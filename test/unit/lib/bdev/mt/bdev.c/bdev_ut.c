@@ -909,6 +909,119 @@ io_during_qos_queue(void)
 }
 
 static void
+io_during_qos_reset(void)
+{
+	struct spdk_io_channel *io_ch[3];
+	struct spdk_bdev_channel *bdev_ch[3], *qos_bdev_ch;
+	struct spdk_bdev *bdev;
+	enum spdk_bdev_io_status status0, status1, status_reset;
+	struct spdk_bdev_module_channel *module_ch;
+	int rc;
+
+	setup_test();
+
+	/*
+	 * First test normal case - submit an I/O on each of two channels (QoS disabled and no reset)
+	 *  and verify they complete successfully.
+	 */
+	set_thread(0);
+	io_ch[0] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[0] = spdk_io_channel_get_ctx(io_ch[0]);
+	status0 = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[0], NULL, 0, 1, io_during_reset_qos_done, &status0);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(bdev_ch[0]->flags == 0);
+
+	set_thread(1);
+	io_ch[1] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[1] = spdk_io_channel_get_ctx(io_ch[1]);
+	status1 = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[1], NULL, 0, 1, io_during_reset_qos_done, &status1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(bdev_ch[1]->flags == 0);
+
+	poll_threads();
+	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_PENDING);
+	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_PENDING);
+
+	set_thread(0);
+	stub_complete_io(g_bdev.io_target, 0);
+	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	set_thread(1);
+	stub_complete_io(g_bdev.io_target, 0);
+	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	/*
+	 * Enable QoS on the bdev
+	 */
+	set_thread(2);
+	bdev = bdev_ch[0]->bdev;
+	bdev->ios_per_sec = 2000;
+	io_ch[2] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[2] = spdk_io_channel_get_ctx(io_ch[2]);
+	qos_bdev_ch = bdev->qos_channel;
+	module_ch = qos_bdev_ch->module_ch;
+	CU_ASSERT(bdev->qos_channel->flags == BDEV_CH_QOS_ENABLED);
+	CU_ASSERT(qos_bdev_ch != NULL);
+	CU_ASSERT(module_ch != NULL);
+
+	/*
+	 * Now submit a reset, and leave it pending while we submit I/O on two different
+	 *  channels.  These I/O should be failed by the bdev layer since the reset is in
+	 *  progress.
+	 */
+	set_thread(0);
+	status_reset = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_reset(g_desc, io_ch[0], io_during_reset_qos_done, &status_reset);
+	CU_ASSERT(rc == 0);
+
+	CU_ASSERT(bdev_ch[0]->flags == 0);
+	CU_ASSERT(bdev_ch[1]->flags == 0);
+	CU_ASSERT(bdev_ch[2]->flags == 0);
+	CU_ASSERT(qos_bdev_ch->flags & BDEV_CH_QOS_ENABLED);
+	poll_threads();
+	CU_ASSERT(bdev_ch[0]->flags == BDEV_CH_RESET_IN_PROGRESS);
+	CU_ASSERT(bdev_ch[1]->flags == BDEV_CH_RESET_IN_PROGRESS);
+	CU_ASSERT(bdev_ch[2]->flags == BDEV_CH_RESET_IN_PROGRESS);
+	CU_ASSERT(qos_bdev_ch->flags & BDEV_CH_RESET_IN_PROGRESS);
+
+	set_thread(0);
+	status0 = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[0], NULL, 0, 1, io_during_reset_qos_done, &status0);
+	CU_ASSERT(rc == 0);
+
+	set_thread(1);
+	status1 = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[1], NULL, 0, 1, io_during_reset_qos_done, &status1);
+	CU_ASSERT(rc == 0);
+
+	/*
+	 * A reset is in progress so these read I/O should complete with failure when QoS has been
+	 * enabled. Note that we need to poll_threads() since I/O completed inline have their
+	 *  completion deferred.
+	 */
+	poll_threads();
+	CU_ASSERT(status_reset == SPDK_BDEV_IO_STATUS_PENDING);
+	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_FAILED);
+	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_FAILED);
+
+	set_thread(0);
+	stub_complete_io(g_bdev.io_target, 0);
+	spdk_put_io_channel(io_ch[0]);
+	set_thread(1);
+	stub_complete_io(g_bdev.io_target, 0);
+	spdk_put_io_channel(io_ch[1]);
+	set_thread(2);
+	stub_complete_io(g_bdev.io_target, 0);
+	spdk_put_io_channel(io_ch[2]);
+	poll_threads();
+	CU_ASSERT(status_reset == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	teardown_test();
+}
+
+static void
 enomem_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	enum spdk_bdev_io_status *status = cb_arg;
@@ -1110,6 +1223,7 @@ main(int argc, char **argv)
 		CU_add_test(suite, "io_during_reset", io_during_reset) == NULL ||
 		CU_add_test(suite, "io_during_qos", io_during_qos) == NULL ||
 		CU_add_test(suite, "io_during_qos_queue", io_during_qos_queue) == NULL ||
+		CU_add_test(suite, "io_during_qos_reset", io_during_qos_reset) == NULL ||
 		CU_add_test(suite, "enomem", enomem) == NULL ||
 		CU_add_test(suite, "enomem_multi_bdev", enomem_multi_bdev) == NULL
 	) {
