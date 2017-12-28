@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c6eb8114_070c78c5",
+        "filename": "doc/bdev.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-28T17:54:50Z",
+      "side": 1,
+      "message": "Deep linking an image from some random wiki is probably not a good idea.  If we want to actually refer to this, we should mirror it in our own repository and provide correct attribution. (It is CC-BY-SA, so this is allowed.)  Alternatively, link to the containing wiki page instead of directly to the image, or just leave out this sentence entirely - I think it\u0027s more confusing to mention the kernel block layer here.",
+      "range": {
+        "startLine": 5,
+        "startChar": 246,
+        "endLine": 5,
+        "endChar": 350
+      },
+      "revId": "29da3341f624c8bac0c52ed18befd369a12eca3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8bc4736_61c8a874",
+        "filename": "doc/bdev.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-28T17:54:50Z",
+      "side": 1,
+      "message": "\"JSON RPC\" -\u003e \"JSON-RPC\"",
+      "range": {
+        "startLine": 11,
+        "startChar": 37,
+        "endLine": 11,
+        "endChar": 45
+      },
+      "revId": "29da3341f624c8bac0c52ed18befd369a12eca3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "104968e3_3508d24a",
+        "filename": "doc/bdev.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-28T17:54:50Z",
+      "side": 1,
+      "message": "This heading needs a #-style name; otherwise, the named sections nested inside it won\u0027t actually be named anchors.\n\nAlso, I don\u0027t think this section is actually about using the API - the sections nested in it are all user-level \"getting started\" documentation.",
+      "revId": "29da3341f624c8bac0c52ed18befd369a12eca3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d258309_ea0b13c7",
+        "filename": "doc/bdev.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-28T17:54:50Z",
+      "side": 1,
+      "message": "Mentioning the header by filename is enough - Doxygen will auto-link it.",
+      "range": {
+        "startLine": 17,
+        "startChar": 74,
+        "endLine": 17,
+        "endChar": 132
+      },
+      "revId": "29da3341f624c8bac0c52ed18befd369a12eca3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c943319e_ef22e05d",
+        "filename": "doc/bdev.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-28T17:54:50Z",
+      "side": 1,
+      "message": "The config format isn\u0027t really at all like an INI file (it doesn\u0027t use \"key \u003d value\", which is the defining feature of the INI format).",
+      "range": {
+        "startLine": 17,
+        "startChar": 284,
+        "endLine": 17,
+        "endChar": 306
+      },
+      "revId": "29da3341f624c8bac0c52ed18befd369a12eca3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
