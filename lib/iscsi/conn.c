@@ -1070,6 +1070,9 @@ spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task)
 	if (spdk_iscsi_task_is_read(primary)) {
 		process_read_task_completion(conn, task, primary);
 	} else {
+		if (task != primary) {
+			primary->scsi.data_transferred += task->scsi.data_transferred;
+		}
 		primary->bytes_completed += task->scsi.length;
 		if ((task != primary) &&
 		    (task->scsi.status != SPDK_SCSI_STATUS_GOOD)) {
