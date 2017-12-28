@@ -147,6 +147,16 @@ bdevio_construct_targets(void)
 }
 
 static void
+__spdk_bdev_close(void *arg1, void *arg2)
+{
+	struct io_target *target = arg1;
+
+	spdk_bdev_close(target->bdev_desc);
+	free(target);
+	wake_ut_thread();
+}
+
+static void
 __put_io_channel(void *arg1, void *arg2)
 {
 	struct io_target *target = arg1;
@@ -163,9 +173,8 @@ bdevio_cleanup_targets(void)
 	target = g_io_targets;
 	while (target != NULL) {
 		execute_spdk_function(__put_io_channel, target, NULL);
-		spdk_bdev_close(target->bdev_desc);
+		execute_spdk_function(__spdk_bdev_close, target, NULL);
 		g_io_targets = target->next;
-		free(target);
 		target = g_io_targets;
 	}
 }
