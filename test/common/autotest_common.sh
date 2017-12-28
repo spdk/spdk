@@ -479,6 +479,13 @@ function discover_bdevs()
 		$rootdir/scripts/rpc.py -s "$rpc_server" get_bdevs
 	fi
 
+	# Get I/O state of all the bdevs
+	if [ -z "$rpc_server" ]; then
+		$rootdir/scripts/rpc.py get_bdevs_iostat
+	else
+		$rootdir/scripts/rpc.py -s "$rpc_server" get_bdevs_iostat
+	fi
+
 	# Shut down the bdev service
 	kill $stubpid
 	wait $stubpid
