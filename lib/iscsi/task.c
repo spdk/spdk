@@ -70,6 +70,7 @@ spdk_iscsi_task_get(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *parent
 				 parent ? &parent->scsi : NULL);
 	if (parent) {
 		task->tag = parent->tag;
+		task->transfer_len = parent->transfer_len;
 	}
 
 	return task;

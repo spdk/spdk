@@ -90,7 +90,6 @@ spdk_scsi_task_construct(struct spdk_scsi_task *task,
 		parent->ref++;
 		task->parent = parent;
 		task->dxfer_dir = parent->dxfer_dir;
-		task->transfer_len = parent->transfer_len;
 		task->lun = parent->lun;
 		task->cdb = parent->cdb;
 		task->target_port = parent->target_port;

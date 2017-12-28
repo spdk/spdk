@@ -47,6 +47,8 @@ struct spdk_iscsi_task {
 
 	uint32_t desired_data_transfer_length;
 
+	uint32_t transfer_len;
+
 	/* Only valid for Read/Write */
 	uint32_t bytes_completed;
 

@@ -109,13 +109,12 @@ struct spdk_scsi_task {
 	spdk_scsi_task_free		free_fn;
 
 	uint32_t ref;
-	uint32_t transfer_len;
 	uint32_t dxfer_dir;
 	uint32_t length;
 
 	/**
 	 * Amount of data actually transferred.  Can be less than requested
-	 *  transfer_len - i.e. SCSI INQUIRY.
+	 *  length - i.e. SCSI INQUIRY.
 	 */
 	uint32_t data_transferred;
 
