@@ -1317,95 +1317,6 @@ spdk_bdev_scsi_read_write_lba_check(struct spdk_scsi_task *primary,
 }
 
 static int
-spdk_bdev_scsi_read(struct spdk_bdev *bdev,
-		    struct spdk_scsi_task *task, uint64_t lba,
-		    uint32_t len)
-{
-	uint64_t blen;
-	uint64_t offset;
-	uint64_t nbytes;
-	int rc;
-
-	blen = spdk_bdev_get_block_size(bdev);
-
-	lba += (task->offset / blen);
-	offset = lba * blen;
-	nbytes = task->length;
-
-	SPDK_DEBUGLOG(SPDK_LOG_SCSI,
-		      "Read: lba=%"PRIu64", len=%"PRIu64"\n",
-		      lba, (uint64_t)task->length / blen);
-
-	rc = spdk_bdev_readv(task->desc, task->ch, task->iovs,
-			     task->iovcnt, offset, nbytes,
-			     spdk_bdev_scsi_task_complete_cmd, task);
-	if (rc) {
-		SPDK_ERRLOG("spdk_bdev_readv() failed\n");
-		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
-					  SPDK_SCSI_SENSE_NO_SENSE,
-					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
-					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
-		return SPDK_SCSI_TASK_COMPLETE;
-	}
-
-	task->data_transferred = nbytes;
-	task->status = SPDK_SCSI_STATUS_GOOD;
-
-	return SPDK_SCSI_TASK_PENDING;
-}
-
-static int
-spdk_bdev_scsi_write(struct spdk_bdev *bdev,
-		     struct spdk_scsi_task *task, uint64_t lba, uint32_t len)
-{
-	uint64_t blen;
-	uint64_t offset;
-	uint64_t nbytes;
-	int rc;
-
-	blen = spdk_bdev_get_block_size(bdev);
-	offset = lba * blen;
-	nbytes = ((uint64_t)len) * blen;
-
-	SPDK_DEBUGLOG(SPDK_LOG_SCSI,
-		      "Write: lba=%"PRIu64", len=%u\n",
-		      lba, len);
-
-	if (nbytes > task->transfer_len) {
-		SPDK_ERRLOG("nbytes(%zu) > transfer_len(%u)\n",
-			    (size_t)nbytes, task->transfer_len);
-		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
-					  SPDK_SCSI_SENSE_NO_SENSE,
-					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
-					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
-		return SPDK_SCSI_TASK_COMPLETE;
-	}
-
-	offset += task->offset;
-	rc = spdk_bdev_writev(task->desc, task->ch, task->iovs,
-			      task->iovcnt, offset, task->length,
-			      spdk_bdev_scsi_task_complete_cmd,
-			      task);
-
-	if (rc) {
-		SPDK_ERRLOG("spdk_bdev_writev failed\n");
-		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
-					  SPDK_SCSI_SENSE_NO_SENSE,
-					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
-					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
-		return SPDK_SCSI_TASK_COMPLETE;
-	}
-
-	task->data_transferred = task->length;
-
-	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "Wrote %"PRIu64"/%"PRIu64" bytes\n",
-		      (uint64_t)task->length, nbytes);
-
-	task->status = SPDK_SCSI_STATUS_GOOD;
-	return SPDK_SCSI_TASK_PENDING;
-}
-
-static int
 spdk_bdev_scsi_sync(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 		    uint64_t lba, uint32_t num_blocks)
 {
@@ -1456,6 +1367,9 @@ spdk_bdev_scsi_readwrite(struct spdk_bdev *bdev,
 			 uint64_t lba, uint32_t xfer_len, bool is_read)
 {
 	uint32_t max_xfer_len;
+	uint64_t offset;
+	uint32_t blen;
+	int rc;
 
 	task->data_transferred = 0;
 
@@ -1480,8 +1394,10 @@ spdk_bdev_scsi_readwrite(struct spdk_bdev *bdev,
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
+	blen = spdk_bdev_get_block_size(bdev);
+
 	/* Transfer Length is limited to the Block Limits VPD page Maximum Transfer Length */
-	max_xfer_len = SPDK_WORK_BLOCK_SIZE / spdk_bdev_get_block_size(bdev);
+	max_xfer_len = SPDK_WORK_BLOCK_SIZE / blen;
 	if (xfer_len > max_xfer_len) {
 		SPDK_ERRLOG("xfer_len %" PRIu32 " > maximum transfer length %" PRIu32 "\n",
 			    xfer_len, max_xfer_len);
@@ -1492,11 +1408,33 @@ spdk_bdev_scsi_readwrite(struct spdk_bdev *bdev,
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
+	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "%s: lba=%" PRIu64 ", len=%" PRIu32 "\n",
+		      is_read ? "Read" : "Write",
+		      lba, xfer_len);
+
+	offset = lba * blen + task->offset;
 	if (is_read) {
-		return spdk_bdev_scsi_read(bdev, task, lba, xfer_len);
+		rc = spdk_bdev_readv(task->desc, task->ch, task->iovs,
+				     task->iovcnt, offset, task->length,
+				     spdk_bdev_scsi_task_complete_cmd, task);
 	} else {
-		return spdk_bdev_scsi_write(bdev, task, lba, xfer_len);
+		rc = spdk_bdev_writev(task->desc, task->ch, task->iovs,
+				      task->iovcnt, offset, task->length,
+				      spdk_bdev_scsi_task_complete_cmd, task);
 	}
+
+	if (rc) {
+		SPDK_ERRLOG("bdev I/O failed\n");
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_NO_SENSE,
+					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		return SPDK_SCSI_TASK_COMPLETE;
+	}
+
+	task->data_transferred = task->length;
+	task->status = SPDK_SCSI_STATUS_GOOD;
+	return SPDK_SCSI_TASK_PENDING;
 }
 
 struct spdk_bdev_scsi_unmap_ctx {
