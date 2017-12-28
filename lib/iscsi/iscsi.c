@@ -2762,13 +2762,13 @@ spdk_iscsi_transfer_in(struct spdk_iscsi_conn *conn,
 		if (task != primary) {
 			conn->data_in_cnt--;
 			/* Handle the case when primary task return success but the subtask failed */
-			if (primary->bytes_completed == primary->scsi.transfer_len &&
+			if (primary->bytes_completed == primary->transfer_len &&
 			    primary->scsi.status == SPDK_SCSI_STATUS_GOOD) {
 				conn->data_in_cnt--;
 			}
 		} else {
 			/* handle the case that it is a primary task which has subtasks */
-			if (primary->scsi.transfer_len != task->scsi.length) {
+			if (primary->transfer_len != task->scsi.length) {
 				conn->data_in_cnt--;
 			}
 		}
@@ -2824,7 +2824,7 @@ spdk_iscsi_transfer_in(struct spdk_iscsi_conn *conn,
 						/* The last pdu in all data-in pdus */
 						if ((offset + len) == transfer_len &&
 						    (primary->bytes_completed ==
-						     primary->scsi.transfer_len)) {
+						     primary->transfer_len)) {
 							datain_flag |= ISCSI_DATAIN_STATUS;
 							sent_status = 1;
 						}
@@ -2907,12 +2907,13 @@ int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 	while (!TAILQ_EMPTY(&conn->queued_datain_tasks) &&
 	       conn->data_in_cnt < MAX_LARGE_DATAIN_PER_CONNECTION) {
 		task = TAILQ_FIRST(&conn->queued_datain_tasks);
-		assert(task->current_datain_offset <= task->scsi.transfer_len);
+		assert(task->current_datain_offset <= task->transfer_len);
 
 		if (task->current_datain_offset == 0) {
 			task->scsi.lun = spdk_scsi_dev_get_lun(conn->dev, task->scsi.lun_id);
 			if (task->scsi.lun == NULL) {
 				TAILQ_REMOVE(&conn->queued_datain_tasks, task, link);
+				task->scsi.length = task->transfer_len;
 				spdk_scsi_task_process_null_lun(&task->scsi);
 				spdk_iscsi_task_cpl(&task->scsi);
 				return 0;
@@ -2922,11 +2923,11 @@ int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 			spdk_iscsi_queue_task(conn, task);
 			continue;
 		}
-		if (task->current_datain_offset < task->scsi.transfer_len) {
+		if (task->current_datain_offset < task->transfer_len) {
 			struct spdk_iscsi_task *subtask;
 			uint32_t remaining_size = 0;
 
-			remaining_size = task->scsi.transfer_len - task->current_datain_offset;
+			remaining_size = task->transfer_len - task->current_datain_offset;
 			subtask = spdk_iscsi_task_get(conn, task, spdk_iscsi_task_cpl);
 			assert(subtask != NULL);
 			subtask->scsi.offset = task->current_datain_offset;
@@ -2938,10 +2939,10 @@ int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 			task->scsi.lun = spdk_scsi_dev_get_lun(conn->dev, task->scsi.lun_id);
 			if (task->scsi.lun == NULL) {
 				/* Remove the primary task from the list if this is the last subtask */
-				if (task->current_datain_offset == task->scsi.transfer_len) {
+				if (task->current_datain_offset == task->transfer_len) {
 					TAILQ_REMOVE(&conn->queued_datain_tasks, task, link);
 				}
-				subtask->scsi.transfer_len = subtask->scsi.length;
+				subtask->transfer_len = subtask->scsi.length;
 				spdk_scsi_task_process_null_lun(&subtask->scsi);
 				spdk_iscsi_task_cpl(&subtask->scsi);
 				return 0;
@@ -2949,7 +2950,7 @@ int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 
 			spdk_iscsi_queue_task(conn, subtask);
 		}
-		if (task->current_datain_offset == task->scsi.transfer_len) {
+		if (task->current_datain_offset == task->transfer_len) {
 			TAILQ_REMOVE(&conn->queued_datain_tasks, task, link);
 		}
 	}
@@ -2965,10 +2966,10 @@ static int spdk_iscsi_op_scsi_read(struct spdk_iscsi_conn *conn,
 	task->scsi.dxfer_dir = SPDK_SCSI_DIR_FROM_DEV;
 	task->scsi.parent = NULL;
 	task->scsi.offset = 0;
-	task->scsi.length = DMIN32(SPDK_BDEV_LARGE_BUF_MAX_SIZE, task->scsi.transfer_len);
+	task->scsi.length = DMIN32(SPDK_BDEV_LARGE_BUF_MAX_SIZE, task->transfer_len);
 	spdk_scsi_task_set_data(&task->scsi, NULL, 0);
 
-	remaining_size = task->scsi.transfer_len - task->scsi.length;
+	remaining_size = task->transfer_len - task->scsi.length;
 	task->current_datain_offset = 0;
 
 	if (remaining_size == 0) {
@@ -3031,12 +3032,13 @@ spdk_iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	task->scsi.cdb = cdb;
 	task->tag = task_tag;
-	task->scsi.transfer_len = transfer_len;
+	task->transfer_len = transfer_len;
 	task->scsi.target_port = conn->target_port;
 	task->scsi.initiator_port = conn->initiator_port;
 	task->scsi.parent = NULL;
 
 	if (task->scsi.lun == NULL) {
+		task->scsi.length = task->transfer_len;
 		spdk_scsi_task_process_null_lun(&task->scsi);
 		spdk_iscsi_task_cpl(&task->scsi);
 		return 0;
@@ -3192,7 +3194,7 @@ void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
 
 	primary = spdk_iscsi_task_get_primary(task);
 
-	transfer_len = primary->scsi.transfer_len;
+	transfer_len = primary->transfer_len;
 	task_tag = task->tag;
 
 	/* transfer data from logical unit */
@@ -3204,7 +3206,7 @@ void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
 			return;
 		}
 
-		if (primary->bytes_completed != primary->scsi.transfer_len) {
+		if (primary->bytes_completed != primary->transfer_len) {
 			return;
 		}
 	}
@@ -3563,7 +3565,7 @@ spdk_add_transfer_task(struct spdk_iscsi_conn *conn,
 	int rc;
 	int data_out_req;
 
-	transfer_len = task->scsi.transfer_len;
+	transfer_len = task->transfer_len;
 	data_len = spdk_iscsi_task_get_pdu(task)->data_segment_len;
 	max_burst_len = conn->sess->MaxBurstLength;
 	segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
@@ -4177,7 +4179,7 @@ static int spdk_iscsi_op_data(struct spdk_iscsi_conn *conn,
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
 
-	transfer_len = task->scsi.transfer_len;
+	transfer_len = task->transfer_len;
 	task->current_r2t_length += pdu->data_segment_len;
 	task->next_expected_r2t_offset += pdu->data_segment_len;
 	task->r2t_datasn++;
@@ -4224,7 +4226,7 @@ static int spdk_iscsi_op_data(struct spdk_iscsi_conn *conn,
 
 	if (lun_dev == NULL) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "LUN %d is removed, complete the task immediately\n", lun_i);
-		subtask->scsi.transfer_len = subtask->scsi.length;
+		subtask->transfer_len = subtask->scsi.length;
 		spdk_scsi_task_process_null_lun(&subtask->scsi);
 		spdk_iscsi_task_cpl(&subtask->scsi);
 		return 0;

@@ -1060,7 +1060,7 @@ process_read_task_completion(struct spdk_iscsi_conn *conn,
 	spdk_iscsi_task_response(conn, task);
 
 	if ((task != primary) ||
-	    (task->scsi.transfer_len == task->scsi.length)) {
+	    (task->transfer_len == task->scsi.length)) {
 		spdk_iscsi_task_put(task);
 	}
 	process_completed_read_subtask_list(conn, primary);
@@ -1090,7 +1090,7 @@ spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task)
 			primary->scsi.status = task->scsi.status;
 		}
 
-		if (primary->bytes_completed == primary->scsi.transfer_len) {
+		if (primary->bytes_completed == primary->transfer_len) {
 			spdk_del_transfer_task(conn, primary->tag);
 			spdk_iscsi_task_response(conn, primary);
 			/*
@@ -1101,7 +1101,7 @@ spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task)
 			 *  task - in this case the task will have a smaller length than
 			 *  the overall transfer length.
 			 */
-			if (task != primary || task->scsi.length != task->scsi.transfer_len) {
+			if (task != primary || task->scsi.length != task->transfer_len) {
 				TAILQ_REMOVE(&conn->active_r2t_tasks, primary, link);
 				spdk_iscsi_task_put(primary);
 			}

@@ -240,7 +240,6 @@ spdk_vhost_scsi_task_cpl(struct spdk_scsi_task *scsi_task)
 		memcpy(task->resp->sense, task->scsi.sense_data, task->scsi.sense_data_len);
 		task->resp->sense_len = task->scsi.sense_data_len;
 	}
-	assert(task->scsi.transfer_len == task->scsi.length);
 	task->resp->resid = task->scsi.length - task->scsi.data_transferred;
 
 	submit_completion(task);
@@ -459,7 +458,6 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 			task->scsi.iovcnt = 1;
 			task->scsi.iovs[0].iov_len = 0;
 			task->scsi.length = 0;
-			task->scsi.transfer_len = 0;
 			return 0;
 		}
 
@@ -519,7 +517,6 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 
 	task->scsi.iovcnt = iovcnt;
 	task->scsi.length = len;
-	task->scsi.transfer_len = len;
 	return 0;
 
 invalid_task:
