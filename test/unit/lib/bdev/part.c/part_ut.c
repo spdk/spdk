@@ -42,6 +42,20 @@
 #include "bdev/bdev.c"
 #include "bdev/part.c"
 
+/* Return NULL to test hardcoded defaults. */
+struct spdk_conf_section *
+spdk_conf_find_section(struct spdk_conf *cp, const char *name)
+{
+	return NULL;
+}
+
+/* Return NULL to test hardcoded defaults. */
+char *
+spdk_conf_section_get_nmval(struct spdk_conf_section *sp, const char *key, int idx1, int idx2)
+{
+	return NULL;
+}
+
 void
 spdk_scsi_nvme_translate(const struct spdk_bdev_io *bdev_io,
 			 int *sc, int *sk, int *asc, int *ascq)
