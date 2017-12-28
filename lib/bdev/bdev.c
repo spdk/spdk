@@ -1902,6 +1902,64 @@ spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	memset(&channel->stat, 0, sizeof(channel->stat));
 }
 
+static void
+_spdk_bdev_get_device_stat_done(struct spdk_io_channel_iter *i, int status)
+{
+	void *io_device = spdk_io_channel_iter_get_io_device(i);
+	struct spdk_bdev_ctx *bdev_ctx = spdk_io_channel_iter_get_ctx(i);
+
+	bdev_ctx->cb(__bdev_from_io_dev(io_device), bdev_ctx->stat, bdev_ctx->cb_arg);
+	free(bdev_ctx->stat);
+	free(bdev_ctx);
+}
+
+static void
+_spdk_bdev_get_each_channel_stat(struct spdk_io_channel_iter *i)
+{
+	struct spdk_bdev_ctx *bdev_ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+
+	bdev_ctx->stat->bytes_read    += channel->stat.bytes_read;
+	bdev_ctx->stat->num_read_ops  += channel->stat.num_read_ops;
+	bdev_ctx->stat->bytes_written += channel->stat.bytes_written;
+	bdev_ctx->stat->num_write_ops += channel->stat.num_write_ops;
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+void
+spdk_bdev_get_device_stat(struct spdk_bdev *bdev,
+			  spdk_bdev_get_device_stat_cb cb, void *cb_arg)
+{
+	struct spdk_bdev_io_stat *stat;
+	struct spdk_bdev_ctx *bdev_ctx;
+
+	assert(cb != NULL);
+
+	stat = calloc(1, sizeof(struct spdk_bdev_io_stat));
+	if (stat == NULL) {
+		SPDK_ERRLOG("could not allocate spdk_bdev_io_stat\n");
+		return;
+	}
+
+	bdev_ctx = calloc(1, sizeof(struct spdk_bdev_ctx));
+	if (bdev_ctx == NULL) {
+		SPDK_ERRLOG("could not allocate spdk_bdev_ctx\n");
+		free(stat);
+		return;
+	}
+
+	bdev_ctx->stat = stat;
+	bdev_ctx->cb = cb;
+	bdev_ctx->cb_arg = cb_arg;
+
+	spdk_for_each_channel(__bdev_to_io_dev(bdev),
+			      _spdk_bdev_get_each_channel_stat,
+			      bdev_ctx,
+			      _spdk_bdev_get_device_stat_done);
+}
+
 int
 spdk_bdev_nvme_admin_passthru(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			      const struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes,
