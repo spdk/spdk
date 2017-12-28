@@ -35,6 +35,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/bdev.h"
+#include "spdk/conf.h"
 
 #include "spdk/env.h"
 #include "spdk/event.h"
@@ -64,6 +65,8 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define SPDK_BDEV_QOS_TIMESLICE_IN_USEC		1000
 #define SPDK_BDEV_SEC_TO_USEC			1000000ULL
 #define SPDK_BDEV_QOS_MIN_IO_PER_TIMESLICE	1
+#define SPDK_BDEV_QOS_MIN_IOS_PER_SEC		10000
+#define SPDK_BDEV_QOS_MAX_COUNT			256
 
 typedef TAILQ_HEAD(, spdk_bdev_io) bdev_io_tailq_t;
 typedef STAILQ_HEAD(, spdk_bdev_io) bdev_io_stailq_t;
@@ -2408,6 +2411,51 @@ spdk_bdev_io_get_thread(struct spdk_bdev_io *bdev_io)
 	return spdk_io_channel_get_thread(bdev_io->ch->channel);
 }
 
+static void
+_spdk_bdev_qos_config(struct spdk_bdev *bdev)
+{
+	struct spdk_conf_section	*sp = NULL;
+	const char			*val = NULL;
+	int				ios_per_sec = 0;
+	int				i = 0;
+
+	sp = spdk_conf_find_section(NULL, "QoS");
+	if (!sp) {
+		return;
+	}
+
+	for (i = 0; i < SPDK_BDEV_QOS_MAX_COUNT; i++) {
+		val = spdk_conf_section_get_nmval(sp, "Limit_IOPS", i, 0);
+		if (!val) {
+			continue;
+		}
+
+		if (strcmp(bdev->name, val) != 0) {
+			continue;
+		}
+
+		val = spdk_conf_section_get_nmval(sp, "Limit_IOPS", i, 1);
+		if (!val) {
+			return;
+		}
+
+		ios_per_sec = (int)strtol(val, NULL, 10);
+		if (ios_per_sec > 0) {
+			if (ios_per_sec % SPDK_BDEV_QOS_MIN_IOS_PER_SEC) {
+				SPDK_ERRLOG("Assigned IOPS %u on bdev %s is not multiple of %u\n",
+					    ios_per_sec, bdev->name, SPDK_BDEV_QOS_MIN_IOS_PER_SEC);
+				SPDK_ERRLOG("Failed to enable QoS on this bdev %s\n", bdev->name);
+			} else {
+				bdev->ios_per_sec = (uint64_t)ios_per_sec;
+				SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Bdev:%s QoS:%lu\n",
+					      bdev->name, bdev->ios_per_sec);
+			}
+		}
+
+		return;
+	}
+}
+
 static int
 _spdk_bdev_register(struct spdk_bdev *bdev)
 {
@@ -2435,6 +2483,8 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 	TAILQ_INIT(&bdev->aliases);
 
 	bdev->reset_in_progress = NULL;
+
+	_spdk_bdev_qos_config(bdev);
 
 	spdk_io_device_register(bdev, spdk_bdev_channel_create, spdk_bdev_channel_destroy,
 				sizeof(struct spdk_bdev_channel));
