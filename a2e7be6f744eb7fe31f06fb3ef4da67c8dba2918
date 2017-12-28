@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8cedb9be_dffa887f",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-12-28T10:57:21Z",
+      "side": 1,
+      "message": "There are square brackets used in comparisions in others parts of code. Shouldn\u0027t be used here too?",
+      "range": {
+        "startLine": 17,
+        "startChar": 1,
+        "endLine": 17,
+        "endChar": 31
+      },
+      "revId": "a2e7be6f744eb7fe31f06fb3ef4da67c8dba2918",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
