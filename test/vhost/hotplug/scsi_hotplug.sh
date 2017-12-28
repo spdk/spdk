@@ -15,8 +15,6 @@ END_OF_CONFIG
 }
 
 # Run spdk by calling run_vhost from hotplug/common.sh.
-# Run_vhost uses run_vhost.sh (test/vhost/common) script.
-# This script calls spdk_vhost_run (common/common.sh) to run vhost.
 # Then prepare vhost with rpc calls and setup and run 4 VMs.
 function pre_test_case() {
     used_vms=""
