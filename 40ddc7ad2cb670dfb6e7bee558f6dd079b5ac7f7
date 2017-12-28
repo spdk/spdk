@@ -16,6 +16,24 @@
       "revId": "40ddc7ad2cb670dfb6e7bee558f6dd079b5ac7f7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bf9c28d4_442c1a3b",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-28T08:32:09Z",
+      "side": 1,
+      "message": "Idea was to have \u0027name\u0027 be present at all times, with suggestion that some unchangeable unique identifier is used by each bdev type where possible. This would make it similar to symlinks that all refer to single uuid (\u0027name\u0027), but have alias (or multiple) in addition to that.\n\nFor example:\nNVMe bdev - \u0027name\u0027 \u003d\u003d serial number, \u0027alias\u0027 \u003d\u003d Nvme0\nLvol bdev - \u0027name\u0027 \u003d\u003d lvs-\u003euuid/blobid, \u0027alias\u0027 \u003d\u003d lvs-\u003ename/lvol-\u003ename\netc..",
+      "parentUuid": "7ac84132_4be50474",
+      "revId": "40ddc7ad2cb670dfb6e7bee558f6dd079b5ac7f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
