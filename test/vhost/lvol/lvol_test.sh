@@ -13,7 +13,7 @@ rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py "
 
 vm_count=1
 max_disks=""
-ctrl_type="vhost_scsi"
+ctrl_type="spdk_vhost_scsi"
 use_fs=false
 nested_lvol=false
 distribute_cores=false
@@ -32,8 +32,8 @@ function usage()
     echo "    --max-disks=INT       Maximum number of NVMe drives to use in test."
     echo "                          Default: will use all available NVMes."
     echo "    --ctrl-type=TYPE      Controller type to use for test:"
-    echo "                          vhost_scsi - use spdk vhost scsi"
-    echo "                          vhost_blk - use spdk vhost block"
+    echo "                          spdk_vhost_scsi - use spdk vhost scsi"
+    echo "                          spdk_vhost_blk - use spdk vhost block"
     echo "    --nested-lvol         If enabled will create additional lvol bdev"
     echo "                          on each NVMe for use as base device for next"
     echo "                          lvol store and lvol bdevs."
@@ -178,13 +178,7 @@ for (( i=0; i<$vm_count; i++)); do
         select(.name | contains(\"$vm\")) | .name) | join(\" \")" <<< "$bdev_info")
     bdevs=($bdevs)
 
-    setup_cmd="$COMMON_DIR/vm_setup.sh $x --work-dir=$TEST_DIR"
-    if [[ "$ctrl_type" == "vhost_scsi" ]]; then
-        setup_cmd+=" --test-type=spdk_vhost_scsi"
-    elif [[ "$ctrl_type" == "vhost_blk" ]]; then
-        setup_cmd+=" --test-type=spdk_vhost_blk"
-    fi
-    setup_cmd+=" -f $i"
+    setup_cmd="vm_setup --disk-type=$ctrl_type --force=$i"
     setup_cmd+=" --os=/home/sys_sgsw/vhost_vm_image.qcow2"
 
     # Create single SCSI controller or multiple BLK controllers for this VM
@@ -193,13 +187,13 @@ for (( i=0; i<$vm_count; i++)); do
         mask_arg="--cpumask ${!mask}"
     fi
 
-    if [[ "$ctrl_type" == "vhost_scsi" ]]; then
+    if [[ "$ctrl_type" == "spdk_vhost_scsi" ]]; then
         $rpc_py construct_vhost_scsi_controller naa.0.$i $mask_arg
         for (( j=0; j<${#bdevs[@]}; j++)); do
             $rpc_py add_vhost_scsi_lun naa.0.$i $j ${bdevs[$j]}
         done
-        setup_cmd+=" --disk=0"
-    elif [[ "$ctrl_type" == "vhost_blk" ]]; then
+        setup_cmd+=" --disks=0"
+    elif [[ "$ctrl_type" == "spdk_vhost_blk" ]]; then
         disk=""
         for (( j=0; j<${#bdevs[@]}; j++)); do
             blk_dev_size=$(get_bdev_size "${bdevs[$j]}")
@@ -208,7 +202,7 @@ for (( i=0; i<$vm_count; i++)); do
             disk+="${j}_size_${blk_dev_size}M:"
         done
         disk="${disk::-1}"
-        setup_cmd+=" --disk=$disk"
+        setup_cmd+=" --disks=$disk"
     fi
 
     $setup_cmd
@@ -232,9 +226,9 @@ for vm_num in $used_vms; do
     vm_ssh $vm_num "hostname $host_name"
     vm_start_fio_server $fio_bin $vm_num
 
-    if [[ "$ctrl_type" == "vhost_scsi" ]]; then
+    if [[ "$ctrl_type" == "spdk_vhost_scsi" ]]; then
         vm_check_scsi_location $vm_num
-    elif [[ "$ctrl_type" == "vhost_blk" ]]; then
+    elif [[ "$ctrl_type" == "spdk_vhost_blk" ]]; then
         vm_check_blk_location $vm_num
     fi
 
@@ -249,7 +243,7 @@ vm_shutdown_all
 sleep 2
 
 notice "Cleaning up vhost - remove LUNs, controllers, lvol bdevs and lvol stores"
-if [[ "$ctrl_type" == "vhost_scsi" ]]; then
+if [[ "$ctrl_type" == "spdk_vhost_scsi" ]]; then
     for (( i=0; i<$vm_count; i++)); do
         notice "Removing devices from vhost SCSI controller naa.0.$i"
         for (( j=0; j<${#bdevs[@]}; j++)); do
@@ -259,7 +253,7 @@ if [[ "$ctrl_type" == "vhost_scsi" ]]; then
         notice "Removing vhost SCSI controller naa.0.$i"
         $rpc_py remove_vhost_controller naa.0.$i
     done
-elif [[ "$ctrl_type" == "vhost_blk" ]]; then
+elif [[ "$ctrl_type" == "spdk_vhost_blk" ]]; then
     for (( i=0; i<$vm_count; i++)); do
         for (( j=0; j<${#bdevs[@]}; j++)); do
             notice "Removing vhost BLK controller naa.$j.$i"
