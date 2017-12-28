@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b421d271_645a439c",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-28T16:51:25Z",
+      "side": 1,
+      "message": "spdk_env_get_core_count() returns the total number of cores, not the highest-numbered core; for example, with coremask 0x101, it returns 2, not 8.",
+      "range": {
+        "startLine": 114,
+        "startChar": 23,
+        "endLine": 114,
+        "endChar": 46
+      },
+      "revId": "2ab1883d99b6132f8ffd3f886b790fca4fa34ef8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
