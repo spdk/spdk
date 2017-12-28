@@ -40,6 +40,9 @@
 /* Length of string returned from uuid_unparse() */
 #define UUID_STRING_LEN 37
 
+/* Default blob channel opts for lvol */
+#define SPDK_LVOL_BLOB_OPTS_CHANNEL_OPS 8192
+
 SPDK_LOG_REGISTER_COMPONENT("lvol", SPDK_LOG_LVOL)
 
 static TAILQ_HEAD(, spdk_lvol_store) g_lvol_stores = TAILQ_HEAD_INITIALIZER(g_lvol_stores);
@@ -390,6 +393,7 @@ spdk_lvs_load(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn
 	req->cb_arg = cb_arg;
 	req->bs_dev = bs_dev;
 
+	opts.max_channel_ops = SPDK_LVOL_BLOB_OPTS_CHANNEL_OPS;
 	spdk_bs_opts_init(&opts);
 	strncpy(opts.bstype.bstype, "LVOLSTORE", SPDK_BLOBSTORE_TYPE_LENGTH);
 
