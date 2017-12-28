@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "e7622294_97070766",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 31
+      },
+      "lineNbr": 436,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-28T19:39:41Z",
+      "side": 1,
+      "message": "do -\u003e to",
+      "range": {
+        "startLine": 436,
+        "startChar": 19,
+        "endLine": 436,
+        "endChar": 21
+      },
+      "revId": "5b29e2a1528e45dedbc8b0acb8271aa92665ff08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5b50fdd2_cf2be0ec",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 31
