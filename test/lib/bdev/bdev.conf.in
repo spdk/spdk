@@ -16,3 +16,14 @@
 
 [Ioat]
   Disable Yes
+
+[QoS]
+  # QoS section defines IOPS limit
+  #
+  # Format: Bdev_Name Expected_IOPS
+  #
+  # A requirement of minimum 1000 and multiple of
+  # 1000 IOPS is needed
+  #
+  # Assign 20000 IOPs for the Malloc0 block device
+  Malloc0 20000
