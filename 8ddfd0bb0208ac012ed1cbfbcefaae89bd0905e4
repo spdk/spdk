@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b41713ae_a24328ed",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-28T16:33:20Z",
+      "side": 1,
+      "message": "Not particular to this patch but while looking at this, a question arises:\nwhat if bdev_io-\u003eu.bdev.iovcnt + 2 \u003e queue_size?\n\nThe request will be ENOMEM indefinitely? In virtqueue_req_start() the check\n\tif (iovcnt \u003e vq-\u003evq_free_cnt) {\n\t\treturn -ENOSPC;\n\t}\n\nShould be changed to:\n\tif (iovcnt \u003e vq-\u003evq_free_cnt) {\n\t\treturn iovcnt \u003e vq-\u003evq_nentries ? -EINVAL : -ENOSPC;\n\t}",
+      "range": {
+        "startLine": 114,
+        "startChar": 39,
+        "endLine": 114,
+        "endChar": 65
+      },
+      "revId": "8ddfd0bb0208ac012ed1cbfbcefaae89bd0905e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a33ef881_1bafc9bb",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-28T16:33:20Z",
+      "side": 1,
+      "message": "New line needed",
+      "range": {
+        "startLine": 147,
+        "startChar": 10,
+        "endLine": 147,
+        "endChar": 11
+      },
+      "revId": "8ddfd0bb0208ac012ed1cbfbcefaae89bd0905e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e6f0cddb_1679c9cd",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-28T16:33:20Z",
+      "side": 1,
+      "message": "needed? better SPDK_UNREACHABLE()",
+      "range": {
+        "startLine": 165,
+        "startChar": 1,
+        "endLine": 165,
+        "endChar": 10
+      },
+      "revId": "8ddfd0bb0208ac012ed1cbfbcefaae89bd0905e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1659fce3_3b5e34e1",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-28T16:33:20Z",
+      "side": 1,
+      "message": "New line needed",
+      "range": {
+        "startLine": 168,
+        "startChar": 11,
+        "endLine": 168,
+        "endChar": 12
+      },
+      "revId": "8ddfd0bb0208ac012ed1cbfbcefaae89bd0905e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
