@@ -1,0 +1,107 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1cc22f24_1bee450e",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-28T16:21:00Z",
+      "side": 1,
+      "message": "This should be changed to something like \"configure the RNICs and NVMe devices to be located on the same NUMA node.\"",
+      "revId": "9a9e5e6272c730eb5c6c1028758102018c32af89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "70e5f458_82c675d9",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-28T16:21:00Z",
+      "side": 1,
+      "message": "Maybe \"are used to configure the SPDK NVMe-oF target\" instead.",
+      "revId": "9a9e5e6272c730eb5c6c1028758102018c32af89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3240c497_a88cac3e",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-28T16:21:00Z",
+      "side": 1,
+      "message": "configurtion -\u003e configuration",
+      "range": {
+        "startLine": 151,
+        "startChar": 12,
+        "endLine": 151,
+        "endChar": 24
+      },
+      "revId": "9a9e5e6272c730eb5c6c1028758102018c32af89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "95b851e5_06b4c360",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-28T16:21:00Z",
+      "side": 1,
+      "message": "subsystem -\u003e \"a subsystem\" or \"subsystems\"",
+      "range": {
+        "startLine": 152,
+        "startChar": 0,
+        "endLine": 152,
+        "endChar": 10
+      },
+      "revId": "9a9e5e6272c730eb5c6c1028758102018c32af89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "859730f7_a96d0eaf",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-28T16:21:00Z",
+      "side": 1,
+      "message": "I don\u0027t think we need \"Currently\" here; the documentation should always describe the current state of affairs.",
+      "range": {
+        "startLine": 173,
+        "startChar": 0,
+        "endLine": 173,
+        "endChar": 11
+      },
+      "revId": "9a9e5e6272c730eb5c6c1028758102018c32af89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
