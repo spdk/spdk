@@ -33,9 +33,6 @@
 
 #include "spdk/stdinc.h"
 
-#include <rte_config.h>
-#include <rte_lcore.h>
-
 #include "spdk/env.h"
 #include "spdk/event.h"
 #include "spdk_internal/event.h"
@@ -47,7 +44,7 @@ static uint64_t g_tsc_end;
 
 static int g_time_in_sec;
 
-static uint64_t call_count[RTE_MAX_LCORE];
+static uint64_t *call_count;
 
 static bool g_app_stopped = false;
 
@@ -55,7 +52,7 @@ static void
 submit_new_event(void *arg1, void *arg2)
 {
 	struct spdk_event *event;
-	static __thread uint32_t next_lcore = RTE_MAX_LCORE;
+	static __thread uint32_t next_lcore = UINT32_MAX;
 
 	if (spdk_get_ticks() > g_tsc_end) {
 		if (__sync_bool_compare_and_swap(&g_app_stopped, false, true)) {
@@ -64,8 +61,11 @@ submit_new_event(void *arg1, void *arg2)
 		return;
 	}
 
-	if (next_lcore == RTE_MAX_LCORE) {
-		next_lcore = rte_get_next_lcore(rte_lcore_id(), 0, 1);
+	if (next_lcore == UINT32_MAX) {
+		next_lcore = spdk_env_get_next_core(spdk_env_get_current_core());
+		if (next_lcore == UINT32_MAX) {
+			next_lcore = spdk_env_get_first_core();
+		}
 	}
 
 	call_count[next_lcore]++;
@@ -87,6 +87,13 @@ static void
 event_perf_start(void *arg1, void *arg2)
 {
 	uint32_t i;
+
+	call_count = calloc(spdk_env_get_last_core() + 1, sizeof(*call_count));
+	if (call_count == NULL) {
+		fprintf(stderr, "call_count allocation failed\n");
+		spdk_app_stop(1);
+		return;
+	}
 
 	g_tsc_rate = spdk_get_ticks_hz();
 	g_tsc_us_rate = g_tsc_rate / (1000 * 1000);
@@ -116,12 +123,17 @@ performance_dump(int io_time)
 {
 	uint32_t i;
 
+	if (call_count == NULL) {
+		return;
+	}
+
 	printf("\n");
 	SPDK_ENV_FOREACH_CORE(i) {
 		printf("lcore %2d: %8ju\n", i, call_count[i] / g_time_in_sec);
 	}
 
 	fflush(stdout);
+	free(call_count);
 }
 
 int
