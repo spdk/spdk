@@ -382,6 +382,19 @@ struct spdk_bdev_io {
 	/* No members may be added after driver_ctx! */
 };
 
+typedef void (*spdk_bdev_pass_device_stat)(struct spdk_bdev *bdev,
+		struct spdk_bdev_io_stat *stat, void *ctx, void *arg, int status);
+
+struct spdk_bdev_with_stat {
+	int16_t current_num;
+	int16_t total_num;
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_io_stat *stat;
+	spdk_bdev_pass_device_stat pass_stat_fn;
+	void *ctx;
+	void *arg;
+};
+
 int spdk_bdev_register(struct spdk_bdev *bdev);
 void spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg);
 void spdk_bdev_unregister_done(struct spdk_bdev *bdev, int bdeverrno);

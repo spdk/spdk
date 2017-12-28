@@ -61,8 +61,10 @@ typedef void (*spdk_bdev_remove_cb_t)(void *remove_ctx);
 struct spdk_bdev_io;
 
 struct spdk_bdev_fn_table;
+struct spdk_bdev_with_stat;
 struct spdk_io_channel;
 struct spdk_json_write_ctx;
+
 
 /** bdev status */
 enum spdk_bdev_status {
@@ -725,6 +727,7 @@ int spdk_bdev_free_io(struct spdk_bdev_io *bdev_io);
 void spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 			   struct spdk_bdev_io_stat *stat);
 
+void spdk_bdev_get_device_stat(struct spdk_bdev_with_stat *bdev_with_stat);
 /**
  * Get the status of bdev_io as an NVMe status code.
  *

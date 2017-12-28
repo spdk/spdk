@@ -61,7 +61,7 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define BUF_LARGE_POOL_SIZE	1024
 #define NOMEM_THRESHOLD_COUNT	8
 #define ZERO_BUFFER_SIZE	0x100000
-
+#define MAX_IO_CHANNEL          64
 typedef TAILQ_HEAD(, spdk_bdev_io) bdev_io_tailq_t;
 
 struct spdk_bdev_mgr {
@@ -1514,6 +1514,55 @@ spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 
 	*stat = channel->stat;
 	memset(&channel->stat, 0, sizeof(channel->stat));
+}
+
+static void
+spdk_bdev_get_device_stat_done(struct spdk_io_channel_iter *i, int status)
+{
+	static int iter = 0;
+
+	struct spdk_bdev_with_stat *bdev_with_stat = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_bdev *bdev = bdev_with_stat->bdev;
+	struct spdk_bdev_io_stat *stat = bdev_with_stat->stat;
+	void *ctx = bdev_with_stat->ctx;
+	void *arg = bdev_with_stat->arg;
+
+	iter++;
+	if (iter == bdev_with_stat->total_num) {
+		bdev_with_stat->pass_stat_fn(bdev, stat, ctx, arg, 1);
+		iter = 0;
+	} else {
+		bdev_with_stat->pass_stat_fn(bdev, stat, ctx, arg, 0);
+	}
+
+	free(stat);
+	free(bdev_with_stat);
+}
+
+static void
+spdk_bdev_get_each_channel_stat(struct spdk_io_channel_iter *i)
+{
+	struct spdk_bdev_with_stat *bdev_with_stat = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+
+	bdev_with_stat->stat->bytes_read    += channel->stat.bytes_read;
+	bdev_with_stat->stat->num_read_ops  += channel->stat.num_read_ops;
+	bdev_with_stat->stat->bytes_written += channel->stat.bytes_written;
+	bdev_with_stat->stat->num_write_ops += channel->stat.num_write_ops;
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+void
+spdk_bdev_get_device_stat(struct spdk_bdev_with_stat *bdev_with_stat)
+{
+	memset(bdev_with_stat->stat, 0, sizeof(struct spdk_bdev_io_stat));
+
+	spdk_for_each_channel(bdev_with_stat->bdev,
+			      spdk_bdev_get_each_channel_stat,
+			      bdev_with_stat,
+			      spdk_bdev_get_device_stat_done);
 }
 
 int
