@@ -1891,6 +1891,29 @@ _spdk_bdev_reset_freeze_channel(struct spdk_io_channel_iter *i)
 }
 
 static void
+_spdk_bdev_reset_freeze_qos_channel(void *ctx)
+{
+	struct spdk_bdev		*bdev = ctx;
+	struct spdk_bdev_mgmt_channel	*mgmt_channel = NULL;
+	struct spdk_bdev_channel	*qos_channel = bdev->qos_channel;
+	struct spdk_bdev_module_channel	*shared_ch = NULL;
+
+	if (qos_channel) {
+		shared_ch = qos_channel->module_ch;
+		mgmt_channel = spdk_io_channel_get_ctx(qos_channel->mgmt_channel);
+
+		qos_channel->flags |= BDEV_CH_RESET_IN_PROGRESS;
+
+		_spdk_bdev_abort_queued_io(&shared_ch->nomem_io, qos_channel);
+		_spdk_bdev_abort_queued_io(&qos_channel->qos_io, qos_channel);
+		_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_small, qos_channel);
+		_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_large, qos_channel);
+
+		qos_channel->io_submitted_this_timeslice = 0;
+	}
+}
+
+static void
 _spdk_bdev_start_reset(void *ctx)
 {
 	struct spdk_bdev_channel *ch = ctx;
@@ -1946,6 +1969,12 @@ spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	pthread_mutex_unlock(&bdev->mutex);
 
 	_spdk_bdev_channel_start_reset(channel);
+
+	/* Explicitly handle the QoS bdev channel as no IO channel associated */
+	if (bdev->qos_thread) {
+		spdk_thread_send_msg(bdev->qos_thread,
+				     _spdk_bdev_reset_freeze_qos_channel, bdev);
+	}
 
 	return 0;
 }
@@ -2153,6 +2182,17 @@ _spdk_bdev_io_complete(void *ctx)
 }
 
 static void
+_spdk_bdev_unfreeze_qos_channel(void *ctx)
+{
+	struct spdk_bdev	*bdev = ctx;
+
+	if (bdev->qos_channel) {
+		bdev->qos_channel->flags &= ~BDEV_CH_RESET_IN_PROGRESS;
+		assert(TAILQ_EMPTY(&bdev->qos_channel->queued_resets));
+	}
+}
+
+static void
 _spdk_bdev_reset_complete(struct spdk_io_channel_iter *i, int status)
 {
 	struct spdk_bdev_io *bdev_io = spdk_io_channel_iter_get_ctx(i);
@@ -2202,6 +2242,12 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 		pthread_mutex_unlock(&bdev->mutex);
 
 		if (unlock_channels) {
+			/* Explicitly handle the QoS bdev channel as no IO channel associated */
+			if (bdev->qos_thread) {
+				spdk_thread_send_msg(bdev->qos_thread,
+						     _spdk_bdev_unfreeze_qos_channel, bdev);
+			}
+
 			spdk_for_each_channel(__bdev_to_io_dev(bdev), _spdk_bdev_unfreeze_channel,
 					      bdev_io, _spdk_bdev_reset_complete);
 			return;
