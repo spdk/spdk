@@ -208,6 +208,15 @@ if __name__ == "__main__":
     p.set_defaults(func=get_bdevs_config)
 
     @call_cmd
+    def get_bdevs_iostat(args):
+        print_dict(rpc.bdev.get_bdevs_iostat(args.client, args))
+
+    p = subparsers.add_parser(
+        'get_bdevs_iostat', help='Display current I/O statistics of all the blockdevs or required blockdev.')
+    p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1", required=False)
+    p.set_defaults(func=get_bdevs_iostat)
+
+    @call_cmd
     def delete_bdev(args):
         rpc.bdev.delete_bdev(args.client, args)
 
