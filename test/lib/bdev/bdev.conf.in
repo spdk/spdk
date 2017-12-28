@@ -16,3 +16,6 @@
 
 [Ioat]
   Disable Yes
+
+[QoS]
+  Malloc0 20000
