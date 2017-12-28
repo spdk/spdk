@@ -1480,7 +1480,7 @@ spdk_bs_opts_init(struct spdk_bs_opts *opts)
 	opts->cluster_sz = SPDK_BLOB_OPTS_CLUSTER_SZ;
 	opts->num_md_pages = SPDK_BLOB_OPTS_NUM_MD_PAGES;
 	opts->max_md_ops = SPDK_BLOB_OPTS_MAX_MD_OPS;
-	opts->max_channel_ops = SPDK_BLOB_OPTS_MAX_CHANNEL_OPS;
+	opts->max_channel_ops = SPDK_BLOB_OPTS_DEFAULT_CHANNEL_OPS;
 	memset(&opts->bstype, 0, sizeof(opts->bstype));
 }
 
