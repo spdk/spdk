@@ -534,13 +534,11 @@ function vm_setup()
 	cmd+="-drive file=$os,if=none,id=os_disk ${eol}"
 	cmd+="-device ide-hd,drive=os_disk,bootindex=0 ${eol}"
 
-	IFS=':'
-
 	if ( [[ $disks == '' ]] && [[ $disk_type == virtio* ]] ); then
 		disks=1
 	fi
 
-	for disk in $disks; do
+	for disk in ${disks//:/ }; do
 		case $disk_type in
 			virtio)
 				local raw_name="RAWSCSI"
