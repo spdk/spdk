@@ -1516,6 +1516,22 @@ spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	memset(&channel->stat, 0, sizeof(channel->stat));
 }
 
+void
+spdk_bdev_get_device_stat(struct spdk_bdev *bdev,
+			  struct spdk_bdev_io_stat *stat)
+{
+	struct spdk_io_channel *ch;
+	struct spdk_bdev_channel *channel;
+
+	ch = spdk_get_io_channel(bdev);
+	channel = spdk_io_channel_get_ctx(ch);
+
+	stat->bytes_read    = channel->stat.bytes_read;
+	stat->num_read_ops  = channel->stat.num_read_ops;
+	stat->bytes_written = channel->stat.bytes_written;
+	stat->num_write_ops = channel->stat.num_write_ops;
+}
+
 int
 spdk_bdev_nvme_admin_passthru(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			      const struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes,
