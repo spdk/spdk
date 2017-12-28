@@ -84,7 +84,7 @@ if [[ $test_type =~ "spdk_vhost" ]]; then
 	notice ""
 	notice "running SPDK"
 	notice ""
-	$COMMON_DIR/run_vhost.sh $x --work-dir=$TEST_DIR --conf-dir=$BASE_DIR
+	spdk_vhost_run $BASE_DIR
 	notice ""
 fi
 
