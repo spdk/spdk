@@ -37,6 +37,84 @@
 #include "spdk_internal/bdev.h"
 
 static void
+spdk_rpc_pass_device_stat(struct spdk_bdev *bdev,
+			  struct spdk_bdev_io_stat *stat, void *ctx, void *arg, int status)
+{
+
+	struct spdk_jsonrpc_request *request = ctx;
+	struct spdk_json_write_ctx *w = arg;
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "name");
+	spdk_json_write_string(w, spdk_bdev_get_name(bdev));
+
+	spdk_json_write_name(w, "bytes_read");
+	spdk_json_write_uint64(w, stat->bytes_read);
+
+	spdk_json_write_name(w, "num_read_ops");
+	spdk_json_write_uint64(w, stat->num_read_ops);
+
+	spdk_json_write_name(w, "bytes_written");
+	spdk_json_write_uint64(w, stat->bytes_written);
+
+	spdk_json_write_name(w, "num_write_ops");
+	spdk_json_write_uint64(w, stat->num_write_ops);
+
+	spdk_json_write_object_end(w);
+
+	if (status) {
+		spdk_json_write_array_end(w);
+		spdk_jsonrpc_end_result(request, w);
+	}
+}
+
+static void
+spdk_rpc_get_bdev_io_stat(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
+{
+	int num = 0;
+	struct spdk_bdev *bdev = NULL;
+	struct spdk_bdev_with_stat *bdev_with_stat;
+	struct spdk_json_write_ctx *w;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "get_bdev_io_stat requires no parameters");
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_array_begin(w);
+
+	for (bdev = spdk_bdev_first(); bdev != NULL; bdev = spdk_bdev_next(bdev)) {
+		num++;
+	}
+
+	if (num == 0) {
+		spdk_json_write_array_end(w);
+		spdk_jsonrpc_end_result(request, w);
+		return;
+	}
+
+	for (bdev = spdk_bdev_first(); bdev != NULL; bdev = spdk_bdev_next(bdev)) {
+		bdev_with_stat = calloc(1, sizeof(struct spdk_bdev_with_stat));
+		bdev_with_stat->total_num = num;
+		bdev_with_stat->bdev = bdev;
+		bdev_with_stat->stat = calloc(1, sizeof(struct spdk_bdev_io_stat));
+		bdev_with_stat->pass_stat_fn = spdk_rpc_pass_device_stat;
+		bdev_with_stat->ctx = request;
+		bdev_with_stat->arg = w;
+		spdk_bdev_get_device_stat(bdev_with_stat);
+	}
+}
+SPDK_RPC_REGISTER("get_bdev_io_stat", spdk_rpc_get_bdev_io_stat)
+
+static void
 spdk_rpc_dump_bdev_info(struct spdk_json_write_ctx *w,
 			struct spdk_bdev *bdev)
 {
