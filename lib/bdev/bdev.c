@@ -134,13 +134,39 @@ struct spdk_bdev_channel {
 	struct spdk_io_channel	*channel;
 
 	/* Channel for the bdev manager */
-	struct spdk_io_channel *mgmt_channel;
+	struct spdk_io_channel	*mgmt_channel;
 
 	struct spdk_bdev_io_stat stat;
 
 	bdev_io_tailq_t		queued_resets;
 
 	uint32_t		flags;
+
+	/*
+	 * Rate limiting on this channel.
+	 * Queue of IO awaiting issue because of a QoS rate limiting happened
+	 *  on this channel.
+	 */
+	bdev_io_tailq_t		qos_io;
+
+	/*
+	 * Rate limiting on this channel.
+	 * Maximum allowed IOs to be issued in one millisecond and only valid
+	 *  for the master channel which manages the outstanding IOs.
+	 */
+	uint64_t		qos_max_ios_per_ms;
+
+	/*
+	 * Rate limiting on this channel.
+	 * Submitted IO in one millisecond.
+	 */
+	uint64_t		io_submitted_this_ms;
+
+	/*
+	 * Rate limiting on this channel.
+	 * Periodic running QoS poller in millisecond.
+	 */
+	struct spdk_poller	*qos_poller;
 
 	/* Per-device channel */
 	struct spdk_bdev_module_channel *module_ch;
@@ -910,6 +936,10 @@ _spdk_bdev_channel_create(struct spdk_bdev_channel *ch, void *io_device)
 
 	memset(&ch->stat, 0, sizeof(ch->stat));
 	TAILQ_INIT(&ch->queued_resets);
+	TAILQ_INIT(&ch->qos_io);
+	ch->qos_max_ios_per_ms = 0;
+	ch->io_submitted_this_ms = 0;
+	ch->qos_poller = NULL;
 	ch->flags = 0;
 	ch->module_ch = shared_ch;
 
@@ -1023,6 +1053,7 @@ _spdk_bdev_channel_destroy(struct spdk_bdev_channel *ch)
 	mgmt_channel = spdk_io_channel_get_ctx(ch->mgmt_channel);
 
 	_spdk_bdev_abort_queued_io(&ch->queued_resets, ch);
+	_spdk_bdev_abort_queued_io(&ch->qos_io, ch);
 	_spdk_bdev_abort_queued_io(&shared_ch->nomem_io, ch);
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_small, ch);
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_large, ch);
@@ -1598,6 +1629,7 @@ _spdk_bdev_reset_freeze_channel(struct spdk_io_channel_iter *i)
 	channel->flags |= BDEV_CH_RESET_IN_PROGRESS;
 
 	_spdk_bdev_abort_queued_io(&shared_ch->nomem_io, channel);
+	_spdk_bdev_abort_queued_io(&channel->qos_io, channel);
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_small, channel);
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_large, channel);
 
