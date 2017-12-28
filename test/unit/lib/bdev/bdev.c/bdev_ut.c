@@ -221,6 +221,35 @@ free_vbdev(struct spdk_bdev *bdev)
 }
 
 static void
+get_device_stat_cb(struct spdk_bdev *bdev, struct spdk_bdev_io_stat *stat, void *cb_arg, int rc)
+{
+	const char *bdev_name;
+
+	CU_ASSERT(bdev != NULL);
+	CU_ASSERT(rc == 0);
+
+	bdev_name = spdk_bdev_get_name(bdev);
+	CU_ASSERT_STRING_EQUAL(bdev_name, "bdev0");
+	free(stat);
+	free_bdev(bdev);
+}
+
+static void
+get_device_stat_test(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_io_stat *stat;
+
+	bdev = allocate_bdev("bdev0");
+	stat = calloc(1, sizeof(struct spdk_bdev_io_stat));
+	if (stat == NULL) {
+		free_bdev(bdev);
+		return;
+	}
+	spdk_bdev_get_device_stat(bdev, stat, get_device_stat_cb, NULL);
+}
+
+static void
 open_write_test(void)
 {
 	struct spdk_bdev *bdev[9];
@@ -543,7 +572,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "num_blocks_test", num_blocks_test) == NULL ||
 		CU_add_test(suite, "io_valid", io_valid_test) == NULL ||
 		CU_add_test(suite, "open_write", open_write_test) == NULL ||
-		CU_add_test(suite, "alias_add_del", alias_add_del_test) == NULL
+		CU_add_test(suite, "alias_add_del", alias_add_del_test) == NULL ||
+		CU_add_test(suite, "get_device_stat", get_device_stat_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
