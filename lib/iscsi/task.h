@@ -86,6 +86,12 @@ struct spdk_iscsi_task {
 
 	uint32_t tag;
 
+	/**
+	 * Record the lun id just in case the lun is invalid,
+	 * which will happen when hot removing the lun.
+	 */
+	int lun_id;
+
 	TAILQ_ENTRY(spdk_iscsi_task) link;
 
 	TAILQ_HEAD(subtask_list, spdk_iscsi_task) subtask_list;
