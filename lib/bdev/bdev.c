@@ -217,6 +217,12 @@ struct spdk_bdev_desc {
 	TAILQ_ENTRY(spdk_bdev_desc)	link;
 };
 
+struct spdk_bdev_iostat_ctx {
+	struct spdk_bdev_io_stat *stat;
+	spdk_bdev_get_device_stat_cb cb;
+	void *cb_arg;
+};
+
 #define __bdev_to_io_dev(bdev)		(((char *)bdev) + 1)
 #define __bdev_from_io_dev(io_dev)	((struct spdk_bdev *)(((char *)io_dev) - 1))
 
@@ -1966,6 +1972,59 @@ spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	channel->stat.ticks_rate = spdk_get_ticks_hz();
 	*stat = channel->stat;
 	memset(&channel->stat, 0, sizeof(channel->stat));
+}
+
+static void
+_spdk_bdev_get_device_stat_done(struct spdk_io_channel_iter *i, int status)
+{
+	void *io_device = spdk_io_channel_iter_get_io_device(i);
+	struct spdk_bdev_iostat_ctx *bdev_iostat_ctx = spdk_io_channel_iter_get_ctx(i);
+
+	bdev_iostat_ctx->cb(__bdev_from_io_dev(io_device), bdev_iostat_ctx->stat,
+			    bdev_iostat_ctx->cb_arg, 0);
+	free(bdev_iostat_ctx);
+}
+
+static void
+_spdk_bdev_get_each_channel_stat(struct spdk_io_channel_iter *i)
+{
+	struct spdk_bdev_iostat_ctx *bdev_iostat_ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+
+	bdev_iostat_ctx->stat->bytes_read += channel->stat.bytes_read;
+	bdev_iostat_ctx->stat->num_read_ops += channel->stat.num_read_ops;
+	bdev_iostat_ctx->stat->bytes_written += channel->stat.bytes_written;
+	bdev_iostat_ctx->stat->num_write_ops += channel->stat.num_write_ops;
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+void
+spdk_bdev_get_device_stat(struct spdk_bdev *bdev, struct spdk_bdev_io_stat *stat,
+			  spdk_bdev_get_device_stat_cb cb, void *cb_arg)
+{
+	struct spdk_bdev_iostat_ctx *bdev_iostat_ctx;
+
+	assert(bdev != NULL);
+	assert(stat != NULL);
+	assert(cb != NULL);
+
+	bdev_iostat_ctx = calloc(1, sizeof(struct spdk_bdev_iostat_ctx));
+	if (bdev_iostat_ctx == NULL) {
+		SPDK_ERRLOG("Unable to allocate memory for spdk_bdev_iostat_ctx\n");
+		cb(bdev, stat, cb_arg, -ENOMEM);
+		return;
+	}
+
+	bdev_iostat_ctx->stat = stat;
+	bdev_iostat_ctx->cb = cb;
+	bdev_iostat_ctx->cb_arg = cb_arg;
+
+	spdk_for_each_channel(__bdev_to_io_dev(bdev),
+			      _spdk_bdev_get_each_channel_stat,
+			      bdev_iostat_ctx,
+			      _spdk_bdev_get_device_stat_done);
 }
 
 int
