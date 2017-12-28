@@ -242,6 +242,21 @@ spdk_lvol_resize(struct spdk_lvol *lvol, size_t sz,  spdk_lvol_op_complete cb_fn
 	return 0;
 }
 
+int
+spdk_bdev_set_num_blocks(struct spdk_bdev *bdev, uint64_t size)
+{
+	int ret;
+
+	if (bdev->status == SPDK_BDEV_STATUS_READY) {
+		ret = -1;
+	} else {
+		bdev->blockcnt = size;
+		ret = 0;
+	}
+
+	return ret;
+}
+
 uint64_t
 spdk_bs_get_cluster_size(struct spdk_blob_store *bs)
 {

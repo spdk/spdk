@@ -280,6 +280,21 @@ spdk_bdev_module_finish_done(void)
 {
 }
 
+int
+spdk_bdev_set_num_blocks(struct spdk_bdev *bdev, uint64_t size)
+{
+	int ret;
+
+	if (bdev->status == SPDK_BDEV_STATUS_READY) {
+		ret = -1;
+	} else {
+		bdev->blockcnt = size;
+		ret = 0;
+	}
+
+	return ret;
+}
+
 static void
 ut_bdev_pmem_destruct(struct spdk_bdev *bdev)
 {

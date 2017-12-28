@@ -157,7 +157,12 @@ create_null_bdev(const char *name, uint64_t num_blocks, uint32_t block_size)
 
 	bdev->bdev.write_cache = 0;
 	bdev->bdev.blocklen = block_size;
-	bdev->bdev.blockcnt = num_blocks;
+	rc = spdk_bdev_set_num_blocks(&bdev->bdev, num_blocks);
+	if (rc != 0) {
+		SPDK_ERRLOG("Could not change num blocks for bdev_null.\n");
+		spdk_dma_free(bdev);
+		return NULL;
+	}
 
 	bdev->bdev.ctxt = bdev;
 	bdev->bdev.fn_table = &null_fn_table;
