@@ -1371,6 +1371,8 @@ spdk_bdev_scsi_readwrite(struct spdk_bdev *bdev,
 	uint32_t blen;
 	int rc;
 
+	task->data_transferred = 0;
+
 	if (task->dxfer_dir != SPDK_SCSI_DIR_NONE &&
 	    task->dxfer_dir != (is_read ? SPDK_SCSI_DIR_FROM_DEV : SPDK_SCSI_DIR_TO_DEV)) {
 		SPDK_ERRLOG("Incorrect data direction\n");
@@ -1430,12 +1432,7 @@ spdk_bdev_scsi_readwrite(struct spdk_bdev *bdev,
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
-	if (!is_read && task->parent) {
-		task->parent->data_transferred += task->length;
-	} else {
-		task->data_transferred += task->length;
-	}
-
+	task->data_transferred = task->length;
 	task->status = SPDK_SCSI_STATUS_GOOD;
 	return SPDK_SCSI_TASK_PENDING;
 }

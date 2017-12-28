@@ -594,7 +594,6 @@ lba_range_test(void)
 	to_be64(&cdb[2], 0); /* LBA */
 	to_be32(&cdb[10], 1); /* transfer length */
 	task.length = 1 * 512;
-	task.data_transferred = 0;
 	rc = spdk_bdev_scsi_execute(&bdev, &task);
 	CU_ASSERT(rc == SPDK_SCSI_TASK_PENDING);
 	CU_ASSERT(task.status == SPDK_SCSI_STATUS_GOOD);
@@ -603,7 +602,6 @@ lba_range_test(void)
 	to_be64(&cdb[2], 4); /* LBA */
 	to_be32(&cdb[10], 1); /* transfer length */
 	task.length = 1 * 512;
-	task.data_transferred = 0;
 	rc = spdk_bdev_scsi_execute(&bdev, &task);
 	CU_ASSERT(rc == SPDK_SCSI_TASK_COMPLETE);
 	CU_ASSERT(task.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
@@ -613,7 +611,6 @@ lba_range_test(void)
 	to_be64(&cdb[2], 0); /* LBA */
 	to_be32(&cdb[10], 4); /* transfer length */
 	task.length = 4 * 512;
-	task.data_transferred = 0;
 	rc = spdk_bdev_scsi_execute(&bdev, &task);
 	CU_ASSERT(rc == SPDK_SCSI_TASK_PENDING);
 	CU_ASSERT(task.status == SPDK_SCSI_STATUS_GOOD);
@@ -622,7 +619,6 @@ lba_range_test(void)
 	to_be64(&cdb[2], 0); /* LBA */
 	to_be32(&cdb[10], 5); /* transfer length */
 	task.length = 5 * 512;
-	task.data_transferred = 0;
 	rc = spdk_bdev_scsi_execute(&bdev, &task);
 	CU_ASSERT(rc == SPDK_SCSI_TASK_COMPLETE);
 	CU_ASSERT(task.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
@@ -652,7 +648,6 @@ xfer_len_test(void)
 	to_be64(&cdb[2], 0); /* LBA */
 	to_be32(&cdb[10], 1); /* transfer length */
 	task.length = 1 * 512;
-	task.data_transferred = 0;
 	rc = spdk_bdev_scsi_execute(&bdev, &task);
 	CU_ASSERT(rc == SPDK_SCSI_TASK_PENDING);
 	CU_ASSERT(task.status == SPDK_SCSI_STATUS_GOOD);
@@ -661,7 +656,6 @@ xfer_len_test(void)
 	to_be64(&cdb[2], 0); /* LBA */
 	to_be32(&cdb[10], SPDK_WORK_BLOCK_SIZE / 512); /* transfer length */
 	task.length = SPDK_WORK_BLOCK_SIZE;
-	task.data_transferred = 0;
 	rc = spdk_bdev_scsi_execute(&bdev, &task);
 	CU_ASSERT(rc == SPDK_SCSI_TASK_PENDING);
 	CU_ASSERT(task.status == SPDK_SCSI_STATUS_GOOD);
@@ -670,7 +664,6 @@ xfer_len_test(void)
 	to_be64(&cdb[2], 0); /* LBA */
 	to_be32(&cdb[10], SPDK_WORK_BLOCK_SIZE / 512 + 1); /* transfer length */
 	task.length = SPDK_WORK_BLOCK_SIZE + 512;
-	task.data_transferred = 0;
 	rc = spdk_bdev_scsi_execute(&bdev, &task);
 	CU_ASSERT(rc == SPDK_SCSI_TASK_COMPLETE);
 	CU_ASSERT(task.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
@@ -681,7 +674,6 @@ xfer_len_test(void)
 	to_be64(&cdb[2], 0); /* LBA */
 	to_be32(&cdb[10], 0); /* transfer length */
 	task.length = 0;
-	task.data_transferred = 0;
 	rc = spdk_bdev_scsi_execute(&bdev, &task);
 	CU_ASSERT(rc == SPDK_SCSI_TASK_COMPLETE);
 	CU_ASSERT(task.status == SPDK_SCSI_STATUS_GOOD);
@@ -691,7 +683,6 @@ xfer_len_test(void)
 	to_be64(&cdb[2], g_test_bdev_num_blocks); /* LBA */
 	to_be32(&cdb[10], 0); /* transfer length */
 	task.length = 0;
-	task.data_transferred = 0;
 	rc = spdk_bdev_scsi_execute(&bdev, &task);
 	CU_ASSERT(rc == SPDK_SCSI_TASK_COMPLETE);
 	CU_ASSERT(task.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
