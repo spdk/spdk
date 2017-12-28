@@ -12,6 +12,7 @@
 
 - @ref userspace
 - @ref memory
+- @ref concurrency
 - @ref porting
 
 # User Guides {#user_guides}
