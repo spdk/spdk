@@ -1719,6 +1719,32 @@ _spdk_bdev_reset_freeze_channel(struct spdk_io_channel_iter *i)
 }
 
 static void
+_spdk_bdev_reset_freeze_qos_channel(struct spdk_bdev *bdev)
+{
+	struct spdk_bdev_mgmt_channel	*mgmt_channel = NULL;
+	struct spdk_bdev_channel	*channel = NULL;
+
+	if (bdev->qos_channel) {
+		channel = bdev->qos_channel;
+		mgmt_channel = spdk_io_channel_get_ctx(channel->mgmt_channel);
+
+		channel->flags |= BDEV_CH_RESET_IN_PROGRESS;
+
+		_spdk_bdev_abort_queued_io(&channel->nomem_io, channel);
+		_spdk_bdev_abort_queued_io(&channel->qos_io, channel);
+		_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_small, channel);
+		_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_large, channel);
+
+		if (channel->qos_poller) {
+			spdk_thread_send_msg(bdev->qos_thread, spdk_bdev_qos_unregister_poller,
+					     channel->qos_poller);
+		}
+		channel->io_completed_per_ms = 0;
+	}
+
+}
+
+static void
 _spdk_bdev_start_reset(void *ctx)
 {
 	struct spdk_bdev_channel *ch = ctx;
@@ -1774,6 +1800,9 @@ spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	pthread_mutex_unlock(&bdev->mutex);
 
 	_spdk_bdev_channel_start_reset(channel);
+
+	/* Explicitly handle the QoS bdev channel as no IO channel associated */
+	_spdk_bdev_reset_freeze_qos_channel(bdev);
 
 	return 0;
 }
@@ -1977,6 +2006,17 @@ _spdk_bdev_io_complete(void *ctx)
 }
 
 static void
+_spdk_bdev_unfreeze_qos_channel(struct spdk_bdev *bdev)
+{
+	if (bdev->qos_channel) {
+		bdev->qos_channel->flags &= ~BDEV_CH_RESET_IN_PROGRESS;
+		assert(TAILQ_EMPTY(&bdev->qos_channel->queued_resets));
+		spdk_thread_send_msg(bdev->qos_thread, spdk_bdev_qos_register_poller,
+				     bdev->qos_channel);
+	}
+}
+
+static void
 _spdk_bdev_reset_complete(struct spdk_io_channel_iter *i, int status)
 {
 	struct spdk_bdev_io *bdev_io = spdk_io_channel_iter_get_ctx(i);
@@ -2025,6 +2065,9 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 		pthread_mutex_unlock(&bdev->mutex);
 
 		if (unlock_channels) {
+			/* Explicitly handle the QoS bdev channel as no IO channel associated */
+			_spdk_bdev_unfreeze_qos_channel(bdev);
+
 			spdk_for_each_channel(bdev, _spdk_bdev_unfreeze_channel, bdev_io,
 					      _spdk_bdev_reset_complete);
 			return;
