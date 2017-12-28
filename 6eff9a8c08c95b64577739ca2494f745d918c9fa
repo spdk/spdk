@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "92a78f46_a3f045b9",
+        "filename": "test/lib/ut_multithread.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-28T07:35:39Z",
+      "side": 1,
+      "message": "you may separate poll_thread into poll_thread_msg and poll_thread_poller. this is related with the below comment.",
+      "range": {
+        "startLine": 214,
+        "startChar": 11,
+        "endLine": 214,
+        "endChar": 22
+      },
+      "revId": "6eff9a8c08c95b64577739ca2494f745d918c9fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bc772cff_32596c59",
+        "filename": "test/lib/ut_multithread.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-28T07:35:39Z",
+      "side": 1,
+      "message": "This exit condition is for message processing. (if at least a message is processed in any poll_thread, poll_threads() will continue.)\n\nIf poller processing is added, we should define exit condition for poller too.\ne.g. poller is not found in any thread?\n\nHow do you think?",
+      "range": {
+        "startLine": 220,
+        "startChar": 0,
+        "endLine": 222,
+        "endChar": 3
+      },
+      "revId": "6eff9a8c08c95b64577739ca2494f745d918c9fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
