@@ -86,11 +86,7 @@ function blk_ro_tc1()
 	notice "Creating vhost_blk controller"
 	vhost_blk_name="naa.$disk_name.$vm_no"
 	$rpc_py construct_vhost_blk_controller $vhost_blk_name $disk_name
-	setup_cmd="$COMMON_DIR/vm_setup.sh $x --work-dir=$TEST_DIR --test-type=spdk_vhost_blk"
-	setup_cmd+=" -f $vm_no"
-	setup_cmd+=" --os=$vm_img"
-	setup_cmd+=" --disk=$disk"
-	$setup_cmd
+	vm_setup --disk-type=spdk_vhost_blk --force=$vm_no --os=$vm_img --disks=$disk"
 
 	vm_run $vm_no
 	vm_wait_for_boot 600 $vm_no
