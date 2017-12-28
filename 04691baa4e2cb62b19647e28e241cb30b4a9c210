@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba93253d_252c290b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1536,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-28T16:41:43Z",
+      "side": 1,
+      "message": "Accessing the channel context from a different thread than the one that owns the channel is not safe.\n\nWe should instead use spdk_for_each_thread() and make this an asynchronous function with a completion callback that reports the final statistics.  The RPC layer has support for asynchronously completing RPC methods, so you can just pass along a pointer to the accumulated I/O statistics and the spdk_jsonrpc_request object to complete when implementing the RPC.\n\nThat would also mean this could be implemented without adding the new (unsafe) spdk_io_channel_get_all() function.",
+      "revId": "04691baa4e2cb62b19647e28e241cb30b4a9c210",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d5295baf_c4837da0",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-28T16:41:43Z",
+      "side": 1,
+      "message": "state -\u003e stat or statistics",
+      "range": {
+        "startLine": 40,
+        "startChar": 19,
+        "endLine": 40,
+        "endChar": 24
+      },
+      "revId": "04691baa4e2cb62b19647e28e241cb30b4a9c210",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a4f2c9e7_f2920936",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-28T16:41:43Z",
+      "side": 1,
+      "message": "It might be good to allow an optional bdev name parameter in the same way as get_bdevs, but that can be added later.",
+      "revId": "04691baa4e2cb62b19647e28e241cb30b4a9c210",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "342c2f82_a43e047b",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-28T16:41:43Z",
+      "side": 1,
+      "message": "Maybe \"get_bdev_io_statistics\" so it\u0027s clear that this is about bdevs.",
+      "range": {
+        "startLine": 95,
+        "startChar": 19,
+        "endLine": 95,
+        "endChar": 36
+      },
+      "revId": "04691baa4e2cb62b19647e28e241cb30b4a9c210",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
