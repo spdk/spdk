@@ -240,7 +240,8 @@ spdk_vhost_scsi_task_cpl(struct spdk_scsi_task *scsi_task)
 		memcpy(task->resp->sense, task->scsi.sense_data, task->scsi.sense_data_len);
 		task->resp->sense_len = task->scsi.sense_data_len;
 	}
-	task->resp->resid = task->scsi.transfer_len - task->scsi.data_transferred;
+	assert(task->scsi.transfer_len == task->scsi.length);
+	task->resp->resid = task->scsi.length - task->scsi.data_transferred;
 
 	submit_completion(task);
 }
