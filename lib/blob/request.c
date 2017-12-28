@@ -110,6 +110,7 @@ spdk_bs_sequence_start(struct spdk_io_channel *_channel,
 
 	set = TAILQ_FIRST(&channel->reqs);
 	if (!set) {
+		SPDK_ERRLOG("Unable to allocate requests from channel=%p\n", channel);
 		return NULL;
 	}
 	TAILQ_REMOVE(&channel->reqs, set, link);
@@ -284,6 +285,7 @@ spdk_bs_batch_open(struct spdk_io_channel *_channel,
 
 	set = TAILQ_FIRST(&channel->reqs);
 	if (!set) {
+		SPDK_ERRLOG("Unable to allocate requests from channel=%p\n", channel);
 		return NULL;
 	}
 	TAILQ_REMOVE(&channel->reqs, set, link);
