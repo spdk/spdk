@@ -1415,9 +1415,6 @@ spdk_bdev_scsi_sync(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 		    uint64_t lba, uint32_t num_blocks)
 {
 	uint64_t bdev_num_blocks;
-	uint64_t blen;
-	uint64_t offset;
-	uint64_t nbytes;
 	int rc;
 
 	if (num_blocks == 0) {
@@ -1425,9 +1422,6 @@ spdk_bdev_scsi_sync(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 	}
 
 	bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
-	blen = spdk_bdev_get_block_size(bdev);
-	offset = lba * blen;
-	nbytes = num_blocks * blen;
 
 	if (lba >= bdev_num_blocks || num_blocks > bdev_num_blocks ||
 	    lba > (bdev_num_blocks - num_blocks)) {
@@ -1439,11 +1433,11 @@ spdk_bdev_scsi_sync(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
-	rc = spdk_bdev_flush(task->desc, task->ch, offset, nbytes,
-			     spdk_bdev_scsi_task_complete_cmd, task);
+	rc = spdk_bdev_flush_blocks(task->desc, task->ch, lba, num_blocks,
+				    spdk_bdev_scsi_task_complete_cmd, task);
 
 	if (rc) {
-		SPDK_ERRLOG("spdk_bdev_flush() failed\n");
+		SPDK_ERRLOG("spdk_bdev_flush_blocks() failed\n");
 		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 					  SPDK_SCSI_SENSE_NO_SENSE,
 					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
