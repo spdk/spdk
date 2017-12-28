@@ -515,7 +515,11 @@ lvol_op_comp(void *cb_arg, int bserrno)
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(task);
 
 	if (bserrno != 0) {
-		task->status = SPDK_BDEV_IO_STATUS_FAILED;
+		if (bserrno == -ENOMEM) {
+			task->status  = SPDK_BDEV_IO_STATUS_NOMEM);
+		} else {
+			task->status = SPDK_BDEV_IO_STATUS_FAILED;
+		}
 	}
 
 	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Vbdev processing callback on device %s with type %d\n",
