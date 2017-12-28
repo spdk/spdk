@@ -37,6 +37,64 @@
 #include "spdk_internal/bdev.h"
 
 static void
+spdk_rpc_dump_bdev_state(struct spdk_json_write_ctx *w,
+			 struct spdk_bdev *bdev)
+{
+	struct spdk_bdev_io_stat stat;
+
+	spdk_bdev_get_device_stat(bdev, &stat);
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "name");
+	spdk_json_write_string(w, spdk_bdev_get_name(bdev));
+
+	spdk_json_write_name(w, "bytes_read");
+	spdk_json_write_uint64(w, stat.bytes_read);
+
+	spdk_json_write_name(w, "num_read_ops");
+	spdk_json_write_uint64(w, stat.num_read_ops);
+
+	spdk_json_write_name(w, "bytes_written");
+	spdk_json_write_uint64(w, stat.bytes_written);
+
+	spdk_json_write_name(w, "num_write_ops");
+	spdk_json_write_uint64(w, stat.num_write_ops);
+
+	spdk_json_write_object_end(w);
+}
+
+static void
+spdk_rpc_get_io_statistics(struct spdk_jsonrpc_request *request,
+			   const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+	struct spdk_bdev *bdev = NULL;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "get_io_statistics requires no parameters");
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_array_begin(w);
+
+	for (bdev = spdk_bdev_first(); bdev != NULL; bdev = spdk_bdev_next(bdev)) {
+		spdk_rpc_dump_bdev_state(w, bdev);
+	}
+
+	spdk_json_write_array_end(w);
+
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("get_io_statistics", spdk_rpc_get_io_statistics)
+
+static void
 spdk_rpc_dump_bdev_info(struct spdk_json_write_ctx *w,
 			struct spdk_bdev *bdev)
 {

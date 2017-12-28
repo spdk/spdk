@@ -661,3 +661,21 @@ end:
 
 	spdk_thread_send_msg(i->orig_thread, _call_completion, i);
 }
+
+int
+spdk_io_channel_get_all(void *io_device, struct spdk_io_channel **ch_array)
+{
+	int iter = 0;
+	struct spdk_thread *thread;
+	struct spdk_io_channel *ch;
+
+	TAILQ_FOREACH(thread, &g_threads, tailq) {
+		TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
+			if (ch->dev->io_device == io_device) {
+				ch_array[iter++] = ch;
+			}
+		}
+	}
+
+	return iter;
+}
