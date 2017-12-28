@@ -76,6 +76,13 @@ def get_bdevs(args):
     print_dict(args.client.call('get_bdevs', params))
 
 
+def get_bdevs_iostat(args):
+    params = {}
+    if args.name:
+        params['name'] = args.name
+    print_dict(args.client.call('get_bdevs_iostat', params))
+
+
 def delete_bdev(args):
     params = {'name': args.bdev_name}
     args.client.call('delete_bdev', params, verbose=args.verbose)

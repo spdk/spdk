@@ -1647,6 +1647,49 @@ spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	memset(&channel->stat, 0, sizeof(channel->stat));
 }
 
+static void
+spdk_bdev_get_device_stat_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_bdev *bdev = spdk_io_channel_iter_get_io_device(i);
+	struct spdk_bdev_ctx *bdev_ctx = spdk_io_channel_iter_get_ctx(i);
+
+	bdev_ctx->cb(bdev, bdev_ctx->stat, bdev_ctx->cb_arg);
+	free(bdev_ctx->stat);
+	free(bdev_ctx);
+}
+
+static void
+spdk_bdev_get_each_channel_stat(struct spdk_io_channel_iter *i)
+{
+	struct spdk_bdev_ctx *bdev_ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+
+	bdev_ctx->stat->bytes_read    += channel->stat.bytes_read;
+	bdev_ctx->stat->num_read_ops  += channel->stat.num_read_ops;
+	bdev_ctx->stat->bytes_written += channel->stat.bytes_written;
+	bdev_ctx->stat->num_write_ops += channel->stat.num_write_ops;
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+void
+spdk_bdev_get_device_stat(struct spdk_bdev *bdev,
+			  spdk_bdev_get_device_stat_cb cb, void *cb_arg)
+{
+	struct spdk_bdev_io_stat *stat = calloc(1, sizeof(struct spdk_bdev_io_stat));
+	struct spdk_bdev_ctx *bdev_ctx = calloc(1, sizeof(struct spdk_bdev_ctx));
+
+	bdev_ctx->stat = stat;
+	bdev_ctx->cb = cb;
+	bdev_ctx->cb_arg = cb_arg;
+
+	spdk_for_each_channel(bdev,
+			      spdk_bdev_get_each_channel_stat,
+			      bdev_ctx,
+			      spdk_bdev_get_device_stat_done);
+}
+
 int
 spdk_bdev_nvme_admin_passthru(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			      const struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes,

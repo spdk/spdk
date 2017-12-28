@@ -393,6 +393,12 @@ struct spdk_bdev_io {
 	/* No members may be added after driver_ctx! */
 };
 
+struct spdk_bdev_ctx {
+	struct spdk_bdev_io_stat *stat;
+	spdk_bdev_get_device_stat_cb cb;
+	void *cb_arg;
+};
+
 int spdk_bdev_register(struct spdk_bdev *bdev);
 void spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg);
 void spdk_bdev_unregister_done(struct spdk_bdev *bdev, int bdeverrno);

@@ -37,6 +37,149 @@
 
 #include "spdk_internal/bdev.h"
 
+struct rpc_get_bdevs_iostat_ctx {
+	int bdev_num;
+	struct spdk_jsonrpc_request *request;
+	struct spdk_json_write_ctx *w;
+	pthread_mutex_t mutex;
+};
+
+static void
+spdk_rpc_get_bdevs_iostat_cb(struct spdk_bdev *bdev,
+			     const struct spdk_bdev_io_stat *stat, void *cb_arg)
+{
+	static int iter = 0;
+	struct rpc_get_bdevs_iostat_ctx *ctx = cb_arg;
+	struct spdk_jsonrpc_request *request = ctx->request;
+	struct spdk_json_write_ctx *w = ctx->w;
+
+	pthread_mutex_lock(&ctx->mutex);
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "name");
+	spdk_json_write_string(w, spdk_bdev_get_name(bdev));
+
+	spdk_json_write_name(w, "bytes_read");
+	spdk_json_write_uint64(w, stat->bytes_read);
+
+	spdk_json_write_name(w, "num_read_ops");
+	spdk_json_write_uint64(w, stat->num_read_ops);
+
+	spdk_json_write_name(w, "bytes_written");
+	spdk_json_write_uint64(w, stat->bytes_written);
+
+	spdk_json_write_name(w, "num_write_ops");
+	spdk_json_write_uint64(w, stat->num_write_ops);
+
+	spdk_json_write_object_end(w);
+	if (++iter == ctx->bdev_num) {
+		spdk_json_write_array_end(w);
+		spdk_jsonrpc_end_result(request, w);
+		iter = 0;
+		pthread_mutex_unlock(&ctx->mutex);
+		pthread_mutex_destroy(&ctx->mutex);
+		free(ctx);
+		return;
+	}
+	pthread_mutex_unlock(&ctx->mutex);
+}
+
+struct rpc_get_bdevs_iostat {
+	char *name;
+};
+
+static void
+free_rpc_get_bdevs_iostat(struct rpc_get_bdevs_iostat *r)
+{
+	free(r->name);
+}
+
+static const struct spdk_json_object_decoder rpc_get_bdevs_iostat_decoders[] = {
+	{"name", offsetof(struct rpc_get_bdevs_iostat, name), spdk_json_decode_string},
+};
+
+static void
+spdk_rpc_get_bdevs_iostat(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
+{
+	int bdev_num = 0;
+	struct rpc_get_bdevs_iostat req = {};
+	struct spdk_bdev *bdev = NULL;
+	struct spdk_json_write_ctx *w;
+	struct rpc_get_bdevs_iostat_ctx *ctx;
+
+	if (params != NULL) {
+		if (spdk_json_decode_object(params, rpc_get_bdevs_iostat_decoders,
+					    SPDK_COUNTOF(rpc_get_bdevs_iostat_decoders),
+					    &req)) {
+			SPDK_ERRLOG("spdk_json_decode_object failed\n");
+			goto invalid;
+		} else {
+			if (req.name == NULL) {
+				SPDK_ERRLOG("missing name param\n");
+				goto invalid;
+			}
+
+			bdev = spdk_bdev_get_by_name(req.name);
+			if (bdev == NULL) {
+				SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
+				goto invalid;
+			}
+
+			free_rpc_get_bdevs_iostat(&req);
+		}
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_array_begin(w);
+
+	if (bdev != NULL) {
+		bdev_num++;
+	} else {
+		for (bdev = spdk_bdev_first(); bdev != NULL; bdev = spdk_bdev_next(bdev)) {
+			bdev_num++;
+		}
+	}
+
+	if (bdev_num == 0) {
+		spdk_json_write_array_end(w);
+		spdk_jsonrpc_end_result(request, w);
+		return;
+	}
+
+	ctx = calloc(1, sizeof(struct rpc_get_bdevs_iostat_ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("Filed to allocate rpc_get_bdevs_iostat_ctx struct\n");
+		spdk_json_write_array_end(w);
+		spdk_jsonrpc_end_result(request, w);
+		return;
+	}
+
+	ctx->bdev_num = bdev_num;
+	ctx->request = request;
+	ctx->w = w;
+	pthread_mutex_init(&ctx->mutex, NULL);
+
+	if (bdev != NULL) {
+		spdk_bdev_get_device_stat(bdev, spdk_rpc_get_bdevs_iostat_cb, ctx);
+	} else {
+		for (bdev = spdk_bdev_first(); bdev != NULL; bdev = spdk_bdev_next(bdev)) {
+			spdk_bdev_get_device_stat(bdev, spdk_rpc_get_bdevs_iostat_cb, ctx);
+		}
+	}
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+
+	free_rpc_get_bdevs_iostat(&req);
+}
+SPDK_RPC_REGISTER("get_bdevs_iostat", spdk_rpc_get_bdevs_iostat)
+
 static void
 spdk_rpc_dump_bdev_info(struct spdk_json_write_ctx *w,
 			struct spdk_bdev *bdev)
