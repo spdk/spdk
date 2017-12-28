@@ -139,6 +139,54 @@ Example response:
 }
 ~~~
 
+## get_bdevs_iostat {#rpc_get_bdevs}
+
+Get I/O statistics of block devices (bdevs).
+
+### Parameters
+
+The user may specify no parameters in order to list all block devices, or a block device may be
+specified by name.
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Optional | string      | Block device name
+
+### Response
+
+The response is an array of objects containing I/O statistic of the requested block devices.
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "get_bdevs_iostat",
+  "params": {
+    "name": "Nvme0n1"
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "name": "Nvme0n1",
+      "bytes_read": 34051522560,
+      "num_read_ops": 8312910,
+      "bytes_written": 0,
+      "num_write_ops": 0
+    }
+  ]
+}
+~~~
+
 ## delete_bdev {#rpc_delete_bdev}
 
 Unregister a block device.

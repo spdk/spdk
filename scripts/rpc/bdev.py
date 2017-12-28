@@ -111,6 +111,13 @@ def get_bdevs_config(client, args):
     return client.call('get_bdevs_config', params)
 
 
+def get_bdevs_iostat(client, args):
+    params = {}
+    if args.name:
+        params['name'] = args.name
+    return client.call('get_bdevs_iostat', params)
+
+
 def delete_bdev(client, args):
     params = {'name': args.bdev_name}
     return client.call('delete_bdev', params)
