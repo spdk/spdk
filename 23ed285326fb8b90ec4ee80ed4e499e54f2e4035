@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "46395c13_3b869690",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2250,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-29T11:53:47Z",
+      "side": 1,
+      "message": "Warning message should be collected if the specified value is less than allowed.",
+      "range": {
+        "startLine": 2249,
+        "startChar": 23,
+        "endLine": 2250,
+        "endChar": 42
+      },
+      "revId": "23ed285326fb8b90ec4ee80ed4e499e54f2e4035",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27d9c8e8_ea95430d",
+        "filename": "test/lib/bdev/bdev.conf.in",
+        "patchSetId": 1
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-29T11:53:47Z",
+      "side": 1,
+      "message": "Any comment will be helpful\nFor example \"QoS section defines IOPS Limit.\"\n\nIs it possible to specify Unlimited or -1 (\u003dUnlimited)?",
+      "range": {
+        "startLine": 20,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 5
+      },
+      "revId": "23ed285326fb8b90ec4ee80ed4e499e54f2e4035",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
