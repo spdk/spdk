@@ -45,30 +45,87 @@
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
+#include <uuid/uuid.h>
+
 static bool
 spdk_nvmf_valid_nqn(const char *nqn)
 {
 	size_t len;
+	uuid_t uuid_value;
+	uint i;
+	const uint SPDK_NVMF_NQN_MIN_LEN = 11;
+	const uint UUID_PREFIX_LEN = 32;
+	const uint UUID_STRING_LEN = 36;
+	char uuid_cmp_buffer[UUID_STRING_LEN];
+	char *uuid_prefix = "nqn.2014-08.org.nvmexpress:uuid:";
+	bool matches_uuid_prefix = true;
 
+	/* Check for length requirements */
 	len = strlen(nqn);
 	if (len > SPDK_NVMF_NQN_MAX_LEN) {
 		SPDK_ERRLOG("Invalid NQN \"%s\": length %zu > max %d\n", nqn, len, SPDK_NVMF_NQN_MAX_LEN);
 		return false;
 	}
 
+	/* The nqn must be at least as long as SPDK_NVMF_NQN_MIN_LEN to contain the necessary prefix. */
+	if (len < SPDK_NVMF_NQN_MIN_LEN) {
+		SPDK_ERRLOG("Invalid NQN \"%s\": length %zu < min %d\n", nqn, len, SPDK_NVMF_NQN_MIN_LEN);
+		return false;
+	}
+
+	/* Check for equality with the generic nqn structure of the form "nqn.2014-08.org.nvmexpress:uuid:11111111-2222-3333-4444-555555555555" */
+	if (len >= UUID_PREFIX_LEN) {
+		i = 0;
+		while (i < UUID_PREFIX_LEN && matches_uuid_prefix) {
+			if (nqn[i] != uuid_prefix[i]) {
+				matches_uuid_prefix = false;
+			}
+			i++;
+		}
+
+		if (matches_uuid_prefix) {
+			if (len != UUID_PREFIX_LEN + UUID_STRING_LEN) {
+				SPDK_ERRLOG("Invalid NQN \"%s\": uuid is not the correct length\n", nqn);
+				return false;
+			}
+
+			snprintf(uuid_cmp_buffer, UUID_STRING_LEN + 1, "%s", &nqn[UUID_PREFIX_LEN]);
+			if (uuid_parse(uuid_cmp_buffer, uuid_value) == -1) {
+				SPDK_ERRLOG("Invalid NQN \"%s\": uuid is not formatted correctly\n", nqn);
+				return false;
+			}
+			return true;
+		}
+	}
+
+	/* If the nqn does not match the uuid structure, check for the form "nqn.yyyy-mm.reverse.domain:user-string" */
 	if (strncmp(nqn, "nqn.", 4) != 0) {
 		SPDK_ERRLOG("Invalid NQN \"%s\": NQN must begin with \"nqn.\".\n", nqn);
 		return false;
 	}
 
-	/* yyyy-mm. */
+	/* Check for yyyy-mm. */
 	if (!(isdigit(nqn[4]) && isdigit(nqn[5]) && isdigit(nqn[6]) && isdigit(nqn[7]) &&
 	      nqn[8] == '-' && isdigit(nqn[9]) && isdigit(nqn[10]) && nqn[11] == '.')) {
 		SPDK_ERRLOG("Invalid date code in NQN \"%s\"\n", nqn);
 		return false;
 	}
 
-	return true;
+	/* Check for valid reverse domain (i.e. something.something) */
+	i = 12;
+	while (i < len && nqn[i] != '.') {
+		i++;
+	}
+
+	/* Check for user defined colon prefixed string */
+	while (i < len) {
+		if (nqn[i] == ':' && i < len - 1) {
+			return true;
+		}
+		i++;
+	}
+
+	return false;
 }
 
 static void
