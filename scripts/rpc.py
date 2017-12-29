@@ -602,7 +602,6 @@ p = subparsers.add_parser('get_bdevs', help='Display current blockdev list or re
 p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1", required=False)
 p.set_defaults(func=get_bdevs)
 
-
 def delete_bdev(args):
     params = {'name': args.bdev_name}
     jsonrpc_call('delete_bdev', params)
@@ -610,6 +609,18 @@ def delete_bdev(args):
 p = subparsers.add_parser('delete_bdev', help='Delete a blockdev')
 p.add_argument('bdev_name', help='Blockdev name to be deleted. Example: Malloc0.')
 p.set_defaults(func=delete_bdev)
+
+def enable_bdev_qos(args):
+    params = {
+        'name': args.bdev_name,
+        'ios_per_sec': args.ios_per_sec
+    }
+    jsonrpc_call('enable_bdev_qos', params)
+
+p = subparsers.add_parser('enable_bdev_qos', help='Enable the QoS on a blockdev')
+p.add_argument('bdev_name', help='Blockdev name to enable QoS. Example: Malloc0.')
+p.add_argument('ios_per_sec', help='Expected IOs per second (>=1000). Example: 20000', type=int)
+p.set_defaults(func=enable_bdev_qos)
 
 def start_nbd_disk(args):
     params = {
