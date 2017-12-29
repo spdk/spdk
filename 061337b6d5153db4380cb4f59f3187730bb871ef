@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e4cdc89f_e56263eb",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 983,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-29T21:06:41Z",
+      "side": 1,
+      "message": "Different descriptors can be open for the same bdev and they\u0027ll all use the same I/O channel. Further, this will just get the I/O channel for the current thread, but the user is free to submit I/O on another channel but with this same descriptor. Finally, if you never call spdk_put_io_channel you\u0027ll never release your ref count on the channel and it will never be destroyed.\n\nPutting the rate limitations on the channel does not seem viable to me. I think it either needs to be in the bdev or in the descriptor. We\u0027ll then have to figure out how to make it thread safe to access.",
+      "revId": "061337b6d5153db4380cb4f59f3187730bb871ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
