@@ -22,6 +22,30 @@
       "revId": "45a0cf80ce7fe1c3de0567aac501726f7952e55a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a3f9484_10d5754b",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 528,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-12-29T00:50:03Z",
+      "side": 1,
+      "message": "I do not know for other third party TCP/IP will need or this, may remove the comments for safety. The reason is that libuns is not officially supported by SPDK any more. For the code, we may still keep it since the default function does nothing.",
+      "parentUuid": "8fbc2093_d6dde80e",
+      "range": {
+        "startLine": 528,
+        "startChar": 1,
+        "endLine": 528,
+        "endChar": 57
+      },
+      "revId": "45a0cf80ce7fe1c3de0567aac501726f7952e55a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
