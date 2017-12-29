@@ -213,6 +213,12 @@ static struct spdk_bdev_fn_table vbdev_error_fn_table = {
 	.dump_config_json	= vbdev_error_dump_config_json,
 };
 
+static void
+spdk_vbdev_error_base_bdev_hotremove_cb(void *_base_bdev)
+{
+	spdk_bdev_part_base_hotremove(_base_bdev, &g_error_disks);
+}
+
 int
 spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 {
@@ -227,7 +233,8 @@ spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 		return -1;
 	}
 
-	rc = spdk_bdev_part_base_construct(base, base_bdev, NULL,
+	rc = spdk_bdev_part_base_construct(base, base_bdev,
+					   spdk_vbdev_error_base_bdev_hotremove_cb,
 					   SPDK_GET_BDEV_MODULE(error), &vbdev_error_fn_table,
 					   &g_error_disks, spdk_error_free_base,
 					   sizeof(struct error_channel), NULL, NULL);
