@@ -88,6 +88,13 @@ if __name__ == "__main__":
     p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1", required=False)
     p.set_defaults(func=rpc.bdev.get_bdevs)
 
+    p = subparsers.add_parser(
+        'enable_bdev_qos', help='Enable the QoS on a blockdev')
+    p.add_argument('name', help='Blockdev name to enable QoS. Example: Malloc0')
+    p.add_argument('-I', dest='ios_per_sec',
+                   help='Expected IOs per second (>=10000). Example: 20000', type=int, required=False)
+    p.set_defaults(func=rpc.bdev.enable_bdev_qos)
+
     p = subparsers.add_parser('delete_bdev', help='Delete a blockdev')
     p.add_argument(
         'bdev_name', help='Blockdev name to be deleted. Example: Malloc0.')

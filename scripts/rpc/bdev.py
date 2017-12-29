@@ -81,6 +81,14 @@ def delete_bdev(args):
     args.client.call('delete_bdev', params)
 
 
+def enable_bdev_qos(args):
+    params = {}
+    params['name'] = args.name
+    if args.ios_per_sec:
+        params['ios_per_sec'] = args.ios_per_sec
+    args.client.call('enable_bdev_qos', params, verbose=args.verbose)
+
+
 def bdev_inject_error(args):
     params = {
         'name': args.name,
