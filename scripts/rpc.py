@@ -199,6 +199,16 @@ if __name__ == "__main__":
     p.set_defaults(func=delete_bdev)
 
     @call_cmd
+    def enable_bdev_qos(args):
+        rpc.bdev.enable_bdev_qos(args.client, args)
+
+    p = subparsers.add_parser('enable_bdev_qos', help='Enable the QoS on a blockdev')
+    p.add_argument('name', help='Blockdev name to enable QoS. Example: Malloc0')
+    p.add_argument('-I', dest='ios_per_sec',
+                   help='Expected IOs per second (>=10000). Example: 20000', type=int, required=False)
+    p.set_defaults(func=rpc.bdev.enable_bdev_qos)
+
+    @call_cmd
     def bdev_inject_error(args):
         rpc.bdev.bdev_inject_error(args.client, args)
 
