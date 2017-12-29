@@ -5,11 +5,12 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/scripts/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
-MALLOC_BDEV_SIZE=64
-MALLOC_BLOCK_SIZE=512
-
 rpc_py="python $rootdir/scripts/rpc.py"
 fio_py="python $rootdir/scripts/nvmf_fio.py"
+
+function cleanup(){
+nvme disconnect -n "nqn.2016-06.io.spdk:cnode1" || true
+}
 
 set -e
 
@@ -23,20 +24,21 @@ fi
 timing_enter fio
 timing_enter start_nvmf_tgt
 # Start up the NVMf target in another process
+$rootdir/scripts/gen_nvme.sh >> $testdir/../nvmf.conf
 $NVMF_APP -c $testdir/../nvmf.conf &
 nvmfpid=$!
 
-trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
+trap "cleanup;killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $nvmfpid
 timing_exit start_nvmf_tgt
 
-bdevs="$bdevs $($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
-bdevs="$bdevs $($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
+ls_guid="$($rpc_py construct_lvol_store Nvme0n1 lvs0 -c 1048576)"
+lb_bdevs="$($rpc_py construct_lvol_bdev -u $ls_guid lbd0 512)"
 
 modprobe -v nvme-rdma
 
-$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" "" -a -s SPDK00000000000001 -n "$bdevs"
+$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" '' -a -s SPDK000000000001 -n "$lb_bdevs"
 
 nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
@@ -44,19 +46,34 @@ $fio_py 4096 1 write 1 verify
 $fio_py 4096 1 randwrite 1 verify
 $fio_py 4096 128 write 1 verify
 $fio_py 4096 128 randwrite 1 verify
+$fio_py 4096 16 trim 1
 
+if [ $RUN_NIGHTLY -eq 1 ]; then
+	$fio_py 1048576 128 randread 30 verify 512M
+	$fio_py 4096 16 randread 30 verify 512M
+	$fio_py 8192 32 randread 30 verify 512M
+	$fio_py 1048576 128 trim 30 verify 512M
+	$fio_py 4096 16 trim 30 verify 512M
+	$fio_py 12288 128 trim 30 verify 512M
+	$fio_py 524288 128 trimwrite 30 verify 512M
+	$fio_py 262144 128 trimwrite 30 verify 512M
+	$fio_py 131072 128 trimwrite 30 verify 512M
+	$fio_py 65536 128 randtrim 30 verify 512M
+	$fio_py 32768 128 randtrim 30 verify 512M
+	$fio_py 16384 128 randtrim 30 verify 512M
+fi
 sync
 
 #start hotplug test case
-$testdir/nvmf_fio.py 4096 1 read 10 &
+$fio_py 4096 1 read 10 &
 fio_pid=$!
 
 sleep 3
 set +e
 
-for bdev in $bdevs; do
-	$rpc_py delete_bdev "$bdev"
-done
+$rpc_py delete_bdev "lvs0/lbd0"
+$rpc_py destroy_lvol_store -l "lvs0"
+$rpc_py delete_bdev "Nvme0n1"
 
 wait $fio_pid
 fio_status=$?
@@ -76,8 +93,6 @@ set -e
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 
 rm -f ./local-job0-0-verify.state
-rm -f ./local-job1-1-verify.state
-rm -f ./local-job2-2-verify.state
 
 trap - SIGINT SIGTERM EXIT
 
