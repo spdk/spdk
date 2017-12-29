@@ -42,6 +42,7 @@
 #include "spdk/vhost.h"
 #include "vhost_internal.h"
 
+static uint32_t spdk_vhost_ctrlr_id;
 static uint32_t *g_num_ctrlrs;
 
 /* Path to folder where character device will be created. Can be set by user. */
@@ -50,8 +51,8 @@ static char dev_dirname[PATH_MAX] = "";
 #define MAX_VHOST_DEVICES	64
 
 struct spdk_vhost_dev_event_ctx {
-	/** Pointer to the controller obtained before enqueuing the event */
-	struct spdk_vhost_dev *vdev;
+	/** Identifier of the controller obtained before enqueuing the event */
+	uint32_t id;
 
 	/** Index of the ctrlr to send event to. */
 	unsigned vdev_id;
@@ -361,6 +362,22 @@ spdk_vhost_dev_has_feature(struct spdk_vhost_dev *vdev, unsigned feature_id)
 }
 
 static struct spdk_vhost_dev *
+spdk_vhost_dev_find_by_id(uint32_t id)
+{
+	unsigned i;
+	struct spdk_vhost_dev *vdev;
+
+	for (i = 0; i < MAX_VHOST_DEVICES; i++) {
+		vdev = g_spdk_vhost_devices[i];
+		if (vdev && vdev->id == id) {
+			return vdev;
+		}
+	}
+
+	return NULL;
+}
+
+static struct spdk_vhost_dev *
 spdk_vhost_dev_find_by_vid(int vid)
 {
 	unsigned i;
@@ -434,7 +451,7 @@ spdk_vhost_free_reactor(uint32_t lcore)
 }
 
 static int
-spdk_vhost_dev_find_id(const char *ctrlr_name)
+spdk_vhost_dev_find_idx(const char *ctrlr_name)
 {
 	unsigned i;
 	size_t dev_dirname_len = strlen(dev_dirname);
@@ -461,7 +478,7 @@ spdk_vhost_dev_find(const char *ctrlr_name)
 {
 	int id;
 
-	id = spdk_vhost_dev_find_id(ctrlr_name);
+	id = spdk_vhost_dev_find_idx(ctrlr_name);
 	if (id == -1) {
 		return NULL;
 	}
@@ -582,6 +599,7 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const ch
 	vdev->name = strdup(name);
 	vdev->path = strdup(path);
 	vdev->vid = -1;
+	vdev->id = ++spdk_vhost_ctrlr_id;
 	vdev->lcore = -1;
 	vdev->cpumask = cpumask;
 	vdev->type = type;
@@ -708,8 +726,14 @@ static void
 spdk_vhost_event_cb(void *arg1, void *arg2)
 {
 	struct spdk_vhost_dev_event_ctx *ctx = arg1;
+	struct spdk_vhost_dev *vdev;
 
-	ctx->cb_fn(ctx->vdev, ctx);
+	vdev = spdk_vhost_dev_find_by_id(ctx->id);
+	if (vdev == NULL) {
+		SPDK_ERRLOG("Couldn't find device for id %d.\n", ctx->id);
+		return;
+	}
+	ctx->cb_fn(vdev, ctx);
 }
 
 static void
@@ -726,7 +750,7 @@ spdk_vhost_event_async_fn(void *arg1, void *arg2)
 	}
 
 	vdev = g_spdk_vhost_devices[ctx->vdev_id];
-	if (vdev != ctx->vdev) {
+	if (vdev->id != ctx->id) {
 		/* vdev has been changed after enqueuing this event */
 		vdev = NULL;
 	}
@@ -755,7 +779,7 @@ spdk_vhost_event_async_foreach_fn(void *arg1, void *arg2)
 	}
 
 	vdev = g_spdk_vhost_devices[ctx->vdev_id];
-	if (vdev == ctx->vdev) {
+	if (vdev->id == ctx->id) {
 		ctx->cb_fn(vdev, arg2);
 	}
 
@@ -780,7 +804,7 @@ spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn,
 		return -errno;
 	}
 
-	ev_ctx.vdev = vdev;
+	ev_ctx.id = vdev->id;
 	ev_ctx.cb_fn = cb_fn;
 
 	ev = spdk_event_allocate(vdev->lcore, spdk_vhost_event_cb, &ev_ctx, NULL);
@@ -806,6 +830,7 @@ spdk_vhost_event_async_send(unsigned vdev_id, spdk_vhost_event_fn cb_fn, void *a
 {
 	struct spdk_vhost_dev_event_ctx *ev_ctx;
 	struct spdk_event *ev;
+	struct spdk_vhost_dev *vdev;
 	spdk_event_fn fn;
 
 	ev_ctx = calloc(1, sizeof(*ev_ctx));
@@ -814,12 +839,14 @@ spdk_vhost_event_async_send(unsigned vdev_id, spdk_vhost_event_fn cb_fn, void *a
 		return -ENOMEM;
 	}
 
-	ev_ctx->vdev = g_spdk_vhost_devices[vdev_id];
+	vdev = g_spdk_vhost_devices[vdev_id];
+
+	ev_ctx->id = g_spdk_vhost_devices[vdev_id]->id;
 	ev_ctx->vdev_id = vdev_id;
 	ev_ctx->cb_fn = cb_fn;
 
 	fn = foreach ? spdk_vhost_event_async_foreach_fn : spdk_vhost_event_async_fn;
-	ev = spdk_event_allocate(ev_ctx->vdev->lcore, fn, ev_ctx, arg);
+	ev = spdk_event_allocate(vdev->lcore, fn, ev_ctx, arg);
 	assert(ev);
 	spdk_event_call(ev);
 
@@ -1093,7 +1120,7 @@ spdk_vhost_call_external_event(const char *ctrlr_name, spdk_vhost_event_fn fn, v
 	int vdev_id;
 
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
-	vdev_id = spdk_vhost_dev_find_id(ctrlr_name);
+	vdev_id = spdk_vhost_dev_find_idx(ctrlr_name);
 
 	if (vdev_id == -1) {
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
