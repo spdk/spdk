@@ -456,6 +456,29 @@ spdk_vhost_dev_find_id(const char *ctrlr_name)
 	return -1;
 }
 
+static int
+spdk_vhost_dev_find_id_all(const char *ctrlr_name, int *all_id) {
+        unsigned i, vdev_num = 0;
+        size_t dev_dirname_len = strlen(dev_dirname);
+
+        if (strncmp(ctrlr_name, dev_dirname, dev_dirname_len) == 0) {
+                ctrlr_name += dev_dirname_len;
+        }
+
+        for (i = 0; i < MAX_VHOST_DEVICES; i++) {
+                if (g_spdk_vhost_devices[i] == NULL) {
+                        continue;
+                }
+
+                if (strcmp(g_spdk_vhost_devices[i]->name, ctrlr_name) == 0) {
+                        all_id[vdev_num++] = i;
+                        assert(vdev_num <= MAX_CONNECT_DEVS);
+                }
+        }
+
+        return vdev_num;
+}
+
 struct spdk_vhost_dev *
 spdk_vhost_dev_find(const char *ctrlr_name)
 {
@@ -467,6 +490,22 @@ spdk_vhost_dev_find(const char *ctrlr_name)
 	}
 
 	return g_spdk_vhost_devices[id];
+}
+
+int 
+spdk_vhost_dev_find_all(const char *ctrlr_name, struct spdk_vhost_dev **vdevs)
+{
+        int all_id[MAX_CONNECT_DEVS];
+        int vdev_num = 0, i;
+        
+        vdev_num = spdk_vhost_dev_find_id_all(ctrlr_name, all_id);
+        assert(vdev_num <= MAX_CONNECT_DEVS);
+ 
+        for (i = 0; i < vdev_num; i++) {
+                vdevs[i] = g_spdk_vhost_devices[all_id[i]];
+        }
+       
+        return vdev_num;
 }
 
 static int
@@ -508,6 +547,7 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const ch
 	char path[PATH_MAX];
 	struct stat file_stat;
 	uint64_t cpumask;
+        bool socket_started = false; 
 
 	assert(vdev);
 
@@ -522,10 +562,11 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const ch
 		return -EINVAL;
 	}
 
+
 	if (spdk_vhost_dev_find(name)) {
-		SPDK_ERRLOG("vhost controller %s already exists.\n", name);
-		return -EEXIST;
-	}
+	        socket_started = true;
+        }
+
 
 	for (ctrlr_num = 0; ctrlr_num < MAX_VHOST_DEVICES; ctrlr_num++) {
 		if (g_spdk_vhost_devices[ctrlr_num] == NULL) {
@@ -544,6 +585,7 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const ch
 		return -EINVAL;
 	}
 
+        if (!socket_started) {
 	/* Register vhost driver to handle vhost messages. */
 	if (stat(path, &file_stat) != -1) {
 		if (!S_ISSOCK(file_stat.st_mode)) {
@@ -577,6 +619,7 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const ch
 		SPDK_ERRLOG("Couldn't register callbacks for controller %s\n", name);
 		return -EIO;
 	}
+        }
 
 	vdev->name = strdup(name);
 	vdev->path = strdup(path);
@@ -594,6 +637,7 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const ch
 
 	g_spdk_vhost_devices[ctrlr_num] = vdev;
 
+        if (!socket_started) {
 	if (rte_vhost_driver_start(path) != 0) {
 		SPDK_ERRLOG("Failed to start vhost driver for controller %s (%d): %s\n", name, errno,
 			    spdk_strerror(errno));
@@ -602,6 +646,7 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const ch
 	}
 
 	SPDK_NOTICELOG("Controller %s: new controller added\n", vdev->name);
+        }
 	return 0;
 }
 
@@ -933,6 +978,10 @@ start_device(int vid)
 	}
 
 out:
+        if (rc == 0) {
+                assert(vdev->status & 1);                
+                vdev->status |= 2;
+        }
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 	return rc;
 }
@@ -1054,14 +1103,18 @@ new_connection(int vid)
 		return -1;
 	}
 
-	/* since pollers are not running it safe not to use spdk_event here */
 	if (vdev->vid != -1) {
-		SPDK_ERRLOG("Device with vid %d is already connected.\n", vid);
-		pthread_mutex_unlock(&g_spdk_vhost_mutex);
-		return -1;
-	}
+                vdev = spdk_vhost_dev_find_next(vdev);
+                if (!vdev) {
+                        SPDK_ERRLOG("Couldn't find unused vdev for vid %d to create connection for.\n", vid);
+                        pthread_mutex_unlock(&g_spdk_vhost_mutex);
+                        return -1;
+                }
+        }
 
 	vdev->vid = vid;
+        assert(vdev->status == 0);
+        vdev->status |= 1;
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 	return 0;
 }

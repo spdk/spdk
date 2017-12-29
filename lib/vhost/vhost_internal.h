@@ -67,6 +67,8 @@
 
 #define SPDK_VHOST_IOVS_MAX 128
 
+#define MAX_CONNECT_DEVS 64
+
 /*
  * Rate at which stats are checked for interrupt coalescing.
  */
@@ -134,6 +136,7 @@ struct spdk_vhost_dev_backend {
 	int (*vhost_remove_controller)(struct spdk_vhost_dev *vdev);
 };
 
+struct spdk_vhost_scsi_dev;
 struct spdk_vhost_dev {
 	struct rte_vhost_memory *mem;
 	char *name;
@@ -146,6 +149,8 @@ struct spdk_vhost_dev {
 
 	enum spdk_vhost_dev_type type;
 	const struct spdk_vhost_dev_backend *backend;
+        struct spdk_vhost_scsi_dev *svdev;
+        uint8_t status;
 
 	uint32_t coalescing_delay_time_base;
 
@@ -166,6 +171,8 @@ struct spdk_vhost_dev {
 };
 
 struct spdk_vhost_dev *spdk_vhost_dev_find(const char *ctrlr_name);
+struct spdk_vhost_dev *spdk_vhost_dev_find_next(struct spdk_vhost_dev *vdev);
+int spdk_vhost_dev_find_all(const char *ctrlr_name, struct spdk_vhost_dev **vdevs);
 void spdk_vhost_dev_mem_register(struct spdk_vhost_dev *vdev);
 void spdk_vhost_dev_mem_unregister(struct spdk_vhost_dev *vdev);
 
