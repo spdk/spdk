@@ -45,29 +45,160 @@
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
+#include <uuid/uuid.h>
+
+
+/**
+ * States for parsing valid domains in NQNs according to RFC 1034
+ */
+enum spdk_nvmf_nqn_domain_states {
+	/** First character of a domain must be a letter */
+	SPDK_NVMF_DOMAIN_ACCEPT_LETTER = 0,
+
+	/** Subsequent characters can be any of letter, digit, or hyphen */
+	SPDK_NVMF_DOMAIN_ACCEPT_LDH = 1,
+
+	/** A domain label must end with either a letter or digit */
+	SPDK_NVMF_DOMAIN_ACCEPT_ANY = 2
+};
+
 static bool
 spdk_nvmf_valid_nqn(const char *nqn)
 {
 	size_t len;
+	uuid_t uuid_value;
+	uint i;
+	uint domain_label_length;
+	char *reverse_domain_end;
+	uint reverse_domain_end_index;
+	enum spdk_nvmf_nqn_domain_states domain_state = SPDK_NVMF_DOMAIN_ACCEPT_LETTER;
 
+	/* Check for length requirements */
 	len = strlen(nqn);
 	if (len > SPDK_NVMF_NQN_MAX_LEN) {
 		SPDK_ERRLOG("Invalid NQN \"%s\": length %zu > max %d\n", nqn, len, SPDK_NVMF_NQN_MAX_LEN);
 		return false;
 	}
 
+	/* The nqn must be at least as long as SPDK_NVMF_NQN_MIN_LEN to contain the necessary prefix. */
+	if (len < SPDK_NVMF_NQN_MIN_LEN) {
+		SPDK_ERRLOG("Invalid NQN \"%s\": length %zu < min %d\n", nqn, len, SPDK_NVMF_NQN_MIN_LEN);
+		return false;
+	}
+
+	/* Check for discovery controller nqn */
+	if (!strcmp(nqn, SPDK_NVMF_DISCOVERY_NQN)) {
+		return true;
+	}
+
+	/* Check for equality with the generic nqn structure of the form "nqn.2014-08.org.nvmexpress:uuid:11111111-2222-3333-4444-555555555555" */
+	if (!strncmp(nqn, SPDK_NVMF_NQN_UUID_PRE, SPDK_NVMF_NQN_UUID_PRE_LEN)) {
+		if (len != SPDK_NVMF_NQN_UUID_PRE_LEN + SPDK_NVMF_UUID_STRING_LEN) {
+			SPDK_ERRLOG("Invalid NQN \"%s\": uuid is not the correct length\n", nqn);
+			return false;
+		}
+
+		if (uuid_parse(&nqn[SPDK_NVMF_NQN_UUID_PRE_LEN], uuid_value) == -1) {
+			SPDK_ERRLOG("Invalid NQN \"%s\": uuid is not formatted correctly\n", nqn);
+			return false;
+		}
+		return true;
+	}
+
+	/* If the nqn does not match the uuid structure, the next several checks validate the form "nqn.yyyy-mm.reverse.domain:user-string" */
+
 	if (strncmp(nqn, "nqn.", 4) != 0) {
 		SPDK_ERRLOG("Invalid NQN \"%s\": NQN must begin with \"nqn.\".\n", nqn);
 		return false;
 	}
 
-	/* yyyy-mm. */
+	/* Check for yyyy-mm. */
 	if (!(isdigit(nqn[4]) && isdigit(nqn[5]) && isdigit(nqn[6]) && isdigit(nqn[7]) &&
 	      nqn[8] == '-' && isdigit(nqn[9]) && isdigit(nqn[10]) && nqn[11] == '.')) {
 		SPDK_ERRLOG("Invalid date code in NQN \"%s\"\n", nqn);
 		return false;
 	}
 
+	reverse_domain_end = strchr(nqn, ':');
+	if (reverse_domain_end != NULL && (reverse_domain_end_index = reverse_domain_end - nqn) < len - 1) {
+	} else {
+		SPDK_ERRLOG("Invalid NQN \"%s\". NQN must contain user specified name with a ':' as a prefix.\n",
+			    nqn);
+		return false;
+	}
+
+	/* Check for valid reverse domain */
+	domain_label_length = 0;
+	for (i = 12; i < reverse_domain_end_index; i++) {
+		if (domain_label_length > SPDK_DOMAIN_LABEL_MAX_LEN) {
+			SPDK_ERRLOG("Invalid domain name in NQN \"%s\". At least one Label is too long.\n", nqn);
+			return false;
+		}
+
+		switch (domain_state) {
+
+		case SPDK_NVMF_DOMAIN_ACCEPT_LETTER: {
+			if (isalpha(nqn[i])) {
+				domain_state = SPDK_NVMF_DOMAIN_ACCEPT_ANY;
+				domain_label_length++;
+				break;
+			} else {
+				SPDK_ERRLOG("Invalid domain name in NQN \"%s\". Label names must start with a letter.\n", nqn);
+				return false;
+			}
+		}
+
+		case SPDK_NVMF_DOMAIN_ACCEPT_LDH: {
+			if (isalpha(nqn[i]) || isdigit(nqn[i])) {
+				domain_state = SPDK_NVMF_DOMAIN_ACCEPT_ANY;
+				domain_label_length++;
+				break;
+			} else if (nqn[i] == '-') {
+				if (i == reverse_domain_end_index - 1) {
+					SPDK_ERRLOG("Invalid domain name in NQN \"%s\". Label names must end with an alphanumeric symbol.\n",
+						    nqn);
+					return false;
+				}
+				domain_state = SPDK_NVMF_DOMAIN_ACCEPT_LDH;
+				domain_label_length++;
+				break;
+			} else if (nqn[i] == '.') {
+				SPDK_ERRLOG("Invalid domain name in NQN \"%s\". Label names must end with an alphanumeric symbol.\n",
+					    nqn);
+				return false;
+			} else {
+				SPDK_ERRLOG("Invalid domain name in NQN \"%s\". Label names must contain only [a-z,A-Z,0-9,'-','.'].\n",
+					    nqn);
+				return false;
+			}
+		}
+
+		case SPDK_NVMF_DOMAIN_ACCEPT_ANY: {
+			if (isalpha(nqn[i]) || isdigit(nqn[i])) {
+				domain_state = SPDK_NVMF_DOMAIN_ACCEPT_ANY;
+				domain_label_length++;
+				break;
+			} else if (nqn[i] == '-') {
+				if (i == reverse_domain_end_index - 1) {
+					SPDK_ERRLOG("Invalid domain name in NQN \"%s\". Label names must end with an alphanumeric symbol.\n",
+						    nqn);
+					return false;
+				}
+				domain_state = SPDK_NVMF_DOMAIN_ACCEPT_LDH;
+				domain_label_length++;
+				break;
+			} else if (nqn[i] == '.') {
+				domain_state = SPDK_NVMF_DOMAIN_ACCEPT_LETTER;
+				domain_label_length = 0;
+				break;
+			} else {
+				SPDK_ERRLOG("Invalid domain name in NQN \"%s\". Label names must contain only [a-z,A-Z,0-9,'-','.'].\n",
+					    nqn);
+				return false;
+			}
+		}
+		}
+	}
 	return true;
 }
 
