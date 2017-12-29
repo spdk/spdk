@@ -859,13 +859,14 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 	assert(bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING);
 
 	if (bdev->ios_per_sec > 0) {
-		assert(bdev->qos_channel);
-		if (!bdev->qos_channel) {
+		if (!bdev->qos_channel || !bdev->qos_thread) {
 			SPDK_ERRLOG("QoS Channel not setup yet\n");
+			_spdk_bdev_io_submit(bdev_io);
+		} else {
+			bdev_io->orig_ch = bdev_io->ch;
+			bdev_io->ch = bdev->qos_channel;
+			spdk_thread_send_msg(bdev->qos_thread, _spdk_bdev_io_submit, bdev_io);
 		}
-		bdev_io->orig_ch = bdev_io->ch;
-		bdev_io->ch = bdev->qos_channel;
-		spdk_thread_send_msg(bdev->qos_thread, _spdk_bdev_io_submit, bdev_io);
 	} else {
 		_spdk_bdev_io_submit(bdev_io);
 	}
@@ -1022,20 +1023,65 @@ spdk_bdev_qos_channel_destroy(void *ctx)
 	struct spdk_poller		*poller = ch->qos_poller;
 	struct spdk_thread		*thread = bdev->qos_thread;
 
-	if (!ch->qos_poller) {
-		SPDK_ERRLOG("already NULL\n");
+	if (!bdev->qos_channel) {
+		SPDK_ERRLOG("QoS channel already NULL\n");
+		return;
 	}
 
 	bdev->qos_channel->flags &= ~BDEV_CH_QOS_ENABLED;
+
 	free(bdev->qos_channel);
 	bdev->qos_channel = NULL;
 	bdev->qos_thread = NULL;
+
+	if (!poller) {
+		SPDK_ERRLOG("QoS poller already NULL\n");
+		return;
+	}
 
 	if (thread == spdk_get_thread()) {
 		spdk_poller_unregister(&poller);
 	} else {
 		spdk_thread_send_msg(thread, spdk_bdev_qos_unregister_poller, poller);
 	}
+}
+
+static int
+_spdk_bdev_enable_qos(struct spdk_bdev *bdev, bool enable_on_creation)
+{
+	pthread_mutex_lock(&bdev->mutex);
+	if (enable_on_creation == true) {
+		bdev->channel_count++;
+	}
+
+	/* Rate limiting on this bdev enabled */
+	if (bdev->ios_per_sec > 0) {
+		if (spdk_bdev_qos_channel_create(bdev) != 0) {
+			if (enable_on_creation == true) {
+				bdev->channel_count--;
+			}
+			pthread_mutex_unlock(&bdev->mutex);
+			goto exit;
+		}
+	}
+
+	pthread_mutex_unlock(&bdev->mutex);
+	return 0;
+
+exit:
+	if (bdev->qos_channel) {
+		if (bdev->qos_channel->channel) {
+			spdk_put_io_channel(bdev->qos_channel->channel);
+		}
+
+		if (bdev->qos_channel->mgmt_channel) {
+			spdk_put_io_channel(bdev->qos_channel->mgmt_channel);
+		}
+
+		spdk_bdev_qos_channel_destroy(bdev->qos_channel);
+	}
+
+	return -1;
 }
 
 static int
@@ -1048,19 +1094,9 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 		goto exit;
 	}
 
-	pthread_mutex_lock(&bdev->mutex);
-	bdev->channel_count++;
-
-	/* Rate limiting on this bdev enabled */
-	if (bdev->ios_per_sec > 0) {
-		if (spdk_bdev_qos_channel_create(bdev) != 0) {
-			bdev->channel_count--;
-			pthread_mutex_unlock(&bdev->mutex);
-			goto exit;
-		}
+	if (_spdk_bdev_enable_qos(bdev, true) != 0) {
+		goto exit;
 	}
-
-	pthread_mutex_unlock(&bdev->mutex);
 
 #ifdef SPDK_CONFIG_VTUNE
 	{
@@ -2757,6 +2793,14 @@ spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base
 	TAILQ_INSERT_TAIL(base->tailq, part, tailq);
 
 	return 0;
+}
+
+int
+spdk_bdev_enable_qos(struct spdk_bdev *bdev, uint64_t ios_per_sec)
+{
+	bdev->ios_per_sec = ios_per_sec;
+
+	return _spdk_bdev_enable_qos(bdev, false);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("bdev", SPDK_LOG_BDEV)
