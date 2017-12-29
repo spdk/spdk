@@ -1109,6 +1109,23 @@ spdk_bdev_qos_channel_create(struct spdk_bdev *bdev)
 	return 0;
 }
 
+/* Caller must hold bdev->mutex */
+static int
+_spdk_bdev_enable_qos(struct spdk_bdev *bdev, struct spdk_bdev_channel *ch)
+{
+	/* Rate limiting on this bdev enabled */
+	if (bdev->ios_per_sec) {
+		if (bdev->qos_channel == NULL) {
+			if (spdk_bdev_qos_channel_create(bdev) != 0) {
+				return -1;
+			}
+		}
+		ch->flags |= BDEV_CH_QOS_ENABLED;
+	}
+
+	return 0;
+}
+
 static int
 spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 {
@@ -1138,16 +1155,10 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 
 	pthread_mutex_lock(&bdev->mutex);
 
-	/* Rate limiting on this bdev enabled */
-	if (bdev->ios_per_sec) {
-		if (bdev->qos_channel == NULL) {
-			if (spdk_bdev_qos_channel_create(bdev) != 0) {
-				_spdk_bdev_channel_destroy_resource(ch);
-				pthread_mutex_unlock(&bdev->mutex);
-				return -1;
-			}
-		}
-		ch->flags |= BDEV_CH_QOS_ENABLED;
+	if (_spdk_bdev_enable_qos(bdev, ch)) {
+		_spdk_bdev_channel_destroy_resource(ch);
+		pthread_mutex_unlock(&bdev->mutex);
+		return -1;
 	}
 
 	bdev->channel_count++;
@@ -2862,6 +2873,80 @@ spdk_bdev_write_zeroes_split(struct spdk_bdev_io *bdev_io, bool success, void *c
 		spdk_bdev_io_init(bdev_io, bdev_io->bdev, cb_arg, spdk_bdev_write_zeroes_split);
 	}
 	spdk_bdev_io_submit(bdev_io);
+}
+
+struct set_qos_limit_ctx {
+	void (*cb_fn)(void *cb_arg, int status);
+	void *cb_arg;
+};
+
+static void
+_spdk_bdev_update_qos_limit_iops_msg(void *ctx)
+{
+	struct spdk_bdev_channel *qos_ch = ctx;
+
+	spdk_bdev_qos_get_max_ios_per_timeslice(qos_ch);
+}
+
+static void
+_spdk_bdev_enable_qos_msg(struct spdk_io_channel_iter *i)
+{
+	void *io_device = spdk_io_channel_iter_get_io_device(i);
+	struct spdk_bdev *bdev = __bdev_from_io_dev(io_device);
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_bdev_channel *bdev_ch = spdk_io_channel_get_ctx(ch);
+	int rc;
+
+	pthread_mutex_lock(&bdev->mutex);
+	rc = _spdk_bdev_enable_qos(bdev, bdev_ch);
+	pthread_mutex_unlock(&bdev->mutex);
+
+	spdk_for_each_channel_continue(i, rc);
+}
+
+static void
+_spdk_bdev_enable_qos_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct set_qos_limit_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+
+	ctx->cb_fn(ctx->cb_arg, status);
+	free(ctx);
+}
+
+void
+spdk_bdev_set_qos_limit_iops(struct spdk_bdev *bdev, uint64_t ios_per_sec,
+			     void (*cb_fn)(void *cb_arg, int status), void *cb_arg)
+{
+	struct set_qos_limit_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	if (ios_per_sec == 0 || ios_per_sec % SPDK_BDEV_QOS_MIN_IOS_PER_SEC) {
+		SPDK_ERRLOG("Requested ios_per_sec limit %" PRIu64 " is not a multiple of %u\n",
+			    ios_per_sec, SPDK_BDEV_QOS_MIN_IOS_PER_SEC);
+		cb_fn(cb_arg, -EINVAL);
+		return;
+	}
+
+	pthread_mutex_lock(&bdev->mutex);
+	bdev->ios_per_sec = ios_per_sec;
+	if (bdev->qos_thread) {
+		/*
+		 * TODO: This doesn't take a ref on qos_channel, so it could theoretically
+		 * be destroyed before this message arrives.
+		 */
+		spdk_thread_send_msg(bdev->qos_thread, _spdk_bdev_update_qos_limit_iops_msg,
+				     bdev->qos_channel);
+	}
+	pthread_mutex_unlock(&bdev->mutex);
+
+	spdk_for_each_channel(__bdev_to_io_dev(bdev),
+			      _spdk_bdev_enable_qos_msg, ctx,
+			      _spdk_bdev_enable_qos_done);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("bdev", SPDK_LOG_BDEV)
