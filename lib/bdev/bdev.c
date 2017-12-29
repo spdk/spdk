@@ -2759,4 +2759,35 @@ spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base
 	return 0;
 }
 
+int
+spdk_bdev_enable_qos(struct spdk_bdev *bdev, uint64_t ios_per_sec)
+{
+	pthread_mutex_lock(&bdev->mutex);
+	bdev->ios_per_sec = ios_per_sec;
+
+	/* Rate limiting on this bdev enabled */
+	if (bdev->ios_per_sec > 0) {
+		if (spdk_bdev_qos_channel_create(bdev) != 0) {
+			pthread_mutex_unlock(&bdev->mutex);
+			goto exit;
+		}
+	}
+
+	pthread_mutex_unlock(&bdev->mutex);
+	return 0;
+
+exit:
+	if (bdev->qos_channel) {
+		if (bdev->qos_channel->channel) {
+			spdk_put_io_channel(bdev->qos_channel->channel);
+		}
+
+		if (bdev->qos_channel->mgmt_channel) {
+			spdk_put_io_channel(bdev->qos_channel->mgmt_channel);
+		}
+
+		spdk_bdev_qos_channel_destroy(bdev->qos_channel);
+	}
+}
+
 SPDK_LOG_REGISTER_COMPONENT("bdev", SPDK_LOG_BDEV)
