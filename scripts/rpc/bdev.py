@@ -119,6 +119,13 @@ def bdev_inject_error(client, args):
     return client.call('bdev_inject_error', params)
 
 
+def set_bdev_qos_limit_iops(client, args):
+    params = {}
+    params['name'] = args.name
+    params['ios_per_sec'] = args.ios_per_sec
+    return client.call('set_bdev_qos_limit_iops', params)
+
+
 def apply_firmware(client, args):
     params = {
         'filename': args.filename,

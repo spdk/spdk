@@ -172,6 +172,40 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Block device name
 
+## set_bdev_qos_limit_iops {#rpc_set_bdev_qos_limit_iops}
+
+Set an IOPS-based quality of service rate limit on a bdev.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Block device name
+ios_per_sec             | Required | number      | Number of I/Os per second to allow
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "set_bdev_qos_limit_iops",
+  "params": {
+    "name": "Malloc0"
+    "ios_per_sec": 20000
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
 
 # NVMe-oF Target {#jsonrpc_components_nvmf_tgt}
 
