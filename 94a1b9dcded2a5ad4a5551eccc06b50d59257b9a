@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1eb7b5bc_f1e25a2b",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-29T12:14:57Z",
+      "side": 1,
+      "message": "Separating 1 and 2 into separate patch is impossible?",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 54
+      },
+      "revId": "94a1b9dcded2a5ad4a5551eccc06b50d59257b9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3c58164b_01decb8b",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-29T12:14:57Z",
+      "side": 1,
+      "message": "Please name this algorithm if possible because another algorithm may coexist.",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 11,
+        "endChar": 34
+      },
+      "revId": "94a1b9dcded2a5ad4a5551eccc06b50d59257b9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "598c3342_4091e1e7",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 845,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-29T12:14:57Z",
+      "side": 1,
+      "message": "Why not you enqueue to the qos_io queue unconditionally and then dequeue from the qos_io queue if the rate limit is not enforced? Is it impossible for your method to do that?\n\nDid you look my patch?  and I would like to hear your impression.",
+      "range": {
+        "startLine": 838,
+        "startChar": 0,
+        "endLine": 845,
+        "endChar": 3
+      },
+      "revId": "94a1b9dcded2a5ad4a5551eccc06b50d59257b9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
