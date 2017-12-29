@@ -71,6 +71,16 @@ typedef void (*spdk_channel_msg)(struct spdk_io_channel_iter *i);
 typedef void (*spdk_channel_for_each_cpl)(struct spdk_io_channel_iter *i, int status);
 
 /**
+ * \brief Lock io device list mutex.
+ */
+void spdk_io_device_mutex_lock(void);
+
+/**
+ * \brief Unlock io device list mutex.
+ */
+void spdk_io_device_mutex_unlock(void);
+
+/**
  * \brief Initializes the calling thread for I/O channel allocation.
  *
  * @param fn A function that may be called from any thread and is
@@ -224,6 +234,17 @@ struct spdk_thread *spdk_io_channel_get_thread(struct spdk_io_channel *ch);
  */
 void spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 			   spdk_channel_for_each_cpl cpl);
+
+/**
+ * \brief Get number of channels.
+ *
+ * Provide number of channels allocated for specific io_device.
+ *
+ * \param io_device The pointer to the io device.
+ *
+ * \return number of allocated channels.
+ */
+uint32_t spdk_get_io_channel_num(void *io_device);
 
 void *spdk_io_channel_iter_get_io_device(struct spdk_io_channel_iter *i);
 

@@ -44,7 +44,8 @@
 #include <pthread_np.h>
 #endif
 
-static pthread_mutex_t g_devlist_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t g_io_device_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t g_threads_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 struct io_device {
 	void			*io_device;
@@ -53,6 +54,7 @@ struct io_device {
 	spdk_io_device_unregister_cb unregister_cb;
 	uint32_t		ctx_size;
 	uint32_t		for_each_count;
+	uint32_t		io_channel_count;
 	TAILQ_ENTRY(io_device)	tailq;
 
 	bool			unregistered;
@@ -118,6 +120,18 @@ _set_thread_name(const char *thread_name)
 #endif
 }
 
+void
+spdk_io_channel_mutex_lock(void)
+{
+	pthread_mutex_lock(&g_threads_mutex);
+}
+
+void
+spdk_io_channel_mutex_unlock(void)
+{
+	pthread_mutex_unlock(&g_threads_mutex);
+}
+
 struct spdk_thread *
 spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 		     spdk_start_poller start_poller_fn,
@@ -126,19 +140,19 @@ spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 {
 	struct spdk_thread *thread;
 
-	pthread_mutex_lock(&g_devlist_mutex);
+	pthread_mutex_lock(&g_threads_mutex);
 
 	thread = _get_thread();
 	if (thread) {
 		SPDK_ERRLOG("Double allocated SPDK thread\n");
-		pthread_mutex_unlock(&g_devlist_mutex);
+		pthread_mutex_unlock(&g_threads_mutex);
 		return NULL;
 	}
 
 	thread = calloc(1, sizeof(*thread));
 	if (!thread) {
 		SPDK_ERRLOG("Unable to allocate memory for thread\n");
-		pthread_mutex_unlock(&g_devlist_mutex);
+		pthread_mutex_unlock(&g_threads_mutex);
 		return NULL;
 	}
 
@@ -154,7 +168,7 @@ spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 		thread->name = strdup(name);
 	}
 
-	pthread_mutex_unlock(&g_devlist_mutex);
+	pthread_mutex_unlock(&g_threads_mutex);
 
 	return thread;
 }
@@ -164,12 +178,12 @@ spdk_free_thread(void)
 {
 	struct spdk_thread *thread;
 
-	pthread_mutex_lock(&g_devlist_mutex);
+	pthread_mutex_lock(&g_threads_mutex);
 
 	thread = _get_thread();
 	if (!thread) {
 		SPDK_ERRLOG("No thread allocated\n");
-		pthread_mutex_unlock(&g_devlist_mutex);
+		pthread_mutex_unlock(&g_threads_mutex);
 		return;
 	}
 
@@ -177,7 +191,7 @@ spdk_free_thread(void)
 	free(thread->name);
 	free(thread);
 
-	pthread_mutex_unlock(&g_devlist_mutex);
+	pthread_mutex_unlock(&g_threads_mutex);
 }
 
 struct spdk_thread *
@@ -185,14 +199,14 @@ spdk_get_thread(void)
 {
 	struct spdk_thread *thread;
 
-	pthread_mutex_lock(&g_devlist_mutex);
+	pthread_mutex_lock(&g_threads_mutex);
 
 	thread = _get_thread();
 	if (!thread) {
 		SPDK_ERRLOG("No thread allocated\n");
 	}
 
-	pthread_mutex_unlock(&g_devlist_mutex);
+	pthread_mutex_unlock(&g_threads_mutex);
 
 	return thread;
 }
@@ -268,9 +282,9 @@ spdk_on_thread(void *ctx)
 
 	ct->fn(ct->ctx);
 
-	pthread_mutex_lock(&g_devlist_mutex);
+	pthread_mutex_lock(&g_threads_mutex);
 	ct->cur_thread = TAILQ_NEXT(ct->cur_thread, tailq);
-	pthread_mutex_unlock(&g_devlist_mutex);
+	pthread_mutex_unlock(&g_threads_mutex);
 
 	if (!ct->cur_thread) {
 		spdk_thread_send_msg(ct->orig_thread, ct->cpl, ct->ctx);
@@ -296,10 +310,10 @@ spdk_for_each_thread(spdk_thread_fn fn, void *ctx, spdk_thread_fn cpl)
 	ct->ctx = ctx;
 	ct->cpl = cpl;
 
-	pthread_mutex_lock(&g_devlist_mutex);
+	pthread_mutex_lock(&g_threads_mutex);
 	ct->orig_thread = _get_thread();
 	ct->cur_thread = TAILQ_FIRST(&g_threads);
-	pthread_mutex_unlock(&g_devlist_mutex);
+	pthread_mutex_unlock(&g_threads_mutex);
 
 	spdk_thread_send_msg(ct->cur_thread, spdk_on_thread, ct);
 }
@@ -322,19 +336,20 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 	dev->unregister_cb = NULL;
 	dev->ctx_size = ctx_size;
 	dev->for_each_count = 0;
+	dev->io_channel_count = 0;
 	dev->unregistered = false;
 
-	pthread_mutex_lock(&g_devlist_mutex);
+	pthread_mutex_lock(&g_io_device_mutex);
 	TAILQ_FOREACH(tmp, &g_io_devices, tailq) {
 		if (tmp->io_device == io_device) {
 			SPDK_ERRLOG("io_device %p already registered\n", io_device);
 			free(dev);
-			pthread_mutex_unlock(&g_devlist_mutex);
+			pthread_mutex_unlock(&g_io_device_mutex);
 			return;
 		}
 	}
 	TAILQ_INSERT_TAIL(&g_io_devices, dev, tailq);
-	pthread_mutex_unlock(&g_devlist_mutex);
+	pthread_mutex_unlock(&g_io_device_mutex);
 }
 
 static void
@@ -343,7 +358,7 @@ _spdk_io_device_attempt_free(struct io_device *dev)
 	struct spdk_thread *thread;
 	struct spdk_io_channel *ch;
 
-	pthread_mutex_lock(&g_devlist_mutex);
+	pthread_mutex_lock(&g_threads_mutex);
 	TAILQ_FOREACH(thread, &g_threads, tailq) {
 		TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
 			if (ch->dev == dev) {
@@ -351,12 +366,12 @@ _spdk_io_device_attempt_free(struct io_device *dev)
 				 * device still exists. Defer deletion
 				 * until it is removed.
 				 */
-				pthread_mutex_unlock(&g_devlist_mutex);
+				pthread_mutex_unlock(&g_threads_mutex);
 				return;
 			}
 		}
 	}
-	pthread_mutex_unlock(&g_devlist_mutex);
+	pthread_mutex_unlock(&g_threads_mutex);
 
 	if (dev->unregister_cb) {
 		dev->unregister_cb(dev->io_device);
@@ -370,7 +385,7 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 {
 	struct io_device *dev;
 
-	pthread_mutex_lock(&g_devlist_mutex);
+	pthread_mutex_lock(&g_io_device_mutex);
 	TAILQ_FOREACH(dev, &g_io_devices, tailq) {
 		if (dev->io_device == io_device) {
 			break;
@@ -379,20 +394,20 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 
 	if (!dev) {
 		SPDK_ERRLOG("io_device %p not found\n", io_device);
-		pthread_mutex_unlock(&g_devlist_mutex);
+		pthread_mutex_unlock(&g_io_device_mutex);
 		return;
 	}
 
 	if (dev->for_each_count > 0) {
 		SPDK_ERRLOG("io_device %p has %u for_each calls outstanding\n", io_device, dev->for_each_count);
-		pthread_mutex_unlock(&g_devlist_mutex);
+		pthread_mutex_unlock(&g_io_device_mutex);
 		return;
 	}
 
 	dev->unregister_cb = unregister_cb;
 	dev->unregistered = true;
 	TAILQ_REMOVE(&g_io_devices, dev, tailq);
-	pthread_mutex_unlock(&g_devlist_mutex);
+	pthread_mutex_unlock(&g_io_device_mutex);
 	_spdk_io_device_attempt_free(dev);
 }
 
@@ -404,7 +419,9 @@ spdk_get_io_channel(void *io_device)
 	struct io_device *dev;
 	int rc;
 
-	pthread_mutex_lock(&g_devlist_mutex);
+	pthread_mutex_lock(&g_threads_mutex);
+	pthread_mutex_lock(&g_io_device_mutex);
+
 	TAILQ_FOREACH(dev, &g_io_devices, tailq) {
 		if (dev->io_device == io_device) {
 			break;
@@ -412,14 +429,16 @@ spdk_get_io_channel(void *io_device)
 	}
 	if (dev == NULL) {
 		SPDK_ERRLOG("could not find io_device %p\n", io_device);
-		pthread_mutex_unlock(&g_devlist_mutex);
+		pthread_mutex_unlock(&g_io_device_mutex);
+		pthread_mutex_unlock(&g_threads_mutex);
 		return NULL;
 	}
 
 	thread = _get_thread();
 	if (!thread) {
 		SPDK_ERRLOG("No thread allocated\n");
-		pthread_mutex_unlock(&g_devlist_mutex);
+		pthread_mutex_unlock(&g_io_device_mutex);
+		pthread_mutex_unlock(&g_threads_mutex);
 		return NULL;
 	}
 
@@ -430,7 +449,8 @@ spdk_get_io_channel(void *io_device)
 			 * An I/O channel already exists for this device on this
 			 *  thread, so return it.
 			 */
-			pthread_mutex_unlock(&g_devlist_mutex);
+			pthread_mutex_unlock(&g_io_device_mutex);
+			pthread_mutex_unlock(&g_threads_mutex);
 			return ch;
 		}
 	}
@@ -438,7 +458,8 @@ spdk_get_io_channel(void *io_device)
 	ch = calloc(1, sizeof(*ch) + dev->ctx_size);
 	if (ch == NULL) {
 		SPDK_ERRLOG("could not calloc spdk_io_channel\n");
-		pthread_mutex_unlock(&g_devlist_mutex);
+		pthread_mutex_unlock(&g_io_device_mutex);
+		pthread_mutex_unlock(&g_threads_mutex);
 		return NULL;
 	}
 
@@ -446,16 +467,26 @@ spdk_get_io_channel(void *io_device)
 	ch->destroy_cb = dev->destroy_cb;
 	ch->thread = thread;
 	ch->ref = 1;
+	ch->dev->io_channel_count++;
 	TAILQ_INSERT_TAIL(&thread->io_channels, ch, tailq);
 
-	pthread_mutex_unlock(&g_devlist_mutex);
+	pthread_mutex_unlock(&g_io_device_mutex);
+	pthread_mutex_unlock(&g_threads_mutex);
 
 	rc = dev->create_cb(io_device, (uint8_t *)ch + sizeof(*ch));
 	if (rc == -1) {
-		pthread_mutex_lock(&g_devlist_mutex);
+		pthread_mutex_lock(&g_io_device_mutex);
+		ch->dev->io_channel_count--;
+		pthread_mutex_unlock(&g_io_device_mutex);
+
+		pthread_mutex_lock(&g_threads_mutex);
 		TAILQ_REMOVE(&ch->thread->io_channels, ch, tailq);
+		pthread_mutex_unlock(&g_threads_mutex);
+
+		if (ch->dev->unregistered) {
+			_spdk_io_device_attempt_free(ch->dev);
+		}
 		free(ch);
-		pthread_mutex_unlock(&g_devlist_mutex);
 		return NULL;
 	}
 
@@ -480,9 +511,13 @@ _spdk_put_io_channel(void *arg)
 
 	ch->destroy_cb(ch->dev->io_device, spdk_io_channel_get_ctx(ch));
 
-	pthread_mutex_lock(&g_devlist_mutex);
+	pthread_mutex_lock(&g_io_device_mutex);
+	ch->dev->io_channel_count--;
+	pthread_mutex_unlock(&g_io_device_mutex);
+
+	pthread_mutex_lock(&g_threads_mutex);
 	TAILQ_REMOVE(&ch->thread->io_channels, ch, tailq);
-	pthread_mutex_unlock(&g_devlist_mutex);
+	pthread_mutex_unlock(&g_threads_mutex);
 
 	if (ch->dev->unregistered) {
 		_spdk_io_device_attempt_free(ch->dev);
@@ -568,13 +603,13 @@ _call_channel(void *ctx)
 	 *  message had a chance to execute.  If so, skip calling
 	 *  the fn() on this thread.
 	 */
-	pthread_mutex_lock(&g_devlist_mutex);
+	pthread_mutex_lock(&g_threads_mutex);
 	TAILQ_FOREACH(ch, &i->cur_thread->io_channels, tailq) {
 		if (ch->dev->io_device == i->io_device) {
 			break;
 		}
 	}
-	pthread_mutex_unlock(&g_devlist_mutex);
+	pthread_mutex_unlock(&g_threads_mutex);
 
 	if (ch) {
 		i->fn(i);
@@ -602,7 +637,7 @@ spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 	i->ctx = ctx;
 	i->cpl = cpl;
 
-	pthread_mutex_lock(&g_devlist_mutex);
+	pthread_mutex_lock(&g_threads_mutex);
 	i->orig_thread = _get_thread();
 
 	TAILQ_FOREACH(thread, &g_threads, tailq) {
@@ -612,14 +647,14 @@ spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 				i->dev = ch->dev;
 				i->cur_thread = thread;
 				i->ch = ch;
-				pthread_mutex_unlock(&g_devlist_mutex);
+				pthread_mutex_unlock(&g_threads_mutex);
 				spdk_thread_send_msg(thread, _call_channel, i);
 				return;
 			}
 		}
 	}
 
-	pthread_mutex_unlock(&g_devlist_mutex);
+	pthread_mutex_unlock(&g_threads_mutex);
 
 	cpl(i, 0);
 
@@ -636,7 +671,7 @@ spdk_for_each_channel_continue(struct spdk_io_channel_iter *i, int status)
 
 	i->status = status;
 
-	pthread_mutex_lock(&g_devlist_mutex);
+	pthread_mutex_lock(&g_threads_mutex);
 	if (status) {
 		goto end;
 	}
@@ -646,7 +681,7 @@ spdk_for_each_channel_continue(struct spdk_io_channel_iter *i, int status)
 			if (ch->dev->io_device == i->io_device) {
 				i->cur_thread = thread;
 				i->ch = ch;
-				pthread_mutex_unlock(&g_devlist_mutex);
+				pthread_mutex_unlock(&g_threads_mutex);
 				spdk_thread_send_msg(thread, _call_channel, i);
 				return;
 			}
@@ -657,7 +692,27 @@ spdk_for_each_channel_continue(struct spdk_io_channel_iter *i, int status)
 end:
 	i->dev->for_each_count--;
 	i->ch = NULL;
-	pthread_mutex_unlock(&g_devlist_mutex);
+	pthread_mutex_unlock(&g_threads_mutex);
 
 	spdk_thread_send_msg(i->orig_thread, _call_completion, i);
+}
+
+uint32_t
+spdk_get_io_channel_num(void *io_device)
+{
+	struct io_device *dev;
+	uint32_t count = 0;
+
+	pthread_mutex_lock(&g_io_device_mutex);
+
+	TAILQ_FOREACH(dev, &g_io_devices, tailq) {
+		if (dev->io_device == io_device) {
+			count = dev->io_channel_count;
+			break;
+		}
+	}
+
+	pthread_mutex_unlock(&g_io_device_mutex);
+
+	return count;
 }
