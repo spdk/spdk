@@ -1113,6 +1113,29 @@ spdk_bdev_qos_channel_destroy(void *ctx)
 }
 
 static int
+_spdk_bdev_enable_qos(struct spdk_bdev *bdev, bool enable_on_creation)
+{
+	pthread_mutex_lock(&bdev->mutex);
+
+	/* Rate limiting on this bdev enabled */
+	if (bdev->ios_per_sec > 0) {
+		if (spdk_bdev_qos_channel_create(bdev) != 0) {
+			_spdk_bdev_channel_destroy_resource(bdev->qos_channel);
+			spdk_bdev_qos_channel_destroy(bdev->qos_channel);
+			pthread_mutex_unlock(&bdev->mutex);
+			return -1;
+		}
+	}
+
+	if (enable_on_creation == true) {
+		bdev->channel_count++;
+	}
+
+	pthread_mutex_unlock(&bdev->mutex);
+	return 0;
+}
+
+static int
 spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 {
 	struct spdk_bdev		*bdev = io_device;
@@ -1123,22 +1146,10 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 		return -1;
 	}
 
-	pthread_mutex_lock(&bdev->mutex);
-
-	/* Rate limiting on this bdev enabled */
-	if (bdev->ios_per_sec > 0) {
-		if (spdk_bdev_qos_channel_create(bdev) != 0) {
-			_spdk_bdev_channel_destroy_resource(ch);
-			_spdk_bdev_channel_destroy_resource(bdev->qos_channel);
-			spdk_bdev_qos_channel_destroy(bdev->qos_channel);
-			pthread_mutex_unlock(&bdev->mutex);
-			return -1;
-		}
+	if (_spdk_bdev_enable_qos(bdev, true) != 0) {
+		_spdk_bdev_channel_destroy_resource(ch);
+		return -1;
 	}
-
-	bdev->channel_count++;
-
-	pthread_mutex_unlock(&bdev->mutex);
 
 #ifdef SPDK_CONFIG_VTUNE
 	{
@@ -2865,6 +2876,14 @@ spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base
 	TAILQ_INSERT_TAIL(base->tailq, part, tailq);
 
 	return 0;
+}
+
+int
+spdk_bdev_enable_qos(struct spdk_bdev *bdev, uint64_t ios_per_sec)
+{
+	bdev->ios_per_sec = ios_per_sec;
+
+	return _spdk_bdev_enable_qos(bdev, false);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("bdev", SPDK_LOG_BDEV)
