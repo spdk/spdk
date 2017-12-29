@@ -115,8 +115,15 @@ def bdev_inject_error(client, args):
         'error_type': args.error_type,
         'num': args.num,
     }
-
     return client.call('bdev_inject_error', params)
+
+
+def enable_bdev_qos(client, args):
+    params = {}
+    params['name'] = args.name
+    if args.ios_per_sec:
+        params['ios_per_sec'] = args.ios_per_sec
+    return client.call('enable_bdev_qos', params)
 
 
 def apply_firmware(client, args):
