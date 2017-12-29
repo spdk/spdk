@@ -322,8 +322,14 @@ struct spdk_nvmf_fabric_prop_set_cmd {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_fabric_prop_set_cmd) == 64, "Incorrect size");
 
+#define SPDK_NVMF_NQN_MIN_LEN 11 /* The prefix in the spec is 11 characters */
 #define SPDK_NVMF_NQN_MAX_LEN 223
+#define SPDK_NVMF_NQN_UUID_PRE_LEN 32
+#define SPDK_NVMF_UUID_STRING_LEN 36
+#define SPDK_NVMF_NQN_UUID_PRE "nqn.2014-08.org.nvmexpress:uuid:"
 #define SPDK_NVMF_DISCOVERY_NQN "nqn.2014-08.org.nvmexpress.discovery"
+
+#define SPDK_DOMAIN_LABEL_MAX_LEN 63 /* RFC 1034 max domain label length */
 
 #define SPDK_NVMF_TRADDR_MAX_LEN 256
 #define SPDK_NVMF_TRSVCID_MAX_LEN 32
