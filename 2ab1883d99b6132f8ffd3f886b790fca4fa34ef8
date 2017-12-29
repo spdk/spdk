@@ -22,6 +22,30 @@
       "revId": "2ab1883d99b6132f8ffd3f886b790fca4fa34ef8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a976556f_9788266e",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-12-29T00:13:56Z",
+      "side": 1,
+      "message": "Yes, I know. Otherwise, I will not introduce spdk_env_get_last_core. But for this case, it is different. Can you recheck the code, since we have core_map here? Each targetwill be mapped to the core according to the core_map. So it works",
+      "parentUuid": "b421d271_645a439c",
+      "range": {
+        "startLine": 114,
+        "startChar": 23,
+        "endLine": 114,
+        "endChar": 46
+      },
+      "revId": "2ab1883d99b6132f8ffd3f886b790fca4fa34ef8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
