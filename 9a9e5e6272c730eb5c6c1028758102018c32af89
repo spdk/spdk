@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "39c74b76_a96eaa45",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-12-29T00:23:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1cc22f24_1bee450e",
+      "revId": "9a9e5e6272c730eb5c6c1028758102018c32af89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "70e5f458_82c675d9",
         "filename": "doc/nvmf.md",
         "patchSetId": 3
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "a1ecf287_1cdba2df",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-12-29T00:23:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "70e5f458_82c675d9",
+      "revId": "9a9e5e6272c730eb5c6c1028758102018c32af89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3240c497_a88cac3e",
         "filename": "doc/nvmf.md",
         "patchSetId": 3
@@ -47,6 +83,30 @@
       "writtenOn": "2017-12-28T16:21:00Z",
       "side": 1,
       "message": "configurtion -\u003e configuration",
+      "range": {
+        "startLine": 151,
+        "startChar": 12,
+        "endLine": 151,
+        "endChar": 24
+      },
+      "revId": "9a9e5e6272c730eb5c6c1028758102018c32af89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6146c8ea_b0b95213",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-12-29T00:23:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3240c497_a88cac3e",
       "range": {
         "startLine": 151,
         "startChar": 12,
@@ -82,6 +142,30 @@
     },
     {
       "key": {
+        "uuid": "3815ea43_28aafad5",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-12-29T00:23:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "95b851e5_06b4c360",
+      "range": {
+        "startLine": 152,
+        "startChar": 0,
+        "endLine": 152,
+        "endChar": 10
+      },
+      "revId": "9a9e5e6272c730eb5c6c1028758102018c32af89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "859730f7_a96d0eaf",
         "filename": "doc/nvmf.md",
         "patchSetId": 3
@@ -93,6 +177,30 @@
       "writtenOn": "2017-12-28T16:21:00Z",
       "side": 1,
       "message": "I don\u0027t think we need \"Currently\" here; the documentation should always describe the current state of affairs.",
+      "range": {
+        "startLine": 173,
+        "startChar": 0,
+        "endLine": 173,
+        "endChar": 11
+      },
+      "revId": "9a9e5e6272c730eb5c6c1028758102018c32af89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b32bfcd_d99b1427",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-12-29T00:23:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "859730f7_a96d0eaf",
       "range": {
         "startLine": 173,
         "startChar": 0,
