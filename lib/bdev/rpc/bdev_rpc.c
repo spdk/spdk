@@ -223,3 +223,91 @@ invalid:
 	free_rpc_delete_bdev(&req);
 }
 SPDK_RPC_REGISTER("delete_bdev", spdk_rpc_delete_bdev)
+
+
+struct rpc_enable_bdev_qos {
+	char		*name;
+	uint64_t	ios_per_sec;
+};
+
+static void
+free_rpc_enable_bdev_qos(struct rpc_enable_bdev_qos *r)
+{
+	free(r->name);
+}
+
+static const struct spdk_json_object_decoder rpc_enable_bdev_qos_decoders[] = {
+	{"name", offsetof(struct rpc_enable_bdev_qos, name), spdk_json_decode_string},
+	{"ios_per_sec", offsetof(struct rpc_enable_bdev_qos, ios_per_sec), spdk_json_decode_uint64},
+};
+
+static void
+_spdk_rpc_enable_bdev_qos_complete(void *cb_arg, int bdeverrno)
+{
+	struct spdk_jsonrpc_request *request = cb_arg;
+	struct spdk_json_write_ctx *w;
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, bdeverrno == 0);
+	spdk_jsonrpc_end_result(request, w);
+}
+
+static void
+spdk_rpc_enable_bdev_qos(struct spdk_jsonrpc_request *request,
+			 const struct spdk_json_val *params)
+{
+	struct rpc_enable_bdev_qos	req = {};
+	struct spdk_bdev		*bdev;
+	int				rc = 0;
+
+	if (spdk_json_decode_object(params, rpc_enable_bdev_qos_decoders,
+				    sizeof(rpc_enable_bdev_qos_decoders) /
+				    sizeof(*rpc_enable_bdev_qos_decoders),
+				    &req)) {
+		SPDK_ERRLOG("%s %lu\n", req.name, req.ios_per_sec);
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		goto invalid;
+	}
+
+	if (req.name == NULL) {
+		SPDK_ERRLOG("missing name param\n");
+		goto invalid;
+	}
+
+	bdev = spdk_bdev_get_by_name(req.name);
+	if (bdev == NULL) {
+		SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
+		goto invalid;
+	}
+
+	if (bdev->ios_per_sec > 0) {
+		SPDK_ERRLOG("QoS (%lu IOs per second) already enabled on bdev '%s'\n",
+			    bdev->ios_per_sec, req.name);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_REQUEST,
+						 "QoS already enabled");
+		goto exit;
+	}
+
+	if (req.ios_per_sec < 1000) {
+		SPDK_ERRLOG("At least 1000 for expected IOs per sec (%lu)\n", req.ios_per_sec);
+		goto invalid;
+	}
+
+	rc = spdk_bdev_enable_qos(bdev, req.ios_per_sec);
+	_spdk_rpc_enable_bdev_qos_complete(request, rc);
+	free_rpc_enable_bdev_qos(&req);
+
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+
+exit:
+	free_rpc_enable_bdev_qos(&req);
+}
+
+SPDK_RPC_REGISTER("enable_bdev_qos", spdk_rpc_enable_bdev_qos)
