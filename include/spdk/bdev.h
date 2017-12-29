@@ -273,6 +273,16 @@ uint32_t spdk_bdev_get_block_size(const struct spdk_bdev *bdev);
 uint64_t spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev);
 
 /**
+ * Get IOs per second of block device for the QoS rate limiting.
+ *
+ * \param bdev Block device to query.
+ * \return IOs per second.
+ *
+ * Return 0 for no QoS enforced on the queried block device.
+ */
+uint64_t spdk_bdev_get_qos_ios_per_sec(const struct spdk_bdev *bdev);
+
+/**
  * Get minimum I/O buffer address alignment for a bdev.
  *
  * \param bdev Block device to query.
