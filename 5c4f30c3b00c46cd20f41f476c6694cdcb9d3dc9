@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6c68697d_1cbb09c6",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1374,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-29T11:20:31Z",
+      "side": 1,
+      "message": "In iSCSI, this may not be check condition but overflow. Is it OK for us to keep this?\n\nnbytes (\u003dCDB.length) is necessary for iSCSI to handle residual count correctly but it is not transferred to iSCSI now.\n\nBesides why this transfer_len is not replaced?",
+      "range": {
+        "startLine": 1374,
+        "startChar": 0,
+        "endLine": 1374,
+        "endChar": 35
+      },
+      "revId": "5c4f30c3b00c46cd20f41f476c6694cdcb9d3dc9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
