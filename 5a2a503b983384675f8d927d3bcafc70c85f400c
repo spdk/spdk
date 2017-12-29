@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "68455926_43df7d91",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 991,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-29T19:07:10Z",
+      "side": 1,
+      "message": "Unrelated whitespace change",
+      "revId": "5a2a503b983384675f8d927d3bcafc70c85f400c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e589dac7_9f9745ef",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1022,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-29T19:07:10Z",
+      "side": 1,
+      "message": "This case should probably return -ENOSPC rather than -ENOMEM.",
+      "revId": "5a2a503b983384675f8d927d3bcafc70c85f400c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
