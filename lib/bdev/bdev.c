@@ -1249,6 +1249,12 @@ spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev)
 	return bdev->blockcnt;
 }
 
+uint64_t
+spdk_bdev_get_qos_ios_per_sec(const struct spdk_bdev *bdev)
+{
+	return bdev->ios_per_sec;
+}
+
 size_t
 spdk_bdev_get_buf_align(const struct spdk_bdev *bdev)
 {
