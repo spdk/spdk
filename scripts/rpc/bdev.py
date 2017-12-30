@@ -89,6 +89,13 @@ def enable_bdev_qos(args):
     args.client.call('enable_bdev_qos', params, verbose=args.verbose)
 
 
+def disable_bdev_qos(args):
+    params = {
+        'name': args.bdev_name,
+    }
+    args.client.call('disable_bdev_qos', params, verbose=args.verbose)
+
+
 def bdev_inject_error(args):
     params = {
         'name': args.name,

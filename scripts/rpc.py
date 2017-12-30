@@ -94,6 +94,11 @@ if __name__ == "__main__":
     p.add_argument('ios_per_sec', help='Expected IOs per second (>=1000). Example: 20000', type=int)
     p.set_defaults(func=rpc.bdev.enable_bdev_qos)
 
+    p = subparsers.add_parser(
+        'disable_bdev_qos', help='Disable the QoS on a blockdev')
+    p.add_argument('bdev_name', help='Blockdev name to disable QoS. Example: Malloc0')
+    p.set_defaults(func=rpc.bdev.disable_bdev_qos)
+
     p = subparsers.add_parser('delete_bdev', help='Delete a blockdev')
     p.add_argument(
         'bdev_name', help='Blockdev name to be deleted. Example: Malloc0.')

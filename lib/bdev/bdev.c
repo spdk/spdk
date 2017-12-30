@@ -1092,17 +1092,20 @@ spdk_bdev_qos_channel_create(void *ctx)
 			return -1;
 		}
 
+		if (_spdk_bdev_channel_create(bdev->qos_channel, bdev) != 0) {
+			return -1;
+		}
+	}
+
+	/* Enable QoS setting and the QoS poller */
+	if (!(bdev->qos_channel->flags & BDEV_CH_QOS_ENABLED)) {
+		bdev->qos_channel->flags |= BDEV_CH_QOS_ENABLED;
+		bdev->qos_channel->qos_max_ios_per_ms = bdev->ios_per_sec / 1000;
+
 		bdev->qos_thread = spdk_get_thread();
 		if (!bdev->qos_thread) {
 			return -1;
 		}
-
-		if (_spdk_bdev_channel_create(bdev->qos_channel, bdev) != 0) {
-			return -1;
-		}
-
-		bdev->qos_channel->flags |= BDEV_CH_QOS_ENABLED;
-		bdev->qos_channel->qos_max_ios_per_ms = bdev->ios_per_sec / 1000;
 		spdk_bdev_qos_register_poller(bdev->qos_channel);
 	}
 
@@ -2926,6 +2929,51 @@ spdk_bdev_enable_qos(struct spdk_bdev *bdev, uint64_t ios_per_sec)
 	bdev->ios_per_sec = ios_per_sec;
 
 	return _spdk_bdev_enable_qos(bdev, false);
+}
+
+int
+spdk_bdev_disable_qos(struct spdk_bdev *bdev)
+{
+	struct spdk_bdev_io		*bdev_io = NULL;
+	struct spdk_bdev_channel	*qos_channel = bdev->qos_channel;
+	struct spdk_poller		*qos_poller = NULL;
+	struct spdk_thread		*qos_thread = NULL;
+
+	pthread_mutex_lock(&bdev->mutex);
+
+	if (!qos_channel) {
+		pthread_mutex_unlock(&bdev->mutex);
+		SPDK_ERRLOG("QoS channel is already NULL.\n");
+		return -1;
+	}
+
+	bdev->ios_per_sec = 0;
+
+	qos_channel->flags &= ~BDEV_CH_QOS_ENABLED;
+
+	while (!TAILQ_EMPTY(&qos_channel->qos_io)) {
+		bdev_io = TAILQ_FIRST(&qos_channel->qos_io);
+		TAILQ_REMOVE(&qos_channel->qos_io, bdev_io, link);
+
+		assert(bdev_io->io_submit_ch);
+		bdev_io->ch = bdev_io->io_submit_ch;
+		bdev_io->io_submit_ch = NULL;
+
+		spdk_thread_send_msg(spdk_io_channel_get_thread(bdev_io->ch->channel),
+				     _spdk_bdev_io_submit, bdev_io);
+	}
+
+	qos_poller = qos_channel->qos_poller;
+	qos_thread = bdev->qos_thread;
+
+	/* Stop the QoS poller only and the QoS channel will be cleaned up eventually. */
+	spdk_thread_send_msg(qos_thread, spdk_bdev_qos_unregister_poller, qos_poller);
+	qos_channel->qos_poller = NULL;
+	bdev->qos_thread = NULL;
+
+	pthread_mutex_unlock(&bdev->mutex);
+
+	return 0;
 }
 
 SPDK_LOG_REGISTER_COMPONENT("bdev", SPDK_LOG_BDEV)
