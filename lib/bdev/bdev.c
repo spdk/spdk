@@ -1092,6 +1092,15 @@ _spdk_bdev_enable_qos(struct spdk_bdev *bdev, bool enable_on_creation)
 {
 	pthread_mutex_lock(&bdev->mutex);
 
+	if (enable_on_creation == false && bdev->channel_count == 0) {
+		/*
+		 * No IO channel created yet.
+		 * Defer this QoS enabling when first IO channel is created.
+		 */
+		pthread_mutex_unlock(&bdev->mutex);
+		return 0;
+	}
+
 	/* Rate limiting on this bdev enabled */
 	if (bdev->ios_per_sec > 0) {
 		if (spdk_bdev_qos_channel_create(bdev) != 0) {
