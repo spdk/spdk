@@ -540,7 +540,7 @@ static void usage(char *program_name)
 	printf("\t\t(read, write, randread, randwrite, rw, randrw, verify, reset)]\n");
 	printf("\t[-M rwmixread (100 for reads, 0 for writes)]\n");
 	printf("\t[-t time in seconds]\n");
-	printf("\t[-S Show performance result in real time]\n");
+	printf("\t[-S Show performance result in real time in seconds]\n");
 }
 
 static void
@@ -724,6 +724,7 @@ main(int argc, char **argv)
 	bool mix_specified;
 	struct spdk_app_opts opts = {};
 	int time_in_sec;
+	uint64_t show_performance_period_in_usec = 0;
 
 	/* default value */
 	config_file = NULL;
@@ -734,7 +735,7 @@ main(int argc, char **argv)
 	mix_specified = false;
 	core_mask = NULL;
 
-	while ((op = getopt(argc, argv, "c:d:m:q:s:t:w:M:S")) != -1) {
+	while ((op = getopt(argc, argv, "c:d:m:q:s:t:w:M:S:")) != -1) {
 		switch (op) {
 		case 'c':
 			config_file = optarg;
@@ -763,6 +764,9 @@ main(int argc, char **argv)
 			break;
 		case 'S':
 			g_show_performance_real_time = 1;
+			show_performance_period_in_usec = atoi(optarg) * 1000000;
+			g_show_performance_period_in_usec = spdk_max(g_show_performance_period_in_usec,
+							    show_performance_period_in_usec);
 			break;
 		default:
 			usage(argv[0]);
