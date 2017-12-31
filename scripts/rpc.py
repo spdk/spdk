@@ -632,6 +632,18 @@ p = subparsers.add_parser('disable_bdev_qos', help='Disable the QoS on a blockde
 p.add_argument('bdev_name', help='Blockdev name to disable QoS. Example: Malloc0.')
 p.set_defaults(func=disable_bdev_qos)
 
+def adjust_bdev_qos(args):
+    params = {
+        'name': args.bdev_name,
+        'ios_per_sec': args.ios_per_sec
+    }
+    jsonrpc_call('adjust_bdev_qos', params)
+
+p = subparsers.add_parser('adjust_bdev_qos', help='Adjust the QoS on a blockdev')
+p.add_argument('bdev_name', help='Blockdev name to adjust QoS setting. Example: Malloc0.')
+p.add_argument('ios_per_sec', help='Expected IOs per second (>=1000). Example: 20000', type=int)
+p.set_defaults(func=adjust_bdev_qos)
+
 def start_nbd_disk(args):
     params = {
         'bdev_name': args.bdev_name,

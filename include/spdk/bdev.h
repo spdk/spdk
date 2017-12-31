@@ -641,6 +641,16 @@ int spdk_bdev_enable_qos(struct spdk_bdev *bdev, uint64_t ios_per_sec);
 int spdk_bdev_disable_qos(struct spdk_bdev *bdev);
 
 /**
+ * Adjust the QoS setting to the bdev.
+ *
+ * \param bdev Block device with QoS already enabled.
+ * \parame ios_per_sec expected IOs per second.
+ *
+ * \return 0 on success. Or negated errno on failure.
+ */
+int spdk_bdev_adjust_qos(struct spdk_bdev *bdev, uint64_t ios_per_sec);
+
+/**
  * Submit an NVMe Admin command to the bdev. This passes directly through
  * the block layer to the device. Support for NVMe passthru is optional,
  * indicated by calling spdk_bdev_io_type_supported().
