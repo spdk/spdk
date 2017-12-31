@@ -243,6 +243,42 @@ Name                    | Optional | Type        | Description
 name                    | Required | string      | Block device name
 
 
+## adjust_bdev_qos {#rpc_adjust_bdev_qos}
+
+Adjust QoS on a block device.
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "adjust_bdev_qos",
+  "params": {
+    "name": "Malloc0"
+    "ios_per_sec": 20000
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Block device name
+ios_per_sec             | Required | uint64_t    | IOs per second
+
+
 # NVMe-oF Target {#jsonrpc_components_nvmf_tgt}
 
 ## get_nvmf_subsystems method {#rpc_get_nvmf_subsystems}
