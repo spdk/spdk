@@ -2974,4 +2974,10 @@ spdk_bdev_disable_qos(struct spdk_bdev *bdev)
 	return 0;
 }
 
+void
+spdk_bdev_adjust_qos(struct spdk_bdev *bdev, uint64_t ios_per_sec)
+{
+	bdev->ios_per_sec = ios_per_sec;
+}
+
 SPDK_LOG_REGISTER_COMPONENT("bdev", SPDK_LOG_BDEV)
