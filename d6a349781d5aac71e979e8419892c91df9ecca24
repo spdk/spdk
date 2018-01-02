@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9b10c6ab_19258311",
+        "filename": "test/nvmf/fio/fio.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-01-02T10:20:03Z",
+      "side": 1,
+      "message": "call function cleanup() here ?",
+      "revId": "d6a349781d5aac71e979e8419892c91df9ecca24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
