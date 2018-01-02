@@ -72,6 +72,40 @@
     },
     {
       "key": {
+        "uuid": "4b0d4013_c2065dce",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 805,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-02T23:41:58Z",
+      "side": 1,
+      "message": "I don\u0027t understand this math; can you expand on why we are counting outstanding I/O against the QoS limit?  I think we should also be tracking submissions, not completions.\n\nThis seems like it should just be something like:\n\n    if (ch-\u003eio_submitted_per_ms \u003e\u003d ch-\u003eqos_max_ios_per_ms) {\n        break;\n    }",
+      "revId": "94a1b9dcded2a5ad4a5551eccc06b50d59257b9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41602cbe_f30684c5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 844,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-02T23:41:58Z",
+      "side": 1,
+      "message": "I\u0027m also not clear why the I/O is enqueued on the nomem_io queue - I think we should always queue QoS I/O on the QoS queue, and only add I/O to the nomem queue if it fails due to ENOMEM.",
+      "revId": "94a1b9dcded2a5ad4a5551eccc06b50d59257b9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "598c3342_4091e1e7",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 3
@@ -137,6 +171,63 @@
         "endLine": 845,
         "endChar": 3
       },
+      "revId": "94a1b9dcded2a5ad4a5551eccc06b50d59257b9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1affac93_f160c984",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 929,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-02T23:41:58Z",
+      "side": 1,
+      "message": "This probably needs to account for the actual time between poll_qos calls, not just hard-coded to 1000, since the QoS timer poller may not run immediately due to other pollers.",
+      "range": {
+        "startLine": 929,
+        "startChar": 45,
+        "endLine": 929,
+        "endChar": 51
+      },
+      "revId": "94a1b9dcded2a5ad4a5551eccc06b50d59257b9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "12cf4405_d89b93ac",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 933,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-02T23:41:58Z",
+      "side": 1,
+      "message": "I don\u0027t think we should roll unused I/Os per ms into the next ms - this will just result in allowing more I/Os in the next ms than the defined ios_per_sec limit.",
+      "revId": "94a1b9dcded2a5ad4a5551eccc06b50d59257b9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ce1072c4_4c9e8952",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2038,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-02T23:41:58Z",
+      "side": 1,
+      "message": "Can this go in the if (status \u003d\u003d SPDK_BDEV_IO_STATUS_SUCCESS) block below?",
       "revId": "94a1b9dcded2a5ad4a5551eccc06b50d59257b9a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
