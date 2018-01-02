@@ -91,7 +91,7 @@ while getopts 'xh-:' optchar; do
 done
 
 echo "INFO: Get NVMe disks:"
-nvmes=($(lspci -mm -n | grep 0108 | tr -d '"' | awk -F " " '{print "0000:"$1}'))
+nvmes=($(iter_pci_dev_id 01 08 02))
 
 if [[ -z $max_disks ]]; then
     max_disks=${#nvmes[@]}

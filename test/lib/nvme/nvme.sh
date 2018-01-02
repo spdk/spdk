@@ -4,11 +4,8 @@ set -e
 
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
+source $rootdir/scripts/common.sh
 source $rootdir/scripts/autotest_common.sh
-
-function linux_iter_pci {
-	lspci -mm -n -D | grep $1 | tr -d '"' | awk -F " " '{print $1}'
-}
 
 function get_nvme_name_from_bdf {
 	lsblk -d --output NAME
@@ -43,7 +40,7 @@ blkname=''
 #
 # note: more work probably needs to be done to properly handle devices with multiple
 # namespaces
-for bdf in $(linux_iter_pci 0108); do
+for bdf in $(iter_pci_class_code 01 08 02); do
 	get_nvme_name_from_bdf "$bdf" blkname
 	if [ "$blkname" != "" ]; then
 		mountpoints=$(lsblk /dev/$blkname --output MOUNTPOINT -n | wc -w)
