@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "87a9a201_4b274cf8",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-02T21:01:55Z",
+      "side": 1,
+      "message": "I think we should just require stop_poller_fn to be non-NULL when setting up the thread.",
+      "revId": "f7df9fe84d9128f8a413e4f55245d54678d071d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
