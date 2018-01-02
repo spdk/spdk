@@ -18,4 +18,9 @@
   Disable Yes
 
 [QoS]
+  # QoS section defines IOPS limit
+  # Timeout in microseconds for single IO under QoS control.
+  # The BUSY state will be returned when timeout.
+  Timeout 100
+  # Assign 20000 IOPS for the Malloc0 block device
   Malloc0 20000
