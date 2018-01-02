@@ -548,7 +548,7 @@ performance_dump(uint64_t io_time_in_usec)
 {
 	uint32_t index;
 	unsigned lcore_id;
-	double io_per_second, mb_per_second;
+	double io_per_second = 0, mb_per_second = 0;
 	double total_io_per_second, total_mb_per_second;
 	struct io_target *target;
 

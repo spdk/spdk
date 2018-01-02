@@ -201,6 +201,9 @@ struct spdk_bdev {
 	/** QoS per second */
 	uint64_t ios_per_sec;
 
+	/** Actual IOs per second after QoS is enabled */
+	uint64_t actual_ios_per_sec;
+
 	/** Number of outstanding channels on this bdev */
 	uint32_t channel_count;
 
