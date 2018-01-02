@@ -55,6 +55,13 @@ spdk_conf_section_get_nmval(struct spdk_conf_section *sp, const char *key, int i
 	return NULL;
 }
 
+/* Return -1 to test hardcoded defaults. */
+int
+spdk_conf_section_get_intval(struct spdk_conf_section *sp, const char *key)
+{
+	return -1;
+}
+
 static void
 _bdev_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 {
