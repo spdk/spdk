@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e8fee7c9_daa922b1",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-02T18:43:05Z",
+      "side": 1,
+      "message": "These don\u0027t need to go on the stack, so you can make them #defines instead (the compiler is probably doing this automatically with optimization on anyway). In fact, I think those #defines belong in include/nvmf_spec.h.",
+      "revId": "cc7880980a89aacde69ef6e20f95c00269b5e803",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8cf55a7c_2a2f3f1a",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-02T18:43:05Z",
+      "side": 1,
+      "message": "In order to use \u0027uuid\u0027, does the NQN need to start with \u0027nqn.2014-08.org.nvmexpress:\u0027 exactly? If so, you should strncmp with \u0027nqn.2014-08.org.nvmexpress:uuid\u0027 first to confirm that the string starts with exactly the right sequence. That simplifies this block from 82 to 89 considerably.",
+      "revId": "cc7880980a89aacde69ef6e20f95c00269b5e803",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "31557bd5_75e2c252",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-02T18:43:05Z",
+      "side": 1,
+      "message": "You don\u0027t need the intermediate buffer here. Just pass an offset into the \u0027nqn\u0027 string.",
+      "revId": "cc7880980a89aacde69ef6e20f95c00269b5e803",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f640f77_f05b5cd8",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-02T18:43:05Z",
+      "side": 1,
+      "message": "The comments are a bit confusing here. I think you want to separate this comment from the strncmp below so it is clear that the comment applies to the next several checks, not just the one immediately below it. For this specific check, you can comment that \"NQNs must start with \u0027nqn.\u0027\".",
+      "revId": "cc7880980a89aacde69ef6e20f95c00269b5e803",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fedad414_551b87c2",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-02T18:43:05Z",
+      "side": 1,
+      "message": "You aren\u0027t really checking for a valid reverse domain. You\u0027re just checking (in combination with the next check) that it is in the form \u0027something.something:\u0027. I\u0027d make the comment say that.",
+      "revId": "cc7880980a89aacde69ef6e20f95c00269b5e803",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "24b48481_a4f4a7bb",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-02T18:43:05Z",
+      "side": 1,
+      "message": "You can use strchr here.",
+      "revId": "cc7880980a89aacde69ef6e20f95c00269b5e803",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "349e61ff_7424c7ec",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-02T18:43:05Z",
+      "side": 1,
+      "message": "strchr here too",
+      "revId": "cc7880980a89aacde69ef6e20f95c00269b5e803",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
