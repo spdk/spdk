@@ -43,6 +43,8 @@ function usage()
     echo "    --distribute-cores    Use custom config file and run vhost controllers"
     echo "                          on different CPU cores instead of single core."
     echo "                          Default: False"
+    echo "    --multi-os            Run tests on different os types in VMs"
+    echo "                          Default: False"
     exit 0
 }
 
@@ -84,6 +86,7 @@ while getopts 'xh-:' optchar; do
             ctrl-type=*) ctrl_type="${OPTARG#*=}" ;;
             nested-lvol) nested_lvol=true ;;
             distribute-cores) distribute_cores=true ;;
+            multi-os) multi_os=true ;;
             *) usage $0 "Invalid argument '$OPTARG'" ;;
         esac
         ;;
@@ -185,8 +188,11 @@ for (( i=0; i<$vm_count; i++)); do
         setup_cmd+=" --test-type=spdk_vhost_blk"
     fi
     setup_cmd+=" -f $i"
-    setup_cmd+=" --os=/home/sys_sgsw/vhost_vm_image.qcow2"
-
+    if [[ $i -eq 1 ]] && [[ $multi_os ]]; then
+        setup_cmd+=" --os=/home/sys_sgsw/spdk_vhost_CentOS_vm_image.qcow2"
+    else
+        setup_cmd+=" --os=/home/sys_sgsw/vhost_vm_image.qcow2"
+    fi
     # Create single SCSI controller or multiple BLK controllers for this VM
     if $distribute_cores; then
         mask="VM_${i}_qemu_mask"
@@ -242,8 +248,13 @@ for vm_num in $used_vms; do
     fio_disks+=" --vm=${vm_num}$(printf ':/dev/%s' $SCSI_DISK)"
 done
 
+if [[ $RUN_NIGHTLY -eq 1 ]]; then
+    job_file="default_integrity_nightly.job"
+else
+    job_file="default_integrity.job"
+fi
 # Run FIO traffic
-run_fio $fio_bin --job-file=$COMMON_DIR/fio_jobs/default_integrity.job --out="$TEST_DIR/fio_results" $fio_disks
+run_fio $fio_bin --job-file=$COMMON_DIR/fio_jobs/$job_file --out="$TEST_DIR/fio_results" $fio_disks
 
 notice "Shutting down virtual machines..."
 vm_shutdown_all
