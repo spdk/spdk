@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bdb94d1c_2e3c8c16",
+        "filename": "doc/iscsi.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-02T16:53:00Z",
+      "side": 1,
+      "message": "I think iscsi_tgt should work fine as a normal user, as long as the setup steps are performed as root.\n\nCan you provide details about what doesn\u0027t work as a non-root user?",
+      "range": {
+        "startLine": 31,
+        "startChar": 91,
+        "endLine": 32,
+        "endChar": 54
+      },
+      "revId": "d1521569c30ede0d1be13f2dcef692a3115cf54a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "135d54f5_b74ad5f7",
+        "filename": "doc/iscsi.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-02T16:53:00Z",
+      "side": 1,
+      "message": "Something like \"Configuring a LUN in the iSCSI target\" would be more consistent with the iSCSI initiator section below.",
+      "range": {
+        "startLine": 54,
+        "startChar": 3,
+        "endLine": 54,
+        "endChar": 9
+      },
+      "revId": "d1521569c30ede0d1be13f2dcef692a3115cf54a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "522023b5_35ab2f54",
+        "filename": "doc/iscsi.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-02T16:53:00Z",
+      "side": 1,
+      "message": "Maybe \"for run-time configuration\" instead.",
+      "range": {
+        "startLine": 72,
+        "startChar": 48,
+        "endLine": 72,
+        "endChar": 75
+      },
+      "revId": "d1521569c30ede0d1be13f2dcef692a3115cf54a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "05bcf867_b8f5ebac",
+        "filename": "doc/iscsi.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-02T16:53:00Z",
+      "side": 1,
+      "message": "We should not recommend the TCP-based RPC, since it is not secure; the RPC server has been changed to listen on a UNIX domain socket by default, and this should be used in the documentation examples, so no configuration file change is necessary.",
+      "revId": "d1521569c30ede0d1be13f2dcef692a3115cf54a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
