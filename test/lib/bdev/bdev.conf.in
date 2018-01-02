@@ -18,12 +18,17 @@
   Disable Yes
 
 [QoS]
-  # QoS section defines IOPS limit
+  # QoS section defines IOPS rate limiting for
+  # each block device.
   #
   # Format: Bdev_Name Expected_IOPS
   #
   # A requirement of minimum 1000 and multiple of
   # 1000 IOPS is needed
   #
-  # Assign 20000 IOPs for the Malloc0 block device
+  # Global setting of timeout in milliseconds for
+  # the IO under QoS control. The BUSY state will
+  # be returned when timeout.
+  Timeout 100
+  # Assign 20000 IOPS for the Malloc0 block device
   Malloc0 20000
