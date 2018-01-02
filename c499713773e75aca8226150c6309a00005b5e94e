@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "40ab36ea_1222e059",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-02T17:24:48Z",
+      "side": 1,
+      "message": "no big deal but I\u0027d either make it \"for the event framework\" or just leave it as \"Initialization options\"",
+      "revId": "c499713773e75aca8226150c6309a00005b5e94e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b051baa_af5c8452",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-02T17:24:48Z",
+      "side": 1,
+      "message": "Just for readability maybe spdk_app-\u003erc instead of spdk_app.rc",
+      "revId": "c499713773e75aca8226150c6309a00005b5e94e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1389d495_905fa0a8",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-02T17:24:48Z",
+      "side": 1,
+      "message": "same thing as before wrt use of -\u003e instead of .",
+      "revId": "c499713773e75aca8226150c6309a00005b5e94e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fef2dd77_d8f0a762",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-02T17:24:48Z",
+      "side": 1,
+      "message": "might be clearer as \"to save the current config to\" instead of \"to hold the config\"",
+      "revId": "c499713773e75aca8226150c6309a00005b5e94e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dee01f43_605b7d27",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-02T17:24:48Z",
+      "side": 1,
+      "message": "what about on failure?",
+      "revId": "c499713773e75aca8226150c6309a00005b5e94e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "24edf18c_17cc01c1",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-02T17:24:48Z",
+      "side": 1,
+      "message": "I believe this should be \"True to enable, false to disable. \"",
+      "revId": "c499713773e75aca8226150c6309a00005b5e94e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
