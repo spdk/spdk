@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fcbcfb7a_037557b3",
+        "filename": "include/spdk/io_channel.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-02T14:50:55Z",
+      "side": 1,
+      "message": "change \"that\" to \"to\"",
+      "revId": "f238efc1a74fd6398cee090aea775836a0c3f561",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1fc15dc4_49b73b44",
+        "filename": "include/spdk/io_channel.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-02T14:50:55Z",
+      "side": 1,
+      "message": "same as line 80",
+      "revId": "f238efc1a74fd6398cee090aea775836a0c3f561",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "46c34280_a1bd1035",
+        "filename": "include/spdk/io_channel.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-02T14:50:55Z",
+      "side": 1,
+      "message": "Not sure if we\u0027re using \"handle\" like this elsewhere but it typically means a reference to some opaque struct, this is specifically the thread struct so I would prefer \"A pointer to the current thread.\"",
+      "revId": "f238efc1a74fd6398cee090aea775836a0c3f561",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a7a8c2b_4cc84a36",
+        "filename": "include/spdk/io_channel.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-02T14:50:55Z",
+      "side": 1,
+      "message": "\"A pointer to the poller...\"",
+      "revId": "f238efc1a74fd6398cee090aea775836a0c3f561",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5a182f4_b50cbc7b",
+        "filename": "include/spdk/io_channel.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-02T14:50:55Z",
+      "side": 1,
+      "message": "A pointer to...",
+      "revId": "f238efc1a74fd6398cee090aea775836a0c3f561",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "440b0045_db17e26a",
+        "filename": "include/spdk/io_channel.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-02T14:50:55Z",
+      "side": 1,
+      "message": "This is really a nit, sorry, but maybe search for everywhere you state \"The pointer\" and replace with \"A pointer\"?",
+      "revId": "f238efc1a74fd6398cee090aea775836a0c3f561",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c6a418e4_5e656719",
+        "filename": "include/spdk/io_channel.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-02T14:50:55Z",
+      "side": 1,
+      "message": "Just realized that with almost all of these return values that are pointers you are just naming the struct and not saying \"A pointer to..\". I think it\u0027s better to say \"A pointer to\" everywhere so will stop commenting on every instance :)",
+      "revId": "f238efc1a74fd6398cee090aea775836a0c3f561",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ee65a20_91399284",
+        "filename": "include/spdk/io_channel.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 270,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-02T14:50:55Z",
+      "side": 1,
+      "message": "maybe use the word \u0027appropriate\u0027 instead of \u0027correct\u0027",
+      "revId": "f238efc1a74fd6398cee090aea775836a0c3f561",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
