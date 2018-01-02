@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d828a27c_b65a0bb2",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-01-02T04:21:11Z",
+      "side": 1,
+      "message": "This part of logic is not accurate, spdk_env_get_last_core may be bigger than SPDK_MAX_LCORE, I know SPDK_MAX_LCORE it not introduced by you, but it is better to replace it with spdk_env_get_last_core.",
+      "revId": "9c75663ec2465b194ea166f5880aa4d2ae67e4cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
