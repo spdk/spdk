@@ -26,5 +26,9 @@
   # IOPS limit must be 10000 or greater and be multiple
   # of 10000
   #
+  # Global setting of timeout in milliseconds for
+  # the IO under QoS control. The BUSY state will
+  # be returned when timeout.
+  Timeout 100
   # Assign 20000 IOPS for the Malloc0 block device
   Limit_IOPS Malloc0 20000

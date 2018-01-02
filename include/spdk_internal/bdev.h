@@ -169,6 +169,12 @@ struct spdk_bdev_fn_table {
 /** bdev I/O completion status */
 enum spdk_bdev_io_status {
 	/*
+	 * BUSY should be returned when an I/O has been queued on the bdev channel for
+	 *  a long time (i.e., 100ms). Possible reason is due to the rate limiting on
+	 *  this channel. Return this status to let the IO sender to properly handle.
+	 */
+	SPDK_BDEV_IO_STATUS_BUSY = -5,
+	/*
 	 * NOMEM should be returned when a bdev module cannot start an I/O because of
 	 *  some lack of resources.  It may not be returned for RESET I/O.  I/O completed
 	 *  with NOMEM status will be retried after some I/O from the same channel have
