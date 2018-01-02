@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7d60403f_8a604ed3",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 735,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-02T23:14:02Z",
+      "side": 1,
+      "message": "This doesn\u0027t work as a public API function, since the definition of struct spdk_bdev_with_stat is in the internal header.  I also don\u0027t think this is quite what we want the API to look like.\n\nCan you try something like this instead?\n\n    // Callback function signature\n    typedef void (*spdk_bdev_get_io_stat_cb)(\n        struct spdk_bdev *bdev,\n        const struct spdk_bdev_io_stat *stat,\n        void *cb_arg);\n    // Public API - get current I/O stats for one bdev\n    void spdk_bdev_get_device_stat(\n        struct spdk_bdev *bdev,\n        spdk_bdev_get_io_stat_cb cb,\n        void *cb_arg);",
+      "revId": "25d0db34902da194aa084ec50724d857eab81af3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "39e51f8a_86434f4e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1522,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-02T23:14:02Z",
+      "side": 1,
+      "message": "A static variable is essentially a global; this is not at all thread safe, and won\u0027t work if there are multiple get_stat calls happening at once.",
+      "revId": "25d0db34902da194aa084ec50724d857eab81af3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
