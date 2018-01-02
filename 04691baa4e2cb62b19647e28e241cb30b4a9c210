@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a4bd4c6a_540be4c6",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1536,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-01-02T12:44:10Z",
+      "side": 1,
+      "message": "Ok, thanks so much for your comments.",
+      "parentUuid": "ba93253d_252c290b",
+      "revId": "04691baa4e2cb62b19647e28e241cb30b4a9c210",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d5295baf_c4837da0",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 2
