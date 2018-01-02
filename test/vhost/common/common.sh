@@ -350,6 +350,9 @@ function vm_shutdown_all()
 	while [[ $timeo -gt 0 ]]; do
 		all_vms_down=1
 		for vm in $VM_BASE_DIR/[0-9]*; do
+			echo "********************************"
+			echo $vm
+			echo "********************************"
 			if /bin/kill -0 "$(cat $vm/qemu.pid)"; then
 				all_vms_down=0
 				break
@@ -363,7 +366,7 @@ function vm_shutdown_all()
 		fi
 
 		((timeo-=1))
-		sleep 1
+		sleep 3
 	done
 	shopt -u nullglob
 	return 1
