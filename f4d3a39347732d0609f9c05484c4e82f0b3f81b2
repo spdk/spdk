@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "35bb9dd5_42f1ae2c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-02T23:23:11Z",
+      "side": 1,
+      "message": "This value, io_completed_per_ms, and qos_poller are not actually read anywhere in this patch; please introduce them in the patch where they are first used.",
+      "revId": "f4d3a39347732d0609f9c05484c4e82f0b3f81b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "03181778_788355d1",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 877,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-02T23:23:11Z",
+      "side": 1,
+      "message": "This case looks like it will put ch-\u003echannel twice (here and in the \u0027exit:\u0027 label of spdk_bdev_channel_create()).",
+      "revId": "f4d3a39347732d0609f9c05484c4e82f0b3f81b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b66a8148_6d82285e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 900,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-02T23:23:11Z",
+      "side": 1,
+      "message": "Why is this split up? It seems unrelated to this patch.",
+      "revId": "f4d3a39347732d0609f9c05484c4e82f0b3f81b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
