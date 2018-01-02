@@ -4,11 +4,8 @@ set -e
 
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
+source $rootdir/scripts/common.sh
 source $rootdir/scripts/autotest_common.sh
-
-function linux_iter_pci {
-	lspci -mm -n -D | grep $1 | tr -d '"' | awk -F " " '{print $1}'
-}
 
 function get_nvme_name_from_bdf {
 	lsblk -d --output NAME
@@ -44,7 +41,7 @@ if [ `uname` = Linux ]; then
 	#
 	# note: more work probably needs to be done to properly handle devices with multiple
 	# namespaces
-	for bdf in $(linux_iter_pci 0108); do
+	for bdf in $(iter_pci_class_code 01 08 02); do
 		get_nvme_name_from_bdf "$bdf" blkname
 		if [ "$blkname" != "" ]; then
 			mountpoints=$(lsblk /dev/$blkname --output MOUNTPOINT -n | wc -w)
@@ -107,7 +104,7 @@ fi
 
 timing_enter identify
 $rootdir/examples/nvme/identify/identify -i 0
-for bdf in $(linux_iter_pci 0108); do
+for bdf in $(iter_pci_class_code 01 08 02); do
 	$rootdir/examples/nvme/identify/identify -r "trtype:PCIe traddr:${bdf}" -i 0
 done
 timing_exit identify
@@ -168,7 +165,7 @@ PLUGIN_DIR=$rootdir/examples/nvme/fio_plugin
 
 if [ -d /usr/src/fio ]; then
 	timing_enter fio_plugin
-	for bdf in $(linux_iter_pci 0108); do
+	for bdf in $(iter_pci_class_code 01 08 02); do
 		# Only test when ASAN is not enabled. If ASAN is enabled, we cannot test.
 		if [ $SPDK_RUN_ASAN -eq 0 ]; then
 			LD_PRELOAD=$PLUGIN_DIR/fio_plugin /usr/src/fio/fio $PLUGIN_DIR/example_config.fio --filename="trtype=PCIe traddr=${bdf//:/.} ns=1"
