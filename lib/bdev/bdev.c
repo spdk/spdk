@@ -56,13 +56,14 @@
 int __itt_init_ittlib(const char *, __itt_group_id);
 #endif
 
-#define SPDK_BDEV_IO_POOL_SIZE		(64 * 1024)
-#define SPDK_BDEV_IO_CACHE_SIZE		256
-#define BUF_SMALL_POOL_SIZE		8192
-#define BUF_LARGE_POOL_SIZE		1024
-#define NOMEM_THRESHOLD_COUNT		8
-#define ZERO_BUFFER_SIZE		0x100000
-#define SPDK_BDEV_QOS_MIN_IOS_PER_SEC	1000
+#define SPDK_BDEV_IO_POOL_SIZE			(64 * 1024)
+#define SPDK_BDEV_IO_CACHE_SIZE			256
+#define BUF_SMALL_POOL_SIZE			8192
+#define BUF_LARGE_POOL_SIZE			1024
+#define NOMEM_THRESHOLD_COUNT			8
+#define ZERO_BUFFER_SIZE			0x100000
+#define SPDK_BDEV_QOS_MIN_IOS_PER_SEC		1000
+#define SPDK_BDEV_QOS_MIN_IO_TIMEOUT_IN_MSEC	100
 
 typedef TAILQ_HEAD(, spdk_bdev_io) bdev_io_tailq_t;
 typedef STAILQ_HEAD(, spdk_bdev_io) bdev_io_stailq_t;
@@ -100,6 +101,7 @@ static void			*g_init_cb_arg = NULL;
 static spdk_bdev_fini_cb	g_fini_cb_fn = NULL;
 static void			*g_fini_cb_arg = NULL;
 static struct spdk_thread	*g_fini_thread = NULL;
+static int			g_qos_io_timeout_in_ms = -1;
 
 
 struct spdk_bdev_mgmt_channel {
@@ -541,6 +543,26 @@ spdk_bdev_modules_init(void)
 	g_bdev_mgr.module_init_complete = true;
 	return rc;
 }
+
+static void
+_spdk_bdev_qos_global_config(void)
+{
+	struct spdk_conf_section	*sp = NULL;
+
+	g_qos_io_timeout_in_ms = -1;
+
+	sp = spdk_conf_find_section(NULL, "QoS");
+	if (sp != NULL) {
+		g_qos_io_timeout_in_ms = spdk_conf_section_get_intval(sp, "Timeout");
+		if (g_qos_io_timeout_in_ms > 0) {
+			g_qos_io_timeout_in_ms = spdk_max(g_qos_io_timeout_in_ms,
+							  SPDK_BDEV_QOS_MIN_IO_TIMEOUT_IN_MSEC);
+			SPDK_DEBUGLOG(SPDK_LOG_BDEV, "QoS IO timeout in millisecond %d\n",
+				      g_qos_io_timeout_in_ms);
+		}
+	}
+}
+
 void
 spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 {
@@ -612,6 +634,8 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 #ifdef SPDK_CONFIG_VTUNE
 	g_bdev_mgr.domain = __itt_domain_create("spdk_bdev");
 #endif
+
+	_spdk_bdev_qos_global_config();
 
 	spdk_io_device_register(&g_bdev_mgr, spdk_bdev_mgmt_channel_create,
 				spdk_bdev_mgmt_channel_destroy,
@@ -833,6 +857,12 @@ _spdk_bdev_qos_io_submit(void *ctx)
 	struct spdk_bdev_io		*bdev_io = NULL;
 	struct spdk_bdev		*bdev = ch->bdev;
 	struct spdk_bdev_module_channel *shared_ch = ch->module_ch;
+	uint64_t			current_tsc = 0, ticks = 0;
+
+	if (g_qos_io_timeout_in_ms > 0) {
+		current_tsc = spdk_get_ticks();
+		ticks = spdk_get_ticks_hz();
+	}
 
 	while (!TAILQ_EMPTY(&ch->qos_io)) {
 		if (ch->io_submitted_this_ms < ch->qos_max_ios_per_ms) {
@@ -840,7 +870,17 @@ _spdk_bdev_qos_io_submit(void *ctx)
 			TAILQ_REMOVE(&ch->qos_io, bdev_io, link);
 			ch->io_submitted_this_ms++;
 			shared_ch->io_outstanding++;
-			bdev->fn_table->submit_request(ch->channel, bdev_io);
+
+			/* No IO timeout check needed */
+			if (g_qos_io_timeout_in_ms == -1) {
+				bdev->fn_table->submit_request(ch->channel, bdev_io);
+			} else if ((current_tsc - bdev_io->arrival_tsc) >
+				   (SPDK_BDEV_QOS_MIN_IO_TIMEOUT_IN_MSEC * ticks / 1000)) {
+				/* Complete those already queued long enough IOs in busy state */
+				spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_BUSY);
+			} else {
+				bdev->fn_table->submit_request(ch->channel, bdev_io);
+			}
 		} else {
 			break;
 		}
@@ -868,6 +908,9 @@ _spdk_bdev_io_submit(void *ctx)
 	} else if (bdev_ch->flags & BDEV_CH_RESET_IN_PROGRESS) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	} else if (bdev_ch->flags & BDEV_CH_QOS_ENABLED) {
+		if (g_qos_io_timeout_in_ms > 0) {
+			bdev_io->arrival_tsc = spdk_get_ticks();
+		}
 		shared_ch->io_outstanding--;
 		TAILQ_INSERT_TAIL(&bdev_ch->qos_io, bdev_io, link);
 		_spdk_bdev_qos_io_submit(bdev_ch);
@@ -921,6 +964,7 @@ spdk_bdev_io_init(struct spdk_bdev_io *bdev_io,
 	bdev_io->in_submit_request = false;
 	bdev_io->buf = NULL;
 	bdev_io->io_submit_ch = NULL;
+	bdev_io->arrival_tsc = 0;
 }
 
 bool
@@ -2305,6 +2349,12 @@ spdk_bdev_io_get_scsi_status(const struct spdk_bdev_io *bdev_io,
 	switch (bdev_io->status) {
 	case SPDK_BDEV_IO_STATUS_SUCCESS:
 		*sc = SPDK_SCSI_STATUS_GOOD;
+		*sk = SPDK_SCSI_SENSE_NO_SENSE;
+		*asc = SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE;
+		*ascq = SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE;
+		break;
+	case SPDK_BDEV_IO_STATUS_BUSY:
+		*sc = SPDK_SCSI_STATUS_BUSY;
 		*sk = SPDK_SCSI_SENSE_NO_SENSE;
 		*asc = SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE;
 		*ascq = SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE;
