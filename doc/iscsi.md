@@ -8,8 +8,8 @@ This following section describes how to run iscsi from your cloned package.
 ## Prerequisites {#iscsi_prereqs}
 
 This guide starts by assuming that you can already build the standard SPDK distribution on your
-platform. The SPDK iSCSI target has been known to work on several Linux distributions, namely
-Ubuntu 14.04, 15.04, and 15.10, Fedora 21, 22, and 23, and CentOS 7.
+platform. The SPDK iSCSI target has been known to work on several Linux distributions and their
+later versions, namely Ubuntu 14.04, 15.04, and 15.10, Fedora 21, 22, and 23, and CentOS 7.
 
 Once built, the binary will be in `app/iscsi_tgt`.
 
@@ -27,6 +27,32 @@ TCP ports to use as iSCSI portals; general iSCSI parameters; initiator names and
 access to iSCSI target nodes; number and types of storage backends to export over iSCSI LUNs; iSCSI
 target node mappings between portal groups, initiator groups, and LUNs.
 
+You should make a copy of the example configuration file, modify it to suit your environment, and
+then run the iscsi_tgt application and pass it the configuration file using the -c option. Right now,
+the target requires elevated privileges (root) to run.
+
+~~~
+app/iscsi_tgt/iscsi_tgt -c /path/to/iscsi.conf
+~~~
+
+## Assigning CPU Cores to the iSCSI Target {#iscsi_config_lcore}
+
+SPDK uses the [DPDK Environment Abstraction Layer](http://dpdk.org/doc/guides/prog_guide/env_abstraction_layer.html)
+to gain access to hardware resources such as huge memory pages and CPU core(s). DPDK EAL provides
+functions to assign threads to specific cores.
+To ensure the SPDK iSCSI target has the best performance, configure the NICs and NVMe devices to
+be located on the same NUMA node. The following parameters in the configuration file
+are used to configure SPDK iSCSI target:
+
+**ReactorMask:** A hexadecimal bit mask of the CPU cores that SPDK is allowed to execute work
+items on. The ReactorMask is located in the [Global] section of the configuration file. For example,
+to assign lcores 24,25,26 and 27 to iSCSI target work items, set the ReactorMask to:
+~~~{.sh}
+ReactorMask 0xF000000
+~~~
+
+## Configuring a LUN in the iSCSI Target {#iscsi_lun}
+
 Each LUN in an iSCSI target node is associated with an SPDK block device.  See @ref bdev_getting_started
 for details on configuring SPDK block devices.  The block device to LUN mappings are specified in the
 configuration file as:
@@ -41,12 +67,32 @@ This exports a malloc'd target. The disk is a RAM disk that is a chunk of memory
 user space. It will use offload engine to do the copy job instead of memcpy if the system has enough DMA
 channels.
 
-You should make a copy of the example configuration file, modify it to suit your environment, and
-then run the iscsi_tgt application and pass it the configuration file using the -c option. Right now,
-the target requires elevated privileges (root) to run.
+## Configuring iSCSI Target via RPC method {#iscsi_rpc}
+
+SPDK iSCSI Target allows to use the RPC methods for run-time configuration. See @ref jsonrpc for details.
+
+### Add the portal group
 
 ~~~
-app/iscsi_tgt/iscsi_tgt -c /path/to/iscsi.conf
+python /path/to/spdk/scripts/rpc.py add_portal_group 1 127.0.0.1:3260
+~~~
+
+### Add the initiator group
+
+~~~
+python /path/to/spdk/scripts/rpc.py add_initiator_group 2 ANY 127.0.0.1/32
+~~~
+
+### Construct the backend block device
+
+~~~
+python /path/to/spdk/scripts/rpc.py construct_malloc_bdev -b MyBdev 64 512
+~~~
+
+### Construct the target node
+
+~~~
+python /path/to/spdk/scripts/rpc.py construct_target_node Target3 Target3_alias MyBdev:0 1:2 64 0 0 0 1
 ~~~
 
 ## Configuring iSCSI Initiator {#iscsi_initiator}
