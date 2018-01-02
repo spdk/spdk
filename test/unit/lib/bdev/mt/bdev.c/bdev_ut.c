@@ -61,6 +61,13 @@ spdk_conf_section_get_nmval(struct spdk_conf_section *sp, const char *key, int i
 	return NULL;
 }
 
+/* Return -1 to test hardcoded defaults. */
+int
+spdk_conf_section_get_intval(struct spdk_conf_section *sp, const char *key)
+{
+	return -1;
+}
+
 struct ut_bdev {
 	struct spdk_bdev	bdev;
 	void			*io_target;
@@ -792,6 +799,99 @@ io_during_qos_queue(void)
 }
 
 static void
+io_during_qos_timeout(void)
+{
+	struct spdk_io_channel *io_ch[2];
+	struct spdk_bdev_channel *bdev_ch[2], *qos_bdev_ch;
+	struct spdk_bdev *bdev;
+	enum spdk_bdev_io_status status0, status1;
+	struct spdk_bdev_module_channel *module_ch;
+	int rc;
+
+	setup_test();
+	reset_time();
+	spdk_bdev_qos_set_io_timeout(100);
+
+	/* Enable QoS */
+	bdev = &g_bdev.bdev;
+	bdev->ios_per_sec = 1000; /* 1000 I/O per second, or 1 per millisecond */
+
+	g_get_io_channel = true;
+
+	/* Create channels */
+	set_thread(0);
+	io_ch[0] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[0] = spdk_io_channel_get_ctx(io_ch[0]);
+	CU_ASSERT(bdev_ch[0]->flags == BDEV_CH_QOS_ENABLED);
+	qos_bdev_ch = bdev->qos_channel;
+	CU_ASSERT(bdev->qos_channel->flags == BDEV_CH_QOS_ENABLED);
+	CU_ASSERT(qos_bdev_ch != NULL);
+	module_ch = qos_bdev_ch->module_ch;
+	CU_ASSERT(module_ch->io_outstanding == 0);
+
+	set_thread(1);
+	io_ch[1] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[1] = spdk_io_channel_get_ctx(io_ch[1]);
+	CU_ASSERT(bdev_ch[1]->flags == BDEV_CH_QOS_ENABLED);
+
+	/*
+	 * Now sending some I/Os on different channels when QoS has been enabled
+	 */
+	set_thread(0);
+	status0 = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[0], NULL, 0, 1, io_during_io_done, &status0);
+	CU_ASSERT(rc == 0);
+
+	set_thread(1);
+	status1 = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[1], NULL, 0, 1, io_during_io_done, &status1);
+	CU_ASSERT(rc == 0);
+
+	/*
+	 * Poll the QoS thread to send the allowed I/O down
+	 */
+	poll_threads();
+	CU_ASSERT(module_ch->io_outstanding == 1);
+	CU_ASSERT(bdev_io_tailq_cnt(&qos_bdev_ch->qos_io) == 1);
+	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_PENDING);
+
+	/*
+	 * Increase the time and poll the QoS thread to run the periodical poller
+	 */
+	increment_time(1000);
+
+	/*
+	 * Delay the time to simulate the passed time to trigger timeout
+	 */
+	spdk_delay_us(1000000);
+
+	poll_threads();
+	CU_ASSERT(module_ch->io_outstanding == 1);
+	CU_ASSERT(bdev_io_tailq_cnt(&qos_bdev_ch->qos_io) == 0);
+	/*
+	 * Second IO is failed due to timeout
+	 */
+	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_FAILED);
+
+	/*
+	 * IOs are handled on the thread(0) as the QoS thread
+	 */
+	set_thread(0);
+	stub_complete_io(g_bdev.io_target, 0);
+	spdk_put_io_channel(io_ch[0]);
+	spdk_put_io_channel(io_ch[1]);
+
+	poll_threads();
+
+	/*
+	 * First IO is successfully completed
+	 */
+	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	teardown_test();
+}
+
+static void
 io_during_qos_reset(void)
 {
 	struct spdk_io_channel *io_ch[2];
@@ -1061,6 +1161,7 @@ main(int argc, char **argv)
 		CU_add_test(suite, "aborted_reset", aborted_reset) == NULL ||
 		CU_add_test(suite, "io_during_reset", io_during_reset) == NULL ||
 		CU_add_test(suite, "io_during_qos_queue", io_during_qos_queue) == NULL ||
+		CU_add_test(suite, "io_during_qos_timeout", io_during_qos_timeout) == NULL ||
 		CU_add_test(suite, "io_during_qos_reset", io_during_qos_reset) == NULL ||
 		CU_add_test(suite, "enomem", enomem) == NULL ||
 		CU_add_test(suite, "enomem_multi_bdev", enomem_multi_bdev) == NULL

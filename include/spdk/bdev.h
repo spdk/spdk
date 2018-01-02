@@ -671,6 +671,13 @@ void spdk_bdev_set_qos_limit_iops(struct spdk_bdev *bdev, uint64_t ios_per_sec,
 				  void (*cb_fn)(void *cb_arg, int status), void *cb_arg);
 
 /**
+ * Set the I/O timeout configuration on the bdev that is quality of service enabled.
+ *
+ * \param timeout_in_ms I/O timeout value in millisecond.
+ */
+void spdk_bdev_qos_set_io_timeout(int timeout_in_ms);
+
+/**
  * Submit an NVMe Admin command to the bdev. This passes directly through
  * the block layer to the device. Support for NVMe passthru is optional,
  * indicated by calling spdk_bdev_io_type_supported().

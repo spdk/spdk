@@ -66,6 +66,7 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define SPDK_BDEV_SEC_TO_USEC			1000000ULL
 #define SPDK_BDEV_QOS_MIN_IO_PER_TIMESLICE	1
 #define SPDK_BDEV_QOS_MIN_IOS_PER_SEC		10000
+#define SPDK_BDEV_QOS_MIN_IO_TIMEOUT_IN_MSEC	100
 
 typedef TAILQ_HEAD(, spdk_bdev_io) bdev_io_tailq_t;
 typedef STAILQ_HEAD(, spdk_bdev_io) bdev_io_stailq_t;
@@ -103,6 +104,7 @@ static void			*g_init_cb_arg = NULL;
 static spdk_bdev_fini_cb	g_fini_cb_fn = NULL;
 static void			*g_fini_cb_arg = NULL;
 static struct spdk_thread	*g_fini_thread = NULL;
+static int			g_qos_io_timeout_in_ms = -1;
 
 
 struct spdk_bdev_mgmt_channel {
@@ -606,6 +608,32 @@ spdk_bdev_modules_init(void)
 	g_bdev_mgr.module_init_complete = true;
 	return rc;
 }
+
+void
+spdk_bdev_qos_set_io_timeout(int timeout_in_ms)
+{
+	if (timeout_in_ms <= 0) {
+		return;
+	}
+
+	g_qos_io_timeout_in_ms = spdk_max(timeout_in_ms, SPDK_BDEV_QOS_MIN_IO_TIMEOUT_IN_MSEC);
+}
+
+static void
+_spdk_bdev_qos_global_config(void)
+{
+	struct spdk_conf_section	*sp = NULL;
+	int				timeout_in_ms = 0;
+
+	sp = spdk_conf_find_section(NULL, "QoS");
+	if (sp != NULL) {
+		timeout_in_ms = spdk_conf_section_get_intval(sp, "Timeout");
+		spdk_bdev_qos_set_io_timeout(timeout_in_ms);
+		SPDK_DEBUGLOG(SPDK_LOG_BDEV, "QoS IO timeout in millisecond %d\n",
+			      g_qos_io_timeout_in_ms);
+	}
+}
+
 void
 spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 {
@@ -677,6 +705,8 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 #ifdef SPDK_CONFIG_VTUNE
 	g_bdev_mgr.domain = __itt_domain_create("spdk_bdev");
 #endif
+
+	_spdk_bdev_qos_global_config();
 
 	spdk_io_device_register(&g_bdev_mgr, spdk_bdev_mgmt_channel_create,
 				spdk_bdev_mgmt_channel_destroy,
@@ -881,6 +911,12 @@ _spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch)
 	struct spdk_bdev_io		*bdev_io = NULL;
 	struct spdk_bdev		*bdev = ch->bdev;
 	struct spdk_bdev_module_channel *module_ch = ch->module_ch;
+	uint64_t			current_tsc = 0, ticks = 0;
+
+	if (g_qos_io_timeout_in_ms > 0) {
+		current_tsc = spdk_get_ticks();
+		ticks = spdk_get_ticks_hz();
+	}
 
 	while (!TAILQ_EMPTY(&ch->qos_io)) {
 		if (ch->io_submitted_this_timeslice < ch->qos_max_ios_per_timeslice) {
@@ -889,7 +925,17 @@ _spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch)
 			ch->io_submitted_this_timeslice++;
 			ch->io_outstanding++;
 			module_ch->io_outstanding++;
-			bdev->fn_table->submit_request(ch->channel, bdev_io);
+
+			/* No IO timeout check needed */
+			if (g_qos_io_timeout_in_ms == -1) {
+				bdev->fn_table->submit_request(ch->channel, bdev_io);
+			} else if ((current_tsc - bdev_io->submit_tsc) >
+				   (SPDK_BDEV_QOS_MIN_IO_TIMEOUT_IN_MSEC * ticks / 1000)) {
+				/* Complete those already queued long enough IOs in failed state */
+				spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+			} else {
+				bdev->fn_table->submit_request(ch->channel, bdev_io);
+			}
 		} else {
 			break;
 		}
@@ -973,6 +1019,7 @@ spdk_bdev_io_init(struct spdk_bdev_io *bdev_io,
 	bdev_io->in_submit_request = false;
 	bdev_io->buf = NULL;
 	bdev_io->io_submit_ch = NULL;
+	bdev_io->submit_tsc = 0;
 }
 
 bool
