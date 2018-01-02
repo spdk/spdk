@@ -120,6 +120,12 @@ struct spdk_bdev_io_stat {
 	uint64_t read_latency_ticks;
 	uint64_t write_latency_ticks;
 	uint64_t ticks_rate;
+
+	/* QoS poller runs periodically. Update these values at that time. */
+	uint64_t num_read_ops_in_last_timeslice;
+	uint64_t num_write_ops_in_last_timeslice;
+	uint64_t read_iops;
+	uint64_t write_iops;
 };
 
 typedef void (*spdk_bdev_init_cb)(void *cb_arg, int rc);
@@ -298,6 +304,16 @@ uint32_t spdk_bdev_get_block_size(const struct spdk_bdev *bdev);
  * Logical blocks are numbered from 0 to spdk_bdev_get_num_blocks(bdev) - 1, inclusive.
  */
 uint64_t spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev);
+
+/**
+ * Get actual IOPS of the block device when QoS is enabled.
+ *
+ * \param bdev Block device to query.
+ * \return Actual IOPS when QoS is enabled.
+ *
+ * Return 0 is QoS is not enabled on this block device.
+ */
+uint64_t spdk_bdev_get_qos_iops(const struct spdk_bdev *bdev);
 
 /**
  * Get minimum I/O buffer address alignment for a bdev.
