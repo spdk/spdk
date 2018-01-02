@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5e841c2a_86dcd5be",
+        "filename": "include/spdk/conf.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-02T17:44:30Z",
+      "side": 1,
+      "message": "\"an\" should be \"a\"",
+      "revId": "fd9618011514c69e93f46a0896cb4f21802f4f65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "97080c58_4edbe73f",
+        "filename": "include/spdk/conf.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-02T17:44:30Z",
+      "side": 1,
+      "message": "I mentioned in another review that sometimes in the return section we are saying \"A pointer to\" sometimes \"The pointer to\" and sometimes just \"the \u003cstructname\u003e\". Consistency is probably the most important thing but the first option is the most correct if you can standardize on one and try keep them all the same moving forward.",
+      "revId": "fd9618011514c69e93f46a0896cb4f21802f4f65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "822949fd_2af13727",
+        "filename": "include/spdk/conf.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-02T17:44:30Z",
+      "side": 1,
+      "message": "These descriptions of idx1 and idx2 don\u0027t make a lot of sense. Looking at the code I *think* it makes more sense to call them:\nidx1: The index into the item list for the key\nidx2: The index into the value list for the item\nor something like that?",
+      "revId": "fd9618011514c69e93f46a0896cb4f21802f4f65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c155d9b_10c24dc4",
+        "filename": "include/spdk/conf.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-02T17:44:30Z",
+      "side": 1,
+      "message": "instead of \"the value\", the requested value\"",
+      "revId": "fd9618011514c69e93f46a0896cb4f21802f4f65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b8e5ab2_f1e18b26",
+        "filename": "include/spdk/conf.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-02T17:44:30Z",
+      "side": 1,
+      "message": "Number --\u003e Index (I know it might sound redundant since the param name is idx but \u0027Number\u0027 doesn\u0027t feel right)",
+      "revId": "fd9618011514c69e93f46a0896cb4f21802f4f65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0bbca20_0d2560fd",
+        "filename": "include/spdk/conf.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-02T17:44:30Z",
+      "side": 1,
+      "message": "delete \"in the form of integer\" to be consistent with all the others where we don\u0027t mention the return type",
+      "revId": "fd9618011514c69e93f46a0896cb4f21802f4f65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
