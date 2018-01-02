@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5ccaabd2_4308f9d6",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 21
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-02T14:33:39Z",
+      "side": 1,
+      "message": "Would ask the same question Karol did, I don\u0027t believe we have any test env where there is no NVMe (real or emulated).\n\nIf you look at how this is used in other test scripts it just runs w/o any sort of check. I think the message and will leave it to a maintainer to decide but I think it should exit with error if there are no NVMe devices",
+      "revId": "07fd0eaa39a73e355d18076a4c23540243163145",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
