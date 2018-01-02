@@ -4,6 +4,7 @@ BASE_DIR=$(readlink -f $(dirname $0))
 [[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $BASE_DIR/../../../../ && pwd)"
 [[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $BASE_DIR/../common && pwd)"
 
+. $TEST_DIR/scripts/common.sh
 . $COMMON_DIR/common.sh
 rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py "
 
@@ -91,7 +92,7 @@ while getopts 'xh-:' optchar; do
 done
 
 echo "INFO: Get NVMe disks:"
-nvmes=($(lspci -mm -n | grep 0108 | tr -d '"' | awk -F " " '{print "0000:"$1}'))
+nvmes=($(iter_pci_dev_id 01 08 02))
 
 if [[ -z $max_disks ]]; then
     max_disks=${#nvmes[@]}

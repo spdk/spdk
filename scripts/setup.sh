@@ -3,17 +3,7 @@
 set -e
 
 rootdir=$(readlink -f $(dirname $0))/..
-
-function linux_iter_pci_class_code {
-	# Argument is the class code
-	lspci -mm -n -D | awk -v cc="\"$1\"" -F " " '{if (cc ~ $2) print $1}' | tr -d '"'
-}
-
-function linux_iter_pci_dev_id {
-	# Argument 1 is the vendor id
-	# Argument 2 is the device id
-	lspci -mm -n -D | awk -v ven="\"$1\"" -v dev="\"$2\"" -F " " '{if (ven ~ $3 && dev ~ $4) print $1}' | tr -d '"'
-}
+source "$rootdir/scripts/common.sh"
 
 function linux_bind_driver() {
 	bdf="$1"
@@ -90,7 +80,7 @@ function configure_linux_pci {
 
 	# NVMe
 	modprobe $driver_name || true
-	for bdf in $(linux_iter_pci_class_code 0108); do
+	for bdf in $(iter_pci_class_code 01 08 02); do
 		blkname=''
 		get_nvme_name_from_bdf "$bdf" blkname
 		if [ "$blkname" != "" ]; then
@@ -112,7 +102,7 @@ function configure_linux_pci {
 	| awk -F"x" '{print $2}' > $TMP
 
 	for dev_id in `cat $TMP`; do
-		for bdf in $(linux_iter_pci_dev_id 8086 $dev_id); do
+		for bdf in $(iter_pci_dev_id 8086 $dev_id); do
 			linux_bind_driver "$bdf" "$driver_name"
 		done
 	done
@@ -125,7 +115,7 @@ function configure_linux_pci {
 	| awk -F"x" '{print $2}' > $TMP
 
 	for dev_id in `cat $TMP`; do
-		for bdf in $(linux_iter_pci_dev_id 1af4 $dev_id); do
+		for bdf in $(iter_pci_dev_id 1af4 $dev_id); do
 			linux_bind_driver "$bdf" "$driver_name"
 		done
 	done
@@ -196,7 +186,7 @@ function reset_linux_pci {
 	lsmod | grep nvme > /dev/null
 	driver_loaded=$?
 	set -e
-	for bdf in $(linux_iter_pci_class_code 0108); do
+	for bdf in $(iter_pci_class_code 01 08 02); do
 		if [ $driver_loaded -eq 0 ]; then
 			linux_bind_driver "$bdf" nvme
 		else
@@ -215,7 +205,7 @@ function reset_linux_pci {
 	driver_loaded=$?
 	set -e
 	for dev_id in `cat $TMP`; do
-		for bdf in $(linux_iter_pci_dev_id 8086 $dev_id); do
+		for bdf in $(iter_pci_dev_id 8086 $dev_id); do
 			if [ $driver_loaded -eq 0 ]; then
 				linux_bind_driver "$bdf" ioatdma
 			else
@@ -237,7 +227,7 @@ function reset_linux_pci {
 	#  underscore vs. dash right in the virtio_scsi name.
 	modprobe virtio-pci || true
 	for dev_id in `cat $TMP`; do
-		for bdf in $(linux_iter_pci_dev_id 1af4 $dev_id); do
+		for bdf in $(iter_pci_dev_id 1af4 $dev_id); do
 			linux_bind_driver "$bdf" virtio-pci
 		done
 	done
@@ -260,7 +250,7 @@ function status_linux {
 	echo "NVMe devices"
 
 	echo -e "BDF\t\tNuma Node\tDriver name\t\tDevice name"
-	for bdf in $(linux_iter_pci_class_code 0108); do
+	for bdf in $(iter_pci_class_code 01 08 02); do
 		driver=`grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}'`
 		node=`cat /sys/bus/pci/devices/$bdf/numa_node`;
 		if [ "$driver" = "nvme" ]; then
@@ -278,7 +268,7 @@ function status_linux {
 	| awk -F"x" '{print $2}'`
 	echo -e "BDF\t\tNuma Node\tDriver Name"
 	for dev_id in $TMP; do
-		for bdf in $(linux_iter_pci_dev_id 8086 $dev_id); do
+		for bdf in $(iter_pci_dev_id 8086 $dev_id); do
 			driver=`grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}'`
 			node=`cat /sys/bus/pci/devices/$bdf/numa_node`;
 			echo -e "$bdf\t$node\t\t$driver"
@@ -292,7 +282,7 @@ function status_linux {
 	| awk -F"x" '{print $2}'`
 	echo -e "BDF\t\tNuma Node\tDriver Name"
 	for dev_id in $TMP; do
-		for bdf in $(linux_iter_pci_dev_id 1af4 $dev_id); do
+		for bdf in $(iter_pci_dev_id 1af4 $dev_id); do
 			driver=`grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}'`
 			node=`cat /sys/bus/pci/devices/$bdf/numa_node`;
 			echo -e "$bdf\t$node\t\t$driver"
