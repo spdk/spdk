@@ -2,17 +2,10 @@
 
 set -e
 
-case `uname` in
-        FreeBSD)
-                bdfs=$(pciconf -l | grep "class=0x010802" | awk -F: ' {printf "0000:%02X:%02X.%X\n", $2, $3, $4}')
-                ;;
-        Linux)
-                bdfs=$(lspci -mm -n | grep 0108 | tr -d '"' | awk -F " " '{print "0000:"$1}')
-                ;;
-        *)
-                exit 1
-                ;;
-esac
+rootdir=$(readlink -f $(dirname $0))/..
+source "$rootdir/scripts/common.sh"
+
+bdfs=$(iter_pci_class_code 01 08 02)
 
 echo "[Nvme]"
 i=0
