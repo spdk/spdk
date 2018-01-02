@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "bb541ebb_e698b3b5",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-02T21:36:24Z",
+      "side": 1,
+      "message": "This check is probably redundant, since we will be explicitly checking against the required prefix later in this function.",
+      "revId": "cc7880980a89aacde69ef6e20f95c00269b5e803",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8cf55a7c_2a2f3f1a",
         "filename": "lib/nvmf/subsystem.c",
         "patchSetId": 4
@@ -104,6 +121,41 @@
     },
     {
       "key": {
+        "uuid": "bc08e9f7_19aad60c",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-02T21:36:24Z",
+      "side": 1,
+      "message": "I think we should be at least validating that the domain part contains only valid domain name characters (only \u0027a\u0027-\u0027z\u0027, \u0027A\u0027-\u0027Z\u0027, \u00270\u0027-\u00279\u0027, and \u0027-\u0027, unless we want to support IDN).  Also, \u0027-\u0027 is not allowed to be the first or last character of a label, and two \u0027.\u0027 should not be allowed in a row, etc.\n\nSome of the rules for DNS names are laid out here: https://tools.ietf.org/html/rfc1034#section-3.5",
+      "parentUuid": "24b48481_a4f4a7bb",
+      "revId": "cc7880980a89aacde69ef6e20f95c00269b5e803",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a75d4c4_2eab0c38",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-02T21:36:24Z",
+      "side": 1,
+      "message": "I think this only accepts two dot-separated components, which is probably not what\u0027s intended by the spec.  It should accept any number of  dot-separated components, like \"com.example.test.world.hello\".  (In fact, a top-level domain name with no \u0027.\u0027 should probably also be accepted.)",
+      "revId": "cc7880980a89aacde69ef6e20f95c00269b5e803",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "349e61ff_7424c7ec",
         "filename": "lib/nvmf/subsystem.c",
         "patchSetId": 4
@@ -115,6 +167,40 @@
       "writtenOn": "2018-01-02T18:43:05Z",
       "side": 1,
       "message": "strchr here too",
+      "revId": "cc7880980a89aacde69ef6e20f95c00269b5e803",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a6621f13_add921e6",
+        "filename": "test/unit/lib/nvmf/subsystem.c/subsystem_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-02T21:36:24Z",
+      "side": 1,
+      "message": "This isn\u0027t the discovery controller NQN, so I think the comment above is wrong.\n\nIt would probably also be easier to understand what\u0027s going on if we unit test spdk_nvmf_valid_nqn() directly, rather than by calling it indirectly via spdk_nvmf_create_subsystem().  Can you split these new tests into a separate unit test function and make them call spdk_nvmf_valid_nqn() instead?",
+      "revId": "cc7880980a89aacde69ef6e20f95c00269b5e803",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c990281_11381f2c",
+        "filename": "test/unit/lib/nvmf/subsystem.c/subsystem_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-02T21:36:24Z",
+      "side": 1,
+      "message": "I think this case should probably be valid.",
       "revId": "cc7880980a89aacde69ef6e20f95c00269b5e803",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
