@@ -8,8 +8,8 @@ This following section describes how to run iscsi from your cloned package.
 ## Prerequisites {#iscsi_prereqs}
 
 This guide starts by assuming that you can already build the standard SPDK distribution on your
-platform. The SPDK iSCSI target has been known to work on several Linux distributions, namely
-Ubuntu 14.04, 15.04, and 15.10, Fedora 21, 22, and 23, and CentOS 7.
+platform. The SPDK iSCSI target has been known to work on several Linux distributions and their
+later versions, namely Ubuntu 14.04, 15.04, and 15.10, Fedora 21, 22, and 23, and CentOS 7.
 
 Once built, the binary will be in `app/iscsi_tgt`.
 
@@ -27,6 +27,22 @@ TCP ports to use as iSCSI portals; general iSCSI parameters; initiator names and
 access to iSCSI target nodes; number and types of storage backends to export over iSCSI LUNs; iSCSI
 target node mappings between portal groups, initiator groups, and LUNs.
 
+## Assigning CPU Cores to the iSCSI Target {#iscsi_config_lcore}
+
+SPDK uses the [DPDK Environment Abstraction Layer](http://dpdk.org/doc/guides/prog_guide/env_abstraction_layer.html)
+to gain access to hardware resources such as huge memory pages and CPU core(s). DPDK EAL provides
+functions to assign threads to specific cores.
+To ensure the SPDK iSCSI target has the best performance, configure the NICs and NVMe devices to
+be located on the same NUMA node. The following parameters in the configuration file
+are used to configure SPDK iSCSI target:
+
+**ReactorMask:** A hexadecimal bit mask of the CPU cores that SPDK is allowed to execute work
+items on. The ReactorMask is located in the [Global] section of the configuration file. For example,
+to assign lcores 24,25,26 and 27 to iSCSI Target work items, set the ReactorMask to:
+~~~{.sh}
+ReactorMask 0xF000000
+~~~
+
 Each LUN in an iSCSI target node is associated with an SPDK block device.  See @ref bdev_getting_started
 for details on configuring SPDK block devices.  The block device to LUN mappings are specified in the
 configuration file as:
@@ -40,6 +56,43 @@ configuration file as:
 This exports a malloc'd target. The disk is a RAM disk that is a chunk of memory allocated by iscsi in
 user space. It will use offload engine to do the copy job instead of memcpy if the system has enough DMA
 channels.
+
+## Config iSCSI Target via RPC method {#iscsi_rpc}
+
+SPDK iSCSI Target allows to use the RPC methods to configure at the runtime. See @ref jsonrpc for details.
+
+To enable this, add the [Rpc] section in the configuration file and started the iSCSI Target.
+
+~~~{.sh}
+[Rpc]
+  Listen 127.0.0.1
+~~~
+
+The listen address can be the IP address for the iSCSI portals.
+
+### Add the portal group
+
+~~~
+python /path/to/spdk/scripts/rpc.py add_portal_group -s 127.0.0.1 1 127.0.0.1:3260
+~~~
+
+### Add the initiator group
+
+~~~
+python /path/to/spdk/scripts/rpc.py add_initiator_group -s 127.0.0.1 2 ANY 127.0.0.1/32
+~~~
+
+### Construct the backend block device
+
+~~~
+python /path/to/spdk/scripts/rpc.py construct_malloc_bdev -s 127.0.0.1 -b MyBdev 64 512
+~~~
+
+### Construct the target node
+
+~~~
+python /path/to/spdk/scripts/rpc.py construct_target_node -s 127.0.0.1 Target3 Target3_alias MyBdev:0 1:2 64 0 0 0 1
+~~~
 
 You should make a copy of the example configuration file, modify it to suit your environment, and
 then run the iscsi_tgt application and pass it the configuration file using the -c option. Right now,
