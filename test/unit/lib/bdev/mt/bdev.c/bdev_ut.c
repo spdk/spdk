@@ -60,6 +60,13 @@ spdk_conf_section_get_nmval(struct spdk_conf_section *sp, const char *key, int i
 	return NULL;
 }
 
+/* Return -1 to test hardcoded defaults. */
+int
+spdk_conf_section_get_intval(struct spdk_conf_section *sp, const char *key)
+{
+	return -1;
+}
+
 struct ut_bdev {
 	struct spdk_bdev	bdev;
 	void			*io_target;
