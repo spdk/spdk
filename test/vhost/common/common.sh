@@ -238,7 +238,7 @@ function vm_ssh()
 	vm_create_ssh_config
 	local ssh_config="$VM_BASE_DIR/ssh_config"
 
-	local ssh_cmd="ssh -i $SPDK_VHOST_SSH_KEY_FILE -F $ssh_config \
+	local ssh_cmd="ssh -v -i $SPDK_VHOST_SSH_KEY_FILE -F $ssh_config \
 		-p $(vm_ssh_socket $1) 127.0.0.1"
 
 	shift
@@ -385,6 +385,9 @@ function vm_shutdown_all()
 	while [[ $timeo -gt 0 ]]; do
 		all_vms_down=1
 		for vm in $VM_BASE_DIR/[0-9]*; do
+			echo "********************************"
+			echo $vm
+			echo "********************************"
 			if /bin/kill -0 "$(cat $vm/qemu.pid)"; then
 				all_vms_down=0
 				break
@@ -398,7 +401,7 @@ function vm_shutdown_all()
 		fi
 
 		((timeo-=1))
-		sleep 1
+		sleep 2
 	done
 	shopt -u nullglob
 	return 1
