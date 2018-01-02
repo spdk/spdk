@@ -1007,6 +1007,22 @@ spdk_bdev_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 }
 
 static void
+spdk_bdev_update_qos_iops(struct spdk_bdev_channel *ch)
+{
+	struct spdk_bdev *bdev = ch->bdev;
+	int num_timeslice_per_sec = SPDK_BDEV_SEC_TO_USEC / SPDK_BDEV_QOS_TIMESLICE_IN_USEC;
+
+	/* Calculate the actual IOPS based on this interval */
+	ch->stat.read_iops = (ch->stat.num_read_ops -
+			      ch->stat.num_read_ops_in_last_timeslice) * num_timeslice_per_sec;
+	ch->stat.write_iops = (ch->stat.num_write_ops -
+			       ch->stat.num_write_ops_in_last_timeslice) * num_timeslice_per_sec;
+	ch->stat.num_read_ops_in_last_timeslice = ch->stat.num_read_ops;
+	ch->stat.num_write_ops_in_last_timeslice = ch->stat.num_write_ops;
+	bdev->actual_ios_per_sec = ch->stat.read_iops + ch->stat.write_iops;
+}
+
+static void
 spdk_bdev_qos_update_max_ios_per_timeslice(struct spdk_bdev_channel *qos_ch)
 {
 	uint64_t		qos_max_ios_per_timeslice = 0;
@@ -1025,6 +1041,8 @@ spdk_bdev_channel_poll_qos(void *arg)
 
 	/* Reset for next round of rate limiting */
 	ch->io_submitted_this_timeslice = 0;
+
+	spdk_bdev_update_qos_iops(ch);
 
 	_spdk_bdev_qos_io_submit(ch);
 
@@ -1350,6 +1368,12 @@ uint64_t
 spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev)
 {
 	return bdev->blockcnt;
+}
+
+uint64_t
+spdk_bdev_get_qos_iops(const struct spdk_bdev *bdev)
+{
+	return bdev->actual_ios_per_sec;
 }
 
 size_t
