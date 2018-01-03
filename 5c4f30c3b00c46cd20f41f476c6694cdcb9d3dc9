@@ -22,6 +22,30 @@
       "revId": "5c4f30c3b00c46cd20f41f476c6694cdcb9d3dc9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "188f8257_aeb98d61",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1374,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-03T23:03:41Z",
+      "side": 1,
+      "message": "I think this could definitely use some cleanup; it is very confusing today.\n\nThe way it works right now (as I understand it):\n- nbytes is calculated based on the TRANSFER LENGTH field of the CDB and is only used for this check against task-\u003etransfer_len.\n- The actual number of bytes to read/write is indicated by the task-\u003elength field, which is potentially smaller than the CDB transfer length (the iSCSI layer may split the transfer up into several tasks to be sent in separate Data-Out PDUs; all of the subtasks for a particular task point at the original task via task-\u003eparent).\n- The actual LBA to read/write is calculated based on the CDB LOGICAL BLOCK ADDRESS field plus the task-\u003eoffset (also set by the iSCSI subtask logic mentioned above).\n\nIdeally, some of these fields should be renamed to make their purpose clear, and some of the checks probably belong in the iSCSI layer instead of SCSI; that\u0027s what this patch series is trying to accomplish, but I\u0027m not totally sure if I understand the way it works right now, so your input is welcomed.",
+      "parentUuid": "6c68697d_1cbb09c6",
+      "range": {
+        "startLine": 1374,
+        "startChar": 0,
+        "endLine": 1374,
+        "endChar": 35
+      },
+      "revId": "5c4f30c3b00c46cd20f41f476c6694cdcb9d3dc9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
