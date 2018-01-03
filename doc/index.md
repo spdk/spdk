@@ -25,6 +25,8 @@
 
 # Programmer Guides {#general}
 
+- @ref bdev_pg
+- @ref bdev_module
 - @ref directory_structure
 - [Public API header files](files.html)
 
