@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4c4eed65_6f9f67b9",
+        "filename": "test/nvmf/filesystem/filesystem.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-03T12:01:49Z",
+      "side": 1,
+      "message": "You\u0027re using the exact same piece of script but with different function name here:\nhttps://review.gerrithub.io/#/c/393297/3/test/nvmf/fio/fio.sh\n\nMaybe we should make this function more generic and useful for other scripts as well?\n(check connected sybsystems and disconnect all of them and destroy all lvol stores in configuration?)",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 22,
+        "endChar": 1
+      },
+      "revId": "004a4cb021185702b1ef9f812dee5682d134e34b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49607f12_86cac8ca",
+        "filename": "test/nvmf/filesystem/filesystem.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-03T12:01:49Z",
+      "side": 1,
+      "message": "trap cleanup fucntion can be used here instead",
+      "range": {
+        "startLine": 102,
+        "startChar": 0,
+        "endLine": 105,
+        "endChar": 34
+      },
+      "revId": "004a4cb021185702b1ef9f812dee5682d134e34b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
