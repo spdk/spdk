@@ -107,10 +107,10 @@ vm_no="0"
 vm_setup --disk-type=spdk_vhost_scsi --force=$vm_no --os=$os_image --disks="Nvme0n1:Malloc0:Malloc1" --queue_num=18 --memory=6144
 vm_run $vm_no
 vm_wait_for_boot 600 $vm_no
-vm_scp $vm_num -r $ROOT_DIR "127.0.0.1:/root/spdk"
-vm_ssh $vm_num " cd spdk ; make clean ; ./configure --with-fio=/root/fio_src ; make -j2"
-vm_ssh $vm_num "/root/spdk/scripts/setup.sh"
-vbdevs=$(vm_ssh $vm_num ". /root/spdk/scripts/autotest_common.sh && discover_bdevs /root/spdk \
+vm_scp $vm_no -r $ROOT_DIR "127.0.0.1:/root/spdk"
+vm_ssh $vm_no " cd spdk ; make clean ; ./configure --with-fio=/root/fio_src ; make -j2"
+vm_ssh $vm_no "/root/spdk/scripts/setup.sh"
+vbdevs=$(vm_ssh $vm_no ". /root/spdk/scripts/autotest_common.sh && discover_bdevs /root/spdk \
  /root/spdk/test/vhost/initiator/bdev_pci.conf")
 virtio_bdevs=$(jq -r '[.[].name] | join(":")' <<< $vbdevs)
 virtio_with_unmap=$(jq -r '[.[] | select(.supported_io_types.unmap==true).name]
@@ -118,14 +118,14 @@ virtio_with_unmap=$(jq -r '[.[] | select(.supported_io_types.unmap==true).name]
 timing_exit setup_vm
 
 timing_enter run_spdk_fio_pci
-vm_ssh $vm_num "LD_PRELOAD=/root/spdk/examples/bdev/fio_plugin/fio_plugin /root/fio_src/fio --ioengine=spdk_bdev \
+vm_ssh $vm_no "LD_PRELOAD=/root/spdk/examples/bdev/fio_plugin/fio_plugin /root/fio_src/fio --ioengine=spdk_bdev \
  /root/spdk/test/vhost/initiator/bdev.fio --filename=$virtio_bdevs --section=job_randwrite \
  --section=job_randrw --section=job_write --section=job_rw \
  --spdk_conf=/root/spdk/test/vhost/initiator/bdev_pci.conf --spdk_mem=1024"
 timing_exit run_spdk_fio_pci
 
 timing_enter run_spdk_fio_pci_unmap
-vm_ssh $vm_num "LD_PRELOAD=/root/spdk/examples/bdev/fio_plugin/fio_plugin /root/fio_src/fio --ioengine=spdk_bdev \
+vm_ssh $vm_no "LD_PRELOAD=/root/spdk/examples/bdev/fio_plugin/fio_plugin /root/fio_src/fio --ioengine=spdk_bdev \
  /root/spdk/test/vhost/initiator/bdev.fio --filename=$virtio_with_unmap \
  --spdk_conf=/root/spdk/test/vhost/initiator/bdev_pci.conf --spdk_mem=1024"
 timing_exit run_spdk_fio_pci_unmap
