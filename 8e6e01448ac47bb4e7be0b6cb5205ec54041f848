@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "11e3055b_9bc7412b",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 448,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-01-03T08:05:35Z",
+      "side": 1,
+      "message": "I\u0027m upstreaming the vhost-user-blk host driver to QEMU, and added 2 extra vhost-user message to get virtio configuration space from slave target, so there is an optimization here in future for vhost-user devices.",
+      "revId": "8e6e01448ac47bb4e7be0b6cb5205ec54041f848",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
