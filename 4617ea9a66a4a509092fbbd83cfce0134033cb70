@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa74ca6c_a75ee089",
+        "filename": "doc/iscsi.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-03T21:03:39Z",
+      "side": 1,
+      "message": "Maybe we should just change this to \"The SPDK iSCSI target is tested on both the most recent and the long term support versions of Ubuntu, on the latest Fedora, and on actively supported versions of CentOS.\"\n\nThat way we don\u0027t have to keep updating it.",
+      "revId": "4617ea9a66a4a509092fbbd83cfce0134033cb70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d571898_336fe7bf",
+        "filename": "doc/iscsi.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-03T21:03:39Z",
+      "side": 1,
+      "message": "Instead of \"configure the NICs and NVMe devices...\", maybe say \"place the NICs and the NVMe devices on the same NUMA node and configure the target to run on CPU cores associated with the that node\". It\u0027s less about configuration and more about physically plugging the devices in to the appropriate slots.",
+      "revId": "4617ea9a66a4a509092fbbd83cfce0134033cb70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3e33239_ed7b3638",
+        "filename": "doc/iscsi.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-03T21:03:39Z",
+      "side": 1,
+      "message": "\"In addition to the configuration file, the iSCSI target may also be configured via JSON-RPC calls. See @ref jsonrpc for details.\"",
+      "revId": "4617ea9a66a4a509092fbbd83cfce0134033cb70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
