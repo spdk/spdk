@@ -69,6 +69,14 @@ case $1 in
 		--vm=0,$VM_IMAGE,Nvme0n1p0 \
 		--test-type=spdk_vhost_blk \
 		--fio-job=$WORKDIR/common/fio_jobs/default_performance.job
+		--fio-jobs=$WORKDIR/common/fio_jobs/default_performance.job
+		;;
+	-m|--migration)
+		echo 'Running migration suite...'
+		./migration/migration.sh -x \
+		--fio-bin=$FIO_BIN \
+		--fio-job=$WORKDIR/migration/migration.job \
+		--os=$VM_IMAGE
 		;;
 	-i|--integrity)
 		echo 'Running SCSI integrity suite...'
