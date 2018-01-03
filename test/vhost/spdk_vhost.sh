@@ -74,6 +74,11 @@ case $1 in
 		--test-type=spdk_vhost_blk \
 		--fio-job=$WORKDIR/common/fio_jobs/default_performance.job
 		;;
+	-m|--migration)
+		echo 'Running migration suite...'
+		./migration/migration-malloc.sh -x \
+		--fio-bin=$FIO_BIN --os=$VM_IMAGE
+		;;
 	-i|--integrity)
 		echo 'Running SCSI integrity suite...'
 		./fiotest/autotest.sh -x --fio-bin=$FIO_BIN \
