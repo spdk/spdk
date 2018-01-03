@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "96a44a77_3fdc7d33",
+        "filename": "doc/about.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-03T19:57:48Z",
+      "side": 1,
+      "message": "I think \"direct access to storage devices\" is too narrow.",
+      "revId": "817e234e363dec1dc9fd8edd36e6201d90d49da8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d4a4ad3_bf67d1e9",
+        "filename": "doc/about.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-03T19:57:48Z",
+      "side": 1,
+      "message": "I\u0027d leave I/OAT out here.  My concern is putting it in the second paragraph makes it seem like it\u0027s an important part of SPDK while in reality it\u0027s not used much.",
+      "revId": "817e234e363dec1dc9fd8edd36e6201d90d49da8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "257f8396_74977ea0",
+        "filename": "doc/about.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-03T19:57:48Z",
+      "side": 1,
+      "message": "Maybe \"used as the basis for production deployments\"?  I\u0027m concerned saying \"used as-is\" infers a level of validation that\u0027s not there today.",
+      "revId": "817e234e363dec1dc9fd8edd36e6201d90d49da8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
