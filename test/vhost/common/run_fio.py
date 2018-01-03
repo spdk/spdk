@@ -20,7 +20,7 @@ def show_help():
     Options:
         -h, --help        Show this message.
         -j, --job-file    Paths to file with FIO job configuration on remote host.
-        -f, --fio-bin     Location of FIO binary on remote host (Default "fio")
+        -f, --fio-bin     Location of FIO binary on local host (Default "fio")
         -o, --out         Directory used to save generated job files and
                           files with test results
         -p, --perf-vmex   Enable aggregating statistic for VMEXITS for VMs
@@ -112,6 +112,7 @@ def main():
 
     vms = []
     fio_cfg = None
+    out_dir = None
     perf_vmex = False
 
     try:
@@ -143,7 +144,7 @@ def main():
         print("ERROR! No FIO job provided!")
         sys.exit(1)
 
-    if not os.path.exists(out_dir):
+    if out_dir is None or not os.path.exists(out_dir):
         print("ERROR! Folder {out_dir} does not exist ".format(out_dir=out_dir))
         sys.exit(1)
 
