@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eff2844d_d583233c",
+        "filename": "doc/userspace.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-03T20:19:46Z",
+      "side": 1,
+      "message": "This is probably ok, but it reads to me like the primary reason for kernel v. user space is to divide the system\u0027s virtual memory into separate address spaces.  It might be better to frame it more in privileged v. unprivileged terms - that\u0027s usually what I think of when it comes to kernel v. userspace.",
+      "revId": "c5a147f4a2f98ea17d5168d3d37fb81b194f3ce6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f842ea41_67599cf6",
+        "filename": "doc/userspace.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-03T20:19:46Z",
+      "side": 1,
+      "message": "ring 0 is really an x86-specific thing - so maybe make this \"run in kernel space (i.e. ring 0 on x86)\"",
+      "revId": "c5a147f4a2f98ea17d5168d3d37fb81b194f3ce6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "361d5088_d1920c20",
+        "filename": "doc/userspace.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-03T20:19:46Z",
+      "side": 1,
+      "message": "I would maybe drop I/OAT here.  Each IOAT PCI function only exposes one \"queue\" - I guess with 8 functions you get 8 queues but somehow that seems different to me than NVMe queues.",
+      "revId": "c5a147f4a2f98ea17d5168d3d37fb81b194f3ce6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ecebc21f_5e549d92",
+        "filename": "doc/userspace.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-03T20:19:46Z",
+      "side": 1,
+      "message": "Unfortunately",
+      "revId": "c5a147f4a2f98ea17d5168d3d37fb81b194f3ce6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77d7412f_37cc895b",
+        "filename": "doc/userspace.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-03T20:19:46Z",
+      "side": 1,
+      "message": "I think this should be toned down a bit - we do support multi-process so this sentence isn\u0027t really accurate.",
+      "revId": "c5a147f4a2f98ea17d5168d3d37fb81b194f3ce6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
