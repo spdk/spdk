@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "47a66249_4f052a4a",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-03T07:39:31Z",
+      "side": 1,
+      "message": "That\u0027s a nice solution, thanks",
+      "parentUuid": "b41713ae_a24328ed",
+      "range": {
+        "startLine": 114,
+        "startChar": 39,
+        "endLine": 114,
+        "endChar": 65
+      },
+      "revId": "8ddfd0bb0208ac012ed1cbfbcefaae89bd0905e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a33ef881_1bafc9bb",
         "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
         "patchSetId": 6
