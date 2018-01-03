@@ -209,9 +209,10 @@ uint16_t virtio_recv_pkts(struct virtqueue *vq, void **io, uint32_t *len, uint16
  * is sent, processed and a response is received, the same object will be
  * returned to the user calling the virtio poll API.
  * \param iovcnt number of required iovectors for the request. This can be
- * higher than than the actual number of descriptors to be added.
- * \return 0 on success or negative errno otherwise. If not enough iovectors
- * are available, -ENOSPC is returned.
+ * higher than than the actual number of iovectors to be added.
+ * \return 0 on success or negative errno otherwise. If the `iovcnt` is
+ * greater than virtqueue depth, -EINVAL is returned. If simply not enough
+ * iovectors are available, -ENOMEM is returned.
  */
 int virtqueue_req_start(struct virtqueue *vq, void *cookie, int iovcnt);
 
