@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "b9246dd4_bc5af1b4",
+        "filename": "doc/iscsi.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-03T12:42:52Z",
+      "side": 1,
+      "message": "I\u0027ve just moved this paragraph from the original lines.\n\nFor those memory consumption, does it require the root privilege?",
+      "parentUuid": "bdb94d1c_2e3c8c16",
+      "range": {
+        "startLine": 31,
+        "startChar": 91,
+        "endLine": 32,
+        "endChar": 54
+      },
+      "revId": "d1521569c30ede0d1be13f2dcef692a3115cf54a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "135d54f5_b74ad5f7",
         "filename": "doc/iscsi.md",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2018-01-02T16:53:00Z",
       "side": 1,
       "message": "Something like \"Configuring a LUN in the iSCSI target\" would be more consistent with the iSCSI initiator section below.",
+      "range": {
+        "startLine": 54,
+        "startChar": 3,
+        "endLine": 54,
+        "endChar": 9
+      },
+      "revId": "d1521569c30ede0d1be13f2dcef692a3115cf54a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d12a818c_149ccd0c",
+        "filename": "doc/iscsi.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-03T12:42:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "135d54f5_b74ad5f7",
       "range": {
         "startLine": 54,
         "startChar": 3,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "17ec9b8b_47372b5d",
+        "filename": "doc/iscsi.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-03T12:42:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "522023b5_35ab2f54",
+      "range": {
+        "startLine": 72,
+        "startChar": 48,
+        "endLine": 72,
+        "endChar": 75
+      },
+      "revId": "d1521569c30ede0d1be13f2dcef692a3115cf54a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "05bcf867_b8f5ebac",
         "filename": "doc/iscsi.md",
         "patchSetId": 2
@@ -82,6 +154,24 @@
       "writtenOn": "2018-01-02T16:53:00Z",
       "side": 1,
       "message": "We should not recommend the TCP-based RPC, since it is not secure; the RPC server has been changed to listen on a UNIX domain socket by default, and this should be used in the documentation examples, so no configuration file change is necessary.",
+      "revId": "d1521569c30ede0d1be13f2dcef692a3115cf54a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "adbb0f68_11f536a4",
+        "filename": "doc/iscsi.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-03T12:42:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "05bcf867_b8f5ebac",
       "revId": "d1521569c30ede0d1be13f2dcef692a3115cf54a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
