@@ -272,17 +272,39 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_v
 	struct rte_vhost_vring *vring = &virtqueue->vring;
 	struct vring_used *used = vring->used;
 	uint16_t last_idx = vring->last_used_idx & (vring->size - 1);
+	struct vring_desc *desc, *desc_table;
+	uint32_t desc_table_size;
+	int rc;
 
 	SPDK_DEBUGLOG(SPDK_LOG_VHOST_RING,
 		      "Queue %td - USED RING: last_idx=%"PRIu16" req id=%"PRIu16" len=%"PRIu32"\n",
 		      virtqueue - vdev->virtqueue, vring->last_used_idx, id, len);
 
+
+	rc = spdk_vhost_vq_get_desc(vdev, virtqueue, last_idx, &desc, &desc_table, &desc_table_size);
+	if (spdk_likely(rc == 0)) {
+		do {
+			if (spdk_vhost_vring_desc_is_wr(desc)) {
+				/* To be honest, we should log only realy touched pages, but
+				 * doing so would require tracking those changes in each backed, so for now
+				 * assume we touched all pages passed to as writeable buffers. */
+				rte_vhost_log_write(vdev->vid, desc->addr, desc->len);
+			}
+			spdk_vhost_vring_desc_get_next(&desc, desc_table, desc_table_size);
+		} while (desc);
+	} else {
+		SPDK_ERRLOG("Can't log used ring descriptors!\n");
+	}
 	vring->last_used_idx++;
 	used->ring[last_idx].id = id;
 	used->ring[last_idx].len = len;
+	rte_vhost_log_used_vring(vdev->vid, virtqueue - vdev->virtqueue, offsetof(struct vring_used,
+				 ring[last_idx]), sizeof(used->ring[last_idx]));
 
 	spdk_wmb();
 	* (volatile uint16_t *) &used->idx = vring->last_used_idx;
+	rte_vhost_log_used_vring(vdev->vid, virtqueue - vdev->virtqueue, offsetof(struct vring_used, idx),
+				 sizeof(used->idx));
 
 	virtqueue->used_req_cnt++;
 
@@ -894,10 +916,16 @@ start_device(int vid)
 
 	memset(vdev->virtqueue, 0, sizeof(vdev->virtqueue));
 	for (i = 0; i < num_queues; i++) {
+		struct rte_vhost_vring *vr;
+
 		if (rte_vhost_get_vhost_vring(vid, i, &vdev->virtqueue[i].vring)) {
 			SPDK_ERRLOG("vhost device %d: Failed to get information of queue %"PRIu16"\n", vid, i);
 			goto out;
 		}
+
+		vr = &vdev->virtqueue[i].vring;
+		SPDK_WARNLOG("VQ %i vring is: last_avail_idx=%d, last_used_idx=%d avail->idx = %d, used->idx = %d\n",
+			     i, vr->last_avail_idx, vr->last_used_idx, vr->avail->idx, vr->used->idx);
 
 		if (vdev->virtqueue[i].vring.size == 0) {
 			SPDK_ERRLOG("vhost device %d: Queue %"PRIu16" has size 0.\n", vid, i);
@@ -909,7 +937,6 @@ start_device(int vid)
 			SPDK_ERRLOG("vhost device %d: Failed to disable guest notification on queue %"PRIu16"\n", vid, i);
 			goto out;
 		}
-
 	}
 
 	vdev->num_queues = num_queues;
