@@ -54,6 +54,7 @@
 struct virtio_blk_dev {
 	struct virtio_dev		vdev;
 	struct spdk_bdev		bdev;
+	bool				readonly;
 };
 
 struct virtio_blk_io_ctx {
@@ -77,7 +78,8 @@ struct bdev_virtio_blk_io_channel {
 #define VIRTIO_BLK_DEV_SUPPORTED_FEATURES		\
 	(1ULL << VIRTIO_BLK_F_BLK_SIZE		|	\
 	 1ULL << VIRTIO_BLK_F_TOPOLOGY		|	\
-	 1ULL << VIRTIO_BLK_F_MQ)
+	 1ULL << VIRTIO_BLK_F_MQ		|	\
+	 1ULL << VIRTIO_BLK_F_RO)
 
 SPDK_DECLARE_BDEV_MODULE(virtio_blk);
 
@@ -179,11 +181,14 @@ bdev_virtio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 static bool
 bdev_virtio_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
+	struct virtio_blk_dev *bvdev = ctx;
+
 	switch (io_type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-	case SPDK_BDEV_IO_TYPE_WRITE:
 	case SPDK_BDEV_IO_TYPE_RESET:
 		return true;
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		return !bvdev->readonly;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 	default:
@@ -379,6 +384,10 @@ virtio_pci_blk_dev_create_cb(struct virtio_pci_ctx *pci_ctx)
 	rc = virtio_dev_reset(vdev, VIRTIO_BLK_DEV_SUPPORTED_FEATURES);
 	if (rc != 0) {
 		return rc;
+	}
+
+	if (virtio_dev_has_feature(vdev, VIRTIO_BLK_F_RO)) {
+		bvdev->readonly = true;
 	}
 
 	if (virtio_dev_has_feature(vdev, VIRTIO_BLK_F_BLK_SIZE)) {
