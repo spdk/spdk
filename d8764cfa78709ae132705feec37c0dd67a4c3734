@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cdd5d0a7_3b9fc498",
+        "filename": "autotest.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-01-03T07:06:34Z",
+      "side": 1,
+      "message": "Are you plan to merge per patch test and nightly test into same one ? If so please remove the nightly prefix.",
+      "revId": "d8764cfa78709ae132705feec37c0dd67a4c3734",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
