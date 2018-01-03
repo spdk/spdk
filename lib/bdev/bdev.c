@@ -2328,11 +2328,15 @@ spdk_bdev_part_free(struct spdk_bdev_part *part)
 void
 spdk_bdev_part_base_hotremove(struct spdk_bdev *base_bdev, struct bdev_part_tailq *tailq)
 {
-	struct spdk_bdev_part *part, *tmp;
+	struct spdk_bdev_part *part;
 
-	TAILQ_FOREACH_SAFE(part, tailq, tailq, tmp) {
+	part = TAILQ_FIRST(tailq);
+	while (part != NULL) {
 		if (part->base->bdev == base_bdev) {
 			spdk_vbdev_unregister(&part->bdev, NULL, NULL);
+                        //	part = TAILQ_FIRST(tailq);
+                        //} else {
+			part = TAILQ_NEXT(part, tailq);
 		}
 	}
 }
