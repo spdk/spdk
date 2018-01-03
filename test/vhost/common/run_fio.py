@@ -45,7 +45,7 @@ def save_file(path, mode, contents):
 
 def run_fio(vms, fio_cfg_fname, out_path, perf_vmex=False):
         global fio_bin
-        fio_cfg_prefix = fio_cfg_fname.split(".")[0]
+        job_name = os.path.splitext(os.path.basename(fio_cfg_fname))[0]
 
         # Build command for FIO
         fio_cmd = " ".join([fio_bin, "--eta=never"])
@@ -82,7 +82,7 @@ def run_fio(vms, fio_cfg_fname, out_path, perf_vmex=False):
             print("ERROR! While executing FIO jobs - RC: {rc}".format(rc=rc, out=out))
             sys.exit(rc)
         else:
-            save_file(os.path.join(out_path, ".".join([fio_cfg_prefix, "log"])), "w", out)
+            save_file(os.path.join(out_path, ".".join([job_name, "log"])), "w", out)
 
         if perf_vmex:
             # Stop gathering perf statistics and prepare some result files
@@ -96,7 +96,7 @@ def run_fio(vms, fio_cfg_fname, out_path, perf_vmex=False):
                                blocking=True)
             print("VMexit host stats:")
             print("{perf_out}".format(perf_out=out))
-            save_file(os.path.join(perf_dir, "vmexit_stats_" + fio_cfg_prefix),
+            save_file(os.path.join(perf_dir, "vmexit_stats_" + job_name),
                       "w", "{perf_out}".format(perf_out=out))
             try:
                 os.remove(perf_rec_file)

@@ -799,19 +799,20 @@ function run_fio()
 		esac
 	done
 
+	job_fname=$(basename "$job_file")
+
 	# prepare job file for each VM
 	for vm in ${vms[@]}; do
 		local vm_num=${vm%%:*}
 		local vmdisks=${vm#*:}
 
-		sed "s@filename=@filename=$vmdisks@" $job_file | vm_ssh $vm_num 'cat > /root/fio.job'
+		sed "s@filename=@filename=$vmdisks@" $job_file | vm_ssh $vm_num "cat > /root/$job_fname"
 		fio_disks+="127.0.0.1:$(vm_fio_socket $vm_num):$vmdisks,"
 
-		vm_ssh $vm_num ls -al
-		vm_ssh $vm_num cat /root/fio.job
+		vm_ssh $vm_num cat /root/$job_fname
 	done
 
-	python $SPDK_BUILD_DIR/test/vhost/common/run_fio.py --job-file=/root/fio.job $fio_bin $out ${fio_disks%,}
+	python $SPDK_BUILD_DIR/test/vhost/common/run_fio.py --job-file=/root/$job_fname $fio_bin $out ${fio_disks%,}
 }
 
 # Shutdown or kill any running VM and SPDK APP.
