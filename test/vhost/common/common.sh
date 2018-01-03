@@ -116,8 +116,8 @@ function spdk_vhost_kill()
 			fi
 		done
 		if /bin/kill -0 $vhost_pid; then
-			echo "ERROR: vhost was NOT killed - sending SIGKILL"
-			/bin/kill -KILL $vhost_pid
+			echo "ERROR: vhost was NOT killed - sending SIGABRT"
+			/bin/kill -ABRT $vhost_pid
 			rm $vhost_pid_file
 			return 1
 		fi
