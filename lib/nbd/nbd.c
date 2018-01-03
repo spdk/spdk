@@ -228,12 +228,6 @@ _nbd_stop(struct spdk_nbd_disk *nbd)
 		spdk_bdev_close(nbd->bdev_desc);
 	}
 
-	if (nbd->dev_fd >= 0) {
-		ioctl(nbd->dev_fd, NBD_CLEAR_QUE);
-		ioctl(nbd->dev_fd, NBD_CLEAR_SOCK);
-		close(nbd->dev_fd);
-	}
-
 	if (nbd->nbd_path) {
 		free(nbd->nbd_path);
 	}
@@ -244,6 +238,12 @@ _nbd_stop(struct spdk_nbd_disk *nbd)
 
 	if (nbd->kernel_sp_fd >= 0) {
 		close(nbd->kernel_sp_fd);
+	}
+
+	if (nbd->dev_fd >= 0) {
+		ioctl(nbd->dev_fd, NBD_CLEAR_QUE);
+		ioctl(nbd->dev_fd, NBD_CLEAR_SOCK);
+		close(nbd->dev_fd);
 	}
 
 	if (nbd->nbd_poller) {
