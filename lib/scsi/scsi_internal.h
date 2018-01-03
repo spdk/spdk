@@ -141,11 +141,6 @@ int spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun);
 void spdk_scsi_lun_free_io_channel(struct spdk_scsi_lun *lun);
 bool spdk_scsi_lun_has_pending_tasks(const struct spdk_scsi_lun *lun);
 
-int spdk_scsi_lun_db_add(struct spdk_scsi_lun *lun);
-int spdk_scsi_lun_db_delete(struct spdk_scsi_lun *lun);
-
-struct spdk_scsi_lun *spdk_lun_db_get_lun(const char *lun_name);
-
 struct spdk_scsi_dev *spdk_scsi_dev_get_list(void);
 
 int spdk_scsi_port_construct(struct spdk_scsi_port *port, uint64_t id,

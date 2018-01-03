@@ -161,21 +161,13 @@ def verify_scsi_devices_rpc_methods(rpc_py):
     print "verify_scsi_devices_rpc_methods passed"
 
 
-def verify_luns_rpc_methods(rpc_py, rpc_param):
+def create_malloc_bdevs_rpc_methods(rpc_py, rpc_param):
     rpc = spdk_rpc(rpc_py)
-    output = rpc.get_luns()
-    jsonvalue = json.loads(output)
-    verify(not jsonvalue, 1,
-           "get_luns returned {}, expected empty".format(jsonvalue))
 
     for i in range(1, rpc_param['lun_total'] + 1):
         rpc.construct_malloc_bdev(rpc_param['malloc_bdev_size'], rpc_param['malloc_block_size'])
-        output = rpc.get_luns()
-        jsonvalue = json.loads(output)
-        verify(not jsonvalue, 1,
-               "get_luns returned {}, expected empty".format(jsonvalue))
 
-    print "verify_luns_rpc_methods passed"
+    print "create_malloc_bdevs_rpc_methods passed"
 
 
 def verify_portal_groups_rpc_methods(rpc_py, rpc_param):
@@ -421,7 +413,7 @@ if __name__ == "__main__":
         verify_trace_flag_rpc_methods(rpc_py, rpc_param)
         verify_get_interfaces(rpc_py)
         verify_add_delete_ip_address(rpc_py)
-        verify_luns_rpc_methods(rpc_py, rpc_param)
+        create_malloc_bdevs_rpc_methods(rpc_py, rpc_param)
         verify_portal_groups_rpc_methods(rpc_py, rpc_param)
         verify_initiator_groups_rpc_methods(rpc_py, rpc_param)
         verify_target_nodes_rpc_methods(rpc_py, rpc_param)
