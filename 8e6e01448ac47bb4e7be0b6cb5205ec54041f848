@@ -16,6 +16,24 @@
       "revId": "8e6e01448ac47bb4e7be0b6cb5205ec54041f848",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8aeda0c_2d20d775",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 448,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-03T11:01:13Z",
+      "side": 1,
+      "message": "Yes, I saw that. I see a great potential in that feature and I\u0027m looking forward to it. We already have a virtio_dev_read_dev_config, but it works only for virtio-pci (and does nothing for virtio-user). Should we support older devices that don\u0027t implement these 2 extra vhost-user messages? (e.g. current SPDK vhost-blk target)",
+      "parentUuid": "11e3055b_9bc7412b",
+      "revId": "8e6e01448ac47bb4e7be0b6cb5205ec54041f848",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
