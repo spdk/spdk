@@ -46,6 +46,30 @@
       "revId": "5c4f30c3b00c46cd20f41f476c6694cdcb9d3dc9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da7d31e0_cdcf68f4",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1374,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-03T23:22:35Z",
+      "side": 1,
+      "message": "Sorry, the reference to \"Data-Out\" above should be \"Data-In\".",
+      "parentUuid": "188f8257_aeb98d61",
+      "range": {
+        "startLine": 1374,
+        "startChar": 0,
+        "endLine": 1374,
+        "endChar": 35
+      },
+      "revId": "5c4f30c3b00c46cd20f41f476c6694cdcb9d3dc9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
