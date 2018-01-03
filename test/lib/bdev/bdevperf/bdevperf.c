@@ -544,13 +544,17 @@ static void usage(char *program_name)
 }
 
 static void
-performance_dump(uint64_t io_time_in_usec)
+performance_dump(uint64_t io_time_in_usec, bool end)
 {
 	uint32_t index;
 	unsigned lcore_id;
 	double io_per_second, mb_per_second;
 	double total_io_per_second, total_mb_per_second;
 	struct io_target *target;
+	static double io_completed_by_last_cycle = 0;
+	double io_completed_in_last_cycle = 0;
+	double iops_in_last_cycle = 0;
+	double total_iops_in_last_cycle = 0;
 
 	total_io_per_second = 0;
 	total_mb_per_second = 0;
@@ -561,21 +565,43 @@ performance_dump(uint64_t io_time_in_usec)
 			printf("\r Logical core: %u\n", lcore_id);
 		}
 		while (target != NULL) {
+			if (g_show_performance_real_time) {
+				io_completed_in_last_cycle = (double)target->io_completed -
+							     io_completed_by_last_cycle;
+				io_completed_by_last_cycle = (double)target->io_completed;
+				iops_in_last_cycle = io_completed_in_last_cycle /
+						     g_show_performance_period_in_usec * 1000000;
+			}
+
 			io_per_second = (double)target->io_completed * 1000000 /
 					io_time_in_usec;
 			mb_per_second = io_per_second * g_io_size /
 					(1024 * 1024);
-			printf("\r %-20s: %10.2f IO/s %10.2f MB/s\n",
-			       target->name, io_per_second, mb_per_second);
+
+			if (g_show_performance_real_time && end == false) {
+				printf("\r %-20s: %10.2f RT. IO/s %10.2f Avg. IO/s %10.2f MB/s\n",
+				       target->name, iops_in_last_cycle,
+				       io_per_second, mb_per_second);
+			} else {
+				printf("\r %-20s: %10.2f IO/s %10.2f MB/s\n",
+				       target->name, io_per_second, mb_per_second);
+			}
+
+			total_iops_in_last_cycle += iops_in_last_cycle;
 			total_io_per_second += io_per_second;
 			total_mb_per_second += mb_per_second;
 			target = target->next;
 		}
 	}
 
-	printf("\r =====================================================\n");
-	printf("\r %-20s: %10.2f IO/s %10.2f MB/s\n",
-	       "Total", total_io_per_second, total_mb_per_second);
+	printf("\r ==============================================================================\n");
+	if (g_show_performance_real_time && end == false) {
+		printf("\r %-20s: %10.2f RT. IO/s %10.2f Avg. IO/s %10.2f MB/s\n",
+		       "Total", total_iops_in_last_cycle, total_io_per_second, total_mb_per_second);
+	} else {
+		printf("\r %-20s: %10.2f IO/s %10.2f MB/s\n",
+		       "Total", total_io_per_second, total_mb_per_second);
+	}
 	fflush(stdout);
 
 }
@@ -584,7 +610,7 @@ static void
 performance_statistics_thread(void *arg)
 {
 	g_show_performance_period_num++;
-	performance_dump(g_show_performance_period_num * g_show_performance_period_in_usec);
+	performance_dump(g_show_performance_period_num * g_show_performance_period_in_usec, false);
 }
 
 static int
@@ -896,7 +922,7 @@ main(int argc, char **argv)
 	}
 
 	if (g_time_in_usec) {
-		performance_dump(g_time_in_usec);
+		performance_dump(g_time_in_usec, true);
 	} else {
 		printf("Test time less than one microsecond, no performance data will be shown\n");
 	}
