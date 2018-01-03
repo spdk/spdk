@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "93fb6a1d_8acd1334",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-03T11:06:16Z",
+      "side": 1,
+      "message": "If possible we should move this bit to separate function to avoid copy-pasta",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 24,
+        "endChar": 3
+      },
+      "revId": "1071c9c372e34f4dfbc20e13d9899ea03b53a2d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
