@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "6ea867dd_307cf967",
+        "filename": "test/lib/bdev/blockdev.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-01-03T08:46:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "93629587_6af95c88",
+      "revId": "3eb5a0ed8306c3993a241d52aa89c57244c85c35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e4030e25_81e11cc4",
         "filename": "test/lib/bdev/nbd/nbd_common.sh",
         "patchSetId": 12
