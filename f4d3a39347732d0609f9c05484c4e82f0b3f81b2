@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "dd3751db_a24a3a2e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-03T09:48:14Z",
+      "side": 1,
+      "message": "This patch is to introduce this QoS related parameters and so far these new parameters are just initialized to zero when the bdev channel is created.",
+      "parentUuid": "35bb9dd5_42f1ae2c",
+      "revId": "f4d3a39347732d0609f9c05484c4e82f0b3f81b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "03181778_788355d1",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 2
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "7ea9e914_e8ead02e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 877,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-03T09:48:14Z",
+      "side": 1,
+      "message": "Yes. This can be removed. Good catch. Thanks.",
+      "parentUuid": "03181778_788355d1",
+      "revId": "f4d3a39347732d0609f9c05484c4e82f0b3f81b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b66a8148_6d82285e",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 2
@@ -47,6 +83,24 @@
       "writtenOn": "2018-01-02T23:23:11Z",
       "side": 1,
       "message": "Why is this split up? It seems unrelated to this patch.",
+      "revId": "f4d3a39347732d0609f9c05484c4e82f0b3f81b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a6409d65_019476f0",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 900,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-03T09:48:14Z",
+      "side": 1,
+      "message": "This is for the QoS bdev channel creation in the following patch, to have a consolidated place for the bdev channel initialization instead of having duplicate code.\n\nMaybe have another patch for this?",
+      "parentUuid": "b66a8148_6d82285e",
       "revId": "f4d3a39347732d0609f9c05484c4e82f0b3f81b2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
