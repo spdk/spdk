@@ -54,6 +54,7 @@
 struct virtio_blk_dev {
 	struct virtio_dev		vdev;
 	struct spdk_bdev		bdev;
+	bool				readonly;
 };
 
 struct virtio_blk_io_ctx {
@@ -77,7 +78,8 @@ struct bdev_virtio_blk_io_channel {
 #define VIRTIO_BLK_DEV_SUPPORTED_FEATURES		\
 	(1ULL << VIRTIO_BLK_F_BLK_SIZE		|	\
 	 1ULL << VIRTIO_BLK_F_TOPOLOGY		|	\
-	 1ULL << VIRTIO_BLK_F_MQ)
+	 1ULL << VIRTIO_BLK_F_MQ		|	\
+	 1ULL << VIRTIO_BLK_F_RO)
 
 static int bdev_virtio_initialize(void);
 static int bdev_virtio_blk_get_ctx_size(void);
@@ -157,13 +159,19 @@ bdev_virtio_rw(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 static int
 _bdev_virtio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
+	struct virtio_blk_dev *bvdev = bdev_io->bdev->ctxt;
+
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 		spdk_bdev_io_get_buf(bdev_io, bdev_virtio_rw,
 				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		return 0;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		bdev_virtio_rw(ch, bdev_io);
+		if (bvdev->readonly) {
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		} else {
+			bdev_virtio_rw(ch, bdev_io);
+		}
 		return 0;
 	case SPDK_BDEV_IO_TYPE_RESET:
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
@@ -188,11 +196,14 @@ bdev_virtio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 static bool
 bdev_virtio_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
+	struct virtio_blk_dev *bvdev = ctx;
+
 	switch (io_type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-	case SPDK_BDEV_IO_TYPE_WRITE:
 	case SPDK_BDEV_IO_TYPE_RESET:
 		return true;
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		return !bvdev->readonly;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 	default:
@@ -350,6 +361,10 @@ virtio_blk_dev_init(struct virtio_blk_dev *bvdev, uint16_t max_queues)
 					   &host_max_queues, sizeof(host_max_queues));
 	} else {
 		host_max_queues = 1;
+	}
+
+	if (virtio_dev_has_feature(vdev, VIRTIO_BLK_F_RO)) {
+		bvdev->readonly = true;
 	}
 
 	if (max_queues == 0) {
