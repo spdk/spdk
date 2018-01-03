@@ -42,8 +42,14 @@
 #include "nvme_internal.h"
 #include "nvme_uevent.h"
 
+/*
+ * Number of completion queue entries to process before ringing the
+ *  completion queue doorbell.
+ */
+#define NVME_MIN_COMPLETIONS	(1)
+#define NVME_MAX_COMPLETIONS	(128)
+
 #define NVME_ADMIN_ENTRIES	(128)
-#define NVME_ADMIN_TRACKERS	(64)
 
 /*
  * NVME_MAX_SGL_DESCRIPTORS defines the maximum number of descriptors in one SGL
@@ -157,6 +163,8 @@ struct nvme_pcie_qpair {
 	struct nvme_tracker *tr;
 
 	uint16_t num_entries;
+
+	uint16_t max_completions_cap;
 
 	uint16_t sq_tail;
 	uint16_t cq_head;
@@ -871,15 +879,18 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 	uint16_t		num_trackers;
 	size_t 			page_size = sysconf(_SC_PAGESIZE);
 
-	if (qpair->id == 0) {
-		num_trackers = NVME_ADMIN_TRACKERS;
-	} else {
-		/*
-		 *  Note that for a queue size of N, we can only have (N-1)
-		 *  commands outstanding, hence the "-1" here.
-		 */
-		num_trackers = pqpair->num_entries - 1;
-	}
+	/*
+	 * Limit the maximum number of completions to return per call to prevent wraparound,
+	 * and calculate how many trackers can be submitted at once without overflowing the
+	 * completion queue.
+	 */
+	pqpair->max_completions_cap = pqpair->num_entries / 4;
+	pqpair->max_completions_cap = spdk_max(pqpair->max_completions_cap, NVME_MIN_COMPLETIONS);
+	pqpair->max_completions_cap = spdk_min(pqpair->max_completions_cap, NVME_MAX_COMPLETIONS);
+	num_trackers = pqpair->num_entries - pqpair->max_completions_cap;
+
+	SPDK_INFOLOG(SPDK_LOG_NVME, "max_completions_cap = %" PRIu16 " num_trackers = %" PRIu16 "\n",
+		     pqpair->max_completions_cap, num_trackers);
 
 	assert(num_trackers != 0);
 
@@ -1971,14 +1982,13 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	}
 
-	if (max_completions == 0 || (max_completions > (pqpair->num_entries - 1U))) {
-
+	if (max_completions == 0 || max_completions > pqpair->max_completions_cap) {
 		/*
-		 * max_completions == 0 means unlimited, but complete at most one
-		 * queue depth batch of I/O at a time so that the completion
+		 * max_completions == 0 means unlimited, but complete at most
+		 * max_completions_cap batch of I/O at a time so that the completion
 		 * queue doorbells don't wrap around.
 		 */
-		max_completions = pqpair->num_entries - 1;
+		max_completions = pqpair->max_completions_cap;
 	}
 
 	while (1) {
