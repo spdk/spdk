@@ -91,6 +91,71 @@ void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr)
 	return (void *)rte_vhost_gpa_to_vva(vdev->mem, addr);
 }
 
+static void
+spdk_vhost_log_req_desc(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *virtqueue,
+			uint16_t req_id)
+{
+	struct vring_desc *desc, *desc_table;
+	uint32_t desc_table_size;
+	int rc;
+
+	if (spdk_likely(!spdk_vhost_dev_has_feature(vdev, VHOST_F_LOG_ALL))) {
+		return;
+	}
+
+	rc = spdk_vhost_vq_get_desc(vdev, virtqueue, req_id, &desc, &desc_table, &desc_table_size);
+	if (spdk_unlikely(rc != 0)) {
+		SPDK_ERRLOG("Can't log used ring descriptors!\n");
+		return;
+	}
+
+	do {
+		if (spdk_vhost_vring_desc_is_wr(desc)) {
+			/* To be honest, only pages realy touched should be logged, but
+			 * doing so would require tracking those changes in each backed.
+			 * Also backend most likely will touch all/most of those pages so
+			 * for lets assume we touched all pages passed to as writeable buffers. */
+			rte_vhost_log_write(vdev->vid, desc->addr, desc->len);
+		}
+		spdk_vhost_vring_desc_get_next(&desc, desc_table, desc_table_size);
+	} while (desc);
+}
+
+static void
+spdk_vhost_log_used_vring_elem(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *virtqueue,
+			       uint16_t idx)
+{
+	uint64_t offset, len;
+	uint16_t vq_idx;
+
+	if (spdk_likely(!spdk_vhost_dev_has_feature(vdev, VHOST_F_LOG_ALL))) {
+		return;
+	}
+
+	offset = offsetof(struct vring_used, ring[idx]);
+	len = sizeof(virtqueue->vring.used->ring[idx]);
+	vq_idx = virtqueue - vdev->virtqueue;
+
+	rte_vhost_log_used_vring(vdev->vid, vq_idx, offset, len);
+}
+
+static void
+spdk_vhost_log_used_vring_idx(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *virtqueue)
+{
+	uint64_t offset, len;
+	uint16_t vq_idx;
+
+	if (spdk_likely(!spdk_vhost_dev_has_feature(vdev, VHOST_F_LOG_ALL))) {
+		return;
+	}
+
+	offset = offsetof(struct vring_used, idx);
+	len = sizeof(virtqueue->vring.used->idx);
+	vq_idx = virtqueue - vdev->virtqueue;
+
+	rte_vhost_log_used_vring(vdev->vid, vq_idx, offset, len);
+}
+
 /*
  * Get available requests from avail ring.
  */
@@ -290,13 +355,17 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_v
 		      "Queue %td - USED RING: last_idx=%"PRIu16" req id=%"PRIu16" len=%"PRIu32"\n",
 		      virtqueue - vdev->virtqueue, vring->last_used_idx, id, len);
 
+	spdk_vhost_log_req_desc(vdev, virtqueue, id);
+
 	vring->last_used_idx++;
 	used->ring[last_idx].id = id;
 	used->ring[last_idx].len = len;
+	spdk_vhost_log_used_vring_elem(vdev, virtqueue, last_idx);
 
 	/* Ensure the used ring is updated before we increment used->idx. */
 	spdk_smp_wmb();
 	* (volatile uint16_t *) &used->idx = vring->last_used_idx;
+	spdk_vhost_log_used_vring_idx(vdev, virtqueue);
 
 	/* Ensure all our used ring changes are visible to the guest at the time
 	 * of interrupt.
@@ -955,10 +1024,16 @@ start_device(int vid)
 
 	memset(vdev->virtqueue, 0, sizeof(vdev->virtqueue));
 	for (i = 0; i < num_queues; i++) {
-		if (rte_vhost_get_vhost_vring(vid, i, &vdev->virtqueue[i].vring)) {
+		struct rte_vhost_vring *vr = &vdev->virtqueue[i].vring;
+
+		if (rte_vhost_get_vhost_vring(vid, i, vr)) {
 			SPDK_ERRLOG("vhost device %d: Failed to get information of queue %"PRIu16"\n", vid, i);
 			goto out;
 		}
+
+		SPDK_DEBUGLOG(SPDK_LOG_VHOST_RING,
+			      "VQ %i vring is: last_avail_idx=%d, last_used_idx=%d avail->idx = %d, used->idx = %d\n",
+			      i, vr->last_avail_idx, vr->last_used_idx, vr->avail->idx, vr->used->idx);
 
 		if (vdev->virtqueue[i].vring.size == 0) {
 			SPDK_ERRLOG("vhost device %d: Queue %"PRIu16" has size 0.\n", vid, i);
@@ -970,7 +1045,6 @@ start_device(int vid)
 			SPDK_ERRLOG("vhost device %d: Failed to disable guest notification on queue %"PRIu16"\n", vid, i);
 			goto out;
 		}
-
 	}
 
 	vdev->num_queues = num_queues;
