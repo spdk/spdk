@@ -111,7 +111,7 @@ function spdk_vhost_run()
 	cp $vhost_conf_template $vhost_conf_file
 	$SPDK_BUILD_DIR/scripts/gen_nvme.sh >> $vhost_conf_file
 
-	local cmd="$vhost_app -m $vhost_reactor_mask -p $vhost_master_core -c $vhost_conf_file"
+	local cmd="$vhost_app -m $vhost_reactor_mask -p $vhost_master_core -c $vhost_conf_file -s 2048"
 
 	notice "Loging to:   $vhost_log_file"
 	notice "Config file: $vhost_conf_file"
@@ -412,13 +412,16 @@ function vm_shutdown_all()
 function vm_setup()
 {
 	local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
-	local OPTIND optchar a
+	local OPTIND optchar vm_num
 
 	local os=""
+	local os_mode=""
 	local qemu_args=""
 	local disk_type=NOT_DEFINED
 	local disks=""
 	local raw_cache=""
+	local vm_incoming=""
+	local vm_migrate_to=""
 	local force_vm=""
 	while getopts ':-:' optchar; do
 		case "$optchar" in
@@ -431,6 +434,8 @@ function vm_setup()
 				disks=*) local disks="${OPTARG#*=}" ;;
 				raw-cache=*) local raw_cache=",cache${OPTARG#*=}" ;;
 				force=*) local force_vm=${OPTARG#*=} ;;
+				incoming=*) local vm_incoming="${OPTARG#*=}" ;;
+				migrate-to=*) local vm_migrate_to="${OPTARG#*=}" ;;
 				*)
 					error "unknown argument $OPTARG"
 					return 1
@@ -450,8 +455,6 @@ function vm_setup()
 		vm_num_is_valid $vm_num || return 1
 		local vm_dir="$VM_BASE_DIR/$vm_num"
 		[[ -d $vm_dir ]] && warning "removing existing VM in '$vm_dir'"
-		# FIXME: why this is just echo???
-		echo "rm -rf $vm_dir"
 	else
 		local vm_dir=""
 
@@ -470,11 +473,43 @@ function vm_setup()
 		return 1
 	fi
 
+	if [[ ! -z "$vm_migrate_to" && ! -z "$vm_incoming" ]]; then
+		error "'--incoming' and '--migrate-to' cannot be used together"
+		return 1
+	elif [[ ! -z "$vm_incoming" ]]; then
+		if [[ ! -z "$os_mode" || ! -z "$os_img" ]]; then
+			error "'--incoming' can't be used together with '--os' nor '--os-mode'"
+			return 1
+		fi
+
+		os_mode="original"
+		os="$VM_BASE_DIR/$vm_incoming/os.qcow2"
+	elif [[ ! -z "$vm_migrate_to" ]]; then
+		[[ "$os_mode" != "backing" ]] && warning "Using 'backing' mode for OS since '--migrate-to' is used"
+		os_mode=backing
+	fi
+
 	notice "Creating new VM in $vm_dir"
 	mkdir -p $vm_dir
-	if [[ ! -r $os ]]; then
-		error "file not found: $os"
-		return 1
+
+	if [[ "$os_mode" == "backing" ]]; then
+		notice "Creating backing file for OS image file: $os"
+		if ! $INSTALL_DIR/bin/qemu-img create -f qcow2 -b $os $vm_dir/os.qcow2; then
+			error "Failed to create OS backing file in '$vm_dir/os.qcow2' using '$os'"
+			return 1
+		fi
+
+		local os=$vm_dir/os.qcow2
+	elif [[ "$os_mode" == "original" ]]; then
+		warning "Using original OS image file: $os"
+	elif [[ "$os_mode" != "snapshot" ]]; then
+		if [[ -z "$os_mode" ]]; then
+			notice "No '--os-mode' parameter provided - using 'snapshot'"
+			os_mode="snapshot"
+		else 
+			error "Invalid '--os-mode=$os_mode'"
+			return 1
+		fi
 	fi
 
 	# WARNING:
@@ -497,8 +532,8 @@ function vm_setup()
 
 	local ssh_socket=$(( vm_socket_offset + 0 ))
 	local fio_socket=$(( vm_socket_offset + 1 ))
-	# vm_socket_offset + 2 - can be reused
-	# vm_socket_offset + 3 - can be reused
+	local monitor_port=$(( vm_socket_offset + 2 ))
+	local migration_port=$(( vm_socket_offset + 3 ))
 	local gdbserver_socket=$(( vm_socket_offset + 4 ))
 	local vnc_socket=$(( 100 + vm_num ))
 	local qemu_pid_file="$vm_dir/qemu.pid"
@@ -514,7 +549,10 @@ function vm_setup()
 	#-cpu host
 	local node_num=${!qemu_numa_node_param}
 	notice "NUMA NODE: $node_num"
-	cmd+="-m 1024 --enable-kvm -smp $cpu_num -vga std -vnc :$vnc_socket -daemonize -snapshot ${eol}"
+	cmd+="-m 1024 --enable-kvm -smp $cpu_num -vga std -vnc :$vnc_socket -daemonize ${eol}"
+	[[ $os_mode == snapshot ]] && cmd+="-snapshot ${eol}"
+	[[ ! -z "$vm_incoming" ]] && cmd+=" -incoming tcp:0:$migration_port ${eol}"
+	cmd+="-monitor telnet:127.0.0.1:$monitor_port,server,nowait ${eol}"
 	cmd+="-object memory-backend-file,id=mem,size=1G,mem-path=/dev/hugepages,share=on,prealloc=yes,host-nodes=$node_num,policy=bind ${eol}"
 	cmd+="-numa node,memdev=mem ${eol}"
 	cmd+="-pidfile $qemu_pid_file ${eol}"
@@ -522,7 +560,6 @@ function vm_setup()
 	cmd+="-D $vm_dir/qemu.log ${eol}"
 	cmd+="-net user,hostfwd=tcp::$ssh_socket-:22,hostfwd=tcp::$fio_socket-:8765 ${eol}"
 	cmd+="-net nic ${eol}"
-
 	cmd+="-drive file=$os,if=none,id=os_disk ${eol}"
 	cmd+="-device ide-hd,drive=os_disk,bootindex=0 ${eol}"
 
@@ -599,7 +636,7 @@ function vm_setup()
 	# remove last $eol
 	cmd="${cmd%\\\\\\n  }"
 
-	notice "Saving to $vm_dir/run.sh:"
+	notice "Saving to $vm_dir/run.sh"
 	(
 	echo '#!/bin/bash'
 	echo 'if [[ $EUID -ne 0 ]]; then '
@@ -629,8 +666,16 @@ function vm_setup()
 	# Save generated sockets redirection
 	echo $ssh_socket > $vm_dir/ssh_socket
 	echo $fio_socket > $vm_dir/fio_socket
+	echo $monitor_port > $vm_dir/monitor_port
+
+	rm -f $vm_dir/migration_port
+	[[ -z $vm_incoming ]] || echo $migration_port > $vm_dir/migration_port
+	
 	echo $gdbserver_socket > $vm_dir/gdbserver_socket
 	echo $vnc_socket >> $vm_dir/vnc_socket
+
+	[[ -z $vm_incoming ]] || ln -fs $VM_BASE_DIR/$vm_incoming $vm_dir/vm_incoming
+	[[ -z $vm_migrate_to ]] || ln -fs $VM_BASE_DIR/$vm_migrate_to $vm_dir/vm_migrate_to
 }
 
 function vm_run()
