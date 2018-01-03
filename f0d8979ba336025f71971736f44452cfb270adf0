@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "33b29678_511c59f7",
+        "filename": "test/nvmf/fio/fio.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-03T11:57:13Z",
+      "side": 1,
+      "message": "you can simplify it to:\n\"if ps -p $nvmfpid; then\"",
+      "range": {
+        "startLine": 13,
+        "startChar": 8,
+        "endLine": 15,
+        "endChar": 34
+      },
+      "revId": "f0d8979ba336025f71971736f44452cfb270adf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c40a97ad_8e6f3f8a",
+        "filename": "test/nvmf/fio/fio.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-03T11:57:13Z",
+      "side": 1,
+      "message": "I think trim should be verified as well",
+      "range": {
+        "startLine": 57,
+        "startChar": 0,
+        "endLine": 57,
+        "endChar": 22
+      },
+      "revId": "f0d8979ba336025f71971736f44452cfb270adf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
