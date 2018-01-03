@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8303ad6e_bd308099",
+        "filename": "doc/iscsi.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-03T21:14:35Z",
+      "side": 1,
+      "message": "I would prefer to just remove this section entirely, personally.\n\nIf we want to write down specific Linux distribution versions that we\u0027ve tested, that should go in a generic place, not in the iSCSI user guide.",
+      "parentUuid": "fa74ca6c_a75ee089",
+      "revId": "4617ea9a66a4a509092fbbd83cfce0134033cb70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1d571898_336fe7bf",
         "filename": "doc/iscsi.md",
         "patchSetId": 3
