@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c0389865_db6abdea",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-03T11:37:19Z",
+      "side": 1,
+      "message": "Change unrelated to commit message. Please either update commit message or split this commit into a series of separate commits.\n(I think splitting would be preferred because modifying masks and tampering with VM OS\u0027 are two separate topics)",
+      "range": {
+        "startLine": 42,
+        "startChar": 0,
+        "endLine": 43,
+        "endChar": 51
+      },
+      "revId": "7f9330e2dbd5f4ddabfb466c2b11056c7b643a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
