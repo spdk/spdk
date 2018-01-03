@@ -448,7 +448,7 @@ virtqueue_req_start(struct virtqueue *vq, void *cookie, int iovcnt)
 	assert(virtio_dev_get_status(vq->vdev) & VIRTIO_CONFIG_S_DRIVER_OK);
 
 	if (iovcnt > vq->vq_free_cnt) {
-		return -ENOSPC;
+		return iovcnt > vq->vq_nentries ? -EINVAL : -ENOMEM;
 	}
 
 	if (vq->req_start != VQ_RING_DESC_CHAIN_END) {
