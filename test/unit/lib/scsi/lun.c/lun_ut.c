@@ -37,7 +37,6 @@
 
 #include "task.c"
 #include "lun.c"
-#include "lun_db.c"
 
 #include "spdk_internal/mock.h"
 
@@ -612,27 +611,6 @@ lun_construct_success(void)
 }
 
 static void
-lun_construct_same_same_twice(void)
-{
-	struct spdk_scsi_lun		*lun, *lun2;
-	struct spdk_bdev		bdev, bdev2;
-
-	lun = spdk_scsi_lun_construct("lun0", &bdev, NULL, NULL);
-
-	/* Successfully constructs and returns lun */
-	SPDK_CU_ASSERT_FATAL(lun != NULL);
-
-	lun2 = spdk_scsi_lun_construct("lun0", &bdev2, NULL, NULL);
-
-	/* Fails to construct the same lun on another bdev and returns NULL */
-	CU_ASSERT(lun2 == NULL);
-
-	lun_destruct(lun);
-
-	CU_ASSERT_EQUAL(g_task_count, 0);
-}
-
-static void
 lun_delete(void)
 {
 	struct spdk_scsi_lun *lun;
@@ -691,7 +669,6 @@ main(int argc, char **argv)
 		|| CU_add_test(suite, "destruct task - success", lun_destruct_success) == NULL
 		|| CU_add_test(suite, "construct - null ctx", lun_construct_null_ctx) == NULL
 		|| CU_add_test(suite, "construct - success", lun_construct_success) == NULL
-		|| CU_add_test(suite, "construct - same lun twice", lun_construct_same_same_twice) == NULL
 		|| CU_add_test(suite, "lun_delete", lun_delete) == NULL
 	) {
 		CU_cleanup_registry();

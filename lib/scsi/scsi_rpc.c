@@ -38,44 +38,6 @@
 #include "spdk/util.h"
 
 static void
-spdk_rpc_get_luns(struct spdk_jsonrpc_request *request,
-		  const struct spdk_json_val *params)
-{
-	struct spdk_json_write_ctx *w;
-	struct spdk_lun_db_entry *current;
-
-	if (params != NULL) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "get_luns requires no parameters");
-		return;
-	}
-
-	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
-	spdk_json_write_array_begin(w);
-
-	current = spdk_scsi_lun_list_head;
-	while (current != NULL) {
-		struct spdk_scsi_lun *lun = current->lun;
-
-		spdk_json_write_object_begin(w);
-		spdk_json_write_name(w, "name");
-		spdk_json_write_string(w, lun->name);
-		spdk_json_write_object_end(w);
-
-		current = current->next;
-	}
-
-	spdk_json_write_array_end(w);
-
-	spdk_jsonrpc_end_result(request, w);
-}
-SPDK_RPC_REGISTER("get_luns", spdk_rpc_get_luns)
-
-static void
 spdk_rpc_get_scsi_devices(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
