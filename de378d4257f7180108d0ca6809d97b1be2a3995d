@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "375f6c12_58b875bf",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-01-03T07:06:34Z",
+      "side": 1,
+      "message": "I don\u0027t see where to use the variable \"DISKS_NUMBER\" ?",
+      "revId": "de378d4257f7180108d0ca6809d97b1be2a3995d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
