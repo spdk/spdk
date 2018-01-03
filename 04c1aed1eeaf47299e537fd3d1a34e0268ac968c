@@ -83,6 +83,30 @@
     },
     {
       "key": {
+        "uuid": "025a90c1_21aae853",
+        "filename": "doc/vhost.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-03T09:11:02Z",
+      "side": 1,
+      "message": "+1 for Paul.",
+      "parentUuid": "e79d84ca_1d357354",
+      "range": {
+        "startLine": 74,
+        "startChar": 0,
+        "endLine": 79,
+        "endChar": 3
+      },
+      "revId": "04c1aed1eeaf47299e537fd3d1a34e0268ac968c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bd0bfa50_8738eae1",
         "filename": "doc/vhost.md",
         "patchSetId": 3
