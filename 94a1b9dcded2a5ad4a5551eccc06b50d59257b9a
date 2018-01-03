@@ -89,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "ce1aebe7_0edaef12",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 805,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-03T14:55:00Z",
+      "side": 1,
+      "message": "Yes. Here it is tracking the submissions and completed in this microsecond. The ch-\u003eio_outstanding is reflecting the submissions at this point. As this function is also called in the normal IO path besides the periodical QoS poller. The io_completed_per_ms reflects in this microsecond, how many IOs already been finished. The sum of io_completed_per_ms and io_outstanding is the overall allowed budget in this microsecond. As the io_outstanding is a dynamic value only count the current active IOs and not the overall IOs that has been issued. The other way is that we may also have a specific member like io_submitted_per_ms for the same purpose as the sum of io_compelted_per_ms and io_outstanding. Here I just track the io_completed_per_ms.",
+      "parentUuid": "4b0d4013_c2065dce",
+      "revId": "94a1b9dcded2a5ad4a5551eccc06b50d59257b9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "41602cbe_f30684c5",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 3
