@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8cd837c4_d3380fa4",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 450,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-03T09:00:01Z",
+      "side": 1,
+      "message": "blocks",
+      "range": {
+        "startLine": 450,
+        "startChar": 20,
+        "endLine": 450,
+        "endChar": 26
+      },
+      "revId": "00ce8fc77d86fe8b7c3f485230e1f5eae45c0992",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1cabfe7_804d7d98",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-03T09:00:01Z",
+      "side": 1,
+      "message": "I think name should be freed here as well\n\nfree(bdev-\u003ebdev.name);",
+      "revId": "00ce8fc77d86fe8b7c3f485230e1f5eae45c0992",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e3f6c8e6_229b6a94",
+        "filename": "test/unit/lib/bdev/pmem/bdev_pmem_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-03T09:00:01Z",
+      "side": 1,
+      "message": "As there were no specific UTs added to bdev_pmem, so I don\u0027t think there is need for handling errors here. Besides it is outdated just using bdev-\u003estatus as a condition comparing to actual implementation.\n\nI would leave it at just changing blockcnt \u003d size at all times in UTs. Similarly in rest of the UT (except bdev_ut.c of course).",
+      "range": {
+        "startLine": 286,
+        "startChar": 0,
+        "endLine": 295,
+        "endChar": 12
+      },
+      "revId": "00ce8fc77d86fe8b7c3f485230e1f5eae45c0992",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
