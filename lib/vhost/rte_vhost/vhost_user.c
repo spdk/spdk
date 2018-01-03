@@ -1051,8 +1051,13 @@ vhost_user_msg_handler(int vid, int fd)
 		return -1;
 	}
 
-	RTE_LOG(INFO, VHOST_CONFIG, "read message %s\n",
-		vhost_message_str[msg.request]);
+	RTE_LOG(INFO, VHOST_CONFIG, "%s: read message %s\n",
+		dev->ifname, vhost_message_str[msg.request]);
+
+	if (dev->flags & VIRTIO_DEV_RUNNING) {
+		dev->flags &= ~VIRTIO_DEV_RUNNING;
+		dev->notify_ops->destroy_device(dev->vid);
+	}
 
 	ret = vhost_user_check_and_alloc_queue_pair(dev, &msg);
 	if (ret < 0) {
