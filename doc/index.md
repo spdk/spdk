@@ -22,6 +22,8 @@
 
 # Programmer Guides {#general}
 
+- @ref bdal_pg
+
 - @ref directory_structure
 - [Public API header files](files.html)
 
