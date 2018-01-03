@@ -116,13 +116,13 @@ case $1 in
 	-ils|--integrity-lvol-scsi)
 		echo 'Running lvol integrity suite...'
 		$WORKDIR/lvol/lvol_test.sh -x --fio-bin=$FIO_BIN \
-		--ctrl-type=spdk_vhost_scsi --thin-provisioning
+		--ctrl-type=spdk_vhost_scsi --thin-provisioning --nested-lvol
 		report_test_completion "vhost_integrity_lvol_scsi"
 		;;
 	-ilb|--integrity-lvol-blk)
 		echo 'Running lvol integrity suite...'
 		$WORKDIR/lvol/lvol_test.sh -x --fio-bin=$FIO_BIN \
-		--ctrl-type=spdk_vhost_blk
+		--ctrl-type=spdk_vhost_blk --nested-lvol
 		report_test_completion "vhost_integrity_lvol_blk"
 		;;
 	-ilsn|--integrity-lvol-scsi-nightly)
