@@ -388,7 +388,7 @@ function vm_shutdown_all()
 	while [[ $timeo -gt 0 ]]; do
 		all_vms_down=1
 		for vm in $VM_BASE_DIR/[0-9]*; do
-			if /bin/kill -0 "$(cat $vm/qemu.pid)"; then
+			if [[ -r $vm/qemu.pid ]] && pkill -0 -F "$vm/qemu.pid"; then
 				all_vms_down=0
 				break
 			fi
@@ -412,13 +412,16 @@ function vm_shutdown_all()
 function vm_setup()
 {
 	local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
-	local OPTIND optchar a
+	local OPTIND optchar vm_num
 
 	local os=""
+	local os_mode=""
 	local qemu_args=""
 	local disk_type=NOT_DEFINED
 	local disks=""
 	local raw_cache=""
+	local vm_incoming=""
+	local vm_migrate_to=""
 	local force_vm=""
 	local guest_memory=1024
 	local queue_number=""
@@ -435,6 +438,8 @@ function vm_setup()
 				force=*) local force_vm=${OPTARG#*=} ;;
 				memory=*) local guest_memory=${OPTARG#*=} ;;
 				queue_num=*) local queue_number=${OPTARG#*=} ;;
+				incoming=*) local vm_incoming="${OPTARG#*=}" ;;
+				migrate-to=*) local vm_migrate_to="${OPTARG#*=}" ;;
 				*)
 					error "unknown argument $OPTARG"
 					return 1
@@ -454,8 +459,6 @@ function vm_setup()
 		vm_num_is_valid $vm_num || return 1
 		local vm_dir="$VM_BASE_DIR/$vm_num"
 		[[ -d $vm_dir ]] && warning "removing existing VM in '$vm_dir'"
-		# FIXME: why this is just echo???
-		echo "rm -rf $vm_dir"
 	else
 		local vm_dir=""
 
@@ -474,11 +477,43 @@ function vm_setup()
 		return 1
 	fi
 
+	if [[ ! -z "$vm_migrate_to" && ! -z "$vm_incoming" ]]; then
+		error "'--incoming' and '--migrate-to' cannot be used together"
+		return 1
+	elif [[ ! -z "$vm_incoming" ]]; then
+		if [[ ! -z "$os_mode" || ! -z "$os_img" ]]; then
+			error "'--incoming' can't be used together with '--os' nor '--os-mode'"
+			return 1
+		fi
+
+		os_mode="original"
+		os="$VM_BASE_DIR/$vm_incoming/os.qcow2"
+	elif [[ ! -z "$vm_migrate_to" ]]; then
+		[[ "$os_mode" != "backing" ]] && warning "Using 'backing' mode for OS since '--migrate-to' is used"
+		os_mode=backing
+	fi
+
 	notice "Creating new VM in $vm_dir"
 	mkdir -p $vm_dir
-	if [[ ! -r $os ]]; then
-		error "file not found: $os"
-		return 1
+
+	if [[ "$os_mode" == "backing" ]]; then
+		notice "Creating backing file for OS image file: $os"
+		if ! $INSTALL_DIR/bin/qemu-img create -f qcow2 -b $os $vm_dir/os.qcow2; then
+			error "Failed to create OS backing file in '$vm_dir/os.qcow2' using '$os'"
+			return 1
+		fi
+
+		local os=$vm_dir/os.qcow2
+	elif [[ "$os_mode" == "original" ]]; then
+		warning "Using original OS image file: $os"
+	elif [[ "$os_mode" != "snapshot" ]]; then
+		if [[ -z "$os_mode" ]]; then
+			notice "No '--os-mode' parameter provided - using 'snapshot'"
+			os_mode="snapshot"
+		else
+			error "Invalid '--os-mode=$os_mode'"
+			return 1
+		fi
 	fi
 
 	# WARNING:
@@ -501,8 +536,8 @@ function vm_setup()
 
 	local ssh_socket=$(( vm_socket_offset + 0 ))
 	local fio_socket=$(( vm_socket_offset + 1 ))
-	# vm_socket_offset + 2 - can be reused
-	# vm_socket_offset + 3 - can be reused
+	local monitor_port=$(( vm_socket_offset + 2 ))
+	local migration_port=$(( vm_socket_offset + 3 ))
 	local gdbserver_socket=$(( vm_socket_offset + 4 ))
 	local vnc_socket=$(( 100 + vm_num ))
 	local qemu_pid_file="$vm_dir/qemu.pid"
@@ -520,18 +555,19 @@ function vm_setup()
 
 	$shell_restore_x
 
-	#-cpu host
 	local node_num=${!qemu_numa_node_param}
 	notice "NUMA NODE: $node_num"
-	cmd+="-m $guest_memory --enable-kvm -cpu host -smp $cpu_num -vga std -vnc :$vnc_socket -daemonize -snapshot ${eol}"
+	cmd+="-m $guest_memory --enable-kvm -cpu host -smp $cpu_num -vga std -vnc :$vnc_socket -daemonize ${eol}"
 	cmd+="-object memory-backend-file,id=mem,size=${guest_memory}M,mem-path=/dev/hugepages,share=on,prealloc=yes,host-nodes=$node_num,policy=bind ${eol}"
+	[[ $os_mode == snapshot ]] && cmd+="-snapshot ${eol}"
+	[[ ! -z "$vm_incoming" ]] && cmd+=" -incoming tcp:0:$migration_port ${eol}"
+	cmd+="-monitor telnet:127.0.0.1:$monitor_port,server,nowait ${eol}"
 	cmd+="-numa node,memdev=mem ${eol}"
 	cmd+="-pidfile $qemu_pid_file ${eol}"
 	cmd+="-serial file:$vm_dir/serial.log ${eol}"
 	cmd+="-D $vm_dir/qemu.log ${eol}"
 	cmd+="-net user,hostfwd=tcp::$ssh_socket-:22,hostfwd=tcp::$fio_socket-:8765 ${eol}"
 	cmd+="-net nic ${eol}"
-
 	cmd+="-drive file=$os,if=none,id=os_disk ${eol}"
 	cmd+="-device ide-hd,drive=os_disk,bootindex=0 ${eol}"
 
@@ -608,7 +644,7 @@ function vm_setup()
 	# remove last $eol
 	cmd="${cmd%\\\\\\n  }"
 
-	notice "Saving to $vm_dir/run.sh:"
+	notice "Saving to $vm_dir/run.sh"
 	(
 	echo '#!/bin/bash'
 	echo 'if [[ $EUID -ne 0 ]]; then '
@@ -638,8 +674,16 @@ function vm_setup()
 	# Save generated sockets redirection
 	echo $ssh_socket > $vm_dir/ssh_socket
 	echo $fio_socket > $vm_dir/fio_socket
+	echo $monitor_port > $vm_dir/monitor_port
+
+	rm -f $vm_dir/migration_port
+	[[ -z $vm_incoming ]] || echo $migration_port > $vm_dir/migration_port
+
 	echo $gdbserver_socket > $vm_dir/gdbserver_socket
 	echo $vnc_socket >> $vm_dir/vnc_socket
+
+	[[ -z $vm_incoming ]] || ln -fs $VM_BASE_DIR/$vm_incoming $vm_dir/vm_incoming
+	[[ -z $vm_migrate_to ]] || ln -fs $VM_BASE_DIR/$vm_migrate_to $vm_dir/vm_migrate_to
 }
 
 function vm_run()
@@ -840,16 +884,18 @@ function run_fio()
 	local out=""
 	local fio_disks=""
 	local vm
+	local run_server_mode=true
 
 	for arg in $@; do
 		case "$arg" in
 			--job-file=*) local job_file="${arg#*=}" ;;
-			--fio-bin=*) local fio_bin="--fio-bin=${arg#*=}" ;;
+			--fio-bin=*) local fio_bin="${arg#*=}" ;;
 			--vm=*) vms+=( "${arg#*=}" ) ;;
 			--out=*)
-				local out="$arg"
-				mkdir -p ${out#*=}
-			;;
+				local out="${arg#*=}"
+				mkdir -p $out
+				;;
+			--local) run_server_mode=false ;;
 		*)
 			error "Invalid argument '$arg'"
 			return 1
@@ -857,8 +903,17 @@ function run_fio()
 		esac
 	done
 
-	local job_fname=$(basename "$job_file")
+	if [[ ! -z "$fio_bin" && ! -r "$fio_bin" ]]; then
+		error "FIO binary '$fio_bin' does not exist"
+		return 1
+	fi
 
+	if [[ ! -r "$job_file" ]]; then
+		error "Fio job '$job_file' does not exist"
+		return 1
+	fi
+
+	local job_fname=$(basename "$job_file")
 	# prepare job file for each VM
 	for vm in ${vms[@]}; do
 		local vm_num=${vm%%:*}
@@ -868,9 +923,25 @@ function run_fio()
 		fio_disks+="127.0.0.1:$(vm_fio_socket $vm_num):$vmdisks,"
 
 		vm_ssh $vm_num cat /root/$job_fname
+		if ! $run_server_mode; then
+			if [[ ! -z "$fio_bin" ]]; then
+				cat $fio_bin | vm_ssh $vm_num 'cat > /root/fio; chmod +x /root/fio'
+			fi
+
+			notice "Running local fio on VM $vm_num"
+			vm_ssh $vm_num "nohup /root/fio /root/$job_fname 1>/root/$job_fname.out 2>/root/$job_fname.out </dev/null & echo \$! > /root/fio.pid"
+		fi
 	done
 
-	python $SPDK_BUILD_DIR/test/vhost/common/run_fio.py --job-file=/root/$job_fname $fio_bin $out ${fio_disks%,}
+	if ! $run_server_mode; then
+		# Give FIO time to run
+		sleep 0.5
+		return 0
+	fi
+
+	python $SPDK_BUILD_DIR/test/vhost/common/run_fio.py --job-file=/root/$job_fname \
+		$([[ ! -z "$fio_bin" ]] && echo "--fio-bin=$fio_bin") \
+		--out=$out ${fio_disks%,}
 }
 
 # Shutdown or kill any running VM and SPDK APP.

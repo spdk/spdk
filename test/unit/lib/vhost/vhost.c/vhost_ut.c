@@ -81,6 +81,9 @@ DEFINE_STUB(rte_vhost_driver_callback_register, int,
 DEFINE_STUB(rte_vhost_driver_disable_features, int, (const char *path, uint64_t features), 0);
 DEFINE_STUB(rte_vhost_driver_set_features, int, (const char *path, uint64_t features), 0);
 DEFINE_STUB(rte_vhost_driver_register, int, (const char *path, uint64_t flags), 0);
+DEFINE_STUB_V(rte_vhost_log_used_vring, (int vid, uint16_t vring_idx, uint64_t offset,
+		uint64_t len));
+DEFINE_STUB_V(rte_vhost_log_write, (int vid, uint64_t addr, uint64_t len));
 DEFINE_STUB(spdk_vhost_scsi_controller_construct, int, (void), 0);
 DEFINE_STUB(spdk_vhost_blk_controller_construct, int, (void), 0);
 DEFINE_STUB(rte_vhost_set_vhost_vring_last_idx, int,
