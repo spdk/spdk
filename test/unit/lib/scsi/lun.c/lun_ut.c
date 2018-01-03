@@ -37,7 +37,6 @@
 
 #include "task.c"
 #include "lun.c"
-#include "lun_db.c"
 
 #include "spdk_internal/mock.h"
 

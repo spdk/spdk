@@ -287,12 +287,6 @@ spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev,
 		return NULL;
 	}
 
-	lun = spdk_lun_db_get_lun(name);
-	if (lun) {
-		SPDK_ERRLOG("LUN %s already created\n", lun->name);
-		return NULL;
-	}
-
 	lun = calloc(1, sizeof(*lun));
 	if (lun == NULL) {
 		SPDK_ERRLOG("could not allocate lun\n");
@@ -315,14 +309,6 @@ spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev,
 	lun->hotremove_cb = hotremove_cb;
 	lun->hotremove_ctx = hotremove_ctx;
 
-	rc = spdk_scsi_lun_db_add(lun);
-	if (rc < 0) {
-		SPDK_ERRLOG("Unable to add LUN %s to DB\n", lun->name);
-		spdk_bdev_close(lun->bdev_desc);
-		free(lun);
-		return NULL;
-	}
-
 	return lun;
 }
 
@@ -331,7 +317,6 @@ spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun)
 {
 	spdk_bdev_close(lun->bdev_desc);
 	spdk_poller_unregister(&lun->hotplug_poller);
-	spdk_scsi_lun_db_delete(lun);
 
 	free(lun);
 
