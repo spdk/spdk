@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab0a6973_f1a5940b",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-03T11:21:06Z",
+      "side": 1,
+      "message": "Chen why do change the execution order? I think it\u0027s not needed.",
+      "range": {
+        "startLine": 50,
+        "startChar": 0,
+        "endLine": 50,
+        "endChar": 36
+      },
+      "revId": "39e911645d60337d7a956449c86cc0f2363414b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
