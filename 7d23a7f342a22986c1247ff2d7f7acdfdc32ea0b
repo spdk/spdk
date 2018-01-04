@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ae861295_bf7b8392",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 13
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T12:49:14Z",
+      "side": 1,
+      "message": "replace",
+      "range": {
+        "startLine": 13,
+        "startChar": 3,
+        "endLine": 13,
+        "endChar": 9
+      },
+      "revId": "7d23a7f342a22986c1247ff2d7f7acdfdc32ea0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a94f46a7_459b9088",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 13
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T12:49:14Z",
+      "side": 1,
+      "message": "dynamically",
+      "range": {
+        "startLine": 16,
+        "startChar": 32,
+        "endLine": 16,
+        "endChar": 42
+      },
+      "revId": "7d23a7f342a22986c1247ff2d7f7acdfdc32ea0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a825160_afc12ff4",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 13
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T12:49:14Z",
+      "side": 1,
+      "message": "accessed",
+      "range": {
+        "startLine": 16,
+        "startChar": 47,
+        "endLine": 16,
+        "endChar": 54
+      },
+      "revId": "7d23a7f342a22986c1247ff2d7f7acdfdc32ea0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1861c27_73d10461",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 493,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T12:49:14Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this declaration be at the top of the function ?",
+      "range": {
+        "startLine": 493,
+        "startChar": 2,
+        "endLine": 493,
+        "endChar": 24
+      },
+      "revId": "7d23a7f342a22986c1247ff2d7f7acdfdc32ea0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a9ad817_899c7888",
+        "filename": "test/unit/lib/util/cpuset.c/cpuset_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T12:49:14Z",
+      "side": 1,
+      "message": "It works, but wouldn\u0027t it be more clear to have it like so:\n\nif (isset !\u003d spdk_cpuset_get_cpu(core_mask, core)){\n  return -1;\n}",
+      "range": {
+        "startLine": 46,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 3
+      },
+      "revId": "7d23a7f342a22986c1247ff2d7f7acdfdc32ea0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
