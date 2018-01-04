@@ -1,0 +1,234 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "176a4603_9e813acd",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-04T04:50:44Z",
+      "side": 1,
+      "message": "Do you have to mention this in the section of \"Theory of Operation\"? It looks that this line is very important and the south-bound interface is described only in this line.",
+      "range": {
+        "startLine": 73,
+        "startChar": 39,
+        "endLine": 74,
+        "endChar": 68
+      },
+      "revId": "e24028333b23cedb05773bd6d3f35dd2e1be5b9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56a92085_cb88c311",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-04T04:50:44Z",
+      "side": 1,
+      "message": "Pointer to the network portal the connection uses ?",
+      "range": {
+        "startLine": 106,
+        "startChar": 4,
+        "endLine": 106,
+        "endChar": 39
+      },
+      "revId": "e24028333b23cedb05773bd6d3f35dd2e1be5b9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f1dddb87_11c4a6fb",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-04T04:50:44Z",
+      "side": 1,
+      "message": "when the application is exited?",
+      "range": {
+        "startLine": 116,
+        "startChar": 27,
+        "endLine": 116,
+        "endChar": 54
+      },
+      "revId": "e24028333b23cedb05773bd6d3f35dd2e1be5b9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d401df5_192c0cf4",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-04T04:50:44Z",
+      "side": 1,
+      "message": "struct spdk_iscsi_conn is clearer?",
+      "range": {
+        "startLine": 118,
+        "startChar": 17,
+        "endLine": 118,
+        "endChar": 27
+      },
+      "revId": "e24028333b23cedb05773bd6d3f35dd2e1be5b9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e63f009a_0dbab06e",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-04T04:50:44Z",
+      "side": 1,
+      "message": "In the iSCSI specification the portal group tag is unique within the portal group but in the SPDK iSCSI the portal group tag is globally unique.",
+      "range": {
+        "startLine": 285,
+        "startChar": 0,
+        "endLine": 285,
+        "endChar": 24
+      },
+      "revId": "e24028333b23cedb05773bd6d3f35dd2e1be5b9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3f13cfd_e8006b2b",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-04T04:50:44Z",
+      "side": 1,
+      "message": "Change the line?",
+      "range": {
+        "startLine": 357,
+        "startChar": 71,
+        "endLine": 357,
+        "endChar": 72
+      },
+      "revId": "e24028333b23cedb05773bd6d3f35dd2e1be5b9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0519e7dd_5047a886",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-04T04:50:44Z",
+      "side": 1,
+      "message": "Not bad but \"Create a list of targets and their addresses for the SendTargets command\" is easy to understand?",
+      "range": {
+        "startLine": 357,
+        "startChar": 94,
+        "endLine": 359,
+        "endChar": 84
+      },
+      "revId": "e24028333b23cedb05773bd6d3f35dd2e1be5b9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ecf778d8_4367616c",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 363,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-04T04:50:44Z",
+      "side": 1,
+      "message": "This function is used in the login phase?",
+      "range": {
+        "startLine": 363,
+        "startChar": 1,
+        "endLine": 363,
+        "endChar": 27
+      },
+      "revId": "e24028333b23cedb05773bd6d3f35dd2e1be5b9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb1df893_774f036b",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 366,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-04T04:50:44Z",
+      "side": 1,
+      "message": "This function should be removed because this is not implemented yet.",
+      "range": {
+        "startLine": 366,
+        "startChar": 0,
+        "endLine": 366,
+        "endChar": 61
+      },
+      "revId": "e24028333b23cedb05773bd6d3f35dd2e1be5b9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b8634ed_d1d644c7",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 370,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-04T04:50:44Z",
+      "side": 1,
+      "message": "when the portal group or initiator group is deleted.",
+      "range": {
+        "startLine": 370,
+        "startChar": 20,
+        "endLine": 370,
+        "endChar": 21
+      },
+      "revId": "e24028333b23cedb05773bd6d3f35dd2e1be5b9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
