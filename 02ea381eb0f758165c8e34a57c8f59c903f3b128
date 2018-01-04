@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5f3d8b51_41887945",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T14:01:04Z",
+      "side": 1,
+      "message": "How is write and writev to dummy_bs_dev any different than other unsupported operations ? Shouldn\u0027t they all be invalid except read/readv ?",
+      "range": {
+        "startLine": 84,
+        "startChar": 0,
+        "endLine": 99,
+        "endChar": 1
+      },
+      "revId": "02ea381eb0f758165c8e34a57c8f59c903f3b128",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c32505b9_b6ca57dd",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 1615,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T14:01:04Z",
+      "side": 1,
+      "message": "I still feel like switch below and calculating lba/lba_count can be improved from readability standpoint. Maybe addin back_bs_dev to all operations ? Will think more on that and provide feedback later.",
+      "revId": "02ea381eb0f758165c8e34a57c8f59c903f3b128",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "80f4dcab_0814d9e4",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 22
+      },
+      "lineNbr": 491,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T14:01:04Z",
+      "side": 1,
+      "message": "Can be just me, but doesn\u0027t sound right. Following might be better:\n\"look up the number of pages into blob to beginning of current cluster.\"",
+      "range": {
+        "startLine": 491,
+        "startChar": 36,
+        "endLine": 491,
+        "endChar": 89
+      },
+      "revId": "02ea381eb0f758165c8e34a57c8f59c903f3b128",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
