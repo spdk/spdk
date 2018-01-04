@@ -325,7 +325,8 @@ spdk_rpc_construct_lvol_bdev(struct spdk_jsonrpc_request *request,
 
 	sz = (size_t)req.size;
 
-	rc = vbdev_lvol_create(lvs, req.lvol_name, sz, _spdk_rpc_construct_lvol_bdev_cb, request);
+	rc = vbdev_lvol_create(lvs, req.lvol_name, sz, req.thin_provisioned,
+			       _spdk_rpc_construct_lvol_bdev_cb, request);
 	if (rc < 0) {
 		goto invalid;
 	}
