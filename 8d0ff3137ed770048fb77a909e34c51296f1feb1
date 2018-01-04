@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1c07c4d3_eb424148",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-04T13:35:10Z",
+      "side": 1,
+      "message": "Does executing req-\u003ecb_fn should depend on lvserrno value?",
+      "parentUuid": "e8b2a01e_f1d8d910",
+      "revId": "8d0ff3137ed770048fb77a909e34c51296f1feb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0bb29e3d_cbf371e6",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 20
@@ -30,6 +48,30 @@
       "writtenOn": "2018-01-04T10:20:16Z",
       "side": 1,
       "message": "Please use something else other than lvs variable as that is one passed in argument. If lvs with new_lvs_name is not found its always set to NULL further down.",
+      "range": {
+        "startLine": 219,
+        "startChar": 1,
+        "endLine": 219,
+        "endChar": 4
+      },
+      "revId": "8d0ff3137ed770048fb77a909e34c51296f1feb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1b4afe5_c19c69e7",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-04T13:35:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0bb29e3d_cbf371e6",
       "range": {
         "startLine": 219,
         "startChar": 1,
@@ -65,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "a20b793f_48a2fe13",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-04T13:35:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "380530ac_733b70cb",
+      "range": {
+        "startLine": 222,
+        "startChar": 0,
+        "endLine": 224,
+        "endChar": 3
+      },
+      "revId": "8d0ff3137ed770048fb77a909e34c51296f1feb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "167d9143_fb2c4ef8",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 20
@@ -76,6 +142,30 @@
       "writtenOn": "2018-01-04T10:20:16Z",
       "side": 1,
       "message": "Same as above.",
+      "range": {
+        "startLine": 231,
+        "startChar": 0,
+        "endLine": 233,
+        "endChar": 3
+      },
+      "revId": "8d0ff3137ed770048fb77a909e34c51296f1feb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "24a4d14d_3d9da45e",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-04T13:35:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "167d9143_fb2c4ef8",
       "range": {
         "startLine": 231,
         "startChar": 0,
@@ -111,6 +201,53 @@
     },
     {
       "key": {
+        "uuid": "99a5267e_932ad77e",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-04T13:35:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d951ee44_a264c73b",
+      "range": {
+        "startLine": 239,
+        "startChar": 2,
+        "endLine": 239,
+        "endChar": 20
+      },
+      "revId": "8d0ff3137ed770048fb77a909e34c51296f1feb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "06bda2b9_bd460270",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-04T13:35:10Z",
+      "side": 1,
+      "message": "Sorry, but i\u0027m not sure if that line is replaces by this call -\u003e spdk_blob_set_xattr(blob, \"name\", new_name, strlen(new_name) + 1);\nCould You, Tomasz, could confirm or deny?",
+      "range": {
+        "startLine": 250,
+        "startChar": 1,
+        "endLine": 250,
+        "endChar": 52
+      },
+      "revId": "8d0ff3137ed770048fb77a909e34c51296f1feb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e26410b4_a8fcd8ba",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 20
@@ -122,6 +259,30 @@
       "writtenOn": "2018-01-04T10:20:16Z",
       "side": 1,
       "message": "Those couples lines should be moved to spdk_lvs_rename() as assigning new lvs name and changing lvol names ought to be there.",
+      "range": {
+        "startLine": 250,
+        "startChar": 0,
+        "endLine": 254,
+        "endChar": 2
+      },
+      "revId": "8d0ff3137ed770048fb77a909e34c51296f1feb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3122f67_ed8338d3",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-04T13:35:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e26410b4_a8fcd8ba",
       "range": {
         "startLine": 250,
         "startChar": 0,
@@ -151,6 +312,24 @@
     },
     {
       "key": {
+        "uuid": "18eb9380_b6f8a2cc",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 611,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-04T13:35:10Z",
+      "side": 1,
+      "message": "I don\u0027t understand what you mean.\nDoes commands from vbdev_lvol.c:250-254 should be executed after confirming lvolerrno \u003d\u003d 0?",
+      "parentUuid": "d426db88_b3359f69",
+      "revId": "8d0ff3137ed770048fb77a909e34c51296f1feb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a8f33946_b4993f29",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 20
@@ -174,6 +353,30 @@
     },
     {
       "key": {
+        "uuid": "f689ee00_98650100",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 630,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-04T13:35:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a8f33946_b4993f29",
+      "range": {
+        "startLine": 630,
+        "startChar": 1,
+        "endLine": 630,
+        "endChar": 20
+      },
+      "revId": "8d0ff3137ed770048fb77a909e34c51296f1feb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7092c58d_bc85637e",
         "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
         "patchSetId": 20
@@ -185,6 +388,30 @@
       "writtenOn": "2018-01-04T10:20:16Z",
       "side": 1,
       "message": "Can\u0027t we retrieve name from spdk_lvs_opts *o in UT ?",
+      "range": {
+        "startLine": 223,
+        "startChar": 21,
+        "endLine": 223,
+        "endChar": 35
+      },
+      "revId": "8d0ff3137ed770048fb77a909e34c51296f1feb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "612240e7_eebefa69",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-04T13:35:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7092c58d_bc85637e",
       "range": {
         "startLine": 223,
         "startChar": 21,
