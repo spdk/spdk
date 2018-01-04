@@ -1627,9 +1627,10 @@ spdk_bdev_scsi_unmap(struct spdk_bdev *bdev,
 }
 
 static int
-spdk_bdev_scsi_process_block(struct spdk_bdev *bdev,
+spdk_bdev_scsi_process_block(struct spdk_scsi_lun *lun,
 			     struct spdk_scsi_task *task)
 {
+	struct spdk_bdev *bdev = lun->bdev;
 	uint64_t lba;
 	uint32_t xfer_len;
 	uint32_t len = 0;
@@ -1764,9 +1765,10 @@ spdk_bdev_scsi_check_len(struct spdk_scsi_task *task, int len, int min_len)
 }
 
 static int
-spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
+spdk_bdev_scsi_process_primary(struct spdk_scsi_lun *lun,
 			       struct spdk_scsi_task *task)
 {
+	struct spdk_bdev *bdev = lun->bdev;
 	int alloc_len = -1;
 	int data_len = -1;
 	uint8_t *cdb = task->cdb;
@@ -2015,12 +2017,12 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 }
 
 int
-spdk_bdev_scsi_execute(struct spdk_bdev *bdev, struct spdk_scsi_task *task)
+spdk_bdev_scsi_execute(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
 	int rc;
 
-	if ((rc = spdk_bdev_scsi_process_block(bdev, task)) == SPDK_SCSI_TASK_UNKNOWN) {
-		if ((rc = spdk_bdev_scsi_process_primary(bdev, task)) == SPDK_SCSI_TASK_UNKNOWN) {
+	if ((rc = spdk_bdev_scsi_process_block(lun, task)) == SPDK_SCSI_TASK_UNKNOWN) {
+		if ((rc = spdk_bdev_scsi_process_primary(lun, task)) == SPDK_SCSI_TASK_UNKNOWN) {
 			SPDK_DEBUGLOG(SPDK_LOG_SCSI, "unsupported SCSI OP=0x%x\n", task->cdb[0]);
 			/* INVALID COMMAND OPERATION CODE */
 			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,

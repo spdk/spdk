@@ -202,7 +202,7 @@ spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun)
 		TAILQ_REMOVE(&lun->pending_tasks, task, scsi_link);
 		TAILQ_INSERT_TAIL(&lun->tasks, task, scsi_link);
 		if (!lun->removed) {
-			rc = spdk_bdev_scsi_execute(lun->bdev, task);
+			rc = spdk_bdev_scsi_execute(lun, task);
 		} else {
 			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 						  SPDK_SCSI_SENSE_ABORTED_COMMAND,
