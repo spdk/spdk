@@ -104,7 +104,7 @@ function blk_ro_tc1()
 	vm_wait_for_boot 600 $vm_no
 	notice "Testing readonly feature on guest VM"
 	vm_ssh $vm_no "bash -s" < $BASE_DIR/enabled_readonly_vm.sh
-	sleep 3
+	sleep 5
 
 	vm_shutdown_all
 #Delete file from disk and delete partition
