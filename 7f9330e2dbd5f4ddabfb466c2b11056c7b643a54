@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "bc5bcda9_ae8c2984",
+        "filename": "test/vhost/common/run_vhost.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-01-04T08:58:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4636bc15_f019722e",
+      "revId": "7f9330e2dbd5f4ddabfb466c2b11056c7b643a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "27394493_99532b3f",
         "filename": "test/vhost/common/run_vhost.sh",
         "patchSetId": 13
@@ -30,6 +48,24 @@
       "writtenOn": "2018-01-04T08:39:54Z",
       "side": 1,
       "message": "Core instead of core",
+      "revId": "7f9330e2dbd5f4ddabfb466c2b11056c7b643a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4cdb549e_6ff8654b",
+        "filename": "test/vhost/common/run_vhost.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-01-04T08:58:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "27394493_99532b3f",
       "revId": "7f9330e2dbd5f4ddabfb466c2b11056c7b643a54",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "9a1e9bd6_bb2a74ea",
+        "filename": "test/vhost/common/run_vhost.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-01-04T08:58:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "16c892ec_dffb5210",
+      "revId": "7f9330e2dbd5f4ddabfb466c2b11056c7b643a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c0389865_db6abdea",
         "filename": "test/vhost/lvol/lvol_test.sh",
         "patchSetId": 13
@@ -64,6 +118,30 @@
       "writtenOn": "2018-01-03T11:37:19Z",
       "side": 1,
       "message": "Change unrelated to commit message. Please either update commit message or split this commit into a series of separate commits.\n(I think splitting would be preferred because modifying masks and tampering with VM OS\u0027 are two separate topics)",
+      "range": {
+        "startLine": 42,
+        "startChar": 0,
+        "endLine": 43,
+        "endChar": 51
+      },
+      "revId": "7f9330e2dbd5f4ddabfb466c2b11056c7b643a54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d6da6d7_a562d54b",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-01-04T08:58:57Z",
+      "side": 1,
+      "message": "https://review.gerrithub.io/#/c/393602/ This patch is submitted for multi-os test. And it has some same codes with this patch which needed to be used in each patch. I will delete the same parts when any patch be merged, thanks.",
+      "parentUuid": "c0389865_db6abdea",
       "range": {
         "startLine": 42,
         "startChar": 0,
