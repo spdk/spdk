@@ -42,6 +42,11 @@ spdk_iscsi_task_free(struct spdk_scsi_task *scsi_task)
 {
 	struct spdk_iscsi_task *task = spdk_iscsi_task_from_scsi_task(scsi_task);
 
+	if (task->parent) {
+		spdk_scsi_task_put(&task->parent->scsi);
+		task->parent = NULL;
+	}
+
 	spdk_iscsi_task_disassociate_pdu(task);
 	assert(task->conn->pending_task_cnt > 0);
 	task->conn->pending_task_cnt--;
@@ -66,10 +71,17 @@ spdk_iscsi_task_get(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *parent
 	conn->pending_task_cnt++;
 	spdk_scsi_task_construct(&task->scsi,
 				 cpl_fn,
-				 spdk_iscsi_task_free,
-				 parent ? &parent->scsi : NULL);
+				 spdk_iscsi_task_free);
 	if (parent) {
+		parent->scsi.ref++;
+		task->parent = parent;
 		task->tag = parent->tag;
+		task->scsi.dxfer_dir = parent->scsi.dxfer_dir;
+		task->scsi.transfer_len = parent->scsi.transfer_len;
+		task->scsi.lun = parent->scsi.lun;
+		task->scsi.cdb = parent->scsi.cdb;
+		task->scsi.target_port = parent->scsi.target_port;
+		task->scsi.initiator_port = parent->scsi.initiator_port;
 	}
 
 	return task;

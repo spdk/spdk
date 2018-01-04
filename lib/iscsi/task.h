@@ -41,6 +41,8 @@
 struct spdk_iscsi_task {
 	struct spdk_scsi_task	scsi;
 
+	struct spdk_iscsi_task *parent;
+
 	struct spdk_iscsi_conn *conn;
 	struct spdk_iscsi_pdu *pdu;
 	uint32_t outstanding_r2t;
@@ -173,12 +175,11 @@ spdk_iscsi_task_from_scsi_task(struct spdk_scsi_task *task)
 static inline struct spdk_iscsi_task *
 spdk_iscsi_task_get_primary(struct spdk_iscsi_task *task)
 {
-	struct spdk_scsi_task *scsi_task;
-	struct spdk_scsi_task *scsi_primary_task;
-
-	scsi_task = &task->scsi;
-	scsi_primary_task = spdk_scsi_task_get_primary(scsi_task);
-	return spdk_iscsi_task_from_scsi_task(scsi_primary_task);
+	if (task->parent) {
+		return task->parent;
+	} else {
+		return task;
+	}
 }
 
 #endif /* SPDK_ISCSI_TASK_H */

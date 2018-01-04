@@ -96,8 +96,7 @@ ut_init_task(struct spdk_scsi_task *task)
 {
 	memset(task, 0, sizeof(*task));
 	spdk_scsi_task_construct(task, spdk_lun_ut_cpl_task,
-				 spdk_lun_ut_free_task,
-				 NULL);
+				 spdk_lun_ut_free_task);
 	g_task_count++;
 }
 
