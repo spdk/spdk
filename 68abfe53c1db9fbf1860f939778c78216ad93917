@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7c3458ff_f4d55259",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-04T21:05:14Z",
+      "side": 1,
+      "message": "should this be a notice instead?",
+      "revId": "68abfe53c1db9fbf1860f939778c78216ad93917",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d41a2a2_5bff2d7e",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-04T21:05:14Z",
+      "side": 1,
+      "message": "should this be a notice instead?",
+      "revId": "68abfe53c1db9fbf1860f939778c78216ad93917",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c319fe5_f191fca7",
+        "filename": "test/vhost/hotplug/scsi_hotdetach.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-04T21:05:14Z",
+      "side": 1,
+      "message": "fail \"Disk has not been deleted\"?",
+      "revId": "68abfe53c1db9fbf1860f939778c78216ad93917",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
