@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "bc46a872_a74d484b",
+        "filename": "doc/iscsi.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-04T03:12:07Z",
+      "side": 1,
+      "message": "Would like to remove the version related information. Thanks.",
+      "parentUuid": "8303ad6e_bd308099",
+      "revId": "4617ea9a66a4a509092fbbd83cfce0134033cb70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1d571898_336fe7bf",
         "filename": "doc/iscsi.md",
         "patchSetId": 3
@@ -54,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "39df1f24_604ec7c8",
+        "filename": "doc/iscsi.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-04T03:12:07Z",
+      "side": 1,
+      "message": "Thanks for this comment.",
+      "parentUuid": "1d571898_336fe7bf",
+      "revId": "4617ea9a66a4a509092fbbd83cfce0134033cb70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f3e33239_ed7b3638",
         "filename": "doc/iscsi.md",
         "patchSetId": 3
@@ -65,6 +101,24 @@
       "writtenOn": "2018-01-03T21:03:39Z",
       "side": 1,
       "message": "\"In addition to the configuration file, the iSCSI target may also be configured via JSON-RPC calls. See @ref jsonrpc for details.\"",
+      "revId": "4617ea9a66a4a509092fbbd83cfce0134033cb70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9bdf0eb6_443407a7",
+        "filename": "doc/iscsi.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-04T03:12:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f3e33239_ed7b3638",
       "revId": "4617ea9a66a4a509092fbbd83cfce0134033cb70",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
