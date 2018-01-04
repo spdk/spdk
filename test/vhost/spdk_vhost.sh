@@ -8,17 +8,19 @@ case $1 in
 	-h|--help)
 		echo "usage: $(basename $0) TEST_TYPE"
 		echo "Test type can be:"
-		echo "  -i |--integrity             for running an integrity test with vhost scsi"
-		echo "  -fs|--fs-integrity-scsi     for running an integrity test with filesystem"
-		echo "  -fb|--fs-integrity-blk      for running an integrity test with filesystem"
-		echo "  -p |--performance           for running a performance test with vhost scsi"
-		echo "  -ib|--integrity-blk         for running an integrity test with vhost blk"
-		echo "  -pb|--performance-blk       for running a performance test with vhost blk"
-		echo "  -ils|--integrity-lvol-scsi  for running an integrity test with vhost scsi and lvol backends"
-		echo "  -ilb|--integrity-lvol-blk   for running an integrity test with vhost blk and lvol backends"
-		echo "  -hp|--hotplug               for running hotplug tests"
-		echo "  -ro|--readonly              for running readonly test for vhost blk"
-		echo "  -h |--help                  prints this message"
+		echo "  -i |--integrity                      for running an integrity test with vhost scsi"
+		echo "  -fs|--fs-integrity-scsi              for running an integrity test with filesystem"
+		echo "  -fb|--fs-integrity-blk               for running an integrity test with filesystem"
+		echo "  -p |--performance                    for running a performance test with vhost scsi"
+		echo "  -ib|--integrity-blk                  for running an integrity test with vhost blk"
+		echo "  -pb|--performance-blk                for running a performance test with vhost blk"
+		echo "  -ils|--integrity-lvol-scsi           for running an integrity test with vhost scsi and lvol backends"
+		echo "  -ilb|--integrity-lvol-blk            for running an integrity test with vhost blk and lvol backends"
+		echo "  -ilsn|--integrity-lvol-scsi-nightly  for running an nightly integrity test with vhost scsi and lvol backends"
+		echo "  -ilbn|--integrity-lvol-blk-nightly   for running an nightly integrity test with vhost blk and lvol backends"
+		echo "  -hp|--hotplug                        for running hotplug tests"
+		echo "  -ro|--readonly                       for running readonly test for vhost blk"
+		echo "  -h |--help                           prints this message"
 		echo ""
 		echo "Environment:"
 		echo "  VM_IMAGE        path to QCOW2 VM image used during test (default: $DEFAULT_VM_IMAGE)"
@@ -102,6 +104,16 @@ case $1 in
 		echo 'Running lvol integrity suite...'
 		./lvol/lvol_test.sh -x --fio-bin=/home/sys_sgsw/fio_ubuntu \
 		--ctrl-type=vhost_blk
+		;;
+	-ilsn|--integrity-lvol-scsi-nightly)
+		echo 'Running lvol integrity nightly suite with different os types'
+		./lvol/lvol_test.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+		--ctrl-type=vhost_scsi --vm-count=2 --multi-os
+		;;
+	-ilbn|--integrity-lvol-blk-nightly)
+		echo 'Running lvol integrity nightly suite with different os types'
+		./lvol/lvol_test.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+		--ctrl-type=vhost_blk --vm-count=2 --multi-os
 		;;
 	-hp|--hotplug)
 		echo 'Running hotplug tests suite...'
