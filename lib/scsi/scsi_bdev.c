@@ -43,6 +43,7 @@
 #include "spdk/env.h"
 #include "spdk/bdev.h"
 #include "spdk/endian.h"
+#include "spdk/likely.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
 
@@ -1430,8 +1431,8 @@ spdk_bdev_scsi_readwrite(struct spdk_bdev *bdev,
 
 	task->data_transferred = 0;
 
-	if (task->dxfer_dir != SPDK_SCSI_DIR_NONE &&
-	    task->dxfer_dir != (is_read ? SPDK_SCSI_DIR_FROM_DEV : SPDK_SCSI_DIR_TO_DEV)) {
+	if (spdk_unlikely(task->dxfer_dir != SPDK_SCSI_DIR_NONE &&
+			  task->dxfer_dir != (is_read ? SPDK_SCSI_DIR_FROM_DEV : SPDK_SCSI_DIR_TO_DEV))) {
 		SPDK_ERRLOG("Incorrect data direction\n");
 		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 					  SPDK_SCSI_SENSE_NO_SENSE,
@@ -1441,7 +1442,7 @@ spdk_bdev_scsi_readwrite(struct spdk_bdev *bdev,
 	}
 
 	bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
-	if (bdev_num_blocks <= lba || bdev_num_blocks - lba < xfer_len) {
+	if (spdk_unlikely(bdev_num_blocks <= lba || bdev_num_blocks - lba < xfer_len)) {
 		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "end of media\n");
 		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 					  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
@@ -1450,14 +1451,14 @@ spdk_bdev_scsi_readwrite(struct spdk_bdev *bdev,
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
-	if (xfer_len == 0) {
+	if (spdk_unlikely(xfer_len == 0)) {
 		task->status = SPDK_SCSI_STATUS_GOOD;
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
 	/* Transfer Length is limited to the Block Limits VPD page Maximum Transfer Length */
 	max_xfer_len = SPDK_WORK_BLOCK_SIZE / spdk_bdev_get_block_size(bdev);
-	if (xfer_len > max_xfer_len) {
+	if (spdk_unlikely(xfer_len > max_xfer_len)) {
 		SPDK_ERRLOG("xfer_len %" PRIu32 " > maximum transfer length %" PRIu32 "\n",
 			    xfer_len, max_xfer_len);
 		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
