@@ -2708,7 +2708,7 @@ spdk_iscsi_send_datain(struct spdk_iscsi_conn *conn,
 	DataSN++;
 
 	if (task->scsi.parent) {
-		offset += primary->scsi.data_transferred;
+		offset += primary->bytes_completed;
 	}
 	to_be32(&rsph->buffer_offset, (uint32_t)offset);
 
@@ -2727,7 +2727,6 @@ spdk_iscsi_transfer_in(struct spdk_iscsi_conn *conn,
 {
 	uint32_t DataSN;
 	int transfer_len;
-	int data_len;
 	int segment_len;
 	int offset;
 	int residual_len = 0;
@@ -2741,8 +2740,6 @@ spdk_iscsi_transfer_in(struct spdk_iscsi_conn *conn,
 
 	primary = spdk_iscsi_task_get_primary(task);
 	segment_len = conn->MaxRecvDataSegmentLength;
-	data_len = task->scsi.data_transferred;
-	transfer_len = task->scsi.length;
 
 	if (task->scsi.status != SPDK_SCSI_STATUS_GOOD) {
 		if (task != primary) {
@@ -2762,24 +2759,9 @@ spdk_iscsi_transfer_in(struct spdk_iscsi_conn *conn,
 		return 0;
 	}
 
-	if (data_len < transfer_len) {
-		/* underflow */
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Underflow %u/%u\n",
-			      data_len, transfer_len);
-		residual_len = transfer_len - data_len;
-		transfer_len = data_len;
-		datain_flag |= ISCSI_DATAIN_UNDERFLOW;
-	} else if (data_len > transfer_len) {
-		/* overflow */
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Overflow %u/%u\n",
-			      data_len, transfer_len);
-		residual_len = data_len - transfer_len;
-		datain_flag |= ISCSI_DATAIN_OVERFLOW;
-	} else {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Transfer %u\n",
-			      transfer_len);
-		residual_len = 0;
-	}
+	transfer_len = task->scsi.length;
+
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Transfer %u\n", transfer_len);
 
 	DataSN = primary->datain_datasn;
 	sent_status = 0;
@@ -2834,9 +2816,6 @@ spdk_iscsi_transfer_in(struct spdk_iscsi_conn *conn,
 		}
 	}
 
-	if (task != primary) {
-		primary->scsi.data_transferred += task->scsi.data_transferred;
-	}
 	primary->datain_datasn = DataSN;
 
 	if (sent_status) {
@@ -3197,7 +3176,7 @@ void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
 
 	o_bit = u_bit = O_bit = U_bit = 0;
 	bidi_residual_len = residual_len = 0;
-	data_len = primary->scsi.data_transferred;
+	data_len = primary->bytes_completed;
 
 	if ((transfer_len != 0) &&
 	    (task->scsi.status == SPDK_SCSI_STATUS_GOOD)) {
