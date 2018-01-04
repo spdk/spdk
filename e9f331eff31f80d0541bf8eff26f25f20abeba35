@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9e2a20c6_896d9a96",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-04T22:11:47Z",
+      "side": 1,
+      "message": "yikes!  isn\u0027t this a bug in the existing code?  if so, please let\u0027s put this in a separate patch, along with a unit test that reproduces a bug and shows that this fixes it",
+      "revId": "e9f331eff31f80d0541bf8eff26f25f20abeba35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "08feffd1_d887af2b",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 361,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-04T22:11:47Z",
+      "side": 1,
+      "message": "i would maybe create a new test for thin provisioning to keep this one from getting too long (plus I think we need more tests here)\n\nreally this should reload the blobstore after unloading, open the blob again, and make sure the invalid_flag is set",
+      "revId": "e9f331eff31f80d0541bf8eff26f25f20abeba35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
