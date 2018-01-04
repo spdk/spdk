@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4472d826_03645ceb",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 37
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T09:49:51Z",
+      "side": 0,
+      "message": "Unnecessary whitespace change.",
+      "revId": "926a220c5b753f23e74dc5b49779e8054c7018aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "31e039ed_60003c7d",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 37
+      },
+      "lineNbr": 360,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T09:49:51Z",
+      "side": 0,
+      "message": "Unnecessary whitespace change.",
+      "revId": "926a220c5b753f23e74dc5b49779e8054c7018aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

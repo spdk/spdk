@@ -25,6 +25,47 @@
     },
     {
       "key": {
+        "uuid": "0f538ad4_ce432506",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 906,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T09:49:51Z",
+      "side": 1,
+      "message": "Sorry, got much ahead of myself. UTs are there.",
+      "parentUuid": "71f44097_f6353261",
+      "range": {
+        "startLine": 906,
+        "startChar": 0,
+        "endLine": 906,
+        "endChar": 47
+      },
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0929734e_27bdd0b3",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 759,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T09:49:51Z",
+      "side": 1,
+      "message": "lvolerrno should be handled, probably by removing the newly added alias.",
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "884a9889_49a4b84f",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 37
@@ -110,6 +151,115 @@
         "startChar": 6,
         "endLine": 791,
         "endChar": 25
+      },
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bc422e24_51771c45",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 799,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T09:49:51Z",
+      "side": 1,
+      "message": "It might be best to issue callbacks only in _vbdev_lvol_rename_cb, but return appropriate error codes in this function.",
+      "range": {
+        "startLine": 799,
+        "startChar": 2,
+        "endLine": 799,
+        "endChar": 20
+      },
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f037ecac_fd531839",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T09:49:51Z",
+      "side": 1,
+      "message": "It does not look like this field is used here, it can be removed.",
+      "range": {
+        "startLine": 349,
+        "startChar": 1,
+        "endLine": 349,
+        "endChar": 12
+      },
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63a35857_70dd2613",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 954,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T09:49:51Z",
+      "side": 1,
+      "message": "This change is fine, but seems not related directly to this patch",
+      "range": {
+        "startLine": 954,
+        "startChar": 11,
+        "endLine": 954,
+        "endChar": 17
+      },
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb2aa5dd_15d751bc",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 1055,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T09:49:51Z",
+      "side": 1,
+      "message": "Please display SPDK_ERRLOG when lvolerrno is set to non-0 value.",
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f412e2e_edf8565c",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 1075,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T09:49:51Z",
+      "side": 1,
+      "message": "This function can return an error, please check it.",
+      "range": {
+        "startLine": 1075,
+        "startChar": 1,
+        "endLine": 1075,
+        "endChar": 20
       },
       "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
