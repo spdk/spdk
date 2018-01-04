@@ -22,6 +22,7 @@
 
 # Programmer Guides {#general}
 
+- @ref nvmf_tgt_pg
 - @ref directory_structure
 - [Public API header files](files.html)
 
