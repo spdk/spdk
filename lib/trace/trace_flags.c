@@ -79,7 +79,7 @@ spdk_trace_get_tpoint_group_mask(void)
 	uint64_t mask = 0x0;
 	int i;
 
-	for (i = 0; i < 64; i++) {
+	for (i = 0; i < SPDK_TRACE_MAX_GROUP_ID; i++) {
 		if (spdk_trace_get_tpoint_mask(i) != 0) {
 			mask |= (1ULL << i);
 		}
