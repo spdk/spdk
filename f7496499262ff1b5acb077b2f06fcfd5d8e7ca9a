@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2dd0526d_e415736c",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-01-04T04:31:19Z",
+      "side": 1,
+      "message": "We\u0027d better use TAB instead of space for new patches.",
+      "revId": "f7496499262ff1b5acb077b2f06fcfd5d8e7ca9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "72b8bb5d_2c8571c6",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-01-04T04:31:19Z",
+      "side": 1,
+      "message": "Should be called after stopping the VM",
+      "revId": "f7496499262ff1b5acb077b2f06fcfd5d8e7ca9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e01c3db_d9a1908b",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-01-04T04:31:19Z",
+      "side": 1,
+      "message": "Same here, we should use TAB for new coming patches.",
+      "revId": "f7496499262ff1b5acb077b2f06fcfd5d8e7ca9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
