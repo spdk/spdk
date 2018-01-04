@@ -88,6 +88,7 @@ trap "iscsicleanup; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 sleep 1
 $fio_py 4096 1 randrw 1 verify
 $fio_py 131072 32 randrw 1 verify
+$fio_py 524288 128 randrw 1 verify
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	$fio_py 4096 1 write 300 verify
