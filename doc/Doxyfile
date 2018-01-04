@@ -802,6 +802,7 @@ INPUT                  = ../include/spdk \
                          nvme.md \
                          nvme-cli.md \
                          nvmf.md \
+                         nvmf_tgt_pg.md \
                          ssd_internals.md \
                          userspace.md \
                          vagrant.md \

@@ -31,6 +31,7 @@
 - @ref bdev_module
 - @ref directory_structure
 - [Public API header files](files.html)
+- @ref nvmf_tgt_pg
 - @ref event
 - @ref blob
 
