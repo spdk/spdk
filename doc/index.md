@@ -12,6 +12,10 @@
 - @ref nvmf_getting_started
 - @ref blobfs_getting_started
 
+# Programmer Guides {#prog_guides}
+
+- @ref nvmf_tgt_pg
+
 # General Information {#general}
 
  - @ref directory_structure
