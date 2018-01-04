@@ -1,12 +1,15 @@
 [global]
-ioengine=spdk
 thread=1
 group_reporting=1
 direct=1
 verify=0
 norandommap=1
 cpumask=1
-percentile_list=50:99:99.9:99.99:99.999
+disable_slat=1
+disable_bw=1
+lat_percentiles=1
+clat_percentiles=0
+percentile_list=50:99:99.999
 
 [precondition-sequential]
 stonewall
