@@ -57,7 +57,6 @@ DEFINE_STUB(spdk_poller_register, struct spdk_poller *, (spdk_poller_fn fn, void
 		uint64_t period_microseconds), NULL);
 DEFINE_STUB_V(spdk_poller_unregister, (struct spdk_poller **ppoller));
 DEFINE_STUB(spdk_iommu_mem_unregister, int, (uint64_t addr, uint64_t len), 0);
-DEFINE_STUB(rte_vhost_get_mem_table, int, (int vid, struct rte_vhost_memory **mem), 0);
 DEFINE_STUB(rte_vhost_get_negotiated_features, int, (int vid, uint64_t *features), 0);
 DEFINE_STUB(rte_vhost_get_vhost_vring, int,
 	    (int vid, uint16_t vring_idx, struct rte_vhost_vring *vring), 0);
@@ -77,6 +76,76 @@ DEFINE_STUB(rte_vhost_set_vhost_vring_last_idx, int,
 	    (int vid, uint16_t vring_idx, uint16_t last_avail_idx, uint16_t last_used_idx), 0);
 DEFINE_STUB(spdk_env_get_current_core, uint32_t, (void), 0);
 
+int
+rte_vhost_get_mem_table(int vid, struct rte_vhost_memory **mem)
+{
+	struct rte_vhost_memory *m;
+
+	m = calloc(1, sizeof(*m) + 2 * sizeof(struct rte_vhost_mem_region));
+	SPDK_CU_ASSERT_FATAL(mem != NULL);
+	m->nregions = 2;
+	m->regions[0].guest_phys_addr = 0;
+	m->regions[0].size = 0x400000; /* 4 MB */
+	m->regions[0].host_user_addr = 0x1000000;
+	m->regions[1].guest_phys_addr = 0x400000;
+	m->regions[1].size = 0x400000; /* 4 MB */
+	m->regions[1].host_user_addr = 0x2000000;
+
+	*mem = m;
+
+	return 0;
+}
+
+static int g_mem_map = 0;
+
+struct spdk_mem_map *
+spdk_mem_map_alloc(uint64_t default_translation,
+		   spdk_mem_map_notify_cb notify_cb, void *cb_ctx)
+{
+	return (struct spdk_mem_map *)&g_mem_map;
+}
+
+void
+spdk_mem_map_free(struct spdk_mem_map **pmap)
+{
+	*pmap = NULL;
+}
+
+int
+spdk_mem_map_set_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_t size,
+			     uint64_t translation)
+{
+	if (vaddr == 0) {
+		CU_ASSERT(size == 0x400000);
+		CU_ASSERT(translation == 0x1000000);
+	} else if (vaddr == 0x400000) {
+		CU_ASSERT(size == 0x400000);
+		CU_ASSERT(translation == 0x2000000);
+	} else {
+		CU_ASSERT(false);
+	}
+
+	return 0;
+}
+
+int
+spdk_mem_map_clear_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_t size)
+{
+	return 0;
+}
+
+uint64_t
+spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr)
+{
+	if (vaddr < 0x400000) {
+		return 0x1000000 + vaddr;
+	} else if (vaddr < 0x800000) {
+		return 0x2000000 + (vaddr - 0x400000);
+	}
+
+	return 0;
+}
+
 static int
 test_setup(void)
 {
@@ -94,17 +163,9 @@ alloc_vdev(void)
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(vdev != NULL);
 	memset(vdev, 0, sizeof(*vdev));
-
-	vdev->mem = calloc(1, sizeof(*vdev->mem) + 2 * sizeof(struct rte_vhost_mem_region));
-	SPDK_CU_ASSERT_FATAL(vdev->mem != NULL);
-	vdev->mem->nregions = 2;
-	vdev->mem->regions[0].guest_phys_addr = 0;
-	vdev->mem->regions[0].size = 0x400000; /* 4 MB */
-	vdev->mem->regions[0].host_user_addr = 0x1000000;
-	vdev->mem->regions[1].guest_phys_addr = 0x400000;
-	vdev->mem->regions[1].size = 0x400000; /* 4 MB */
-	vdev->mem->regions[1].host_user_addr = 0x2000000;
 	vdev->vid = 0x10;
+
+	spdk_vhost_dev_mem_register(vdev);
 
 	return vdev;
 }
@@ -113,7 +174,6 @@ static void
 free_vdev(struct spdk_vhost_dev *vdev)
 {
 	free(vdev->name);
-	free(vdev->mem);
 	free(vdev);
 }
 

@@ -83,7 +83,7 @@ static pthread_mutex_t g_spdk_vhost_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr)
 {
-	return (void *)rte_vhost_gpa_to_vva(vdev->mem, addr);
+	return (void *)spdk_mem_map_translate(vdev->gpa_to_vva_map, addr);
 }
 
 /*
@@ -376,6 +376,20 @@ spdk_vhost_dev_find_by_vid(int vid)
 	return NULL;
 }
 
+static int
+spdk_gpa_to_vva_map_notify(void *cb_ctx, struct spdk_mem_map *map,
+			   enum spdk_mem_map_notify_action action,
+			   void *vaddr, size_t len)
+{
+	/*
+	 * We're abusing the memory map structure to do a gpa to vva
+	 * map. This callback is notifying us of new vva's and asking
+	 * us to set their translation, but we're actually using gpa
+	 * as the key here. Just ignore these calls.
+	 */
+	return 0;
+}
+
 #define SHIFT_2MB	21
 #define SIZE_2MB	(1ULL << SHIFT_2MB)
 #define FLOOR_2MB(x)	(((uintptr_t)x) / SIZE_2MB) << SHIFT_2MB
@@ -384,12 +398,32 @@ spdk_vhost_dev_find_by_vid(int vid)
 void
 spdk_vhost_dev_mem_register(struct spdk_vhost_dev *vdev)
 {
+	struct rte_vhost_memory *mem;
 	struct rte_vhost_mem_region *region;
 	uint32_t i;
 
-	for (i = 0; i < vdev->mem->nregions; i++) {
+	if (rte_vhost_get_mem_table(vdev->vid, &mem) != 0) {
+		SPDK_ERRLOG("vhost device %d: Failed to get guest memory table\n", vdev->vid);
+		return;
+	}
+
+	vdev->gpa_to_vva_map = spdk_mem_map_alloc(0, spdk_gpa_to_vva_map_notify, NULL);
+	if (!vdev->gpa_to_vva_map) {
+		free(mem);
+		SPDK_ERRLOG("Unable to allocate gpa to vva memory map\n");
+		return;
+	}
+
+	for (i = 0; i < mem->nregions; i++) {
 		uint64_t start, end, len;
-		region = &vdev->mem->regions[i];
+
+		region = &mem->regions[i];
+
+		/* Register the gpa with the gpa to vva map */
+		spdk_mem_map_set_translation(vdev->gpa_to_vva_map, region->guest_phys_addr, region->size,
+					     region->host_user_addr);
+
+		/* Register the vva with the main memory maps */
 		start = FLOOR_2MB(region->mmap_addr);
 		end = CEIL_2MB(region->mmap_addr + region->mmap_size);
 		len = end - start;
@@ -402,17 +436,29 @@ spdk_vhost_dev_mem_register(struct spdk_vhost_dev *vdev)
 			continue;
 		}
 	}
+
+	free(mem);
 }
 
 void
 spdk_vhost_dev_mem_unregister(struct spdk_vhost_dev *vdev)
 {
+	struct rte_vhost_memory *mem;
 	struct rte_vhost_mem_region *region;
 	uint32_t i;
 
-	for (i = 0; i < vdev->mem->nregions; i++) {
+	if (rte_vhost_get_mem_table(vdev->vid, &mem) != 0) {
+		SPDK_ERRLOG("vhost device %d: Failed to get guest memory table\n", vdev->vid);
+		return;
+	}
+
+	for (i = 0; i < mem->nregions; i++) {
 		uint64_t start, end, len;
-		region = &vdev->mem->regions[i];
+
+		region = &mem->regions[i];
+
+		spdk_mem_map_clear_translation(vdev->gpa_to_vva_map, region->guest_phys_addr, region->size);
+
 		start = FLOOR_2MB(region->mmap_addr);
 		end = CEIL_2MB(region->mmap_addr + region->mmap_size);
 		len = end - start;
@@ -425,6 +471,8 @@ spdk_vhost_dev_mem_unregister(struct spdk_vhost_dev *vdev)
 			assert(false);
 		}
 	}
+
+	spdk_mem_map_free(&vdev->gpa_to_vva_map);
 }
 
 static void
@@ -858,7 +906,6 @@ stop_device(int vid)
 		rte_vhost_set_vhost_vring_last_idx(vdev->vid, i, q->last_avail_idx, q->last_used_idx);
 	}
 
-	free(vdev->mem);
 	spdk_vhost_free_reactor(vdev->lcore);
 	vdev->lcore = -1;
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
@@ -919,15 +966,9 @@ start_device(int vid)
 		goto out;
 	}
 
-	if (rte_vhost_get_mem_table(vid, &vdev->mem) != 0) {
-		SPDK_ERRLOG("vhost device %d: Failed to get guest memory table\n", vid);
-		goto out;
-	}
-
 	vdev->lcore = spdk_vhost_allocate_reactor(vdev->cpumask);
 	rc = spdk_vhost_event_send(vdev, vdev->backend->start_device, 3, "start device");
 	if (rc != 0) {
-		free(vdev->mem);
 		spdk_vhost_free_reactor(vdev->lcore);
 		vdev->lcore = -1;
 	}

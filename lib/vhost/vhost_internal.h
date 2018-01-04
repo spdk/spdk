@@ -135,7 +135,7 @@ struct spdk_vhost_dev_backend {
 };
 
 struct spdk_vhost_dev {
-	struct rte_vhost_memory *mem;
+	struct spdk_mem_map	*gpa_to_vva_map;
 	char *name;
 	char *path;
 
