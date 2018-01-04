@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "213599e7_d83a3880",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T09:22:12Z",
+      "side": 1,
+      "message": "Same as in previous patch set in pmem_bdev_ut.c, I don\u0027t think this is required as tests here do not check for specific handling of this function.",
+      "range": {
+        "startLine": 248,
+        "startChar": 0,
+        "endLine": 257,
+        "endChar": 12
+      },
+      "revId": "2eb731c50ac91dd9a1c8fc0a787b7a4ca2199ff5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca6d92e9_95221dc4",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T09:22:12Z",
+      "side": 1,
+      "message": "Same as in previous patch set in pmem_bdev_ut.c, I don\u0027t think this is required as tests here do not check for specific handling of this function.",
+      "range": {
+        "startLine": 209,
+        "startChar": 0,
+        "endLine": 218,
+        "endChar": 12
+      },
+      "revId": "2eb731c50ac91dd9a1c8fc0a787b7a4ca2199ff5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
