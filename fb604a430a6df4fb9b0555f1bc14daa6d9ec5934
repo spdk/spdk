@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7f53163e_e131a364",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-04T20:56:15Z",
+      "side": 1,
+      "message": "was the -x removed intentionally?\n\nif so, we should remove the one from -i, and make a comment about this in the commit message",
+      "revId": "fb604a430a6df4fb9b0555f1bc14daa6d9ec5934",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
