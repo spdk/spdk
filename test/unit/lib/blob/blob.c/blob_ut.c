@@ -85,6 +85,20 @@ struct spdk_bs_super_block_ver1 {
 } __attribute__((packed));
 SPDK_STATIC_ASSERT(sizeof(struct spdk_bs_super_block_ver1) == 0x1000, "Invalid super block size");
 
+/* Return NULL to test hardcoded defaults. */
+struct spdk_conf_section *
+spdk_conf_find_section(struct spdk_conf *cp, const char *name)
+{
+	return NULL;
+}
+
+/* Return -1 to test hardcoded defaults. */
+int
+spdk_conf_section_get_intval(struct spdk_conf_section *sp, const char *key)
+{
+	return -1;
+}
+
 static void
 _bs_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 {
