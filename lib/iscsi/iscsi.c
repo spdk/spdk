@@ -2834,6 +2834,9 @@ spdk_iscsi_transfer_in(struct spdk_iscsi_conn *conn,
 		}
 	}
 
+	if (task != primary) {
+		primary->scsi.data_transferred += task->scsi.data_transferred;
+	}
 	primary->datain_datasn = DataSN;
 
 	if (sent_status) {
