@@ -2834,9 +2834,6 @@ spdk_iscsi_transfer_in(struct spdk_iscsi_conn *conn,
 		}
 	}
 
-	if (task != primary) {
-		primary->scsi.data_transferred += task->scsi.data_transferred;
-	}
 	primary->datain_datasn = DataSN;
 
 	if (sent_status) {
@@ -3197,7 +3194,7 @@ void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
 
 	o_bit = u_bit = O_bit = U_bit = 0;
 	bidi_residual_len = residual_len = 0;
-	data_len = primary->scsi.data_transferred;
+	data_len = primary->bytes_completed;
 
 	if ((transfer_len != 0) &&
 	    (task->scsi.status == SPDK_SCSI_STATUS_GOOD)) {

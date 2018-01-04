@@ -1362,7 +1362,6 @@ spdk_bdev_scsi_write(struct spdk_bdev *bdev,
 	uint64_t offset;
 	uint64_t nbytes;
 	int rc;
-	struct spdk_scsi_task *primary = task->parent;
 
 	blen = spdk_bdev_get_block_size(bdev);
 	offset = lba * blen;
@@ -1395,17 +1394,12 @@ spdk_bdev_scsi_write(struct spdk_bdev *bdev,
 					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
 					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 		return SPDK_SCSI_TASK_COMPLETE;
-	} else {
-		if (!primary) {
-			task->data_transferred += task->length;
-		} else {
-			primary->data_transferred += task->length;
-		}
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "Wrote %"PRIu64"/%"PRIu64" bytes\n",
 		      (uint64_t)task->length, nbytes);
 
+	task->data_transferred = task->length;
 	task->status = SPDK_SCSI_STATUS_GOOD;
 	return SPDK_SCSI_TASK_PENDING;
 }
