@@ -1055,7 +1055,7 @@ process_read_task_completion(struct spdk_iscsi_conn *conn,
 		return;
 	}
 
-	primary->bytes_completed += task->scsi.length;
+	primary->bytes_completed += task->scsi.data_transferred;
 	spdk_iscsi_task_response(conn, task);
 
 	if ((task != primary) ||
@@ -1080,7 +1080,7 @@ spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task)
 	if (spdk_iscsi_task_is_read(primary)) {
 		process_read_task_completion(conn, task, primary);
 	} else {
-		primary->bytes_completed += task->scsi.length;
+		primary->bytes_completed += task->scsi.data_transferred;
 		if ((task != primary) &&
 		    (task->scsi.status != SPDK_SCSI_STATUS_GOOD)) {
 			memcpy(primary->scsi.sense_data, task->scsi.sense_data,
