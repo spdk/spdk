@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "26d5eac4_e36c8713",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-04T07:19:36Z",
+      "side": 1,
+      "message": "All iSCSI connections of a target is handled by one CPU core. Which CPU core is used for the target is determined automatically based on the simple load balancing algorithm.",
+      "range": {
+        "startLine": 50,
+        "startChar": 46,
+        "endLine": 51,
+        "endChar": 47
+      },
+      "revId": "2c18c1362d346320e611846b7675d3ac7fce69ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
