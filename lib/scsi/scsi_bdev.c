@@ -1294,23 +1294,6 @@ spdk_bdev_scsi_task_complete_mgmt(struct spdk_bdev_io *bdev_io, bool success,
 }
 
 static int
-spdk_bdev_scsi_read_write_lba_check(struct spdk_scsi_task *task,
-				    uint64_t lba, uint64_t cmd_num_blocks,
-				    uint64_t bdev_num_blocks)
-{
-	if (bdev_num_blocks <= lba || bdev_num_blocks - lba < cmd_num_blocks) {
-		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "end of media\n");
-		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
-					  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
-					  SPDK_SCSI_ASC_LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE,
-					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
-		return -1;
-	}
-
-	return 0;
-}
-
-static int
 spdk_bdev_scsi_read(struct spdk_bdev *bdev,
 		    struct spdk_scsi_task *task, uint64_t lba,
 		    uint32_t len)
@@ -1442,6 +1425,7 @@ spdk_bdev_scsi_readwrite(struct spdk_bdev *bdev,
 			 struct spdk_scsi_task *task,
 			 uint64_t lba, uint32_t xfer_len, bool is_read)
 {
+	uint64_t bdev_num_blocks;
 	uint32_t max_xfer_len;
 
 	task->data_transferred = 0;
@@ -1456,9 +1440,13 @@ spdk_bdev_scsi_readwrite(struct spdk_bdev *bdev,
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
-	if (spdk_bdev_scsi_read_write_lba_check(task, lba,
-						xfer_len, spdk_bdev_get_num_blocks(bdev)) < 0) {
-		/* spdk_bdev_scsi_read_write_lba_check() already set the correct sense code */
+	bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
+	if (bdev_num_blocks <= lba || bdev_num_blocks - lba < xfer_len) {
+		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "end of media\n");
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+					  SPDK_SCSI_ASC_LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
