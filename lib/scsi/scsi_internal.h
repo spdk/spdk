@@ -60,6 +60,7 @@ struct spdk_scsi_port {
 struct spdk_scsi_dev {
 	int			id;
 	int			is_allocated;
+	bool			removed;
 
 	char			name[SPDK_SCSI_DEV_MAX_NAME + 1];
 
@@ -125,13 +126,12 @@ typedef struct spdk_scsi_lun _spdk_scsi_lun;
 _spdk_scsi_lun *spdk_scsi_lun_construct(struct spdk_bdev *bdev,
 					void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
 					void *hotremove_ctx);
-int spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun);
+void spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun);
 
 void spdk_scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
 int spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task, enum spdk_scsi_task_func func);
 void spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
 void spdk_scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
-int spdk_scsi_lun_delete(struct spdk_scsi_lun *lun);
 int spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun);
 void spdk_scsi_lun_free_io_channel(struct spdk_scsi_lun *lun);
 bool spdk_scsi_lun_has_pending_tasks(const struct spdk_scsi_lun *lun);

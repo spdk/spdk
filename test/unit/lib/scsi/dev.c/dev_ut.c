@@ -91,11 +91,10 @@ spdk_scsi_lun_construct(struct spdk_bdev *bdev,
 	return lun;
 }
 
-int
+void
 spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun)
 {
 	free(lun);
-	return 0;
 }
 
 struct spdk_bdev *
@@ -150,7 +149,7 @@ dev_destruct_null_dev(void)
 static void
 dev_destruct_zero_luns(void)
 {
-	struct spdk_scsi_dev dev = { 0 };
+	struct spdk_scsi_dev dev = { .is_allocated = 1 };
 
 	/* No luns attached to the dev */
 
@@ -161,7 +160,7 @@ dev_destruct_zero_luns(void)
 static void
 dev_destruct_null_lun(void)
 {
-	struct spdk_scsi_dev dev = { 0 };
+	struct spdk_scsi_dev dev = { .is_allocated = 1 };
 
 	/* pass null for the lun */
 	dev.lun[0] = NULL;
@@ -173,13 +172,13 @@ dev_destruct_null_lun(void)
 static void
 dev_destruct_success(void)
 {
-	struct spdk_scsi_dev dev = { 0 };
+	struct spdk_scsi_dev dev = { .is_allocated = 1 };
 	struct spdk_scsi_lun *lun;
 
 	lun = calloc(1, sizeof(struct spdk_scsi_lun));
 
 	/* dev with a single lun */
-	dev.lun[0] = lun;
+	spdk_scsi_dev_add_lun(&dev, lun, 0);
 
 	/* free the dev */
 	spdk_scsi_dev_destruct(&dev);
