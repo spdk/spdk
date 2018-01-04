@@ -2294,10 +2294,10 @@ _file_sync(struct spdk_file *file, struct spdk_fs_channel *channel,
 	sync_args->op.sync.offset = file->append_pos;
 	sync_args->op.sync.xattr_in_progress = false;
 	TAILQ_INSERT_TAIL(&file->sync_requests, sync_req, args.op.sync.tailq);
-	pthread_spin_unlock(&file->lock);
 
 	flush_args->file = file;
 	channel->send_request(__file_flush, flush_args);
+	pthread_spin_unlock(&file->lock);
 }
 
 int
