@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b69f6ce9_8dce09e7",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-01-04T09:09:11Z",
+      "side": 1,
+      "message": "The original code was all used space in this script, should I need to change all? Or only change my parts.",
+      "parentUuid": "2dd0526d_e415736c",
+      "revId": "f7496499262ff1b5acb077b2f06fcfd5d8e7ca9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "72b8bb5d_2c8571c6",
         "filename": "test/vhost/integrity/integrity_start.sh",
         "patchSetId": 13
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "a121502a_a028c073",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-01-04T09:09:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "72b8bb5d_2c8571c6",
+      "revId": "f7496499262ff1b5acb077b2f06fcfd5d8e7ca9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4e01c3db_d9a1908b",
         "filename": "test/vhost/integrity/integrity_vm.sh",
         "patchSetId": 13
@@ -47,6 +83,24 @@
       "writtenOn": "2018-01-04T04:31:19Z",
       "side": 1,
       "message": "Same here, we should use TAB for new coming patches.",
+      "revId": "f7496499262ff1b5acb077b2f06fcfd5d8e7ca9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9475b649_57fe4eda",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-01-04T09:09:11Z",
+      "side": 1,
+      "message": "The same as above.",
+      "parentUuid": "4e01c3db_d9a1908b",
       "revId": "f7496499262ff1b5acb077b2f06fcfd5d8e7ca9a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
