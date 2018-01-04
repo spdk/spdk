@@ -107,7 +107,7 @@ function spdk_vhost_kill()
 
 	if /bin/kill -INT $vhost_pid >/dev/null; then
 		echo "INFO: sent SIGINT to vhost app - waiting 60 seconds to exit"
-		for ((i=0; i<60; i++)); do
+		for ((i=0; i<90; i++)); do
 			if /bin/kill -0 $vhost_pid; then
 				echo "."
 				sleep 1
