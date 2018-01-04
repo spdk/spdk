@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7320f97b_47f89de3",
+        "filename": "scripts/prep_benchmarks.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-04T21:39:19Z",
+      "side": 1,
+      "message": "is this right?  no_turbo \u003d 0 means disabling turbo boost?",
+      "revId": "307238ccfcd684ae1fac55af17b041d6f1ea0877",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ee202611_898b6113",
+        "filename": "scripts/prep_benchmarks.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-04T21:39:19Z",
+      "side": 1,
+      "message": "this whole interrupt thing is pretty destructive - it not only moves interrupts off of core 0 (or adds them back here now in the reset routine) but it will also enable interrupts on a lot of cores where they weren\u0027t previously\n\nthis happens a lot with NICs for example - they do per-core interrupts (just one bit set in smp_affinity) and now we overwrite that with all 1\u0027s except bit 0\n\ni\u0027d be more tempted to just leave the interrupts alone in the reset routine for now",
+      "revId": "307238ccfcd684ae1fac55af17b041d6f1ea0877",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
