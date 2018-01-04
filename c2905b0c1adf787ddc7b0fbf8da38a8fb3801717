@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "43a5735c_5cafc4f9",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1755,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-04T18:10:56Z",
+      "side": 1,
+      "message": "This is probably fine (normally we should not be anywhere near exceeding the range of int64_t), but it might be simpler to just change the logic to something like this:\n\n    if (bdev_ch-\u003eio_outstanding \u003e NOMEM_THRESHOLD_COUNT * 2) {\n        bdev_ch-\u003enomem_threshold \u003d bdev_ch-\u003eio_outstanding - NOMEM_THRESHOLD_COUNT;\n    } else {\n        bdev_ch-\u003enomem_threshold \u003d bdev_ch-\u003eio_outstanding / 2;\n    }\n\nI\u0027ll leave this up to other reviewers - I\u0027m OK with either method.",
+      "revId": "c2905b0c1adf787ddc7b0fbf8da38a8fb3801717",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
