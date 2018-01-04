@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d3b1a83e_8abd6a23",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-04T22:47:02Z",
+      "side": 1,
+      "message": "we should confirm here that this blob is thin provisioned - if it\u0027s not, a cluster index of 0 is invalid and we should return -EINVAL",
+      "revId": "c47064ec0634a5545c75a791c85705189d16133d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f94b4157_4a53fe62",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 847,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-04T22:47:02Z",
+      "side": 1,
+      "message": "if (next_lba !\u003d 0)",
+      "revId": "c47064ec0634a5545c75a791c85705189d16133d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d50dffb1_afad699f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 870,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-04T22:47:02Z",
+      "side": 1,
+      "message": "I don\u0027t think this is going to work.\n\nLet\u0027s say blob is size 2, first cluster is allocated, second is not.\nFirst time through the loop, lba_count will get incremented.\nSecond time through the loop, cluster is not allocated - lba will get set to 0.\n\nSo when we get to here, nothing will unmap that first cluster, since lba \u003d\u003d 0.\n\nI think probably in the loop, if next_lba \u003d\u003d 0, you should send the spdk_bs_batch_unmap() if lba_count \u003e 0 and then set lba_count \u003d 0.\n\nWe should get some unit tests to cover this - it\u0027s a tricky use case and I\u0027m not confident we\u0027re going to get it right just by looking at it.",
+      "range": {
+        "startLine": 869,
+        "startChar": 0,
+        "endLine": 870,
+        "endChar": 33
+      },
+      "revId": "c47064ec0634a5545c75a791c85705189d16133d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "01abff88_2156e92f",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 2557,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-04T22:47:02Z",
+      "side": 1,
+      "message": "maybe also assert spdk_blob_get_num_clusters() \u003d\u003d 3?\n\nspdk_blob_get_num_clusters() just returns active.num_clusters - but this way we make sure we are testing the blob API and not just the internal representation",
+      "revId": "c47064ec0634a5545c75a791c85705189d16133d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
