@@ -1,0 +1,157 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d5dbe9ef_b62aefa0",
+        "filename": "doc/userspace.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-04T22:35:55Z",
+      "side": 1,
+      "message": "suggest removing the words \"that means\" - t just reads a little weird",
+      "revId": "2000d36694b08cfebb54b826c8d4e3bed268b032",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ca83dab_1377acb5",
+        "filename": "doc/userspace.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-04T22:35:55Z",
+      "side": 1,
+      "message": "instead of \"is bypassed\", which would go along with a sentence describing how SPDK is involved whereas these couple of sentences are explaining how the OS is not involved anymore, I would go with \"no longer in the picture\" or something like that",
+      "revId": "2000d36694b08cfebb54b826c8d4e3bed268b032",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b58c21f8_3b45f00f",
+        "filename": "doc/userspace.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-04T22:35:55Z",
+      "side": 1,
+      "message": "\"to poll\" --\u003e \"polls\"",
+      "revId": "2000d36694b08cfebb54b826c8d4e3bed268b032",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a5377bcd_55e3bda3",
+        "filename": "doc/userspace.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-04T22:35:55Z",
+      "side": 1,
+      "message": "I believe, and I didn\u0027t check Strunk \u0026 White on this, that the ; here should be a :",
+      "revId": "2000d36694b08cfebb54b826c8d4e3bed268b032",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6199d19c_a11ad73c",
+        "filename": "doc/userspace.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-04T22:35:55Z",
+      "side": 1,
+      "message": "Maybe \"Polling can be very fast; for example with NVMe...\" (the \"at least\" phase seems sorta off)",
+      "revId": "2000d36694b08cfebb54b826c8d4e3bed268b032",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17e7536b_5c6668be",
+        "filename": "doc/userspace.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-04T22:35:55Z",
+      "side": 1,
+      "message": "suggest deleting the word \"perfectly\" (I don\u0027t optimal needs to be qualified)",
+      "revId": "2000d36694b08cfebb54b826c8d4e3bed268b032",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed98d6f5_149f185f",
+        "filename": "doc/userspace.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-04T22:35:55Z",
+      "side": 1,
+      "message": "suggest deleting the word \"even\"",
+      "revId": "2000d36694b08cfebb54b826c8d4e3bed268b032",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e19502e7_5e1fdbd0",
+        "filename": "doc/userspace.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-04T22:35:55Z",
+      "side": 1,
+      "message": "..",
+      "revId": "2000d36694b08cfebb54b826c8d4e3bed268b032",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4342b7af_81309e57",
+        "filename": "doc/userspace.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-04T22:35:55Z",
+      "side": 1,
+      "message": "That --\u003e This",
+      "revId": "2000d36694b08cfebb54b826c8d4e3bed268b032",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
