@@ -43,6 +43,8 @@ function usage()
     echo "    --distribute-cores    Use custom config file and run vhost controllers"
     echo "                          on different CPU cores instead of single core."
     echo "                          Default: False"
+    echo "    --multi-os            Run tests on different os types in VMs"
+    echo "                          Default: False"
     exit 0
 }
 
@@ -84,6 +86,7 @@ while getopts 'xh-:' optchar; do
             ctrl-type=*) ctrl_type="${OPTARG#*=}" ;;
             nested-lvol) nested_lvol=true ;;
             distribute-cores) distribute_cores=true ;;
+            multi-os) multi_os=true ;;
             *) usage $0 "Invalid argument '$OPTARG'" ;;
         esac
         ;;
@@ -179,7 +182,11 @@ for (( i=0; i<$vm_count; i++)); do
     bdevs=($bdevs)
 
     setup_cmd="vm_setup --disk-type=$ctrl_type --force=$i"
-    setup_cmd+=" --os=/home/sys_sgsw/vhost_vm_image.qcow2"
+    if [[ $i%2 -ne 0 ]] && [[ $multi_os ]]; then
+        setup_cmd+=" --os=/home/sys_sgsw/spdk_vhost_CentOS_vm_image.qcow2"
+    else
+        setup_cmd+=" --os=/home/sys_sgsw/vhost_vm_image.qcow2"
+    fi
 
     # Create single SCSI controller or multiple BLK controllers for this VM
     if $distribute_cores; then

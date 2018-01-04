@@ -134,6 +134,16 @@ case $1 in
 		./lvol/lvol_test.sh --fio-bin=$FIO_BIN \
 		--ctrl-type=spdk_vhost_blk --max-disks=1
 		;;
+	-ilsn|--integrity-lvol-scsi-nightly)
+		echo 'Running lvol integrity nightly suite with different os types'
+		./lvol/lvol_test.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+		--ctrl-type=vhost_scsi --vm-count=2 --multi-os
+		;;
+	-ilbn|--integrity-lvol-blk-nightly)
+		echo 'Running lvol integrity nightly suite with different os types'
+		./lvol/lvol_test.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+		--ctrl-type=vhost_blk --vm-count=2 --multi-os
+		;;
 	-hp|--hotplug)
 		echo 'Running hotplug tests suite...'
 		./hotplug/scsi_hotplug.sh --fio-bin=$FIO_BIN \
