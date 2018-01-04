@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3c08d255_6a8a9d26",
+        "filename": "autotest.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-04T09:35:56Z",
+      "side": 1,
+      "message": "Since this is in \"if RUN_NIGHTLY\" condition - you are not really testing these changes on commit.\nI\u0027d suggest moving these lines out of \"if RUN_NIGHTLY\" temporarily to be sure everything works OK, and then before merging - move it back to \"if\" block.",
+      "range": {
+        "startLine": 149,
+        "startChar": 2,
+        "endLine": 155,
+        "endChar": 40
+      },
+      "revId": "d67ad71ff02b8a592c5695443bb4919caa768c3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0d93f4d_2320ac11",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-04T09:35:56Z",
+      "side": 1,
+      "message": "In case if there\u0027s more than 2 VMs (let\u0027s say 10) only 1 VM will be using CentOS image, the rest will bu using Ubuntu. Are you OK with that?",
+      "range": {
+        "startLine": 194,
+        "startChar": 0,
+        "endLine": 198,
+        "endChar": 6
+      },
+      "revId": "d67ad71ff02b8a592c5695443bb4919caa768c3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
