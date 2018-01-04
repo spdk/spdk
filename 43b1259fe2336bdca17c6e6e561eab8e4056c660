@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fe7b3edb_41105dff",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-04T17:19:09Z",
+      "side": 1,
+      "message": "I think we can reword this slightly for clarity - something like: \"Only physical removal events are supported; removing devices via the sysfs `remove` file will not work.\"",
+      "range": {
+        "startLine": 36,
+        "startChar": 53,
+        "endLine": 38,
+        "endChar": 50
+      },
+      "revId": "43b1259fe2336bdca17c6e6e561eab8e4056c660",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
