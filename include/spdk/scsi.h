@@ -147,18 +147,7 @@ struct spdk_scsi_task {
 };
 
 struct spdk_scsi_port;
-
 struct spdk_scsi_dev;
-
-/**
- * \brief Represents a SCSI LUN.
- *
- * LUN modules will implement the function pointers specifically for the LUN
- * type.  For example, NVMe LUNs will implement scsi_execute to translate
- * the SCSI task to an NVMe command and post it to the NVMe controller.
- * malloc LUNs will implement scsi_execute to translate the SCSI task and
- * copy the task's data into or out of the allocated memory buffer.
- */
 struct spdk_scsi_lun;
 
 int spdk_scsi_init(void);
