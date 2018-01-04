@@ -100,8 +100,6 @@ struct spdk_scsi_task {
 	uint8_t				response; /* task mgmt response */
 
 	struct spdk_scsi_lun		*lun;
-	struct spdk_bdev_desc		*desc;
-	struct spdk_io_channel		*ch;
 	struct spdk_scsi_port		*target_port;
 	struct spdk_scsi_port		*initiator_port;
 

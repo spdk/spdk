@@ -110,9 +110,6 @@ spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task,
 		return -1;
 	}
 
-	task->ch = task->lun->io_channel;
-	task->desc = task->lun->bdev_desc;
-
 	switch (func) {
 	case SPDK_SCSI_TASK_FUNC_ABORT_TASK:
 		task->response = SPDK_SCSI_TASK_MGMT_RESP_REJECT_FUNC_NOT_SUPPORTED;
@@ -125,7 +122,7 @@ spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task,
 		break;
 
 	case SPDK_SCSI_TASK_FUNC_LUN_RESET:
-		spdk_bdev_scsi_reset(task->lun->bdev, task);
+		spdk_bdev_scsi_reset(task);
 		return 0;
 
 	default:
@@ -196,13 +193,11 @@ spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun)
 
 	TAILQ_FOREACH_SAFE(task, &lun->pending_tasks, scsi_link, task_tmp) {
 		task->status = SPDK_SCSI_STATUS_GOOD;
-		task->ch = lun->io_channel;
-		task->desc = lun->bdev_desc;
 		spdk_trace_record(TRACE_SCSI_TASK_START, lun->dev->id, task->length, (uintptr_t)task, 0);
 		TAILQ_REMOVE(&lun->pending_tasks, task, scsi_link);
 		TAILQ_INSERT_TAIL(&lun->tasks, task, scsi_link);
 		if (!lun->removed) {
-			rc = spdk_bdev_scsi_execute(lun->bdev, task);
+			rc = spdk_bdev_scsi_execute(task);
 		} else {
 			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 						  SPDK_SCSI_SENSE_ABORTED_COMMAND,
