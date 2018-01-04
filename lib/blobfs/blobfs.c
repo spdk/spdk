@@ -2075,8 +2075,9 @@ spdk_file_write(struct spdk_file *file, struct spdk_io_channel *_channel,
 		}
 	}
 
+	pthread_spin_unlock(&file->lock);
+
 	if (cache_buffers_filled == 0) {
-		pthread_spin_unlock(&file->lock);
 		return 0;
 	}
 
@@ -2088,7 +2089,6 @@ spdk_file_write(struct spdk_file *file, struct spdk_io_channel *_channel,
 
 	args->file = file;
 	file->fs->send_request(__file_flush, args);
-	pthread_spin_unlock(&file->lock);
 	return 0;
 }
 
