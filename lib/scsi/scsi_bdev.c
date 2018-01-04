@@ -1280,37 +1280,18 @@ spdk_bdev_scsi_task_complete_mgmt(struct spdk_bdev_io *bdev_io, bool success,
 }
 
 static int
-spdk_bdev_scsi_read_write_lba_check(struct spdk_scsi_task *primary,
-				    struct spdk_scsi_task *task,
+spdk_bdev_scsi_read_write_lba_check(struct spdk_scsi_task *task,
 				    uint64_t lba, uint64_t cmd_num_blocks,
 				    uint64_t bdev_num_blocks)
 {
-	if (!primary) {
-		/*
-		 * Indicates this task is a primary task, we check whether the LBA and
-		 * range is valid. If such info of primary is valid, all subtasks' are valid.
-		 */
-		if (lba >= bdev_num_blocks || cmd_num_blocks > bdev_num_blocks ||
-		    lba > (bdev_num_blocks - cmd_num_blocks)) {
-			SPDK_DEBUGLOG(SPDK_LOG_SCSI, "end of media\n");
-			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
-						  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
-						  SPDK_SCSI_ASC_LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE,
-						  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
-			return -1;
-		}
-	} else {
-		/*
-		 * Indicates this task is a subtask, we do not need to check the LBA range.
-		 * Need to check condition of primary task.
-		 */
-		if (primary->status == SPDK_SCSI_STATUS_CHECK_CONDITION) {
-			memcpy(task->sense_data, primary->sense_data,
-			       primary->sense_data_len);
-			task->status = SPDK_SCSI_STATUS_CHECK_CONDITION;
-			task->sense_data_len = primary->sense_data_len;
-			return -1;
-		}
+	if (lba >= bdev_num_blocks || cmd_num_blocks > bdev_num_blocks ||
+	    lba > (bdev_num_blocks - cmd_num_blocks)) {
+		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "end of media\n");
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+					  SPDK_SCSI_ASC_LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		return -1;
 	}
 
 	return 0;
@@ -1462,7 +1443,7 @@ spdk_bdev_scsi_readwrite(struct spdk_bdev *bdev,
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
-	if (spdk_bdev_scsi_read_write_lba_check(task->parent, task, lba,
+	if (spdk_bdev_scsi_read_write_lba_check(task, lba,
 						xfer_len, spdk_bdev_get_num_blocks(bdev)) < 0) {
 		/* spdk_bdev_scsi_read_write_lba_check() already set the correct sense code */
 		return SPDK_SCSI_TASK_COMPLETE;
