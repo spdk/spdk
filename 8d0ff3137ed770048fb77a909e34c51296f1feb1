@@ -1,0 +1,199 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e8b2a01e_f1d8d910",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T10:20:16Z",
+      "side": 1,
+      "message": "Please handle lvserrno.",
+      "revId": "8d0ff3137ed770048fb77a909e34c51296f1feb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0bb29e3d_cbf371e6",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T10:20:16Z",
+      "side": 1,
+      "message": "Please use something else other than lvs variable as that is one passed in argument. If lvs with new_lvs_name is not found its always set to NULL further down.",
+      "range": {
+        "startLine": 219,
+        "startChar": 1,
+        "endLine": 219,
+        "endChar": 4
+      },
+      "revId": "8d0ff3137ed770048fb77a909e34c51296f1feb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "380530ac_733b70cb",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T10:20:16Z",
+      "side": 1,
+      "message": "There should not be a need to issue callbacks in this function, return with error code should be enough.",
+      "range": {
+        "startLine": 222,
+        "startChar": 0,
+        "endLine": 224,
+        "endChar": 3
+      },
+      "revId": "8d0ff3137ed770048fb77a909e34c51296f1feb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "167d9143_fb2c4ef8",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T10:20:16Z",
+      "side": 1,
+      "message": "Same as above.",
+      "range": {
+        "startLine": 231,
+        "startChar": 0,
+        "endLine": 233,
+        "endChar": 3
+      },
+      "revId": "8d0ff3137ed770048fb77a909e34c51296f1feb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d951ee44_a264c73b",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T10:20:16Z",
+      "side": 1,
+      "message": "Same as above.",
+      "range": {
+        "startLine": 239,
+        "startChar": 2,
+        "endLine": 239,
+        "endChar": 20
+      },
+      "revId": "8d0ff3137ed770048fb77a909e34c51296f1feb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e26410b4_a8fcd8ba",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T10:20:16Z",
+      "side": 1,
+      "message": "Those couples lines should be moved to spdk_lvs_rename() as assigning new lvs name and changing lvol names ought to be there.",
+      "range": {
+        "startLine": 250,
+        "startChar": 0,
+        "endLine": 254,
+        "endChar": 2
+      },
+      "revId": "8d0ff3137ed770048fb77a909e34c51296f1feb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d426db88_b3359f69",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 611,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T10:20:16Z",
+      "side": 1,
+      "message": "Please handle lvolerrno here.\nOn success lvs-\u003ename and its lvols names can be changes.",
+      "revId": "8d0ff3137ed770048fb77a909e34c51296f1feb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8f33946_b4993f29",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 630,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T10:20:16Z",
+      "side": 1,
+      "message": "This can fail, please check return.",
+      "range": {
+        "startLine": 630,
+        "startChar": 1,
+        "endLine": 630,
+        "endChar": 20
+      },
+      "revId": "8d0ff3137ed770048fb77a909e34c51296f1feb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7092c58d_bc85637e",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T10:20:16Z",
+      "side": 1,
+      "message": "Can\u0027t we retrieve name from spdk_lvs_opts *o in UT ?",
+      "range": {
+        "startLine": 223,
+        "startChar": 21,
+        "endLine": 223,
+        "endChar": 35
+      },
+      "revId": "8d0ff3137ed770048fb77a909e34c51296f1feb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
