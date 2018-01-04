@@ -36,6 +36,16 @@
 
 static struct spdk_scsi_dev g_devs[SPDK_SCSI_MAX_DEVS];
 
+void
+spdk_scsi_dev_init_list(void)
+{
+	int i;
+
+	for (i = 0; i < SPDK_SCSI_MAX_DEVS; i++) {
+		g_devs[i].id = -1;
+	}
+}
+
 struct spdk_scsi_dev *
 spdk_scsi_dev_get_list(void)
 {
@@ -50,10 +60,9 @@ allocate_dev(void)
 
 	for (i = 0; i < SPDK_SCSI_MAX_DEVS; i++) {
 		dev = &g_devs[i];
-		if (!dev->is_allocated) {
+		if (dev->id == -1) {
 			memset(dev, 0, sizeof(*dev));
 			dev->id = i;
-			dev->is_allocated = 1;
 			return dev;
 		}
 	}
@@ -62,9 +71,12 @@ allocate_dev(void)
 }
 
 static void
-free_dev(struct spdk_scsi_dev *dev)
+dev_free(struct spdk_scsi_dev *dev)
 {
-	dev->is_allocated = 0;
+	assert(dev->lun_cnt == 0);
+	assert(dev->removed == true);
+
+	dev->id = -1;
 }
 
 void
@@ -72,7 +84,13 @@ spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev)
 {
 	int i;
 
-	if (dev == NULL) {
+	if (dev == NULL || dev->removed) {
+		return;
+	}
+
+	dev->removed = true;
+	if (dev->lun_cnt == 0) {
+		dev_free(dev);
 		return;
 	}
 
@@ -81,11 +99,8 @@ spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev)
 			continue;
 		}
 
-		spdk_scsi_lun_destruct(dev->lun[i]);
-		dev->lun[i] = NULL;
+		spdk_scsi_lun_remove(dev->lun[i]);
 	}
-
-	free_dev(dev);
 }
 
 static void
@@ -95,6 +110,7 @@ spdk_scsi_dev_add_lun(struct spdk_scsi_dev *dev,
 	lun->id = id;
 	lun->dev = dev;
 	dev->lun[id] = lun;
+	dev->lun_cnt++;
 }
 
 void
@@ -106,7 +122,14 @@ spdk_scsi_dev_delete_lun(struct spdk_scsi_dev *dev,
 	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
 		if (dev->lun[i] == lun) {
 			dev->lun[i] = NULL;
+			dev->lun_cnt--;
+			break;
 		}
+	}
+
+	assert(i != SPDK_SCSI_DEV_MAX_LUN);
+	if (dev->removed == true && dev->lun_cnt == 0) {
+		dev_free(dev);
 	}
 }
 
