@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/blob.h"
+#include "spdk/conf.h"
 #include "spdk/crc32.h"
 #include "spdk/env.h"
 #include "spdk/queue.h"
@@ -46,6 +47,7 @@
 #include "blobstore.h"
 
 #define BLOB_CRC32C_INITIAL    0xffffffffUL
+uint32_t g_cluster_size;
 
 static int spdk_bs_register_md_thread(struct spdk_blob_store *bs);
 static int spdk_bs_unregister_md_thread(struct spdk_blob_store *bs);
@@ -1483,10 +1485,31 @@ _spdk_bs_free(struct spdk_blob_store *bs)
 	spdk_io_device_unregister(bs, _spdk_bs_dev_destroy);
 }
 
+static void
+blobstore_conf_parse(void)
+{
+	struct spdk_conf_section *sp;
+
+	sp = spdk_conf_find_section(NULL, "BlobStore");
+	if (sp == NULL) {
+		g_cluster_size = SPDK_BLOB_OPTS_CLUSTER_SZ;
+		return;
+	}
+
+	g_cluster_size = spdk_conf_section_get_intval(sp, "ClusterSize");
+	if (g_cluster_size <= 0) {
+		g_cluster_size = SPDK_BLOB_OPTS_CLUSTER_SZ;
+	} else {
+		g_cluster_size *= SPDK_BLOB_OPTS_CLUSTER_SZ;
+	}
+}
+
 void
 spdk_bs_opts_init(struct spdk_bs_opts *opts)
 {
-	opts->cluster_sz = SPDK_BLOB_OPTS_CLUSTER_SZ;
+	blobstore_conf_parse();
+
+	opts->cluster_sz = g_cluster_size;
 	opts->num_md_pages = SPDK_BLOB_OPTS_NUM_MD_PAGES;
 	opts->max_md_ops = SPDK_BLOB_OPTS_MAX_MD_OPS;
 	opts->max_channel_ops = SPDK_BLOB_OPTS_MAX_CHANNEL_OPS;
