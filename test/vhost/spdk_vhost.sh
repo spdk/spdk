@@ -119,6 +119,9 @@ case $1 in
 		echo 'Running lvol integrity nightly suite with one core and one controller'
 		./lvol/lvol_test.sh --fio-bin=$FIO_BIN \
 		--ctrl-type=spdk_vhost_scsi --max-disks=1
+		echo 'Running lvol integrity nightly suite with different os types'
+		./lvol/lvol_test.sh --fio-bin=$FIO_BIN \
+		--ctrl-type=spdk_vhost_scsi --vm-count=2 --multi-os
 		;;
 	-ilbn|--integrity-lvol-blk-nightly)
 		if [[ $DISKS_NUMBER -ge 2 ]]; then
@@ -133,6 +136,9 @@ case $1 in
 		echo 'Running lvol integrity nightly suite with one core and one controller'
 		./lvol/lvol_test.sh --fio-bin=$FIO_BIN \
 		--ctrl-type=spdk_vhost_blk --max-disks=1
+		echo 'Running lvol integrity nightly suite with different os types'
+		./lvol/lvol_test.sh --fio-bin=$FIO_BIN \
+		--ctrl-type=spdk_vhost_blk --vm-count=2 --multi-os
 		;;
 	-hp|--hotplug)
 		echo 'Running hotplug tests suite...'
