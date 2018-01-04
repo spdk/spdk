@@ -25,6 +25,29 @@
     },
     {
       "key": {
+        "uuid": "7c6fd3e5_c2c1de27",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1005,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T07:52:25Z",
+      "side": 1,
+      "message": "I think this might be worded better:\n\"bdev registered and has open descriptors\"",
+      "range": {
+        "startLine": 1005,
+        "startChar": 4,
+        "endLine": 1005,
+        "endChar": 43
+      },
+      "revId": "00ce8fc77d86fe8b7c3f485230e1f5eae45c0992",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a1cabfe7_804d7d98",
         "filename": "lib/bdev/null/bdev_null.c",
         "patchSetId": 7
