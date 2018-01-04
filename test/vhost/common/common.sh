@@ -387,7 +387,7 @@ function vm_shutdown_all()
 	done
 
 	notice "Waiting for VMs to shutdown..."
-	timeo=10
+	timeo=15
 	while [[ $timeo -gt 0 ]]; do
 		all_vms_down=1
 		for vm in $VM_BASE_DIR/[0-9]*; do
