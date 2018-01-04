@@ -169,6 +169,20 @@ spdk_bdev_scsi_report_luns(struct spdk_scsi_lun *lun,
 }
 
 static int
+spdk_bdev_scsi_pad_scsi_name(char *dst, const char *name)
+{
+	size_t len;
+
+	len = strnlen(name, SPDK_SCSI_DEV_MAX_NAME);
+	memcpy(dst, name, len);
+	do {
+		dst[len++] = '\0';
+	} while (len & 3);
+
+	return len;
+}
+
+static int
 spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 		       uint8_t *cdb, uint8_t *data, uint16_t alloc_len)
 {
@@ -269,7 +283,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			/* Check total length by calculated how much space all entries take */
 			len = sizeof(struct spdk_scsi_desig_desc) + 8;
 			len += sizeof(struct spdk_scsi_desig_desc) + 8 + 16 + MAX_SERIAL_STRING;
-			len += sizeof(struct spdk_scsi_desig_desc) + SPDK_SCSI_DEV_MAX_NAME;
+			len += sizeof(struct spdk_scsi_desig_desc) + SPDK_SCSI_DEV_MAX_NAME + 1;
 			len += sizeof(struct spdk_scsi_desig_desc) + SPDK_SCSI_PORT_MAX_NAME_LENGTH;
 			len += sizeof(struct spdk_scsi_desig_desc) + 4;
 			len += sizeof(struct spdk_scsi_desig_desc) + 4;
@@ -325,7 +339,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			desig->reserved0 = 0;
 			desig->piv = 1;
 			desig->reserved1 = 0;
-			desig->len = snprintf(desig->desig, SPDK_SCSI_DEV_MAX_NAME, "%s", dev->name);
+			desig->len = spdk_bdev_scsi_pad_scsi_name(desig->desig, dev->name);
 			len += sizeof(struct spdk_scsi_desig_desc) + desig->len;
 
 			buf += sizeof(struct spdk_scsi_desig_desc) + desig->len;

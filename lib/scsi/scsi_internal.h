@@ -61,7 +61,7 @@ struct spdk_scsi_dev {
 	int			id;
 	int			is_allocated;
 
-	char			name[SPDK_SCSI_DEV_MAX_NAME];
+	char			name[SPDK_SCSI_DEV_MAX_NAME + 1];
 
 	struct spdk_scsi_lun	*lun[SPDK_SCSI_DEV_MAX_LUN];
 
