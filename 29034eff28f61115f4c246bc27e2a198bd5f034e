@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "849bcd34_2c5985ce",
+        "filename": "doc/bdev.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-04T22:46:54Z",
+      "side": 1,
+      "message": "Just me 2 cents but \"full substitute\" seems a little bold. Might be better to describe it as \"the rough equivalent of\" as to hold up to scrutiny a little better :)",
+      "revId": "29034eff28f61115f4c246bc27e2a198bd5f034e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
