@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7c63d9a9_388421e2",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-04T17:49:39Z",
+      "side": 1,
+      "message": "This should not be a global; the cluster size is already configurable on a per-blobstore basis (via spdk_bs_opts).",
+      "revId": "9bdd234afaf83cb8da3cedcc5cfd02b0e3abaac7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
