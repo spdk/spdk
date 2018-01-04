@@ -64,7 +64,24 @@ allocate_dev(void)
 static void
 free_dev(struct spdk_scsi_dev *dev)
 {
+	assert(dev->is_allocated == 1);
+	assert(dev->removed == true);
+
 	dev->is_allocated = 0;
+}
+
+static int
+dev_lun_cnt(struct spdk_scsi_dev *dev)
+{
+	int i, cnt;
+
+	for (i = 0, cnt = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+		if (dev->lun[i] != NULL) {
+			cnt++;
+		}
+	}
+
+	return cnt;
 }
 
 void
@@ -72,7 +89,13 @@ spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev)
 {
 	int i;
 
-	if (dev == NULL) {
+	if (dev == NULL || dev->removed) {
+		return;
+	}
+
+	dev->removed = true;
+	if (dev_lun_cnt(dev) == 0) {
+		free_dev(dev);
 		return;
 	}
 
@@ -81,11 +104,12 @@ spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev)
 			continue;
 		}
 
+		/*
+		 * LUN will remove itself from this dev when all outstanding IO
+		 * is done. When no more LUNs, dev will be deleted.
+		 */
 		spdk_scsi_lun_destruct(dev->lun[i]);
-		dev->lun[i] = NULL;
 	}
-
-	free_dev(dev);
 }
 
 static void
@@ -106,7 +130,13 @@ spdk_scsi_dev_delete_lun(struct spdk_scsi_dev *dev,
 	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
 		if (dev->lun[i] == lun) {
 			dev->lun[i] = NULL;
+			break;
 		}
+	}
+
+	assert(i != SPDK_SCSI_DEV_MAX_LUN);
+	if (dev->removed == true && dev_lun_cnt(dev) == 0) {
+		free_dev(dev);
 	}
 }
 
