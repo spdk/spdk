@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3f119d03_cdd93b2e",
+        "filename": "test/nvmf/host/perf.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-01-04T08:16:50Z",
+      "side": 1,
+      "message": "remove the extra empty line, other part looks good to me.",
+      "revId": "43c26811bc47986d563271e47d423cc5be966dbe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
