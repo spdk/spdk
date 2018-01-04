@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "58fef3ff_825ab01e",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-04T23:23:43Z",
+      "side": 1,
+      "message": "instead of dummy, maybe bdev_blob_read_zeroes and readv_zeroes?",
+      "revId": "bfa4190d53c7c7e6edd5b1e8f40f0c85fa4927d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca0e2bdf_ef9c0e15",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-04T23:23:43Z",
+      "side": 1,
+      "message": "ivalid \u003d\u003e invalid?",
+      "revId": "bfa4190d53c7c7e6edd5b1e8f40f0c85fa4927d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "23d20c26_35978999",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-04T23:23:43Z",
+      "side": 1,
+      "message": "these should probably still call the cb_fn, with an error code (in addition to the assert)",
+      "revId": "bfa4190d53c7c7e6edd5b1e8f40f0c85fa4927d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f2dd318_49de7ddc",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-04T23:23:43Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "bfa4190d53c7c7e6edd5b1e8f40f0c85fa4927d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e66f894_8b47fab0",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-04T23:23:43Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "bfa4190d53c7c7e6edd5b1e8f40f0c85fa4927d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0934746_e1b45d76",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-04T23:23:43Z",
+      "side": 1,
+      "message": "this pretty much duplicates code in _spdk_resize_blob\n\nI\u0027d suggest adding an output parameter here to pass the lfc (last found cluster) - then use this function in _spdk_resize_blob().\n\nDo the above in a separate patch (before this patch).  Then this thin provisioning patch can just use _spdk_bs_allocate_cluster().",
+      "revId": "bfa4190d53c7c7e6edd5b1e8f40f0c85fa4927d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1ca996e_9db8e14e",
+        "filename": "lib/blob/request.h",
+        "patchSetId": 23
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-04T23:23:43Z",
+      "side": 1,
+      "message": "I think I\u0027d prefer to see a new set of functions in the form:\n\nspdk_bs_sequence_read_bs_dev()\n\nThen spdk_bs_sequence_read() can just call this new function, passing channel-\u003edev as the bs_dev parameter.\n\nYour new code can call the new version of this function, passing the backing dev bs_dev directly.\n\nPlease let\u0027s make this a separate patch though - before this big one.",
+      "revId": "bfa4190d53c7c7e6edd5b1e8f40f0c85fa4927d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
