@@ -37,6 +37,12 @@
 
 #include "spdk_cunit.h"
 
+static void
+spdk_scsi_dev_init_list(void)
+{
+
+}
+
 #include "scsi.c"
 
 static void

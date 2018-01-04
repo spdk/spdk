@@ -220,7 +220,7 @@ lun_construct(void)
 static void
 lun_destruct(struct spdk_scsi_lun *lun)
 {
-	spdk_scsi_lun_destruct(lun);
+	spdk_scsi_lun_remove(lun);
 }
 
 static void
@@ -578,13 +578,11 @@ static void
 lun_destruct_success(void)
 {
 	struct spdk_scsi_lun *lun;
-	int rc;
 
 	lun = lun_construct();
 
-	rc = spdk_scsi_lun_destruct(lun);
+	spdk_scsi_lun_remove(lun);
 
-	CU_ASSERT_EQUAL(rc, 0);
 	CU_ASSERT_EQUAL(g_task_count, 0);
 }
 
@@ -608,18 +606,6 @@ lun_construct_success(void)
 	lun_destruct(lun);
 
 	CU_ASSERT_EQUAL(g_task_count, 0);
-}
-
-static void
-lun_delete(void)
-{
-	struct spdk_scsi_lun *lun;
-	int rc;
-
-	lun = lun_construct();
-
-	rc = spdk_scsi_lun_delete(lun);
-	CU_ASSERT_EQUAL(rc, 0);
 }
 
 int
@@ -669,7 +655,6 @@ main(int argc, char **argv)
 		|| CU_add_test(suite, "destruct task - success", lun_destruct_success) == NULL
 		|| CU_add_test(suite, "construct - null ctx", lun_construct_null_ctx) == NULL
 		|| CU_add_test(suite, "construct - success", lun_construct_success) == NULL
-		|| CU_add_test(suite, "lun_delete", lun_delete) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
