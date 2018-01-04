@@ -48,4 +48,26 @@ function configure_performance() {
 	echo "Done"
 }
 
-configure_performance
+function reset_performance() {
+	echo -n "Placing all CPUs in powersave mode..."
+	for governor in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+		echo -n powersave > $governor
+	done
+	echo "Done"
+
+	if [ -f "/sys/devices/system/cpu/intel_pstate/no_turbo" ]; then
+		echo -n "Enabling Turbo Boost..."
+		echo -n 0 > /sys/devices/system/cpu/intel_pstate/no_turbo
+		echo "Done"
+	fi
+
+	echo -n "Enabling irqbalance service..."
+	service irqbalance start 2> /dev/null
+	echo "Done"
+}
+
+if [ "$1" = "reset" ]; then
+	reset_performance
+else
+	configure_performance
+fi
