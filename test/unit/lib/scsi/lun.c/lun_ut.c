@@ -164,13 +164,13 @@ void spdk_scsi_dev_delete_lun(struct spdk_scsi_dev *dev,
 }
 
 int
-spdk_bdev_scsi_reset(struct spdk_bdev *bdev, struct spdk_scsi_task *task)
+spdk_bdev_scsi_reset(struct spdk_scsi_task *task)
 {
 	return 0;
 }
 
 int
-spdk_bdev_scsi_execute(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
+spdk_bdev_scsi_execute(struct spdk_scsi_task *task)
 {
 	if (g_lun_execute_fail) {
 		return -EINVAL;

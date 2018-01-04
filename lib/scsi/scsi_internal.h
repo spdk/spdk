@@ -152,8 +152,8 @@ int spdk_scsi_port_construct(struct spdk_scsi_port *port, uint64_t id,
 			     uint16_t index, const char *name);
 void spdk_scsi_port_destruct(struct spdk_scsi_port *port);
 
-int spdk_bdev_scsi_execute(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
-int spdk_bdev_scsi_reset(struct spdk_bdev *bdev, struct spdk_scsi_task *task);
+int spdk_bdev_scsi_execute(struct spdk_scsi_task *task);
+int spdk_bdev_scsi_reset(struct spdk_scsi_task *task);
 
 struct spdk_scsi_globals {
 	pthread_mutex_t mutex;
