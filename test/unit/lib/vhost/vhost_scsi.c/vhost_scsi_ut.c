@@ -58,7 +58,7 @@ DEFINE_STUB_V(spdk_scsi_dev_queue_mgmt_task, (struct spdk_scsi_dev *dev,
 DEFINE_STUB_P(spdk_scsi_dev_find_port_by_id, struct spdk_scsi_port, (struct spdk_scsi_dev *dev,
 		uint64_t id), {0});
 DEFINE_STUB_V(spdk_scsi_task_construct, (struct spdk_scsi_task *task, spdk_scsi_task_cpl cpl_fn,
-		spdk_scsi_task_free free_fn, struct spdk_scsi_task *parent));
+		spdk_scsi_task_free free_fn));
 DEFINE_STUB_P(spdk_scsi_dev_get_lun, struct spdk_scsi_lun, (struct spdk_scsi_dev *dev, int lun_id), {0});
 DEFINE_STUB_V(spdk_scsi_task_process_null_lun, (struct spdk_scsi_task *task));
 DEFINE_STUB_P(spdk_scsi_lun_get_dev, const struct spdk_scsi_dev, (const struct spdk_scsi_lun *lun), {0});

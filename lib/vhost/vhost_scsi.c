@@ -307,8 +307,7 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
 	uint32_t desc_table_size;
 	int rc;
 
-	spdk_scsi_task_construct(&task->scsi, spdk_vhost_scsi_task_mgmt_cpl, spdk_vhost_scsi_task_free_cb,
-				 NULL);
+	spdk_scsi_task_construct(&task->scsi, spdk_vhost_scsi_task_mgmt_cpl, spdk_vhost_scsi_task_free_cb);
 	rc = spdk_vhost_vq_get_desc(vdev, task->vq, task->req_idx, &desc, &desc_table, &desc_table_size);
 	if (spdk_unlikely(rc != 0)) {
 		SPDK_ERRLOG("%s: Invalid controlq descriptor at index %d.\n",
@@ -403,7 +402,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 	uint32_t desc_table_len, len = 0;
 	int rc;
 
-	spdk_scsi_task_construct(&task->scsi, spdk_vhost_scsi_task_cpl, spdk_vhost_scsi_task_free_cb, NULL);
+	spdk_scsi_task_construct(&task->scsi, spdk_vhost_scsi_task_cpl, spdk_vhost_scsi_task_free_cb);
 
 	rc = spdk_vhost_vq_get_desc(vdev, task->vq, task->req_idx, &desc, &desc_table, &desc_table_len);
 	/* First descriptor must be readable */
