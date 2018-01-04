@@ -1284,8 +1284,7 @@ spdk_bdev_scsi_read_write_lba_check(struct spdk_scsi_task *task,
 				    uint64_t lba, uint64_t cmd_num_blocks,
 				    uint64_t bdev_num_blocks)
 {
-	if (lba >= bdev_num_blocks || cmd_num_blocks > bdev_num_blocks ||
-	    lba > (bdev_num_blocks - cmd_num_blocks)) {
+	if (bdev_num_blocks <= lba || bdev_num_blocks - lba < cmd_num_blocks) {
 		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "end of media\n");
 		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 					  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
