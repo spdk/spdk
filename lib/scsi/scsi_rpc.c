@@ -61,7 +61,7 @@ spdk_rpc_get_scsi_devices(struct spdk_jsonrpc_request *request,
 	for (i = 0; i < SPDK_SCSI_MAX_DEVS; i++) {
 		struct spdk_scsi_dev *dev = &devs[i];
 
-		if (!dev->is_allocated) {
+		if (dev->id != -1) {
 			continue;
 		}
 

@@ -61,6 +61,7 @@ static int
 test_setup(void)
 {
 	TAILQ_INIT(&g_lun_head);
+	spdk_scsi_dev_init_list();
 	return 0;
 }
 
@@ -119,8 +120,8 @@ spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev,
 	return lun;
 }
 
-int
-spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun)
+void
+spdk_scsi_lun_remove(struct spdk_scsi_lun *lun)
 {
 	struct lun_entry *p, *tmp;
 
@@ -134,7 +135,6 @@ spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun)
 	}
 
 	free(lun);
-	return 0;
 }
 
 struct spdk_bdev *
