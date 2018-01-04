@@ -145,6 +145,14 @@ if [ $SPDK_TEST_VHOST -eq 1 ]; then
 		timing_enter readonly
 		run_test ./test/vhost/spdk_vhost.sh --readonly
 		timing_exit readonly
+
+		#timing_enter integrity_lvol_scsi_nightly
+		#run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-scsi-nightly
+		#timing_exit integrity_lvol_scsi_nightly
+
+		#timing_enter integrity_lvol_blk_nightly
+		#run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-blk-nightly
+		#timing_exit integrity_lvol_blk_nightly
 	fi
 
 	timing_enter integrity_lvol_scsi
@@ -154,6 +162,14 @@ if [ $SPDK_TEST_VHOST -eq 1 ]; then
 	timing_enter integrity_lvol_blk
 	run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-blk
 	timing_exit integrity_lvol_blk
+
+	timing_enter integrity_lvol_scsi_nightly
+	run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-scsi-nightly
+	timing_exit integrity_lvol_scsi_nightly
+
+	timing_enter integrity_lvol_blk_nightly
+	run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-blk-nightly
+	timing_exit integrity_lvol_blk_nightly
 
 	timing_exit vhost
 fi
