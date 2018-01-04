@@ -47,6 +47,8 @@ spdk_scsi_init(void)
 		return -1;
 	}
 
+	spdk_scsi_dev_init_list();
+
 	return 0;
 }
 

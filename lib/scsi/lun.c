@@ -232,7 +232,12 @@ spdk_scsi_lun_hotplug(void *arg)
 
 	if (!spdk_scsi_lun_has_pending_tasks(lun)) {
 		spdk_scsi_lun_free_io_channel(lun);
-		spdk_scsi_lun_delete(lun);
+
+		spdk_bdev_close(lun->bdev_desc);
+		spdk_poller_unregister(&lun->hotplug_poller);
+
+		spdk_scsi_dev_delete_lun(lun->dev, lun);
+		free(lun);
 	}
 }
 
@@ -241,12 +246,15 @@ _spdk_scsi_lun_hot_remove(void *arg1)
 {
 	struct spdk_scsi_lun *lun = arg1;
 
-	lun->removed = true;
 	if (lun->hotremove_cb) {
 		lun->hotremove_cb(lun, lun->hotremove_ctx);
 	}
 
-	lun->hotplug_poller = spdk_poller_register(spdk_scsi_lun_hotplug, lun, 0);
+	if (!spdk_scsi_lun_has_pending_tasks(lun)) {
+		spdk_scsi_lun_hotplug(lun);
+	} else {
+		lun->hotplug_poller = spdk_poller_register(spdk_scsi_lun_hotplug, lun, 0);
+	}
 }
 
 static void
@@ -255,6 +263,11 @@ spdk_scsi_lun_hot_remove(void *remove_ctx)
 	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)remove_ctx;
 	struct spdk_thread *thread;
 
+	if (lun->removed) {
+		return;
+	}
+
+	lun->removed = true;
 	if (lun->io_channel == NULL) {
 		_spdk_scsi_lun_hot_remove(lun);
 		return;
@@ -315,35 +328,10 @@ spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev,
 	return lun;
 }
 
-int
-spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun)
+void
+spdk_scsi_lun_remove(struct spdk_scsi_lun *lun)
 {
-	spdk_bdev_close(lun->bdev_desc);
-	spdk_poller_unregister(&lun->hotplug_poller);
-
-	free(lun);
-
-	return 0;
-}
-
-int
-spdk_scsi_lun_delete(struct spdk_scsi_lun *lun)
-{
-	struct spdk_scsi_dev *dev;
-
-	pthread_mutex_lock(&g_spdk_scsi.mutex);
-
-	dev = lun->dev;
-
-	/* Remove the LUN from the device */
-	if (dev != NULL) {
-		spdk_scsi_dev_delete_lun(dev, lun);
-	}
-
-	/* Destroy this lun */
-	spdk_scsi_lun_destruct(lun);
-	pthread_mutex_unlock(&g_spdk_scsi.mutex);
-	return 0;
+	spdk_scsi_lun_hot_remove(lun);
 }
 
 int spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun)
