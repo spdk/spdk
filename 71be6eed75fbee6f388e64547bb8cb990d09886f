@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b418514d_fa46fd7f",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2300,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-04T23:36:59Z",
+      "side": 1,
+      "message": "What is the race here?  I guess I\u0027m not sure what the path is to hit a problem here.\n\nI see in spdk_file_write(), that we also hold the lock across the send_request call.\n\nReally there should be no reason to hold the lock across the send_request call - that call is asynchronous so holding the lock should have no effect.  I think spdk_file_write() should probably be modified to operate more like this function (_file_sync).",
+      "revId": "71be6eed75fbee6f388e64547bb8cb990d09886f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
