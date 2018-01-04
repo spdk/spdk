@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "65ce41e0_e77d6285",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 906,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-04T13:35:07Z",
+      "side": 1,
+      "message": ":)",
+      "parentUuid": "0f538ad4_ce432506",
+      "range": {
+        "startLine": 906,
+        "startChar": 0,
+        "endLine": 906,
+        "endChar": 47
+      },
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0929734e_27bdd0b3",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 37
@@ -60,6 +84,24 @@
       "writtenOn": "2018-01-04T09:49:51Z",
       "side": 1,
       "message": "lvolerrno should be handled, probably by removing the newly added alias.",
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cdcba0bd_33196b58",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 759,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-04T13:35:07Z",
+      "side": 1,
+      "message": "Then i should pass new alias name in cb_arg, right?",
+      "parentUuid": "0929734e_27bdd0b3",
       "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -89,6 +131,30 @@
     },
     {
       "key": {
+        "uuid": "4e40d735_6cd00ce7",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 773,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-04T13:35:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "884a9889_49a4b84f",
+      "range": {
+        "startLine": 773,
+        "startChar": 1,
+        "endLine": 773,
+        "endChar": 51
+      },
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cf79493c_49e3e6a6",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 37
@@ -100,6 +166,30 @@
       "writtenOn": "2018-01-04T09:02:58Z",
       "side": 1,
       "message": "Just a bit of background. Due to current tasting/loading of lvols/blobstore. We either load whole lvol store or fail it, no functionality of loading just select lvols is offered at this time. To prevent often failures in case of same lvol names we assumed naming scheme of lvol_store-\u003ename/lvol-\u003ename basically narrowing down name conflicts.\n\nThis is somewhat mitigated now by having bdev-\u003ealiases, we simply ignore error when adding alias and tasting anyway. Lvols would be perfectly usable with unique_id as name, but without an alias.\n\n\nI think for now we should keep having this naming scheme and change it in separate patch later on if we decide to (this would require changes in creating lvol). For now we might keep it so that vbdev_lvol_rename(lvolstore1/lvol1, fancy_name, cb_fn, cb_arg) would result in bdev having new alias lvolstore1/fancy_name.",
+      "range": {
+        "startLine": 785,
+        "startChar": 1,
+        "endLine": 785,
+        "endChar": 47
+      },
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6750c241_8205767e",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-04T13:35:07Z",
+      "side": 1,
+      "message": "lvolstore1/lvol is a string, am i correct?\nI mean, whether your intention was to give the old name as string or as a pointer to struct?",
+      "parentUuid": "cf79493c_49e3e6a6",
       "range": {
         "startLine": 785,
         "startChar": 1,
@@ -158,6 +248,54 @@
     },
     {
       "key": {
+        "uuid": "65aef5e0_a4469382",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 791,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-04T13:35:07Z",
+      "side": 1,
+      "message": "Maybe we could call functions like that:\n\n...\nrc \u003d spck_lvol_rename(...)\nif (rc !\u003d 0) {\nreturn rc);\n}\n\nrc \u003d spdk_bdev_alias_del(...)\n...\n\nCalling spdk_bdev_alias_del() in _vbdev_lvol_rename_cb() requires passing additional parameters and thus changing API.",
+      "parentUuid": "5dcbac19_fe4a0a1e",
+      "range": {
+        "startLine": 791,
+        "startChar": 6,
+        "endLine": 791,
+        "endChar": 25
+      },
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d8dc95aa_8b2ef916",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 791,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-04T13:35:07Z",
+      "side": 1,
+      "message": "\u003e As old_lvol_name supplied can be unique_id that is not changeable,\n \u003e it might be better to instead retrieve the old alias from bdev and\n \u003e remove that.\n\n\nCould You explain on what basis i should specify that alias?\nMaybe when unique_id is passed no alias should be deleted? Just new alias",
+      "parentUuid": "8b51fb71_b988481b",
+      "range": {
+        "startLine": 791,
+        "startChar": 32,
+        "endLine": 791,
+        "endChar": 45
+      },
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bc422e24_51771c45",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 37
@@ -169,6 +307,30 @@
       "writtenOn": "2018-01-04T09:49:51Z",
       "side": 1,
       "message": "It might be best to issue callbacks only in _vbdev_lvol_rename_cb, but return appropriate error codes in this function.",
+      "range": {
+        "startLine": 799,
+        "startChar": 2,
+        "endLine": 799,
+        "endChar": 20
+      },
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "579afbd7_23ca97ac",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 799,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-04T13:35:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bc422e24_51771c45",
       "range": {
         "startLine": 799,
         "startChar": 2,
@@ -204,6 +366,30 @@
     },
     {
       "key": {
+        "uuid": "e456d59d_36f5ba3d",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-04T13:35:07Z",
+      "side": 1,
+      "message": "In vbdev_lvol.c You suggested that vbdev_lvol_rename should be called with firsts argument as lvolstore1/lvol (it doesn;t matter as a string or a pointer), and if we need to know lvolstore, then uuid/lvs_name is needed. \nuuid in code below is not used, but now will be.",
+      "parentUuid": "f037ecac_fd531839",
+      "range": {
+        "startLine": 349,
+        "startChar": 1,
+        "endLine": 349,
+        "endChar": 12
+      },
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "63a35857_70dd2613",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 37
@@ -215,6 +401,30 @@
       "writtenOn": "2018-01-04T09:49:51Z",
       "side": 1,
       "message": "This change is fine, but seems not related directly to this patch",
+      "range": {
+        "startLine": 954,
+        "startChar": 11,
+        "endLine": 954,
+        "endChar": 17
+      },
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8078fab2_1e518756",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 954,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-04T13:35:07Z",
+      "side": 1,
+      "message": "Will be revoked, also change in a lvol_ut.c:1285",
+      "parentUuid": "63a35857_70dd2613",
       "range": {
         "startLine": 954,
         "startChar": 11,
@@ -244,6 +454,24 @@
     },
     {
       "key": {
+        "uuid": "05b0182f_b409893b",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 1055,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-04T13:35:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bb2aa5dd_15d751bc",
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4f412e2e_edf8565c",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 37
@@ -255,6 +483,30 @@
       "writtenOn": "2018-01-04T09:49:51Z",
       "side": 1,
       "message": "This function can return an error, please check it.",
+      "range": {
+        "startLine": 1075,
+        "startChar": 1,
+        "endLine": 1075,
+        "endChar": 20
+      },
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56d0be77_b3c9baf4",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 1075,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-04T13:35:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4f412e2e_edf8565c",
       "range": {
         "startLine": 1075,
         "startChar": 1,
