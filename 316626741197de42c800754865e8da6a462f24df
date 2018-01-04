@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cf7ddb72_ce335848",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2839,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-04T23:39:34Z",
+      "side": 0,
+      "message": "It looks that this remove was my fault.\nWe should have kept both data_transferred and byte_completed for read.\n\nI believe it will be OK for write.",
+      "range": {
+        "startLine": 2837,
+        "startChar": 0,
+        "endLine": 2839,
+        "endChar": 2
+      },
+      "revId": "316626741197de42c800754865e8da6a462f24df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
