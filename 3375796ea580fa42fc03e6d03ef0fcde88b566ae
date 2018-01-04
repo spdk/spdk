@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "24a4ca50_a322b5da",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 344,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-04T20:40:09Z",
+      "side": 1,
+      "message": "assigning a -1 to a uint64_t without a cast is probably asking for problems down the road - I\u0027m actually surprised this doesn\u0027t result in a compiler warning that fails the build",
+      "revId": "3375796ea580fa42fc03e6d03ef0fcde88b566ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48da5973_814ae90d",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-04T20:40:09Z",
+      "side": 1,
+      "message": "resize is done in terms of clusters, not blocks - so just BLOCKCNT would be sufficient here (dropping the minus one)\n\nbut I think to make this more clear, you should just use bs-\u003etotal_clusters + 1 - otherwise it can be confusing to readers why we are using BLOCKCNT for a parameter that is terms of clusters",
+      "revId": "3375796ea580fa42fc03e6d03ef0fcde88b566ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
