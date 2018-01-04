@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "71f44097_f6353261",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 906,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T09:02:58Z",
+      "side": 1,
+      "message": "Please add UT for this function in bdev_ut.c.",
+      "range": {
+        "startLine": 906,
+        "startChar": 0,
+        "endLine": 906,
+        "endChar": 47
+      },
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "884a9889_49a4b84f",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 773,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T09:02:58Z",
+      "side": 1,
+      "message": "I don\u0027t think we want to search for lvol by unique_id, as old_lvol_name could be either lvs-\u003eguid_blob_id (unique_id and bdev-\u003ename) or lvs-\u003ename/lvol-\u003ename (bdev-\u003ealias).\n\nspdk_bdev_get_by_name(old_lvol_name) searches both bdev-\u003ename and aliases. Lvol can be retrieved from bdev-\u003ectx.",
+      "range": {
+        "startLine": 773,
+        "startChar": 1,
+        "endLine": 773,
+        "endChar": 51
+      },
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf79493c_49e3e6a6",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T09:02:58Z",
+      "side": 1,
+      "message": "Just a bit of background. Due to current tasting/loading of lvols/blobstore. We either load whole lvol store or fail it, no functionality of loading just select lvols is offered at this time. To prevent often failures in case of same lvol names we assumed naming scheme of lvol_store-\u003ename/lvol-\u003ename basically narrowing down name conflicts.\n\nThis is somewhat mitigated now by having bdev-\u003ealiases, we simply ignore error when adding alias and tasting anyway. Lvols would be perfectly usable with unique_id as name, but without an alias.\n\n\nI think for now we should keep having this naming scheme and change it in separate patch later on if we decide to (this would require changes in creating lvol). For now we might keep it so that vbdev_lvol_rename(lvolstore1/lvol1, fancy_name, cb_fn, cb_arg) would result in bdev having new alias lvolstore1/fancy_name.",
+      "range": {
+        "startLine": 785,
+        "startChar": 1,
+        "endLine": 785,
+        "endChar": 47
+      },
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b51fb71_b988481b",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 791,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T09:02:58Z",
+      "side": 1,
+      "message": "As old_lvol_name supplied can be unique_id that is not changeable, it might be better to instead retrieve the old alias from bdev and remove that.",
+      "range": {
+        "startLine": 791,
+        "startChar": 32,
+        "endLine": 791,
+        "endChar": 45
+      },
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5dcbac19_fe4a0a1e",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 791,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T09:02:58Z",
+      "side": 1,
+      "message": "spdk_bdev_alias_del could be called in _vbdev_lvol_rename_cb() so that we don\u0027t pull this name before spdk_lvol_rename() completes.",
+      "range": {
+        "startLine": 791,
+        "startChar": 6,
+        "endLine": 791,
+        "endChar": 25
+      },
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
