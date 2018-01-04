@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3446471c_07bf4b06",
+        "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2018-01-04T08:25:50Z",
+      "side": 1,
+      "message": "Delete extra space here",
+      "revId": "d6655b72953e752ccd942183e7237a4ca9e8b3c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c042409a_33403242",
+        "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2018-01-04T08:25:50Z",
+      "side": 1,
+      "message": "Add space after commas",
+      "revId": "d6655b72953e752ccd942183e7237a4ca9e8b3c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "01fe0512_a9a28fd2",
+        "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2018-01-04T08:25:50Z",
+      "side": 1,
+      "message": "Delete extra line",
+      "revId": "d6655b72953e752ccd942183e7237a4ca9e8b3c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0950b7f3_091b0fc3",
+        "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2018-01-04T08:25:50Z",
+      "side": 1,
+      "message": "Can we delete comments from line 83 to 96",
+      "revId": "d6655b72953e752ccd942183e7237a4ca9e8b3c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
