@@ -2707,7 +2707,7 @@ spdk_iscsi_send_datain(struct spdk_iscsi_conn *conn,
 	}
 	DataSN++;
 
-	if (task->scsi.parent) {
+	if (task->parent) {
 		offset += primary->scsi.data_transferred;
 	}
 	to_be32(&rsph->buffer_offset, (uint32_t)offset);
@@ -2946,7 +2946,7 @@ static int spdk_iscsi_op_scsi_read(struct spdk_iscsi_conn *conn,
 
 	TAILQ_INIT(&task->subtask_list);
 	task->scsi.dxfer_dir = SPDK_SCSI_DIR_FROM_DEV;
-	task->scsi.parent = NULL;
+	task->parent = NULL;
 	task->scsi.offset = 0;
 	task->scsi.length = DMIN32(SPDK_BDEV_LARGE_BUF_MAX_SIZE, task->scsi.transfer_len);
 	spdk_scsi_task_set_data(&task->scsi, NULL, 0);
@@ -3017,7 +3017,7 @@ spdk_iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	task->scsi.transfer_len = transfer_len;
 	task->scsi.target_port = conn->target_port;
 	task->scsi.initiator_port = conn->initiator_port;
-	task->scsi.parent = NULL;
+	task->parent = NULL;
 
 	if (task->scsi.lun == NULL) {
 		spdk_scsi_task_process_null_lun(&task->scsi);

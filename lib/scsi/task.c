@@ -49,11 +49,6 @@ spdk_scsi_task_put(struct spdk_scsi_task *task)
 	if (task->ref == 0) {
 		struct spdk_bdev_io *bdev_io = task->bdev_io;
 
-		if (task->parent) {
-			spdk_scsi_task_put(task->parent);
-			task->parent = NULL;
-		}
-
 		if (bdev_io) {
 			spdk_bdev_free_io(bdev_io);
 		}
@@ -67,8 +62,7 @@ spdk_scsi_task_put(struct spdk_scsi_task *task)
 void
 spdk_scsi_task_construct(struct spdk_scsi_task *task,
 			 spdk_scsi_task_cpl cpl_fn,
-			 spdk_scsi_task_free free_fn,
-			 struct spdk_scsi_task *parent)
+			 spdk_scsi_task_free free_fn)
 {
 	assert(task != NULL);
 	assert(cpl_fn != NULL);
@@ -85,17 +79,6 @@ spdk_scsi_task_construct(struct spdk_scsi_task *task,
 	assert(task->iov.iov_base == NULL);
 	task->iovs = &task->iov;
 	task->iovcnt = 1;
-
-	if (parent != NULL) {
-		parent->ref++;
-		task->parent = parent;
-		task->dxfer_dir = parent->dxfer_dir;
-		task->transfer_len = parent->transfer_len;
-		task->lun = parent->lun;
-		task->cdb = parent->cdb;
-		task->target_port = parent->target_port;
-		task->initiator_port = parent->initiator_port;
-	}
 }
 
 void

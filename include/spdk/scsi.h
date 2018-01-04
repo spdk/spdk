@@ -120,7 +120,6 @@ struct spdk_scsi_task {
 	uint32_t data_transferred;
 
 	uint64_t offset;
-	struct spdk_scsi_task *parent;
 
 	uint8_t *cdb;
 
@@ -219,8 +218,7 @@ const char *spdk_scsi_port_get_name(const struct spdk_scsi_port *port);
 
 void spdk_scsi_task_construct(struct spdk_scsi_task *task,
 			      spdk_scsi_task_cpl cpl_fn,
-			      spdk_scsi_task_free free_fn,
-			      struct spdk_scsi_task *parent);
+			      spdk_scsi_task_free free_fn);
 void spdk_scsi_task_put(struct spdk_scsi_task *task);
 
 void spdk_scsi_task_free_data(struct spdk_scsi_task *task);
@@ -254,16 +252,6 @@ void spdk_scsi_task_build_sense_data(struct spdk_scsi_task *task, int sk, int as
 void spdk_scsi_task_set_status(struct spdk_scsi_task *task, int sc, int sk, int asc,
 			       int ascq);
 void spdk_scsi_task_process_null_lun(struct spdk_scsi_task *task);
-
-static inline struct spdk_scsi_task *
-spdk_scsi_task_get_primary(struct spdk_scsi_task *task)
-{
-	if (task->parent) {
-		return task->parent;
-	} else {
-		return task;
-	}
-}
 
 #ifdef __cplusplus
 }
