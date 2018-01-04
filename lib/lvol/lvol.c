@@ -926,11 +926,12 @@ _spdk_lvol_create_cb(void *cb_arg, spdk_blob_id blobid, int lvolerrno)
 
 int
 spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
-		 spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
+		 bool thin_provisioned, spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvol_with_handle_req *req;
 	struct spdk_blob_store *bs;
 	struct spdk_lvol *lvol, *tmp;
+	struct spdk_blob_opts opts;
 	uint64_t num_clusters, free_clusters;
 
 	if (lvs == NULL) {
@@ -986,7 +987,10 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	strncpy(lvol->name, name, SPDK_LVS_NAME_MAX);
 	req->lvol = lvol;
 
-	spdk_bs_create_blob(lvs->blobstore, _spdk_lvol_create_cb, req);
+	spdk_blob_opts_init(&opts);
+	opts.thin_provision = thin_provisioned;
+
+	spdk_bs_create_blob_ext(lvs->blobstore, &opts, _spdk_lvol_create_cb, req);
 
 	return 0;
 }
