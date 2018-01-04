@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "796749cc_632e3886",
+        "filename": "include/spdk/io_channel.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T11:35:07Z",
+      "side": 1,
+      "message": "Name does not match one in io_channel.c:\nspdk_io_channel_mutex_lock()",
+      "range": {
+        "startLine": 76,
+        "startChar": 5,
+        "endLine": 76,
+        "endChar": 30
+      },
+      "revId": "e5dd191e3f0f8a7e9687c0a427c41ed793f06eb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "26bb9d43_ee9b11ab",
+        "filename": "include/spdk/io_channel.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-04T11:35:07Z",
+      "side": 1,
+      "message": "Same as above.",
+      "range": {
+        "startLine": 81,
+        "startChar": 5,
+        "endLine": 81,
+        "endChar": 32
+      },
+      "revId": "e5dd191e3f0f8a7e9687c0a427c41ed793f06eb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
