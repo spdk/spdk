@@ -70,6 +70,24 @@ _spdk_bs_claim_cluster(struct spdk_blob_store *bs, uint32_t cluster_num)
 	bs->num_free_clusters--;
 }
 
+static int
+_spdk_bs_allocate_cluster(struct spdk_blob_data *blob, uint32_t cluster_num,
+			  uint64_t *lowest_free_cluster)
+{
+	*lowest_free_cluster = spdk_bit_array_find_first_clear(blob->bs->used_clusters,
+			       *lowest_free_cluster);
+	if (*lowest_free_cluster >= blob->bs->total_clusters) {
+		/* No more free clusters. Cannot satisfy the request */
+		return -ENOSPC;
+	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Claiming cluster %lu for blob %lu\n", *lowest_free_cluster, blob->id);
+	_spdk_bs_claim_cluster(blob->bs, *lowest_free_cluster);
+	blob->active.clusters[cluster_num] = _spdk_bs_cluster_to_lba(blob->bs, *lowest_free_cluster);
+
+	return 0;
+}
+
 static void
 _spdk_bs_release_cluster(struct spdk_blob_store *bs, uint32_t cluster_num)
 {
@@ -1068,10 +1086,7 @@ _spdk_resize_blob(struct spdk_blob_data *blob, uint64_t sz)
 	if (spdk_blob_is_thin_provisioned(blob) == false) {
 		lfc = 0;
 		for (i = num_clusters; i < sz; i++) {
-			lfc = spdk_bit_array_find_first_clear(bs->used_clusters, lfc);
-			SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Claiming cluster %lu for blob %lu\n", lfc, blob->id);
-			_spdk_bs_claim_cluster(bs, lfc);
-			blob->active.clusters[i] = _spdk_bs_cluster_to_lba(bs, lfc);
+			_spdk_bs_allocate_cluster(blob, i, &lfc);
 			lfc++;
 		}
 	}
