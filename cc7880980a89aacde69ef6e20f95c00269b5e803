@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "60812e50_d899b845",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-01-05T19:25:36Z",
+      "side": 1,
+      "message": "thanks! done.",
+      "parentUuid": "e8fee7c9_daa922b1",
+      "revId": "cc7880980a89aacde69ef6e20f95c00269b5e803",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bb541ebb_e698b3b5",
         "filename": "lib/nvmf/subsystem.c",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2018-01-02T21:36:24Z",
       "side": 1,
       "message": "This check is probably redundant, since we will be explicitly checking against the required prefix later in this function.",
+      "revId": "cc7880980a89aacde69ef6e20f95c00269b5e803",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a4def493_776a20d9",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-01-05T19:25:36Z",
+      "side": 1,
+      "message": "The reason I did this check is because when we check for yyyy-mm (line 110 in this patch) we use array indexing and I don\u0027t want to throw an index out of bounds error. I think that this check is still necessary.",
+      "parentUuid": "bb541ebb_e698b3b5",
       "revId": "cc7880980a89aacde69ef6e20f95c00269b5e803",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "1f17949e_afe684b1",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-01-05T19:25:36Z",
+      "side": 1,
+      "message": "Yeah, the spec places that whole string in quotes when discussing this class of nqn. Thanks! That makes life a lot easier.",
+      "parentUuid": "8cf55a7c_2a2f3f1a",
+      "revId": "cc7880980a89aacde69ef6e20f95c00269b5e803",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "31557bd5_75e2c252",
         "filename": "lib/nvmf/subsystem.c",
         "patchSetId": 4
@@ -64,6 +118,24 @@
       "writtenOn": "2018-01-02T18:43:05Z",
       "side": 1,
       "message": "You don\u0027t need the intermediate buffer here. Just pass an offset into the \u0027nqn\u0027 string.",
+      "revId": "cc7880980a89aacde69ef6e20f95c00269b5e803",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b957ef80_46738bd9",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-01-05T19:25:36Z",
+      "side": 1,
+      "message": "thanks. done.",
+      "parentUuid": "31557bd5_75e2c252",
       "revId": "cc7880980a89aacde69ef6e20f95c00269b5e803",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "5d947a43_9c71e3ac",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-01-05T19:25:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9f640f77_f05b5cd8",
+      "revId": "cc7880980a89aacde69ef6e20f95c00269b5e803",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fedad414_551b87c2",
         "filename": "lib/nvmf/subsystem.c",
         "patchSetId": 4
@@ -98,6 +188,24 @@
       "writtenOn": "2018-01-02T18:43:05Z",
       "side": 1,
       "message": "You aren\u0027t really checking for a valid reverse domain. You\u0027re just checking (in combination with the next check) that it is in the form \u0027something.something:\u0027. I\u0027d make the comment say that.",
+      "revId": "cc7880980a89aacde69ef6e20f95c00269b5e803",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f0c51a11_2d49a0a7",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-01-05T19:25:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fedad414_551b87c2",
       "revId": "cc7880980a89aacde69ef6e20f95c00269b5e803",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -139,6 +247,24 @@
     },
     {
       "key": {
+        "uuid": "dbd8870d_cec5da6b",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-01-05T19:25:36Z",
+      "side": 1,
+      "message": "Thanks Daniel, I\u0027ll put together a loop for the pattern supplied in that rfc. The spec doesn\u0027t mention IDN, so I won\u0027t try to support it right now.",
+      "parentUuid": "bc08e9f7_19aad60c",
+      "revId": "cc7880980a89aacde69ef6e20f95c00269b5e803",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a75d4c4_2eab0c38",
         "filename": "lib/nvmf/subsystem.c",
         "patchSetId": 4
@@ -156,6 +282,24 @@
     },
     {
       "key": {
+        "uuid": "03583fbc_64d90d99",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-01-05T19:25:36Z",
+      "side": 1,
+      "message": "I just read this last part of your comment after pushing my changes. I think you\u0027re right. I\u0027ll make that work in the next patchset.",
+      "parentUuid": "9a75d4c4_2eab0c38",
+      "revId": "cc7880980a89aacde69ef6e20f95c00269b5e803",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "349e61ff_7424c7ec",
         "filename": "lib/nvmf/subsystem.c",
         "patchSetId": 4
@@ -167,6 +311,24 @@
       "writtenOn": "2018-01-02T18:43:05Z",
       "side": 1,
       "message": "strchr here too",
+      "revId": "cc7880980a89aacde69ef6e20f95c00269b5e803",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fd5bae85_1a800587",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-01-05T19:25:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "349e61ff_7424c7ec",
       "revId": "cc7880980a89aacde69ef6e20f95c00269b5e803",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
