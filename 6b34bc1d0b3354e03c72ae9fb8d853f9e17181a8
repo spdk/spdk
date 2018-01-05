@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b5255cb3_83ffd858",
+        "filename": "test/unit/lib/scsi/lun.c/lun_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-05T22:37:46Z",
+      "side": 1,
+      "message": "defer",
+      "revId": "6b34bc1d0b3354e03c72ae9fb8d853f9e17181a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
