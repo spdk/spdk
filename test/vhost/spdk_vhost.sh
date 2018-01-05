@@ -99,12 +99,12 @@ case $1 in
 	-ils|--integrity-lvol-scsi)
 		echo 'Running lvol integrity suite...'
 		./lvol/lvol_test.sh -x --fio-bin=$FIO_BIN \
-		--ctrl-type=spdk_vhost_scsi
+		--ctrl-type=spdk_vhost_scsi --thin-provisioning
 		;;
 	-ilb|--integrity-lvol-blk)
 		echo 'Running lvol integrity suite...'
 		./lvol/lvol_test.sh -x --fio-bin=$FIO_BIN \
-		--ctrl-type=spdk_vhost_blk
+		--ctrl-type=spdk_vhost_blk --thin-provisioning
 		;;
 	-ilsn|--integrity-lvol-scsi-nightly)
 		if [[ $DISKS_NUMBER -ge 2 ]]; then
