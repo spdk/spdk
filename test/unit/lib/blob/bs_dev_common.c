@@ -37,9 +37,7 @@
 uint8_t *g_dev_buffer;
 
 /* Define here for UT only. */
-struct spdk_io_channel {
-	struct spdk_thread		*thread;
-} g_io_channel;
+struct spdk_io_channel g_io_channel;
 
 static struct spdk_io_channel *
 dev_create_channel(struct spdk_bs_dev *dev)

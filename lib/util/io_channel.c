@@ -60,21 +60,6 @@ struct io_device {
 
 static TAILQ_HEAD(, io_device) g_io_devices = TAILQ_HEAD_INITIALIZER(g_io_devices);
 
-struct spdk_io_channel {
-	struct spdk_thread		*thread;
-	struct io_device		*dev;
-	uint32_t			ref;
-	TAILQ_ENTRY(spdk_io_channel)	tailq;
-	spdk_io_channel_destroy_cb	destroy_cb;
-
-	/*
-	 * Modules will allocate extra memory off the end of this structure
-	 *  to store references to hardware-specific references (i.e. NVMe queue
-	 *  pairs, or references to child device spdk_io_channels (i.e.
-	 *  virtual bdevs).
-	 */
-};
-
 struct spdk_thread {
 	pthread_t thread_id;
 	spdk_thread_pass_msg msg_fn;
@@ -494,12 +479,6 @@ void
 spdk_put_io_channel(struct spdk_io_channel *ch)
 {
 	spdk_thread_send_msg(ch->thread, _spdk_put_io_channel, ch);
-}
-
-void *
-spdk_io_channel_get_ctx(struct spdk_io_channel *ch)
-{
-	return (uint8_t *)ch + sizeof(*ch);
 }
 
 struct spdk_io_channel *
