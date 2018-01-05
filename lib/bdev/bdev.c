@@ -753,8 +753,6 @@ spdk_bdev_get_io(struct spdk_io_channel *_ch)
 		}
 	}
 
-	memset(bdev_io, 0, offsetof(struct spdk_bdev_io, u));
-
 	return bdev_io;
 }
 
@@ -826,6 +824,7 @@ spdk_bdev_io_init(struct spdk_bdev_io *bdev_io,
 	bdev_io->cb = cb;
 	bdev_io->status = SPDK_BDEV_IO_STATUS_PENDING;
 	bdev_io->in_submit_request = false;
+	bdev_io->buf = NULL;
 }
 
 bool
