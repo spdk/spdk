@@ -284,7 +284,7 @@ struct spdk_bdev_io {
 	spdk_bdev_io_get_buf_cb get_buf_cb;
 
 	/** Entry to the list need_buf of struct spdk_bdev. */
-	TAILQ_ENTRY(spdk_bdev_io) buf_link;
+	STAILQ_ENTRY(spdk_bdev_io) buf_link;
 
 	/** Enumerated value representing the I/O type. */
 	int16_t type;
