@@ -31,7 +31,7 @@ function configure_performance() {
 	done
 	echo "Done"
 
-	echo -n "Configuring kernel blk-mq for for NVMe SSDs..."
+	echo -n "Configuring kernel blk-mq for NVMe SSDs..."
 	for queue in /sys/block/nvme*n*/queue; do
 		if [ -f "$queue/nomerges" ]; then
 			echo "1" > $queue/nomerges
