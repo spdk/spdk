@@ -7,6 +7,12 @@ function configure_performance() {
 	done
 	echo "Done"
 
+	if [ -f "/sys/devices/system/cpu/intel_pstate/no_turbo" ]; then
+		echo -n "Disabling Turbo Boost..."
+		echo -n 1 > /sys/devices/system/cpu/intel_pstate/no_turbo
+		echo "Done"
+	fi
+
 	echo -n "Disabling irqbalance service..."
 	service irqbalance stop 2> /dev/null
 	echo "Done"
