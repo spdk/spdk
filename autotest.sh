@@ -20,6 +20,8 @@ trap "process_core; $rootdir/scripts/setup.sh reset; exit 1" SIGINT SIGTERM EXIT
 
 timing_enter autotest
 
+./scripts/setup.sh status
+
 src=$(readlink -f $(dirname $0))
 out=$PWD
 cd $src
