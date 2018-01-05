@@ -8,12 +8,6 @@ norandommap=1
 cpumask=1
 percentile_list=50:99:99.9:99.99:99.999
 
-[precondition-trim]
-description="Trim the entire device"
-rw=trim
-iodepth=128
-bs=1M
-
 [precondition-sequential]
 stonewall
 description="Sequentially write to the device twice"
