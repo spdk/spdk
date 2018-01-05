@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2be98677_90f9d73f",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-05T05:27:24Z",
+      "side": 1,
+      "message": "Initialize the filesystem on the blobstore block device which has been created by the function spdk_bdev_create_bs_dev() in the blob_bdev.h",
+      "range": {
+        "startLine": 75,
+        "startChar": 3,
+        "endLine": 76,
+        "endChar": 70
+      },
+      "revId": "1549039e59b69867bb3558bbe918cf2b0890688e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
