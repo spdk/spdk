@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0e8053f8_9e78a9bc",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-05T13:47:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "58fef3ff_825ab01e",
+      "revId": "bfa4190d53c7c7e6edd5b1e8f40f0c85fa4927d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ca0e2bdf_ef9c0e15",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 23
@@ -30,6 +48,24 @@
       "writtenOn": "2018-01-04T23:23:43Z",
       "side": 1,
       "message": "ivalid \u003d\u003e invalid?",
+      "revId": "bfa4190d53c7c7e6edd5b1e8f40f0c85fa4927d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29a9a9dc_2a9b710d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-05T13:47:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ca0e2bdf_ef9c0e15",
       "revId": "bfa4190d53c7c7e6edd5b1e8f40f0c85fa4927d8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "60147984_d0382681",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-05T13:47:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "23d20c26_35978999",
+      "revId": "bfa4190d53c7c7e6edd5b1e8f40f0c85fa4927d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5f2dd318_49de7ddc",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 23
@@ -64,6 +118,24 @@
       "writtenOn": "2018-01-04T23:23:43Z",
       "side": 1,
       "message": "same here",
+      "revId": "bfa4190d53c7c7e6edd5b1e8f40f0c85fa4927d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "23399953_375d69a6",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-05T13:47:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5f2dd318_49de7ddc",
       "revId": "bfa4190d53c7c7e6edd5b1e8f40f0c85fa4927d8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "48ff1620_733951a7",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-05T13:47:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8e66f894_8b47fab0",
+      "revId": "bfa4190d53c7c7e6edd5b1e8f40f0c85fa4927d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b0934746_e1b45d76",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 23
@@ -104,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "16556ba8_70c6d158",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-05T13:47:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b0934746_e1b45d76",
+      "revId": "bfa4190d53c7c7e6edd5b1e8f40f0c85fa4927d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a1ca996e_9db8e14e",
         "filename": "lib/blob/request.h",
         "patchSetId": 23
@@ -115,6 +223,24 @@
       "writtenOn": "2018-01-04T23:23:43Z",
       "side": 1,
       "message": "I think I\u0027d prefer to see a new set of functions in the form:\n\nspdk_bs_sequence_read_bs_dev()\n\nThen spdk_bs_sequence_read() can just call this new function, passing channel-\u003edev as the bs_dev parameter.\n\nYour new code can call the new version of this function, passing the backing dev bs_dev directly.\n\nPlease let\u0027s make this a separate patch though - before this big one.",
+      "revId": "bfa4190d53c7c7e6edd5b1e8f40f0c85fa4927d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47fceede_87b669dd",
+        "filename": "lib/blob/request.h",
+        "patchSetId": 23
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-05T13:47:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a1ca996e_9db8e14e",
       "revId": "bfa4190d53c7c7e6edd5b1e8f40f0c85fa4927d8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
