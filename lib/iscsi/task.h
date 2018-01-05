@@ -52,8 +52,6 @@ struct spdk_iscsi_task {
 	/* Only valid for Read/Write */
 	uint32_t bytes_completed;
 
-	uint32_t data_out_cnt;
-
 	/*
 	 * Tracks the current offset of large read io.
 	 */

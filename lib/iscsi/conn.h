@@ -138,7 +138,6 @@ struct spdk_iscsi_conn {
 	int req_mutual;
 	uint64_t last_activity_tsc;
 	uint32_t pending_task_cnt;
-	uint32_t data_out_cnt;
 	uint32_t data_in_cnt;
 	bool pending_activate_event;
 
