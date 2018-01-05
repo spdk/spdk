@@ -2342,6 +2342,7 @@ __file_close_async_done(void *ctx, int bserrno)
 		spdk_fs_delete_file_async(file->fs, file->name, blob_delete_cb, ctx);
 		return;
 	}
+
 	args->fn.file_op(args->arg, bserrno);
 	free_fs_request(req);
 }
@@ -2361,7 +2362,8 @@ __file_close_async(struct spdk_file *file, struct spdk_fs_request *req)
 	file->ref_count--;
 	if (file->ref_count > 0) {
 		pthread_spin_unlock(&file->lock);
-		__file_close_async_done(req, 0);
+		req->args.fn.file_op(req->args.arg, 0);
+		free_fs_request(req);
 		return;
 	}
 
