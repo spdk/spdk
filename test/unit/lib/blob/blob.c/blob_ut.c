@@ -2119,6 +2119,7 @@ blob_flags(void)
 	spdk_blob_id blobid_invalid, blobid_data_ro, blobid_md_ro;
 	struct spdk_blob *blob_invalid, *blob_data_ro, *blob_md_ro;
 	struct spdk_bs_opts opts;
+	int rc;
 
 	dev = init_dev();
 	spdk_bs_opts_init(&opts);
@@ -2158,6 +2159,16 @@ blob_flags(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob_md_ro = g_blob;
+
+	/* Change the size of blob_data_ro to check if flags are serialized
+	 * when blob has non zero number of extents */
+	rc = spdk_blob_resize(blob_data_ro, 10);
+	CU_ASSERT(rc == 0);
+
+	/* Set the xattr to check if flags are serialized
+	 * when blob has non zero number of xattrs */
+	rc = spdk_blob_set_xattr(blob_md_ro, "name", "log.txt", strlen("log.txt") + 1);
+	CU_ASSERT(rc == 0);
 
 	__blob_to_data(blob_invalid)->invalid_flags = (1ULL << 63);
 	__blob_to_data(blob_invalid)->state = SPDK_BLOB_STATE_DIRTY;
@@ -2218,6 +2229,7 @@ blob_flags(void)
 	/* If an unknown data_ro flag was found, the blob should be marked both data and md read-only. */
 	CU_ASSERT(__blob_to_data(blob_data_ro)->data_ro == true);
 	CU_ASSERT(__blob_to_data(blob_data_ro)->md_ro == true);
+	CU_ASSERT(spdk_blob_get_num_clusters(blob_data_ro) == 10);
 
 	g_blob = NULL;
 	g_bserrno = -1;

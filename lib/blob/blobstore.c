@@ -559,6 +559,7 @@ _spdk_blob_serialize(const struct spdk_blob_data *blob, struct spdk_blob_md_page
 
 	/* Serialize flags */
 	_spdk_blob_serialize_flags(blob, buf, &remaining_sz);
+	buf += sizeof(struct spdk_blob_md_descriptor_flags);
 
 	/* Serialize xattrs */
 	TAILQ_FOREACH(xattr, &blob->xattrs, link) {
