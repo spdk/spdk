@@ -3539,19 +3539,14 @@ spdk_add_transfer_task(struct spdk_iscsi_conn *conn,
 {
 	uint32_t transfer_len;
 	size_t max_burst_len;
-	size_t segment_len;
 	size_t data_len;
 	int len;
 	int idx;
 	int rc;
-	int data_out_req;
 
 	transfer_len = task->scsi.transfer_len;
 	data_len = spdk_iscsi_task_get_pdu(task)->data_segment_len;
 	max_burst_len = conn->sess->MaxBurstLength;
-	segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
-	data_out_req = 1 + (transfer_len - data_len - 1) / segment_len;
-	task->data_out_cnt = data_out_req;
 
 	/*
 	 * If we already have too many tasks using R2T, then queue this task
@@ -3563,7 +3558,6 @@ spdk_add_transfer_task(struct spdk_iscsi_conn *conn,
 		return SPDK_SUCCESS;
 	}
 
-	conn->data_out_cnt += data_out_req;
 	idx = conn->pending_r2t++;
 
 	conn->outstanding_r2t_tasks[idx] = task;
@@ -3600,9 +3594,7 @@ void spdk_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t task_tag)
 
 	for (i = 0; i < conn->pending_r2t; i++) {
 		if (conn->outstanding_r2t_tasks[i]->tag == task_tag) {
-			task = conn->outstanding_r2t_tasks[i];
 			conn->outstanding_r2t_tasks[i] = NULL;
-			conn->data_out_cnt -= task->data_out_cnt;
 			found = 1;
 			break;
 		}
@@ -3667,7 +3659,6 @@ void spdk_clear_all_transfer_task(struct spdk_iscsi_conn *conn,
 			task->outstanding_r2t = 0;
 			task->next_r2t_offset = 0;
 			task->next_expected_r2t_offset = 0;
-			conn->data_out_cnt -= task->data_out_cnt;
 			conn->pending_r2t--;
 		}
 	}
