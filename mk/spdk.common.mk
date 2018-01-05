@@ -37,7 +37,7 @@ include $(SPDK_ROOT_DIR)/CONFIG
 
 -include $(SPDK_ROOT_DIR)/mk/cc.mk
 
-C_OPT ?= -fno-omit-frame-pointer
+C_OPT ?=
 ifneq ($(V),1)
 Q ?= @
 endif
@@ -121,7 +121,7 @@ COMMON_CFLAGS += -I$(CONFIG_NVML_DIR)/src/include
 endif
 
 ifeq ($(CONFIG_DEBUG), y)
-COMMON_CFLAGS += -DDEBUG -O0
+COMMON_CFLAGS += -DDEBUG -O0 -fno-omit-frame-pointer
 else
 COMMON_CFLAGS += -DNDEBUG -O2
 # Enable _FORTIFY_SOURCE checks - these only work when optimizations are enabled.
