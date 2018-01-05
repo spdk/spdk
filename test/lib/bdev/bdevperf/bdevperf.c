@@ -73,7 +73,7 @@ static unsigned g_master_core;
 
 static struct spdk_poller *g_perf_timer = NULL;
 
-static void bdevperf_submit_single(struct io_target *target);
+static void bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task);
 
 #include "../common.c"
 
@@ -293,8 +293,6 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		target->io_completed++;
 	}
 
-	TAILQ_INSERT_TAIL(&target->task_list, task, link);
-
 	spdk_bdev_free_io(bdev_io);
 
 	/*
@@ -304,10 +302,13 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	 * the one just completed.
 	 */
 	if (!target->is_draining) {
-		bdevperf_submit_single(target);
-	} else if (target->current_queue_depth == 0) {
-		complete = spdk_event_allocate(g_master_core, end_run, target, NULL);
-		spdk_event_call(complete);
+		bdevperf_submit_single(target, task);
+	} else {
+		TAILQ_INSERT_TAIL(&target->task_list, task, link);
+		if (target->current_queue_depth == 0) {
+			complete = spdk_event_allocate(g_master_core, end_run, target, NULL);
+			spdk_event_call(complete);
+		}
 	}
 }
 
@@ -374,11 +375,10 @@ bdevperf_verify_write_complete(struct spdk_bdev_io *bdev_io, bool success,
 static __thread unsigned int seed = 0;
 
 static void
-bdevperf_submit_single(struct io_target *target)
+bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
 {
 	struct spdk_bdev_desc	*desc;
 	struct spdk_io_channel	*ch;
-	struct bdevperf_task	*task = NULL;
 	uint64_t		offset_in_ios;
 	void			*rbuf;
 	int			rc;
@@ -386,13 +386,15 @@ bdevperf_submit_single(struct io_target *target)
 	desc = target->bdev_desc;
 	ch = target->ch;
 
-	task = TAILQ_FIRST(&target->task_list);
 	if (!task) {
-		printf("Task allocation failed\n");
-		abort();
+		if (!TAILQ_EMPTY(&target->task_list)) {
+			task = TAILQ_FIRST(&target->task_list);
+			TAILQ_REMOVE(&target->task_list, task, link);
+		} else {
+			printf("Task allocation failed\n");
+			abort();
+		}
 	}
-
-	TAILQ_REMOVE(&target->task_list, task, link);
 
 	if (g_is_random) {
 		offset_in_ios = rand_r(&seed) % target->size_in_ios;
@@ -447,7 +449,7 @@ static void
 bdevperf_submit_io(struct io_target *target, int queue_depth)
 {
 	while (queue_depth-- > 0) {
-		bdevperf_submit_single(target);
+		bdevperf_submit_single(target, NULL);
 	}
 }
 
