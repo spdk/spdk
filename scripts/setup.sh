@@ -71,16 +71,19 @@ function get_nvme_name_from_bdf {
 	done
 }
 
-function get_virtio_name_from_bdf {
+function get_virtio_names_from_bdf {
 	set +e
 	virtio_ctrlrs=`lsblk --nodeps --output "NAME,SUBSYSTEMS" | grep virtio | awk '{print $1}'`
 	set -e
+	virtio_names=''
+
 	for ctrlr in $virtio_ctrlrs; do
 		if readlink "/sys/block/$ctrlr" | grep -q "$1"; then
-			eval "$2=$ctrlr"
-			return
+			virtio_names="$virtio_names $ctrlr"
 		fi
 	done
+
+	eval "$2='$virtio_names'"
 }
 
 function configure_linux_pci {
@@ -128,13 +131,16 @@ function configure_linux_pci {
 
 	for dev_id in `cat $TMP`; do
 		for bdf in $(iter_pci_dev_id 1af4 $dev_id); do
-			blkname=''
-			get_virtio_name_from_bdf "$bdf" blkname
-			if mount | grep -q "/dev/$blkname"; then
-				echo Active mountpoints on /dev/$blkname, so not binding PCI dev $bdf
-			else
-				linux_bind_driver "$bdf" "$driver_name"
-			fi
+			blknames=''
+			get_virtio_names_from_bdf "$bdf" blknames
+			for blkname in $blknames; do
+				if mount | grep -q "/dev/$blkname"; then
+					echo Active mountpoints on /dev/$blkname, so not binding PCI dev $bdf
+					continue 2
+				fi
+			done
+
+			linux_bind_driver "$bdf" "$driver_name"
 		done
 	done
 	rm $TMP
