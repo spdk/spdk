@@ -298,12 +298,14 @@ function status_linux {
 	#collect all the device_id info of virtio-scsi devices.
 	TMP=`grep "PCI_DEVICE_ID_VIRTIO_SCSI" $rootdir/include/spdk/pci_ids.h \
 	| awk -F"x" '{print $2}'`
-	echo -e "BDF\t\tNuma Node\tDriver Name"
+	echo -e "BDF\t\tNuma Node\tDriver Name\t\tDevice Name"
 	for dev_id in $TMP; do
 		for bdf in $(iter_pci_dev_id 1af4 $dev_id); do
 			driver=`grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}'`
 			node=`cat /sys/bus/pci/devices/$bdf/numa_node`;
-			echo -e "$bdf\t$node\t\t$driver"
+			blkname='-'
+			get_virtio_name_from_bdf "$bdf" blkname
+			echo -e "$bdf\t$node\t\t$driver\t\t$blkname"
 		done
 	done
 }
