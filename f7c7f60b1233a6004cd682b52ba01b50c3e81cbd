@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4595349b_9bfa5c48",
+        "filename": "test/iscsi_tgt/rpc_config/rpc_config.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-01-05T09:52:06Z",
+      "side": 1,
+      "message": "One of next steps depend on those malloc bdevs be created here. Don\u0027t know if this is desired but if not should be fixed in separate patch.",
+      "range": {
+        "startLine": 164,
+        "startChar": 0,
+        "endLine": 170,
+        "endChar": 50
+      },
+      "revId": "f7c7f60b1233a6004cd682b52ba01b50c3e81cbd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
