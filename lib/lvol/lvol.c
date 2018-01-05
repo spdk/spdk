@@ -368,6 +368,13 @@ _spdk_lvs_load_cb(void *cb_arg, struct spdk_blob_store *bs, int lvolerrno)
 	spdk_bs_get_super(bs, _spdk_lvs_open_super, req);
 }
 
+static void
+spdk_lvs_bs_opts_init(struct spdk_bs_opts *opts)
+{
+	spdk_bs_opts_init(opts);
+	opts->max_channel_ops = SPDK_LVOL_BLOB_OPTS_CHANNEL_OPS;
+}
+
 void
 spdk_lvs_load(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
 {
@@ -393,8 +400,7 @@ spdk_lvs_load(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn
 	req->cb_arg = cb_arg;
 	req->bs_dev = bs_dev;
 
-	spdk_bs_opts_init(&opts);
-	opts.max_channel_ops = SPDK_LVOL_BLOB_OPTS_CHANNEL_OPS;
+	spdk_lvs_bs_opts_init(&opts);
 	strncpy(opts.bstype.bstype, "LVOLSTORE", SPDK_BLOBSTORE_TYPE_LENGTH);
 
 	spdk_bs_load(bs_dev, &opts, _spdk_lvs_load_cb, req);
@@ -535,7 +541,7 @@ static void
 _spdk_setup_lvs_opts(struct spdk_bs_opts *bs_opts, struct spdk_lvs_opts *o)
 {
 	assert(o != NULL);
-	spdk_bs_opts_init(bs_opts);
+	spdk_lvs_bs_opts_init(bs_opts);
 	bs_opts->cluster_sz = o->cluster_sz;
 }
 
