@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "1acc61dd_76310455",
+        "filename": "autotest.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-01-05T07:35:27Z",
+      "side": 1,
+      "message": "Hi Karol, I have done it in other patch https://review.gerrithub.io/#/c/393340/ but there is an little issue. The physical machine fedora-08 is OK. but the virtual machine fedora-03 sometimes pass and sometimes failed(login Centos VM timeout) can you check it? Thanks so much.",
+      "parentUuid": "3c08d255_6a8a9d26",
+      "range": {
+        "startLine": 149,
+        "startChar": 2,
+        "endLine": 155,
+        "endChar": 40
+      },
+      "revId": "d67ad71ff02b8a592c5695443bb4919caa768c3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b0d93f4d_2320ac11",
         "filename": "test/vhost/lvol/lvol_test.sh",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2018-01-04T09:35:56Z",
       "side": 1,
       "message": "In case if there\u0027s more than 2 VMs (let\u0027s say 10) only 1 VM will be using CentOS image, the rest will bu using Ubuntu. Are you OK with that?",
+      "range": {
+        "startLine": 194,
+        "startChar": 0,
+        "endLine": 198,
+        "endChar": 6
+      },
+      "revId": "d67ad71ff02b8a592c5695443bb4919caa768c3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9aa9446d_5c375bbb",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-01-05T07:35:27Z",
+      "side": 1,
+      "message": "Sorry for that. How about average distribution the VM. 5 VM will be using CentOS image and another 5 VM will be using Ubuntu image?",
+      "parentUuid": "b0d93f4d_2320ac11",
       "range": {
         "startLine": 194,
         "startChar": 0,
