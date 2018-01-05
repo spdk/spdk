@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "69c2d75a_19be70ad",
+        "filename": "test/nvmf/host/kernel_nvmf.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-01-05T08:18:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8353c1f7_19fb596f",
+      "revId": "34e4e0fdf5cb6e3beb82a005a36f9f17b80f2780",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f205e0e1_a602fb7c",
         "filename": "test/nvmf/host/kernel_nvmf.sh",
         "patchSetId": 13
@@ -65,6 +83,42 @@
       "writtenOn": "2017-12-14T02:28:14Z",
       "side": 1,
       "message": "same as above",
+      "parentUuid": "f205e0e1_a602fb7c",
+      "revId": "34e4e0fdf5cb6e3beb82a005a36f9f17b80f2780",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "536b6630_246e6ffe",
+        "filename": "test/nvmf/host/kernel_nvmf.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-01-05T08:18:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "60fb59f5_dd366f5a",
+      "revId": "34e4e0fdf5cb6e3beb82a005a36f9f17b80f2780",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f18757c5_ad93b7f9",
+        "filename": "test/nvmf/host/kernel_nvmf.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-01-05T08:18:58Z",
+      "side": 1,
+      "message": "Done",
       "parentUuid": "f205e0e1_a602fb7c",
       "revId": "34e4e0fdf5cb6e3beb82a005a36f9f17b80f2780",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
@@ -106,6 +160,30 @@
       "writtenOn": "2017-12-14T02:28:14Z",
       "side": 1,
       "message": "I actually sure this can work.You\u0027re right: fio interprets that as a separator for multiple files. But when only one single file we can use \":\". And here we only use one file and one subsystem.If we use many --file\u003d\"...\" as argv, like as follows:\nLD_PRELOAD\u003d$rootdir/examples/nvme/fio_plugin/fio_plugin /usr/src/fio/fio $rootdir/examples/nvme/fio_plugin/example_config.fio --filename\u003d\"....\" --filename\u003d\"...\" --filename\u003d\"...\"\nwe can\u0027t use \":\" in subsystem name.\n\nThanks\nWenzhong",
+      "parentUuid": "3eb85980_98092df5",
+      "range": {
+        "startLine": 71,
+        "startChar": 5,
+        "endLine": 71,
+        "endChar": 19
+      },
+      "revId": "34e4e0fdf5cb6e3beb82a005a36f9f17b80f2780",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7cb99376_880fd783",
+        "filename": "test/nvmf/host/kernel_nvmf.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-01-05T08:18:58Z",
+      "side": 1,
+      "message": "Hi,Daniel\n\nSorry for my misunderstanding,you are right,we couldn\u0027t pass strings with \":\" in them via filename.Only one filename can\u0027t use \":\" too. So,I remove the subnqn.Thanks for you review,any comment is appreciated.\n\nThanks\nWenzhong",
       "parentUuid": "3eb85980_98092df5",
       "range": {
         "startLine": 71,
