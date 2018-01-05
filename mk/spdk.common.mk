@@ -37,7 +37,6 @@ include $(SPDK_ROOT_DIR)/CONFIG
 
 -include $(SPDK_ROOT_DIR)/mk/cc.mk
 
-C_OPT ?= -fno-omit-frame-pointer
 ifneq ($(V),1)
 Q ?= @
 endif
