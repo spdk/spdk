@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "515b27c3_49f90f26",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 903,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-05T22:18:02Z",
+      "side": 1,
+      "message": "This doesn\u0027t look quite right - if some of the bdev_io in the list aren\u0027t for this channel, we could be removing the head when looking at a later bdev_io.\n\nWe should probably iterate the whole list, removing the head on each iteration and either dropping it or reinserting the ones for other channels onto a new list head, then swap the heads.",
+      "revId": "fed49701fed8d9845f23bbadd714b972db671f9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
