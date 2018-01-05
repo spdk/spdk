@@ -33,6 +33,24 @@
       "revId": "e9f331eff31f80d0541bf8eff26f25f20abeba35",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "57e439fa_0e40952f",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 361,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-05T12:35:16Z",
+      "side": 1,
+      "message": "\u003e i would maybe create a new test for thin provisioning to keep this\n \u003e one from getting too long (plus I think we need more tests here)\n \u003e \n \u003e really this should reload the blobstore after unloading, open the\n \u003e blob again, and make sure the invalid_flag is set\n\nPiotr, could you please address feedback above ?",
+      "parentUuid": "08feffd1_d887af2b",
+      "revId": "e9f331eff31f80d0541bf8eff26f25f20abeba35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
