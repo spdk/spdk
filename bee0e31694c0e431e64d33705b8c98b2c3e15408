@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6b3be1d4_7ab261cd",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-05T01:10:36Z",
+      "side": 1,
+      "message": "I would also add:\n\nThis makes spdk_file_write consistent with _file_sync.  The lock should not be held across calls to send_request.",
+      "revId": "bee0e31694c0e431e64d33705b8c98b2c3e15408",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
