@@ -56,8 +56,8 @@ function notice()
 
 
 # SSH key file
-: ${SPDK_VHOST_SSH_KEY_FILE="$HOME/.ssh/spdk_vhost_id_rsa"}
-if [[ ! -e "$SPDK_VHOST_SSH_KEY_FILE" ]]; then
+: ${SPDK_VHOST_SSH_KEY_FILE="$(readlink -e $HOME/.ssh/spdk_vhost_id_rsa)"}
+if [[ ! -r "$SPDK_VHOST_SSH_KEY_FILE" ]]; then
 	error "Could not find SSH key file $SPDK_VHOST_SSH_KEY_FILE"
 	exit 1
 fi
@@ -375,6 +375,9 @@ function vm_kill_all()
 #
 function vm_shutdown_all()
 {
+	local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
+	set +x
+	
 	shopt -s nullglob
 	for vm in $VM_BASE_DIR/[0-9]*; do
 		vm_shutdown $(basename $vm)
@@ -394,6 +397,7 @@ function vm_shutdown_all()
 		if [[ $all_vms_down == 1 ]]; then
 			notice "All VMs successfully shut down"
 			shopt -u nullglob
+			$shell_restore_x
 			return 0
 		fi
 
@@ -401,11 +405,13 @@ function vm_shutdown_all()
 		sleep 1
 	done
 	shopt -u nullglob
+	$shell_restore_x
 	return 1
 }
 
 function vm_setup()
 {
+	local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
 	local OPTIND optchar a
 
 	local os=""
@@ -448,11 +454,14 @@ function vm_setup()
 		echo "rm -rf $vm_dir"
 	else
 		local vm_dir=""
+
+		set +x
 		for (( i=0; i<=256; i++)); do
 			local vm_dir="$VM_BASE_DIR/$i"
 			[[ ! -d $vm_dir ]] && break
 		done
-
+		$shell_restore_x
+		
 		vm_num=$i
 	fi
 
@@ -495,10 +504,12 @@ function vm_setup()
 	local qemu_pid_file="$vm_dir/qemu.pid"
 	local cpu_num=0
 
+	set +x
 	for ((cpu=0; cpu<$(nproc --all); cpu++))
 	do
 		(($task_mask&1<<$cpu)) && ((cpu_num++)) || :
 	done
+	$shell_restore_x
 
 	#-cpu host
 	local node_num=${!qemu_numa_node_param}
@@ -673,6 +684,9 @@ function vm_wait_for_boot()
 {
 	assert_number $1
 
+	local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
+	set +x
+
 	local all_booted=false
 	local timeout_time=$1
 	[[ $timeout_time -lt 10 ]] && timeout_time=10
@@ -712,11 +726,13 @@ function vm_wait_for_boot()
 					warning "LOG not found"
 				fi
 				warning "================"
+				$shell_restore_x
 				return 1
 			fi
 
 			if [[ $(date +%s) -gt $timeout_time ]]; then
-				error "timeout waiting for machines to boot"
+				warning "timeout waiting for machines to boot"
+				$shell_restore_x
 				return 1
 			fi
 			if (( i > 30 )); then
@@ -731,6 +747,7 @@ function vm_wait_for_boot()
 	done
 
 	notice "all VMs ready"
+	$shell_restore_x
 	return 0
 }
 
