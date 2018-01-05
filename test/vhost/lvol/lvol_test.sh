@@ -35,10 +35,12 @@ function usage()
     echo "                          lvol store and lvol bdevs."
     echo "                          (NVMe->lvol_store->lvol_bdev->lvol_store->lvol_bdev)"
     echo "                          Default: False"
-    echo "-x                        set -x for script debug"
+    echo "    --thin-provisioning   Create lvol bdevs thin provisioned instead of"
+    echo "                          allocating space up front"
     echo "    --distribute-cores    Use custom config file and run vhost controllers"
     echo "                          on different CPU cores instead of single core."
     echo "                          Default: False"
+    echo "-x                        set -x for script debug"
     exit 0
 }
 
@@ -80,6 +82,7 @@ while getopts 'xh-:' optchar; do
             ctrl-type=*) ctrl_type="${OPTARG#*=}" ;;
             nested-lvol) nested_lvol=true ;;
             distribute-cores) distribute_cores=true ;;
+            thin-provisioning) thin=" -t " ;;
             *) usage $0 "Invalid argument '$OPTARG'" ;;
         esac
         ;;
@@ -138,7 +141,7 @@ for (( i=0; i<$max_disks; i++ ));do
         size=$((free_mb / (vm_count+1) ))
 
         echo "INFO: Creating lvol bdev on lvol store: $ls_guid"
-        lb_name=$($rpc_py construct_lvol_bdev -u $ls_guid lbd_nest $size)
+        lb_name=$($rpc_py construct_lvol_bdev -u $ls_guid lbd_nest $size $thin)
 
         echo "INFO: Creating nested lvol store on lvol bdev: $lb_name"
         nest_ls_guid=$($rpc_py construct_lvol_store $lb_name lvs_n_$i)
@@ -148,7 +151,7 @@ for (( i=0; i<$max_disks; i++ ));do
             echo "INFO: Creating nested lvol bdev for VM $i on lvol store $nest_ls_guid"
             free_mb=$(get_lvs_free_mb "$nest_ls_guid")
             nest_size=$((free_mb / (vm_count-j) ))
-            lb_name=$($rpc_py construct_lvol_bdev -u $nest_ls_guid lbd_vm_$j $nest_size)
+            lb_name=$($rpc_py construct_lvol_bdev -u $nest_ls_guid lbd_vm_$j $nest_size $thin)
             nest_lvol_bdevs+=("$lb_name")
         done
     fi
@@ -158,7 +161,7 @@ for (( i=0; i<$max_disks; i++ ));do
         echo "INFO: Creating lvol bdev for VM $i on lvol store $ls_guid"
         free_mb=$(get_lvs_free_mb "$ls_guid")
         size=$((free_mb / (vm_count-j) ))
-        lb_name=$($rpc_py construct_lvol_bdev -u $ls_guid lbd_vm_$j $size)
+        lb_name=$($rpc_py construct_lvol_bdev -u $ls_guid lbd_vm_$j $size $thin)
         lvol_bdevs+=("$lb_name")
     done
 done
