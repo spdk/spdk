@@ -148,7 +148,7 @@ _fs_init(void *arg)
 	g_fs = NULL;
 	g_fserrno = -1;
 	dev = init_dev();
-	spdk_fs_init(dev, send_request, fs_op_with_handle_complete, NULL);
+	spdk_fs_init(dev, NULL, send_request, fs_op_with_handle_complete, NULL);
 	SPDK_CU_ASSERT_FATAL(g_fs != NULL);
 	CU_ASSERT(g_fserrno == 0);
 }

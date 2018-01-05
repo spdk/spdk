@@ -38,9 +38,11 @@
 #include "spdk/event.h"
 #include "spdk/blob_bdev.h"
 #include "spdk/log.h"
+#include "spdk/string.h"
 
 struct spdk_bs_dev *g_bs_dev;
 const char *g_bdev_name;
+static uint64_t cluster_size;
 
 static void
 stop_cb(void *ctx, int fserrno)
@@ -66,10 +68,17 @@ init_cb(void *ctx, struct spdk_filesystem *fs, int fserrno)
 	spdk_event_call(event);
 }
 
+void
+spdk_fs_opts_init(struct spdk_blobfs_opts *opts)
+{
+	opts->cluster_sz = cluster_size;
+}
+
 static void
 spdk_mkfs_run(void *arg1, void *arg2)
 {
 	struct spdk_bdev *bdev;
+	struct spdk_blobfs_opts blobfs_opt;
 
 	bdev = spdk_bdev_get_by_name(g_bdev_name);
 
@@ -81,8 +90,34 @@ spdk_mkfs_run(void *arg1, void *arg2)
 
 	printf("Initializing filesystem on bdev %s...", g_bdev_name);
 	fflush(stdout);
+
+	spdk_fs_opts_init(&blobfs_opt);
 	g_bs_dev = spdk_bdev_create_bs_dev(bdev, NULL, NULL);
-	spdk_fs_init(g_bs_dev, NULL, init_cb, NULL);
+	if (blobfs_opt.cluster_sz) {
+		spdk_fs_init(g_bs_dev, &blobfs_opt, NULL, init_cb, NULL);
+	} else {
+		spdk_fs_init(g_bs_dev, NULL, NULL, init_cb, NULL);
+	}
+}
+
+static void
+mkfs_usage(void)
+{
+	printf(" -C cluster size\n");
+}
+
+static void
+mkfs_parse_arg(int ch, char *arg)
+{
+	bool has_prefix;
+	switch (ch) {
+	case 'C':
+		spdk_parse_capacity(arg, &cluster_size, &has_prefix);
+		break;
+	default:
+		break;
+	}
+
 }
 
 int main(int argc, char **argv)
@@ -102,8 +137,9 @@ int main(int argc, char **argv)
 	opts.shutdown_cb = NULL;
 
 	spdk_fs_set_cache_size(512);
-
 	g_bdev_name = argv[2];
+	spdk_app_parse_args(argc, argv, &opts, "C:", mkfs_parse_arg, mkfs_usage);
+
 	spdk_app_start(&opts, spdk_mkfs_run, NULL, NULL);
 	spdk_app_fini();
 
