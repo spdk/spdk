@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "89bf830d_dcb07652",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1301,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-05T01:23:44Z",
+      "side": 1,
+      "message": "I think all cases should be covered here, without ever triggering any wraparound/overflow.\n\nIf lba \u003e bdev_num_blocks, the first condition fails; once we know bdev_num_blocks \u003e lba, we can guarantee that bdev_num_blocks - lba in the second condition will always be positive (no wraparound is possible).",
+      "revId": "7f5a52c212fb3773cdcff2e817db553d1342d677",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
