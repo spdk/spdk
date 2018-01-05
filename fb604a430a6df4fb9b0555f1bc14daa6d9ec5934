@@ -16,6 +16,24 @@
       "revId": "fb604a430a6df4fb9b0555f1bc14daa6d9ec5934",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b480cc2_94c1a513",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-01-05T08:50:35Z",
+      "side": 1,
+      "message": "It was moved to line 83.",
+      "parentUuid": "7f53163e_e131a364",
+      "revId": "fb604a430a6df4fb9b0555f1bc14daa6d9ec5934",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
