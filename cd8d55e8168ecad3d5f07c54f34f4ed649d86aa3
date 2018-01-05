@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "866f1403_7a27d794",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-05T12:32:28Z",
+      "side": 1,
+      "message": "UT extended at this time, verifies if flags are serialized properly with non-zero size of blob (one or more extent). Can one for xattr be added as well (and/or combination of both extent and xattr)?\n\nEither as part of existing test or extending blob_serialize.",
+      "range": {
+        "startLine": 10,
+        "startChar": 19,
+        "endLine": 10,
+        "endChar": 49
+      },
+      "revId": "cd8d55e8168ecad3d5f07c54f34f4ed649d86aa3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
