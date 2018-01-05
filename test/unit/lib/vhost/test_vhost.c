@@ -45,14 +45,6 @@ struct spdk_conf_section {
 	struct spdk_conf_item *item;
 };
 
-struct spdk_io_channel {
-	struct spdk_thread		*thread;
-	struct io_device		*dev;
-	uint32_t			ref;
-	TAILQ_ENTRY(spdk_io_channel)	tailq;
-	spdk_io_channel_destroy_cb	destroy_cb;
-};
-
 DEFINE_STUB(spdk_ring_enqueue, size_t, (struct spdk_ring *ring, void **objs, size_t count), 0);
 DEFINE_STUB(spdk_ring_dequeue, size_t, (struct spdk_ring *ring, void **objs, size_t count), 0);
 DEFINE_STUB(spdk_vhost_vq_get_desc, int, (struct spdk_vhost_dev *vdev,
