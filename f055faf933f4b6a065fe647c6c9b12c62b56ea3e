@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a9f30d1_5af7ead0",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-05T12:51:58Z",
+      "side": 1,
+      "message": "Please add reasoning similar to one below, such as:\n\n/* Try to create blob with size larger than blobstore. */",
+      "range": {
+        "startLine": 341,
+        "startChar": 1,
+        "endLine": 341,
+        "endChar": 26
+      },
+      "revId": "f055faf933f4b6a065fe647c6c9b12c62b56ea3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56f3615c_83063dba",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 344,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-05T12:51:58Z",
+      "side": 1,
+      "message": "Why UINT64_MAX here ? I think idea of using bs-\u003etotal_clusters +1 looks better, as it clearly states it goes over total number of clusters.",
+      "range": {
+        "startLine": 344,
+        "startChar": 21,
+        "endLine": 344,
+        "endChar": 32
+      },
+      "revId": "f055faf933f4b6a065fe647c6c9b12c62b56ea3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d5b25a9_65d85b40",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-05T12:51:58Z",
+      "side": 1,
+      "message": "Can we check specifically for g_bserrno \u003d\u003d -ENOSPC here ?",
+      "range": {
+        "startLine": 347,
+        "startChar": 24,
+        "endLine": 347,
+        "endChar": 25
+      },
+      "revId": "f055faf933f4b6a065fe647c6c9b12c62b56ea3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
