@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b59dfc95_d2418d7f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-05T11:52:20Z",
+      "side": 1,
+      "message": "On dirty shutdown, even if blob was not thin provisioned, we can land in the \u0027else\u0027 block. I\u0027m not sure if we should fail it in that case. Unit test blob_dirty_shutdown shows that issue if we change it to return error. I need to think this through.",
+      "parentUuid": "d3b1a83e_8abd6a23",
+      "revId": "c47064ec0634a5545c75a791c85705189d16133d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f94b4157_4a53fe62",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 25
@@ -30,6 +48,24 @@
       "writtenOn": "2018-01-04T22:47:02Z",
       "side": 1,
       "message": "if (next_lba !\u003d 0)",
+      "revId": "c47064ec0634a5545c75a791c85705189d16133d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea53e0af_f67fd912",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 847,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-05T11:52:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f94b4157_4a53fe62",
       "revId": "c47064ec0634a5545c75a791c85705189d16133d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -59,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "abeef79d_de7b9565",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 870,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-05T11:52:20Z",
+      "side": 1,
+      "message": "Done. I will add unit tests.",
+      "parentUuid": "d50dffb1_afad699f",
+      "range": {
+        "startLine": 869,
+        "startChar": 0,
+        "endLine": 870,
+        "endChar": 33
+      },
+      "revId": "c47064ec0634a5545c75a791c85705189d16133d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "01abff88_2156e92f",
         "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
         "patchSetId": 25
@@ -70,6 +130,24 @@
       "writtenOn": "2018-01-04T22:47:02Z",
       "side": 1,
       "message": "maybe also assert spdk_blob_get_num_clusters() \u003d\u003d 3?\n\nspdk_blob_get_num_clusters() just returns active.num_clusters - but this way we make sure we are testing the blob API and not just the internal representation",
+      "revId": "c47064ec0634a5545c75a791c85705189d16133d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79002608_f46ecc20",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 2557,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-05T11:52:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "01abff88_2156e92f",
       "revId": "c47064ec0634a5545c75a791c85705189d16133d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
