@@ -40,17 +40,24 @@
  */
 
 #include <stdint.h>
-#include <linux/vhost.h>
-#include <linux/virtio_ring.h>
 #include <sys/eventfd.h>
 
 #include <rte_config.h>
 #include <rte_memory.h>
 #include <rte_mempool.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* These are not C++-aware. */
+#include <linux/vhost.h>
+#include <linux/virtio_ring.h>
+
 #define RTE_VHOST_USER_CLIENT		(1ULL << 0)
 #define RTE_VHOST_USER_NO_RECONNECT	(1ULL << 1)
 #define RTE_VHOST_USER_DEQUEUE_ZERO_COPY	(1ULL << 2)
+#define RTE_VHOST_USER_IOMMU_SUPPORT	(1ULL << 3)
 
 /**
  * Information relating to memory regions including offsets to
@@ -71,7 +78,7 @@ struct rte_vhost_mem_region {
  */
 struct rte_vhost_memory {
 	uint32_t nregions;
-	struct rte_vhost_mem_region regions[0];
+	struct rte_vhost_mem_region regions[];
 };
 
 struct rte_vhost_vring {
@@ -121,7 +128,7 @@ struct vhost_device_ops {
  * @return
  *  the host virtual address on success, 0 on failure
  */
-static inline uint64_t __attribute__((always_inline))
+static __rte_always_inline uint64_t
 rte_vhost_gpa_to_vva(struct rte_vhost_memory *mem, uint64_t gpa)
 {
 	struct rte_vhost_mem_region *reg;
@@ -198,6 +205,8 @@ int rte_vhost_driver_unregister(const char *path);
  *
  * @param path
  *  The vhost-user socket file path
+ * @param features
+ *  Supported features
  * @return
  *  0 on success, -1 on failure
  */
@@ -207,7 +216,7 @@ int rte_vhost_driver_set_features(const char *path, uint64_t features);
  * Enable vhost-user driver features.
  *
  * Note that
- * - the param @features should be a subset of the feature bits provided
+ * - the param features should be a subset of the feature bits provided
  *   by rte_vhost_driver_set_features().
  * - it must be invoked before vhost-user negotiation starts.
  *
@@ -364,7 +373,7 @@ struct rte_mempool;
 /**
  * This function adds buffers to the virtio devices RX virtqueue. Buffers can
  * be received from the physical port or from another virtual device. A packet
- * count is returned to indicate the number of packets that were succesfully
+ * count is returned to indicate the number of packets that were successfully
  * added to the RX queue.
  * @param vid
  *  vhost device ID
@@ -432,6 +441,18 @@ int rte_vhost_get_vhost_vring(int vid, uint16_t vring_idx,
 			      struct rte_vhost_vring *vring);
 
 /**
+ * Get vhost RX queue avail count.
+ *
+ * @param vid
+ *  vhost device ID
+ * @param qid
+ *  virtio queue index in mq case
+ * @return
+ *  num of desc available
+ */
+uint32_t rte_vhost_rx_queue_count(int vid, uint16_t qid);
+
+/**
  * Set id of the last descriptors in avail and used guest vrings.
  *
  * In case user application operates directly on buffers, it should use this
@@ -451,5 +472,9 @@ int rte_vhost_get_vhost_vring(int vid, uint16_t vring_idx,
  */
 int rte_vhost_set_vhost_vring_last_idx(int vid, uint16_t vring_idx,
 			      uint16_t last_avail_idx, uint16_t last_used_idx);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _RTE_VHOST_H_ */

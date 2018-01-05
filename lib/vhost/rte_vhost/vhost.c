@@ -40,16 +40,55 @@
 #include <numaif.h>
 #endif
 
+#include <rte_errno.h>
 #include <rte_ethdev.h>
 #include <rte_log.h>
 #include <rte_string_fns.h>
 #include <rte_memory.h>
 #include <rte_malloc.h>
 #include <rte_vhost.h>
+#include <rte_rwlock.h>
 
+#include "iotlb.h"
 #include "vhost.h"
+#include "vhost_user.h"
 
 struct virtio_net *vhost_devices[MAX_VHOST_DEVICE];
+
+/* Called with iotlb_lock read-locked */
+uint64_t
+__vhost_iova_to_vva(struct virtio_net *dev, struct vhost_virtqueue *vq,
+		    uint64_t iova, uint64_t size, uint8_t perm)
+{
+	uint64_t vva, tmp_size;
+
+	if (unlikely(!size))
+		return 0;
+
+	tmp_size = size;
+
+	vva = vhost_user_iotlb_cache_find(vq, iova, &tmp_size, perm);
+	if (tmp_size == size)
+		return vva;
+
+	if (!vhost_user_iotlb_pending_miss(vq, iova + tmp_size, perm)) {
+		/*
+		 * iotlb_lock is read-locked for a full burst,
+		 * but it only protects the iotlb cache.
+		 * In case of IOTLB miss, we might block on the socket,
+		 * which could cause a deadlock with QEMU if an IOTLB update
+		 * is being handled. We can safely unlock here to avoid it.
+		 */
+		vhost_user_iotlb_rd_unlock(vq);
+
+		vhost_user_iotlb_pending_insert(vq, iova + tmp_size, perm);
+		vhost_user_iotlb_miss(dev, iova + tmp_size, perm);
+
+		vhost_user_iotlb_rd_lock(vq);
+	}
+
+	return 0;
+}
 
 struct virtio_net *
 get_device(int vid)
@@ -101,21 +140,86 @@ free_device(struct virtio_net *dev)
 		vq = dev->virtqueue[i];
 
 		rte_free(vq->shadow_used_ring);
-
+		rte_free(vq->batch_copy_elems);
+		rte_mempool_free(vq->iotlb_pool);
 		rte_free(vq);
 	}
 
 	rte_free(dev);
 }
 
-static void
-init_vring_queue(struct vhost_virtqueue *vq)
+int
+vring_translate(struct virtio_net *dev, struct vhost_virtqueue *vq)
 {
+	uint64_t size;
+
+	if (!(dev->features & (1ULL << VIRTIO_F_IOMMU_PLATFORM)))
+		goto out;
+
+	size = sizeof(struct vring_desc) * vq->size;
+	vq->desc = (struct vring_desc *)(uintptr_t)vhost_iova_to_vva(dev, vq,
+						vq->ring_addrs.desc_user_addr,
+						size, VHOST_ACCESS_RW);
+	if (!vq->desc)
+		return -1;
+
+	size = sizeof(struct vring_avail);
+	size += sizeof(uint16_t) * vq->size;
+	vq->avail = (struct vring_avail *)(uintptr_t)vhost_iova_to_vva(dev, vq,
+						vq->ring_addrs.avail_user_addr,
+						size, VHOST_ACCESS_RW);
+	if (!vq->avail)
+		return -1;
+
+	size = sizeof(struct vring_used);
+	size += sizeof(struct vring_used_elem) * vq->size;
+	vq->used = (struct vring_used *)(uintptr_t)vhost_iova_to_vva(dev, vq,
+						vq->ring_addrs.used_user_addr,
+						size, VHOST_ACCESS_RW);
+	if (!vq->used)
+		return -1;
+
+out:
+	vq->access_ok = 1;
+
+	return 0;
+}
+
+void
+vring_invalidate(struct virtio_net *dev, struct vhost_virtqueue *vq)
+{
+	if (dev->features & (1ULL << VIRTIO_F_IOMMU_PLATFORM))
+		vhost_user_iotlb_wr_lock(vq);
+
+	vq->access_ok = 0;
+	vq->desc = NULL;
+	vq->avail = NULL;
+	vq->used = NULL;
+
+	if (dev->features & (1ULL << VIRTIO_F_IOMMU_PLATFORM))
+		vhost_user_iotlb_wr_unlock(vq);
+}
+
+static void
+init_vring_queue(struct virtio_net *dev, uint32_t vring_idx)
+{
+	struct vhost_virtqueue *vq;
+
+	if (vring_idx >= VHOST_MAX_VRING) {
+		RTE_LOG(ERR, VHOST_CONFIG,
+				"Failed not init vring, out of bound (%d)\n",
+				vring_idx);
+		return;
+	}
+
+	vq = dev->virtqueue[vring_idx];
+
 	memset(vq, 0, sizeof(struct vhost_virtqueue));
 
 	vq->kickfd = VIRTIO_UNINITIALIZED_EVENTFD;
 	vq->callfd = VIRTIO_UNINITIALIZED_EVENTFD;
 
+	vhost_user_iotlb_init(dev, vring_idx);
 	/* Backends are set to -1 indicating an inactive device. */
 	vq->backend = -1;
 
@@ -129,12 +233,21 @@ init_vring_queue(struct vhost_virtqueue *vq)
 }
 
 static void
-reset_vring_queue(struct vhost_virtqueue *vq)
+reset_vring_queue(struct virtio_net *dev, uint32_t vring_idx)
 {
+	struct vhost_virtqueue *vq;
 	int callfd;
 
+	if (vring_idx >= VHOST_MAX_VRING) {
+		RTE_LOG(ERR, VHOST_CONFIG,
+				"Failed not init vring, out of bound (%d)\n",
+				vring_idx);
+		return;
+	}
+
+	vq = dev->virtqueue[vring_idx];
 	callfd = vq->callfd;
-	init_vring_queue(vq);
+	init_vring_queue(dev, vring_idx);
 	vq->callfd = callfd;
 }
 
@@ -151,7 +264,7 @@ alloc_vring_queue(struct virtio_net *dev, uint32_t vring_idx)
 	}
 
 	dev->virtqueue[vring_idx] = vq;
-	init_vring_queue(vq);
+	init_vring_queue(dev, vring_idx);
 
 	dev->nr_vring += 1;
 
@@ -173,7 +286,7 @@ reset_device(struct virtio_net *dev)
 	dev->flags = 0;
 
 	for (i = 0; i < dev->nr_vring; i++)
-		reset_vring_queue(dev->virtqueue[i]);
+		reset_vring_queue(dev, i);
 }
 
 /*
@@ -206,6 +319,7 @@ vhost_new_device(uint64_t features)
 
 	vhost_devices[i] = dev;
 	dev->vid = i;
+	dev->slave_req_fd = -1;
 	dev->features = features;
 
 	return i;
@@ -296,7 +410,8 @@ rte_vhost_get_numa_node(int vid)
 			    MPOL_F_NODE | MPOL_F_ADDR);
 	if (ret < 0) {
 		RTE_LOG(ERR, VHOST_CONFIG,
-			"(%d) failed to query numa node: %d\n", vid, ret);
+			"(%d) failed to query numa node: %s\n",
+			vid, rte_strerror(errno));
 		return -1;
 	}
 
@@ -478,6 +593,32 @@ rte_vhost_log_used_vring(int vid, uint16_t vring_idx,
 		return;
 
 	vhost_log_used_vring(dev, vq, offset, len);
+}
+
+uint32_t
+rte_vhost_rx_queue_count(int vid, uint16_t qid)
+{
+	struct virtio_net *dev;
+	struct vhost_virtqueue *vq;
+
+	dev = get_device(vid);
+	if (dev == NULL)
+		return 0;
+
+	if (unlikely(qid >= dev->nr_vring || (qid & 1) == 0)) {
+		RTE_LOG(ERR, VHOST_DATA, "(%d) %s: invalid virtqueue idx %d.\n",
+			dev->vid, __func__, qid);
+		return 0;
+	}
+
+	vq = dev->virtqueue[qid];
+	if (vq == NULL)
+		return 0;
+
+	if (unlikely(vq->enabled == 0 || vq->avail == NULL))
+		return 0;
+
+	return *((volatile uint16_t *)&vq->avail->idx) - vq->last_avail_idx;
 }
 
 int
