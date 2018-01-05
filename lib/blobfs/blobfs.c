@@ -200,6 +200,12 @@ struct spdk_fs_cb_args {
 
 static void cache_free_buffers(struct spdk_file *file);
 
+void
+spdk_fs_opts_init(struct spdk_blobfs_opts *opts)
+{
+	opts->cluster_sz = SPDK_BLOB_OPTS_CLUSTER_SZ;
+}
+
 static void
 __initialize_cache(void)
 {
@@ -453,7 +459,8 @@ fs_alloc(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn)
 }
 
 void
-spdk_fs_init(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
+spdk_fs_init(struct spdk_bs_dev *dev, struct spdk_blobfs_opts *opt,
+	     fs_send_request_fn send_request_fn,
 	     spdk_fs_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_filesystem *fs;
@@ -488,7 +495,9 @@ spdk_fs_init(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 
 	spdk_bs_opts_init(&opts);
 	strncpy(opts.bstype.bstype, "BLOBFS", SPDK_BLOBSTORE_TYPE_LENGTH);
-
+	if (opt) {
+		opts.cluster_sz = opt->cluster_sz;
+	}
 	spdk_bs_init(dev, &opts, init_cb, req);
 }
 
