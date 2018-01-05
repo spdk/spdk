@@ -674,7 +674,6 @@ spdk_fs_load(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 	struct spdk_filesystem *fs;
 	struct spdk_fs_cb_args *args;
 	struct spdk_fs_request *req;
-	struct spdk_bs_opts opts = {};
 
 	fs = fs_alloc(dev, send_request_fn);
 	if (fs == NULL) {
@@ -701,10 +700,7 @@ spdk_fs_load(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 	args->arg = cb_arg;
 	args->fs = fs;
 	TAILQ_INIT(&args->op.fs_load.deleted_files);
-
-	spdk_bs_opts_init(&opts);
-
-	spdk_bs_load(dev, &opts, load_cb, req);
+	spdk_bs_load(dev, NULL, load_cb, req);
 }
 
 static void
