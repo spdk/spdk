@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0a0aab38_4d1c7ccd",
+        "filename": "lib/iscsi/iscsi.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-01-05T10:31:28Z",
+      "side": 0,
+      "message": "Why change this? We we define the MAX_DATA_OUT_PER_CONNECTION. I do not suggest to change this macro",
+      "range": {
+        "startLine": 113,
+        "startChar": 3,
+        "endLine": 113,
+        "endChar": 42
+      },
+      "revId": "683eeb59b8d05b637a4671469a9ce75efe1899a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
