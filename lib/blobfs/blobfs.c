@@ -819,11 +819,18 @@ spdk_fs_file_stat(struct spdk_filesystem *fs, struct spdk_io_channel *_channel,
 {
 	struct spdk_fs_channel *channel = spdk_io_channel_get_ctx(_channel);
 	struct spdk_fs_request *req;
+	struct spdk_file *file;
 	int rc;
+
+	file = fs_find_file(fs, name);
+	if (file == NULL) {
+		return -ENOENT;
+	}
 
 	req = alloc_fs_request(channel);
 	assert(req != NULL);
 
+	spdk_file_sync(file, _channel);
 	req->args.fs = fs;
 	req->args.op.stat.name = name;
 	req->args.fn.stat_op = __copy_stat;
