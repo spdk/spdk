@@ -24,6 +24,8 @@ src=$(readlink -f $(dirname $0))
 out=$PWD
 cd $src
 
+./scripts/setup.sh status
+
 if hash lcov; then
 	# setup output dir for unittest.sh
 	export UT_COVERAGE=$out/ut_coverage
