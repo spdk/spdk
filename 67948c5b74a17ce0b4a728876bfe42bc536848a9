@@ -108,6 +108,24 @@
     },
     {
       "key": {
+        "uuid": "9d53f5d8_40736e16",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 759,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-05T11:45:37Z",
+      "side": 1,
+      "message": "Disregard that, I think it might be fine to change lvol struct before getting the callback. Below I\u0027ve posted suggestion to make changing aliases more concise.\nBut please add SPDK_ERRLOG when lvolerrno is non-zero.",
+      "parentUuid": "cdcba0bd_33196b58",
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "884a9889_49a4b84f",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 37
@@ -190,6 +208,30 @@
       "side": 1,
       "message": "lvolstore1/lvol is a string, am i correct?\nI mean, whether your intention was to give the old name as string or as a pointer to struct?",
       "parentUuid": "cf79493c_49e3e6a6",
+      "range": {
+        "startLine": 785,
+        "startChar": 1,
+        "endLine": 785,
+        "endChar": 47
+      },
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "45a19da9_f46416ff",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-05T11:45:37Z",
+      "side": 1,
+      "message": "Originally was thinking about string for the first parameter of vbdev_lvol_rename(), but then again pointer to struct might be more elegant.\n\nIn RPC a string lvolstore1/lvol (or uuid_blobid) is provided, then bdev with that name/alias is found using spdk_bdev_get_by_name() and lvol retrieved from bdev-\u003ectx.\nMeanwhile vbdev_lvol_rename() simply takes pointer to struct spdk_lvol.",
+      "parentUuid": "6750c241_8205767e",
       "range": {
         "startLine": 785,
         "startChar": 1,
@@ -296,6 +338,54 @@
     },
     {
       "key": {
+        "uuid": "2520563e_0e6d9265",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 791,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-05T11:45:37Z",
+      "side": 1,
+      "message": "\u003e Could You explain on what basis i should specify that alias?\n \u003e Maybe when unique_id is passed no alias should be deleted? Just new\n \u003e alias\n\nA new static function to be used here and in lvs rename could be created:\nstatic int _vbdev_lvol_change_alias(struct spdk_lvol, const char *new_lvol_name)\n\nBdevs representing lvols have just a single alias representing lvs-\u003ename/lvol-\u003ename. This new function could:\n- use spdk_bdev_get_aliases(lvol-\u003ebdev) to get old_bdev_alias\n- spdk_bdev_alias_add(lvol-\u003elvol_store-\u003elvs_name/new_lvol_name)\n- then spdk_bdev_alias_del(old_bdev_alias)\n\nIt can be reused in lvs rename as well.",
+      "parentUuid": "d8dc95aa_8b2ef916",
+      "range": {
+        "startLine": 791,
+        "startChar": 32,
+        "endLine": 791,
+        "endChar": 45
+      },
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "03251622_4b5493a0",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 791,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-05T11:45:37Z",
+      "side": 1,
+      "message": "\u003e Maybe we could call functions like that:\n \u003e \n \u003e ...\n \u003e rc \u003d spck_lvol_rename(...)\n \u003e if (rc !\u003d 0) {\n \u003e return rc);\n \u003e }\n \u003e \n \u003e rc \u003d spdk_bdev_alias_del(...)\n \u003e ...\n \u003e \n \u003e Calling spdk_bdev_alias_del() in _vbdev_lvol_rename_cb() requires\n \u003e passing additional parameters and thus changing API.\n\nIt might be best to leave the call that passes the callback as last (spdk_lvol_rename() in this case). Otherwise we might run into issue where vbdev_lvol_rename() returns error (on spdk_bdev_alias_del()) and _vbdev_lvol_rename_cb() is called.\n\nInstead please check out suggestion on adding _vbdev_lvol_change_alias() function below. Let me know what you think.",
+      "parentUuid": "65aef5e0_a4469382",
+      "range": {
+        "startLine": 791,
+        "startChar": 6,
+        "endLine": 791,
+        "endChar": 25
+      },
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bc422e24_51771c45",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 37
@@ -378,6 +468,30 @@
       "side": 1,
       "message": "In vbdev_lvol.c You suggested that vbdev_lvol_rename should be called with firsts argument as lvolstore1/lvol (it doesn;t matter as a string or a pointer), and if we need to know lvolstore, then uuid/lvs_name is needed. \nuuid in code below is not used, but now will be.",
       "parentUuid": "f037ecac_fd531839",
+      "range": {
+        "startLine": 349,
+        "startChar": 1,
+        "endLine": 349,
+        "endChar": 12
+      },
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "06274023_09bab29a",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-05T11:45:37Z",
+      "side": 1,
+      "message": "Still don\u0027t see how uuid might be relevant here as this is lvol store property (lvols have \"uuid_blobid\" as unique_id).\nYour suggestion on using a pointer to lvol might be best, I\u0027ve made comment on that in vbdev_lvol.c:785.",
+      "parentUuid": "e456d59d_36f5ba3d",
       "range": {
         "startLine": 349,
         "startChar": 1,
