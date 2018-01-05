@@ -1,8 +1,7 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright(c) 2010-2014 Intel Corporation. All rights reserved.
- *   All rights reserved.
+ *   Copyright (c) 2017 Red Hat, Inc.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -30,40 +29,48 @@
  *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#ifndef _VHOST_IOTLB_H_
+#define _VHOST_IOTLB_H_
 
-#ifndef _FD_MAN_H_
-#define _FD_MAN_H_
-#include <stdint.h>
-#include <pthread.h>
-#include <poll.h>
+#include <stdbool.h>
 
-#define MAX_FDS 1024
+#include "vhost.h"
 
-typedef void (*fd_cb)(int fd, void *dat, int *remove);
+static __rte_always_inline void
+vhost_user_iotlb_rd_lock(struct vhost_virtqueue *vq)
+{
+	rte_rwlock_read_lock(&vq->iotlb_lock);
+}
 
-struct fdentry {
-	int fd;		/* -1 indicates this entry is empty */
-	fd_cb rcb;	/* callback when this fd is readable. */
-	fd_cb wcb;	/* callback when this fd is writeable.*/
-	void *dat;	/* fd context */
-	int busy;	/* whether this entry is being used in cb. */
-};
+static __rte_always_inline void
+vhost_user_iotlb_rd_unlock(struct vhost_virtqueue *vq)
+{
+	rte_rwlock_read_unlock(&vq->iotlb_lock);
+}
 
-struct fdset {
-	struct pollfd rwfds[MAX_FDS];
-	struct fdentry fd[MAX_FDS];
-	pthread_mutex_t fd_mutex;
-	int num;	/* current fd number of this fdset */
-};
+static __rte_always_inline void
+vhost_user_iotlb_wr_lock(struct vhost_virtqueue *vq)
+{
+	rte_rwlock_write_lock(&vq->iotlb_lock);
+}
 
+static __rte_always_inline void
+vhost_user_iotlb_wr_unlock(struct vhost_virtqueue *vq)
+{
+	rte_rwlock_write_unlock(&vq->iotlb_lock);
+}
 
-void fdset_init(struct fdset *pfdset);
+void vhost_user_iotlb_cache_insert(struct vhost_virtqueue *vq, uint64_t iova,
+					uint64_t uaddr, uint64_t size,
+					uint8_t perm);
+void vhost_user_iotlb_cache_remove(struct vhost_virtqueue *vq,
+					uint64_t iova, uint64_t size);
+uint64_t vhost_user_iotlb_cache_find(struct vhost_virtqueue *vq, uint64_t iova,
+					uint64_t *size, uint8_t perm);
+bool vhost_user_iotlb_pending_miss(struct vhost_virtqueue *vq, uint64_t iova,
+						uint8_t perm);
+void vhost_user_iotlb_pending_insert(struct vhost_virtqueue *vq, uint64_t iova,
+						uint8_t perm);
+int vhost_user_iotlb_init(struct virtio_net *dev, int vq_index);
 
-int fdset_add(struct fdset *pfdset, int fd,
-	fd_cb rcb, fd_cb wcb, void *dat);
-
-void *fdset_del(struct fdset *pfdset, int fd);
-
-void *fdset_event_dispatch(void *arg);
-
-#endif
+#endif /* _VHOST_IOTLB_H_ */
