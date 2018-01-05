@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8bc0e669_4dfeef42",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-01-05T08:42:00Z",
+      "side": 1,
+      "message": "This is only for testing in per-checkin temporarily. Because once set RUN_NIGHTLY, my patch will not run and can\u0027t be verified. This is not final version, \"#\" will be removed later.",
+      "parentUuid": "89c4afe8_7d5169cc",
+      "revId": "efd82fc5b219bd62f6f0a5639899f894f6a12f5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1159950b_d68f0314",
         "filename": "test/iscsi_tgt/iscsi_tgt.sh",
         "patchSetId": 22
@@ -47,6 +65,24 @@
       "writtenOn": "2018-01-05T08:31:39Z",
       "side": 1,
       "message": "Delete extra space here",
+      "revId": "efd82fc5b219bd62f6f0a5639899f894f6a12f5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a4e6c2c_2e536111",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-01-05T08:42:00Z",
+      "side": 1,
+      "message": "Removed, thanks.",
+      "parentUuid": "60542348_2acece70",
       "revId": "efd82fc5b219bd62f6f0a5639899f894f6a12f5f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
