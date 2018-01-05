@@ -53,6 +53,10 @@ struct spdk_filesystem;
 
 typedef struct spdk_file *spdk_fs_iter;
 
+struct spdk_blobfs_opts {
+	uint32_t	cluster_sz;
+};
+
 struct spdk_file_stat {
 	spdk_blob_id	blobid;
 	uint64_t	size;
@@ -69,7 +73,8 @@ typedef void (*spdk_file_stat_op_complete)(void *ctx, struct spdk_file_stat *sta
 typedef void (*fs_request_fn)(void *);
 typedef void (*fs_send_request_fn)(fs_request_fn, void *);
 
-void spdk_fs_init(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
+void spdk_fs_init(struct spdk_bs_dev *dev, struct spdk_blobfs_opts *opt,
+		  fs_send_request_fn send_request_fn,
 		  spdk_fs_op_with_handle_complete cb_fn, void *cb_arg);
 void spdk_fs_load(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 		  spdk_fs_op_with_handle_complete cb_fn, void *cb_arg);
