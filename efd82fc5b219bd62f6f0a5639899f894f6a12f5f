@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "89c4afe8_7d5169cc",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2018-01-05T08:31:39Z",
+      "side": 1,
+      "message": "Would you delete the comment if it\u0027s not needed",
+      "revId": "efd82fc5b219bd62f6f0a5639899f894f6a12f5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1159950b_d68f0314",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2018-01-05T08:31:39Z",
+      "side": 1,
+      "message": "Same as above",
+      "revId": "efd82fc5b219bd62f6f0a5639899f894f6a12f5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "60542348_2acece70",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2018-01-05T08:31:39Z",
+      "side": 1,
+      "message": "Delete extra space here",
+      "revId": "efd82fc5b219bd62f6f0a5639899f894f6a12f5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
