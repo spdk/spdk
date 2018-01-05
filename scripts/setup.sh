@@ -271,7 +271,7 @@ function status_linux {
 	for bdf in $(iter_pci_class_code 01 08 02); do
 		driver=`grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}'`
 		node=`cat /sys/bus/pci/devices/$bdf/numa_node`;
-		if [ "$driver" = "nvme" ]; then
+		if [ "$driver" = "nvme" -a -d /sys/bus/pci/devices/$bdf/nvme ]; then
 			name="\t"`ls /sys/bus/pci/devices/$bdf/nvme`;
 		else
 			name="-";
