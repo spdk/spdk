@@ -47,7 +47,6 @@ extern "C" {
 #endif
 
 struct spdk_thread;
-struct spdk_io_channel;
 struct spdk_io_channel_iter;
 struct spdk_poller;
 
@@ -69,6 +68,30 @@ typedef void (*spdk_io_device_unregister_cb)(void *io_device);
 
 typedef void (*spdk_channel_msg)(struct spdk_io_channel_iter *i);
 typedef void (*spdk_channel_for_each_cpl)(struct spdk_io_channel_iter *i, int status);
+
+/**
+ * \brief Represents a per-thread channel for accessing an I/O device.
+ *
+ * An I/O device may be a physical entity (i.e. NVMe controller) or a software
+ *  entity (i.e. a blobstore).
+ *
+ * This structure is not part of the API - all accesses should be done through
+ *  spdk_io_channel function calls.
+ */
+struct spdk_io_channel {
+	struct spdk_thread		*thread;
+	struct io_device		*dev;
+	uint32_t			ref;
+	TAILQ_ENTRY(spdk_io_channel)	tailq;
+	spdk_io_channel_destroy_cb	destroy_cb;
+
+	/*
+	 * Modules will allocate extra memory off the end of this structure
+	 *  to store references to hardware-specific references (i.e. NVMe queue
+	 *  pairs, or references to child device spdk_io_channels (i.e.
+	 *  virtual bdevs).
+	 */
+};
 
 /**
  * \brief Initializes the calling thread for I/O channel allocation.
@@ -198,7 +221,11 @@ void spdk_put_io_channel(struct spdk_io_channel *ch);
 /**
  * \brief Returns the context buffer associated with an I/O channel.
  */
-void *spdk_io_channel_get_ctx(struct spdk_io_channel *ch);
+static inline void *
+spdk_io_channel_get_ctx(struct spdk_io_channel *ch)
+{
+	return (uint8_t *)ch + sizeof(*ch);
+}
 
 /**
  *  \brief Returns an I/O channel from a context buffer. This is
