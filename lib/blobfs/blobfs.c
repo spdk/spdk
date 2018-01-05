@@ -782,7 +782,7 @@ spdk_fs_file_stat_async(struct spdk_filesystem *fs, const char *name,
 	f = fs_find_file(fs, name);
 	if (f != NULL) {
 		stat.blobid = f->blobid;
-		stat.size = f->length;
+		stat.size = f->append_pos >= f->length ? f->append_pos : f->length;
 		cb_fn(cb_arg, &stat, 0);
 		return;
 	}
