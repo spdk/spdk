@@ -96,12 +96,12 @@ case $1 in
 	-ils|--integrity-lvol-scsi)
 		echo 'Running lvol integrity suite...'
 		./lvol/lvol_test.sh -x --fio-bin=/home/sys_sgsw/fio_ubuntu \
-		--ctrl-type=vhost_scsi
+		--ctrl-type=vhost_scsi --thin-provisioning
 		;;
 	-ilb|--integrity-lvol-blk)
 		echo 'Running lvol integrity suite...'
 		./lvol/lvol_test.sh -x --fio-bin=/home/sys_sgsw/fio_ubuntu \
-		--ctrl-type=vhost_blk
+		--ctrl-type=vhost_blk --thin-provisioning
 		;;
 	-hp|--hotplug)
 		echo 'Running hotplug tests suite...'
