@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "00dd77ea_b1106e87",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-01-07T16:47:36Z",
+      "side": 1,
+      "message": "Maybe spdk_bdev_get_io_stat_cb will cause a little confusion; hence use spdk_bdev_get_device_stat_cb to instead.",
+      "range": {
+        "startLine": 122,
+        "startChar": 15,
+        "endLine": 122,
+        "endChar": 43
+      },
+      "revId": "af04ce4d43554898cee7a6e9fba0f4d6f10d706e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3143764a_6f2b933e",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-01-07T16:47:36Z",
+      "side": 1,
+      "message": "Because spdk_for_each_channel is a asynchronous function, the order of the callback is uncertain(eg., bdev0 is the first one to call get_device_stat, it is very possible that it is the last one to call this callback function).  \n\nI would like to return all json results to user after the last bdev write its json state. Hence I need a sign(static int iter) to record whether this is the last one call this callback. If so, return all results. \n\nIn order to make it safe for multi-threads, add a mutex between it. Do you have any other suggestions  to complete it without using mutex? Thanks.",
+      "range": {
+        "startLine": 74,
+        "startChar": 1,
+        "endLine": 84,
+        "endChar": 35
+      },
+      "revId": "af04ce4d43554898cee7a6e9fba0f4d6f10d706e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
