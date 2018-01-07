@@ -126,6 +126,24 @@
     },
     {
       "key": {
+        "uuid": "edb42ddb_f8fe5618",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 759,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-07T20:00:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9d53f5d8_40736e16",
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "884a9889_49a4b84f",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 37
@@ -232,6 +250,30 @@
       "side": 1,
       "message": "Originally was thinking about string for the first parameter of vbdev_lvol_rename(), but then again pointer to struct might be more elegant.\n\nIn RPC a string lvolstore1/lvol (or uuid_blobid) is provided, then bdev with that name/alias is found using spdk_bdev_get_by_name() and lvol retrieved from bdev-\u003ectx.\nMeanwhile vbdev_lvol_rename() simply takes pointer to struct spdk_lvol.",
       "parentUuid": "6750c241_8205767e",
+      "range": {
+        "startLine": 785,
+        "startChar": 1,
+        "endLine": 785,
+        "endChar": 47
+      },
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dd0a4f24_14aee870",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-07T20:00:13Z",
+      "side": 1,
+      "message": "For now, i have done first version (with a string lvolstore1/lvol). But still, i\u0027m thinking about passing pointer to lvol. I\u0027ll rewrite code today and check if it looks better.",
+      "parentUuid": "45a19da9_f46416ff",
       "range": {
         "startLine": 785,
         "startChar": 1,
@@ -386,6 +428,30 @@
     },
     {
       "key": {
+        "uuid": "db17592c_88662f51",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 791,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-07T20:00:13Z",
+      "side": 1,
+      "message": "This change alias function looks nice. Code concerning aliases gathered in one place. I\u0027ll create \u0026 use it.\nBdevs have always only one alias? Are we checking it somewhere?",
+      "parentUuid": "2520563e_0e6d9265",
+      "range": {
+        "startLine": 791,
+        "startChar": 32,
+        "endLine": 791,
+        "endChar": 45
+      },
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bc422e24_51771c45",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 37
@@ -492,6 +558,30 @@
       "side": 1,
       "message": "Still don\u0027t see how uuid might be relevant here as this is lvol store property (lvols have \"uuid_blobid\" as unique_id).\nYour suggestion on using a pointer to lvol might be best, I\u0027ve made comment on that in vbdev_lvol.c:785.",
       "parentUuid": "e456d59d_36f5ba3d",
+      "range": {
+        "startLine": 349,
+        "startChar": 1,
+        "endLine": 349,
+        "endChar": 12
+      },
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aca48e1a_bb682048",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-07T20:00:13Z",
+      "side": 1,
+      "message": "Ok, if string like \u0027lvolstore1/lvol\u0027 is provided it\u0027s enough. \nin that case uuid will be removed.",
+      "parentUuid": "06274023_09bab29a",
       "range": {
         "startLine": 349,
         "startChar": 1,
