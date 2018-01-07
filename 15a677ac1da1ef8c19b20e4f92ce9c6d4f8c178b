@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dccae82c_822d7b13",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 437,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-01-07T18:44:45Z",
+      "side": 1,
+      "message": "Isn\u0027t the the spdk_gpa_to_vva_map_notify() callback now the right place for this register and unregister code.",
+      "range": {
+        "startLine": 426,
+        "startChar": 0,
+        "endLine": 437,
+        "endChar": 3
+      },
+      "revId": "15a677ac1da1ef8c19b20e4f92ce9c6d4f8c178b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e5c42be_2af82d6e",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 460,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-01-07T18:44:45Z",
+      "side": 1,
+      "message": "Is this manual clear needed since we have SPDK_MEM_MAP_NOTIFY_UNREGISTER action?",
+      "range": {
+        "startLine": 460,
+        "startChar": 2,
+        "endLine": 460,
+        "endChar": 94
+      },
+      "revId": "15a677ac1da1ef8c19b20e4f92ce9c6d4f8c178b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
