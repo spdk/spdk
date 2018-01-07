@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "c2dbff54_7b93143b",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-07T19:59:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7f658b1b_2ab3d707",
+      "revId": "8d0ff3137ed770048fb77a909e34c51296f1feb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0bb29e3d_cbf371e6",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 20
@@ -290,6 +308,30 @@
     },
     {
       "key": {
+        "uuid": "f964dfd6_fd02f245",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-07T19:59:33Z",
+      "side": 1,
+      "message": "Ok. That\u0027s clear.\nAnd last thing - this line should stay here or should be moved to _vbdev_lvs_rename_cb() ?",
+      "parentUuid": "fb156d3a_1a9f4e71",
+      "range": {
+        "startLine": 250,
+        "startChar": 1,
+        "endLine": 250,
+        "endChar": 52
+      },
+      "revId": "8d0ff3137ed770048fb77a909e34c51296f1feb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2aa02adb_9fc47694",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 20
@@ -406,6 +448,30 @@
       "writtenOn": "2018-01-05T11:45:59Z",
       "side": 1,
       "message": "Incorrect request type, this function relates to lvs not lvol.\n\nCan we change type of request to spdk_lvs_with_handle_req anyway ? It would enable to let caller of spdk_lvs_rename know which lvs successfully (or not) changed name.",
+      "range": {
+        "startLine": 620,
+        "startChar": 8,
+        "endLine": 620,
+        "endChar": 21
+      },
+      "revId": "8d0ff3137ed770048fb77a909e34c51296f1feb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aa2429c0_6d856d71",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 620,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-07T19:59:33Z",
+      "side": 1,
+      "message": "Right, i\u0027ll fix that.",
+      "parentUuid": "09ef66d3_7ce0bf5a",
       "range": {
         "startLine": 620,
         "startChar": 8,
