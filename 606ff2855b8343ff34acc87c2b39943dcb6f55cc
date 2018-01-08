@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc4d7b27_0c3728b6",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-08T23:51:43Z",
+      "side": 1,
+      "message": "I think this should say:\n\nblobfs: only delete the \"removed\" file when ref count \u003d\u003d 0\n\nWhen I first read the commit message, I was confused, because it seemed to say that before we were not deleting the file when ref count \u003d\u003d 0.",
+      "revId": "606ff2855b8343ff34acc87c2b39943dcb6f55cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
