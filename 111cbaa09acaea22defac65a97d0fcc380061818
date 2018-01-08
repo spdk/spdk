@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a12dfb8_43287f49",
+        "filename": "include/spdk/io_channel.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-08T18:06:33Z",
+      "side": 1,
+      "message": "missed this the first time, sorry... \"of\" should be \"for\"",
+      "revId": "111cbaa09acaea22defac65a97d0fcc380061818",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
