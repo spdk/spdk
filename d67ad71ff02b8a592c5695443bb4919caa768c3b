@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "1120d10a_575d69ee",
+        "filename": "autotest.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-01-08T02:42:36Z",
+      "side": 1,
+      "message": "Sorry. The fedora-03 machine should change to fedora-05",
+      "parentUuid": "1acc61dd_76310455",
+      "range": {
+        "startLine": 149,
+        "startChar": 2,
+        "endLine": 155,
+        "endChar": 40
+      },
+      "revId": "d67ad71ff02b8a592c5695443bb4919caa768c3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b0d93f4d_2320ac11",
         "filename": "test/vhost/lvol/lvol_test.sh",
         "patchSetId": 1
