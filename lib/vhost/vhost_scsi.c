@@ -94,6 +94,9 @@ struct spdk_vhost_scsi_task {
 	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_scsi_dev *scsi_dev;
 
+	/** Number of bytes that were written. */
+	uint32_t used_len;
+
 	int req_idx;
 
 	/* If set, the task is currently used for I/O processing. */
@@ -212,7 +215,7 @@ static void
 submit_completion(struct spdk_vhost_scsi_task *task)
 {
 	spdk_vhost_vq_used_ring_enqueue(&task->svdev->vdev, task->vq, task->req_idx,
-					task->scsi.data_transferred);
+					task->used_len);
 	SPDK_DEBUGLOG(SPDK_LOG_VHOST_SCSI, "Finished task (%p) req_idx=%d\n", task, task->req_idx);
 
 	spdk_vhost_scsi_task_put(task);
@@ -263,7 +266,8 @@ mgmt_task_submit(struct spdk_vhost_scsi_task *task, enum spdk_scsi_task_func fun
 static void
 invalid_request(struct spdk_vhost_scsi_task *task)
 {
-	spdk_vhost_vq_used_ring_enqueue(&task->svdev->vdev, task->vq, task->req_idx, 0);
+	spdk_vhost_vq_used_ring_enqueue(&task->svdev->vdev, task->vq, task->req_idx,
+					task->used_len);
 	spdk_vhost_scsi_task_put(task);
 
 	SPDK_DEBUGLOG(SPDK_LOG_VHOST_SCSI, "Invalid request (status=%" PRIu8")\n",
@@ -304,7 +308,7 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
 	struct vring_desc *desc, *desc_table;
 	struct virtio_scsi_ctrl_tmf_req *ctrl_req;
 	struct virtio_scsi_ctrl_an_resp *an_resp;
-	uint32_t desc_table_size;
+	uint32_t desc_table_size, used_len = 0;
 	int rc;
 
 	spdk_scsi_task_construct(&task->scsi, spdk_vhost_scsi_task_mgmt_cpl, spdk_vhost_scsi_task_free_cb);
@@ -380,8 +384,9 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
 		break;
 	}
 
+	used_len = sizeof(struct virtio_scsi_ctrl_tmf_resp);
 out:
-	spdk_vhost_vq_used_ring_enqueue(vdev, task->vq, task->req_idx, 0);
+	spdk_vhost_vq_used_ring_enqueue(vdev, task->vq, task->req_idx, used_len);
 	spdk_vhost_scsi_task_put(task);
 }
 
@@ -455,6 +460,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 			SPDK_DEBUGLOG(SPDK_LOG_VHOST_SCSI_DATA,
 				      "No payload descriptors for FROM DEV command req_idx=%"PRIu16".\n", task->req_idx);
 			SPDK_TRACEDUMP(SPDK_LOG_VHOST_SCSI_DATA, "CDB=", (*req)->cdb, VIRTIO_SCSI_CDB_SIZE);
+			task->used_len = sizeof(struct virtio_scsi_cmd_resp);
 			task->scsi.iovcnt = 1;
 			task->scsi.iovs[0].iov_len = 0;
 			task->scsi.length = 0;
@@ -481,6 +487,8 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 				goto invalid_task;
 			}
 		}
+
+		task->used_len = sizeof(struct virtio_scsi_cmd_resp) + len;
 	} else {
 		SPDK_DEBUGLOG(SPDK_LOG_VHOST_SCSI_DATA, "TO DEV");
 		/*
@@ -508,6 +516,8 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 				     vdev->name, task->req_idx);
 			goto invalid_task;
 		}
+
+		task->used_len = sizeof(struct virtio_scsi_cmd_resp);
 	}
 
 	task->scsi.iovcnt = iovcnt;
@@ -616,6 +626,7 @@ process_requestq(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_virtqueue 
 		memset(&task->scsi, 0, sizeof(task->scsi));
 		task->resp = NULL;
 		task->used = true;
+		task->used_len = 0;
 		result = process_request(task);
 		if (likely(result == 0)) {
 			task_submit(task);
