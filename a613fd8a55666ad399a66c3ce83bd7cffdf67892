@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "efc07842_b46bc77e",
+        "filename": "test/lib/vtune/vtune.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2018-01-08T08:28:02Z",
+      "side": 1,
+      "message": "Delete extra line",
+      "revId": "a613fd8a55666ad399a66c3ce83bd7cffdf67892",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
