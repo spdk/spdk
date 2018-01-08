@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "6061fdb2_f0244745",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-01-08T09:55:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5d0d666e_4e9bf733",
+      "range": {
+        "startLine": 160,
+        "startChar": 14,
+        "endLine": 160,
+        "endChar": 16
+      },
+      "revId": "e5ddd33e81b264b2870ea4b7b719193884feb870",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1943742b_b6fe375b",
         "filename": "include/spdk/blob.h",
         "patchSetId": 8
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "977e7415_46a86d56",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-01-08T09:55:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1943742b_b6fe375b",
+      "range": {
+        "startLine": 191,
+        "startChar": 60,
+        "endLine": 192,
+        "endChar": 23
+      },
+      "revId": "e5ddd33e81b264b2870ea4b7b719193884feb870",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e82f1a16_b95e9dd2",
         "filename": "include/spdk/blob.h",
         "patchSetId": 8
@@ -59,6 +107,30 @@
       "writtenOn": "2018-01-08T09:45:35Z",
       "side": 1,
       "message": "Looks like only free the resource allocated in this unload operation. So may not need to mention this.",
+      "range": {
+        "startLine": 204,
+        "startChar": 47,
+        "endLine": 204,
+        "endChar": 72
+      },
+      "revId": "e5ddd33e81b264b2870ea4b7b719193884feb870",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27a86d94_7d0f52cb",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-01-08T09:55:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e82f1a16_b95e9dd2",
       "range": {
         "startLine": 204,
         "startChar": 47,
@@ -105,6 +177,30 @@
       "writtenOn": "2018-01-08T09:45:35Z",
       "side": 1,
       "message": "a",
+      "range": {
+        "startLine": 312,
+        "startChar": 14,
+        "endLine": 312,
+        "endChar": 16
+      },
+      "revId": "e5ddd33e81b264b2870ea4b7b719193884feb870",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ad444c7_d3d64fee",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-01-08T09:55:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "735f8e3c_d693ef87",
       "range": {
         "startLine": 312,
         "startChar": 14,
