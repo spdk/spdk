@@ -19,6 +19,7 @@
 - @ref nvmf_getting_started
 - @ref blobfs_getting_started
 - @ref jsonrpc
+- @ref user_guide
 
 # Programmer Guides {#general}
 
