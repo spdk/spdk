@@ -125,6 +125,24 @@
       "revId": "a5f0a0910fe9e543af8d6cf209668f23c1e10f9d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3108d6e_0c1028e8",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-01-08T17:35:05Z",
+      "side": 1,
+      "message": "I put this line in to avoid confusion. See Ben\u0027s comment from PS4.",
+      "parentUuid": "bbb6181e_08c737af",
+      "revId": "a5f0a0910fe9e543af8d6cf209668f23c1e10f9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
