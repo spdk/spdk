@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ee42da6a_93048f36",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-08T11:08:14Z",
+      "side": 1,
+      "message": "this could use a comment\nOR you could at least assert(lun-\u003ehotplug_poller !\u003d NULL) for readability",
+      "range": {
+        "startLine": 266,
+        "startChar": 1,
+        "endLine": 266,
+        "endChar": 20
+      },
+      "revId": "828aa3e24a16caba661e04301089bafaed441175",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2a04b932_79551718",
+        "filename": "lib/scsi/scsi_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-08T11:08:14Z",
+      "side": 1,
+      "message": "why was this renamed?\n`destruct` seemed to play nice with `construct` that we have above",
+      "range": {
+        "startLine": 133,
+        "startChar": 5,
+        "endLine": 133,
+        "endChar": 25
+      },
+      "revId": "828aa3e24a16caba661e04301089bafaed441175",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
