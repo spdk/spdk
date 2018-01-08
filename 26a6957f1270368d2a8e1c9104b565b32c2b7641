@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8be1a32a_d494c4a0",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 576,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-08T17:58:31Z",
+      "side": 1,
+      "message": "while here, you might want to use spdk_app_get_core_mask(validmask) instead",
+      "range": {
+        "startLine": 574,
+        "startChar": 1,
+        "endLine": 576,
+        "endChar": 2
+      },
+      "revId": "26a6957f1270368d2a8e1c9104b565b32c2b7641",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0206090f_5d330a91",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 590,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-08T17:58:31Z",
+      "side": 1,
+      "message": "is this required? removing this would allow us to make the whole function return void. This could save us a couple lines of error handling.",
+      "range": {
+        "startLine": 588,
+        "startChar": 1,
+        "endLine": 590,
+        "endChar": 2
+      },
+      "revId": "26a6957f1270368d2a8e1c9104b565b32c2b7641",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "99721b6e_7b3c6ad6",
+        "filename": "lib/iscsi/portal_grp.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-08T17:58:31Z",
+      "side": 1,
+      "message": "do we need to free the p-\u003ecpumask here?",
+      "range": {
+        "startLine": 124,
+        "startChar": 1,
+        "endLine": 124,
+        "endChar": 2
+      },
+      "revId": "26a6957f1270368d2a8e1c9104b565b32c2b7641",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "01e00bae_da4b1278",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 534,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-08T17:58:31Z",
+      "side": 1,
+      "message": "I think it is worth creating an \"out\" goto label for freeing this cpumask \u0026 returning the rc;",
+      "range": {
+        "startLine": 533,
+        "startChar": 2,
+        "endLine": 534,
+        "endChar": 17
+      },
+      "revId": "26a6957f1270368d2a8e1c9104b565b32c2b7641",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "115a20ca_506a5c6f",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 478,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-08T17:58:31Z",
+      "side": 1,
+      "message": "could we make spdk_vhost_dev_get_cpumask just return the vdev-\u003ecpumask?\nThis entire callback (spdk_rpc_get_vhost_controllers_cb) is run on the vdev thread. - it is guaranteed that vdev can\u0027t change while this is still executing. What\u0027s more, you can obtain the vdev pointer (spdk_vhost_dev) only from within the vdev thread. It\u0027s all done via spdk_vhost_call_external_event API.  It is safe to assume that vdev/vdev-\u003ecpumask are only accessed temporarily via such callbacks and it is safe to access vdev-\u003ecpumask here.",
+      "range": {
+        "startLine": 475,
+        "startChar": 1,
+        "endLine": 478,
+        "endChar": 27
+      },
+      "revId": "26a6957f1270368d2a8e1c9104b565b32c2b7641",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "778c248a_a9afa33c",
+        "filename": "test/unit/lib/util/cpuset.c/Makefile",
+        "patchSetId": 15
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-08T17:58:31Z",
+      "side": 1,
+      "message": "this is not required. There was a patch from Daniel Verkamp that removed such line from all Makefiles at once. (I\u0027m too lazy to look it up now), so this is probably a leftover from a rebase.\n\nThese flags are required only when referencing DPDK directly - which is not the case here.",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 23
+      },
+      "revId": "26a6957f1270368d2a8e1c9104b565b32c2b7641",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
