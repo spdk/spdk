@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4a180d07_3d4e2c74",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2086,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-08T23:26:17Z",
+      "side": 1,
+      "message": "this one needs to be removed too",
+      "revId": "78419dc2196b00d13fcf118f84595d5c4eaaf7fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
