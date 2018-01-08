@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "47bba000_7a806a94",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 383,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-08T17:40:44Z",
+      "side": 1,
+      "message": "I wonder if we want to mention the functions that this applies to here as that\u0027s something that may change over time and it would be easy to forget about this comment.  I dunno, will leave it up to a maintainer to decide. Its probably OK...",
+      "revId": "cdf9a2640044114006e43baf3b49a1630101594e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
