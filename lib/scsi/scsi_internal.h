@@ -110,8 +110,7 @@ struct spdk_scsi_lun {
 	/** Argument for hotremove_cb */
 	void *hotremove_ctx;
 
-	TAILQ_HEAD(tasks, spdk_scsi_task) tasks;			/* submitted tasks */
-	TAILQ_HEAD(pending_tasks, spdk_scsi_task) pending_tasks;	/* pending tasks */
+	TAILQ_HEAD(tasks, spdk_scsi_task) tasks;			/* pending tasks */
 };
 
 struct spdk_lun_db_entry {
@@ -131,8 +130,7 @@ _spdk_scsi_lun *spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev
 					void *hotremove_ctx);
 int spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun);
 
-int spdk_scsi_lun_append_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
-void spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun);
+void spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
 int spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task, enum spdk_scsi_task_func func);
 void spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
 void spdk_scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
