@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bd86bf2b_ef429dc2",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 483,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-01-08T06:10:06Z",
+      "side": 1,
+      "message": "Here I think you can use a pointer pdu_in_progress to optimize the piece of code, see spdk_iscsi_read_pdu in iscsi.c for reference.",
+      "revId": "df235f9feb0b50e54e91e5453b57dbbd886f05af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
