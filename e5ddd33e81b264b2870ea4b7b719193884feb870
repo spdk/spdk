@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5d0d666e_4e9bf733",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-08T09:45:35Z",
+      "side": 1,
+      "message": "a instead of an",
+      "range": {
+        "startLine": 160,
+        "startChar": 14,
+        "endLine": 160,
+        "endChar": 16
+      },
+      "revId": "e5ddd33e81b264b2870ea4b7b719193884feb870",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1943742b_b6fe375b",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-08T09:45:35Z",
+      "side": 1,
+      "message": "Looks like there is no free of allocated resource on the blobstore through this API?",
+      "range": {
+        "startLine": 191,
+        "startChar": 60,
+        "endLine": 192,
+        "endChar": 23
+      },
+      "revId": "e5ddd33e81b264b2870ea4b7b719193884feb870",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e82f1a16_b95e9dd2",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-08T09:45:35Z",
+      "side": 1,
+      "message": "Looks like only free the resource allocated in this unload operation. So may not need to mention this.",
+      "range": {
+        "startLine": 204,
+        "startChar": 47,
+        "endLine": 204,
+        "endChar": 72
+      },
+      "revId": "e5ddd33e81b264b2870ea4b7b719193884feb870",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7add0582_4fbfa6ca",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-08T09:45:35Z",
+      "side": 1,
+      "message": "given",
+      "range": {
+        "startLine": 213,
+        "startChar": 25,
+        "endLine": 213,
+        "endChar": 29
+      },
+      "revId": "e5ddd33e81b264b2870ea4b7b719193884feb870",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "735f8e3c_d693ef87",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-08T09:45:35Z",
+      "side": 1,
+      "message": "a",
+      "range": {
+        "startLine": 312,
+        "startChar": 14,
+        "endLine": 312,
+        "endChar": 16
+      },
+      "revId": "e5ddd33e81b264b2870ea4b7b719193884feb870",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
