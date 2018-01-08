@@ -16,6 +16,24 @@
       "revId": "c3f79b12f9933cb525f8d8d3b414895ae17cab44",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4442cc94_fbddade9",
+        "filename": "autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-01-08T06:31:49Z",
+      "side": 1,
+      "message": "These are nightly cases and I move them to run patch test to make sure everything works OK. I will change back to what it was before merged.",
+      "parentUuid": "ae6f4456_69cab050",
+      "revId": "c3f79b12f9933cb525f8d8d3b414895ae17cab44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
