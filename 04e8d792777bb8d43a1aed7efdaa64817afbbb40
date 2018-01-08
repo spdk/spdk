@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "76fa7d5c_c6f6b84d",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2018-01-08T07:49:41Z",
+      "side": 1,
+      "message": "Add four space indent",
+      "revId": "04e8d792777bb8d43a1aed7efdaa64817afbbb40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
