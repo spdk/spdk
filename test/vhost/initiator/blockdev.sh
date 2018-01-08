@@ -81,14 +81,8 @@ create_bdev_config
 timing_exit create_bdev_config
 
 timing_enter run_spdk_fio
-
-bdevs="VirtioScsi0t0:VirtioScsi1t0:VirtioScsi2t0"
-IFS=':'
-for bdev in $bdevs; do
-run_spdk_fio $BDEV_FIO --filename="$bdev" \
+run_spdk_fio $BDEV_FIO --filename=VirtioScsi0t0:VirtioScsi1t0:VirtioScsi2t0 \
  --io_size=400m --size=100m --spdk_conf=$BASE_DIR/bdev.conf
-done
-
 timing_exit run_spdk_fio
 
 timing_enter run_spdk_fio_4G
