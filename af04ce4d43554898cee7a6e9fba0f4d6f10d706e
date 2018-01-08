@@ -25,6 +25,29 @@
     },
     {
       "key": {
+        "uuid": "b5501f6d_33fd8ea4",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-01-08T02:22:59Z",
+      "side": 1,
+      "message": "I\u0027m wondering whether the mutex should also protect these contents. \n\nSince multiple threads will call this callback function and  each of them will write its json state to the same \u0027json_write_ctx struct\u0027, it is likely to cause some issues while multiple threads write data to that at the same time although the probability of this situation is very low.\n\nThanks",
+      "range": {
+        "startLine": 55,
+        "startChar": 1,
+        "endLine": 72,
+        "endChar": 31
+      },
+      "revId": "af04ce4d43554898cee7a6e9fba0f4d6f10d706e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3143764a_6f2b933e",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 6
