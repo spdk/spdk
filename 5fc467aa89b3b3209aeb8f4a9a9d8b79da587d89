@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e2ccb9af_0423a0e6",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 556,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-08T12:38:35Z",
+      "side": 1,
+      "message": "equal to",
+      "range": {
+        "startLine": 556,
+        "startChar": 46,
+        "endLine": 556,
+        "endChar": 48
+      },
+      "revId": "5fc467aa89b3b3209aeb8f4a9a9d8b79da587d89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e2a1ce2_7d1df0fd",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 565,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-08T12:38:35Z",
+      "side": 1,
+      "message": "I think it should be \"previous number\" or \"initial value of\"",
+      "range": {
+        "startLine": 565,
+        "startChar": 53,
+        "endLine": 565,
+        "endChar": 60
+      },
+      "revId": "5fc467aa89b3b3209aeb8f4a9a9d8b79da587d89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "19fa4501_d3c82add",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 583,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-08T12:38:35Z",
+      "side": 1,
+      "message": "Which verification? \nWe should move it to separate point in this list and be explicit in what we expect, e.g. \"read operations on empty thin provisioned lvol return zeroes\"",
+      "range": {
+        "startLine": 583,
+        "startChar": 37,
+        "endLine": 583,
+        "endChar": 60
+      },
+      "revId": "5fc467aa89b3b3209aeb8f4a9a9d8b79da587d89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b9d9af88_874870a5",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 600,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-08T12:38:35Z",
+      "side": 1,
+      "message": "As previously commented: specifying malloc size here is not needed",
+      "range": {
+        "startLine": 600,
+        "startChar": 21,
+        "endLine": 600,
+        "endChar": 34
+      },
+      "revId": "5fc467aa89b3b3209aeb8f4a9a9d8b79da587d89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "19a9a270_e579e9df",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 605,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-08T12:38:35Z",
+      "side": 1,
+      "message": "\"(roughly equals to size of malloc bdev)\" - roughly because it will not be the same because of lvol store and lvol bdev metadata consuming some of the space.\nI think you\u0027ll need to calculate the correct size in the scripts",
+      "range": {
+        "startLine": 605,
+        "startChar": 29,
+        "endLine": 605,
+        "endChar": 44
+      },
+      "revId": "5fc467aa89b3b3209aeb8f4a9a9d8b79da587d89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "131db649_fe33fab7",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 608,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-08T12:38:35Z",
+      "side": 1,
+      "message": "I would add some additional steps related to resize before finishing the test:\n- resize lvol bdev again by adding space. Write data with integrity check. Check free clusters on lvs. Expected result: resize \u0026 verification success.\n- resize lvol bdev again by removing space added in previous step. Check size of bdev and free clusters on lvs. Expected results: resize success (this still may change because resize is WiP, but currently we allow to shrink it in this condition as far as I know)",
+      "range": {
+        "startLine": 608,
+        "startChar": 0,
+        "endLine": 608,
+        "endChar": 49
+      },
+      "revId": "5fc467aa89b3b3209aeb8f4a9a9d8b79da587d89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e1bd0771_db7f506b",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 618,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-08T12:38:35Z",
+      "side": 1,
+      "message": "As previously commented: specifying malloc size here is not needed",
+      "range": {
+        "startLine": 618,
+        "startChar": 21,
+        "endLine": 618,
+        "endChar": 34
+      },
+      "revId": "5fc467aa89b3b3209aeb8f4a9a9d8b79da587d89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78f8a828_d22349ca",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 622,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-08T12:38:35Z",
+      "side": 1,
+      "message": "You should mention that we fill it up by writing data with known pattern to it, so taht we can easily check data integrity in next steps.",
+      "range": {
+        "startLine": 622,
+        "startChar": 2,
+        "endLine": 622,
+        "endChar": 33
+      },
+      "revId": "5fc467aa89b3b3209aeb8f4a9a9d8b79da587d89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
