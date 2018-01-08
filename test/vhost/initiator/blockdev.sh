@@ -82,7 +82,7 @@ $rpc_py get_bdevs
 bdevs=$($rpc_py get_bdevs | jq -r '.[] | .name')
 
 for bdev in $bdevs; do
-        timing_enter bdev
+        timing_enter bdev_$bdev
 
         cp $testdir/bdev.conf.in $testdir/bdev.conf
         if [ $bdev == "Nvme0n1" ]; then
@@ -141,7 +141,7 @@ for bdev in $bdevs; do
         fi
 
         rm -f $testdir/bdev.conf
-        timing_exit bdev
+        timing_exit bdev_$bdev
 done
 timing_enter spdk_vhost_kill
 spdk_vhost_kill
