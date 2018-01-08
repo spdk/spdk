@@ -157,14 +157,8 @@ spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task, enum spdk_scsi_task
 	return 0;
 }
 
-int
-spdk_scsi_lun_append_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
-{
-	return 0;
-}
-
 void
-spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun)
+spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
 }
 

@@ -49,46 +49,18 @@ spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *ta
 	task->cpl_fn(task);
 }
 
-static int
-spdk_scsi_lun_clear_all(struct spdk_scsi_lun *lun)
-{
-	struct spdk_scsi_task *task, *task_tmp;
-	int rc = 0;
-
-	/*
-	 * This function is called from one location, after the backend LUN
-	 * device was reset. If there are active tasks in the backend, it
-	 * means that LUN reset fails, and we return and set failure status
-	 * to LUN reset task. If LUN reset succeeds, we need to abort any
-	 * pending tasks..
-	 *
-	 * ( 'tasks' = active, and 'pending' = newest)
-	 */
-
-	if (!TAILQ_EMPTY(&lun->tasks)) {
-		SPDK_ERRLOG("lun->tasks should be empty after reset\n");
-		rc = -1;
-	}
-
-	TAILQ_FOREACH_SAFE(task, &lun->pending_tasks, scsi_link, task_tmp) {
-		TAILQ_REMOVE(&lun->pending_tasks, task, scsi_link);
-		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
-					  SPDK_SCSI_SENSE_ABORTED_COMMAND,
-					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
-					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
-		spdk_trace_record(TRACE_SCSI_TASK_DONE, lun->dev->id, 0, (uintptr_t)task, 0);
-		task->cpl_fn(task);
-	}
-
-	return rc;
-}
-
 void
 spdk_scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
 	if (task->function == SPDK_SCSI_TASK_FUNC_LUN_RESET &&
 	    task->status == SPDK_SCSI_STATUS_GOOD) {
-		if (spdk_scsi_lun_clear_all(task->lun)) {
+		/*
+		 * The backend LUN device was just reset. If there are active tasks
+		 * in the backend, it means that LUN reset fails, and we set failure
+		 * status to LUN reset task.
+		 */
+		if (!TAILQ_EMPTY(&lun->tasks)) {
+			SPDK_ERRLOG("lun->tasks should be empty after reset\n");
 			task->response = SPDK_SCSI_TASK_MGMT_RESP_TARGET_FAILURE;
 		}
 	}
@@ -178,45 +150,34 @@ spdk_scsi_task_process_null_lun(struct spdk_scsi_task *task)
 	}
 }
 
-int
-spdk_scsi_lun_append_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
-{
-	TAILQ_INSERT_TAIL(&lun->pending_tasks, task, scsi_link);
-	return 0;
-}
-
 void
-spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun)
+spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
-	struct spdk_scsi_task *task, *task_tmp;
 	int rc;
 
-	TAILQ_FOREACH_SAFE(task, &lun->pending_tasks, scsi_link, task_tmp) {
-		task->status = SPDK_SCSI_STATUS_GOOD;
-		spdk_trace_record(TRACE_SCSI_TASK_START, lun->dev->id, task->length, (uintptr_t)task, 0);
-		TAILQ_REMOVE(&lun->pending_tasks, task, scsi_link);
-		TAILQ_INSERT_TAIL(&lun->tasks, task, scsi_link);
-		if (!lun->removed) {
-			rc = spdk_bdev_scsi_execute(task);
-		} else {
-			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
-						  SPDK_SCSI_SENSE_ABORTED_COMMAND,
-						  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
-						  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
-			rc = SPDK_SCSI_TASK_COMPLETE;
-		}
+	task->status = SPDK_SCSI_STATUS_GOOD;
+	spdk_trace_record(TRACE_SCSI_TASK_START, lun->dev->id, task->length, (uintptr_t)task, 0);
+	TAILQ_INSERT_TAIL(&lun->tasks, task, scsi_link);
+	if (!lun->removed) {
+		rc = spdk_bdev_scsi_execute(task);
+	} else {
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_ABORTED_COMMAND,
+					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		rc = SPDK_SCSI_TASK_COMPLETE;
+	}
 
-		switch (rc) {
-		case SPDK_SCSI_TASK_PENDING:
-			break;
+	switch (rc) {
+	case SPDK_SCSI_TASK_PENDING:
+		break;
 
-		case SPDK_SCSI_TASK_COMPLETE:
-			spdk_scsi_lun_complete_task(lun, task);
-			break;
+	case SPDK_SCSI_TASK_COMPLETE:
+		spdk_scsi_lun_complete_task(lun, task);
+		break;
 
-		default:
-			abort();
-		}
+	default:
+		abort();
 	}
 }
 
@@ -305,7 +266,6 @@ spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev,
 	}
 
 	TAILQ_INIT(&lun->tasks);
-	TAILQ_INIT(&lun->pending_tasks);
 
 	lun->bdev = bdev;
 	lun->io_channel = NULL;
@@ -408,5 +368,5 @@ spdk_scsi_lun_get_dev(const struct spdk_scsi_lun *lun)
 bool
 spdk_scsi_lun_has_pending_tasks(const struct spdk_scsi_lun *lun)
 {
-	return !TAILQ_EMPTY(&lun->pending_tasks) || !TAILQ_EMPTY(&lun->tasks);
+	return !TAILQ_EMPTY(&lun->tasks);
 }
