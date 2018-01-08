@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9ecf77a5_8f272297",
+        "filename": "test/lib/blobfs/mkfs/mkfs.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-08T23:48:09Z",
+      "side": 1,
+      "message": "this should be uint64_t just in case",
+      "revId": "d0b320db9765175d1c05f0367cc3756706f334be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d3f9dadc_b732918b",
+        "filename": "test/lib/blobfs/mkfs/mkfs.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-08T23:48:09Z",
+      "side": 1,
+      "message": "couple of suggestions:\n\n1) I suggest adding an spdk_fs_opts_init() - similar to spdk_bs_opts_init()\n2) if cluster_size \u003d 0 (meaning user didn\u0027t specify it) just pass NULL for the options so that you don\u0027t have to duplicate SPDK_BLOB_OPTS_CLUSTER_SZ here",
+      "revId": "d0b320db9765175d1c05f0367cc3756706f334be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41105e3e_53c016ba",
+        "filename": "test/lib/blobfs/mkfs/mkfs.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-08T23:48:09Z",
+      "side": 1,
+      "message": "let\u0027s use the new spdk_parse_capacity() instead - then user can do things like 512K or 2m",
+      "revId": "d0b320db9765175d1c05f0367cc3756706f334be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c161f8a_420c6372",
+        "filename": "test/lib/blobfs/mkfs/mkfs.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-08T23:48:09Z",
+      "side": 1,
+      "message": "do we want to print this out here?  looks like maybe this was from debugging",
+      "revId": "d0b320db9765175d1c05f0367cc3756706f334be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
