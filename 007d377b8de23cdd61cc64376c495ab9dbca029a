@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "02176625_300d1d0a",
+        "filename": "test/lib/bdev/blockdev.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2018-01-08T07:53:19Z",
+      "side": 1,
+      "message": "It was designed as write in the test plan, now it\u0027s changed to read, is there any background for it?",
+      "revId": "007d377b8de23cdd61cc64376c495ab9dbca029a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
