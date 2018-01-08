@@ -210,10 +210,6 @@ lun_construct(void)
 	lun = spdk_scsi_lun_construct("lun0", &bdev, NULL, NULL);
 
 	SPDK_CU_ASSERT_FATAL(lun != NULL);
-	if (lun != NULL) {
-		SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&lun->pending_tasks));
-	}
-
 	return lun;
 }
 
@@ -276,12 +272,7 @@ lun_task_mgmt_execute_abort_task_not_supported(void)
 	task.lun = lun;
 	task.cdb = cdb;
 
-	spdk_scsi_lun_append_task(lun, &task);
-
-	/* task should now be on the pending_task list */
-	CU_ASSERT(!TAILQ_EMPTY(&lun->pending_tasks));
-
-	spdk_scsi_lun_execute_tasks(lun);
+	spdk_scsi_lun_task_execute(&task);
 
 	/* task should now be on the tasks list */
 	CU_ASSERT(!TAILQ_EMPTY(&lun->tasks));
@@ -342,12 +333,7 @@ lun_task_mgmt_execute_abort_task_all_not_supported(void)
 	task.lun = lun;
 	task.cdb = cdb;
 
-	spdk_scsi_lun_append_task(lun, &task);
-
-	/* task should now be on the pending_task list */
-	CU_ASSERT(!TAILQ_EMPTY(&lun->pending_tasks));
-
-	spdk_scsi_lun_execute_tasks(lun);
+	spdk_scsi_lun_task_execute(&task);
 
 	/* task should now be on the tasks list */
 	CU_ASSERT(!TAILQ_EMPTY(&lun->tasks));
@@ -516,17 +502,12 @@ lun_execute_scsi_task_pending(void)
 	g_lun_execute_fail = false;
 	g_lun_execute_status = SPDK_SCSI_TASK_PENDING;
 
-	spdk_scsi_lun_append_task(lun, &task);
-
-	/* task should now be on the pending_task list */
-	CU_ASSERT(!TAILQ_EMPTY(&lun->pending_tasks));
-
-	/* but the tasks list should still be empty since it has not been
+	/* the tasks list should still be empty since it has not been
 	   executed yet
 	 */
 	CU_ASSERT(TAILQ_EMPTY(&lun->tasks));
 
-	spdk_scsi_lun_execute_tasks(lun);
+	spdk_scsi_lun_task_execute(&task);
 
 	/* Assert the task has been successfully added to the tasks queue */
 	CU_ASSERT(!TAILQ_EMPTY(&lun->tasks));
@@ -554,17 +535,12 @@ lun_execute_scsi_task_complete(void)
 	g_lun_execute_fail = false;
 	g_lun_execute_status = SPDK_SCSI_TASK_COMPLETE;
 
-	spdk_scsi_lun_append_task(lun, &task);
-
-	/* task should now be on the pending_task list */
-	CU_ASSERT(!TAILQ_EMPTY(&lun->pending_tasks));
-
-	/* but the tasks list should still be empty since it has not been
+	/* the tasks list should still be empty since it has not been
 	   executed yet
 	 */
 	CU_ASSERT(TAILQ_EMPTY(&lun->tasks));
 
-	spdk_scsi_lun_execute_tasks(lun);
+	spdk_scsi_lun_task_execute(&task);
 
 	/* Assert the task has not been added to the tasks queue */
 	CU_ASSERT(TAILQ_EMPTY(&lun->tasks));
