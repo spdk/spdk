@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "3ee7bb9c_cbfb6a3a",
+        "filename": "autotest.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-01-08T06:31:49Z",
+      "side": 1,
+      "message": "Hi Karol, I have moved these lines which running multi-os cases. out of \"if RUN_NIGHTLY\" in Patch Set 4",
+      "parentUuid": "3c08d255_6a8a9d26",
+      "range": {
+        "startLine": 149,
+        "startChar": 2,
+        "endLine": 155,
+        "endChar": 40
+      },
+      "revId": "d67ad71ff02b8a592c5695443bb4919caa768c3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b0d93f4d_2320ac11",
         "filename": "test/vhost/lvol/lvol_test.sh",
         "patchSetId": 1
