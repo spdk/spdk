@@ -209,6 +209,7 @@ uint64_t spdk_blob_get_num_clusters(struct spdk_blob *blob);
 struct spdk_blob_opts {
 	uint64_t  num_clusters;
 	bool    thin_provision;
+	struct spdk_blob *snapshot;
 	/* Number of attributes */
 	size_t	xattr_count;
 	/* Array of attribute names. Caller should free this array after use. */
@@ -235,6 +236,11 @@ void spdk_bs_create_blob(struct spdk_blob_store *bs,
  * Specified blob will become a clone and callback will provide handle to snapshot blob */
 void spdk_bs_create_blob_snapshot(struct spdk_blob_store *bs, struct spdk_blob *blob,
 				  spdk_blob_op_with_handle_complete cb_fn, void *cb_arg);
+
+/* Create a clone of specified snapshot. */
+void spdk_bs_create_blob_clone(struct spdk_blob_store *bs, struct spdk_blob *snapshot,
+			       spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
+
 
 /* Delete an existing blob. */
 void spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,

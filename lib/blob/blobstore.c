@@ -169,6 +169,7 @@ spdk_blob_opts_init(struct spdk_blob_opts *opts)
 {
 	opts->num_clusters = 0;
 	opts->thin_provision = false;
+	opts->snapshot = NULL;
 	opts->xattr_count = 0;
 	opts->xattr_names = NULL;
 	opts->xattr_ctx = NULL;
@@ -3240,6 +3241,12 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 		_spdk_blob_set_thin_provision(blob);
 	}
 	spdk_blob_resize(__data_to_blob(blob), opts->num_clusters);
+	if (opts->snapshot) {
+		_spdk_blob_set_thin_provision(blob);
+		spdk_blob_resize(__data_to_blob(blob), __blob_to_data(opts->snapshot)->active.num_clusters);
+		blob->snapshot = __blob_to_data(opts->snapshot);
+		blob->back_bs_dev = __blob_to_data(opts->snapshot)->back_bs_dev;
+	}
 	cpl.type = SPDK_BS_CPL_TYPE_BLOBID;
 	cpl.u.blobid.cb_fn = cb_fn;
 	cpl.u.blobid.cb_arg = cb_arg;
@@ -3357,7 +3364,7 @@ void spdk_bs_create_blob_snapshot(struct spdk_blob_store *bs, struct spdk_blob *
 	struct spdk_bs_cpl		cpl;
 	char *_snapshot_xattrs[] = {SNAPSHOT_IN_PROGRESS};
 
-	/* set cloned blob as thin provisioned */
+	/* set clone blob as thin provisioned */
 	opts.thin_provision = true;
 	/* Set metadata descriptor SNAPSHOT_IN_PROGRESS */
 	opts.xattr_count = 1;
@@ -3375,6 +3382,35 @@ void spdk_bs_create_blob_snapshot(struct spdk_blob_store *bs, struct spdk_blob *
 	spdk_bs_create_blob_ext(bs, &opts, _spdk_bs_create_blob_snapshot_cpl, &cpl);
 }
 /* END spdk_bs_create_blob_snapshot */
+
+/* START spdk_bs_create_blob_clone */
+
+static void
+_spdk_bs_create_blob_clone_cpl(void *cb_arg, spdk_blob_id blobid, int bserrno)
+{
+	struct spdk_bs_cpl *cpl = cb_arg;
+
+	cpl->u.blobid.cb_fn(cpl->u.blobid.cb_arg, blobid, bserrno);
+}
+
+void spdk_bs_create_blob_clone(struct spdk_blob_store *bs, struct spdk_blob *blob,
+			       spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
+{
+	struct spdk_blob_opts   opts;
+	struct spdk_bs_cpl		cpl;
+	struct spdk_blob_data	*snapshot = __blob_to_data(blob);
+
+
+	/* TODO: Fail if snapshot is not a snapshot */
+
+	opts.snapshot = __data_to_blob(snapshot);
+
+	cpl.u.blobid.cb_fn = cb_fn;
+	cpl.u.blobid.cb_arg = cb_arg;
+
+	spdk_bs_create_blob_ext(bs, &opts, _spdk_bs_create_blob_clone_cpl, &cpl);
+}
+/* END spdk_bs_create_blob_clone */
 
 /* START spdk_blob_resize */
 int
