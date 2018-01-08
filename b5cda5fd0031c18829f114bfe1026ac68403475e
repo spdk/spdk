@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6e85d4d5_b5f31397",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2165,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-08T15:01:48Z",
+      "side": 1,
+      "message": "Please check return value from spdk_blob_resize() and assert it, similar to set_xattr below.",
+      "range": {
+        "startLine": 2165,
+        "startChar": 1,
+        "endLine": 2165,
+        "endChar": 36
+      },
+      "revId": "b5cda5fd0031c18829f114bfe1026ac68403475e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
