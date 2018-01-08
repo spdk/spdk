@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "62cf9089_d4c77703",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-08T23:15:59Z",
+      "side": 1,
+      "message": "should just be spdk_scsi_lun_execute_task now (drop the \"s\")",
+      "revId": "7e106f6f719938f9554b9f5afe0d66ddb1675cca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b58599cd_1109bce9",
+        "filename": "lib/scsi/scsi_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-08T23:15:59Z",
+      "side": 1,
+      "message": "spdk_scsi_lun_execute_task",
+      "revId": "7e106f6f719938f9554b9f5afe0d66ddb1675cca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
