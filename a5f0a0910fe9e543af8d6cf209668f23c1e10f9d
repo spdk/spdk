@@ -1,0 +1,130 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dec6b222_681579f3",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-01-08T01:56:37Z",
+      "side": 1,
+      "message": "Extra empty line.",
+      "revId": "a5f0a0910fe9e543af8d6cf209668f23c1e10f9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "305e6878_213f51a6",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-01-08T01:56:37Z",
+      "side": 1,
+      "message": "Extra \u0027*\u0027",
+      "range": {
+        "startLine": 51,
+        "startChar": 2,
+        "endLine": 51,
+        "endChar": 3
+      },
+      "revId": "a5f0a0910fe9e543af8d6cf209668f23c1e10f9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5cd0a9d4_e3b9dd5c",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-01-08T01:56:37Z",
+      "side": 1,
+      "message": "Extra \u0027*\u0027",
+      "range": {
+        "startLine": 55,
+        "startChar": 3,
+        "endLine": 55,
+        "endChar": 4
+      },
+      "revId": "a5f0a0910fe9e543af8d6cf209668f23c1e10f9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0bc2101_cd29e1b6",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-01-08T01:56:37Z",
+      "side": 1,
+      "message": "Same here",
+      "range": {
+        "startLine": 58,
+        "startChar": 3,
+        "endLine": 58,
+        "endChar": 4
+      },
+      "revId": "a5f0a0910fe9e543af8d6cf209668f23c1e10f9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fffe250f_f5b97a2a",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-01-08T01:56:37Z",
+      "side": 1,
+      "message": "Same here",
+      "range": {
+        "startLine": 61,
+        "startChar": 3,
+        "endLine": 61,
+        "endChar": 4
+      },
+      "revId": "a5f0a0910fe9e543af8d6cf209668f23c1e10f9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bbb6181e_08c737af",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-01-08T01:56:37Z",
+      "side": 1,
+      "message": "Comments with code without empty line is more better.",
+      "revId": "a5f0a0910fe9e543af8d6cf209668f23c1e10f9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
