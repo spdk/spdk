@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3dd68104_bdd8962a",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-08T14:19:48Z",
+      "side": 1,
+      "message": "Should be tabs here",
+      "range": {
+        "startLine": 53,
+        "startChar": 0,
+        "endLine": 53,
+        "endChar": 8
+      },
+      "revId": "aef2c9ac6b54e15c5ff8b3ca974c1cd436cc41e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
