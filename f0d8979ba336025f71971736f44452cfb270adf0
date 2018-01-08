@@ -45,6 +45,23 @@
       "revId": "f0d8979ba336025f71971736f44452cfb270adf0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ffc0bdf_63553205",
+        "filename": "test/nvmf/fio/fio.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2018-01-08T08:18:09Z",
+      "side": 1,
+      "message": "In the original design in test plan, it has 13 cases, here it has 12 cases, i checked that readrw is missed.\nConstruct nvmf target subsystem with lvol \u0026 NVMe bdev.\nrun fio job with following parameters:  \nio_size\u003d4K, depth\u003d16, device_paths, test_type\u003d\"randrw\", runtime\u003d1, verify\u003dTrue, rwmixread\u003d50))",
+      "revId": "f0d8979ba336025f71971736f44452cfb270adf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
