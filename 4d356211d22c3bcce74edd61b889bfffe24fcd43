@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1283a483_55fdcff8",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 645,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-08T13:19:32Z",
+      "side": 1,
+      "message": "construct 2 lvol bdevs like Maciek suggests:\n- 1 thick provisioned on 50% of lvs space\n- 1 thin provisioned on 50% of lvs space",
+      "range": {
+        "startLine": 645,
+        "startChar": 2,
+        "endLine": 645,
+        "endChar": 38
+      },
+      "revId": "4d356211d22c3bcce74edd61b889bfffe24fcd43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56596204_7594a965",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 646,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-08T13:19:32Z",
+      "side": 1,
+      "message": "Please remind - why do we fill lvol bdev only in 50%?",
+      "range": {
+        "startLine": 646,
+        "startChar": 2,
+        "endLine": 646,
+        "endChar": 34
+      },
+      "revId": "4d356211d22c3bcce74edd61b889bfffe24fcd43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9302d3e7_19b2d6ab",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 664,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-08T13:19:32Z",
+      "side": 1,
+      "message": "known pattern",
+      "range": {
+        "startLine": 664,
+        "startChar": 67,
+        "endLine": 664,
+        "endChar": 80
+      },
+      "revId": "4d356211d22c3bcce74edd61b889bfffe24fcd43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
