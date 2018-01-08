@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "19d89a91_fc049035",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-08T22:56:49Z",
+      "side": 1,
+      "message": "even though you\u0027ve indicated readonly in io_type_supported, we should still fail the I/O here - scsi_bdev.c doesn\u0027t check the io_type_supported for example on reads/writes (only unmap)\n\nI\u0027m ok just putting an assert here, and fixing the other layers as part of different patches.",
+      "revId": "95aa5d1255f1344f90795510dc5075ffa3188357",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
