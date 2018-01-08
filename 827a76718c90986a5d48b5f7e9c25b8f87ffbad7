@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "3acb1109_6ae8cc8a",
+        "filename": "test/nvmf/multiconnection/multiconnection.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2018-01-08T08:04:54Z",
+      "side": 1,
+      "message": "nvme",
+      "revId": "827a76718c90986a5d48b5f7e9c25b8f87ffbad7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bdc367c6_aa52454a",
         "filename": "test/nvmf/multiconnection/multiconnection.sh",
         "patchSetId": 7
@@ -19,6 +36,23 @@
         "endLine": 85,
         "endChar": 4
       },
+      "revId": "827a76718c90986a5d48b5f7e9c25b8f87ffbad7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "11d08750_a1de302d",
+        "filename": "test/nvmf/multiconnection/multiconnection.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2018-01-08T08:04:54Z",
+      "side": 1,
+      "message": "In the design test plan, it\u0027s ./fio.py 262144 16 randwrite 10 verify, and it\u0027s 2 cases, is there any background for it?",
       "revId": "827a76718c90986a5d48b5f7e9c25b8f87ffbad7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
