@@ -56,7 +56,8 @@ struct spdk_vhost_blk_task {
 	/* If set, the task is currently used for I/O processing. */
 	bool used;
 
-	uint32_t length;
+	/** Number of bytes that were written. */
+	uint32_t used_len;
 	uint16_t iovcnt;
 	struct iovec iovs[SPDK_VHOST_IOVS_MAX];
 };
@@ -162,7 +163,7 @@ blk_request_finish(bool success, struct spdk_vhost_blk_task *task)
 {
 	*task->status = success ? VIRTIO_BLK_S_OK : VIRTIO_BLK_S_IOERR;
 	spdk_vhost_vq_used_ring_enqueue(&task->bvdev->vdev, task->vq, task->req_idx,
-					task->length);
+					task->used_len);
 	SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "Finished task (%p) req_idx=%d\n status: %s\n", task,
 		      task->req_idx, success ? "OK" : "FAIL");
 	blk_task_finish(task);
@@ -184,9 +185,10 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 	const struct virtio_blk_outhdr *req;
 	struct iovec *iov;
 	uint32_t type;
+	uint32_t payload_len;
 	int rc;
 
-	if (blk_iovs_setup(&bvdev->vdev, vq, task->req_idx, task->iovs, &task->iovcnt, &task->length)) {
+	if (blk_iovs_setup(&bvdev->vdev, vq, task->req_idx, task->iovs, &task->iovcnt, &payload_len)) {
 		SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "Invalid request (req_idx = %"PRIu16").\n", task->req_idx);
 		/* Only READ and WRITE are supported for now. */
 		invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
@@ -214,7 +216,7 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 	}
 
 	task->status = iov->iov_base;
-	task->length -= sizeof(*req) + 1;
+	payload_len -= sizeof(*req) + sizeof(*task->status);
 	task->iovcnt -= 2;
 
 	type = req->type;
@@ -226,7 +228,7 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 	switch (type) {
 	case VIRTIO_BLK_T_IN:
 	case VIRTIO_BLK_T_OUT:
-		if (spdk_unlikely((task->length & (512 - 1)) != 0)) {
+		if (spdk_unlikely((payload_len & (512 - 1)) != 0)) {
 			SPDK_ERRLOG("%s - passed IO buffer is not multiple of 512b (req_idx = %"PRIu16").\n",
 				    type ? "WRITE" : "READ", task->req_idx);
 			invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
@@ -234,13 +236,15 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 		}
 
 		if (type == VIRTIO_BLK_T_IN) {
+			task->used_len = payload_len + sizeof(*task->status);
 			rc = spdk_bdev_readv(bvdev->bdev_desc, bvdev->bdev_io_channel,
 					     &task->iovs[1], task->iovcnt, req->sector * 512,
-					     task->length, blk_request_complete_cb, task);
+					     payload_len, blk_request_complete_cb, task);
 		} else if (!bvdev->readonly) {
+			task->used_len = sizeof(*task->status);
 			rc = spdk_bdev_writev(bvdev->bdev_desc, bvdev->bdev_io_channel,
 					      &task->iovs[1], task->iovcnt, req->sector * 512,
-					      task->length, blk_request_complete_cb, task);
+					      payload_len, blk_request_complete_cb, task);
 		} else {
 			SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "Device is in read-only mode!\n");
 			rc = -1;
@@ -252,12 +256,13 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 		}
 		break;
 	case VIRTIO_BLK_T_GET_ID:
-		if (!task->iovcnt || !task->length) {
+		if (!task->iovcnt || !payload_len) {
 			invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
 			return -1;
 		}
-		task->length = spdk_min((size_t)VIRTIO_BLK_ID_BYTES, task->iovs[1].iov_len);
-		spdk_strcpy_pad(task->iovs[1].iov_base, spdk_bdev_get_product_name(bvdev->bdev), task->length, ' ');
+		task->used_len = spdk_min((size_t)VIRTIO_BLK_ID_BYTES, task->iovs[1].iov_len);
+		spdk_strcpy_pad(task->iovs[1].iov_base, spdk_bdev_get_product_name(bvdev->bdev),
+				task->used_len, ' ');
 		blk_request_finish(true, task);
 		break;
 	default:
