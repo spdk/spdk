@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "fe02e028_efb7ae70",
+        "filename": "include/spdk/io_channel.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-01-08T11:32:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fcbcfb7a_037557b3",
+      "revId": "f238efc1a74fd6398cee090aea775836a0c3f561",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1fc15dc4_49b73b44",
         "filename": "include/spdk/io_channel.h",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2018-01-02T14:50:55Z",
       "side": 1,
       "message": "same as line 80",
+      "revId": "f238efc1a74fd6398cee090aea775836a0c3f561",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b6a82688_03b7aef1",
+        "filename": "include/spdk/io_channel.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-01-08T11:32:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1fc15dc4_49b73b44",
       "revId": "f238efc1a74fd6398cee090aea775836a0c3f561",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "e616fdf9_3cac53aa",
+        "filename": "include/spdk/io_channel.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-01-08T11:32:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "46c34280_a1bd1035",
+      "revId": "f238efc1a74fd6398cee090aea775836a0c3f561",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6a7a8c2b_4cc84a36",
         "filename": "include/spdk/io_channel.h",
         "patchSetId": 1
@@ -64,6 +118,24 @@
       "writtenOn": "2018-01-02T14:50:55Z",
       "side": 1,
       "message": "\"A pointer to the poller...\"",
+      "revId": "f238efc1a74fd6398cee090aea775836a0c3f561",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "043e44a5_51134ff6",
+        "filename": "include/spdk/io_channel.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-01-08T11:32:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6a7a8c2b_4cc84a36",
       "revId": "f238efc1a74fd6398cee090aea775836a0c3f561",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "cebc86f0_352adb56",
+        "filename": "include/spdk/io_channel.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-01-08T11:32:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f5a182f4_b50cbc7b",
+      "revId": "f238efc1a74fd6398cee090aea775836a0c3f561",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "440b0045_db17e26a",
         "filename": "include/spdk/io_channel.h",
         "patchSetId": 1
@@ -104,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "f570244f_9b1b8a5a",
+        "filename": "include/spdk/io_channel.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-01-08T11:32:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "440b0045_db17e26a",
+      "revId": "f238efc1a74fd6398cee090aea775836a0c3f561",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c6a418e4_5e656719",
         "filename": "include/spdk/io_channel.h",
         "patchSetId": 1
@@ -115,6 +223,24 @@
       "writtenOn": "2018-01-02T14:50:55Z",
       "side": 1,
       "message": "Just realized that with almost all of these return values that are pointers you are just naming the struct and not saying \"A pointer to..\". I think it\u0027s better to say \"A pointer to\" everywhere so will stop commenting on every instance :)",
+      "revId": "f238efc1a74fd6398cee090aea775836a0c3f561",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3089b982_cef9b8b7",
+        "filename": "include/spdk/io_channel.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-01-08T11:32:51Z",
+      "side": 1,
+      "message": "Sorry, I will revised all of them. Thanks!",
+      "parentUuid": "c6a418e4_5e656719",
       "revId": "f238efc1a74fd6398cee090aea775836a0c3f561",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
