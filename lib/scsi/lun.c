@@ -78,7 +78,7 @@ spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task,
 	if (!task->lun) {
 		/* LUN does not exist */
 		task->response = SPDK_SCSI_TASK_MGMT_RESP_INVALID_LUN;
-		spdk_scsi_lun_complete_mgmt_task(NULL, task);
+		task->cpl_fn(task);
 		return -1;
 	}
 
