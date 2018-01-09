@@ -1,0 +1,225 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1811636a_fef01ad9",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-09T20:50:52Z",
+      "side": 1,
+      "message": "The -\u003e This\n\nI think it is for developers authoring applications that use the SPDK NVMe-oF target library - library being the key word.",
+      "revId": "d74bd0a8387581c74cede6f86c02891d5971c74c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b952c93_9a7f3457",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-09T20:50:52Z",
+      "side": 1,
+      "message": "source code in providing -\u003e source code to provide",
+      "revId": "d74bd0a8387581c74cede6f86c02891d5971c74c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "72a938bb_d188582d",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-09T20:50:52Z",
+      "side": 1,
+      "message": "integrate the SPDK NVMe-oF target library\n\nproviding -\u003e provide",
+      "revId": "d74bd0a8387581c74cede6f86c02891d5971c74c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2bab8661_1136c0e2",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-09T20:50:52Z",
+      "side": 1,
+      "message": "API reference and in some cases -\u003e API reference, but in some cases",
+      "revId": "d74bd0a8387581c74cede6f86c02891d5971c74c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c62115c3_34168142",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-09T20:50:52Z",
+      "side": 1,
+      "message": "Make this a markdown list instead of a code snippet. You also don\u0027t need the ending punctuation on each line. See https://www.stack.nl/~dimitri/doxygen/manual/markdown.html#md_lists\n\nFor #2, there is only one library for the NVMe-oF target, so replace \u0027libraries\u0027 with \u0027library\u0027.",
+      "revId": "d74bd0a8387581c74cede6f86c02891d5971c74c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1622a27e_50d917a7",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-09T20:50:52Z",
+      "side": 1,
+      "message": "I\u0027m not following what you\u0027re trying to say here. Are you saying that the NVMe-oF library can be used independently from the NVMe-oF application?",
+      "revId": "d74bd0a8387581c74cede6f86c02891d5971c74c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4840d372_f205a8d9",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-09T20:50:52Z",
+      "side": 1,
+      "message": "This should say something like:\n\nFor a quick start guide on using the SPDK NVMe-oF target application, refer to @ref nvmf_getting_started.",
+      "revId": "d74bd0a8387581c74cede6f86c02891d5971c74c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ffa1562c_ec3878f2",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-09T20:50:52Z",
+      "side": 1,
+      "message": "I think this should be primarily describing the NVMe-oF target library (lib/nvmf). So your first sentence should be:\n\nThe NVMe-oF target library implements all of the core NVMe-oF functionality required to build an NVMe-oF target application.\n\nAfter that sentence, you need to hit these key points:\n\n1) What are the core \"objects\" that the library exposes? (i.e. subsystems, namespaces, poll groups, listeners, etc.)\n2) What other libraries does NVMe-oF depend on and why?\n3) How does NVMe-oF support multiple transports?\n4) What is the threading model?",
+      "revId": "d74bd0a8387581c74cede6f86c02891d5971c74c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dfa5eaf3_f8360b24",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-09T20:50:52Z",
+      "side": 1,
+      "message": "The most important subsections here should be:\n\n1) Poll groups and freezing/resuming subsystems\n2) How to implement a new transport\n\nThe other stuff can come after that.",
+      "revId": "d74bd0a8387581c74cede6f86c02891d5971c74c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0feb5185_a650be53",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-09T20:50:52Z",
+      "side": 1,
+      "message": "This isn\u0027t true anymore. Now, connections can be placed on any thread. If connections need to coordinate across a subsystem, they pass a message to every other thread that can access that subsystem.",
+      "revId": "d74bd0a8387581c74cede6f86c02891d5971c74c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "67acefcf_a588f888",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-09T20:50:52Z",
+      "side": 1,
+      "message": "This `master_thread` thing is just an artifact of the current implementation and isn\u0027t critical to the design. What is critical is that connections can be handled on any thread and when they need to coordinate, they pass messages to every other thread.",
+      "revId": "d74bd0a8387581c74cede6f86c02891d5971c74c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5cf2493e_be224857",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-09T20:50:52Z",
+      "side": 1,
+      "message": "This state machine is in the target example application and is really just for initialization and tear down. It\u0027s not particularly important to the overall design of the NVMe-oF library itself.",
+      "revId": "d74bd0a8387581c74cede6f86c02891d5971c74c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0da072d_86a69ef6",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-09T20:50:52Z",
+      "side": 1,
+      "message": "This is a key state machine though, unlike the one above. This is how subsystems coordinate to handle a request even though connections may not be on different threads.",
+      "revId": "d74bd0a8387581c74cede6f86c02891d5971c74c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
