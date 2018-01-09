@@ -452,6 +452,30 @@
     },
     {
       "key": {
+        "uuid": "f5bafb65_d4ba4d23",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 791,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-09T08:33:26Z",
+      "side": 1,
+      "message": "There is no inherent limit to number of aliases bdevs can have. It\u0027s just that currently lvols always have single friendly name. If that limitation would change in future, _vbdev_lvol_change_alias() would have to be changed accordingly.",
+      "parentUuid": "db17592c_88662f51",
+      "range": {
+        "startLine": 791,
+        "startChar": 32,
+        "endLine": 791,
+        "endChar": 45
+      },
+      "revId": "67948c5b74a17ce0b4a728876bfe42bc536848a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bc422e24_51771c45",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 37
