@@ -404,7 +404,7 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	}
 
 	ns = _spdk_nvmf_subsystem_get_ns(ctrlr->subsys, nsid);
-	if (ns == NULL || ns->bdev == NULL || ns->is_removed) {
+	if (ns == NULL || ns->bdev == NULL) {
 		SPDK_ERRLOG("Unsuccessful query for nsid %u\n", cmd->nsid);
 		response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
 		response->status.dnr = 1;
