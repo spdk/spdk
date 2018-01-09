@@ -381,7 +381,7 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	struct spdk_bdev_desc *desc;
 	struct spdk_io_channel *ch;
 	struct spdk_nvmf_poll_group *group = req->qpair->group;
-	struct spdk_nvmf_subsystem *subsystem = req->qpair->ctrlr->subsys;
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 
@@ -389,7 +389,21 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	response->status.sc = SPDK_NVME_SC_SUCCESS;
 	nsid = cmd->nsid;
 
-	ns = _spdk_nvmf_subsystem_get_ns(subsystem, nsid);
+	if (spdk_unlikely(ctrlr == NULL)) {
+		SPDK_ERRLOG("I/O command sent before CONNECT\n");
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	if (spdk_unlikely(ctrlr->vcprop.cc.bits.en != 1)) {
+		SPDK_ERRLOG("I/O command sent to disabled controller\n");
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	ns = _spdk_nvmf_subsystem_get_ns(ctrlr->subsys, nsid);
 	if (ns == NULL || ns->bdev == NULL || ns->is_removed) {
 		SPDK_ERRLOG("Unsuccessful query for nsid %u\n", cmd->nsid);
 		response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
@@ -399,7 +413,7 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 
 	bdev = ns->bdev;
 	desc = ns->desc;
-	ch = group->sgroups[subsystem->id].channels[nsid - 1];
+	ch = group->sgroups[ctrlr->subsys->id].channels[nsid - 1];
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_READ:
 		return nvmf_bdev_ctrlr_read_cmd(bdev, desc, ch, req);

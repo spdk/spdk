@@ -1083,15 +1083,29 @@ spdk_nvmf_ctrlr_keep_alive(struct spdk_nvmf_request *req)
 int
 spdk_nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_subsystem *subsystem = req->qpair->ctrlr->subsys;
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+
+	if (ctrlr == NULL) {
+		SPDK_ERRLOG("Admin command sent before CONNECT\n");
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	if (ctrlr->vcprop.cc.bits.en != 1) {
+		SPDK_ERRLOG("Admin command sent to disabled controller\n");
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
 
 	if (req->data && spdk_nvme_opc_get_data_transfer(cmd->opc) == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
 		memset(req->data, 0, req->length);
 	}
 
-	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+	if (ctrlr->subsys->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
 		/* Discovery controllers only support Get Log Page and Identify */
 		switch (cmd->opc) {
 		case SPDK_NVME_OPC_IDENTIFY:

@@ -37,6 +37,7 @@
 #include "transport.h"
 
 #include "spdk/io_channel.h"
+#include "spdk/likely.h"
 #include "spdk/nvme.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/trace.h"
@@ -44,10 +45,9 @@
 #include "spdk_internal/assert.h"
 #include "spdk_internal/log.h"
 
-static void
-spdk_nvmf_request_complete_on_qpair(void *ctx)
+int
+spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_request *req = ctx;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 
 	rsp->sqid = 0;
@@ -61,25 +61,6 @@ spdk_nvmf_request_complete_on_qpair(void *ctx)
 
 	if (spdk_nvmf_transport_req_complete(req)) {
 		SPDK_ERRLOG("Transport request completion error!\n");
-	}
-}
-
-int
-spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
-{
-	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
-
-	if (cmd->opc == SPDK_NVME_OPC_FABRIC ||
-	    req->qpair->type == QPAIR_TYPE_AQ) {
-		struct spdk_io_channel *ch;
-
-		ch = spdk_io_channel_from_ctx(req->qpair->group);
-		/* Pass a message back to the originating thread. */
-		spdk_thread_send_msg(spdk_io_channel_get_thread(ch),
-				     spdk_nvmf_request_complete_on_qpair,
-				     req);
-	} else {
-		spdk_nvmf_request_complete_on_qpair(req);
 	}
 
 	return 0;
@@ -129,60 +110,24 @@ nvmf_trace_command(union nvmf_h2c_msg *h2c_msg, enum spdk_nvmf_qpair_type qpair_
 	}
 }
 
-static void
-spdk_nvmf_request_exec_on_master(void *ctx)
-{
-	struct spdk_nvmf_request *req = ctx;
-	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
-	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
-	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
-	spdk_nvmf_request_exec_status status;
-
-	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
-		status = spdk_nvmf_ctrlr_process_fabrics_cmd(req);
-	} else if (ctrlr == NULL || !ctrlr->vcprop.cc.bits.en) {
-		/* Only Fabric commands are allowed when the controller is disabled */
-		SPDK_ERRLOG("Non-Fabric command sent to disabled controller\n");
-		rsp->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
-		status = SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	} else {
-		status = spdk_nvmf_ctrlr_process_admin_cmd(req);
-	}
-
-	if (status == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
-		spdk_nvmf_request_complete(req);
-	}
-}
-
 void
 spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_qpair *qpair = req->qpair;
-	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
-	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
-	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	spdk_nvmf_request_exec_status status;
 
 	nvmf_trace_command(req->cmd, qpair->type);
 
-	if (spdk_unlikely(cmd->opc == SPDK_NVME_OPC_FABRIC || qpair->type == QPAIR_TYPE_AQ)) {
-		/* Fabric and admin commands are sent to the master core for synchronization. */
-		spdk_thread_send_msg(qpair->transport->tgt->master_thread,
-				     spdk_nvmf_request_exec_on_master,
-				     req);
-		return;
+	if (spdk_unlikely(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC)) {
+		status = spdk_nvmf_ctrlr_process_fabrics_cmd(req);
+	} else if (spdk_unlikely(qpair->type == QPAIR_TYPE_AQ)) {
+		status = spdk_nvmf_ctrlr_process_admin_cmd(req);
+	} else {
+		status = spdk_nvmf_ctrlr_process_io_cmd(req);
 	}
 
-	if (spdk_unlikely(ctrlr == NULL)) {
-		SPDK_ERRLOG("I/O command sent before connect\n");
-		rsp->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
-		spdk_nvmf_request_complete_on_qpair(req);
-		return;
-	}
-
-	status = spdk_nvmf_ctrlr_process_io_cmd(req);
 	if (status == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
-		spdk_nvmf_request_complete_on_qpair(req);
+		spdk_nvmf_request_complete(req);
 	}
 }
 
