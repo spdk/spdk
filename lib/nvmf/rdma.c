@@ -353,6 +353,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	if (rc) {
 		SPDK_ERRLOG("rdma_create_qp failed: errno %d: %s\n", errno, spdk_strerror(errno));
 		rdma_destroy_id(rqpair->cm_id);
+		rqpair->cm_id = NULL;
 		spdk_nvmf_rdma_qpair_destroy(rqpair);
 		return -1;
 	}
@@ -1581,7 +1582,11 @@ spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 	TAILQ_INSERT_TAIL(&poller->qpairs, rqpair, link);
 	rqpair->poller = poller;
 
-	spdk_nvmf_rdma_qpair_initialize(qpair);
+	rc = spdk_nvmf_rdma_qpair_initialize(qpair);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to initialize nvmf_rdma_qpair with qpair=%p\n", qpair);
+		return -1;
+	}
 
 	rqpair->mgmt_channel = spdk_get_io_channel(rtransport);
 	if (!rqpair->mgmt_channel) {
