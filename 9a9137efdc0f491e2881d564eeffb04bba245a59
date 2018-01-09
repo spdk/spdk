@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f539f02_05bbf2c1",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-09T08:14:41Z",
+      "side": 1,
+      "message": "Why is \"running_config\" test commented out?",
+      "range": {
+        "startLine": 100,
+        "startChar": 1,
+        "endLine": 100,
+        "endChar": 17
+      },
+      "revId": "9a9137efdc0f491e2881d564eeffb04bba245a59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e87e4fe0_ac7f79d7",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-09T08:14:41Z",
+      "side": 1,
+      "message": "Again - do we need this change? If there\u0027s no reason then let\u0027s not change the test order.",
+      "range": {
+        "startLine": 50,
+        "startChar": 0,
+        "endLine": 50,
+        "endChar": 36
+      },
+      "revId": "9a9137efdc0f491e2881d564eeffb04bba245a59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
