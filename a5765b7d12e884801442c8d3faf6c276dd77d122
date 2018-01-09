@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5e5aa11c_110b428d",
+        "filename": "test/lib/blobfs/mkfs/mkfs.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-09T18:38:17Z",
+      "side": 1,
+      "message": "Let\u0027s make this g_cluster_size.  Similar to g_bs_dev and g_bdev_name just before it.\n\nWe want to add g_ to the globals to make it clear when they are used that they are global and not local variables.",
+      "revId": "a5765b7d12e884801442c8d3faf6c276dd77d122",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "376998d4_7eb92ce5",
+        "filename": "test/lib/blobfs/mkfs/mkfs.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-09T18:38:17Z",
+      "side": 1,
+      "message": "Hi Cunyin - I meant to add spdk_fs_opts_init() to blobfs.h.  Then blobfs can in turn call spdk_bs_opts_init() to get the default cluster size.",
+      "revId": "a5765b7d12e884801442c8d3faf6c276dd77d122",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e757ef91_5c324750",
+        "filename": "test/lib/blobfs/mkfs/mkfs.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-09T18:38:17Z",
+      "side": 1,
+      "message": "Then here you can do:\n\nspdk_fs_opts_init(\u0026blobfs_opt);\nif (cluster_size) {\n  blobfs_opt.cluster_size \u003d cluster_size;\n}",
+      "revId": "a5765b7d12e884801442c8d3faf6c276dd77d122",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49add556_805332fd",
+        "filename": "test/lib/blobfs/mkfs/mkfs.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-09T18:38:17Z",
+      "side": 1,
+      "message": "Need newline after variable declarations.",
+      "revId": "a5765b7d12e884801442c8d3faf6c276dd77d122",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
