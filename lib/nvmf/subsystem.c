@@ -44,6 +44,7 @@
 
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
+#include "spdk_internal/utf.h"
 
 #include <uuid/uuid.h>
 
@@ -67,6 +68,7 @@ spdk_nvmf_valid_nqn(const char *nqn)
 	size_t len;
 	uuid_t uuid_value;
 	uint i;
+	int bytes_consumed;
 	uint domain_label_length;
 	char *reverse_domain_end;
 	uint reverse_domain_end_index;
@@ -197,6 +199,17 @@ spdk_nvmf_valid_nqn(const char *nqn)
 			}
 		}
 		}
+	}
+
+	i = reverse_domain_end_index + 1;
+	while (i < len) {
+		bytes_consumed = utf8_valid(&nqn[i], &nqn[len]);
+		if (bytes_consumed <= 0) {
+			SPDK_ERRLOG("Invalid domain name in NQN \"%s\". Label names must contain only valid utf-8.\n", nqn);
+			return false;
+		}
+
+		i += bytes_consumed;
 	}
 	return true;
 }

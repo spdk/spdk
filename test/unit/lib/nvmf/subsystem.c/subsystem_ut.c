@@ -323,6 +323,18 @@ nvmf_test_create_subsystem(void)
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
 	spdk_nvmf_subsystem_destroy(subsystem);
 
+	/* Invalid name user string contains an invalid utf-8 character */
+	strncpy(nqn, "nqn.2016-06.io.spdk:\xFFsubsystem1", sizeof(nqn));
+	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	SPDK_CU_ASSERT_FATAL(subsystem == NULL);
+
+	/* Valid name with non-ascii but valid utf-8 characters */
+	strncpy(nqn, "nqn.2016-06.io.spdk:\xe1\x8a\x88subsystem1\xca\x80", sizeof(nqn));
+	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
+	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
+	spdk_nvmf_subsystem_destroy(subsystem);
+
 	/* Invalid uuid (too long) */
 	strncpy(nqn, "nqn.2014-08.org.nvmexpress:uuid:11111111-aaaa-bbdd-FFEE-123456789abcdef",
 		sizeof(nqn));
