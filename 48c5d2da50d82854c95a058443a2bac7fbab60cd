@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bd90316f_7f81e591",
+        "filename": "lib/scsi/scsi_internal.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-09T18:21:02Z",
+      "side": 1,
+      "message": "We try to keep the names of the functions so that they are in the form of:\n\nspdk_noun_action\n\nWhere \"noun\" is typically the first parameter - the one that the action is performed on.\n\nSo LUN should really be passed as a parameter here - since the function name indicates we want the LUN to execute the task.  Otherwise we have LUN in the function name but nothing about LUNs in the parameters.\n\nOr alternatively, just make it spdk_scsi_task_execute().  But that would seem to indicate that the function should be implemented in task.c instead of lun.c.  Maybe long-term it would get moved there but having task.c directly manipulate the lun\u0027s task list isn\u0027t really ideal.\n\nspdk_scsi_lun_task_mgmt_execute() is correctly noted as being inconsistent - but it should really take the lun as a parameter to be consistent.  That should be a separate patch obviously.",
+      "revId": "48c5d2da50d82854c95a058443a2bac7fbab60cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
