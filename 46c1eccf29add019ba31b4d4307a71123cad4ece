@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "59e471e4_47a16b1e",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-09T22:47:15Z",
+      "side": 1,
+      "message": "if (bytes_consumed \u003c\u003d 0) is probably a better check - i is less than len, so you always expect utf8_valid to process something.",
+      "revId": "46c1eccf29add019ba31b4d4307a71123cad4ece",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "95f7f8d0_f1c1860f",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-09T22:47:15Z",
+      "side": 1,
+      "message": "I don\u0027t think you need this else if - just always increment i by bytes_consumed.",
+      "revId": "46c1eccf29add019ba31b4d4307a71123cad4ece",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
