@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4b25f51d_aee62f0b",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 455,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-01-09T09:44:19Z",
+      "side": 1,
+      "message": "Can you make it one line?",
+      "range": {
+        "startLine": 454,
+        "startChar": 0,
+        "endLine": 455,
+        "endChar": 56
+      },
+      "revId": "b84d21199b654ffaca655e11b7c8655e03ae5b57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
