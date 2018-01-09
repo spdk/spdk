@@ -398,7 +398,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 	struct spdk_vhost_dev *vdev = &task->svdev->vdev;
 	struct vring_desc *desc, *desc_table;
 	struct iovec *iovs = task->iovs;
-	uint16_t iovcnt = 0, iovcnt_max = SPDK_VHOST_IOVS_MAX;
+	uint16_t iovcnt = 0;
 	uint32_t desc_table_len, len = 0;
 	int rc;
 
@@ -463,7 +463,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 		}
 
 		/* All remaining descriptors are data. */
-		while (desc && iovcnt < iovcnt_max) {
+		while (desc) {
 			if (spdk_unlikely(!spdk_vhost_vring_desc_is_wr(desc))) {
 				SPDK_WARNLOG("FROM DEV cmd: descriptor nr %" PRIu16" in payload chain is read only.\n", iovcnt);
 				goto invalid_task;
@@ -489,7 +489,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 		 */
 
 		/* Process descriptors up to response. */
-		while (!spdk_vhost_vring_desc_is_wr(desc) && iovcnt < iovcnt_max) {
+		while (!spdk_vhost_vring_desc_is_wr(desc)) {
 			if (spdk_unlikely(spdk_vhost_vring_desc_to_iov(vdev, iovs, &iovcnt, desc))) {
 				goto invalid_task;
 			}
@@ -508,12 +508,6 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 				     vdev->name, task->req_idx);
 			goto invalid_task;
 		}
-	}
-
-	if (iovcnt == iovcnt_max) {
-		SPDK_WARNLOG("Too many IO vectors in chain!\n");
-		task->resp->response = VIRTIO_SCSI_S_ABORTED;
-		goto invalid_task;
 	}
 
 	task->scsi.iovcnt = iovcnt;
