@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6d82572b_cad1866d",
+        "filename": "include/spdk_internal/utf.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-09T22:42:57Z",
+      "side": 1,
+      "message": "Rename this to SPDK_UTF_H_",
+      "revId": "49625da89831d33555efad9a83116eed672be1e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "512647cd_d2d1eb20",
+        "filename": "include/spdk_internal/utf.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-09T22:42:57Z",
+      "side": 1,
+      "message": "This is JSON related. Is there another header where we can put it?",
+      "revId": "49625da89831d33555efad9a83116eed672be1e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
