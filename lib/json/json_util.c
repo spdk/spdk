@@ -31,7 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "json_internal.h"
+#include "spdk_internal/utf.h"
 
 size_t
 spdk_json_val_len(const struct spdk_json_val *val)

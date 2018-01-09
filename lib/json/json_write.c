@@ -31,7 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "json_internal.h"
+#include "spdk_internal/utf.h"
 
 struct spdk_json_write_ctx {
 	spdk_json_write_cb write_cb;

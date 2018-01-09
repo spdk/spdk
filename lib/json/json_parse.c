@@ -31,7 +31,9 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "json_internal.h"
+#include "spdk_internal/utf.h"
+
+#define SPDK_JSON_MAX_NESTING_DEPTH	64
 
 static int
 hex_value(uint8_t c)
