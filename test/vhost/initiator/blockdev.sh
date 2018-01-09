@@ -9,7 +9,7 @@ PLUGIN_DIR=$ROOT_DIR/examples/bdev/fio_plugin
 RPC_PY="$ROOT_DIR/scripts/rpc.py"
 FIO_BIN="/usr/src/fio/fio"
 virtio_bdevs=""
-virtio_nvme_bdevs=""
+virtio_with_unmap=""
 
 function usage()
 {
@@ -77,6 +77,8 @@ function create_bdev_config()
 
 	vbdevs=$(discover_bdevs $ROOT_DIR $BASE_DIR/bdev.conf)
 	virtio_bdevs=$(jq -r '[.[].name] | join(":")' <<< $vbdevs)
+	virtio_with_unmap=$(jq -r '[.[] | select(.supported_io_types.unmap==true).name]
+	 | join(":")' <<< $vbdevs)
 }
 
 timing_enter spdk_vhost_run
@@ -88,8 +90,14 @@ create_bdev_config
 timing_exit create_bdev_config
 
 timing_enter run_spdk_fio
-run_spdk_fio $BASE_DIR/bdev.fio --filename=$virtio_bdevs --spdk_conf=$BASE_DIR/bdev.conf
+run_spdk_fio $BASE_DIR/bdev.fio --filename=$virtio_bdevs --section=job_randwrite --section=job_randrw \
+	--section=job_write --section=job_rw --spdk_conf=$BASE_DIR/bdev.conf
 timing_exit run_spdk_fio
+
+timing_enter run_spdk_fio_unmap
+run_spdk_fio $BASE_DIR/bdev.fio --filename=$virtio_with_unmap --spdk_conf=$BASE_DIR/bdev.conf \
+	--spdk_conf=$BASE_DIR/bdev.conf
+timing_exit run_spdk_fio_unmap
 
 rm -f *.state
 timing_enter spdk_vhost_kill
