@@ -801,6 +801,29 @@
     },
     {
       "key": {
+        "uuid": "e0476981_5a49e69a",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 410,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-09T12:52:55Z",
+      "side": 1,
+      "message": "For example,\n\nFor large read and write, the data transfer is split into sequences made of multiple tasks. First SCSI Data-Out or Data-In is the primary task and subsequent are subtasks.",
+      "range": {
+        "startLine": 409,
+        "startChar": 90,
+        "endLine": 410,
+        "endChar": 102
+      },
+      "revId": "976af51a841c1c5e9c56001d5e71c623a3757e4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c510b5fd_f1fa4829",
         "filename": "doc/iscsi_pg.md",
         "patchSetId": 10
