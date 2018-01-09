@@ -801,6 +801,7 @@ INPUT                  = ../include/spdk \
                          lvol.md \
                          nvme.md \
                          nvme-cli.md \
+                         fio.md \
                          nvmf.md \
                          nvmf_tgt_pg.md \
                          ssd_internals.md \
