@@ -210,7 +210,6 @@ struct spdk_nvmf_rdma_qpair {
 	/* Mgmt channel */
 	struct spdk_io_channel			*mgmt_channel;
 	struct spdk_nvmf_rdma_mgmt_channel	*ch;
-	struct spdk_thread                      *thread;
 };
 
 struct spdk_nvmf_rdma_poller {
