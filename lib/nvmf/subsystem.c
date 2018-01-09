@@ -710,6 +710,9 @@ spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t ns
 {
 	struct spdk_nvmf_ns *ns;
 
+	assert(subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED ||
+	       subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE);
+
 	if (nsid == 0 || nsid > subsystem->max_nsid) {
 		return -1;
 	}
@@ -727,22 +730,26 @@ spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t ns
 }
 
 static void
-_spdk_nvmf_ns_hot_remove(void *ctx)
+_spdk_nvmf_ns_hot_remove(struct spdk_nvmf_subsystem *subsystem,
+			 void *cb_arg, int status)
 {
-	struct spdk_nvmf_ns *ns = ctx;
+	struct spdk_nvmf_ns *ns = cb_arg;
 
 	spdk_nvmf_subsystem_remove_ns(ns->subsystem, ns->id);
+
+	spdk_nvmf_subsystem_resume(subsystem, NULL, NULL);
 }
 
 static void
 spdk_nvmf_ns_hot_remove(void *remove_ctx)
 {
 	struct spdk_nvmf_ns *ns = remove_ctx;
+	int rc;
 
-	ns->is_removed = true;
-	spdk_thread_send_msg(ns->subsystem->tgt->master_thread,
-			     _spdk_nvmf_ns_hot_remove,
-			     ns);
+	rc = spdk_nvmf_subsystem_pause(ns->subsystem, _spdk_nvmf_ns_hot_remove, ns);
+	if (rc) {
+		SPDK_ERRLOG("Unable to pause subsystem to process namespace removal!\n");
+	}
 }
 
 uint32_t
