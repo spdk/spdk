@@ -10,7 +10,7 @@ RPC_PY="$ROOT_DIR/scripts/rpc.py"
 FIO_BIN="/usr/src/fio/fio"
 BDEV_FIO="$BASE_DIR/bdev.fio"
 virtio_bdevs=""
-virtio_nvme_bdevs=""
+virtio_with_unmap=""
 
 function usage()
 {
@@ -46,10 +46,6 @@ if [[ $EUID -ne 0 ]]; then
 	exit 1
 fi
 
-if [ $RUN_NIGHTLY -eq 1 ]; then
-	BDEV_FIO="$BASE_DIR/bdev_nightly.fio"
-fi
-
 trap 'rm -f *.state; error_exit "${FUNCNAME}""${LINENO}"' ERR SIGTERM SIGABRT
 function run_spdk_fio() {
 	LD_PRELOAD=$PLUGIN_DIR/fio_plugin $FIO_BIN --ioengine=spdk_bdev\
@@ -82,6 +78,8 @@ function create_bdev_config()
 
 	vbdevs=$(discover_bdevs $ROOT_DIR $BASE_DIR/bdev.conf)
 	virtio_bdevs=$(jq -r '[.[].name] | join(":")' <<< $vbdevs)
+	virtio_with_unmap=$(jq -r '[.[] | select(.supported_io_types.unmap==true).name]
+	 | join(":")' <<< $vbdevs)
 }
 
 timing_enter spdk_vhost_run
@@ -93,7 +91,14 @@ create_bdev_config
 timing_exit create_bdev_config
 
 timing_enter run_spdk_fio
-run_spdk_fio $BDEV_FIO --filename=$virtio_bdevs --spdk_conf=$BASE_DIR/bdev.conf
+run_spdk_fio $BASE_DIR/bdev.fio --filename=$virtio_bdevs --section=job_randwrite --section=job_randrw \
+	--section=job_write --section=job_rw --spdk_conf=$BASE_DIR/bdev.conf
+timing_exit run_spdk_fio
+
+timing_enter run_spdk_fio
+run_spdk_fio $BASE_DIR/bdev.fio --filename=$virtio_with_unmap --section=job_randwrite \
+	--section=job_randrw --section=job_unmap_trim_sequential --section=job_unmap_trim_random \
+	--section=job_unmap_write --spdk_conf=$BASE_DIR/bdev.conf --spdk_conf=$BASE_DIR/bdev.conf
 timing_exit run_spdk_fio
 
 rm -f *.state
