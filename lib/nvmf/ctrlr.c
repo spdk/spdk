@@ -813,7 +813,7 @@ spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_subsystem *subsystem,
 	struct spdk_nvmf_ns *ns;
 
 	ns = _spdk_nvmf_subsystem_get_ns(subsystem, cmd->nsid);
-	if (ns == NULL || ns->bdev == NULL || ns->is_removed) {
+	if (ns == NULL || ns->bdev == NULL) {
 		SPDK_ERRLOG("Identify Namespace for invalid NSID %u\n", cmd->nsid);
 		rsp->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -913,7 +913,7 @@ spdk_nvmf_ctrlr_identify_active_ns_list(struct spdk_nvmf_subsystem *subsystem,
 
 	for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
 	     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
-		if (ns->id <= cmd->nsid || ns->is_removed) {
+		if (ns->id <= cmd->nsid) {
 			continue;
 		}
 
