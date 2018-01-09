@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8ec76048_9f9ea048",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 363,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-09T08:59:54Z",
+      "side": 1,
+      "message": "In blobstore.c its actually the other way around, spdk_bs_create_blob() calls spdk_bs_create_blob_ext() with NULL opts parameter.\n\nCan we move contents of current stub for spdk_bs_create_blob() in here ?\n\nBesides that I don\u0027t there will be many UTs for thin_provision in lvol/vbdev_lvol, most will be checked functionally. Yet can we at least assert that passing thin_provision flag to blob_opts works by having one call set to true ?",
+      "range": {
+        "startLine": 363,
+        "startChar": 1,
+        "endLine": 363,
+        "endChar": 40
+      },
+      "revId": "a1c31a94378d838873ba9dee273beacd8a31c41c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
