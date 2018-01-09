@@ -43,6 +43,7 @@
 # Tools {#tools}
 
 - @ref nvme-cli
+- @ref fio
 
 # Performance Reports {#performancereports}
 
