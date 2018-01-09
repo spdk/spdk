@@ -2,6 +2,75 @@
   "comments": [
     {
       "key": {
+        "uuid": "406f1551_1af8c2e8",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-09T00:17:21Z",
+      "side": 1,
+      "message": "as same as below",
+      "range": {
+        "startLine": 188,
+        "startChar": 0,
+        "endLine": 188,
+        "endChar": 56
+      },
+      "revId": "7e106f6f719938f9554b9f5afe0d66ddb1675cca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c48845b3_136ca1d5",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-09T00:17:21Z",
+      "side": 1,
+      "message": "abstraction by scsi_dev is necessary?",
+      "range": {
+        "startLine": 199,
+        "startChar": 0,
+        "endLine": 199,
+        "endChar": 24
+      },
+      "revId": "7e106f6f719938f9554b9f5afe0d66ddb1675cca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b9a5464d_9347c9fc",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-09T00:17:21Z",
+      "side": 1,
+      "message": "not used anymore.",
+      "range": {
+        "startLine": 199,
+        "startChar": 25,
+        "endLine": 199,
+        "endChar": 51
+      },
+      "revId": "7e106f6f719938f9554b9f5afe0d66ddb1675cca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "62cf9089_d4c77703",
         "filename": "lib/scsi/lun.c",
         "patchSetId": 2
@@ -13,6 +82,52 @@
       "writtenOn": "2018-01-08T23:15:59Z",
       "side": 1,
       "message": "should just be spdk_scsi_lun_execute_task now (drop the \"s\")",
+      "revId": "7e106f6f719938f9554b9f5afe0d66ddb1675cca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27170ad2_1bc387eb",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-09T00:17:21Z",
+      "side": 1,
+      "message": "do we have to pass lun as a parameter? spdk_scsi_lun_task_mgmt_execute gets lun internally.",
+      "range": {
+        "startLine": 154,
+        "startChar": 28,
+        "endLine": 154,
+        "endChar": 54
+      },
+      "revId": "7e106f6f719938f9554b9f5afe0d66ddb1675cca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "86ad29e6_9d117c38",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 369,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-09T00:17:21Z",
+      "side": 1,
+      "message": "spdk_scsi_lun_complete_mgmt_task(lun, task) does not use but spdk_scsi_lun_hotplug(lun) uses this function.\n\nChoosing either one may be better if possible.",
+      "range": {
+        "startLine": 369,
+        "startChar": 0,
+        "endLine": 369,
+        "endChar": 31
+      },
       "revId": "7e106f6f719938f9554b9f5afe0d66ddb1675cca",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
