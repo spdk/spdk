@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4194f67a_936d3c46",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 41
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-09T16:58:05Z",
+      "side": 1,
+      "message": "The whitespace is messed up here between the type and the name. We either indent with tabs or a single space, but never multiple spaces.",
+      "revId": "49d2144ff1938de5a05c39051c7354efc67ffbfc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
