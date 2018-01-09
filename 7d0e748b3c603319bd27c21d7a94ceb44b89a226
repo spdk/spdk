@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2ba39f23_d425866f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2777,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-09T19:53:17Z",
+      "side": 1,
+      "message": "I think you meant to remove line 2778.",
+      "revId": "7d0e748b3c603319bd27c21d7a94ceb44b89a226",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
