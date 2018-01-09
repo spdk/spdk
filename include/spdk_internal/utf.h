@@ -31,8 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPDK_JSON_INTERNAL_H_
-#define SPDK_JSON_INTERNAL_H_
+#ifndef SPDK_UTF_H_
+#define SPDK_UTF_H_
 
 #include "spdk/stdinc.h"
 
@@ -40,8 +40,6 @@
 #include "spdk/json.h"
 #include "spdk/likely.h"
 #include "spdk/string.h"
-
-#define SPDK_JSON_MAX_NESTING_DEPTH	64
 
 static inline bool
 utf8_tail(uint8_t c)
