@@ -1,0 +1,15 @@
+A description of the NVMe Qualified Name form in Extended Backus Naur form for submission to the NVMe spec committee
+
+
+<NVMe Qualified Name> ::= <NVMe-oF Discovery NQN> | <NVMe UUID NQN> | <NVMe Domain NQN>
+<NVMe-oF Discovery NQN> ::= "nqn.2014-08.org.nvmexpress.discovery"
+<NVMe UUID NQN> ::= "nqn.2014-08.org.nvmexpress:uuid:" <string_uuid>
+<string_uuid> ::= 8 * <hex digit>, '-', 3 * (4 * <hex digit> '-'), 12 * <hex digit>
+<hex digit> ::= 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
+<NVMe Domain NQN> ::= "nqn.", <year>, '-', <month>, '.', <reverse domain>, ':', <utf-8 string>
+year ::= 4 * <digit>
+month ::= '0', <digit> | '1', '1' | '2'
+digit ::= '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
+<reverse domain> (* defined in rfc 1034 *)
+<utf-8 string> (* defined in rfc 3629 *)
+
