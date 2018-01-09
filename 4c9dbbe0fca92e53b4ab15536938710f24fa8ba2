@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "614d4f67_8cbc63f4",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 388,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-01-09T07:00:53Z",
+      "side": 1,
+      "message": "You may need to move the following abort() for empty task_list to here, or just drop the abort().",
+      "revId": "4c9dbbe0fca92e53b4ab15536938710f24fa8ba2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
