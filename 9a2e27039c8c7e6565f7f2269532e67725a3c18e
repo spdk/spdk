@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "31b8284f_02c8488d",
+        "filename": "NVMe-Qualified-Name-Backus-Naur.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-09T23:01:38Z",
+      "side": 1,
+      "message": "In eBNF, you just use \u0027\u003d\u0027, not \u0027::\u003d\u0027. Also, variable names in eBNF don\u0027t have \u003c\u003e around them - you just write the string.",
+      "revId": "9a2e27039c8c7e6565f7f2269532e67725a3c18e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cdbe3720_d2dcce23",
+        "filename": "NVMe-Qualified-Name-Backus-Naur.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-09T23:01:38Z",
+      "side": 1,
+      "message": "You need a \u0027,\u0027 to concatenate the NQN with string_uuid.",
+      "revId": "9a2e27039c8c7e6565f7f2269532e67725a3c18e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8fd1517b_df4e8c77",
+        "filename": "NVMe-Qualified-Name-Backus-Naur.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-09T23:01:38Z",
+      "side": 1,
+      "message": "Is the \u0027:\u0027 part required or optional?",
+      "revId": "9a2e27039c8c7e6565f7f2269532e67725a3c18e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c97e212_63914c11",
+        "filename": "NVMe-Qualified-Name-Backus-Naur.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-09T23:01:38Z",
+      "side": 1,
+      "message": "I don\u0027t think this month definition is right. I think you need () around \u00270\u0027, digit to make it clear. You could almost just write out the twelve options to make it easy though.",
+      "revId": "9a2e27039c8c7e6565f7f2269532e67725a3c18e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
