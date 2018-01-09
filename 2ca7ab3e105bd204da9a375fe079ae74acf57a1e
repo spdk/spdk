@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d102bf78_cdf8c9a7",
+        "filename": "doc/benchmarking.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-01-09T22:59:21Z",
+      "side": 1,
+      "message": "I like this description. You covered the topics in a really understandable way. The only question I still have at the end of it was how can I know if my device is being bottlenecked by garbage collection. However, I can see how the answer to that question may be outside of the scope of this document.\nIs there a specific rule of thumb that users can use to determine how to manage their workloads to see maximum random write performance based on the factory over-provisioning of their device? \nI imagine another way for the user to check would be to start a random write benchmark on a small portion of the disk (i.e. by reserving a large portion of the disk in software)and then increase the portion of the disk to which they are writing until they see a performance dip.\nDo we currently have a best known method?",
+      "revId": "2ca7ab3e105bd204da9a375fe079ae74acf57a1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
