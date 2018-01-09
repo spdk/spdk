@@ -71,6 +71,30 @@
     },
     {
       "key": {
+        "uuid": "ca5ef7fa_71506c0e",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-09T09:41:12Z",
+      "side": 1,
+      "message": "unlike lun api, the scsi_dev functions are public.\nlun api - scsi_internal.h\nscsi_dev - scsi.h\n\nWe might ask if the whole scsi_dev abstraction is required. It could be integrated into lun. Or actually the other way - luns could be integrated into scsi_dev.",
+      "parentUuid": "c48845b3_136ca1d5",
+      "range": {
+        "startLine": 199,
+        "startChar": 0,
+        "endLine": 199,
+        "endChar": 24
+      },
+      "revId": "7e106f6f719938f9554b9f5afe0d66ddb1675cca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "62cf9089_d4c77703",
         "filename": "lib/scsi/lun.c",
         "patchSetId": 2
@@ -111,6 +135,48 @@
     },
     {
       "key": {
+        "uuid": "f56b01bd_4eb4cc42",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-09T09:41:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "62cf9089_d4c77703",
+      "revId": "7e106f6f719938f9554b9f5afe0d66ddb1675cca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a93ae3c_83b9e509",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-09T09:41:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "27170ad2_1bc387eb",
+      "range": {
+        "startLine": 154,
+        "startChar": 28,
+        "endLine": 154,
+        "endChar": 54
+      },
+      "revId": "7e106f6f719938f9554b9f5afe0d66ddb1675cca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "86ad29e6_9d117c38",
         "filename": "lib/scsi/lun.c",
         "patchSetId": 2
@@ -122,6 +188,30 @@
       "writtenOn": "2018-01-09T00:17:21Z",
       "side": 1,
       "message": "spdk_scsi_lun_complete_mgmt_task(lun, task) does not use but spdk_scsi_lun_hotplug(lun) uses this function.\n\nChoosing either one may be better if possible.",
+      "range": {
+        "startLine": 369,
+        "startChar": 0,
+        "endLine": 369,
+        "endChar": 31
+      },
+      "revId": "7e106f6f719938f9554b9f5afe0d66ddb1675cca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c72e8b37_647351da",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 369,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-09T09:41:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "86ad29e6_9d117c38",
       "range": {
         "startLine": 369,
         "startChar": 0,
