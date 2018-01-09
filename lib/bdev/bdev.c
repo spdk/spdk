@@ -123,6 +123,8 @@ struct spdk_bdev_desc {
 };
 
 #define BDEV_CH_RESET_IN_PROGRESS	(1 << 0)
+#define BDEV_CH_QOS_IS_ENABLED		(1 << 1)
+#define BDEV_CH_QOS_MASTER_CHANNEL	(1 << 2)
 
 struct spdk_bdev_channel {
 	struct spdk_bdev	*bdev;
@@ -155,6 +157,13 @@ struct spdk_bdev_channel {
 	uint64_t		nomem_threshold;
 
 	uint32_t		flags;
+
+	bdev_io_tailq_t		qos_io;
+	uint64_t		qos_local_assigned;
+	uint64_t		qos_local_used;
+	uint64_t		qos_local_throttled;
+	struct spdk_poller	*qos_poller;
+	bool			qos_slice_requesting;
 
 #ifdef SPDK_CONFIG_VTUNE
 	uint64_t		start_tsc;
@@ -774,13 +783,11 @@ spdk_bdev_put_io(struct spdk_bdev_io *bdev_io)
 }
 
 static void
-spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
+_spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_bdev *bdev = bdev_io->bdev;
 	struct spdk_bdev_channel *bdev_ch = bdev_io->ch;
 	struct spdk_io_channel *ch = bdev_ch->channel;
-
-	assert(bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING);
 
 	bdev_ch->io_outstanding++;
 	bdev_io->in_submit_request = true;
@@ -798,6 +805,46 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
 	bdev_io->in_submit_request = false;
+}
+
+static void
+spdk_bdev_qos_channel_get_slice_start(struct spdk_bdev *bdev,
+				      struct spdk_bdev_channel *bdev_ch,
+				      uint64_t slice_req);
+
+static void
+spdk_bdev_qos_io_submit(struct spdk_bdev_io *bdev_io, struct spdk_bdev_channel *bdev_ch)
+{
+	struct spdk_bdev *bdev = bdev_ch->bdev;
+	uint64_t slice_req;
+
+	if (bdev_ch->qos_local_used < bdev_ch->qos_local_assigned) {
+		bdev_ch->qos_local_used++;
+		_spdk_bdev_io_submit(bdev_io);
+		return;
+	}
+
+	bdev_ch->qos_local_throttled++;
+	TAILQ_INSERT_TAIL(&bdev_ch->qos_io, bdev_io, link);
+
+	if (!bdev_ch->qos_slice_requesting) {
+		slice_req = bdev_ch->qos_local_assigned - bdev_ch->qos_local_used;
+		spdk_bdev_qos_channel_get_slice_start(bdev, bdev_ch, slice_req);
+	}
+}
+
+static void
+spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
+{
+	struct spdk_bdev_channel *bdev_ch = bdev_io->ch;
+
+	assert(bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING);
+
+	if (!(bdev_ch->flags & BDEV_CH_QOS_IS_ENABLED)) {
+		_spdk_bdev_io_submit(bdev_io);
+	} else {
+		spdk_bdev_qos_io_submit(bdev_io, bdev_ch);
+	}
 }
 
 static void
@@ -843,6 +890,188 @@ spdk_bdev_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 	return 0;
 }
 
+static void
+spdk_bdev_qos_io_schedule(struct spdk_bdev_channel *bdev_ch)
+{
+	struct spdk_bdev_io *bdev_io, *tmp_io;
+	uint64_t slice_req, required, assigned;
+
+	TAILQ_FOREACH_SAFE(bdev_io, &bdev_ch->qos_io, link, tmp_io) {
+		if (bdev_ch->qos_local_used < bdev_ch->qos_local_assigned) {
+			bdev_ch->qos_local_throttled--;
+			bdev_ch->qos_local_used++;
+			TAILQ_REMOVE(&bdev_ch->qos_io, bdev_io, link);
+
+			_spdk_bdev_io_submit(bdev_io);
+		} else {
+			break;
+		}
+	}
+
+	if (!bdev_ch->qos_slice_requesting) {
+		required = bdev_ch->qos_local_throttled + bdev_ch->qos_local_used;
+		assigned = bdev_ch->qos_local_assigned;
+
+		if (required > assigned) {
+			slice_req = required - assigned;
+			spdk_bdev_qos_channel_get_slice_start(bdev_ch->bdev, bdev_ch, slice_req);
+		}
+	}
+}
+
+struct spdk_bdev_qos_ch_get_slice_ctx {
+	struct spdk_bdev_channel	*orig_ch;
+	uint64_t			slice_req;
+	uint64_t			slice_rsp;
+};
+
+static void
+spdk_bdev_qos_channel_get_slice_done(struct spdk_io_channel_iter *i,
+				     int status)
+{
+	struct spdk_bdev_qos_ch_get_slice_ctx *ctx;
+	struct spdk_bdev_channel *orig_ch;
+
+	ctx = spdk_io_channel_iter_get_ctx(i);
+	orig_ch = ctx->orig_ch;
+
+	orig_ch->qos_local_assigned += ctx->slice_rsp;
+	orig_ch->qos_slice_requesting = false;
+
+	free(ctx);
+
+	spdk_bdev_qos_io_schedule(orig_ch);
+}
+
+static void
+spdk_bdev_qos_channel_get_slice(struct spdk_io_channel_iter *i)
+{
+	struct spdk_bdev_qos_ch_get_slice_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_bdev *bdev = spdk_io_channel_iter_get_io_device(i);
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_bdev_channel *bdev_ch = spdk_io_channel_get_ctx(ch);
+
+	uint64_t quota, assigned, slice_size, slice_req, slice_rsp;
+
+	if (!(bdev_ch->flags & BDEV_CH_QOS_MASTER_CHANNEL)) {
+		spdk_for_each_channel_continue(i, 0);
+		return;
+	}
+
+	quota = bdev->qos_global_quota;
+	assigned = bdev->qos_global_assigned;
+	slice_size = bdev->qos_slice_size;
+
+	slice_req = ((ctx->slice_req + slice_size - 1) / slice_size) * slice_size;
+
+	if (assigned + slice_req <= quota) {
+		slice_rsp = slice_req;
+	} else if (assigned <= quota) {
+		slice_rsp = slice_req + assigned - quota;
+	} else {
+		slice_rsp = 0;
+	}
+
+	bdev->qos_global_assigned += slice_rsp;
+	ctx->slice_rsp = slice_rsp;
+
+	spdk_for_each_channel_continue(i, 1);
+}
+
+static void
+spdk_bdev_qos_channel_get_slice_start(struct spdk_bdev *bdev,
+				      struct spdk_bdev_channel *bdev_ch,
+				      uint64_t slice_req)
+{
+	struct spdk_bdev_qos_ch_get_slice_ctx *ctx;
+
+	bdev_ch->qos_slice_requesting = true;
+
+	ctx = calloc(1, sizeof(*ctx));
+
+	ctx->orig_ch = bdev_ch;
+	ctx->slice_req = slice_req;
+
+	spdk_for_each_channel(bdev, spdk_bdev_qos_channel_get_slice, ctx,
+			      spdk_bdev_qos_channel_get_slice_done);
+}
+
+
+static void
+spdk_bdev_qos_channel_io_refresh_start(struct spdk_io_channel_iter *i)
+{
+	struct spdk_bdev *bdev = spdk_io_channel_iter_get_io_device(i);
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_bdev_channel *bdev_ch = spdk_io_channel_get_ctx(ch);
+
+	uint64_t used, assigned, slice_req;
+
+	spdk_for_each_channel_continue(i, 0);
+
+	used = bdev_ch->qos_local_used;
+	assigned = bdev_ch->qos_local_assigned;
+
+	if (used > assigned) {
+		slice_req = used - assigned;
+		spdk_bdev_qos_channel_get_slice_start(bdev, bdev_ch, slice_req);
+	}
+}
+
+static void
+spdk_bdev_qos_master_ch_io_refresh(void *arg)
+{
+	struct spdk_bdev_channel *bdev_ch = arg;
+	struct spdk_bdev *bdev = bdev_ch->bdev;
+
+	bdev->qos_global_assigned = 0;
+
+	spdk_for_each_channel(bdev, spdk_bdev_qos_channel_io_refresh_start,
+			      NULL, NULL);
+}
+
+static void
+spdk_bdev_qos_channel_enable(struct spdk_bdev *bdev,
+			     struct spdk_bdev_channel *bdev_ch)
+{
+	bdev_ch->flags |= BDEV_CH_QOS_IS_ENABLED;
+
+	spdk_bdev_qos_channel_get_slice_start(bdev, bdev_ch, 1);
+}
+
+static void
+spdk_bdev_qos_master_ch_enable_done(struct spdk_io_channel_iter *i,
+				    int status)
+{
+	struct spdk_bdev *bdev = spdk_io_channel_iter_get_io_device(i);
+	struct spdk_bdev_channel *bdev_ch = spdk_io_channel_iter_get_ctx(i);
+
+	spdk_bdev_qos_channel_enable(bdev, bdev_ch);
+}
+
+static void
+spdk_bdev_qos_master_ch_enable(struct spdk_io_channel_iter *i)
+{
+	struct spdk_bdev *bdev = spdk_io_channel_iter_get_io_device(i);
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_bdev_channel *bdev_ch = spdk_io_channel_get_ctx(ch);
+
+	bdev->qos_master_channel = bdev_ch;
+	bdev_ch->qos_poller = spdk_poller_register(spdk_bdev_qos_master_ch_io_refresh,
+			      bdev_ch, bdev->qos_period);
+	bdev_ch->flags |= BDEV_CH_QOS_MASTER_CHANNEL;
+
+	spdk_for_each_channel_continue(i, 1);
+}
+
+static void
+spdk_bdev_qos_master_ch_enable_start(struct spdk_bdev *bdev,
+				     struct spdk_bdev_channel *bdev_ch)
+{
+	/* the channel found first will become the master channel */
+	spdk_for_each_channel(bdev, spdk_bdev_qos_master_ch_enable, bdev_ch,
+			      spdk_bdev_qos_master_ch_enable_done);
+}
+
 static int
 spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 {
@@ -867,6 +1096,17 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 	TAILQ_INIT(&ch->nomem_io);
 	ch->nomem_threshold = 0;
 	ch->flags = 0;
+
+	TAILQ_INIT(&ch->qos_io);
+	ch->qos_local_assigned = 0;
+	ch->qos_local_used = 0;
+	ch->qos_local_throttled = 0;
+	ch->qos_poller = 0;
+	ch->qos_slice_requesting = false;
+
+	if (bdev->qos_is_enabled) {
+		spdk_bdev_qos_master_ch_enable_start(bdev, ch);
+	}
 
 #ifdef SPDK_CONFIG_VTUNE
 	{

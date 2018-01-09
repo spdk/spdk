@@ -263,6 +263,24 @@ struct spdk_bdev {
 
 	/** points to a reset bdev_io if one is in progress. */
 	struct spdk_bdev_io *reset_in_progress;
+
+	/** This is set when qos is enabled */
+	bool qos_is_enabled;
+
+	/** Master channel for qos */
+	struct spdk_bdev_channel *qos_master_channel;
+
+	/** Quota per period of rate limiting for the bdev */
+	uint64_t qos_global_quota;
+
+	/** Assigned amount to any io_channel of the bdev */
+	uint64_t qos_global_assigned;
+
+	/** Refresh period of rate limiting for the bdev */
+	uint64_t qos_period;
+
+	/** Size of slice of rate limiting */
+	uint64_t qos_slice_size;
 };
 
 typedef void (*spdk_bdev_io_get_buf_cb)(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
