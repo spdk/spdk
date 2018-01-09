@@ -71,6 +71,30 @@
     },
     {
       "key": {
+        "uuid": "575af44d_44d65f7a",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-01-09T09:11:06Z",
+      "side": 1,
+      "message": "What about FreeBSD?",
+      "parentUuid": "1bf51cb7_949c535d",
+      "range": {
+        "startLine": 227,
+        "startChar": 4,
+        "endLine": 237,
+        "endChar": 20
+      },
+      "revId": "be470ef2d79c31dd9728f3f0556b274523cf513c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9daa9019_422edbc5",
         "filename": "test/vhost/hotplug/common.sh",
         "patchSetId": 2
