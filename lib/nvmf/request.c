@@ -118,6 +118,19 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 
 	nvmf_trace_command(req->cmd, qpair->type);
 
+	/* Check if the subsystem is paused (if there is a subsystem) */
+	if (qpair->ctrlr) {
+		if (qpair->group->sgroups[qpair->ctrlr->subsys->id].state != SPDK_NVMF_SUBSYSTEM_ACTIVE) {
+			struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+
+			/* TODO: Queue requests here instead of failing */
+			rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+			spdk_nvmf_request_complete(req);
+			return;
+		}
+	}
+
 	if (spdk_unlikely(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC)) {
 		status = spdk_nvmf_ctrlr_process_fabrics_cmd(req);
 	} else if (spdk_unlikely(qpair->type == QPAIR_TYPE_AQ)) {
