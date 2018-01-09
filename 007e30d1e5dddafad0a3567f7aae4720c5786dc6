@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ec27bde5_3d07e997",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-01-09T23:54:46Z",
+      "side": 1,
+      "message": "double is.",
+      "range": {
+        "startLine": 25,
+        "startChar": 22,
+        "endLine": 25,
+        "endChar": 23
+      },
+      "revId": "007e30d1e5dddafad0a3567f7aae4720c5786dc6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
