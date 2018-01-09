@@ -58,8 +58,6 @@ enum spdk_nvmf_subsystem_state {
 struct spdk_nvmf_tgt {
 	struct spdk_nvmf_tgt_opts		opts;
 
-	struct spdk_thread			*master_thread;
-
 	uint64_t				discovery_genctr;
 
 	/* Array of subsystem pointers of size max_sid indexed by sid */

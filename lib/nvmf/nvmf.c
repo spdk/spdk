@@ -160,13 +160,6 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 		tgt->opts = *opts;
 	}
 
-	tgt->master_thread = spdk_get_thread();
-	if (!tgt->master_thread) {
-		free(tgt);
-		SPDK_ERRLOG("Call spdk_allocate_thread() prior to calling spdk_nvmf_tgt_create()\n");
-		return NULL;
-	}
-
 	tgt->discovery_genctr = 0;
 	tgt->discovery_log_page = NULL;
 	tgt->discovery_log_page_size = 0;
