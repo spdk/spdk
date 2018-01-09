@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c6156692_0fc9c380",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 731,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-09T08:33:26Z",
+      "side": 1,
+      "message": "This change requires modification of test script.\nCurrently test pool fails due to vhost lvol tests that were based on bdev-\u003ename to select devices. Now bdev alias should be used instead.\n\n\nFor this particular test pool fail please see spdk/test/vhost/lvol/lvol_test.sh:181\n\n# Get all lvol bdevs associated with this VM number\nbdevs\u003d$(jq -r \"map(select(.product_name\u003d\u003d\\\"Logical Volume\\\") |\nselect(.name | contains(\\\"$vm\\\")) | .name) | join(\\\" \\\")\" \u003c\u003c\u003c \"$bdev_info\")",
+      "range": {
+        "startLine": 731,
+        "startChar": 1,
+        "endLine": 731,
+        "endChar": 56
+      },
+      "revId": "e31dca6b5dd09fab7564f7eec73d6cbefe58fb60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
