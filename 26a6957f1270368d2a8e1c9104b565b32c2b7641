@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "2989b72d_97cf7c59",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 576,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-01-10T14:14:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8be1a32a_d494c4a0",
+      "range": {
+        "startLine": 574,
+        "startChar": 1,
+        "endLine": 576,
+        "endChar": 2
+      },
+      "revId": "26a6957f1270368d2a8e1c9104b565b32c2b7641",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0206090f_5d330a91",
         "filename": "lib/event/reactor.c",
         "patchSetId": 15
@@ -71,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "19cb0e71_7c4adeb3",
+        "filename": "lib/iscsi/portal_grp.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-01-10T14:14:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "99721b6e_7b3c6ad6",
+      "range": {
+        "startLine": 124,
+        "startChar": 1,
+        "endLine": 124,
+        "endChar": 2
+      },
+      "revId": "26a6957f1270368d2a8e1c9104b565b32c2b7641",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "01e00bae_da4b1278",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 15
@@ -82,6 +130,30 @@
       "writtenOn": "2018-01-08T17:58:31Z",
       "side": 1,
       "message": "I think it is worth creating an \"out\" goto label for freeing this cpumask \u0026 returning the rc;",
+      "range": {
+        "startLine": 533,
+        "startChar": 2,
+        "endLine": 534,
+        "endChar": 17
+      },
+      "revId": "26a6957f1270368d2a8e1c9104b565b32c2b7641",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ba375b2_8c37efa9",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 534,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-01-10T14:14:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "01e00bae_da4b1278",
       "range": {
         "startLine": 533,
         "startChar": 2,
@@ -117,6 +189,30 @@
     },
     {
       "key": {
+        "uuid": "de1ed94e_2e854b47",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 478,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-01-10T14:14:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "115a20ca_506a5c6f",
+      "range": {
+        "startLine": 475,
+        "startChar": 1,
+        "endLine": 478,
+        "endChar": 27
+      },
+      "revId": "26a6957f1270368d2a8e1c9104b565b32c2b7641",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "778c248a_a9afa33c",
         "filename": "test/unit/lib/util/cpuset.c/Makefile",
         "patchSetId": 15
@@ -128,6 +224,30 @@
       "writtenOn": "2018-01-08T17:58:31Z",
       "side": 1,
       "message": "this is not required. There was a patch from Daniel Verkamp that removed such line from all Makefiles at once. (I\u0027m too lazy to look it up now), so this is probably a leftover from a rebase.\n\nThese flags are required only when referencing DPDK directly - which is not the case here.",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 23
+      },
+      "revId": "26a6957f1270368d2a8e1c9104b565b32c2b7641",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "94b412e0_e044ef7d",
+        "filename": "test/unit/lib/util/cpuset.c/Makefile",
+        "patchSetId": 15
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-01-10T14:14:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "778c248a_a9afa33c",
       "range": {
         "startLine": 39,
         "startChar": 0,
