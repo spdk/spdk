@@ -5,6 +5,16 @@ set -e
 rootdir=$(readlink -f $(dirname $0))/..
 source "$rootdir/scripts/common.sh"
 
+function nvme_whitelist_contains() {
+	for i in ${NVME_WHITELIST[@]}
+	do
+		if [ "$i" == "$1" ] ; then
+			 return 1
+		fi
+	done
+	return 0
+}
+
 function linux_bind_driver() {
 	bdf="$1"
 	driver_name="$2"
@@ -98,6 +108,10 @@ function configure_linux_pci {
 	for bdf in $(iter_pci_class_code 01 08 02); do
 		blkname=''
 		get_nvme_name_from_bdf "$bdf" blkname
+		if [[ ${#NVME_WHITELIST[@]} != 0 ]] && nvme_whitelist_contains $bdf == "0" ; then
+			echo "Skipping un-whitelisted NVMe controller $blkname ($bdf)"
+			continue
+		fi
 		if [ "$blkname" != "" ]; then
 			mountpoints=$(lsblk /dev/$blkname --output MOUNTPOINT -n | wc -w)
 		else
@@ -378,6 +392,8 @@ fi
 
 : ${HUGEMEM:=2048}
 : ${SKIP_PCI:=0}
+: ${NVME_WHITELIST:=""}
+declare -a NVME_WHITELIST=(${NVME_WHITELIST})
 
 if [ `uname` = Linux ]; then
 	HUGEPGSZ=$(( `grep Hugepagesize /proc/meminfo | cut -d : -f 2 | tr -dc '0-9'` ))
