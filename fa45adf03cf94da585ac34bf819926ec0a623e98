@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fb26598a_2d2c56c9",
+        "filename": "doc/userspace.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-10T15:47:36Z",
+      "side": 1,
+      "message": "this sentence still isn\u0027t right, either make it \"polls\" instead of \"poll\" or add the word \"elects\" after instead or something.  Read the sentence as is again and make sure its not just in my head",
+      "revId": "fa45adf03cf94da585ac34bf819926ec0a623e98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
