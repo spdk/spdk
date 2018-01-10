@@ -273,6 +273,9 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
     rpc = spdk_rpc(rpc_py)
     portal_tag = '1'
     initiator_tag = '1'
+    output = rpc.get_iscsi_global_params()
+    jsonvalues = json.loads(output)
+    nodebase = jsonvalues['node_base']
     output = rpc.get_target_nodes()
     jsonvalues = json.loads(output)
     verify(not jsonvalues, 1,
@@ -290,11 +293,12 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
     jsonvalues = json.loads(output)
     verify(len(jsonvalues) == 1, 1,
            "get_target_nodes returned {} nodes, expected 1".format(len(jsonvalues)))
-    verify(jsonvalues[0]['luns'][0]['bdev_name'] == "Malloc" + str(rpc_param['lun_total']), 1,
+    bdev_name = jsonvalues[0]['luns'][0]['bdev_name']
+    verify(bdev_name == "Malloc" + str(rpc_param['lun_total']), 1,
            "bdev_name value is {}, expected Malloc{}".format(jsonvalues[0]['luns'][0]['bdev_name'], str(rpc_param['lun_total'])))
     name = jsonvalues[0]['name']
-    verify(name == "iqn.2016-06.io.spdk:" + rpc_param['target_name'], 1,
-           "target name value is {}, expected {}".format(name, "iqn.2016-06.io.spdk:" + rpc_param['target_name']))
+    verify(name == nodebase + ":" + rpc_param['target_name'], 1,
+           "target name value is {}, expected {}".format(name, nodebase + ":" + rpc_param['target_name']))
     verify(jsonvalues[0]['alias_name'] == rpc_param['alias_name'], 1,
            "target alias_name value is {}, expected {}".format(jsonvalues[0]['alias_name'], rpc_param['alias_name']))
     verify(jsonvalues[0]['luns'][0]['id'] == 0, 1,
@@ -313,6 +317,14 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
            "chap required value is {}, expected {}".format(jsonvalues[0]['chap_required'], rpc_param['chap_required']))
     verify(jsonvalues[0]['chap_auth_group'] == rpc_param['chap_auth_group'], 1,
            "chap auth group value is {}, expected {}".format(jsonvalues[0]['chap_auth_group'], rpc_param['chap_auth_group']))
+    lun_id = '1'
+    rpc.target_node_add_lun(name, bdev_name, "-i", lun_id)
+    output = rpc.get_target_nodes()
+    jsonvalues = json.loads(output)
+    verify(jsonvalues[0]['luns'][1]['bdev_name'] == "Malloc" + str(rpc_param['lun_total']), 1,
+           "bdev_name value is {}, expected Malloc{}".format(jsonvalues[0]['luns'][0]['bdev_name'], str(rpc_param['lun_total'])))
+    verify(jsonvalues[0]['luns'][1]['id'] == 1, 1,
+           "lun id value is {}, expected 1".format(jsonvalues[0]['luns'][1]['id']))
 
     rpc.delete_target_node(name)
     output = rpc.get_target_nodes()
