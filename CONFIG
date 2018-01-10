@@ -89,3 +89,6 @@ CONFIG_VIRTIO?=y
 
 # Build with NVML backends
 CONFIG_NVML?=n
+
+# Build with VPP
+CONFIG_VPP?=n

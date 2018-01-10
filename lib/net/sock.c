@@ -361,3 +361,13 @@ spdk_sock_is_ipv4(int sock)
 
 	return (sa.ss_family == AF_INET);
 }
+
+void
+spdk_sock_init(void)
+{
+}
+
+void
+spdk_sock_fini(void)
+{
+}

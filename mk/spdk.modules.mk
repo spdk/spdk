@@ -55,6 +55,11 @@ BLOCKDEV_MODULES_LIST += bdev_pmem
 BLOCKDEV_MODULES_DEPS += -lpmemblk
 endif
 
+NET_MODULES_LIST = net
+ifeq ($(CONFIG_VPP),y)
+NET_MODULES_DEPS = -l:libvppinfra.a -l:libsvm.a -l:libvapiclient.a -l:libvppcom.a -l:libvlibmemoryclient.a
+endif
+
 COPY_MODULES_LIST = copy_ioat ioat
 
 BLOCKDEV_MODULES_LINKER_ARGS = -Wl,--whole-archive \
@@ -70,3 +75,10 @@ COPY_MODULES_LINKER_ARGS = -Wl,--whole-archive \
 			   $(COPY_MODULES_DEPS)
 
 COPY_MODULES_FILES = $(call spdk_lib_list_to_files,$(COPY_MODULES_LIST))
+
+NET_MODULES_LINKER_ARGS = -Wl,--whole-archive \
+			   $(NET_MODULES_LIST:%=-lspdk_%) \
+			   $(NET_MODULES_DEPS) \
+			   -Wl,--no-whole-archive
+
+NET_MODULES_FILES = $(call spdk_lib_list_to_files,$(NET_MODULES_LIST))
