@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "4d0c87a2_87d13f97",
+        "filename": "NVMe-Qualified-Name-Backus-Naur.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-01-10T18:02:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "31b8284f_02c8488d",
+      "revId": "9a2e27039c8c7e6565f7f2269532e67725a3c18e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cdbe3720_d2dcce23",
         "filename": "NVMe-Qualified-Name-Backus-Naur.txt",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2018-01-09T23:01:38Z",
       "side": 1,
       "message": "You need a \u0027,\u0027 to concatenate the NQN with string_uuid.",
+      "revId": "9a2e27039c8c7e6565f7f2269532e67725a3c18e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "09d0e4ba_fd5fcc52",
+        "filename": "NVMe-Qualified-Name-Backus-Naur.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-01-10T18:02:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cdbe3720_d2dcce23",
       "revId": "9a2e27039c8c7e6565f7f2269532e67725a3c18e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "69e13458_f8f48188",
+        "filename": "NVMe-Qualified-Name-Backus-Naur.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-01-10T18:02:46Z",
+      "side": 1,
+      "message": "The colon is required. The spec calls for a colon prefixed user string that is valid utf-8.",
+      "parentUuid": "8fd1517b_df4e8c77",
+      "revId": "9a2e27039c8c7e6565f7f2269532e67725a3c18e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2c97e212_63914c11",
         "filename": "NVMe-Qualified-Name-Backus-Naur.txt",
         "patchSetId": 1
@@ -64,6 +118,24 @@
       "writtenOn": "2018-01-09T23:01:38Z",
       "side": 1,
       "message": "I don\u0027t think this month definition is right. I think you need () around \u00270\u0027, digit to make it clear. You could almost just write out the twelve options to make it easy though.",
+      "revId": "9a2e27039c8c7e6565f7f2269532e67725a3c18e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82c611af_a31d0250",
+        "filename": "NVMe-Qualified-Name-Backus-Naur.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-01-10T18:02:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2c97e212_63914c11",
       "revId": "9a2e27039c8c7e6565f7f2269532e67725a3c18e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
