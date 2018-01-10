@@ -178,7 +178,7 @@ for (( i=0; i<$vm_count; i++)); do
 
     # Get all lvol bdevs associated with this VM number
     bdevs=$(jq -r "map(select(.product_name==\"Logical Volume\") |
-        select(.name | contains(\"$vm\")) | .name) | join(\" \")" <<< "$bdev_info")
+        select(.alias | contains(\"$vm\")) | .alias) | join(\" \")" <<< "$bdev_info")
     bdevs=($bdevs)
 
     setup_cmd="$COMMON_DIR/vm_setup.sh $x --work-dir=$TEST_DIR"

@@ -359,6 +359,19 @@ p.add_argument('-c', '--cluster-sz', help='size of cluster (in bytes)', type=int
 p.set_defaults(func=construct_lvol_store)
 
 
+def rename_lvol_store(args):
+    params = {
+        'old_lvs_name': args.old_lvs_name,
+        'new_lvs_name': args.new_lvs_name
+    }
+
+    print_array(jsonrpc_call('rename_lvol_store', params))
+p = subparsers.add_parser('rename_lvol_store', help='Change logical volume store name')
+p.add_argument('old_lvs_name', help='old lvs name')
+p.add_argument('new_lvs_name', help='new lvs name')
+p.set_defaults(func=rename_lvol_store)
+
+
 def construct_lvol_bdev(args):
     num_bytes = (args.size * 1024 * 1024)
     params = {'lvol_name': args.lvol_name, 'size': num_bytes}
@@ -376,6 +389,27 @@ p.add_argument('-l', '--lvs_name', help='lvol store name', required=False)
 p.add_argument('lvol_name', help='name for this lvol')
 p.add_argument('size', help='size in MiB for this bdev', type=int)
 p.set_defaults(func=construct_lvol_bdev)
+
+def rename_lvol_bdev(args):
+    params = {
+        'lvs_name': args.lvol_store_name,
+        'old_lvol_bdev_name': args.old_lvol_bdev_name,
+        'new_lvol_bdev_name': args.new_lvol_bdev_name
+    }
+    if (args.uuid and args.lvs_name) or (not args.uuid and not args.lvs_name):
+        print("You need to specify either uuid or name of lvolstore")
+    else:
+        if args.uuid:
+            params['uuid'] = args.uuid
+        if args.lvs_name:
+            params['lvs_name'] = args.lvs_name
+    print_array(jsonrpc_call('rename_lvol_bdev', params))
+p = subparsers.add_parser('rename_lvol_bdev', help='Change lvol bdev name')
+p.add_argument('-u', '--uuid', help='lvol store UUID', required=False)
+p.add_argument('-l', '--lvs_name', help='lvol store name', required=False)
+p.add_argument('old_lvol_bdev_name', help='old lvol name')
+p.add_argument('new_lvol_bdev_name', help='new lvol name')
+p.set_defaults(func=rename_lvol_bdev)
 
 # Logical volume resize feature is disabled, as it is currently work in progress
 #
