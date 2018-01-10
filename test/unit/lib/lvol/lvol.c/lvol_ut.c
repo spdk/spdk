@@ -1288,8 +1288,7 @@ lvol_names(void)
 	struct lvol_ut_bs_dev dev;
 	struct spdk_lvs_opts opts;
 	struct spdk_lvol_store *lvs;
-	struct spdk_lvol *lvol, *lvol2;
-	char fullname[SPDK_LVOL_NAME_MAX];
+	struct spdk_lvol *lvol;
 	int rc = 0;
 
 	init_dev(&dev);
@@ -1307,16 +1306,6 @@ lvol_names(void)
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
 	lvs = g_lvol_store;
 
-	rc = spdk_lvol_create(lvs, NULL, 1, false, lvol_op_with_handle_complete, NULL);
-	CU_ASSERT(rc == -EINVAL);
-
-	rc = spdk_lvol_create(lvs, "", 1, false, lvol_op_with_handle_complete, NULL);
-	CU_ASSERT(rc == -EINVAL);
-
-	memset(fullname, 'x', sizeof(fullname));
-	rc = spdk_lvol_create(lvs, fullname, 1, false, lvol_op_with_handle_complete, NULL);
-	CU_ASSERT(rc == -EINVAL);
-
 	g_lvserrno = -1;
 	rc = spdk_lvol_create(lvs, "lvol", 1, false, lvol_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == 0);
@@ -1324,32 +1313,10 @@ lvol_names(void)
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 	lvol = g_lvol;
 
-	rc = spdk_lvol_create(lvs, "lvol", 1, false, lvol_op_with_handle_complete, NULL);
-	CU_ASSERT(rc == -EINVAL);
-
-	g_lvserrno = -1;
-	rc = spdk_lvol_create(lvs, "lvol2", 1, false, lvol_op_with_handle_complete, NULL);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(g_lvserrno == 0);
-	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
-	lvol2 = g_lvol;
-
-	spdk_lvol_close(lvol, close_cb, NULL);
-	spdk_lvol_destroy(lvol, lvol_op_complete, NULL);
-
-	g_lvserrno = -1;
-	g_lvol = NULL;
-	rc = spdk_lvol_create(lvs, "lvol", 1, false, lvol_op_with_handle_complete, NULL);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(g_lvserrno == 0);
-	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
-	lvol = g_lvol;
+	rc = spdk_lvs_rename(lvs, "new_lvs_name", lvol_store_op_with_handle_complete, NULL);
 
 	spdk_lvol_close(lvol, close_cb, NULL);
 	spdk_lvol_destroy(lvol, destroy_cb, NULL);
-
-	spdk_lvol_close(lvol2, close_cb, NULL);
-	spdk_lvol_destroy(lvol2, destroy_cb, NULL);
 
 	g_lvserrno = -1;
 	rc = spdk_lvs_destroy(lvs, lvol_store_op_complete, NULL);
@@ -1406,6 +1373,41 @@ lvol_rename(void)
 	spdk_free_thread();
 }
 
+static void
+lvs_rename(void)
+{
+	struct lvol_ut_bs_dev dev;
+	struct spdk_lvs_opts opts;
+	struct spdk_lvol_store *lvs;
+	int rc = 0;
+
+	init_dev(&dev);
+
+	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
+
+	spdk_lvs_opts_init(&opts);
+	strncpy(opts.name, "lvs", sizeof(opts.name));
+
+	g_lvserrno = -1;
+	g_lvol_store = NULL;
+	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	lvs = g_lvol_store;
+
+	rc = spdk_lvs_rename(lvs, "new_lvs_name", lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT_STRING_EQUAL(lvs->name, "new_lvs_name");
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_destroy(lvs, lvol_store_op_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	g_lvol_store = NULL;
+
+	spdk_free_thread();
+}
 static void lvol_refcnt(void)
 {
 	struct lvol_ut_bs_dev dev;
@@ -1555,7 +1557,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "lvol_refcnt", lvol_refcnt) == NULL ||
 		CU_add_test(suite, "lvol_names", lvol_names) == NULL ||
 		CU_add_test(suite, "lvol_create_thin_provisioned", lvol_create_thin_provisioned) == NULL ||
-		CU_add_test(suite, "lvol_rename", lvol_rename) == NULL
+		CU_add_test(suite, "lvol_rename", lvol_rename) == NULL ||
+		CU_add_test(suite, "lvs_rename", lvs_rename) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
