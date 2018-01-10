@@ -3206,8 +3206,10 @@ _spdk_blob_set_thin_provision(struct spdk_blob_data *blob)
 	blob->state = SPDK_BLOB_STATE_DIRTY;
 }
 
-void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_opts *opts,
-			     spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
+static void
+_spdk_bs_create_blob(struct spdk_blob_store *bs,
+		     const struct spdk_blob_opts *opts, struct spdk_blob_data *snapshot,
+		     spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
 {
 	struct spdk_blob_data	*blob;
 	uint32_t		page_idx;
@@ -3249,6 +3251,10 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 		_spdk_blob_set_thin_provision(blob);
 	}
 	spdk_blob_resize(__data_to_blob(blob), opts->num_clusters);
+
+	if (snapshot) {
+		blob->back_bs_dev = snapshot->back_bs_dev;
+	}
 	cpl.type = SPDK_BS_CPL_TYPE_BLOBID;
 	cpl.u.blobid.cb_fn = cb_fn;
 	cpl.u.blobid.cb_arg = cb_arg;
@@ -3264,10 +3270,16 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 	_spdk_blob_persist(seq, blob, _spdk_bs_create_blob_cpl, blob);
 }
 
+void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_opts *opts,
+			     spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
+{
+	_spdk_bs_create_blob(bs, opts, NULL, cb_fn, cb_arg);
+}
+
 void spdk_bs_create_blob(struct spdk_blob_store *bs,
 			 spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
 {
-	spdk_bs_create_blob_ext(bs, NULL, cb_fn, cb_arg);
+	_spdk_bs_create_blob(bs, NULL, NULL, cb_fn, cb_arg);
 }
 
 /* END spdk_bs_create_blob */
@@ -3441,9 +3453,42 @@ void spdk_bs_create_blob_snapshot(struct spdk_blob_store *bs, struct spdk_blob *
 		_spdk_bs_snapshot_fail(&cpl, -EINVAL);
 		return;
 	}
-	spdk_bs_create_blob_ext(bs, &opts, _spdk_bs_create_blob_snapshot_cpl, &cpl);
+	_spdk_bs_create_blob(bs, &opts, NULL, _spdk_bs_create_blob_snapshot_cpl, &cpl);
 }
 /* END spdk_bs_create_blob_snapshot */
+
+/* START spdk_bs_create_blob_clone */
+
+static void
+_spdk_bs_create_blob_clone_cpl(void *cb_arg, spdk_blob_id blobid, int bserrno)
+{
+	struct spdk_bs_cpl *cpl = cb_arg;
+
+	cpl->u.blobid.cb_fn(cpl->u.blobid.cb_arg, blobid, bserrno);
+}
+
+void spdk_bs_create_blob_clone(struct spdk_blob_store *bs, struct spdk_blob *blob,
+			       spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
+{
+	struct spdk_blob_opts   opts;
+	struct spdk_bs_cpl		cpl;
+	struct spdk_blob_data	*snapshot = __blob_to_data(blob);
+
+	spdk_blob_opts_init(&opts);
+	opts.thin_provision = true;
+	opts.num_clusters = spdk_blob_get_num_pages(blob);
+
+	cpl.u.blobid.cb_fn = cb_fn;
+	cpl.u.blobid.cb_arg = cb_arg;
+
+	if (!snapshot->data_ro || !snapshot->md_ro) {
+		cb_fn(cb_arg, SPDK_BLOBID_INVALID, -EINVAL);
+		return;
+	}
+
+	_spdk_bs_create_blob(bs, &opts, snapshot, _spdk_bs_create_blob_clone_cpl, &cpl);
+}
+/* END spdk_bs_create_blob_clone */
 
 /* START spdk_blob_resize */
 int
