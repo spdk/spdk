@@ -22,6 +22,30 @@
       "revId": "a1c31a94378d838873ba9dee273beacd8a31c41c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27517d47_18e3e796",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 363,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-10T13:01:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8ec76048_9f9ea048",
+      "range": {
+        "startLine": 363,
+        "startChar": 1,
+        "endLine": 363,
+        "endChar": 40
+      },
+      "revId": "a1c31a94378d838873ba9dee273beacd8a31c41c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
