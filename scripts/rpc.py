@@ -255,6 +255,11 @@ if __name__ == "__main__":
     p.add_argument('-c', '--cluster-sz', help='size of cluster (in bytes)', type=int, required=False)
     p.set_defaults(func=rpc.lvol.construct_lvol_store)
 
+    p = subparsers.add_parser('rename_lvol_store', help='Change logical volume store name')
+    p.add_argument('old_lvs_name', help='old lvs name')
+    p.add_argument('new_lvs_name', help='new lvs name')
+    p.set_defaults(func=rpc.lvol.rename_lvol_store)
+
     p = subparsers.add_parser('construct_lvol_bdev', help='Add a bdev with an logical volume backend')
     p.add_argument('-u', '--uuid', help='lvol store UUID', required=False)
     p.add_argument('-l', '--lvs_name', help='lvol store name', required=False)
