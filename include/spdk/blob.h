@@ -245,7 +245,11 @@ void spdk_bs_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
  * spdk_blob_sync_md() is called. */
 int spdk_blob_resize(struct spdk_blob *blob, size_t sz);
 
-/* Set blob as read only */
+/* Set blob as read only.
+ *
+ * These changes do not take effect until
+ * spdk_blob_sync_md() is called. */
+
 void spdk_blob_set_read_only(struct spdk_blob *blob);
 
 /* Sync a blob */

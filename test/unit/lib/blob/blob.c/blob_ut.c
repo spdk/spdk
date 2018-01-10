@@ -557,7 +557,13 @@ blob_read_only(void)
 	spdk_blob_set_read_only(blob);
 
 	blob_data = __blob_to_data(blob);
+	CU_ASSERT(blob_data->data_ro == false);
+	CU_ASSERT(blob_data->md_ro == false);
+
+	spdk_blob_sync_md(blob, bs_op_complete, NULL);
+
 	CU_ASSERT(blob_data->data_ro == true);
+	CU_ASSERT(blob_data->md_ro == true);
 	CU_ASSERT(blob_data->data_ro_flags & SPDK_BLOB_READ_ONLY);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
@@ -570,6 +576,7 @@ blob_read_only(void)
 
 	blob_data = __blob_to_data(blob);
 	CU_ASSERT(blob_data->data_ro == true);
+	CU_ASSERT(blob_data->md_ro == true);
 	CU_ASSERT(blob_data->data_ro_flags & SPDK_BLOB_READ_ONLY);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
@@ -578,6 +585,31 @@ blob_read_only(void)
 	spdk_bs_unload(g_bs, bs_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	g_bs = NULL;
+	g_blob = NULL;
+	g_blobid = 0;
+
+	/* Load an existing blob store */
+	dev = init_dev();
+	strncpy(opts.bstype.bstype, "TESTTYPE", SPDK_BLOBSTORE_TYPE_LENGTH);
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	spdk_bs_open_blob(g_bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+
+	blob_data = __blob_to_data(blob);
+	CU_ASSERT(blob_data->data_ro == true);
+	CU_ASSERT(blob_data->md_ro == true);
+	CU_ASSERT(blob_data->data_ro_flags & SPDK_BLOB_READ_ONLY);
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
 
 }
 
