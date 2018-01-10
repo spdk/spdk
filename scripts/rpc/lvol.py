@@ -21,6 +21,14 @@ def construct_lvol_bdev(args):
         print_array(args.client.call('construct_lvol_bdev', params))
 
 
+def rename_lvol_bdev(args):
+    params = {
+        'old_lvol_bdev_name': args.old_lvol_bdev_name,
+        'new_lvol_bdev_name': args.new_lvol_bdev_name
+    }
+    args.client.call('rename_lvol_bdev', params)
+
+
 # Logical volume resize feature is disabled, as it is currently work in progress
 #
 # def resize_lvol_bdev(args):
