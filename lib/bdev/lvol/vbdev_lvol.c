@@ -39,10 +39,22 @@
 
 #include "vbdev_lvol.h"
 
+struct vbdev_lvol_io_channel {
+	/*
+	 * Queue of IO awaiting retry because of a previous NOMEM status returned
+	 *  on this channel.
+	 */
+	TAILQ_HEAD(, spdk_bdev_io)	nomem_io;
+
+	struct spdk_io_channel  	*bs_ch;
+};
+
 SPDK_DECLARE_BDEV_MODULE(lvol);
 
 static TAILQ_HEAD(, lvol_store_bdev) g_spdk_lvol_pairs = TAILQ_HEAD_INITIALIZER(
 			g_spdk_lvol_pairs);
+static void
+vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
 
 static struct lvol_store_bdev *
 vbdev_get_lvs_bdev_by_lvs(struct spdk_lvol_store *lvs_orig)
@@ -513,10 +525,13 @@ lvol_op_comp(void *cb_arg, int bserrno)
 {
 	struct lvol_task *task = cb_arg;
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(task);
+	struct vbdev_lvol_io_channel *lvol_ch = spdk_io_channel_get_ctx(task->ch);
 
 	if (bserrno != 0) {
 		if (bserrno == -ENOMEM) {
 			task->status = SPDK_BDEV_IO_STATUS_NOMEM;
+			TAILQ_INSERT_TAIL(&lvol_ch->nomem_io, bdev_io, link);
+			return;
 		} else {
 			task->status = SPDK_BDEV_IO_STATUS_FAILED;
 		}
@@ -525,6 +540,12 @@ lvol_op_comp(void *cb_arg, int bserrno)
 	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Vbdev processing callback on device %s with type %d\n",
 		     bdev_io->bdev->name, bdev_io->type);
 	spdk_bdev_io_complete(bdev_io, task->status);
+
+	if (!TAILQ_EMPTY(&lvol_ch->nomem_io)) {
+		bdev_io = TAILQ_FIRST(&lvol_ch->nomem_io);
+		TAILQ_REMOVE(&lvol_ch->nomem_io, bdev_io, link);
+		vbdev_lvol_submit_request(task->ch, bdev_io);
+	}
 }
 
 static void
@@ -615,8 +636,19 @@ static void
 vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_lvol *lvol = bdev_io->bdev->ctxt;
+	struct vbdev_lvol_io_channel *lvol_ch;
+	struct lvol_task *task;
 
 	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Vbdev request type %d submitted\n", bdev_io->type);
+
+	lvol_ch = spdk_io_channel_get_ctx(ch);
+	if (!TAILQ_EMPTY(&lvol_ch->nomem_io)) {
+		TAILQ_INSERT_TAIL(&lvol_ch->nomem_io, bdev_io, link);
+		return;
+	}
+
+	task = (struct lvol_task *)bdev_io->driver_ctx;
+	task->ch = ch;
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
@@ -624,16 +656,16 @@ vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		lvol_write(lvol, ch, bdev_io);
+		lvol_write(lvol, lvol_ch->bs_ch, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_RESET:
 		lvol_reset(bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
-		lvol_unmap(lvol, ch, bdev_io);
+		lvol_unmap(lvol, lvol_ch->bs_ch, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
-		lvol_write_zeroes(lvol, ch, bdev_io);
+		lvol_write_zeroes(lvol, lvol_ch->bs_ch, bdev_io);
 		break;
 	default:
 		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "lvol: unsupported I/O type %d\n", bdev_io->type);
@@ -848,6 +880,37 @@ end:
 	}
 }
 
+static int
+vbdev_lvol_channel_create_cb(void *io_device, void *ctx_buf)
+{
+	struct vbdev_lvol_io_channel *ch = ctx_buf;
+	struct spdk_lvol_store *lvs_store = (struct spdk_lvol_store *)io_device;
+
+	TAILQ_INIT(&ch->nomem_io);
+
+	ch->bs_ch = spdk_bs_alloc_io_channel(lvs_store->blobstore);
+	if (!ch) {
+		SPDK_ERRLOG("Cannot get blobstore io channel from blobstore=%p\n",
+			    lvs_store->blobstore);
+		return -1;
+	}
+
+	return 0;
+}
+
+static void
+vbdev_lvol_channel_destroy_cb(void *io_device, void *ctx_buf)
+{
+	struct vbdev_lvol_io_channel *ch = ctx_buf;
+
+	if (!TAILQ_EMPTY(&ch->nomem_io)) {
+		SPDK_ERRLOG("Pending I/O list wasn't empty on channel destruction\n");
+	}
+
+	assert(ch->bs_ch != NULL);
+	spdk_bs_free_io_channel(ch->bs_ch);
+}
+
 static void
 _vbdev_lvs_examine_cb(void *arg, struct spdk_lvol_store *lvol_store, int lvserrno)
 {
@@ -891,6 +954,10 @@ _vbdev_lvs_examine_cb(void *arg, struct spdk_lvol_store *lvol_store, int lvserrn
 		     req->base_bdev->name);
 
 	lvol_store->lvols_opened = 0;
+
+	spdk_io_device_register(lvol_store, vbdev_lvol_channel_create_cb,
+				vbdev_lvol_channel_destroy_cb,
+				sizeof(struct vbdev_lvol_io_channel));
 
 	if (TAILQ_EMPTY(&lvol_store->lvols)) {
 		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Lvol store examination done\n");

@@ -75,6 +75,15 @@ spdk_blob_close(struct spdk_blob *b, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 }
 
+struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs)
+{
+	return NULL;
+}
+
+void spdk_bs_free_io_channel(struct spdk_io_channel *channel)
+{
+}
+
 static struct spdk_lvol *_lvol_create(struct spdk_lvol_store *lvs);
 
 void
