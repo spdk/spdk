@@ -48,6 +48,14 @@ typedef void (*bdev_virtio_create_cb)(void *ctx, int errnum,
 				      struct spdk_bdev **bdevs, size_t bdev_cnt);
 
 /**
+ * Callback for removing virtio devices.
+ *
+ * \param ctx opaque context set by the user
+ * \param errnum error code. 0 on success, negative errno on error.
+ */
+typedef void (*bdev_virtio_remove_cb)(void *ctx, int errnum);
+
+/**
  * Connect to a vhost-user Unix domain socket and create a Virtio SCSI device.
  * If the connection is successful, the device will be automatically scanned.
  * The scan consists of probing the targets on the device and will result in
@@ -72,5 +80,20 @@ typedef void (*bdev_virtio_create_cb)(void *ctx, int errnum,
 int bdev_virtio_scsi_dev_create(const char *name, const char *path,
 				unsigned num_queues, unsigned queue_size,
 				bdev_virtio_create_cb cb_fn, void *cb_arg);
+
+/**
+ * Remove a Virtio device with given name. This will destroy all bdevs exposed
+ * by this device.
+ *
+ * \param name virtio device name
+ * \param cb_fn function to be called after scanning all targets on the virtio
+ * device. It's optional, can be NULL. See \c bdev_virtio_create_cb. Possible
+ * error codes are:
+ *  * ENODEV - couldn't find device with given name
+ *  * EBUSY - device is already being removed
+ * \param cb_arg argument for the `cb_fn`
+ */
+void bdev_virtio_scsi_dev_remove(const char *name,
+				 bdev_virtio_remove_cb cb_fn, void *cb_arg);
 
 #endif /* SPDK_BDEV_VIRTIO_H */
