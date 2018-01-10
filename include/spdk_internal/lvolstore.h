@@ -109,6 +109,7 @@ struct spdk_lvol {
 };
 
 struct lvol_task {
+	struct spdk_io_channel		*ch;
 	enum spdk_bdev_io_status	status;
 };
 
