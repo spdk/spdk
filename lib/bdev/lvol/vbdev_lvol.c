@@ -66,6 +66,61 @@ vbdev_get_lvs_bdev_by_lvs(struct spdk_lvol_store *lvs_orig)
 	return NULL;
 }
 
+static int
+_vbdev_lvol_change_bdev_alias(struct spdk_lvol *lvol, const char *new_lvol_name)
+{
+	struct spdk_bdev_alias *tmp;
+	char *old_alias;
+	char *alias;
+	int rc;
+	int alias_number = 0;
+
+	/* bdev representing lvols have only one alias,
+	 * while we changed lvs name earlier, we have to iterate alias list to get one,
+	 * and check if there is only one alias */
+
+	TAILQ_FOREACH(tmp, &lvol->bdev->aliases, tailq) {
+		if (++alias_number > 1) {
+			SPDK_ERRLOG("There is more than 1 alias in bdev %s\n", lvol->bdev->name);
+			return -EINVAL;
+		}
+	}
+
+	if (alias_number == 0) {
+		SPDK_ERRLOG("There are no aliases in bdev %s\n", lvol->bdev->name);
+		return -EINVAL;
+	}
+
+	old_alias = TAILQ_FIRST(&lvol->bdev->aliases)->alias;
+	if (!old_alias) {
+		SPDK_ERRLOG("Cannot alloc memory for alias\n");
+		return -ENOMEM;
+	}
+
+	alias = spdk_sprintf_alloc("%s/%s", lvol->lvol_store->name, new_lvol_name);
+	if (alias == NULL) {
+		SPDK_ERRLOG("Cannot alloc memory for alias\n");
+		free(old_alias);
+		return -ENOMEM;
+	}
+
+	rc = spdk_bdev_alias_add(lvol->bdev, alias);
+	if (rc != 0) {
+		SPDK_ERRLOG("cannot add alias '%s'\n", alias);
+		free(alias);
+		return rc;
+	}
+	free(alias);
+
+	rc = spdk_bdev_alias_del(lvol->bdev, old_alias);
+	if (rc != 0) {
+		SPDK_ERRLOG("cannot remove alias '%s'\n", old_alias);
+		return rc;
+	}
+
+	return 0;
+}
+
 static struct lvol_store_bdev *
 vbdev_get_lvs_bdev_by_bdev(struct spdk_bdev *bdev_orig)
 {
@@ -442,8 +497,17 @@ static int
 vbdev_lvol_destruct(void *ctx)
 {
 	struct spdk_lvol *lvol = ctx;
+	char *alias;
 
 	assert(lvol != NULL);
+
+	alias = spdk_sprintf_alloc("%s/%s", lvol->lvol_store->name, lvol->name);
+	if (alias != NULL) {
+		spdk_bdev_alias_del(lvol->bdev, alias);
+		free(alias);
+	} else {
+		SPDK_ERRLOG("Cannot alloc memory for alias\n");
+	}
 
 	if (lvol->close_only) {
 		free(lvol->bdev->name);
@@ -660,6 +724,7 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 	struct spdk_bdev *bdev;
 	struct lvol_store_bdev *lvs_bdev;
 	uint64_t total_size;
+	unsigned char *alias;
 	int rc;
 
 	if (!lvol->unique_id) {
@@ -678,8 +743,8 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 		return NULL;
 	}
 
-	bdev->name = spdk_sprintf_alloc("%s/%s", lvs_bdev->lvs->name, lvol->name);
-	if (bdev->name == NULL) {
+	bdev->name = strdup(lvol->unique_id);
+	if (!bdev->name) {
 		SPDK_ERRLOG("Cannot alloc memory for bdev name\n");
 		free(bdev);
 		return NULL;
@@ -700,6 +765,24 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 		free(bdev);
 		return NULL;
 	}
+
+	alias = spdk_sprintf_alloc("%s/%s", lvs_bdev->lvs->name, lvol->name);
+	if (alias == NULL) {
+		SPDK_ERRLOG("Cannot alloc memory for alias\n");
+		free(bdev->name);
+		free(bdev);
+		return NULL;
+	}
+
+	rc = spdk_bdev_alias_add(bdev, alias);
+	if (rc != 0) {
+		SPDK_ERRLOG("Cannot add alias to lvol bdev\n");
+		free(bdev->name);
+		free(bdev);
+		free(alias);
+		return NULL;
+	}
+	free(alias);
 
 	return bdev;
 }
@@ -744,6 +827,44 @@ vbdev_lvol_create(struct spdk_lvol_store *lvs, const char *name, size_t sz,
 	if (rc != 0) {
 		free(req);
 	}
+
+	return rc;
+}
+
+static void
+_vbdev_lvol_rename_cb(void *cb_arg, int lvolerrno)
+{
+	struct spdk_lvol_req *req = cb_arg;
+
+	if (lvolerrno != 0) {
+		SPDK_ERRLOG("Renaming lvol failed\n");
+	}
+
+	req->cb_fn(req->cb_arg, lvolerrno);
+	free(req);
+}
+
+int
+vbdev_lvol_rename(struct spdk_lvol *lvol, const char *new_lvol_name,
+		  spdk_lvol_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvol_req *req;
+	int rc;
+
+	rc = _vbdev_lvol_change_bdev_alias(lvol, new_lvol_name);
+	if (rc != 0) {
+		SPDK_ERRLOG("renaming lvol to '%s' does not succeed\n", new_lvol_name);
+		return rc;
+	}
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+
+	rc = spdk_lvol_rename(lvol, new_lvol_name, _vbdev_lvol_rename_cb, req);
 
 	return rc;
 }
