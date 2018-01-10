@@ -377,6 +377,17 @@ p.add_argument('lvol_name', help='name for this lvol')
 p.add_argument('size', help='size in MiB for this bdev', type=int)
 p.set_defaults(func=construct_lvol_bdev)
 
+def rename_lvol_bdev(args):
+    params = {
+        'old_lvol_bdev_name': args.old_lvol_bdev_name,
+        'new_lvol_bdev_name': args.new_lvol_bdev_name
+    }
+    print_array(jsonrpc_call('rename_lvol_bdev', params))
+p = subparsers.add_parser('rename_lvol_bdev', help='Change lvol bdev name')
+p.add_argument('old_lvol_bdev_name', help='lvol bdev name')
+p.add_argument('new_lvol_bdev_name', help='new lvol name')
+p.set_defaults(func=rename_lvol_bdev)
+
 # Logical volume resize feature is disabled, as it is currently work in progress
 #
 # def resize_lvol_bdev(args):
