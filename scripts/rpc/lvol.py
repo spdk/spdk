@@ -8,6 +8,15 @@ def construct_lvol_store(args):
     print_array(args.client.call('construct_lvol_store', params))
 
 
+def rename_lvol_store(args):
+    params = {
+        'old_lvs_name': args.old_lvs_name,
+        'new_lvs_name': args.new_lvs_name
+    }
+
+    args.client.call('rename_lvol_store', params)
+
+
 def construct_lvol_bdev(args):
     num_bytes = (args.size * 1024 * 1024)
     params = {'lvol_name': args.lvol_name, 'size': num_bytes}
