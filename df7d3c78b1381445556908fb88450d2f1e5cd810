@@ -45,6 +45,122 @@
       "revId": "df7d3c78b1381445556908fb88450d2f1e5cd810",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fe929d66_d8c848bb",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T16:40:42Z",
+      "side": 1,
+      "message": "We are already storing it as combination of two fields \"lvol-\u003elvol_store-\u003ename/lvol-\u003ename\". You are right that we could use spdk_bdev_alias_del() to remove this exact alias in this function.\n\nAs for removing spdk_bdev_clean_aliases(). It could work as well, with exception of _vbdev_lvol_destroy_cb() where lvol is no longer available. To deal with that we would have to call spdk_bdev_alias_del() at the beginning of vbdev_lvol_destruct(), so we no longer worry about that alias. It should not be a problem as it is called when lvol is being closed or deleted.",
+      "parentUuid": "b95a4847_a0807b04",
+      "range": {
+        "startLine": 78,
+        "startChar": 24,
+        "endLine": 78,
+        "endChar": 75
+      },
+      "revId": "df7d3c78b1381445556908fb88450d2f1e5cd810",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c5a3f5d_72ab15cf",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T16:40:42Z",
+      "side": 1,
+      "message": "Is this used anywhere ?",
+      "range": {
+        "startLine": 343,
+        "startChar": 0,
+        "endLine": 343,
+        "endChar": 19
+      },
+      "revId": "df7d3c78b1381445556908fb88450d2f1e5cd810",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c7301732_c7784a45",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 1080,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T16:40:42Z",
+      "side": 1,
+      "message": "Even tough it is not wrong, I think \"rc\" might be better name. As lvserrno or lvolerrno is mostly used within callbacks.",
+      "range": {
+        "startLine": 1080,
+        "startChar": 5,
+        "endLine": 1080,
+        "endChar": 14
+      },
+      "revId": "df7d3c78b1381445556908fb88450d2f1e5cd810",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "34144213_221bb321",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 1092,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T16:40:42Z",
+      "side": 1,
+      "message": "I don\u0027t think we should close the blob explicitly here, returning appropriate error should be enough.",
+      "range": {
+        "startLine": 1092,
+        "startChar": 2,
+        "endLine": 1092,
+        "endChar": 51
+      },
+      "revId": "df7d3c78b1381445556908fb88450d2f1e5cd810",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e93525f_314522de",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 1093,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T16:40:42Z",
+      "side": 1,
+      "message": "Passing error from spdk_blob_set_xattr() might be better.\nAs well req should be freed.",
+      "range": {
+        "startLine": 1093,
+        "startChar": 2,
+        "endLine": 1093,
+        "endChar": 12
+      },
+      "revId": "df7d3c78b1381445556908fb88450d2f1e5cd810",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
