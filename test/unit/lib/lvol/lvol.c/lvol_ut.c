@@ -72,6 +72,7 @@ int g_lvolerrno;
 int g_lvserrno;
 int g_close_super_status;
 int g_resize_rc;
+bool g_lvs_rename_blob_open_error = false;
 struct spdk_lvol_store *g_lvol_store;
 struct spdk_lvol *g_lvol;
 spdk_blob_id g_blobid = 1;
@@ -343,11 +344,13 @@ spdk_bs_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 {
 	struct spdk_blob *blob;
 
-	TAILQ_FOREACH(blob, &bs->blobs, link) {
-		if (blob->id == blobid) {
-			blob->ref++;
-			cb_fn(cb_arg, blob, blob->open_status);
-			return;
+	if (!g_lvs_rename_blob_open_error) {
+		TAILQ_FOREACH(blob, &bs->blobs, link) {
+			if (blob->id == blobid) {
+				blob->ref++;
+				cb_fn(cb_arg, blob, blob->open_status);
+				return;
+			}
 		}
 	}
 
@@ -1433,6 +1436,87 @@ lvol_rename(void)
 	spdk_free_thread();
 }
 
+static void
+lvs_rename(void)
+{
+	struct lvol_ut_bs_dev dev;
+	struct spdk_lvs_opts opts;
+	struct spdk_lvol_store *lvs, *lvs2;
+	int rc = 0;
+
+	init_dev(&dev);
+
+	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
+
+	spdk_lvs_opts_init(&opts);
+	strncpy(opts.name, "lvs", SPDK_LVS_NAME_MAX);
+	g_lvserrno = -1;
+	g_lvol_store = NULL;
+	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	lvs = g_lvol_store;
+
+	spdk_lvs_opts_init(&opts);
+	strncpy(opts.name, "unimportant_lvs_name", SPDK_LVS_NAME_MAX);
+	g_lvserrno = -1;
+	g_lvol_store = NULL;
+	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	lvs2 = g_lvol_store;
+
+	/* Trying to rename lvs with new name */
+	spdk_lvs_rename(lvs, "new_lvs_name", lvol_store_op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	CU_ASSERT_STRING_EQUAL(lvs->name, "new_lvs_name");
+
+	/* Trying to rename lvs with name lvs already has */
+	spdk_lvs_rename(lvs, "new_lvs_name", lvol_store_op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	CU_ASSERT_STRING_EQUAL(lvs->name, "new_lvs_name");
+
+	/* Trying to rename lvs with name already existing */
+	spdk_lvs_rename(lvs2, "new_lvs_name", lvol_store_op_complete, NULL);
+	CU_ASSERT(g_lvserrno == -EEXIST);
+	CU_ASSERT_STRING_EQUAL(lvs2->name, "unimportant_lvs_name");
+
+	/* Trying to rename lvs with another rename process started with the same name */
+	/* Simulate renaming process in progress */
+	strncpy(lvs2->new_name, "another_new_lvs_name", SPDK_LVS_NAME_MAX);
+	CU_ASSERT_STRING_EQUAL(lvs2->new_name, "another_new_lvs_name");
+	/* Start second process */
+	spdk_lvs_rename(lvs, "another_new_lvs_name", lvol_store_op_complete, NULL);
+	CU_ASSERT(g_lvserrno == -EEXIST);
+	CU_ASSERT_STRING_EQUAL(lvs->name, "new_lvs_name");
+	/* reverting lvs2 new name to proper value */
+	strncpy(lvs2->new_name, "unimportant_lvs_name", SPDK_LVS_NAME_MAX);
+	CU_ASSERT_STRING_EQUAL(lvs2->new_name, "unimportant_lvs_name");
+
+	/* Simulate error while lvs rename */
+	g_lvs_rename_blob_open_error = true;
+	spdk_lvs_rename(lvs, "complete_new_lvs_name", lvol_store_op_complete, NULL);
+	CU_ASSERT(g_lvserrno != 0);
+	CU_ASSERT_STRING_EQUAL(lvs->name, "new_lvs_name");
+	CU_ASSERT_STRING_EQUAL(lvs->new_name, "new_lvs_name");
+	g_lvs_rename_blob_open_error = false;
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_destroy(lvs, lvol_store_op_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	g_lvol_store = NULL;
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_destroy(lvs2, lvol_store_op_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	g_lvol_store = NULL;
+
+	spdk_free_thread();
+}
 static void lvol_refcnt(void)
 {
 	struct lvol_ut_bs_dev dev;
@@ -1582,7 +1666,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "lvol_refcnt", lvol_refcnt) == NULL ||
 		CU_add_test(suite, "lvol_names", lvol_names) == NULL ||
 		CU_add_test(suite, "lvol_create_thin_provisioned", lvol_create_thin_provisioned) == NULL ||
-		CU_add_test(suite, "lvol_rename", lvol_rename) == NULL
+		CU_add_test(suite, "lvol_rename", lvol_rename) == NULL ||
+		CU_add_test(suite, "lvs_rename", lvs_rename) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
