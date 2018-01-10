@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ce9a3760_4a418751",
+        "filename": "test/vhost/common/fio_jobs/default_integrity_nightly.job",
+        "patchSetId": 18
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-10T17:27:24Z",
+      "side": 1,
+      "message": "512k block size? Why that particular choice? Are you trying to stress memory availability?",
+      "revId": "18e8386bc7ec663e9a25a57b8639d1d5edeb0e44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "776b2e9e_e575ee0d",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-10T17:27:24Z",
+      "side": 1,
+      "message": "It looks to me like you could probably unify integrity-lvol-scsi with the new nightly version if you just put a few conditionals on $RUN_NIGHTLY in the original version.",
+      "revId": "18e8386bc7ec663e9a25a57b8639d1d5edeb0e44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca6e8de2_002bbf68",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-10T17:27:24Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be $FIO_BIN?",
+      "revId": "18e8386bc7ec663e9a25a57b8639d1d5edeb0e44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
