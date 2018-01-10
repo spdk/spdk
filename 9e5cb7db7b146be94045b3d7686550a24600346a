@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7ba85e29_ba26ebb4",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-10T23:11:00Z",
+      "side": 1,
+      "message": "We really want to keep any bdev details out of the lvol.c code.  So this io_channel should have bdev somewhere in the name to make it clear this is specific to bdev.",
+      "revId": "9e5cb7db7b146be94045b3d7686550a24600346a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47e0861a_94656f2d",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-10T23:11:00Z",
+      "side": 1,
+      "message": "You could add this as a new function in a separate patch - it will just simplify and reduce this patch a bit.",
+      "revId": "9e5cb7db7b146be94045b3d7686550a24600346a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d28f8a5b_67588767",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-10T23:11:00Z",
+      "side": 1,
+      "message": "we shouldn\u0027t register the lvol_store itself as the io_device - it should probably be the lvs_bdev (or something else bdev specific)\n\nThis allows us to keep bdev specifics in this file and not associate bdev stuff with lvol_store.\n\nWith these changes, it would not be possible for someone to use lvol.c without this bdev code - when they try to allocate an I/O channel it would not work since the io device had not been registered.",
+      "revId": "9e5cb7db7b146be94045b3d7686550a24600346a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7e6c7ac7_91765161",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-10T23:11:00Z",
+      "side": 1,
+      "message": "suggest changing this back to 512 in a separate commit",
+      "revId": "9e5cb7db7b146be94045b3d7686550a24600346a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3198998a_3daa6cc5",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-10T23:11:00Z",
+      "side": 1,
+      "message": "unrelated whitespace change",
+      "revId": "9e5cb7db7b146be94045b3d7686550a24600346a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a3401551_4e830f65",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1149,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-10T23:11:00Z",
+      "side": 1,
+      "message": "I think this should stay as-is.  See comments on vbdev_lvol.c.",
+      "revId": "9e5cb7db7b146be94045b3d7686550a24600346a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
