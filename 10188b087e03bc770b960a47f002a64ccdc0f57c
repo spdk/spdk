@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3ede04d2_b95b3cc5",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-10T17:03:47Z",
+      "side": 1,
+      "message": "$fs seems undefined? I assume it is inherited when this script is called from another script. That\u0027s really confusing though. \n\nUsually for environment variables that are inherited, we name them with ALL_CAPS. Maybe a more obvious way to write this would be to make this script expect the filesystems to be passed in as arguments though.",
+      "revId": "10188b087e03bc770b960a47f002a64ccdc0f57c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
