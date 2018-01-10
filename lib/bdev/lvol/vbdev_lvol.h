@@ -60,6 +60,9 @@ int vbdev_lvol_resize(char *name, size_t sz, spdk_lvol_op_complete cb_fn, void *
 void vbdev_lvol_rename(struct spdk_lvol *lvol, const char *new_lvol_name,
 		       spdk_lvol_op_complete cb_fn, void *cb_arg);
 
+void vbdev_lvs_rename(struct spdk_lvol_store *lvs, const char *new_lvs_name,
+		      spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg);
+
 /**
  * \brief Search for handle lvolstore
  * \param uuid_str UUID of lvolstore
