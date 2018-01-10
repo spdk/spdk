@@ -89,7 +89,13 @@ struct virtio_scsi_dev {
 	struct virtio_scsi_eventq_io	*eventq_ios;
 
 	/** Device marked for removal. */
-	bool removed;
+	bool				removed;
+
+	/** Callback to be called after vdev removal. */
+	bdev_virtio_remove_cb		remove_cb;
+
+	/** Context for the `remove_cb`. */
+	void				*remove_ctx;
 };
 
 struct virtio_scsi_io_ctx {
@@ -182,7 +188,8 @@ static bool g_bdev_virtio_finish = false;
 	 1ULL << VIRTIO_SCSI_F_HOTPLUG)
 
 static void virtio_scsi_dev_unregister_cb(void *io_device);
-static void virtio_scsi_dev_remove(struct virtio_scsi_dev *svdev);
+static void virtio_scsi_dev_remove(struct virtio_scsi_dev *svdev,
+				   bdev_virtio_remove_cb cb_fn, void *cb_arg);
 static int bdev_virtio_scsi_ch_create_cb(void *io_device, void *ctx_buf);
 static void bdev_virtio_scsi_ch_destroy_cb(void *io_device, void *ctx_buf);
 static void process_scan_resp(struct virtio_scsi_scan_base *base);
@@ -274,6 +281,8 @@ virtio_scsi_dev_init(struct virtio_scsi_dev *svdev, uint16_t max_queues)
 	TAILQ_INIT(&svdev->luns);
 	svdev->scan_ctx = NULL;
 	svdev->removed = false;
+	svdev->remove_cb = NULL;
+	svdev->remove_ctx = NULL;
 
 	spdk_io_device_register(svdev, bdev_virtio_scsi_ch_create_cb,
 				bdev_virtio_scsi_ch_destroy_cb,
@@ -1676,7 +1685,7 @@ out:
 	TAILQ_FOREACH_SAFE(vdev, &g_virtio_driver.scsi_devs, tailq, next_vdev) {
 		svdev = virtio_dev_to_scsi(vdev);
 		TAILQ_REMOVE(&g_virtio_driver.scsi_devs, vdev, tailq);
-		virtio_scsi_dev_remove(svdev);
+		virtio_scsi_dev_remove(svdev, NULL, NULL);
 	}
 
 	spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(virtio_scsi));
@@ -1690,6 +1699,8 @@ virtio_scsi_dev_unregister_cb(void *io_device)
 	struct virtio_dev *vdev = &svdev->vdev;
 	struct spdk_thread *thread;
 	bool finish_module;
+	bdev_virtio_remove_cb remove_cb;
+	void *remove_ctx;
 
 	thread = virtio_dev_queue_get_thread(vdev, VIRTIO_SCSI_CONTROLQ);
 	if (thread != spdk_get_thread()) {
@@ -1707,10 +1718,17 @@ virtio_scsi_dev_unregister_cb(void *io_device)
 
 	virtio_dev_stop(vdev);
 	virtio_dev_destruct(vdev);
+
+	TAILQ_REMOVE(&g_virtio_driver.scsi_devs, vdev, tailq);
+	remove_cb = svdev->remove_cb;
+	remove_ctx = svdev->remove_ctx;
 	spdk_dma_free(svdev->eventq_ios);
 	free(svdev);
 
-	TAILQ_REMOVE(&g_virtio_driver.scsi_devs, vdev, tailq);
+	if (remove_cb) {
+		remove_cb(remove_ctx, 0);
+	}
+
 	finish_module = TAILQ_EMPTY(&g_virtio_driver.scsi_devs);
 
 	if (g_bdev_virtio_finish && finish_module) {
@@ -1719,16 +1737,21 @@ virtio_scsi_dev_unregister_cb(void *io_device)
 }
 
 static void
-virtio_scsi_dev_remove(struct virtio_scsi_dev *svdev)
+virtio_scsi_dev_remove(struct virtio_scsi_dev *svdev,
+		       bdev_virtio_remove_cb cb_fn, void *cb_arg)
 {
 	struct virtio_scsi_disk *disk, *disk_tmp;
 	bool do_remove = true;
 
 	if (svdev->removed) {
-		/** device removal in progress */
+		if (cb_fn) {
+			cb_fn(cb_arg, -EBUSY);
+		}
 		return;
 	}
 
+	svdev->remove_cb = cb_fn;
+	svdev->remove_ctx = cb_arg;
 	svdev->removed = true;
 
 	if (svdev->scan_ctx) {
@@ -1762,7 +1785,7 @@ bdev_virtio_finish(void)
 
 	/* Defer module finish until all controllers are removed. */
 	TAILQ_FOREACH_SAFE(vdev, &g_virtio_driver.scsi_devs, tailq, next) {
-		virtio_scsi_dev_remove(virtio_dev_to_scsi(vdev));
+		virtio_scsi_dev_remove(virtio_dev_to_scsi(vdev), NULL, NULL);
 	}
 }
 
@@ -1780,11 +1803,32 @@ bdev_virtio_scsi_dev_create(const char *base_name, const char *path, unsigned nu
 
 	rc = virtio_scsi_dev_scan(svdev, cb_fn, cb_arg);
 	if (rc) {
-		virtio_scsi_dev_remove(svdev);
+		virtio_scsi_dev_remove(svdev, NULL, NULL);
 	}
 
 	return rc;
 }
 
+void
+bdev_virtio_scsi_dev_remove(const char *name, bdev_virtio_remove_cb cb_fn, void *cb_arg)
+{
+	struct virtio_scsi_dev *svdev = NULL;
+	struct virtio_dev *vdev;
+
+	TAILQ_FOREACH(vdev, &g_virtio_driver.scsi_devs, tailq) {
+		if (strcmp(vdev->name, name) == 0) {
+			svdev = virtio_dev_to_scsi(vdev);
+			break;
+		}
+	}
+
+	if (svdev == NULL) {
+		SPDK_ERRLOG("Cannot find Virtio-SCSI device named '%s'\n", name);
+		cb_fn(cb_arg, -ENODEV);
+		return;
+	}
+
+	virtio_scsi_dev_remove(svdev, cb_fn, cb_arg);
+}
 
 SPDK_LOG_REGISTER_COMPONENT("virtio", SPDK_LOG_VIRTIO)

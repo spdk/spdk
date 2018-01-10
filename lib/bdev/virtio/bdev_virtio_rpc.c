@@ -135,3 +135,79 @@ invalid:
 	free_rpc_connect_virtio_user_scsi_dev(req);
 }
 SPDK_RPC_REGISTER("construct_virtio_user_scsi_bdev", spdk_rpc_create_virtio_user_scsi_bdev);
+
+struct rpc_remove_virtio_scsi_dev {
+	char *name;
+	struct spdk_jsonrpc_request *request;
+};
+
+static const struct spdk_json_object_decoder rpc_remove_virtio_scsi_dev[] = {
+	{"name", offsetof(struct rpc_remove_virtio_scsi_dev, name), spdk_json_decode_string },
+};
+
+static void
+free_rpc_remove_virtio_scsi_dev(struct rpc_remove_virtio_scsi_dev *req)
+{
+	if (!req) {
+		return;
+	}
+
+	free(req->name);
+	free(req);
+}
+
+static void
+spdk_rpc_remove_virtio_scsi_bdev_cb(void *ctx, int errnum)
+{
+	struct rpc_remove_virtio_scsi_dev *req = ctx;
+	struct spdk_jsonrpc_request *request = req->request;
+	struct spdk_json_write_ctx *w;
+
+	free_rpc_remove_virtio_scsi_dev(req);
+
+	if (errnum != 0) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 spdk_strerror(-errnum));
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+}
+
+static void
+spdk_rpc_remove_virtio_scsi_bdev(struct spdk_jsonrpc_request *request,
+				 const struct spdk_json_val *params)
+{
+	struct rpc_remove_virtio_scsi_dev *req;
+	int rc;
+
+	req = calloc(1, sizeof(*req));
+	if (!req) {
+		rc = -ENOMEM;
+		goto invalid;
+	}
+
+	if (spdk_json_decode_object(params, rpc_remove_virtio_scsi_dev,
+				    SPDK_COUNTOF(rpc_remove_virtio_scsi_dev),
+				    req)) {
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	req->request = request;
+	bdev_virtio_scsi_dev_remove(req->name, spdk_rpc_remove_virtio_scsi_bdev_cb, req);
+
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_strerror(-rc));
+	free_rpc_remove_virtio_scsi_dev(req);
+}
+SPDK_RPC_REGISTER("remove_virtio_scsi_bdev", spdk_rpc_remove_virtio_scsi_bdev);
