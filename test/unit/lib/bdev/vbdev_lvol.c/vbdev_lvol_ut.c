@@ -162,6 +162,15 @@ spdk_lvs_opts_init(struct spdk_lvs_opts *opts)
 {
 }
 
+struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs)
+{
+	return NULL;
+}
+
+void spdk_bs_free_io_channel(struct spdk_io_channel *channel)
+{
+}
+
 int
 spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 	      spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
@@ -381,7 +390,6 @@ spdk_bs_io_readv_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
 		      spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	CU_ASSERT(blob == NULL);
-	CU_ASSERT(channel == g_ch);
 	CU_ASSERT(offset == g_io->u.bdev.offset_blocks);
 	CU_ASSERT(length == g_io->u.bdev.num_blocks);
 }
@@ -891,6 +899,10 @@ ut_lvol_read_write(void)
 	g_io->u.bdev.offset_blocks = 20;
 	g_io->u.bdev.num_blocks = 20;
 
+	/* The siize should be larger than sizeof(struct spdk_io_channel) */
+	g_ch = calloc(1, sizeof(struct spdk_io_channel) + 4);
+	CU_ASSERT(g_ch != NULL);
+
 	lvol_read(g_ch, g_io);
 	CU_ASSERT(g_task->status == SPDK_BDEV_IO_STATUS_SUCCESS);
 
@@ -900,6 +912,7 @@ ut_lvol_read_write(void)
 	free(g_io);
 	free(g_base_bdev);
 	free(g_lvol);
+	free(g_ch);
 }
 
 static void
