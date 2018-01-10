@@ -75,7 +75,7 @@ echo "--benchmarks=readrandom" >> randread_flags.txt
 echo "--threads=16" >> randread_flags.txt
 echo "--duration=$DURATION" >> randread_flags.txt
 echo "--disable_wal=1" >> randread_flags.txt
-echo "--use_existing_db=1" >> randread_flags.txt
+echo "--use_existing_db=0" >> randread_flags.txt
 echo "--num=$NUM_KEYS" >> randread_flags.txt
 
 cp $testdir/common_flags.txt overwrite_flags.txt
@@ -99,7 +99,7 @@ echo "--benchmarks=overwrite" >> writesync_flags.txt
 echo "--threads=1" >> writesync_flags.txt
 echo "--duration=$DURATION" >> writesync_flags.txt
 echo "--disable_wal=0" >> writesync_flags.txt
-echo "--use_existing_db=1" >> writesync_flags.txt
+echo "--use_existing_db=0" >> writesync_flags.txt
 echo "--sync=1" >> writesync_flags.txt
 echo "--num=$NUM_KEYS" >> writesync_flags.txt
 
