@@ -25,6 +25,29 @@
     },
     {
       "key": {
+        "uuid": "178ab9a4_84298143",
+        "filename": "test/vhost/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-10T14:47:01Z",
+      "side": 1,
+      "message": "Why do we need write permission?",
+      "range": {
+        "startLine": 145,
+        "startChar": 50,
+        "endLine": 145,
+        "endChar": 55
+      },
+      "revId": "a02120eaa43a07e58f922654af157093a2928204",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6fcfe7e3_efcfcf5d",
         "filename": "test/vhost/test_plan.md",
         "patchSetId": 1
