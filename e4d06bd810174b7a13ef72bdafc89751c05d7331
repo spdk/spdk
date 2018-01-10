@@ -1,0 +1,107 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0b4e88ba_9bc0277c",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 686,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-10T14:03:18Z",
+      "side": 1,
+      "message": "This test case looks like test case 800. Can we remove one of them?",
+      "range": {
+        "startLine": 686,
+        "startChar": 5,
+        "endLine": 686,
+        "endChar": 18
+      },
+      "revId": "e4d06bd810174b7a13ef72bdafc89751c05d7331",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b960e5ed_b4f38fda",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 743,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-10T14:03:18Z",
+      "side": 1,
+      "message": "This scenario is already covered by test case 805",
+      "range": {
+        "startLine": 743,
+        "startChar": 10,
+        "endLine": 743,
+        "endChar": 18
+      },
+      "revId": "e4d06bd810174b7a13ef72bdafc89751c05d7331",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5318e121_717cf64a",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 767,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-10T14:03:18Z",
+      "side": 1,
+      "message": "Clones won\u0027t be removed automatically. There will still exist and can be used, but data that wasn\u0027t overwritten after cloning will be lost. We check if data written before deleting snapshot still exists, data that was not overwritten is gone and we can still write and read data after snapshot was deleted.",
+      "range": {
+        "startLine": 767,
+        "startChar": 2,
+        "endLine": 767,
+        "endChar": 42
+      },
+      "revId": "e4d06bd810174b7a13ef72bdafc89751c05d7331",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a1bcb1c_c61b52e4",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 783,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-10T14:03:18Z",
+      "side": 1,
+      "message": "... and verify that data was written correctly",
+      "revId": "e4d06bd810174b7a13ef72bdafc89751c05d7331",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2507bd0d_f23b2da7",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 793,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-10T14:03:18Z",
+      "side": 1,
+      "message": "We can add test case where we create snapshot on bdev, delete this snapshot and then check if data on bdev is still the same.",
+      "revId": "e4d06bd810174b7a13ef72bdafc89751c05d7331",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
