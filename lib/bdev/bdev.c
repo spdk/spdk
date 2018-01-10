@@ -799,12 +799,13 @@ spdk_bdev_put_io(struct spdk_bdev_io *bdev_io)
 	}
 }
 
-static void
+static int
 _spdk_bdev_qos_io_submit(void *ctx)
 {
 	struct spdk_bdev_channel	*ch = ctx;
 	struct spdk_bdev_io		*bdev_io = NULL;
 	struct spdk_bdev		*bdev = ch->bdev;
+	int				rc = 0;
 
 	while (!TAILQ_EMPTY(&ch->qos_io)) {
 		/* All IO count from completed and active is no more than allowed */
@@ -814,10 +815,16 @@ _spdk_bdev_qos_io_submit(void *ctx)
 
 			ch->io_outstanding++;
 			bdev->fn_table->submit_request(ch->channel, bdev_io);
+			if (bdev_io->status == SPDK_BDEV_IO_STATUS_NOMEM) {
+				rc = -1;
+				break;
+			}
 		} else {
 			break;
 		}
 	}
+
+	return rc;
 }
 
 static void
@@ -2007,11 +2014,19 @@ _spdk_bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch)
 	while (!TAILQ_EMPTY(&bdev_ch->nomem_io)) {
 		bdev_io = TAILQ_FIRST(&bdev_ch->nomem_io);
 		TAILQ_REMOVE(&bdev_ch->nomem_io, bdev_io, link);
-		bdev_ch->io_outstanding++;
-		bdev_io->status = SPDK_BDEV_IO_STATUS_PENDING;
-		bdev->fn_table->submit_request(bdev_ch->channel, bdev_io);
-		if (bdev_io->status == SPDK_BDEV_IO_STATUS_NOMEM) {
-			break;
+
+		if (bdev_ch->flags & BDEV_CH_QOS_ENABLED) {
+			TAILQ_INSERT_TAIL(&bdev_ch->qos_io, bdev_io, link);
+			if (_spdk_bdev_qos_io_submit(bdev_ch) != 0) {
+				break;
+			}
+		} else {
+			bdev_ch->io_outstanding++;
+			bdev_io->status = SPDK_BDEV_IO_STATUS_PENDING;
+			bdev->fn_table->submit_request(bdev_ch->channel, bdev_io);
+			if (bdev_io->status == SPDK_BDEV_IO_STATUS_NOMEM) {
+				break;
+			}
 		}
 	}
 }
