@@ -33,6 +33,7 @@
 
 #include "spdk_cunit.h"
 #include "spdk/string.h"
+#include "spdk_internal/lvolstore.h"
 
 #include "vbdev_lvol.c"
 
@@ -159,6 +160,15 @@ spdk_bdev_create_bs_dev(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb,
 
 void
 spdk_lvs_opts_init(struct spdk_lvs_opts *opts)
+{
+}
+
+struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs)
+{
+	return NULL;
+}
+
+void spdk_bs_free_io_channel(struct spdk_io_channel *channel)
 {
 }
 
@@ -381,7 +391,6 @@ spdk_bs_io_readv_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
 		      spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	CU_ASSERT(blob == NULL);
-	CU_ASSERT(channel == g_ch);
 	CU_ASSERT(offset == g_io->u.bdev.offset_blocks);
 	CU_ASSERT(length == g_io->u.bdev.num_blocks);
 }
@@ -867,12 +876,27 @@ ut_vbdev_lvol_io_type_supported(void)
 }
 
 static void
+ut_init_lvol_ch(void)
+{
+	struct lvol_store_bdev_io_channel *lvs_ch;
+
+	g_ch = calloc(1, sizeof(struct spdk_io_channel) + sizeof(struct lvol_store_bdev_io_channel));
+
+	CU_ASSERT(g_ch != NULL);
+	lvs_ch = spdk_io_channel_get_ctx(g_ch);
+	TAILQ_INIT(&lvs_ch->nomem_io);
+}
+
+static void
 ut_lvol_op_comp(void)
 {
 	struct lvol_task task;
 
+	ut_init_lvol_ch();
+	task.ch = g_ch;
 	lvol_op_comp(&task, 1);
 	CU_ASSERT(task.status == SPDK_BDEV_IO_STATUS_FAILED);
+	free(g_ch);
 }
 
 static void
@@ -891,6 +915,8 @@ ut_lvol_read_write(void)
 	g_io->u.bdev.offset_blocks = 20;
 	g_io->u.bdev.num_blocks = 20;
 
+	ut_init_lvol_ch();
+
 	lvol_read(g_ch, g_io);
 	CU_ASSERT(g_task->status == SPDK_BDEV_IO_STATUS_SUCCESS);
 
@@ -900,6 +926,7 @@ ut_lvol_read_write(void)
 	free(g_io);
 	free(g_base_bdev);
 	free(g_lvol);
+	free(g_ch);
 }
 
 static void
@@ -911,13 +938,15 @@ ut_vbdev_lvol_submit_request(void)
 	SPDK_CU_ASSERT_FATAL(g_base_bdev != NULL);
 	g_task = (struct lvol_task *)g_io->driver_ctx;
 
-	g_io->bdev = g_base_bdev;
+	ut_init_lvol_ch();
 
+	g_io->bdev = g_base_bdev;
 	g_io->type = SPDK_BDEV_IO_TYPE_READ;
 	vbdev_lvol_submit_request(g_ch, g_io);
 
 	free(g_io);
 	free(g_base_bdev);
+	free(g_ch);
 }
 
 int main(int argc, char **argv)
