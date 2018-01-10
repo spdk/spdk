@@ -59,9 +59,30 @@ bool lvol_store_initialize_cb_fail = false;
 bool lvol_already_opened = false;
 bool g_examine_done = false;
 
+int
+spdk_bdev_alias_add(struct spdk_bdev *bdev, const char *alias)
+{
+	return 0;
+}
+
+int
+spdk_bdev_alias_del(struct spdk_bdev *bdev, const char *alias)
+{
+	return 0;
+}
+
 void
 spdk_bdev_unregister_done(struct spdk_bdev *bdev, int bdeverrno)
 {
+}
+
+int
+spdk_lvol_rename(struct spdk_lvol *lvol, const char *new_name,
+		 spdk_lvol_op_complete cb_fn, void *cb_arg)
+{
+	cb_fn(cb_arg, g_lvolerrno);
+
+	return 0;
 }
 
 void
@@ -492,6 +513,12 @@ vbdev_lvol_resize_complete(void *cb_arg, int lvolerrno)
 }
 
 static void
+vbdev_lvol_rename_complete(void *cb_arg, int lvolerrno)
+{
+	g_lvolerrno = lvolerrno;
+}
+
+static void
 ut_lvs_destroy(void)
 {
 	int rc = 0;
@@ -669,6 +696,49 @@ ut_lvol_examine(void)
 	free(bdev);
 	free(g_bs_dev);
 	free(g_lvol_store);
+}
+
+static void
+ut_lvol_rename(void)
+{
+	int sz = 10;
+	int rc;
+
+	g_lvs = calloc(1, sizeof(*g_lvs));
+	SPDK_CU_ASSERT_FATAL(g_lvs != NULL);
+	TAILQ_INIT(&g_lvs->lvols);
+	g_lvs_bdev = calloc(1, sizeof(*g_lvs_bdev));
+	SPDK_CU_ASSERT_FATAL(g_lvs_bdev != NULL);
+	g_base_bdev = calloc(1, sizeof(*g_base_bdev));
+	SPDK_CU_ASSERT_FATAL(g_base_bdev != NULL);
+
+	g_lvs_bdev->lvs = g_lvs;
+	g_lvs_bdev->bdev = g_base_bdev;
+
+	uuid_generate_time(g_lvs->uuid);
+
+	TAILQ_INSERT_TAIL(&g_spdk_lvol_pairs, g_lvs_bdev, lvol_stores);
+
+	/* Successful lvol create */
+	g_lvolerrno = -1;
+	rc = vbdev_lvol_create(g_lvs, "lvol", sz, vbdev_lvol_create_complete, NULL);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	CU_ASSERT(g_lvol != NULL);
+	CU_ASSERT(g_lvolerrno == 0);
+
+	/* rename lvol */
+	rc = vbdev_lvol_rename(g_lvol, "new_lvol_name", vbdev_lvol_rename_complete, NULL);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	/* Successful lvol destruct */
+	vbdev_lvol_destruct(g_lvol);
+	CU_ASSERT(g_lvol == NULL);
+
+	TAILQ_REMOVE(&g_spdk_lvol_pairs, g_lvs_bdev, lvol_stores);
+
+	free(g_lvs);
+	free(g_lvs_bdev);
+	free(g_base_bdev);
 }
 
 static void
@@ -947,7 +1017,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "ut_lvol_op_comp", ut_lvol_op_comp) == NULL ||
 		CU_add_test(suite, "ut_lvol_read_write", ut_lvol_read_write) == NULL ||
 		CU_add_test(suite, "ut_vbdev_lvol_submit_request", ut_vbdev_lvol_submit_request) == NULL ||
-		CU_add_test(suite, "lvol_examine", ut_lvol_examine) == NULL
+		CU_add_test(suite, "lvol_examine", ut_lvol_examine) == NULL ||
+		CU_add_test(suite, "ut_lvol_rename", ut_lvol_rename) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
