@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2ac75c49_66d9661d",
+        "filename": "lib/env_dpdk/init.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-10T10:58:30Z",
+      "side": 1,
+      "message": "since spdk_env_init could be potentially called multiple times now, we will need some extra refactor here to prevent double-free on shutdown.\nthis is ok for now, i see that we don\u0027t fully support multiple spdk_env_init calls anyway.",
+      "range": {
+        "startLine": 261,
+        "startChar": 0,
+        "endLine": 261,
+        "endChar": 46
+      },
+      "revId": "19bd7ca0b360b6e7f439c73267223bc5fc4c226c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
