@@ -305,8 +305,8 @@ spdk_rpc_get_target_nodes(struct spdk_jsonrpc_request *request,
 
 			if (lun) {
 				spdk_json_write_object_begin(w);
-				spdk_json_write_name(w, "name");
-				spdk_json_write_string(w, spdk_scsi_lun_get_name(lun));
+				spdk_json_write_name(w, "bdev_name");
+				spdk_json_write_string(w, spdk_scsi_lun_get_bdev_name(lun));
 				spdk_json_write_name(w, "id");
 				spdk_json_write_int32(w, spdk_scsi_lun_get_id(lun));
 				spdk_json_write_object_end(w);
@@ -371,23 +371,23 @@ decode_rpc_ig_tags(const struct spdk_json_val *val, void *out)
 
 #define RPC_CONSTRUCT_TARGET_NODE_MAX_LUN	64
 
-struct rpc_lun_names {
+struct rpc_bdev_names {
 	size_t num_names;
 	char *names[RPC_CONSTRUCT_TARGET_NODE_MAX_LUN];
 };
 
 static int
-decode_rpc_lun_names(const struct spdk_json_val *val, void *out)
+decode_rpc_bdev_names(const struct spdk_json_val *val, void *out)
 {
-	struct rpc_lun_names *lun_names = out;
+	struct rpc_bdev_names *bdev_names = out;
 
-	return spdk_json_decode_array(val, spdk_json_decode_string, lun_names->names,
+	return spdk_json_decode_array(val, spdk_json_decode_string, bdev_names->names,
 				      RPC_CONSTRUCT_TARGET_NODE_MAX_LUN,
-				      &lun_names->num_names, sizeof(char *));
+				      &bdev_names->num_names, sizeof(char *));
 }
 
 static void
-free_rpc_lun_names(struct rpc_lun_names *r)
+free_rpc_bdev_names(struct rpc_bdev_names *r)
 {
 	size_t i;
 
@@ -418,7 +418,7 @@ struct rpc_target_node {
 	struct rpc_pg_tags pg_tags;
 	struct rpc_ig_tags ig_tags;
 
-	struct rpc_lun_names lun_names;
+	struct rpc_bdev_names bdev_names;
 	struct rpc_lun_ids lun_ids;
 
 	int32_t queue_depth;
@@ -433,7 +433,7 @@ free_rpc_target_node(struct rpc_target_node *req)
 {
 	free(req->name);
 	free(req->alias_name);
-	free_rpc_lun_names(&req->lun_names);
+	free_rpc_bdev_names(&req->bdev_names);
 }
 
 static const struct spdk_json_object_decoder rpc_target_node_decoders[] = {
@@ -441,7 +441,7 @@ static const struct spdk_json_object_decoder rpc_target_node_decoders[] = {
 	{"alias_name", offsetof(struct rpc_target_node, alias_name), spdk_json_decode_string},
 	{"pg_tags", offsetof(struct rpc_target_node, pg_tags), decode_rpc_pg_tags},
 	{"ig_tags", offsetof(struct rpc_target_node, ig_tags), decode_rpc_ig_tags},
-	{"lun_names", offsetof(struct rpc_target_node, lun_names), decode_rpc_lun_names},
+	{"bdev_names", offsetof(struct rpc_target_node, bdev_names), decode_rpc_bdev_names},
 	{"lun_ids", offsetof(struct rpc_target_node, lun_ids), decode_rpc_lun_ids},
 	{"queue_depth", offsetof(struct rpc_target_node, queue_depth), spdk_json_decode_int32},
 	{"chap_disabled", offsetof(struct rpc_target_node, chap_disabled), spdk_json_decode_int32},
@@ -470,8 +470,8 @@ spdk_rpc_construct_target_node(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	if (req.lun_names.num_names != req.lun_ids.num_ids) {
-		SPDK_ERRLOG("lun_names/lun_ids count mismatch\n");
+	if (req.bdev_names.num_names != req.lun_ids.num_ids) {
+		SPDK_ERRLOG("bdev_names/lun_ids count mismatch\n");
 		goto invalid;
 	}
 
@@ -485,9 +485,9 @@ spdk_rpc_construct_target_node(struct spdk_jsonrpc_request *request,
 					       req.pg_tags.tags,
 					       req.ig_tags.tags,
 					       req.pg_tags.num_tags,
-					       req.lun_names.names,
+					       (const char **)req.bdev_names.names,
 					       req.lun_ids.ids,
-					       req.lun_names.num_names,
+					       req.bdev_names.num_names,
 					       req.queue_depth,
 					       req.chap_disabled,
 					       req.chap_required,

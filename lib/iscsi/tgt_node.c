@@ -847,7 +847,7 @@ _spdk_iscsi_tgt_node *
 spdk_iscsi_tgt_node_construct(int target_index,
 			      const char *name, const char *alias,
 			      int *pg_tag_list, int *ig_tag_list, uint16_t num_maps,
-			      char *lun_name_list[], int *lun_id_list, int num_luns,
+			      const char *bdev_name_list[], int *lun_id_list, int num_luns,
 			      int queue_depth,
 			      int auth_chap_disabled, int auth_chap_required, int auth_chap_mutual, int auth_group,
 			      int header_digest, int data_digest)
@@ -920,7 +920,7 @@ spdk_iscsi_tgt_node_construct(int target_index,
 		}
 	}
 
-	target->dev = spdk_scsi_dev_construct(fullname, lun_name_list, lun_id_list, num_luns,
+	target->dev = spdk_scsi_dev_construct(fullname, bdev_name_list, lun_id_list, num_luns,
 					      SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI, NULL, NULL);
 	if (!target->dev) {
 		SPDK_ERRLOG("Could not construct SCSI device\n");
@@ -976,8 +976,7 @@ spdk_cf_add_iscsi_tgt_node(struct spdk_conf_section *sp)
 	int auth_chap_disabled, auth_chap_required, auth_chap_mutual;
 	int i;
 	int lun_id_list[SPDK_SCSI_DEV_MAX_LUN];
-	char lun_name_array[SPDK_SCSI_DEV_MAX_LUN][SPDK_SCSI_LUN_MAX_NAME_LENGTH] = {};
-	char *lun_name_list[SPDK_SCSI_DEV_MAX_LUN];
+	const char *bdev_name_list[SPDK_SCSI_DEV_MAX_LUN];
 	int num_luns, queue_depth;
 
 	target_num = spdk_conf_section_get_num(sp);
@@ -1150,8 +1149,7 @@ spdk_cf_add_iscsi_tgt_node(struct spdk_conf_section *sp)
 			continue;
 		}
 
-		snprintf(lun_name_array[num_luns], SPDK_SCSI_LUN_MAX_NAME_LENGTH, "%s", val);
-		lun_name_list[num_luns] = lun_name_array[num_luns];
+		bdev_name_list[num_luns] = val;
 		lun_id_list[num_luns] = i;
 		num_luns++;
 	}
@@ -1163,7 +1161,7 @@ spdk_cf_add_iscsi_tgt_node(struct spdk_conf_section *sp)
 
 	target = spdk_iscsi_tgt_node_construct(target_num, name, alias,
 					       pg_tag_list, ig_tag_list, num_target_maps,
-					       lun_name_list, lun_id_list, num_luns, queue_depth,
+					       bdev_name_list, lun_id_list, num_luns, queue_depth,
 					       auth_chap_disabled, auth_chap_required,
 					       auth_chap_mutual, auth_group,
 					       header_digest, data_digest);
@@ -1180,7 +1178,7 @@ spdk_cf_add_iscsi_tgt_node(struct spdk_conf_section *sp)
 			SPDK_INFOLOG(SPDK_LOG_ISCSI, "device %d: LUN%d %s\n",
 				     spdk_scsi_dev_get_id(target->dev),
 				     spdk_scsi_lun_get_id(lun),
-				     spdk_scsi_lun_get_name(lun));
+				     spdk_scsi_lun_get_bdev_name(lun));
 		}
 	}
 

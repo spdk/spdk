@@ -290,8 +290,8 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
     jsonvalues = json.loads(output)
     verify(len(jsonvalues) == 1, 1,
            "get_target_nodes returned {} nodes, expected 1".format(len(jsonvalues)))
-    verify(jsonvalues[0]['luns'][0]['name'] == "Malloc" + str(rpc_param['lun_total']), 1,
-           "lun_name value is {}, expected Malloc{}".format(jsonvalues[0]['luns'][0]['name'], str(rpc_param['lun_total'])))
+    verify(jsonvalues[0]['luns'][0]['bdev_name'] == "Malloc" + str(rpc_param['lun_total']), 1,
+           "bdev_name value is {}, expected Malloc{}".format(jsonvalues[0]['luns'][0]['bdev_name'], str(rpc_param['lun_total'])))
     name = jsonvalues[0]['name']
     verify(name == "iqn.2016-06.io.spdk:" + rpc_param['target_name'], 1,
            "target name value is {}, expected {}".format(name, "iqn.2016-06.io.spdk:" + rpc_param['target_name']))
