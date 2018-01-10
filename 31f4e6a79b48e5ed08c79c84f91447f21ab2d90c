@@ -1,0 +1,228 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "16563817_821ccb4a",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 552,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T15:47:57Z",
+      "side": 1,
+      "message": "Even though there are instances of \"write/read data\", there is no mention on how it is performed. From patch regarding snapshot/clone test plan I see this will be done using NBD. I think it would be great to mention that here.",
+      "revId": "31f4e6a79b48e5ed08c79c84f91447f21ab2d90c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5fa0655b_6148af11",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 562,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T15:47:57Z",
+      "side": 1,
+      "message": "lvs",
+      "range": {
+        "startLine": 562,
+        "startChar": 14,
+        "endLine": 562,
+        "endChar": 17
+      },
+      "revId": "31f4e6a79b48e5ed08c79c84f91447f21ab2d90c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba6752f3_d2617b89",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 575,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T15:47:57Z",
+      "side": 1,
+      "message": "According to current steps, it would be no different if device was thin provisioned or not. \nIdea behind this test was to check that its possible to read data from regions that weren\u0027t written to and therefore not allocated. Its hard to know that for sure in current steps.\n\nI think more appropriate would be to test clusters that simply cannot be allocated. \n- create thick provisioned lvol bdev with size equal to lvol store\n- create thin provisioned lvol bdev with same size\n- fill whole thick provisioned lvol bdev\n- perform read operation on thin provisioned lvol bdev\n\nThis would ensure that those clusters on thin provisioned lvol were not written to or allocated (as this would exceed size of lvol store).",
+      "range": {
+        "startLine": 575,
+        "startChar": 27,
+        "endLine": 575,
+        "endChar": 60
+      },
+      "revId": "31f4e6a79b48e5ed08c79c84f91447f21ab2d90c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "096dc8ee_32943a7f",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 592,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T15:47:57Z",
+      "side": 1,
+      "message": "What is the size of write here ? How is it any different than test case 650 if verification was enabled ?",
+      "range": {
+        "startLine": 592,
+        "startChar": 1,
+        "endLine": 592,
+        "endChar": 56
+      },
+      "revId": "31f4e6a79b48e5ed08c79c84f91447f21ab2d90c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8c15ccb_5bed47cf",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 606,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T15:47:57Z",
+      "side": 1,
+      "message": "\"with data\" should be enough",
+      "range": {
+        "startLine": 606,
+        "startChar": 35,
+        "endLine": 606,
+        "endChar": 49
+      },
+      "revId": "31f4e6a79b48e5ed08c79c84f91447f21ab2d90c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ce0c72b8_fd8455f0",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 609,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T15:47:57Z",
+      "side": 1,
+      "message": "This can be measured exactly - new lvol bdev size is what it was resized to. Keeping in mind that resizes result in lvol bdevs with size in multiples of cluster_size.\n\nIn this case total_data_clusters * cluser_size of lvol store.",
+      "range": {
+        "startLine": 609,
+        "startChar": 30,
+        "endLine": 609,
+        "endChar": 67
+      },
+      "revId": "31f4e6a79b48e5ed08c79c84f91447f21ab2d90c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f362edfe_3aae2b8a",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 609,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T15:47:57Z",
+      "side": 1,
+      "message": "\"check if lvol bdev size changed\"",
+      "range": {
+        "startLine": 609,
+        "startChar": 2,
+        "endLine": 609,
+        "endChar": 28
+      },
+      "revId": "31f4e6a79b48e5ed08c79c84f91447f21ab2d90c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "73946394_88ebf49e",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 629,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T15:47:57Z",
+      "side": 1,
+      "message": "As this operation will not succeed (only 25% will be written, then fail), I think it might be better worded as \"try to fill second bdev up to...\"",
+      "range": {
+        "startLine": 629,
+        "startChar": 2,
+        "endLine": 629,
+        "endChar": 38
+      },
+      "revId": "31f4e6a79b48e5ed08c79c84f91447f21ab2d90c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d948ecc0_f3195c20",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 630,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T15:47:57Z",
+      "side": 1,
+      "message": "\"check that error message occured\", as this is expected outcome.",
+      "range": {
+        "startLine": 630,
+        "startChar": 2,
+        "endLine": 630,
+        "endChar": 32
+      },
+      "revId": "31f4e6a79b48e5ed08c79c84f91447f21ab2d90c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "216f6099_e538c28e",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 652,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T15:47:57Z",
+      "side": 1,
+      "message": "Numbering test cases with 3 digits was added in order to limit necessity to change numbering each time new tests were added.\n\nLets number them in such a way that it no longer conflicts when having reasonable number of tests for each category (I mean first digit). But if such change is deemed necessary, lets do it in separate patch all in one go.\n\n\nFor this patch lets leave old tests without any change in test number.",
+      "range": {
+        "startLine": 652,
+        "startChar": 15,
+        "endLine": 652,
+        "endChar": 18
+      },
+      "revId": "31f4e6a79b48e5ed08c79c84f91447f21ab2d90c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
