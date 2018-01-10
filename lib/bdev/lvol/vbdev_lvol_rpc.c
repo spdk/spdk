@@ -342,6 +342,98 @@ invalid:
 
 SPDK_RPC_REGISTER("construct_lvol_bdev", spdk_rpc_construct_lvol_bdev)
 
+struct rpc_rename_lvol_bdev {
+	char *old_name;
+	char *new_name;
+};
+
+static void
+free_rpc_rename_lvol_bdev(struct rpc_rename_lvol_bdev *req)
+{
+	free(req->old_name);
+	free(req->new_name);
+}
+
+static const struct spdk_json_object_decoder rpc_rename_lvol_bdev_decoders[] = {
+	{"old_name", offsetof(struct rpc_rename_lvol_bdev, old_name), spdk_json_decode_string, true},
+	{"new_name", offsetof(struct rpc_rename_lvol_bdev, new_name), spdk_json_decode_string, true},
+};
+
+static void
+_spdk_rpc_rename_lvol_bdev_cb(void *cb_arg, int lvolerrno)
+{
+	struct spdk_json_write_ctx *w;
+	struct spdk_jsonrpc_request *request = cb_arg;
+	char buf[64];
+
+	if (lvolerrno != 0) {
+		goto invalid;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+	return;
+
+invalid:
+	spdk_strerror(-lvolerrno);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+}
+
+static void
+spdk_rpc_rename_lvol_bdev(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
+{
+	struct rpc_rename_lvol_bdev req = {};
+	struct spdk_bdev *bdev;
+	struct spdk_lvol *lvol;
+	int rc = 0;
+
+	SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "Renaming lvol\n");
+
+	if (spdk_json_decode_object(params, rpc_rename_lvol_bdev_decoders,
+				    SPDK_COUNTOF(rpc_rename_lvol_bdev_decoders),
+				    &req)) {
+		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	bdev = spdk_bdev_get_by_name(req.old_name);
+	if (bdev == NULL) {
+		SPDK_ERRLOG("bdev '%s' does not exist\n", req.old_name);
+		rc = -ENODEV;
+		goto invalid;
+	}
+
+	lvol = vbdev_lvol_get_from_bdev(bdev);
+	if (lvol == NULL) {
+		SPDK_ERRLOG("lvol does not exist\n");
+		rc = -ENODEV;
+		goto invalid;
+	}
+
+	rc = vbdev_lvol_rename(lvol, req.new_name,
+			       _spdk_rpc_rename_lvol_bdev_cb, request);
+
+	if (rc < 0) {
+		goto invalid;
+	}
+
+	free_rpc_rename_lvol_bdev(&req);
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
+	free_rpc_rename_lvol_bdev(&req);
+}
+
+SPDK_RPC_REGISTER("rename_lvol_bdev", spdk_rpc_rename_lvol_bdev)
+
 struct rpc_resize_lvol_bdev {
 	char *name;
 	uint64_t size;
