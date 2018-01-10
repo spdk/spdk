@@ -426,7 +426,6 @@ vhost_user_set_vring_base(struct virtio_net *dev,
 		dev->notify_ops->destroy_device(dev->vid);
 	}
 
-	dev->virtqueue[msg->payload.state.index]->last_used_idx  = msg->payload.state.num;
 	dev->virtqueue[msg->payload.state.index]->last_avail_idx = msg->payload.state.num;
 
 	return 0;
