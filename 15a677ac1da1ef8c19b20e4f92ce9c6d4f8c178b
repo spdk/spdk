@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "139a4230_9cfa050e",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-10T10:11:17Z",
+      "side": 1,
+      "message": "you need to to add (addr \u0026 mem_region_page_size)\nIt might be a good idea to set the translations for each 2MB region manually (vhost.c:423) and then use\n(void *)(spdk_mem_map_translate(vdev-\u003egpa_to_vva_map, addr) | (addr \u0026 2MB_MASK));",
+      "range": {
+        "startLine": 86,
+        "startChar": 66,
+        "endLine": 86,
+        "endChar": 67
+      },
+      "revId": "15a677ac1da1ef8c19b20e4f92ce9c6d4f8c178b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "dccae82c_822d7b13",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 1
@@ -45,6 +68,47 @@
       "revId": "15a677ac1da1ef8c19b20e4f92ce9c6d4f8c178b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9bafa33_5dc2527d",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 460,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-10T10:11:17Z",
+      "side": 1,
+      "message": "do we have to clear this translation at all? We delete the whole mem_map anyway (vhost.c:475)",
+      "parentUuid": "9e5c42be_2af82d6e",
+      "range": {
+        "startLine": 460,
+        "startChar": 2,
+        "endLine": 460,
+        "endChar": 94
+      },
+      "revId": "15a677ac1da1ef8c19b20e4f92ce9c6d4f8c178b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c16f5f9b_a510b130",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 475,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-10T10:11:17Z",
+      "side": 1,
+      "message": "free(mem)?",
+      "revId": "15a677ac1da1ef8c19b20e4f92ce9c6d4f8c178b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
