@@ -95,6 +95,7 @@ $valgrind test/unit/lib/scsi/scsi_bdev.c/scsi_bdev_ut
 
 $valgrind test/unit/lib/lvol/lvol.c/lvol_ut
 
+$valgrind test/unit/lib/iscsi/conn.c/conn_ut
 $valgrind test/unit/lib/iscsi/param.c/param_ut
 $valgrind test/unit/lib/iscsi/tgt_node.c/tgt_node_ut test/unit/lib/iscsi/tgt_node.c/tgt_node.conf
 $valgrind test/unit/lib/iscsi/iscsi.c/iscsi_ut
