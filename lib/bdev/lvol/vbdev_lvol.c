@@ -41,8 +41,52 @@
 
 SPDK_DECLARE_BDEV_MODULE(lvol);
 
+struct spdk_lvol_store_io_channel {
+	/*
+	 * Queue of IO awaiting retry because of a previous NOMEM status returned
+	 *  on this channel.
+	 */
+	TAILQ_HEAD(, spdk_bdev_io)	nomem_io;
+
+	struct spdk_io_channel  	*bs_ch;
+};
+
 static TAILQ_HEAD(, lvol_store_bdev) g_spdk_lvol_pairs = TAILQ_HEAD_INITIALIZER(
 			g_spdk_lvol_pairs);
+
+static int
+lvs_channel_create_cb(void *io_device, void *ctx_buf)
+{
+	struct spdk_lvol_store_io_channel *ch = ctx_buf;
+	struct spdk_lvol_store *lvs_store = (struct spdk_lvol_store *)io_device;
+
+	TAILQ_INIT(&ch->nomem_io);
+
+	ch->bs_ch = spdk_bs_alloc_io_channel(lvs_store->blobstore);
+	if (!ch->bs_ch) {
+		SPDK_ERRLOG("Cannot get blobstore io channel from blobstore=%p\n",
+			    lvs_store->blobstore);
+		return -1;
+	}
+
+	return 0;
+}
+
+static void
+lvs_channel_destroy_cb(void *io_device, void *ctx_buf)
+{
+	struct spdk_lvol_store_io_channel *ch = ctx_buf;
+
+	if (!TAILQ_EMPTY(&ch->nomem_io)) {
+		SPDK_ERRLOG("Pending I/O list wasn't empty on channel destruction\n");
+	}
+
+	assert(ch->bs_ch != NULL);
+	spdk_bs_free_io_channel(ch->bs_ch);
+}
+
+static void
+_vbdev_lvol_submit_request(struct spdk_lvol_store_io_channel *ch, struct spdk_bdev_io *bdev_io);
 
 static struct lvol_store_bdev *
 vbdev_get_lvs_bdev_by_lvs(struct spdk_lvol_store *lvs_orig)
@@ -99,6 +143,15 @@ vbdev_lvs_hotremove_cb(void *ctx)
 }
 
 static void
+_vbdev_lvs_add_lvs_bdev(struct lvol_store_bdev *lvs_bdev)
+{
+	spdk_io_device_register(lvs_bdev->lvs, lvs_channel_create_cb,
+				lvs_channel_destroy_cb,
+				sizeof(struct spdk_lvol_store_io_channel));
+	TAILQ_INSERT_TAIL(&g_spdk_lvol_pairs, lvs_bdev, lvol_stores);
+}
+
+static void
 _vbdev_lvs_create_cb(void *cb_arg, struct spdk_lvol_store *lvs, int lvserrno)
 {
 	struct spdk_lvs_with_handle_req *req = cb_arg;
@@ -130,7 +183,7 @@ _vbdev_lvs_create_cb(void *cb_arg, struct spdk_lvol_store *lvs, int lvserrno)
 	lvs_bdev->bdev = bdev;
 	lvs_bdev->req = NULL;
 
-	TAILQ_INSERT_TAIL(&g_spdk_lvol_pairs, lvs_bdev, lvol_stores);
+	_vbdev_lvs_add_lvs_bdev(lvs_bdev);
 	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Lvol store bdev inserted\n");
 
 end:
@@ -210,6 +263,7 @@ _vbdev_lvs_remove_cb(void *cb_arg, int lvserrno)
 	if (lvserrno != 0) {
 		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Could not remove lvol store bdev\n");
 	} else {
+		spdk_io_device_unregister(lvs_bdev->lvs, NULL);
 		TAILQ_REMOVE(&g_spdk_lvol_pairs, lvs_bdev, lvol_stores);
 		free(lvs_bdev);
 	}
@@ -513,10 +567,13 @@ lvol_op_comp(void *cb_arg, int bserrno)
 {
 	struct lvol_task *task = cb_arg;
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(task);
+	struct spdk_lvol_store_io_channel *lvs_ch = spdk_io_channel_get_ctx(task->ch);
 
 	if (bserrno != 0) {
 		if (bserrno == -ENOMEM) {
 			task->status = SPDK_BDEV_IO_STATUS_NOMEM;
+			TAILQ_INSERT_TAIL(&lvs_ch->nomem_io, bdev_io, link);
+			return;
 		} else {
 			task->status = SPDK_BDEV_IO_STATUS_FAILED;
 		}
@@ -525,6 +582,12 @@ lvol_op_comp(void *cb_arg, int bserrno)
 	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Vbdev processing callback on device %s with type %d\n",
 		     bdev_io->bdev->name, bdev_io->type);
 	spdk_bdev_io_complete(bdev_io, task->status);
+
+	if (!TAILQ_EMPTY(&lvs_ch->nomem_io)) {
+		bdev_io = TAILQ_FIRST(&lvs_ch->nomem_io);
+		TAILQ_REMOVE(&lvs_ch->nomem_io, bdev_io, link);
+		_vbdev_lvol_submit_request(lvs_ch, bdev_io);
+	}
 }
 
 static void
@@ -570,7 +633,10 @@ lvol_read(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	struct spdk_lvol *lvol = bdev_io->bdev->ctxt;
 	struct spdk_blob *blob = lvol->blob;
 	struct lvol_task *task = (struct lvol_task *)bdev_io->driver_ctx;
+	struct spdk_lvol_store_io_channel *lvs_ch;
 
+	lvs_ch = spdk_io_channel_get_ctx(ch);
+	task->ch = ch;
 	start_page = bdev_io->u.bdev.offset_blocks;
 	num_pages = bdev_io->u.bdev.num_blocks;
 
@@ -579,7 +645,7 @@ lvol_read(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL,
 		     "Vbdev doing read at offset %" PRIu64 " using %" PRIu64 " pages on device %s\n", start_page,
 		     num_pages, bdev_io->bdev->name);
-	spdk_bs_io_readv_blob(blob, ch, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, start_page,
+	spdk_bs_io_readv_blob(blob, lvs_ch->bs_ch, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, start_page,
 			      num_pages,
 			      lvol_op_comp, task);
 }
@@ -612,11 +678,9 @@ lvol_reset(struct spdk_bdev_io *bdev_io)
 }
 
 static void
-vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+_vbdev_lvol_submit_request(struct spdk_lvol_store_io_channel *lvs_ch, struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_lvol *lvol = bdev_io->bdev->ctxt;
-
-	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Vbdev request type %d submitted\n", bdev_io->type);
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
@@ -624,16 +688,16 @@ vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		lvol_write(lvol, ch, bdev_io);
+		lvol_write(lvol, lvs_ch->bs_ch, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_RESET:
 		lvol_reset(bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
-		lvol_unmap(lvol, ch, bdev_io);
+		lvol_unmap(lvol, lvs_ch->bs_ch, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
-		lvol_write_zeroes(lvol, ch, bdev_io);
+		lvol_write_zeroes(lvol, lvs_ch->bs_ch, bdev_io);
 		break;
 	default:
 		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "lvol: unsupported I/O type %d\n", bdev_io->type);
@@ -643,6 +707,26 @@ vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 	return;
 }
 
+static void
+vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	struct spdk_lvol_store_io_channel *lvs_ch;
+	struct lvol_task *task;
+
+	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Vbdev request type %d submitted\n", bdev_io->type);
+
+	lvs_ch = spdk_io_channel_get_ctx(ch);
+	if (!TAILQ_EMPTY(&lvs_ch->nomem_io)) {
+		TAILQ_INSERT_TAIL(&lvs_ch->nomem_io, bdev_io, link);
+		return;
+	}
+
+	task = (struct lvol_task *)bdev_io->driver_ctx;
+	task->ch = ch;
+
+	_vbdev_lvol_submit_request(lvs_ch, bdev_io);
+
+}
 static struct spdk_bdev_fn_table vbdev_lvol_fn_table = {
 	.destruct		= vbdev_lvol_destruct,
 	.io_type_supported	= vbdev_lvol_io_type_supported,
@@ -885,7 +969,7 @@ _vbdev_lvs_examine_cb(void *arg, struct spdk_lvol_store *lvol_store, int lvserrn
 	lvs_bdev->lvs = lvol_store;
 	lvs_bdev->bdev = req->base_bdev;
 
-	TAILQ_INSERT_TAIL(&g_spdk_lvol_pairs, lvs_bdev, lvol_stores);
+	_vbdev_lvs_add_lvs_bdev(lvs_bdev);
 
 	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Lvol store found on %s - begin parsing\n",
 		     req->base_bdev->name);

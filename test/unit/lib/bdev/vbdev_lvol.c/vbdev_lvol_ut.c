@@ -162,6 +162,15 @@ spdk_lvs_opts_init(struct spdk_lvs_opts *opts)
 {
 }
 
+struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs)
+{
+	return NULL;
+}
+
+void spdk_bs_free_io_channel(struct spdk_io_channel *channel)
+{
+}
+
 int
 spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 	      spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
