@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "95507059_1526e028",
+        "filename": "lib/blob/request.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-10T22:38:50Z",
+      "side": 1,
+      "message": "This doesn\u0027t make any sense. channels are associated with just one device, and a sequence has a pointer to one specific channel. You can\u0027t use channel-\u003edev_channel with any bs_dev.",
+      "revId": "96763bc5deb9ab9f8153b5a89008b1c3c0838675",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
