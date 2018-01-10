@@ -1038,6 +1038,69 @@ invalid:
 	return rc;
 }
 
+static void
+_spdk_lvol_rename_cb(void *cb_arg, int lvolerrno)
+{
+	struct spdk_lvol_req *req = cb_arg;
+
+	if (lvolerrno != 0) {
+		SPDK_ERRLOG("Lvol rename operation failed\n");
+	} else {
+		strncpy(req->lvol->name, req->name, SPDK_LVOL_NAME_MAX);
+	}
+
+	req->cb_fn(req->cb_arg, lvolerrno);
+	free(req);
+}
+
+int
+spdk_lvol_rename(struct spdk_lvol *lvol, const char *new_name,
+		 spdk_lvol_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvol *tmp;
+	struct spdk_blob *blob = lvol->blob;
+	struct spdk_lvol_req *req;
+	int rc;
+
+	/* Check if new name is current lvol name.
+	 * If so, return success immediately */
+	if (strcmp(lvol->name, new_name) == 0) {
+		cb_fn(cb_arg, 0);
+		return 0;
+	}
+
+	/* Check if lvol with 'new_name' already exists in lvolstore */
+	TAILQ_FOREACH(tmp, &lvol->lvol_store->lvols, link) {
+		if (strcmp(tmp->name, new_name) == 0) {
+			SPDK_ERRLOG("Lvol %s already exists in lvol store %s\n", new_name, lvol->lvol_store->name);
+			cb_fn(cb_arg, -EEXIST);
+			return -EEXIST;
+		}
+	}
+
+	req = calloc(1, sizeof(*req));
+	if (!req) {
+		SPDK_ERRLOG("Cannot alloc memory for lvol request pointer\n");
+		cb_fn(cb_arg, -ENOMEM);
+		return -ENOMEM;
+	}
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+	req->lvol = lvol;
+	strncpy(req->name, new_name, SPDK_LVOL_NAME_MAX);
+
+	rc = spdk_blob_set_xattr(blob, "name", new_name, strlen(new_name) + 1);
+	if (rc < 0) {
+		free(req);
+		cb_fn(cb_arg, rc);
+		return rc;
+	}
+
+	spdk_blob_sync_md(blob, _spdk_lvol_rename_cb, req);
+
+	return 0;
+}
+
 void
 spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
