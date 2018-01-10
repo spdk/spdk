@@ -2,6 +2,125 @@
   "comments": [
     {
       "key": {
+        "uuid": "d9873b0e_3c15d4b4",
+        "filename": "doc/benchmarking.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-10T17:25:32Z",
+      "side": 1,
+      "message": "I hear what you are saying with this 1st sentence but it sounds a little uninviting.  Maybe soften with something like \"Benchmarking Solid State Drives (SSDs) can be tricky and without some solid knowledge of the internal properties of the underlying media, it can be easy to create inefficient tests or mis-interpret results.\"",
+      "revId": "2ca7ab3e105bd204da9a375fe079ae74acf57a1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7e5691f_4bf1d406",
+        "filename": "doc/benchmarking.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-10T17:25:32Z",
+      "side": 1,
+      "message": "I know you understand this but as written it sounds like we\u0027re saying that GC is needed because EBs become full when actually GC is needed because EBs become fragmented and, as you noted earlier, you can\u0027t \u0027erase\u0027 anything smaller than an EB so at some point FW needs to collect all of the fragmented data in an EB and move it to another EB contiguously so that it can free up the old EB fully and make all of that space available as the \u0027deleted\u0027 areas in the fragmented EB are unusable.",
+      "revId": "2ca7ab3e105bd204da9a375fe079ae74acf57a1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fd189366_e23cb475",
+        "filename": "doc/benchmarking.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-10T17:25:32Z",
+      "side": 1,
+      "message": "and i would add \"by having assured free EBs to move fragmented data to\" or something less wordy than that which you are better at crafting than I am :)",
+      "revId": "2ca7ab3e105bd204da9a375fe079ae74acf57a1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1198b12f_aa7fcd5d",
+        "filename": "doc/benchmarking.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-10T17:25:32Z",
+      "side": 1,
+      "message": "Not sure how over-provisioning helps skip #3? It is actually what makes it possible that #3 can be completed",
+      "revId": "2ca7ab3e105bd204da9a375fe079ae74acf57a1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "72ed6fb7_0ae837e4",
+        "filename": "doc/benchmarking.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-10T17:25:32Z",
+      "side": 1,
+      "message": "This thing about SW doing sequential writes, as you know its a lot more complicated than that unless you\u0027re doing raw writes.  Maybe instead of saying software say \"the lowest software layer in the storage stack\" unless you think that\u0027s just more info and will confuse more than it helps",
+      "revId": "2ca7ab3e105bd204da9a375fe079ae74acf57a1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7380e466_ec24596c",
+        "filename": "doc/benchmarking.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-10T17:25:32Z",
+      "side": 1,
+      "message": "Again, I know what you are saying but to avoid it sounding like that actually what its doing (yes, I know you used the word \u0027effectively\u0027) I would add \"by laying out the data so that the GC FW has much less work to do\"",
+      "revId": "2ca7ab3e105bd204da9a375fe079ae74acf57a1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2985035b_9ee1a106",
+        "filename": "doc/benchmarking.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-10T17:25:32Z",
+      "side": 1,
+      "message": "So I don\u0027t think it\u0027s possible to know this as stated.  Maybe it\u0027d be better to say something like \"given this basic knowledge of GC, trying to perform IO in such a way as to minimize the impact of GC one can work to improve the consistency of IO latencies\" or something like that",
+      "revId": "2ca7ab3e105bd204da9a375fe079ae74acf57a1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d102bf78_cdf8c9a7",
         "filename": "doc/benchmarking.md",
         "patchSetId": 2
