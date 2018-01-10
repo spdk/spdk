@@ -105,10 +105,10 @@ p.set_defaults(func=get_target_nodes)
 
 
 def construct_target_node(args):
-    lun_name_id_dict = dict(u.split(":")
-                            for u in args.lun_name_id_pairs.strip().split(" "))
-    lun_names = lun_name_id_dict.keys()
-    lun_ids = list(map(int, lun_name_id_dict.values()))
+    bdev_name_id_dict = dict(u.split(":")
+                             for u in args.bdev_name_id_pairs.strip().split(" "))
+    bdev_names = bdev_name_id_dict.keys()
+    lun_ids = list(map(int, bdev_name_id_dict.values()))
 
     pg_tags = []
     ig_tags = []
@@ -122,7 +122,7 @@ def construct_target_node(args):
         'alias_name': args.alias_name,
         'pg_tags': pg_tags,
         'ig_tags': ig_tags,
-        'lun_names': lun_names,
+        'bdev_names': bdev_names,
         'lun_ids': lun_ids,
         'queue_depth': args.queue_depth,
         'chap_disabled': args.chap_disabled,
@@ -135,12 +135,12 @@ def construct_target_node(args):
 p = subparsers.add_parser('construct_target_node', help='Add a target node')
 p.add_argument('name', help='Target node name (ASCII)')
 p.add_argument('alias_name', help='Target node alias name (ASCII)')
-p.add_argument('lun_name_id_pairs', help="""Whitespace-separated list of LUN <name:id> pairs enclosed
-in quotes.  Format:  'lun_name0:id0 lun_name1:id1' etc
+p.add_argument('bdev_name_id_pairs', help="""Whitespace-separated list of <bdev name:LUN ID> pairs enclosed
+in quotes.  Format:  'bdev_name0:id0 bdev_name1:id1' etc
 Example: 'Malloc0:0 Malloc1:1 Malloc5:2'
-*** The LUNs must pre-exist ***
+*** The bdevs must pre-exist ***
 *** LUN0 (id = 0) is required ***
-*** LUN names cannot contain space or colon characters ***""")
+*** bdev names cannot contain space or colon characters ***""")
 p.add_argument('pg_ig_mappings', help="""List of (Portal_Group_Tag:Initiator_Group_Tag) mappings
 Whitespace separated, quoted, mapping defined with colon
 separated list of "tags" (int > 0)
@@ -759,7 +759,7 @@ p.set_defaults(func=construct_vhost_scsi_controller)
 def add_vhost_scsi_lun(args):
     params = {
         'ctrlr': args.ctrlr,
-        'lun_name': args.lun_name,
+        'bdev_name': args.bdev_name,
         'scsi_target_num': args.scsi_target_num
     }
 
@@ -768,7 +768,7 @@ def add_vhost_scsi_lun(args):
 p = subparsers.add_parser('add_vhost_scsi_lun', help='Add lun to vhost controller')
 p.add_argument('ctrlr', help='conntroller name where add lun')
 p.add_argument('scsi_target_num', help='scsi_target_num', type=int)
-p.add_argument('lun_name', help='lun name')
+p.add_argument('bdev_name', help='bdev name')
 p.set_defaults(func=add_vhost_scsi_lun)
 
 def remove_vhost_scsi_target(args):

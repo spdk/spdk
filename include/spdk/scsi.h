@@ -61,8 +61,6 @@ extern "C" {
 
 #define SPDK_SCSI_PORT_MAX_NAME_LENGTH		255
 
-#define SPDK_SCSI_LUN_MAX_NAME_LENGTH		64
-
 enum spdk_scsi_data_dir {
 	SPDK_SCSI_DIR_NONE = 0,
 	SPDK_SCSI_DIR_TO_DEV = 1,
@@ -153,7 +151,7 @@ int spdk_scsi_init(void);
 void spdk_scsi_fini(void);
 
 int spdk_scsi_lun_get_id(const struct spdk_scsi_lun *lun);
-const char *spdk_scsi_lun_get_name(const struct spdk_scsi_lun *lun);
+const char *spdk_scsi_lun_get_bdev_name(const struct spdk_scsi_lun *lun);
 const struct spdk_scsi_dev *spdk_scsi_lun_get_dev(const struct spdk_scsi_lun *lun);
 
 const char *spdk_scsi_dev_get_name(const struct spdk_scsi_dev *dev);
@@ -174,10 +172,8 @@ void spdk_scsi_dev_free_io_channels(struct spdk_scsi_dev *dev);
  * \brief Constructs a SCSI device object using the given parameters.
  *
  * \param name Name for the SCSI device.
- * \param queue_depth Queue depth for the SCSI device.  This queue depth is
- * 		      a combined queue depth for all LUNs in the device.
- * \param lun_list List of LUN objects for the SCSI device.  Caller is
- * 		   responsible for managing the memory containing this list.
+ * \param bdev_name_list List of bdev names to attach to the LUNs for this SCSI
+ *                       device.
  * \param lun_id_list List of LUN IDs for the LUN in this SCSI device.  Caller is
  *		      responsible for managing the memory containing this list.
  *		      lun_id_list[x] is the LUN ID for lun_list[x].
@@ -188,7 +184,7 @@ void spdk_scsi_dev_free_io_channels(struct spdk_scsi_dev *dev);
  * \return The constructed spdk_scsi_dev object.
  */
 struct spdk_scsi_dev *spdk_scsi_dev_construct(const char *name,
-		char *lun_name_list[],
+		const char *bdev_name_list[],
 		int *lun_id_list,
 		int num_luns,
 		uint8_t protocol_id,
