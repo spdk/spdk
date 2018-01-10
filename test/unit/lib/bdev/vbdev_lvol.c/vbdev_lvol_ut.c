@@ -108,6 +108,15 @@ spdk_bdev_unregister_done(struct spdk_bdev *bdev, int bdeverrno)
 }
 
 void
+spdk_lvs_rename(struct spdk_lvol_store *lvs, const char *new_name,
+		spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	strncpy(lvs->name, new_name, SPDK_LVS_NAME_MAX);
+
+	cb_fn(cb_arg, lvs, g_lvolerrno);
+}
+
+void
 spdk_lvol_rename(struct spdk_lvol *lvol, const char *new_name,
 		 spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
@@ -248,6 +257,8 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 		lvs = calloc(1, sizeof(*lvs));
 		SPDK_CU_ASSERT_FATAL(lvs != NULL);
 		TAILQ_INIT(&lvs->lvols);
+		uuid_generate_time(lvs->uuid);
+		strncpy(lvs->name, o->name, SPDK_LVS_NAME_MAX);
 		lvs->bs_dev = bs_dev;
 		error = 0;
 	}
@@ -1137,6 +1148,57 @@ ut_vbdev_lvol_submit_request(void)
 	free(g_base_bdev);
 }
 
+static void
+ut_lvs_rename(void)
+{
+	int rc = 0;
+	int sz = 10;
+	struct spdk_lvol_store *lvs;
+	struct spdk_bs_dev *b_bdev;
+
+	/* Lvol store is succesfully created */
+	rc = vbdev_lvs_create(&g_bdev, "old_lvs_name", 0, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	CU_ASSERT(g_bs_dev != NULL);
+	b_bdev = g_bs_dev;
+
+	g_bs_dev = NULL;
+	lvs = g_lvol_store;
+	g_lvol_store = NULL;
+
+	g_base_bdev = calloc(1, sizeof(*g_base_bdev));
+	SPDK_CU_ASSERT_FATAL(g_base_bdev != NULL);
+
+	/* Successfully create lvol, which should be destroyed with lvs later */
+	g_lvolerrno = -1;
+	rc = vbdev_lvol_create(lvs, "lvol", sz, false, vbdev_lvol_create_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvolerrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
+
+	/* Trying to rename lvs with lvols created */
+	vbdev_lvs_rename(lvs, "new_lvs_name", lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	CU_ASSERT_STRING_EQUAL(lvs->name, "new_lvs_name");
+	CU_ASSERT_STRING_EQUAL(TAILQ_FIRST(&TAILQ_FIRST(&lvs->lvols)->bdev->aliases)->alias, "new_lvs_name/lvol");
+
+	/* Trying to rename lvs with name already exists */
+	vbdev_lvs_rename(lvs, "new_lvs_name", lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(g_lvserrno == -EEXIST);
+
+	/* Unload lvol store */
+	g_lvol_store = lvs;
+	g_bs_dev = b_bdev;
+	vbdev_lvs_destruct(g_lvol_store, lvol_store_op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	CU_ASSERT(g_lvol_store == NULL);
+
+	free(g_base_bdev->name);
+	free(g_base_bdev);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1165,7 +1227,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "ut_lvol_read_write", ut_lvol_read_write) == NULL ||
 		CU_add_test(suite, "ut_vbdev_lvol_submit_request", ut_vbdev_lvol_submit_request) == NULL ||
 		CU_add_test(suite, "lvol_examine", ut_lvol_examine) == NULL ||
-		CU_add_test(suite, "ut_lvol_rename", ut_lvol_rename) == NULL
+		CU_add_test(suite, "ut_lvol_rename", ut_lvol_rename) == NULL ||
+		CU_add_test(suite, "ut_lvs_rename", ut_lvs_rename) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

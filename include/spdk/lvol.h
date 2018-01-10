@@ -114,6 +114,17 @@ int spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 		  spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg);
 
 /**
+ * \brief Renames given lvolstore.
+ *
+ * \param lvs Pointer to lvolstore
+ * \param cb_fn Completion callback
+ * \param cb_arg Completion callback custom arguments
+ * \return error
+ */
+void spdk_lvs_rename(struct spdk_lvol_store *lvs, const char *new_name,
+		     spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg);
+
+/**
  * \brief Unloads lvolstore
  *
  * All lvols have to be closed beforehand, when doing unload.

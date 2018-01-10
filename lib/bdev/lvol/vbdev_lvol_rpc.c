@@ -168,6 +168,81 @@ invalid:
 }
 SPDK_RPC_REGISTER("construct_lvol_store", spdk_rpc_construct_lvol_store)
 
+struct rpc_rename_lvol_store {
+	char *old_name;
+	char *new_name;
+};
+
+static void
+free_rpc_rename_lvol_store(struct rpc_rename_lvol_store *req)
+{
+	free(req->old_name);
+	free(req->new_name);
+}
+
+static const struct spdk_json_object_decoder rpc_rename_lvol_store_decoders[] = {
+	{"old_name", offsetof(struct rpc_rename_lvol_store, old_name), spdk_json_decode_string},
+	{"new_name", offsetof(struct rpc_rename_lvol_store, new_name), spdk_json_decode_string},
+};
+
+static void
+_spdk_rpc_rename_lvol_store_cb(void *cb_arg, struct spdk_lvol_store *lvol_store, int lvserrno)
+{
+	struct spdk_json_write_ctx *w;
+	struct spdk_jsonrpc_request *request = cb_arg;
+
+	if (lvserrno != 0) {
+		goto invalid;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-lvserrno));
+}
+
+static void
+spdk_rpc_rename_lvol_store(struct spdk_jsonrpc_request *request,
+			   const struct spdk_json_val *params)
+{
+	struct rpc_rename_lvol_store req = {};
+	struct spdk_lvol_store *lvs;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_rename_lvol_store_decoders,
+				    SPDK_COUNTOF(rpc_rename_lvol_store_decoders),
+				    &req)) {
+		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	lvs = vbdev_get_lvol_store_by_name(req.old_name);
+	if (lvs == NULL) {
+		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "no lvs existing for given name\n");
+		rc = -ENOENT;
+		goto invalid;
+	}
+
+	vbdev_lvs_rename(lvs, req.new_name, _spdk_rpc_rename_lvol_store_cb, request);
+
+	free_rpc_rename_lvol_store(&req);
+
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
+	free_rpc_rename_lvol_store(&req);
+}
+SPDK_RPC_REGISTER("rename_lvol_store", spdk_rpc_rename_lvol_store)
+
 struct rpc_destroy_lvol_store {
 	char *uuid;
 	char *lvs_name;
