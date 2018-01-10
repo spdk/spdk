@@ -780,12 +780,12 @@ spdk_vhost_scsi_lun_hotremove(const struct spdk_scsi_lun *lun, void *arg)
 
 int
 spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num,
-			    const char *lun_name)
+			    const char *bdev_name)
 {
 	struct spdk_vhost_scsi_dev *svdev;
 	char target_name[SPDK_SCSI_DEV_MAX_NAME];
 	int lun_id_list[1];
-	char *lun_names_list[1];
+	const char *bdev_names_list[1];
 
 	svdev = to_scsi_dev(vdev);
 	if (svdev == NULL) {
@@ -798,12 +798,9 @@ spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num,
 		return -EINVAL;
 	}
 
-	if (lun_name == NULL) {
+	if (bdev_name == NULL) {
 		SPDK_ERRLOG("No lun name specified \n");
 		return -EINVAL;
-	} else if (strlen(lun_name) >= SPDK_SCSI_DEV_MAX_NAME) {
-		SPDK_ERRLOG("LUN name '%s' too long (max %d).\n", lun_name, SPDK_SCSI_DEV_MAX_NAME - 1);
-		return -1;
 	}
 
 	if (vdev->lcore != -1 && !spdk_vhost_dev_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG)) {
@@ -821,16 +818,16 @@ spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num,
 	 */
 	snprintf(target_name, sizeof(target_name), "Target %u", scsi_tgt_num);
 	lun_id_list[0] = 0;
-	lun_names_list[0] = (char *)lun_name;
+	bdev_names_list[0] = (char *)bdev_name;
 
 	svdev->scsi_dev_state[scsi_tgt_num].removed = false;
-	svdev->scsi_dev[scsi_tgt_num] = spdk_scsi_dev_construct(target_name, lun_names_list, lun_id_list,
+	svdev->scsi_dev[scsi_tgt_num] = spdk_scsi_dev_construct(target_name, bdev_names_list, lun_id_list,
 					1,
 					SPDK_SPC_PROTOCOL_IDENTIFIER_SAS, spdk_vhost_scsi_lun_hotremove, svdev);
 
 	if (svdev->scsi_dev[scsi_tgt_num] == NULL) {
-		SPDK_ERRLOG("Couldn't create spdk SCSI target '%s' using lun device '%s' in controller: %s\n",
-			    target_name, lun_name, vdev->name);
+		SPDK_ERRLOG("Couldn't create spdk SCSI target '%s' using bdev '%s' in controller: %s\n",
+			    target_name, bdev_name, vdev->name);
 		return -EINVAL;
 	}
 	spdk_scsi_dev_add_port(svdev->scsi_dev[scsi_tgt_num], 0, "vhost");
@@ -840,8 +837,8 @@ spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num,
 		eventq_enqueue(svdev, scsi_tgt_num, VIRTIO_SCSI_T_TRANSPORT_RESET, VIRTIO_SCSI_EVT_RESET_RESCAN);
 	}
 
-	SPDK_NOTICELOG("Controller %s: defined target '%s' using lun '%s'\n",
-		       vdev->name, target_name, lun_name);
+	SPDK_NOTICELOG("Controller %s: defined target '%s' using bdev '%s'\n",
+		       vdev->name, target_name, bdev_name);
 	return 0;
 }
 
@@ -910,7 +907,7 @@ spdk_vhost_scsi_controller_construct(void)
 	struct spdk_vhost_dev *vdev;
 	int i, dev_num;
 	unsigned ctrlr_num = 0;
-	char *lun_name, *tgt_num_str;
+	char *bdev_name, *tgt_num_str;
 	char *cpumask;
 	char *name;
 	char *keyword;
@@ -967,16 +964,16 @@ spdk_vhost_scsi_controller_construct(void)
 			}
 
 			dev_num = (int)strtol(tgt_num_str, NULL, 10);
-			lun_name = spdk_conf_section_get_nmval(sp, keyword, i, 1);
-			if (lun_name == NULL) {
-				SPDK_ERRLOG("%s: Invalid or missing LUN name for target %d\n", name, dev_num);
+			bdev_name = spdk_conf_section_get_nmval(sp, keyword, i, 1);
+			if (bdev_name == NULL) {
+				SPDK_ERRLOG("%s: Invalid or missing bdev name for target %d\n", name, dev_num);
 				return -1;
 			} else if (spdk_conf_section_get_nmval(sp, keyword, i, 2)) {
 				SPDK_ERRLOG("%s: Only one LUN per vhost SCSI device supported\n", name);
 				return -1;
 			}
 
-			if (spdk_vhost_scsi_dev_add_tgt(vdev, dev_num, lun_name) < 0) {
+			if (spdk_vhost_scsi_dev_add_tgt(vdev, dev_num, bdev_name) < 0) {
 				return -1;
 			}
 		}
@@ -1199,8 +1196,8 @@ spdk_vhost_scsi_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_
 			spdk_json_write_name(w, "id");
 			spdk_json_write_int32(w, spdk_scsi_lun_get_id(lun));
 
-			spdk_json_write_name(w, "name");
-			spdk_json_write_string(w, spdk_scsi_lun_get_name(lun));
+			spdk_json_write_name(w, "bdev_name");
+			spdk_json_write_string(w, spdk_scsi_lun_get_bdev_name(lun));
 
 			spdk_json_write_object_end(w);
 		}

@@ -206,7 +206,7 @@ lun_construct(void)
 	struct spdk_scsi_lun		*lun;
 	struct spdk_bdev		bdev;
 
-	lun = spdk_scsi_lun_construct("lun0", &bdev, NULL, NULL);
+	lun = spdk_scsi_lun_construct(&bdev, NULL, NULL);
 
 	SPDK_CU_ASSERT_FATAL(lun != NULL);
 	return lun;
@@ -568,7 +568,7 @@ lun_construct_null_ctx(void)
 {
 	struct spdk_scsi_lun		*lun;
 
-	lun = spdk_scsi_lun_construct("lun0", NULL, NULL, NULL);
+	lun = spdk_scsi_lun_construct(NULL, NULL, NULL);
 
 	/* lun should be NULL since we passed NULL for the ctx pointer. */
 	CU_ASSERT(lun == NULL);
