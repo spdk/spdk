@@ -59,9 +59,70 @@ bool lvol_store_initialize_cb_fail = false;
 bool lvol_already_opened = false;
 bool g_examine_done = false;
 
+int
+spdk_bdev_alias_add(struct spdk_bdev *bdev, const char *alias)
+{
+	struct spdk_bdev_alias *tmp;
+
+	if (alias == NULL) {
+		SPDK_ERRLOG("Empty alias passed\n");
+		return -EINVAL;
+	}
+
+	if (spdk_bdev_get_by_name(alias)) {
+		SPDK_ERRLOG("Bdev name/alias: %s already exists\n", alias);
+		return -EEXIST;
+	}
+
+	tmp = calloc(1, sizeof(*tmp));
+	if (tmp == NULL) {
+		SPDK_ERRLOG("Unable to allocate alias\n");
+		return -ENOMEM;
+	}
+
+	tmp->alias = strdup(alias);
+	if (tmp->alias == NULL) {
+		free(tmp);
+		SPDK_ERRLOG("Unable to allocate alias\n");
+		return -ENOMEM;
+	}
+
+	TAILQ_INSERT_TAIL(&bdev->aliases, tmp, tailq);
+
+	return 0;
+}
+
+int
+spdk_bdev_alias_del(struct spdk_bdev *bdev, const char *alias)
+{
+	struct spdk_bdev_alias *tmp;
+
+	TAILQ_FOREACH(tmp, &bdev->aliases, tailq) {
+		if (strcmp(alias, tmp->alias) == 0) {
+			TAILQ_REMOVE(&bdev->aliases, tmp, tailq);
+			free(tmp->alias);
+			free(tmp);
+			return 0;
+		}
+	}
+
+	free(tmp);
+
+	return -ENOENT;
+}
+
 void
 spdk_bdev_unregister_done(struct spdk_bdev *bdev, int bdeverrno)
 {
+}
+
+int
+spdk_lvol_rename(struct spdk_lvol *lvol, const char *new_name,
+		 spdk_lvol_op_complete cb_fn, void *cb_arg)
+{
+	cb_fn(cb_arg, g_lvolerrno);
+
+	return 0;
 }
 
 void
@@ -431,6 +492,8 @@ spdk_bdev_get_name(const struct spdk_bdev *bdev)
 int
 spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs, int base_bdev_count)
 {
+	TAILQ_INIT(&vbdev->aliases);
+
 	g_registered_bdevs++;
 	return 0;
 }
@@ -465,6 +528,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, size_t sz,
 	struct spdk_lvol *lvol;
 
 	lvol = _lvol_create(lvs);
+	strncpy(lvol->name, name, SPDK_LVS_NAME_MAX);
 	cb_fn(cb_arg, lvol, 0);
 
 	return 0;
@@ -499,6 +563,12 @@ vbdev_lvol_resize_complete(void *cb_arg, int lvolerrno)
 }
 
 static void
+vbdev_lvol_rename_complete(void *cb_arg, int lvolerrno)
+{
+	g_lvolerrno = lvolerrno;
+}
+
+static void
 ut_lvs_destroy(void)
 {
 	int rc = 0;
@@ -511,6 +581,17 @@ ut_lvs_destroy(void)
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
 	CU_ASSERT(g_bs_dev != NULL);
+
+	/* Create g_base_dev */
+	g_lvs_bdev = calloc(1, sizeof(*g_lvs_bdev));
+	SPDK_CU_ASSERT_FATAL(g_lvs_bdev != NULL);
+	g_base_bdev = calloc(1, sizeof(*g_base_bdev));
+	SPDK_CU_ASSERT_FATAL(g_base_bdev != NULL);
+	g_lvs_bdev->bdev = g_base_bdev;
+
+	/* Assign name to bdev */
+	g_base_bdev->name = strdup("UNIT_TEST_LVS_NAME/old_lvol");
+	SPDK_CU_ASSERT_FATAL(g_base_bdev->name != NULL);
 
 	lvs = g_lvol_store;
 	g_lvol_store = NULL;
@@ -528,6 +609,10 @@ ut_lvs_destroy(void)
 	vbdev_lvs_destruct(lvs, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvserrno == 0);
 	CU_ASSERT(g_lvol_store == NULL);
+
+	free(g_lvs_bdev);
+	free(g_base_bdev->name);
+	free(g_base_bdev);
 }
 
 static void
@@ -543,6 +628,14 @@ ut_lvol_init(void)
 	SPDK_CU_ASSERT_FATAL(g_lvs_bdev != NULL);
 	g_base_bdev = calloc(1, sizeof(*g_base_bdev));
 	SPDK_CU_ASSERT_FATAL(g_base_bdev != NULL);
+
+	/* Assign name to lvs */
+	strncpy(g_lvs->name, "UNIT_TEST_LVS_NAME", SPDK_LVS_NAME_MAX);
+	SPDK_CU_ASSERT_FATAL(g_lvs->name != NULL);
+
+	/* Assign name to bdev */
+	g_base_bdev->name = strdup("UNIT_TEST_LVS_NAME/old_lvol");
+	SPDK_CU_ASSERT_FATAL(g_base_bdev->name != NULL);
 
 	g_lvs_bdev->lvs = g_lvs;
 	g_lvs_bdev->bdev = g_base_bdev;
@@ -566,9 +659,8 @@ ut_lvol_init(void)
 
 	free(g_lvs);
 	free(g_lvs_bdev);
+	free(g_base_bdev->name);
 	free(g_base_bdev);
-
-
 }
 
 static void
@@ -656,6 +748,22 @@ ut_lvol_examine(void)
 	free(g_bs_dev);
 
 	/* Examine succesfully */
+	g_lvs = calloc(1, sizeof(*g_lvs));
+	SPDK_CU_ASSERT_FATAL(g_lvs != NULL);
+	TAILQ_INIT(&g_lvs->lvols);
+	g_lvs_bdev = calloc(1, sizeof(*g_lvs_bdev));
+	SPDK_CU_ASSERT_FATAL(g_lvs_bdev != NULL);
+	g_base_bdev = calloc(1, sizeof(*g_base_bdev));
+	SPDK_CU_ASSERT_FATAL(g_base_bdev != NULL);
+
+	/* Assign name to lvs */
+	strncpy(g_lvs->name, "UNIT_TEST_LVS_NAME", SPDK_LVS_NAME_MAX);
+	SPDK_CU_ASSERT_FATAL(g_lvs->name != NULL);
+
+	/* Assign name to bdev */
+	g_base_bdev->name = strdup("UNIT_TEST_LVS_NAME/old_lvol");
+	SPDK_CU_ASSERT_FATAL(g_base_bdev->name != NULL);
+
 	g_bs_dev = NULL;
 	g_lvserrno = 0;
 	g_lvolerrno = 0;
@@ -676,6 +784,63 @@ ut_lvol_examine(void)
 	free(bdev);
 	free(g_bs_dev);
 	free(g_lvol_store);
+
+	free(g_lvs);
+	free(g_lvs_bdev);
+	free(g_base_bdev->name);
+	free(g_base_bdev);
+}
+
+static void
+ut_lvol_rename(void)
+{
+	int sz = 10;
+	int rc;
+
+	g_lvs = calloc(1, sizeof(*g_lvs));
+	SPDK_CU_ASSERT_FATAL(g_lvs != NULL);
+	TAILQ_INIT(&g_lvs->lvols);
+	g_lvs_bdev = calloc(1, sizeof(*g_lvs_bdev));
+	SPDK_CU_ASSERT_FATAL(g_lvs_bdev != NULL);
+	g_base_bdev = calloc(1, sizeof(*g_base_bdev));
+	SPDK_CU_ASSERT_FATAL(g_base_bdev != NULL);
+
+	/* Assign name to lvs */
+	strncpy(g_lvs->name, "UNIT_TEST_LVS_NAME", SPDK_LVS_NAME_MAX);
+	SPDK_CU_ASSERT_FATAL(g_lvs->name != NULL);
+
+	/* Assign name to bdev */
+	g_base_bdev->name = strdup("UNIT_TEST_LVS_NAME/old_lvol");
+	SPDK_CU_ASSERT_FATAL(g_base_bdev->name != NULL);
+
+	g_lvs_bdev->lvs = g_lvs;
+	g_lvs_bdev->bdev = g_base_bdev;
+
+	uuid_generate_time(g_lvs->uuid);
+
+	TAILQ_INSERT_TAIL(&g_spdk_lvol_pairs, g_lvs_bdev, lvol_stores);
+
+	/* Successful lvol create */
+	g_lvolerrno = -1;
+	rc = vbdev_lvol_create(g_lvs, "lvol", sz, false, vbdev_lvol_create_complete, NULL);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	CU_ASSERT(g_lvol != NULL);
+	CU_ASSERT(g_lvolerrno == 0);
+
+	/* rename lvol */
+	rc = vbdev_lvol_rename(g_lvol, "new_lvol_name", vbdev_lvol_rename_complete, NULL);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	/* Successful lvol destruct */
+	vbdev_lvol_destruct(g_lvol);
+	CU_ASSERT(g_lvol == NULL);
+
+	TAILQ_REMOVE(&g_spdk_lvol_pairs, g_lvs_bdev, lvol_stores);
+
+	free(g_lvs);
+	free(g_lvs_bdev);
+	free(g_base_bdev->name);
+	free(g_base_bdev);
 }
 
 static void
@@ -693,9 +858,13 @@ ut_lvol_resize(void)
 	SPDK_CU_ASSERT_FATAL(g_lvs_bdev != NULL);
 	g_base_bdev = calloc(1, sizeof(*g_base_bdev));
 	SPDK_CU_ASSERT_FATAL(g_base_bdev != NULL);
+
+	/* Assign name to bdev */
+	g_base_bdev->name = strdup("UNIT_TEST_LVS_NAME/old_lvol");
+	SPDK_CU_ASSERT_FATAL(g_base_bdev->name != NULL);
+
 	g_lvs_bdev->lvs = g_lvs;
 	g_lvs_bdev->bdev = g_base_bdev;
-
 
 	uuid_generate_time(g_lvs->uuid);
 	g_base_bdev->blocklen = 4096;
@@ -754,6 +923,17 @@ ut_lvs_unload(void)
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
 	CU_ASSERT(g_bs_dev != NULL);
 
+	/* Create g_base_dev */
+	g_lvs_bdev = calloc(1, sizeof(*g_lvs_bdev));
+	SPDK_CU_ASSERT_FATAL(g_lvs_bdev != NULL);
+	g_base_bdev = calloc(1, sizeof(*g_base_bdev));
+	SPDK_CU_ASSERT_FATAL(g_base_bdev != NULL);
+	g_lvs_bdev->bdev = g_base_bdev;
+
+	/* Assign name to bdev */
+	g_base_bdev->name = strdup("UNIT_TEST_LVS_NAME/old_lvol");
+	SPDK_CU_ASSERT_FATAL(g_base_bdev->name != NULL);
+
 	lvs = g_lvol_store;
 	g_lvol_store = NULL;
 
@@ -771,6 +951,10 @@ ut_lvs_unload(void)
 	CU_ASSERT(g_lvserrno == 0);
 	CU_ASSERT(g_lvol_store == NULL);
 	CU_ASSERT(g_lvol != NULL);
+
+	free(g_lvs_bdev);
+	free(g_base_bdev->name);
+	free(g_base_bdev);
 }
 
 static void
@@ -954,7 +1138,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "ut_lvol_op_comp", ut_lvol_op_comp) == NULL ||
 		CU_add_test(suite, "ut_lvol_read_write", ut_lvol_read_write) == NULL ||
 		CU_add_test(suite, "ut_vbdev_lvol_submit_request", ut_vbdev_lvol_submit_request) == NULL ||
-		CU_add_test(suite, "lvol_examine", ut_lvol_examine) == NULL
+		CU_add_test(suite, "lvol_examine", ut_lvol_examine) == NULL ||
+		CU_add_test(suite, "ut_lvol_rename", ut_lvol_rename) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
