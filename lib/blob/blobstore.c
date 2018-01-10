@@ -3506,8 +3506,6 @@ void spdk_blob_set_read_only(struct spdk_blob *b)
 {
 	struct spdk_blob_data *blob = __blob_to_data(b);
 
-	blob->data_ro = true;
-	blob->md_ro = true;
 	blob->data_ro_flags |= SPDK_BLOB_READ_ONLY;
 
 	blob->state = SPDK_BLOB_STATE_DIRTY;
@@ -3519,6 +3517,13 @@ void spdk_blob_set_read_only(struct spdk_blob *b)
 static void
 _spdk_blob_sync_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
+	struct spdk_blob_data *blob = __blob_to_data(cb_arg);
+
+	if (bserrno == 0 && (blob->data_ro_flags & SPDK_BLOB_READ_ONLY)) {
+		blob->data_ro = true;
+		blob->md_ro = true;
+	}
+
 	spdk_bs_sequence_finish(seq, bserrno);
 }
 
