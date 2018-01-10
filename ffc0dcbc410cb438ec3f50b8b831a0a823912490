@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "934942e7_ec0e2a34",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-10T12:51:46Z",
+      "side": 1,
+      "message": ":D",
+      "range": {
+        "startLine": 9,
+        "startChar": 11,
+        "endLine": 9,
+        "endChar": 14
+      },
+      "revId": "ffc0dcbc410cb438ec3f50b8b831a0a823912490",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a992bbfe_8bc2db51",
+        "filename": "test/vhost/migration/autotest.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-10T12:51:46Z",
+      "side": 1,
+      "message": "Can we now name this file autotest.sh? we already have spdk/autotest.sh, spdk/test/vhost/fiotest/auotest.sh, now this autotest.sh... It will be confusing when talking about autotest which \"autotest\" are we referring to",
+      "revId": "ffc0dcbc410cb438ec3f50b8b831a0a823912490",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
