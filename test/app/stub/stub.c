@@ -55,6 +55,11 @@ static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
+	/* Set io_queue_size to UINT16_MAX, NVMe driver
+	 * will then reduce this to MQES to maximize
+	 * the io_queue_size as much as possible.
+	 */
+	opts->io_queue_size = UINT16_MAX;
 	return true;
 }
 
