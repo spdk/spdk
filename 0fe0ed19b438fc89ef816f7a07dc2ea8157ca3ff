@@ -1,0 +1,320 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0991f1f2_7341022d",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 632,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T08:33:33Z",
+      "side": 1,
+      "message": "I assume that lvol bdev has to be already attached as nbd disk to perform write ? Please see comment below for \"install/uninstall\".",
+      "range": {
+        "startLine": 632,
+        "startChar": 17,
+        "endLine": 632,
+        "endChar": 32
+      },
+      "revId": "0fe0ed19b438fc89ef816f7a07dc2ea8157ca3ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98aac8f6_5e2360af",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 634,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T08:33:33Z",
+      "side": 1,
+      "message": "snapshot could be deleted as well using delete_bdev() RPC.",
+      "revId": "0fe0ed19b438fc89ef816f7a07dc2ea8157ca3ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "974e0f85_616b56e2",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 645,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T08:33:33Z",
+      "side": 1,
+      "message": "Not sure on this requirement of 50% of lvs space. More important one would be that size of data being checked should be more than 1 cluster size.",
+      "range": {
+        "startLine": 645,
+        "startChar": 59,
+        "endLine": 645,
+        "endChar": 75
+      },
+      "revId": "0fe0ed19b438fc89ef816f7a07dc2ea8157ca3ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3879b1b_7849e43f",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 647,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T08:33:33Z",
+      "side": 1,
+      "message": "How is lvol bdev filled with data when we add it as nbd two steps below ?",
+      "range": {
+        "startLine": 647,
+        "startChar": 2,
+        "endLine": 647,
+        "endChar": 6
+      },
+      "revId": "0fe0ed19b438fc89ef816f7a07dc2ea8157ca3ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ff1f96c_f57e1bb0",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 648,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T08:33:33Z",
+      "side": 1,
+      "message": "I don\u0027t think its possible to create another lvol (this includes snapshots) if lvol store was taken up to 100%.\n\nIn this test one of lvols was thin provisioned, so that would make it possible. But then was written to 100%, leaving no more space for snapshot.",
+      "range": {
+        "startLine": 648,
+        "startChar": 2,
+        "endLine": 648,
+        "endChar": 18
+      },
+      "revId": "0fe0ed19b438fc89ef816f7a07dc2ea8157ca3ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b0b61cb_d54b152a",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 649,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T08:33:33Z",
+      "side": 1,
+      "message": "Maybe instead of two lines \"install\" and \"uninstall\" for each test, mention at top of snapshot/clone tests that nbd is used for testing whenever snapshot/clone data is accessed.",
+      "range": {
+        "startLine": 649,
+        "startChar": 2,
+        "endLine": 649,
+        "endChar": 69
+      },
+      "revId": "0fe0ed19b438fc89ef816f7a07dc2ea8157ca3ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de512f9f_cfc9cb8a",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 650,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T08:33:33Z",
+      "side": 1,
+      "message": "corresponding",
+      "range": {
+        "startLine": 650,
+        "startChar": 37,
+        "endLine": 650,
+        "endChar": 50
+      },
+      "revId": "0fe0ed19b438fc89ef816f7a07dc2ea8157ca3ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e1522c39_893574e8",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 661,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T08:33:33Z",
+      "side": 1,
+      "message": "This test case can be realized as one or two steps within previous TEST CASE 801 - Name: snapshot_compare_with_lvol_bdev\n\nOnly difference is writing to lvol bdev after making snapshot to see if it affected original snapshot.",
+      "range": {
+        "startLine": 661,
+        "startChar": 5,
+        "endLine": 661,
+        "endChar": 47
+      },
+      "revId": "0fe0ed19b438fc89ef816f7a07dc2ea8157ca3ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "71099b62_58e4e6f2",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 696,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T08:33:33Z",
+      "side": 1,
+      "message": "This can be added as one step in very first test 801, by adding one more step of removing snapshot.",
+      "range": {
+        "startLine": 696,
+        "startChar": 5,
+        "endLine": 696,
+        "endChar": 43
+      },
+      "revId": "0fe0ed19b438fc89ef816f7a07dc2ea8157ca3ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7869f59d_d6172fb6",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 716,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T08:33:33Z",
+      "side": 1,
+      "message": "Only two tests have this requirement, why particularly 64M in those two ?",
+      "range": {
+        "startLine": 716,
+        "startChar": 37,
+        "endLine": 716,
+        "endChar": 51
+      },
+      "revId": "0fe0ed19b438fc89ef816f7a07dc2ea8157ca3ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "34e7dbd0_8f6a25f4",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 750,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T08:33:33Z",
+      "side": 1,
+      "message": "Isn\u0027t this the same as test 806 above ?",
+      "range": {
+        "startLine": 750,
+        "startChar": 0,
+        "endLine": 750,
+        "endChar": 48
+      },
+      "revId": "0fe0ed19b438fc89ef816f7a07dc2ea8157ca3ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "049c16fd_a20256e5",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 766,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T08:33:33Z",
+      "side": 1,
+      "message": "It seems that creating clones on same blobstore will be supported in 18.01. In such case this test case won\u0027t be needed.",
+      "range": {
+        "startLine": 766,
+        "startChar": 0,
+        "endLine": 766,
+        "endChar": 49
+      },
+      "revId": "0fe0ed19b438fc89ef816f7a07dc2ea8157ca3ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ac59e8a_a0d46aad",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 789,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T08:33:33Z",
+      "side": 1,
+      "message": "This I\u0027m not sure of. Its possible that instead clones will be left as they are, but unusable due to removal of snapshot. I\u0027ll get back to you on that.",
+      "range": {
+        "startLine": 789,
+        "startChar": 0,
+        "endLine": 789,
+        "endChar": 42
+      },
+      "revId": "0fe0ed19b438fc89ef816f7a07dc2ea8157ca3ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bfb0a9f0_cb1e15f2",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 798,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T08:33:33Z",
+      "side": 1,
+      "message": "Isn\u0027t check if clone can be created on not a snapshot bdev done already in first couple steps of test 806 ?",
+      "range": {
+        "startLine": 798,
+        "startChar": 0,
+        "endLine": 798,
+        "endChar": 45
+      },
+      "revId": "0fe0ed19b438fc89ef816f7a07dc2ea8157ca3ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
