@@ -55,6 +55,7 @@ static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
+	opts->io_queue_size = UINT16_MAX;
 	return true;
 }
 
