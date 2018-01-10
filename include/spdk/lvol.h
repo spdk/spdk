@@ -152,6 +152,17 @@ int spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 		     bool thin_provisioned, spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
 
 /**
+ * \brief Renames lvol with new_name.
+ * \param lvol Handle to lvol
+ * \param new_name new name for lvol
+ * \param cb_fn Completion callback
+ * \param cb_arg Completion callback custom arguments
+ */
+int
+spdk_lvol_rename(struct spdk_lvol *lvol, const char *new_name,
+		 spdk_lvol_op_complete cb_fn, void *cb_arg);
+
+/**
  * \brief Closes lvol and removes information about lvol from its lvolstore.
  * \param lvol Handle to lvol
  * \param cb_fn Completion callback
