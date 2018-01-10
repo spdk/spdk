@@ -617,6 +617,88 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 }
 
 static void
+_spdk_lvs_rename_cb(void *cb_arg, int lvolerrno)
+{
+	struct spdk_lvs_with_handle_req *req = cb_arg;
+
+	if (req->lvserrno != 0) {
+		lvolerrno = req->lvserrno;
+	}
+	if (lvolerrno != 0) {
+		SPDK_ERRLOG("Lvol store rename operation failed\n");
+	} else {
+		strncpy(req->lvol_store->name, req->new_name, SPDK_LVS_NAME_MAX);
+	}
+
+	req->cb_fn(req->cb_arg, req->lvol_store, lvolerrno);
+	free(req);
+}
+
+static void
+_spdk_lvs_rename_sync_cb(void *cb_arg, int lvolerrno)
+{
+	struct spdk_lvs_with_handle_req *req = cb_arg;
+	struct spdk_blob *blob = req->lvol_store->super_blob;
+
+	if (lvolerrno < 0) {
+		req->lvserrno = lvolerrno;
+	}
+
+	spdk_blob_close(blob, _spdk_lvs_rename_cb, req);
+}
+
+static void
+_spdk_lvs_rename_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
+{
+	struct spdk_lvs_with_handle_req *req = cb_arg;
+	int rc;
+
+	if (lvolerrno < 0) {
+		req->lvserrno = lvolerrno;
+		_spdk_lvs_rename_cb(req->cb_arg, lvolerrno);
+		return;
+	}
+
+	rc = spdk_blob_set_xattr(blob, "name", req->new_name, strlen(req->new_name) + 1);
+	if (rc < 0) {
+		req->lvserrno = lvolerrno;
+		spdk_blob_close(blob, _spdk_lvs_rename_cb, req);
+		return;
+	}
+
+	req->lvol_store->super_blob = blob;
+
+	spdk_blob_sync_md(blob, _spdk_lvs_rename_sync_cb, req);
+}
+
+int spdk_lvs_rename(struct spdk_lvol_store *lvs, const char *new_name,
+		    spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvs_with_handle_req *req;
+
+	/* Check if new name is current lvol name.
+	 * If so, return success immediately */
+	if (strcmp(lvs->name, new_name) == 0) {
+		cb_fn(cb_arg, lvs, 0);
+		return 0;
+	}
+
+	req = calloc(1, sizeof(*req));
+	if (!req) {
+		SPDK_ERRLOG("Cannot alloc memory for lvol request pointer\n");
+		return -ENOMEM;
+	}
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+	req->lvol_store = lvs;
+	strncpy(req->new_name, new_name, SPDK_LVS_NAME_MAX);
+
+	spdk_bs_open_blob(lvs->blobstore, lvs->super_blob_id, _spdk_lvs_rename_open_cb, req);
+
+	return 0;
+}
+
+static void
 _lvs_unload_cb(void *cb_arg, int lvserrno)
 {
 	struct spdk_lvs_req *lvs_req = cb_arg;
