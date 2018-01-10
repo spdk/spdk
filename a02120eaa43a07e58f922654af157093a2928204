@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bd75fdd6_48e41695",
+        "filename": "test/vhost/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T13:30:21Z",
+      "side": 1,
+      "message": "The highlighted part is conflicting. Physical RDMA NIC is not \"needed\", but \"will be used if available\".\n\nIs there a requirement to use physical NIC at all ? Why not use just emulated Soft Roce NIC?",
+      "range": {
+        "startLine": 141,
+        "startChar": 20,
+        "endLine": 142,
+        "endChar": 29
+      },
+      "revId": "a02120eaa43a07e58f922654af157093a2928204",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6fcfe7e3_efcfcf5d",
+        "filename": "test/vhost/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T13:30:21Z",
+      "side": 1,
+      "message": "As this is a test plan, each step should be defined or refer to some other documentation/setup description. But it should not be optional.\nI think highlighted part can be removed.",
+      "range": {
+        "startLine": 146,
+        "startChar": 48,
+        "endLine": 146,
+        "endChar": 70
+      },
+      "revId": "a02120eaa43a07e58f922654af157093a2928204",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7cbf4811_ea4dd210",
+        "filename": "test/vhost/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T13:30:21Z",
+      "side": 1,
+      "message": "What information are checked exactly? Are there some details useful for determining level of success (time migration took or errors along the way) ?",
+      "range": {
+        "startLine": 171,
+        "startChar": 2,
+        "endLine": 172,
+        "endChar": 26
+      },
+      "revId": "a02120eaa43a07e58f922654af157093a2928204",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
