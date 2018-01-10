@@ -70,6 +70,24 @@
     },
     {
       "key": {
+        "uuid": "738acbdd_e88a0be9",
+        "filename": "doc/benchmarking.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-10T21:24:14Z",
+      "side": 1,
+      "message": "The larger the number of \"reserved\" erase blocks, the longer garbage collection can be delayed. The longer garbage collection is delayed, the higher the statistical likelihood that data on older erase blocks is rewritten, obviating the need for step #3.",
+      "parentUuid": "1198b12f_aa7fcd5d",
+      "revId": "2ca7ab3e105bd204da9a375fe079ae74acf57a1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "72ed6fb7_0ae837e4",
         "filename": "doc/benchmarking.md",
         "patchSetId": 2
@@ -81,6 +99,24 @@
       "writtenOn": "2018-01-10T17:25:32Z",
       "side": 1,
       "message": "This thing about SW doing sequential writes, as you know its a lot more complicated than that unless you\u0027re doing raw writes.  Maybe instead of saying software say \"the lowest software layer in the storage stack\" unless you think that\u0027s just more info and will confuse more than it helps",
+      "revId": "2ca7ab3e105bd204da9a375fe079ae74acf57a1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc7952ee_2a6ff659",
+        "filename": "doc/benchmarking.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-10T21:24:14Z",
+      "side": 1,
+      "message": "I added in \"to the device\" specifically so that it was clear that this was sequentially in terms of logical blocks on the SSD, not sequentially to some abstraction like a file (although those two are ultimately correlated).",
+      "parentUuid": "72ed6fb7_0ae837e4",
       "revId": "2ca7ab3e105bd204da9a375fe079ae74acf57a1e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -132,6 +168,24 @@
       "writtenOn": "2018-01-09T22:59:21Z",
       "side": 1,
       "message": "I like this description. You covered the topics in a really understandable way. The only question I still have at the end of it was how can I know if my device is being bottlenecked by garbage collection. However, I can see how the answer to that question may be outside of the scope of this document.\nIs there a specific rule of thumb that users can use to determine how to manage their workloads to see maximum random write performance based on the factory over-provisioning of their device? \nI imagine another way for the user to check would be to start a random write benchmark on a small portion of the disk (i.e. by reserving a large portion of the disk in software)and then increase the portion of the disk to which they are writing until they see a performance dip.\nDo we currently have a best known method?",
+      "revId": "2ca7ab3e105bd204da9a375fe079ae74acf57a1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d0fe895_3350b2d1",
+        "filename": "doc/benchmarking.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-10T21:24:14Z",
+      "side": 1,
+      "message": "Q) How can I know if my device is being bottlenecked by garbage collection?\n\nA) You don\u0027t really - the best you can do is see that you aren\u0027t getting the performance quoted in the spec sheet.\n\nQ) Is there a specific rule of thumb that users can use to determine how to manage their workloads to see maximum random write performance?\n\nA) You have to discover it using a process like you described for each SSD independently. They all behave differently. For enterprise SSDs, they come essentially already optimized for random write workloads (they ship with between 10 and 20% over-provisioning typically). Consumer SSDs usually have much less over-provisioning, but you probably aren\u0027t running a production database on a consumer SSD anyway. This document is mostly going to prevent mistakes people make when benchmarking something at their desk against a consumer SSD during development. That scenario is the vast majority of the questions we get about performance.",
+      "parentUuid": "d102bf78_cdf8c9a7",
       "revId": "2ca7ab3e105bd204da9a375fe079ae74acf57a1e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
