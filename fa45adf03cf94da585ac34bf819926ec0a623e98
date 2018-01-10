@@ -16,6 +16,24 @@
       "revId": "fa45adf03cf94da585ac34bf819926ec0a623e98",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17f41913_a1912065",
+        "filename": "doc/userspace.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-10T16:37:37Z",
+      "side": 1,
+      "message": "If you cut out the first clause in the compound sentence, it reads \"SPDK elects instead to poll them for completions\". I think it is grammatically correct.",
+      "parentUuid": "fb26598a_2d2c56c9",
+      "revId": "fa45adf03cf94da585ac34bf819926ec0a623e98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
