@@ -3486,6 +3486,34 @@ void spdk_bs_create_blob_snapshot(struct spdk_blob *blob, spdk_blob_get_bs_dev b
 }
 /* END spdk_bs_create_blob_snapshot */
 
+/* START spdk_bs_create_blob_clone */
+
+void spdk_bs_create_blob_clone(struct spdk_blob *blob, spdk_blob_get_bs_dev bs_dev_fn,
+			       spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
+{
+	struct spdk_blob_opts   opts;
+	struct spdk_bs_cpl		cpl;
+	struct spdk_blob_data	*snapshot = __blob_to_data(blob);
+	struct spdk_bs_dev		*bs_dev;
+
+	bs_dev_fn(cb_arg, __data_to_blob(snapshot), &bs_dev);
+
+	spdk_blob_opts_init(&opts);
+	opts.thin_provision = true;
+	opts.num_clusters = spdk_blob_get_num_pages(blob);
+
+	cpl.u.blobid.cb_fn = cb_fn;
+	cpl.u.blobid.cb_arg = cb_arg;
+
+	if (!snapshot->data_ro || !snapshot->md_ro) {
+		cb_fn(cb_arg, SPDK_BLOBID_INVALID, -EINVAL);
+		return;
+	}
+
+	_spdk_bs_create_blob(snapshot->bs, &opts, bs_dev, cb_fn, &cpl);
+}
+/* END spdk_bs_create_blob_clone */
+
 /* START spdk_blob_resize */
 int
 spdk_blob_resize(struct spdk_blob *_blob, uint64_t sz)
