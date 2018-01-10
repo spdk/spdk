@@ -253,6 +253,53 @@ vbdev_lvs_create(struct spdk_bdev *base_bdev, const char *name, uint32_t cluster
 }
 
 static void
+_vbdev_lvs_rename_cb(void *cb_arg, int lvserrno)
+{
+	struct spdk_lvs_req *req = cb_arg;
+	struct spdk_lvol *tmp;
+
+	if (lvserrno != 0) {
+		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Lvol store rename failed\n");
+	} else {
+		TAILQ_FOREACH(tmp, &req->lvol_store->lvols, link) {
+			/* We have to pass current lvol name, since only lvs name changed */
+			_vbdev_lvol_change_bdev_alias(tmp, tmp->name);
+		}
+	}
+
+	req->cb_fn(req->cb_arg, lvserrno);
+	free(req);
+}
+
+void
+vbdev_lvs_rename(struct spdk_lvol_store *lvs, const char *new_lvs_name,
+		 spdk_lvs_op_complete cb_fn, void *cb_arg)
+{
+	struct lvol_store_bdev *lvs_bdev;
+
+	struct spdk_lvs_req *req;
+
+	lvs_bdev = vbdev_get_lvs_bdev_by_lvs(lvs);
+	if (!lvs_bdev) {
+		SPDK_ERRLOG("No such lvol store found\n");
+		cb_fn(cb_arg, -ENODEV);
+		return;
+	}
+
+	req = calloc(1, sizeof(*req));
+	if (!req) {
+		SPDK_ERRLOG("Cannot alloc memory for vbdev lvol store request pointer\n");
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+	req->lvol_store = lvs;
+
+	spdk_lvs_rename(lvs, new_lvs_name, _vbdev_lvs_rename_cb, req);
+}
+
+static void
 _vbdev_lvs_remove_cb(void *cb_arg, int lvserrno)
 {
 	struct lvol_store_bdev *lvs_bdev = cb_arg;

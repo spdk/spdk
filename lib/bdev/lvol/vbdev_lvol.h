@@ -61,6 +61,17 @@ void vbdev_lvol_rename(struct spdk_lvol *lvol, const char *new_lvol_name,
 		       spdk_lvol_op_complete cb_fn, void *cb_arg);
 
 /**
+ * \brief Renames given lvolstore.
+ *
+ * \param lvs Pointer to lvolstore
+ * \param new_name New name of lvs
+ * \param cb_fn Completion callback
+ * \param cb_arg Completion callback custom arguments
+ */
+void vbdev_lvs_rename(struct spdk_lvol_store *lvs, const char *new_lvs_name,
+		      spdk_lvs_op_complete cb_fn, void *cb_arg);
+
+/**
  * \brief Search for handle lvolstore
  * \param uuid_str UUID of lvolstore
  * \return Handle to spdk_lvol_store or NULL if not found.

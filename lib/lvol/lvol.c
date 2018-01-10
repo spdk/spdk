@@ -623,6 +623,102 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 }
 
 static void
+_spdk_lvs_rename_cb(void *cb_arg, int lvolerrno)
+{
+	struct spdk_lvs_req *req = cb_arg;
+
+	if (lvolerrno != 0) {
+		req->lvserrno = lvolerrno;
+	}
+	if (req->lvserrno != 0) {
+		SPDK_ERRLOG("Lvol store rename operation failed\n");
+		/* Lvs renaming failed, so we should 'clear' new_name.
+		 * Otherwise it could cause a failure on the next attepmt to change the name to 'new_name'  */
+		strncpy(req->lvol_store->new_name, req->lvol_store->name, SPDK_LVS_NAME_MAX);
+	} else {
+		/* Update lvs name with new_name */
+		strncpy(req->lvol_store->name, req->lvol_store->new_name, SPDK_LVS_NAME_MAX);
+	}
+
+	req->cb_fn(req->cb_arg, req->lvserrno);
+	free(req);
+}
+
+static void
+_spdk_lvs_rename_sync_cb(void *cb_arg, int lvolerrno)
+{
+	struct spdk_lvs_req *req = cb_arg;
+	struct spdk_blob *blob = req->lvol_store->super_blob;
+
+	if (lvolerrno < 0) {
+		req->lvserrno = lvolerrno;
+	}
+
+	spdk_blob_close(blob, _spdk_lvs_rename_cb, req);
+}
+
+static void
+_spdk_lvs_rename_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
+{
+	struct spdk_lvs_req *req = cb_arg;
+	int rc;
+
+	if (lvolerrno < 0) {
+		_spdk_lvs_rename_cb(cb_arg, lvolerrno);
+		return;
+	}
+
+	rc = spdk_blob_set_xattr(blob, "name", req->lvol_store->new_name,
+				 strlen(req->lvol_store->new_name) + 1);
+	if (rc < 0) {
+		req->lvserrno = rc;
+		_spdk_lvs_rename_sync_cb(req, rc);
+		return;
+	}
+
+	req->lvol_store->super_blob = blob;
+
+	spdk_blob_sync_md(blob, _spdk_lvs_rename_sync_cb, req);
+}
+
+void
+spdk_lvs_rename(struct spdk_lvol_store *lvs, const char *new_name,
+		spdk_lvs_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvs_req *req;
+	struct spdk_lvol_store *tmp;
+
+	/* Check if new name is current lvs name.
+	 * If so, return success immediately */
+	if (strncmp(lvs->name, new_name, SPDK_LVS_NAME_MAX) == 0) {
+		cb_fn(cb_arg, 0);
+		return;
+	}
+
+	/* Check if new or new_name is already used in other lvs */
+	TAILQ_FOREACH(tmp, &g_lvol_stores, link) {
+		if (!strncmp(new_name, tmp->name, SPDK_LVS_NAME_MAX) ||
+		    !strncmp(new_name, tmp->new_name, SPDK_LVS_NAME_MAX)) {
+			cb_fn(cb_arg, -EEXIST);
+			return;
+		}
+	}
+
+	req = calloc(1, sizeof(*req));
+	if (!req) {
+		SPDK_ERRLOG("Cannot alloc memory for lvol request pointer\n");
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+	strncpy(lvs->new_name, new_name, SPDK_LVS_NAME_MAX);
+	req->lvol_store = lvs;
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+
+	spdk_bs_open_blob(lvs->blobstore, lvs->super_blob_id, _spdk_lvs_rename_open_cb, req);
+}
+
+static void
 _lvs_unload_cb(void *cb_arg, int lvserrno)
 {
 	struct spdk_lvs_req *lvs_req = cb_arg;

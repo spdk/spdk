@@ -45,6 +45,8 @@
 struct spdk_lvs_req {
 	spdk_lvs_op_complete    cb_fn;
 	void                    *cb_arg;
+	struct spdk_lvol_store		*lvol_store;
+	int				lvserrno;
 };
 
 struct spdk_lvol_req {
@@ -89,6 +91,7 @@ struct spdk_lvol_store {
 	bool				on_list;
 	TAILQ_ENTRY(spdk_lvol_store)	link;
 	char				name[SPDK_LVS_NAME_MAX];
+	char				new_name[SPDK_LVS_NAME_MAX];
 };
 
 struct spdk_lvol {
