@@ -129,6 +129,95 @@ All tests are run in virtio-user mode. Tests 2-3, 5-9 are additionally run in vi
 3. Check if fio test ends with success.
 4. Repeat steps 1-3 on host for malloc with 4096 block size and 512 block size.
 
+### Live migration
+Live migration feature allows to move running virtual machines between SPDK vhost
+instances.
+Following tests include scenarios with SPDK vhost instances running on both the same
+physical server and between remote servers.
+Additional configuration of utilities like NFS share, NIC IP address adjustment,
+etc., might be necessary.
+
+#### Test case 1 - single server migration
+- Detect RDMA NICs; At least 1 physical RDMA NIC is needed to run the test.
+  If there is no physical NIC available then emulated Soft Roce NIC will
+  be used instead.
+- Create /tmp/share directory and put a test VM image in there.
+  Permissions to /tmp/share should allow read and write operations.
+- Run SPDK scripts/setup.sh to bind NVMe devices, if already not done.
+- Start SPDK NVMeOF Target application.
+    - Construct a single NVMe bdev from available bound NVMe drives.
+    - Create NVMeoF subsystem with NVMe bdev as single namespace.
+- Start first SDPK Vhost application instance (later referred to as "Vhost_1").
+    - Use different shared memory ID and CPU mask than NVMeOF Target.
+    - Construct a NVMe bdev by connecting to NVMeOF Target
+        (using trtype: rdma).
+    - Construct a single SCSI controller and add NVMe bdev to it.
+- Start first VM (VM_1) and connect to Vhost_1 controller. Verify if attached disk
+  is visible in the system.
+- Start second SDPK Vhost application instance (later referred to as "Vhost_2").
+    - Use different shared memory ID and CPU mask than previous SPDK instances.
+    - Construct a NVMe bdev by connecting to NVMeOF Target. Connect to the same
+      subsystem as Vhost_1, multiconnection is allowed.
+    - Construct a single SCSI controller and add NVMe bdev to it.
+- Start second VM (VM_2) but with "-incoming" option enabled.
+- Check states of both VMs using Qemu monitor utility.
+  VM_1 should be in running state.
+  VM_2 should be in paused (inmigrate) state.
+- Run FIO I/O traffic with verification enabled on to attached NVME on VM_1.
+- While FIO is running issue a command for VM_1 to migrate.
+- When the migrate call returns check the states of VMs again.
+  VM_1 should be in paused (postmigrate) state.
+  VM_2 should be in running state.
+  Additionally check the "info migrate" in VM_1 monitor for detailed information
+  about migration process.
+- Verify that FIO task completed successfully on VM_2 after migrating.
+  There should be no I/O failures, no verification failures, etc.
+- Cleanup:
+    - Shutdown both VMs.
+    - Gracefully shutdown Vhost instances and VNMeOF Target instance.
+    - Remove /tmp/share directory and it's contents.
+    - Clean RDMA NIC / Soft RoCE configuration.
+
+#### Test case 2 - remote server migration
+- Detect RDMA NICs on physical hosts. At least 1 RDMA NIC per host is needed
+  to run the test.
+- On Host 1 create /tmp/share directory and put a test VM image in there.
+  Add directory to /etc/exports and run NFS server on Host 1.
+- On Host 2 create /tmp/share directory. Using "showmount -e" check that NFS
+  resource from Host 1 is visible and mount it to /tmp/share.
+- Start SPDK NVMeOF Target application on Host 1.
+    - Construct a single NVMe bdev from available bound NVMe drives.
+    - Create NVMeoF subsystem with NVMe bdev as single namespace.
+- Start first SDPK Vhost application instance on Host 1(later referred to as "Vhost_1").
+    - Use different shared memory ID and CPU mask than NVMeOF Target.
+    - Construct a NVMe bdev by connecting to NVMeOF Target
+        (using trtype: rdma).
+    - Construct a single SCSI controller and add NVMe bdev to it.
+- Start first VM (VM_1) and connect to Vhost_1 controller. Verify if attached disk
+  is visible in the system.
+- Start second SDPK Vhost application instance on Host 2(later referred to as "Vhost_2").
+    - Construct a NVMe bdev by connecting to NVMeOF Target. Connect to the same
+      subsystem as Vhost_1, multiconnection is allowed.
+    - Construct a single SCSI controller and add NVMe bdev to it.
+- Start second VM (VM_2) but with "-incoming" option enabled.
+- Check states of both VMs using Qemu monitor utility.
+  VM_1 should be in running state.
+  VM_2 should be in paused (inmigrate) state.
+- Run FIO I/O traffic with verification enabled on to attached NVME on VM_1.
+- While FIO is running issue a command for VM_1 to migrate.
+- When the migrate call returns check the states of VMs again.
+  VM_1 should be in paused (postmigrate) state.
+  VM_2 should be in running state.
+  Additionally check the "info migrate" in VM_1 monitor for detailed information
+  about migration process.
+- Verify that FIO task completed successfully on VM_2 after migrating.
+  There should be no I/O failures, no verification failures, etc.
+- Cleanup:
+    - Shutdown both VMs.
+    - Gracefully shutdown Vhost instances and VNMeOF Target instance.
+    - Remove /tmp/share directory and it's contents.
+    - Clean RDMA NIC configuration.
+
 ### Performance tests
 Tests verifying the performance and efficiency of the module.
 
