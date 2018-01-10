@@ -95,6 +95,69 @@ spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id)
 	return dev->lun[lun_id];
 }
 
+int
+spdk_scsi_dev_add_lun(struct spdk_scsi_dev *dev, const char *bdev_name, int lun_id,
+		      void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
+		      void *hotremove_ctx)
+{
+	if (bdev_name == NULL) {
+		return -1;
+	} else {
+		return 0;
+	}
+}
+
+static void
+add_lun_test_cases(void)
+{
+	struct spdk_iscsi_tgt_node tgtnode;
+	int lun_id = 0;
+	char *bdev_name = NULL;
+	struct spdk_scsi_dev scsi_dev;
+	int rc;
+
+	memset(&tgtnode, 0, sizeof(struct spdk_iscsi_tgt_node));
+	memset(&scsi_dev, 0, sizeof(struct spdk_scsi_dev));
+
+	/* case 1 */
+	tgtnode.num_active_conns = 1;
+
+	rc = spdk_iscsi_tgt_node_add_lun(&tgtnode, bdev_name, lun_id);
+	CU_ASSERT(rc != 0);
+
+	/* case 2 */
+	tgtnode.num_active_conns = 0;
+	lun_id = -2;
+
+	rc = spdk_iscsi_tgt_node_add_lun(&tgtnode, bdev_name, lun_id);
+	CU_ASSERT(rc != 0);
+
+	/* case 3 */
+	lun_id = SPDK_SCSI_DEV_MAX_LUN;
+
+	rc = spdk_iscsi_tgt_node_add_lun(&tgtnode, bdev_name, lun_id);
+	CU_ASSERT(rc != 0);
+
+	/* case 4 */
+	lun_id = -1;
+	tgtnode.dev = NULL;
+
+	rc = spdk_iscsi_tgt_node_add_lun(&tgtnode, bdev_name, lun_id);
+	CU_ASSERT(rc != 0);
+
+	/* case 5 */
+	tgtnode.dev = &scsi_dev;
+
+	rc = spdk_iscsi_tgt_node_add_lun(&tgtnode, bdev_name, lun_id);
+	CU_ASSERT(rc != 0);
+
+	/* case 6 */
+	bdev_name = "LUN0";
+
+	rc = spdk_iscsi_tgt_node_add_lun(&tgtnode, bdev_name, lun_id);
+	CU_ASSERT(rc == 0);
+}
+
 static void
 config_file_fail_cases(void)
 {
@@ -755,7 +818,8 @@ main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "config file fail cases", config_file_fail_cases) == NULL
+		CU_add_test(suite, "add lun test cases", add_lun_test_cases) == NULL
+		|| CU_add_test(suite, "config file fail cases", config_file_fail_cases) == NULL
 		|| CU_add_test(suite, "allow any allowed case", allow_any_allowed) == NULL
 		|| CU_add_test(suite, "allow ipv6 allowed case", allow_ipv6_allowed) == NULL
 		|| CU_add_test(suite, "allow ipv6 denied case", allow_ipv6_denied) == NULL
