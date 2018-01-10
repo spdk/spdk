@@ -1308,7 +1308,7 @@ spdk_iscsi_conn_flush_pdus(struct spdk_iscsi_conn *conn)
 		 * empty - to make sure all data is sent before
 		 * closing the connection.
 		 */
-		while (!TAILQ_EMPTY(&conn->write_pdu_list) > 0) {
+		while (!TAILQ_EMPTY(&conn->write_pdu_list)) {
 			rc = spdk_iscsi_conn_flush_pdus_internal(conn);
 			if (rc != 0) {
 				break;
