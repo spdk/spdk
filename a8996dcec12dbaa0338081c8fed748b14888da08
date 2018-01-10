@@ -187,6 +187,208 @@
       "revId": "a8996dcec12dbaa0338081c8fed748b14888da08",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e2f688d2_2b47c17d",
+        "filename": "doc/vhost.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T12:35:44Z",
+      "side": 1,
+      "message": "Yes, you are right. I\u0027ve missed that there is more logic than just first available core from mask. \nStill this is not based on CPU usage, is it ? Which in my mind \"to the least occupied CPU core\" seem to imply.\nWouldn\u0027t it be more clear to specify \"to CPU core with least number of vhost controllers\" ?",
+      "parentUuid": "757bbe2f_ffa95876",
+      "range": {
+        "startLine": 119,
+        "startChar": 30,
+        "endLine": 120,
+        "endChar": 67
+      },
+      "revId": "a8996dcec12dbaa0338081c8fed748b14888da08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8aa7aeb_64e29572",
+        "filename": "doc/vhost.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T12:35:44Z",
+      "side": 1,
+      "message": "\"should\" as in to avoid going over QPI between sockets for performance reasons or \"have to\" as in it won\u0027t work if there is no overlap. Either way I think reason should be noted.",
+      "range": {
+        "startLine": 121,
+        "startChar": 21,
+        "endLine": 121,
+        "endChar": 27
+      },
+      "revId": "a8996dcec12dbaa0338081c8fed748b14888da08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4eb95672_fa58799e",
+        "filename": "doc/vhost.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T12:35:44Z",
+      "side": 1,
+      "message": "I think it would be best not to stray from commands given as example above. This one in Starting SPDK vhost target section was given as:\nHUGEMEM\u003d4096 scripts/setup.sh",
+      "range": {
+        "startLine": 203,
+        "startChar": 8,
+        "endLine": 203,
+        "endChar": 50
+      },
+      "revId": "a8996dcec12dbaa0338081c8fed748b14888da08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "55fda2e7_205f2327",
+        "filename": "doc/vhost.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T12:35:44Z",
+      "side": 1,
+      "message": "Similar to the above:\n\"app/vhost/vhost -S /var/tmp -m 0x3\"\nBesides it might be more straight forward to ask user to call following RPC in another terminal, rather than putting into background using \"\u0026\".",
+      "range": {
+        "startLine": 208,
+        "startChar": 41,
+        "endLine": 208,
+        "endChar": 42
+      },
+      "revId": "a8996dcec12dbaa0338081c8fed748b14888da08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d388d50d_dcbb4fdf",
+        "filename": "doc/vhost.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T12:35:44Z",
+      "side": 1,
+      "message": "Reason for using taskset here was not explained, might be confusing.",
+      "range": {
+        "startLine": 261,
+        "startChar": 8,
+        "endLine": 261,
+        "endChar": 15
+      },
+      "revId": "a8996dcec12dbaa0338081c8fed748b14888da08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8afe5263_9e626dce",
+        "filename": "doc/vhost.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T12:35:44Z",
+      "side": 1,
+      "message": "Two following commands are called on guest VM, please put a note for that outside of code block. It is visible in command prompt, but someone might miss that.",
+      "revId": "a8996dcec12dbaa0338081c8fed748b14888da08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "18379aae_1ee2015e",
+        "filename": "doc/vhost.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T12:35:44Z",
+      "side": 1,
+      "message": "vhost-scsi controller",
+      "range": {
+        "startLine": 333,
+        "startChar": 54,
+        "endLine": 333,
+        "endChar": 70
+      },
+      "revId": "a8996dcec12dbaa0338081c8fed748b14888da08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "90158441_e900ecdc",
+        "filename": "doc/vhost.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T12:35:44Z",
+      "side": 1,
+      "message": "vhost-scsi controller",
+      "range": {
+        "startLine": 342,
+        "startChar": 78,
+        "endLine": 342,
+        "endChar": 88
+      },
+      "revId": "a8996dcec12dbaa0338081c8fed748b14888da08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88ff97bb_052f1653",
+        "filename": "doc/vhost.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T12:35:44Z",
+      "side": 1,
+      "message": "vhost-scsi controller",
+      "range": {
+        "startLine": 349,
+        "startChar": 50,
+        "endLine": 349,
+        "endChar": 60
+      },
+      "revId": "a8996dcec12dbaa0338081c8fed748b14888da08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
