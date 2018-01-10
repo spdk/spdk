@@ -776,6 +776,10 @@ vhost_user_get_vring_base(struct virtio_net *dev,
 
 	RTE_LOG(INFO, VHOST_CONFIG,
 		"vring base idx:%d file:%d\n", msg->payload.state.index, msg->payload.state.num);
+
+	RTE_LOG(INFO, VHOST_CONFIG,
+		"used idx:%d last_used_idx = %d, avail idx:%d last_avail_idx = %d\n",
+		vq->used->idx, vq->last_used_idx, vq->avail->idx, vq->last_avail_idx);
 	/*
 	 * Based on current qemu vhost-user implementation, this message is
 	 * sent and only sent in vhost_vring_stop.
@@ -1020,6 +1024,7 @@ vhost_user_msg_handler(int vid, int fd)
 {
 	struct virtio_net *dev;
 	struct VhostUserMsg msg;
+	uint32_t vq_idx;
 	int ret;
 
 	dev = get_device(vid);
@@ -1168,6 +1173,16 @@ vhost_user_msg_handler(int vid, int fd)
 			if (dev->dequeue_zero_copy) {
 				RTE_LOG(INFO, VHOST_CONFIG,
 						"dequeue zero copy is enabled\n");
+			}
+
+			RTE_LOG(INFO, VHOST_CONFIG, "Starting '%s'", dev->ifname);
+
+			for (vq_idx = 0; vq_idx < dev->nr_vring; vq_idx++) {
+				struct vhost_virtqueue *vq = dev->virtqueue[vq_idx];
+
+				RTE_LOG(INFO, VHOST_CONFIG,
+					"VQ %d used idx:%d last_used_idx = %d, avail idx:%d last_avail_idx = %d\n",
+					vq_idx, vq->used->idx, vq->last_used_idx, vq->avail->idx, vq->last_avail_idx);
 			}
 
 			if (dev->notify_ops->new_device(dev->vid) == 0)
