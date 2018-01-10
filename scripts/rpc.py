@@ -263,6 +263,11 @@ if __name__ == "__main__":
     p.add_argument('size', help='size in MiB for this bdev', type=int)
     p.set_defaults(func=rpc.lvol.construct_lvol_bdev)
 
+    p = subparsers.add_parser('rename_lvol_bdev', help='Change lvol bdev name')
+    p.add_argument('old_name', help='lvol bdev name')
+    p.add_argument('new_name', help='new lvol name')
+    p.set_defaults(func=rpc.lvol.rename_lvol_bdev)
+
     # Logical volume resize feature is disabled, as it is currently work in progress
     # p = subparsers.add_parser('resize_lvol_bdev', help='Resize existing lvol bdev')
     # p.add_argument('name', help='lvol bdev name')
