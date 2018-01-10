@@ -836,6 +836,15 @@ p.add_argument('--vq-count', help='Number of virtual queues to be used.', type=i
 p.add_argument('--vq-size', help='Size of each queue', type=int)
 p.set_defaults(func=construct_virtio_user_scsi_bdev)
 
+def remove_virtio_scsi_bdev(args):
+    params = {'name': args.name}
+    jsonrpc_call('remove_virtio_scsi_bdev', params)
+
+p = subparsers.add_parser('remove_virtio_scsi_bdev', help="""Remove a Virtio-SCSI device
+This will delete all bdevs exposed by this device""")
+p.add_argument('name', help='Virtio device name. E.g. VirtioUser0')
+p.set_defaults(func=remove_virtio_scsi_bdev)
+
 def get_rpc_methods(args):
     print_dict(jsonrpc_call('get_rpc_methods'))
 
