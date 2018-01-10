@@ -116,8 +116,9 @@ spdk_scsi_dev_delete_lun(struct spdk_scsi_dev *dev,
 typedef struct spdk_scsi_dev _spdk_scsi_dev;
 
 _spdk_scsi_dev *
-spdk_scsi_dev_construct(const char *name, char *lun_name_list[], int *lun_id_list, int num_luns,
-			uint8_t protocol_id, void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
+spdk_scsi_dev_construct(const char *name, const char *bdev_name_list[],
+			int *lun_id_list, int num_luns, uint8_t protocol_id,
+			void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
 			void *hotremove_ctx)
 {
 	struct spdk_scsi_dev *dev;
@@ -145,7 +146,7 @@ spdk_scsi_dev_construct(const char *name, char *lun_name_list[], int *lun_id_lis
 	}
 
 	for (i = 0; i < num_luns; i++) {
-		if (lun_name_list[i] == NULL) {
+		if (bdev_name_list[i] == NULL) {
 			SPDK_ERRLOG("NULL spdk_scsi_lun for LUN %d\n",
 				    lun_id_list[i]);
 			return NULL;
@@ -163,14 +164,14 @@ spdk_scsi_dev_construct(const char *name, char *lun_name_list[], int *lun_id_lis
 	dev->protocol_id = protocol_id;
 
 	for (i = 0; i < num_luns; i++) {
-		bdev = spdk_bdev_get_by_name(lun_name_list[i]);
+		bdev = spdk_bdev_get_by_name(bdev_name_list[i]);
 		if (bdev == NULL) {
 			SPDK_ERRLOG("device %s: cannot find bdev '%s' (target %d)\n",
-				    name, lun_name_list[i], i);
+				    name, bdev_name_list[i], i);
 			goto error;
 		}
 
-		lun = spdk_scsi_lun_construct(spdk_bdev_get_name(bdev), bdev, hotremove_cb, hotremove_ctx);
+		lun = spdk_scsi_lun_construct(bdev, hotremove_cb, hotremove_ctx);
 		if (lun == NULL) {
 			goto error;
 		}

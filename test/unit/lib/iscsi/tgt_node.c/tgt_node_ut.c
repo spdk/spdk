@@ -51,7 +51,7 @@ DEFINE_STUB(spdk_scsi_dev_get_id,
 	    (const struct spdk_scsi_dev *dev),
 	    0);
 
-DEFINE_STUB(spdk_scsi_lun_get_name,
+DEFINE_STUB(spdk_scsi_lun_get_bdev_name,
 	    const char *,
 	    (const struct spdk_scsi_lun *lun),
 	    NULL);

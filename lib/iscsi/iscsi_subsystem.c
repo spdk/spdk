@@ -299,7 +299,7 @@ spdk_iscsi_config_dump_target_nodes(FILE *fp)
 
 			fprintf(fp, TARGET_NODE_LUN_TMPL,
 				spdk_scsi_lun_get_id(lun),
-				spdk_scsi_lun_get_name(lun));
+				spdk_scsi_lun_get_bdev_name(lun));
 		}
 
 		fprintf(fp, TARGET_NODE_QD_TMPL,
