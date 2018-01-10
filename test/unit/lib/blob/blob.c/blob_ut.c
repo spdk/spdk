@@ -1918,6 +1918,7 @@ blob_dirty_shutdown(void)
 	spdk_blob_id blobid1, blobid2, blobid3;
 	struct spdk_blob *blob;
 	uint64_t length;
+	uint64_t free_clusters;
 	const void *value;
 	size_t value_len;
 	uint32_t page_num;
@@ -1954,6 +1955,8 @@ blob_dirty_shutdown(void)
 	rc = spdk_blob_resize(blob, 10);
 	CU_ASSERT(rc == 0);
 
+	free_clusters = spdk_bs_free_cluster_count(g_bs);
+
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	blob = NULL;
 	g_blob = NULL;
@@ -1973,6 +1976,8 @@ blob_dirty_shutdown(void)
 	CU_ASSERT(g_blob != NULL);
 	blob = g_blob;
 
+	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(g_bs));
+
 	/* Get the xattrs */
 	value = NULL;
 	rc = spdk_blob_get_xattr_value(blob, "length", &value, &value_len);
@@ -1985,6 +1990,8 @@ blob_dirty_shutdown(void)
 	/* Resize the blob */
 	rc = spdk_blob_resize(blob, 20);
 	CU_ASSERT(rc == 0);
+
+	free_clusters = spdk_bs_free_cluster_count(g_bs);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -2007,6 +2014,7 @@ blob_dirty_shutdown(void)
 	CU_ASSERT(g_blob != NULL);
 	blob = g_blob;
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 20);
+	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(g_bs));
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -2037,6 +2045,8 @@ blob_dirty_shutdown(void)
 	rc = spdk_blob_resize(blob, 10);
 	CU_ASSERT(rc == 0);
 
+	free_clusters = spdk_bs_free_cluster_count(g_bs);
+
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	blob = NULL;
 	g_blob = NULL;
@@ -2064,11 +2074,14 @@ blob_dirty_shutdown(void)
 	CU_ASSERT(*(uint64_t *)value == length);
 	CU_ASSERT(value_len == 8);
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10);
+	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(g_bs));
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	spdk_bs_delete_blob(g_bs, blobid2, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
+
+	free_clusters = spdk_bs_free_cluster_count(g_bs);
 
 	/* Dirty shutdown */
 	_spdk_bs_free(g_bs);
@@ -2085,6 +2098,7 @@ blob_dirty_shutdown(void)
 	spdk_bs_open_blob(g_bs, blobid1, blob_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blob != NULL);
+	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(g_bs));
 	spdk_blob_close(g_blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
@@ -2154,6 +2168,8 @@ blob_dirty_shutdown(void)
 	page->sequence_num = 1;
 	page->crc = _spdk_blob_md_page_calc_crc(page);
 
+	free_clusters = spdk_bs_free_cluster_count(g_bs);
+
 	/* Dirty shutdown */
 	_spdk_bs_free(g_bs);
 	/* reload the blobstore */
@@ -2170,6 +2186,8 @@ blob_dirty_shutdown(void)
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blob != NULL);
 	blob = g_blob;
+
+	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(g_bs));
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	blob = NULL;
