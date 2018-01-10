@@ -1085,6 +1085,123 @@ enomem_multi_bdev(void)
 	teardown_test();
 }
 
+static void
+enomem_qos(void)
+{
+	struct spdk_io_channel *io_ch[2];
+	struct spdk_bdev_channel *bdev_ch[2], *qos_bdev_ch;
+	struct spdk_bdev_module_channel *module_ch[2];
+	struct spdk_bdev *bdev;
+	struct ut_bdev_channel *ut_ch;
+	const uint32_t IO_ARRAY_SIZE = 10;
+	const uint32_t AVAIL = 2;
+	enum spdk_bdev_io_status status[IO_ARRAY_SIZE], status_reset;
+	uint32_t i;
+	struct spdk_bdev_io *first_io;
+	int rc;
+	uint64_t io_outstanding;
+
+	setup_test();
+
+	set_thread(0);
+	io_ch[0] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[0] = spdk_io_channel_get_ctx(io_ch[0]);
+	module_ch[0] = bdev_ch[0]->module_ch;
+	ut_ch = spdk_io_channel_get_ctx(bdev_ch[0]->channel);
+	ut_ch->avail_cnt = AVAIL;
+
+	/* First submit a number of IOs equal to what the channel can support. */
+	for (i = 0; i < AVAIL; i++) {
+		status[i] = SPDK_BDEV_IO_STATUS_PENDING;
+		rc = spdk_bdev_read_blocks(g_desc, io_ch[0], NULL, 0, 1, enomem_done, &status[i]);
+		CU_ASSERT(rc == 0);
+	}
+	CU_ASSERT(TAILQ_EMPTY(&module_ch[0]->nomem_io));
+
+	/*
+	 * Next, submit one additional IO.  This one should fail with ENOMEM and then go onto
+	 *  the enomem_io list.
+	 */
+	status[AVAIL] = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[0], NULL, 0, 1, enomem_done, &status[AVAIL]);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&module_ch[0]->nomem_io));
+
+	/* Now enabled the QoS on bdev. */
+	set_thread(1);
+	bdev = bdev_ch[0]->bdev;
+	bdev->ios_per_sec = 10000;
+	io_ch[1] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[1] = spdk_io_channel_get_ctx(io_ch[1]);
+	qos_bdev_ch = bdev->qos_channel;
+	module_ch[1] = qos_bdev_ch->module_ch;
+	io_outstanding = module_ch[1]->io_outstanding;
+	ut_ch = spdk_io_channel_get_ctx(qos_bdev_ch->channel);
+	ut_ch->avail_cnt = AVAIL;
+	CU_ASSERT(bdev->qos_channel->flags == BDEV_CH_QOS_ENABLED);
+	CU_ASSERT(qos_bdev_ch != NULL);
+	CU_ASSERT(module_ch[1] != NULL);
+	CU_ASSERT(io_outstanding == 0);
+
+	/*
+	 * Now submit a bunch more IOs for the QoS rate limiting
+	 */
+	for (i = AVAIL + 1; i < IO_ARRAY_SIZE; i++) {
+		status[i] = SPDK_BDEV_IO_STATUS_PENDING;
+		rc = spdk_bdev_read_blocks(g_desc, io_ch[1], NULL, 0, 1, enomem_done, &status[i]);
+		CU_ASSERT(rc == 0);
+	}
+
+	poll_threads();
+	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&module_ch[1]->nomem_io));
+
+	/* Assert that first_io is still at the head of the list. */
+	first_io = TAILQ_FIRST(&module_ch[0]->nomem_io);
+	CU_ASSERT(TAILQ_FIRST(&module_ch[0]->nomem_io) == first_io);
+	CU_ASSERT(bdev_io_tailq_cnt(&module_ch[0]->nomem_io) == 1);
+	CU_ASSERT(bdev_io_tailq_cnt(&module_ch[1]->nomem_io) == IO_ARRAY_SIZE - AVAIL - 1 - AVAIL);
+
+	/*
+	 * Complete all IOs on non qos_bdev_ch
+	 */
+	set_thread(0);
+	stub_complete_io(g_bdev.io_target, 0);
+
+	/*
+	 * Complete enough I/O to hit the nomem_theshold.  This should trigger retrying nomem_io,
+	 *  and we should see I/O get resubmitted to the test bdev module.
+	 */
+	set_thread(1);
+	stub_complete_io(g_bdev.io_target, NOMEM_THRESHOLD_COUNT - AVAIL - 1);
+
+	/* Complete 1 I/O only.  This should not trigger retrying the queued nomem_io. */
+	stub_complete_io(g_bdev.io_target, 1);
+
+	/*
+	 * Send a reset and confirm that all I/O are completed, including the ones that
+	 *  were queued on the nomem_io list.
+	 */
+	status_reset = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_reset(g_desc, io_ch[1], enomem_done, &status_reset);
+	poll_threads();
+	CU_ASSERT(rc == 0);
+	/* This will complete the reset. */
+	set_thread(0);
+	stub_complete_io(g_bdev.io_target, 0);
+	set_thread(1);
+	stub_complete_io(g_bdev.io_target, 0);
+
+	CU_ASSERT(bdev_io_tailq_cnt(&module_ch[0]->nomem_io) == 0);
+	CU_ASSERT(bdev_io_tailq_cnt(&module_ch[1]->nomem_io) == 0);
+	CU_ASSERT(module_ch[0]->io_outstanding == 0);
+	CU_ASSERT(module_ch[1]->io_outstanding == 0);
+
+	spdk_put_io_channel(io_ch[0]);
+	spdk_put_io_channel(io_ch[1]);
+	poll_threads();
+	teardown_test();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1111,7 +1228,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "io_during_qos", io_during_qos) == NULL ||
 		CU_add_test(suite, "io_during_qos_queue", io_during_qos_queue) == NULL ||
 		CU_add_test(suite, "enomem", enomem) == NULL ||
-		CU_add_test(suite, "enomem_multi_bdev", enomem_multi_bdev) == NULL
+		CU_add_test(suite, "enomem_multi_bdev", enomem_multi_bdev) == NULL ||
+		CU_add_test(suite, "enomem_qos", enomem_qos) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
