@@ -41,7 +41,7 @@
 #define UUID_STRING_LEN 37
 
 /* Default blob channel opts for lvol */
-#define SPDK_LVOL_BLOB_OPTS_CHANNEL_OPS 8192
+#define SPDK_LVOL_BLOB_OPTS_CHANNEL_OPS 512
 
 SPDK_LOG_REGISTER_COMPONENT("lvol", SPDK_LOG_LVOL)
 
@@ -81,6 +81,7 @@ _spdk_lvs_free(struct spdk_lvol_store *lvs)
 	if (lvs->on_list) {
 		TAILQ_REMOVE(&g_lvol_stores, lvs, link);
 	}
+
 	free(lvs);
 }
 
@@ -1145,5 +1146,5 @@ spdk_lvol_close(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_ar
 struct spdk_io_channel *
 spdk_lvol_get_io_channel(struct spdk_lvol *lvol)
 {
-	return spdk_bs_alloc_io_channel(lvol->lvol_store->blobstore);
+	return spdk_get_io_channel(lvol->lvol_store);
 }
