@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "15833e73_ac259fb3",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 1563,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-10T23:09:47Z",
+      "side": 1,
+      "message": "Aren\u0027t the LBA\u0027s on the backing bdev exactly equal to the LBA\u0027s on the new bdev? I understand that the target of the read changes based on whether the cluster is allocated, but aren\u0027t the LBAs the same?",
+      "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b463e3b2_1e4b6b1f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 1817,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-10T23:09:47Z",
+      "side": 1,
+      "message": "I think burying the setting of which I/O device to target inside this function just makes things confusing. I\u0027d rather see this written right here as:\n\nif (read) {\n    if (\u003cutility function that checks whether a page is allocated\u003e) {\n        spdk_bs_sequence_readv to local disk\n    } else {\n        spdk_bs_sequence_readv to backing bdev\n    }\n}",
+      "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f298b3d_30ddd275",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 491,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-10T23:09:47Z",
+      "side": 1,
+      "message": "_spdk_bs_page_to_cluster_start?",
+      "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "764154d1_637bb0e7",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 503,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-10T23:09:47Z",
+      "side": 1,
+      "message": "_spdk_bs_blob_is_page_allocated?",
+      "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
