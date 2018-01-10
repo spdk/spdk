@@ -25,6 +25,29 @@
     },
     {
       "key": {
+        "uuid": "36106358_0e31f836",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 552,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-10T13:49:22Z",
+      "side": 1,
+      "message": "Any way we could make IP address configurable? We could then try to use the scripts in scenario with 2 servers",
+      "range": {
+        "startLine": 552,
+        "startChar": 16,
+        "endLine": 552,
+        "endChar": 32
+      },
+      "revId": "ffc0dcbc410cb438ec3f50b8b831a0a823912490",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a992bbfe_8bc2db51",
         "filename": "test/vhost/migration/autotest.sh",
         "patchSetId": 1
