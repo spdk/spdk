@@ -154,6 +154,12 @@ struct virtio_scsi_disk {
 	struct spdk_bdev		bdev;
 	struct virtio_scsi_dev		*svdev;
 	struct virtio_scsi_scan_info	info;
+
+	/** Descriptor opened just to be notified of external bdev hotremove. */
+	struct spdk_bdev_desc		*notify_desc;
+
+	/** Disk marked for removal. */
+	bool				removed;
 	TAILQ_ENTRY(virtio_scsi_disk)	link;
 };
 
@@ -1204,6 +1210,15 @@ process_scan_inquiry(struct virtio_scsi_scan_base *base)
 	}
 }
 
+static void
+bdev_virtio_disc_notify_remove(void *remove_ctx)
+{
+	struct virtio_scsi_disk *disk = remove_ctx;
+
+	disk->removed = true;
+	spdk_bdev_close(disk->notify_desc);
+}
+
 /* To be called only from the thread performing target scan */
 static int
 virtio_scsi_dev_add_tgt(struct virtio_scsi_dev *svdev, struct virtio_scsi_scan_info *info)
@@ -1250,6 +1265,11 @@ virtio_scsi_dev_add_tgt(struct virtio_scsi_dev *svdev, struct virtio_scsi_scan_i
 		SPDK_ERRLOG("Failed to register bdev name=%s\n", disk->bdev.name);
 		free(disk);
 		return rc;
+	}
+
+	rc = spdk_bdev_open(bdev, false, bdev_virtio_disc_notify_remove, disk, &disk->notify_desc);
+	if (rc) {
+		assert(false);
 	}
 
 	TAILQ_INSERT_TAIL(&svdev->luns, disk, link);
@@ -1717,7 +1737,9 @@ virtio_scsi_dev_remove(struct virtio_scsi_dev *svdev)
 	}
 
 	TAILQ_FOREACH_SAFE(disk, &svdev->luns, link, disk_tmp) {
-		spdk_bdev_unregister(&disk->bdev, NULL, NULL);
+		if (!disk->removed) {
+			spdk_bdev_unregister(&disk->bdev, NULL, NULL);
+		}
 		do_remove = false;
 	}
 
