@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cc705359_53f0e46a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 865,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-10T21:55:53Z",
+      "side": 1,
+      "message": "contiguous",
+      "revId": "dffef0a80b6cd3895de5f4e35666a823dc457eed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9fd0d1fb_4d7697e4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 872,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-10T21:55:53Z",
+      "side": 1,
+      "message": "I think these three lines need to go to the end of the next_lba !\u003d 0 block.\n\nThis is tricky - seems like some unit tests would be in order here.  Most of the code in this function could go into a new static function - and then the new static function could be the target of new unit tests.\n\nA few notes:\ndev_unmap in bs_dev_common.c should be modified to zero the affected LBAs.\nThe unit tests could write 0xFF to the first byte in each cluster (since the unit test block device is just a malloc buffer).\nThen after the call, you check that only the appropriate bytes were cleared.\nFor the initial patch (before this one) that does not have thin provisioning support, you do things like create a blob with clusters 8, 9, 10 and make sure that only the first byte in those clusters were set to 0.  Check that other clusters first byte is still 0xFF.\n\nThen in this patch when adding thin provisioning, add new test cases with cluster arrays that have some indices of 0.\n\nBen and I have had bugs in this code before, so unit tests would really be helpful.",
+      "revId": "dffef0a80b6cd3895de5f4e35666a823dc457eed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d989df3_45a9b0cc",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1048,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-10T21:55:53Z",
+      "side": 1,
+      "message": "ENOSPC is probably a better return code here.",
+      "revId": "dffef0a80b6cd3895de5f4e35666a823dc457eed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
