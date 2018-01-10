@@ -55,6 +55,11 @@ static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
+	/*
+	 * Set the io_queue_size to UINT16_MAX to initialize
+	 * the controller with the possible largest queue size.
+	 */
+	opts->io_queue_size = UINT16_MAX;
 	return true;
 }
 
