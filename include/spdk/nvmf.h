@@ -171,10 +171,12 @@ typedef void (*spdk_nvmf_subsystem_state_change_done)(struct spdk_nvmf_subsystem
  * \param cb_fn A function that will be called once the subsystem has changed state.
  * \param cb_arg Argument passed to cb_fn.
  *
+ * \return 0 on success. Negated errno on failure. The callback provided
+ *	     will only be called on success.
  */
-void spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem,
-			       spdk_nvmf_subsystem_state_change_done cb_fn,
-			       void *cb_arg);
+int spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem,
+			      spdk_nvmf_subsystem_state_change_done cb_fn,
+			      void *cb_arg);
 
 /**
  * Transition an NVMe-oF subsystem from Active to Inactive state.
@@ -183,10 +185,12 @@ void spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem,
  * \param cb_fn A function that will be called once the subsystem has changed state.
  * \param cb_arg Argument passed to cb_fn.
  *
+ * \return 0 on success. Negated errno on failure. The callback provided
+ *	     will only be called on success.
  */
-void spdk_nvmf_subsystem_stop(struct spdk_nvmf_subsystem *subsystem,
-			      spdk_nvmf_subsystem_state_change_done cb_fn,
-			      void *cb_arg);
+int spdk_nvmf_subsystem_stop(struct spdk_nvmf_subsystem *subsystem,
+			     spdk_nvmf_subsystem_state_change_done cb_fn,
+			     void *cb_arg);
 
 /**
  * Transition an NVMe-oF subsystem from Active to Paused state.
@@ -195,10 +199,12 @@ void spdk_nvmf_subsystem_stop(struct spdk_nvmf_subsystem *subsystem,
  * \param cb_fn A function that will be called once the subsystem has changed state.
  * \param cb_arg Argument passed to cb_fn.
  *
+ * \return 0 on success. Negated errno on failure. The callback provided
+ *	     will only be called on success.
  */
-void spdk_nvmf_subsystem_pause(struct spdk_nvmf_subsystem *subsystem,
-			       spdk_nvmf_subsystem_state_change_done cb_fn,
-			       void *cb_arg);
+int spdk_nvmf_subsystem_pause(struct spdk_nvmf_subsystem *subsystem,
+			      spdk_nvmf_subsystem_state_change_done cb_fn,
+			      void *cb_arg);
 
 /**
  * Transition an NVMe-oF subsystem from Paused to Active state.
@@ -207,10 +213,12 @@ void spdk_nvmf_subsystem_pause(struct spdk_nvmf_subsystem *subsystem,
  * \param cb_fn A function that will be called once the subsystem has changed state.
  * \param cb_arg Argument passed to cb_fn.
  *
+ * \return 0 on success. Negated errno on failure. The callback provided
+ *	     will only be called on success.
  */
-void spdk_nvmf_subsystem_resume(struct spdk_nvmf_subsystem *subsystem,
-				spdk_nvmf_subsystem_state_change_done cb_fn,
-				void *cb_arg);
+int spdk_nvmf_subsystem_resume(struct spdk_nvmf_subsystem *subsystem,
+			       spdk_nvmf_subsystem_state_change_done cb_fn,
+			       void *cb_arg);
 
 /**
  * Search the target for a subsystem with the given NQN

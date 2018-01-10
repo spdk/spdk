@@ -382,7 +382,9 @@ subsystem_state_change_done(struct spdk_io_channel_iter *i, int status)
 		}
 	}
 
-	ctx->cb_fn(ctx->subsystem, ctx->cb_arg, status);
+	if (ctx->cb_fn) {
+		ctx->cb_fn(ctx->subsystem, ctx->cb_arg, status);
+	}
 	free(ctx);
 }
 
@@ -420,7 +422,7 @@ subsystem_state_change_on_pg(struct spdk_io_channel_iter *i)
 	spdk_for_each_channel_continue(i, rc);
 }
 
-static void
+static int
 spdk_nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 				 enum spdk_nvmf_subsystem_state requested_state,
 				 spdk_nvmf_subsystem_state_change_done cb_fn,
@@ -446,21 +448,18 @@ spdk_nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 		break;
 	default:
 		assert(false);
-		cb_fn(subsystem, cb_arg, -EINVAL);
-		return;
+		return -EINVAL;
 	}
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
-		cb_fn(subsystem, cb_arg, -ENOMEM);
-		return;
+		return -ENOMEM;
 	}
 
 	rc = spdk_nvmf_subsystem_set_state(subsystem, intermediate_state);
 	if (rc) {
 		free(ctx);
-		cb_fn(subsystem, cb_arg, -1);
-		return;
+		return rc;
 	}
 
 	ctx->subsystem = subsystem;
@@ -472,38 +471,40 @@ spdk_nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 			      subsystem_state_change_on_pg,
 			      ctx,
 			      subsystem_state_change_done);
+
+	return 0;
 }
 
-void
+int
 spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem,
 			  spdk_nvmf_subsystem_state_change_done cb_fn,
 			  void *cb_arg)
 {
-	spdk_nvmf_subsystem_state_change(subsystem, SPDK_NVMF_SUBSYSTEM_ACTIVE, cb_fn, cb_arg);
+	return spdk_nvmf_subsystem_state_change(subsystem, SPDK_NVMF_SUBSYSTEM_ACTIVE, cb_fn, cb_arg);
 }
 
-void
+int
 spdk_nvmf_subsystem_stop(struct spdk_nvmf_subsystem *subsystem,
 			 spdk_nvmf_subsystem_state_change_done cb_fn,
 			 void *cb_arg)
 {
-	spdk_nvmf_subsystem_state_change(subsystem, SPDK_NVMF_SUBSYSTEM_INACTIVE, cb_fn, cb_arg);
+	return spdk_nvmf_subsystem_state_change(subsystem, SPDK_NVMF_SUBSYSTEM_INACTIVE, cb_fn, cb_arg);
 }
 
-void
+int
 spdk_nvmf_subsystem_pause(struct spdk_nvmf_subsystem *subsystem,
 			  spdk_nvmf_subsystem_state_change_done cb_fn,
 			  void *cb_arg)
 {
-	spdk_nvmf_subsystem_state_change(subsystem, SPDK_NVMF_SUBSYSTEM_PAUSED, cb_fn, cb_arg);
+	return spdk_nvmf_subsystem_state_change(subsystem, SPDK_NVMF_SUBSYSTEM_PAUSED, cb_fn, cb_arg);
 }
 
-void
+int
 spdk_nvmf_subsystem_resume(struct spdk_nvmf_subsystem *subsystem,
 			   spdk_nvmf_subsystem_state_change_done cb_fn,
 			   void *cb_arg)
 {
-	spdk_nvmf_subsystem_state_change(subsystem, SPDK_NVMF_SUBSYSTEM_ACTIVE, cb_fn, cb_arg);
+	return spdk_nvmf_subsystem_state_change(subsystem, SPDK_NVMF_SUBSYSTEM_ACTIVE, cb_fn, cb_arg);
 }
 
 struct spdk_nvmf_subsystem *
