@@ -547,6 +547,8 @@ static void
 submit_single_io(struct perf_task *task)
 {
 	uint64_t		offset_in_ios;
+	uint64_t		buf_seed;
+	uint32_t		i, offset;
 	int			rc;
 	struct ns_worker_ctx	*ns_ctx = task->ns_ctx;
 	struct ns_entry		*entry = ns_ctx->entry;
@@ -582,6 +584,12 @@ submit_single_io(struct perf_task *task)
 							   task->appmask, task->apptag);
 		}
 	} else {
+		/* make sure each lba data buffer is not zeroed */
+		buf_seed = offset_in_ios << 32 | offset_in_ios;
+		for (i = 0; i < entry->io_size_blocks; i++) {
+			offset = i * g_io_size_bytes / entry->io_size_blocks;
+			memcpy(task->buf + offset, &buf_seed, sizeof(buf_seed));
+		}
 #if HAVE_LIBAIO
 		if (entry->type == ENTRY_TYPE_AIO_FILE) {
 			rc = aio_submit(ns_ctx->u.aio.ctx, &task->iocb, entry->u.aio.fd, IO_CMD_PWRITE, task->buf,
