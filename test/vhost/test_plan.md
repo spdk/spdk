@@ -27,7 +27,7 @@
 - lvol store is constructed on each NVMe device
 - on each lvol store 1 lvol bdev will be constructed for each running VM
 - Logical volume block device is used as backend instead of using
-  NVMe device backed directly
+  NVMe device backend directly
 - after set up, data integrity check will be performed by FIO randwrite
   operation with verify flag enabled
 - optionally nested lvols can be tested with use of appropriate flag;
@@ -114,13 +114,13 @@ All tests are run in virtio-user mode. Tests 2-3, 5-9 are additionally run in vi
 3. Run fio tests: iodepth=128, block_size=4k, rw, randread, randwrite, read, write, randrw with verify
 4. Check if fio tests are successful.
 
-### Test Case 8 - vhost initator test with multiple socket
+#### Test Case 8 - vhost initator test with multiple socket
 1. Run vhost with two scsi controllers, one with nvme bdev and one with malloc bdev.
 2. Generate the fio config file given the list of all bdevs.
 3. Run fio tests: iodepth=128, block_size=4k, write with verification.
 4. Check if fio tests are successful.
 
-### Test Case 9 - vhost initiator test with unmap
+#### Test Case 9 - vhost initiator test with unmap
 1. Run vhost with one controller and one nvme bdev with 512 block size.
 2. Run fio test with sequential jobs: trim, randtrim, write.
    All this jobs run with verification enabled.
@@ -133,34 +133,25 @@ All tests are run in virtio-user mode. Tests 2-3, 5-9 are additionally run in vi
 Tests verifying the performance and efficiency of the module.
 
 #### FIO Performance 6 NVMes
-- SPDK is run on 2 CPU cores
-- Run with vhost scsi
-- 6 VMs are run with 2 cores, 1 controller (2 queues), 1 Split NVMe LUN each
-- FIO configurations runs are 15 minute job combinations of:
-    - IO depth: 1, 8, 128
+- SPDK and created controllers run on 2 CPU cores.
+- Each NVMe drive is split into 2 Split NVMe bdevs, which gives a total of 12
+  in test setup.
+- 12 vhost controllers are created, one for each Split NVMe bdev. All controllers
+  use the same CPU mask as used for running Vhost instance.
+- 12 virtual machines are run as guest systems (with Ubuntu 16.04.2); Each VM
+  connects to a single corresponding vhost controller.
+  Per VM configuration is: 2 pass-through host CPU's, 1 GB RAM, 2 IO controller queues.
+- NVMe drives are pre-conditioned before the test starts. Pre-conditioning is done by
+  writing over whole disk sequentially at least 2 times.
+- FIO configurations used for tests:
+    - IO depths: 1, 8, 128
     - Blocksize: 4k
     - RW modes: read, randread, write, randwrite, rw, randrw
-
-    Write modes are additionally run with 10 minute ramp-up time to allow better
+    - Write modes are additionally run with 15 minute ramp-up time to allow better
     measurements. Randwrite mode uses longer ramp-up preconditioning of 90 minutes per run.
-
-
-#### Full Performance Suite
-On-demand performance tests allowing to run test jobs which can be combinations of:
-- SPDK cores: 1-3 CPU cores,
-- VM cores: 1-5 CPU cores per VM,
-- VM count: 1-12,
-- vhost controller queues: single, multi
-- FIO IO depth: 1, 2, 4, 8, 32, 64, 128
-- FIO Blocksize: 4k
-- FIO RW modes: read, randread, write, randwrite, rw, randrw
-- each test job takes from 30 to 120 minutes
-
+- Each FIO job result is compared with baseline results to allow detecting performance drops.
 
 ## Future tests and improvements
-
-### Performance tests
-- Establish a baseline for acceptance level of FIO Performance 6 NVMe test results
 
 ### Stress tests
 - Add stability and stress tests (long duration tests, long looped start/stop tests, etc.)
