@@ -1294,3 +1294,36 @@ void spdk_iscsi_tgt_node_delete_map(struct spdk_iscsi_portal_grp *portal_group,
 	}
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 }
+
+int
+spdk_iscsi_tgt_node_add_lun(struct spdk_iscsi_tgt_node *target,
+			    const char *bdev_name, int lun_id)
+{
+	struct spdk_scsi_dev *dev;
+	int rc;
+
+	if (target->num_active_conns > 0) {
+		SPDK_ERRLOG("Target has active connections (count=%d)\n",
+			    target->num_active_conns);
+		return -1;
+	}
+
+	if (lun_id < -1 || lun_id >= SPDK_SCSI_DEV_MAX_LUN) {
+		SPDK_ERRLOG("Specified LUN ID (%d) is invalid\n", lun_id);
+		return -1;
+	}
+
+	dev = target->dev;
+	if (dev == NULL) {
+		SPDK_ERRLOG("SCSI device is not found\n");
+		return -1;
+	}
+
+	rc = spdk_scsi_dev_add_lun(dev, bdev_name, lun_id, NULL, NULL);
+	if (rc != 0) {
+		SPDK_ERRLOG("spdk_scsi_dev_add_lun failed\n");
+		return -1;
+	}
+
+	return 0;
+}
