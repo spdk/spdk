@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "37defd6c_856f25ac",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-10T22:30:56Z",
+      "side": 1,
+      "message": "It\u0027s probably easier to read something like this because it separates the parsing of the descriptor from the validation of the value:\n\nblob-\u003eactive.clusters[blob-\u003eactive.num_clusters] \u003d _spdk_bs_cluster_to_lba(blob-\u003ebs, desc_extent-\u003eextents[i].cluster_idx + j);\nif (!spdk_blob_is_thin_provisioned(blob) \u0026\u0026\n    blob-\u003eactive.clusters[blob-\u003eactive.num_clusters] \u003d\u003d 0) {\n    return -EINVAL;\n\n}\nnum_clusters++;\n\nI\u0027ll leave it up to you to decide whether you want to change it.",
+      "revId": "dffef0a80b6cd3895de5f4e35666a823dc457eed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b4b6931_8cefdfe9",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 845,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-10T22:30:56Z",
+      "side": 1,
+      "message": "I think there may be a slightly simpler way to modify the body of this loop. Maybe something like this:\n\nuint64_t next_lba \u003d blob-\u003eactive.clusters[i];\n\nif (next_lba \u003e 0 \u0026\u0026 (lba + lba_count) \u003d\u003d next_lba) {\n        /* This cluster is contiguous with the previous one. */\n        lba_count +\u003d _spdk_bs_cluster_to_lba(bs, 1);\n        continue;\n}\n\n/* This cluster is not contiguous with the previous one. */\n\n/* If a run of LBAs has been built up, send them\n * as an unmap.\n */\nif (lba_count \u003e 0) {\n        spdk_bs_batch_unmap(batch, lba, lba_count);\n}\n\n/* Start building the next batch */\nlba \u003d next_lba;\nif (next_lba \u003e 0) {\n        lba_count \u003d _spdk_bs_cluster_to_lba(bs, 1);\n}\n\nEither way - follow Jim\u0027s advice and write a zillion unit tests. This stuff is really tricky.",
+      "revId": "dffef0a80b6cd3895de5f4e35666a823dc457eed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cc705359_53f0e46a",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 28
@@ -47,6 +81,23 @@
       "writtenOn": "2018-01-10T21:55:53Z",
       "side": 1,
       "message": "ENOSPC is probably a better return code here.",
+      "revId": "dffef0a80b6cd3895de5f4e35666a823dc457eed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7702a1f2_2f2f54ee",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1068,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-10T22:30:56Z",
+      "side": 1,
+      "message": "The blob state was already marked as dirty on line 1036.",
       "revId": "dffef0a80b6cd3895de5f4e35666a823dc457eed",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
