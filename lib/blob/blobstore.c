@@ -3193,8 +3193,10 @@ _spdk_blob_set_thin_provision(struct spdk_blob_data *blob)
 	blob->state = SPDK_BLOB_STATE_DIRTY;
 }
 
-void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_opts *opts,
-			     spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
+static void
+_spdk_bs_create_blob(struct spdk_blob_store *bs,
+		     const struct spdk_blob_opts *opts, struct spdk_bs_dev *bs_dev,
+		     spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
 {
 	struct spdk_blob_data	*blob;
 	uint32_t		page_idx;
@@ -3236,6 +3238,11 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 		_spdk_blob_set_thin_provision(blob);
 	}
 	spdk_blob_resize(__data_to_blob(blob), opts->num_clusters);
+
+	if (bs_dev) {
+		blob->back_bs_dev = bs_dev;
+	}
+
 	cpl.type = SPDK_BS_CPL_TYPE_BLOBID;
 	cpl.u.blobid.cb_fn = cb_fn;
 	cpl.u.blobid.cb_arg = cb_arg;
@@ -3251,13 +3258,234 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 	_spdk_blob_persist(seq, blob, _spdk_bs_create_blob_cpl, blob);
 }
 
+void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_opts *opts,
+			     spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
+{
+	_spdk_bs_create_blob(bs, opts, NULL, cb_fn, cb_arg);
+}
+
 void spdk_bs_create_blob(struct spdk_blob_store *bs,
 			 spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
 {
-	spdk_bs_create_blob_ext(bs, NULL, cb_fn, cb_arg);
+	_spdk_bs_create_blob(bs, NULL, NULL, cb_fn, cb_arg);
 }
 
 /* END spdk_bs_create_blob */
+
+/* START spdk_bs_create_blob_snapshot */
+
+char *SNAPSHOT_IN_PROGRESS = "SNAPSHOT_IN_PROGRESS";
+
+static void
+_spdk_bs_snapshot_fail(void *cb_arg, int bserrno)
+{
+	struct spdk_bs_cpl *cpl = cb_arg;
+
+	cpl->u.blob_snapshot.cb_fn(cpl->u.blob_snapshot.cb_arg, NULL, bserrno);
+}
+
+static void
+_spdk_bs_snapshot_fail_delete(void *cb_arg, int bserrno)
+{
+	struct spdk_bs_cpl *cpl = cb_arg;
+	struct spdk_blob_data *orgblob = __blob_to_data(cpl->u.blob_snapshot.orgblob);
+
+	spdk_bs_delete_blob(orgblob->bs, cpl->u.blob_snapshot.newblobid,
+			    _spdk_bs_snapshot_fail, cpl);
+}
+
+static void
+_spdk_bs_snapshot_fail_fallback_delete(void *cb_arg, int bserrno)
+{
+	struct spdk_bs_cpl *cpl = cb_arg;
+	struct spdk_blob_data *orgblob = __blob_to_data(cpl->u.blob_snapshot.orgblob);
+	struct spdk_blob_data *newblob = __blob_to_data(cpl->u.blob_snapshot.newblob);
+	uint64_t i;
+	int rc;
+	int thin_provisioned = false;
+
+	for (i = 0; i < newblob->active.num_clusters; i++) {
+		if (newblob->active.clusters[i] == 0) {
+			thin_provisioned = true;
+		}
+		rc = __sync_bool_compare_and_swap(&orgblob->active.clusters[i], 0, newblob->active.clusters[i]);
+		if (rc == 0 && newblob->active.clusters[i] != 0) {
+			_spdk_bs_release_cluster(newblob->bs, newblob->active.clusters[i]);
+		}
+
+	}
+	/* Unset thin provisioned flag if there were no unallocated clusters */
+	if (!thin_provisioned) {
+		orgblob->invalid_flags &= !SPDK_BLOB_THIN_PROV;
+	}
+
+	orgblob->back_bs_dev = newblob->back_bs_dev;
+
+	spdk_blob_close(__data_to_blob(newblob), _spdk_bs_snapshot_fail_delete, cpl);
+
+}
+
+static void
+_spdk_bs_sync_snapshot_final_cpl(void *cb_arg, int bserrno)
+{
+	struct spdk_bs_cpl *cpl = cb_arg;
+	struct spdk_blob_data *newblob = __blob_to_data(cpl->u.blob_snapshot.newblob);
+
+	if (bserrno != 0) {
+		_spdk_bs_snapshot_fail_fallback_delete(cpl, bserrno);
+		return;
+	}
+
+	cpl->u.blob_snapshot.cb_fn(cpl->u.blob_snapshot.cb_arg, __data_to_blob(newblob), bserrno);
+}
+
+static void
+_spdk_bs_sync_clone_cpl(void *cb_arg, int bserrno)
+{
+	struct spdk_bs_cpl *cpl = cb_arg;
+	struct spdk_blob_data *newblob = __blob_to_data(cpl->u.blob_snapshot.newblob);
+
+	if (bserrno != 0) {
+		_spdk_bs_snapshot_fail_fallback_delete(cpl, bserrno);
+		return;
+	}
+	/* Temporarily force metadata to be mutable */
+	newblob->md_ro = false;
+
+	/* Remove metadata descriptor SNAPSHOT_IN_PROGRESS */
+	bserrno = spdk_blob_remove_xattr(__data_to_blob(newblob), SNAPSHOT_IN_PROGRESS);
+	if (bserrno != 0) {
+		assert(true);
+		_spdk_bs_snapshot_fail_fallback_delete(cpl, bserrno);
+		return;
+	}
+
+	/* sync snapshot metadata */
+	spdk_blob_sync_md(__data_to_blob(newblob), _spdk_bs_sync_snapshot_final_cpl, cb_arg);
+}
+
+static void
+_spdk_bs_sync_snapshot_cpl(void *cb_arg, int bserrno)
+{
+	struct spdk_bs_cpl *cpl = cb_arg;
+	struct spdk_blob_data *orgblob = __blob_to_data(cpl->u.blob_snapshot.orgblob);
+
+	if (bserrno != 0) {
+		_spdk_bs_snapshot_fail_fallback_delete(cpl, bserrno);
+		return;
+	}
+
+	/* sync clone metadata */
+	spdk_blob_sync_md(__data_to_blob(orgblob), _spdk_bs_sync_clone_cpl, cpl);
+}
+
+static void
+_spdk_bs_open_blob_snapshot_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
+{
+	struct spdk_bs_cpl *cpl = cb_arg;
+	struct spdk_blob_data *orgblob = __blob_to_data(cpl->u.blob_snapshot.orgblob);
+	struct spdk_blob_data *newblob = __blob_to_data(blob);
+	uint64_t i;
+
+	if (bserrno != 0) {
+		/* Blob opening failed, delete newblob and return error */
+		_spdk_bs_snapshot_fail_delete(cpl, bserrno);
+		return;
+	}
+
+	cpl->u.blob_snapshot.newblob = __data_to_blob(newblob);
+	cpl->u.blob_snapshot.newblobid = newblob->id;
+
+	/* set new back device for clone */
+
+	cpl->u.blob_snapshot.bs_dev_fn(cpl->u.blob_snapshot.cb_arg, __data_to_blob(newblob),
+				       &newblob->back_bs_dev);
+
+	/* set clone blob as thin provisioned */
+	_spdk_blob_set_thin_provision(orgblob);
+
+	/* copy cluster map to snapshot */
+	for (i = 0; i < newblob->active.num_clusters; i++) {
+		if (orgblob->active.clusters[i]) {
+			newblob->active.clusters[i] = orgblob->active.clusters[i];
+			orgblob->active.clusters[i] = 0;
+		} else {
+			newblob->active.clusters[i] = 0;
+		}
+
+	}
+
+	/* set snapshot blob as read only */
+	spdk_blob_set_read_only(__data_to_blob(newblob));
+
+	/* sync snapshot metadata */
+	spdk_blob_sync_md(__data_to_blob(newblob), _spdk_bs_sync_snapshot_cpl, cpl);
+
+}
+
+static void
+_spdk_bs_create_blob_snapshot_cpl(void *cb_arg, spdk_blob_id blobid, int bserrno)
+{
+	struct spdk_bs_cpl *cpl = cb_arg;
+	struct spdk_blob_data *orgblob = __blob_to_data(cpl->u.blob_snapshot.orgblob);
+
+	if (bserrno != 0) {
+		/* Blob creation failed, return with error */
+		_spdk_bs_snapshot_fail(cpl, bserrno);
+		return;
+	}
+
+	cpl->u.blob_snapshot.newblobid = blobid;
+
+	spdk_bs_open_blob(orgblob->bs, blobid, _spdk_bs_open_blob_snapshot_cpl, cpl);
+}
+
+static void
+_spdk_bs_xattr_snapshot(void *arg, const char *name,
+			const void **value, size_t *value_len)
+{
+	*value = arg;
+	*value_len = sizeof(spdk_blob_id);
+}
+
+void spdk_bs_create_blob_snapshot(struct spdk_blob *blob, spdk_blob_get_bs_dev bs_dev_fn,
+				  spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	struct spdk_blob_opts   opts;
+	struct spdk_bs_cpl		cpl;
+	struct spdk_blob_data	*orgblob = __blob_to_data(blob);
+	char *snapshot_xattrs[] = {SNAPSHOT_IN_PROGRESS};
+
+	/* Original blob will become thin provisioned clone
+	 * Newly created blob will become,
+	 * read only snapshot with cluster_map copied from original blob */
+
+	cpl.u.blob_snapshot.cb_fn = cb_fn;
+	cpl.u.blob_snapshot.cb_arg = cb_arg;
+	cpl.u.blob_snapshot.orgblob = blob;
+	cpl.u.blob_snapshot.orgblobid = __blob_to_data(blob)->id;
+
+	if (orgblob->data_ro || orgblob->md_ro) {
+		_spdk_bs_snapshot_fail(&cpl, -EINVAL);
+		return;
+	}
+	/* Change the size of new blob to the same as in original blob,
+	 * but do not allocate clusters */
+	opts.thin_provision = true;
+	opts.num_clusters = spdk_blob_get_num_clusters(blob);
+	/* Set metadata descriptor SNAPSHOT_IN_PROGRESS */
+	opts.xattr_count = 1;
+	opts.xattr_ctx = &orgblob->id;
+	opts.xattr_names = snapshot_xattrs;
+	opts.get_xattr_value = _spdk_bs_xattr_snapshot;
+
+	/* save back device */
+	cpl.u.blob_snapshot.bs_dev_fn = bs_dev_fn;
+
+	_spdk_bs_create_blob(orgblob->bs, &opts, orgblob->back_bs_dev, _spdk_bs_create_blob_snapshot_cpl,
+			     &cpl);
+}
+/* END spdk_bs_create_blob_snapshot */
 
 /* START spdk_blob_resize */
 int

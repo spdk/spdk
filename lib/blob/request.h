@@ -90,6 +90,16 @@ struct spdk_bs_cpl {
 		} blob_handle;
 
 		struct {
+			spdk_blob_op_with_handle_complete       cb_fn;
+			void                                    *cb_arg;
+			struct spdk_blob                        *orgblob;
+			spdk_blob_id							orgblobid;
+			struct spdk_blob                        *newblob;
+			spdk_blob_id							newblobid;
+			spdk_blob_get_bs_dev					bs_dev_fn;
+		} blob_snapshot;
+
+		struct {
 			spdk_bs_nested_seq_complete	cb_fn;
 			void				*cb_arg;
 			spdk_bs_sequence_t		*parent;
