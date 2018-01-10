@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b4a10da0_cebc1182",
+        "filename": "doc/vhost.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T09:17:51Z",
+      "side": 1,
+      "message": "Did you mean \"vhost_bdev_create\" ? This ref link is not generating currently.",
+      "range": {
+        "startLine": 86,
+        "startChar": 66,
+        "endLine": 86,
+        "endChar": 82
+      },
+      "revId": "a8996dcec12dbaa0338081c8fed748b14888da08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ecba418a_d9529b7c",
+        "filename": "doc/vhost.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T09:17:51Z",
+      "side": 1,
+      "message": "\"yet\" is it needed ?\n\"Particular vhost devices can be restricted to run on a subset of these CPU cores.\" Seems clear enough I think.",
+      "range": {
+        "startLine": 86,
+        "startChar": 3,
+        "endLine": 86,
+        "endChar": 6
+      },
+      "revId": "a8996dcec12dbaa0338081c8fed748b14888da08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c7eb917a_18a7a003",
+        "filename": "doc/vhost.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T09:17:51Z",
+      "side": 1,
+      "message": "\"This guide will use a malloc\"",
+      "range": {
+        "startLine": 107,
+        "startChar": 0,
+        "endLine": 107,
+        "endChar": 33
+      },
+      "revId": "a8996dcec12dbaa0338081c8fed748b14888da08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b632c7ae_39c7f4e0",
+        "filename": "doc/vhost.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-10T09:17:51Z",
+      "side": 1,
+      "message": "It makes it sound like there is some core balancing based on CPU usage going on. Did you mean first CPU core within a given mask ?",
+      "range": {
+        "startLine": 119,
+        "startChar": 30,
+        "endLine": 120,
+        "endChar": 67
+      },
+      "revId": "a8996dcec12dbaa0338081c8fed748b14888da08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
