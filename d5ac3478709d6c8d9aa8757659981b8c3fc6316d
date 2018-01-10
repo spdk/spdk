@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "029d4298_186a0efa",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-01-10T08:59:04Z",
+      "side": 1,
+      "message": "Is NBD_IO_PROCESS still being used?",
+      "revId": "d5ac3478709d6c8d9aa8757659981b8c3fc6316d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58555597_ab594871",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 283,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-01-10T08:59:04Z",
+      "side": 1,
+      "message": "From the code, name this function spdk_nbd_io_put_check seems not so reasonable, spdk_nbd_cleanup?",
+      "revId": "d5ac3478709d6c8d9aa8757659981b8c3fc6316d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "735dfb2b_9de5d7fb",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 294,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-01-10T08:59:04Z",
+      "side": 1,
+      "message": "Is TAILQ_EMPTY needed here?",
+      "revId": "d5ac3478709d6c8d9aa8757659981b8c3fc6316d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
