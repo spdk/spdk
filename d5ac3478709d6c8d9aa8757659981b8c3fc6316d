@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "fc167df4_96e0d355",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-01-10T09:21:05Z",
+      "side": 1,
+      "message": "Done, removed it",
+      "parentUuid": "029d4298_186a0efa",
+      "revId": "d5ac3478709d6c8d9aa8757659981b8c3fc6316d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "58555597_ab594871",
         "filename": "lib/nbd/nbd.c",
         "patchSetId": 9
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "bfa06104_8559e22f",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 283,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-01-10T09:21:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "58555597_ab594871",
+      "revId": "d5ac3478709d6c8d9aa8757659981b8c3fc6316d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "735dfb2b_9de5d7fb",
         "filename": "lib/nbd/nbd.c",
         "patchSetId": 9
@@ -47,6 +83,24 @@
       "writtenOn": "2018-01-10T08:59:04Z",
       "side": 1,
       "message": "Is TAILQ_EMPTY needed here?",
+      "revId": "d5ac3478709d6c8d9aa8757659981b8c3fc6316d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e391a141_d03986cf",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 294,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-01-10T09:21:05Z",
+      "side": 1,
+      "message": "yes, it is necessary.\nin case connection runs in error when receiving io, some received io are linked in it, and have no chance to get executed. they should be freed here.",
+      "parentUuid": "735dfb2b_9de5d7fb",
       "revId": "d5ac3478709d6c8d9aa8757659981b8c3fc6316d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
