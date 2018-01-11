@@ -89,6 +89,8 @@ int bdev_virtio_user_scsi_dev_create(const char *name, const char *path,
  * detected - LUN0. Note that the bdev creation is run asynchronously in the
  * background. After it's finished, the `cb_fn` callback is called.
  *
+ * \param name name for the virtio device. It will be inherited by all created
+ * bdevs, which are named in the following format: <name>t<target_id>
  * \param bdf PCI address in domain:bus:device.function format or
  * domain.bus.device.function format
  * \param cb_fn function to be called after scanning all targets on the virtio
@@ -97,7 +99,7 @@ int bdev_virtio_user_scsi_dev_create(const char *name, const char *path,
  * \return zero on success (device scan is started) or negative error code.
  * In case of error the \c cb_fn is not called.
  */
-int bdev_virtio_pci_scsi_dev_create(const char *bdf,
+int bdev_virtio_pci_scsi_dev_create(const char *name, const char *bdf,
 				    bdev_virtio_create_cb cb_fn, void *cb_arg);
 
 /**
