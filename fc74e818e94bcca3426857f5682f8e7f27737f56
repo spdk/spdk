@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "820dd8fb_fe584c05",
+        "filename": "autotest.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-01-11T08:19:51Z",
+      "side": 1,
+      "message": "Moved, thanks.",
+      "parentUuid": "2f445b9b_c7f19cca",
+      "revId": "fc74e818e94bcca3426857f5682f8e7f27737f56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e5d5192f_b86ee808",
         "filename": "test/blobstore/blobstore.sh",
         "patchSetId": 28
@@ -30,6 +48,24 @@
       "writtenOn": "2018-01-10T18:09:47Z",
       "side": 1,
       "message": "blobstore.sh cannot run on FreeBSD currently.",
+      "revId": "fc74e818e94bcca3426857f5682f8e7f27737f56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "07e56660_66b7c837",
+        "filename": "test/blobstore/blobstore.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-01-11T08:19:51Z",
+      "side": 1,
+      "message": "I have added these statement to exit if run on FreeBSD. And I verified it on FreeBSD. It did exit.",
+      "parentUuid": "e5d5192f_b86ee808",
       "revId": "fc74e818e94bcca3426857f5682f8e7f27737f56",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
