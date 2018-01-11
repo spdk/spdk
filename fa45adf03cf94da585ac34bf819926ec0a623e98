@@ -34,6 +34,24 @@
       "revId": "fa45adf03cf94da585ac34bf819926ec0a623e98",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4550aada_fcab06ac",
+        "filename": "doc/userspace.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-11T17:54:51Z",
+      "side": 1,
+      "message": "Not sure what an English teacher would say, technically it may be the correct use of ellipsis but its an awkward sounding sentence.  Our docs should be easy to read and clear, as is most of your writing, but stuff like this has me scratching my head as to why you don\u0027t just simplify it (just like code, something more complex usually isn\u0027t better)",
+      "parentUuid": "17f41913_a1912065",
+      "revId": "fa45adf03cf94da585ac34bf819926ec0a623e98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
