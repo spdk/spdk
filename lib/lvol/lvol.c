@@ -41,7 +41,7 @@
 #define UUID_STRING_LEN 37
 
 /* Default blob channel opts for lvol */
-#define SPDK_LVOL_BLOB_OPTS_CHANNEL_OPS 8192
+#define SPDK_LVOL_BLOB_OPTS_CHANNEL_OPS 512
 
 SPDK_LOG_REGISTER_COMPONENT("lvol", SPDK_LOG_LVOL)
 
