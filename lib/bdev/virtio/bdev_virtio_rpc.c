@@ -121,8 +121,8 @@ spdk_rpc_create_virtio_user_scsi_bdev(struct spdk_jsonrpc_request *request,
 	}
 
 	req->request = request;
-	rc = bdev_virtio_scsi_dev_create(req->name, req->path, req->vq_count, req->vq_size,
-					 rpc_create_virtio_user_scsi_bdev_cb, req);
+	rc = bdev_virtio_user_scsi_dev_create(req->name, req->path, req->vq_count, req->vq_size,
+					      rpc_create_virtio_user_scsi_bdev_cb, req);
 	if (rc < 0) {
 		goto invalid;
 	}
