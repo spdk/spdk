@@ -97,7 +97,7 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	#  running iSCSI target, then kill and restart the iSCSI target using the
 	#  generated config file
 	running_config
-fi
+else
 
 # Start hotplug test case.
 $fio_py 1048576 128 rw 10 &
@@ -121,6 +121,8 @@ else
 fi
 
 set -e
+
+fi
 
 iscsicleanup
 $rpc_py delete_target_node 'iqn.2016-06.io.spdk:Target3'
