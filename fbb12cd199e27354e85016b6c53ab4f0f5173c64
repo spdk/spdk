@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a951ed6d_6024175e",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-01-11T04:04:40Z",
+      "side": 1,
+      "message": "Remove the detailed JIRA issue information.",
+      "range": {
+        "startLine": 10,
+        "startChar": 44,
+        "endLine": 10,
+        "endChar": 50
+      },
+      "revId": "fbb12cd199e27354e85016b6c53ab4f0f5173c64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
