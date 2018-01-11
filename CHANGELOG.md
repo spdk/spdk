@@ -83,6 +83,12 @@ The NBD application (test/lib/bdev/nbd) has been removed; Same functionality can
 achieved by using the test/app/bdev_svc application and start_nbd_disk RPC method.
 See the [GPT](http://www.spdk.io/doc/bdev.html#bdev_config_gpt) documentation for more details.
 
+### FIO plugin
+
+SPDK `fio_plugin` now suports FIO 3.3. The support for previous FIO 2.21 has been dropped,
+although it still remains to work for now. The new FIO contains huge amount of bugfixes and
+it's recommended to do an update.
+
 ## v17.10: Logical Volumes
 
 ### New dependencies
