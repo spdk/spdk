@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "468b8779_ba54a8d0",
+        "filename": "lib/bdev/virtio/bdev_virtio_scsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1813,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-11T21:13:12Z",
+      "side": 1,
+      "message": "It does. I\u0027ll introduce mutexes later",
+      "parentUuid": "887298a7_bdf20308",
+      "range": {
+        "startLine": 1813,
+        "startChar": 0,
+        "endLine": 1813,
+        "endChar": 88
+      },
+      "revId": "817c4e29406b9385793b7e62a42d72b348d36666",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "397aa15a_c649d350",
         "filename": "lib/bdev/virtio/bdev_virtio_scsi.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2018-01-11T20:31:09Z",
       "side": 1,
       "message": "How about\n\nif (strcmp(vdev-\u003ename, name) \u003d\u003d 0) {\n\tsvdev \u003d virtio_dev_to_scsi(vdev);\n\tbreak;\n}",
+      "range": {
+        "startLine": 1819,
+        "startChar": 0,
+        "endLine": 1824,
+        "endChar": 8
+      },
+      "revId": "817c4e29406b9385793b7e62a42d72b348d36666",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b2e6c135_db912550",
+        "filename": "lib/bdev/virtio/bdev_virtio_scsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1824,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-11T21:13:12Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "397aa15a_c649d350",
       "range": {
         "startLine": 1819,
         "startChar": 0,
