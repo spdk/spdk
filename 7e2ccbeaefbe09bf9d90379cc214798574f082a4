@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "43e6fd81_88fbe4ae",
+        "filename": "include/spdk/conf.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T21:22:23Z",
+      "side": 1,
+      "message": "If key appears multiple times, idx1 will control which version to retrieve. Indices will start from the top of the configuration file at 0 and increment by one for each new appearance.\n\nIf the configuration key contains multiple whitespace delimited values, idx2 controls which value is returned. The index begins at 0.",
+      "revId": "7e2ccbeaefbe09bf9d90379cc214798574f082a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c4df02f_7c7a2a9e",
+        "filename": "include/spdk/conf.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T21:22:23Z",
+      "side": 1,
+      "message": "This index parameter works like the idx2 above.",
+      "revId": "7e2ccbeaefbe09bf9d90379cc214798574f082a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
