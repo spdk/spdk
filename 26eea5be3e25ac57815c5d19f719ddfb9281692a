@@ -1,0 +1,344 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "51f9a5f2_f6d71a2b",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T18:48:19Z",
+      "side": 1,
+      "message": "Maybe say\n\n1. An NVMe-oF target application (app/nvmf_tgt)\n2. An NVMe-oF target library (lib/nvmf)",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "297d8bc9_dd3ac598",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T18:48:19Z",
+      "side": 1,
+      "message": "I\u0027m still unsure of what you\u0027re trying to say here. I\u0027m not understanding what \u0027invoke\u0027 means in this context.\n\nAre you saying that the NVMe-oF target application depends on the NVMe-oF target library and that users can choose to either use/modify the full application or consume the library directly from their application?",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42f8ad60_9f75f176",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T18:48:19Z",
+      "side": 1,
+      "message": "Maybe instead of core objects we call them primitives. I know I said core objects in one of my earlier comments.",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3882fd61_f45f423b",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T18:48:19Z",
+      "side": 1,
+      "message": "This should probably say something like \"An NVMe-oF subsystem, as defined by the NVMe-oF specification. Subsystems contain namespaces and controllers and perform access control\"",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "05518a03_0cd0cac7",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T18:48:19Z",
+      "side": 1,
+      "message": "You should be clear that each namespace is a bdev - they\u0027re mapped 1:1.",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0f20412e_ba5d3fdc",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T18:48:19Z",
+      "side": 1,
+      "message": "This is an abstraction for a network transport, as defined by the NVMe-oF specification. Currently, only an RDMA transport is available.",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4169fbb_47fa0221",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T18:48:19Z",
+      "side": 1,
+      "message": "A poll group is a collection of transport connections that can be polled as a unit. Often, network transports have facilities to check for incoming data on groups of connections more efficiently than checking each one individually.\n\nThe transport group/subsystem group is just an implementation detail - you can leave that out.",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d27eb889_c00b7b63",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T18:48:19Z",
+      "side": 1,
+      "message": "Dependencies",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a64c704_c8e8dd99",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T18:48:19Z",
+      "side": 1,
+      "message": "The nvmf library depends on the bdev layer, where each bdev is exposed as a namespace. That\u0027s what I really think we should make clear here - the stack of components is nvmf on top, then bdev underneath, then bdev drivers like nvme under that.\n\nThe nvmf library does not depend on the application framework or the RPC library.",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5aa410c8_307dae2b",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T18:48:19Z",
+      "side": 1,
+      "message": "Network Transports",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9918e4a_b621a787",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T18:48:19Z",
+      "side": 1,
+      "message": "I think this section should say something like this:\n\n\"The NVMe-oF specification defines multiple network transports and has an extensible system for adding new transports in the future. The NVMe-oF library implements a plugin system for network transports to support this. The API a new transport must implement is located in lib/nvmf/transport.h. As of this writing, only an RDMA transport has been implemented.\"\n\nThe poll group thing doesn\u0027t really need to come up here unless you want to go into detail on how to implement a transport. It\u0027s not true that transports can be grouped into a single poll group, unless you mean connections belonging to different transports can be grouped into a single poll group - that part is true.",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be6ebb89_c19fc3c9",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T18:48:19Z",
+      "side": 1,
+      "message": "The NVMe-oF application spawns one thread per core using the SPDK application framework and places a single poll group on each thread. However, the NVMe-oF library doesn\u0027t spawn any threads and has looser requirements. The primary requirement is that a poll group can only be accessed from the thread it was created on.",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "08eb14c1_cf6be6d1",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T18:48:19Z",
+      "side": 1,
+      "message": "Poll groups just provide an efficient way to poll sets of connections. They can only be used from the thread they were created on. Given that, it makes the most sense to create one poll group per thread in the user application.\n\nSince we\u0027re in the design considerations section, you should probably talk about why poll groups are important to the design (the scaling problem).\n\nYou should also point out that when the user calls spdk_nvmf_tgt_accept(...) and gets a callback for a new connection, they should place it in a poll group that is NUMA appropriate for best performance.",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a782562b_01728a3e",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T18:48:19Z",
+      "side": 1,
+      "message": "Dynamic Subsystem Management",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "476c8f3e_0cbba583",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T18:48:19Z",
+      "side": 1,
+      "message": "You can probably combine this with the poll group section above.",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e2ccf00e_01816c4e",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T18:48:19Z",
+      "side": 1,
+      "message": "For all of the NVMe I/O commands, no message passing is needed. These commands can execute on any thread.\n\nFor some NVMe admin and fabrics commands, messages will be sent to all other threads to temporarily freeze a subsystem before they are processed. This can block incoming NVMe I/O commands.",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d7cb255_fb08b62b",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T18:48:19Z",
+      "side": 1,
+      "message": "Data is transferred from the RDMA NIC to host memory and then host memory to the SSD (or vis. versa), without any intermediate copies.",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42e2f2d5_310341e9",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T18:48:19Z",
+      "side": 1,
+      "message": "We should separate data structures that are part of the application from data structures that are part of the library.",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b9a97c7_b1245e82",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T18:48:19Z",
+      "side": 1,
+      "message": "I have a patch out that deletes this.",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c6bc23c0_5d9cb3aa",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T18:48:19Z",
+      "side": 1,
+      "message": "Below this point, you end up talking a lot about the current implementation. I think it\u0027s much more useful to talk about the key ideas in the design, mixed with some discussion of public APIs, but to generally stay out of implementation details that may change at any time in the future.",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
