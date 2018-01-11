@@ -293,7 +293,7 @@ virtio_scsi_dev_init(struct virtio_scsi_dev *svdev, uint16_t max_queues)
 }
 
 static int
-virtio_pci_scsi_dev_create_cb(struct virtio_pci_ctx *pci_ctx)
+virtio_pci_scsi_dev_create_cb(struct virtio_pci_ctx *pci_ctx, void *ctx)
 {
 	static int pci_dev_counter = 0;
 	struct virtio_scsi_dev *svdev;
@@ -1502,7 +1502,7 @@ bdev_virtio_process_config(void)
 
 	enable_pci = spdk_conf_section_get_boolval(sp, "Enable", false);
 	if (enable_pci) {
-		rc = virtio_pci_dev_enumerate(virtio_pci_scsi_dev_create_cb,
+		rc = virtio_pci_dev_enumerate(virtio_pci_scsi_dev_create_cb, NULL,
 					      PCI_DEVICE_ID_VIRTIO_SCSI_MODERN);
 	}
 
