@@ -164,7 +164,7 @@ public:
 
 SpdkRandomAccessFile::SpdkRandomAccessFile(const std::string &fname, const EnvOptions &options)
 {
-	spdk_fs_open_file(g_fs, g_sync_args.channel, fname.c_str(), SPDK_BLOBFS_OPEN_CREATE, &mFile);
+	spdk_fs_open_file(g_fs, g_sync_args.channel, fname.c_str(), 0, &mFile);
 }
 
 SpdkRandomAccessFile::~SpdkRandomAccessFile(void)
