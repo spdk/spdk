@@ -2,6 +2,176 @@
   "comments": [
     {
       "key": {
+        "uuid": "f21f3f7f_10e313a8",
+        "filename": "doc/user_guide.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T21:03:47Z",
+      "side": 1,
+      "message": "This section needs to describe\n\n1) What the roles and responsibilities of the bdev layer are (see the current getting started guide)\n2) What a bdev module is\n3) Virtual bdevs and their uses",
+      "revId": "c3af0ae6e0543a46415284868da23010d519790b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e96cc6a_698580e8",
+        "filename": "doc/user_guide.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T21:03:47Z",
+      "side": 1,
+      "message": "This guide describes...",
+      "revId": "c3af0ae6e0543a46415284868da23010d519790b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "53f04813_0f1e10b7",
+        "filename": "doc/user_guide.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T21:03:47Z",
+      "side": 1,
+      "message": "It\u0027s just \"Storage Performance Development Kit\" - no Intel.",
+      "revId": "c3af0ae6e0543a46415284868da23010d519790b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3e2acc0_ddbc5a92",
+        "filename": "doc/user_guide.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T21:03:47Z",
+      "side": 1,
+      "message": "Markdown headers need a space between the # and the title.",
+      "revId": "c3af0ae6e0543a46415284868da23010d519790b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a46c708d_986904c9",
+        "filename": "doc/user_guide.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T21:03:47Z",
+      "side": 1,
+      "message": "This guide assumes that you can already build...",
+      "revId": "c3af0ae6e0543a46415284868da23010d519790b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d648f1bf_073d1622",
+        "filename": "doc/user_guide.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T21:03:47Z",
+      "side": 1,
+      "message": "fallowing -\u003e following",
+      "revId": "c3af0ae6e0543a46415284868da23010d519790b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4618f357_6488d9c5",
+        "filename": "doc/user_guide.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T21:03:47Z",
+      "side": 1,
+      "message": "SPDK provides a python-based command line tool for sending RPC commands located at `scripts/rpc.py`.",
+      "revId": "c3af0ae6e0543a46415284868da23010d519790b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c43ba67b_606c7b08",
+        "filename": "doc/user_guide.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T21:03:47Z",
+      "side": 1,
+      "message": "Maybe name this section \"General Purpose RPCs\"",
+      "revId": "c3af0ae6e0543a46415284868da23010d519790b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "89edcf00_ef895cf1",
+        "filename": "doc/user_guide.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T21:03:47Z",
+      "side": 1,
+      "message": "Let\u0027s name the section exactly the same as the RPC command",
+      "revId": "c3af0ae6e0543a46415284868da23010d519790b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b95f3e0f_b03972a0",
+        "filename": "doc/user_guide.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T21:03:47Z",
+      "side": 1,
+      "message": "This header is probably overkill.",
+      "revId": "c3af0ae6e0543a46415284868da23010d519790b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "52cece3f_74e28002",
         "filename": "doc/user_guide.md",
         "patchSetId": 1
