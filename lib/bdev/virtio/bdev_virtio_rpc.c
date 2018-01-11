@@ -42,6 +42,7 @@
 
 struct rpc_construct_virtio_scsi_dev {
 	char *path;
+	char *pci_address;
 	char *name;
 	uint32_t vq_count;
 	uint32_t vq_size;
@@ -64,6 +65,7 @@ free_rpc_construct_virtio_scsi_dev(struct rpc_construct_virtio_scsi_dev *req)
 	}
 
 	free(req->path);
+	free(req->pci_address);
 	free(req->name);
 	free(req);
 }
@@ -110,6 +112,7 @@ spdk_rpc_create_virtio_user_scsi_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
+	req->pci_address = NULL;
 	req->vq_count = 1;
 	req->vq_size = 512;
 
@@ -135,6 +138,56 @@ invalid:
 	free_rpc_construct_virtio_scsi_dev(req);
 }
 SPDK_RPC_REGISTER("construct_virtio_user_scsi_bdev", spdk_rpc_create_virtio_user_scsi_bdev);
+
+static const struct spdk_json_object_decoder rpc_construct_virtio_pci_scsi_dev[] = {
+	{"pci_address", offsetof(struct rpc_construct_virtio_scsi_dev, pci_address), spdk_json_decode_string },
+	{"name", offsetof(struct rpc_construct_virtio_scsi_dev, name), spdk_json_decode_string },
+};
+
+static void
+spdk_rpc_construct_virtio_pci_scsi_dev(struct spdk_jsonrpc_request *request,
+				       const struct spdk_json_val *params)
+{
+	struct rpc_construct_virtio_scsi_dev *req;
+	struct spdk_pci_addr pci_addr;
+	int rc;
+
+	req = calloc(1, sizeof(*req));
+	if (!req) {
+		rc = -ENOMEM;
+		goto invalid;
+	}
+
+	req->path = NULL;
+
+	if (spdk_json_decode_object(params, rpc_construct_virtio_pci_scsi_dev,
+				    SPDK_COUNTOF(rpc_construct_virtio_pci_scsi_dev),
+				    req)) {
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	if (spdk_pci_addr_parse(&pci_addr, req->pci_address) != 0) {
+		SPDK_ERRLOG("Invalid PCI address '%s'\n", req->pci_address);
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	req->request = request;
+	rc = bdev_virtio_pci_scsi_dev_create(req->name, &pci_addr,
+					     rpc_construct_virtio_scsi_dev_cb, req);
+	if (rc < 0) {
+		goto invalid;
+	}
+
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_strerror(-rc));
+	free_rpc_construct_virtio_scsi_dev(req);
+}
+SPDK_RPC_REGISTER("construct_virtio_pci_scsi_bdev", spdk_rpc_construct_virtio_pci_scsi_dev);
 
 struct rpc_remove_virtio_scsi_dev {
 	char *name;

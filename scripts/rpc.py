@@ -868,6 +868,20 @@ p.add_argument('--vq-count', help='Number of virtual queues to be used.', type=i
 p.add_argument('--vq-size', help='Size of each queue', type=int)
 p.set_defaults(func=construct_virtio_user_scsi_bdev)
 
+def construct_virtio_pci_scsi_bdev(args):
+    params = {
+        'pci_address': args.pci_address,
+        'name': args.name,
+    }
+    print_dict(jsonrpc_call('construct_virtio_pci_scsi_bdev', params))
+
+p = subparsers.add_parser('construct_virtio_pci_scsi_bdev', help="""Create a Virtio SCSI device from a virtio-pci device.""")
+p.add_argument('pci_address', help="""PCI address in domain:bus:device.function format or
+domain.bus.device.function format""")
+p.add_argument('name', help="""Name for the virtio device.
+It will be inherited by all created bdevs, which are named in the following format: <name>t<target_id>""")
+p.set_defaults(func=construct_virtio_pci_scsi_bdev)
+
 def remove_virtio_scsi_bdev(args):
     params = {'name': args.name}
     jsonrpc_call('remove_virtio_scsi_bdev', params)
