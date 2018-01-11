@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "55315538_2c8394cd",
+        "filename": "NVMe-Qualified-Name-Backus-Naur.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T04:26:44Z",
+      "side": 1,
+      "message": "I don\u0027t totally understand the order of operations in this syntax, but I assume \u0027|\u0027 is processed before \u0027,\u0027 and what you wrote is correct. Can you double check that though?",
+      "revId": "1cd53dace17dd710b3deaf04a27ab988a17a92e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1199116a_b31d09fb",
+        "filename": "NVMe-Qualified-Name-Backus-Naur.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T04:26:44Z",
+      "side": 1,
+      "message": "You still have a ::\u003d here",
+      "revId": "1cd53dace17dd710b3deaf04a27ab988a17a92e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
