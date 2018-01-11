@@ -8,7 +8,6 @@ ROOT_DIR=$(readlink -f $BASE_DIR/../../..)
 PLUGIN_DIR=$ROOT_DIR/examples/bdev/fio_plugin
 RPC_PY="$ROOT_DIR/scripts/rpc.py"
 FIO_BIN="/usr/src/fio/fio"
-BDEV_FIO="$BASE_DIR/bdev.fio"
 virtio_bdevs=""
 virtio_nvme_bdevs=""
 
@@ -44,10 +43,6 @@ fi
 if [[ $EUID -ne 0 ]]; then
 	echo "INFO: Go away user come back as root"
 	exit 1
-fi
-
-if [ $RUN_NIGHTLY -eq 1 ]; then
-	BDEV_FIO="$BASE_DIR/bdev_nightly.fio"
 fi
 
 trap 'rm -f *.state; error_exit "${FUNCNAME}""${LINENO}"' ERR SIGTERM SIGABRT
@@ -93,7 +88,7 @@ create_bdev_config
 timing_exit create_bdev_config
 
 timing_enter run_spdk_fio
-run_spdk_fio $BDEV_FIO --filename=$virtio_bdevs --spdk_conf=$BASE_DIR/bdev.conf
+run_spdk_fio $BASE_DIR/bdev.fio --filename=$virtio_bdevs --spdk_conf=$BASE_DIR/bdev.conf
 timing_exit run_spdk_fio
 
 rm -f *.state
