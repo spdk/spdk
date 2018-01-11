@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2e204156_ba292426",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T21:51:14Z",
+      "side": 1,
+      "message": "Why? (You should answer why in the body of the commit message)",
+      "revId": "fc1604b14310400ab3cc986bb0f3ed2012c1e23d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
