@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "29399b55_32f219c2",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-11T14:33:09Z",
+      "side": 1,
+      "message": "I think I\u0027d remove the word \"un-whitelisted\" and just go with \"Skipping NVMe controller\" but it\u0027s not a big thing, just a preference",
+      "revId": "10b1883380f3c3f0efad9c582e4617ffd5ce9ce6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
