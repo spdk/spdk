@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7b73f9ef_acd65b1c",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-01-11T16:18:57Z",
+      "side": 1,
+      "message": "Hmmm... I don\u0027t like this picture but from other side I don\u0027t know how this picture should look like for describing VM\u003c-\u003evhost\u003c-\u003eNVMe relationship.",
+      "range": {
+        "startLine": 18,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 81
+      },
+      "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17ec2a24_ae6b7910",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-01-11T16:18:57Z",
+      "side": 1,
+      "message": "Can you place output or at least mention \u0027-h\u0027 option so the user can find out which parameter is responsible for setting sockets directory (and other options).\n\nSomething like \"Please check app/vhost/vhost -h for all available options.\" might be sufficient.",
+      "range": {
+        "startLine": 84,
+        "startChar": 74,
+        "endLine": 84,
+        "endChar": 82
+      },
+      "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c29fcf12_602ae8a4",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-01-11T16:18:57Z",
+      "side": 1,
+      "message": "Isn\u0027t \u0027prealloc\u003dyes\u0027 quite important here?",
+      "range": {
+        "startLine": 173,
+        "startChar": 0,
+        "endLine": 173,
+        "endChar": 75
+      },
+      "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
