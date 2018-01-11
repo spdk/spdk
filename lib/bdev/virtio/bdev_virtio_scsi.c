@@ -293,12 +293,12 @@ virtio_scsi_dev_init(struct virtio_scsi_dev *svdev, uint16_t max_queues)
 }
 
 static struct virtio_scsi_dev *
-virtio_pci_scsi_dev_create(struct virtio_pci_ctx *pci_ctx)
+virtio_pci_scsi_dev_create(const char *name, struct virtio_pci_ctx *pci_ctx)
 {
 	static int pci_dev_counter = 0;
 	struct virtio_scsi_dev *svdev;
 	struct virtio_dev *vdev;
-	char *name;
+	char *default_name = NULL;
 	uint32_t num_queues;
 	int rc;
 
@@ -309,14 +309,17 @@ virtio_pci_scsi_dev_create(struct virtio_pci_ctx *pci_ctx)
 	}
 
 	vdev = &svdev->vdev;
-	name = spdk_sprintf_alloc("VirtioScsi%"PRIu32, pci_dev_counter++);
 	if (name == NULL) {
-		free(vdev);
-		return NULL;
+		default_name = spdk_sprintf_alloc("VirtioScsi%"PRIu32, pci_dev_counter++);
+		if (default_name == NULL) {
+			free(vdev);
+			return NULL;
+		}
+		name = default_name;
 	}
 
 	rc = virtio_pci_dev_init(vdev, name, pci_ctx);
-	free(name);
+	free(default_name);
 
 	if (rc != 0) {
 		free(svdev);
@@ -1449,7 +1452,7 @@ virtio_pci_scsi_dev_enumerate_cb(struct virtio_pci_ctx *pci_ctx, void *ctx)
 {
 	struct virtio_scsi_dev *svdev;
 
-	svdev = virtio_pci_scsi_dev_create(pci_ctx);
+	svdev = virtio_pci_scsi_dev_create(NULL, pci_ctx);
 	return svdev == NULL ? -1 : 0;
 }
 
@@ -1821,6 +1824,7 @@ bdev_virtio_user_scsi_dev_create(const char *base_name, const char *path,
 }
 
 struct bdev_virtio_pci_dev_create_ctx {
+	const char *name;
 	bdev_virtio_create_cb cb_fn;
 	void *cb_arg;
 };
@@ -1832,7 +1836,7 @@ bdev_virtio_pci_scsi_dev_create_cb(struct virtio_pci_ctx *pci_ctx, void *ctx)
 	struct bdev_virtio_pci_dev_create_ctx *create_ctx = ctx;
 	int rc;
 
-	svdev = virtio_pci_scsi_dev_create(pci_ctx);
+	svdev = virtio_pci_scsi_dev_create(create_ctx->name, pci_ctx);
 	if (svdev == NULL) {
 		return -1;
 	}
@@ -1846,11 +1850,12 @@ bdev_virtio_pci_scsi_dev_create_cb(struct virtio_pci_ctx *pci_ctx, void *ctx)
 }
 
 int
-bdev_virtio_pci_scsi_dev_create(struct spdk_pci_addr *pci_addr,
+bdev_virtio_pci_scsi_dev_create(const char *name, struct spdk_pci_addr *pci_addr,
 				bdev_virtio_create_cb cb_fn, void *cb_arg)
 {
 	struct bdev_virtio_pci_dev_create_ctx create_ctx;
 
+	create_ctx.name = name;
 	create_ctx.cb_fn = cb_fn;
 	create_ctx.cb_arg = cb_arg;
 
