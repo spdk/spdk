@@ -284,6 +284,30 @@
     },
     {
       "key": {
+        "uuid": "28a2ace1_d6f5c286",
+        "filename": "doc/vhost.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-11T16:00:45Z",
+      "side": 1,
+      "message": "HUGENODE is not explained anywhere in docs actually, which is shame. It should be explained at least in one place.",
+      "parentUuid": "30ce9994_17ab54b4",
+      "range": {
+        "startLine": 203,
+        "startChar": 8,
+        "endLine": 203,
+        "endChar": 50
+      },
+      "revId": "a8996dcec12dbaa0338081c8fed748b14888da08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "55fda2e7_205f2327",
         "filename": "doc/vhost.md",
         "patchSetId": 7
@@ -424,6 +448,30 @@
       "side": 1,
       "message": "I\u0027ve mentioned hot-attach/detach is Vhost-SCSI-specific [1] so I\u0027d rather keep it short here.\n\n[1] (line #326) \"Please also note that hot-attach/detach is Vhost-SCSI-specific.\"",
       "parentUuid": "18379aae_1ee2015e",
+      "range": {
+        "startLine": 333,
+        "startChar": 54,
+        "endLine": 333,
+        "endChar": 70
+      },
+      "revId": "a8996dcec12dbaa0338081c8fed748b14888da08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ad5362d0_f00d5c00",
+        "filename": "doc/vhost.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-11T16:00:45Z",
+      "side": 1,
+      "message": "Sure, keeping it short works as well then.",
+      "parentUuid": "b73ee801_fc042bf7",
       "range": {
         "startLine": 333,
         "startChar": 54,
