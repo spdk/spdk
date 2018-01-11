@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da41ab9c_a5b0d762",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-11T15:38:06Z",
+      "side": 1,
+      "message": "Can\u0027t we follow same logic as recently changed code in vbdev_lvol_destruct() ?\nlvol is available here so extracting the alias string should be possible.",
+      "range": {
+        "startLine": 78,
+        "startChar": 17,
+        "endLine": 78,
+        "endChar": 77
+      },
+      "revId": "26c643e2528844be87829993c8a3710b364aaf0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52b03635_ddca0405",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 479,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-11T15:38:06Z",
+      "side": 1,
+      "message": "I think this can be removed from here, please see below.",
+      "range": {
+        "startLine": 471,
+        "startChar": 0,
+        "endLine": 479,
+        "endChar": 2
+      },
+      "revId": "26c643e2528844be87829993c8a3710b364aaf0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92ab115c_c0e0c6a8",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 508,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-11T15:38:06Z",
+      "side": 1,
+      "message": "This block could be moved before the condition above. Regardless whether we are closing or deleting the lvol, bdev alias can be deleted.\n\nIt would no longer be needed in _vbdev_lvol_destroy_after_close_cb.",
+      "range": {
+        "startLine": 502,
+        "startChar": 0,
+        "endLine": 508,
+        "endChar": 3
+      },
+      "revId": "26c643e2528844be87829993c8a3710b364aaf0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
