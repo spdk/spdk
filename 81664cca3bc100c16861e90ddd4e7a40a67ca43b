@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fd0990c3_95aa4bb1",
+        "filename": "doc/template_pg.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T21:18:48Z",
+      "side": 1,
+      "message": "This programmer\u0027s guide",
+      "revId": "81664cca3bc100c16861e90ddd4e7a40a67ca43b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef193f51_74da76f3",
+        "filename": "doc/template_pg.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T21:18:48Z",
+      "side": 1,
+      "message": "source code to provide",
+      "revId": "81664cca3bc100c16861e90ddd4e7a40a67ca43b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f754c6de_2242215f",
+        "filename": "doc/template_pg.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T21:18:48Z",
+      "side": 1,
+      "message": "API reference and in some cases -\u003e API reference but in some cases",
+      "revId": "81664cca3bc100c16861e90ddd4e7a40a67ca43b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ae7ee15_7313cc3f",
+        "filename": "doc/template_pg.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T21:18:48Z",
+      "side": 1,
+      "message": "I think instead of the semicolon you can just put a period and make the other clause a new sentence.",
+      "revId": "81664cca3bc100c16861e90ddd4e7a40a67ca43b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff665d6c_4a8d16a1",
+        "filename": "doc/template_pg.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T21:18:48Z",
+      "side": 1,
+      "message": "if there at this point, they are by definition -\u003e if they\u0027re at this point because they are by definition",
+      "revId": "81664cca3bc100c16861e90ddd4e7a40a67ca43b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8f4f2ef_f302afa9",
+        "filename": "doc/template_pg.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T21:18:48Z",
+      "side": 1,
+      "message": "I\u0027d like to add a set of things that this section should cover:\n\n1) What are the basic primitives that this component exposes?\n2) How are these primitives related to one another?\n3) What are the threading rules when using these primitives?\n4) What are the theoretical performance implications for different scaling vectors?\n5) Are there any other documents or specifications that the user should be familiar with?\n6) What are the intended use cases?",
+      "revId": "81664cca3bc100c16861e90ddd4e7a40a67ca43b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ce820ce2_dddbff79",
+        "filename": "doc/template_pg.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T21:18:48Z",
+      "side": 1,
+      "message": "This section should describe the mechanisms for configuring the component at a high level (i.e. you can configure it using a config file, or you can configure it using RPC calls over a unix domain socket). It should also talk about when you can configure it - i.e. at run time or only up front. For specifics about how the RPCs work or the config file format, link to the appropriate user guide instead of putting that information here.",
+      "revId": "81664cca3bc100c16861e90ddd4e7a40a67ca43b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
