@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "43b84bbd_9a082464",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 10
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T21:35:59Z",
+      "side": 1,
+      "message": "public",
+      "revId": "d487b13e0e7dc6016f5f5132d22a3c3d87d85574",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17dbbdef_c0c14a15",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T21:35:59Z",
+      "side": 1,
+      "message": "passed to callback function -\u003e passed to the callback function\n\nThis same sort of fix needs to be applied to most of the comments.",
+      "revId": "d487b13e0e7dc6016f5f5132d22a3c3d87d85574",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ce459b6_e5827be5",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T21:35:59Z",
+      "side": 1,
+      "message": "massage -\u003e message\n\nThis typo occurs in a number of other places",
+      "revId": "d487b13e0e7dc6016f5f5132d22a3c3d87d85574",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e96c89c1_2d734caa",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T21:35:59Z",
+      "side": 1,
+      "message": "Get statistics about the file including the underlying blob id and the file size.",
+      "revId": "d487b13e0e7dc6016f5f5132d22a3c3d87d85574",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
