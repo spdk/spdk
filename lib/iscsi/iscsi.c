@@ -4249,7 +4249,7 @@ spdk_iscsi_send_r2t(struct spdk_iscsi_conn *conn,
 	rsp_pdu->data = NULL;
 	rsph->opcode = ISCSI_OP_R2T;
 	rsph->flags |= 0x80; /* bit 0 is default to 1 */
-	to_be64(&rsph->lun, spdk_scsi_lun_get_id(task->scsi.lun));
+	to_be64(&rsph->lun, task->lun_id);
 	to_be32(&rsph->itt, task->tag);
 	to_be32(&rsph->ttt, transfer_tag);
 
