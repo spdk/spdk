@@ -22,6 +22,30 @@
       "revId": "00ce48f774525292e4456a3104b9c9c1da9ea65b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "58c7fec1_0ffd47b9",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1127,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-11T21:54:19Z",
+      "side": 1,
+      "message": "we don\u0027t even need strdup - we can just pass the buffers directly in the array\n\nI\u0027ll clean this up too.",
+      "parentUuid": "98739284_cf82cb7e",
+      "range": {
+        "startLine": 1127,
+        "startChar": 0,
+        "endLine": 1127,
+        "endChar": 80
+      },
+      "revId": "00ce48f774525292e4456a3104b9c9c1da9ea65b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }

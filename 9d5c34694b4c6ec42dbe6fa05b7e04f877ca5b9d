@@ -22,6 +22,30 @@
       "revId": "9d5c34694b4c6ec42dbe6fa05b7e04f877ca5b9d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d35840df_be5c604c",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-11T21:54:19Z",
+      "side": 0,
+      "message": "Yes - you\u0027re right - I\u0027ll fix this up.",
+      "parentUuid": "e709f892_9578725a",
+      "range": {
+        "startLine": 60,
+        "startChar": 8,
+        "endLine": 60,
+        "endChar": 37
+      },
+      "revId": "9d5c34694b4c6ec42dbe6fa05b7e04f877ca5b9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
