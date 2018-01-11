@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "52cece3f_74e28002",
+        "filename": "doc/user_guide.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-11T13:57:36Z",
+      "side": 1,
+      "message": "can you add {#link}?\nThis will automatically create clickable entries in the menu bar. This would simplify the navigation greatly.",
+      "revId": "c3af0ae6e0543a46415284868da23010d519790b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
