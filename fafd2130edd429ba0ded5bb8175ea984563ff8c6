@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5f4e9681_78c21289",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T18:58:44Z",
+      "side": 1,
+      "message": "This programmer\u0027s guide\n\nutilize the SPDK iSCSI library and application.",
+      "revId": "fafd2130edd429ba0ded5bb8175ea984563ff8c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "921c3aa2_01b0e66e",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T18:58:44Z",
+      "side": 1,
+      "message": "One important point to make is that the code is divided into several layers - iscsi, scsi, bdev - and this guide will cover only iscsi and scsi.",
+      "revId": "fafd2130edd429ba0ded5bb8175ea984563ff8c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "504507c8_52ded906",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T18:58:44Z",
+      "side": 1,
+      "message": "This should mention what the key concepts are (the primitives) - connections, sessions, target nodes, portal groups, etc.",
+      "revId": "fafd2130edd429ba0ded5bb8175ea984563ff8c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e17602d3_565ef613",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T18:58:44Z",
+      "side": 1,
+      "message": "All connections for a target are not handled on one cpu core. It\u0027s not even true that all connections for a single target node are handled on one cpu core. All connections for a single session would need to be handled on the same core, but we only support one connection per session today anyway.\n\nIn order to be able to make these statements, you have to first explain that there is a thing called a target node, a session, a connection, etc.",
+      "revId": "fafd2130edd429ba0ded5bb8175ea984563ff8c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "070da1ab_82a31678",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T18:58:44Z",
+      "side": 1,
+      "message": "I think calling this a \"run to completion model\" is more accurate.",
+      "revId": "fafd2130edd429ba0ded5bb8175ea984563ff8c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
