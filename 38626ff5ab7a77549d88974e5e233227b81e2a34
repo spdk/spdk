@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ee35b348_9b0f8c1b",
+        "filename": "doc/benchmarking.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-01-11T14:44:15Z",
+      "side": 1,
+      "message": "Ben\nGreat article talking about the complex internals of the SSDs and how they cause performance variability. SNIA has a performance spec test spec for SSDs (http://www.snia.org/sites/default/files/SSS_PTS_Enterprise_v1.1.pdf). The spec defines three steps for pre-conditioning SSDs to achieve accurate, repeatable and reliable results:\n1) Purge the SSD to bring it to a consistent state.\n2) Workload Independent Preconditioning using 128K sequential writes to fill the device twice. This maps all LBA addresses and over-provisioning areas and fills them with data.\n3) Workload Dependent Preconditioning: Running the test workload to place the device into a steady state for the desired workload so that the average performance doesn\u0027t vary during the performance measurement window.\nTom\u0027s Hardware also has a great article that talks about SSD performance variability and how they get the performance to steady state that is locate at http://www.tomsitpro.com/articles/enterprise-ssd-testing,2-863.html?_ga\u003d2.183777187.4055747.1515679441-984220001.1514927654",
+      "range": {
+        "startLine": 92,
+        "startChar": 62,
+        "endLine": 94,
+        "endChar": 7
+      },
+      "revId": "38626ff5ab7a77549d88974e5e233227b81e2a34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
