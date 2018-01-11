@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "5f696070_d4bbe3c3",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-11T13:40:57Z",
+      "side": 1,
+      "message": "We probably don\u0027t need this argument - we can get it from blob, because it will always be on the same blobstore.",
+      "range": {
+        "startLine": 236,
+        "startChar": 34,
+        "endLine": 236,
+        "endChar": 60
+      },
+      "revId": "4c348fcaca856aa009ec98a13a6c27c36002702a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e64b5d23_4de6d9ea",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 3
