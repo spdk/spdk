@@ -260,6 +260,30 @@
     },
     {
       "key": {
+        "uuid": "30ce9994_17ab54b4",
+        "filename": "doc/vhost.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-11T09:36:09Z",
+      "side": 1,
+      "message": "\u003e I think it would be best not to stray from commands given as example above.\n\nI\u0027ve added a new cpu layout section and a word of reasoning for this.\nWe might want to mention HUGENODE param in the \"Starting SPDK vhost target\" as well. Do you think we should?",
+      "parentUuid": "4eb95672_fa58799e",
+      "range": {
+        "startLine": 203,
+        "startChar": 8,
+        "endLine": 203,
+        "endChar": 50
+      },
+      "revId": "a8996dcec12dbaa0338081c8fed748b14888da08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "55fda2e7_205f2327",
         "filename": "doc/vhost.md",
         "patchSetId": 7
@@ -306,6 +330,30 @@
     },
     {
       "key": {
+        "uuid": "365ff420_c23842f3",
+        "filename": "doc/vhost.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-11T09:36:09Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "d388d50d_dcbb4fdf",
+      "range": {
+        "startLine": 261,
+        "startChar": 8,
+        "endLine": 261,
+        "endChar": 15
+      },
+      "revId": "a8996dcec12dbaa0338081c8fed748b14888da08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8afe5263_9e626dce",
         "filename": "doc/vhost.md",
         "patchSetId": 7
@@ -323,6 +371,24 @@
     },
     {
       "key": {
+        "uuid": "b0f1ec62_49afeb91",
+        "filename": "doc/vhost.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-11T09:36:09Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "8afe5263_9e626dce",
+      "revId": "a8996dcec12dbaa0338081c8fed748b14888da08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "18379aae_1ee2015e",
         "filename": "doc/vhost.md",
         "patchSetId": 7
@@ -334,6 +400,30 @@
       "writtenOn": "2018-01-10T12:35:44Z",
       "side": 1,
       "message": "vhost-scsi controller",
+      "range": {
+        "startLine": 333,
+        "startChar": 54,
+        "endLine": 333,
+        "endChar": 70
+      },
+      "revId": "a8996dcec12dbaa0338081c8fed748b14888da08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b73ee801_fc042bf7",
+        "filename": "doc/vhost.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-11T09:36:09Z",
+      "side": 1,
+      "message": "I\u0027ve mentioned hot-attach/detach is Vhost-SCSI-specific [1] so I\u0027d rather keep it short here.\n\n[1] (line #326) \"Please also note that hot-attach/detach is Vhost-SCSI-specific.\"",
+      "parentUuid": "18379aae_1ee2015e",
       "range": {
         "startLine": 333,
         "startChar": 54,
