@@ -46,6 +46,7 @@
 #include "spdk/json.h"
 #include "spdk/io_channel.h"
 #include "spdk/pci_ids.h"
+#include "spdk/env.h"
 
 /**
  * The maximum virtqueue size is 2^15. Use that value as the end of
@@ -443,6 +444,20 @@ void virtio_dev_dump_json_config(struct virtio_dev *vdev, struct spdk_json_write
  */
 int virtio_pci_dev_enumerate(virtio_pci_create_cb enum_cb, void *enum_ctx,
 			     uint16_t pci_device_id);
+
+/**
+ * Attach a PCI Virtio device of given type.
+ *
+ * \param create_cb callback to create a virtio_dev.
+ * If virtio_dev is has been created, the callback should return 0.
+ * Returning any other value will cause the PCI context to be freed,
+ * making it unusable.
+ * \param enum_ctx additional opaque context to be passed into `enum_cb`
+ * \param pci_device_id PCI Device ID of devices to iterate through
+ * \param pci_addr PCI address of the device to attach
+ */
+int virtio_pci_dev_attach(virtio_pci_create_cb create_cb, void *enum_ctx,
+			  uint16_t pci_device_id, struct spdk_pci_addr *pci_addr);
 
 /**
  * Connect to a vhost-user device and init corresponding virtio_dev struct.

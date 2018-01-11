@@ -35,6 +35,7 @@
 #define SPDK_BDEV_VIRTIO_H
 
 #include "spdk/bdev.h"
+#include "spdk/env.h"
 
 /**
  * Callback for creating virtio bdevs.
@@ -77,9 +78,27 @@ typedef void (*bdev_virtio_remove_cb)(void *ctx, int errnum);
  * \return zero on success (device scan is started) or negative error code.
  * In case of error the \c cb_fn is not called.
  */
-int bdev_virtio_scsi_dev_create(const char *name, const char *path,
-				unsigned num_queues, unsigned queue_size,
-				bdev_virtio_create_cb cb_fn, void *cb_arg);
+int bdev_virtio_user_scsi_dev_create(const char *name, const char *path,
+				     unsigned num_queues, unsigned queue_size,
+				     bdev_virtio_create_cb cb_fn, void *cb_arg);
+
+/**
+ * Attach virtio-pci device. This creates a Virtio SCSI device with the same
+ * capabilities as the vhost-user equivalent. The device will be automatically
+ * scanned for exposed SCSI targets. This will result in creating possibly multiple
+ * Virtio SCSI bdevs - one for each target. Currently only one LUN per target is
+ * detected - LUN0. Note that the bdev creation is run asynchronously in the
+ * background. After it's finished, the `cb_fn` callback is called.
+ *
+ * \param pci_addr PCI address of the device to attach
+ * \param cb_fn function to be called after scanning all targets on the virtio
+ * device. It's optional, can be NULL. See \c bdev_virtio_create_cb.
+ * \param cb_arg argument for the `cb_fn`
+ * \return zero on success (device scan is started) or negative error code.
+ * In case of error the \c cb_fn is not called.
+ */
+int bdev_virtio_pci_scsi_dev_create(struct spdk_pci_addr *pci_addr,
+				    bdev_virtio_create_cb cb_fn, void *cb_arg);
 
 /**
  * Remove a Virtio device with given name. This will destroy all bdevs exposed
