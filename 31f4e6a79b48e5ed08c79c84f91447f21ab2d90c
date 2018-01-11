@@ -60,6 +60,24 @@
     },
     {
       "key": {
+        "uuid": "3d5041da_49d2129c",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 552,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-11T16:52:01Z",
+      "side": 1,
+      "message": "Yup, that will work.",
+      "parentUuid": "9b35779f_35b4e08b",
+      "revId": "31f4e6a79b48e5ed08c79c84f91447f21ab2d90c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5fa0655b_6148af11",
         "filename": "test/lvol/test_plan.md",
         "patchSetId": 8
@@ -118,6 +136,30 @@
       "side": 1,
       "message": "\u003e - perform read operation on thin provisioned lvol bdev\n\nWe still check if zeroes are returned, right?",
       "parentUuid": "ba6752f3_d2617b89",
+      "range": {
+        "startLine": 575,
+        "startChar": 27,
+        "endLine": 575,
+        "endChar": 60
+      },
+      "revId": "31f4e6a79b48e5ed08c79c84f91447f21ab2d90c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8688ed98_9fa7c7d2",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 575,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-11T16:52:01Z",
+      "side": 1,
+      "message": "Yes, exactly.",
+      "parentUuid": "0a30ada3_69415359",
       "range": {
         "startLine": 575,
         "startChar": 27,
