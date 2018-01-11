@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e0b9d022_7a3ec9c2",
+        "filename": "lib/vhost/rte_vhost/virtio_net.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-01-11T21:42:52Z",
+      "side": 1,
+      "message": "We delibertly removed this file some time ago. So lets not reintroduce it.",
+      "revId": "7d8768505fd68c18b0257e6f17693b794866a267",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
