@@ -283,7 +283,7 @@ spdk_bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 	assert(bdev_io->u.bdev.iovcnt == 1);
 
 	buf = bdev_io->buf;
-	ch = spdk_io_channel_get_ctx(bdev_io->ch->mgmt_channel);
+	ch = bdev_io->mgmt_ch;
 
 	if (bdev_io->buf_len <= SPDK_BDEV_SMALL_BUF_MAX_SIZE) {
 		pool = g_bdev_mgr.buf_small_pool;
@@ -754,13 +754,15 @@ spdk_bdev_get_io(struct spdk_io_channel *_ch)
 		}
 	}
 
+	bdev_io->mgmt_ch = ch;
+
 	return bdev_io;
 }
 
 static void
 spdk_bdev_put_io(struct spdk_bdev_io *bdev_io)
 {
-	struct spdk_bdev_mgmt_channel *ch = spdk_io_channel_get_ctx(bdev_io->ch->mgmt_channel);
+	struct spdk_bdev_mgmt_channel *ch = bdev_io->mgmt_ch;
 
 	if (bdev_io->buf != NULL) {
 		spdk_bdev_io_put_buf(bdev_io);
