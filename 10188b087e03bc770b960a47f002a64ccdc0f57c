@@ -16,6 +16,24 @@
       "revId": "10188b087e03bc770b960a47f002a64ccdc0f57c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "80502466_2768bee1",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-01-11T01:18:22Z",
+      "side": 1,
+      "message": "It is inherited when this script is called in \"test/vhost/integrity/integrity_start.sh\" script line 156. and the command is \"fs\u003d$VM_FS ~/integrity_vm.sh $VHOST_MODE\".",
+      "parentUuid": "3ede04d2_b95b3cc5",
+      "revId": "10188b087e03bc770b960a47f002a64ccdc0f57c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
