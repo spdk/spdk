@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d1f9826b_9a625e62",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T21:45:09Z",
+      "side": 1,
+      "message": "I think by \u0027innotation\u0027 you mean \u0027description\u0027.\n\nWe don\u0027t do this alignment anywhere else. I\u0027d prefer to see just updates to the comments without the alignment changes here. If we all agree that the parameter descriptions should be aligned, we can do that in a separate patch that changes the whole repository at once.",
+      "revId": "97be062da5dfacba3bbe569ac6e63610ae9bff71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
