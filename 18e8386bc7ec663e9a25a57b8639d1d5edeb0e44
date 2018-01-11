@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "5a085aad_3de99abb",
+        "filename": "test/vhost/common/fio_jobs/default_integrity_nightly.job",
+        "patchSetId": 18
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-01-11T01:44:30Z",
+      "side": 1,
+      "message": "Yes, I am trying to stress memory availability and make sure it\u0027s stable in high block size.",
+      "parentUuid": "ce9a3760_4a418751",
+      "revId": "18e8386bc7ec663e9a25a57b8639d1d5edeb0e44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "776b2e9e_e575ee0d",
         "filename": "test/vhost/spdk_vhost.sh",
         "patchSetId": 18
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "cf24efdb_47b912b8",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-01-11T01:44:30Z",
+      "side": 1,
+      "message": "The timeout limit for run patch test is 10 min. If unify these cases to integrity-lvol-scsi maybe cause the timeout. Another reason is these cases run different Fio job with patch test, it cost more time and more pressure.",
+      "parentUuid": "776b2e9e_e575ee0d",
+      "revId": "18e8386bc7ec663e9a25a57b8639d1d5edeb0e44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ca6e8de2_002bbf68",
         "filename": "test/vhost/spdk_vhost.sh",
         "patchSetId": 18
@@ -47,6 +83,24 @@
       "writtenOn": "2018-01-10T17:27:24Z",
       "side": 1,
       "message": "Shouldn\u0027t this be $FIO_BIN?",
+      "revId": "18e8386bc7ec663e9a25a57b8639d1d5edeb0e44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7927a085_248f0bb1",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-01-11T01:44:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ca6e8de2_002bbf68",
       "revId": "18e8386bc7ec663e9a25a57b8639d1d5edeb0e44",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
