@@ -190,10 +190,11 @@ struct virtio_pci_ctx;
 
 /**
  * Callback for creating virtio_dev from a PCI device.
- * The first param is the PCI context to be associated with virtio_dev.
+ * \param pci_ctx PCI context to be associated with a virtio_dev
+ * \param ctx context provided by the user
  * \return 0 on success, -1 on error.
  */
-typedef int (*virtio_pci_create_cb)(struct virtio_pci_ctx *pci_ctx);
+typedef int (*virtio_pci_create_cb)(struct virtio_pci_ctx *pci_ctx, void *ctx);
 
 uint16_t virtio_recv_pkts(struct virtqueue *vq, void **io, uint32_t *len, uint16_t io_cnt);
 
@@ -434,12 +435,14 @@ void virtio_dev_dump_json_config(struct virtio_dev *vdev, struct spdk_json_write
  * Enumerate all PCI Virtio devices of given type on the system.
  *
  * \param enum_cb a function to be called for each valid PCI device.
- * \return if a virtio_dev is has been created, the callback should return 0.
+ * If a virtio_dev is has been created, the callback should return 0.
  * Returning any other value will cause the PCI context to be freed,
  * making it unusable.
+ * \param enum_ctx additional opaque context to be passed into `enum_cb`
  * \param pci_device_id PCI Device ID of devices to iterate through
  */
-int virtio_pci_dev_enumerate(virtio_pci_create_cb enum_cb, uint16_t pci_device_id);
+int virtio_pci_dev_enumerate(virtio_pci_create_cb enum_cb, void *enum_ctx,
+			     uint16_t pci_device_id);
 
 /**
  * Connect to a vhost-user device and init corresponding virtio_dev struct.

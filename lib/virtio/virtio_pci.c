@@ -62,6 +62,7 @@ struct virtio_hw {
 
 struct virtio_pci_probe_ctx {
 	virtio_pci_create_cb enum_cb;
+	void *enum_ctx;
 	uint16_t device_id;
 };
 
@@ -421,7 +422,7 @@ next:
 }
 
 static int
-virtio_pci_dev_probe(struct spdk_pci_device *pci_dev, virtio_pci_create_cb enum_cb)
+virtio_pci_dev_probe(struct spdk_pci_device *pci_dev, struct virtio_pci_probe_ctx *ctx)
 {
 	struct virtio_hw *hw;
 	uint8_t *bar_vaddr;
@@ -468,7 +469,7 @@ virtio_pci_dev_probe(struct spdk_pci_device *pci_dev, virtio_pci_create_cb enum_
 		return -1;
 	}
 
-	rc = enum_cb((struct virtio_pci_ctx *)hw);
+	rc = ctx->enum_cb((struct virtio_pci_ctx *)hw, ctx->enum_ctx);
 	if (rc != 0) {
 		free_virtio_hw(hw);
 	}
@@ -486,11 +487,12 @@ virtio_pci_dev_probe_cb(void *probe_ctx, struct spdk_pci_device *pci_dev)
 		return 1;
 	}
 
-	return virtio_pci_dev_probe(pci_dev, ctx->enum_cb);
+	return virtio_pci_dev_probe(pci_dev, ctx);
 }
 
 int
-virtio_pci_dev_enumerate(virtio_pci_create_cb enum_cb, uint16_t pci_device_id)
+virtio_pci_dev_enumerate(virtio_pci_create_cb enum_cb, void *enum_ctx,
+			 uint16_t pci_device_id)
 {
 	struct virtio_pci_probe_ctx ctx;
 
@@ -500,6 +502,7 @@ virtio_pci_dev_enumerate(virtio_pci_create_cb enum_cb, uint16_t pci_device_id)
 	}
 
 	ctx.enum_cb = enum_cb;
+	ctx.enum_ctx = enum_ctx;
 	ctx.device_id = pci_device_id;
 
 	return spdk_pci_virtio_enumerate(virtio_pci_dev_probe_cb, &ctx);
