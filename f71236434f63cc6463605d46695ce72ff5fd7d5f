@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6c51846f_4c6c78d5",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 527,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-11T10:51:47Z",
+      "side": 1,
+      "message": "you can pass this in MB as well\n${guest_memory}M",
+      "range": {
+        "startLine": 527,
+        "startChar": 47,
+        "endLine": 527,
+        "endChar": 71
+      },
+      "revId": "f71236434f63cc6463605d46695ce72ff5fd7d5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
