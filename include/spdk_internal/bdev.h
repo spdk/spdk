@@ -274,6 +274,9 @@ struct spdk_bdev_io {
 	/** The bdev I/O channel that this was submitted on. */
 	struct spdk_bdev_channel *ch;
 
+	/** The mgmt channel that this I/O was allocated from. */
+	struct spdk_bdev_mgmt_channel *mgmt_ch;
+
 	/** bdev allocated memory associated with this request */
 	void *buf;
 
