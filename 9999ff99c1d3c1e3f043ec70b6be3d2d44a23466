@@ -1,0 +1,259 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0803e48c_dcb86844",
+        "filename": "doc/concurrency.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-11T21:48:44Z",
+      "side": 1,
+      "message": "Somehow this should be both softened a bit and we should be clear that we\u0027re talking about IO performance.  Something like \"One of the goals of SPDK is to help the IO subsystem achieve near linear performance increases as the hardware scales.\".",
+      "revId": "9999ff99c1d3c1e3f043ec70b6be3d2d44a23466",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "384cddf1_f690cca0",
+        "filename": "doc/concurrency.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-11T21:48:44Z",
+      "side": 1,
+      "message": "Before the \"For Instance\" sentence I would, again, try to make it clear that we\u0027re not talking so literally.  If you start the next couple of examples off with \"In a perfect world, as we double the number of SSDs, we should double the I/O\u0027s per second\" and then after your couple of examples add \"Due to numerous factors perfectly linear scaling is rarely achievable but with SPDK application it becomes much more feasible\".",
+      "revId": "9999ff99c1d3c1e3f043ec70b6be3d2d44a23466",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6dcf834e_8ca37457",
+        "filename": "doc/concurrency.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-11T21:48:44Z",
+      "side": 1,
+      "message": "I would add a little more pre-text to this acknowledging the complexity and varicose aspects to concurrency in general but regarding a shared memory resource....",
+      "revId": "9999ff99c1d3c1e3f043ec70b6be3d2d44a23466",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e3cb3b29_af2e8ba9",
+        "filename": "doc/concurrency.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-11T21:48:44Z",
+      "side": 1,
+      "message": "add a period",
+      "revId": "9999ff99c1d3c1e3f043ec70b6be3d2d44a23466",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c26b180_6cec5b4d",
+        "filename": "doc/concurrency.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-11T21:48:44Z",
+      "side": 1,
+      "message": "not sure I\u0027d use the word exponentially simply because that\u0027s a matter of opinion (more so than some of the other statements we make it our docs anyway) and is obviously a generalization that isn\u0027t always going to be true. People love to argue, take the recent comment on the dist list over what we have in the blobfs doc \"in lieu of a traditional FS\", the developer took that quite literally",
+      "revId": "9999ff99c1d3c1e3f043ec70b6be3d2d44a23466",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "338ad189_1eccbf01",
+        "filename": "doc/concurrency.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-11T21:48:44Z",
+      "side": 1,
+      "message": "comma after \u0027point\u0027",
+      "revId": "9999ff99c1d3c1e3f043ec70b6be3d2d44a23466",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1eb32479_f22a1b76",
+        "filename": "doc/concurrency.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-11T21:48:44Z",
+      "side": 1,
+      "message": "I would say \"likely not benefit\" - again just softening things",
+      "revId": "9999ff99c1d3c1e3f043ec70b6be3d2d44a23466",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35fd6984_210aab3b",
+        "filename": "doc/concurrency.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-11T21:48:44Z",
+      "side": 1,
+      "message": "Question: How do we know this, when is it done (any examples)?",
+      "revId": "9999ff99c1d3c1e3f043ec70b6be3d2d44a23466",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d436fdc7_9668a680",
+        "filename": "doc/concurrency.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-11T21:48:44Z",
+      "side": 1,
+      "message": "a comment about where the implementation of the MP would be good right here",
+      "revId": "9999ff99c1d3c1e3f043ec70b6be3d2d44a23466",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0f4eb84_7977e26c",
+        "filename": "doc/concurrency.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-11T21:48:44Z",
+      "side": 1,
+      "message": "do we have a @ref for pollers anywhere?",
+      "revId": "9999ff99c1d3c1e3f043ec70b6be3d2d44a23466",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e44f2d1f_27171c90",
+        "filename": "doc/concurrency.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-11T21:48:44Z",
+      "side": 1,
+      "message": "you could just say \"and\" instead of \"but then additionally\"",
+      "revId": "9999ff99c1d3c1e3f043ec70b6be3d2d44a23466",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e891e29b_d4462568",
+        "filename": "doc/concurrency.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-11T21:48:44Z",
+      "side": 1,
+      "message": "probably not relevant to the review but either eyes are getting even worse or everything after io_ is in italics here? (stops after the io_ at the end, and starts again after the io_ in io_device)",
+      "revId": "9999ff99c1d3c1e3f043ec70b6be3d2d44a23466",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b13e6380_408634ca",
+        "filename": "doc/concurrency.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-11T21:48:44Z",
+      "side": 1,
+      "message": "did you want `` around function names? There are few of them throughout without them and some with",
+      "revId": "9999ff99c1d3c1e3f043ec70b6be3d2d44a23466",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a6f7913_4d234b0f",
+        "filename": "doc/concurrency.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-11T21:48:44Z",
+      "side": 1,
+      "message": "I --\u003e We",
+      "revId": "9999ff99c1d3c1e3f043ec70b6be3d2d44a23466",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d80705a9_9e6c4467",
+        "filename": "doc/concurrency.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-11T21:48:44Z",
+      "side": 1,
+      "message": "can you some line breaks in here for review purposes (like all earlier text)?",
+      "revId": "9999ff99c1d3c1e3f043ec70b6be3d2d44a23466",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
