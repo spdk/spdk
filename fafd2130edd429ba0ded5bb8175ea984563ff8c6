@@ -84,6 +84,23 @@
       "revId": "fafd2130edd429ba0ded5bb8175ea984563ff8c6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5afdbd13_80afcec2",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-11T19:10:02Z",
+      "side": 1,
+      "message": "I\u0027m not sure going into this level of detail on the current implementation is useful because the implementation can change. What is more important, in my opinion, is talking about the higher level design. Here\u0027s some questions this document should answer:\n\n1) How is the software layered and why? What are the responsibilities of each layer?\n2) What are the basic primitives?\n3) How are those primitives related to each other? (i.e. a target node contains sessions, sessions contain connections, etc.)\n4) What is the threading model and why was that model chosen?\n5) How does the performance scale with number of connections, number of target nodes, etc. (in a theoretical sense, no benchmarks required)\n6) How are target nodes and such modified at run time and what impact does that have on the rest of the system?\n7) How are idle connections managed?\n\nProbably more, but this is what I could think of for now.",
+      "revId": "fafd2130edd429ba0ded5bb8175ea984563ff8c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
