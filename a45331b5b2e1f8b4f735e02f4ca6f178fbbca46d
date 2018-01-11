@@ -124,6 +124,23 @@
     },
     {
       "key": {
+        "uuid": "9ca8e898_0a1bef51",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-01-11T23:44:07Z",
+      "side": 1,
+      "message": "Also Fedora 26 now.",
+      "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "444e7fca_41fe45f7",
         "filename": "doc/vhost.md",
         "patchSetId": 9
@@ -273,6 +290,52 @@
       "writtenOn": "2018-01-11T23:03:15Z",
       "side": 1,
       "message": "I would suggest dropping the socket stuff from this section just to keep it simpler.  Primary goal is to help the reader just get it up and working to start.  The CPU socket stuff would be great to add as a section at the end of the users guide though.",
+      "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4bee6f5b_c7418c52",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-01-11T23:44:07Z",
+      "side": 1,
+      "message": "You should include -S /var/tmp to be consistent with the below Qemu command.",
+      "range": {
+        "startLine": 230,
+        "startChar": 26,
+        "endLine": 230,
+        "endChar": 27
+      },
+      "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6fcc0283_f19e61c7",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-01-11T23:44:07Z",
+      "side": 1,
+      "message": "Should this be Nvme0n1? When I was running this on my machine, it only worked if I specified the namespace as well as the drive.",
+      "range": {
+        "startLine": 262,
+        "startChar": 54,
+        "endLine": 262,
+        "endChar": 59
+      },
       "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
