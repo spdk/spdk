@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ce9cf0b1_971cdef7",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-11T21:23:06Z",
+      "side": 1,
+      "message": "changing free_dev to dev_free should probably be done in a separate patch",
+      "revId": "33c840743b3577eceb6a8d9fcf2473ef8c47d115",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "06ae30c9_bebd845c",
+        "filename": "lib/scsi/scsi_internal.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-11T21:23:06Z",
+      "side": 1,
+      "message": "I think keeping is_allocated is nicer - because then you don\u0027t have to initialize the dev list - by default is_allocated is set to 0.\n\nIf it\u0027s really critical to change it - let\u0027s do it in a separate patch.  But I think that change is orthogonal to the hotplug fixes.",
+      "revId": "33c840743b3577eceb6a8d9fcf2473ef8c47d115",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77f2dfd6_b78107da",
+        "filename": "test/unit/lib/scsi/lun.c/lun_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-11T21:23:06Z",
+      "side": 1,
+      "message": "this patch needs to be rebased on top of Darek\u0027s recently merged task submission path changes",
+      "revId": "33c840743b3577eceb6a8d9fcf2473ef8c47d115",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
