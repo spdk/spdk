@@ -99,6 +99,12 @@ vbdev_lvs_hotremove_cb(void *ctx)
 }
 
 static void
+_vbdev_lvs_add_lvs_bdev(struct lvol_store_bdev *lvs_bdev)
+{
+	TAILQ_INSERT_TAIL(&g_spdk_lvol_pairs, lvs_bdev, lvol_stores);
+}
+
+static void
 _vbdev_lvs_create_cb(void *cb_arg, struct spdk_lvol_store *lvs, int lvserrno)
 {
 	struct spdk_lvs_with_handle_req *req = cb_arg;
@@ -130,7 +136,7 @@ _vbdev_lvs_create_cb(void *cb_arg, struct spdk_lvol_store *lvs, int lvserrno)
 	lvs_bdev->bdev = bdev;
 	lvs_bdev->req = NULL;
 
-	TAILQ_INSERT_TAIL(&g_spdk_lvol_pairs, lvs_bdev, lvol_stores);
+	_vbdev_lvs_add_lvs_bdev(lvs_bdev);
 	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Lvol store bdev inserted\n");
 
 end:
@@ -885,7 +891,7 @@ _vbdev_lvs_examine_cb(void *arg, struct spdk_lvol_store *lvol_store, int lvserrn
 	lvs_bdev->lvs = lvol_store;
 	lvs_bdev->bdev = req->base_bdev;
 
-	TAILQ_INSERT_TAIL(&g_spdk_lvol_pairs, lvs_bdev, lvol_stores);
+	_vbdev_lvs_add_lvs_bdev(lvs_bdev);
 
 	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Lvol store found on %s - begin parsing\n",
 		     req->base_bdev->name);
