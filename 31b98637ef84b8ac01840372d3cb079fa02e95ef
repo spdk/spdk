@@ -71,6 +71,30 @@
     },
     {
       "key": {
+        "uuid": "0b26bf43_1a6d87f5",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1126,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-11T21:54:19Z",
+      "side": 1,
+      "message": "actually we do not need to strdup here - spdk_iscsi_tgt_node_construct will only reference this list to look up bdev names (indirectly via spdk_scsi_dev_construct) - so the strings do not need to be duplicated, we can just pass in the value strings directly from spdk_conf_section_get_val()",
+      "parentUuid": "5e6ad229_2138fd1f",
+      "range": {
+        "startLine": 1126,
+        "startChar": 2,
+        "endLine": 1126,
+        "endChar": 33
+      },
+      "revId": "31b98637ef84b8ac01840372d3cb079fa02e95ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ce971b5d_fde51b57",
         "filename": "lib/iscsi/tgt_node.h",
         "patchSetId": 7
@@ -105,6 +129,30 @@
       "writtenOn": "2017-12-08T01:51:09Z",
       "side": 1,
       "message": "num_bdevs? or num_lun_bdevs?",
+      "range": {
+        "startLine": 107,
+        "startChar": 61,
+        "endLine": 107,
+        "endChar": 69
+      },
+      "revId": "31b98637ef84b8ac01840372d3cb079fa02e95ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "229e37e8_7069cdc0",
+        "filename": "lib/iscsi/tgt_node.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-11T21:54:19Z",
+      "side": 1,
+      "message": "I will add a comment here to make this more clear.\n\nI prefer lun_id_list and num_luns for these parameters, but I agree with you comment that maybe this is confusing since it is no longer lun_name_list but bdev_name_list.",
+      "parentUuid": "f0d535d8_f2ab96bc",
       "range": {
         "startLine": 107,
         "startChar": 61,
