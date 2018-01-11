@@ -2,6 +2,57 @@
   "comments": [
     {
       "key": {
+        "uuid": "09ea590e_8e1623b1",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-11T23:03:15Z",
+      "side": 1,
+      "message": "can you put a Table of Contents in here like Paul had suggested on my earlier rev of this patch?",
+      "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "868a74e8_37290405",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-11T23:03:15Z",
+      "side": 1,
+      "message": "QEMU doesn\u0027t really offer a vhost application - it just provides the plumbing to connect a VM to a vhost target.\n\nI think you can say SPDK provides an accelerated vhost target through application of the same SPDK userspace polled-mode principles.",
+      "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8564cdcc_7883f44e",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-11T23:03:15Z",
+      "side": 1,
+      "message": "Plus access to NVMe media is also accelerated through use of the NVMe polled mode driver.",
+      "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7b73f9ef_acd65b1c",
         "filename": "doc/vhost.md",
         "patchSetId": 9
@@ -43,6 +94,47 @@
         "endLine": 36,
         "endChar": 81
       },
+      "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "943b5ad1_df1c510a",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-11T23:03:15Z",
+      "side": 1,
+      "message": "I think the diagram is OK.  I don\u0027t think QEMU-VM should be shown doing DMA to shared memory though - only the NVMe disk is doing that.  I think QEMU-VM should be shown modifying virtqueues though.",
+      "parentUuid": "5f025541_2a58f3cc",
+      "range": {
+        "startLine": 18,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 81
+      },
+      "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "444e7fca_41fe45f7",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-11T23:03:15Z",
+      "side": 1,
+      "message": "should we add something here on how to confirm QEMU support vhost-blk?  similar to the vhost-user-scsi-pci,help example above?",
       "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -96,6 +188,57 @@
     },
     {
       "key": {
+        "uuid": "ab579969_195eed34",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-11T23:03:15Z",
+      "side": 1,
+      "message": "took \u003d\u003e taken",
+      "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "490b2313_140e2c07",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-11T23:03:15Z",
+      "side": 1,
+      "message": "Maybe add something like:\n\n\"Additional LUNs can be added by specifying a different target ID.\"",
+      "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be813b0c_cc268092",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-11T23:03:15Z",
+      "side": 1,
+      "message": "Maybe clarify here \"if your QEMU supports vhost-blk\".\n\nIt\u0027s possible I\u0027m being overly pedantic - but I\u0027m guessing some people will want to just use an existing QEMU that has vhost-scsi support without rebuilding our QEMU for vhost-blk support.\n\nOr I guess you really don\u0027t need to specify this here - the important part if further below where we start QEMU with a vhost-blk device.",
+      "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c29fcf12_602ae8a4",
         "filename": "doc/vhost.md",
         "patchSetId": 9
@@ -113,6 +256,40 @@
         "endLine": 173,
         "endChar": 75
       },
+      "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd87f809_64c36300",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-11T23:03:15Z",
+      "side": 1,
+      "message": "I would suggest dropping the socket stuff from this section just to keep it simpler.  Primary goal is to help the reader just get it up and working to start.  The CPU socket stuff would be great to add as a section at the end of the users guide though.",
+      "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b575c7c_51434004",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-11T23:03:15Z",
+      "side": 1,
+      "message": "Completely separate comment - we should change the VENDOR to SPDK instead of INTEL.  But we\u0027ll do that later.",
       "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
