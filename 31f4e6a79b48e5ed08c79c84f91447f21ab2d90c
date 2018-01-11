@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "9fb3935a_d09d2620",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 551,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-11T09:30:04Z",
+      "side": 1,
+      "message": "I just noticed - why is that here? This header is already at line 650",
+      "range": {
+        "startLine": 551,
+        "startChar": 4,
+        "endLine": 551,
+        "endChar": 45
+      },
+      "revId": "31f4e6a79b48e5ed08c79c84f91447f21ab2d90c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "16563817_821ccb4a",
         "filename": "test/lvol/test_plan.md",
         "patchSetId": 8
@@ -13,6 +36,24 @@
       "writtenOn": "2018-01-10T15:47:57Z",
       "side": 1,
       "message": "Even though there are instances of \"write/read data\", there is no mention on how it is performed. From patch regarding snapshot/clone test plan I see this will be done using NBD. I think it would be great to mention that here.",
+      "revId": "31f4e6a79b48e5ed08c79c84f91447f21ab2d90c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b35779f_35b4e08b",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 552,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-11T09:30:04Z",
+      "side": 1,
+      "message": "How about mentioning that in \"Methodology\" section at the beginning of the document? It\u0027d be common for thin provisioning and for clone \u0026 snapshots.",
+      "parentUuid": "16563817_821ccb4a",
       "revId": "31f4e6a79b48e5ed08c79c84f91447f21ab2d90c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -65,6 +106,30 @@
     },
     {
       "key": {
+        "uuid": "0a30ada3_69415359",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 575,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-11T09:30:04Z",
+      "side": 1,
+      "message": "\u003e - perform read operation on thin provisioned lvol bdev\n\nWe still check if zeroes are returned, right?",
+      "parentUuid": "ba6752f3_d2617b89",
+      "range": {
+        "startLine": 575,
+        "startChar": 27,
+        "endLine": 575,
+        "endChar": 60
+      },
+      "revId": "31f4e6a79b48e5ed08c79c84f91447f21ab2d90c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "096dc8ee_32943a7f",
         "filename": "test/lvol/test_plan.md",
         "patchSetId": 8
@@ -76,6 +141,30 @@
       "writtenOn": "2018-01-10T15:47:57Z",
       "side": 1,
       "message": "What is the size of write here ? How is it any different than test case 650 if verification was enabled ?",
+      "range": {
+        "startLine": 592,
+        "startChar": 1,
+        "endLine": 592,
+        "endChar": 56
+      },
+      "revId": "31f4e6a79b48e5ed08c79c84f91447f21ab2d90c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d108f04d_2b8d91d1",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 592,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-11T09:30:04Z",
+      "side": 1,
+      "message": "Original idea was to fill the whole lvol bdev.",
+      "parentUuid": "096dc8ee_32943a7f",
       "range": {
         "startLine": 592,
         "startChar": 1,
