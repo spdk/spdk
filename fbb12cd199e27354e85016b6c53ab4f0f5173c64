@@ -22,6 +22,30 @@
       "revId": "fbb12cd199e27354e85016b6c53ab4f0f5173c64",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8da8817_96609b95",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-01-11T05:26:16Z",
+      "side": 1,
+      "message": "Removed.",
+      "parentUuid": "a951ed6d_6024175e",
+      "range": {
+        "startLine": 10,
+        "startChar": 44,
+        "endLine": 10,
+        "endChar": 50
+      },
+      "revId": "fbb12cd199e27354e85016b6c53ab4f0f5173c64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
