@@ -1,0 +1,262 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e64b5d23_4de6d9ea",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3313,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-11T13:33:32Z",
+      "side": 1,
+      "message": "We can just copy back cluster map, set old blob as thick provisioned and remove new blob.",
+      "range": {
+        "startLine": 3312,
+        "startChar": 0,
+        "endLine": 3313,
+        "endChar": 44
+      },
+      "revId": "4c348fcaca856aa009ec98a13a6c27c36002702a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b45c32d_f8c0f128",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3342,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-11T13:33:32Z",
+      "side": 1,
+      "message": "We need to close blob before deleting it.",
+      "range": {
+        "startLine": 3342,
+        "startChar": 2,
+        "endLine": 3342,
+        "endChar": 21
+      },
+      "revId": "4c348fcaca856aa009ec98a13a6c27c36002702a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c4aad1e_9493d3f5",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3352,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-11T13:33:32Z",
+      "side": 1,
+      "message": "This is dummy device at this moment. You should create new bs_dev at lvol level based on original lvol/blob bdev and pass it to spdk_bs_create_blob_snapshot.",
+      "range": {
+        "startLine": 3352,
+        "startChar": 33,
+        "endLine": 3352,
+        "endChar": 44
+      },
+      "revId": "4c348fcaca856aa009ec98a13a6c27c36002702a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cbb8b480_89d04a8d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3372,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-11T13:33:32Z",
+      "side": 1,
+      "message": "We should call spdk_bs_delete_blob here.",
+      "range": {
+        "startLine": 3372,
+        "startChar": 2,
+        "endLine": 3372,
+        "endChar": 24
+      },
+      "revId": "4c348fcaca856aa009ec98a13a6c27c36002702a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fd5af94f_dfedf8d8",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3389,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-11T13:33:32Z",
+      "side": 1,
+      "message": "New cluster map won\u0027t be stored because we already made that blob read only.",
+      "range": {
+        "startLine": 3389,
+        "startChar": 1,
+        "endLine": 3389,
+        "endChar": 18
+      },
+      "revId": "4c348fcaca856aa009ec98a13a6c27c36002702a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "54e948cb_5d22d446",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3390,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-11T13:33:32Z",
+      "side": 1,
+      "message": "Extra empty line.",
+      "revId": "4c348fcaca856aa009ec98a13a6c27c36002702a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f32a56ba_3613f44a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3420,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-11T13:33:32Z",
+      "side": 1,
+      "message": "Do we need variable for this? We could assign it directly in line 3433.",
+      "range": {
+        "startLine": 3420,
+        "startChar": 1,
+        "endLine": 3420,
+        "endChar": 51
+      },
+      "revId": "4c348fcaca856aa009ec98a13a6c27c36002702a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "565bf3dd_6f4dc62e",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3443,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-11T13:33:32Z",
+      "side": 1,
+      "message": "We should do this check at the beginning of the function.",
+      "range": {
+        "startLine": 3440,
+        "startChar": 0,
+        "endLine": 3443,
+        "endChar": 2
+      },
+      "revId": "4c348fcaca856aa009ec98a13a6c27c36002702a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b666add_4fb00719",
+        "filename": "lib/blob/request.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-11T13:33:32Z",
+      "side": 1,
+      "message": "Can we change that to org_blob or src_blob?",
+      "range": {
+        "startLine": 95,
+        "startChar": 44,
+        "endLine": 95,
+        "endChar": 51
+      },
+      "revId": "4c348fcaca856aa009ec98a13a6c27c36002702a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c442811_1d752934",
+        "filename": "lib/blob/request.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-11T13:33:32Z",
+      "side": 1,
+      "message": "Please change this to new_blob.",
+      "range": {
+        "startLine": 96,
+        "startChar": 44,
+        "endLine": 96,
+        "endChar": 51
+      },
+      "revId": "4c348fcaca856aa009ec98a13a6c27c36002702a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db1273f9_b2c6762f",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 412,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-11T13:33:32Z",
+      "side": 1,
+      "message": "We should add here:\n\tCU_ASSERT(g_bserrno \u003d\u003d 0);\n\tSPDK_CU_ASSERT_FATAL(g_blob !\u003d NULL);",
+      "revId": "4c348fcaca856aa009ec98a13a6c27c36002702a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bdc63d9c_65faba6f",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-11T13:33:32Z",
+      "side": 1,
+      "message": "Extra empty line",
+      "revId": "4c348fcaca856aa009ec98a13a6c27c36002702a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
