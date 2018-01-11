@@ -292,8 +292,8 @@ virtio_scsi_dev_init(struct virtio_scsi_dev *svdev, uint16_t max_queues)
 	return 0;
 }
 
-static int
-virtio_pci_scsi_dev_create_cb(struct virtio_pci_ctx *pci_ctx, void *ctx)
+static struct virtio_scsi_dev *
+virtio_pci_scsi_dev_create(struct virtio_pci_ctx *pci_ctx)
 {
 	static int pci_dev_counter = 0;
 	struct virtio_scsi_dev *svdev;
@@ -305,14 +305,14 @@ virtio_pci_scsi_dev_create_cb(struct virtio_pci_ctx *pci_ctx, void *ctx)
 	svdev = calloc(1, sizeof(*svdev));
 	if (svdev == NULL) {
 		SPDK_ERRLOG("virtio device calloc failed\n");
-		return -1;
+		return NULL;
 	}
 
 	vdev = &svdev->vdev;
 	name = spdk_sprintf_alloc("VirtioScsi%"PRIu32, pci_dev_counter++);
 	if (name == NULL) {
 		free(vdev);
-		return -1;
+		return NULL;
 	}
 
 	rc = virtio_pci_dev_init(vdev, name, pci_ctx);
@@ -320,7 +320,7 @@ virtio_pci_scsi_dev_create_cb(struct virtio_pci_ctx *pci_ctx, void *ctx)
 
 	if (rc != 0) {
 		free(svdev);
-		return -1;
+		return NULL;
 	}
 
 	virtio_dev_read_dev_config(vdev, offsetof(struct virtio_scsi_config, num_queues),
@@ -330,9 +330,10 @@ virtio_pci_scsi_dev_create_cb(struct virtio_pci_ctx *pci_ctx, void *ctx)
 	if (rc != 0) {
 		virtio_dev_destruct(vdev);
 		free(svdev);
+		return NULL;
 	}
 
-	return rc;
+	return svdev;
 }
 
 static struct virtio_scsi_dev *
@@ -1444,6 +1445,15 @@ _virtio_scsi_dev_scan_next(struct virtio_scsi_scan_base *base)
 }
 
 static int
+virtio_pci_scsi_dev_enumerate_cb(struct virtio_pci_ctx *pci_ctx, void *ctx)
+{
+	struct virtio_scsi_dev *svdev;
+
+	svdev = virtio_pci_scsi_dev_create(pci_ctx);
+	return svdev == NULL ? -1 : 0;
+}
+
+static int
 bdev_virtio_process_config(void)
 {
 	struct spdk_conf_section *sp;
@@ -1502,7 +1512,7 @@ bdev_virtio_process_config(void)
 
 	enable_pci = spdk_conf_section_get_boolval(sp, "Enable", false);
 	if (enable_pci) {
-		rc = virtio_pci_dev_enumerate(virtio_pci_scsi_dev_create_cb, NULL,
+		rc = virtio_pci_dev_enumerate(virtio_pci_scsi_dev_enumerate_cb, NULL,
 					      PCI_DEVICE_ID_VIRTIO_SCSI_MODERN);
 	}
 
@@ -1790,8 +1800,9 @@ bdev_virtio_finish(void)
 }
 
 int
-bdev_virtio_scsi_dev_create(const char *base_name, const char *path, unsigned num_queues,
-			    unsigned queue_size, bdev_virtio_create_cb cb_fn, void *cb_arg)
+bdev_virtio_user_scsi_dev_create(const char *base_name, const char *path,
+				 unsigned num_queues, unsigned queue_size,
+				 bdev_virtio_create_cb cb_fn, void *cb_arg)
 {
 	struct virtio_scsi_dev *svdev;
 	int rc;
@@ -1807,6 +1818,44 @@ bdev_virtio_scsi_dev_create(const char *base_name, const char *path, unsigned nu
 	}
 
 	return rc;
+}
+
+struct bdev_virtio_pci_dev_create_ctx {
+	bdev_virtio_create_cb cb_fn;
+	void *cb_arg;
+};
+
+static int
+bdev_virtio_pci_scsi_dev_create_cb(struct virtio_pci_ctx *pci_ctx, void *ctx)
+{
+	struct virtio_scsi_dev *svdev;
+	struct bdev_virtio_pci_dev_create_ctx *create_ctx = ctx;
+	int rc;
+
+	svdev = virtio_pci_scsi_dev_create(pci_ctx);
+	if (svdev == NULL) {
+		return -1;
+	}
+
+	rc = virtio_scsi_dev_scan(svdev, create_ctx->cb_fn, create_ctx->cb_arg);
+	if (rc) {
+		virtio_scsi_dev_remove(svdev, NULL, NULL);
+	}
+
+	return rc;
+}
+
+int
+bdev_virtio_pci_scsi_dev_create(struct spdk_pci_addr *pci_addr,
+				bdev_virtio_create_cb cb_fn, void *cb_arg)
+{
+	struct bdev_virtio_pci_dev_create_ctx create_ctx;
+
+	create_ctx.cb_fn = cb_fn;
+	create_ctx.cb_arg = cb_arg;
+
+	return virtio_pci_dev_attach(bdev_virtio_pci_scsi_dev_create_cb, &create_ctx,
+				     PCI_DEVICE_ID_VIRTIO_SCSI_MODERN, pci_addr);
 }
 
 void

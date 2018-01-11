@@ -509,6 +509,24 @@ virtio_pci_dev_enumerate(virtio_pci_create_cb enum_cb, void *enum_ctx,
 }
 
 int
+virtio_pci_dev_attach(virtio_pci_create_cb enum_cb, void *enum_ctx,
+		      uint16_t pci_device_id, struct spdk_pci_addr *pci_address)
+{
+	struct virtio_pci_probe_ctx ctx;
+
+	if (!spdk_process_is_primary()) {
+		SPDK_WARNLOG("virtio_pci secondary process support is not implemented yet.\n");
+		return 0;
+	}
+
+	ctx.enum_cb = enum_cb;
+	ctx.enum_ctx = enum_ctx;
+	ctx.device_id = pci_device_id;
+
+	return spdk_pci_virtio_device_attach(virtio_pci_dev_probe_cb, &ctx, pci_address);
+}
+
+int
 virtio_pci_dev_init(struct virtio_dev *vdev, const char *name,
 		    struct virtio_pci_ctx *pci_ctx)
 {
