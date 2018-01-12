@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "17ad43a9_cf46e06c",
+        "filename": "doc/concurrency.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-12T19:00:56Z",
+      "side": 1,
+      "message": "It\u0027s at least clear to me that the paragraph is talking about the goals of SPDK (\"primary aims\") - not absolute reality. Is that the part I should clarify further? I get concerned that all of the hedging clutters up the core message. Are you worried about legal issues or something?\n\nAnd this isn\u0027t just about IO performance. If you double the number of CPUs, we should aim to double the number of computations you can perform (assuming you\u0027re not bottlenecked on another part of the hardware).",
+      "parentUuid": "384cddf1_f690cca0",
+      "revId": "9999ff99c1d3c1e3f043ec70b6be3d2d44a23466",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6dcf834e_8ca37457",
         "filename": "doc/concurrency.md",
         "patchSetId": 8
@@ -47,6 +65,24 @@
       "writtenOn": "2018-01-11T21:48:44Z",
       "side": 1,
       "message": "I would add a little more pre-text to this acknowledging the complexity and varicose aspects to concurrency in general but regarding a shared memory resource....",
+      "revId": "9999ff99c1d3c1e3f043ec70b6be3d2d44a23466",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ad128b6c_9a190aa1",
+        "filename": "doc/concurrency.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-12T19:00:56Z",
+      "side": 1,
+      "message": "Concurrency is hard, sure, but does saying that contribute to the point being made here? The point the document is building to is not that message passing changes the complexity of concurrency, just that it can have better performance. In a lot of ways, message passing ends up more complicated in C.",
+      "parentUuid": "6dcf834e_8ca37457",
       "revId": "9999ff99c1d3c1e3f043ec70b6be3d2d44a23466",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +123,24 @@
     },
     {
       "key": {
+        "uuid": "36d365cc_44efa052",
+        "filename": "doc/concurrency.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-12T19:00:56Z",
+      "side": 1,
+      "message": "I\u0027ll change it to \"greatly\" since I think that conveys the same message.",
+      "parentUuid": "9c26b180_6cec5b4d",
+      "revId": "9999ff99c1d3c1e3f043ec70b6be3d2d44a23466",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "338ad189_1eccbf01",
         "filename": "doc/concurrency.md",
         "patchSetId": 8
@@ -121,6 +175,24 @@
     },
     {
       "key": {
+        "uuid": "6fc391dd_d13badc7",
+        "filename": "doc/concurrency.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-12T19:00:56Z",
+      "side": 1,
+      "message": "I think what I said is always true, but that \"point\" may be more threads than can reasonably be executed at one time due to limits on the number of CPU cores that exist. For software where the crossover point is that extreme, moving to a message passing model probably doesn\u0027t make sense. I could potentially clarify that not all software reaches the crossover point in reality.\n\nMy main concern is that all of the hedging words take away from the clarity of the main message we\u0027re trying to communicate.",
+      "parentUuid": "1eb32479_f22a1b76",
+      "revId": "9999ff99c1d3c1e3f043ec70b6be3d2d44a23466",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "35fd6984_210aab3b",
         "filename": "doc/concurrency.md",
         "patchSetId": 8
@@ -132,6 +204,24 @@
       "writtenOn": "2018-01-11T21:48:44Z",
       "side": 1,
       "message": "Question: How do we know this, when is it done (any examples)?",
+      "revId": "9999ff99c1d3c1e3f043ec70b6be3d2d44a23466",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "833a9208_065e457b",
+        "filename": "doc/concurrency.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-12T19:00:56Z",
+      "side": 1,
+      "message": "If we think of a SATA controller with one queue with 32 slots, the first model I described is to have all threads access it at once, but take a lock. The paragraph right above this says SPDK would instead have all threads send a message to a single thread which would locklessly manage the queue. This paragraph describes a third scheme more akin to NVMe where each thread gets its own queue pair. This is setting up the motivation for I/O channels, essentially.",
+      "parentUuid": "35fd6984_210aab3b",
       "revId": "9999ff99c1d3c1e3f043ec70b6be3d2d44a23466",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -155,6 +245,24 @@
     },
     {
       "key": {
+        "uuid": "1aa0d490_0320cd7f",
+        "filename": "doc/concurrency.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-12T19:00:56Z",
+      "side": 1,
+      "message": "I think I\u0027ll actually delete the sentence here that says the library does not implement the message passing. I say it again in the next paragraph, followed quickly by a reference to the event framework.",
+      "parentUuid": "d436fdc7_9668a680",
+      "revId": "9999ff99c1d3c1e3f043ec70b6be3d2d44a23466",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e0f4eb84_7977e26c",
         "filename": "doc/concurrency.md",
         "patchSetId": 8
@@ -166,6 +274,24 @@
       "writtenOn": "2018-01-11T21:48:44Z",
       "side": 1,
       "message": "do we have a @ref for pollers anywhere?",
+      "revId": "9999ff99c1d3c1e3f043ec70b6be3d2d44a23466",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "74ddeb68_05007a88",
+        "filename": "doc/concurrency.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-12T19:00:56Z",
+      "side": 1,
+      "message": "I think this is it",
+      "parentUuid": "e0f4eb84_7977e26c",
       "revId": "9999ff99c1d3c1e3f043ec70b6be3d2d44a23466",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -206,6 +332,24 @@
     },
     {
       "key": {
+        "uuid": "db7361f5_1b07dbed",
+        "filename": "doc/concurrency.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-12T19:00:56Z",
+      "side": 1,
+      "message": "It\u0027s just Gerrit being dumb I think. You make things italic by doing _this_, but Gerrit doesn\u0027t seem to be smart enough to realize only a _ at the beginning of word starts the italic sequence.",
+      "parentUuid": "e891e29b_d4462568",
+      "revId": "9999ff99c1d3c1e3f043ec70b6be3d2d44a23466",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b13e6380_408634ca",
         "filename": "doc/concurrency.md",
         "patchSetId": 8
@@ -217,6 +361,24 @@
       "writtenOn": "2018-01-11T21:48:44Z",
       "side": 1,
       "message": "did you want `` around function names? There are few of them throughout without them and some with",
+      "revId": "9999ff99c1d3c1e3f043ec70b6be3d2d44a23466",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "46bc2cda_21f1b9f6",
+        "filename": "doc/concurrency.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-12T19:00:56Z",
+      "side": 1,
+      "message": "Actually I need to go back and take out the ``. If I just put the function and struct names in, Doxygen will automatically generate links for them to the API documentation.",
+      "parentUuid": "b13e6380_408634ca",
       "revId": "9999ff99c1d3c1e3f043ec70b6be3d2d44a23466",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
