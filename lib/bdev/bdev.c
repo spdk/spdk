@@ -113,6 +113,8 @@ struct spdk_bdev_mgmt_channel {
 	 */
 	bdev_io_stailq_t per_thread_cache;
 	uint32_t	per_thread_cache_count;
+	bool		need_remove;
+	uint32_t	io_inflight;
 };
 
 struct spdk_bdev_desc {
@@ -283,7 +285,7 @@ spdk_bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 	assert(bdev_io->u.bdev.iovcnt == 1);
 
 	buf = bdev_io->buf;
-	ch = spdk_io_channel_get_ctx(bdev_io->ch->mgmt_channel);
+	ch = bdev_io->mgmt_ch;
 
 	if (bdev_io->buf_len <= SPDK_BDEV_SMALL_BUF_MAX_SIZE) {
 		pool = g_bdev_mgr.buf_small_pool;
@@ -753,14 +755,15 @@ spdk_bdev_get_io(struct spdk_io_channel *_ch)
 			abort();
 		}
 	}
-
+	ch->io_inflight++;
+	bdev_io->mgmt_ch = ch;
 	return bdev_io;
 }
 
 static void
 spdk_bdev_put_io(struct spdk_bdev_io *bdev_io)
 {
-	struct spdk_bdev_mgmt_channel *ch = spdk_io_channel_get_ctx(bdev_io->ch->mgmt_channel);
+	struct spdk_bdev_mgmt_channel *ch = bdev_io->mgmt_ch;
 
 	if (bdev_io->buf != NULL) {
 		spdk_bdev_io_put_buf(bdev_io);
@@ -771,6 +774,11 @@ spdk_bdev_put_io(struct spdk_bdev_io *bdev_io)
 		STAILQ_INSERT_TAIL(&ch->per_thread_cache, bdev_io, buf_link);
 	} else {
 		spdk_mempool_put(g_bdev_mgr.bdev_io_pool, (void *)bdev_io);
+	}
+
+	ch->io_inflight--;
+	if (ch->need_remove && ch->io_inflight == 0) {
+		spdk_put_io_channel(spdk_io_channel_from_ctx(ch));
 	}
 }
 
@@ -954,7 +962,11 @@ spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_large, ch);
 
 	spdk_put_io_channel(ch->channel);
-	spdk_put_io_channel(ch->mgmt_channel);
+	if (mgmt_channel->io_inflight == 0) {
+		spdk_put_io_channel(ch->mgmt_channel);
+	} else {
+		mgmt_channel->need_remove = true;
+	}
 	assert(ch->io_outstanding == 0);
 }
 
