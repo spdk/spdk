@@ -107,6 +107,24 @@
     },
     {
       "key": {
+        "uuid": "17a85698_592a2147",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-12T09:06:12Z",
+      "side": 1,
+      "message": "I changed this part a bit without adding your NVMe note. \n\n\u003e SPDK provides an accelerated vhost target through application of\n\u003e the same SPDK userspace polled-mode principles. What\u0027s more, its initiators are\n\u003e told not to send any interrupts on I/O submission, meaning [...]\n\nPlease check if it\u0027s ok.",
+      "parentUuid": "4b7540f7_7f683e6f",
+      "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7b73f9ef_acd65b1c",
         "filename": "doc/vhost.md",
         "patchSetId": 9
@@ -166,6 +184,30 @@
       "side": 1,
       "message": "I think the diagram is OK.  I don\u0027t think QEMU-VM should be shown doing DMA to shared memory though - only the NVMe disk is doing that.  I think QEMU-VM should be shown modifying virtqueues though.",
       "parentUuid": "5f025541_2a58f3cc",
+      "range": {
+        "startLine": 18,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 81
+      },
+      "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "50cba61d_578c4cdf",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-12T09:06:12Z",
+      "side": 1,
+      "message": "I removed QEMU DMA for now. \nHow about renaming \"Shared hugepage memory\" to \"Virtqueues in shared hugepage memory\"?",
+      "parentUuid": "943b5ad1_df1c510a",
       "range": {
         "startLine": 18,
         "startChar": 0,
