@@ -36,10 +36,13 @@
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 #include "spdk/string.h"
+#include "spdk/util.h"
 
 #include "vbdev_lvol.h"
 
 SPDK_DECLARE_BDEV_MODULE(lvol);
+
+#define LVS_VBDEV_NOMEM_THRESHOLD_COUNT   8
 
 struct lvol_store_bdev_io_channel {
 	/*
@@ -48,7 +51,18 @@ struct lvol_store_bdev_io_channel {
 	 */
 	TAILQ_HEAD(, spdk_bdev_io)	nomem_io;
 
-	struct spdk_io_channel  	*bs_ch;
+	/*
+	 * Threshold which io_outstanding must drop to before retrying nomem_io.
+	 */
+	uint64_t			nomem_threshold;
+
+	/*
+	 * Count of I/O submitted to bdev module and waiting for completion.
+	 * Incremented before submit_request() is called on an spdk_bdev_io.
+	 */
+	uint64_t			io_outstanding;
+
+	struct spdk_io_channel		*bs_ch;
 };
 
 static TAILQ_HEAD(, lvol_store_bdev) g_spdk_lvol_pairs = TAILQ_HEAD_INITIALIZER(
@@ -61,6 +75,8 @@ lvs_channel_create_cb(void *io_device, void *ctx_buf)
 	struct lvol_store_bdev *lvs_bdev = (struct lvol_store_bdev *)io_device;
 
 	TAILQ_INIT(&ch->nomem_io);
+	ch->nomem_threshold = 0;
+	ch->io_outstanding = 0;
 
 	ch->bs_ch = spdk_bs_alloc_io_channel(lvs_bdev->lvs->blobstore);
 	if (!ch->bs_ch) {
@@ -571,16 +587,40 @@ vbdev_lvol_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 }
 
 static void
+spdk_lvs_bdev_ch_retry_io(struct lvol_store_bdev_io_channel *lvs_ch)
+{
+	struct spdk_bdev_io *bdev_io;
+
+	if (lvs_ch->io_outstanding > lvs_ch->nomem_threshold) {
+		return;
+	}
+
+	while (!TAILQ_EMPTY(&lvs_ch->nomem_io)) {
+		bdev_io = TAILQ_FIRST(&lvs_ch->nomem_io);
+		TAILQ_REMOVE(&lvs_ch->nomem_io, bdev_io, link);
+		lvs_ch->io_outstanding++;
+		bdev_io->status = SPDK_BDEV_IO_STATUS_PENDING;
+		_vbdev_lvol_submit_request(lvs_ch, bdev_io);
+		if (bdev_io->status == SPDK_BDEV_IO_STATUS_NOMEM) {
+			break;
+		}
+	}
+}
+
+static void
 lvol_op_comp(void *cb_arg, int bserrno)
 {
 	struct lvol_task *task = cb_arg;
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(task);
 	struct lvol_store_bdev_io_channel *lvs_ch = spdk_io_channel_get_ctx(task->ch);
 
+	lvs_ch->io_outstanding--;
 	if (bserrno != 0) {
 		if (bserrno == -ENOMEM) {
-			task->status = SPDK_BDEV_IO_STATUS_NOMEM;
+			bdev_io->status = SPDK_BDEV_IO_STATUS_NOMEM;
 			TAILQ_INSERT_HEAD(&lvs_ch->nomem_io, bdev_io, link);
+			lvs_ch->nomem_threshold = spdk_max((int64_t)lvs_ch->io_outstanding / 2,
+							   (int64_t)lvs_ch->io_outstanding - LVS_VBDEV_NOMEM_THRESHOLD_COUNT);
 			return;
 		} else {
 			task->status = SPDK_BDEV_IO_STATUS_FAILED;
@@ -592,9 +632,7 @@ lvol_op_comp(void *cb_arg, int bserrno)
 	spdk_bdev_io_complete(bdev_io, task->status);
 
 	if (!TAILQ_EMPTY(&lvs_ch->nomem_io)) {
-		bdev_io = TAILQ_FIRST(&lvs_ch->nomem_io);
-		TAILQ_REMOVE(&lvs_ch->nomem_io, bdev_io, link);
-		_vbdev_lvol_submit_request(lvs_ch, bdev_io);
+		spdk_lvs_bdev_ch_retry_io(lvs_ch);
 	}
 }
 
@@ -727,7 +765,9 @@ vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 	task->ch = ch;
 
 	lvs_ch = spdk_io_channel_get_ctx(ch);
+	lvs_ch->io_outstanding++;
 	if (!TAILQ_EMPTY(&lvs_ch->nomem_io)) {
+		lvs_ch->io_outstanding--;
 		TAILQ_INSERT_TAIL(&lvs_ch->nomem_io, bdev_io, link);
 		return;
 	}
