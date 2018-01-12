@@ -675,6 +675,17 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 		return NULL;
 	}
 
+	bdev->blocklen = spdk_bs_get_page_size(lvol->lvol_store->blobstore);
+	total_size = lvol->num_clusters * spdk_bs_get_cluster_size(lvol->lvol_store->blobstore);
+	assert((total_size % bdev->blocklen) == 0);
+
+	rc = spdk_bdev_set_num_blocks(bdev, total_size / bdev->blocklen);
+	if (rc != 0) {
+		SPDK_ERRLOG("Could not change num blocks for bdev_lvol.\n");
+		free(bdev);
+		return NULL;
+	}
+
 	bdev->name = spdk_sprintf_alloc("%s/%s", lvs_bdev->lvs->name, lvol->name);
 	if (bdev->name == NULL) {
 		SPDK_ERRLOG("Cannot alloc memory for bdev name\n");
@@ -682,10 +693,6 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 		return NULL;
 	}
 	bdev->product_name = "Logical Volume";
-	bdev->blocklen = spdk_bs_get_page_size(lvol->lvol_store->blobstore);
-	total_size = lvol->num_clusters * spdk_bs_get_cluster_size(lvol->lvol_store->blobstore);
-	assert((total_size % bdev->blocklen) == 0);
-	bdev->blockcnt = total_size / bdev->blocklen;
 
 	bdev->ctxt = lvol;
 	bdev->fn_table = &vbdev_lvol_fn_table;
@@ -791,7 +798,11 @@ vbdev_lvol_resize(char *name, size_t sz,
 	rc = spdk_lvol_resize(lvol, sz, _vbdev_lvol_resize_cb, req);
 
 	if (rc == 0) {
-		bdev->blockcnt = sz * cluster_size / bdev->blocklen;
+		rc = spdk_bdev_set_num_blocks(bdev, sz * cluster_size / bdev->blocklen);
+		if (rc != 0) {
+			SPDK_ERRLOG("Could not change num blocks for bdev_lvol.\n");
+			return -ENODEV;
+		}
 	}
 
 	return rc;

@@ -172,7 +172,7 @@ register_bdev(void)
 	g_bdev.bdev.fn_table = &fn_table;
 	g_bdev.bdev.module = SPDK_GET_BDEV_MODULE(bdev_ut);
 	g_bdev.bdev.blocklen = 4096;
-	g_bdev.bdev.blockcnt = 1024;
+	spdk_bdev_set_num_blocks(&g_bdev.bdev, 1024);
 
 	spdk_io_device_register(&g_bdev.io_target, stub_create_ch, stub_destroy_ch,
 				sizeof(struct ut_bdev_channel));

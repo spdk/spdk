@@ -471,7 +471,7 @@ struct spdk_bdev *
 spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block_size)
 {
 	struct bdev_rbd *rbd;
-	int ret;
+	int ret, rc;
 
 	if ((pool_name == NULL) || (rbd_name == NULL)) {
 		return NULL;
@@ -502,6 +502,16 @@ spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block
 		return NULL;
 	}
 
+	rbd->disk.write_cache = 0;
+	rbd->disk.blocklen = block_size;
+
+	rc = spdk_bdev_set_num_blocks(&rbd->disk, rbd->info.size / rbd->disk.blocklen);
+	if (rc != 0) {
+		SPDK_ERRLOG("Could not change num blocks for bdev_rbd.\n");
+		bdev_rbd_free(rbd);
+		return NULL;
+	}
+
 	rbd->disk.name = spdk_sprintf_alloc("Ceph%d", bdev_rbd_count);
 	if (!rbd->disk.name) {
 		bdev_rbd_free(rbd);
@@ -510,9 +520,6 @@ spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block
 	rbd->disk.product_name = "Ceph Rbd Disk";
 	bdev_rbd_count++;
 
-	rbd->disk.write_cache = 0;
-	rbd->disk.blocklen = block_size;
-	rbd->disk.blockcnt = rbd->info.size / rbd->disk.blocklen;
 	rbd->disk.ctxt = rbd;
 	rbd->disk.fn_table = &rbd_fn_table;
 	rbd->disk.module = SPDK_GET_BDEV_MODULE(rbd);
