@@ -22,6 +22,47 @@
       "revId": "775442695dd7b82f2227efb835a031cb479a5f55",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f721f94b_bd31e672",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-12T17:36:45Z",
+      "side": 1,
+      "message": "I agree - in the two places that dev_lun_cnt is used there are other loops over the lun list that you could piggy-back on.",
+      "parentUuid": "400e5c5f_5cfdfa6f",
+      "range": {
+        "startLine": 97,
+        "startChar": 5,
+        "endLine": 97,
+        "endChar": 16
+      },
+      "revId": "775442695dd7b82f2227efb835a031cb479a5f55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bd8905ff_90b22d6d",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-12T17:36:45Z",
+      "side": 1,
+      "message": "Consider using a small delay on the poller - maybe 10us.",
+      "revId": "775442695dd7b82f2227efb835a031cb479a5f55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
