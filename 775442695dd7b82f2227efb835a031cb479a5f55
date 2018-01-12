@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "400e5c5f_5cfdfa6f",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-12T16:36:41Z",
+      "side": 1,
+      "message": "since dev_lun_cnt iterates through all luns, we might as well reuse the loop from line #102 to count luns manually. then we could inline dev_lun_cnt inside spdk_scsi_dev_delete_lun.\n\ni guess this is fine for now though. i\u0027m probably being picky",
+      "range": {
+        "startLine": 97,
+        "startChar": 5,
+        "endLine": 97,
+        "endChar": 16
+      },
+      "revId": "775442695dd7b82f2227efb835a031cb479a5f55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
