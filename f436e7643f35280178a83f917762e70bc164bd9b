@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "74052569_b930bbab",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 594,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-01-12T06:43:34Z",
+      "side": 1,
+      "message": "Hi Jim,\nCan I port the similar algorithm from bdev layer in another patch? could this address the issue from you?",
+      "parentUuid": "7102b534_e5088834",
+      "revId": "f436e7643f35280178a83f917762e70bc164bd9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dff7169f_9142f048",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 11
