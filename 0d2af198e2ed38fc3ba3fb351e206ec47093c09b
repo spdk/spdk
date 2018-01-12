@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1c977525_52c0b9e1",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 453,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-01-12T02:35:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "08e69b20_436e2947",
+      "revId": "0d2af198e2ed38fc3ba3fb351e206ec47093c09b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b3f64b11_40cfd426",
         "filename": "lib/nbd/nbd.c",
         "patchSetId": 6
@@ -30,6 +48,24 @@
       "writtenOn": "2018-01-11T17:10:03Z",
       "side": 1,
       "message": "should this just be \"response is fully sent\"?  don\u0027t want to confuse the response with the data payload\n\notherwise \"response payload\" might be confusing here",
+      "revId": "0d2af198e2ed38fc3ba3fb351e206ec47093c09b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f875d24d_34c78a02",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 486,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-01-12T02:35:09Z",
+      "side": 1,
+      "message": "yes, it might be confusing here. it it not the right place for this note.\nrelocate it and use \"read\" instead of \"response\"",
+      "parentUuid": "b3f64b11_40cfd426",
       "revId": "0d2af198e2ed38fc3ba3fb351e206ec47093c09b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
