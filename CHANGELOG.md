@@ -89,6 +89,12 @@ SPDK `fio_plugin` now suports FIO 3.3. The support for previous FIO 2.21 has bee
 although it still remains to work for now. The new FIO contains huge amount of bugfixes and
 it's recommended to do an update.
 
+### Virtio library
+
+Previously a part of the bdev_virtio module, now a separate library. Virtio is now available
+via `spdk_internal/virtio.h` file. This is an internal interface to be used when implementing
+new Virtio backends, namely Virtio-BLK.
+
 ## v17.10: Logical Volumes
 
 ### New dependencies
