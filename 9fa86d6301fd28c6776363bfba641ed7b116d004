@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3b914c54_598e89f2",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 622,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-12T21:34:35Z",
+      "side": 1,
+      "message": "You can just use io_outstanding - THRESHOLD_COUNT, and remove the io_outstanding / 2.\n\nFor bdev layer, we use both for cases where channel maybe only supports very small number of IO per channel.  But for lvol, we know each channel allocate 512 requests, so this is not a concern.",
+      "revId": "9fa86d6301fd28c6776363bfba641ed7b116d004",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
