@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "850ce7ea_f5c08234",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-12T10:33:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0d8d4220_c4686ee1",
+      "range": {
+        "startLine": 77,
+        "startChar": 21,
+        "endLine": 77,
+        "endChar": 38
+      },
+      "revId": "df7d3c78b1381445556908fb88450d2f1e5cd810",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b95a4847_a0807b04",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 40
@@ -72,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "0bcc3ee8_70f1ddc3",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-12T10:33:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fe929d66_d8c848bb",
+      "range": {
+        "startLine": 78,
+        "startChar": 24,
+        "endLine": 78,
+        "endChar": 75
+      },
+      "revId": "df7d3c78b1381445556908fb88450d2f1e5cd810",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4c5a3f5d_72ab15cf",
         "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
         "patchSetId": 40
@@ -83,6 +131,30 @@
       "writtenOn": "2018-01-10T16:40:42Z",
       "side": 1,
       "message": "Is this used anywhere ?",
+      "range": {
+        "startLine": 343,
+        "startChar": 0,
+        "endLine": 343,
+        "endChar": 19
+      },
+      "revId": "df7d3c78b1381445556908fb88450d2f1e5cd810",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b33d5e8_ccab475d",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-12T10:33:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4c5a3f5d_72ab15cf",
       "range": {
         "startLine": 343,
         "startChar": 0,
@@ -118,6 +190,30 @@
     },
     {
       "key": {
+        "uuid": "0621738c_75ed518c",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 1080,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-12T10:33:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c7301732_c7784a45",
+      "range": {
+        "startLine": 1080,
+        "startChar": 5,
+        "endLine": 1080,
+        "endChar": 14
+      },
+      "revId": "df7d3c78b1381445556908fb88450d2f1e5cd810",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "34144213_221bb321",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 40
@@ -141,6 +237,30 @@
     },
     {
       "key": {
+        "uuid": "51c57dde_50d4e31b",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 1092,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-12T10:33:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "34144213_221bb321",
+      "range": {
+        "startLine": 1092,
+        "startChar": 2,
+        "endLine": 1092,
+        "endChar": 51
+      },
+      "revId": "df7d3c78b1381445556908fb88450d2f1e5cd810",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6e93525f_314522de",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 40
@@ -152,6 +272,30 @@
       "writtenOn": "2018-01-10T16:40:42Z",
       "side": 1,
       "message": "Passing error from spdk_blob_set_xattr() might be better.\nAs well req should be freed.",
+      "range": {
+        "startLine": 1093,
+        "startChar": 2,
+        "endLine": 1093,
+        "endChar": 12
+      },
+      "revId": "df7d3c78b1381445556908fb88450d2f1e5cd810",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3985856_d9df4456",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 1093,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-12T10:33:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6e93525f_314522de",
       "range": {
         "startLine": 1093,
         "startChar": 2,
