@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "4d7cfb89_4e89ed24",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 1563,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-12T14:14:03Z",
+      "side": 1,
+      "message": "The problem is that on thick provisioned device we translate page to lba using _spdk_bs_blob_page_to_lba function which reads lba from cluster map based on page number. For Thin provisioned bdev, if cluster is unallocated, we will always get lba \u003d 0 which is incorrect. Because of that we have to get lba assuming that page numbers are continuous (which is not true for blobs) and do the real math later based on bs_dev.",
+      "parentUuid": "15833e73_ac259fb3",
+      "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b463e3b2_1e4b6b1f",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 27
@@ -30,6 +48,24 @@
       "writtenOn": "2018-01-10T23:09:47Z",
       "side": 1,
       "message": "I think burying the setting of which I/O device to target inside this function just makes things confusing. I\u0027d rather see this written right here as:\n\nif (read) {\n    if (\u003cutility function that checks whether a page is allocated\u003e) {\n        spdk_bs_sequence_readv to local disk\n    } else {\n        spdk_bs_sequence_readv to backing bdev\n    }\n}",
+      "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1cb552f6_a011d0cc",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 1817,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-12T14:14:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b463e3b2_1e4b6b1f",
       "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "2e08fe4d_9bd70203",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 491,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-12T14:14:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5f298b3d_30ddd275",
+      "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "764154d1_637bb0e7",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 27
@@ -64,6 +118,24 @@
       "writtenOn": "2018-01-10T23:09:47Z",
       "side": 1,
       "message": "_spdk_bs_blob_is_page_allocated?",
+      "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "12c36c75_19e30d42",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 503,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-12T14:14:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "764154d1_637bb0e7",
       "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
