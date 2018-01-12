@@ -2,6 +2,57 @@
   "comments": [
     {
       "key": {
+        "uuid": "103d5354_08489707",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-12T20:52:49Z",
+      "side": 1,
+      "message": "dummy_bs_dev \u003d\u003e zeroes_bs_dev",
+      "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fb3f1321_148337ff",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-12T20:52:49Z",
+      "side": 1,
+      "message": "I would make this UINT64_MAX instead of 1 (since effectively the size of this \"zeroes\" device is unlimited).",
+      "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cdd86854_7040076e",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-12T20:52:49Z",
+      "side": 1,
+      "message": "I guess 1 is fine, but block devices typically use blocklen 512 or 4096.  I would suggest using one of those here.",
+      "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "15833e73_ac259fb3",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 27
@@ -72,6 +123,57 @@
     },
     {
       "key": {
+        "uuid": "392f7dbc_2de197ad",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 352,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-12T20:52:49Z",
+      "side": 1,
+      "message": "I think these could be simplified to just _spdk_bs_dev_byte_to_lba(), and then pass the bs_dev (not the blob).\n\nThis could actually make these functions reusable down the road in case we also needed conversion functions for a different bs_dev.\n\nThen the caller just passes blob-\u003ebs_dev.",
+      "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "864500f6_b2ea840e",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 372,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-12T20:52:49Z",
+      "side": 1,
+      "message": "_spdk_bs_dev_page_to_lba (similar to above)",
+      "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c7b77721_50618e7b",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-12T20:52:49Z",
+      "side": 1,
+      "message": "_spdk_bs_dev_lba_to_page",
+      "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5f298b3d_30ddd275",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 27
@@ -107,6 +209,23 @@
     },
     {
       "key": {
+        "uuid": "bd5e2d1a_0a329965",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 491,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-12T20:52:49Z",
+      "side": 1,
+      "message": "curent \u003d\u003e current",
+      "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "764154d1_637bb0e7",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 27
@@ -136,6 +255,40 @@
       "side": 1,
       "message": "Done",
       "parentUuid": "764154d1_637bb0e7",
+      "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1ce977c3_b26dd3f0",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 504,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-12T20:52:49Z",
+      "side": 1,
+      "message": "_spdk_bs_page_is_allocated?\n\nthat name would be simpler, and I think expresses the same meaning",
+      "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "466867e5_1b40fe5e",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 515,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-12T20:52:49Z",
+      "side": 1,
+      "message": "is bool cast needed here?",
       "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
