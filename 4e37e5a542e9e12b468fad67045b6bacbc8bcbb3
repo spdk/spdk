@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "4b433b92_b454d497",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 1069,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T10:49:57Z",
+      "side": 1,
+      "message": "Yea, I think all requests need a bit of change from \"catch all\" type requests. This would be a good change in future to rethink those requests in whole lvol/vbdev_lvol.\n\nUnfortunately before this moment, it is not assured that sync (that saved this name to disk) succeeded. So it seems like the best place to change the lvol name.\n\nFor now adding new field with this new name might be the way to pass it here.",
+      "parentUuid": "d2800b69_ffb1debf",
+      "revId": "4e37e5a542e9e12b468fad67045b6bacbc8bcbb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9b5325ad_46bd076c",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 48
