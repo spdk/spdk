@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "88a24037_430ac49e",
+        "filename": "doc/bdev.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-12T19:52:38Z",
+      "side": 1,
+      "message": "I would add virtio-scsi here.  If you want to keep the list short, I\u0027d remove PMDK or Ceph probably.",
+      "revId": "588344fac50be1cec23db8dc355f208a68943856",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02f6d8fd_0ed29491",
+        "filename": "doc/bdev.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-12T19:52:38Z",
+      "side": 1,
+      "message": "mention GPT and lvol as examples?",
+      "revId": "588344fac50be1cec23db8dc355f208a68943856",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "032021f2_4b857576",
+        "filename": "doc/bdev.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-12T19:52:38Z",
+      "side": 1,
+      "message": "I think we should prioritize discussion of RPC here instead of config files.  I\u0027m hoping the users guide won\u0027t refer to config files at all actually.\n\nBut maybe you\u0027re planning to change it once the bdev users guide stuff goes in.  If so, this is fine.",
+      "revId": "588344fac50be1cec23db8dc355f208a68943856",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
