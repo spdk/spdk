@@ -2,7 +2,8 @@
 
 # nvme-cli with SPDK Getting Started Guide
 
-Now nvme-cli can support both kernel driver and SPDK user mode driver for most of its available commands.
+Now nvme-cli can support both kernel driver and SPDK user mode driver for most of its available commands and
+Intel specific commands.
 
 1. Clone the nvme-cli repository from the SPDK GitHub fork. Make sure you check out the spdk branch.
 ~~~{.sh}
@@ -40,7 +41,12 @@ This nvme-cli will access those devices from that running SPDK application.
 Example: ./nvme smart-log 0000:01:00.0
 ~~~
 
-9. Execute "<spdk_folder>/scripts/setup.sh reset" with the "root" account and update "spdk=0" in spdk.conf to
+9. Run the "./nvme intel" commands for Intel specific commands against Intel NVMe SSD.
+~~~{.sh}
+Example: ./nvme intel internal-log 0000:08:00.0
+~~~
+
+10. Execute "<spdk_folder>/scripts/setup.sh reset" with the "root" account and update "spdk=0" in spdk.conf to
 use the kernel driver if wanted.
 
 ## Use scenarios
@@ -69,5 +75,8 @@ b. Change the mem_size to a proper size.
 ~~~
 
 ## Note
-To run the newly built nvme-cli, either explicitly run as "./nvme" or added it into the $PATH to avoid invoke
-other already installed version.
+1. To run the newly built nvme-cli, either explicitly run as "./nvme" or added it into the $PATH to avoid
+invoke other already installed version.
+
+2. To run the newly built nvme-cli with SPDK support in arbitrary directory, copy "spdk.conf" to that
+directory from the nvme cli folder and update the configuration as suggested.
