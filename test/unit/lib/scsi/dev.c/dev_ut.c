@@ -531,6 +531,70 @@ dev_find_port_by_id_success(void)
 	}
 }
 
+static void
+dev_add_lun_bdev_not_found(void)
+{
+	int rc;
+	struct spdk_scsi_dev dev = {0};
+
+	rc = spdk_scsi_dev_add_lun(&dev, "malloc2", -1, NULL, NULL);
+
+	CU_ASSERT_NOT_EQUAL(rc, 0);
+}
+
+static void
+dev_add_lun_no_free_lun_id(void)
+{
+	int rc;
+	int i;
+	struct spdk_scsi_dev dev = {0};
+	struct spdk_scsi_lun lun;
+
+	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+		dev.lun[i] = &lun;
+	}
+
+	rc = spdk_scsi_dev_add_lun(&dev, "malloc0", -1, NULL, NULL);
+
+	CU_ASSERT_NOT_EQUAL(rc, 0);
+}
+
+static void
+dev_add_lun_success1(void)
+{
+	int rc;
+	int i;
+	struct spdk_scsi_dev dev;
+
+	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+		dev.lun[i] = NULL;
+	}
+
+	rc = spdk_scsi_dev_add_lun(&dev, "malloc0", -1, NULL, NULL);
+
+	CU_ASSERT_EQUAL(rc, 0);
+
+	spdk_scsi_dev_destruct(&dev);
+}
+
+static void
+dev_add_lun_success2(void)
+{
+	int rc;
+	int i;
+	struct spdk_scsi_dev dev;
+
+	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+		dev.lun[i] = NULL;
+	}
+
+	rc = spdk_scsi_dev_add_lun(&dev, "malloc0", 0, NULL, NULL);
+
+	CU_ASSERT_EQUAL(rc, 0);
+
+	spdk_scsi_dev_destruct(&dev);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -585,6 +649,14 @@ main(int argc, char **argv)
 			       dev_find_port_by_id_id_not_found_failure) == NULL
 		|| CU_add_test(suite, "dev find port by id - success",
 			       dev_find_port_by_id_success) == NULL
+		|| CU_add_test(suite, "dev add lun - bdev not found",
+			       dev_add_lun_bdev_not_found) == NULL
+		|| CU_add_test(suite, "dev add lun - no free lun id",
+			       dev_add_lun_no_free_lun_id) == NULL
+		|| CU_add_test(suite, "dev add lun - success 1",
+			       dev_add_lun_success1) == NULL
+		|| CU_add_test(suite, "dev add lun - success 2",
+			       dev_add_lun_success2) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

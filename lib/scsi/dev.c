@@ -102,13 +102,53 @@ spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev)
 	}
 }
 
-static void
-spdk_scsi_dev_add_lun(struct spdk_scsi_dev *dev,
-		      struct spdk_scsi_lun *lun, int id)
+static int
+spdk_scsi_dev_find_lowest_free_lun_id(struct spdk_scsi_dev *dev)
 {
-	lun->id = id;
+	int i;
+
+	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+		if (dev->lun[i] == NULL) {
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+int
+spdk_scsi_dev_add_lun(struct spdk_scsi_dev *dev, const char *bdev_name, int lun_id,
+		      void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
+		      void *hotremove_ctx)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_scsi_lun *lun;
+
+	bdev = spdk_bdev_get_by_name(bdev_name);
+	if (bdev == NULL) {
+		SPDK_ERRLOG("device %s: cannot find bdev '%s' (target %d)\n",
+			    dev->name, bdev_name, lun_id);
+		return -1;
+	}
+
+	/* Search the lowest free LUN ID if LUN ID is default */
+	if (lun_id == -1) {
+		lun_id = spdk_scsi_dev_find_lowest_free_lun_id(dev);
+		if (lun_id == -1) {
+			SPDK_ERRLOG("Free LUN ID is not found\n");
+			return -1;
+		}
+	}
+
+	lun = spdk_scsi_lun_construct(bdev, hotremove_cb, hotremove_ctx);
+	if (lun == NULL) {
+		return -1;
+	}
+
+	lun->id = lun_id;
 	lun->dev = dev;
-	dev->lun[id] = lun;
+	dev->lun[lun_id] = lun;
+	return 0;
 }
 
 void
@@ -145,10 +185,8 @@ spdk_scsi_dev_construct(const char *name, const char *bdev_name_list[],
 			void *hotremove_ctx)
 {
 	struct spdk_scsi_dev *dev;
-	struct spdk_bdev *bdev;
-	struct spdk_scsi_lun *lun = NULL;
 	bool found_lun_0;
-	int i;
+	int i, rc;
 
 	if (num_luns == 0) {
 		SPDK_ERRLOG("device %s: no LUNs specified\n", name);
@@ -187,27 +225,15 @@ spdk_scsi_dev_construct(const char *name, const char *bdev_name_list[],
 	dev->protocol_id = protocol_id;
 
 	for (i = 0; i < num_luns; i++) {
-		bdev = spdk_bdev_get_by_name(bdev_name_list[i]);
-		if (bdev == NULL) {
-			SPDK_ERRLOG("device %s: cannot find bdev '%s' (target %d)\n",
-				    name, bdev_name_list[i], i);
-			goto error;
+		rc = spdk_scsi_dev_add_lun(dev, bdev_name_list[i], lun_id_list[i],
+					   hotremove_cb, hotremove_ctx);
+		if (rc < 0) {
+			spdk_scsi_dev_destruct(dev);
+			return NULL;
 		}
-
-		lun = spdk_scsi_lun_construct(bdev, hotremove_cb, hotremove_ctx);
-		if (lun == NULL) {
-			goto error;
-		}
-
-		spdk_scsi_dev_add_lun(dev, lun, lun_id_list[i]);
 	}
 
 	return dev;
-
-error:
-	spdk_scsi_dev_destruct(dev);
-
-	return NULL;
 }
 
 void
