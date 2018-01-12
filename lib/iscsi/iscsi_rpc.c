@@ -333,6 +333,12 @@ spdk_rpc_get_target_nodes(struct spdk_jsonrpc_request *request,
 		spdk_json_write_name(w, "chap_auth_group");
 		spdk_json_write_int32(w, tgtnode->auth_group);
 
+		spdk_json_write_name(w, "header_digest");
+		spdk_json_write_int32(w, tgtnode->header_digest);
+
+		spdk_json_write_name(w, "data_digest");
+		spdk_json_write_int32(w, tgtnode->data_digest);
+
 		spdk_json_write_object_end(w);
 	}
 	spdk_json_write_array_end(w);
@@ -426,6 +432,9 @@ struct rpc_target_node {
 	int32_t chap_required;
 	int32_t chap_mutual;
 	int32_t chap_auth_group;
+
+	int32_t header_digest;
+	int32_t data_digest;
 };
 
 static void
@@ -448,6 +457,8 @@ static const struct spdk_json_object_decoder rpc_target_node_decoders[] = {
 	{"chap_required", offsetof(struct rpc_target_node, chap_required), spdk_json_decode_int32},
 	{"chap_mutual", offsetof(struct rpc_target_node, chap_mutual), spdk_json_decode_int32},
 	{"chap_auth_group", offsetof(struct rpc_target_node, chap_auth_group), spdk_json_decode_int32},
+	{"header_digest", offsetof(struct rpc_target_node, header_digest), spdk_json_decode_int32, true},
+	{"data_digest", offsetof(struct rpc_target_node, data_digest), spdk_json_decode_int32, true},
 };
 
 static void
@@ -457,6 +468,9 @@ spdk_rpc_construct_target_node(struct spdk_jsonrpc_request *request,
 	struct rpc_target_node req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_iscsi_tgt_node *target;
+
+	req.header_digest = 0;
+	req.data_digest = 0;
 
 	if (spdk_json_decode_object(params, rpc_target_node_decoders,
 				    SPDK_COUNTOF(rpc_target_node_decoders),
@@ -493,7 +507,8 @@ spdk_rpc_construct_target_node(struct spdk_jsonrpc_request *request,
 					       req.chap_required,
 					       req.chap_mutual,
 					       req.chap_auth_group,
-					       0, 0);
+					       req.header_digest,
+					       req.data_digest);
 
 	if (target == NULL) {
 		goto invalid;

@@ -130,6 +130,10 @@ def construct_target_node(args):
         'chap_mutual': args.chap_mutual,
         'chap_auth_group': args.chap_auth_group,
     }
+    if args.header_digest:
+        params['header_digest'] = args.header_digest
+    if args.data_digest:
+        params['data_digest'] = args.data_digest
     jsonrpc_call('construct_target_node', params)
 
 p = subparsers.add_parser('construct_target_node', help='Add a target node')
@@ -154,6 +158,8 @@ p.add_argument('chap_required', help="""CHAP authentication should be required f
 p.add_argument('chap_mutual', help='CHAP authentication should be mutual/bidirectional.', type=int)
 p.add_argument('chap_auth_group', help="""Authentication group ID for this target node.
 *** Authentication group must be precreated ***""", type=int)
+p.add_argument('-H', dest='header_digest', help='Header Digest should be required for this target node.', type=int, required=False)
+p.add_argument('-D', dest='data_digest', help='Data Digest should be required for this target node.', type=int, required=False)
 p.set_defaults(func=construct_target_node)
 
 

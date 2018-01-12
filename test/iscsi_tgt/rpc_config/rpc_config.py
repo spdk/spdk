@@ -26,6 +26,8 @@ rpc_param = {
     'chap_mutal': 0,
     'chap_required': 0,
     'chap_auth_group': 0,
+    'header_digest': 0,
+    'data_digest': 0,
     'trace_flag': 'rpc'
 }
 
@@ -288,7 +290,8 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
     lun_mapping = "Malloc" + str(rpc_param['lun_total']) + ":0"
     net_mapping = portal_tag + ":" + initiator_tag
     rpc.construct_target_node(rpc_param['target_name'], rpc_param['alias_name'], lun_mapping, net_mapping, rpc_param['queue_depth'],
-                              rpc_param['chap_disable'], rpc_param['chap_mutal'], rpc_param['chap_required'], rpc_param['chap_auth_group'])
+                              rpc_param['chap_disable'], rpc_param['chap_mutal'], rpc_param['chap_required'], rpc_param['chap_auth_group'],
+                              "-H", rpc_param['header_digest'], "-D", rpc_param['data_digest'])
     output = rpc.get_target_nodes()
     jsonvalues = json.loads(output)
     verify(len(jsonvalues) == 1, 1,
@@ -317,6 +320,10 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
            "chap required value is {}, expected {}".format(jsonvalues[0]['chap_required'], rpc_param['chap_required']))
     verify(jsonvalues[0]['chap_auth_group'] == rpc_param['chap_auth_group'], 1,
            "chap auth group value is {}, expected {}".format(jsonvalues[0]['chap_auth_group'], rpc_param['chap_auth_group']))
+    verify(jsonvalues[0]['header_digest'] == rpc_param['header_digest'], 1,
+           "header digest value is {}, expected {}".format(jsonvalues[0]['header_digest'], rpc_param['header_digest']))
+    verify(jsonvalues[0]['data_digest'] == rpc_param['data_digest'], 1,
+           "data digest value is {}, expected {}".format(jsonvalues[0]['data_digest'], rpc_param['data_digest']))
     lun_id = '1'
     rpc.target_node_add_lun(name, bdev_name, "-i", lun_id)
     output = rpc.get_target_nodes()
