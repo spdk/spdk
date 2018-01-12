@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2196b822_009c631e",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 1069,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T10:15:14Z",
+      "side": 1,
+      "message": "Well, not sure how I\u0027ve missed that. lvol-\u003ename should change here if lvolerrno was 0. Lvol can be retrieved from req-\u003elvol.",
+      "revId": "4e37e5a542e9e12b468fad67045b6bacbc8bcbb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b5325ad_46bd076c",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 1089,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T10:15:14Z",
+      "side": 1,
+      "message": "Please assign req-\u003elvol \u003d lvol so it can be later used in callback.",
+      "revId": "4e37e5a542e9e12b468fad67045b6bacbc8bcbb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
