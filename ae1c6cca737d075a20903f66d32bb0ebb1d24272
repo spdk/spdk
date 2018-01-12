@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5d72b48d_ab98e3a9",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-12T20:27:37Z",
+      "side": 1,
+      "message": "this should probably be -ENOSPC\n\nwasn\u0027t going to comment on this but since you need to rebase anyways let\u0027s make it correct",
+      "revId": "ae1c6cca737d075a20903f66d32bb0ebb1d24272",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
