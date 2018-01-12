@@ -1,0 +1,228 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "37be2263_473d8680",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 765,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T15:40:58Z",
+      "side": 1,
+      "message": "Callback should be second to last command, right before freeing the request. It is assumed that before issuing the callback, all operations were completed.",
+      "range": {
+        "startLine": 765,
+        "startChar": 1,
+        "endLine": 765,
+        "endChar": 37
+      },
+      "revId": "9977b29fb024ebda505248171e133d687b64d0fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59032fb2_c8d63dec",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 766,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T15:40:58Z",
+      "side": 1,
+      "message": "On lvolerrno not equal 0, at least display errorlog.",
+      "revId": "9977b29fb024ebda505248171e133d687b64d0fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2f05172f_e6156cf7",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 770,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T15:40:58Z",
+      "side": 1,
+      "message": "This assignment can be done at the top of the function.",
+      "range": {
+        "startLine": 769,
+        "startChar": 0,
+        "endLine": 770,
+        "endChar": 25
+      },
+      "revId": "9977b29fb024ebda505248171e133d687b64d0fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b7dfbca6_cdc3af5c",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 773,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T15:40:58Z",
+      "side": 1,
+      "message": "Is this inverse needed here at all ?\nBlob total size is always a multiple of cluster_size. In spdk_lvol_resize() this divide_round_up() is done because there is no such requirement for \u0027sz\u0027 given as parameter. \nThe blob will have size of cluster_size * cluster_number. So bdev that is representing this blob as lvol, should have this size as well.",
+      "range": {
+        "startLine": 773,
+        "startChar": 2,
+        "endLine": 773,
+        "endChar": 45
+      },
+      "revId": "9977b29fb024ebda505248171e133d687b64d0fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7018ec90_1ec0f1ab",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 774,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T15:40:58Z",
+      "side": 1,
+      "message": "Just sz \u003d cluster_size * lvol-\u003enum_clusters; should be enough.",
+      "range": {
+        "startLine": 774,
+        "startChar": 2,
+        "endLine": 774,
+        "endChar": 51
+      },
+      "revId": "9977b29fb024ebda505248171e133d687b64d0fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c4bb44c_216280fb",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 778,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T15:40:58Z",
+      "side": 1,
+      "message": "Please provide more detailed message, lvol-\u003ename and error code.",
+      "range": {
+        "startLine": 778,
+        "startChar": 48,
+        "endLine": 778,
+        "endChar": 63
+      },
+      "revId": "9977b29fb024ebda505248171e133d687b64d0fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "279d4c58_3e39a5da",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 802,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T15:40:58Z",
+      "side": 1,
+      "message": "Is there a valid case where lvol exists without bdev assigned ?\nAsserting that bdev exists could be enough or even better do that just before spdk_bdev_set_num_blocks() in callback.",
+      "range": {
+        "startLine": 798,
+        "startChar": 0,
+        "endLine": 802,
+        "endChar": 2
+      },
+      "revId": "9977b29fb024ebda505248171e133d687b64d0fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "19eda412_67546900",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 718,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T15:40:58Z",
+      "side": 1,
+      "message": "Not needed, as we can provide lvol directly.",
+      "range": {
+        "startLine": 718,
+        "startChar": 1,
+        "endLine": 718,
+        "endChar": 55
+      },
+      "revId": "9977b29fb024ebda505248171e133d687b64d0fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d215c9ca_9779a768",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 719,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T15:40:58Z",
+      "side": 1,
+      "message": "g_lvol can be passed here directly.",
+      "range": {
+        "startLine": 719,
+        "startChar": 24,
+        "endLine": 719,
+        "endChar": 28
+      },
+      "revId": "9977b29fb024ebda505248171e133d687b64d0fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29f34e63_bac67957",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 734,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T15:40:58Z",
+      "side": 1,
+      "message": "As vbdev_lvol_resize() no longer is responsible for searching for correct lvol, tests with incorrect names are not needed.",
+      "range": {
+        "startLine": 723,
+        "startChar": 0,
+        "endLine": 734,
+        "endChar": 20
+      },
+      "revId": "9977b29fb024ebda505248171e133d687b64d0fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
