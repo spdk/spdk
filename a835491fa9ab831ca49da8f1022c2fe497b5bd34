@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "72e4073c_4a08d697",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T10:40:56Z",
+      "side": 1,
+      "message": "Why not pass the lvs to the caller, this way it can be known which lvs succeeded.",
+      "range": {
+        "startLine": 262,
+        "startChar": 26,
+        "endLine": 262,
+        "endChar": 30
+      },
+      "revId": "a835491fa9ab831ca49da8f1022c2fe497b5bd34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b43390f1_7b7594d0",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T10:40:56Z",
+      "side": 1,
+      "message": "This should not be freed, as it was not allocated here. This check basically only verifies that there is no lvs with same name already.",
+      "range": {
+        "startLine": 279,
+        "startChar": 2,
+        "endLine": 279,
+        "endChar": 16
+      },
+      "revId": "a835491fa9ab831ca49da8f1022c2fe497b5bd34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "85e1714c_54363369",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T10:40:56Z",
+      "side": 1,
+      "message": "free(req); as well",
+      "range": {
+        "startLine": 299,
+        "startChar": 2,
+        "endLine": 299,
+        "endChar": 12
+      },
+      "revId": "a835491fa9ab831ca49da8f1022c2fe497b5bd34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8136c040_10a62cba",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T10:40:56Z",
+      "side": 1,
+      "message": "Please change to rc",
+      "range": {
+        "startLine": 631,
+        "startChar": 5,
+        "endLine": 631,
+        "endChar": 14
+      },
+      "revId": "a835491fa9ab831ca49da8f1022c2fe497b5bd34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4c13c07_2144edd7",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 643,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T10:40:56Z",
+      "side": 1,
+      "message": "Please don\u0027t close the super_blob here.",
+      "range": {
+        "startLine": 643,
+        "startChar": 2,
+        "endLine": 643,
+        "endChar": 50
+      },
+      "revId": "a835491fa9ab831ca49da8f1022c2fe497b5bd34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "64eb173f_520ddc74",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 644,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T10:40:56Z",
+      "side": 1,
+      "message": "return rc as reason for fail might be important for proper handling.",
+      "range": {
+        "startLine": 644,
+        "startChar": 9,
+        "endLine": 644,
+        "endChar": 11
+      },
+      "revId": "a835491fa9ab831ca49da8f1022c2fe497b5bd34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
