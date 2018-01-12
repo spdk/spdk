@@ -1,0 +1,101 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6f0afdde_4f789605",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 302,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T10:40:56Z",
+      "side": 1,
+      "message": "lvs-\u003ename field should be edited on lvol.c layer, rather than this one.",
+      "range": {
+        "startLine": 302,
+        "startChar": 1,
+        "endLine": 302,
+        "endChar": 53
+      },
+      "revId": "9a38bd16fa8b89d57f1a7cd889c9ffaab4371773",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec6c1e23_c0e0fc27",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 621,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T10:40:56Z",
+      "side": 1,
+      "message": "If no error occurred during sync, lvs-\u003ename should be changed.\nIt seems that new_name has to be passed by spdk_lvs_with_handle_req, thus adding new field to it.",
+      "revId": "9a38bd16fa8b89d57f1a7cd889c9ffaab4371773",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c07f0b5_3d3e7ff2",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 622,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T10:40:56Z",
+      "side": 1,
+      "message": "lvs",
+      "range": {
+        "startLine": 622,
+        "startChar": 25,
+        "endLine": 622,
+        "endChar": 29
+      },
+      "revId": "9a38bd16fa8b89d57f1a7cd889c9ffaab4371773",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "55291c8f_fcd9f651",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 640,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T10:40:56Z",
+      "side": 1,
+      "message": "If using spdk_lvs_with_handle_req, please assign lvs passed here as well. Later on it can be returned in callback.\nreq-\u003elvolstore \u003d lvs",
+      "revId": "9a38bd16fa8b89d57f1a7cd889c9ffaab4371773",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4c30021_b1d536f3",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 975,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T10:40:56Z",
+      "side": 1,
+      "message": "Please create lvols on that lvol store in order to test _vbdev_lvol_change_alias() in _vbdev_lvs_rename_cb(). Verifying that lvs name change does affect lvols.",
+      "revId": "9a38bd16fa8b89d57f1a7cd889c9ffaab4371773",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
