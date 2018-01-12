@@ -1205,18 +1205,18 @@ spdk_vhost_nvme_dev_add_ns(struct spdk_vhost_dev *vdev, const char *bdev_name)
 	int rc = -1;
 
 	if (nvme == NULL) {
-		return -1;
+		return -ENODEV;
 	}
 
 	if (nvme->num_ns == MAX_NAMESPACE) {
 		SPDK_ERRLOG("Can't support %d Namespaces\n", nvme->num_ns);
-		return -1;
+		return -ENOSPC;
 	}
 
 	bdev = spdk_bdev_get_by_name(bdev_name);
 	if (!bdev) {
 		SPDK_ERRLOG("could not find bdev %s\n", bdev_name);
-		return -1;
+		return -ENODEV;
 	}
 
 	ns = &nvme->ns[nvme->num_ns];
@@ -1224,7 +1224,7 @@ spdk_vhost_nvme_dev_add_ns(struct spdk_vhost_dev *vdev, const char *bdev_name)
 	if (rc != 0) {
 		SPDK_ERRLOG("Could not open bdev '%s', error=%d\n",
 			    bdev_name, rc);
-		return -1;
+		return rc;
 	}
 
 	nvme->ns[nvme->num_ns].bdev = bdev;
