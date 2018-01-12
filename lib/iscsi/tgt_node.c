@@ -843,6 +843,26 @@ spdk_check_iscsi_name(const char *name)
 	return 0;
 }
 
+static bool
+spdk_iscsi_check_chap_params(int disabled, int required, int mutual, int group)
+{
+	if ((disabled == 0 && required == 0 && mutual == 0) ||	/* Auto */
+	    (disabled == 1 && required == 0 && mutual == 0) ||	/* None */
+	    (disabled == 0 && required == 1 && mutual == 0) ||	/* CHAP */
+	    (disabled == 0 && required == 1 && mutual == 1)) {	/* CHAP Mutual */
+		;
+	} else {
+		SPDK_ERRLOG("Invalid combination of CHAP params (d=%d,r=%d,m=%d)\n",
+			    disabled, required, mutual);
+		return false;
+	}
+	if (group < 0) {
+		SPDK_ERRLOG("Invalid auth group ID (%d)\n", group);
+		return false;
+	}
+	return true;
+}
+
 _spdk_iscsi_tgt_node *
 spdk_iscsi_tgt_node_construct(int target_index,
 			      const char *name, const char *alias,
@@ -856,8 +876,8 @@ spdk_iscsi_tgt_node_construct(int target_index,
 	struct spdk_iscsi_tgt_node	*target;
 	int				rc;
 
-	if (auth_chap_disabled && auth_chap_required) {
-		SPDK_ERRLOG("auth_chap_disabled and auth_chap_required are mutually exclusive\n");
+	if (!spdk_iscsi_check_chap_params(auth_chap_disabled, auth_chap_required,
+					  auth_chap_mutual, auth_group)) {
 		return NULL;
 	}
 
