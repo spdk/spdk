@@ -374,6 +374,17 @@ if __name__ == "__main__":
     p.add_argument('scsi_target_num', help='scsi_target_num', type=int)
     p.set_defaults(func=rpc.vhost.remove_vhost_scsi_target)
 
+    p = subparsers.add_parser('construct_vhost_nvme_controller', help='Add new vhost controller')
+    p.add_argument('ctrlr', help='controller name')
+    p.add_argument('io_queues', help='number of IO queues for the controller', type=int)
+    p.add_argument('--cpumask', help='cpu mask for this controller')
+    p.set_defaults(func=rpc.vhost.construct_vhost_nvme_controller)
+
+    p = subparsers.add_parser('add_vhost_nvme_ns', help='Add a Namespace to vhost controller')
+    p.add_argument('ctrlr', help='conntroller name where add a Namespace')
+    p.add_argument('bdev_name', help='block device name for a new Namespace')
+    p.set_defaults(func=rpc.vhost.add_vhost_nvme_ns)
+
     p = subparsers.add_parser('construct_vhost_blk_controller', help='Add a new vhost block controller')
     p.add_argument('ctrlr', help='controller name')
     p.add_argument('dev_name', help='device name')
