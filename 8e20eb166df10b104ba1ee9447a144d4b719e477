@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8277078f_7155527d",
+        "filename": "doc/userspace.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-12T20:00:06Z",
+      "side": 1,
+      "message": "maybe temper this a bit to account for non-IA architectures?  something like:\n\n...and technologies such as Intel\u0027s DDIO (link) will ensure that the host memory...",
+      "revId": "8e20eb166df10b104ba1ee9447a144d4b719e477",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5cdf3c8e_13d73b0e",
+        "filename": "doc/userspace.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-12T20:00:06Z",
+      "side": 1,
+      "message": "Sometimes they also need to acquire a lock on the queue or disable interrupts to guard against preemption - not just multiple threads sharing one queue, but also multiple threads running on the same core preempting each other.",
+      "revId": "8e20eb166df10b104ba1ee9447a144d4b719e477",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
