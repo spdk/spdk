@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8f608987_c3a25494",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 583,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-12T05:03:38Z",
+      "side": 1,
+      "message": "I think this should be TAILQ_INSERT_HEAD, not INSERT_TAIL.\n\nIf there are already IO on nomem_io list, we want this completed IO to get retried next - not be put at the end of the queue.",
+      "revId": "f436e7643f35280178a83f917762e70bc164bd9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7102b534_e5088834",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 594,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-12T05:03:38Z",
+      "side": 1,
+      "message": "So one concern I have is that in the future, we may want to split lvol I/O, similar to NVMe.  For example, with thin provisioned blobs when an I/O spans a cluster boundary - one cluster is allocated and the other is not.\n\nIn this case, we cannot only submit one IO from nomem_io list when another IO completes.  We should keep submitting IO from nomem_io list until another one fails with ENOMEM.",
+      "revId": "f436e7643f35280178a83f917762e70bc164bd9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dff7169f_9142f048",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 736,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-12T05:03:38Z",
+      "side": 1,
+      "message": "newline after closing brace",
+      "revId": "f436e7643f35280178a83f917762e70bc164bd9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
