@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "231ac891_82286b9b",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 491,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-12T23:13:01Z",
+      "side": 1,
+      "message": "This should be moved just after spdk_bdev_get_num_blocks().\n\nProbably also specify that this can only be called on a registered bdev.  (See later comments on why).",
+      "revId": "e6d52f34ae3aef47d0d9cd0e1c8aee1bfde251d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58b18257_6259ebe3",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 499,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-12T23:13:01Z",
+      "side": 1,
+      "message": "I think the previous code should be kept.\n\nAll of the bdev modules should just set blockcnt directly - keeping the original code unchanged.  spdk_bdev_set_num_blocks() should only be used after a bdev has been registered and its size needs to be changed.\n\nspdk_bdev_set_num_blocks() assumes that the bdev has already been registered.  But spdk_bdev_register() is called after this point.  spdk_bdev_register() is what initializes the mutex, sets the initial status and initializes the open_descs TAILQ.",
+      "revId": "e6d52f34ae3aef47d0d9cd0e1c8aee1bfde251d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fe30d309_71eaea7e",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 294,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-12T23:13:01Z",
+      "side": 1,
+      "message": "call spdk_bdev_register() here",
+      "revId": "e6d52f34ae3aef47d0d9cd0e1c8aee1bfde251d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
