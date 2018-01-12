@@ -33,6 +33,27 @@ def remove_vhost_scsi_target(client, args):
     return client.call('remove_vhost_scsi_target', params)
 
 
+def construct_vhost_nvme_controller(client, args):
+    params = {
+        'ctrlr': args.ctrlr,
+        'io_queues': args.io_queues
+    }
+
+    if args.cpumask:
+        params['cpumask'] = args.cpumask
+
+    return client.call('construct_vhost_nvme_controller', params)
+
+
+def add_vhost_nvme_ns(client, args):
+    params = {
+        'ctrlr': args.ctrlr,
+        'bdev_name': args.bdev_name,
+    }
+
+    return client.call('add_vhost_nvme_ns', params)
+
+
 def construct_vhost_blk_controller(client, args):
     params = {
         'ctrlr': args.ctrlr,
