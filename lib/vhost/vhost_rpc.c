@@ -607,5 +607,160 @@ invalid:
 }
 SPDK_RPC_REGISTER("set_vhost_controller_coalescing", spdk_rpc_set_vhost_controller_coalescing)
 
+struct rpc_vhost_nvme_ctrlr {
+	char *ctrlr;
+	uint32_t io_queues;
+	char *cpumask;
+};
+
+static const struct spdk_json_object_decoder rpc_construct_vhost_nvme_ctrlr[] = {
+	{"ctrlr", offsetof(struct rpc_vhost_nvme_ctrlr, ctrlr), spdk_json_decode_string },
+	{"io_queues", offsetof(struct rpc_vhost_nvme_ctrlr, io_queues), spdk_json_decode_uint32},
+	{"cpumask", offsetof(struct rpc_vhost_nvme_ctrlr, cpumask), spdk_json_decode_string, true},
+};
+
+static void
+free_rpc_vhost_nvme_ctrlr(struct rpc_vhost_nvme_ctrlr *req)
+{
+	free(req->ctrlr);
+	free(req->cpumask);
+}
+
+static void
+spdk_rpc_construct_vhost_nvme_controller(struct spdk_jsonrpc_request *request,
+		const struct spdk_json_val *params)
+{
+	struct rpc_vhost_nvme_ctrlr req = {0};
+	struct spdk_json_write_ctx *w;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_construct_vhost_nvme_ctrlr,
+				    SPDK_COUNTOF(rpc_construct_vhost_nvme_ctrlr),
+				    &req)) {
+		SPDK_DEBUGLOG(SPDK_LOG_VHOST_RPC, "spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	rc = spdk_vhost_nvme_dev_construct(req.ctrlr, req.cpumask, req.io_queues);
+	if (rc < 0) {
+		goto invalid;
+	}
+
+	free_rpc_vhost_nvme_ctrlr(&req);
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+	return;
+
+invalid:
+	free_rpc_vhost_nvme_ctrlr(&req);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_strerror(-rc));
+
+}
+SPDK_RPC_REGISTER("construct_vhost_nvme_controller", spdk_rpc_construct_vhost_nvme_controller)
+
+struct rpc_add_vhost_nvme_ctrlr_ns {
+	char *ctrlr;
+	char *bdev_name;
+	struct spdk_jsonrpc_request *request;
+};
+
+static void
+free_rpc_add_vhost_nvme_ctrlr_ns(struct rpc_add_vhost_nvme_ctrlr_ns *req)
+{
+	free(req->ctrlr);
+	free(req->bdev_name);
+	free(req);
+}
+
+static const struct spdk_json_object_decoder rpc_vhost_nvme_add_ns[] = {
+	{"ctrlr", offsetof(struct rpc_add_vhost_nvme_ctrlr_ns, ctrlr), spdk_json_decode_string },
+	{"bdev_name", offsetof(struct rpc_add_vhost_nvme_ctrlr_ns, bdev_name), spdk_json_decode_string },
+};
+
+static int
+spdk_rpc_add_vhost_nvme_ns_cb(struct spdk_vhost_dev *vdev, void *arg)
+{
+	struct rpc_add_vhost_nvme_ctrlr_ns *rpc = arg;
+	struct spdk_jsonrpc_request *request = rpc->request;
+	struct spdk_json_write_ctx *w;
+	int rc;
+
+	if (vdev == NULL) {
+		rc = -ENODEV;
+		goto invalid;
+	}
+
+	rc = spdk_vhost_nvme_dev_add_ns(vdev, rpc->bdev_name);
+	if (rc < 0) {
+		goto invalid;
+	}
+
+	free_rpc_add_vhost_nvme_ctrlr_ns(rpc);
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return -1;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+	return 0;
+
+invalid:
+	free_rpc_add_vhost_nvme_ctrlr_ns(rpc);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_strerror(-rc));
+	return rc;
+}
+
+static void
+spdk_rpc_add_vhost_nvme_ns(struct spdk_jsonrpc_request *request,
+			   const struct spdk_json_val *params)
+{
+	struct rpc_add_vhost_nvme_ctrlr_ns *req;
+	int rc;
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		rc = -ENOMEM;
+		goto invalid;
+	}
+
+	req->request = request;
+	if (spdk_json_decode_object(params, rpc_vhost_nvme_add_ns,
+				    SPDK_COUNTOF(rpc_vhost_nvme_add_ns),
+				    req)) {
+		SPDK_DEBUGLOG(SPDK_LOG_VHOST_RPC, "spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	if (req->ctrlr == NULL) {
+		SPDK_ERRLOG("No controller name\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	spdk_vhost_call_external_event(req->ctrlr, spdk_rpc_add_vhost_nvme_ns_cb, req);
+
+	return;
+
+invalid:
+	if (req) {
+		free_rpc_add_vhost_nvme_ctrlr_ns(req);
+	}
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_strerror(-rc));
+}
+SPDK_RPC_REGISTER("add_vhost_nvme_ns", spdk_rpc_add_vhost_nvme_ns)
+
 
 SPDK_LOG_REGISTER_COMPONENT("vhost_rpc", SPDK_LOG_VHOST_RPC)
