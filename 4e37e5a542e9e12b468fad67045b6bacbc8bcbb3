@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "f9b6d226_ea9d6530",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 1069,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-12T11:03:48Z",
+      "side": 1,
+      "message": "I think, for now, easiest would be adding field in spdk_lvol_req. Then after refactoring requests, it could be removed.\n\nWhy?\nAt first look, i thought easiest would be adding new spdk_blob_op_complete type ie spdk_blob_op_with_lvol_name_complete. But then i saw spdk_blob_sync_md(), which uses spdk_blob_op_complete is used in a few more places. Changing it like that required changes in places unrelated to lvol rename problem.",
+      "parentUuid": "4b433b92_b454d497",
+      "revId": "4e37e5a542e9e12b468fad67045b6bacbc8bcbb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9b5325ad_46bd076c",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 48
