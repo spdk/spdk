@@ -756,36 +756,50 @@ static void
 _vbdev_lvol_resize_cb(void *cb_arg, int lvolerrno)
 {
 	struct spdk_lvol_req *req = cb_arg;
+	struct spdk_lvol *lvol;
+	struct spdk_lvol_store *lvs;
+	uint64_t cluster_size;
+	size_t sz;
+	int rc;
 
 	req->cb_fn(req->cb_arg,  lvolerrno);
+
+	/* change bdev size */
+	if (lvolerrno == 0)	{
+		lvol = req->lvol;
+		lvs = lvol->lvol_store;
+		cluster_size = spdk_bs_get_cluster_size(lvs->blobstore);
+
+		/* Inverse of function divide_round_up() */
+		sz = cluster_size * (lvol->num_clusters + 1) + 1;
+
+		rc = spdk_bdev_set_num_blocks(lvol->bdev, sz / lvol->bdev->blocklen);
+		if (rc != 0) {
+			SPDK_ERRLOG("Could not change num blocks for bdev_lvol.\n");
+		}
+	}
+
 	free(req);
 }
 
 int
-vbdev_lvol_resize(char *name, size_t sz,
+vbdev_lvol_resize(struct spdk_lvol *lvol, size_t sz,
 		  spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvol_req *req;
 	struct spdk_bdev *bdev;
-	struct spdk_lvol *lvol;
-	struct spdk_lvol_store *lvs;
-	uint64_t cluster_size;
 	int rc;
 
-	lvol = vbdev_get_lvol_by_unique_id(name);
 	if (lvol == NULL) {
-		SPDK_ERRLOG("lvol '%s' does not exist\n", name);
-		return -ENODEV;
+		SPDK_ERRLOG("lvol does not exist\n");
+		return -EINVAL;
 	}
 
-	bdev = spdk_bdev_get_by_name(name);
+	bdev = lvol->bdev;
 	if (bdev == NULL) {
-		SPDK_ERRLOG("bdev '%s' does not exist\n", name);
+		SPDK_ERRLOG("bdev '%s' does not exist\n", lvol->name);
 		return -ENODEV;
 	}
-
-	lvs = lvol->lvol_store;
-	cluster_size = spdk_bs_get_cluster_size(lvs->blobstore);
 
 	req = calloc(1, sizeof(*req));
 	if (req == NULL) {
@@ -794,15 +808,12 @@ vbdev_lvol_resize(char *name, size_t sz,
 	}
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
+	req->lvol = lvol;
 
 	rc = spdk_lvol_resize(lvol, sz, _vbdev_lvol_resize_cb, req);
 
-	if (rc == 0) {
-		rc = spdk_bdev_set_num_blocks(bdev, sz * cluster_size / bdev->blocklen);
-		if (rc != 0) {
-			SPDK_ERRLOG("Could not change num blocks for bdev_lvol.\n");
-			return -ENODEV;
-		}
+	if (rc != 0) {
+		SPDK_ERRLOG("Could not change lvol size.\n");
 	}
 
 	return rc;
