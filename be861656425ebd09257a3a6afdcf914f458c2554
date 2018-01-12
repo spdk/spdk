@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "94ac564b_bb7217fc",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-01-12T02:38:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4e66933b_3bc9ca51",
+      "revId": "be861656425ebd09257a3a6afdcf914f458c2554",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2a0578ad_883daa08",
         "filename": "lib/nbd/nbd.c",
         "patchSetId": 10
@@ -47,6 +65,24 @@
       "writtenOn": "2018-01-11T17:43:02Z",
       "side": 1,
       "message": "it is usually better to do this like:\n\nif (nbd-\u003estate \u003d\u003d NBD_DISK_STATE_HARDDISC) {\n  return 0;\n}\n\nthen the rest of the code does not need to be indented and is a bit easier to read",
+      "revId": "be861656425ebd09257a3a6afdcf914f458c2554",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "60c7fa28_b4d16d1f",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 487,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-01-12T02:38:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2a0578ad_883daa08",
       "revId": "be861656425ebd09257a3a6afdcf914f458c2554",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -70,6 +106,24 @@
     },
     {
       "key": {
+        "uuid": "2dbcfd68_fa20ebfb",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 589,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-01-12T02:38:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b0f4b09d_0e9da3ed",
+      "revId": "be861656425ebd09257a3a6afdcf914f458c2554",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c3efd0e4_d8e70515",
         "filename": "lib/nbd/nbd.c",
         "patchSetId": 10
@@ -81,6 +135,24 @@
       "writtenOn": "2018-01-11T17:43:02Z",
       "side": 1,
       "message": "if (ret !\u003d 0) {\n  return ret;\n}",
+      "revId": "be861656425ebd09257a3a6afdcf914f458c2554",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "068cae84_841481a9",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 607,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-01-12T02:38:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c3efd0e4_d8e70515",
       "revId": "be861656425ebd09257a3a6afdcf914f458c2554",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -104,6 +176,24 @@
     },
     {
       "key": {
+        "uuid": "d7afaa5d_972b9a95",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 612,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-01-12T02:38:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4b2388bb_a00ebf73",
+      "revId": "be861656425ebd09257a3a6afdcf914f458c2554",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0b56c95d_9e355111",
         "filename": "lib/nbd/nbd.c",
         "patchSetId": 10
@@ -115,6 +205,24 @@
       "writtenOn": "2018-01-11T17:43:02Z",
       "side": 1,
       "message": "I think executed_io_list would be a better name here.  This matches the spdk_nbd_io_exec function name.  Otherwise we have two names (processed and exec) which refer to the same thing.",
+      "revId": "be861656425ebd09257a3a6afdcf914f458c2554",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "060bf963_6406cb8f",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 621,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-01-12T02:38:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0b56c95d_9e355111",
       "revId": "be861656425ebd09257a3a6afdcf914f458c2554",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -138,6 +246,24 @@
     },
     {
       "key": {
+        "uuid": "0cc2ef76_1fdb58e3",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 644,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-01-12T02:38:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "086477fd_b41fbe57",
+      "revId": "be861656425ebd09257a3a6afdcf914f458c2554",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9d186911_9e63c701",
         "filename": "lib/nbd/nbd.c",
         "patchSetId": 10
@@ -149,6 +275,24 @@
       "writtenOn": "2018-01-11T17:43:02Z",
       "side": 1,
       "message": "Same here - just return 0.",
+      "revId": "be861656425ebd09257a3a6afdcf914f458c2554",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51d91835_c570d705",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 666,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-01-12T02:38:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9d186911_9e63c701",
       "revId": "be861656425ebd09257a3a6afdcf914f458c2554",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -172,6 +316,24 @@
     },
     {
       "key": {
+        "uuid": "49798b07_2d4983cd",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 670,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-01-12T02:38:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "25f5b8ec_888b9182",
+      "revId": "be861656425ebd09257a3a6afdcf914f458c2554",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8829c990_d70a462f",
         "filename": "lib/nbd/nbd.c",
         "patchSetId": 10
@@ -189,6 +351,24 @@
     },
     {
       "key": {
+        "uuid": "2aa71b07_df759f87",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 681,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-01-12T02:38:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8829c990_d70a462f",
+      "revId": "be861656425ebd09257a3a6afdcf914f458c2554",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2da2634c_b6b10cde",
         "filename": "lib/nbd/nbd.c",
         "patchSetId": 10
@@ -200,6 +380,24 @@
       "writtenOn": "2018-01-11T17:43:02Z",
       "side": 1,
       "message": "Transmit processed io first.",
+      "revId": "be861656425ebd09257a3a6afdcf914f458c2554",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c7d11bb_e96db4c1",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 708,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-01-12T02:38:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2da2634c_b6b10cde",
       "revId": "be861656425ebd09257a3a6afdcf914f458c2554",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
