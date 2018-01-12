@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2a4d4a1e_cadb9179",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-12T05:20:47Z",
+      "side": 1,
+      "message": "What if instead we do not delete_bdev for NIGHTLY test?  Then we still run the 1MB I/O test after running_config.\n\nOf course that means we need to also change the code that checks the wait result.\n\nPlease also add a TODO with a description similar to your commit message - so that future readers understand why we are changing some of this for NIGHTLY test.",
+      "revId": "fe8beaea0b57fd3d8cb92183079e4387d7d4bbb0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
