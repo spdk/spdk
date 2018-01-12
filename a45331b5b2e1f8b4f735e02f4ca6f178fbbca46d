@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1991959a_fefef4c5",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-12T07:16:04Z",
+      "side": 1,
+      "message": "I guess I could. There\u0027s already an auto-generated TOC in the left menubar on spdk.io, but Ack, I\u0027ll add it.",
+      "parentUuid": "09ea590e_8e1623b1",
+      "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "868a74e8_37290405",
         "filename": "doc/vhost.md",
         "patchSetId": 9
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "960814e7_1ff641c7",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-12T07:16:04Z",
+      "side": 1,
+      "message": "\u003e QEMU doesn\u0027t really offer a vhost application\n\nDoesn\u0027t it?. Apart from connecting to a vhost-scsi kernel target, QEMU can create it\u0027s own target:\n\n```\n-device virtio-scsi-pci,id\u003dvirtioscsi0 # create an empty virtio-scsi PCI controller\n-drive file\u003dtest.img,if\u003dnone,id\u003dvs1,format\u003draw # create a casual drive from test.img file\n-device scsi-hd,bus\u003dvirtioscsi0.0,drive\u003dvs1 # connect the drive to the controller\n```\n\nAnd then there\u0027s vhost-user that we use.\n\n\u003e SPDK provides an accelerated vhost target through application of the same SPDK userspace polled-mode principles.\n\nAck, I\u0027ll include this.",
+      "parentUuid": "868a74e8_37290405",
+      "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8564cdcc_7883f44e",
         "filename": "doc/vhost.md",
         "patchSetId": 9
@@ -47,6 +83,24 @@
       "writtenOn": "2018-01-11T23:03:15Z",
       "side": 1,
       "message": "Plus access to NVMe media is also accelerated through use of the NVMe polled mode driver.",
+      "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b7540f7_7f683e6f",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-12T07:16:04Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "8564cdcc_7883f44e",
       "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -141,6 +195,24 @@
     },
     {
       "key": {
+        "uuid": "c947330f_62cf6214",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-12T07:16:04Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "9ca8e898_0a1bef51",
+      "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "444e7fca_41fe45f7",
         "filename": "doc/vhost.md",
         "patchSetId": 9
@@ -152,6 +224,24 @@
       "writtenOn": "2018-01-11T23:03:15Z",
       "side": 1,
       "message": "should we add something here on how to confirm QEMU support vhost-blk?  similar to the vhost-user-scsi-pci,help example above?",
+      "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "05980d56_54c95531",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-12T07:16:04Z",
+      "side": 1,
+      "message": "We could. Ack",
+      "parentUuid": "444e7fca_41fe45f7",
       "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -222,6 +312,24 @@
     },
     {
       "key": {
+        "uuid": "ba9448df_a1c80aa5",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-12T07:16:04Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ab579969_195eed34",
+      "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "490b2313_140e2c07",
         "filename": "doc/vhost.md",
         "patchSetId": 9
@@ -239,6 +347,24 @@
     },
     {
       "key": {
+        "uuid": "e6b0b689_cf721395",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-12T07:16:04Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "490b2313_140e2c07",
+      "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "be813b0c_cc268092",
         "filename": "doc/vhost.md",
         "patchSetId": 9
@@ -250,6 +376,24 @@
       "writtenOn": "2018-01-11T23:03:15Z",
       "side": 1,
       "message": "Maybe clarify here \"if your QEMU supports vhost-blk\".\n\nIt\u0027s possible I\u0027m being overly pedantic - but I\u0027m guessing some people will want to just use an existing QEMU that has vhost-scsi support without rebuilding our QEMU for vhost-blk support.\n\nOr I guess you really don\u0027t need to specify this here - the important part if further below where we start QEMU with a vhost-blk device.",
+      "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ccb6dcf_f90ea864",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-12T07:16:04Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "be813b0c_cc268092",
       "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -296,6 +440,24 @@
     },
     {
       "key": {
+        "uuid": "6fb2bf4d_4fb05e24",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-12T07:16:04Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "bd87f809_64c36300",
+      "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4bee6f5b_c7418c52",
         "filename": "doc/vhost.md",
         "patchSetId": 9
@@ -319,6 +481,30 @@
     },
     {
       "key": {
+        "uuid": "43459c5a_40d9cc42",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-12T07:16:04Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "4bee6f5b_c7418c52",
+      "range": {
+        "startLine": 230,
+        "startChar": 26,
+        "endLine": 230,
+        "endChar": 27
+      },
+      "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6fcc0283_f19e61c7",
         "filename": "doc/vhost.md",
         "patchSetId": 9
@@ -330,6 +516,30 @@
       "writtenOn": "2018-01-11T23:44:07Z",
       "side": 1,
       "message": "Should this be Nvme0n1? When I was running this on my machine, it only worked if I specified the namespace as well as the drive.",
+      "range": {
+        "startLine": 262,
+        "startChar": 54,
+        "endLine": 262,
+        "endChar": 59
+      },
+      "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "429c57ac_a6793c76",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-12T07:16:04Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "6fcc0283_f19e61c7",
       "range": {
         "startLine": 262,
         "startChar": 54,
