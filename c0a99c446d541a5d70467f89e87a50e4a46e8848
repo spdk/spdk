@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "28eb5a5e_42264384",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-12T20:56:03Z",
+      "side": 1,
+      "message": "should this be thin_provision to match the name of the flag in struct spdk_blob_opts?",
+      "revId": "c0a99c446d541a5d70467f89e87a50e4a46e8848",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1270bd83_25928d42",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 27
+      },
+      "lineNbr": 373,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-12T20:56:03Z",
+      "side": 1,
+      "message": "thin_provision (in both places)",
+      "revId": "c0a99c446d541a5d70467f89e87a50e4a46e8848",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e329e966_41f1cf79",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 27
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-12T20:56:03Z",
+      "side": 1,
+      "message": "I think long args name should be --thin_provision.  The help text can keep the \"ed\".",
+      "revId": "c0a99c446d541a5d70467f89e87a50e4a46e8848",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
