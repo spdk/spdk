@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d2800b69_ffb1debf",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 1069,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-12T10:33:42Z",
+      "side": 1,
+      "message": "You mean we should change lvol-\u003ename to new_lvol_name here, right?\nBut, req contains lvol, callback and its arguments. \nDo we have an access to new_lvol_name here?",
+      "parentUuid": "2196b822_009c631e",
+      "revId": "4e37e5a542e9e12b468fad67045b6bacbc8bcbb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9b5325ad_46bd076c",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 48
@@ -30,6 +48,24 @@
       "writtenOn": "2018-01-12T10:15:14Z",
       "side": 1,
       "message": "Please assign req-\u003elvol \u003d lvol so it can be later used in callback.",
+      "revId": "4e37e5a542e9e12b468fad67045b6bacbc8bcbb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "09db7bcd_8d009555",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 1089,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-12T10:33:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9b5325ad_46bd076c",
       "revId": "4e37e5a542e9e12b468fad67045b6bacbc8bcbb3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
