@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "392fb60f_89fa8272",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-12T13:40:15Z",
+      "side": 1,
+      "message": "I understand your point, but this won\u0027t work, as we provide (cluster_idx + j) to _spdk_bs_cluster_to_lba function which will result in value \u003d 0 only for j \u003d 0, but we will still have cluster_idx \u003d\u003d 0 (thin provisioned), but j !\u003d 0 and then we will assign garbage LBA to cluster map.",
+      "parentUuid": "37defd6c_856f25ac",
+      "revId": "dffef0a80b6cd3895de5f4e35666a823dc457eed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2b4b6931_8cefdfe9",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 28
@@ -30,6 +48,24 @@
       "writtenOn": "2018-01-10T22:30:56Z",
       "side": 1,
       "message": "I think there may be a slightly simpler way to modify the body of this loop. Maybe something like this:\n\nuint64_t next_lba \u003d blob-\u003eactive.clusters[i];\n\nif (next_lba \u003e 0 \u0026\u0026 (lba + lba_count) \u003d\u003d next_lba) {\n        /* This cluster is contiguous with the previous one. */\n        lba_count +\u003d _spdk_bs_cluster_to_lba(bs, 1);\n        continue;\n}\n\n/* This cluster is not contiguous with the previous one. */\n\n/* If a run of LBAs has been built up, send them\n * as an unmap.\n */\nif (lba_count \u003e 0) {\n        spdk_bs_batch_unmap(batch, lba, lba_count);\n}\n\n/* Start building the next batch */\nlba \u003d next_lba;\nif (next_lba \u003e 0) {\n        lba_count \u003d _spdk_bs_cluster_to_lba(bs, 1);\n}\n\nEither way - follow Jim\u0027s advice and write a zillion unit tests. This stuff is really tricky.",
+      "revId": "dffef0a80b6cd3895de5f4e35666a823dc457eed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "06d7694d_514201a3",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 845,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-12T13:40:15Z",
+      "side": 1,
+      "message": "I like this code, but with one small fix - we have to add \u0027else\u0027 at the end, where we set lba_count \u003d 0, because if we don\u0027t do this we will try to unmap when we land in unallocated cluster after allocated one.",
+      "parentUuid": "2b4b6931_8cefdfe9",
       "revId": "dffef0a80b6cd3895de5f4e35666a823dc457eed",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "1452e382_b4916868",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 865,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-12T13:40:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cc705359_53f0e46a",
+      "revId": "dffef0a80b6cd3895de5f4e35666a823dc457eed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9fd0d1fb_4d7697e4",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 28
@@ -64,6 +118,24 @@
       "writtenOn": "2018-01-10T21:55:53Z",
       "side": 1,
       "message": "I think these three lines need to go to the end of the next_lba !\u003d 0 block.\n\nThis is tricky - seems like some unit tests would be in order here.  Most of the code in this function could go into a new static function - and then the new static function could be the target of new unit tests.\n\nA few notes:\ndev_unmap in bs_dev_common.c should be modified to zero the affected LBAs.\nThe unit tests could write 0xFF to the first byte in each cluster (since the unit test block device is just a malloc buffer).\nThen after the call, you check that only the appropriate bytes were cleared.\nFor the initial patch (before this one) that does not have thin provisioning support, you do things like create a blob with clusters 8, 9, 10 and make sure that only the first byte in those clusters were set to 0.  Check that other clusters first byte is still 0xFF.\n\nThen in this patch when adding thin provisioning, add new test cases with cluster arrays that have some indices of 0.\n\nBen and I have had bugs in this code before, so unit tests would really be helpful.",
+      "revId": "dffef0a80b6cd3895de5f4e35666a823dc457eed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "30de721a_511cbcbe",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 872,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-12T13:40:15Z",
+      "side": 1,
+      "message": "I like Ben\u0027s approach here and will implement it. I\u0027m working on unit tests right now. They will be uploaded in separate patch set. Thanks for suggestions :)",
+      "parentUuid": "9fd0d1fb_4d7697e4",
       "revId": "dffef0a80b6cd3895de5f4e35666a823dc457eed",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "974d4d23_4d5c29ab",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1048,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-12T13:40:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5d989df3_45a9b0cc",
+      "revId": "dffef0a80b6cd3895de5f4e35666a823dc457eed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7702a1f2_2f2f54ee",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 28
@@ -98,6 +188,24 @@
       "writtenOn": "2018-01-10T22:30:56Z",
       "side": 1,
       "message": "The blob state was already marked as dirty on line 1036.",
+      "revId": "dffef0a80b6cd3895de5f4e35666a823dc457eed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ea40db8_488a43e5",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1068,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-12T13:40:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7702a1f2_2f2f54ee",
       "revId": "dffef0a80b6cd3895de5f4e35666a823dc457eed",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
