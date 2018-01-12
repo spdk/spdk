@@ -1,0 +1,159 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "acf69db2_5e7b8282",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T16:05:38Z",
+      "side": 1,
+      "message": "Please add references like {#link}",
+      "revId": "7f80e58f81a8ad800f53320764322907c9b8a7bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e1e9c33_c2fdcb46",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T16:05:38Z",
+      "side": 1,
+      "message": "This section suits into Introduction below. Maybe combine those two.",
+      "range": {
+        "startLine": 3,
+        "startChar": 0,
+        "endLine": 3,
+        "endChar": 18
+      },
+      "revId": "7f80e58f81a8ad800f53320764322907c9b8a7bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8f96d08a_cfdb5cf9",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T16:05:38Z",
+      "side": 1,
+      "message": "Following language from below: \"implement block device interface\"",
+      "range": {
+        "startLine": 6,
+        "startChar": 39,
+        "endLine": 6,
+        "endChar": 79
+      },
+      "revId": "7f80e58f81a8ad800f53320764322907c9b8a7bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92ef4381_a5d68b16",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T16:05:38Z",
+      "side": 1,
+      "message": "usage",
+      "range": {
+        "startLine": 19,
+        "startChar": 16,
+        "endLine": 19,
+        "endChar": 21
+      },
+      "revId": "7f80e58f81a8ad800f53320764322907c9b8a7bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb982af5_c6edc5a3",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T16:05:38Z",
+      "side": 1,
+      "message": "Please keep capitalization consistent, \"SPDK\"",
+      "range": {
+        "startLine": 22,
+        "startChar": 54,
+        "endLine": 22,
+        "endChar": 58
+      },
+      "revId": "7f80e58f81a8ad800f53320764322907c9b8a7bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ce5bac1_826ba9d7",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T16:05:38Z",
+      "side": 1,
+      "message": "More info might be useful here touching on io channels and their usage.",
+      "range": {
+        "startLine": 57,
+        "startChar": 0,
+        "endLine": 57,
+        "endChar": 32
+      },
+      "revId": "7f80e58f81a8ad800f53320764322907c9b8a7bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd3a98b3_92b2e76f",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-12T16:05:38Z",
+      "side": 1,
+      "message": "existing",
+      "range": {
+        "startLine": 66,
+        "startChar": 6,
+        "endLine": 66,
+        "endChar": 15
+      },
+      "revId": "7f80e58f81a8ad800f53320764322907c9b8a7bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
