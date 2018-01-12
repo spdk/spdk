@@ -40,7 +40,7 @@
 
 #include "bdev_virtio.h"
 
-struct rpc_virtio_user_scsi_dev {
+struct rpc_construct_virtio_scsi_dev {
 	char *path;
 	char *name;
 	uint32_t vq_count;
@@ -50,14 +50,14 @@ struct rpc_virtio_user_scsi_dev {
 };
 
 static const struct spdk_json_object_decoder rpc_construct_virtio_user_scsi_dev[] = {
-	{"path", offsetof(struct rpc_virtio_user_scsi_dev, path), spdk_json_decode_string },
-	{"name", offsetof(struct rpc_virtio_user_scsi_dev, name), spdk_json_decode_string },
-	{"vq_count", offsetof(struct rpc_virtio_user_scsi_dev, vq_size), spdk_json_decode_uint32, true },
-	{"vq_size", offsetof(struct rpc_virtio_user_scsi_dev, vq_size), spdk_json_decode_uint32, true },
+	{"path", offsetof(struct rpc_construct_virtio_scsi_dev, path), spdk_json_decode_string },
+	{"name", offsetof(struct rpc_construct_virtio_scsi_dev, name), spdk_json_decode_string },
+	{"vq_count", offsetof(struct rpc_construct_virtio_scsi_dev, vq_size), spdk_json_decode_uint32, true },
+	{"vq_size", offsetof(struct rpc_construct_virtio_scsi_dev, vq_size), spdk_json_decode_uint32, true },
 };
 
 static void
-free_rpc_connect_virtio_user_scsi_dev(struct rpc_virtio_user_scsi_dev *req)
+free_rpc_construct_virtio_scsi_dev(struct rpc_construct_virtio_scsi_dev *req)
 {
 	if (!req) {
 		return;
@@ -69,16 +69,16 @@ free_rpc_connect_virtio_user_scsi_dev(struct rpc_virtio_user_scsi_dev *req)
 }
 
 static void
-rpc_create_virtio_user_scsi_bdev_cb(void *ctx, int result, struct spdk_bdev **bdevs, size_t cnt)
+rpc_construct_virtio_scsi_dev_cb(void *ctx, int result, struct spdk_bdev **bdevs, size_t cnt)
 {
-	struct rpc_virtio_user_scsi_dev *req = ctx;
+	struct rpc_construct_virtio_scsi_dev *req = ctx;
 	struct spdk_json_write_ctx *w;
 	size_t i;
 
 	if (result) {
 		spdk_jsonrpc_send_error_response(req->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 spdk_strerror(-result));
-		free_rpc_connect_virtio_user_scsi_dev(req);
+		free_rpc_construct_virtio_scsi_dev(req);
 		return;
 	}
 
@@ -94,14 +94,14 @@ rpc_create_virtio_user_scsi_bdev_cb(void *ctx, int result, struct spdk_bdev **bd
 		spdk_jsonrpc_end_result(req->request, w);
 	}
 
-	free_rpc_connect_virtio_user_scsi_dev(ctx);
+	free_rpc_construct_virtio_scsi_dev(ctx);
 }
 
 static void
 spdk_rpc_create_virtio_user_scsi_bdev(struct spdk_jsonrpc_request *request,
 				      const struct spdk_json_val *params)
 {
-	struct rpc_virtio_user_scsi_dev *req;
+	struct rpc_construct_virtio_scsi_dev *req;
 	int rc;
 
 	req = calloc(1, sizeof(*req));
@@ -122,7 +122,7 @@ spdk_rpc_create_virtio_user_scsi_bdev(struct spdk_jsonrpc_request *request,
 
 	req->request = request;
 	rc = bdev_virtio_user_scsi_dev_create(req->name, req->path, req->vq_count, req->vq_size,
-					      rpc_create_virtio_user_scsi_bdev_cb, req);
+					      rpc_construct_virtio_scsi_dev_cb, req);
 	if (rc < 0) {
 		goto invalid;
 	}
@@ -132,7 +132,7 @@ spdk_rpc_create_virtio_user_scsi_bdev(struct spdk_jsonrpc_request *request,
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 					 spdk_strerror(-rc));
-	free_rpc_connect_virtio_user_scsi_dev(req);
+	free_rpc_construct_virtio_scsi_dev(req);
 }
 SPDK_RPC_REGISTER("construct_virtio_user_scsi_bdev", spdk_rpc_create_virtio_user_scsi_bdev);
 
