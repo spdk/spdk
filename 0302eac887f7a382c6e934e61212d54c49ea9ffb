@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bfcde76d_90bd3d82",
+        "filename": "lib/bdev/virtio/bdev_virtio_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-13T10:10:48Z",
+      "side": 1,
+      "message": "Hi Dariusz, \n\nIf notifications_desc is nullified after spdk_bdev_close(), notify_desc may be able to be used as the mark of disk removal.\n\nIt looks that vhost_blk uses the descriptor as the mark of disk removal.\nvhost_blk should adjust to vhost_scsi?\n\nYour feedback will be helpful. Of course this patch is nice as it is.",
+      "range": {
+        "startLine": 159,
+        "startChar": 24,
+        "endLine": 159,
+        "endChar": 36
+      },
+      "revId": "0302eac887f7a382c6e934e61212d54c49ea9ffb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
