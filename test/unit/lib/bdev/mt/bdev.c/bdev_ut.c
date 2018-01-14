@@ -479,6 +479,7 @@ enomem(void)
 {
 	struct spdk_io_channel *io_ch;
 	struct spdk_bdev_channel *bdev_ch;
+	struct spdk_bdev_shared_channel *shared_ch;
 	struct ut_bdev_channel *ut_ch;
 	const uint32_t IO_ARRAY_SIZE = 64;
 	const uint32_t AVAIL = 20;
@@ -492,6 +493,7 @@ enomem(void)
 	set_thread(0);
 	io_ch = spdk_bdev_get_io_channel(g_desc);
 	bdev_ch = spdk_io_channel_get_ctx(io_ch);
+	shared_ch = bdev_ch->shared_ch;
 	ut_ch = spdk_io_channel_get_ctx(bdev_ch->channel);
 	ut_ch->avail_cnt = AVAIL;
 
@@ -501,7 +503,7 @@ enomem(void)
 		rc = spdk_bdev_read_blocks(g_desc, io_ch, NULL, 0, 1, enomem_done, &status[i]);
 		CU_ASSERT(rc == 0);
 	}
-	CU_ASSERT(TAILQ_EMPTY(&bdev_ch->nomem_io));
+	CU_ASSERT(TAILQ_EMPTY(&shared_ch->nomem_io));
 
 	/*
 	 * Next, submit one additional I/O.  This one should fail with ENOMEM and then go onto
@@ -510,8 +512,8 @@ enomem(void)
 	status[AVAIL] = SPDK_BDEV_IO_STATUS_PENDING;
 	rc = spdk_bdev_read_blocks(g_desc, io_ch, NULL, 0, 1, enomem_done, &status[AVAIL]);
 	CU_ASSERT(rc == 0);
-	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&bdev_ch->nomem_io));
-	first_io = TAILQ_FIRST(&bdev_ch->nomem_io);
+	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&shared_ch->nomem_io));
+	first_io = TAILQ_FIRST(&shared_ch->nomem_io);
 
 	/*
 	 * Now submit a bunch more I/O.  These should all fail with ENOMEM and get queued behind
@@ -524,10 +526,10 @@ enomem(void)
 	}
 
 	/* Assert that first_io is still at the head of the list. */
-	CU_ASSERT(TAILQ_FIRST(&bdev_ch->nomem_io) == first_io);
-	CU_ASSERT(bdev_io_tailq_cnt(&bdev_ch->nomem_io) == (IO_ARRAY_SIZE - AVAIL));
-	nomem_cnt = bdev_io_tailq_cnt(&bdev_ch->nomem_io);
-	CU_ASSERT(bdev_ch->nomem_threshold == (AVAIL - NOMEM_THRESHOLD_COUNT));
+	CU_ASSERT(TAILQ_FIRST(&shared_ch->nomem_io) == first_io);
+	CU_ASSERT(bdev_io_tailq_cnt(&shared_ch->nomem_io) == (IO_ARRAY_SIZE - AVAIL));
+	nomem_cnt = bdev_io_tailq_cnt(&shared_ch->nomem_io);
+	CU_ASSERT(shared_ch->nomem_threshold == (AVAIL - NOMEM_THRESHOLD_COUNT));
 
 	/*
 	 * Complete 1 I/O only.  The key check here is bdev_io_tailq_cnt - this should not have
@@ -535,19 +537,19 @@ enomem(void)
 	 *  list.
 	 */
 	stub_complete_io(1);
-	CU_ASSERT(bdev_io_tailq_cnt(&bdev_ch->nomem_io) == nomem_cnt);
+	CU_ASSERT(bdev_io_tailq_cnt(&shared_ch->nomem_io) == nomem_cnt);
 
 	/*
 	 * Complete enough I/O to hit the nomem_theshold.  This should trigger retrying nomem_io,
 	 *  and we should see I/O get resubmitted to the test bdev module.
 	 */
 	stub_complete_io(NOMEM_THRESHOLD_COUNT - 1);
-	CU_ASSERT(bdev_io_tailq_cnt(&bdev_ch->nomem_io) < nomem_cnt);
-	nomem_cnt = bdev_io_tailq_cnt(&bdev_ch->nomem_io);
+	CU_ASSERT(bdev_io_tailq_cnt(&shared_ch->nomem_io) < nomem_cnt);
+	nomem_cnt = bdev_io_tailq_cnt(&shared_ch->nomem_io);
 
 	/* Complete 1 I/O only.  This should not trigger retrying the queued nomem_io. */
 	stub_complete_io(1);
-	CU_ASSERT(bdev_io_tailq_cnt(&bdev_ch->nomem_io) == nomem_cnt);
+	CU_ASSERT(bdev_io_tailq_cnt(&shared_ch->nomem_io) == nomem_cnt);
 
 	/*
 	 * Send a reset and confirm that all I/O are completed, including the ones that
@@ -560,8 +562,8 @@ enomem(void)
 	/* This will complete the reset. */
 	stub_complete_io(0);
 
-	CU_ASSERT(bdev_io_tailq_cnt(&bdev_ch->nomem_io) == 0);
-	CU_ASSERT(bdev_ch->io_outstanding == 0);
+	CU_ASSERT(bdev_io_tailq_cnt(&shared_ch->nomem_io) == 0);
+	CU_ASSERT(shared_ch->io_outstanding == 0);
 
 	spdk_put_io_channel(io_ch);
 	poll_threads();
