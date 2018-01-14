@@ -486,6 +486,7 @@ enomem(void)
 {
 	struct spdk_io_channel *io_ch;
 	struct spdk_bdev_channel *bdev_ch;
+	struct spdk_bdev_module_channel *module_ch;
 	struct ut_bdev_channel *ut_ch;
 	const uint32_t IO_ARRAY_SIZE = 64;
 	const uint32_t AVAIL = 20;
@@ -499,6 +500,7 @@ enomem(void)
 	set_thread(0);
 	io_ch = spdk_bdev_get_io_channel(g_desc);
 	bdev_ch = spdk_io_channel_get_ctx(io_ch);
+	module_ch = bdev_ch->module_ch;
 	ut_ch = spdk_io_channel_get_ctx(bdev_ch->channel);
 	ut_ch->avail_cnt = AVAIL;
 
@@ -508,7 +510,7 @@ enomem(void)
 		rc = spdk_bdev_read_blocks(g_desc, io_ch, NULL, 0, 1, enomem_done, &status[i]);
 		CU_ASSERT(rc == 0);
 	}
-	CU_ASSERT(TAILQ_EMPTY(&bdev_ch->nomem_io));
+	CU_ASSERT(TAILQ_EMPTY(&module_ch->nomem_io));
 
 	/*
 	 * Next, submit one additional I/O.  This one should fail with ENOMEM and then go onto
@@ -517,8 +519,8 @@ enomem(void)
 	status[AVAIL] = SPDK_BDEV_IO_STATUS_PENDING;
 	rc = spdk_bdev_read_blocks(g_desc, io_ch, NULL, 0, 1, enomem_done, &status[AVAIL]);
 	CU_ASSERT(rc == 0);
-	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&bdev_ch->nomem_io));
-	first_io = TAILQ_FIRST(&bdev_ch->nomem_io);
+	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&module_ch->nomem_io));
+	first_io = TAILQ_FIRST(&module_ch->nomem_io);
 
 	/*
 	 * Now submit a bunch more I/O.  These should all fail with ENOMEM and get queued behind
@@ -531,10 +533,10 @@ enomem(void)
 	}
 
 	/* Assert that first_io is still at the head of the list. */
-	CU_ASSERT(TAILQ_FIRST(&bdev_ch->nomem_io) == first_io);
-	CU_ASSERT(bdev_io_tailq_cnt(&bdev_ch->nomem_io) == (IO_ARRAY_SIZE - AVAIL));
-	nomem_cnt = bdev_io_tailq_cnt(&bdev_ch->nomem_io);
-	CU_ASSERT(bdev_ch->nomem_threshold == (AVAIL - NOMEM_THRESHOLD_COUNT));
+	CU_ASSERT(TAILQ_FIRST(&module_ch->nomem_io) == first_io);
+	CU_ASSERT(bdev_io_tailq_cnt(&module_ch->nomem_io) == (IO_ARRAY_SIZE - AVAIL));
+	nomem_cnt = bdev_io_tailq_cnt(&module_ch->nomem_io);
+	CU_ASSERT(module_ch->nomem_threshold == (AVAIL - NOMEM_THRESHOLD_COUNT));
 
 	/*
 	 * Complete 1 I/O only.  The key check here is bdev_io_tailq_cnt - this should not have
@@ -542,19 +544,19 @@ enomem(void)
 	 *  list.
 	 */
 	stub_complete_io(g_bdev.io_target, 1);
-	CU_ASSERT(bdev_io_tailq_cnt(&bdev_ch->nomem_io) == nomem_cnt);
+	CU_ASSERT(bdev_io_tailq_cnt(&module_ch->nomem_io) == nomem_cnt);
 
 	/*
 	 * Complete enough I/O to hit the nomem_theshold.  This should trigger retrying nomem_io,
 	 *  and we should see I/O get resubmitted to the test bdev module.
 	 */
 	stub_complete_io(g_bdev.io_target, NOMEM_THRESHOLD_COUNT - 1);
-	CU_ASSERT(bdev_io_tailq_cnt(&bdev_ch->nomem_io) < nomem_cnt);
-	nomem_cnt = bdev_io_tailq_cnt(&bdev_ch->nomem_io);
+	CU_ASSERT(bdev_io_tailq_cnt(&module_ch->nomem_io) < nomem_cnt);
+	nomem_cnt = bdev_io_tailq_cnt(&module_ch->nomem_io);
 
 	/* Complete 1 I/O only.  This should not trigger retrying the queued nomem_io. */
 	stub_complete_io(g_bdev.io_target, 1);
-	CU_ASSERT(bdev_io_tailq_cnt(&bdev_ch->nomem_io) == nomem_cnt);
+	CU_ASSERT(bdev_io_tailq_cnt(&module_ch->nomem_io) == nomem_cnt);
 
 	/*
 	 * Send a reset and confirm that all I/O are completed, including the ones that
@@ -567,10 +569,82 @@ enomem(void)
 	/* This will complete the reset. */
 	stub_complete_io(g_bdev.io_target, 0);
 
-	CU_ASSERT(bdev_io_tailq_cnt(&bdev_ch->nomem_io) == 0);
-	CU_ASSERT(bdev_ch->io_outstanding == 0);
+	CU_ASSERT(bdev_io_tailq_cnt(&module_ch->nomem_io) == 0);
+	CU_ASSERT(module_ch->io_outstanding == 0);
 
 	spdk_put_io_channel(io_ch);
+	poll_threads();
+	teardown_test();
+}
+
+static void
+enomem_multi_bdev(void)
+{
+	struct spdk_io_channel *io_ch;
+	struct spdk_bdev_channel *bdev_ch;
+	struct spdk_bdev_module_channel *module_ch;
+	struct ut_bdev_channel *ut_ch;
+	const uint32_t IO_ARRAY_SIZE = 64;
+	const uint32_t AVAIL = 20;
+	enum spdk_bdev_io_status status[IO_ARRAY_SIZE];
+	uint32_t i;
+	struct ut_bdev *second_bdev;
+	struct spdk_bdev_desc *second_desc;
+	struct spdk_bdev_channel *second_bdev_ch;
+	struct spdk_io_channel *second_ch;
+	int rc;
+
+	setup_test();
+
+	/* Register second bdev with the same io_target  */
+	second_bdev = calloc(1, sizeof(*second_bdev));
+	SPDK_CU_ASSERT_FATAL(second_bdev != NULL);
+	register_bdev(second_bdev, "ut_bdev2", g_bdev.io_target);
+	spdk_bdev_open(&second_bdev->bdev, true, NULL, NULL, &second_desc);
+
+	set_thread(0);
+	io_ch = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch = spdk_io_channel_get_ctx(io_ch);
+	module_ch = bdev_ch->module_ch;
+	ut_ch = spdk_io_channel_get_ctx(bdev_ch->channel);
+	ut_ch->avail_cnt = AVAIL;
+
+	second_ch = spdk_bdev_get_io_channel(second_desc);
+	second_bdev_ch = spdk_io_channel_get_ctx(second_ch);
+	SPDK_CU_ASSERT_FATAL(module_ch == second_bdev_ch->module_ch);
+
+	/* Saturate io_target through bdev A. */
+	for (i = 0; i < AVAIL; i++) {
+		status[i] = SPDK_BDEV_IO_STATUS_PENDING;
+		rc = spdk_bdev_read_blocks(g_desc, io_ch, NULL, 0, 1, enomem_done, &status[i]);
+		CU_ASSERT(rc == 0);
+	}
+	CU_ASSERT(TAILQ_EMPTY(&module_ch->nomem_io));
+
+	/*
+	 * Now submit I/O through the second bdev. This should fail with ENOMEM
+	 * and then go onto the nomem_io list.
+	 */
+	status[AVAIL] = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(second_desc, second_ch, NULL, 0, 1, enomem_done, &status[AVAIL]);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&module_ch->nomem_io));
+
+	/* Complete first bdev's I/O. This should retry sending second bdev's nomem_io */
+	stub_complete_io(g_bdev.io_target, AVAIL);
+
+	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&module_ch->nomem_io));
+	CU_ASSERT(module_ch->io_outstanding == 1);
+
+	/* Now complete our retried I/O  */
+	stub_complete_io(g_bdev.io_target, 1);
+	SPDK_CU_ASSERT_FATAL(module_ch->io_outstanding == 0);
+
+	spdk_put_io_channel(io_ch);
+	spdk_put_io_channel(second_ch);
+	spdk_bdev_close(second_desc);
+	unregister_bdev(second_bdev);
+	free(second_bdev);
 	poll_threads();
 	teardown_test();
 }
@@ -596,7 +670,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "put_channel_during_reset", put_channel_during_reset) == NULL ||
 		CU_add_test(suite, "aborted_reset", aborted_reset) == NULL ||
 		CU_add_test(suite, "io_during_reset", io_during_reset) == NULL ||
-		CU_add_test(suite, "enomem", enomem) == NULL
+		CU_add_test(suite, "enomem", enomem) == NULL ||
+		CU_add_test(suite, "enomem_multi_bdev", enomem_multi_bdev) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
