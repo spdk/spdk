@@ -138,10 +138,6 @@ struct spdk_bdev_channel {
 
 	struct spdk_bdev_io_stat stat;
 
-	bdev_io_tailq_t		queued_resets;
-
-	uint32_t		flags;
-
 	/* Per-device channel */
 	struct spdk_bdev_shared_channel *shared_ch;
 
@@ -160,6 +156,8 @@ struct spdk_bdev_shared_channel {
 	 */
 	uint64_t		io_outstanding;
 
+	bdev_io_tailq_t		queued_resets;
+
 	/*
 	 * Queue of IO awaiting retry because of a previous NOMEM status returned
 	 *  on this channel.
@@ -170,6 +168,8 @@ struct spdk_bdev_shared_channel {
 	 * Threshold which io_outstanding must drop to before retrying nomem_io.
 	 */
 	uint64_t		nomem_threshold;
+
+	uint32_t		flags;
 
 	struct spdk_io_channel	*owner;
 
@@ -803,17 +803,17 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 
 	shared_ch->io_outstanding++;
 	bdev_io->in_submit_request = true;
-	if (spdk_likely(bdev_ch->flags == 0)) {
+	if (spdk_likely(shared_ch->flags == 0)) {
 		if (spdk_likely(TAILQ_EMPTY(&shared_ch->nomem_io))) {
 			bdev->fn_table->submit_request(ch, bdev_io);
 		} else {
 			shared_ch->io_outstanding--;
 			TAILQ_INSERT_TAIL(&shared_ch->nomem_io, bdev_io, link);
 		}
-	} else if (bdev_ch->flags & BDEV_CH_RESET_IN_PROGRESS) {
+	} else if (shared_ch->flags & BDEV_CH_RESET_IN_PROGRESS) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	} else {
-		SPDK_ERRLOG("unknown bdev_ch flag %x found\n", bdev_ch->flags);
+		SPDK_ERRLOG("unknown bdev_ch flag %x found\n", shared_ch->flags);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
 	bdev_io->in_submit_request = false;
@@ -899,16 +899,16 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 		}
 
 		shared_ch->io_outstanding = 0;
+		TAILQ_INIT(&shared_ch->queued_resets);
 		TAILQ_INIT(&shared_ch->nomem_io);
 		shared_ch->nomem_threshold = 0;
+		shared_ch->flags = 0;
 		shared_ch->owner = ch->channel;
 		shared_ch->ref = 1;
 		TAILQ_INSERT_TAIL(&mgmt_ch->shared_channels, shared_ch, link);
 	}
 
 	memset(&ch->stat, 0, sizeof(ch->stat));
-	TAILQ_INIT(&ch->queued_resets);
-	ch->flags = 0;
 	ch->shared_ch = shared_ch;
 
 #ifdef SPDK_CONFIG_VTUNE
@@ -991,7 +991,7 @@ spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 
 	mgmt_channel = spdk_io_channel_get_ctx(ch->mgmt_channel);
 
-	_spdk_bdev_abort_queued_io(&ch->queued_resets, ch);
+	_spdk_bdev_abort_queued_io(&shared_ch->queued_resets, ch);
 	_spdk_bdev_abort_queued_io(&shared_ch->nomem_io, ch);
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_small, ch);
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_large, ch);
@@ -1536,10 +1536,11 @@ static void
 _spdk_bdev_reset_dev(struct spdk_io_channel_iter *i, int status)
 {
 	struct spdk_bdev_channel *ch = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_bdev_shared_channel	*shared_ch = ch->shared_ch;
 	struct spdk_bdev_io *bdev_io;
 
-	bdev_io = TAILQ_FIRST(&ch->queued_resets);
-	TAILQ_REMOVE(&ch->queued_resets, bdev_io, link);
+	bdev_io = TAILQ_FIRST(&shared_ch->queued_resets);
+	TAILQ_REMOVE(&shared_ch->queued_resets, bdev_io, link);
 	spdk_bdev_io_submit_reset(bdev_io);
 }
 
@@ -1556,7 +1557,7 @@ _spdk_bdev_reset_freeze_channel(struct spdk_io_channel_iter *i)
 	mgmt_channel = spdk_io_channel_get_ctx(channel->mgmt_channel);
 	shared_ch = channel->shared_ch;
 
-	channel->flags |= BDEV_CH_RESET_IN_PROGRESS;
+	shared_ch->flags |= BDEV_CH_RESET_IN_PROGRESS;
 
 	_spdk_bdev_abort_queued_io(&shared_ch->nomem_io, channel);
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_small, channel);
@@ -1578,12 +1579,13 @@ static void
 _spdk_bdev_channel_start_reset(struct spdk_bdev_channel *ch)
 {
 	struct spdk_bdev *bdev = ch->bdev;
+	struct spdk_bdev_shared_channel	*shared_ch = ch->shared_ch;
 
-	assert(!TAILQ_EMPTY(&ch->queued_resets));
+	assert(!TAILQ_EMPTY(&shared_ch->queued_resets));
 
 	pthread_mutex_lock(&bdev->mutex);
 	if (bdev->reset_in_progress == NULL) {
-		bdev->reset_in_progress = TAILQ_FIRST(&ch->queued_resets);
+		bdev->reset_in_progress = TAILQ_FIRST(&shared_ch->queued_resets);
 		/*
 		 * Take a channel reference for the target bdev for the life of this
 		 *  reset.  This guards against the channel getting destroyed while
@@ -1604,6 +1606,7 @@ spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	struct spdk_bdev *bdev = desc->bdev;
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	struct spdk_bdev_shared_channel	*shared_ch = channel->shared_ch;
 
 	bdev_io = spdk_bdev_get_io(channel->mgmt_channel);
 	if (!bdev_io) {
@@ -1617,7 +1620,7 @@ spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
 	pthread_mutex_lock(&bdev->mutex);
-	TAILQ_INSERT_TAIL(&channel->queued_resets, bdev_io, link);
+	TAILQ_INSERT_TAIL(&shared_ch->queued_resets, bdev_io, link);
 	pthread_mutex_unlock(&bdev->mutex);
 
 	_spdk_bdev_channel_start_reset(channel);
@@ -1827,9 +1830,10 @@ _spdk_bdev_unfreeze_channel(struct spdk_io_channel_iter *i)
 {
 	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
 	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+	struct spdk_bdev_shared_channel	*shared_ch = ch->shared_ch;
 
-	ch->flags &= ~BDEV_CH_RESET_IN_PROGRESS;
-	if (!TAILQ_EMPTY(&ch->queued_resets)) {
+	shared_ch->flags &= ~BDEV_CH_RESET_IN_PROGRESS;
+	if (!TAILQ_EMPTY(&shared_ch->queued_resets)) {
 		_spdk_bdev_channel_start_reset(ch);
 	}
 

@@ -353,6 +353,7 @@ io_during_reset(void)
 {
 	struct spdk_io_channel *io_ch[2];
 	struct spdk_bdev_channel *bdev_ch[2];
+	struct spdk_bdev_shared_channel *shared_ch[2];
 	enum spdk_bdev_io_status status0, status1, status_reset;
 	int rc;
 
@@ -365,7 +366,8 @@ io_during_reset(void)
 	set_thread(0);
 	io_ch[0] = spdk_bdev_get_io_channel(g_desc);
 	bdev_ch[0] = spdk_io_channel_get_ctx(io_ch[0]);
-	CU_ASSERT(bdev_ch[0]->flags == 0);
+	shared_ch[0] = bdev_ch[0]->shared_ch;
+	CU_ASSERT(shared_ch[0]->flags == 0);
 	status0 = SPDK_BDEV_IO_STATUS_PENDING;
 	rc = spdk_bdev_read_blocks(g_desc, io_ch[0], NULL, 0, 1, io_during_reset_done, &status0);
 	CU_ASSERT(rc == 0);
@@ -373,7 +375,8 @@ io_during_reset(void)
 	set_thread(1);
 	io_ch[1] = spdk_bdev_get_io_channel(g_desc);
 	bdev_ch[1] = spdk_io_channel_get_ctx(io_ch[1]);
-	CU_ASSERT(bdev_ch[1]->flags == 0);
+	shared_ch[1] = bdev_ch[1]->shared_ch;
+	CU_ASSERT(shared_ch[1]->flags == 0);
 	status1 = SPDK_BDEV_IO_STATUS_PENDING;
 	rc = spdk_bdev_read_blocks(g_desc, io_ch[1], NULL, 0, 1, io_during_reset_done, &status1);
 	CU_ASSERT(rc == 0);
@@ -400,11 +403,11 @@ io_during_reset(void)
 	rc = spdk_bdev_reset(g_desc, io_ch[0], io_during_reset_done, &status_reset);
 	CU_ASSERT(rc == 0);
 
-	CU_ASSERT(bdev_ch[0]->flags == 0);
-	CU_ASSERT(bdev_ch[1]->flags == 0);
+	CU_ASSERT(shared_ch[0]->flags == 0);
+	CU_ASSERT(shared_ch[1]->flags == 0);
 	poll_threads();
-	CU_ASSERT(bdev_ch[0]->flags == BDEV_CH_RESET_IN_PROGRESS);
-	CU_ASSERT(bdev_ch[1]->flags == BDEV_CH_RESET_IN_PROGRESS);
+	CU_ASSERT(shared_ch[0]->flags == BDEV_CH_RESET_IN_PROGRESS);
+	CU_ASSERT(shared_ch[1]->flags == BDEV_CH_RESET_IN_PROGRESS);
 
 	set_thread(0);
 	status0 = SPDK_BDEV_IO_STATUS_PENDING;
