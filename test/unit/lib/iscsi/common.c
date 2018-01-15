@@ -1,9 +1,11 @@
 #include "iscsi/task.h"
 #include "iscsi/iscsi.h"
 #include "iscsi/conn.h"
+#include "iscsi/acceptor.h"
 
 #include "spdk/env.h"
 #include "spdk/event.h"
+#include "spdk/net.h"
 
 #include "spdk_internal/log.h"
 
@@ -98,6 +100,51 @@ spdk_scsi_dev_get_name(const struct spdk_scsi_dev *dev)
 	}
 
 	return NULL;
+}
+
+void
+spdk_iscsi_acceptor_start(struct spdk_iscsi_portal *p)
+{
+}
+
+void
+spdk_iscsi_acceptor_stop(struct spdk_iscsi_portal *p)
+{
+}
+
+int
+spdk_sock_listen(const char *ip, int port)
+{
+	return 0;
+}
+
+int
+spdk_sock_close(int sock)
+{
+	return 0;
+}
+
+uint64_t
+spdk_app_get_core_mask(void)
+{
+	return 0xFFFFFFFFFFFFFFFF;
+}
+
+int
+spdk_app_parse_core_mask(const char *mask, uint64_t *cpumask)
+{
+	char *end;
+
+	if (mask == NULL || cpumask == NULL) {
+		return -1;
+	}
+
+	*cpumask = strtoull(mask, &end, 16);
+	if (*end != '\0' || errno) {
+		return -1;
+	}
+
+	return 0;
 }
 
 uint32_t
