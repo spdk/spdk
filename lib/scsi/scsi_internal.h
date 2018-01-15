@@ -136,6 +136,7 @@ extern struct spdk_lun_db_entry *spdk_scsi_lun_list_head;
  */
 typedef struct spdk_scsi_lun _spdk_scsi_lun;
 
+bool spdk_scsi_dev_lun_removable(struct spdk_scsi_dev *scsi_dev, int id);
 _spdk_scsi_lun *spdk_scsi_lun_construct(struct spdk_bdev *bdev,
 					void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
 					void *hotremove_ctx);
