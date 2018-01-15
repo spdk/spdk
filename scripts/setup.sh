@@ -5,6 +5,51 @@ set -e
 rootdir=$(readlink -f $(dirname $0))/..
 source "$rootdir/scripts/common.sh"
 
+function usage()
+{
+	if [ `uname` = Linux ]; then
+		options="[config|reset|status|help]"
+	else
+		options="[config|reset|help]"
+	fi
+
+	[[ ! -z $2 ]] && ( echo "$2"; echo ""; )
+	echo "Helper script for allocating hugepages and binding NVMe, I/OAT and Virtio devices to"
+	echo "a generic VFIO kernel driver. If VFIO is not available on the system, this script will"
+	echo "fall back to UIO. NVMe and Virtio devices with active mountpoints will be ignored."
+	echo "All hugepage operations use default hugepage size on the system (hugepagesz)."
+	echo "Usage: $(basename $1) $options"
+	echo
+	echo "$options - as following:"
+	echo "config            Default mode. Allocate hugepages and bind PCI devices."
+	echo "reset             Rebind PCI devices back to their original drivers."
+	echo "                  Also cleanup any leftover spdk files/resources."
+	echo "                  Hugepage memory size will remain unchanged."
+	if [ `uname` = Linux ]; then
+		echo "status            Print status of all SPDK-compatible devices on the system."
+	fi
+	echo "help              Print this help message."
+	echo
+	echo "The following environment variables can be specified."
+	echo "HUGEMEM           Size of hugepage memory to allocate (in MB). 2048 by default."
+	echo "                  For NUMA systems, the hugepages will be evenly distributed"
+	echo "                  between CPU nodes"
+	echo "NRHUGE            Number of hugepages to allocate. This variable overwrites HUGEMEM."
+	echo "HUGENODE          Specific NUMA node to allocate hugepages on. To allocate"
+	echo "                  hugepages on multiple nodes run this script multiple times -"
+	echo "                  once for each node."
+	echo "NVME_WHITELIST    Whitespace separated list of NVMe devices to bind."
+	echo "                  Each device must be specified as a full PCI address."
+	echo "                  E.g. NVME_WHITELIST=\"0000:01:00.0 0000:02:00.0\""
+	echo "                  To blacklist all NVMe devices use a non-valid PCI address."
+	echo "                  E.g. NVME_WHITELIST=\"none\""
+	echo "                  If empty or unset, all PCI devices will be bound."
+	echo "SKIP_PCI          Setting this variable to non-zero value will skip all PCI operations."
+	echo "TARGET_USER       User that will own hugepage mountpoint directory and vfio groups."
+	echo "                  By default the current user will be used."
+	exit 0
+}
+
 function nvme_whitelist_contains() {
 	for i in ${NVME_WHITELIST[@]}
 	do
@@ -400,11 +445,19 @@ if [ `uname` = Linux ]; then
 		reset_linux
 	elif [ "$mode" == "status" ]; then
 		status_linux
+	elif [ "$mode" == "help" ]; then
+		usage $0
+	else
+		usage $0 "Invalid argument '$mode'"
 	fi
 else
 	if [ "$mode" == "config" ]; then
 		configure_freebsd
 	elif [ "$mode" == "reset" ]; then
 		reset_freebsd
+	elif [ "$mode" == "help" ]; then
+		usage $0
+	else
+		usage $0 "Invalid argument '$mode'"
 	fi
 fi
