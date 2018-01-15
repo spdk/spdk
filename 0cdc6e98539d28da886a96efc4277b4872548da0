@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9e1234a0_769c176d",
+        "filename": "include/spdk_internal/virtio.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 454,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-15T07:02:46Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "01ec805a_5d8e29ee",
+      "range": {
+        "startLine": 451,
+        "startChar": 2,
+        "endLine": 454,
+        "endChar": 22
+      },
+      "revId": "0cdc6e98539d28da886a96efc4277b4872548da0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "141cbf7b_bd80ee71",
         "filename": "lib/bdev/virtio/bdev_virtio_scsi.c",
         "patchSetId": 3
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "a89ec665_39af655d",
+        "filename": "lib/bdev/virtio/bdev_virtio_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1829,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-15T07:02:46Z",
+      "side": 1,
+      "message": "No. This code is evaluated a part of device initialization (inside DPDK). Returning -1 is enough to free all associated resources etc.\nHowever, we should call spdk_pci_device_detach on device removal. I\u0027ll do this in a separate patch.",
+      "parentUuid": "141cbf7b_bd80ee71",
+      "range": {
+        "startLine": 1829,
+        "startChar": 0,
+        "endLine": 1829,
+        "endChar": 77
+      },
+      "revId": "0cdc6e98539d28da886a96efc4277b4872548da0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0f9a4991_46d4e3cb",
         "filename": "lib/bdev/virtio/bdev_virtio_scsi.c",
         "patchSetId": 3
@@ -59,6 +107,30 @@
       "writtenOn": "2018-01-15T02:24:50Z",
       "side": 1,
       "message": "this context looks to be used in scsi_dev_create_cb. either one is OK but create_ctx may be better?",
+      "range": {
+        "startLine": 1852,
+        "startChar": 39,
+        "endLine": 1852,
+        "endChar": 49
+      },
+      "revId": "0cdc6e98539d28da886a96efc4277b4872548da0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f59a98e7_92f370a3",
+        "filename": "lib/bdev/virtio/bdev_virtio_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1852,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-15T07:02:46Z",
+      "side": 1,
+      "message": "Will change to create_ctx, thanks.",
+      "parentUuid": "0f9a4991_46d4e3cb",
       "range": {
         "startLine": 1852,
         "startChar": 39,
