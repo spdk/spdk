@@ -975,13 +975,7 @@ out:
 }
 
 static void
-session_app_stop(void *arg1, void *arg2)
-{
-	spdk_app_stop(0);
-}
-
-static void *
-session_shutdown(void *arg)
+session_vdev_remove(void *arg1, void *arg2)
 {
 	struct spdk_vhost_dev *vdev = NULL;
 	int i;
@@ -992,11 +986,28 @@ session_shutdown(void *arg)
 			continue;
 		}
 
-		rte_vhost_driver_unregister(vdev->path);
+		spdk_vhost_dev_remove(vdev);
 	}
 
+}
+
+static void
+session_app_stop(void *arg1, void *arg2)
+{
+	struct spdk_event *ev;
+
+	spdk_app_stop(0);
+
+	ev = spdk_event_allocate(spdk_env_get_current_core(), session_vdev_remove, NULL, NULL);
+	spdk_event_call(ev);
+}
+
+static void *
+session_shutdown(void *arg)
+{
 	SPDK_NOTICELOG("Exiting\n");
 	spdk_event_call((struct spdk_event *)arg);
+
 	return NULL;
 }
 
