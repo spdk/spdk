@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "5bad18c9_2e8b6284",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-15T15:34:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "103d5354_08489707",
+      "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fb3f1321_148337ff",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 27
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "f200e815_ee1675d1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-15T15:34:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fb3f1321_148337ff",
+      "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cdd86854_7040076e",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 27
@@ -47,6 +83,24 @@
       "writtenOn": "2018-01-12T20:52:49Z",
       "side": 1,
       "message": "I guess 1 is fine, but block devices typically use blocklen 512 or 4096.  I would suggest using one of those here.",
+      "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "74b7a05a_062cd49f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-15T15:34:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cdd86854_7040076e",
       "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -140,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "2e106bea_8c9329e6",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 352,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-15T15:34:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "392f7dbc_2de197ad",
+      "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "864500f6_b2ea840e",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 27
@@ -157,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "18ab72d9_6bba6f51",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 372,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-15T15:34:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "864500f6_b2ea840e",
+      "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c7b77721_50618e7b",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 27
@@ -168,6 +258,24 @@
       "writtenOn": "2018-01-12T20:52:49Z",
       "side": 1,
       "message": "_spdk_bs_dev_lba_to_page",
+      "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b17b9131_ab02773a",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-15T15:34:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c7b77721_50618e7b",
       "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -278,6 +386,24 @@
     },
     {
       "key": {
+        "uuid": "d36a0621_90b6a0ec",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 504,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-15T15:34:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1ce977c3_b26dd3f0",
+      "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "466867e5_1b40fe5e",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 27
@@ -289,6 +415,24 @@
       "writtenOn": "2018-01-12T20:52:49Z",
       "side": 1,
       "message": "is bool cast needed here?",
+      "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "490d2299_64cb4c3d",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 515,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-15T15:34:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "466867e5_1b40fe5e",
       "revId": "50c8e4c0c729645ccaaddb1ac8373b92ce0bc855",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
