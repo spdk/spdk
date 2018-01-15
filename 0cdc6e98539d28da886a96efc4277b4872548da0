@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "01ec805a_5d8e29ee",
+        "filename": "include/spdk_internal/virtio.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 454,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-15T02:24:50Z",
+      "side": 1,
+      "message": "This looks as same as emunerate() and appropriate?\n\nfor each valid PCI device?, has been created?",
+      "range": {
+        "startLine": 451,
+        "startChar": 2,
+        "endLine": 454,
+        "endChar": 22
+      },
+      "revId": "0cdc6e98539d28da886a96efc4277b4872548da0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "141cbf7b_bd80ee71",
+        "filename": "lib/bdev/virtio/bdev_virtio_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1829,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-15T02:24:50Z",
+      "side": 1,
+      "message": "spdk_pci_device_detach should be called in the end if this fails?",
+      "range": {
+        "startLine": 1829,
+        "startChar": 0,
+        "endLine": 1829,
+        "endChar": 77
+      },
+      "revId": "0cdc6e98539d28da886a96efc4277b4872548da0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0f9a4991_46d4e3cb",
+        "filename": "lib/bdev/virtio/bdev_virtio_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1852,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-15T02:24:50Z",
+      "side": 1,
+      "message": "this context looks to be used in scsi_dev_create_cb. either one is OK but create_ctx may be better?",
+      "range": {
+        "startLine": 1852,
+        "startChar": 39,
+        "endLine": 1852,
+        "endChar": 49
+      },
+      "revId": "0cdc6e98539d28da886a96efc4277b4872548da0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
