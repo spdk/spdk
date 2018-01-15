@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "887a2ccc_d55fcb72",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-15T09:09:34Z",
+      "side": 1,
+      "message": "adds",
+      "range": {
+        "startLine": 9,
+        "startChar": 11,
+        "endLine": 9,
+        "endChar": 14
+      },
+      "revId": "0c5c5f7067cbe0cb723b4d02ecc9c0fc230e6433",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5893e01e_358dad33",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 479,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-15T09:09:34Z",
+      "side": 1,
+      "message": "cannot",
+      "range": {
+        "startLine": 479,
+        "startChar": 41,
+        "endLine": 479,
+        "endChar": 50
+      },
+      "revId": "0c5c5f7067cbe0cb723b4d02ecc9c0fc230e6433",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7612a2fd_42293edf",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 479,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-15T09:09:34Z",
+      "side": 1,
+      "message": "together",
+      "range": {
+        "startLine": 479,
+        "startChar": 59,
+        "endLine": 479,
+        "endChar": 67
+      },
+      "revId": "0c5c5f7067cbe0cb723b4d02ecc9c0fc230e6433",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3cfe3a1d_fdca8b15",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 498,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-15T09:09:34Z",
+      "side": 1,
+      "message": "Nitpicking: capital letter :P",
+      "range": {
+        "startLine": 498,
+        "startChar": 10,
+        "endLine": 498,
+        "endChar": 11
+      },
+      "revId": "0c5c5f7067cbe0cb723b4d02ecc9c0fc230e6433",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7329232c_9c52c29a",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 500,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-15T09:09:34Z",
+      "side": 1,
+      "message": "double space",
+      "range": {
+        "startLine": 500,
+        "startChar": 19,
+        "endLine": 500,
+        "endChar": 21
+      },
+      "revId": "0c5c5f7067cbe0cb723b4d02ecc9c0fc230e6433",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6cdb91a5_124752d1",
+        "filename": "test/vhost/common/vm_setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-15T09:09:34Z",
+      "side": 1,
+      "message": "ws",
+      "range": {
+        "startLine": 33,
+        "startChar": 68,
+        "endLine": 33,
+        "endChar": 77
+      },
+      "revId": "0c5c5f7067cbe0cb723b4d02ecc9c0fc230e6433",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33a50958_6fa571ba",
+        "filename": "test/vhost/common/vm_setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-15T09:09:34Z",
+      "side": 1,
+      "message": "ws",
+      "range": {
+        "startLine": 65,
+        "startChar": 0,
+        "endLine": 65,
+        "endChar": 1
+      },
+      "revId": "0c5c5f7067cbe0cb723b4d02ecc9c0fc230e6433",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "506b9452_9a4f8f9b",
+        "filename": "test/vhost/migration/vhost.conf.in",
+        "patchSetId": 2
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-15T09:09:34Z",
+      "side": 1,
+      "message": "tabs / spaces",
+      "range": {
+        "startLine": 2,
+        "startChar": 0,
+        "endLine": 2,
+        "endChar": 1
+      },
+      "revId": "0c5c5f7067cbe0cb723b4d02ecc9c0fc230e6433",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d076cef1_1a67d4bb",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-15T09:09:34Z",
+      "side": 1,
+      "message": "Missing line breaks \"\\\"",
+      "range": {
+        "startLine": 77,
+        "startChar": 0,
+        "endLine": 79,
+        "endChar": 16
+      },
+      "revId": "0c5c5f7067cbe0cb723b4d02ecc9c0fc230e6433",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
