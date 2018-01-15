@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a258090c_7fe430d4",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-01-15T09:16:52Z",
+      "side": 1,
+      "message": "This is destination blobstore, while blob might be in other blobstore in future implementations. We need to discuss this...",
+      "parentUuid": "5f696070_d4bbe3c3",
+      "range": {
+        "startLine": 236,
+        "startChar": 34,
+        "endLine": 236,
+        "endChar": 60
+      },
+      "revId": "4c348fcaca856aa009ec98a13a6c27c36002702a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e64b5d23_4de6d9ea",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2018-01-11T13:33:32Z",
       "side": 1,
       "message": "We can just copy back cluster map, set old blob as thick provisioned and remove new blob.",
+      "range": {
+        "startLine": 3312,
+        "startChar": 0,
+        "endLine": 3313,
+        "endChar": 44
+      },
+      "revId": "4c348fcaca856aa009ec98a13a6c27c36002702a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3abd062b_f177a7dd",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3313,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-01-15T09:16:52Z",
+      "side": 1,
+      "message": "Not so simple. This is fail on sync_md. If such call fails we might not be able to sync metadata.",
+      "parentUuid": "e64b5d23_4de6d9ea",
       "range": {
         "startLine": 3312,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "550dd375_a75474db",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3342,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-01-15T09:16:52Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "8b45c32d_f8c0f128",
+      "range": {
+        "startLine": 3342,
+        "startChar": 2,
+        "endLine": 3342,
+        "endChar": 21
+      },
+      "revId": "4c348fcaca856aa009ec98a13a6c27c36002702a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7c4aad1e_9493d3f5",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 3
@@ -82,6 +154,30 @@
       "writtenOn": "2018-01-11T13:33:32Z",
       "side": 1,
       "message": "This is dummy device at this moment. You should create new bs_dev at lvol level based on original lvol/blob bdev and pass it to spdk_bs_create_blob_snapshot.",
+      "range": {
+        "startLine": 3352,
+        "startChar": 33,
+        "endLine": 3352,
+        "endChar": 44
+      },
+      "revId": "4c348fcaca856aa009ec98a13a6c27c36002702a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "828654a1_28566de4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3352,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-01-15T09:16:52Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "7c4aad1e_9493d3f5",
       "range": {
         "startLine": 3352,
         "startChar": 33,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "76d9bc7a_816e863b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3372,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-01-15T09:16:52Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "cbb8b480_89d04a8d",
+      "range": {
+        "startLine": 3372,
+        "startChar": 2,
+        "endLine": 3372,
+        "endChar": 24
+      },
+      "revId": "4c348fcaca856aa009ec98a13a6c27c36002702a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fd5af94f_dfedf8d8",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 3
@@ -128,6 +248,30 @@
       "writtenOn": "2018-01-11T13:33:32Z",
       "side": 1,
       "message": "New cluster map won\u0027t be stored because we already made that blob read only.",
+      "range": {
+        "startLine": 3389,
+        "startChar": 1,
+        "endLine": 3389,
+        "endChar": 18
+      },
+      "revId": "4c348fcaca856aa009ec98a13a6c27c36002702a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dff6f84b_47ef1f42",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3389,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-01-15T09:16:52Z",
+      "side": 1,
+      "message": "Read only behavior changed a little bit in previous patch.\nFlags data_ro and md_ro now are applied *after* calling spdk_blob_sync_md.",
+      "parentUuid": "fd5af94f_dfedf8d8",
       "range": {
         "startLine": 3389,
         "startChar": 1,
@@ -157,6 +301,24 @@
     },
     {
       "key": {
+        "uuid": "02fae22c_4b163675",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3390,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-01-15T09:16:52Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "54e948cb_5d22d446",
+      "revId": "4c348fcaca856aa009ec98a13a6c27c36002702a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f32a56ba_3613f44a",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 3
@@ -180,6 +342,30 @@
     },
     {
       "key": {
+        "uuid": "512219c2_8080b0d1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3420,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-01-15T09:16:52Z",
+      "side": 1,
+      "message": "opts.xattr_names is pointer to *array* of char*, so we need such variable.",
+      "parentUuid": "f32a56ba_3613f44a",
+      "range": {
+        "startLine": 3420,
+        "startChar": 1,
+        "endLine": 3420,
+        "endChar": 51
+      },
+      "revId": "4c348fcaca856aa009ec98a13a6c27c36002702a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "565bf3dd_6f4dc62e",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 3
@@ -191,6 +377,30 @@
       "writtenOn": "2018-01-11T13:33:32Z",
       "side": 1,
       "message": "We should do this check at the beginning of the function.",
+      "range": {
+        "startLine": 3440,
+        "startChar": 0,
+        "endLine": 3443,
+        "endChar": 2
+      },
+      "revId": "4c348fcaca856aa009ec98a13a6c27c36002702a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f199768c_b01295e9",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3443,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-01-15T09:16:52Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "565bf3dd_6f4dc62e",
       "range": {
         "startLine": 3440,
         "startChar": 0,
