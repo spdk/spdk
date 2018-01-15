@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "743f68cb_34a46b16",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 369,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-15T17:01:15Z",
+      "side": 1,
+      "message": "This should probably be \"TARGET_USER\". I\u0027ll update it tomorrow",
+      "range": {
+        "startLine": 369,
+        "startChar": 10,
+        "endLine": 369,
+        "endChar": 26
+      },
+      "revId": "d56decc8cabf146d1c4d252defdfceb7972e91ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
