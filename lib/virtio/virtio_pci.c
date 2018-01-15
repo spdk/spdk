@@ -207,9 +207,11 @@ static void
 modern_destruct_dev(struct virtio_dev *vdev)
 {
 	struct virtio_hw *hw = vdev->ctx;
+	struct spdk_pci_device *pci_dev = hw->pci_dev;
 
 	free_virtio_hw(hw);
 	free(vdev->name);
+	spdk_pci_device_detach(pci_dev);
 }
 
 static uint8_t
