@@ -45,6 +45,11 @@ struct spdk_bdev {
 	int x;
 };
 
+struct poller_ctx {
+	spdk_poller_fn fn;
+	void *arg;
+};
+
 SPDK_LOG_REGISTER_COMPONENT("scsi", SPDK_LOG_SCSI)
 
 struct spdk_scsi_globals g_spdk_scsi;
@@ -52,12 +57,34 @@ struct spdk_scsi_globals g_spdk_scsi;
 static bool g_lun_execute_fail = false;
 static int g_lun_execute_status = SPDK_SCSI_TASK_PENDING;
 static uint32_t g_task_count = 0;
+static struct poller_ctx poll_ctx;
+
+static void *
+_run_poller(void *arg)
+{
+	struct poller_ctx *ctx = arg;
+
+	ctx->fn(ctx->arg);
+	return NULL;
+}
+
+bool
+spdk_scsi_dev_lun_removable(struct spdk_scsi_dev *scsi_dev, int id)
+{
+	return true;
+}
 
 struct spdk_poller *
 spdk_poller_register(spdk_poller_fn fn,
 		     void *arg,
 		     uint64_t period_microseconds)
 {
+	poll_ctx.fn = fn;
+	poll_ctx.arg = arg;
+	pthread_t tid;
+
+	pthread_create(&tid, NULL, &_run_poller, &poll_ctx);
+	pthread_detach(tid);
 	return NULL;
 }
 
