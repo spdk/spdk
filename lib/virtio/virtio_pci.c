@@ -210,7 +210,6 @@ modern_destruct_dev(struct virtio_dev *vdev)
 	struct spdk_pci_device *pci_dev = hw->pci_dev;
 
 	free_virtio_hw(hw);
-	free(vdev->name);
 	spdk_pci_device_detach(pci_dev);
 }
 
@@ -533,20 +532,12 @@ virtio_pci_dev_init(struct virtio_dev *vdev, const char *name,
 		    struct virtio_pci_ctx *pci_ctx)
 {
 	int rc;
-	char *name_dup;
 
-	name_dup = strdup(name);
-	if (name_dup == NULL) {
-		return -1;
-	}
-
-	rc = virtio_dev_construct(vdev, &modern_ops, pci_ctx);
+	rc = virtio_dev_construct(vdev, name, &modern_ops, pci_ctx);
 	if (rc != 0) {
-		free(name_dup);
 		return -1;
 	}
 
-	vdev->name = name_dup;
 	vdev->is_hw = 1;
 	vdev->modern = 1;
 
