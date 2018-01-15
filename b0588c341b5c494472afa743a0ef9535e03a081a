@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a7a4d7ba_bab7bb3d",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 652,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-15T12:59:28Z",
+      "side": 1,
+      "message": "is equal to",
+      "range": {
+        "startLine": 652,
+        "startChar": 54,
+        "endLine": 652,
+        "endChar": 62
+      },
+      "revId": "b0588c341b5c494472afa743a0ef9535e03a081a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b093a612_e7c0ec08",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 658,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-15T12:59:28Z",
+      "side": 1,
+      "message": "You lost expected results section.",
+      "revId": "b0588c341b5c494472afa743a0ef9535e03a081a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
