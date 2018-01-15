@@ -983,18 +983,6 @@ session_app_stop(void *arg1, void *arg2)
 static void *
 session_shutdown(void *arg)
 {
-	struct spdk_vhost_dev *vdev = NULL;
-	int i;
-
-	for (i = 0; i < MAX_VHOST_DEVICES; i++) {
-		vdev = g_spdk_vhost_devices[i];
-		if (vdev == NULL) {
-			continue;
-		}
-
-		rte_vhost_driver_unregister(vdev->path);
-	}
-
 	SPDK_NOTICELOG("Exiting\n");
 	spdk_event_call((struct spdk_event *)arg);
 	return NULL;
@@ -1172,6 +1160,18 @@ spdk_vhost_init(void)
 void
 spdk_vhost_fini(void)
 {
+	struct spdk_vhost_dev *vdev = NULL;
+	int i;
+
+	for (i = 0; i < MAX_VHOST_DEVICES; i++) {
+		vdev = g_spdk_vhost_devices[i];
+		if (vdev == NULL) {
+			continue;
+		}
+
+		spdk_vhost_dev_remove(vdev);
+	}
+
 	free(g_num_ctrlrs);
 }
 
