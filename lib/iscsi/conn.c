@@ -716,6 +716,10 @@ void spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 		}
 	}
 
+	if (conn->desc && conn->dev) {
+		spdk_scsi_dev_close(conn->desc);
+	}
+
 	spdk_clear_all_transfer_task(conn, NULL);
 	spdk_sock_close(conn->sock);
 	spdk_poller_unregister(&conn->logout_timer);
@@ -1432,6 +1436,7 @@ spdk_iscsi_conn_full_feature_migrate(void *arg1, void *arg2)
 	if (conn->sess->session_type == SESSION_TYPE_NORMAL) {
 		assert(conn->dev != NULL);
 		spdk_scsi_dev_allocate_io_channels(conn->dev);
+		spdk_scsi_dev_open(conn->dev, NULL, conn, &conn->desc);
 	}
 
 	/* The poller has been unregistered, so now we can re-register it on the new core. */
@@ -1564,6 +1569,10 @@ __add_idle_conn(void *arg1, void *arg2)
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "add conn id = %d, cid = %d poller = %p to idle\n",
 			      conn->id, conn->cid, conn->poller);
 		conn->is_idle = 1;
+		if (conn->dev) {
+			spdk_scsi_dev_close(conn->desc);
+			conn->desc = NULL;
+		}
 		STAILQ_INSERT_TAIL(&g_idle_conn_list_head, conn, link);
 	} else {
 		SPDK_ERRLOG("add_idle_conn() failed\n");

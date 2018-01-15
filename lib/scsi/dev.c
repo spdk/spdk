@@ -178,6 +178,46 @@ spdk_scsi_dev_delete_lun(struct spdk_scsi_dev *dev,
  */
 typedef struct spdk_scsi_dev _spdk_scsi_dev;
 
+void
+spdk_scsi_dev_close(struct spdk_scsi_desc *desc)
+{
+	struct spdk_scsi_dev *scsi_dev = desc->scsi_dev;
+
+	pthread_mutex_lock(&scsi_dev->mutex);
+
+	TAILQ_REMOVE(&scsi_dev->open_descs, desc, link);
+	free(desc);
+
+	pthread_mutex_unlock(&scsi_dev->mutex);
+}
+
+int
+spdk_scsi_dev_open(struct spdk_scsi_dev *dev, spdk_scsi_remove_cb_t remove_cb,
+		   void *remove_ctx, struct spdk_scsi_desc **_desc)
+{
+	struct spdk_scsi_desc *desc;
+
+	desc = calloc(1, sizeof(*desc));
+	if (desc == NULL) {
+		SPDK_ERRLOG("Failed to allocate memory for scsi descriptor\n");
+		return -ENOMEM;
+	}
+
+	pthread_mutex_lock(&dev->mutex);
+
+
+	TAILQ_INSERT_TAIL(&dev->open_descs, desc, link);
+
+	desc->scsi_dev = dev;
+	desc->remove_cb = remove_cb;
+	desc->remove_ctx = remove_ctx;
+	*_desc = desc;
+
+	pthread_mutex_unlock(&dev->mutex);
+
+	return 0;
+}
+
 _spdk_scsi_dev *
 spdk_scsi_dev_construct(const char *name, const char *bdev_name_list[],
 			int *lun_id_list, int num_luns, uint8_t protocol_id,
@@ -223,6 +263,8 @@ spdk_scsi_dev_construct(const char *name, const char *bdev_name_list[],
 
 	dev->num_ports = 0;
 	dev->protocol_id = protocol_id;
+	TAILQ_INIT(&dev->open_descs);
+	pthread_mutex_init(&dev->mutex, NULL);
 
 	for (i = 0; i < num_luns; i++) {
 		rc = spdk_scsi_dev_add_lun(dev, bdev_name_list[i], lun_id_list[i],
