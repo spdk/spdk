@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "5f196b55_d5027a19",
+        "filename": "lib/bdev/virtio/bdev_virtio_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1829,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-15T07:32:46Z",
+      "side": 1,
+      "message": "Still complex for me but thanks to your feedback, I understood that this function is registered to SPDK as virtio-pci driver\u0027s probe function and this function is in the control of DPDK.",
+      "parentUuid": "a89ec665_39af655d",
+      "range": {
+        "startLine": 1829,
+        "startChar": 0,
+        "endLine": 1829,
+        "endChar": 77
+      },
+      "revId": "0cdc6e98539d28da886a96efc4277b4872548da0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0f9a4991_46d4e3cb",
         "filename": "lib/bdev/virtio/bdev_virtio_scsi.c",
         "patchSetId": 3
