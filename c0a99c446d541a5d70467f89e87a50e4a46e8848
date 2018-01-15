@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e27c88dd_1ff5e3ec",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-15T15:30:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "28eb5a5e_42264384",
+      "revId": "c0a99c446d541a5d70467f89e87a50e4a46e8848",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1270bd83_25928d42",
         "filename": "scripts/rpc.py",
         "patchSetId": 27
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "d21ceaf6_6ce4357b",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 27
+      },
+      "lineNbr": 373,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-15T15:30:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1270bd83_25928d42",
+      "revId": "c0a99c446d541a5d70467f89e87a50e4a46e8848",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e329e966_41f1cf79",
         "filename": "scripts/rpc.py",
         "patchSetId": 27
@@ -47,6 +83,24 @@
       "writtenOn": "2018-01-12T20:56:03Z",
       "side": 1,
       "message": "I think long args name should be --thin_provision.  The help text can keep the \"ed\".",
+      "revId": "c0a99c446d541a5d70467f89e87a50e4a46e8848",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e1fb37b2_e4d139a4",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 27
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-15T15:30:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e329e966_41f1cf79",
       "revId": "c0a99c446d541a5d70467f89e87a50e4a46e8848",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
