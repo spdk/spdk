@@ -325,9 +325,22 @@ virtio_negotiate_features(struct virtio_dev *dev, uint64_t req_features)
 }
 
 int
-virtio_dev_construct(struct virtio_dev *vdev, const struct virtio_dev_ops *ops, void *ctx)
+virtio_dev_construct(struct virtio_dev *vdev, const char *name,
+		     const struct virtio_dev_ops *ops, void *ctx)
 {
-	pthread_mutex_init(&vdev->mutex, NULL);
+	int rc;
+
+	vdev->name = strdup(name);
+	if (vdev->name == NULL) {
+		return -ENOMEM;
+	}
+
+	rc = pthread_mutex_init(&vdev->mutex, NULL);
+	if (rc != 0) {
+		free(vdev->name);
+		return -rc;
+	}
+
 	vdev->backend_ops = ops;
 	vdev->ctx = ctx;
 
@@ -370,6 +383,7 @@ virtio_dev_destruct(struct virtio_dev *dev)
 {
 	virtio_dev_backend_ops(dev)->destruct_dev(dev);
 	pthread_mutex_destroy(&dev->mutex);
+	free(dev->name);
 }
 
 static void
