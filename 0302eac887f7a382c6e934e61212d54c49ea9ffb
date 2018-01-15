@@ -22,6 +22,30 @@
       "revId": "0302eac887f7a382c6e934e61212d54c49ea9ffb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "31009284_5fa93a6f",
+        "filename": "lib/bdev/virtio/bdev_virtio_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-15T12:11:01Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\n\u003e If notifications_desc is nullified after spdk_bdev_close(), notify_desc may be able to be used as the mark of disk removal.\n\nIt could. I decided to follow Curly\u0027s Law [1] here. :)\nSince this is not a hot I/O path, I find it cleaner to use a separate variable that is self-descriptive. \n\n\u003e It looks that vhost_blk uses the descriptor as the mark of disk removal.\n\u003e vhost_blk should adjust to vhost_scsi?\n\nThis is virtio_scsi (vhost_scsi initiator). vhost_scsi is using `removed` flag as well:\n\n```\nstruct spdk_scsi_dev_vhost_state {\n\tbool removed;\n\tspdk_vhost_event_fn remove_cb;\n\tvoid *remove_ctx;\n};\n```\n\nSo I think using the same flag here fits just fine.\n\n[1] https://blog.codinghorror.com/curlys-law-do-one-thing/",
+      "parentUuid": "bfcde76d_90bd3d82",
+      "range": {
+        "startLine": 159,
+        "startChar": 24,
+        "endLine": 159,
+        "endChar": 36
+      },
+      "revId": "0302eac887f7a382c6e934e61212d54c49ea9ffb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
