@@ -29,8 +29,8 @@ function linux_bind_driver() {
 
 	iommu_group=$(basename $(readlink -f /sys/bus/pci/devices/$bdf/iommu_group))
 	if [ -e "/dev/vfio/$iommu_group" ]; then
-		if [ "$username" != "" ]; then
-			chown "$username" "/dev/vfio/$iommu_group"
+		if [ -z "$DESTINATION_USER" ]; then
+			chown "$DESTINATION_USER" "/dev/vfio/$iommu_group"
 		fi
 	fi
 }
@@ -178,8 +178,8 @@ function configure_linux {
 	fi
 
 	if [ "$driver_name" = "vfio-pci" ]; then
-		if [ "$username" != "" ]; then
-			chown "$username" "$hugetlbfs_mount"
+		if [ -z "$DESTINATION_USER" ]; then
+			chown "$DESTINATION_USER" "$hugetlbfs_mount"
 			chmod g+w "$hugetlbfs_mount"
 		fi
 
@@ -357,27 +357,21 @@ function reset_freebsd {
 	fi
 }
 
-username=$1
-mode=$2
+mode=$1
 
-if [ "$username" = "reset" -o "$username" = "config" -o "$username" = "status" ]; then
-	mode="$username"
-	username=""
-fi
-
-if [ "$mode" == "" ]; then
+if [ -z "$mode" ]; then
 	mode="config"
-fi
-
-if [ "$username" = "" ]; then
-	username="$SUDO_USER"
-	if [ "$username" = "" ]; then
-		username=`logname 2>/dev/null` || true
-	fi
 fi
 
 : ${HUGEMEM:=2048}
 : ${SKIP_PCI:=0}
+
+if [ -z "$DESTINATION_USER" ]; then
+	DESTINATION_USER="$SUDO_USER"
+	if [ -z "$DESTINATION_USER" ]; then
+		DESTINATION_USER=`logname 2>/dev/null` || true
+	fi
+fi
 
 if [ `uname` = Linux ]; then
 	HUGEPGSZ=$(( `grep Hugepagesize /proc/meminfo | cut -d : -f 2 | tr -dc '0-9'` ))
