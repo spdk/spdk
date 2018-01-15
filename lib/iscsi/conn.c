@@ -527,6 +527,10 @@ spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 		}
 	}
 
+	if (conn->desc && conn->dev) {
+		spdk_scsi_dev_close(conn->desc);
+	}
+
 	spdk_clear_all_transfer_task(conn, NULL);
 	spdk_iscsi_poll_group_remove_conn_sock(conn);
 	spdk_sock_close(&conn->sock);
@@ -1179,6 +1183,7 @@ spdk_iscsi_conn_full_feature_migrate(void *arg1, void *arg2)
 	if (conn->sess->session_type == SESSION_TYPE_NORMAL) {
 		assert(conn->dev != NULL);
 		spdk_scsi_dev_allocate_io_channels(conn->dev);
+		spdk_scsi_dev_open(conn->dev, NULL, conn, &conn->desc);
 	}
 
 	/* The poller has been unregistered, so now we can re-register it on the new core. */
