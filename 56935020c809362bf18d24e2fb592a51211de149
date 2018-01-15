@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8499a7e7_b9e9325a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-15T08:04:12Z",
+      "side": 1,
+      "message": "simultaneously",
+      "range": {
+        "startLine": 9,
+        "startChar": 37,
+        "endLine": 9,
+        "endChar": 50
+      },
+      "revId": "56935020c809362bf18d24e2fb592a51211de149",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cc733204_5231ab33",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-15T08:04:12Z",
+      "side": 1,
+      "message": "multiqueue",
+      "range": {
+        "startLine": 9,
+        "startChar": 5,
+        "endLine": 9,
+        "endChar": 15
+      },
+      "revId": "56935020c809362bf18d24e2fb592a51211de149",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "165d1fb5_f4503d86",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-15T08:04:12Z",
+      "side": 1,
+      "message": "execution",
+      "range": {
+        "startLine": 10,
+        "startChar": 22,
+        "endLine": 10,
+        "endChar": 32
+      },
+      "revId": "56935020c809362bf18d24e2fb592a51211de149",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de275dd7_27bbdb86",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-15T08:04:12Z",
+      "side": 1,
+      "message": "What do you mean by constant? \nMaybe rephrase to something like \"Because all tests will be run in parallel execution time will not be extended\"",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 8
+      },
+      "revId": "56935020c809362bf18d24e2fb592a51211de149",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
