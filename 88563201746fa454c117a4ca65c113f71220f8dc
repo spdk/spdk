@@ -22,6 +22,30 @@
       "revId": "88563201746fa454c117a4ca65c113f71220f8dc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4aed1fc0_f93e8260",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-01-15T11:22:32Z",
+      "side": 1,
+      "message": "There are 4 non unmap related jobs and 3 vhost sockets. I\u0027ve set 12 queues because 4*3 \u003d 12. In second test case there are 2 unmap jobs done in parallel so I added 2 non unmap jobs to fill all queues",
+      "parentUuid": "4154b3fd_06bff238",
+      "range": {
+        "startLine": 98,
+        "startChar": 0,
+        "endLine": 100,
+        "endChar": 90
+      },
+      "revId": "88563201746fa454c117a4ca65c113f71220f8dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
