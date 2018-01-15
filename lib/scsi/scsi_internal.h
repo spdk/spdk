@@ -57,6 +57,13 @@ struct spdk_scsi_port {
 	char			name[SPDK_SCSI_PORT_MAX_NAME_LENGTH];
 };
 
+struct spdk_scsi_desc {
+	struct spdk_scsi_dev		*scsi_dev;
+	spdk_scsi_remove_cb_t		remove_cb;
+	void				*remove_ctx;
+	TAILQ_ENTRY(spdk_scsi_desc)	link;
+};
+
 struct spdk_scsi_dev {
 	int			id;
 	int			is_allocated;
@@ -70,6 +77,12 @@ struct spdk_scsi_dev {
 	struct spdk_scsi_port	port[SPDK_SCSI_DEV_MAX_PORTS];
 
 	uint8_t			protocol_id;
+
+	/** Mutex protecting claimed */
+	pthread_mutex_t mutex;
+
+	/** List of open descriptors for this scsi device. */
+	TAILQ_HEAD(, spdk_scsi_desc) open_descs;
 };
 
 struct spdk_scsi_lun {
