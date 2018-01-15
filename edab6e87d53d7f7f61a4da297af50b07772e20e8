@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7152231f_fd549edf",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-15T15:34:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6c4e512c_9caa119b",
+      "revId": "edab6e87d53d7f7f61a4da297af50b07772e20e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "85ac70f5_1cca1b34",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 28
@@ -30,6 +48,24 @@
       "writtenOn": "2018-01-12T20:52:49Z",
       "side": 1,
       "message": "let\u0027s make this 512 or 4096 - blocklen\u003d1 works, but is not typical for block devices",
+      "revId": "edab6e87d53d7f7f61a4da297af50b07772e20e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ba454e7_8e4f1c1b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-15T15:34:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "85ac70f5_1cca1b34",
       "revId": "edab6e87d53d7f7f61a4da297af50b07772e20e8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "235eab12_d567b7f2",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1285,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-15T15:34:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3b1be919_a12d9a26",
+      "revId": "edab6e87d53d7f7f61a4da297af50b07772e20e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3ca697dc_f106b86a",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 28
@@ -64,6 +118,24 @@
       "writtenOn": "2018-01-12T20:52:49Z",
       "side": 1,
       "message": "let\u0027s drop the is_thin_provisioned check here and just make it:\n\nif (!_spdk_bs_blob_is_page_allocated(blob, page)) {\n\nYou could add an assert() in _spdk_bs_blob_is_page_allocated(), something like:\n\nif (lba \u003d\u003d 0) {\n  assert(blob is thin provisioned);\n  return false;\n} else {\n  return true;\n}",
+      "revId": "edab6e87d53d7f7f61a4da297af50b07772e20e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a20c92e_890f8cde",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1563,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-15T15:34:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3ca697dc_f106b86a",
       "revId": "edab6e87d53d7f7f61a4da297af50b07772e20e8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "e868a758_a5df1b51",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1806,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-15T15:34:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "187538de_353673a8",
+      "revId": "edab6e87d53d7f7f61a4da297af50b07772e20e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dccf0d13_ee26dfd3",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 28
@@ -98,6 +188,24 @@
       "writtenOn": "2018-01-12T20:52:49Z",
       "side": 1,
       "message": "_spdk_bs_dev_byte_to_lba would be better here - then the function is more generally usable and the name is shorter\n\nthen caller just needs to pass blob-\u003eback_bs_dev to get same functionality",
+      "revId": "edab6e87d53d7f7f61a4da297af50b07772e20e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fd88532c_4b44c6e0",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 352,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-15T15:34:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dccf0d13_ee26dfd3",
       "revId": "edab6e87d53d7f7f61a4da297af50b07772e20e8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "23d1eb6f_7db0ae94",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 372,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-15T15:34:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bd11f7bb_15962bc1",
+      "revId": "edab6e87d53d7f7f61a4da297af50b07772e20e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "55b25cee_f283a321",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 28
@@ -138,6 +264,24 @@
     },
     {
       "key": {
+        "uuid": "559cae05_2e89d923",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-15T15:34:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "55b25cee_f283a321",
+      "revId": "edab6e87d53d7f7f61a4da297af50b07772e20e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7e8d0218_d6c8b52a",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 28
@@ -149,6 +293,24 @@
       "writtenOn": "2018-01-12T20:52:49Z",
       "side": 1,
       "message": "is bool cast needed?",
+      "revId": "edab6e87d53d7f7f61a4da297af50b07772e20e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fd88a1dc_b0023e91",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 515,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-15T15:34:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7e8d0218_d6c8b52a",
       "revId": "edab6e87d53d7f7f61a4da297af50b07772e20e8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
