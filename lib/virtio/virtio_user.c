@@ -362,7 +362,6 @@ virtio_user_destroy(struct virtio_dev *vdev)
 	struct virtio_user_dev *dev = vdev->ctx;
 
 	close(dev->vhostfd);
-	free(vdev->name);
 	free(dev);
 }
 
@@ -410,7 +409,7 @@ virtio_user_dev_init(struct virtio_dev *vdev, const char *name, const char *path
 		return -1;
 	}
 
-	rc = virtio_dev_construct(vdev, &virtio_user_ops, dev);
+	rc = virtio_dev_construct(vdev, name, &virtio_user_ops, dev);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to init device: %s\n", path);
 		free(dev);
@@ -418,11 +417,6 @@ virtio_user_dev_init(struct virtio_dev *vdev, const char *name, const char *path
 	}
 
 	vdev->is_hw = 0;
-	vdev->name = strdup(name);
-	if (!vdev->name) {
-		SPDK_ERRLOG("Failed to reserve memory for controller name: %s\n", path);
-		goto err;
-	}
 
 	snprintf(dev->path, PATH_MAX, "%s", path);
 	dev->queue_size = queue_size;
