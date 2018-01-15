@@ -578,6 +578,15 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const ch
 		return -EIO;
 	}
 
+#if 0
+	if (rte_vhost_driver_start(path) != 0) {
+		SPDK_ERRLOG("Failed to start vhost driver for controller %s (%d): %s\n", name, errno,
+			    spdk_strerror(errno));
+		rte_vhost_driver_unregister(path);
+		return -EIO;
+	}
+#endif
+
 	vdev->name = strdup(name);
 	vdev->path = strdup(path);
 	vdev->vid = -1;
@@ -594,12 +603,14 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const ch
 
 	g_spdk_vhost_devices[ctrlr_num] = vdev;
 
+#if 1
 	if (rte_vhost_driver_start(path) != 0) {
 		SPDK_ERRLOG("Failed to start vhost driver for controller %s (%d): %s\n", name, errno,
 			    spdk_strerror(errno));
 		rte_vhost_driver_unregister(path);
 		return -EIO;
 	}
+#endif
 
 	SPDK_NOTICELOG("Controller %s: new controller added\n", vdev->name);
 	return 0;
@@ -609,6 +620,8 @@ int
 spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev)
 {
 	unsigned ctrlr_num;
+
+	printf("[TK] spdk_vhost_dev_remove (%s)\n", vdev->name);
 
 	if (vdev->vid != -1) {
 		SPDK_ERRLOG("Controller %s has still valid connection.\n", vdev->name);
@@ -983,18 +996,23 @@ session_app_stop(void *arg1, void *arg2)
 static void *
 session_shutdown(void *arg)
 {
+	printf("[TK] session_shutdown()\n");
+#if 0
 	struct spdk_vhost_dev *vdev = NULL;
 	int i;
-
 	for (i = 0; i < MAX_VHOST_DEVICES; i++) {
 		vdev = g_spdk_vhost_devices[i];
 		if (vdev == NULL) {
 			continue;
 		}
 
+		/* FIXIT: This unregister doesn't let to use spdk_vhost_dev_remove
+		 *        while fails on trying to unregister vdev second time and
+		 *        doesn't free vdev->name as well as vdev->path.
+		 */
 		rte_vhost_driver_unregister(vdev->path);
 	}
-
+#endif
 	SPDK_NOTICELOG("Exiting\n");
 	spdk_event_call((struct spdk_event *)arg);
 	return NULL;

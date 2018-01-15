@@ -37,6 +37,7 @@
 
 #include "spdk_internal/event.h"
 #include "spdk/env.h"
+#include "spdk/vhost.h"
 
 static TAILQ_HEAD(spdk_subsystem_list, spdk_subsystem) g_subsystems =
 	TAILQ_HEAD_INITIALIZER(g_subsystems);
@@ -201,6 +202,7 @@ _spdk_subsystem_fini_next(void *arg1, void *arg2)
 
 	while (g_next_subsystem) {
 		if (g_next_subsystem->fini) {
+			printf("[TK] _spdk_subsystem_fini_next\n");
 			g_next_subsystem->fini();
 			return;
 		}
@@ -224,6 +226,27 @@ spdk_subsystem_fini_next(void)
 	}
 }
 
+#if 1
+/* PoC */
+
+/* FIXIT: this is vdev internal function -- remove it */
+int spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev);
+
+static int
+spdk_vhost_subsystem_fini_done(struct spdk_vhost_dev *vdev, void *arg)
+{
+
+	printf("[TK] spdk_vhost_subsystem_fini_done\n");
+	if (vdev != NULL) {
+		spdk_vhost_dev_remove(vdev);
+		//rte_vhost_driver_unregister(vdev->path);
+	}
+	return 0;
+}
+#endif
+
+/* End of PoC */
+
 void
 spdk_subsystem_fini(struct spdk_event *app_stop_event)
 {
@@ -231,6 +254,9 @@ spdk_subsystem_fini(struct spdk_event *app_stop_event)
 	g_fini_core = spdk_env_get_current_core();
 
 	spdk_subsystem_fini_next();
+
+	//FIXIT: force removing vdevs
+	spdk_vhost_call_external_event_foreach(spdk_vhost_subsystem_fini_done, NULL);
 }
 
 void

@@ -715,6 +715,8 @@ rte_vhost_driver_unregister(const char *path)
 	int count;
 	struct vhost_user_connection *conn;
 
+	printf("[TK] rte_vhost_driver_unregister(%s)\n", path);
+
 	pthread_mutex_lock(&vhost_user.mutex);
 
 	for (i = 0; i < vhost_user.vsocket_cnt; i++) {
@@ -749,11 +751,13 @@ rte_vhost_driver_unregister(const char *path)
 			vhost_user.vsockets[count] = NULL;
 			pthread_mutex_unlock(&vhost_user.mutex);
 
+			printf("[TK] rte_vhost_driver_unregister(%s) success\n", path);
 			return 0;
 		}
 	}
 	pthread_mutex_unlock(&vhost_user.mutex);
 
+	printf("[TK] rte_vhost_driver_unregister(%s) failed\n", path);
 	return -1;
 }
 
