@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "22e41c90_f8a63d51",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3212,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-01-15T09:13:24Z",
+      "side": 1,
+      "message": "opts in create_blob_ext is public API. We probably don\u0027t want to pass snapshot with opts because it doesn\u0027t make sense with opts like thin_provision \u003d 0 , num_clusters \u003d 0, etc.",
+      "parentUuid": "17e60908_8f04cf1f",
+      "range": {
+        "startLine": 3209,
+        "startChar": 0,
+        "endLine": 3212,
+        "endChar": 57
+      },
+      "revId": "a0f6c7857f5fee889ba34cd34e01b961acff526a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1e2e8ccd_2c42f3ef",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2018-01-11T14:14:52Z",
       "side": 1,
       "message": "This is NULL as snapshot should be thick provisioned. You should pass here bs_dev created on top of snapshot lvol.",
+      "range": {
+        "startLine": 3256,
+        "startChar": 32,
+        "endLine": 3256,
+        "endChar": 43
+      },
+      "revId": "a0f6c7857f5fee889ba34cd34e01b961acff526a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "168e6faf_83c2b342",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3256,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-01-15T09:13:24Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "1e2e8ccd_2c42f3ef",
       "range": {
         "startLine": 3256,
         "startChar": 32,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "ebc5213a_ae2c4eae",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3470,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-01-15T09:13:24Z",
+      "side": 1,
+      "message": "Should user create bs_dev?",
+      "parentUuid": "13821723_5b8fe36f",
+      "range": {
+        "startLine": 3470,
+        "startChar": 59,
+        "endLine": 3470,
+        "endChar": 81
+      },
+      "revId": "a0f6c7857f5fee889ba34cd34e01b961acff526a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0ada4b7c_85e9e270",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 3
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "4dc9f78c_45d4750a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3474,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-01-15T09:13:24Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "0ada4b7c_85e9e270",
+      "range": {
+        "startLine": 3474,
+        "startChar": 20,
+        "endLine": 3474,
+        "endChar": 21
+      },
+      "revId": "a0f6c7857f5fee889ba34cd34e01b961acff526a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0f39ed00_2693fd4e",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 3
@@ -105,6 +201,30 @@
       "writtenOn": "2018-01-11T14:14:52Z",
       "side": 1,
       "message": "In future bs passed to this function can be different bs than the one that snapshot blob is on so it would not work. We should do the math here based on passed bs cluster size and backing_bs_dev lockcnt and blocklen.",
+      "range": {
+        "startLine": 3479,
+        "startChar": 1,
+        "endLine": 3479,
+        "endChar": 51
+      },
+      "revId": "a0f6c7857f5fee889ba34cd34e01b961acff526a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d38161e_d35f02a6",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3479,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-01-15T09:13:24Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "0f39ed00_2693fd4e",
       "range": {
         "startLine": 3479,
         "startChar": 1,
