@@ -1172,6 +1172,21 @@ spdk_vhost_init(void)
 void
 spdk_vhost_fini(void)
 {
+	struct spdk_vhost_dev *vdev;
+	int i;
+	// check if function can be blocked
+	// try spdk_vhost_call_external_event_foreach(spdk_rpc_get_vhost_controllers_cb, ctx);
+	sleep(3);
+	/*
+	for (i = 0; i < MAX_VHOST_DEVICES; i++) {
+		vdev = g_spdk_vhost_devices[i];
+		if (vdev == NULL) {
+			continue;
+		}
+
+	}
+	*/
+
 	free(g_num_ctrlrs);
 }
 
