@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4154b3fd_06bff238",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-15T08:08:13Z",
+      "side": 1,
+      "message": "Why do you select sections from FIO file and not run the whole file instead? I mean, if we run randwrite or randrw then why not seq write and seq rw?:P",
+      "range": {
+        "startLine": 98,
+        "startChar": 0,
+        "endLine": 100,
+        "endChar": 90
+      },
+      "revId": "88563201746fa454c117a4ca65c113f71220f8dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
