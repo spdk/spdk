@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "94036e5c_cb514318",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 770,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-15T15:25:57Z",
+      "side": 1,
+      "message": "Can we just do lvs_ch-\u003eio_outstanding++ after if (!TAILQ_EMPTY...) {} - this way we won\u0027t need to do -- inside if.",
+      "range": {
+        "startLine": 768,
+        "startChar": 0,
+        "endLine": 770,
+        "endChar": 27
+      },
+      "revId": "a555a91dcfaa585917a24001687c2a583cb33389",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
