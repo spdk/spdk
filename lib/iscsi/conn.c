@@ -1428,6 +1428,20 @@ conn_exit:
 	return 0;
 }
 
+static bool
+spdk_iscsi_lun_removable(void *remove_ctx, int lun_id)
+{
+	struct spdk_iscsi_conn *conn = remove_ctx;
+	struct spdk_iscsi_task	*task;
+
+	TAILQ_FOREACH(task, &conn->active_r2t_tasks, link) {
+		if (spdk_scsi_lun_get_id(task->scsi.lun) == lun_id) {
+			return false;
+		}
+	}
+	return true;
+}
+
 static void
 spdk_iscsi_conn_full_feature_migrate(void *arg1, void *arg2)
 {
@@ -1436,7 +1450,7 @@ spdk_iscsi_conn_full_feature_migrate(void *arg1, void *arg2)
 	if (conn->sess->session_type == SESSION_TYPE_NORMAL) {
 		assert(conn->dev != NULL);
 		spdk_scsi_dev_allocate_io_channels(conn->dev);
-		spdk_scsi_dev_open(conn->dev, NULL, conn, &conn->desc);
+		spdk_scsi_dev_open(conn->dev, spdk_iscsi_lun_removable, conn, &conn->desc);
 	}
 
 	/* The poller has been unregistered, so now we can re-register it on the new core. */

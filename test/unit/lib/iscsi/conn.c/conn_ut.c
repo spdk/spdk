@@ -60,6 +60,12 @@ spdk_scsi_dev_open(struct spdk_scsi_dev *dev, spdk_scsi_remove_cb_t remove_cb,
 }
 
 int
+spdk_scsi_lun_get_id(const struct spdk_scsi_lun *lun)
+{
+	return 0;
+}
+
+int
 spdk_app_get_shm_id(void)
 {
 	return 0;
