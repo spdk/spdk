@@ -158,6 +158,7 @@ struct spdk_iscsi_conn {
 	uint32_t ttt; /* target transfer tag */
 	char *partial_text_parameter;
 
+	struct spdk_scsi_desc *desc;
 	STAILQ_ENTRY(spdk_iscsi_conn) link;
 	struct spdk_poller	*flush_poller;
 	TAILQ_HEAD(queued_r2t_tasks, spdk_iscsi_task)	queued_r2t_tasks;
