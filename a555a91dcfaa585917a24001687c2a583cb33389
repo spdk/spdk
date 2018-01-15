@@ -22,6 +22,30 @@
       "revId": "a555a91dcfaa585917a24001687c2a583cb33389",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dd518add_34c53ea7",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 770,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-15T15:52:53Z",
+      "side": 1,
+      "message": "Good catch Maciek.\n\nIn lib/bdev/bdev.c, we do this same increment and then decrement - but there are more cases to consider in bdev.c which we do not have here.  So it would be simpler to wait to increment io_outstanding until after the TAILQ_EMPTY check.",
+      "parentUuid": "94036e5c_cb514318",
+      "range": {
+        "startLine": 768,
+        "startChar": 0,
+        "endLine": 770,
+        "endChar": 27
+      },
+      "revId": "a555a91dcfaa585917a24001687c2a583cb33389",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
