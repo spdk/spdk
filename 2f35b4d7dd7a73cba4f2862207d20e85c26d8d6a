@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "272ea04e_2e7b3823",
+        "filename": "test/lib/nvme/nvme.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-01-15T05:21:33Z",
+      "side": 1,
+      "message": "add a space behind the \";\"",
+      "range": {
+        "startLine": 13,
+        "startChar": 24,
+        "endLine": 13,
+        "endChar": 28
+      },
+      "revId": "2f35b4d7dd7a73cba4f2862207d20e85c26d8d6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
