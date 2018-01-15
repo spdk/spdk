@@ -108,9 +108,6 @@
 
 # Define an NVMf Subsystem.
 # - NQN is required and must be unique.
-# - Core may be set or not. If set, the specified subsystem will run on
-#   it, otherwise each subsystem will use a round-robin method to allocate
-#   core from available cores,  lcores are numbered starting at 0.
 # - Between 1 and 255 Listen directives are allowed. This defines
 #   the addresses on which new connections may be accepted. The format
 #   is Listen <type> <address> where type currently can only be RDMA.
