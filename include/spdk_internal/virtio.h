@@ -256,11 +256,13 @@ void virtqueue_req_add_iovs(struct virtqueue *vq, struct iovec *iovs, uint16_t i
  * Before doing any I/O, it has to be manually started via \c virtio_dev_restart.
  *
  * \param vdev memory for virtio device, must be zeroed
+ * \param name name for the virtio device
  * \param ops backend callbacks
- * \param ctx argument for the backend callbacks
+ * \param ops_ctx argument for the backend callbacks
+ * \return zero on success, or negative error code otherwise
  */
-int virtio_dev_construct(struct virtio_dev *vdev, const struct virtio_dev_ops *ops,
-			 void *ctx);
+int virtio_dev_construct(struct virtio_dev *vdev, const char *name,
+			 const struct virtio_dev_ops *ops, void *ops_ctx);
 
 /**
  * Reset the device and prepare it to be `virtio_dev_start`ed.  This call
