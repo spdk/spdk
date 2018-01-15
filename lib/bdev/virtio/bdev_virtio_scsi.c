@@ -1228,7 +1228,6 @@ virtio_scsi_dev_add_tgt(struct virtio_scsi_dev *svdev, struct virtio_scsi_scan_i
 	disk->svdev = svdev;
 	memcpy(&disk->info, info, sizeof(*info));
 
-	bdev = &disk->bdev;
 	bdev->name = spdk_sprintf_alloc("%st%"PRIu8, svdev->vdev.name, info->target);
 	if (bdev->name == NULL) {
 		SPDK_ERRLOG("Couldn't alloc memory for the bdev name.\n");

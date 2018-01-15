@@ -273,6 +273,18 @@ uint32_t spdk_bdev_get_block_size(const struct spdk_bdev *bdev);
 uint64_t spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev);
 
 /**
+ * Resize for a bdev.
+ *
+ * Change number of blocks for provided block device.
+ * It can only be called on a registered bdev.
+ *
+ * \param bdev Block device to change.
+ * \param size New size of bdev.
+ * \return 0 on success, negated errno on failure.
+ */
+int spdk_bdev_set_num_blocks(struct spdk_bdev *bdev, uint64_t size);
+
+/**
  * Get minimum I/O buffer address alignment for a bdev.
  *
  * \param bdev Block device to query.
