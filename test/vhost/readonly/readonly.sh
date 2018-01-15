@@ -86,7 +86,7 @@ function blk_ro_tc1()
 	notice "Creating vhost_blk controller"
 	vhost_blk_name="naa.$disk_name.$vm_no"
 	$rpc_py construct_vhost_blk_controller $vhost_blk_name $disk_name
-	vm_setup --disk-type=spdk_vhost_blk --force=$vm_no --os=$vm_img --disks=$disk"
+	vm_setup --disk-type=spdk_vhost_blk --force=$vm_no --os=$vm_img --disks=$disk
 
 	vm_run $vm_no
 	vm_wait_for_boot 600 $vm_no
@@ -104,7 +104,7 @@ function blk_ro_tc1()
 	vm_wait_for_boot 600 $vm_no
 	notice "Testing readonly feature on guest VM"
 	vm_ssh $vm_no "bash -s" < $BASE_DIR/enabled_readonly_vm.sh
-	sleep 1
+	sleep 5
 
 	vm_shutdown_all
 #Delete file from disk and delete partition
