@@ -880,10 +880,10 @@ print_bucket(void *ctx, uint64_t start, uint64_t end, uint64_t count,
 static void
 print_performance(void)
 {
-	uint64_t total_io_completed;
-	float io_per_second, mb_per_second, average_latency, min_latency, max_latency;
-	float total_io_per_second, total_mb_per_second;
-	float sum_ave_latency, sum_min_latency, sum_max_latency;
+	uint64_t total_io_completed, total_io_tsc;
+	double io_per_second, mb_per_second, average_latency, min_latency, max_latency;
+	double sum_ave_latency, min_latency_so_far, max_latency_so_far;
+	double total_io_per_second, total_mb_per_second;
 	int ns_count;
 	struct worker_thread	*worker;
 	struct ns_worker_ctx	*ns_ctx;
@@ -891,9 +891,9 @@ print_performance(void)
 	total_io_per_second = 0;
 	total_mb_per_second = 0;
 	total_io_completed = 0;
-	sum_ave_latency = 0;
-	sum_min_latency = 0;
-	sum_max_latency = 0;
+	total_io_tsc = 0;
+	min_latency_so_far = (double)UINT64_MAX;
+	max_latency_so_far = 0;
 	ns_count = 0;
 
 	printf("========================================================\n");
@@ -906,11 +906,19 @@ print_performance(void)
 		ns_ctx = worker->ns_ctx;
 		while (ns_ctx) {
 			if (ns_ctx->io_completed != 0) {
-				io_per_second = (float)ns_ctx->io_completed / g_time_in_sec;
+				io_per_second = (double)ns_ctx->io_completed / g_time_in_sec;
 				mb_per_second = io_per_second * g_io_size_bytes / (1024 * 1024);
-				average_latency = (float)(ns_ctx->total_tsc / ns_ctx->io_completed) * 1000 * 1000 / g_tsc_rate;
-				min_latency = (float)ns_ctx->min_tsc * 1000 * 1000 / g_tsc_rate;
-				max_latency = (float)ns_ctx->max_tsc * 1000 * 1000 / g_tsc_rate;
+				average_latency = ((double)ns_ctx->total_tsc / ns_ctx->io_completed) * 1000 * 1000 / g_tsc_rate;
+				min_latency = (double)ns_ctx->min_tsc * 1000 * 1000 / g_tsc_rate;
+				if (min_latency < min_latency_so_far) {
+					min_latency_so_far = min_latency;
+				}
+
+				max_latency = (double)ns_ctx->max_tsc * 1000 * 1000 / g_tsc_rate;
+				if (max_latency > max_latency_so_far) {
+					max_latency_so_far = max_latency;
+				}
+
 				printf("%-43.43s from core %u: %10.2f %10.2f %10.2f %10.2f %10.2f\n",
 				       ns_ctx->entry->name, worker->lcore,
 				       io_per_second, mb_per_second,
@@ -918,9 +926,7 @@ print_performance(void)
 				total_io_per_second += io_per_second;
 				total_mb_per_second += mb_per_second;
 				total_io_completed += ns_ctx->io_completed;
-				sum_ave_latency += average_latency;
-				sum_min_latency += min_latency;
-				sum_max_latency += max_latency;
+				total_io_tsc += ns_ctx->total_tsc;
 				ns_count++;
 			}
 			ns_ctx = ns_ctx->next;
@@ -928,12 +934,12 @@ print_performance(void)
 		worker = worker->next;
 	}
 
-	if (ns_count != 0) {
+	if (ns_count != 0 && total_io_completed) {
+		sum_ave_latency = ((double)total_io_tsc / total_io_completed) * 1000 * 1000 / g_tsc_rate;
 		printf("========================================================\n");
 		printf("%-55s: %10.2f %10.2f %10.2f %10.2f %10.2f\n",
 		       "Total", total_io_per_second, total_mb_per_second,
-		       sum_ave_latency / ns_count, sum_min_latency / ns_count,
-		       sum_max_latency / ns_count);
+		       sum_ave_latency, min_latency_so_far, max_latency_so_far);
 		printf("\n");
 	}
 
