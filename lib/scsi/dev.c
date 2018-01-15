@@ -36,6 +36,25 @@
 
 static struct spdk_scsi_dev g_devs[SPDK_SCSI_MAX_DEVS];
 
+bool
+spdk_scsi_dev_lun_removable(struct spdk_scsi_dev *scsi_dev, int id)
+{
+	struct spdk_scsi_desc *desc;
+
+	pthread_mutex_lock(&scsi_dev->mutex);
+	TAILQ_FOREACH(desc, &scsi_dev->open_descs, link) {
+		if (desc->remove_cb) {
+			if (desc->remove_cb(desc->remove_ctx, id) == false) {
+				pthread_mutex_unlock(&scsi_dev->mutex);
+				return false;
+			}
+		}
+	}
+
+	pthread_mutex_unlock(&scsi_dev->mutex);
+	return true;
+}
+
 struct spdk_scsi_dev *
 spdk_scsi_dev_get_list(void)
 {
