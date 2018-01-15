@@ -28,7 +28,8 @@ rpc_param = {
     'chap_auth_group': 0,
     'header_digest': 0,
     'data_digest': 0,
-    'trace_flag': 'rpc'
+    'trace_flag': 'rpc',
+    'cpumask': 0x1
 }
 
 
@@ -187,7 +188,7 @@ def verify_portal_groups_rpc_methods(rpc_py, rpc_param):
     for idx, value in enumerate(lo_ip):
         # The portal group tag must start at 1
         tag = idx + 1
-        rpc.add_portal_group(tag, "{}:{}".format(value, rpc_param['port']))
+        rpc.add_portal_group(tag, "{}:{}@{}".format(value, rpc_param['port'], rpc_param['cpumask']))
         output = rpc.get_portal_groups()
         jsonvalues = json.loads(output)
         verify(len(jsonvalues) == tag, 1,
@@ -199,6 +200,8 @@ def verify_portal_groups_rpc_methods(rpc_py, rpc_param):
                "host value is {}, expected {}".format(value['portals'][0]['host'], rpc_param['target_ip']))
         verify(value['portals'][0]['port'] == str(rpc_param['port']), 1,
                "port value is {}, expected {}".format(value['portals'][0]['port'], str(rpc_param['port'])))
+        verify(value['portals'][0]['cpumask'] == format(rpc_param['cpumask'], '#x'), 1,
+               "cpumask value is {}, expected {}".format(value['portals'][0]['cpumask'], format(rpc_param['cpumask'], '#x')))
         tag_list.append(value['tag'])
         verify(value['tag'] == idx + 1, 1,
                "tag value is {}, expected {}".format(value['tag'], idx + 1))
@@ -217,6 +220,8 @@ def verify_portal_groups_rpc_methods(rpc_py, rpc_param):
                    "host value is {}, expected {}".format(jvalue['portals'][0]['host'], lo_ip[idx + jidx + 1]))
             verify(jvalue['portals'][0]['port'] == str(rpc_param['port']), 1,
                    "port value is {}, expected {}".format(jvalue['portals'][0]['port'], str(rpc_param['port'])))
+            verify(jvalue['portals'][0]['cpumask'] == format(rpc_param['cpumask'], '#x'), 1,
+                   "cpumask value is {}, expected {}".format(jvalue['portals'][0]['cpumask'], format(rpc_param['cpumask'], '#x')))
             verify(jvalue['tag'] != value or jvalue['tag'] == tag_list[idx + jidx + 1], 1,
                    "tag value is {}, expected {} and not {}".format(jvalue['tag'], tag_list[idx + jidx + 1], value))
 
