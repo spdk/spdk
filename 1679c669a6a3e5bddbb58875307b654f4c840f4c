@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff5796e1_618fc427",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 6
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-16T08:26:12Z",
+      "side": 1,
+      "message": "This needs some more detailed description in body.\n\n\"Script refactoring to accommodate for coming hot-remove tests\"? Or smth like this.",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 43
+      },
+      "revId": "1679c669a6a3e5bddbb58875307b654f4c840f4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92ed5d17_b4bdee44",
+        "filename": "test/vhost/hotplug/scsi_hotplug.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-16T08:26:12Z",
+      "side": 1,
+      "message": "Pawel, is it possible to do this like suggested in PS1?\n\n \u003e Could we instead call this function \"clear_vhost_config\" (or\n \u003e something similar) and instead call RPC once (with\n \u003e get_vhost_controllers function), get a list of all controllers and iterate over them to remove?",
+      "range": {
+        "startLine": 44,
+        "startChar": 0,
+        "endLine": 58,
+        "endChar": 51
+      },
+      "revId": "1679c669a6a3e5bddbb58875307b654f4c840f4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
