@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8872f5d6_9f3fb2c8",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-16T17:29:06Z",
+      "side": 1,
+      "message": "This isn\u0027t really needed - calloc zeroes the buffer.",
+      "revId": "28ac63ddb3c2f9d09349d722b84b18f869bf2b79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e237894b_ccb9e94b",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-16T17:29:06Z",
+      "side": 1,
+      "message": "This isn\u0027t really needed - calloc zeroes the buffer.",
+      "revId": "28ac63ddb3c2f9d09349d722b84b18f869bf2b79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c55f587c_3b3b19c8",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-16T17:29:06Z",
+      "side": 1,
+      "message": "see comment on previous patch - you could parse req-\u003ebdf here, and return -EINVAL if it fails - then pass the spdk_pci_addr to bdev_virtio_pci_scsi_dev_create instead",
+      "revId": "28ac63ddb3c2f9d09349d722b84b18f869bf2b79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
