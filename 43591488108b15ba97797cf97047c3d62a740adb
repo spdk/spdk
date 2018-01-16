@@ -22,6 +22,30 @@
       "revId": "43591488108b15ba97797cf97047c3d62a740adb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "869b43c1_e5f319a9",
+        "filename": "lib/virtio/virtio_pci.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-16T06:20:50Z",
+      "side": 1,
+      "message": "`modern_destruct_dev` is only called after device has been fully initialized, and hw-\u003epci_dev is set directly during initialization in `virtio_pci_dev_probe`.\nYou can see that inside `virtio_pci_dev_probe` we still call free_virtio_hw to cleanup after we encountered an error. That is because we\u0027re still inside initialization. Once we return -1, the device will be `detached` automatically.",
+      "parentUuid": "48d16d9c_b578efaf",
+      "range": {
+        "startLine": 214,
+        "startChar": 1,
+        "endLine": 214,
+        "endChar": 33
+      },
+      "revId": "43591488108b15ba97797cf97047c3d62a740adb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
