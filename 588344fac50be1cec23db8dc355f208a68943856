@@ -50,6 +50,24 @@
       "revId": "588344fac50be1cec23db8dc355f208a68943856",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b40036a_6cf2341d",
+        "filename": "doc/bdev.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-16T17:29:09Z",
+      "side": 1,
+      "message": "I think I\u0027ll have to rewrite this once we\u0027re confident that RPC is the primary configuration vehicle. The whole rest of the document is still talking about config files currently.",
+      "parentUuid": "032021f2_4b857576",
+      "revId": "588344fac50be1cec23db8dc355f208a68943856",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
