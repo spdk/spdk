@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bdc14b19_e1cf0fcf",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-16T13:55:14Z",
+      "side": 1,
+      "message": "this is not descriptive at all :)\nplease name it e.g. \"remove all vhost devices on shutdown\"",
+      "range": {
+        "startLine": 7,
+        "startChar": 7,
+        "endLine": 7,
+        "endChar": 24
+      },
+      "revId": "f64f4e94926d42bb7f56ae380075405c35994563",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9bf05b6a_bfa42292",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1172,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-16T13:55:14Z",
+      "side": 1,
+      "message": "The vdev might still have an active connection. It might be still processing I/O on some other thread. You need to use vhost external events API for removing devices. Otherwise you have a data race and a potential segfault scenario. Then, spdk_vhost_subsystem_fini will need to be modified. We should probably add a separate spdk_vhost_subsystem_fini_done function to signal vhost shutdown finish.",
+      "range": {
+        "startLine": 1172,
+        "startChar": 2,
+        "endLine": 1172,
+        "endChar": 30
+      },
+      "revId": "f64f4e94926d42bb7f56ae380075405c35994563",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
