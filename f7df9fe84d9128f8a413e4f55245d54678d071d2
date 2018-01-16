@@ -16,6 +16,24 @@
       "revId": "f7df9fe84d9128f8a413e4f55245d54678d071d2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2535ea49_8c818589",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-16T06:17:18Z",
+      "side": 1,
+      "message": "So we can move the check at the above spdk_poller_register() function at an earlier time? The start/stop are relating to the poller. For the allocate_thread interface, it is ok for the NULL setting for the start and stop poller functions.",
+      "parentUuid": "87a9a201_4b274cf8",
+      "revId": "f7df9fe84d9128f8a413e4f55245d54678d071d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
