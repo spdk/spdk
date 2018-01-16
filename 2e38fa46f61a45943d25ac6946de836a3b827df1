@@ -190,6 +190,30 @@
     },
     {
       "key": {
+        "uuid": "ee29c8fa_efb49745",
+        "filename": "test/vhost/hotplug/scsi_hotdetach.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-16T08:26:12Z",
+      "side": 1,
+      "message": "Why did you this line? It could stay (maybe it is needed and I don\u0027t see it), but we\u0027d need to clarify why, as you left my question unanswered.",
+      "parentUuid": "b3f82630_2f6ef4df",
+      "range": {
+        "startLine": 232,
+        "startChar": 4,
+        "endLine": 232,
+        "endChar": 81
+      },
+      "revId": "2e38fa46f61a45943d25ac6946de836a3b827df1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "81be499d_415c8dba",
         "filename": "test/vhost/hotplug/scsi_hotplug.sh",
         "patchSetId": 1
