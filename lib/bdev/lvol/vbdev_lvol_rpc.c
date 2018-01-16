@@ -339,6 +339,56 @@ invalid:
 
 SPDK_RPC_REGISTER("construct_lvol_bdev", spdk_rpc_construct_lvol_bdev)
 
+struct rpc_snapshot_lvol_bdev {
+	char *name;
+};
+
+static void
+spdk_rpc_snapshot_lvol_bdev(struct spdk_jsonrpc_request *request,
+			    const struct spdk_json_val *params)
+{
+	struct rpc_construct_lvol_bdev req = {};
+	size_t sz;
+	int rc;
+	struct spdk_lvol_store *lvs = NULL;
+
+	SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "Creating blob\n");
+
+	if (spdk_json_decode_object(params, rpc_construct_lvol_bdev_decoders,
+				    SPDK_COUNTOF(rpc_construct_lvol_bdev_decoders),
+				    &req)) {
+		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	rc = vbdev_get_lvol_store_by_uuid_xor_name(req.uuid, req.lvs_name, &lvs);
+	if (rc != 0) {
+		goto invalid;
+	}
+
+	if (req.lvol_name == NULL) {
+		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "no bdev name\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	rc = vbdev_lvol_create_snapshot(lvol, req.lvol_name, sz, _spdk_rpc_construct_lvol_bdev_cb, request);
+	if (rc < 0) {
+		goto invalid;
+	}
+
+	free_rpc_construct_lvol_bdev(&req);
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_strerror(-rc));
+	free_rpc_construct_lvol_bdev(&req);
+}
+
+SPDK_RPC_REGISTER("snapshot_lvol_bdev", spdk_rpc_snapshot_lvol_bdev)
+
 struct rpc_resize_lvol_bdev {
 	char *name;
 	uint64_t size;

@@ -745,6 +745,12 @@ vbdev_lvol_create(struct spdk_lvol_store *lvs, const char *name, size_t sz,
 	return rc;
 }
 
+int vbdev_lvol_create_snapshot(struct spdk_lvol *base_lvol, const char *name,
+			       spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	rc = spdk_lvol_snapshot(lvol,)
+}
+
 static void
 _vbdev_lvol_resize_cb(void *cb_arg, int lvolerrno)
 {
