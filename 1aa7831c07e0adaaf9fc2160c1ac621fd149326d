@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "01231f33_aeeb10d2",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 848,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-16T23:10:15Z",
+      "side": 1,
+      "message": "Is it important that the combination of CHAP params is checked before the validity of the group? If not, you can flip this around to make it simpler.\n\nif (group \u003c 0) {\n    return false;\n}\n\nif ((disabled \u003d\u003d....)) {\n    return true;\n}\n\nreturn false;",
+      "revId": "1aa7831c07e0adaaf9fc2160c1ac621fd149326d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
