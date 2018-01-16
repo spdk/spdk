@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ea06e302_f855fd55",
+        "filename": "lib/bdev/virtio/bdev_virtio.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-16T17:22:31Z",
+      "side": 1,
+      "message": "Could this take struct spdk_pci_addr * as a parameter, instead of the const char *?  I feel like this is more inline with something like spdk_bdev_nvme_create() - which takes the appropriate structure (spdk_nvme_transport_id) as the parameter instead of the raw char array.",
+      "revId": "d6bb27dcfac7759467ecb614b56cbf197923c41f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
