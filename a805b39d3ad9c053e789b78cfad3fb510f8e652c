@@ -1,0 +1,174 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "79dfab78_5b227e88",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 1281,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-16T19:34:43Z",
+      "side": 1,
+      "message": "in general - the lba_count variables in this patch are confusing\n\nsometimes it means lba_count in the blob, other times it is the converted lba_count to the backing bs_dev\n\nthe names really need to clarify this - something like lba_count_blob and lba_count_back_dev",
+      "revId": "a805b39d3ad9c053e789b78cfad3fb510f8e652c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "86a17f80_aa75c62e",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 1294,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-16T19:34:43Z",
+      "side": 1,
+      "message": "The name of this function (and also writev and write_zeroes variants below) do not really match what this function does.\n\nHow about _spdk_blob_write_after_allocate or _spdk_blob_write_after_copy?",
+      "revId": "a805b39d3ad9c053e789b78cfad3fb510f8e652c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "463da144_8ea6ab89",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 1305,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-16T19:34:43Z",
+      "side": 1,
+      "message": "comment is incorrect",
+      "revId": "a805b39d3ad9c053e789b78cfad3fb510f8e652c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf5f11a2_cf0a2340",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 1322,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-16T19:34:43Z",
+      "side": 1,
+      "message": "comment is incorrect",
+      "revId": "a805b39d3ad9c053e789b78cfad3fb510f8e652c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3c4bc2b6_ce1d77b6",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 1340,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-16T19:34:43Z",
+      "side": 1,
+      "message": "comment is incorrect",
+      "revId": "a805b39d3ad9c053e789b78cfad3fb510f8e652c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "45c8e82a_5fcd5b2f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 1402,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-16T19:34:43Z",
+      "side": 1,
+      "message": "_spdk_bs_allocate_cluster() will put the new cluster immediately into the blob\u0027s cluster array.  What happens if user issues a read to this cluster before the backing device data has been read and written to this cluster?  I think we would return invalid data to the user.",
+      "revId": "a805b39d3ad9c053e789b78cfad3fb510f8e652c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e74505cb_f3696200",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 1422,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-16T19:34:43Z",
+      "side": 1,
+      "message": "does it need to be aligned like this (second parameter)?\n\nrequesting a bigger alignment than necessary can waste memory",
+      "revId": "a805b39d3ad9c053e789b78cfad3fb510f8e652c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "044b5e4c_388a5b07",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 1475,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-16T19:34:43Z",
+      "side": 1,
+      "message": "We should not increment outstanding_ops directly here.  This should be done through a request.h interface instead.",
+      "revId": "a805b39d3ad9c053e789b78cfad3fb510f8e652c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0f5cbe2c_64048cd3",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 2831,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-16T19:34:43Z",
+      "side": 1,
+      "message": "should be 10 * 4096",
+      "revId": "a805b39d3ad9c053e789b78cfad3fb510f8e652c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "06cd44f8_32c65985",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 2839,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-16T19:34:43Z",
+      "side": 1,
+      "message": "10 * 4096",
+      "revId": "a805b39d3ad9c053e789b78cfad3fb510f8e652c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
