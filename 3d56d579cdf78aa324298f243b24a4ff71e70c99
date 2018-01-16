@@ -2,6 +2,213 @@
   "comments": [
     {
       "key": {
+        "uuid": "a44f59af_72b0f4fa",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 6
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-16T10:23:59Z",
+      "side": 1,
+      "message": "Why is this commit based on latest master?\nTests will not work because thin prov RPC options are added here, in this commit series: https://review.gerrithub.io/#/c/393634/.\n\nPlease rebase on top of provided link.",
+      "range": {
+        "startLine": 1,
+        "startChar": 13,
+        "endLine": 1,
+        "endChar": 78
+      },
+      "revId": "3d56d579cdf78aa324298f243b24a4ff71e70c99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ce283c6_7d5ce489",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-16T10:23:59Z",
+      "side": 1,
+      "message": "Please also update help message in test/lvol/lvol.sh",
+      "range": {
+        "startLine": 59,
+        "startChar": 0,
+        "endLine": 64,
+        "endChar": 66
+      },
+      "revId": "3d56d579cdf78aa324298f243b24a4ff71e70c99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cad9c982_249d7ba5",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-16T10:23:59Z",
+      "side": 1,
+      "message": "Please let\u0027s not do sed.\nWe already do bash script as \"main\" part of execution (for initial spdk config, running spdk) and python for tests.\nLet\u0027s not do bash-\u003epython-\u003ebash. You have other options to consider:\na) open, read and modify the config file in python\nb) you can use template strings and use variables to fill it, and then save it to config file. See spdk/scripts/fio.py for example.",
+      "range": {
+        "startLine": 94,
+        "startChar": 0,
+        "endLine": 99,
+        "endChar": 16
+      },
+      "revId": "3d56d579cdf78aa324298f243b24a4ff71e70c99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "73e6ef2d_4dd9ebb5",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-16T10:23:59Z",
+      "side": 1,
+      "message": "Some error messages would be nice.",
+      "range": {
+        "startLine": 110,
+        "startChar": 0,
+        "endLine": 112,
+        "endChar": 18
+      },
+      "revId": "3d56d579cdf78aa324298f243b24a4ff71e70c99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b9549af_5df924eb",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 873,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-16T10:23:59Z",
+      "side": 1,
+      "message": "What is the reason for try-catch here?\nCatching exceptions is done mostly in rpc_commands_lib.py, so...\nBesides - in \"except\" block you handle an exception and only print the error, without stopping the tests execution or any cleanup, etc.",
+      "range": {
+        "startLine": 873,
+        "startChar": 8,
+        "endLine": 873,
+        "endChar": 12
+      },
+      "revId": "3d56d579cdf78aa324298f243b24a4ff71e70c99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "871b9c82_dc370931",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 874,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-16T10:23:59Z",
+      "side": 1,
+      "message": "This variable is never used, while it should be (delete_bdev for example)",
+      "range": {
+        "startLine": 874,
+        "startChar": 12,
+        "endLine": 874,
+        "endChar": 21
+      },
+      "revId": "3d56d579cdf78aa324298f243b24a4ff71e70c99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29a5dbf3_7ce8f549",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 886,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-16T10:23:59Z",
+      "side": 1,
+      "message": "No reason to do string concat and generate lvol bdev name yourself: construct_lvol_bdev from line 874 by default returns the user-friendly name of created lvol bdev.\n\nSo here you could just use variable uuid_bdev. Feel free to change the var name.",
+      "range": {
+        "startLine": 885,
+        "startChar": 35,
+        "endLine": 886,
+        "endChar": 43
+      },
+      "revId": "3d56d579cdf78aa324298f243b24a4ff71e70c99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1eaa905a_501b3398",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 891,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-16T10:23:59Z",
+      "side": 1,
+      "message": "See my other comment about sed\u0027ing.",
+      "range": {
+        "startLine": 890,
+        "startChar": 8,
+        "endLine": 891,
+        "endChar": 85
+      },
+      "revId": "3d56d579cdf78aa324298f243b24a4ff71e70c99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a186ebd_a25fbe24",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 963,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-16T10:23:59Z",
+      "side": 1,
+      "message": "TestCases object does not have attribute named \"lbd_name0\", only \"lbd_name\". This line will fail.",
+      "range": {
+        "startLine": 963,
+        "startChar": 52,
+        "endLine": 963,
+        "endChar": 66
+      },
+      "revId": "3d56d579cdf78aa324298f243b24a4ff71e70c99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6bf40340_a953325e",
         "filename": "test/lvol/test_cases.py",
         "patchSetId": 6
