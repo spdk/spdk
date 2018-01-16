@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e8e47529_ab6c3a19",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-16T07:40:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "51f9a5f2_f6d71a2b",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "297d8bc9_dd3ac598",
         "filename": "doc/nvmf_tgt_pg.md",
         "patchSetId": 22
@@ -30,6 +48,24 @@
       "writtenOn": "2018-01-11T18:48:19Z",
       "side": 1,
       "message": "I\u0027m still unsure of what you\u0027re trying to say here. I\u0027m not understanding what \u0027invoke\u0027 means in this context.\n\nAre you saying that the NVMe-oF target application depends on the NVMe-oF target library and that users can choose to either use/modify the full application or consume the library directly from their application?",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0fac7f57_ebfbee5d",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-16T07:40:45Z",
+      "side": 1,
+      "message": "Yes. Our nvme-of app integrates the nvme-of lib and serves the two purposes you mentioned.",
+      "parentUuid": "297d8bc9_dd3ac598",
       "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "75444231_f0b0f7a9",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-16T07:40:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "42f8ad60_9f75f176",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3882fd61_f45f423b",
         "filename": "doc/nvmf_tgt_pg.md",
         "patchSetId": 22
@@ -64,6 +118,24 @@
       "writtenOn": "2018-01-11T18:48:19Z",
       "side": 1,
       "message": "This should probably say something like \"An NVMe-oF subsystem, as defined by the NVMe-oF specification. Subsystems contain namespaces and controllers and perform access control\"",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2914202e_c595cbef",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-16T07:40:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3882fd61_f45f423b",
       "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "008433b5_87254254",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-16T07:40:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "05518a03_0cd0cac7",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0f20412e_ba5d3fdc",
         "filename": "doc/nvmf_tgt_pg.md",
         "patchSetId": 22
@@ -98,6 +188,24 @@
       "writtenOn": "2018-01-11T18:48:19Z",
       "side": 1,
       "message": "This is an abstraction for a network transport, as defined by the NVMe-oF specification. Currently, only an RDMA transport is available.",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a5b5c1a5_2c2323e6",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-16T07:40:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0f20412e_ba5d3fdc",
       "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "87a2ae2c_616145fa",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-16T07:40:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e4169fbb_47fa0221",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d27eb889_c00b7b63",
         "filename": "doc/nvmf_tgt_pg.md",
         "patchSetId": 22
@@ -132,6 +258,24 @@
       "writtenOn": "2018-01-11T18:48:19Z",
       "side": 1,
       "message": "Dependencies",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "572c5886_17f4a4a8",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-16T07:40:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d27eb889_c00b7b63",
       "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -155,6 +299,24 @@
     },
     {
       "key": {
+        "uuid": "7519a713_67bbaf98",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-16T07:40:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2a64c704_c8e8dd99",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5aa410c8_307dae2b",
         "filename": "doc/nvmf_tgt_pg.md",
         "patchSetId": 22
@@ -166,6 +328,24 @@
       "writtenOn": "2018-01-11T18:48:19Z",
       "side": 1,
       "message": "Network Transports",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d85e739_9a4efeef",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-16T07:40:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5aa410c8_307dae2b",
       "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -189,6 +369,24 @@
     },
     {
       "key": {
+        "uuid": "d2e7be6f_89824fa9",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-16T07:40:45Z",
+      "side": 1,
+      "message": "Thanks. Updated accordingly. Looks like I have some wrong understanding for the transport here. For the group together, yet it is for the connections.",
+      "parentUuid": "f9918e4a_b621a787",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "be6ebb89_c19fc3c9",
         "filename": "doc/nvmf_tgt_pg.md",
         "patchSetId": 22
@@ -200,6 +398,24 @@
       "writtenOn": "2018-01-11T18:48:19Z",
       "side": 1,
       "message": "The NVMe-oF application spawns one thread per core using the SPDK application framework and places a single poll group on each thread. However, the NVMe-oF library doesn\u0027t spawn any threads and has looser requirements. The primary requirement is that a poll group can only be accessed from the thread it was created on.",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4002acb6_70306815",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-16T07:40:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "be6ebb89_c19fc3c9",
       "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
