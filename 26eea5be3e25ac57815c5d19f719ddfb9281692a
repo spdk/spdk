@@ -439,6 +439,24 @@
     },
     {
       "key": {
+        "uuid": "722b5318_5114013f",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-16T09:28:32Z",
+      "side": 1,
+      "message": "For the NUMA appropriate, it looks like we are currently just round robin to put the new connection on the next available poll group. So that it relies on user\u0027s setting on the CoreMask configured and which socket the NICs are installed. Is this understanding correct? Thanks.",
+      "parentUuid": "08eb14c1_cf6be6d1",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a782562b_01728a3e",
         "filename": "doc/nvmf_tgt_pg.md",
         "patchSetId": 22
@@ -450,6 +468,24 @@
       "writtenOn": "2018-01-11T18:48:19Z",
       "side": 1,
       "message": "Dynamic Subsystem Management",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b96e006_983e5800",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-16T09:28:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a782562b_01728a3e",
       "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -473,6 +509,24 @@
     },
     {
       "key": {
+        "uuid": "eb247b8a_56afac51",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-16T09:28:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "476c8f3e_0cbba583",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e2ccf00e_01816c4e",
         "filename": "doc/nvmf_tgt_pg.md",
         "patchSetId": 22
@@ -484,6 +538,24 @@
       "writtenOn": "2018-01-11T18:48:19Z",
       "side": 1,
       "message": "For all of the NVMe I/O commands, no message passing is needed. These commands can execute on any thread.\n\nFor some NVMe admin and fabrics commands, messages will be sent to all other threads to temporarily freeze a subsystem before they are processed. This can block incoming NVMe I/O commands.",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a710810_917cba99",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-16T09:28:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e2ccf00e_01816c4e",
       "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -507,6 +579,24 @@
     },
     {
       "key": {
+        "uuid": "68aa28ec_162ad871",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-16T09:28:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2d7cb255_fb08b62b",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "42e2f2d5_310341e9",
         "filename": "doc/nvmf_tgt_pg.md",
         "patchSetId": 22
@@ -524,6 +614,24 @@
     },
     {
       "key": {
+        "uuid": "a6c884db_14f65264",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-16T09:28:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "42e2f2d5_310341e9",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4b9a97c7_b1245e82",
         "filename": "doc/nvmf_tgt_pg.md",
         "patchSetId": 22
@@ -535,6 +643,24 @@
       "writtenOn": "2018-01-11T18:48:19Z",
       "side": 1,
       "message": "I have a patch out that deletes this.",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f80b8950_79dc84e4",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-16T09:28:32Z",
+      "side": 1,
+      "message": "Removed this. Thanks.",
+      "parentUuid": "4b9a97c7_b1245e82",
       "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
