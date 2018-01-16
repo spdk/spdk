@@ -681,6 +681,24 @@
       "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1cb2c874_50343f89",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-16T09:45:27Z",
+      "side": 1,
+      "message": "Thanks for the suggestion. I\u0027ll add some description on the public APIs and remove some of the description of the current implementation. For the concern of implementation change in the future, maybe this programming guide can also be updated at that time for some major change. This document along with the source code can both help the developers to understand the NVMe-oF target. What\u0027s your thinking? Thanks.",
+      "parentUuid": "c6bc23c0_5d9cb3aa",
+      "revId": "26eea5be3e25ac57815c5d19f719ddfb9281692a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
