@@ -104,6 +104,24 @@
     },
     {
       "key": {
+        "uuid": "676093de_17e2a1b9",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 1402,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-16T22:12:43Z",
+      "side": 1,
+      "message": "Let\u0027s keep this code as you have it for now.  I\u0027m working on a blobstore patch that would enable queuing of user requests.  Once we have that in place, we can do the following:\n\nif cluster is not allocated\n  if a cluster allocation is already in progress on this channel\n    queue the user request\n  else\n    allocate a cluster but do *not* put it in the blob\u0027s cluster array\n    set a flag in the channel that an allocation is in progress\n\nThen after the updated cluster has been written out, grab a lock and update the blob\u0027s cluster array.  If that cluster has already been allocated by another channel, throw away the allocated cluster and redo the operation on the other cluster instead.",
+      "parentUuid": "45c8e82a_5fcd5b2f",
+      "revId": "a805b39d3ad9c053e789b78cfad3fb510f8e652c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e74505cb_f3696200",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 31
