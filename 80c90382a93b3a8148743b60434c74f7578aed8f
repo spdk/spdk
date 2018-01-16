@@ -22,6 +22,30 @@
       "revId": "80c90382a93b3a8148743b60434c74f7578aed8f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8f6f3c64_e648e3b8",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-01-16T18:27:11Z",
+      "side": 1,
+      "message": "Can you explain why?",
+      "parentUuid": "2003c63b_72e2331a",
+      "range": {
+        "startLine": 96,
+        "startChar": 2,
+        "endLine": 96,
+        "endChar": 12
+      },
+      "revId": "80c90382a93b3a8148743b60434c74f7578aed8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
