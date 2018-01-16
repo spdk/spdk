@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e718f939_29fe84e7",
+        "filename": "doc/vhost.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-16T17:10:48Z",
+      "side": 1,
+      "message": "I think these tags are part of a global SPDK namespace?  So instead of #intro, maybe #vhost_toc would be better.",
+      "revId": "fd0bc0059fe6a1108527d94eb8e979874134be51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b28879f9_e2777525",
+        "filename": "doc/vhost.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-16T17:10:48Z",
+      "side": 1,
+      "message": "the same SPDK userspace polled-mode principles.  Since SPDK is polling for virtio submissions, it can signal the virtio driver to skip notifications on submission.  This avoids VMEXITs on I/O submission and can significantly reduce CPU usage in the guest VM on heavy I/O workloads.",
+      "revId": "fd0bc0059fe6a1108527d94eb8e979874134be51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ee4e69c_be862fd7",
+        "filename": "doc/vhost.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-16T17:10:48Z",
+      "side": 1,
+      "message": "I preferred just \"shared hugepage memory\".  Otherwise it seems that the NVMe disk is doing DMA to/from the virtqueues in shared hugepage memory.",
+      "revId": "fd0bc0059fe6a1108527d94eb8e979874134be51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
