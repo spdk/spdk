@@ -244,6 +244,8 @@ struct spdk_blob_md_descriptor_extent {
 #define SPDK_BLOB_DATA_RO_FLAGS_MASK	SPDK_BLOB_READ_ONLY
 #define SPDK_BLOB_MD_RO_FLAGS_MASK	0
 
+#define SNAPSHOT_IN_PROGRESS "SNAPSHOT_IN_PROGRESS"
+
 #define spdk_blob_is_thin_provisioned(blob) (blob->invalid_flags & SPDK_BLOB_THIN_PROV)
 
 struct spdk_blob_md_descriptor_flags {

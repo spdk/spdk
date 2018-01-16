@@ -76,6 +76,7 @@ struct spdk_blob_store;
 struct spdk_io_channel;
 struct spdk_blob;
 struct spdk_xattr_names;
+struct spdk_bs_dev;
 
 typedef void (*spdk_bs_op_complete)(void *cb_arg, int bserrno);
 typedef void (*spdk_bs_op_with_handle_complete)(void *cb_arg, struct spdk_blob_store *bs,
@@ -83,6 +84,8 @@ typedef void (*spdk_bs_op_with_handle_complete)(void *cb_arg, struct spdk_blob_s
 typedef void (*spdk_blob_op_complete)(void *cb_arg, int bserrno);
 typedef void (*spdk_blob_op_with_id_complete)(void *cb_arg, spdk_blob_id blobid, int bserrno);
 typedef void (*spdk_blob_op_with_handle_complete)(void *cb_arg, struct spdk_blob *blb, int bserrno);
+typedef void (*spdk_blob_get_bs_dev)(void *cb_arg, struct spdk_blob *blob,
+				     struct spdk_bs_dev **bs_dev);
 
 
 /* Calls to function pointers of this type must obey all of the normal
@@ -230,6 +233,12 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 /* Create a new blob. */
 void spdk_bs_create_blob(struct spdk_blob_store *bs,
 			 spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
+
+/* Create a snapshot of specified blob. Specified blob will become a clone.
+ * bs_dev is spdk_bs_dev created on top of
+ * Callback will provide handle to newly created snapshot blob. */
+void spdk_bs_create_blob_snapshot(struct spdk_blob *blob, spdk_blob_get_bs_dev bs_dev_fn,
+				  spdk_blob_op_with_handle_complete cb_fn, void *cb_arg);
 
 /* Delete an existing blob. */
 void spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
