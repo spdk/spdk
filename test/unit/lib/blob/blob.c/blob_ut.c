@@ -1066,6 +1066,108 @@ blob_rw_iov_read_only(void)
 }
 
 static void
+blob_unmap(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_bs_dev *dev;
+	struct spdk_blob *blob;
+	struct spdk_blob_data *_blob;
+	struct spdk_io_channel *channel;
+	spdk_blob_id blobid;
+	struct spdk_blob_opts opts;
+	uint8_t payload[4096];
+	int rc;
+	int i;
+
+	dev = init_dev();
+
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	channel = spdk_bs_alloc_io_channel(bs);
+	CU_ASSERT(channel != NULL);
+
+	spdk_blob_opts_init(&opts);
+	opts.num_clusters = 10;
+
+	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+	_blob = __blob_to_data(blob);
+
+	rc = spdk_blob_resize(blob, 10);
+	CU_ASSERT(rc == 0);
+
+	memset(payload, 0, sizeof(payload));
+	payload[0] = 0xFF;
+
+	/*
+	 * Set first byte of every cluster to 0xFF.
+	 * First cluster on device is reserved so let's start from cluster number 1
+	 */
+	for (i = 1; i < 11; i++) {
+		g_dev_buffer[i * SPDK_BLOB_OPTS_CLUSTER_SZ] = 0xFF;
+	}
+
+	/* Confirm writes */
+	for (i = 0; i < 10; i++) {
+		payload[0] = 0;
+		spdk_bs_io_read_blob(blob, channel, &payload, i * SPDK_BLOB_OPTS_CLUSTER_SZ / 4096, 1,
+				     blob_op_complete, NULL);
+		CU_ASSERT(g_bserrno == 0);
+		CU_ASSERT(payload[0] == 0xFF);
+	}
+
+	/* Mark some clusters as unallocated */
+	_blob->active.clusters[1] = 0;
+	_blob->active.clusters[2] = 0;
+	_blob->active.clusters[3] = 0;
+	_blob->active.clusters[6] = 0;
+	_blob->active.clusters[8] = 0;
+
+	/* Unmap clusters by resizing to 0 */
+	rc = spdk_blob_resize(blob, 0);
+	CU_ASSERT(rc == 0);
+
+	spdk_blob_sync_md(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Confirm that only 'allocated' clusters were unmaped */
+	for (i = 1; i < 11; i++) {
+		switch (i) {
+		case 2:
+		case 3:
+		case 4:
+		case 7:
+		case 9:
+			CU_ASSERT(g_dev_buffer[i * SPDK_BLOB_OPTS_CLUSTER_SZ] == 0xFF);
+			break;
+		default:
+			CU_ASSERT(g_dev_buffer[i * SPDK_BLOB_OPTS_CLUSTER_SZ] == 0);
+			break;
+		}
+	}
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_free_io_channel(channel);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+}
+
+
+static void
 blob_iter(void)
 {
 	struct spdk_blob_store *bs;
@@ -3006,6 +3108,7 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "blob_rw_verify_iov", blob_rw_verify_iov) == NULL ||
 		CU_add_test(suite, "blob_rw_verify_iov_nomem", blob_rw_verify_iov_nomem) == NULL ||
 		CU_add_test(suite, "blob_rw_iov_read_only", blob_rw_iov_read_only) == NULL ||
+		CU_add_test(suite, "blob_unmap", blob_unmap) == NULL ||
 		CU_add_test(suite, "blob_iter", blob_iter) == NULL ||
 		CU_add_test(suite, "blob_xattr", blob_xattr) == NULL ||
 		CU_add_test(suite, "bs_load", bs_load) == NULL ||
