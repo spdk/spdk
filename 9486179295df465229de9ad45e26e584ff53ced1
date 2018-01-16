@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7393c886_9b1c4f13",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-16T18:57:32Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "bc566a30_7c0ba9e1",
+      "revId": "9486179295df465229de9ad45e26e584ff53ced1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e9688755_17887820",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2018-01-16T18:39:04Z",
       "side": 1,
       "message": "Let\u0027s call this module_ch.  With a comment explaining that this points to the spdk_io_channel allocated by the bdev module.",
+      "revId": "9486179295df465229de9ad45e26e584ff53ced1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cfe387d3_d353b7c8",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-16T18:57:32Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "e9688755_17887820",
       "revId": "9486179295df465229de9ad45e26e584ff53ced1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
