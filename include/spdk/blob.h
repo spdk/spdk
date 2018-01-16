@@ -142,6 +142,7 @@ struct spdk_bs_dev {
 
 	uint64_t	blockcnt;
 	uint32_t	blocklen; /* In bytes */
+	void		*ctx;
 };
 
 struct spdk_bs_type {
@@ -230,6 +231,12 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 /* Create a new blob. */
 void spdk_bs_create_blob(struct spdk_blob_store *bs,
 			 spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
+
+/* Create a snapshot of specified blob. Specified blob will become a clone.
+ * bs_dev is spdk_bs_dev created on top of
+ * Callback will provide handle to newly created snapshot blob. */
+void spdk_bs_create_blob_snapshot(struct spdk_blob *blob,
+				  spdk_blob_op_with_handle_complete cb_fn, void *cb_arg);
 
 /* Delete an existing blob. */
 void spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
