@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "44b61228_0ad3fd62",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-16T08:37:15Z",
+      "side": 1,
+      "message": "bdevs",
+      "range": {
+        "startLine": 19,
+        "startChar": 33,
+        "endLine": 19,
+        "endChar": 37
+      },
+      "revId": "8a653712345318cd3f16bb940e0be39646da7551",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8c8605b_78e682f7",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-16T08:37:15Z",
+      "side": 1,
+      "message": "what about snapshots \u0026 clones?",
+      "range": {
+        "startLine": 19,
+        "startChar": 11,
+        "endLine": 19,
+        "endChar": 27
+      },
+      "revId": "8a653712345318cd3f16bb940e0be39646da7551",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b248637_e3c16c3f",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-16T08:37:15Z",
+      "side": 1,
+      "message": "This paragraph is a copy-pasta from commit with thin prov test plan, but I\u0027m okay with that as this shouldn\u0027t generate conflicts on merging.",
+      "revId": "8a653712345318cd3f16bb940e0be39646da7551",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bbc664c2_b18ade32",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 680,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-16T08:37:15Z",
+      "side": 1,
+      "message": "Do we do verify during write? This test would be best to use FIO in implementation so we are sure that written data is valid.",
+      "range": {
+        "startLine": 680,
+        "startChar": 2,
+        "endLine": 680,
+        "endChar": 47
+      },
+      "revId": "8a653712345318cd3f16bb940e0be39646da7551",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
