@@ -1001,6 +1001,148 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	return 0;
 }
 
+
+/* START spdk_lvol_create_snapshot */
+
+
+// static void
+// _spdk_lvol_create_blob_snapshot_cb(void *cb_arg, struct spdk_blob *blob, int bserrno)
+// {
+// Do we need to set anything specific to snapshot here?
+// }
+
+int
+spdk_lvol_create_snapshot(struct spdk_lvol *orglvol, const char *snapshot_name,
+			  spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvol_store *lvs = orglvol->lvol_store;
+	struct spdk_lvol *tmp, *newlvol;
+	struct spdk_blob *orgblob = orglvol->blob;
+	struct spdk_lvol_with_handle_req *req;
+	struct tm *snapshot_time;
+	char time_buf[30];
+	char *name;
+	time_t t;
+
+
+	if (snapshot_name == NULL) {
+		time(&t);
+		snapshot_time = localtime(&t);
+		strftime(time_buf, sizeof(time_buf), "%Y/%m/%d-%H:%M:%S", snapshot_time);
+		name = spdk_sprintf_alloc("snapshot:%s-%s", orglvol->name, time_buf);
+	} else {
+		name = spdk_sprintf_alloc("snapshot:%s", snapshot_name);
+	}
+
+	if (name != NULL && strnlen(name, SPDK_LVOL_NAME_MAX) == SPDK_LVOL_NAME_MAX) {
+		free(name);
+		SPDK_ERRLOG("Name has no null terminator.\n");
+		return -EINVAL;
+	}
+
+	TAILQ_FOREACH(tmp, &lvs->lvols, link) {
+		if (!strncmp(name, tmp->name, SPDK_LVOL_NAME_MAX)) {
+			free(name);
+			SPDK_ERRLOG("lvol with name %s already exists\n", name);
+			return -EINVAL;
+		}
+	}
+
+	req = calloc(1, sizeof(*req));
+	if (!req) {
+		free(name);
+		SPDK_ERRLOG("Cannot alloc memory for lvol request pointer\n");
+		return -ENOMEM;
+	}
+
+	newlvol = calloc(1, sizeof(*newlvol));
+	if (!newlvol) {
+		free(req);
+		free(name);
+		SPDK_ERRLOG("Cannot alloc memory for lvol base pointer\n");
+		return -ENOMEM;
+	}
+
+	newlvol->lvol_store = lvs;
+	newlvol->num_clusters = orglvol->num_clusters;
+	newlvol->close_only = false;
+	strncpy(newlvol->name, name, SPDK_LVS_NAME_MAX);
+	req->lvol = newlvol;
+
+	spdk_bs_create_blob_snapshot(orgblob, _spdk_lvol_create_open_cb, &req);
+
+	free(name);
+	return 0;
+}
+
+/* END spdk_lvol_create_snapshot */
+
+/* START spdk_lvol_create_clone */
+
+// static void
+// _spdk_lvol_open_clone_cb(void *cb_arg, spdk_blob_id blob_id, int bserrno)
+// {
+// Do we need to set anything specific to clone here?
+// }
+
+// _spdk_lvol_create_clone_cb(void *cb_arg, spdk_blob_id blob_id, int bserrno)
+// {
+// Do we need to set anything specific to clone here?
+// }
+
+int
+spdk_lvol_create_clone(struct spdk_lvol *orglvol, const char *clone_name,
+		       spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvol_store *lvs = orglvol->lvol_store;
+	struct spdk_lvol *tmp, *newlvol;
+	struct spdk_blob *orgblob = orglvol->blob;
+	struct spdk_lvol_with_handle_req *req;
+
+	if (clone_name == NULL || strnlen(clone_name, SPDK_LVS_NAME_MAX) == 0) {
+		SPDK_ERRLOG("No name specified.\n");
+		return -EINVAL;
+	}
+
+	if (strnlen(clone_name, SPDK_LVOL_NAME_MAX) == SPDK_LVOL_NAME_MAX) {
+		SPDK_ERRLOG("Name has no null terminator.\n");
+		return -EINVAL;
+	}
+
+	TAILQ_FOREACH(tmp, &lvs->lvols, link) {
+		if (!strncmp(clone_name, tmp->name, SPDK_LVOL_NAME_MAX)) {
+			SPDK_ERRLOG("lvol with name %s already exists\n", clone_name);
+			return -EINVAL;
+		}
+	}
+
+	req = calloc(1, sizeof(*req));
+	if (!req) {
+		SPDK_ERRLOG("Cannot alloc memory for lvol request pointer\n");
+		return -ENOMEM;
+	}
+
+	newlvol = calloc(1, sizeof(*newlvol));
+	if (!newlvol) {
+		free(req);
+		SPDK_ERRLOG("Cannot alloc memory for lvol base pointer\n");
+		return -ENOMEM;
+	}
+
+	newlvol->lvol_store = lvs;
+	newlvol->num_clusters = orglvol->num_clusters;
+	newlvol->close_only = false;
+	strncpy(newlvol->name, clone_name, SPDK_LVS_NAME_MAX);
+	req->lvol = newlvol;
+
+	spdk_bs_create_blob_clone(orgblob, _spdk_lvol_create_cb, &req);
+
+	return 0;
+}
+
+/* END spdk_lvol_create_clone */
+
+
 static void
 _spdk_lvol_resize_cb(void *cb_arg, int lvolerrno)
 {
