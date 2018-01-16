@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0dca23ea_4ce6e4fc",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 49
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-16T10:26:40Z",
+      "side": 1,
+      "message": "Just nit picking here, can we align it with fields above ?",
+      "range": {
+        "startLine": 58,
+        "startChar": 8,
+        "endLine": 58,
+        "endChar": 9
+      },
+      "revId": "169789eef79e61021699125c39c06443a42d39c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "64bc5e55_9bd2d11f",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 49
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-16T10:26:40Z",
+      "side": 1,
+      "message": "Is this used anywhere now in vbdev_lvol.c after the changes ?",
+      "range": {
+        "startLine": 62,
+        "startChar": 0,
+        "endLine": 66,
+        "endChar": 1
+      },
+      "revId": "169789eef79e61021699125c39c06443a42d39c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21290393_9ead8b39",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 49
+      },
+      "lineNbr": 1352,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-16T10:26:40Z",
+      "side": 1,
+      "message": "Please check that lvol-\u003ename changed.",
+      "revId": "169789eef79e61021699125c39c06443a42d39c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
