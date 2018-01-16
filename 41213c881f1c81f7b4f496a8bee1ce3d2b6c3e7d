@@ -378,6 +378,40 @@
       "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0120b060_b2dd6594",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 418,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-16T12:49:10Z",
+      "side": 1,
+      "message": "We should add here:\nCU_ASSERT(g_bserrno \u003d\u003d 0);\nSPDK_CU_ASSERT_FATAL(g_blob !\u003d NULL);",
+      "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "81bf7580_e673953c",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 441,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-16T12:49:10Z",
+      "side": 1,
+      "message": "Unnecessary empty line.",
+      "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
