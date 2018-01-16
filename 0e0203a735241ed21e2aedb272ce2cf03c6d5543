@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "45e59107_53284827",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-16T13:33:10Z",
+      "side": 1,
+      "message": "VM0 has cpumask 0x6 (autotest.config:4), so you should probably use `make -j2`",
+      "range": {
+        "startLine": 111,
+        "startChar": 85,
+        "endLine": 111,
+        "endChar": 87
+      },
+      "revId": "0e0203a735241ed21e2aedb272ce2cf03c6d5543",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
