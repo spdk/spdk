@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "6dd09d60_6b78426c",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-16T17:10:48Z",
+      "side": 1,
+      "message": "That QEMU example is not vhost though - it\u0027s just a virtio backend running inside of the QEMU process.  vhost protocol is not used at all in this case.",
+      "parentUuid": "960814e7_1ff641c7",
+      "revId": "a45331b5b2e1f8b4f735e02f4ca6f178fbbca46d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8564cdcc_7883f44e",
         "filename": "doc/vhost.md",
         "patchSetId": 9
