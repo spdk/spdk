@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2003c63b_72e2331a",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-16T14:29:07Z",
+      "side": 1,
+      "message": "You don\u0027t really this lun counter, neither here nor in spdk_scsi_dev_delete_lun.",
+      "range": {
+        "startLine": 96,
+        "startChar": 2,
+        "endLine": 96,
+        "endChar": 12
+      },
+      "revId": "80c90382a93b3a8148743b60434c74f7578aed8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
