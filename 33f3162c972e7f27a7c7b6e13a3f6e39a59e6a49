@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "caa14860_a4094ba5",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 866,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-16T18:44:01Z",
+      "side": 1,
+      "message": "Instead of an else here, can we set lba_count to 0 inside the if on line 859? That makes more sense to me - the lba_count goes to zero when you send an unmap.",
+      "revId": "33f3162c972e7f27a7c7b6e13a3f6e39a59e6a49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
