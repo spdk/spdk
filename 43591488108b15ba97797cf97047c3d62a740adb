@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "48d16d9c_b578efaf",
+        "filename": "lib/virtio/virtio_pci.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-16T01:49:34Z",
+      "side": 1,
+      "message": "It looks eunsured that hw-\u003epci_dev is not NULL. Unconditional call of spdk_pci_device_detach() is good/necessary for all cases?",
+      "range": {
+        "startLine": 214,
+        "startChar": 1,
+        "endLine": 214,
+        "endChar": 33
+      },
+      "revId": "43591488108b15ba97797cf97047c3d62a740adb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
