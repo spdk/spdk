@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "71e88b62_3f4c7a53",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3491,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-16T13:01:39Z",
+      "side": 1,
+      "message": "We can actually get bs_dev directly as an argument. We don\u0027t need callback - user should provide bs_dev created on blob that is provided as an argument as well.",
+      "range": {
+        "startLine": 3491,
+        "startChar": 54,
+        "endLine": 3491,
+        "endChar": 85
+      },
+      "revId": "adf6bd1a267647e95dc5bee6c82f68128435e229",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
