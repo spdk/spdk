@@ -149,6 +149,15 @@ int spdk_lvs_destroy(struct spdk_lvol_store *lvol_store,
  */
 int spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 		     spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
+/**
+ * \brief Create snapshot of given lvol
+ * \param lvol Handle to lvol
+ * \param cb_fn Completion callback
+ * \param cb_arg Completion callback custom arguments
+ * \return error
+ */
+int spdk_lvol_snapshot(struct spdk_lvol *lvol,
+		       spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
 
 /**
  * \brief Closes lvol and removes information about lvol from its lvolstore.
