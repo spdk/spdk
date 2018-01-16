@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6bf40340_a953325e",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 1117,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-16T09:15:07Z",
+      "side": 1,
+      "message": "Running this test case by itself on a system with NVMe device will not work. Currently in vhost_start() a vhost.conf is used with NVMe parameters defined.\n\nDepending on what is on the system, calls like get_lvol_stores() and get_lvol_bdevs() might return unexpected results.",
+      "range": {
+        "startLine": 1117,
+        "startChar": 8,
+        "endLine": 1117,
+        "endChar": 27
+      },
+      "revId": "3d56d579cdf78aa324298f243b24a4ff71e70c99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e821aa4_e6d38f02",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 1127,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-16T09:15:07Z",
+      "side": 1,
+      "message": "Hardcoding it for first encountered lvs might not work, if there are some other devices in system with lvs already on them.",
+      "range": {
+        "startLine": 1127,
+        "startChar": 34,
+        "endLine": 1127,
+        "endChar": 40
+      },
+      "revId": "3d56d579cdf78aa324298f243b24a4ff71e70c99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "26bd174f_3524b16b",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 1152,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-16T09:15:07Z",
+      "side": 1,
+      "message": "Similar to above, it might not work if there are other bdevs beside malloc in the system.",
+      "range": {
+        "startLine": 1152,
+        "startChar": 58,
+        "endLine": 1152,
+        "endChar": 71
+      },
+      "revId": "3d56d579cdf78aa324298f243b24a4ff71e70c99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
