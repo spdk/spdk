@@ -157,6 +157,7 @@ dev_unmap(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	offset = lba * DEV_BUFFER_BLOCKLEN;
 	length = lba_count * DEV_BUFFER_BLOCKLEN;
 	SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
+	memset(&g_dev_buffer[offset], 0, length);
 	cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, 0);
 }
 
