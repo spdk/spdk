@@ -65,6 +65,30 @@
     },
     {
       "key": {
+        "uuid": "9f42cc26_07796be6",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-16T10:34:01Z",
+      "side": 1,
+      "message": "\"or libraries that want to implement block device abstraction layer\"\nThis part doesn\u0027t tell me anything. After reading it I\u0027m even more confused than I was before.\n\nMaybe we could start this guide as following:\n\n```\nThis programming guide consists of 2 main parts.\n - @ref bdev usage in application\n - @ref implementing bdev submodules\n\nThe first part is intended for developers authoring applications that use the SPDK bdev library.\nSecond part explains how to write a backend library to fulfill block device abstraction layer requirements.\n\nThis guide is not intended to serve as a design document or an API reference, but in some cases source code snippets and high level sequences will be discussed.\n```",
+      "parentUuid": "8f96d08a_cfdb5cf9",
+      "range": {
+        "startLine": 6,
+        "startChar": 39,
+        "endLine": 6,
+        "endChar": 79
+      },
+      "revId": "7f80e58f81a8ad800f53320764322907c9b8a7bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "92ef4381_a5d68b16",
         "filename": "doc/bdal_pg.md",
         "patchSetId": 5
@@ -111,6 +135,29 @@
     },
     {
       "key": {
+        "uuid": "cfa880d7_d4d2dec0",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-16T10:34:01Z",
+      "side": 1,
+      "message": "Do we need this entire section?\n\nCan\u0027t we just say that SPDK bdev I/O is asynchronous by design and all I/O requests must provide a completion callback?\nI\u0027d probably put such sentence in `I/O Operations` section.",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 0
+      },
+      "revId": "7f80e58f81a8ad800f53320764322907c9b8a7bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0ce5bac1_826ba9d7",
         "filename": "doc/bdal_pg.md",
         "patchSetId": 5
@@ -131,6 +178,52 @@
       "revId": "7f80e58f81a8ad800f53320764322907c9b8a7bb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5362b123_82b6bc91",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-16T10:34:01Z",
+      "side": 1,
+      "message": "I do not think this sentence is necessary. You list all I/O-sending functions below.",
+      "range": {
+        "startLine": 57,
+        "startChar": 0,
+        "endLine": 57,
+        "endChar": 92
+      },
+      "revId": "7f80e58f81a8ad800f53320764322907c9b8a7bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "07145c79_a4129fcd",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-16T10:34:01Z",
+      "side": 1,
+      "message": "It\u0027s probably worth placing each of these in a separate line.",
+      "range": {
+        "startLine": 58,
+        "startChar": 62,
+        "endLine": 58,
+        "endChar": 146
+      },
+      "revId": "7f80e58f81a8ad800f53320764322907c9b8a7bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     },
     {
       "key": {
