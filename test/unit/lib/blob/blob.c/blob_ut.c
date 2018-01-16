@@ -113,6 +113,12 @@ _bs_flush_scheduler(void)
 }
 
 static void
+_spdk_blob_get_bs_dev(void *cb_arg, struct spdk_blob *blob, struct spdk_bs_dev **bs_dev)
+{
+	*bs_dev = NULL;
+}
+
+static void
 bs_op_complete(void *cb_arg, int bserrno)
 {
 	g_bserrno = bserrno;
@@ -363,6 +369,78 @@ blob_create(void)
 	g_bs = NULL;
 
 }
+
+static void
+blob_snapshot(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_bs_dev *dev;
+	struct spdk_blob *blob;
+	struct spdk_blob *snapshot, *snapshot2;
+	struct spdk_blob_opts opts;
+	spdk_blob_id blobid;
+
+	dev = init_dev();
+
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	/* Create blob with 10 clusters */
+
+	spdk_blob_opts_init(&opts);
+	opts.num_clusters = 10;
+
+	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10)
+
+	/* Create snapshot */
+	spdk_bs_create_blob_snapshot(blob, _spdk_blob_get_bs_dev, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	snapshot = g_blob;
+	CU_ASSERT(__blob_to_data(snapshot)->data_ro == true)
+	CU_ASSERT(__blob_to_data(snapshot)->md_ro == true)
+	/* Snapshot should have same number of clusters */
+	CU_ASSERT(spdk_blob_get_num_clusters(snapshot) == 10)
+
+	/* Try to create snapshot from clone */
+	spdk_bs_create_blob_snapshot(blob, _spdk_blob_get_bs_dev, blob_op_with_handle_complete, NULL);
+	snapshot2 = g_blob;
+	CU_ASSERT(__blob_to_data(snapshot2)->data_ro == true)
+	CU_ASSERT(__blob_to_data(snapshot2)->md_ro == true)
+	/* Snapshot should have same number of clusters */
+	CU_ASSERT(spdk_blob_get_num_clusters(snapshot2) == 10)
+
+	/* Try to create snapshot from snapshot */
+	spdk_bs_create_blob_snapshot(snapshot, _spdk_blob_get_bs_dev, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == -EINVAL);
+	CU_ASSERT(g_blob == NULL);
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_blob_close(snapshot, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_blob_close(snapshot2, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+
+}
+
 static void
 blob_delete(void)
 {
@@ -2838,6 +2916,7 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "blob_init", blob_init) == NULL ||
 		CU_add_test(suite, "blob_open", blob_open) == NULL ||
 		CU_add_test(suite, "blob_create", blob_create) == NULL ||
+		CU_add_test(suite, "blob_snapshot", blob_snapshot) == NULL ||
 		CU_add_test(suite, "blob_delete", blob_delete) == NULL ||
 		CU_add_test(suite, "blob_resize", blob_resize) == NULL ||
 		CU_add_test(suite, "blob_read_only", blob_read_only) == NULL ||
