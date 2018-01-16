@@ -1,0 +1,130 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f16b95fa_6ed2f43e",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-16T14:55:34Z",
+      "side": 1,
+      "message": "Please add a space here",
+      "revId": "b06aa1d667d100a4c697c16332f685d26071fb93",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f68c916_8a030da2",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-16T14:55:34Z",
+      "side": 1,
+      "message": "Do we want to mention config file here ?",
+      "range": {
+        "startLine": 88,
+        "startChar": 7,
+        "endLine": 88,
+        "endChar": 18
+      },
+      "revId": "b06aa1d667d100a4c697c16332f685d26071fb93",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "65c26826_c7e9a97d",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-16T14:55:34Z",
+      "side": 1,
+      "message": "We are describing iterating over bdevs, without first describing how to register a bdev. I think info on that could be put here to tell how to initialize bdev layer, register bdevs and iterate over them, unregister a bdev and finally finish whole bdev layer.",
+      "range": {
+        "startLine": 88,
+        "startChar": 20,
+        "endLine": 89,
+        "endChar": 103
+      },
+      "revId": "b06aa1d667d100a4c697c16332f685d26071fb93",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "595937f3_6d880c6f",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-16T14:55:34Z",
+      "side": 1,
+      "message": "descriptor",
+      "range": {
+        "startLine": 133,
+        "startChar": 37,
+        "endLine": 133,
+        "endChar": 48
+      },
+      "revId": "b06aa1d667d100a4c697c16332f685d26071fb93",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e568df67_d2f28c9b",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-16T14:55:34Z",
+      "side": 1,
+      "message": "This can be found in bdev.h header so it could be referred to directly.\nRather than listing all of that, it might be more helpful to describe (or put code snippet) steps of opening bdev, allocating channel, performing io, closing bdev.",
+      "range": {
+        "startLine": 158,
+        "startChar": 0,
+        "endLine": 180,
+        "endChar": 86
+      },
+      "revId": "b06aa1d667d100a4c697c16332f685d26071fb93",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92cb6b72_178da2b6",
+        "filename": "doc/index.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-16T14:55:34Z",
+      "side": 1,
+      "message": "unnecessary new line",
+      "revId": "b06aa1d667d100a4c697c16332f685d26071fb93",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
