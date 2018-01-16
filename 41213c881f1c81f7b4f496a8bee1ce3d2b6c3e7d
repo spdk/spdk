@@ -1,0 +1,383 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "28dde32a_d8eba2e1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3242,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-16T12:45:46Z",
+      "side": 1,
+      "message": "We don\u0027t need that check. We can assign NULL anyway.",
+      "range": {
+        "startLine": 3242,
+        "startChar": 1,
+        "endLine": 3242,
+        "endChar": 12
+      },
+      "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c2709ce3_84ddf98b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3310,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-16T12:45:46Z",
+      "side": 1,
+      "message": "rc should be a bool type.",
+      "range": {
+        "startLine": 3310,
+        "startChar": 6,
+        "endLine": 3310,
+        "endChar": 49
+      },
+      "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "96925980_3564ca4f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3323,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-16T12:45:46Z",
+      "side": 1,
+      "message": "Unnecessary empty line.",
+      "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "668280dd_6797b912",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3327,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-16T12:45:46Z",
+      "side": 1,
+      "message": "Can we change this name to just _spdk_bs_sync_snapshot_cpl (see comments below)?",
+      "range": {
+        "startLine": 3327,
+        "startChar": 0,
+        "endLine": 3327,
+        "endChar": 32
+      },
+      "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "80c6e192_1525d1cb",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3341,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-16T12:45:46Z",
+      "side": 1,
+      "message": "Can we change this name to just _spdk_bs_sync_snapshot?",
+      "range": {
+        "startLine": 3341,
+        "startChar": 0,
+        "endLine": 3341,
+        "endChar": 23
+      },
+      "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eb135f4a_e47b6c78",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3351,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-16T12:45:46Z",
+      "side": 1,
+      "message": "We should set it to true again in _spdk_bs_sync_snapshot_final_cpl.",
+      "range": {
+        "startLine": 3351,
+        "startChar": 1,
+        "endLine": 3351,
+        "endChar": 24
+      },
+      "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a42f17a5_87dc378d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3366,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-16T12:45:46Z",
+      "side": 1,
+      "message": "Can we change this name to just _spdk_bs_sync_clone?",
+      "range": {
+        "startLine": 3366,
+        "startChar": 0,
+        "endLine": 3366,
+        "endChar": 26
+      },
+      "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e638da57_cca20d49",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3400,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-16T12:45:46Z",
+      "side": 1,
+      "message": "This has to be asynchronous function. See lvol - we need to work on callbacks to create lvol, bdev and bs_dev.",
+      "range": {
+        "startLine": 3399,
+        "startChar": 1,
+        "endLine": 3400,
+        "endChar": 34
+      },
+      "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "54baa89d_3c3f9e90",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3403,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-16T12:45:46Z",
+      "side": 1,
+      "message": "First we need to check if original blob was already thin provisioned and if yes, set snapshot as thin provisioned as well (case where we create snapshot on clone of different snapshot).",
+      "range": {
+        "startLine": 3402,
+        "startChar": 1,
+        "endLine": 3403,
+        "endChar": 40
+      },
+      "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed85c4f7_2abe3529",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3412,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-16T12:45:46Z",
+      "side": 1,
+      "message": "This can by just newblob-\u003eactive.clusters[i] \u003d orgblob-\u003eactive.clusters[i] - the result will be the same.",
+      "range": {
+        "startLine": 3407,
+        "startChar": 0,
+        "endLine": 3412,
+        "endChar": 3
+      },
+      "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c7f710a1_99b80685",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3413,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-16T12:45:46Z",
+      "side": 1,
+      "message": "Unnecessary new line.",
+      "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f90d8cbf_2b6f9e3d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3454,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-16T12:45:46Z",
+      "side": 1,
+      "message": "Alignment.",
+      "range": {
+        "startLine": 3454,
+        "startChar": 20,
+        "endLine": 3454,
+        "endChar": 21
+      },
+      "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69212e7a_36244a1a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3456,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-16T12:45:46Z",
+      "side": 1,
+      "message": "Alignment.",
+      "range": {
+        "startLine": 3456,
+        "startChar": 5,
+        "endLine": 3456,
+        "endChar": 6
+      },
+      "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d456868_1a344a86",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3481,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-16T12:45:46Z",
+      "side": 1,
+      "message": "Comment not accurate.",
+      "range": {
+        "startLine": 3481,
+        "startChar": 1,
+        "endLine": 3481,
+        "endChar": 23
+      },
+      "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "121cc9e2_f216bb7e",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3482,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-16T12:45:46Z",
+      "side": 1,
+      "message": "This line would look better when moved to line 3466.",
+      "range": {
+        "startLine": 3482,
+        "startChar": 1,
+        "endLine": 3482,
+        "endChar": 43
+      },
+      "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "299183f7_0a096e3b",
+        "filename": "lib/blob/request.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-16T12:45:46Z",
+      "side": 1,
+      "message": "We don\u0027t need this as we can get it directly from orgblob.",
+      "range": {
+        "startLine": 96,
+        "startChar": 3,
+        "endLine": 96,
+        "endChar": 53
+      },
+      "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b844cf0d_ef2166d5",
+        "filename": "lib/blob/request.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-16T12:45:46Z",
+      "side": 1,
+      "message": "We don\u0027t need this as we can get it directly from newblob.",
+      "range": {
+        "startLine": 98,
+        "startChar": 3,
+        "endLine": 98,
+        "endChar": 53
+      },
+      "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
