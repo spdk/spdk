@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "327b2a0f_3145b5da",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 35
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-16T10:40:58Z",
+      "side": 1,
+      "message": "Can we align it with fields above ?",
+      "range": {
+        "startLine": 68,
+        "startChar": 9,
+        "endLine": 68,
+        "endChar": 37
+      },
+      "revId": "da879de02bcf905bcc6202cd92915eaa802b6d14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
