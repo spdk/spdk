@@ -2,7 +2,7 @@
 
 # iSCSI Target Getting Started Guide {#iscsi_getting_started}
 
-The Intel(R) Storage Performance Development Kit iSCSI target application is named `iscsi_tgt`.
+The Storage Performance Development Kit iSCSI target application is named `iscsi_tgt`.
 This following section describes how to run iscsi from your cloned package.
 
 ## Prerequisites {#iscsi_prereqs}
