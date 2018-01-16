@@ -1002,6 +1002,24 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 }
 
 static void
+_spdk_lvol_snapshot_complete(void *cb_arg, struct spdk_blob *blob, int bserrno)
+{
+	//struct spdk_lvol_with_handle_req req = (spdk_lvol_with_handle_req*)cb_arg;
+
+}
+
+int
+spdk_lvol_snapshot(struct spdk_lvol *lvol, spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	struct spdk_blob *blob = lvol->blob;
+	struct spdk_lvol_with_handle_req req;
+
+	spdk_bs_create_blob_snapshot(blob, _spdk_lvol_snapshot_complete, &req);
+
+	return 0;
+}
+
+static void
 _spdk_lvol_resize_cb(void *cb_arg, int lvolerrno)
 {
 	struct spdk_lvol_req *req = cb_arg;
