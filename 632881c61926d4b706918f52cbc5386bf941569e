@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a7ff4f0d_5f1100f6",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 797,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-16T16:25:28Z",
+      "side": 1,
+      "message": "should you just return rc here?\n\nENODEV means \"No such device\" - that does not seem like a good error code to return here.  Returning rc seems better (which would be -EBUSY since that\u0027s the only error code returned by spdk_bdev_set_num_blocks currently).",
+      "revId": "632881c61926d4b706918f52cbc5386bf941569e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
