@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "98184c20_fafa4a75",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-17T22:24:50Z",
+      "side": 1,
+      "message": "this patch is not really forcing a write for each completion; it is adding a compile time option to do so\n\nalso the first line should start with the module it is touching\n\nsomething like:\n\nnvme: add compile time option to force db write for each completion\n\nIt should also include an explanation somewhere of \"why\" you would want to enable this option.  What are the pros and cons?  Otherwise this will cause confusion for our users.",
+      "revId": "fc1199eee019b6e8a74031a46b7c501530f6c0d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
