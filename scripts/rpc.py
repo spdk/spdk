@@ -666,11 +666,8 @@ p = subparsers.add_parser('get_nvmf_subsystems', help='Display nvmf subsystems')
 p.set_defaults(func=get_nvmf_subsystems)
 
 def construct_nvmf_subsystem(args):
-    listen_addresses = [dict(u.split(":") for u in a.split(" ")) for a in args.listen.split(",")]
-
     params = {
         'nqn': args.nqn,
-        'listen_addresses': listen_addresses,
         'serial_number': args.serial_number,
     }
 
@@ -704,9 +701,6 @@ def construct_nvmf_subsystem(args):
 
 p = subparsers.add_parser('construct_nvmf_subsystem', help='Add a nvmf subsystem')
 p.add_argument('nqn', help='Target nqn(ASCII)')
-p.add_argument('listen', help="""comma-separated list of Listen <trtype:transport_name traddr:address trsvcid:port_id> pairs enclosed
-in quotes.  Format:  'trtype:transport0 traddr:traddr0 trsvcid:trsvcid0,trtype:transport1 traddr:traddr1 trsvcid:trsvcid1' etc
-Example: 'trtype:RDMA traddr:192.168.100.8 trsvcid:4420,trtype:RDMA traddr:192.168.100.9 trsvcid:4420'""")
 p.add_argument('hosts', help="""Whitespace-separated list of host nqn list.
 Format:  'nqn1 nqn2' etc
 Example: 'nqn.2016-06.io.spdk:init nqn.2016-07.io.spdk:init'""")
@@ -719,6 +713,27 @@ Format:  'bdev_name1[:nsid1] bdev_name2[:nsid2] bdev_name3[:nsid3]' etc
 Example: '1:Malloc0 2:Malloc1 3:Malloc2'
 *** The devices must pre-exist ***""")
 p.set_defaults(func=construct_nvmf_subsystem)
+
+def nvmf_subsystem_add_listener(args):
+    trid = "trtype:{} traddr:{} subnqn:{}".format(args.trtype, args.traddr, args.nqn)
+
+    if args.adrfam:
+        trid += " adrfam:{}".format(args.adrfam)
+
+    if args.trsvcid:
+        trid += " trsvcid:{}".format(args.trsvcid)
+
+    params = {'trid': trid}
+
+    jsonrpc_call('nvmf_subsystem_add_listener', params)
+
+p = subparsers.add_parser('nvmf_subsystem_add_listener', help='Add a listener to an NVMe-oF subsystem')
+p.add_argument('nqn', help='NVMe-oF subsystem NQN')
+p.add_argument('-t', '--trtype', help='NVMe-oF transport type: e.g., rdma', required=True)
+p.add_argument('-a', '--traddr', help='NVMe-oF transport address: e.g., an ip address', required=True)
+p.add_argument('-f', '--adrfam', help='NVMe-oF transport adrfam: e.g., ipv4, ipv6, ib, fc, intra_host')
+p.add_argument('-s', '--trsvcid', help='NVMe-oF transport service id: e.g., a port number')
+p.set_defaults(func=nvmf_subsystem_add_listener)
 
 def delete_nvmf_subsystem(args):
     params = {'nqn': args.subsystem_nqn}
