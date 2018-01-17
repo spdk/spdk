@@ -398,6 +398,13 @@ spdk_nvmf_poll_group_add_transport(struct spdk_nvmf_poll_group *group,
 {
 	struct spdk_nvmf_transport_poll_group *tgroup;
 
+	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
+		if (tgroup->transport == transport) {
+			/* Transport already in the poll group */
+			return 0;
+		}
+	}
+
 	tgroup = spdk_nvmf_transport_poll_group_create(transport);
 	if (!tgroup) {
 		SPDK_ERRLOG("Unable to create poll group for transport\n");
