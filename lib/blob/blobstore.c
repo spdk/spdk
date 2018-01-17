@@ -1364,6 +1364,7 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *_blob, struct spdk_io_channel
 	struct spdk_blob_data		*blob = __blob_to_data(_blob);
 	spdk_bs_sequence_t		*seq;
 	struct spdk_bs_cpl		cpl;
+	uint32_t			start_cluster, end_cluster, num_clusters;
 
 	assert(blob != NULL);
 
@@ -1406,7 +1407,11 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *_blob, struct spdk_io_channel
 		return;
 	}
 
-	if (spdk_likely(length <= _spdk_bs_num_pages_to_cluster_boundary(blob, offset))) {
+	start_cluster = _spdk_bs_page_to_cluster(blob->bs, offset);
+	end_cluster = _spdk_bs_page_to_cluster(blob->bs, offset + length - 1);
+	num_clusters = end_cluster - start_cluster + 1;
+
+	if (spdk_likely(num_clusters == 1)) {
 		uint64_t lba = _spdk_bs_blob_page_to_lba(blob, offset);
 		uint32_t lba_count = _spdk_bs_page_to_lba(blob->bs, length);
 
