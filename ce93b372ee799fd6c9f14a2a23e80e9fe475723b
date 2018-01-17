@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b17628fe_96a03d49",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 771,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-17T08:58:24Z",
+      "side": 1,
+      "message": "I think we should assign rc to lvolerrno, otherwise the called of vbdev_lvol_resize() might assume it completed successfully.",
+      "revId": "ce93b372ee799fd6c9f14a2a23e80e9fe475723b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6dc3fab6_bdca1f93",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 410,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-17T08:58:24Z",
+      "side": 1,
+      "message": "ENODEV is more appropriate here",
+      "range": {
+        "startLine": 410,
+        "startChar": 8,
+        "endLine": 410,
+        "endChar": 14
+      },
+      "revId": "ce93b372ee799fd6c9f14a2a23e80e9fe475723b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b5d565a3_399c7883",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 725,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-17T08:58:24Z",
+      "side": 1,
+      "message": "vbdev_lvol_resize() no longer handles searching for lvol by its name, taking only pointer to spdk_lvol struct.\nThis case should either be removed or replaced by UT that verifies error when NULL is passed as lvol.",
+      "range": {
+        "startLine": 722,
+        "startChar": 0,
+        "endLine": 725,
+        "endChar": 20
+      },
+      "revId": "ce93b372ee799fd6c9f14a2a23e80e9fe475723b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
