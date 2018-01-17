@@ -132,46 +132,46 @@ void spdk_bs_call_cpl(struct spdk_bs_cpl *cpl, int bserrno);
 spdk_bs_sequence_t *spdk_bs_sequence_start(struct spdk_io_channel *channel,
 		struct spdk_bs_cpl *cpl);
 
-void spdk_bs_sequence_read(spdk_bs_sequence_t *seq, void *payload,
-			   uint64_t lba, uint32_t lba_count,
-			   spdk_bs_sequence_cpl cb_fn, void *cb_arg);
+void spdk_bs_sequence_read_dev(spdk_bs_sequence_t *seq, void *payload,
+			       uint64_t lba, uint32_t lba_count,
+			       spdk_bs_sequence_cpl cb_fn, void *cb_arg);
 
-void spdk_bs_sequence_write(spdk_bs_sequence_t *seq, void *payload,
-			    uint64_t lba, uint32_t lba_count,
-			    spdk_bs_sequence_cpl cb_fn, void *cb_arg);
+void spdk_bs_sequence_write_dev(spdk_bs_sequence_t *seq, void *payload,
+				uint64_t lba, uint32_t lba_count,
+				spdk_bs_sequence_cpl cb_fn, void *cb_arg);
 
-void spdk_bs_sequence_readv(spdk_bs_batch_t *batch, struct iovec *iov, int iovcnt,
-			    uint64_t lba, uint32_t lba_count,
-			    spdk_bs_sequence_cpl cb_fn, void *cb_arg);
+void spdk_bs_sequence_readv_dev(spdk_bs_batch_t *batch, struct iovec *iov, int iovcnt,
+				uint64_t lba, uint32_t lba_count,
+				spdk_bs_sequence_cpl cb_fn, void *cb_arg);
 
-void spdk_bs_sequence_writev(spdk_bs_batch_t *batch, struct iovec *iov, int iovcnt,
-			     uint64_t lba, uint32_t lba_count,
-			     spdk_bs_sequence_cpl cb_fn, void *cb_arg);
+void spdk_bs_sequence_writev_dev(spdk_bs_batch_t *batch, struct iovec *iov, int iovcnt,
+				 uint64_t lba, uint32_t lba_count,
+				 spdk_bs_sequence_cpl cb_fn, void *cb_arg);
 
-void spdk_bs_sequence_unmap(spdk_bs_sequence_t *seq,
-			    uint64_t lba, uint32_t lba_count,
-			    spdk_bs_sequence_cpl cb_fn, void *cb_arg);
+void spdk_bs_sequence_unmap_dev(spdk_bs_sequence_t *seq,
+				uint64_t lba, uint32_t lba_count,
+				spdk_bs_sequence_cpl cb_fn, void *cb_arg);
 
-void spdk_bs_sequence_write_zeroes(spdk_bs_sequence_t *seq,
-				   uint64_t lba, uint32_t lba_count,
-				   spdk_bs_sequence_cpl cb_fn, void *cb_arg);
+void spdk_bs_sequence_write_zeroes_dev(spdk_bs_sequence_t *seq,
+				       uint64_t lba, uint32_t lba_count,
+				       spdk_bs_sequence_cpl cb_fn, void *cb_arg);
 
 void spdk_bs_sequence_finish(spdk_bs_sequence_t *seq, int bserrno);
 
 spdk_bs_batch_t *spdk_bs_batch_open(struct spdk_io_channel *channel,
 				    struct spdk_bs_cpl *cpl);
 
-void spdk_bs_batch_read(spdk_bs_batch_t *batch, void *payload,
-			uint64_t lba, uint32_t lba_count);
+void spdk_bs_batch_read_dev(spdk_bs_batch_t *batch, void *payload,
+			    uint64_t lba, uint32_t lba_count);
 
-void spdk_bs_batch_write(spdk_bs_batch_t *batch, void *payload,
-			 uint64_t lba, uint32_t lba_count);
+void spdk_bs_batch_write_dev(spdk_bs_batch_t *batch, void *payload,
+			     uint64_t lba, uint32_t lba_count);
 
-void spdk_bs_batch_unmap(spdk_bs_batch_t *batch,
-			 uint64_t lba, uint32_t lba_count);
+void spdk_bs_batch_unmap_dev(spdk_bs_batch_t *batch,
+			     uint64_t lba, uint32_t lba_count);
 
-void spdk_bs_batch_write_zeroes(spdk_bs_batch_t *batch,
-				uint64_t lba, uint32_t lba_count);
+void spdk_bs_batch_write_zeroes_dev(spdk_bs_batch_t *batch,
+				    uint64_t lba, uint32_t lba_count);
 
 void spdk_bs_batch_close(spdk_bs_batch_t *batch);
 

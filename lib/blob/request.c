@@ -126,9 +126,9 @@ spdk_bs_sequence_start(struct spdk_io_channel *_channel,
 }
 
 void
-spdk_bs_sequence_read(spdk_bs_sequence_t *seq, void *payload,
-		      uint64_t lba, uint32_t lba_count,
-		      spdk_bs_sequence_cpl cb_fn, void *cb_arg)
+spdk_bs_sequence_read_dev(spdk_bs_sequence_t *seq, void *payload,
+			  uint64_t lba, uint32_t lba_count,
+			  spdk_bs_sequence_cpl cb_fn, void *cb_arg)
 {
 	struct spdk_bs_request_set      *set = (struct spdk_bs_request_set *)seq;
 	struct spdk_bs_channel       *channel = set->channel;
@@ -143,9 +143,9 @@ spdk_bs_sequence_read(spdk_bs_sequence_t *seq, void *payload,
 }
 
 void
-spdk_bs_sequence_write(spdk_bs_sequence_t *seq, void *payload,
-		       uint64_t lba, uint32_t lba_count,
-		       spdk_bs_sequence_cpl cb_fn, void *cb_arg)
+spdk_bs_sequence_write_dev(spdk_bs_sequence_t *seq, void *payload,
+			   uint64_t lba, uint32_t lba_count,
+			   spdk_bs_sequence_cpl cb_fn, void *cb_arg)
 {
 	struct spdk_bs_request_set      *set = (struct spdk_bs_request_set *)seq;
 	struct spdk_bs_channel       *channel = set->channel;
@@ -160,9 +160,9 @@ spdk_bs_sequence_write(spdk_bs_sequence_t *seq, void *payload,
 }
 
 void
-spdk_bs_sequence_readv(spdk_bs_sequence_t *seq, struct iovec *iov, int iovcnt,
-		       uint64_t lba, uint32_t lba_count,
-		       spdk_bs_sequence_cpl cb_fn, void *cb_arg)
+spdk_bs_sequence_readv_dev(spdk_bs_sequence_t *seq, struct iovec *iov, int iovcnt,
+			   uint64_t lba, uint32_t lba_count,
+			   spdk_bs_sequence_cpl cb_fn, void *cb_arg)
 {
 	struct spdk_bs_request_set      *set = (struct spdk_bs_request_set *)seq;
 	struct spdk_bs_channel       *channel = set->channel;
@@ -177,9 +177,9 @@ spdk_bs_sequence_readv(spdk_bs_sequence_t *seq, struct iovec *iov, int iovcnt,
 }
 
 void
-spdk_bs_sequence_writev(spdk_bs_sequence_t *seq, struct iovec *iov, int iovcnt,
-			uint64_t lba, uint32_t lba_count,
-			spdk_bs_sequence_cpl cb_fn, void *cb_arg)
+spdk_bs_sequence_writev_dev(spdk_bs_sequence_t *seq, struct iovec *iov, int iovcnt,
+			    uint64_t lba, uint32_t lba_count,
+			    spdk_bs_sequence_cpl cb_fn, void *cb_arg)
 {
 	struct spdk_bs_request_set      *set = (struct spdk_bs_request_set *)seq;
 	struct spdk_bs_channel       *channel = set->channel;
@@ -194,9 +194,9 @@ spdk_bs_sequence_writev(spdk_bs_sequence_t *seq, struct iovec *iov, int iovcnt,
 }
 
 void
-spdk_bs_sequence_unmap(spdk_bs_sequence_t *seq,
-		       uint64_t lba, uint32_t lba_count,
-		       spdk_bs_sequence_cpl cb_fn, void *cb_arg)
+spdk_bs_sequence_unmap_dev(spdk_bs_sequence_t *seq,
+			   uint64_t lba, uint32_t lba_count,
+			   spdk_bs_sequence_cpl cb_fn, void *cb_arg)
 {
 	struct spdk_bs_request_set      *set = (struct spdk_bs_request_set *)seq;
 	struct spdk_bs_channel       *channel = set->channel;
@@ -211,9 +211,9 @@ spdk_bs_sequence_unmap(spdk_bs_sequence_t *seq,
 }
 
 void
-spdk_bs_sequence_write_zeroes(spdk_bs_sequence_t *seq,
-			      uint64_t lba, uint32_t lba_count,
-			      spdk_bs_sequence_cpl cb_fn, void *cb_arg)
+spdk_bs_sequence_write_zeroes_dev(spdk_bs_sequence_t *seq,
+				  uint64_t lba, uint32_t lba_count,
+				  spdk_bs_sequence_cpl cb_fn, void *cb_arg)
 {
 	struct spdk_bs_request_set      *set = (struct spdk_bs_request_set *)seq;
 	struct spdk_bs_channel       *channel = set->channel;
@@ -289,8 +289,8 @@ spdk_bs_batch_open(struct spdk_io_channel *_channel,
 }
 
 void
-spdk_bs_batch_read(spdk_bs_batch_t *batch, void *payload,
-		   uint64_t lba, uint32_t lba_count)
+spdk_bs_batch_read_dev(spdk_bs_batch_t *batch, void *payload,
+		       uint64_t lba, uint32_t lba_count)
 {
 	struct spdk_bs_request_set	*set = (struct spdk_bs_request_set *)batch;
 	struct spdk_bs_channel		*channel = set->channel;
@@ -303,8 +303,8 @@ spdk_bs_batch_read(spdk_bs_batch_t *batch, void *payload,
 }
 
 void
-spdk_bs_batch_write(spdk_bs_batch_t *batch, void *payload,
-		    uint64_t lba, uint32_t lba_count)
+spdk_bs_batch_write_dev(spdk_bs_batch_t *batch, void *payload,
+			uint64_t lba, uint32_t lba_count)
 {
 	struct spdk_bs_request_set	*set = (struct spdk_bs_request_set *)batch;
 	struct spdk_bs_channel		*channel = set->channel;
@@ -317,8 +317,8 @@ spdk_bs_batch_write(spdk_bs_batch_t *batch, void *payload,
 }
 
 void
-spdk_bs_batch_unmap(spdk_bs_batch_t *batch,
-		    uint64_t lba, uint32_t lba_count)
+spdk_bs_batch_unmap_dev(spdk_bs_batch_t *batch,
+			uint64_t lba, uint32_t lba_count)
 {
 	struct spdk_bs_request_set	*set = (struct spdk_bs_request_set *)batch;
 	struct spdk_bs_channel		*channel = set->channel;
@@ -331,8 +331,8 @@ spdk_bs_batch_unmap(spdk_bs_batch_t *batch,
 }
 
 void
-spdk_bs_batch_write_zeroes(spdk_bs_batch_t *batch,
-			   uint64_t lba, uint32_t lba_count)
+spdk_bs_batch_write_zeroes_dev(spdk_bs_batch_t *batch,
+			       uint64_t lba, uint32_t lba_count)
 {
 	struct spdk_bs_request_set	*set = (struct spdk_bs_request_set *)batch;
 	struct spdk_bs_channel		*channel = set->channel;
