@@ -95,7 +95,7 @@ function blk_ro_tc1()
 	sleep 1
 
 	vm_shutdown_all
-#Create readonly controller and test readonly featchure
+#Create readonly controller and test readonly feature
 	notice "Removing controller and creating new one with readonly flag"
 	$rpc_py remove_vhost_controller $vhost_blk_name
 	$rpc_py construct_vhost_blk_controller -r $vhost_blk_name $disk_name
@@ -104,7 +104,7 @@ function blk_ro_tc1()
 	vm_wait_for_boot 600 $vm_no
 	notice "Testing readonly feature on guest VM"
 	vm_ssh $vm_no "bash -s" < $BASE_DIR/enabled_readonly_vm.sh
-	sleep 1
+	sleep 2
 
 	vm_shutdown_all
 #Delete file from disk and delete partition
