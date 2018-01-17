@@ -173,12 +173,12 @@ static void
 dev_destruct_success(void)
 {
 	struct spdk_scsi_dev dev = { .is_allocated = 1 };
-	struct spdk_scsi_lun *lun;
-
-	lun = calloc(1, sizeof(struct spdk_scsi_lun));
+	int rc;
 
 	/* dev with a single lun */
-	spdk_scsi_dev_add_lun(&dev, lun, 0);
+	rc = spdk_scsi_dev_add_lun(&dev, "malloc0", 0, NULL, NULL);
+
+	CU_ASSERT(rc == 0);
 
 	/* free the dev */
 	spdk_scsi_dev_destruct(&dev);
@@ -563,12 +563,7 @@ static void
 dev_add_lun_success1(void)
 {
 	int rc;
-	int i;
-	struct spdk_scsi_dev dev;
-
-	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
-		dev.lun[i] = NULL;
-	}
+	struct spdk_scsi_dev dev = {0};
 
 	rc = spdk_scsi_dev_add_lun(&dev, "malloc0", -1, NULL, NULL);
 
@@ -581,12 +576,7 @@ static void
 dev_add_lun_success2(void)
 {
 	int rc;
-	int i;
-	struct spdk_scsi_dev dev;
-
-	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
-		dev.lun[i] = NULL;
-	}
+	struct spdk_scsi_dev dev = {0};
 
 	rc = spdk_scsi_dev_add_lun(&dev, "malloc0", 0, NULL, NULL);
 
