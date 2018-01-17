@@ -342,3 +342,46 @@ Example response:
   "result": true
 }
 ~~~
+
+## nvmf_subsystem_add_listener  method {#rpc_nvmf_subsystem_add_listener}
+
+Add a new listen address to an NVMe-oF subsystem.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+subnqn                  | Required | string      | Subsystem NQN
+trtype                  | Required | string      | Transport type ("RDMA")
+traddr                  | Required | string      | Transport address
+trsvcid                 | Required | string      | Transport service ID
+adrfam                  | Optional | string      | Address family ("IPv4", "IPv6", "IB", or "FC"). Default: IPv4
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "nvmf_subsystem_add_listener",
+  "params": {
+    "subnqn": "nqn.2016-06.io.spdk:cnode1",
+    "trtype": "RDMA",
+    "adrfam": "IPv4",
+    "traddr": "192.168.0.123",
+    "trsvcid: "4420"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
