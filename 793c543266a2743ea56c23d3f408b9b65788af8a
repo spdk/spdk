@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "81dec2e2_693a18d8",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-17T08:51:27Z",
+      "side": 1,
+      "message": "Shoudln\u0027t we return some error code  \u0026 error message instead of just \"none\" where there is no lvs of that name?",
+      "range": {
+        "startLine": 154,
+        "startChar": 8,
+        "endLine": 154,
+        "endChar": 19
+      },
+      "revId": "793c543266a2743ea56c23d3f408b9b65788af8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "65cee1e9_cfd758f6",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-17T08:51:27Z",
+      "side": 1,
+      "message": "This function can be more generic - get_bdev_by_name()",
+      "range": {
+        "startLine": 165,
+        "startChar": 8,
+        "endLine": 165,
+        "endChar": 31
+      },
+      "revId": "793c543266a2743ea56c23d3f408b9b65788af8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14453f04_14337ef8",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-17T08:51:27Z",
+      "side": 1,
+      "message": "rpc.py get_bdevs takes -b argument to lookup only one bdev. You don\u0027t have to iterate over all bdevs.",
+      "range": {
+        "startLine": 169,
+        "startChar": 8,
+        "endLine": 172,
+        "endChar": 31
+      },
+      "revId": "793c543266a2743ea56c23d3f408b9b65788af8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bbde3aee_4f43f872",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-17T08:51:27Z",
+      "side": 1,
+      "message": "print()\n\nBTW, why do we need print here?",
+      "range": {
+        "startLine": 97,
+        "startChar": 12,
+        "endLine": 97,
+        "endChar": 52
+      },
+      "revId": "793c543266a2743ea56c23d3f408b9b65788af8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c09017e_2029d4bb",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-17T08:51:27Z",
+      "side": 1,
+      "message": "Since this is an exception then we already know that this is an error... maybe add some more informative message, like exception message + FIO output?",
+      "range": {
+        "startLine": 108,
+        "startChar": 12,
+        "endLine": 108,
+        "endChar": 55
+      },
+      "revId": "793c543266a2743ea56c23d3f408b9b65788af8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c5011fd2_a203ca55",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 731,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-17T08:51:27Z",
+      "side": 1,
+      "message": "Again - why? construct_lvol_bdev returns the name of constructed bdev. You don\u0027t have to manually create it by concatenating the strings.",
+      "range": {
+        "startLine": 731,
+        "startChar": 51,
+        "endLine": 731,
+        "endChar": 86
+      },
+      "revId": "793c543266a2743ea56c23d3f408b9b65788af8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3a0e8a1_3d292fb9",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 777,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-17T08:51:27Z",
+      "side": 1,
+      "message": "I still suggest using template strings instead of modifying the same file multiple times.",
+      "range": {
+        "startLine": 774,
+        "startChar": 0,
+        "endLine": 777,
+        "endChar": 62
+      },
+      "revId": "793c543266a2743ea56c23d3f408b9b65788af8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
