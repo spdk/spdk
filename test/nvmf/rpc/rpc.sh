@@ -45,7 +45,8 @@ do
 	j=0
 	for bdf in $bdfs; do
 		let j=j+1
-		$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode$j "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" '' -a -s SPDK00000000000001 -n "$bdevs"
+		$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode$j '' -a -s SPDK00000000000001 -n "$bdevs"
+		$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$j -t RDMA -a $NVMF_FIRST_TARGET_IP -s 4420
 	done
 
 	n=$j
