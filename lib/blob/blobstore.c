@@ -707,10 +707,10 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 			return;
 		}
 
-		spdk_bs_sequence_read(seq, &ctx->pages[ctx->num_pages - 1],
-				      next_lba,
-				      _spdk_bs_byte_to_lba(blob->bs, sizeof(*page)),
-				      _spdk_blob_load_cpl, ctx);
+		spdk_bs_sequence_read_dev(seq, &ctx->pages[ctx->num_pages - 1],
+					  next_lba,
+					  _spdk_bs_byte_to_lba(blob->bs, sizeof(*page)),
+					  _spdk_blob_load_cpl, ctx);
 		return;
 	}
 
@@ -772,9 +772,9 @@ _spdk_blob_load(spdk_bs_sequence_t *seq, struct spdk_blob_data *blob,
 
 	blob->state = SPDK_BLOB_STATE_LOADING;
 
-	spdk_bs_sequence_read(seq, &ctx->pages[0], lba,
-			      _spdk_bs_byte_to_lba(bs, SPDK_BS_PAGE_SIZE),
-			      _spdk_blob_load_cpl, ctx);
+	spdk_bs_sequence_read_dev(seq, &ctx->pages[0], lba,
+				  _spdk_bs_byte_to_lba(bs, SPDK_BS_PAGE_SIZE),
+				  _spdk_blob_load_cpl, ctx);
 }
 
 struct spdk_blob_persist_ctx {
@@ -875,7 +875,7 @@ _spdk_blob_persist_unmap_clusters(spdk_bs_sequence_t *seq, void *cb_arg, int bse
 		 * as an unmap.
 		 */
 		if (lba_count > 0) {
-			spdk_bs_batch_unmap(batch, lba, lba_count);
+			spdk_bs_batch_unmap_dev(batch, lba, lba_count);
 		}
 
 		/* Start building the next batch */
@@ -889,7 +889,7 @@ _spdk_blob_persist_unmap_clusters(spdk_bs_sequence_t *seq, void *cb_arg, int bse
 
 	/* If we ended with a contiguous set of LBAs, send the unmap now */
 	if (lba_count > 0) {
-		spdk_bs_batch_unmap(batch, lba, lba_count);
+		spdk_bs_batch_unmap_dev(batch, lba, lba_count);
 	}
 
 	spdk_bs_batch_close(batch);
@@ -944,7 +944,7 @@ _spdk_blob_persist_zero_pages(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno
 	for (i = 1; i < blob->clean.num_pages; i++) {
 		lba = _spdk_bs_page_to_lba(bs, bs->md_start + blob->clean.pages[i]);
 
-		spdk_bs_batch_write_zeroes(batch, lba, lba_count);
+		spdk_bs_batch_write_zeroes_dev(batch, lba, lba_count);
 	}
 
 	/* The first page will only be zeroed if this is a delete. */
@@ -955,7 +955,7 @@ _spdk_blob_persist_zero_pages(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno
 		page_num = _spdk_bs_blobid_to_page(blob->id);
 		lba = _spdk_bs_page_to_lba(bs, bs->md_start + page_num);
 
-		spdk_bs_batch_write_zeroes(batch, lba, lba_count);
+		spdk_bs_batch_write_zeroes_dev(batch, lba, lba_count);
 	}
 
 	spdk_bs_batch_close(batch);
@@ -983,8 +983,8 @@ _spdk_blob_persist_write_page_root(spdk_bs_sequence_t *seq, void *cb_arg, int bs
 	/* The first page in the metadata goes where the blobid indicates */
 	lba = _spdk_bs_page_to_lba(bs, bs->md_start + _spdk_bs_blobid_to_page(blob->id));
 
-	spdk_bs_sequence_write(seq, page, lba, lba_count,
-			       _spdk_blob_persist_zero_pages, ctx);
+	spdk_bs_sequence_write_dev(seq, page, lba, lba_count,
+				   _spdk_blob_persist_zero_pages, ctx);
 }
 
 static void
@@ -1016,7 +1016,7 @@ _spdk_blob_persist_write_page_chain(spdk_bs_sequence_t *seq, void *cb_arg, int b
 
 		lba = _spdk_bs_page_to_lba(bs, bs->md_start + blob->active.pages[i]);
 
-		spdk_bs_batch_write(batch, page, lba, lba_count);
+		spdk_bs_batch_write_dev(batch, page, lba, lba_count);
 	}
 
 	spdk_bs_batch_close(batch);
@@ -1239,16 +1239,16 @@ _spdk_blob_request_submit_op(struct spdk_blob *_blob, struct spdk_io_channel *_c
 
 		switch (op_type) {
 		case SPDK_BLOB_READ:
-			spdk_bs_batch_read(batch, buf, lba, lba_count);
+			spdk_bs_batch_read_dev(batch, buf, lba, lba_count);
 			break;
 		case SPDK_BLOB_WRITE:
-			spdk_bs_batch_write(batch, buf, lba, lba_count);
+			spdk_bs_batch_write_dev(batch, buf, lba, lba_count);
 			break;
 		case SPDK_BLOB_UNMAP:
-			spdk_bs_batch_unmap(batch, lba, lba_count);
+			spdk_bs_batch_unmap_dev(batch, lba, lba_count);
 			break;
 		case SPDK_BLOB_WRITE_ZEROES:
-			spdk_bs_batch_write_zeroes(batch, lba, lba_count);
+			spdk_bs_batch_write_zeroes_dev(batch, lba, lba_count);
 			break;
 		}
 
@@ -1344,9 +1344,9 @@ _spdk_rw_iov_split_next(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	iov = &ctx->iov[0];
 
 	if (ctx->read) {
-		spdk_bs_sequence_readv(seq, iov, iovcnt, lba, lba_count, _spdk_rw_iov_split_next, ctx);
+		spdk_bs_sequence_readv_dev(seq, iov, iovcnt, lba, lba_count, _spdk_rw_iov_split_next, ctx);
 	} else {
-		spdk_bs_sequence_writev(seq, iov, iovcnt, lba, lba_count, _spdk_rw_iov_split_next, ctx);
+		spdk_bs_sequence_writev_dev(seq, iov, iovcnt, lba, lba_count, _spdk_rw_iov_split_next, ctx);
 	}
 }
 
@@ -1405,9 +1405,9 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *_blob, struct spdk_io_channel
 		uint32_t lba_count = _spdk_bs_page_to_lba(blob->bs, length);
 
 		if (read) {
-			spdk_bs_sequence_readv(seq, iov, iovcnt, lba, lba_count, _spdk_rw_iov_done, NULL);
+			spdk_bs_sequence_readv_dev(seq, iov, iovcnt, lba, lba_count, _spdk_rw_iov_done, NULL);
 		} else {
-			spdk_bs_sequence_writev(seq, iov, iovcnt, lba, lba_count, _spdk_rw_iov_done, NULL);
+			spdk_bs_sequence_writev_dev(seq, iov, iovcnt, lba, lba_count, _spdk_rw_iov_done, NULL);
 		}
 	} else {
 		struct rw_iov_ctx *ctx;
@@ -1661,9 +1661,9 @@ _spdk_bs_write_super(spdk_bs_sequence_t *seq, struct spdk_blob_store *bs,
 	super->super_blob = bs->super_blob;
 	memcpy(&super->bstype, &bs->bstype, sizeof(bs->bstype));
 	super->crc = _spdk_blob_md_page_calc_crc(super);
-	spdk_bs_sequence_write(seq, super, _spdk_bs_page_to_lba(bs, 0),
-			       _spdk_bs_byte_to_lba(bs, sizeof(*super)),
-			       cb_fn, cb_arg);
+	spdk_bs_sequence_write_dev(seq, super, _spdk_bs_page_to_lba(bs, 0),
+				   _spdk_bs_byte_to_lba(bs, sizeof(*super)),
+				   cb_fn, cb_arg);
 }
 
 static void
@@ -1687,7 +1687,7 @@ _spdk_bs_write_used_clusters(spdk_bs_sequence_t *seq, void *arg, spdk_bs_sequenc
 	_spdk_bs_set_mask(ctx->bs->used_clusters, ctx->mask);
 	lba = _spdk_bs_page_to_lba(ctx->bs, ctx->super->used_cluster_mask_start);
 	lba_count = _spdk_bs_page_to_lba(ctx->bs, ctx->super->used_cluster_mask_len);
-	spdk_bs_sequence_write(seq, ctx->mask, lba, lba_count, cb_fn, arg);
+	spdk_bs_sequence_write_dev(seq, ctx->mask, lba, lba_count, cb_fn, arg);
 }
 
 static void
@@ -1710,7 +1710,7 @@ _spdk_bs_write_used_md(spdk_bs_sequence_t *seq, void *arg, spdk_bs_sequence_cpl 
 	_spdk_bs_set_mask(ctx->bs->used_md_pages, ctx->mask);
 	lba = _spdk_bs_page_to_lba(ctx->bs, ctx->super->used_page_mask_start);
 	lba_count = _spdk_bs_page_to_lba(ctx->bs, ctx->super->used_page_mask_len);
-	spdk_bs_sequence_write(seq, ctx->mask, lba, lba_count, cb_fn, arg);
+	spdk_bs_sequence_write_dev(seq, ctx->mask, lba, lba_count, cb_fn, arg);
 }
 
 static void
@@ -1742,7 +1742,7 @@ _spdk_bs_write_used_blobids(spdk_bs_sequence_t *seq, void *arg, spdk_bs_sequence
 	_spdk_bs_set_mask(ctx->bs->used_blobids, ctx->mask);
 	lba = _spdk_bs_page_to_lba(ctx->bs, ctx->super->used_blobid_mask_start);
 	lba_count = _spdk_bs_page_to_lba(ctx->bs, ctx->super->used_blobid_mask_len);
-	spdk_bs_sequence_write(seq, ctx->mask, lba, lba_count, cb_fn, arg);
+	spdk_bs_sequence_write_dev(seq, ctx->mask, lba, lba_count, cb_fn, arg);
 }
 
 static void
@@ -1834,8 +1834,8 @@ _spdk_bs_load_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserr
 	}
 	lba = _spdk_bs_page_to_lba(ctx->bs, ctx->super->used_blobid_mask_start);
 	lba_count = _spdk_bs_page_to_lba(ctx->bs, ctx->super->used_blobid_mask_len);
-	spdk_bs_sequence_read(seq, ctx->mask, lba, lba_count,
-			      _spdk_bs_load_used_blobids_cpl, ctx);
+	spdk_bs_sequence_read_dev(seq, ctx->mask, lba, lba_count,
+				  _spdk_bs_load_used_blobids_cpl, ctx);
 }
 
 static void
@@ -1881,8 +1881,8 @@ _spdk_bs_load_used_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	}
 	lba = _spdk_bs_page_to_lba(ctx->bs, ctx->super->used_cluster_mask_start);
 	lba_count = _spdk_bs_page_to_lba(ctx->bs, ctx->super->used_cluster_mask_len);
-	spdk_bs_sequence_read(seq, ctx->mask, lba, lba_count,
-			      _spdk_bs_load_used_clusters_cpl, ctx);
+	spdk_bs_sequence_read_dev(seq, ctx->mask, lba, lba_count,
+				  _spdk_bs_load_used_clusters_cpl, ctx);
 }
 
 static void
@@ -1901,8 +1901,8 @@ _spdk_bs_load_write_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno
 
 	lba = _spdk_bs_page_to_lba(ctx->bs, ctx->super->used_page_mask_start);
 	lba_count = _spdk_bs_page_to_lba(ctx->bs, ctx->super->used_page_mask_len);
-	spdk_bs_sequence_read(seq, ctx->mask, lba, lba_count,
-			      _spdk_bs_load_used_pages_cpl, ctx);
+	spdk_bs_sequence_read_dev(seq, ctx->mask, lba, lba_count,
+				  _spdk_bs_load_used_pages_cpl, ctx);
 }
 
 static int
@@ -2074,9 +2074,9 @@ _spdk_bs_load_replay_cur_md_page(spdk_bs_sequence_t *seq, void *cb_arg)
 
 	assert(ctx->cur_page < ctx->super->md_len);
 	lba = _spdk_bs_page_to_lba(ctx->bs, ctx->super->md_start + ctx->cur_page);
-	spdk_bs_sequence_read(seq, ctx->page, lba,
-			      _spdk_bs_byte_to_lba(ctx->bs, SPDK_BS_PAGE_SIZE),
-			      _spdk_bs_load_replay_md_cpl, ctx);
+	spdk_bs_sequence_read_dev(seq, ctx->page, lba,
+				  _spdk_bs_byte_to_lba(ctx->bs, SPDK_BS_PAGE_SIZE),
+				  _spdk_bs_load_replay_md_cpl, ctx);
 }
 
 static void
@@ -2255,9 +2255,9 @@ spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	}
 
 	/* Read the super block */
-	spdk_bs_sequence_read(seq, ctx->super, _spdk_bs_page_to_lba(bs, 0),
-			      _spdk_bs_byte_to_lba(bs, sizeof(*ctx->super)),
-			      _spdk_bs_load_super_cpl, ctx);
+	spdk_bs_sequence_read_dev(seq, ctx->super, _spdk_bs_page_to_lba(bs, 0),
+				  _spdk_bs_byte_to_lba(bs, sizeof(*ctx->super)),
+				  _spdk_bs_load_super_cpl, ctx);
 }
 
 /* END spdk_bs_load */
@@ -2286,9 +2286,9 @@ _spdk_bs_init_trim_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	struct spdk_bs_init_ctx *ctx = cb_arg;
 
 	/* Write super block */
-	spdk_bs_sequence_write(seq, ctx->super, _spdk_bs_page_to_lba(ctx->bs, 0),
-			       _spdk_bs_byte_to_lba(ctx->bs, sizeof(*ctx->super)),
-			       _spdk_bs_init_persist_super_cpl, ctx);
+	spdk_bs_sequence_write_dev(seq, ctx->super, _spdk_bs_page_to_lba(ctx->bs, 0),
+				   _spdk_bs_byte_to_lba(ctx->bs, sizeof(*ctx->super)),
+				   _spdk_bs_init_persist_super_cpl, ctx);
 }
 
 void
@@ -2465,9 +2465,9 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	batch = spdk_bs_sequence_to_batch(seq, _spdk_bs_init_trim_cpl, ctx);
 
 	/* Clear metadata space */
-	spdk_bs_batch_write_zeroes(batch, 0, num_md_lba);
+	spdk_bs_batch_write_zeroes_dev(batch, 0, num_md_lba);
 	/* Trim data clusters */
-	spdk_bs_batch_unmap(batch, num_md_lba, ctx->bs->dev->blockcnt - num_md_lba);
+	spdk_bs_batch_unmap_dev(batch, num_md_lba, ctx->bs->dev->blockcnt - num_md_lba);
 
 	spdk_bs_batch_close(batch);
 }
@@ -2532,10 +2532,10 @@ spdk_bs_destroy(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn,
 	}
 
 	/* Write zeroes to the super block */
-	spdk_bs_sequence_write_zeroes(seq,
-				      _spdk_bs_page_to_lba(bs, 0),
-				      _spdk_bs_byte_to_lba(bs, sizeof(struct spdk_bs_super_block)),
-				      _spdk_bs_destroy_trim_cpl, ctx);
+	spdk_bs_sequence_write_zeroes_dev(seq,
+					  _spdk_bs_page_to_lba(bs, 0),
+					  _spdk_bs_byte_to_lba(bs, sizeof(struct spdk_bs_super_block)),
+					  _spdk_bs_destroy_trim_cpl, ctx);
 }
 
 /* END spdk_bs_destroy */
@@ -2646,9 +2646,9 @@ spdk_bs_unload(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn, void *cb_a
 	}
 
 	/* Read super block */
-	spdk_bs_sequence_read(seq, ctx->super, _spdk_bs_page_to_lba(bs, 0),
-			      _spdk_bs_byte_to_lba(bs, sizeof(*ctx->super)),
-			      _spdk_bs_unload_read_super_cpl, ctx);
+	spdk_bs_sequence_read_dev(seq, ctx->super, _spdk_bs_page_to_lba(bs, 0),
+				  _spdk_bs_byte_to_lba(bs, sizeof(*ctx->super)),
+				  _spdk_bs_unload_read_super_cpl, ctx);
 }
 
 /* END spdk_bs_unload */
