@@ -71,4 +71,11 @@ struct spdk_lvol_store *vbdev_get_lvol_store_by_uuid(const char *uuid_str);
  */
 struct spdk_lvol_store *vbdev_get_lvol_store_by_name(const char *name);
 
+/**
+ * \brief Search for handle to lvol_store_bdev
+ * \param lvs handle to lvolstore
+ * \return Handle to lvol_store_bdev or NULL if not found.
+ */
+struct lvol_store_bdev *vbdev_get_lvs_bdev_by_lvs(struct spdk_lvol_store *lvs);
+
 #endif /* SPDK_VBDEV_LVOL_H */
