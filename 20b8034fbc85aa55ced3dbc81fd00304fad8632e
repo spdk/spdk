@@ -22,6 +22,30 @@
       "revId": "20b8034fbc85aa55ced3dbc81fd00304fad8632e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c7e60dd_15cfebb8",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-01-17T03:13:43Z",
+      "side": 1,
+      "message": "Thanks, and will change it.",
+      "parentUuid": "34c4c4c8_ec72373b",
+      "range": {
+        "startLine": 7,
+        "startChar": 16,
+        "endLine": 7,
+        "endChar": 26
+      },
+      "revId": "20b8034fbc85aa55ced3dbc81fd00304fad8632e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
