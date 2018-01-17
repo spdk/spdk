@@ -173,12 +173,17 @@ static void
 dev_destruct_success(void)
 {
 	struct spdk_scsi_dev dev = { .is_allocated = 1 };
-	struct spdk_scsi_lun *lun;
+	int i;
+	int rc;
 
-	lun = calloc(1, sizeof(struct spdk_scsi_lun));
+	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+		dev.lun[i] = NULL;
+	}
 
 	/* dev with a single lun */
-	spdk_scsi_dev_add_lun(&dev, lun, 0);
+	rc = spdk_scsi_dev_add_lun(&dev, "malloc0", 0, NULL, NULL);
+
+	CU_ASSERT_EQUAL(rc, 0);
 
 	/* free the dev */
 	spdk_scsi_dev_destruct(&dev);
