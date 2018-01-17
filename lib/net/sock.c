@@ -314,6 +314,8 @@ spdk_epoll_create(int size)
 	return epoll_create1(0);
 }
 
+#if defined(FREEBSD)
+#else
 int
 spdk_epoll_ctl(int sock, int op, int fd, struct epoll_event *event)
 {
@@ -325,6 +327,7 @@ spdk_epoll_wait(int sock, struct epoll_event *events, int maxevents, int timeout
 {
 	return epoll_wait(sock, events, maxevents, timeout);
 }
+#endif
 
 bool
 spdk_sock_is_ipv6(int sock)
