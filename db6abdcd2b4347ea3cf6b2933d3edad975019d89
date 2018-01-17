@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c1b7f6cb_017a8beb",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-17T21:40:54Z",
+      "side": 1,
+      "message": "Can you outline the scenario where this bug hits?",
+      "revId": "db6abdcd2b4347ea3cf6b2933d3edad975019d89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0624c94d_acb6ea1e",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 409,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-17T21:40:54Z",
+      "side": 1,
+      "message": "You\u0027re using ERRLOG here, but then returning 0. Is this an error or not?",
+      "revId": "db6abdcd2b4347ea3cf6b2933d3edad975019d89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
