@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "df5d208b_d980cdcf",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-01-17T08:12:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e01bd67f_0eceb90d",
+      "revId": "397524caef592d6d3c9555c4b062b6015946c28f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "83e2df41_f25cd8b3",
         "filename": "test/vhost/readonly/readonly.sh",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2018-01-17T07:17:10Z",
       "side": 1,
       "message": "Preparing instead of \"Prepearing\"\nHow many vms here? 1 or \u003e1",
+      "revId": "397524caef592d6d3c9555c4b062b6015946c28f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e605a86_92dcc538",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-01-17T08:12:40Z",
+      "side": 1,
+      "message": "Thanks, and will change it. \nOnly one vm here and you can see the \"vm_no\" in line 66.",
+      "parentUuid": "83e2df41_f25cd8b3",
       "revId": "397524caef592d6d3c9555c4b062b6015946c28f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "487ce182_2af473a3",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-01-17T08:12:40Z",
+      "side": 1,
+      "message": "The same as above.",
+      "parentUuid": "e7cedfc7_470092fe",
+      "revId": "397524caef592d6d3c9555c4b062b6015946c28f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a27ca5e1_8ba4f31e",
         "filename": "test/vhost/readonly/readonly.sh",
         "patchSetId": 2
@@ -64,6 +118,24 @@
       "writtenOn": "2018-01-17T07:17:10Z",
       "side": 1,
       "message": "Removing instead of \"removing\"\nHow many vms here? 1 or \u003e1?",
+      "revId": "397524caef592d6d3c9555c4b062b6015946c28f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c7e6a86_ac071a16",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-01-17T08:12:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a27ca5e1_8ba4f31e",
       "revId": "397524caef592d6d3c9555c4b062b6015946c28f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
