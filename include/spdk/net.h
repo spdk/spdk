@@ -86,9 +86,16 @@ int spdk_sock_close(int sock);
 ssize_t spdk_sock_recv(int sock, void *buf, size_t len);
 ssize_t spdk_sock_writev(int sock, struct iovec *iov, int iovcnt);
 
+
+#if defined(__FreeBSD__)
+int spdk_epoll_create();
+int spdk_epoll_ctl(int epfd, int op, int fd, struct kevent *event);
+int spdk_epoll_wait(int epfd, struct kevent *events, int maxevents, int timeout);
+#else
 int spdk_epoll_create(int size);
 int spdk_epoll_ctl(int epfd, int op, int fd, struct epoll_event *event);
 int spdk_epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout);
+#endif
 
 int spdk_sock_set_recvlowat(int sock, int nbytes);
 int spdk_sock_set_recvbuf(int sock, int sz);
