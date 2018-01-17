@@ -41,7 +41,8 @@ if [ -n "$local_nvme_trid" ]; then
 	bdevs="$bdevs Nvme0n1"
 fi
 
-$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" '' -a -s SPDK00000000000001 -n "$bdevs"
+$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 '' -a -s SPDK00000000000001 -n "$bdevs"
+$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t RDMA -a $NVMF_FIRST_TARGET_IP -s 4420
 
 # Test multi-process access to local NVMe device
 if [ -n "$local_nvme_trid" ]; then
@@ -58,12 +59,14 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 		ls_guid=$($rpc_py construct_lvol_store Nvme0n1 lvs_0)
 		get_lvs_free_mb $ls_guid
 		lb_guid=$($rpc_py construct_lvol_bdev -u $ls_guid lbd_0 $free_mb)
-		$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" "" -a -s SPDK00000000000001 -n "$lb_guid"
+		$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 "" -a -s SPDK00000000000001 -n "$lb_guid"
+		$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t RDMA -a $NVMF_FIRST_TARGET_IP -s 4420
 		# Create lvol bdev for nested lvol stores
 		ls_nested_guid=$($rpc_py construct_lvol_store $lb_guid lvs_n_0)
 		get_lvs_free_mb $ls_nested_guid
 		lb_nested_guid=$($rpc_py construct_lvol_bdev -u $ls_nested_guid lbd_nest_0 $free_mb)
-		$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode2 "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" "" -a -s SPDK00000000000002 -n "$lb_nested_guid"
+		$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode2 "" -a -s SPDK00000000000002 -n "$lb_nested_guid"
+		$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode2 -t RDMA -a $NVMF_FIRST_TARGET_IP -s 4420
 
 		# Test perf as host with different io_size and qd_depth in nightly
 		qd_depth=("1" "128")

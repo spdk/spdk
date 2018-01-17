@@ -242,7 +242,7 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 core                    | Optional | number      | Core to run the subsystem's poller on. Default: Automatically assign a core.
 nqn                     | Required | string      | Subsystem NQN
-listen_addresses        | Required | array       | Array of @ref rpc_construct_nvmf_subsystem_listen_address objects
+listen_addresses        | Optional | array       | Array of @ref rpc_construct_nvmf_subsystem_listen_address objects
 hosts                   | Optional | array       | Array of strings containing allowed host NQNs. Default: No hosts allowed.
 allow_any_host          | Optional | boolean     | Allow any host (`true`) or enforce allowed host whitelist (`false`). Default: `false`.
 serial_number           | Required | string      | Serial number of virtual controller
@@ -329,6 +329,48 @@ Example request:
   "method": "delete_nvmf_subsystem",
   "params": {
     "nqn": "nqn.2016-06.io.spdk:cnode1"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## nvmf_subsystem_add_listener  method {#rpc_nvmf_subsystem_add_listener}
+
+Add a new listen address to an NVMe-oF subsystem.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+subnqn                  | Required | string      | Subsystem NQN
+listen_address          | Required | object      | @ref rpc_construct_nvmf_subsystem_listen_address object
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "nvmf_subsystem_add_listener",
+  "params": {
+    "subnqn": "nqn.2016-06.io.spdk:cnode1",
+    "listen_address": {
+      "trtype": "RDMA",
+      "adrfam": "IPv4",
+      "traddr": "192.168.0.123",
+      "trsvcid: "4420"
+    }
   }
 }
 ~~~
