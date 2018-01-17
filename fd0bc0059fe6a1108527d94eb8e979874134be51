@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "cffe62c0_fd9732fb",
+        "filename": "doc/vhost.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-17T18:58:11Z",
+      "side": 1,
+      "message": "Thanks, fixed.",
+      "parentUuid": "e718f939_29fe84e7",
+      "revId": "fd0bc0059fe6a1108527d94eb8e979874134be51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b28879f9_e2777525",
         "filename": "doc/vhost.md",
         "patchSetId": 11
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "1b2dbd52_199859fc",
+        "filename": "doc/vhost.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-17T18:58:11Z",
+      "side": 1,
+      "message": "This sounds so much better. Thanks!",
+      "parentUuid": "b28879f9_e2777525",
+      "revId": "fd0bc0059fe6a1108527d94eb8e979874134be51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7ee4e69c_be862fd7",
         "filename": "doc/vhost.md",
         "patchSetId": 11
@@ -47,6 +83,24 @@
       "writtenOn": "2018-01-16T17:10:48Z",
       "side": 1,
       "message": "I preferred just \"shared hugepage memory\".  Otherwise it seems that the NVMe disk is doing DMA to/from the virtqueues in shared hugepage memory.",
+      "revId": "fd0bc0059fe6a1108527d94eb8e979874134be51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33d880c5_a3b6f9fa",
+        "filename": "doc/vhost.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-17T18:58:11Z",
+      "side": 1,
+      "message": "K, changed it.",
+      "parentUuid": "7ee4e69c_be862fd7",
       "revId": "fd0bc0059fe6a1108527d94eb8e979874134be51",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
