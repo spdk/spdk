@@ -48,7 +48,7 @@ DEFINE_STUB_V(spdk_scsi_nvme_translate, (const struct spdk_bdev_io *bdev_io,
 
 struct ut_bdev {
 	struct spdk_bdev	bdev;
-	int			io_target;
+	void			*io_target;
 };
 
 struct ut_bdev_channel {
@@ -57,6 +57,7 @@ struct ut_bdev_channel {
 	uint32_t			avail_cnt;
 };
 
+int g_io_device;
 struct ut_bdev g_bdev;
 struct spdk_bdev_desc *g_desc;
 bool g_teardown_done = false;
@@ -86,7 +87,9 @@ stub_destroy_ch(void *io_device, void *ctx_buf)
 static struct spdk_io_channel *
 stub_get_io_channel(void *ctx)
 {
-	return spdk_get_io_channel(&g_bdev.io_target);
+	struct ut_bdev *ut_bdev = ctx;
+
+	return spdk_get_io_channel(ut_bdev->io_target);
 }
 
 static int
@@ -122,9 +125,9 @@ stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 }
 
 static uint32_t
-stub_complete_io(uint32_t num_to_complete)
+stub_complete_io(void *io_target, uint32_t num_to_complete)
 {
-	struct spdk_io_channel *_ch = spdk_get_io_channel(&g_bdev.io_target);
+	struct spdk_io_channel *_ch = spdk_get_io_channel(io_target);
 	struct ut_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
 	struct spdk_bdev_io *io;
 	bool complete_all = (num_to_complete == 0);
@@ -166,27 +169,28 @@ module_fini(void)
 SPDK_BDEV_MODULE_REGISTER(bdev_ut, module_init, module_fini, NULL, NULL, NULL)
 
 static void
-register_bdev(void)
+register_bdev(struct ut_bdev *ut_bdev, char *name, void *io_target)
 {
-	g_bdev.bdev.name = "bdev_ut";
-	g_bdev.bdev.fn_table = &fn_table;
-	g_bdev.bdev.module = SPDK_GET_BDEV_MODULE(bdev_ut);
-	g_bdev.bdev.blocklen = 4096;
-	g_bdev.bdev.blockcnt = 1024;
+	memset(ut_bdev, 0, sizeof(*ut_bdev));
 
-	spdk_io_device_register(&g_bdev.io_target, stub_create_ch, stub_destroy_ch,
-				sizeof(struct ut_bdev_channel));
-	spdk_bdev_register(&g_bdev.bdev);
+	ut_bdev->io_target = io_target;
+	ut_bdev->bdev.ctxt = ut_bdev;
+	ut_bdev->bdev.name = name;
+	ut_bdev->bdev.fn_table = &fn_table;
+	ut_bdev->bdev.module = SPDK_GET_BDEV_MODULE(bdev_ut);
+	ut_bdev->bdev.blocklen = 4096;
+	ut_bdev->bdev.blockcnt = 1024;
+
+	spdk_bdev_register(&ut_bdev->bdev);
 }
 
 static void
-unregister_bdev(void)
+unregister_bdev(struct ut_bdev *ut_bdev)
 {
 	/* Handle any deferred messages. */
 	poll_threads();
-	spdk_bdev_unregister(&g_bdev.bdev, NULL, NULL);
-	spdk_io_device_unregister(&g_bdev.io_target, NULL);
-	memset(&g_bdev, 0, sizeof(g_bdev));
+	spdk_bdev_unregister(&ut_bdev->bdev, NULL, NULL);
+	memset(ut_bdev, 0, sizeof(*ut_bdev));
 }
 
 static void
@@ -203,7 +207,9 @@ setup_test(void)
 
 	allocate_threads(BDEV_UT_NUM_THREADS);
 	spdk_bdev_initialize(bdev_init_cb, &done);
-	register_bdev();
+	spdk_io_device_register(&g_io_device, stub_create_ch, stub_destroy_ch,
+				sizeof(struct ut_bdev_channel));
+	register_bdev(&g_bdev, "ut_bdev", &g_io_device);
 	spdk_bdev_open(&g_bdev.bdev, true, NULL, NULL, &g_desc);
 }
 
@@ -219,7 +225,8 @@ teardown_test(void)
 	g_teardown_done = false;
 	spdk_bdev_close(g_desc);
 	g_desc = NULL;
-	unregister_bdev();
+	unregister_bdev(&g_bdev);
+	spdk_io_device_unregister(&g_io_device, NULL);
 	spdk_bdev_finish(finish_cb, NULL);
 	poll_threads();
 	CU_ASSERT(g_teardown_done == true);
@@ -270,7 +277,7 @@ put_channel_during_reset(void)
 	spdk_bdev_reset(g_desc, io_ch, reset_done, &done);
 	spdk_put_io_channel(io_ch);
 	poll_threads();
-	stub_complete_io(0);
+	stub_complete_io(g_bdev.io_target, 0);
 
 	teardown_test();
 }
@@ -331,7 +338,7 @@ aborted_reset(void)
 	 */
 	set_thread(0);
 	spdk_put_io_channel(io_ch[0]);
-	stub_complete_io(0);
+	stub_complete_io(g_bdev.io_target, 0);
 	poll_threads();
 	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(g_bdev.bdev.reset_in_progress == NULL);
@@ -383,11 +390,11 @@ io_during_reset(void)
 	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_PENDING);
 
 	set_thread(0);
-	stub_complete_io(0);
+	stub_complete_io(g_bdev.io_target, 0);
 	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_SUCCESS);
 
 	set_thread(1);
-	stub_complete_io(0);
+	stub_complete_io(g_bdev.io_target, 0);
 	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_SUCCESS);
 
 	/*
@@ -429,7 +436,7 @@ io_during_reset(void)
 	 * Complete the reset
 	 */
 	set_thread(0);
-	stub_complete_io(0);
+	stub_complete_io(g_bdev.io_target, 0);
 
 	/*
 	 * Only poll thread 0. We should not get a completion.
@@ -534,19 +541,19 @@ enomem(void)
 	 *  changed since completing just 1 I/O should not trigger retrying the queued nomem_io
 	 *  list.
 	 */
-	stub_complete_io(1);
+	stub_complete_io(g_bdev.io_target, 1);
 	CU_ASSERT(bdev_io_tailq_cnt(&bdev_ch->nomem_io) == nomem_cnt);
 
 	/*
 	 * Complete enough I/O to hit the nomem_theshold.  This should trigger retrying nomem_io,
 	 *  and we should see I/O get resubmitted to the test bdev module.
 	 */
-	stub_complete_io(NOMEM_THRESHOLD_COUNT - 1);
+	stub_complete_io(g_bdev.io_target, NOMEM_THRESHOLD_COUNT - 1);
 	CU_ASSERT(bdev_io_tailq_cnt(&bdev_ch->nomem_io) < nomem_cnt);
 	nomem_cnt = bdev_io_tailq_cnt(&bdev_ch->nomem_io);
 
 	/* Complete 1 I/O only.  This should not trigger retrying the queued nomem_io. */
-	stub_complete_io(1);
+	stub_complete_io(g_bdev.io_target, 1);
 	CU_ASSERT(bdev_io_tailq_cnt(&bdev_ch->nomem_io) == nomem_cnt);
 
 	/*
@@ -558,7 +565,7 @@ enomem(void)
 	poll_threads();
 	CU_ASSERT(rc == 0);
 	/* This will complete the reset. */
-	stub_complete_io(0);
+	stub_complete_io(g_bdev.io_target, 0);
 
 	CU_ASSERT(bdev_io_tailq_cnt(&bdev_ch->nomem_io) == 0);
 	CU_ASSERT(bdev_ch->io_outstanding == 0);
