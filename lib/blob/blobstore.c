@@ -1269,7 +1269,10 @@ _spdk_blob_request_submit_op(struct spdk_blob *_blob, struct spdk_io_channel *_c
 }
 
 struct rw_iov_ctx {
-	struct spdk_blob_data *blob;
+	struct spdk_blob *blob;
+	struct spdk_io_channel *channel;
+	spdk_blob_op_complete cb_fn;
+	void *cb_arg;
 	bool read;
 	int iovcnt;
 	struct iovec *orig_iov;
@@ -1287,27 +1290,25 @@ _spdk_rw_iov_done(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 }
 
 static void
-_spdk_rw_iov_split_next(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+_spdk_rw_iov_split_next(void *cb_arg, int bserrno)
 {
 	struct rw_iov_ctx *ctx = cb_arg;
+	struct spdk_blob_data *blob = __blob_to_data(ctx->blob);
 	struct iovec *iov, *orig_iov;
 	int iovcnt;
 	size_t orig_iovoff;
-	uint64_t lba;
-	uint64_t page_count, pages_to_boundary;
-	uint32_t lba_count;
+	uint64_t page_count, pages_to_boundary, page_offset;
 	uint64_t byte_count;
 
 	if (bserrno != 0 || ctx->pages_remaining == 0) {
 		free(ctx);
-		spdk_bs_sequence_finish(seq, bserrno);
+		ctx->cb_fn(ctx->cb_arg, bserrno);
 		return;
 	}
 
-	pages_to_boundary = _spdk_bs_num_pages_to_cluster_boundary(ctx->blob, ctx->page_offset);
+	page_offset = ctx->page_offset;
+	pages_to_boundary = _spdk_bs_num_pages_to_cluster_boundary(blob, page_offset);
 	page_count = spdk_min(ctx->pages_remaining, pages_to_boundary);
-	lba = _spdk_bs_blob_page_to_lba(ctx->blob, ctx->page_offset);
-	lba_count = _spdk_bs_page_to_lba(ctx->blob->bs, page_count);
 
 	/*
 	 * Get index and offset into the original iov array for our current position in the I/O sequence.
@@ -1350,9 +1351,11 @@ _spdk_rw_iov_split_next(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	iov = &ctx->iov[0];
 
 	if (ctx->read) {
-		spdk_bs_sequence_readv_dev(seq, iov, iovcnt, lba, lba_count, _spdk_rw_iov_split_next, ctx);
+		spdk_bs_io_readv_blob(ctx->blob, ctx->channel, iov, iovcnt, page_offset,
+				      page_count, _spdk_rw_iov_split_next, ctx);
 	} else {
-		spdk_bs_sequence_writev_dev(seq, iov, iovcnt, lba, lba_count, _spdk_rw_iov_split_next, ctx);
+		spdk_bs_io_writev_blob(ctx->blob, ctx->channel, iov, iovcnt, page_offset,
+				       page_count, _spdk_rw_iov_split_next, ctx);
 	}
 }
 
@@ -1429,7 +1432,8 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *_blob, struct spdk_io_channel
 			return;
 		}
 
-		ctx->blob = blob;
+		ctx->blob = _blob;
+		ctx->channel = _channel;
 		ctx->read = read;
 		ctx->orig_iov = iov;
 		ctx->iovcnt = iovcnt;
@@ -1437,7 +1441,7 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *_blob, struct spdk_io_channel
 		ctx->pages_remaining = length;
 		ctx->pages_done = 0;
 
-		_spdk_rw_iov_split_next(seq, ctx, 0);
+		_spdk_rw_iov_split_next(ctx, 0);
 	}
 }
 
