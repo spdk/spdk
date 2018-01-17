@@ -54,6 +54,8 @@ extern "C" {
 
 #define IDLE_INTERVAL_TIME_IN_US 5000
 
+#define SPDK_MAX_POLLERS_PER_CORE	4096
+
 int spdk_interface_init(void);
 void spdk_interface_destroy(void);
 
@@ -86,9 +88,10 @@ int spdk_sock_close(int sock);
 ssize_t spdk_sock_recv(int sock, void *buf, size_t len);
 ssize_t spdk_sock_writev(int sock, struct iovec *iov, int iovcnt);
 
-int spdk_epoll_create(int size);
-int spdk_epoll_ctl(int epfd, int op, int fd, struct epoll_event *event);
-int spdk_epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout);
+int spdk_epoll_create(__attribute__((unused))int size);
+int spdk_epoll_ctl(int epfd, int op, int fd, void *conn);
+int spdk_epoll_wait(int epfd, int maxevents, int timeout, void *event_ptr);
+void *spdk_get_events_data(void *event_ptr, int index);
 
 int spdk_sock_set_recvlowat(int sock, int nbytes);
 int spdk_sock_set_recvbuf(int sock, int sz);
