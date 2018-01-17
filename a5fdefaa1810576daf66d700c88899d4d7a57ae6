@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "808732c8_1a242ee9",
+        "filename": "scripts/fio.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-01-17T10:15:11Z",
+      "side": 1,
+      "message": "you should delete the file at the previous patch: https://review.gerrithub.io/#/c/390259/",
+      "revId": "a5fdefaa1810576daf66d700c88899d4d7a57ae6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
