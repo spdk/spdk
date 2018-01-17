@@ -54,6 +54,13 @@ extern "C" {
 
 #define IDLE_INTERVAL_TIME_IN_US 5000
 
+#define SPDK_MAX_POLLERS_PER_CORE	4096
+
+#define SPDK_EPOLL_CTL_ADD	1
+#define SPDK_EPOLL_CTL_DEL	2
+
+#define SPDK_EPOLL_EVENTS_POLLIN	1
+
 int spdk_interface_init(void);
 void spdk_interface_destroy(void);
 
@@ -74,6 +81,14 @@ struct spdk_interface {
 	TAILQ_ENTRY(spdk_interface)	tailq;
 };
 
+struct spdk_net_event {
+#if defined (__FreeBSD__)
+	struct kevent event[SPDK_MAX_POLLERS_PER_CORE];
+#else
+	struct epoll_event event[SPDK_MAX_POLLERS_PER_CORE];
+#endif
+};
+
 int spdk_interface_add_ip_address(int ifc_index, char *ip_addr);
 int spdk_interface_delete_ip_address(int ifc_index, char *ip_addr);
 void *spdk_interface_get_list(void);
@@ -86,9 +101,10 @@ int spdk_sock_close(int sock);
 ssize_t spdk_sock_recv(int sock, void *buf, size_t len);
 ssize_t spdk_sock_writev(int sock, struct iovec *iov, int iovcnt);
 
-int spdk_epoll_create(int size);
-int spdk_epoll_ctl(int epfd, int op, int fd, struct epoll_event *event);
-int spdk_epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout);
+int spdk_epoll_create(__attribute__((unused))int size);
+int spdk_epoll_ctl(int epfd, __attribute__((unused))int events, int op, int fd, void *conn);
+int spdk_epoll_wait(int epfd, int maxevents, int timeout, struct spdk_net_event *event);
+void *spdk_get_events_data(struct spdk_net_event *event, int index);
 
 int spdk_sock_set_recvlowat(int sock, int nbytes);
 int spdk_sock_set_recvbuf(int sock, int sz);

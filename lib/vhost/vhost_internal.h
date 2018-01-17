@@ -65,7 +65,7 @@
 
 #define SPDK_VHOST_SCSI_CTRLR_MAX_DEVS 8
 
-#define SPDK_VHOST_IOVS_MAX 128
+#define SPDK_VHOST_IOVS_MAX 129
 
 /*
  * Rate at which stats are checked for interrupt coalescing.
