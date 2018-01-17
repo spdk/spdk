@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4a30ea75_ae829c1d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3482,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-17T16:42:24Z",
+      "side": 1,
+      "message": "I think you would want to assert that sync completed successfully based on bserrno before setting data_ro and md_ro fields in blob.",
+      "range": {
+        "startLine": 3482,
+        "startChar": 1,
+        "endLine": 3482,
+        "endChar": 49
+      },
+      "revId": "272af1300f8ae3828f75dc1c797f3d8c9744e252",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
