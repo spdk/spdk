@@ -373,6 +373,71 @@ spdk_bs_batch_write_zeroes_dev(spdk_bs_batch_t *batch,
 				   &set->cb_args);
 }
 
+static void
+spdk_bs_batch_blob_op_complete(void *arg, int bserrno)
+{
+	/* TODO: spdk_bs_batch_completion does not actually use the channel parameter -
+	 *  just pass NULL here instead of getting the channel from the set cb_arg.
+	 */
+	spdk_bs_batch_completion(NULL, arg, bserrno);
+}
+
+void
+spdk_bs_batch_read_blob(spdk_bs_batch_t *batch, struct spdk_blob *blob,
+			void *payload, uint64_t offset, uint64_t length)
+{
+	struct spdk_bs_request_set	*set = (struct spdk_bs_request_set *)batch;
+	struct spdk_bs_channel		*channel = set->channel;
+
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB_RW, "Reading %lu pages from offset %lu\n", length, offset);
+
+	set->u.batch.outstanding_ops++;
+	spdk_bs_io_read_blob(blob, spdk_io_channel_from_ctx(channel), payload, offset,
+			     length, spdk_bs_batch_blob_op_complete, set);
+}
+
+void
+spdk_bs_batch_write_blob(spdk_bs_batch_t *batch, struct spdk_blob *blob,
+			 void *payload, uint64_t offset, uint64_t length)
+{
+	struct spdk_bs_request_set	*set = (struct spdk_bs_request_set *)batch;
+	struct spdk_bs_channel		*channel = set->channel;
+
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB_RW, "Writing %lu pages from offset %lu\n", length, offset);
+
+	set->u.batch.outstanding_ops++;
+	spdk_bs_io_write_blob(blob, spdk_io_channel_from_ctx(channel), payload, offset,
+			      length, spdk_bs_batch_blob_op_complete, set);
+}
+
+void
+spdk_bs_batch_unmap_blob(spdk_bs_batch_t *batch, struct spdk_blob *blob,
+			 uint64_t offset, uint64_t length)
+{
+	struct spdk_bs_request_set	*set = (struct spdk_bs_request_set *)batch;
+	struct spdk_bs_channel		*channel = set->channel;
+
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB_RW, "Unmapping %lu pages from offset %lu\n", length, offset);
+
+	set->u.batch.outstanding_ops++;
+	spdk_bs_io_unmap_blob(blob, spdk_io_channel_from_ctx(channel), offset, length,
+			      spdk_bs_batch_blob_op_complete, set);
+}
+
+void
+spdk_bs_batch_write_zeroes_blob(spdk_bs_batch_t *batch, struct spdk_blob *blob,
+				uint64_t offset, uint64_t length)
+{
+	struct spdk_bs_request_set	*set = (struct spdk_bs_request_set *)batch;
+	struct spdk_bs_channel		*channel = set->channel;
+
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB_RW, "Zeroing %lu pages from offset %lu\n", length, offset);
+
+	set->u.batch.outstanding_ops++;
+	spdk_bs_io_write_zeroes_blob(blob, spdk_io_channel_from_ctx(channel), offset, length,
+				     spdk_bs_batch_blob_op_complete, set);
+}
+
 void
 spdk_bs_batch_close(spdk_bs_batch_t *batch)
 {
