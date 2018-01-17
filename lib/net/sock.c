@@ -308,12 +308,30 @@ spdk_sock_set_sendbuf(int sock, int sz)
 			  &sz, sizeof(sz));
 }
 
+#if defined(__FreeBSD__)
+int
+spdk_epoll_create(void)
+{
+	return kqueue();
+}
+
+int
+spdk_epoll_ctl(int sock, int op, int fd, struct kevent *event)
+{
+	return 0;
+}
+
+int
+spdk_epoll_wait(int sock, struct kevent *events, int maxevents, int timeout)
+{
+	return 0;
+}
+#else
 int
 spdk_epoll_create(int size)
 {
 	return epoll_create1(0);
 }
-
 int
 spdk_epoll_ctl(int sock, int op, int fd, struct epoll_event *event)
 {
@@ -325,6 +343,7 @@ spdk_epoll_wait(int sock, struct epoll_event *events, int maxevents, int timeout
 {
 	return epoll_wait(sock, events, maxevents, timeout);
 }
+#endif
 
 bool
 spdk_sock_is_ipv6(int sock)
