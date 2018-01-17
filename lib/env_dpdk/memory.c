@@ -213,7 +213,7 @@ spdk_mem_map_free(struct spdk_mem_map **pmap)
 }
 
 int
-spdk_mem_register(void *vaddr, size_t len)
+spdk_mem_register(void *vaddr, size_t len, uint64_t paddr)
 {
 	struct spdk_mem_map *map;
 	int rc;
@@ -523,7 +523,7 @@ spdk_mem_map_init(void)
 			break;
 		}
 
-		spdk_mem_register(seg->addr, seg->len);
+		spdk_mem_register(seg->addr, seg->len, 0);
 	}
 	return 0;
 }

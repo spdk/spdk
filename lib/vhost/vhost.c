@@ -437,7 +437,7 @@ spdk_vhost_dev_mem_register(struct spdk_vhost_dev *vdev)
 		SPDK_NOTICELOG("Registering VM memory for vtophys translation - 0x%jx len:0x%jx\n",
 			       start, len);
 
-		if (spdk_mem_register((void *)start, len) != 0) {
+		if (spdk_mem_register((void *)start, len, 0) != 0) {
 			SPDK_WARNLOG("Failed to register memory region %"PRIu32". Future vtophys translation might fail.\n",
 				     i);
 			continue;

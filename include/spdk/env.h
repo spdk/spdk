@@ -332,6 +332,16 @@ size_t spdk_ring_dequeue(struct spdk_ring *ring, void **objs, size_t count);
 
 uint64_t spdk_vtophys(void *buf);
 
+/**
+ * \brief Struct for physical memory regions we wish to register (e.g NVMe CMBs/PMRs)
+ *
+ */
+struct spdk_phys_region {
+	uint64_t paddr;
+	uint64_t size;
+	uint64_t vaddr;
+};
+
 struct spdk_pci_addr {
 	uint32_t			domain;
 	uint8_t				bus;
@@ -520,7 +530,7 @@ uint64_t spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr);
  * Register the specified memory region for address translation.
  * The memory region must map to pinned huge pages (2MB or greater).
  */
-int spdk_mem_register(void *vaddr, size_t len);
+int spdk_mem_register(void *vaddr, size_t len, uint64_t paddr);
 
 /**
  * Unregister the specified memory region from vtophys address translation.

@@ -190,19 +190,19 @@ test_mem_map_registration(void)
 	CU_ASSERT(rc == -EINVAL);
 
 	/* Register non-2MB multiple size */
-	rc = spdk_mem_register((void *)VALUE_2MB, 1234);
+	rc = spdk_mem_register((void *)VALUE_2MB, 1234, 0);
 	CU_ASSERT(rc == -EINVAL);
 
 	/* Register region that isn't 2MB aligned */
-	rc = spdk_mem_register((void *)1234, VALUE_2MB);
+	rc = spdk_mem_register((void *)1234, VALUE_2MB, 0);
 	CU_ASSERT(rc == -EINVAL);
 
 	/* Register one 2MB page */
-	rc = spdk_mem_register((void *)VALUE_2MB, VALUE_2MB);
+	rc = spdk_mem_register((void *)VALUE_2MB, VALUE_2MB, 0);
 	CU_ASSERT(rc == 0);
 
 	/* Register an overlapping address range */
-	rc = spdk_mem_register((void *)0, 3 * VALUE_2MB);
+	rc = spdk_mem_register((void *)0, 3 * VALUE_2MB, 0);
 	CU_ASSERT(rc == 0);
 
 	/*
