@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f7153b39_a6e7aa19",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-17T15:57:54Z",
+      "side": 1,
+      "message": "Instead of adding ctx here, create a new type of spdk_bs_dev structure in blobstore.c.\n\nFor example:\n\nstruct spdk_blob_bs_dev {\n  struct spdk_bs_dev bs_dev;\n  struct spdk_blob *blob;\n};\n\nThen allocate this structure, instead of spdk_bs_dev, in _create_snapshot_bs_dev.\n\nThis is similar to the struct blob_bdev structure in lib/blob/bdev/blob_bdev.c.",
+      "revId": "72f827a7c0ca051c04a27cba25cfe2f6c693d786",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
