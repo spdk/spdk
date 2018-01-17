@@ -239,6 +239,8 @@ struct spdk_nvmf_subsystem *spdk_nvmf_subsystem_get_next(struct spdk_nvmf_subsys
 /**
  * Allow the given host NQN to connect to the given subsystem.
  *
+ * May only be performed on subsystems in the PAUSED or INACTIVE states.
+ *
  * \param subsystem Subsystem to add host to
  * \param host_nqn The NQN for the host
  * \return 0 on success. Negated errno value on failure.
@@ -249,11 +251,14 @@ int spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem,
 /**
  * Set whether a subsystem should allow any host or only hosts in the allowed list.
  *
+ * May only be performed on subsystems in the PAUSED or INACTIVE states.
+ *
  * \param subsystem Subsystem to modify.
  * \param allow_any_host true to allow any host to connect to this subsystem, or false to enforce
  *                       the whitelist configured with spdk_nvmf_subsystem_add_host().
+ * \return 0 on success. Negated errno value on failure.
  */
-void spdk_nvmf_subsystem_set_allow_any_host(struct spdk_nvmf_subsystem *subsystem,
+int spdk_nvmf_subsystem_set_allow_any_host(struct spdk_nvmf_subsystem *subsystem,
 		bool allow_any_host);
 
 /**
@@ -302,6 +307,8 @@ const char *spdk_nvmf_host_get_nqn(struct spdk_nvmf_host *host);
 
 /**
  * Accept new connections on the address provided
+ *
+ * May only be performed on subsystems in the PAUSED or INACTIVE states.
  *
  * \param subsystem Subsystem to add listener to
  * \param trid The address to accept connections from
@@ -352,6 +359,8 @@ const struct spdk_nvme_transport_id *spdk_nvmf_listener_get_trid(
 /**
  * Add a namespace to a subsytem.
  *
+ * May only be performed on subsystems in the PAUSED or INACTIVE states.
+ *
  * \param subsystem Subsystem to add namespace to.
  * \param bdev Block device to add as a namespace.
  * \param nsid Namespace ID to assign to the new namespace, or 0 to automatically use an available
@@ -364,6 +373,8 @@ uint32_t spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struc
 
 /**
  * Remove a namespace from a subsytem.
+ *
+ * May only be performed on subsystems in the PAUSED or INACTIVE states.
  *
  * \param subsystem Subsystem the namespace belong to.
  * \param nsid Namespace ID to be removed.
