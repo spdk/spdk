@@ -429,9 +429,18 @@ p.set_defaults(func=destroy_lvol_store)
 
 
 def get_lvol_stores(args):
-    print_dict(jsonrpc_call('get_lvol_stores'))
-
+    params = {}
+    if (args.uuid and args.lvs_name):
+        print("You can only specify either uuid or name of lvolstore")
+    else:
+        if args.uuid:
+            params['uuid'] = args.uuid
+        if args.lvs_name:
+            params['lvs_name'] = args.lvs_name
+    print_dict(jsonrpc_call('get_lvol_stores', params))
 p = subparsers.add_parser('get_lvol_stores', help='Display current logical volume store list')
+p.add_argument('-u', '--uuid', help='lvol store UUID', required=False)
+p.add_argument('-l', '--lvs_name', help='lvol store name', required=False)
 p.set_defaults(func=get_lvol_stores)
 
 
