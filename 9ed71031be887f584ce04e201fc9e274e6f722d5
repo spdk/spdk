@@ -1,0 +1,101 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "11e668b1_eba84c8d",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-17T21:38:25Z",
+      "side": 1,
+      "message": "General note: please run scripts/check_format.sh, and also build docs locally (make -C doc) to verify the generated output looks okay.",
+      "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ae64b49_e8ec218d",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-17T21:38:25Z",
+      "side": 1,
+      "message": "We should probably replace all instances of \"bdal\" (including in the filename) with \"bdev\" - we never use \"bdal\" anywhere else in the code or docs.",
+      "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e1a8241_f2645279",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-17T21:38:25Z",
+      "side": 1,
+      "message": "If you\u0027re going to have a table of contents, it would be good to link it to the sections below by assigning them {#bdev_pg_...} names and using @ref bdev_pg... here.",
+      "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "071f9f7e_030f807b",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-17T21:38:25Z",
+      "side": 1,
+      "message": "Function names should all have () appended to allow Doxygen to auto-link them when they have doc comments.",
+      "range": {
+        "startLine": 103,
+        "startChar": 4,
+        "endLine": 103,
+        "endChar": 28
+      },
+      "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc90fcb1_4dbe32c2",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-17T21:38:25Z",
+      "side": 1,
+      "message": "Nvme -\u003e NVMe",
+      "range": {
+        "startLine": 125,
+        "startChar": 0,
+        "endLine": 125,
+        "endChar": 4
+      },
+      "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
