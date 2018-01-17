@@ -194,6 +194,15 @@ decode_rpc_listen_address(const struct spdk_json_val *val, void *out)
 	return 0;
 }
 
+static void
+free_rpc_listen_address(struct rpc_listen_address *r)
+{
+	free(r->transport);
+	free(r->adrfam);
+	free(r->traddr);
+	free(r->trsvcid);
+}
+
 static int
 decode_rpc_listen_addresses(const struct spdk_json_val *val, void *out)
 {
@@ -293,10 +302,7 @@ free_rpc_listen_addresses(struct rpc_listen_addresses *r)
 	size_t i;
 
 	for (i = 0; i < r->num_listen_address; i++) {
-		free(r->addresses[i].transport);
-		free(r->addresses[i].adrfam);
-		free(r->addresses[i].traddr);
-		free(r->addresses[i].trsvcid);
+		free_rpc_listen_address(&r->addresses[i]);
 	}
 }
 
@@ -353,7 +359,7 @@ static const struct spdk_json_object_decoder rpc_subsystem_decoders[] = {
 	{"core", offsetof(struct rpc_subsystem, core), spdk_json_decode_int32, true},
 	{"mode", offsetof(struct rpc_subsystem, mode), spdk_json_decode_string, true},
 	{"nqn", offsetof(struct rpc_subsystem, nqn), spdk_json_decode_string},
-	{"listen_addresses", offsetof(struct rpc_subsystem, listen_addresses), decode_rpc_listen_addresses},
+	{"listen_addresses", offsetof(struct rpc_subsystem, listen_addresses), decode_rpc_listen_addresses, true},
 	{"hosts", offsetof(struct rpc_subsystem, hosts), decode_rpc_hosts, true},
 	{"allow_any_host", offsetof(struct rpc_subsystem, allow_any_host), spdk_json_decode_bool, true},
 	{"serial_number", offsetof(struct rpc_subsystem, serial_number), spdk_json_decode_string, true},
@@ -493,3 +499,167 @@ invalid:
 	free_rpc_delete_subsystem(&req);
 }
 SPDK_RPC_REGISTER("delete_nvmf_subsystem", spdk_rpc_delete_nvmf_subsystem)
+
+struct nvmf_rpc_listener_ctx {
+	char				*subnqn;
+	struct rpc_listen_address	address;
+
+	struct spdk_jsonrpc_request	*request;
+	struct spdk_nvme_transport_id	trid;
+	bool				response_sent;
+};
+
+static const struct spdk_json_object_decoder nvmf_rpc_listener_decoder[] = {
+	{"subnqn", offsetof(struct nvmf_rpc_listener_ctx, subnqn), spdk_json_decode_string},
+	{"listen_address", offsetof(struct nvmf_rpc_listener_ctx, address), decode_rpc_listen_address},
+};
+
+static void
+nvmf_rpc_listener_ctx_free(struct nvmf_rpc_listener_ctx *ctx)
+{
+	free(ctx->subnqn);
+	free_rpc_listen_address(&ctx->address);
+	free(ctx);
+}
+
+static void
+nvmf_rpc_listen_resumed(struct spdk_nvmf_subsystem *subsystem,
+			void *cb_arg, int status)
+{
+	struct nvmf_rpc_listener_ctx *ctx = cb_arg;
+	struct spdk_jsonrpc_request *request;
+	struct spdk_json_write_ctx *w;
+
+	request = ctx->request;
+	if (ctx->response_sent) {
+		/* If an error occurred, the response has already been sent. */
+		nvmf_rpc_listener_ctx_free(ctx);
+		return;
+	}
+
+	nvmf_rpc_listener_ctx_free(ctx);
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+}
+
+static void
+nvmf_rpc_listen_paused(struct spdk_nvmf_subsystem *subsystem,
+		       void *cb_arg, int status)
+{
+	struct nvmf_rpc_listener_ctx *ctx = cb_arg;
+
+	if (spdk_nvmf_tgt_listen(g_tgt.tgt, &ctx->trid)) {
+		SPDK_ERRLOG("Unable to add listener.\n");
+		goto invalid;
+	}
+
+	if (spdk_nvmf_subsystem_add_listener(subsystem, &ctx->trid)) {
+		goto invalid;
+	}
+
+	if (spdk_nvmf_subsystem_resume(subsystem, nvmf_rpc_listen_resumed, ctx)) {
+		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+		nvmf_rpc_listener_ctx_free(ctx);
+		return;
+	}
+
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 "Invalid parameters");
+	ctx->response_sent = true;
+	if (spdk_nvmf_subsystem_resume(subsystem, nvmf_rpc_listen_resumed, ctx)) {
+		SPDK_ERRLOG("Failed to resume subsystem\n");
+		/* Can't really do anything to recover here - subsystem will remain paused. */
+	}
+}
+
+static void
+nvmf_rpc_subsystem_add_listener(struct spdk_jsonrpc_request *request,
+				const struct spdk_json_val *params)
+{
+	struct nvmf_rpc_listener_ctx *ctx;
+	struct spdk_nvmf_subsystem *subsystem;
+	size_t len;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Out of memory");
+		return;
+	}
+
+	ctx->request = request;
+
+	if (spdk_json_decode_object(params, nvmf_rpc_listener_decoder,
+				    SPDK_COUNTOF(nvmf_rpc_listener_decoder),
+				    ctx)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		nvmf_rpc_listener_ctx_free(ctx);
+		return;
+	}
+
+	subsystem = spdk_nvmf_tgt_find_subsystem(g_tgt.tgt, ctx->subnqn);
+	if (!subsystem) {
+		SPDK_ERRLOG("Unable to find subsystem with NQN %s\n", ctx->subnqn);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		nvmf_rpc_listener_ctx_free(ctx);
+		return;
+	}
+
+	if (spdk_nvme_transport_id_parse_trtype(&ctx->trid.trtype, ctx->address.transport)) {
+		SPDK_ERRLOG("Invalid transport type: %s\n", ctx->address.transport);
+		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		nvmf_rpc_listener_ctx_free(ctx);
+		return;
+	}
+
+	if (ctx->address.adrfam) {
+		if (spdk_nvme_transport_id_parse_adrfam(&ctx->trid.adrfam, ctx->address.adrfam)) {
+			SPDK_ERRLOG("Invalid adrfam: %s\n", ctx->address.adrfam);
+			spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							 "Invalid parameters");
+			nvmf_rpc_listener_ctx_free(ctx);
+			return;
+		}
+	} else {
+		ctx->trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
+	}
+
+	len = strlen(ctx->address.traddr);
+	if (len > sizeof(ctx->trid.traddr) - 1) {
+		SPDK_ERRLOG("Transport address longer than %zu characters: %s\n",
+			    sizeof(ctx->trid.traddr) - 1, ctx->address.traddr);
+		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		nvmf_rpc_listener_ctx_free(ctx);
+		return;
+	}
+	memcpy(ctx->trid.traddr, ctx->address.traddr, len + 1);
+
+	len = strlen(ctx->address.trsvcid);
+	if (len > sizeof(ctx->trid.trsvcid) - 1) {
+		SPDK_ERRLOG("Transport service id longer than %zu characters: %s\n",
+			    sizeof(ctx->trid.trsvcid) - 1, ctx->address.trsvcid);
+		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		nvmf_rpc_listener_ctx_free(ctx);
+		return;
+	}
+	memcpy(ctx->trid.trsvcid, ctx->address.trsvcid, len + 1);
+
+	if (spdk_nvmf_subsystem_pause(subsystem, nvmf_rpc_listen_paused, ctx)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+		nvmf_rpc_listener_ctx_free(ctx);
+		return;
+	}
+}
+SPDK_RPC_REGISTER("nvmf_subsystem_add_listener", nvmf_rpc_subsystem_add_listener);

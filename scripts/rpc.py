@@ -337,6 +337,14 @@ if __name__ == "__main__":
                    help='subsystem nqn to be deleted. Example: nqn.2016-06.io.spdk:cnode1.')
     p.set_defaults(func=rpc.nvmf.delete_nvmf_subsystem)
 
+    p = subparsers.add_parser('nvmf_subsystem_add_listener', help='Add a listener to an NVMe-oF subsystem')
+    p.add_argument('nqn', help='NVMe-oF subsystem NQN')
+    p.add_argument('-t', '--trtype', help='NVMe-oF transport type: e.g., rdma', required=True)
+    p.add_argument('-a', '--traddr', help='NVMe-oF transport address: e.g., an ip address', required=True)
+    p.add_argument('-f', '--adrfam', help='NVMe-oF transport adrfam: e.g., ipv4, ipv6, ib, fc, intra_host')
+    p.add_argument('-s', '--trsvcid', help='NVMe-oF transport service id: e.g., a port number')
+    p.set_defaults(func=rpc.nvmf.nvmf_subsystem_add_listener)
+
     # pmem
     p = subparsers.add_parser('create_pmem_pool', help='Create pmem pool')
     p.add_argument('pmem_file', help='Path to pmemblk pool file')
