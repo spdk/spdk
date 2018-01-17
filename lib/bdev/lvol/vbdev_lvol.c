@@ -44,7 +44,7 @@ SPDK_DECLARE_BDEV_MODULE(lvol);
 static TAILQ_HEAD(, lvol_store_bdev) g_spdk_lvol_pairs = TAILQ_HEAD_INITIALIZER(
 			g_spdk_lvol_pairs);
 
-static struct lvol_store_bdev *
+struct lvol_store_bdev *
 vbdev_get_lvs_bdev_by_lvs(struct spdk_lvol_store *lvs_orig)
 {
 	struct spdk_lvol_store *lvs = NULL;
