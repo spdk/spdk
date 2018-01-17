@@ -45,6 +45,30 @@
       "revId": "1679c669a6a3e5bddbb58875307b654f4c840f4c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "248747b4_922d79e3",
+        "filename": "test/vhost/hotplug/scsi_hotplug.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-01-17T11:08:58Z",
+      "side": 1,
+      "message": "I could do this, but in bash parsing json is difficult to do. Number of lines of code could be the same.",
+      "parentUuid": "92ed5d17_b4bdee44",
+      "range": {
+        "startLine": 44,
+        "startChar": 0,
+        "endLine": 58,
+        "endChar": 51
+      },
+      "revId": "1679c669a6a3e5bddbb58875307b654f4c840f4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
