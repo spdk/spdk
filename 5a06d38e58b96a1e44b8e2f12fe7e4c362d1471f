@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "90cdfc49_eb053e44",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 746,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-17T15:50:42Z",
+      "side": 1,
+      "message": "\u003e I think we should assign rc to lvolerrno, otherwise the called of\n \u003e vbdev_lvol_resize() might assume it completed successfully.\n\nCan you please see the feedback from previous patch set ?",
+      "revId": "5a06d38e58b96a1e44b8e2f12fe7e4c362d1471f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "116a0e79_8fe7a1c6",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 410,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-17T15:50:42Z",
+      "side": 1,
+      "message": "\u003e \n\u003e ENODEV is more appropriate here\n\u003e \n \nSame as in previous patch set.",
+      "range": {
+        "startLine": 410,
+        "startChar": 8,
+        "endLine": 410,
+        "endChar": 14
+      },
+      "revId": "5a06d38e58b96a1e44b8e2f12fe7e4c362d1471f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
