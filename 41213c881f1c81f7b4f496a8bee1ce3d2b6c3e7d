@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "868800da_a1694bd3",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3242,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-01-17T16:40:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "28dde32a_d8eba2e1",
+      "range": {
+        "startLine": 3242,
+        "startChar": 1,
+        "endLine": 3242,
+        "endChar": 12
+      },
+      "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c2709ce3_84ddf98b",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 6
@@ -36,6 +60,30 @@
       "writtenOn": "2018-01-16T12:45:46Z",
       "side": 1,
       "message": "rc should be a bool type.",
+      "range": {
+        "startLine": 3310,
+        "startChar": 6,
+        "endLine": 3310,
+        "endChar": 49
+      },
+      "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "caadc986_18f0da17",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3310,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-01-17T16:40:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c2709ce3_84ddf98b",
       "range": {
         "startLine": 3310,
         "startChar": 6,
@@ -65,6 +113,24 @@
     },
     {
       "key": {
+        "uuid": "7b64fa24_73b92f51",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3323,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-01-17T16:40:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "96925980_3564ca4f",
+      "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "668280dd_6797b912",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 6
@@ -76,6 +142,30 @@
       "writtenOn": "2018-01-16T12:45:46Z",
       "side": 1,
       "message": "Can we change this name to just _spdk_bs_sync_snapshot_cpl (see comments below)?",
+      "range": {
+        "startLine": 3327,
+        "startChar": 0,
+        "endLine": 3327,
+        "endChar": 32
+      },
+      "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48d34db7_555be4c3",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3327,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-01-17T16:40:14Z",
+      "side": 1,
+      "message": "We have to callbacks for syncing snapshots, both doing different things. This is second one.",
+      "parentUuid": "668280dd_6797b912",
       "range": {
         "startLine": 3327,
         "startChar": 0,
@@ -111,6 +201,30 @@
     },
     {
       "key": {
+        "uuid": "b812542e_82ecae79",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3341,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-01-17T16:40:14Z",
+      "side": 1,
+      "message": "this is callback from spdk_blob_sync_md(*clone*, ...) , why calling it ...sync_snapshot?",
+      "parentUuid": "80c6e192_1525d1cb",
+      "range": {
+        "startLine": 3341,
+        "startChar": 0,
+        "endLine": 3341,
+        "endChar": 23
+      },
+      "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eb135f4a_e47b6c78",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 6
@@ -122,6 +236,30 @@
       "writtenOn": "2018-01-16T12:45:46Z",
       "side": 1,
       "message": "We should set it to true again in _spdk_bs_sync_snapshot_final_cpl.",
+      "range": {
+        "startLine": 3351,
+        "startChar": 1,
+        "endLine": 3351,
+        "endChar": 24
+      },
+      "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "351e5e2a_d7159f2a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3351,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-01-17T16:40:14Z",
+      "side": 1,
+      "message": "It will be set true in spdk_blob_sync_md because flags in data_ro_flags and md_ro_flags are set",
+      "parentUuid": "eb135f4a_e47b6c78",
       "range": {
         "startLine": 3351,
         "startChar": 1,
@@ -157,6 +295,30 @@
     },
     {
       "key": {
+        "uuid": "30153662_1ebc52ee",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3366,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-01-17T16:40:14Z",
+      "side": 1,
+      "message": "this is callback from spdk_blob_sync_md(*snapshot*, ...) , why calling it ...sync_clone?",
+      "parentUuid": "a42f17a5_87dc378d",
+      "range": {
+        "startLine": 3366,
+        "startChar": 0,
+        "endLine": 3366,
+        "endChar": 26
+      },
+      "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e638da57_cca20d49",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 6
@@ -168,6 +330,30 @@
       "writtenOn": "2018-01-16T12:45:46Z",
       "side": 1,
       "message": "This has to be asynchronous function. See lvol - we need to work on callbacks to create lvol, bdev and bs_dev.",
+      "range": {
+        "startLine": 3399,
+        "startChar": 1,
+        "endLine": 3400,
+        "endChar": 34
+      },
+      "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dd96a570_a759cb69",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3400,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-01-17T16:40:14Z",
+      "side": 1,
+      "message": "Implementation changed.",
+      "parentUuid": "e638da57_cca20d49",
       "range": {
         "startLine": 3399,
         "startChar": 1,
@@ -203,6 +389,30 @@
     },
     {
       "key": {
+        "uuid": "8a8e13ce_78d85fec",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3403,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-01-17T16:40:14Z",
+      "side": 1,
+      "message": "We do set snapshot as thin provisioned anyway to resize cluster map without allocating clusters. The case is if we ever want to set snapshot to thick provisioned again? I guess we could do that if there is no such cluster that active.clusters[i] \u003d\u003d 0.",
+      "parentUuid": "54baa89d_3c3f9e90",
+      "range": {
+        "startLine": 3402,
+        "startChar": 1,
+        "endLine": 3403,
+        "endChar": 40
+      },
+      "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ed85c4f7_2abe3529",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 6
@@ -226,6 +436,30 @@
     },
     {
       "key": {
+        "uuid": "d353a873_cc709aeb",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3412,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-01-17T16:40:14Z",
+      "side": 1,
+      "message": "what about zeroing active.clusters[i] in clone (orgblob)?",
+      "parentUuid": "ed85c4f7_2abe3529",
+      "range": {
+        "startLine": 3407,
+        "startChar": 0,
+        "endLine": 3412,
+        "endChar": 3
+      },
+      "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c7f710a1_99b80685",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 6
@@ -237,6 +471,24 @@
       "writtenOn": "2018-01-16T12:45:46Z",
       "side": 1,
       "message": "Unnecessary new line.",
+      "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a150bdd_0ad0d7b4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3413,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-01-17T16:40:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c7f710a1_99b80685",
       "revId": "41213c881f1c81f7b4f496a8bee1ce3d2b6c3e7d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
