@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e01bd67f_0eceb90d",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2018-01-17T07:17:10Z",
+      "side": 1,
+      "message": "for instead of \"fo\"",
+      "revId": "397524caef592d6d3c9555c4b062b6015946c28f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83e2df41_f25cd8b3",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2018-01-17T07:17:10Z",
+      "side": 1,
+      "message": "Preparing instead of \"Prepearing\"\nHow many vms here? 1 or \u003e1",
+      "revId": "397524caef592d6d3c9555c4b062b6015946c28f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7cedfc7_470092fe",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2018-01-17T07:17:10Z",
+      "side": 1,
+      "message": "How many vms will be tested here? 1 or \u003e1",
+      "revId": "397524caef592d6d3c9555c4b062b6015946c28f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a27ca5e1_8ba4f31e",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2018-01-17T07:17:10Z",
+      "side": 1,
+      "message": "Removing instead of \"removing\"\nHow many vms here? 1 or \u003e1?",
+      "revId": "397524caef592d6d3c9555c4b062b6015946c28f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
