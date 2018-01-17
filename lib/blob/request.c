@@ -214,22 +214,6 @@ spdk_bs_sequence_writev(spdk_bs_sequence_t *seq, struct iovec *iov, int iovcnt,
 }
 
 void
-spdk_bs_sequence_flush(spdk_bs_sequence_t *seq,
-		       spdk_bs_sequence_cpl cb_fn, void *cb_arg)
-{
-	struct spdk_bs_request_set      *set = (struct spdk_bs_request_set *)seq;
-	struct spdk_bs_channel       *channel = set->channel;
-
-	SPDK_DEBUGLOG(SPDK_LOG_BLOB_RW, "Flushing\n");
-
-	set->u.sequence.cb_fn = cb_fn;
-	set->u.sequence.cb_arg = cb_arg;
-
-	channel->dev->flush(channel->dev, channel->dev_channel,
-			    &set->cb_args);
-}
-
-void
 spdk_bs_sequence_unmap(spdk_bs_sequence_t *seq,
 		       uint64_t lba, uint32_t lba_count,
 		       spdk_bs_sequence_cpl cb_fn, void *cb_arg)
@@ -358,19 +342,6 @@ spdk_bs_batch_write(spdk_bs_batch_t *batch, void *payload,
 
 	set->u.batch.outstanding_ops++;
 	channel->dev->write(channel->dev, channel->dev_channel, payload, lba, lba_count,
-			    &set->cb_args);
-}
-
-void
-spdk_bs_batch_flush(spdk_bs_batch_t *batch)
-{
-	struct spdk_bs_request_set	*set = (struct spdk_bs_request_set *)batch;
-	struct spdk_bs_channel		*channel = set->channel;
-
-	SPDK_DEBUGLOG(SPDK_LOG_BLOB_RW, "Flushing\n");
-
-	set->u.batch.outstanding_ops++;
-	channel->dev->flush(channel->dev, channel->dev_channel,
 			    &set->cb_args);
 }
 
