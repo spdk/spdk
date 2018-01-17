@@ -242,20 +242,10 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 core                    | Optional | number      | Core to run the subsystem's poller on. Default: Automatically assign a core.
 nqn                     | Required | string      | Subsystem NQN
-listen_addresses        | Required | array       | Array of @ref rpc_construct_nvmf_subsystem_listen_address objects
 hosts                   | Optional | array       | Array of strings containing allowed host NQNs. Default: No hosts allowed.
 allow_any_host          | Optional | boolean     | Allow any host (`true`) or enforce allowed host whitelist (`false`). Default: `false`.
 serial_number           | Required | string      | Serial number of virtual controller
 namespaces              | Optional | array       | Array of @ref rpc_construct_nvmf_subsystem_namespace objects. Default: No namespaces.
-
-### listen_address {#rpc_construct_nvmf_subsystem_listen_address}
-
-Name                    | Optional | Type        | Description
------------------------ | -------- | ----------- | -----------
-trtype                  | Required | string      | Transport type ("RDMA")
-adrfam                  | Required | string      | Address family ("IPv4", "IPv6", "IB", or "FC")
-traddr                  | Required | string      | Transport address
-trsvcid                 | Required | string      | Transport service ID
 
 ### namespace {#rpc_construct_nvmf_subsystem_namespace}
 
@@ -276,14 +266,6 @@ Example request:
   "params": {
     "core": 5,
     "nqn": "nqn.2016-06.io.spdk:cnode1",
-    "listen_addresses": [
-      {
-        "trtype": "RDMA",
-        "adrfam": "IPv4",
-        "traddr": "192.168.0.123",
-        "trsvcid: "4420"
-      }
-    ],
     "hosts": [
       "nqn.2016-06.io.spdk:host1",
       "nqn.2016-06.io.spdk:host2"
