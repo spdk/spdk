@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b3c3ef86_17823dc2",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 888,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-17T09:06:17Z",
+      "side": 1,
+      "message": "In that case - shouldn\u0027t the default value for run_server_mode be \"true\" ? And in migration.sh @ 169 shouldn\u0027t you add \"--local\"?",
+      "range": {
+        "startLine": 888,
+        "startChar": 3,
+        "endLine": 888,
+        "endChar": 36
+      },
+      "revId": "56bf271b5c7c8e04384d222226ce31f18553c475",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2320fa5c_50f4b092",
+        "filename": "test/vhost/migration/migration.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-17T09:06:17Z",
+      "side": 1,
+      "message": "Pretty thank you for renaming!",
+      "revId": "56bf271b5c7c8e04384d222226ce31f18553c475",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9432aa8_23949760",
+        "filename": "test/vhost/migration/migration.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-17T09:06:17Z",
+      "side": 1,
+      "message": "reads will be removed right?",
+      "range": {
+        "startLine": 166,
+        "startChar": 0,
+        "endLine": 166,
+        "endChar": 4
+      },
+      "revId": "56bf271b5c7c8e04384d222226ce31f18553c475",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c69c5fc7_e2489219",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-17T09:06:17Z",
+      "side": 1,
+      "message": "Can\u0027t see the file in the commit. Did you add it?",
+      "range": {
+        "startLine": 78,
+        "startChar": 12,
+        "endLine": 78,
+        "endChar": 44
+      },
+      "revId": "56bf271b5c7c8e04384d222226ce31f18553c475",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
