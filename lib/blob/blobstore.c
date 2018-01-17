@@ -1194,39 +1194,16 @@ _spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob_data *blob,
 }
 
 static void
-_spdk_blob_request_submit_op(struct spdk_blob *_blob, struct spdk_io_channel *_channel,
-			     void *payload, uint64_t offset, uint64_t length,
-			     spdk_blob_op_complete cb_fn, void *cb_arg, enum spdk_blob_op_type op_type)
+_spdk_blob_request_submit_op_impl(spdk_bs_batch_t *batch, struct spdk_blob_data *blob,
+				  void *payload, uint64_t offset, uint64_t length,
+				  spdk_blob_op_complete cb_fn, void *cb_arg, enum spdk_blob_op_type op_type)
 {
-	struct spdk_blob_data		*blob = __blob_to_data(_blob);
-	spdk_bs_batch_t			*batch;
-	struct spdk_bs_cpl		cpl;
 	uint64_t			lba;
 	uint32_t			lba_count;
 	uint8_t				*buf;
 	uint64_t			page;
 
 	assert(blob != NULL);
-
-	if (blob->data_ro && op_type != SPDK_BLOB_READ) {
-		cb_fn(cb_arg, -EPERM);
-		return;
-	}
-
-	if (offset + length > blob->active.num_clusters * blob->bs->pages_per_cluster) {
-		cb_fn(cb_arg, -EINVAL);
-		return;
-	}
-
-	cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
-	cpl.u.blob_basic.cb_fn = cb_fn;
-	cpl.u.blob_basic.cb_arg = cb_arg;
-
-	batch = spdk_bs_batch_open(_channel, &cpl);
-	if (!batch) {
-		cb_fn(cb_arg, -ENOMEM);
-		return;
-	}
 
 	length = _spdk_bs_page_to_lba(blob->bs, length);
 	page = offset;
@@ -1258,6 +1235,41 @@ _spdk_blob_request_submit_op(struct spdk_blob *_blob, struct spdk_io_channel *_c
 			buf += _spdk_bs_lba_to_byte(blob->bs, lba_count);
 		}
 	}
+}
+
+static void
+_spdk_blob_request_submit_op(struct spdk_blob *_blob, struct spdk_io_channel *_channel,
+			     void *payload, uint64_t offset, uint64_t length,
+			     spdk_blob_op_complete cb_fn, void *cb_arg, enum spdk_blob_op_type op_type)
+{
+	struct spdk_blob_data		*blob = __blob_to_data(_blob);
+	spdk_bs_batch_t			*batch;
+	struct spdk_bs_cpl		cpl;
+
+	assert(blob != NULL);
+
+	if (blob->data_ro && op_type != SPDK_BLOB_READ) {
+		cb_fn(cb_arg, -EPERM);
+		return;
+	}
+
+	if (offset + length > blob->active.num_clusters * blob->bs->pages_per_cluster) {
+		cb_fn(cb_arg, -EINVAL);
+		return;
+	}
+
+	cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
+	cpl.u.blob_basic.cb_fn = cb_fn;
+	cpl.u.blob_basic.cb_arg = cb_arg;
+
+	batch = spdk_bs_batch_open(_channel, &cpl);
+	if (!batch) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	_spdk_blob_request_submit_op_impl(batch, blob, payload, offset, length,
+					  cb_fn, cb_arg, op_type);
 
 	spdk_bs_batch_close(batch);
 }
