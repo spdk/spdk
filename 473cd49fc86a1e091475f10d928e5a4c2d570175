@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "48fb38fa_9d59af2b",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 392,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-17T22:18:32Z",
+      "side": 1,
+      "message": "I don\u0027t think it\u0027s possible to get here with ctrlr \u003d\u003d NULL.\n\nI/O queues are created via an admin command, so we shouldn\u0027t be able to ever get an I/O command until the controller exists (created during admin queue connect).\n\nUnless there\u0027s some upcoming code that can destroy a controller while it still has I/O queues, I think this can be dropped (or made into an assert).",
+      "revId": "473cd49fc86a1e091475f10d928e5a4c2d570175",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
