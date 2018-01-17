@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "63c63618_a061a085",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-17T21:42:25Z",
+      "side": 1,
+      "message": "IO/AT should be I/OAT",
+      "revId": "11dbf52f8e8669c513a95dea384c3680133dc55f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
