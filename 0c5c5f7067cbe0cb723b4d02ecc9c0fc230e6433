@@ -140,6 +140,30 @@
     },
     {
       "key": {
+        "uuid": "537c665c_1263d478",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 508,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-01-17T18:21:04Z",
+      "side": 1,
+      "message": "I\u0027ll change this to use \u0027snapshot\u0027 in case no \u0027--os-mode\u0027",
+      "parentUuid": "c5e26271_01d366cf",
+      "range": {
+        "startLine": 508,
+        "startChar": 2,
+        "endLine": 508,
+        "endChar": 38
+      },
+      "revId": "0c5c5f7067cbe0cb723b4d02ecc9c0fc230e6433",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6cdb91a5_124752d1",
         "filename": "test/vhost/common/vm_setup.sh",
         "patchSetId": 2
