@@ -312,9 +312,6 @@ if __name__ == "__main__":
 
     p = subparsers.add_parser('construct_nvmf_subsystem', help='Add a nvmf subsystem')
     p.add_argument('nqn', help='Target nqn(ASCII)')
-    p.add_argument('listen', help="""comma-separated list of Listen <trtype:transport_name traddr:address trsvcid:port_id> pairs enclosed
-    in quotes.  Format:  'trtype:transport0 traddr:traddr0 trsvcid:trsvcid0,trtype:transport1 traddr:traddr1 trsvcid:trsvcid1' etc
-    Example: 'trtype:RDMA traddr:192.168.100.8 trsvcid:4420,trtype:RDMA traddr:192.168.100.9 trsvcid:4420'""")
     p.add_argument('hosts', help="""Whitespace-separated list of host nqn list.
     Format:  'nqn1 nqn2' etc
     Example: 'nqn.2016-06.io.spdk:init nqn.2016-07.io.spdk:init'""")
@@ -333,6 +330,14 @@ if __name__ == "__main__":
     p.add_argument('subsystem_nqn',
                    help='subsystem nqn to be deleted. Example: nqn.2016-06.io.spdk:cnode1.')
     p.set_defaults(func=rpc.nvmf.delete_nvmf_subsystem)
+
+    p = subparsers.add_parser('nvmf_subsystem_add_listener', help='Add a listener to an NVMe-oF subsystem')
+    p.add_argument('nqn', help='NVMe-oF subsystem NQN')
+    p.add_argument('-t', '--trtype', help='NVMe-oF transport type: e.g., rdma', required=True)
+    p.add_argument('-a', '--traddr', help='NVMe-oF transport address: e.g., an ip address', required=True)
+    p.add_argument('-f', '--adrfam', help='NVMe-oF transport adrfam: e.g., ipv4, ipv6, ib, fc, intra_host')
+    p.add_argument('-s', '--trsvcid', help='NVMe-oF transport service id: e.g., a port number')
+    p.set_defaults(func=rpc.nvmf.nvmf_subsystem_add_listener)
 
     # pmem
     p = subparsers.add_parser('create_pmem_pool', help='Create pmem pool')
