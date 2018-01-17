@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c288b5d4_337a77be",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 878,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-17T07:30:39Z",
+      "side": 1,
+      "message": "If message is send even on the qos_thread, why the submit function for QoS cannot be set into message?",
+      "range": {
+        "startLine": 878,
+        "startChar": 2,
+        "endLine": 878,
+        "endChar": 72
+      },
+      "revId": "fd82eb33b9e98538b9b37abb6a100389ffc249fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e506bec_5b0c3000",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1004,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-17T07:30:39Z",
+      "side": 1,
+      "message": "This may be related with Daniel\u0027s feedback.\nif creating qos_channel is failed, freeing qos_channel in this function may be easier to understand. Please get feedback from other reviewers.",
+      "range": {
+        "startLine": 1004,
+        "startChar": 8,
+        "endLine": 1004,
+        "endChar": 19
+      },
+      "revId": "fd82eb33b9e98538b9b37abb6a100389ffc249fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "26a8483d_7a1b1b28",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1014,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-17T07:30:39Z",
+      "side": 1,
+      "message": "_spdk_bdev_channel_create in the line 1014 and 1057 looks confusing for me.",
+      "range": {
+        "startLine": 1014,
+        "startChar": 6,
+        "endLine": 1014,
+        "endChar": 31
+      },
+      "revId": "fd82eb33b9e98538b9b37abb6a100389ffc249fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1db042f6_141b9fa0",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1037,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-17T07:30:39Z",
+      "side": 1,
+      "message": "This was set by the qos_thread. Hence this should be nullified by the qos_thread at least.",
+      "range": {
+        "startLine": 1037,
+        "startChar": 1,
+        "endLine": 1037,
+        "endChar": 25
+      },
+      "revId": "fd82eb33b9e98538b9b37abb6a100389ffc249fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3a7cc97_21d8ad54",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1044,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-17T07:30:39Z",
+      "side": 1,
+      "message": "Ensuring to call this function on the qos_thread is not possible? qos_thread is not migrated if qos_channel exits?",
+      "range": {
+        "startLine": 1044,
+        "startChar": 1,
+        "endLine": 1044,
+        "endChar": 34
+      },
+      "revId": "fd82eb33b9e98538b9b37abb6a100389ffc249fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5904e38c_dc30d129",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1062,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-17T07:30:39Z",
+      "side": 1,
+      "message": "to bring this line to the line 1072 and remove the line 1067 may be simpler.",
+      "range": {
+        "startLine": 1062,
+        "startChar": 1,
+        "endLine": 1062,
+        "endChar": 23
+      },
+      "revId": "fd82eb33b9e98538b9b37abb6a100389ffc249fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "713b9ac0_bb7df6c3",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1201,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-17T07:30:39Z",
+      "side": 1,
+      "message": "Is this multi processor safe if this is not called on the qos_thread?",
+      "range": {
+        "startLine": 1201,
+        "startChar": 2,
+        "endLine": 1201,
+        "endChar": 32
+      },
+      "revId": "fd82eb33b9e98538b9b37abb6a100389ffc249fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c645faf_fced01f7",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1230,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-17T07:30:39Z",
+      "side": 1,
+      "message": "Detecting qos_channel exit and migrating it to the other channel is not planned in this patch series?\n\nThe maximum we do is just reference counting in this patch series?\n\n\nP.S.\n\nMigrating queued IOs to other thread will be difficult and I have proposed hybrid pool mechanism. I wish you have found any solution in later patches.",
+      "range": {
+        "startLine": 1230,
+        "startChar": 2,
+        "endLine": 1230,
+        "endChar": 33
+      },
+      "revId": "fd82eb33b9e98538b9b37abb6a100389ffc249fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
