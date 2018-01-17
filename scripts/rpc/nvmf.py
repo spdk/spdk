@@ -6,12 +6,8 @@ def get_nvmf_subsystems(args):
 
 
 def construct_nvmf_subsystem(args):
-    listen_addresses = [dict(u.split(":") for u in a.split(" "))
-                        for a in args.listen.split(",")]
-
     params = {
         'nqn': args.nqn,
-        'listen_addresses': listen_addresses,
         'serial_number': args.serial_number,
     }
 
@@ -42,6 +38,18 @@ def construct_nvmf_subsystem(args):
         params['namespaces'] = namespaces
 
     args.client.call('construct_nvmf_subsystem', params, verbose=args.verbose)
+
+
+def nvmf_subsystem_add_listener(args):
+    params = {'subnqn': args.nqn,
+              'trtype': args.trtype,
+              'traddr': args.traddr,
+              'trsvcid': args.trsvcid}
+
+    if args.adrfam:
+        params['adrfam'] = args.adrfam
+
+    args.client.call('nvmf_subsystem_add_listener', params)
 
 
 def delete_nvmf_subsystem(args):
