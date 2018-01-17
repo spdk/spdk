@@ -308,23 +308,123 @@ spdk_sock_set_sendbuf(int sock, int sz)
 			  &sz, sizeof(sz));
 }
 
+#if defined(__FreeBSD__)
 int
-spdk_epoll_create(int size)
+spdk_epoll_create(__attribute__((unused))int size)
 {
-	return epoll_create1(0);
+	return kqueue();
 }
 
 int
-spdk_epoll_ctl(int sock, int op, int fd, struct epoll_event *event)
+spdk_epoll_ctl(int sock, int events, int op, int fd, void *conn)
 {
-	return epoll_ctl(sock, op, fd, event);
+	struct kevent event;
+	struct timespec ts = {0};
+
+	EV_SET(&event, fd, EVFILT_READ, op, 0, 0, NULL);
+
+	return kevent(sock, &event, 1, NULL, 0, &ts);
 }
 
 int
-spdk_epoll_wait(int sock, struct epoll_event *events, int maxevents, int timeout)
+spdk_epoll_wait(int sock, int maxevents, int timeout, struct spdk_net_event *event)
 {
-	return epoll_wait(sock, events, maxevents, timeout);
+	struct timespec ts = {0};
+
+	return kevent(sock, NULL, 0, event->event, SPDK_MAX_POLLERS_PER_CORE, &ts);
 }
+
+void *
+spdk_get_events_data(struct spdk_net_event *event, int index)
+{
+	return event->event[index].udata;
+}
+#else
+int
+spdk_epoll_create(__attribute__((unused))int size)
+{
+	return epoll_create1(size);
+}
+
+int
+spdk_epoll_ctl(int sock, int events, int op, int fd, void *conn)
+{
+	struct epoll_event event;
+
+	event.events = events;
+	event.data.u64 = 0LL;
+	event.data.ptr = conn;
+
+	return epoll_ctl(sock, op, fd, &event);
+}
+
+int
+spdk_epoll_wait(int sock, int maxevents, int timeout, struct spdk_net_event *event)
+{
+	return epoll_wait(sock, event->event, maxevents, timeout);
+}
+
+void *
+spdk_get_events_data(struct spdk_net_event *event, int index)
+{
+	return event->event[index].data.ptr;
+}
+#endif
+
+#if 0
+int
+spdk_epoll_create(__attribute__((unused))int size)
+{
+#if defined(__FreeBSD__)
+	return kqueue();
+#else
+	return epoll_create1(size);
+#endif
+}
+
+int
+spdk_epoll_ctl(int sock, int op, int fd, void *conn)
+{
+#if defined(__FreeBSD__)
+	struct kevent event;
+	struct timespec ts = {0};
+
+	EV_SET(&event, fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+
+	return kevent(sock, &event, 1, NULL, 0, &ts);
+#else
+	struct epoll_event event;
+
+	event.events = EPOLLIN;
+	event.data.u64 = 0LL;
+	event.data.ptr = conn;
+
+	return epoll_ctl(sock, op, fd, &event);
+#endif
+}
+
+int
+spdk_epoll_wait(int sock, int maxevents, int timeout, struct spdk_net_event *event)
+{
+#if defined(__FreeBSD__)
+	struct timespec ts = {0};
+
+	return kevent(sock, NULL, 0, event->event, SPDK_MAX_POLLERS_PER_CORE, &ts);
+#else
+	return epoll_wait(sock, event->event, maxevents, timeout);
+#endif
+}
+
+void *
+spdk_get_events_data(struct spdk_net_event *event, int index)
+{
+#if defined(__FreeBSD__)
+	return event->event[index].udata;
+#else
+	return event->event[index].data.ptr;
+#endif
+}
+#endif
 
 bool
 spdk_sock_is_ipv6(int sock)
