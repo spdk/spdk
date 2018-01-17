@@ -564,17 +564,22 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *
 	struct spdk_nvmf_host *host;
 
 	if (!spdk_nvmf_valid_nqn(hostnqn)) {
-		return -1;
+		return -EINVAL;
+	}
+
+	if (!(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
+	      subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED)) {
+		return -EAGAIN;
 	}
 
 	host = calloc(1, sizeof(*host));
 	if (!host) {
-		return -1;
+		return -ENOMEM;
 	}
 	host->nqn = strdup(hostnqn);
 	if (!host->nqn) {
 		free(host);
-		return -1;
+		return -ENOMEM;
 	}
 
 	TAILQ_INSERT_HEAD(&subsystem->hosts, host, link);
@@ -583,10 +588,17 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *
 	return 0;
 }
 
-void
+int
 spdk_nvmf_subsystem_set_allow_any_host(struct spdk_nvmf_subsystem *subsystem, bool allow_any_host)
 {
+	if (!(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
+	      subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED)) {
+		return -EAGAIN;
+	}
+
 	subsystem->allow_any_host = allow_any_host;
+
+	return 0;
 }
 
 bool
@@ -644,15 +656,20 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 	struct spdk_nvmf_transport *transport;
 	struct spdk_nvmf_listener *listener;
 
+	if (!(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
+	      subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED)) {
+		return -EAGAIN;
+	}
+
 	transport = spdk_nvmf_tgt_get_transport(subsystem->tgt, trid->trtype);
 	if (transport == NULL) {
 		SPDK_ERRLOG("Unknown transport type %d\n", trid->trtype);
-		return -1;
+		return -EINVAL;
 	}
 
 	listener = calloc(1, sizeof(*listener));
 	if (!listener) {
-		return -1;
+		return -ENOMEM;
 	}
 
 	listener->trid = *trid;
@@ -717,6 +734,11 @@ spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t ns
 		return -1;
 	}
 
+	if (!(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
+	      subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED)) {
+		return -1;
+	}
+
 	ns = &subsystem->ns[nsid - 1];
 	if (ns->allocated == false) {
 		return -1;
@@ -760,8 +782,10 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	uint32_t i;
 	int rc;
 
-	assert(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
-	       subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED);
+	if (!(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
+	      subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED)) {
+		return 0;
+	}
 
 	if (nsid == SPDK_NVME_GLOBAL_NS_TAG) {
 		SPDK_ERRLOG("Invalid NSID %" PRIu32 "\n", nsid);
