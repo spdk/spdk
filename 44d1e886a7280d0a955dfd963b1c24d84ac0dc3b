@@ -1,0 +1,642 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e52e277b_b1669031",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-18T09:19:48Z",
+      "side": 1,
+      "message": "library",
+      "range": {
+        "startLine": 29,
+        "startChar": 32,
+        "endLine": 29,
+        "endChar": 39
+      },
+      "revId": "44d1e886a7280d0a955dfd963b1c24d84ac0dc3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cf6f6cc1_2d7fd6d0",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-18T09:19:48Z",
+      "side": 1,
+      "message": "available",
+      "range": {
+        "startLine": 64,
+        "startChar": 15,
+        "endLine": 64,
+        "endChar": 24
+      },
+      "revId": "44d1e886a7280d0a955dfd963b1c24d84ac0dc3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ef47205b_9e872dfe",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-18T09:19:48Z",
+      "side": 1,
+      "message": "Due to the way tables are displayed on spdk.io, this diagram is not really straightforward.\nWe might want to change it later. This is fine for now ofc.",
+      "range": {
+        "startLine": 68,
+        "startChar": 0,
+        "endLine": 73,
+        "endChar": 97
+      },
+      "revId": "44d1e886a7280d0a955dfd963b1c24d84ac0dc3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1149e006_54069974",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-18T09:19:48Z",
+      "side": 1,
+      "message": "implementations",
+      "range": {
+        "startLine": 77,
+        "startChar": 79,
+        "endLine": 77,
+        "endChar": 92
+      },
+      "revId": "44d1e886a7280d0a955dfd963b1c24d84ac0dc3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a1d01a7f_cf5bbe49",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-18T09:19:48Z",
+      "side": 1,
+      "message": "library",
+      "range": {
+        "startLine": 80,
+        "startChar": 81,
+        "endLine": 80,
+        "endChar": 88
+      },
+      "revId": "44d1e886a7280d0a955dfd963b1c24d84ac0dc3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1705b3c0_c5ee5218",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-18T09:19:48Z",
+      "side": 1,
+      "message": "This was already described as a part of `Hierarchy` section. Is this section required?\nIt doesn\u0027t hurt to repeat it here - it\u0027s just my minor suggestion to remove it.",
+      "range": {
+        "startLine": 97,
+        "startChar": 0,
+        "endLine": 98,
+        "endChar": 43
+      },
+      "revId": "44d1e886a7280d0a955dfd963b1c24d84ac0dc3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "834a7ddd_9748b79b",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-18T09:19:48Z",
+      "side": 1,
+      "message": "always",
+      "range": {
+        "startLine": 128,
+        "startChar": 76,
+        "endLine": 128,
+        "endChar": 82
+      },
+      "revId": "44d1e886a7280d0a955dfd963b1c24d84ac0dc3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "29a3bee6_f9ac159e",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-18T09:19:48Z",
+      "side": 1,
+      "message": "mechanism",
+      "range": {
+        "startLine": 132,
+        "startChar": 16,
+        "endLine": 132,
+        "endChar": 25
+      },
+      "revId": "44d1e886a7280d0a955dfd963b1c24d84ac0dc3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "43fa6d30_fa7d3211",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-18T09:19:48Z",
+      "side": 1,
+      "message": "available",
+      "range": {
+        "startLine": 148,
+        "startChar": 3,
+        "endLine": 148,
+        "endChar": 11
+      },
+      "revId": "44d1e886a7280d0a955dfd963b1c24d84ac0dc3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2e9a0f46_bce25e19",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-18T09:19:48Z",
+      "side": 1,
+      "message": "executed",
+      "range": {
+        "startLine": 155,
+        "startChar": 80,
+        "endLine": 155,
+        "endChar": 88
+      },
+      "revId": "44d1e886a7280d0a955dfd963b1c24d84ac0dc3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c762f723_7bf3b409",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-18T09:19:48Z",
+      "side": 1,
+      "message": "destroying",
+      "range": {
+        "startLine": 180,
+        "startChar": 32,
+        "endLine": 180,
+        "endChar": 43
+      },
+      "revId": "44d1e886a7280d0a955dfd963b1c24d84ac0dc3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e6b2ee7f_142c63f7",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-18T09:19:48Z",
+      "side": 1,
+      "message": "subsystem",
+      "range": {
+        "startLine": 182,
+        "startChar": 93,
+        "endLine": 182,
+        "endChar": 102
+      },
+      "revId": "44d1e886a7280d0a955dfd963b1c24d84ac0dc3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "174f1060_ef020630",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-18T09:19:48Z",
+      "side": 1,
+      "message": "refer",
+      "range": {
+        "startLine": 216,
+        "startChar": 4,
+        "endLine": 216,
+        "endChar": 9
+      },
+      "revId": "44d1e886a7280d0a955dfd963b1c24d84ac0dc3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e6c7e024_a846f396",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-18T09:19:48Z",
+      "side": 1,
+      "message": "libraries",
+      "range": {
+        "startLine": 244,
+        "startChar": 0,
+        "endLine": 244,
+        "endChar": 12
+      },
+      "revId": "44d1e886a7280d0a955dfd963b1c24d84ac0dc3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "99c32b3a_fe990a9e",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-18T09:19:48Z",
+      "side": 1,
+      "message": "destroy",
+      "range": {
+        "startLine": 271,
+        "startChar": 25,
+        "endLine": 271,
+        "endChar": 33
+      },
+      "revId": "44d1e886a7280d0a955dfd963b1c24d84ac0dc3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d0075190_d538b746",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-18T09:19:48Z",
+      "side": 1,
+      "message": "at runtime",
+      "range": {
+        "startLine": 271,
+        "startChar": 55,
+        "endLine": 271,
+        "endChar": 68
+      },
+      "revId": "44d1e886a7280d0a955dfd963b1c24d84ac0dc3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d9fb7d31_6fa63805",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-18T09:19:48Z",
+      "side": 1,
+      "message": "destroy",
+      "range": {
+        "startLine": 281,
+        "startChar": 0,
+        "endLine": 281,
+        "endChar": 7
+      },
+      "revId": "44d1e886a7280d0a955dfd963b1c24d84ac0dc3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "292c63ac_592e7a9c",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-18T09:19:48Z",
+      "side": 1,
+      "message": "resources",
+      "revId": "44d1e886a7280d0a955dfd963b1c24d84ac0dc3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "259a3419_6262b42b",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-18T09:19:48Z",
+      "side": 1,
+      "message": "If any error happens",
+      "range": {
+        "startLine": 342,
+        "startChar": 3,
+        "endLine": 342,
+        "endChar": 17
+      },
+      "revId": "44d1e886a7280d0a955dfd963b1c24d84ac0dc3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "464353ab_9003ad81",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 366,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-18T09:19:48Z",
+      "side": 1,
+      "message": "destroy",
+      "range": {
+        "startLine": 366,
+        "startChar": 33,
+        "endLine": 366,
+        "endChar": 40
+      },
+      "revId": "44d1e886a7280d0a955dfd963b1c24d84ac0dc3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4cea59b0_79ab025d",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-18T09:19:48Z",
+      "side": 1,
+      "message": "Initialize",
+      "range": {
+        "startLine": 402,
+        "startChar": 3,
+        "endLine": 402,
+        "endChar": 13
+      },
+      "revId": "44d1e886a7280d0a955dfd963b1c24d84ac0dc3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ca8b713e_35e8c100",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-18T09:19:48Z",
+      "side": 1,
+      "message": "reference",
+      "range": {
+        "startLine": 430,
+        "startChar": 16,
+        "endLine": 430,
+        "endChar": 26
+      },
+      "revId": "44d1e886a7280d0a955dfd963b1c24d84ac0dc3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "179077e2_7ae9f4c9",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 462,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-18T09:19:48Z",
+      "side": 1,
+      "message": "protection",
+      "range": {
+        "startLine": 462,
+        "startChar": 25,
+        "endLine": 462,
+        "endChar": 36
+      },
+      "revId": "44d1e886a7280d0a955dfd963b1c24d84ac0dc3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d2fa2903_39653c65",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 474,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-18T09:19:48Z",
+      "side": 1,
+      "message": "associated",
+      "range": {
+        "startLine": 474,
+        "startChar": 36,
+        "endLine": 474,
+        "endChar": 45
+      },
+      "revId": "44d1e886a7280d0a955dfd963b1c24d84ac0dc3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ceb5c4c0_9523fdc3",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 503,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-18T09:19:48Z",
+      "side": 1,
+      "message": "structures",
+      "range": {
+        "startLine": 503,
+        "startChar": 55,
+        "endLine": 503,
+        "endChar": 64
+      },
+      "revId": "44d1e886a7280d0a955dfd963b1c24d84ac0dc3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "505a791d_87f9a2d4",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 535,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-18T09:19:48Z",
+      "side": 1,
+      "message": "available",
+      "range": {
+        "startLine": 535,
+        "startChar": 58,
+        "endLine": 535,
+        "endChar": 67
+      },
+      "revId": "44d1e886a7280d0a955dfd963b1c24d84ac0dc3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d290c2fd_268a64af",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 535,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-18T09:19:48Z",
+      "side": 1,
+      "message": "Could you add () brackets so that doxygen links are generated?\n**spdk_nvmf_poll_group_create()**",
+      "range": {
+        "startLine": 535,
+        "startChar": 0,
+        "endLine": 535,
+        "endChar": 31
+      },
+      "revId": "44d1e886a7280d0a955dfd963b1c24d84ac0dc3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2923ead2_049edd5f",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 542,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-18T09:19:48Z",
+      "side": 1,
+      "message": "available",
+      "range": {
+        "startLine": 542,
+        "startChar": 51,
+        "endLine": 542,
+        "endChar": 60
+      },
+      "revId": "44d1e886a7280d0a955dfd963b1c24d84ac0dc3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
