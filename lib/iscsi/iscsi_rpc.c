@@ -1104,9 +1104,6 @@ spdk_rpc_get_iscsi_global_params(struct spdk_jsonrpc_request *request,
 	spdk_json_write_name(w, "timeout");
 	spdk_json_write_int32(w, g_spdk_iscsi.timeout);
 
-	spdk_json_write_name(w, "flush_timeout");
-	spdk_json_write_uint64(w, g_spdk_iscsi.flush_timeout);
-
 	spdk_json_write_name(w, "nop_in_interval");
 	spdk_json_write_int32(w, g_spdk_iscsi.nopininterval);
 

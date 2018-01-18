@@ -1372,7 +1372,6 @@ static int
 spdk_iscsi_conn_execute(struct spdk_iscsi_conn *conn)
 {
 	int				rc = 0;
-	uint64_t			tsc;
 	bool				conn_active = false;
 
 	if (conn->state == ISCSI_CONN_STATE_EXITED) {
@@ -1399,14 +1398,9 @@ spdk_iscsi_conn_execute(struct spdk_iscsi_conn *conn)
 		conn_active = true;
 	}
 
-	/* If flush timer has expired, flush all PDUs */
-	tsc = spdk_get_ticks();
-	if (tsc - conn->last_flush > g_spdk_iscsi.flush_timeout) {
-		conn->last_flush = tsc;
-		if (spdk_iscsi_conn_flush_pdus(conn) != 0) {
-			conn->state = ISCSI_CONN_STATE_EXITING;
-			goto conn_exit;
-		}
+	if (spdk_iscsi_conn_flush_pdus(conn) != 0) {
+		conn->state = ISCSI_CONN_STATE_EXITING;
+		goto conn_exit;
 	}
 
 	spdk_iscsi_conn_handle_queued_datain_tasks(conn);

@@ -538,7 +538,6 @@ spdk_iscsi_log_globals(void)
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "ErrorRecoveryLevel %d\n",
 		      g_spdk_iscsi.ErrorRecoveryLevel);
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Timeout %d\n", g_spdk_iscsi.timeout);
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "FlushTimeout %"PRIu64"\n", g_spdk_iscsi.flush_timeout);
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "NopInInterval %d\n",
 		      g_spdk_iscsi.nopininterval);
 	if (g_spdk_iscsi.no_discovery_auth != 0) {
@@ -579,7 +578,6 @@ spdk_iscsi_read_parameters_from_config_file(struct spdk_conf_section *sp)
 	int nopininterval;
 	int min_conn_per_core = 0;
 	int conn_idle_interval = 0;
-	int flush_timeout = 0;
 	const char *ag_tag;
 	int ag_tag_i;
 
@@ -685,10 +683,6 @@ spdk_iscsi_read_parameters_from_config_file(struct spdk_conf_section *sp)
 	if (timeout >= 0) {
 		g_spdk_iscsi.timeout = timeout;
 	}
-	flush_timeout = spdk_conf_section_get_intval(sp, "FlushTimeout");
-	if (flush_timeout >= 0) {
-		g_spdk_iscsi.flush_timeout = flush_timeout;
-	}
 	nopininterval = spdk_conf_section_get_intval(sp, "NopInInterval");
 	if (nopininterval >= 0) {
 		if (nopininterval > MAX_NOPININTERVAL) {
@@ -761,7 +755,6 @@ spdk_iscsi_app_read_parameters(void)
 	g_spdk_iscsi.AllowDuplicateIsid = 0;
 	g_spdk_iscsi.ErrorRecoveryLevel = DEFAULT_ERRORRECOVERYLEVEL;
 	g_spdk_iscsi.timeout = DEFAULT_TIMEOUT;
-	g_spdk_iscsi.flush_timeout = DEFAULT_FLUSH_TIMEOUT;
 	g_spdk_iscsi.nopininterval = DEFAULT_NOPININTERVAL;
 	g_spdk_iscsi.no_discovery_auth = 0;
 	g_spdk_iscsi.req_discovery_auth = 0;
@@ -798,8 +791,6 @@ spdk_iscsi_app_read_parameters(void)
 	 *  pools, we can bump this up to support more connections.
 	 */
 	g_spdk_iscsi.MaxConnections = g_spdk_iscsi.MaxSessions;
-
-	g_spdk_iscsi.flush_timeout *= (spdk_get_ticks_hz() >> 20);
 
 	spdk_iscsi_log_globals();
 

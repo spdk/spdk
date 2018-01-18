@@ -76,7 +76,6 @@
 #define DEFAULT_TIMEOUT 60
 #define MAX_NOPININTERVAL 60
 #define DEFAULT_NOPININTERVAL 30
-#define DEFAULT_FLUSH_TIMEOUT 8
 
 /*
  * SPDK iSCSI target currently only supports 64KB as the maximum data segment length
@@ -271,7 +270,6 @@ struct spdk_iscsi_globals {
 	int req_discovery_auth;
 	int req_discovery_auth_mutual;
 	int discovery_auth_group;
-	uint64_t flush_timeout;
 
 	uint32_t MaxSessions;
 	uint32_t MaxConnectionsPerSession;
