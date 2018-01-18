@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "608f3988_e3287159",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 885,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-18T04:28:31Z",
+      "side": 1,
+      "message": "Hi Ziye,\n\nI think this patch looks good overall, but probably we should rename the min and max variables.  These are no longer a sum.  I suggest\n\nsum_min_latency \u003d\u003e min_latency_so_far\nsum_max_latency \u003d\u003e max_latency_so_far\n\nThanks,\n\n-Jim",
+      "revId": "e053027e7dd78969e5898d1637ef960e9750e46e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
