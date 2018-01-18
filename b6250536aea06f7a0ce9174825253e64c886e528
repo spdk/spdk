@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1f646399_1b4cfd17",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-18T15:43:57Z",
+      "side": 1,
+      "message": "add thin_provisioned to comment",
+      "revId": "b6250536aea06f7a0ce9174825253e64c886e528",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "853dab9a_383a0e08",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 973,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-18T15:43:57Z",
+      "side": 1,
+      "message": "This is OK for now.  But really we should rely on spdk_bs_create_blob_ext() to return an error code if we try to create a blob with not enough clusters.  Clusters could get allocated between this point and line 1003 when the blob is actually created.\n\nCan you take an AR to look at this as part of a separate patch?",
+      "revId": "b6250536aea06f7a0ce9174825253e64c886e528",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9124dff0_41770a55",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-18T15:43:57Z",
+      "side": 1,
+      "message": "instead of duplicating invalid_flags here, just create a bool called thin_provision in the unit test version of spdk_blob\n\ninvalid flags is an implementation detail of blobstore - we do not need to duplicate that here - just using a thin_provision flag is simpler",
+      "revId": "b6250536aea06f7a0ce9174825253e64c886e528",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
