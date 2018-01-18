@@ -174,6 +174,30 @@
     },
     {
       "key": {
+        "uuid": "a4142da9_0854b7da",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 3486,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-01-18T15:20:48Z",
+      "side": 1,
+      "message": "This code tries to avoid i/o race conditions.\nExample:\n1. orgblob is thin provisioned\n2. orgblob-\u003eactive.clusters[i] is 0 before above code executes\n3. i/o from other allocates orgblob-\u003eactive.clusters[i] between those operations\n4. then we set zero again: orgblob-\u003eactive.clusters[i] \u003d 0;\n5. we have data corruption and memory leak\n\nAlternatively:\nnewblob-\u003eactive.clusters[i] \u003d orgblob-\u003eactive.clusters[i];\n__sync_val_compare_and_swap(orgblob-\u003eactive.clusters[i], newblob-\u003eactive.clusters[i], 0);",
+      "parentUuid": "0c2cccd4_c28c39df",
+      "range": {
+        "startLine": 3481,
+        "startChar": 0,
+        "endLine": 3486,
+        "endChar": 3
+      },
+      "revId": "5c1b450b2cabff396c78c62a9838bd5f409687d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "17e8bf7d_61080c17",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 14
