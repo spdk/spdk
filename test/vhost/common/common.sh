@@ -564,7 +564,7 @@ function vm_setup()
 			spdk_vhost_scsi)
 				notice "using socket $SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num"
 				cmd+="-chardev socket,id=char_$disk,path=$SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num ${eol}"
-				cmd+="-device vhost-user-scsi-pci,id=scsi_$disk,num_queues=$cpu_num,chardev=char_$disk ${eol}"
+				cmd+="-device vhost-user-scsi-pci,id=scsi_$disk,num_queues=$cpu_num,chardev=char_$disk ${eol},virtqueue_size=512"
 				;;
 			spdk_vhost_blk)
 				[[ $disk =~ _size_([0-9]+[MG]?) ]] || true
