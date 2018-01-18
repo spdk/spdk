@@ -170,6 +170,11 @@ spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int bytes,
 }
 
 void
+spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+{
+}
+
+void
 spdk_iscsi_conn_logout(struct spdk_iscsi_conn *conn)
 {
 }
