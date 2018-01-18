@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a2110dcf_55afafc5",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-18T10:07:45Z",
+      "side": 1,
+      "message": "do we have to rebind devices inside the script?\nCould we rely on some test machines using uio by default?",
+      "range": {
+        "startLine": 254,
+        "startChar": 0,
+        "endLine": 266,
+        "endChar": 1
+      },
+      "revId": "505654997f72183e132b0f7c2de27c4865f00382",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
