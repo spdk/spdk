@@ -280,6 +280,13 @@ spdk_bdev_module_finish_done(void)
 {
 }
 
+int
+spdk_bdev_set_num_blocks(struct spdk_bdev *bdev, uint64_t size)
+{
+	bdev->blockcnt = size;
+	return 0;
+}
+
 static void
 ut_bdev_pmem_destruct(struct spdk_bdev *bdev)
 {
