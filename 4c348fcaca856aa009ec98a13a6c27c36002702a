@@ -284,6 +284,30 @@
     },
     {
       "key": {
+        "uuid": "f9ff6b7b_8a97de0d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3389,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T13:51:47Z",
+      "side": 1,
+      "message": "Looking on patch previous to this, wasn\u0027t the point to save the read_only flag on disk with sync ? Thus making it \"apply\" after sync, so all xattrs/flags/extents are saved at the same time.",
+      "parentUuid": "fd5af94f_dfedf8d8",
+      "range": {
+        "startLine": 3389,
+        "startChar": 1,
+        "endLine": 3389,
+        "endChar": 18
+      },
+      "revId": "4c348fcaca856aa009ec98a13a6c27c36002702a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "54e948cb_5d22d446",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 3
