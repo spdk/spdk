@@ -973,6 +973,8 @@ _spdk_bdev_abort_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_channel *ch)
 
 	TAILQ_FOREACH_SAFE(bdev_io, queue, link, tmp) {
 		if (bdev_io->ch == ch) {
+			SPDK_ERRLOG("Aborting nomem_io offset=%"PRIu64"\n",
+				    bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blockcnt);
 			TAILQ_REMOVE(queue, bdev_io, link);
 			/*
 			 * spdk_bdev_io_complete() assumes that the completed I/O had
