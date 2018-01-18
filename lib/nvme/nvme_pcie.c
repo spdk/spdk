@@ -446,7 +446,7 @@ nvme_pcie_ctrlr_map_cmb(struct nvme_pcie_ctrlr *pctrlr)
 	uint32_t bir;
 	union spdk_nvme_cmbsz_register cmbsz;
 	union spdk_nvme_cmbloc_register cmbloc;
-	uint64_t size, unit_size, offset, bar_size, bar_phys_addr;
+	uint64_t size, unit_size, offset, bar_size, bar_phys_addr, paddr;
 	uint64_t mem_register_start, mem_register_end;
 
 	if (nvme_pcie_ctrlr_get_cmbsz(pctrlr, &cmbsz) ||
@@ -511,7 +511,10 @@ nvme_pcie_ctrlr_map_cmb(struct nvme_pcie_ctrlr *pctrlr)
 	pctrlr->cmb_mem_register_addr = (void *)mem_register_start;
 	pctrlr->cmb_mem_register_size = mem_register_end - mem_register_start;
 
-	rc = spdk_mem_register(pctrlr->cmb_mem_register_addr, pctrlr->cmb_mem_register_size, 0);
+	/* calculate phys address for vtophys mapping for CMB. */
+	paddr = bar_phys_addr + (mem_register_start - (uint64_t)pctrlr->cmb_bar_virt_addr);
+
+	rc = spdk_mem_register(pctrlr->cmb_mem_register_addr, pctrlr->cmb_mem_register_size, paddr);
 	if (rc) {
 		SPDK_ERRLOG("spdk_mem_register() failed\n");
 		goto exit;
