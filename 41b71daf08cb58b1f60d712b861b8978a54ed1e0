@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e5002419_ef2f72f6",
+        "filename": "test/nvmf/filesystem/filesystem.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-18T08:11:45Z",
+      "side": 1,
+      "message": "Can we make this comment a bit more specific?\nWhich variables do we update (KERNEL_DIR \u0026 KERNEL_BASE?) and why do we need to update?",
+      "range": {
+        "startLine": 8,
+        "startChar": 0,
+        "endLine": 8,
+        "endChar": 46
+      },
+      "revId": "41b71daf08cb58b1f60d712b861b8978a54ed1e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "31932214_94667d2a",
+        "filename": "test/nvmf/filesystem/filesystem.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-18T08:11:45Z",
+      "side": 1,
+      "message": "Your cleanup() function does exactly the same, so you could call it here.",
+      "range": {
+        "startLine": 100,
+        "startChar": 0,
+        "endLine": 103,
+        "endChar": 34
+      },
+      "revId": "41b71daf08cb58b1f60d712b861b8978a54ed1e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
