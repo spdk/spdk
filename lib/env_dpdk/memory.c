@@ -219,6 +219,7 @@ spdk_mem_register(void *vaddr, size_t len, uint64_t paddr)
 	int rc;
 	void *seg_vaddr;
 	size_t seg_len;
+	struct spdk_phys_region phys;
 
 	if ((uintptr_t)vaddr & ~MASK_256TB) {
 		DEBUG_PRINT("invalid usermode virtual address %p\n", vaddr);
@@ -232,6 +233,13 @@ spdk_mem_register(void *vaddr, size_t len, uint64_t paddr)
 	}
 
 	pthread_mutex_lock(&g_spdk_mem_map_mutex);
+
+	if (paddr) {
+		phys.vaddr = (uint64_t)vaddr;
+		phys.size = (uint64_t)len;
+		phys.paddr = paddr;
+		spdk_vtophys_add_phys_region(&phys);
+	}
 
 	seg_vaddr = vaddr;
 	seg_len = 0;

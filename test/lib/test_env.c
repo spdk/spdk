@@ -141,6 +141,11 @@ uint64_t spdk_vtophys(void *buf)
 	}
 }
 
+void spdk_vtophys_add_phys_region(struct spdk_phys_region *phys)
+{
+	return;
+}
+
 void
 spdk_memzone_dump(FILE *f)
 {

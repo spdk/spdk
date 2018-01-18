@@ -333,6 +333,7 @@ size_t spdk_ring_dequeue(struct spdk_ring *ring, void **objs, size_t count);
 uint64_t spdk_vtophys(void *buf);
 
 /**
+<<<<<<< HEAD
  * \brief Struct for physical memory regions we wish to register (e.g NVMe CMBs/PMRs)
  *
  */
@@ -341,6 +342,8 @@ struct spdk_phys_region {
 	uint64_t size;
 	uint64_t vaddr;
 };
+
+void spdk_vtophys_add_phys_region(struct spdk_phys_region *);
 
 struct spdk_pci_addr {
 	uint32_t			domain;

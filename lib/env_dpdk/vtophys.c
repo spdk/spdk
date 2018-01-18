@@ -77,6 +77,14 @@ static struct vfio_cfg g_vfio = {
 	.mutex = PTHREAD_MUTEX_INITIALIZER
 };
 
+/* TAILQ structure for physical based vtophys mappings (e.g. NVMe CMBs and PMRs) */
+struct spdk_phys_regions {
+	struct spdk_phys_region phys;
+	TAILQ_ENTRY(spdk_phys_regions) tailq;
+};
+
+static TAILQ_HEAD(, spdk_phys_regions) g_phys_regions = TAILQ_HEAD_INITIALIZER(g_phys_regions);
+
 #else
 #define SPDK_VFIO_ENABLED 0
 #endif
@@ -240,6 +248,38 @@ vtophys_get_paddr_pagemap(uint64_t vaddr)
 	return paddr;
 }
 
+/* Add an phys region to our TAILQ list */
+void spdk_vtophys_add_phys_region(struct spdk_phys_region *phys)
+{
+	struct spdk_phys_regions *this;
+
+	this = malloc(sizeof(struct spdk_phys_regions));
+	this->phys = *phys;
+	TAILQ_INSERT_TAIL(&g_phys_regions, this, tailq);
+}
+
+/* Try to get the paddr from phys linked list */
+static uint64_t
+vtophys_get_paddr_phys(uint64_t vaddr)
+{
+	uintptr_t paddr;
+	struct spdk_phys_regions *phys_region;
+
+	TAILQ_FOREACH(phys_region, &g_phys_regions, tailq) {
+		DEBUG_PRINT("%s: %p %p %p\n", __func__, (void *)vaddr,
+			    (void *)phys_region->phys.paddr,
+			    (void *)phys_region->phys.size);
+		if (vaddr >= phys_region->phys.vaddr &&
+		    vaddr < phys_region->phys.vaddr + phys_region->phys.size) {
+			paddr = phys_region->phys.paddr + (vaddr - phys_region->phys.vaddr);
+			DEBUG_PRINT("%s: %p -> %p\n", __func__, (void *)vaddr,
+				    (void *)paddr);
+			return paddr;
+		}
+	}
+	return  SPDK_VTOPHYS_ERROR;
+}
+
 static int
 spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 		    enum spdk_mem_map_notify_action action,
@@ -247,6 +287,7 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 {
 	int rc = 0;
 	uint64_t paddr;
+	unsigned phys = 0;
 
 	if ((uintptr_t)vaddr & ~MASK_256TB) {
 		DEBUG_PRINT("invalid usermode virtual address %p\n", vaddr);
@@ -286,13 +327,18 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 					/* Get the physical address from /proc/self/pagemap. */
 					paddr = vtophys_get_paddr_pagemap((uint64_t)vaddr);
 					if (paddr == SPDK_VTOPHYS_ERROR) {
-						DEBUG_PRINT("could not get phys addr for %p\n", vaddr);
-						return -EFAULT;
+						/* Get the physical address from phys linked list */
+						paddr = vtophys_get_paddr_phys((uint64_t)vaddr);
+						if (paddr == SPDK_VTOPHYS_ERROR) {
+							DEBUG_PRINT("could not get phys addr for %p\n", vaddr);
+							return -EFAULT;
+						}
+						phys = 1;
 					}
 				}
 			}
-
-			if (paddr & MASK_2MB) {
+			/* Since PHYS can break the 2MiB physical alginment skip this check for that. */
+			if (!phys && (paddr & MASK_2MB)) {
 				DEBUG_PRINT("invalid paddr 0x%" PRIx64 " - must be 2MB aligned\n", paddr);
 				return -EINVAL;
 			}
