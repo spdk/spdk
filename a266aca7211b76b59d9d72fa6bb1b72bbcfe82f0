@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "95a4bca5_055ef04d",
+        "filename": "lib/iscsi/portal_grp.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-18T00:02:26Z",
+      "side": 1,
+      "message": "in this function, this code sequence is used in three places and hence may be aggregated into a helper function.\n\nI\u0027ll make a helper function in another patch and then update this patch.\n\n/* copy a sequence of characters into a newly allocated null-terminated string */\nchar *copy_string_null_end(const char *str, size_t len)\n{\n    char *value \u003d calloc(1, len + 1);\n    if (!value) {\n        return NULL;\n    }\n    memcpy(value, str, len);\n    return value;\n}\n\n\nby using the above function:\n    len \u003d p - portalstring;\n    host \u003d copy_string_null_end(portalstring, len);\n    if (!host) {\n      ....",
+      "range": {
+        "startLine": 231,
+        "startChar": 0,
+        "endLine": 236,
+        "endChar": 34
+      },
+      "revId": "a266aca7211b76b59d9d72fa6bb1b72bbcfe82f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
