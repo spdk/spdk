@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "125351d6_b1fcd3af",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-18T12:18:10Z",
+      "side": 1,
+      "message": "Can we mention that all test cases as run as mulit-socket \u0026 multitarget \u0026 multiqeueue?\n\nFor multiqueue give explanation that multiple fio jobs can be run in parallel instead of sequentially",
+      "range": {
+        "startLine": 79,
+        "startChar": 0,
+        "endLine": 81,
+        "endChar": 20
+      },
+      "revId": "cff6e08d6b09b7aa9bc142db4ca5c4e87805ba4e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "124a5759_7660dfd8",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-18T12:18:10Z",
+      "side": 1,
+      "message": "fio is capitalized FIO in rest of document so lets stick to that",
+      "range": {
+        "startLine": 84,
+        "startChar": 2,
+        "endLine": 84,
+        "endChar": 5
+      },
+      "revId": "cff6e08d6b09b7aa9bc142db4ca5c4e87805ba4e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "45fa1110_f0b4e2c3",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-18T12:18:10Z",
+      "side": 1,
+      "message": "verification",
+      "range": {
+        "startLine": 85,
+        "startChar": 67,
+        "endLine": 85,
+        "endChar": 79
+      },
+      "revId": "cff6e08d6b09b7aa9bc142db4ca5c4e87805ba4e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e34bc357_3609c765",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-18T12:18:10Z",
+      "side": 1,
+      "message": "spaces",
+      "range": {
+        "startLine": 86,
+        "startChar": 0,
+        "endLine": 86,
+        "endChar": 1
+      },
+      "revId": "cff6e08d6b09b7aa9bc142db4ca5c4e87805ba4e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6eb90cdb_73d3343e",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-18T12:18:10Z",
+      "side": 1,
+      "message": "comma not needed",
+      "range": {
+        "startLine": 102,
+        "startChar": 28,
+        "endLine": 102,
+        "endChar": 29
+      },
+      "revId": "cff6e08d6b09b7aa9bc142db4ca5c4e87805ba4e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c67e769_56747e5e",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-18T12:18:10Z",
+      "side": 1,
+      "message": "comma not needed",
+      "range": {
+        "startLine": 106,
+        "startChar": 57,
+        "endLine": 106,
+        "endChar": 58
+      },
+      "revId": "cff6e08d6b09b7aa9bc142db4ca5c4e87805ba4e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f6b84b2_ae53c35c",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-18T12:18:10Z",
+      "side": 1,
+      "message": "comma not needed",
+      "range": {
+        "startLine": 111,
+        "startChar": 28,
+        "endLine": 111,
+        "endChar": 29
+      },
+      "revId": "cff6e08d6b09b7aa9bc142db4ca5c4e87805ba4e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
