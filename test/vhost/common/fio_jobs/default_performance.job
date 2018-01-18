@@ -12,4 +12,5 @@ thread
 numjobs=1
 direct=1
 rw=randread
+fsync_on_close=1
 [nvme-host]
