@@ -182,6 +182,7 @@ void spdk_iscsi_set_min_conn_idle_interval(int interval_in_us);
 int spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int len,
 			      void *buf);
 void spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu);
+void spdk_iscsi_conn_write_pdu_no_flush(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu);
 
 void spdk_iscsi_conn_free_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu);
 
