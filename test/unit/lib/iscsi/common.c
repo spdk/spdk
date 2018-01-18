@@ -178,6 +178,11 @@ spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 }
 
 void
+spdk_iscsi_conn_write_pdu_no_flush(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+{
+}
+
+void
 spdk_iscsi_conn_logout(struct spdk_iscsi_conn *conn)
 {
 }
