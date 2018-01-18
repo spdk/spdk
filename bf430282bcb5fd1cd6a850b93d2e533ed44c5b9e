@@ -1,0 +1,584 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eb85ee78_6537ad0d",
+        "filename": "test/lvol/fio.job",
+        "patchSetId": 14
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T10:49:47Z",
+      "side": 1,
+      "message": "Can\u0027t all the jobs have verify on ?\nDo we need this many different jobs, if their parameters are the same (i.e. fill_*_percent) ? There are just two distinct jobs here check_zeroes and write_verify.",
+      "revId": "bf430282bcb5fd1cd6a850b93d2e533ed44c5b9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d609b877_ae353b05",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T10:49:47Z",
+      "side": 1,
+      "message": "rpc.get_lvol_stores()[0] could be done here, please see comment below.",
+      "range": {
+        "startLine": 57,
+        "startChar": 26,
+        "endLine": 57,
+        "endChar": 43
+      },
+      "revId": "bf430282bcb5fd1cd6a850b93d2e533ed44c5b9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79025160_9c2fc7e1",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T10:49:47Z",
+      "side": 1,
+      "message": "This functionality can be used in check_get_lvol_stores(). Instead of going over whole list, just request specific one.\nAs well, please rebase on top of https://review.gerrithub.io/#/c/395126/",
+      "range": {
+        "startLine": 147,
+        "startChar": 8,
+        "endLine": 147,
+        "endChar": 32
+      },
+      "revId": "bf430282bcb5fd1cd6a850b93d2e533ed44c5b9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ae5d8e9_497256c2",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 726,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T10:49:47Z",
+      "side": 1,
+      "message": "Why use free_clusters_start here ? This is size of lvol_bdev in MiB. It only works now due to cluster_size set to 1 MiB in test currently.\nself.total_size will work here regardless of changes in cluster_sizes.",
+      "range": {
+        "startLine": 726,
+        "startChar": 47,
+        "endLine": 726,
+        "endChar": 66
+      },
+      "revId": "bf430282bcb5fd1cd6a850b93d2e533ed44c5b9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1b3d770_f55afa7a",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 739,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T10:49:47Z",
+      "side": 1,
+      "message": "Idea here was to write exactly 1 cluster. Cluster_size is available in get_lvol_stores(), no need to calculate it here.",
+      "range": {
+        "startLine": 738,
+        "startChar": 8,
+        "endLine": 739,
+        "endChar": 45
+      },
+      "revId": "bf430282bcb5fd1cd6a850b93d2e533ed44c5b9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7d5d100_91202e4e",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 740,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T10:49:47Z",
+      "side": 1,
+      "message": "Can this use variable nbd_name?",
+      "range": {
+        "startLine": 740,
+        "startChar": 45,
+        "endLine": 740,
+        "endChar": 54
+      },
+      "revId": "bf430282bcb5fd1cd6a850b93d2e533ed44c5b9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "09690682_25acb41b",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 756,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T10:49:47Z",
+      "side": 1,
+      "message": "Same as above, cluster_size is not changeable after lvol store creation so it can be reused here.",
+      "range": {
+        "startLine": 753,
+        "startChar": 8,
+        "endLine": 756,
+        "endChar": 55
+      },
+      "revId": "bf430282bcb5fd1cd6a850b93d2e533ed44c5b9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b35916b_5f26631b",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 771,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T10:49:47Z",
+      "side": 1,
+      "message": "\"size \u003d (total_data_clusters - 3) * cluster_size\"\n \nSeems simpler.",
+      "range": {
+        "startLine": 771,
+        "startChar": 8,
+        "endLine": 771,
+        "endChar": 12
+      },
+      "revId": "bf430282bcb5fd1cd6a850b93d2e533ed44c5b9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c365e935_5547ec0f",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 774,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T10:49:47Z",
+      "side": 1,
+      "message": "cluster_size * 3",
+      "range": {
+        "startLine": 773,
+        "startChar": 17,
+        "endLine": 774,
+        "endChar": 51
+      },
+      "revId": "bf430282bcb5fd1cd6a850b93d2e533ed44c5b9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c4093b7_046e7151",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 813,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T10:49:47Z",
+      "side": 1,
+      "message": "self.total_size",
+      "range": {
+        "startLine": 813,
+        "startChar": 48,
+        "endLine": 813,
+        "endChar": 67
+      },
+      "revId": "bf430282bcb5fd1cd6a850b93d2e533ed44c5b9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a6793355_1635f8d3",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 815,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T10:49:47Z",
+      "side": 1,
+      "message": "self.total_size",
+      "range": {
+        "startLine": 815,
+        "startChar": 48,
+        "endLine": 815,
+        "endChar": 67
+      },
+      "revId": "bf430282bcb5fd1cd6a850b93d2e533ed44c5b9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1328f746_bfed2e28",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 825,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T10:49:47Z",
+      "side": 1,
+      "message": "Isn\u0027t this the same as self.total_size, or at least should be ?",
+      "range": {
+        "startLine": 825,
+        "startChar": 8,
+        "endLine": 825,
+        "endChar": 76
+      },
+      "revId": "bf430282bcb5fd1cd6a850b93d2e533ed44c5b9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "87544820_deebf54c",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 834,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T10:49:47Z",
+      "side": 1,
+      "message": "self.total_size",
+      "range": {
+        "startLine": 834,
+        "startChar": 15,
+        "endLine": 834,
+        "endChar": 76
+      },
+      "revId": "bf430282bcb5fd1cd6a850b93d2e533ed44c5b9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e4123fc_b47ebe3d",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 863,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T10:49:47Z",
+      "side": 1,
+      "message": "self.total_size",
+      "range": {
+        "startLine": 863,
+        "startChar": 47,
+        "endLine": 863,
+        "endChar": 66
+      },
+      "revId": "bf430282bcb5fd1cd6a850b93d2e533ed44c5b9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27181178_c9456a61",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 868,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T10:49:47Z",
+      "side": 1,
+      "message": "Do we need to check that here ? Wasn\u0027t that already part of 650 ?",
+      "range": {
+        "startLine": 865,
+        "startChar": 2,
+        "endLine": 868,
+        "endChar": 27
+      },
+      "revId": "bf430282bcb5fd1cd6a850b93d2e533ed44c5b9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29e42097_bab06862",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 875,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T10:49:47Z",
+      "side": 1,
+      "message": "self.total_size",
+      "range": {
+        "startLine": 875,
+        "startChar": 15,
+        "endLine": 875,
+        "endChar": 74
+      },
+      "revId": "bf430282bcb5fd1cd6a850b93d2e533ed44c5b9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9792404_177d0cee",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 903,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T10:49:47Z",
+      "side": 1,
+      "message": "\"self.total_size/2\" should be enough.",
+      "range": {
+        "startLine": 903,
+        "startChar": 47,
+        "endLine": 903,
+        "endChar": 56
+      },
+      "revId": "bf430282bcb5fd1cd6a850b93d2e533ed44c5b9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c2a9cf0d_205971a7",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 917,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T10:49:47Z",
+      "side": 1,
+      "message": "I understand that steps listed below are missing due to lvol resize being WIP ? I think we could put them here anyway and not run it until lvol resize is ready.\n\n- save number of free clusters for lvs\n- resize bdev to full size of lvs\n- check if bdev size changed (total_data_clusters*cluster_size\n  equal to num_blocks*block_size)\n- check if free_clusters on lvs remain unaffected\n- perform write operation with verification\n  to newly created free space of lvol bdev\n- resize bdev to 30M and check if it ended with success\n- check if free clusters on lvs equals to saved counter",
+      "revId": "bf430282bcb5fd1cd6a850b93d2e533ed44c5b9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cdca9f8a_94ff3181",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 939,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T10:49:47Z",
+      "side": 1,
+      "message": "self.total_size",
+      "range": {
+        "startLine": 939,
+        "startChar": 48,
+        "endLine": 939,
+        "endChar": 67
+      },
+      "revId": "bf430282bcb5fd1cd6a850b93d2e533ed44c5b9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "09d32215_da6a66ad",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 941,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T10:49:47Z",
+      "side": 1,
+      "message": "self.total_size",
+      "range": {
+        "startLine": 941,
+        "startChar": 48,
+        "endLine": 941,
+        "endChar": 67
+      },
+      "revId": "bf430282bcb5fd1cd6a850b93d2e533ed44c5b9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47a29f7a_3cb27c26",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 946,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T10:49:47Z",
+      "side": 1,
+      "message": "Already part of 650.",
+      "range": {
+        "startLine": 943,
+        "startChar": 0,
+        "endLine": 946,
+        "endChar": 27
+      },
+      "revId": "bf430282bcb5fd1cd6a850b93d2e533ed44c5b9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fefae438_aebe4412",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 971,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T10:49:47Z",
+      "side": 1,
+      "message": "Isn\u0027t failure expected here as the second lvol bdev goes over total size of lvol store ? (This is intended by test case description)",
+      "range": {
+        "startLine": 969,
+        "startChar": 0,
+        "endLine": 971,
+        "endChar": 27
+      },
+      "revId": "bf430282bcb5fd1cd6a850b93d2e533ed44c5b9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52c4608d_b7b4c38f",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 972,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T10:49:47Z",
+      "side": 1,
+      "message": "Missing one step from test plan:\n- check if data on first disk stayed unchanged",
+      "revId": "bf430282bcb5fd1cd6a850b93d2e533ed44c5b9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e80f6e0e_72782aad",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 996,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T10:49:47Z",
+      "side": 1,
+      "message": "self.total_size",
+      "range": {
+        "startLine": 996,
+        "startChar": 24,
+        "endLine": 996,
+        "endChar": 43
+      },
+      "revId": "bf430282bcb5fd1cd6a850b93d2e533ed44c5b9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c36d007_981b1103",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 1005,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T10:49:47Z",
+      "side": 1,
+      "message": "already part of 650",
+      "range": {
+        "startLine": 1002,
+        "startChar": 0,
+        "endLine": 1005,
+        "endChar": 27
+      },
+      "revId": "bf430282bcb5fd1cd6a850b93d2e533ed44c5b9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af190baf_380749c5",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 1030,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T10:49:47Z",
+      "side": 1,
+      "message": "Do we really need such code block for each fio test ? Can\u0027t this be separate function like run_fio_job(device, size, offset, job_name) or something similar ?",
+      "range": {
+        "startLine": 1022,
+        "startChar": 0,
+        "endLine": 1030,
+        "endChar": 27
+      },
+      "revId": "bf430282bcb5fd1cd6a850b93d2e533ed44c5b9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
