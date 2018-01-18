@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "af28f9b6_f8098ded",
+        "filename": "test/vhost/initiator/bdev.conf",
+        "patchSetId": 13
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-01-18T12:48:36Z",
+      "side": 1,
+      "message": "This digit is vm_num in function vm_setup() and we only use vm \"0\"",
+      "parentUuid": "f4d90b2c_d1c7f809",
+      "range": {
+        "startLine": 6,
+        "startChar": 19,
+        "endLine": 6,
+        "endChar": 20
+      },
+      "revId": "2efa8e2558c32e876ada719e20cd67d8acc1600c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "aac409ba_6ef599a8",
         "filename": "test/vhost/initiator/blockdev.sh",
         "patchSetId": 13
