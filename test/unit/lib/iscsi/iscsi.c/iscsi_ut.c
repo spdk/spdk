@@ -35,6 +35,7 @@
 
 #include "spdk/endian.h"
 #include "spdk/scsi.h"
+#include "spdk_cunit.h"
 
 #include "CUnit/Basic.h"
 
@@ -177,6 +178,8 @@ maxburstlength_test(void)
 	TAILQ_INIT(&conn.write_pdu_list);
 	TAILQ_INIT(&conn.active_r2t_tasks);
 
+	TAILQ_INIT(&g_write_pdu_list);
+
 	req_pdu->bhs.opcode = ISCSI_OP_SCSI;
 	req_pdu->data_segment_len = 0;
 
@@ -191,14 +194,14 @@ maxburstlength_test(void)
 	rc = spdk_iscsi_execute(&conn, req_pdu);
 	CU_ASSERT_FATAL(rc == 0);
 
-	response_pdu = TAILQ_FIRST(&conn.write_pdu_list);
-	CU_ASSERT(response_pdu != NULL);
+	response_pdu = TAILQ_FIRST(&g_write_pdu_list);
+	SPDK_CU_ASSERT_FATAL(response_pdu != NULL);
 
 	/*
 	 * Confirm that a correct R2T reply was sent in reponse to the
 	 *  SCSI request.
 	 */
-	TAILQ_REMOVE(&conn.write_pdu_list, response_pdu, tailq);
+	TAILQ_REMOVE(&g_write_pdu_list, response_pdu, tailq);
 	CU_ASSERT(response_pdu->bhs.opcode == ISCSI_OP_R2T);
 	r2t = (struct iscsi_bhs_r2t *)&response_pdu->bhs;
 	CU_ASSERT(from_be32(&r2t->desired_xfer_len) == 1024);
@@ -221,9 +224,9 @@ maxburstlength_test(void)
 	spdk_iscsi_task_put(response_pdu->task);
 	spdk_put_pdu(response_pdu);
 
-	r2t_pdu = TAILQ_FIRST(&conn.write_pdu_list);
+	r2t_pdu = TAILQ_FIRST(&g_write_pdu_list);
 	CU_ASSERT(r2t_pdu != NULL);
-	TAILQ_REMOVE(&conn.write_pdu_list, r2t_pdu, tailq);
+	TAILQ_REMOVE(&g_write_pdu_list, r2t_pdu, tailq);
 	spdk_put_pdu(r2t_pdu);
 
 	spdk_put_pdu(data_out_pdu);
