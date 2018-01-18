@@ -180,6 +180,9 @@ struct spdk_bs_channel {
 
 	struct spdk_bs_dev		*dev;
 	struct spdk_io_channel		*dev_channel;
+
+	bool				cluster_alloc_in_progress;
+	TAILQ_HEAD(, spdk_bs_request_set) need_cluster_alloc;
 };
 
 /** operation type */
@@ -446,6 +449,21 @@ _spdk_bs_num_pages_to_cluster_boundary(struct spdk_blob_data *blob, uint32_t pag
 	pages_per_cluster = blob->bs->pages_per_cluster;
 
 	return pages_per_cluster - (page % pages_per_cluster);
+}
+
+static inline bool
+_spdk_bs_page_is_allocated(struct spdk_blob_data *blob, uint32_t page)
+{
+	uint32_t cluster_idx;
+	uint32_t pages_per_cluster;
+
+	pages_per_cluster = blob->bs->pages_per_cluster;
+
+	assert(page < blob->active.num_clusters * pages_per_cluster);
+
+	cluster_idx = blob->active.clusters[page / pages_per_cluster];
+
+	return cluster_idx != 0;
 }
 
 #endif

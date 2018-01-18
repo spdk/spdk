@@ -1253,6 +1253,7 @@ _spdk_blob_request_submit_op_single(struct spdk_io_channel *_ch, struct spdk_blo
 	struct spdk_blob_data *blob = __blob_to_data(_blob);
 	spdk_bs_batch_t *batch;
 	struct spdk_bs_cpl cpl;
+	struct spdk_bs_channel *ch = spdk_io_channel_get_ctx(_ch);
 	uint64_t lba;
 	uint32_t lba_count;
 
@@ -1261,6 +1262,18 @@ _spdk_blob_request_submit_op_single(struct spdk_io_channel *_ch, struct spdk_blo
 	cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
 	cpl.u.blob_basic.cb_fn = cb_fn;
 	cpl.u.blob_basic.cb_arg = cb_arg;
+
+	if (!_spdk_bs_page_is_allocated(blob, offset) && ch->cluster_alloc_in_progress) {
+		spdk_bs_user_op_t *op;
+
+		op = spdk_bs_user_op_alloc(_ch, &cpl, op_type, _blob, payload, 0, offset, length);
+		if (op != NULL) {
+			TAILQ_INSERT_TAIL(&ch->need_cluster_alloc, op, link);
+		} else {
+			cb_fn(cb_arg, -ENOMEM);
+		}
+		return;
+	}
 
 	batch = spdk_bs_batch_open(_ch, &cpl);
 	if (!batch) {
@@ -1537,6 +1550,8 @@ _spdk_bs_channel_create(void *io_device, void *ctx_buf)
 		return -1;
 	}
 
+	TAILQ_INIT(&channel->need_cluster_alloc);
+
 	return 0;
 }
 
@@ -1544,6 +1559,13 @@ static void
 _spdk_bs_channel_destroy(void *io_device, void *ctx_buf)
 {
 	struct spdk_bs_channel *channel = ctx_buf;
+	spdk_bs_user_op_t *op;
+
+	while (!TAILQ_EMPTY(&channel->need_cluster_alloc)) {
+		op = TAILQ_FIRST(&channel->need_cluster_alloc);
+		TAILQ_REMOVE(&channel->need_cluster_alloc, op, link);
+		spdk_bs_user_op_abort(op);
+	}
 
 	free(channel->req_mem);
 	channel->dev->destroy_channel(channel->dev, channel->dev_channel);
