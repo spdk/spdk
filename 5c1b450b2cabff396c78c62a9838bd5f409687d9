@@ -1,0 +1,216 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff29078a_60687abf",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T13:51:47Z",
+      "side": 1,
+      "message": "\"This will automatically sync.\" To make clear that all changes done before to original blob will be persisted.",
+      "revId": "5c1b450b2cabff396c78c62a9838bd5f409687d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b5b31fc_da026e2f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 3316,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T13:51:47Z",
+      "side": 1,
+      "message": "Reason for fail with bserrno is lost here, as bserrno is not passed via cpl. Assuming that spdk_bs_delete_blob() completes without error, then caller of spdk_bs_create_blob_snapshot() will receive bserrno set to 0 and blob set to NULL - going against typical handling of errors.\n\nShould bserrno be added into spdk_bs_cpl ?",
+      "range": {
+        "startLine": 3316,
+        "startChar": 48,
+        "endLine": 3316,
+        "endChar": 55
+      },
+      "revId": "5c1b450b2cabff396c78c62a9838bd5f409687d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1425b22a_c4f3622f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 3326,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T13:51:47Z",
+      "side": 1,
+      "message": "Similar to above, bserrno is lost.",
+      "range": {
+        "startLine": 3326,
+        "startChar": 57,
+        "endLine": 3326,
+        "endChar": 64
+      },
+      "revId": "5c1b450b2cabff396c78c62a9838bd5f409687d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "81172073_81117db8",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 3338,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T13:51:47Z",
+      "side": 1,
+      "message": "This doesn\u0027t seem like a reliable way to determine if blob passed to snapshoting was thin provisioned. Its possible that thin provisioned blob had all clusters allocated, but still would like to keep property in case of resize.",
+      "range": {
+        "startLine": 3336,
+        "startChar": 0,
+        "endLine": 3338,
+        "endChar": 3
+      },
+      "revId": "5c1b450b2cabff396c78c62a9838bd5f409687d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6dd6aba1_66408848",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 3435,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T13:51:47Z",
+      "side": 1,
+      "message": "Can this function and callbacks be put somewhere higher up, maybe next to zeroes_bs_dev ? So it does not interrupt flow of reading snapshot function from bottom to top.",
+      "range": {
+        "startLine": 3435,
+        "startChar": 0,
+        "endLine": 3435,
+        "endChar": 23
+      },
+      "revId": "5c1b450b2cabff396c78c62a9838bd5f409687d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba039d61_3764766e",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 3466,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T13:51:47Z",
+      "side": 1,
+      "message": "I think some kind of log is required here (info or error). _spdk_bs_snapshot_fail_delete() does operations that can fail on their own, information that it failed here might be lost.",
+      "revId": "5c1b450b2cabff396c78c62a9838bd5f409687d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91deba8f_b23ef216",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 3477,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T13:51:47Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we track what if orgblob was thin provisioned before starting snapshot ? Then we can revert this in case of failure.",
+      "range": {
+        "startLine": 3476,
+        "startChar": 0,
+        "endLine": 3477,
+        "endChar": 40
+      },
+      "revId": "5c1b450b2cabff396c78c62a9838bd5f409687d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c2cccd4_c28c39df",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 3486,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T13:51:47Z",
+      "side": 1,
+      "message": "This is not wrong, but wouldn\u0027t it be simpler to just have two lines:\nnewblob-\u003eactive.clusters[i] \u003d orgblob-\u003eactive.clusters[i];\norgblob-\u003eactive.clusters[i] \u003d 0;",
+      "range": {
+        "startLine": 3481,
+        "startChar": 0,
+        "endLine": 3486,
+        "endChar": 3
+      },
+      "revId": "5c1b450b2cabff396c78c62a9838bd5f409687d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17e8bf7d_61080c17",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 3547,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T13:51:47Z",
+      "side": 1,
+      "message": "Shouldn\u0027t snapshot_in_progress xattr be considered in blobstore recovery path ? Otherwise if power failure occurs after syncing snapshot to disk, there will be two blobs with the same cluster maps.",
+      "range": {
+        "startLine": 3547,
+        "startChar": 1,
+        "endLine": 3547,
+        "endChar": 51
+      },
+      "revId": "5c1b450b2cabff396c78c62a9838bd5f409687d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "07d67355_bf063332",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-18T13:51:47Z",
+      "side": 1,
+      "message": "Could more UT be added that do:\n- close/open of snapshot/clone\n- unload/load of blobstore",
+      "revId": "5c1b450b2cabff396c78c62a9838bd5f409687d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
