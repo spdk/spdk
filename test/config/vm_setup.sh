@@ -125,6 +125,7 @@ git clone http://git.kernel.dk/fio.git
 sudo mv fio /usr/src/
 (
     cd /usr/src/fio &&
+    git checkout fio-3.3 &&
     make &&
     sudo make install
 )
