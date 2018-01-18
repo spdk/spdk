@@ -13,6 +13,8 @@
 
 SPDK_LOG_REGISTER_COMPONENT("iscsi", SPDK_LOG_ISCSI)
 
+TAILQ_HEAD(, spdk_iscsi_pdu) g_write_pdu_list;
+
 struct spdk_iscsi_task *
 spdk_iscsi_task_get(struct spdk_iscsi_conn *conn,
 		    struct spdk_iscsi_task *parent,
@@ -214,6 +216,12 @@ spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int bytes,
 			  void *buf)
 {
 	return 0;
+}
+
+void
+spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+{
+	TAILQ_INSERT_TAIL(&g_write_pdu_list, pdu, tailq);
 }
 
 void
