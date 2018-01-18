@@ -985,6 +985,21 @@ start_device(int vid)
 		goto out;
 	}
 
+	/*
+	 * Not sure right now but this look like some kind of QEMU bug and guest IO
+	 * might be frozed without kicking all queues after live-migration. This look like
+	 * the previous vhost instance failed to effectively deliver all interrupts before
+	 * the GET_VRING_BASE message. This shouldn't harm guest since spurious interrupts
+	 * should be ignored by guest virtio driver.
+	 *
+	 * Tested on QEMU 2.10.91 and 2.11.50.
+	 */
+	for (i = 0; i < num_queues; i++) {
+		if (vdev->virtqueue[i].vring.callfd != -1) {
+			eventfd_write(vdev->virtqueue[i].vring.callfd, (eventfd_t)1);
+		}
+	}
+
 	vdev->lcore = spdk_vhost_allocate_reactor(vdev->cpumask);
 	rc = spdk_vhost_event_send(vdev, vdev->backend->start_device, 3, "start device");
 	if (rc != 0) {
