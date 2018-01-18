@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "5809c2c1_695e370b",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-18T02:09:50Z",
+      "side": 1,
+      "message": "The poll_group add transport operation is called when creating the poll group and also from the spdk_nvmf_tgt_listen() when creating the subsystem. I\u0027ve debugged the code, the tgt_listen() adds the transport first on the poll group and as no IO channels created on the same device (g_tgt.tgt), the transport is not added.\n\nOne thinking is that it seems no need to call the poll_group add transport in spdk_nvmf_tgt_listen() operation. Or like here, we add a check for the case the transport already there instead of always creating a group from two different calls.\n\nPlease let me know whether this is correct. Thanks.",
+      "parentUuid": "c1b7f6cb_017a8beb",
+      "revId": "db6abdcd2b4347ea3cf6b2933d3edad975019d89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0624c94d_acb6ea1e",
         "filename": "lib/nvmf/nvmf.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2018-01-17T21:40:54Z",
       "side": 1,
       "message": "You\u0027re using ERRLOG here, but then returning 0. Is this an error or not?",
+      "revId": "db6abdcd2b4347ea3cf6b2933d3edad975019d89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "033499dc_e6418661",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 409,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-18T02:09:50Z",
+      "side": 1,
+      "message": "Yes. Change to NOTICELOG. Thanks.",
+      "parentUuid": "0624c94d_acb6ea1e",
       "revId": "db6abdcd2b4347ea3cf6b2933d3edad975019d89",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
