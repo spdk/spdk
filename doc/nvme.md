@@ -1,5 +1,15 @@
 # NVMe Driver {#nvme}
 
+# In this document {#nvme_toc}
+
+* @ref nvme_intro
+* @ref nvme_examples
+* @ref nvme_interface
+* @ref nvme_design
+* @ref nvme_fabrics_host
+* @ref nvme_multi_process
+* @ref nvme_hogplug
+
 # Introduction {#nvme_intro}
 
 The NVMe driver is a C library that may be linked directly into an application
@@ -20,17 +30,39 @@ otherwise unchanged.
 
 # Examples {#nvme_examples}
 
+## Examples Hello World
+
 There are a number of examples provided that demonstrate how to use the NVMe
 library. They are all in the [examples/nvme](https://github.com/spdk/spdk/tree/master/examples/nvme)
 directory in the repository. The best place to start is
 [hello_world](https://github.com/spdk/spdk/blob/master/examples/nvme/hello_world/hello_world.c).
 
-# Running Benchmarks {#nvme_benchmarks}
+## Running Benchmarks {#nvme_benchmarks}
 
 SPDK provides a plugin to the very popular [fio](https://github.com/axboe/fio)
 tool for running some basic benchmarks. See the fio start up
 [guide](https://github.com/spdk/spdk/blob/master/examples/nvme/fio_plugin/)
 for more details.
+
+## Examples Perf Tool
+
+NVMe perf utility in the [examples/nvme/perf](https://github.com/spdk/spdk/tree/master/examples/nvme/perf)
+is one of the examples which also can be used for performance tests. The perf tool provides different
+use cases, it can be used for local NVMe SSDs and remote NVMe SSDs via NVMeoF, it can also
+be used for extended LBA format tests.
+
+NVMe SSDs usage example for randread test:
+~~~{.sh}
+perf -q 128 -s 4096 -w randread -r 'trtype:PCIe traddr:0000:04:00.0' -t 300
+perf -q 128 -s 4096 -w randread -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.8 trsvcid:4420' -t 300
+~~~
+
+NVMe SSD usage example for extended LBA format:
+~~~{.sh}
+perf -q 1 -s 4096 -w write -r 'trtype:PCIe traddr:0000:04:00.0' -t 300 -e 'PRACT=0,PRCKH=GUARD'
+perf -q 1 -s 4096 -w read -r 'trtype:PCIe traddr:0000:04:00.0' -t 200 -e 'PRACT=0,PRCKH=GUARD'
+~~~
+For CRC guard tests, users must write to the SSD before read the LBA from SSD.
 
 # Public Interface {#nvme_interface}
 
@@ -42,14 +74,23 @@ spdk_nvme_probe()                           | @copybrief spdk_nvme_probe()
 spdk_nvme_ctrlr_alloc_io_qpair()            | @copybrief spdk_nvme_ctrlr_alloc_io_qpair()
 spdk_nvme_ctrlr_get_ns()                    | @copybrief spdk_nvme_ctrlr_get_ns()
 spdk_nvme_ns_cmd_read()                     | @copybrief spdk_nvme_ns_cmd_read()
+spdk_nvme_ns_cmd_readv                      | @copybrief spdk_nvme_ns_cmd_readv()
+spdk_nvme_ns_cmd_read_with_md               | @copybrief spdk_nvme_ns_cmd_read_with_md()
 spdk_nvme_ns_cmd_write()                    | @copybrief spdk_nvme_ns_cmd_write()
+spdk_nvme_ns_cmd_writev                     | @copybrief spdk_nvme_ns_cmd_writev()
+spdk_nvme_ns_cmd_write_with_md              | @copybrief spdk_nvme_ns_cmd_write_with_md()
+spdk_nvme_ns_cmd_write_zeroes               | @cooybrief spdk_nvme_ns_cmd_write_zeroes()
 spdk_nvme_ns_cmd_dataset_management()       | @copybrief spdk_nvme_ns_cmd_dataset_management()
 spdk_nvme_ns_cmd_flush()                    | @copybrief spdk_nvme_ns_cmd_flush()
 spdk_nvme_qpair_process_completions()       | @copybrief spdk_nvme_qpair_process_completions()
 spdk_nvme_ctrlr_cmd_admin_raw()             | @copybrief spdk_nvme_ctrlr_cmd_admin_raw()
 spdk_nvme_ctrlr_process_admin_completions() | @copybrief spdk_nvme_ctrlr_process_admin_completions()
+spdk_nvme_ctrlr_cmd_io_raw()                | @copybrief spdk_nvme_ctrlr_cmd_io_raw()
+spdk_nvme_ctrlr_cmd_io_raw_with_md          | @copybrief spdk_nvme_ctrlr_cmd_io_raw_with_md()
 
-# NVMe I/O Submission {#nvme_io_submission}
+# NVMe Driver Design {#nvme_design}
+
+## NVMe I/O Submission {#nvme_io_submission}
 
 I/O is submitted to an NVMe namespace using nvme_ns_cmd_xxx functions. The NVMe
 driver submits the I/O request as an NVMe submission queue entry on the queue
@@ -61,7 +102,7 @@ spdk_nvme_qpair_process_completions().
 @sa spdk_nvme_ns_cmd_read, spdk_nvme_ns_cmd_write, spdk_nvme_ns_cmd_dataset_management,
 spdk_nvme_ns_cmd_flush, spdk_nvme_qpair_process_completions
 
-## Scaling Performance {#nvme_scaling}
+### Scaling Performance {#nvme_scaling}
 
 NVMe queue pairs (struct spdk_nvme_qpair) provide parallel submission paths for
 I/O. I/O may be submitted on multiple queue pairs simultaneously from different
@@ -93,6 +134,23 @@ that data is assigned exclusively to a single thread. All operations that
 require that data should be done by sending a request to the owning thread.
 This results in a message passing architecture, as opposed to a locking
 architecture, and will result in superior scaling across CPU cores.
+
+## NVMe Driver Internal Memory Usage
+
+For the purpose to provides zero-copy data transfer to and from NVMe SSDs, the
+NVMe driver itself does not provide any data buffers for I/O commands, however,
+there are data copies for some Admin commands, depends on the API used by users.
+
+Each queue pair has a number of trackers used to track commands sent from caller,
+the number trackers for I/O queues depend on users' input for queue size and the
+value read from controller capabilities register filed: Maximum Queue Entries
+Supported(MQES, 0 based value). Each tracker has a fixed size 4096 Bytes, so the
+maximum memory used for each I/O queue is: (MQES + 1) * 4 KiB.
+
+Another memory consumation is I/O queue pairs, for those I/O queues pairs locate
+at host memory, each entry of submission queue is 64 Bytes and each entry for
+completion queue is 16 Bytes, so the maximum memory used for each I/O queue pair
+is: (MQES + 1) * (64 + 16) Bytes.
 
 # NVMe over Fabrics Host Support {#nvme_fabrics_host}
 
