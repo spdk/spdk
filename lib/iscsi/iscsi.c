@@ -2710,7 +2710,12 @@ spdk_iscsi_send_datain(struct spdk_iscsi_conn *conn,
 		to_be32(&rsph->res_cnt, residual_len);
 	}
 
-	spdk_iscsi_conn_write_pdu(conn, rsp_pdu);
+	/*
+	 * Use the no_flush variant here - we'll wait to flush
+	 *  the contents of this PDU to the initiator with the
+	 *  corresponding task response PDU.
+	 */
+	spdk_iscsi_conn_write_pdu_no_flush(conn, rsp_pdu);
 
 	return DataSN;
 }

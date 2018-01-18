@@ -1322,9 +1322,21 @@ spdk_iscsi_conn_flush_pdus(struct spdk_iscsi_conn *conn)
 }
 
 void
-spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+spdk_iscsi_conn_write_pdu_no_flush(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	TAILQ_INSERT_TAIL(&conn->write_pdu_list, pdu, tailq);
+}
+
+void
+spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+{
+	int rc;
+
+	spdk_iscsi_conn_write_pdu_no_flush(conn, pdu);
+	rc = spdk_iscsi_conn_flush_pdus(conn);
+	if (rc < 0) {
+		conn->state = ISCSI_CONN_STATE_EXITING;
+	}
 }
 
 #define GET_PDU_LOOP_COUNT	16
