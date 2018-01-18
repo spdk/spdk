@@ -1288,7 +1288,18 @@ spdk_iscsi_conn_flush_pdus(struct spdk_iscsi_conn *conn)
 void
 spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
+	int rc;
+
 	TAILQ_INSERT_TAIL(&conn->write_pdu_list, pdu, tailq);
+	rc = spdk_iscsi_conn_flush_pdus(conn);
+	if (rc < 0 && conn->state < ISCSI_CONN_STATE_EXITING) {
+		/*
+		 * If the poller has already started destruction of the connection,
+		 *  i.e. the socket read failed, then the connection state may already
+		 *  be EXITED.  We don't want to set it back to EXITING in that case.
+		 */
+		conn->state = ISCSI_CONN_STATE_EXITING;
+	}
 }
 
 #define GET_PDU_LOOP_COUNT	16
