@@ -1161,8 +1161,10 @@ spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn)
  * case, the partially flushed PDU will remain on the write_pdu_list with
  * an offset pointing to the next byte to be flushed.
  *
- * Returns 0 if no exceptional error encountered.  This includes cases where
- * there are no PDUs to flush or not all PDUs could be flushed.
+ * Returns 0 if all PDUs were flushed.
+ *
+ * Returns 1 if some PDUs could not be flushed due to lack of send buffer
+ * space.
  *
  * Returns -1 if an exception error occurred indicating the TCP connection
  * should be closed.
@@ -1225,7 +1227,7 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 	bytes = spdk_sock_writev(conn->sock, iov, iovec_cnt);
 	if (bytes == -1) {
 		if (errno == EWOULDBLOCK || errno == EAGAIN) {
-			return 0;
+			return 1;
 		} else {
 			SPDK_ERRLOG("spdk_sock_writev() failed (fd=%d), errno %d: %s\n",
 				    conn->sock, errno, spdk_strerror(errno));
@@ -1270,7 +1272,7 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 		}
 	}
 
-	return 0;
+	return TAILQ_EMPTY(&conn->write_pdu_list) ? 0 : 1;
 }
 
 /**
@@ -1287,7 +1289,10 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
  * During other connection states (EXITING or LOGGED_OUT), this
  * function will spin until all PDUs have successfully been flushed.
  *
- * Returns 0 for success.
+ * Returns 0 for success and when all PDUs were able to be flushed.
+ *
+ * Returns 1 for success but when some PDUs could not be flushed due
+ * to lack of TCP buffer space.
  *
  * Returns -1 for an exceptional error indicating the TCP connection
  * should be closed.
@@ -1300,7 +1305,7 @@ spdk_iscsi_conn_flush_pdus(struct spdk_iscsi_conn *conn)
 	if (conn->state == ISCSI_CONN_STATE_RUNNING) {
 		rc = spdk_iscsi_conn_flush_pdus_internal(conn);
 	} else {
-		rc = 0;
+		rc = 1;
 
 		/*
 		 * If the connection state is not RUNNING, then
@@ -1308,11 +1313,8 @@ spdk_iscsi_conn_flush_pdus(struct spdk_iscsi_conn *conn)
 		 * empty - to make sure all data is sent before
 		 * closing the connection.
 		 */
-		while (!TAILQ_EMPTY(&conn->write_pdu_list)) {
+		while (rc == 1) {
 			rc = spdk_iscsi_conn_flush_pdus_internal(conn);
-			if (rc != 0) {
-				break;
-			}
 		}
 	}
 
@@ -1398,7 +1400,7 @@ spdk_iscsi_conn_execute(struct spdk_iscsi_conn *conn)
 		conn_active = true;
 	}
 
-	if (spdk_iscsi_conn_flush_pdus(conn) != 0) {
+	if (spdk_iscsi_conn_flush_pdus(conn) < 0) {
 		conn->state = ISCSI_CONN_STATE_EXITING;
 		goto conn_exit;
 	}
