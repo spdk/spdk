@@ -53,6 +53,75 @@
     },
     {
       "key": {
+        "uuid": "ec97bd2d_86f95ccb",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-18T08:32:50Z",
+      "side": 1,
+      "message": "In GitHub view this point shows as single line and is hard to read. Maybe start \"SPDK block...\" sentence on a new line?",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 96
+      },
+      "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c8473118_5a4ada61",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-18T08:32:50Z",
+      "side": 1,
+      "message": "I don\u0027t get it. If EC\u003d0 then it means that it\u0027s possible for function to produce an error?\nShouldn\u0027t it be \"If EC\u003d0 then there was no error in the function call\" or something like that?",
+      "range": {
+        "startLine": 52,
+        "startChar": 48,
+        "endLine": 53,
+        "endChar": 43
+      },
+      "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "082a6e5e_f8f44c1a",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-18T08:32:50Z",
+      "side": 1,
+      "message": "Long, long line :)",
+      "range": {
+        "startLine": 91,
+        "startChar": 0,
+        "endLine": 91,
+        "endChar": 3
+      },
+      "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "071f9f7e_030f807b",
         "filename": "doc/bdal_pg.md",
         "patchSetId": 10
