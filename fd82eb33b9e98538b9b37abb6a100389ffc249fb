@@ -2,6 +2,46 @@
   "comments": [
     {
       "key": {
+        "uuid": "4de09610_7beeb458",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 7
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-19T21:06:35Z",
+      "side": 1,
+      "message": "I think this \"microsecond\" and the one below should be \"millisecond\".",
+      "range": {
+        "startLine": 14,
+        "startChar": 29,
+        "endLine": 14,
+        "endChar": 40
+      },
+      "revId": "fd82eb33b9e98538b9b37abb6a100389ffc249fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb50be6d_560f31c6",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 874,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-19T21:06:35Z",
+      "side": 1,
+      "message": "We should prevent execution from ever getting here with bdev-\u003eqos_channel \u003d\u003d NULL, so the assert() is okay, but I don\u0027t think the ERRLOG should be necessary.",
+      "revId": "fd82eb33b9e98538b9b37abb6a100389ffc249fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c288b5d4_337a77be",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 7
@@ -94,6 +134,23 @@
     },
     {
       "key": {
+        "uuid": "e3ac6638_ea6330c2",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1040,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-19T21:06:35Z",
+      "side": 1,
+      "message": "Is it possible for this case to happen (barring other programming errors inside the bdev layer)? If not, I don\u0027t think we need to check/errlog it, and if so, it seems like this would be a silent cleanup path to exit early, not something that needs an error message.",
+      "revId": "fd82eb33b9e98538b9b37abb6a100389ffc249fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f3a7cc97_21d8ad54",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 7
@@ -180,6 +237,46 @@
         "endLine": 1230,
         "endChar": 33
       },
+      "revId": "fd82eb33b9e98538b9b37abb6a100389ffc249fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1fccdc24_2478a984",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2032,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-19T21:06:35Z",
+      "side": 1,
+      "message": "This looks a bit misleadingly named, as it will be called for non-QoS I/O as well.",
+      "range": {
+        "startLine": 2032,
+        "startChar": 0,
+        "endLine": 2032,
+        "endChar": 26
+      },
+      "revId": "fd82eb33b9e98538b9b37abb6a100389ffc249fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58fa42d5_eee4da6e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2113,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-19T21:06:35Z",
+      "side": 1,
+      "message": "It seems likely that the extra work to check the conditionals will be more overhead than just doing the increment even when QoS is not enabled.",
       "revId": "fd82eb33b9e98538b9b37abb6a100389ffc249fb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
