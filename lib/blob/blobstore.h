@@ -182,6 +182,9 @@ struct spdk_bs_channel {
 
 	struct spdk_bs_dev		*dev;
 	struct spdk_io_channel		*dev_channel;
+
+	bool				cluster_alloc_in_progress;
+	TAILQ_HEAD(, spdk_bs_request_set) need_cluster_alloc;
 };
 
 /** operation type */
