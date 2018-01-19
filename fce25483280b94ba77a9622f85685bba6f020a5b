@@ -1,0 +1,408 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e36ee054_12a19a99",
+        "filename": "include/spdk/cpuset.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-19T17:04:38Z",
+      "side": 1,
+      "message": "If possible, we should move these two #defines inside the implementation (out of the public API).\n\nIt looks like they\u0027re only used in lib/util/cpuset.c currently, so they should be able to be moved there.",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8c2d9b6_1c267da2",
+        "filename": "include/spdk/cpuset.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-19T17:04:38Z",
+      "side": 1,
+      "message": "I\u0027d prefer not to do this - we don\u0027t use typedef\u0027d structs in the rest of the SPDK public API, so it would be inconsistent.",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eda33a75_029d4d0c",
+        "filename": "include/spdk/cpuset.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-19T17:04:38Z",
+      "side": 1,
+      "message": "Minor nit: we have Doxygen\u0027s autobrief feature turned on, so the first line is always treated as the brief automatically (no \\brief tag necessary).\n\nAlso, the doc comments should be extended with \\param and \\return docs and ideally some explanatory text; for instance, spdk_cpuset_alloc() should mention that it either returns NULL on failure or an object that should be freed with spdk_cpuset_free().",
+      "range": {
+        "startLine": 49,
+        "startChar": 3,
+        "endLine": 49,
+        "endChar": 9
+      },
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a777170d_9ee86770",
+        "filename": "include/spdk/cpuset.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-19T17:04:38Z",
+      "side": 1,
+      "message": "This should probably document how the comparison works if they\u0027re not equal (does it provide a strcmp()-style \u003c 0, 0, \u003e 0 comparison?, or is it just 0, !\u003d 0?)",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a47cc0b0_303bcab3",
+        "filename": "include/spdk/cpuset.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-19T17:04:38Z",
+      "side": 1,
+      "message": "\"two CPU set\" -\u003e \"two CPU sets\" (and also below).",
+      "range": {
+        "startLine": 69,
+        "startChar": 35,
+        "endLine": 69,
+        "endChar": 46
+      },
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed019426_b8963cce",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-19T17:04:38Z",
+      "side": 1,
+      "message": "This is probably okay, although maybe we could just return a const cpuset here, e.g.:\n\n   const struct spdk_cpuset *spdk_app_get_core_mask(void);\n\nWe could just allocate one up front during app startup, and then the caller wouldn\u0027t have to make a new instance each time it\u0027s called (which requires a bunch of messy error checking).",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "707ade3d_63b94147",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-19T17:04:38Z",
+      "side": 1,
+      "message": "Is this actually used in this file? I don\u0027t see any other additions that would make it necessary.",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8afd020a_52a5fe08",
+        "filename": "lib/event/app.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-19T17:04:38Z",
+      "side": 1,
+      "message": "This needs an allocation failure check.",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a0241be4_fdd6b353",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 824,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-19T17:04:38Z",
+      "side": 1,
+      "message": "Add allocation check.",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "01598a89_569d1270",
+        "filename": "lib/iscsi/portal_grp.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-19T17:04:38Z",
+      "side": 1,
+      "message": "Add allocation check.",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7bcf2d5f_149f2fa9",
+        "filename": "lib/iscsi/portal_grp.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-19T17:04:38Z",
+      "side": 1,
+      "message": "free() -\u003e spdk_cpuset_free()?",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5be5cc2e_9a53e5a6",
+        "filename": "lib/iscsi/portal_grp.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-19T17:04:38Z",
+      "side": 1,
+      "message": "Add allocation check.",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f2883eb6_886eda4f",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-19T17:04:38Z",
+      "side": 1,
+      "message": "Since this struct is internal to the cpuset.c implementation, we should just define it with the right size up front, rather than doing the complicated math below.  (Also, str could be pre-allocated as part of the structure as well.)",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b10f478f_e90570a2",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-19T17:04:38Z",
+      "side": 1,
+      "message": "This can be replaced with sizeof(set-\u003ecpus) in the uses below if we change the array in the struct to have its actual size.",
+      "range": {
+        "startLine": 42,
+        "startChar": 8,
+        "endLine": 42,
+        "endChar": 30
+      },
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb67d21b_96675a4c",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-19T17:04:38Z",
+      "side": 1,
+      "message": "Why 1ULL? cpus is just uint8_t, so this should not require an unsigned long long.  1U should be sufficient.",
+      "range": {
+        "startLine": 111,
+        "startChar": 25,
+        "endLine": 111,
+        "endChar": 29
+      },
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f88850cc_cee59777",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-19T17:04:38Z",
+      "side": 1,
+      "message": "This works as-is, but it could also be simplified to:\n\n    return set-\u003ecpus[cpu / 8] \u0026 (1U \u003c\u003c (cpu % 8));\n\nOr maybe better yet:\n\n    return (set-\u003ecpus[cpu / 8] \u003e\u003e (cpu % 8)) \u0026 1U;\n\n(This is probably unimportant for this particular code path, but it will compile to slightly more efficient code.)",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ba6d0b3_d8afd3d9",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-19T17:04:38Z",
+      "side": 1,
+      "message": "We shouldn\u0027t rely on allocations always succeeding, and catching the error with assert() is not acceptable.\n\nA few options:\n- Make this function able to return an error (all callers would need to check it).\n- String could be pre-allocated as part of spdk_cpuset_alloc() so that we don\u0027t need an error check here.\n- Just pass the string buffer as (char *, size_t) like spdk_pci_addr_fmt(). (This would mean the caller somehow needs to know how big to make the string, though, which is not really desirable.)",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1f2260f_28e30b2a",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-19T17:04:38Z",
+      "side": 1,
+      "message": "len should probably be size_t here.",
+      "range": {
+        "startLine": 273,
+        "startChar": 47,
+        "endLine": 273,
+        "endChar": 54
+      },
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8739c31_31cd7329",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 522,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-19T17:04:38Z",
+      "side": 1,
+      "message": "Add allocation check.",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3883f3ef_8a1fde7c",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 474,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-19T17:04:38Z",
+      "side": 1,
+      "message": "Please restore the blank line here between the write_string() call and the write_name() for the next section.\n\nAlso, does this change the RPC output? Previously, it would be something like \"0x1234\", but spdk_cpuset_fmt() doesn\u0027t include the 0x, so this should ideally be modified to do something like:\n\n    spdk_json_write_string_fmt(ctx-\u003ew, \"0x%s\", spdk_cpuset_fmt(vdev-\u003ecpumask));",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c27ffab_a2047f03",
+        "filename": "test/unit/lib/util/cpuset.c/cpuset_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-19T17:04:38Z",
+      "side": 1,
+      "message": "Add SPDK_CU_ASSERT_FATAL() check for allocations.",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "afbd9a0e_d48675db",
+        "filename": "test/unit/lib/util/cpuset.c/cpuset_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-19T17:04:38Z",
+      "side": 1,
+      "message": "Rather than checking with an ASSERT + if, please use:\n\n  SPDK_CU_ASSERT_FATAL(hex_mask !\u003d NULL);",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
