@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ef080d46_17691995",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-19T13:14:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1f646399_1b4cfd17",
+      "revId": "b6250536aea06f7a0ce9174825253e64c886e528",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "853dab9a_383a0e08",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 14
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "0a1b1180_a5d1e0dd",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 973,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-19T13:14:45Z",
+      "side": 1,
+      "message": "Sure, I\u0027ll look at this closer and make a patch.",
+      "parentUuid": "853dab9a_383a0e08",
+      "revId": "b6250536aea06f7a0ce9174825253e64c886e528",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9124dff0_41770a55",
         "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
         "patchSetId": 14
@@ -47,6 +83,24 @@
       "writtenOn": "2018-01-18T15:43:57Z",
       "side": 1,
       "message": "instead of duplicating invalid_flags here, just create a bool called thin_provision in the unit test version of spdk_blob\n\ninvalid flags is an implementation detail of blobstore - we do not need to duplicate that here - just using a thin_provision flag is simpler",
+      "revId": "b6250536aea06f7a0ce9174825253e64c886e528",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14b5c578_dc32130b",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-19T13:14:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9124dff0_41770a55",
       "revId": "b6250536aea06f7a0ce9174825253e64c886e528",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
