@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "52a08c0f_d9e87205",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-19T21:51:30Z",
+      "side": 1,
+      "message": "Still not sure why this is in the public API header rather than the internal one; I believe this should only be called by bdev modules, not app/user code. (See my earlier comments)",
+      "revId": "61fd2676fa50ca191599b1ea2793e6fa91d4006e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
