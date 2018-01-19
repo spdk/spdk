@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5cab89c6_636372ab",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-19T21:09:26Z",
+      "side": 1,
+      "message": "I really like breaking this out into a common function - but let\u0027s do that in a separate patch before this patch.",
+      "revId": "41f7d8d033f4c9be1914d5747c5b5488fd80f284",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
