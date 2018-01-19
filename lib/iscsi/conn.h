@@ -161,6 +161,7 @@ struct spdk_iscsi_conn {
 
 	STAILQ_ENTRY(spdk_iscsi_conn) link;
 	struct spdk_poller	*poller;
+	struct spdk_poller	*flush_poller;
 	TAILQ_HEAD(queued_r2t_tasks, spdk_iscsi_task)	queued_r2t_tasks;
 	TAILQ_HEAD(active_r2t_tasks, spdk_iscsi_task)	active_r2t_tasks;
 	TAILQ_HEAD(queued_datain_tasks, spdk_iscsi_task)	queued_datain_tasks;
