@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fbf9f154_5b8da11d",
+        "filename": "test/nvmf/host/fio.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-01-19T07:06:44Z",
+      "side": 1,
+      "message": "Unnecessary TAB",
+      "revId": "52de324859bb8fe221e639aadd5baa12c22dda95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
