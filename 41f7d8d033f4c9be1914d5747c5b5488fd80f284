@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "b0865990_3774c92c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 8
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-19T21:58:42Z",
+      "side": 1,
+      "message": "inernally \u003d\u003e internally",
+      "revId": "41f7d8d033f4c9be1914d5747c5b5488fd80f284",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5cab89c6_636372ab",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 8
