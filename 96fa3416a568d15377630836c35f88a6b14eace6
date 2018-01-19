@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a6d7ab81_5203cc26",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 739,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-19T21:54:14Z",
+      "side": 1,
+      "message": "This tab before the brace should be a space.",
+      "range": {
+        "startLine": 739,
+        "startChar": 20,
+        "endLine": 739,
+        "endChar": 21
+      },
+      "revId": "96fa3416a568d15377630836c35f88a6b14eace6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
