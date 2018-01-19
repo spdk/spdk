@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "faadbc11_76848dbf",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1110,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-19T17:15:52Z",
+      "side": 1,
+      "message": "It\u0027s a little tricky that the array indices don\u0027t match the cluster numbers, so it could have benefited from a comment. However, the test looks correct to me.",
+      "revId": "0fd4ce821f745dc098c8a5fc1892c97856a4fc7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
