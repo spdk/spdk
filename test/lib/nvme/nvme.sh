@@ -9,7 +9,7 @@ source $rootdir/scripts/autotest_common.sh
 
 function get_nvme_name_from_bdf {
 	lsblk -d --output NAME
-	nvme_devs=`lsblk -d --output NAME | grep "^nvme"`
+	nvme_devs=$(lsblk -d --output NAME | grep "^nvme") || true
 	if [ -z "$nvme_devs" ]; then
 		return
 	fi
