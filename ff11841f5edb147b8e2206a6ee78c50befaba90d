@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "629adcab_834c5174",
+        "filename": "doc/vhost.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-19T20:45:06Z",
+      "side": 1,
+      "message": "Yeah that\u0027s good",
+      "parentUuid": "44b8bfca_67508ecc",
+      "revId": "ff11841f5edb147b8e2206a6ee78c50befaba90d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "04dbca33_bfc04009",
         "filename": "doc/vhost.md",
         "patchSetId": 13
@@ -83,6 +101,24 @@
       "writtenOn": "2018-01-19T20:41:07Z",
       "side": 1,
       "message": "I\u0027m not heavily tied to my version - I don\u0027t necessarily think Ben\u0027s is *that* much better but if he insists I\u0027m ok with changing to his version.",
+      "parentUuid": "e5e8bf9a_aa111746",
+      "revId": "ff11841f5edb147b8e2206a6ee78c50befaba90d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb8954a7_b1335833",
+        "filename": "doc/vhost.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-19T20:45:06Z",
+      "side": 1,
+      "message": "Yeah - Jim\u0027s is fine. Just a few tweaks then:\n\n* vhost follows Virtio virtualization -\u003e vhost follows the Virtio virtualization\n* vhost target through application of the same SPDK userspace polled-mode principles -\u003e vhost target by applying the same user space and polling techniques as other components in SPDK.",
       "parentUuid": "e5e8bf9a_aa111746",
       "revId": "ff11841f5edb147b8e2206a6ee78c50befaba90d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
