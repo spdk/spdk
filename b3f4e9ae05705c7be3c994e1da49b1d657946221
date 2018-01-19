@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "000ccaec_47d20fb3",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 491,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-19T08:53:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f1234287_672f59e9",
+      "revId": "b3f4e9ae05705c7be3c994e1da49b1d657946221",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3a4d7a18_1262482e",
         "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2018-01-18T15:52:57Z",
       "side": 1,
       "message": "you don\u0027t need the else here - if spdk_json_decode_object() fails, it will goto invalid\n\nthis avoids having to indent all of the code from 499 to 515",
+      "revId": "b3f4e9ae05705c7be3c994e1da49b1d657946221",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48c7776e_c19fb6e6",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 498,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-19T08:53:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3a4d7a18_1262482e",
       "revId": "b3f4e9ae05705c7be3c994e1da49b1d657946221",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
