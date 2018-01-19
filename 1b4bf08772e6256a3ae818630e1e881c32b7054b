@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d999cb10_61070baa",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 38
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-19T18:04:24Z",
+      "side": 1,
+      "message": "Now that I understand what you\u0027re trying to say here, let\u0027s try this phrasing:\n\nThe SPDK NVMe-oF target depends on the NVMe-oF library. Developers may consume this code using one of two strategies:\n\n1) Using the NVMe-oF target application as-is, and as necessary adding new features (and hopefully contributing code back to the main SPDK project!)\n\n2) Using the NVMe-oF library inside of their own application.\n\nThis guide is applicable to both strategies.",
+      "revId": "1b4bf08772e6256a3ae818630e1e881c32b7054b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
