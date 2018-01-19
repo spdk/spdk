@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "44b8bfca_67508ecc",
+        "filename": "doc/vhost.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-19T19:18:59Z",
+      "side": 1,
+      "message": "Ok, how about:\n\nA vhost target provides a local storage service as a process running on a local machine. It is capable of exposing virtualized block devices to QEMU instances or other arbitrary processes. These processes communicate with the vhost target using the [virtio protocol](https://wiki.libvirt.org/page/Virtio), a standardized protocol for paravirtualized devices.",
+      "parentUuid": "ff204f4b_9c5490af",
+      "revId": "ff11841f5edb147b8e2206a6ee78c50befaba90d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "04dbca33_bfc04009",
         "filename": "doc/vhost.md",
         "patchSetId": 13
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "e5e8bf9a_aa111746",
+        "filename": "doc/vhost.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-19T19:18:59Z",
+      "side": 1,
+      "message": "The I/O submission part was written by Jim, so I\u0027ll leave it to him to decide.\nPersonally, Jim\u0027s version sounds better to me.",
+      "parentUuid": "04dbca33_bfc04009",
+      "revId": "ff11841f5edb147b8e2206a6ee78c50befaba90d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ac6f6006_e21c20c9",
         "filename": "doc/vhost.md",
         "patchSetId": 13
@@ -47,6 +83,24 @@
       "writtenOn": "2018-01-19T17:41:28Z",
       "side": 1,
       "message": "You can change this to \"The SPDK vhost target has been tested with recent versions of Ubuntu, Fedora, and Windows\" so you don\u0027t have to keep updating it.",
+      "revId": "ff11841f5edb147b8e2206a6ee78c50befaba90d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "73b3185a_31f989e4",
+        "filename": "doc/vhost.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-19T19:18:59Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ac6f6006_e21c20c9",
       "revId": "ff11841f5edb147b8e2206a6ee78c50befaba90d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
