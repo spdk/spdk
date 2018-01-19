@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0efe1fa3_4294aae2",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1439,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-19T11:31:04Z",
+      "side": 1,
+      "message": "if open fails which one is better?\n1) migration to full feature fails\n2) hot plug fails during next full feature period\n\nI think 2) will be reasonable. However, we cannot distinguish idle period and full feature period with open failure and cannot adopt 2).\n\nHence I think any idea not to use malloc will be better.",
+      "range": {
+        "startLine": 1439,
+        "startChar": 2,
+        "endLine": 1439,
+        "endChar": 20
+      },
+      "revId": "457fd083af0babf2ac751de74e832bf4dbd33a9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e50c1cd_7674df21",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-19T11:31:04Z",
+      "side": 1,
+      "message": "Do you have any idea not to use malloc()? because malloc failure should be avoided.",
+      "range": {
+        "startLine": 200,
+        "startChar": 8,
+        "endLine": 200,
+        "endChar": 14
+      },
+      "revId": "457fd083af0babf2ac751de74e832bf4dbd33a9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
