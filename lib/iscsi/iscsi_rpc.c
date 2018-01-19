@@ -970,9 +970,6 @@ spdk_rpc_get_iscsi_connections(struct spdk_jsonrpc_request *request,
 		spdk_json_write_name(w, "tsih");
 		spdk_json_write_int32(w, tsih);
 
-		spdk_json_write_name(w, "is_idle");
-		spdk_json_write_int32(w, c->is_idle);
-
 		spdk_json_write_name(w, "lcore_id");
 		spdk_json_write_int32(w, c->lcore);
 

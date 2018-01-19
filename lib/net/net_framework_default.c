@@ -54,9 +54,3 @@ __attribute__((weak))
 void spdk_net_framework_clear_socket_association(int sock)
 {
 }
-
-__attribute__((weak))
-int spdk_net_framework_idle_time(void)
-{
-	return IDLE_INTERVAL_TIME_IN_US;
-}

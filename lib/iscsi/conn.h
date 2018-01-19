@@ -70,7 +70,6 @@ struct spdk_poller;
 struct spdk_iscsi_conn {
 	int				id;
 	int				is_valid;
-	int				is_idle;
 	/*
 	 * All fields below this point are reinitialized each time the
 	 *  connection object is allocated.  Make sure to update the
@@ -136,7 +135,6 @@ struct spdk_iscsi_conn {
 	int authenticated;
 	int req_auth;
 	int req_mutual;
-	uint64_t last_activity_tsc;
 	uint32_t pending_task_cnt;
 	uint32_t data_out_cnt;
 	uint32_t data_in_cnt;
@@ -177,7 +175,6 @@ void spdk_iscsi_conn_logout(struct spdk_iscsi_conn *conn);
 int spdk_iscsi_drop_conns(struct spdk_iscsi_conn *conn,
 			  const char *conn_match, int drop_all);
 void spdk_iscsi_conn_set_min_per_core(int count);
-void spdk_iscsi_set_min_conn_idle_interval(int interval_in_us);
 
 int spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int len,
 			      void *buf);
