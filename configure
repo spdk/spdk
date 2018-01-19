@@ -263,7 +263,18 @@ if [ -n "$VTUNE_SOURCE_DIR" ]; then
 	echo "VTUNE_SOURCE_DIR?=$VTUNE_SOURCE_DIR" >> CONFIG.local
 fi
 
-python scripts/genconfig.py > config.h
+python_command=
+for interpreter in python3 python2 python ; do
+	type $interpreter > /dev/null 2>&1 || continue
+	python_command=$interpreter
+	break
+done
+if [[ -z "$python_command" ]] ; then
+	echo "Could not find python interpreter! Bailing out."
+	exit 1
+fi
+
+$python_command scripts/genconfig.py > config.h
 
 echo "done."
 if [[ "$OSTYPE" == "FreeBSD"* ]]; then
