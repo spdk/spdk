@@ -61,9 +61,6 @@
 	memset(&(conn)->portal, 0, sizeof(*(conn)) -	\
 		offsetof(struct spdk_iscsi_conn, portal));
 
-#define MICROSECOND_TO_TSC(x) ((x) * spdk_get_ticks_hz()/1000000)
-static int64_t g_conn_idle_interval_in_tsc = -1;
-
 #define DEFAULT_CONNECTIONS_PER_LCORE	4
 #define SPDK_MAX_POLLERS_PER_CORE	4096
 static int g_connections_per_lcore = DEFAULT_CONNECTIONS_PER_LCORE;
@@ -77,27 +74,15 @@ static pthread_mutex_t g_conns_mutex;
 static struct spdk_poller *g_shutdown_timer = NULL;
 
 static uint32_t spdk_iscsi_conn_allocate_reactor(uint64_t cpumask);
-static void __add_idle_conn(void *arg1, void *arg2);
-
-/** Global variables used for managing idle connections. */
-static int g_poll_fd = 0;
-static struct spdk_poller *g_idle_conn_poller;
-static STAILQ_HEAD(idle_list, spdk_iscsi_conn) g_idle_conn_list_head;
 
 void spdk_iscsi_conn_login_do_work(void *arg);
 void spdk_iscsi_conn_full_feature_do_work(void *arg);
-void spdk_iscsi_conn_idle_do_work(void *arg);
 
 static void spdk_iscsi_conn_full_feature_migrate(void *arg1, void *arg2);
 static struct spdk_event *spdk_iscsi_conn_get_migrate_event(struct spdk_iscsi_conn *conn,
 		int *lcore);
 static void spdk_iscsi_conn_stop_poller(struct spdk_iscsi_conn *conn, spdk_event_fn fn_after_stop,
 					int lcore);
-
-void spdk_iscsi_set_min_conn_idle_interval(int interval_in_us)
-{
-	g_conn_idle_interval_in_tsc = MICROSECOND_TO_TSC(interval_in_us);
-}
 
 static struct spdk_iscsi_conn *
 allocate_conn(void)
@@ -138,6 +123,11 @@ spdk_find_iscsi_connection_by_id(int cid)
 	}
 }
 
+/*
+ * Some of this code may be useful once we add back an epoll/kqueue descriptor
+ * for normal processing.  So just #if 0 it out for now.
+ */
+#if 0
 #if defined(__FreeBSD__)
 
 static int
@@ -336,6 +326,7 @@ check_idle_conns(void)
 }
 
 #endif
+#endif
 
 int spdk_initialize_iscsi_conns(void)
 {
@@ -382,17 +373,6 @@ int spdk_initialize_iscsi_conns(void)
 			    last_core + 1);
 		return -1;
 	}
-
-	if (g_conn_idle_interval_in_tsc == -1) {
-		spdk_iscsi_set_min_conn_idle_interval(spdk_net_framework_idle_time());
-	}
-
-	STAILQ_INIT(&g_idle_conn_list_head);
-	if (init_idle_conns() < 0) {
-		return -1;
-	}
-
-	g_idle_conn_poller = spdk_poller_register(spdk_iscsi_conn_idle_do_work, NULL, 0);
 
 	return 0;
 }
@@ -504,11 +484,9 @@ error_return:
 		free_conn(conn);
 		return -1;
 	}
-	conn->is_idle = 0;
 	conn->logout_timer = NULL;
 	conn->shutdown_timer = NULL;
 	SPDK_NOTICELOG("Launching connection on acceptor thread\n");
-	conn->last_activity_tsc = spdk_get_ticks();
 	conn->pending_task_cnt = 0;
 	conn->pending_activate_event = false;
 
@@ -845,18 +823,8 @@ spdk_iscsi_conn_stop_poller(struct spdk_iscsi_conn *conn, spdk_event_fn fn_after
 
 void spdk_shutdown_iscsi_conns(void)
 {
-	struct spdk_iscsi_conn	*conn, *tmp;
-	int				i;
-
-	/* cleanup - move conns from list back into ring
-	   where they will get cleaned up
-	 */
-	STAILQ_FOREACH_SAFE(conn, &g_idle_conn_list_head, link, tmp) {
-		STAILQ_REMOVE(&g_idle_conn_list_head, conn, spdk_iscsi_conn, link);
-		spdk_event_call(spdk_iscsi_conn_get_migrate_event(conn, NULL));
-		conn->is_idle = 0;
-		del_idle_conn(conn);
-	}
+	struct spdk_iscsi_conn	*conn;
+	int			i;
 
 	pthread_mutex_lock(&g_conns_mutex);
 
@@ -989,7 +957,6 @@ spdk_iscsi_task_mgmt_cpl(struct spdk_scsi_task *scsi_task)
 {
 	struct spdk_iscsi_task *task = spdk_iscsi_task_from_scsi_task(scsi_task);
 
-	task->conn->last_activity_tsc = spdk_get_ticks();
 	spdk_iscsi_task_mgmt_response(task->conn, task);
 	spdk_iscsi_task_put(task);
 }
@@ -1063,7 +1030,6 @@ spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task)
 	struct spdk_iscsi_conn *conn = task->conn;
 
 	spdk_trace_record(TRACE_ISCSI_TASK_DONE, conn->id, 0, (uintptr_t)task, 0);
-	conn->last_activity_tsc = spdk_get_ticks();
 
 	primary = spdk_iscsi_task_get_primary(task);
 
@@ -1361,19 +1327,6 @@ spdk_iscsi_conn_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 	return i;
 }
 
-static void spdk_iscsi_conn_handle_idle(struct spdk_iscsi_conn *conn)
-{
-	uint64_t current_tsc = spdk_get_ticks();
-
-	if (g_conn_idle_interval_in_tsc > 0 &&
-	    ((int64_t)(current_tsc - conn->last_activity_tsc)) >= g_conn_idle_interval_in_tsc &&
-	    conn->pending_task_cnt == 0) {
-
-		spdk_trace_record(TRACE_ISCSI_CONN_IDLE, conn->id, 0, 0, 0);
-		spdk_iscsi_conn_stop_poller(conn, __add_idle_conn, spdk_env_get_first_core());
-	}
-}
-
 static int
 spdk_iscsi_conn_execute(struct spdk_iscsi_conn *conn)
 {
@@ -1471,103 +1424,8 @@ void
 spdk_iscsi_conn_full_feature_do_work(void *arg)
 {
 	struct spdk_iscsi_conn	*conn = arg;
-	int				rc = 0;
 
-	rc = spdk_iscsi_conn_execute(conn);
-	if (rc < 0) {
-		return;
-	} else if (rc > 0) {
-		conn->last_activity_tsc = spdk_get_ticks();
-	}
-
-	/* Check if the session was idle during this access pass. If it was,
-	   and it was idle longer than the configured timeout, migrate this
-	   session to the first core. */
-	spdk_iscsi_conn_handle_idle(conn);
-}
-
-/**
- * \brief This is the main routine for the iSCSI 'idle' connection
- * work item.
- *
- * This function handles processing of connecitons whose state have
- * been determined as 'idle' for lack of activity.  These connections
- * no longer reside in the reactor's poller ring, instead they have
- * been staged into an idle list.  This function utilizes the use of
- * epoll as a non-blocking means to test for new socket connection
- * events that indicate the connection should be moved back into the
- * active ring.
- *
- * While in the idle list, this function must scan these connections
- * to process required timer based actions that must be maintained
- * even though the connection is considered 'idle'.
- */
-void spdk_iscsi_conn_idle_do_work(void *arg)
-{
-	uint64_t	tsc;
-	struct spdk_iscsi_conn *tconn;
-
-	check_idle_conns();
-
-	/* Now walk the idle list to process timer based actions */
-	STAILQ_FOREACH(tconn, &g_idle_conn_list_head, link) {
-
-		assert(tconn->is_idle == 1);
-
-		if (tconn->pending_activate_event == false) {
-			tsc = spdk_get_ticks();
-			if (tsc - tconn->last_nopin > tconn->nopininterval) {
-				tconn->pending_activate_event = true;
-			}
-		}
-
-		if (tconn->pending_activate_event) {
-			int lcore;
-
-			spdk_trace_record(TRACE_ISCSI_CONN_ACTIVE, tconn->id, 0, 0, 0);
-
-			/* remove connection from idle list */
-			STAILQ_REMOVE(&g_idle_conn_list_head, tconn, spdk_iscsi_conn, link);
-			tconn->last_activity_tsc = spdk_get_ticks();
-			tconn->pending_activate_event = false;
-			tconn->is_idle = 0;
-			del_idle_conn(tconn);
-			/* migrate work item to new core */
-			spdk_net_framework_clear_socket_association(tconn->sock);
-			spdk_event_call(spdk_iscsi_conn_get_migrate_event(tconn, &lcore));
-			__sync_fetch_and_add(&g_num_connections[lcore], 1);
-			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "add conn id = %d, cid = %d poller = %p to lcore = %d active\n",
-				      tconn->id, tconn->cid, &tconn->poller, lcore);
-		}
-	} /* for each conn in idle list */
-}
-
-static void
-__add_idle_conn(void *arg1, void *arg2)
-{
-	struct spdk_iscsi_conn *conn = arg1;
-	int rc;
-
-	/*
-	 * The iSCSI target may have started shutting down when this connection was
-	 *  determined as idle.  In that case, do not append the connection to the
-	 *  idle list - just start the work item again so it can start its shutdown
-	 *  process.
-	 */
-	if (conn->state == ISCSI_CONN_STATE_EXITING) {
-		spdk_event_call(spdk_iscsi_conn_get_migrate_event(conn, NULL));
-		return;
-	}
-
-	rc = add_idle_conn(conn);
-	if (rc == 0) {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "add conn id = %d, cid = %d poller = %p to idle\n",
-			      conn->id, conn->cid, conn->poller);
-		conn->is_idle = 1;
-		STAILQ_INSERT_TAIL(&g_idle_conn_list_head, conn, link);
-	} else {
-		SPDK_ERRLOG("add_idle_conn() failed\n");
-	}
+	spdk_iscsi_conn_execute(conn);
 }
 
 void
