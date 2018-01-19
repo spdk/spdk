@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a8eb9655_4da44c21",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 1281,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-19T13:02:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "79dfab78_5b227e88",
+      "revId": "a805b39d3ad9c053e789b78cfad3fb510f8e652c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "86a17f80_aa75c62e",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 31
@@ -30,6 +48,24 @@
       "writtenOn": "2018-01-16T19:34:43Z",
       "side": 1,
       "message": "The name of this function (and also writev and write_zeroes variants below) do not really match what this function does.\n\nHow about _spdk_blob_write_after_allocate or _spdk_blob_write_after_copy?",
+      "revId": "a805b39d3ad9c053e789b78cfad3fb510f8e652c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "97df38be_c1af2dd9",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 1294,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-19T13:02:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "86a17f80_aa75c62e",
       "revId": "a805b39d3ad9c053e789b78cfad3fb510f8e652c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "24f0b172_b8d3f048",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 1305,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-19T13:02:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "463da144_8ea6ab89",
+      "revId": "a805b39d3ad9c053e789b78cfad3fb510f8e652c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cf5f11a2_cf0a2340",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 31
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "89d05db8_f080442f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 1322,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-19T13:02:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cf5f11a2_cf0a2340",
+      "revId": "a805b39d3ad9c053e789b78cfad3fb510f8e652c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3c4bc2b6_ce1d77b6",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 31
@@ -81,6 +153,24 @@
       "writtenOn": "2018-01-16T19:34:43Z",
       "side": 1,
       "message": "comment is incorrect",
+      "revId": "a805b39d3ad9c053e789b78cfad3fb510f8e652c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cbb1d0cd_880653e7",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 1340,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-19T13:02:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3c4bc2b6_ce1d77b6",
       "revId": "a805b39d3ad9c053e789b78cfad3fb510f8e652c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -139,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "2fa07149_88408bfe",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 1422,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-19T13:02:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e74505cb_f3696200",
+      "revId": "a805b39d3ad9c053e789b78cfad3fb510f8e652c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "044b5e4c_388a5b07",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 31
@@ -150,6 +258,24 @@
       "writtenOn": "2018-01-16T19:34:43Z",
       "side": 1,
       "message": "We should not increment outstanding_ops directly here.  This should be done through a request.h interface instead.",
+      "revId": "a805b39d3ad9c053e789b78cfad3fb510f8e652c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a7481fc_c3046cad",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 1475,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-19T13:02:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "044b5e4c_388a5b07",
       "revId": "a805b39d3ad9c053e789b78cfad3fb510f8e652c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -173,6 +299,24 @@
     },
     {
       "key": {
+        "uuid": "0a4cdfa1_3d5e9a55",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 2831,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-19T13:02:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0f5cbe2c_64048cd3",
+      "revId": "a805b39d3ad9c053e789b78cfad3fb510f8e652c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "06cd44f8_32c65985",
         "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
         "patchSetId": 31
@@ -184,6 +328,24 @@
       "writtenOn": "2018-01-16T19:34:43Z",
       "side": 1,
       "message": "10 * 4096",
+      "revId": "a805b39d3ad9c053e789b78cfad3fb510f8e652c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "31c7eceb_cab590a0",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 2839,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-19T13:02:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "06cd44f8_32c65985",
       "revId": "a805b39d3ad9c053e789b78cfad3fb510f8e652c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
