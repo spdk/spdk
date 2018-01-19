@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "45b5bcac_6da3b5a1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 1640,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-19T21:20:13Z",
+      "side": 1,
+      "message": "I\u0027d like to consider some simplifications here, now that we have the new user_op API.\n\nWhat if instead we simplify the code like this:\n\nif (_spdk_bs_page_is_allocated(blob, offset) \u003d\u003d false) {\n  switch (op_type) {\n  case SPDK_BLOB_READ:\n    same code as you currently have\n  case SPDK_BLOB_WRITE:\n    allocate a user op\n    call a new _spdk_blob_allocate_cluster() function, with the user op as context\n  case SPDK_BLOB_WRITE_ZEROES:\n    same as SPDK_BLOB_WRITE:\n  }\n}\n\nthen when the cluster is allocated, just execute the user op\n\nthis avoids needing separate write_on_copy, write_zeroes_on_copy and writev_on_copy functions",
+      "revId": "e261b68643bd4c753d91489bd68092ef8b5183f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
