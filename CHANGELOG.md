@@ -95,6 +95,11 @@ Previously a part of the bdev_virtio module, now a separate library. Virtio is n
 via `spdk_internal/virtio.h` file. This is an internal interface to be used when implementing
 new Virtio backends, namely Virtio-BLK.
 
+### iSCSI
+
+The MinConnectionIdleInterval parameter has been removed, and connections are no longer migrated
+to an epoll/kqueue descriptor on the master core when idle.
+
 ## v17.10: Logical Volumes
 
 ### New dependencies
