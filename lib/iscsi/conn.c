@@ -693,6 +693,7 @@ void spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 	spdk_clear_all_transfer_task(conn, NULL);
 	spdk_sock_close(conn->sock);
 	spdk_poller_unregister(&conn->logout_timer);
+	spdk_poller_unregister(&conn->flush_poller);
 
 	rc = spdk_iscsi_conn_free_tasks(conn);
 	if (rc < 0) {
@@ -1218,13 +1219,19 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
  * Returns -1 for an exceptional error indicating the TCP connection
  * should be closed.
  */
-static int
-spdk_iscsi_conn_flush_pdus(struct spdk_iscsi_conn *conn)
+static void
+spdk_iscsi_conn_flush_pdus(void *_conn)
 {
+	struct spdk_iscsi_conn *conn = _conn;
 	int rc;
 
 	if (conn->state == ISCSI_CONN_STATE_RUNNING) {
 		rc = spdk_iscsi_conn_flush_pdus_internal(conn);
+		if (rc == 0 && conn->flush_poller != NULL) {
+			spdk_poller_unregister(&conn->flush_poller);
+		} else if (rc == 1 && conn->flush_poller == NULL) {
+			conn->flush_poller = spdk_poller_register(spdk_iscsi_conn_flush_pdus, conn, 50);
+		}
 	} else {
 		/*
 		 * If the connection state is not RUNNING, then
@@ -1237,16 +1244,6 @@ spdk_iscsi_conn_flush_pdus(struct spdk_iscsi_conn *conn)
 		} while (rc == 1);
 	}
 
-	return rc;
-}
-
-void
-spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
-{
-	int rc;
-
-	TAILQ_INSERT_TAIL(&conn->write_pdu_list, pdu, tailq);
-	rc = spdk_iscsi_conn_flush_pdus(conn);
 	if (rc < 0 && conn->state < ISCSI_CONN_STATE_EXITING) {
 		/*
 		 * If the poller has already started destruction of the connection,
@@ -1255,6 +1252,13 @@ spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 		 */
 		conn->state = ISCSI_CONN_STATE_EXITING;
 	}
+}
+
+void
+spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+{
+	TAILQ_INSERT_TAIL(&conn->write_pdu_list, pdu, tailq);
+	spdk_iscsi_conn_flush_pdus(conn);
 }
 
 #define GET_PDU_LOOP_COUNT	16
@@ -1321,11 +1325,6 @@ spdk_iscsi_conn_execute(struct spdk_iscsi_conn *conn)
 		goto conn_exit;
 	} else if (rc > 0) {
 		conn_active = true;
-	}
-
-	if (spdk_iscsi_conn_flush_pdus(conn) < 0) {
-		conn->state = ISCSI_CONN_STATE_EXITING;
-		goto conn_exit;
 	}
 
 	spdk_iscsi_conn_handle_queued_datain_tasks(conn);
