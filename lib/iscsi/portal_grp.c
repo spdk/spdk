@@ -67,9 +67,11 @@ spdk_iscsi_portal_find_by_addr(const char *host, const char *port)
 
 /* Assumes caller allocated host and port strings on the heap */
 struct spdk_iscsi_portal *
-spdk_iscsi_portal_create(const char *host, const char *port, uint64_t cpumask)
+spdk_iscsi_portal_create(const char *host, const char *port, const char *cpumask)
 {
 	struct spdk_iscsi_portal *p = NULL;
+	uint64_t core_mask;
+	int rc;
 
 	assert(host != NULL);
 	assert(port != NULL);
@@ -80,9 +82,9 @@ spdk_iscsi_portal_create(const char *host, const char *port, uint64_t cpumask)
 		return NULL;
 	}
 
-	p = malloc(sizeof(*p));
+	p = calloc(1, sizeof(*p));
 	if (!p) {
-		SPDK_ERRLOG("malloc() failed for portal\n");
+		SPDK_ERRLOG("calloc() failed for portal\n");
 		return NULL;
 	}
 
@@ -100,9 +102,34 @@ spdk_iscsi_portal_create(const char *host, const char *port, uint64_t cpumask)
 	} else {
 		p->host = strdup(host);
 	}
+	if (!p->host) {
+		SPDK_ERRLOG("strdup() failed for host\n");
+		goto error_out;
+	}
 
 	p->port = strdup(port);
-	p->cpumask = cpumask;
+	if (!p->port) {
+		SPDK_ERRLOG("strdup() failed for host\n");
+		goto error_out;
+	}
+
+	core_mask = spdk_app_get_core_mask();
+
+	if (cpumask != NULL) {
+		rc = spdk_app_parse_core_mask(cpumask, &p->cpumask);
+		if (rc < 0) {
+			SPDK_ERRLOG("cpumask (%s) is invalid\n", cpumask);
+			goto error_out;
+		}
+		if (p->cpumask == 0) {
+			SPDK_ERRLOG("cpumask (%s) does not contain core mask (0x%" PRIx64 ")\n",
+				    cpumask, core_mask);
+			goto error_out;
+		}
+	} else {
+		p->cpumask = core_mask;
+	}
+
 	p->sock = -1;
 	p->group = NULL; /* set at a later time by caller */
 	p->acceptor_poller = NULL;
@@ -110,6 +137,13 @@ spdk_iscsi_portal_create(const char *host, const char *port, uint64_t cpumask)
 	TAILQ_INSERT_TAIL(&g_spdk_iscsi.portal_head, p, g_tailq);
 
 	return p;
+
+error_out:
+	free(p->port);
+	free(p->host);
+	free(p);
+
+	return NULL;
 }
 
 void
@@ -166,10 +200,8 @@ spdk_iscsi_portal_create_from_configline(const char *portalstring,
 		struct spdk_iscsi_portal **ip,
 		int dry_run)
 {
-	char *host = NULL, *port = NULL;
-	const char *cpumask_str;
-	uint64_t cpumask = 0;
-	int n, len, rc = -1;
+	char *host = NULL, *port = NULL, *cpumask = NULL;
+	int len, rc = -1;
 	const char *p, *q;
 
 	if (portalstring == NULL) {
@@ -177,6 +209,7 @@ spdk_iscsi_portal_create_from_configline(const char *portalstring,
 		goto error_out;
 	}
 
+	/* IP address */
 	if (portalstring[0] == '[') {
 		/* IPv6 */
 		p = strchr(portalstring + 1, ']');
@@ -185,114 +218,79 @@ spdk_iscsi_portal_create_from_configline(const char *portalstring,
 			goto error_out;
 		}
 		p++;
-		n = p - portalstring;
-		if (!dry_run) {
-			host = malloc(n + 1);
-			if (!host) {
-				SPDK_ERRLOG("malloc() failed for host\n");
-				goto error_out;
-			}
-			memcpy(host, portalstring, n);
-			host[n] = '\0';
-		}
-		if (p[0] == '\0') {
-			if (!dry_run) {
-				port = malloc(PORTNUMSTRLEN);
-				if (!port) {
-					SPDK_ERRLOG("malloc() failed for port\n");
-					goto error_out;
-				}
-				snprintf(port, PORTNUMSTRLEN, "%d", DEFAULT_PORT);
-			}
-		} else {
-			if (p[0] != ':') {
-				SPDK_ERRLOG("portal error\n");
-				goto error_out;
-			}
-			if (!dry_run) {
-				q = strchr(portalstring, '@');
-				if (q == NULL) {
-					q = portalstring + strlen(portalstring);
-				}
-				len = q - p - 1;
-
-				port = malloc(len + 1);
-				if (!port) {
-					SPDK_ERRLOG("malloc() failed for port\n");
-					goto error_out;
-				}
-				memset(port, 0, len + 1);
-				memcpy(port, p + 1, len);
-			}
-		}
 	} else {
 		/* IPv4 */
 		p = strchr(portalstring, ':');
 		if (p == NULL) {
 			p = portalstring + strlen(portalstring);
 		}
-		n = p - portalstring;
-		if (!dry_run) {
-			host = malloc(n + 1);
-			if (!host) {
-				SPDK_ERRLOG("malloc() failed for host\n");
-				goto error_out;
-			}
-			memcpy(host, portalstring, n);
-			host[n] = '\0';
+	}
+
+	if (!dry_run) {
+		len = p - portalstring;
+		host = malloc(len + 1);
+		if (host == NULL) {
+			SPDK_ERRLOG("malloc() failed for host\n");
+			goto error_out;
 		}
-		if (p[0] == '\0') {
-			if (!dry_run) {
-				port = malloc(PORTNUMSTRLEN);
-				if (!port) {
-					SPDK_ERRLOG("malloc() failed for port\n");
-					goto error_out;
-				}
-				snprintf(port, PORTNUMSTRLEN, "%d", DEFAULT_PORT);
-			}
-		} else {
-			if (p[0] != ':') {
-				SPDK_ERRLOG("portal error\n");
+		strncpy(host, portalstring, len);
+		host[len] = '\0';
+	}
+
+	/* Port number (IPv4 and IPv6 are the same) */
+	if (p[0] == '\0') {
+		if (!dry_run) {
+			port = malloc(PORTNUMSTRLEN);
+			if (!port) {
+				SPDK_ERRLOG("malloc() failed for port\n");
 				goto error_out;
 			}
-			if (!dry_run) {
-				q = strchr(portalstring, '@');
-				if (q == NULL) {
-					q = portalstring + strlen(portalstring);
-				}
+			snprintf(port, PORTNUMSTRLEN, "%d", DEFAULT_PORT);
+		}
+	} else {
+		if (p[0] != ':') {
+			SPDK_ERRLOG("portal error\n");
+			goto error_out;
+		}
+		q = strchr(portalstring, '@');
+		if (q == NULL) {
+			q = portalstring + strlen(portalstring);
+		}
+		if (q == p) {
+			SPDK_ERRLOG("no port specified\n");
+			goto error_out;
+		}
 
-				if (q == p) {
-					SPDK_ERRLOG("no port specified\n");
-					goto error_out;
-				}
-
-				len = q - p - 1;
-				port = malloc(len + 1);
-				if (!port) {
-					SPDK_ERRLOG("malloc() failed for port\n");
-					goto error_out;
-				}
-				memset(port, 0, len + 1);
-				memcpy(port, p + 1, len);
+		if (!dry_run) {
+			len = q - p - 1;
+			port = malloc(len + 1);
+			if (port == NULL) {
+				SPDK_ERRLOG("malloc() failed for port\n");
+				goto error_out;
 			}
-
+			strncpy(port, p + 1, len);
+			port[len] = '\0';
 		}
 	}
 
+	/* Cpumask (IPv4 and IPv6 are the same) */
 	p = strchr(portalstring, '@');
 	if (p != NULL) {
-		cpumask_str = p + 1;
-		if (spdk_app_parse_core_mask(cpumask_str, &cpumask)) {
-			SPDK_ERRLOG("invalid portal cpumask %s\n", cpumask_str);
+		q = portalstring + strlen(portalstring);
+		if (q == p) {
+			SPDK_ERRLOG("no cpumask specified\n");
 			goto error_out;
 		}
-		if (cpumask == 0) {
-			SPDK_ERRLOG("no cpu is selected among reactor mask(=%jx)\n",
-				    spdk_app_get_core_mask());
-			goto error_out;
+		if (!dry_run) {
+			len = q - p - 1;
+			cpumask = malloc(len + 1);
+			if (cpumask == NULL) {
+				SPDK_ERRLOG("malloc() failed for cpumask\n");
+				goto error_out;
+			}
+			strncpy(cpumask, p + 1, len);
+			cpumask[len] = '\0';
 		}
-	} else {
-		cpumask = spdk_app_get_core_mask();
 	}
 
 	if (!dry_run) {
@@ -304,12 +302,9 @@ spdk_iscsi_portal_create_from_configline(const char *portalstring,
 
 	rc = 0;
 error_out:
-	if (host) {
-		free(host);
-	}
-	if (port) {
-		free(port);
-	}
+	free(host);
+	free(port);
+	free(cpumask);
 
 	return rc;
 }
