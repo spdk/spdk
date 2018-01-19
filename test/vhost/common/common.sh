@@ -566,7 +566,7 @@ function vm_setup()
 					notice "Using existing image $raw_disk"
 				fi
 
-				cmd+="-device virtio-scsi-pci ${eol}"
+				cmd+="-device virtio-scsi-pci,num_queues=$queue_number ${eol}"
 				cmd+="-device scsi-hd,drive=hd$i,vendor=$raw_name ${eol}"
 				cmd+="-drive if=none,id=hd$i,file=$raw_disk,format=raw$raw_cache ${eol}"
 				;;

@@ -113,6 +113,17 @@ vm_ssh $vm_num "/root/spdk/test/vhost/initiator/blockdev_pci.sh"
 vm_shutdown_all
 timing_exit run_spdk_fio_pci
 
+timing_enter run_spdk_fio_pci_virtio
+vm_no="0"
+vm_setup --disk-type=virtio --force=$vm_no --os=$os_image --queue_num=18 --memory=6144
+vm_run $vm_no
+vm_wait_for_boot 600 $vm_no
+vm_scp $vm_num -r $ROOT_DIR "127.0.0.1:/root/spdk"
+vm_ssh $vm_num " cd spdk ; make clean ; ./configure --with-fio=/root/fio_src ; make -j2"
+vm_ssh $vm_num "/root/spdk/test/vhost/initiator/blockdev_pci.sh"
+vm_shutdown_all
+timing_exit run_spdk_fio_pci_virtio
+
 rm -f *.state
 timing_enter spdk_vhost_kill
 spdk_vhost_kill
