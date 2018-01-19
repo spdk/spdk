@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa4be1a7_c9091ed4",
+        "filename": "test/nvmf/host/fio.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-01-19T06:23:04Z",
+      "side": 1,
+      "message": "Can we use function iter_pci_class_code to get the bdfs? Otherwise looks good to me.",
+      "revId": "c367716392e60fb1f5b27870f993708218e6a371",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
