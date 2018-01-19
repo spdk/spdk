@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "daf430c3_42786d3a",
+        "filename": "doc/user_guide.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-01-19T00:04:15Z",
+      "side": 1,
+      "message": "I don\u0027t quite understand what the two gpt sections are talking about. You\u0027ll have to forgive me because I don\u0027t have a great understanding of gpt Does this mean that I could have a physical block device with a gpt on it, and depending on the guid of each partition on that drive, it will be conditionally exposed as a bdev?\nAlso, what does exposing an SPDK bdev through the Linux kernel stack mean?",
+      "revId": "3b7ec54182055b153515cc9797cd818fea00a578",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f05a7db6_b9919066",
+        "filename": "doc/user_guide.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-01-19T00:04:15Z",
+      "side": 1,
+      "message": "the repeated",
+      "range": {
+        "startLine": 273,
+        "startChar": 51,
+        "endLine": 273,
+        "endChar": 54
+      },
+      "revId": "3b7ec54182055b153515cc9797cd818fea00a578",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0636fd5_eff3eb31",
+        "filename": "doc/user_guide.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-01-19T00:04:15Z",
+      "side": 1,
+      "message": "RPC",
+      "revId": "3b7ec54182055b153515cc9797cd818fea00a578",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
