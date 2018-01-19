@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8a61e83f_719a6e49",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1436,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-19T09:30:07Z",
+      "side": 1,
+      "message": "spdk_iscsi_task has lun_id as a member variable. Checking only the existence of the task to the LUN by using lun_id may be better?",
+      "range": {
+        "startLine": 1436,
+        "startChar": 5,
+        "endLine": 1436,
+        "endChar": 81
+      },
+      "revId": "23dd54166fbf9d17ad8f82eaa89b6a81c4e12ff1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "309ade01_a18b2e96",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1437,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-19T09:30:07Z",
+      "side": 1,
+      "message": "This is duplicated to the above conditions?",
+      "range": {
+        "startLine": 1437,
+        "startChar": 4,
+        "endLine": 1437,
+        "endChar": 32
+      },
+      "revId": "23dd54166fbf9d17ad8f82eaa89b6a81c4e12ff1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
