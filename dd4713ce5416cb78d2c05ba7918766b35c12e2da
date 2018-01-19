@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2dda02c6_f6583e26",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-19T21:01:05Z",
+      "side": 1,
+      "message": "the extra tab for all of these lines here is not needed - all of the new field would align with the existing fields\n\nremove these changes would drastically reduce the size of this patch",
+      "revId": "dd4713ce5416cb78d2c05ba7918766b35c12e2da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a4b0d55_61624692",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-19T21:01:05Z",
+      "side": 1,
+      "message": "should this be \"io_completed_this_ms\"?\n\nthen it is clear that we are tracking only what was completed this millisecond - it is not an average\n\nor maybe I am not understanding what this field will be used for...",
+      "revId": "dd4713ce5416cb78d2c05ba7918766b35c12e2da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "64a7be05_2ad6d9c0",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 931,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-19T21:01:05Z",
+      "side": 1,
+      "message": "all of the changes related to this are not specific to QoS - can you please move this to a separate patch?",
+      "revId": "dd4713ce5416cb78d2c05ba7918766b35c12e2da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c501da8b_67b34ab9",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 994,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-19T21:01:05Z",
+      "side": 1,
+      "message": "Why are these changes needed?",
+      "revId": "dd4713ce5416cb78d2c05ba7918766b35c12e2da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
