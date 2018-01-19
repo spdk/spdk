@@ -37,11 +37,6 @@
   AuthFile /usr/local/etc/spdk/auth.conf
 
   MinConnectionsPerCore 4
-  # Power saving related variable, this parameter defines how long an iSCSI
-  # connection must be idle before moving it to a state where it will consume
-  # less power. This variable is defined in terms of microseconds. We set default
-  # value as 5ms.
-  MinConnectionIdleInterval 5000
 
   # Socket I/O timeout sec. (0 is infinite)
   Timeout 30

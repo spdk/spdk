@@ -577,7 +577,6 @@ spdk_iscsi_read_parameters_from_config_file(struct spdk_conf_section *sp)
 	int timeout;
 	int nopininterval;
 	int min_conn_per_core = 0;
-	int conn_idle_interval = 0;
 	const char *ag_tag;
 	int ag_tag_i;
 
@@ -732,11 +731,6 @@ spdk_iscsi_read_parameters_from_config_file(struct spdk_conf_section *sp)
 	min_conn_per_core = spdk_conf_section_get_intval(sp, "MinConnectionsPerCore");
 	if (min_conn_per_core >= 0) {
 		spdk_iscsi_conn_set_min_per_core(min_conn_per_core);
-	}
-
-	conn_idle_interval = spdk_conf_section_get_intval(sp, "MinConnectionIdleInterval");
-	if (conn_idle_interval > 0) {
-		spdk_iscsi_set_min_conn_idle_interval(conn_idle_interval);
 	}
 }
 
