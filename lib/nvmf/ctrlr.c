@@ -121,6 +121,7 @@ static void ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 {
 	spdk_nvmf_subsystem_remove_ctrlr(ctrlr->subsys, ctrlr);
 	free(ctrlr);
+	ctrlr = NULL;
 }
 
 void
