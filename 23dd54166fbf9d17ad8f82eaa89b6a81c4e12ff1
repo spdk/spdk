@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5cf1853b_b8ca7211",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1436,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2018-01-20T06:53:29Z",
+      "side": 1,
+      "message": "Thanks, this is what I missed.",
+      "parentUuid": "8a61e83f_719a6e49",
+      "range": {
+        "startLine": 1436,
+        "startChar": 5,
+        "endLine": 1436,
+        "endChar": 81
+      },
+      "revId": "23dd54166fbf9d17ad8f82eaa89b6a81c4e12ff1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "309ade01_a18b2e96",
         "filename": "lib/iscsi/conn.c",
         "patchSetId": 19
