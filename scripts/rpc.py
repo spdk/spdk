@@ -488,16 +488,24 @@ def add_portal_group(args):
     # parse out portal list host1:port1 host2:port2
     portals = []
     for p in args.portal_list:
-        host_port = p.split(':')
-        portals.append({'host': host_port[0], 'port': host_port[1]})
+        ip, separator, port_cpumask = p.rpartition(':')
+        split_port_cpumask = port_cpumask.split('@')
+        if len(split_port_cpumask) == 1:
+            port = port_cpumask
+            portals.append({'host': ip, 'port': port})
+        else:
+            port = split_port_cpumask[0]
+            cpumask = split_port_cpumask[1]
+            portals.append({'host': ip, 'port': port, 'cpumask': cpumask})
 
     params = {'tag': args.tag, 'portals': portals}
     jsonrpc_call('add_portal_group', params)
 
 p = subparsers.add_parser('add_portal_group', help='Add a portal group')
 p.add_argument('tag', help='Portal group tag (unique, integer > 0)', type=int)
-p.add_argument('portal_list', nargs=argparse.REMAINDER, help="""List of portals in 'host:port' format, separated by whitespace
-Example: '192.168.100.100:3260' '192.168.100.100:3261'""")
+p.add_argument('portal_list', nargs=argparse.REMAINDER, help="""List of portals in 'host:port@cpumask' format, separated by whitespace
+(cpumask is optional and can be skipped)
+Example: '192.168.100.100:3260' '192.168.100.100:3261' '192.168.100.100:3262@0x1""")
 p.set_defaults(func=add_portal_group)
 
 

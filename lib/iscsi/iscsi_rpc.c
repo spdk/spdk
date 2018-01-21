@@ -732,6 +732,8 @@ spdk_rpc_get_portal_groups(struct spdk_jsonrpc_request *request,
 			spdk_json_write_string(w, portal->host);
 			spdk_json_write_name(w, "port");
 			spdk_json_write_string(w, portal->port);
+			spdk_json_write_name(w, "cpumask");
+			spdk_json_write_string_fmt(w, "%#" PRIx64, portal->cpumask);
 			spdk_json_write_object_end(w);
 		}
 		spdk_json_write_array_end(w);
@@ -751,6 +753,7 @@ SPDK_RPC_REGISTER("get_portal_groups", spdk_rpc_get_portal_groups)
 struct rpc_portal {
 	char *host;
 	char *port;
+	char *cpumask;
 };
 
 struct rpc_portal_list {
@@ -767,9 +770,8 @@ static void
 free_rpc_portal(struct rpc_portal *portal)
 {
 	free(portal->host);
-	portal->host = NULL;
 	free(portal->port);
-	portal->port = NULL;
+	free(portal->cpumask);
 }
 
 static void
@@ -792,6 +794,7 @@ free_rpc_portal_group(struct rpc_portal_group *pg)
 static const struct spdk_json_object_decoder rpc_portal_decoders[] = {
 	{"host", offsetof(struct rpc_portal, host), spdk_json_decode_string},
 	{"port", offsetof(struct rpc_portal, port), spdk_json_decode_string},
+	{"cpumask", offsetof(struct rpc_portal, cpumask), spdk_json_decode_string, true},
 };
 
 static int
@@ -838,7 +841,8 @@ spdk_rpc_add_portal_group(struct spdk_jsonrpc_request *request,
 
 	for (i = 0; i < req.portal_list.num_portals; i++) {
 		portal_list[i] = spdk_iscsi_portal_create(req.portal_list.portals[i].host,
-				 req.portal_list.portals[i].port, NULL);
+				 req.portal_list.portals[i].port,
+				 req.portal_list.portals[i].cpumask);
 		if (portal_list[i] == NULL) {
 			SPDK_ERRLOG("portal_list allocation failed\n");
 			goto out;
