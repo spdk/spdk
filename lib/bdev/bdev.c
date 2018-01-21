@@ -869,10 +869,9 @@ spdk_bdev_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 }
 
 static int
-spdk_bdev_channel_create(void *io_device, void *ctx_buf)
+_spdk_bdev_channel_create(struct spdk_bdev_channel *ch, void *io_device)
 {
 	struct spdk_bdev		*bdev = io_device;
-	struct spdk_bdev_channel	*ch = ctx_buf;
 	struct spdk_bdev_mgmt_channel	*mgmt_ch;
 	struct spdk_bdev_module_channel	*shared_ch;
 
@@ -884,7 +883,6 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 
 	ch->mgmt_channel = spdk_get_io_channel(&g_bdev_mgr);
 	if (!ch->mgmt_channel) {
-		spdk_put_io_channel(ch->channel);
 		return -1;
 	}
 
@@ -917,15 +915,26 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 	ch->flags = 0;
 	ch->module_ch = shared_ch;
 
+	return 0;
+}
+
+static int
+spdk_bdev_channel_create(void *io_device, void *ctx_buf)
+{
+	struct spdk_bdev_channel	*ch = ctx_buf;
+	struct spdk_bdev_mgmt_channel	*mgmt_channel;
+
+	if (_spdk_bdev_channel_create(ch, io_device) != 0) {
+		goto exit;
+	}
+
 #ifdef SPDK_CONFIG_VTUNE
 	{
 		char *name;
 		__itt_init_ittlib(NULL, 0);
 		name = spdk_sprintf_alloc("spdk_bdev_%s_%p", ch->bdev->name, ch);
 		if (!name) {
-			spdk_put_io_channel(ch->channel);
-			spdk_put_io_channel(ch->mgmt_channel);
-			return -1;
+			goto exit;
 		}
 		ch->handle = __itt_string_handle_create(name);
 		free(name);
@@ -935,6 +944,25 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 #endif
 
 	return 0;
+
+exit:
+	if (ch->channel) {
+		spdk_put_io_channel(ch->channel);
+	}
+	if (ch->mgmt_channel) {
+		if (ch->module_ch) {
+			assert(ch->module_ch->ref > 0);
+			ch->module_ch->ref--;
+			if (ch->module_ch->ref == 0) {
+				mgmt_channel = spdk_io_channel_get_ctx(ch->mgmt_channel);
+				TAILQ_REMOVE(&mgmt_channel->module_channels, ch->module_ch, link);
+				free(ch->module_ch);
+			}
+		}
+		spdk_put_io_channel(ch->mgmt_channel);
+	}
+
+	return -1;
 }
 
 /*
@@ -989,9 +1017,8 @@ _spdk_bdev_abort_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_channel *ch)
 }
 
 static void
-spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
+_spdk_bdev_channel_destroy(struct spdk_bdev_channel *ch)
 {
-	struct spdk_bdev_channel	*ch = ctx_buf;
 	struct spdk_bdev_mgmt_channel	*mgmt_channel;
 	struct spdk_bdev_module_channel	*shared_ch = ch->module_ch;
 
@@ -1011,6 +1038,14 @@ spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 	}
 	spdk_put_io_channel(ch->channel);
 	spdk_put_io_channel(ch->mgmt_channel);
+}
+
+static void
+spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
+{
+	struct spdk_bdev_channel	*ch = ctx_buf;
+
+	_spdk_bdev_channel_destroy(ch);
 }
 
 int
