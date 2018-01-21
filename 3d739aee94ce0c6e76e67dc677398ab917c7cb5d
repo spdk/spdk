@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "493f812b_bedecef5",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 760,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-21T23:49:26Z",
+      "side": 1,
+      "message": "Before this patch, spdk_iscsi_conn_get_migrate_event() is called repeatedly. However after this patch, spdk_iscsi_conn_get_migrate_event() will be called once.\n\nHence spdk_iscsi_conn_get_full_feature_migrate_event() may be meaningful. Is it too long?",
+      "range": {
+        "startLine": 760,
+        "startChar": 0,
+        "endLine": 760,
+        "endChar": 33
+      },
+      "revId": "3d739aee94ce0c6e76e67dc677398ab917c7cb5d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58abf596_e25b7701",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 773,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-21T23:49:26Z",
+      "side": 1,
+      "message": "full feature phase connnection",
+      "range": {
+        "startLine": 773,
+        "startChar": 23,
+        "endLine": 773,
+        "endChar": 40
+      },
+      "revId": "3d739aee94ce0c6e76e67dc677398ab917c7cb5d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c077f1e0_a171b4d9",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 780,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-21T23:49:26Z",
+      "side": 1,
+      "message": "as same as above",
+      "range": {
+        "startLine": 780,
+        "startChar": 22,
+        "endLine": 780,
+        "endChar": 40
+      },
+      "revId": "3d739aee94ce0c6e76e67dc677398ab917c7cb5d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
