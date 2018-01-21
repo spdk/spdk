@@ -869,6 +869,54 @@ spdk_bdev_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 	return 0;
 }
 
+static int
+_spdk_bdev_channel_create(struct spdk_bdev_channel *ch, void *io_device)
+{
+	struct spdk_bdev		*bdev = io_device;
+	struct spdk_bdev_mgmt_channel	*mgmt_ch;
+	struct spdk_bdev_module_channel	*shared_ch;
+
+	ch->bdev = io_device;
+	ch->channel = bdev->fn_table->get_io_channel(bdev->ctxt);
+	if (!ch->channel) {
+		return -1;
+	}
+
+	ch->mgmt_channel = spdk_get_io_channel(&g_bdev_mgr);
+	if (!ch->mgmt_channel) {
+		return -1;
+	}
+
+	mgmt_ch = spdk_io_channel_get_ctx(ch->mgmt_channel);
+	TAILQ_FOREACH(shared_ch, &mgmt_ch->module_channels, link) {
+		if (shared_ch->module_ch == ch->channel) {
+			shared_ch->ref++;
+			break;
+		}
+	}
+
+	if (shared_ch == NULL) {
+		shared_ch = calloc(1, sizeof(*shared_ch));
+		if (!shared_ch) {
+			return -1;
+		}
+
+		shared_ch->io_outstanding = 0;
+		TAILQ_INIT(&shared_ch->nomem_io);
+		shared_ch->nomem_threshold = 0;
+		shared_ch->module_ch = ch->channel;
+		shared_ch->ref = 1;
+		TAILQ_INSERT_TAIL(&mgmt_ch->module_channels, shared_ch, link);
+	}
+
+	memset(&ch->stat, 0, sizeof(ch->stat));
+	TAILQ_INIT(&ch->queued_resets);
+	ch->flags = 0;
+	ch->module_ch = shared_ch;
+
+	return 0;
+}
+
 static void
 _spdk_bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
 {
@@ -897,51 +945,12 @@ _spdk_bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
 static int
 spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 {
-	struct spdk_bdev		*bdev = io_device;
 	struct spdk_bdev_channel	*ch = ctx_buf;
-	struct spdk_bdev_mgmt_channel	*mgmt_ch;
-	struct spdk_bdev_module_channel	*shared_ch;
 
-	ch->bdev = io_device;
-	ch->channel = bdev->fn_table->get_io_channel(bdev->ctxt);
-	if (!ch->channel) {
+	if (_spdk_bdev_channel_create(ch, io_device) != 0) {
 		_spdk_bdev_channel_destroy_resource(ch);
 		return -1;
 	}
-
-	ch->mgmt_channel = spdk_get_io_channel(&g_bdev_mgr);
-	if (!ch->mgmt_channel) {
-		_spdk_bdev_channel_destroy_resource(ch);
-		return -1;
-	}
-
-	mgmt_ch = spdk_io_channel_get_ctx(ch->mgmt_channel);
-	TAILQ_FOREACH(shared_ch, &mgmt_ch->module_channels, link) {
-		if (shared_ch->module_ch == ch->channel) {
-			shared_ch->ref++;
-			break;
-		}
-	}
-
-	if (shared_ch == NULL) {
-		shared_ch = calloc(1, sizeof(*shared_ch));
-		if (!shared_ch) {
-			_spdk_bdev_channel_destroy_resource(ch);
-			return -1;
-		}
-
-		shared_ch->io_outstanding = 0;
-		TAILQ_INIT(&shared_ch->nomem_io);
-		shared_ch->nomem_threshold = 0;
-		shared_ch->module_ch = ch->channel;
-		shared_ch->ref = 1;
-		TAILQ_INSERT_TAIL(&mgmt_ch->module_channels, shared_ch, link);
-	}
-
-	memset(&ch->stat, 0, sizeof(ch->stat));
-	TAILQ_INIT(&ch->queued_resets);
-	ch->flags = 0;
-	ch->module_ch = shared_ch;
 
 #ifdef SPDK_CONFIG_VTUNE
 	{
@@ -1014,9 +1023,8 @@ _spdk_bdev_abort_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_channel *ch)
 }
 
 static void
-spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
+_spdk_bdev_channel_destroy(struct spdk_bdev_channel *ch)
 {
-	struct spdk_bdev_channel	*ch = ctx_buf;
 	struct spdk_bdev_mgmt_channel	*mgmt_channel;
 	struct spdk_bdev_module_channel	*shared_ch = ch->module_ch;
 
@@ -1028,6 +1036,14 @@ spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_large, ch);
 
 	_spdk_bdev_channel_destroy_resource(ch);
+}
+
+static void
+spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
+{
+	struct spdk_bdev_channel	*ch = ctx_buf;
+
+	_spdk_bdev_channel_destroy(ch);
 }
 
 int
