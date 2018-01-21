@@ -61,11 +61,17 @@ int g_io_device;
 struct ut_bdev g_bdev;
 struct spdk_bdev_desc *g_desc;
 bool g_teardown_done = false;
+bool g_get_io_channel = true;
+bool g_create_ch = true;
 
 static int
 stub_create_ch(void *io_device, void *ctx_buf)
 {
 	struct ut_bdev_channel *ch = ctx_buf;
+
+	if (g_create_ch == false) {
+		return -1;
+	}
 
 	TAILQ_INIT(&ch->outstanding_io);
 	ch->outstanding_cnt = 0;
@@ -89,7 +95,11 @@ stub_get_io_channel(void *ctx)
 {
 	struct ut_bdev *ut_bdev = ctx;
 
-	return spdk_get_io_channel(ut_bdev->io_target);
+	if (g_get_io_channel == true) {
+		return spdk_get_io_channel(ut_bdev->io_target);
+	} else {
+		return NULL;
+	}
 }
 
 static int
@@ -241,7 +251,19 @@ basic(void)
 
 	set_thread(0);
 
+	g_get_io_channel = false;
 	g_ut_threads[0].ch = spdk_bdev_get_io_channel(g_desc);
+	CU_ASSERT(g_ut_threads[0].ch == NULL);
+
+	g_get_io_channel = true;
+	g_create_ch = false;
+	g_ut_threads[0].ch = spdk_bdev_get_io_channel(g_desc);
+	CU_ASSERT(g_ut_threads[0].ch == NULL);
+
+	g_get_io_channel = true;
+	g_create_ch = true;
+	g_ut_threads[0].ch = spdk_bdev_get_io_channel(g_desc);
+	CU_ASSERT(g_ut_threads[0].ch != NULL);
 	spdk_put_io_channel(g_ut_threads[0].ch);
 
 	teardown_test();
