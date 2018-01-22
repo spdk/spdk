@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2be3f704_b4467aa5",
+        "filename": "test/iscsi_tgt/idle_migration/idle_migration.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-22T23:07:27Z",
+      "side": 1,
+      "message": "I would prefer that the test names were lower case; otherwise, it looks like yelling. :)",
+      "range": {
+        "startLine": 58,
+        "startChar": 24,
+        "endLine": 58,
+        "endChar": 52
+      },
+      "revId": "229aa98d7e6e838da10bf84d3cf322d043caed57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
