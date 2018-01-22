@@ -53,6 +53,24 @@
     },
     {
       "key": {
+        "uuid": "8b565f59_625904e5",
+        "filename": "lib/jsonrpc/jsonrpc_internal.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2018-01-22T01:34:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "99f64144_079d7389",
+      "revId": "834fee659a285ec9c8f1b125779b5a4476471dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e919f3f7_d2dee2d4",
         "filename": "lib/util/Makefile",
         "patchSetId": 7
@@ -64,6 +82,24 @@
       "writtenOn": "2017-08-18T23:48:33Z",
       "side": 1,
       "message": "I think it would be better to put the histogram functions into a new library (spdk_histogram) rather than into spdk_util.",
+      "revId": "834fee659a285ec9c8f1b125779b5a4476471dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2435fa30_7aa16d19",
+        "filename": "lib/util/Makefile",
+        "patchSetId": 7
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2018-01-22T01:34:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e919f3f7_d2dee2d4",
       "revId": "834fee659a285ec9c8f1b125779b5a4476471dc8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
