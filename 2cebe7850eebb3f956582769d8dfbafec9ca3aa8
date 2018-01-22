@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "3c078107_8c11e404",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 7
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-22T19:43:54Z",
+      "side": 1,
+      "message": "Rather than \"daily\", I think you mean \"per-patch\".",
+      "revId": "2cebe7850eebb3f956582769d8dfbafec9ca3aa8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "47033238_bb9a7e62",
         "filename": "test/vhost/initiator/bdev.fio",
         "patchSetId": 7
