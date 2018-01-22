@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fdc55510_2efd892d",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 1438,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-22T00:01:09Z",
+      "side": 1,
+      "message": "Do you have any specific reason not to use iscsi_task-\u003elun_id? As long as I looked into lib/iscsi/task.h, the variable lun_id was added for the hot remove function.",
+      "range": {
+        "startLine": 1438,
+        "startChar": 6,
+        "endLine": 1438,
+        "endChar": 41
+      },
+      "revId": "5ff5f62649c3e7b1b1ab47448746e49d6f8ea755",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
