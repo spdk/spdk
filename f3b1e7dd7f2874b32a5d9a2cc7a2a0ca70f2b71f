@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f1346b66_c79a6f0e",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-22T20:16:53Z",
+      "side": 1,
+      "message": "Can we call this \"pci_address\" instead for consistency?",
+      "range": {
+        "startLine": 143,
+        "startChar": 3,
+        "endLine": 143,
+        "endChar": 6
+      },
+      "revId": "f3b1e7dd7f2874b32a5d9a2cc7a2a0ca70f2b71f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
