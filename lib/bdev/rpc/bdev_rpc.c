@@ -223,7 +223,7 @@ spdk_rpc_delete_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	spdk_bdev_unregister(bdev, _spdk_rpc_delete_bdev_cb, request);
+	spdk_vbdev_unregister(bdev, _spdk_rpc_delete_bdev_cb, request);
 
 	free_rpc_delete_bdev(&req);
 
