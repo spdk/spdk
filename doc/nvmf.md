@@ -16,12 +16,8 @@ for iSCSI. The specification refers to the "client" that connects to the target 
 people will also refer to the host as an "initiator", which is the equivalent thing in iSCSI
 parlance. SPDK will try to stick to the terms "target" and "host" to match the specification.
 
-There will be both a target and a host implemented in the Linux kernel, and these are available
-today as a set of patches against the kernel 4.8 release candidate. All of the testing against th
-SPDK target has been against the proposed Linux kernel host. This means that for at least the host
-machine, the kernel will need to be a release candidate until the code is actually merged. For the
-system running the SPDK target, however, you can run any modern flavor of Linux as required by your
-NIC vendor's OFED distribution.
+The Linux kernel also implements an NVMe-oF target and host, and SPDK is tested for
+interoperability with the Linux kernel implementations.
 
 If you want to kill the application using signal, make sure use the SIGTERM, then the application
 will release all the share memory resource before exit, the SIGKILL will make the share memory
@@ -43,11 +39,11 @@ Ubuntu:
 apt-get install libibverbs-dev librdmacm-dev
 ~~~
 
-Then build SPDK with RDMA enabled, either by editing CONFIG to enable CONFIG_RDMA or
-enabling it on the `make` command line:
+Then build SPDK with RDMA enabled:
 
 ~~~{.sh}
-make CONFIG_RDMA=y <other config parameters>
+./configure --with-rdma <other config parameters>
+make
 ~~~
 
 Once built, the binary will be in `app/nvmf_tgt`.
@@ -94,8 +90,7 @@ ifconfig eth1 192.168.100.8 netmask 255.255.255.0 up
 ifconfig eth2 192.168.100.9 netmask 255.255.255.0 up
 ~~~
 
-
-## Configuring NVMe over Fabrics Target {#nvmf_config}
+## Configuring the SPDK NVMe over Fabrics Target {#nvmf_config}
 
 A `nvmf_tgt`-specific configuration file is used to configure the NVMe over Fabrics target. This
 file's primary purpose is to define subsystems. A fully documented example configuration file is
@@ -109,47 +104,13 @@ the target requires elevated privileges (root) to run.
 app/nvmf_tgt/nvmf_tgt -c /path/to/nvmf.conf
 ~~~
 
-## Configuring NVMe over Fabrics Host {#nvmf_host}
+### Subsystem Configuration {#nvmf_config_subsystem}
 
-Both the Linux kernel and SPDK implemented NVMe over Fabrics host. Users who want to test
-`nvmf_tgt` with kernel based host should upgrade to Linux kernel 4.8 or later, or can use
-Linux distributions Fedora or Ubuntu with Linux 4.8 kernel or later. A client tool nvme-cli
-is recommended to connect/disconect with NVMe over Fabrics target subsystems. Before
-connecting to remote subsystems, users should verify nvme-rdma driver is loaded.
-
-Discovery:
-~~~{.sh}
-nvme discover -t rdma -a 192.168.100.8 -s 4420
-~~~
-
-Connect:
-~~~{.sh}
-nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode1" -a 192.168.100.8 -s 4420
-~~~
-
-Disconnect:
-~~~{.sh}
-nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
-~~~
-
-## Assigning CPU Cores to the NVMe over Fabrics Target {#nvmf_config_lcore}
-
-SPDK uses the [DPDK Environment Abstraction Layer](http://dpdk.org/doc/guides/prog_guide/env_abstraction_layer.html)
-to gain access to hardware resources such as huge memory pages and CPU core(s). DPDK EAL provides
-functions to assign threads to specific cores.
-To ensure the SPDK NVMe-oF target has the best performance, configure the RNICs and NVMe devices to
-be located on the same NUMA node. The following parameters in the configuration file
-are used to configure SPDK NVMe-oF target:
-
-**ReactorMask:** A hexadecimal bit mask of the CPU cores that SPDK is allowed to execute work
-items on. The ReactorMask is located in the [Global] section of the configuration file. For example,
-to assign lcores 24,25,26 and 27 to NVMe-oF work items, set the ReactorMask to:
-~~~{.sh}
-ReactorMask 0xF000000
-~~~
-
-**Subsystem configuration:** the [Subsystem] section in the configuration file is used to configure
+The `[Subsystem]` section in the configuration file is used to configure
 subysystems for the NVMe-oF target.
+
+This example shows two local PCIe NVMe devices exposed as separate NVMe-oF target subsystems:
+
 ~~~{.sh}
 [Nvme]
 TransportID "trtype:PCIe traddr:0000:02:00.0" Nvme0
@@ -170,29 +131,60 @@ AllowAnyHost Yes
 SN SPDK00000000000002
 Namespace Nvme1n1 1
 ~~~
-SPDK spreads the execution of requests for a single subsystem across all available cores
-in a round-robin manner.
 
-## Emulating an NVMe controller {#nvmf_config_virtual_controller}
-
-The SPDK NVMe-oF target provides the capability to emulate an NVMe controller using a virtual
-controller. Using virtual controllers allows storage software developers to run the NVMe-oF target
-on a system that does not have NVMe devices. You can configure a virtual controller in the configuration
-file as follows:
-
-**Create malloc LUNs:** See @ref bdev_getting_started for details on creating Malloc block devices.
-
-**Create a virtual controller:** Any bdev may be presented as a namespace. For example, to create a
-virtual controller with two namespaces backed by the malloc LUNs named Malloc0 and Malloc1 and made
-available as NSID 1 and 2:
+Any bdev may be presented as a namespace.
+See @ref bdev for details on setting up bdevs.
+For example, to create a virtual controller with two namespaces backed by the malloc bdevs
+named Malloc0 and Malloc1 and made available as NSID 1 and 2:
 ~~~{.sh}
-# Virtual controller
-[Subsystem2]
-  NQN nqn.2016-06.io.spdk:cnode2
+[Subsystem3]
+  NQN nqn.2016-06.io.spdk:cnode3
   Listen RDMA 192.168.2.21:4420
-  AllowAnyHost No
-  Host nqn.2016-06.io.spdk:init
-  SN SPDK00000000000001
+  AllowAnyHost Yes
+  SN SPDK00000000000003
   Namespace Malloc0 1
   Namespace Malloc1 2
+~~~
+
+### Assigning CPU Cores to the NVMe over Fabrics Target {#nvmf_config_lcore}
+
+SPDK uses the [DPDK Environment Abstraction Layer](http://dpdk.org/doc/guides/prog_guide/env_abstraction_layer.html)
+to gain access to hardware resources such as huge memory pages and CPU core(s). DPDK EAL provides
+functions to assign threads to specific cores.
+To ensure the SPDK NVMe-oF target has the best performance, configure the RNICs and NVMe devices to
+be located on the same NUMA node.
+
+The ReactorMask in the `[Global]` section of the configuration file specifies a bit mask of the
+CPU cores that SPDK is allowed to execute work items on. For example,
+to allow SPDK to use cores 24, 25, 26 and 27:
+
+~~~{.sh}
+[Global]
+ReactorMask 0xF000000
+~~~
+
+## Configuring the Linux NVMe over Fabrics Host {#nvmf_host}
+
+Both the Linux kernel and SPDK implement an NVMe over Fabrics host.
+The Linux kernel NVMe-oF RDMA host support is provided by the `nvme-rdma` driver.
+
+~~~{.sh}
+modprobe nvme-rdma
+~~~
+
+The nvme-cli tool may be used to interface with the Linux kernel NVMe over Fabrics host.
+
+Discovery:
+~~~{.sh}
+nvme discover -t rdma -a 192.168.100.8 -s 4420
+~~~
+
+Connect:
+~~~{.sh}
+nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode1" -a 192.168.100.8 -s 4420
+~~~
+
+Disconnect:
+~~~{.sh}
+nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
 ~~~
