@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f0378402_25405b96",
+        "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-22T09:37:46Z",
+      "side": 1,
+      "message": "In this case, the nvme shall be pre-built in the nvme-cli folder.\n\nHow can we verify the build issue in the nvme-cli folder? Like pulling latest SPDK code, build SPDK, then build nvme-cli. Where can we cover this procedure? Not sure whether it is proper to add here. Or we can reference where we build our \"SPDK\" folder for other testing.",
+      "range": {
+        "startLine": 59,
+        "startChar": 22,
+        "endLine": 59,
+        "endChar": 37
+      },
+      "revId": "48d6db2cff878edaaccea9721e31c43ce6d1457a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0f8c99f9_30149450",
+        "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-22T09:37:46Z",
+      "side": 1,
+      "message": "This part of code pieces are same for the \"if\" and \"else\" conditions, maybe just move before the \"timing_exit nvme_cli\"",
+      "range": {
+        "startLine": 62,
+        "startChar": 0,
+        "endLine": 66,
+        "endChar": 21
+      },
+      "revId": "48d6db2cff878edaaccea9721e31c43ce6d1457a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
