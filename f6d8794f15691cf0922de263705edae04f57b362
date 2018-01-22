@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e0c0d577_6fac4e5f",
+        "filename": "autotest.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-22T23:13:26Z",
+      "side": 1,
+      "message": "This should be re-enabled before we submit the patch.",
+      "revId": "f6d8794f15691cf0922de263705edae04f57b362",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cfeff1f4_fdf0a555",
+        "filename": "autotest.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-22T23:13:26Z",
+      "side": 1,
+      "message": "Same here.",
+      "revId": "f6d8794f15691cf0922de263705edae04f57b362",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
