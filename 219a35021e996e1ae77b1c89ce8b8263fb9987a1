@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "107c1623_2746835e",
+        "filename": "doc/fio.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-22T09:23:24Z",
+      "side": 1,
+      "message": "Maybe need to have a little more about the difference between these two.\n\nLike \n\nFIO with nvme driver is to directly integrate with SPDK NVMe driver through those public APIs. Details refer to @ref nvme.\n\nFIO with bdev layer is to integrate with SPDK common block layer and can support different backend block devices. Details refer to @ref bdev.\n\nUsage of these two FIO supports has different aspects:\n\n1. FIO with nvme driver is more focusing and suitable on the I/O performance testing with NVMe SSD backend.\n2. FIO with bdev layer is to have more generic testing and functionalities with common block device handling.",
+      "range": {
+        "startLine": 5,
+        "startChar": 0,
+        "endLine": 5,
+        "endChar": 64
+      },
+      "revId": "219a35021e996e1ae77b1c89ce8b8263fb9987a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7739e041_4f6c5ca9",
+        "filename": "doc/fio.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-22T09:23:24Z",
+      "side": 1,
+      "message": "Maybe we can have a section like Fio usage samples including below cases:\n\n1. With multiple backends (filenames) for one job\n2. With more than one jobs\n\nAnd also a section on how to monitor CPU/core usage when Fio is running. \"htop\" tool is an option to show the usage of \"core\" especially for the case of numjobs \u003e 1",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 30
+      },
+      "revId": "219a35021e996e1ae77b1c89ce8b8263fb9987a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c2316be_46957cfe",
+        "filename": "doc/fio.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-22T09:23:24Z",
+      "side": 1,
+      "message": "Move to next line.",
+      "range": {
+        "startLine": 15,
+        "startChar": 102,
+        "endLine": 15,
+        "endChar": 106
+      },
+      "revId": "219a35021e996e1ae77b1c89ce8b8263fb9987a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a5d91dbe_0a912060",
+        "filename": "doc/fio.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-22T09:23:24Z",
+      "side": 1,
+      "message": "Maybe these details not needed here.",
+      "range": {
+        "startLine": 18,
+        "startChar": 20,
+        "endLine": 36,
+        "endChar": 11
+      },
+      "revId": "219a35021e996e1ae77b1c89ce8b8263fb9987a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "393c9644_06a34c8f",
+        "filename": "doc/fio.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-22T09:23:24Z",
+      "side": 1,
+      "message": "A space needed before \"Note\"",
+      "range": {
+        "startLine": 104,
+        "startChar": 0,
+        "endLine": 104,
+        "endChar": 6
+      },
+      "revId": "219a35021e996e1ae77b1c89ce8b8263fb9987a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
