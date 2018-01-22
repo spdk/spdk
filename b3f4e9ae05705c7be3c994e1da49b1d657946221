@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "89876fcf_c910b19a",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 491,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-22T15:43:38Z",
+      "side": 1,
+      "message": "Sorry, should have answered.\nWe need to check params because get_lvol_stores() can still be called without any parameters. In that case we want to display all lvol stores. When parameters were given, then we proceed to checking them and finding appropriate lvs_bdev.\nIf params are NULL spdk_json_decode_object() will fail.",
+      "parentUuid": "000ccaec_47d20fb3",
+      "revId": "b3f4e9ae05705c7be3c994e1da49b1d657946221",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3a4d7a18_1262482e",
         "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
         "patchSetId": 4
