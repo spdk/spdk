@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "88711e6a_a316168f",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 7
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-22T08:06:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4de09610_7beeb458",
+      "range": {
+        "startLine": 14,
+        "startChar": 29,
+        "endLine": 14,
+        "endChar": 40
+      },
+      "revId": "fd82eb33b9e98538b9b37abb6a100389ffc249fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bb50be6d_560f31c6",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 7
@@ -42,6 +66,24 @@
     },
     {
       "key": {
+        "uuid": "69a01423_28f98533",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 874,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-22T08:06:14Z",
+      "side": 1,
+      "message": "Thanks for this comment. For the case of qos not properly setting up, will just send it normally. The change is addressed in the RPC enable patch, will move it here.",
+      "parentUuid": "bb50be6d_560f31c6",
+      "revId": "fd82eb33b9e98538b9b37abb6a100389ffc249fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c288b5d4_337a77be",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 7
@@ -53,6 +95,30 @@
       "writtenOn": "2018-01-17T07:30:39Z",
       "side": 1,
       "message": "If message is send even on the qos_thread, why the submit function for QoS cannot be set into message?",
+      "range": {
+        "startLine": 878,
+        "startChar": 2,
+        "endLine": 878,
+        "endChar": 72
+      },
+      "revId": "fd82eb33b9e98538b9b37abb6a100389ffc249fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21425f8e_9d89cf11",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 878,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-22T08:06:14Z",
+      "side": 1,
+      "message": "Sorry I did not catch what\u0027s the question here. Here just put the IOs onto the qos_thread from other threads when QoS is enabled.",
+      "parentUuid": "c288b5d4_337a77be",
       "range": {
         "startLine": 878,
         "startChar": 2,
@@ -134,6 +200,30 @@
     },
     {
       "key": {
+        "uuid": "2b6a3542_048b1c1c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1037,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-22T08:06:14Z",
+      "side": 1,
+      "message": "This function can also be executed at the master thread to create qos bdev channel at failure. Since it is a global setting on bdev structure for the qos information, from my perspective, it\u0027s ok to clean up here. Thanks.",
+      "parentUuid": "1db042f6_141b9fa0",
+      "range": {
+        "startLine": 1037,
+        "startChar": 1,
+        "endLine": 1037,
+        "endChar": 25
+      },
+      "revId": "fd82eb33b9e98538b9b37abb6a100389ffc249fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e3ac6638_ea6330c2",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 7
@@ -151,6 +241,24 @@
     },
     {
       "key": {
+        "uuid": "3d272514_5b177dab",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1040,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-22T08:06:14Z",
+      "side": 1,
+      "message": "This code could also be executed when failing to create bdev channel (and qos bdev channel). The poller can be not registered yet. I can change the ERRLOG to DEBUGLOG.",
+      "parentUuid": "e3ac6638_ea6330c2",
+      "revId": "fd82eb33b9e98538b9b37abb6a100389ffc249fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f3a7cc97_21d8ad54",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 7
@@ -162,6 +270,30 @@
       "writtenOn": "2018-01-17T07:30:39Z",
       "side": 1,
       "message": "Ensuring to call this function on the qos_thread is not possible? qos_thread is not migrated if qos_channel exits?",
+      "range": {
+        "startLine": 1044,
+        "startChar": 1,
+        "endLine": 1044,
+        "endChar": 34
+      },
+      "revId": "fd82eb33b9e98538b9b37abb6a100389ffc249fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a6683c9_979affe9",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1044,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-22T08:06:14Z",
+      "side": 1,
+      "message": "When multiple channels are configured, the last bdev channel destroy could happen on any channel/thread. Add this check is for a fast patch operation. Thanks.",
+      "parentUuid": "f3a7cc97_21d8ad54",
       "range": {
         "startLine": 1044,
         "startChar": 1,
@@ -266,6 +398,30 @@
     },
     {
       "key": {
+        "uuid": "c79c2de3_984b578a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2032,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-22T08:06:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1fccdc24_2478a984",
+      "range": {
+        "startLine": 2032,
+        "startChar": 0,
+        "endLine": 2032,
+        "endChar": 26
+      },
+      "revId": "fd82eb33b9e98538b9b37abb6a100389ffc249fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "58fa42d5_eee4da6e",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 7
@@ -277,6 +433,24 @@
       "writtenOn": "2018-01-19T21:06:35Z",
       "side": 1,
       "message": "It seems likely that the extra work to check the conditionals will be more overhead than just doing the increment even when QoS is not enabled.",
+      "revId": "fd82eb33b9e98538b9b37abb6a100389ffc249fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "99c1a609_12ca8baf",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2113,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-22T08:06:14Z",
+      "side": 1,
+      "message": "In this way, shall we check the STATUS_SUCCESS case? Here I only count in the successfully completed IOs.",
+      "parentUuid": "58fa42d5_eee4da6e",
       "revId": "fd82eb33b9e98538b9b37abb6a100389ffc249fb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
