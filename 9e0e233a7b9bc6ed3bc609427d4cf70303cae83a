@@ -46,6 +46,30 @@
       "revId": "9e0e233a7b9bc6ed3bc609427d4cf70303cae83a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7880efbc_23363a11",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-22T07:10:08Z",
+      "side": 1,
+      "message": "Thank you for your explanation. I would like to test too to know the exact reason of failure but let\u0027s fix your previous patch first.",
+      "parentUuid": "a8328a44_668ae546",
+      "range": {
+        "startLine": 195,
+        "startChar": 1,
+        "endLine": 195,
+        "endChar": 59
+      },
+      "revId": "9e0e233a7b9bc6ed3bc609427d4cf70303cae83a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
