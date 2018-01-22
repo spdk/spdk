@@ -89,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "7eb3d50e_ee341680",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 931,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-22T06:48:28Z",
+      "side": 1,
+      "message": "https://review.gerrithub.io/#/c/395677/ submitted for these changes.",
+      "parentUuid": "64a7be05_2ad6d9c0",
+      "revId": "dd4713ce5416cb78d2c05ba7918766b35c12e2da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c501da8b_67b34ab9",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 7
