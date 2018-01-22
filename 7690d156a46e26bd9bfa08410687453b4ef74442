@@ -1,0 +1,136 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f26ce738_bae7ad49",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-22T16:04:04Z",
+      "side": 1,
+      "message": "We could add to net.h SPDK_EPOLL_CTL_ADD/DEL so its easier to understand what is being done here.",
+      "range": {
+        "startLine": 160,
+        "startChar": 32,
+        "endLine": 160,
+        "endChar": 33
+      },
+      "revId": "7690d156a46e26bd9bfa08410687453b4ef74442",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d94fe6e_d6bd8c49",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-22T16:04:04Z",
+      "side": 1,
+      "message": "Same as above ctl.",
+      "range": {
+        "startLine": 178,
+        "startChar": 32,
+        "endLine": 178,
+        "endChar": 33
+      },
+      "revId": "7690d156a46e26bd9bfa08410687453b4ef74442",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ad0a548_5ad3a29d",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-22T16:04:04Z",
+      "side": 1,
+      "message": "What do you think about adding struct spdk_net_event structure to net.h, which definition would change based on which OS it was compiled with ?\n\nThis would result in no longer needing spdk_init_events_structs() and freeing it.",
+      "range": {
+        "startLine": 193,
+        "startChar": 0,
+        "endLine": 198,
+        "endChar": 2
+      },
+      "revId": "7690d156a46e26bd9bfa08410687453b4ef74442",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cc705c49_e4ff155c",
+        "filename": "lib/net/sock.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-22T16:04:04Z",
+      "side": 1,
+      "message": "For functions below it might be more readable to do one whole block for FreeBSD and one for Linux, instead of ifdefs inside the functions themselves.",
+      "revId": "7690d156a46e26bd9bfa08410687453b4ef74442",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bcbd6f0d_72cba01e",
+        "filename": "lib/net/sock.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 328,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-22T16:04:04Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this change based on op ? Either add or delete ?",
+      "range": {
+        "startLine": 328,
+        "startChar": 33,
+        "endLine": 328,
+        "endChar": 42
+      },
+      "revId": "7690d156a46e26bd9bfa08410687453b4ef74442",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "750c0f18_325e9950",
+        "filename": "lib/net/sock.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-22T16:04:04Z",
+      "side": 1,
+      "message": "Similarly to one above, this should depend on op.",
+      "range": {
+        "startLine": 334,
+        "startChar": 16,
+        "endLine": 334,
+        "endChar": 23
+      },
+      "revId": "7690d156a46e26bd9bfa08410687453b4ef74442",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
