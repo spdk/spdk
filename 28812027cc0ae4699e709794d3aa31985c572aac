@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3031b376_cabcac75",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 911,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-22T19:52:39Z",
+      "side": 1,
+      "message": "This \u0027float\u0027 was not converted to double; was that intentional? (Also, it might make sense to cast before doing the division.)",
+      "range": {
+        "startLine": 911,
+        "startChar": 23,
+        "endLine": 911,
+        "endChar": 28
+      },
+      "revId": "28812027cc0ae4699e709794d3aa31985c572aac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c5e7b1d_cf8bb612",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 937,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-22T19:52:39Z",
+      "side": 1,
+      "message": "Since we are dividing by total_io_completed below now, please add \u0027\u0026\u0026 total_io_completed !\u003d 0\u0027 here just to be safe.",
+      "revId": "28812027cc0ae4699e709794d3aa31985c572aac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21eb6b7f_c8b0597f",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 938,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-22T19:52:39Z",
+      "side": 1,
+      "message": "This is casting to double after the division is done in integer math; I\u0027m not sure that\u0027s what you intended.",
+      "range": {
+        "startLine": 938,
+        "startChar": 21,
+        "endLine": 938,
+        "endChar": 27
+      },
+      "revId": "28812027cc0ae4699e709794d3aa31985c572aac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
