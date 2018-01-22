@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "47033238_bb9a7e62",
+        "filename": "test/vhost/initiator/bdev.fio",
+        "patchSetId": 7
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-22T19:43:19Z",
+      "side": 1,
+      "message": "Typo? \"rardwrite\" -\u003e \"randwrite\"",
+      "range": {
+        "startLine": 17,
+        "startChar": 5,
+        "endLine": 17,
+        "endChar": 14
+      },
+      "revId": "2cebe7850eebb3f956582769d8dfbafec9ca3aa8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
