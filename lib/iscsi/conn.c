@@ -79,8 +79,7 @@ void spdk_iscsi_conn_login_do_work(void *arg);
 void spdk_iscsi_conn_full_feature_do_work(void *arg);
 
 static void spdk_iscsi_conn_full_feature_migrate(void *arg1, void *arg2);
-static void spdk_iscsi_conn_stop_poller(struct spdk_iscsi_conn *conn, spdk_event_fn fn_after_stop,
-					int lcore);
+static void spdk_iscsi_conn_stop_poller(struct spdk_iscsi_conn *conn);
 
 static struct spdk_iscsi_conn *
 allocate_conn(void)
@@ -653,10 +652,8 @@ spdk_iscsi_conn_cleanup_backend(struct spdk_iscsi_conn *conn)
 }
 
 static void
-_spdk_iscsi_conn_free(void *arg1, void *arg2)
+_spdk_iscsi_conn_free(struct spdk_iscsi_conn *conn)
 {
-	struct spdk_iscsi_conn	*conn = arg1;
-
 	pthread_mutex_lock(&g_conns_mutex);
 	spdk_iscsi_remove_conn(conn);
 	pthread_mutex_unlock(&g_conns_mutex);
@@ -675,7 +672,8 @@ _spdk_iscsi_conn_check_shutdown(void *arg)
 
 	spdk_poller_unregister(&conn->shutdown_timer);
 
-	spdk_iscsi_conn_stop_poller(conn, _spdk_iscsi_conn_free, spdk_env_get_current_core());
+	spdk_iscsi_conn_stop_poller(conn);
+	_spdk_iscsi_conn_free(conn);
 }
 
 void spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
@@ -701,7 +699,8 @@ void spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 		/* The connection cannot be freed yet. Check back later. */
 		conn->shutdown_timer = spdk_poller_register(_spdk_iscsi_conn_check_shutdown, conn, 1000);
 	} else {
-		spdk_iscsi_conn_stop_poller(conn, _spdk_iscsi_conn_free, spdk_env_get_current_core());
+		spdk_iscsi_conn_stop_poller(conn);
+		_spdk_iscsi_conn_free(conn);
 	}
 }
 
@@ -758,9 +757,8 @@ spdk_iscsi_conn_check_shutdown(void *arg)
  *  fn_after_stop() on the specified lcore.
  */
 static void
-spdk_iscsi_conn_stop_poller(struct spdk_iscsi_conn *conn, spdk_event_fn fn_after_stop, int lcore)
+spdk_iscsi_conn_stop_poller(struct spdk_iscsi_conn *conn)
 {
-	struct spdk_event *event;
 	struct spdk_iscsi_tgt_node *target;
 
 	if (conn->sess != NULL && conn->sess->session_type == SESSION_TYPE_NORMAL &&
@@ -776,8 +774,6 @@ spdk_iscsi_conn_stop_poller(struct spdk_iscsi_conn *conn, spdk_event_fn fn_after
 	__sync_fetch_and_sub(&g_num_connections[spdk_env_get_current_core()], 1);
 	spdk_net_framework_clear_socket_association(conn->sock);
 	spdk_poller_unregister(&conn->poller);
-	event = spdk_event_allocate(lcore, fn_after_stop, conn, NULL);
-	spdk_event_call(event);
 }
 
 void spdk_shutdown_iscsi_conns(void)
