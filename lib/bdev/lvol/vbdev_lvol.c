@@ -275,7 +275,7 @@ _vbdev_lvs_remove(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void 
 		lvs->destruct = destroy;
 		TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
 			lvol->close_only = !destroy;
-			spdk_vbdev_unregister(lvol->bdev, NULL, NULL);
+			spdk_bdev_unregister(lvol->bdev, NULL, NULL);
 		}
 	}
 }

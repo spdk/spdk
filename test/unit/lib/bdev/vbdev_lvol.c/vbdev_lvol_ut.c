@@ -110,7 +110,7 @@ spdk_bs_bdev_claim(struct spdk_bs_dev *bs_dev, struct spdk_bdev_module_if *modul
 }
 
 void
-spdk_vbdev_unregister(struct spdk_bdev *vbdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
+spdk_bdev_unregister(struct spdk_bdev *vbdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	SPDK_CU_ASSERT_FATAL(vbdev != NULL);
 	vbdev->fn_table->destruct(vbdev->ctxt);
