@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b4c13c47_58e28b2b",
+        "filename": "lib/env_dpdk/pci_virtio.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-22T23:00:27Z",
+      "side": 0,
+      "message": "This is surely unrelated to histogram support.",
+      "revId": "5f247660d715e4426e48710872acad7c93b1575a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

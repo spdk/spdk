@@ -1,0 +1,215 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "765c79e3_9bb01281",
+        "filename": "CONFIG",
+        "patchSetId": 12
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-22T23:00:27Z",
+      "side": 1,
+      "message": "This config flag should be introduced in the patch that actually adds the RDMA histogram probe points.",
+      "revId": "50bef2fb256e79bdb0dea6467234f4c5bdd98e0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dbbb2ac8_f6f4e592",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-22T23:00:27Z",
+      "side": 1,
+      "message": "This file is included in the diff because you\u0027ve somehow changed the mode from 644 (the correct mode for non-executable files) to 755.",
+      "revId": "50bef2fb256e79bdb0dea6467234f4c5bdd98e0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db2f3046_98be327a",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-22T23:00:27Z",
+      "side": 1,
+      "message": "This is not the place for RPC client documentation.",
+      "revId": "50bef2fb256e79bdb0dea6467234f4c5bdd98e0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d37e057_bba929fb",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-22T23:00:27Z",
+      "side": 1,
+      "message": "Please use SPDK_HISTOGRAM_H (no leading/trailing underscores) for consistency with the other public header files.",
+      "range": {
+        "startLine": 53,
+        "startChar": 8,
+        "endLine": 53,
+        "endChar": 26
+      },
+      "revId": "50bef2fb256e79bdb0dea6467234f4c5bdd98e0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0f10b752_6391def3",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-22T23:00:27Z",
+      "side": 1,
+      "message": "stdinc.h should be included first.",
+      "revId": "50bef2fb256e79bdb0dea6467234f4c5bdd98e0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b6c2f380_b2cfbac9",
+        "filename": "lib/histogram/Makefile",
+        "patchSetId": 12
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-22T23:00:27Z",
+      "side": 1,
+      "message": "Please drop the addition of ENV_CFLAGS - it shouldn\u0027t be needed here.",
+      "revId": "50bef2fb256e79bdb0dea6467234f4c5bdd98e0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "03c59bdc_7486c712",
+        "filename": "lib/histogram/histogram.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-22T23:00:27Z",
+      "side": 1,
+      "message": "\"total_num_ios\" seems like an odd name for this field.",
+      "range": {
+        "startLine": 150,
+        "startChar": 26,
+        "endLine": 150,
+        "endChar": 39
+      },
+      "revId": "50bef2fb256e79bdb0dea6467234f4c5bdd98e0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "74a99202_ac4b8d88",
+        "filename": "lib/histogram/histogram.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-22T23:00:27Z",
+      "side": 1,
+      "message": "SPDK_TRACE_HISTOGRAM -\u003e SPDK_LOG_HISTOGRAM",
+      "range": {
+        "startLine": 198,
+        "startChar": 41,
+        "endLine": 198,
+        "endChar": 61
+      },
+      "revId": "50bef2fb256e79bdb0dea6467234f4c5bdd98e0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b2a50c67_1a2dac99",
+        "filename": "lib/histogram/rpc/histogram_rpc.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-22T23:00:27Z",
+      "side": 1,
+      "message": "SPDK_TRACE_HIST_RPC -\u003e SPDK_LOG_HIST_RPC\n\nAlso, please move the log component registration down so it\u0027s not mixed in with the hist_get_stats RPC.",
+      "range": {
+        "startLine": 229,
+        "startChar": 40,
+        "endLine": 229,
+        "endChar": 59
+      },
+      "revId": "50bef2fb256e79bdb0dea6467234f4c5bdd98e0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0321450c_67fd6b5a",
+        "filename": "lib/jsonrpc/jsonrpc_internal.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-22T23:00:27Z",
+      "side": 1,
+      "message": "Permissions are busted on this file too. (chmod -x lib/jsonrpc/jsonrpc_internal.h)",
+      "revId": "50bef2fb256e79bdb0dea6467234f4c5bdd98e0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49eb0ad1_526bea46",
+        "filename": "mk/nvme.libtest.mk",
+        "patchSetId": 12
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-22T23:00:27Z",
+      "side": 1,
+      "message": "This doesn\u0027t look related - please don\u0027t add ENV_CFLAGS back unless it\u0027s necessary for some reason.",
+      "revId": "50bef2fb256e79bdb0dea6467234f4c5bdd98e0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
