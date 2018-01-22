@@ -138,7 +138,8 @@ free_bdev(struct spdk_bdev *bdev)
 static void
 free_vbdev(struct spdk_bdev *bdev)
 {
-	spdk_vbdev_unregister(bdev, NULL, NULL);
+	CU_ASSERT(!TAILQ_EMPTY(&bdev->base_bdevs));
+	spdk_bdev_unregister(bdev, NULL, NULL);
 	free(bdev);
 }
 

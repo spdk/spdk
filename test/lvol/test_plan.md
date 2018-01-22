@@ -69,6 +69,7 @@ Steps:
   because of lvol metadata)
 - repeat the previous step three more times
 - delete lvol bdevs
+- create and delete four lvol bdevs again from steps above
 - destroy lvol store
 - delete malloc bdev
 

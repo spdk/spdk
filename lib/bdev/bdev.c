@@ -2110,10 +2110,17 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	struct spdk_bdev_desc	*desc, *tmp;
 	int			rc;
 	bool			do_destruct = true;
+	struct spdk_bdev	*base_bdev;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Removing bdev %s from list\n", bdev->name);
 
 	pthread_mutex_lock(&bdev->mutex);
+
+	if (!TAILQ_EMPTY(&bdev->base_bdevs)) {
+		TAILQ_FOREACH(base_bdev, &bdev->base_bdevs, base_bdev_link) {
+			TAILQ_REMOVE(&base_bdev->vbdevs, bdev, vbdev_link);
+		}
+	}
 
 	bdev->status = SPDK_BDEV_STATUS_REMOVING;
 	bdev->unregister_cb = cb_fn;
@@ -2147,18 +2154,6 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	if (rc <= 0 && cb_fn != NULL) {
 		cb_fn(cb_arg, rc);
 	}
-}
-
-void
-spdk_vbdev_unregister(struct spdk_bdev *vbdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
-{
-	struct spdk_bdev *base_bdev;
-
-	assert(!TAILQ_EMPTY(&vbdev->base_bdevs));
-	TAILQ_FOREACH(base_bdev, &vbdev->base_bdevs, base_bdev_link) {
-		TAILQ_REMOVE(&base_bdev->vbdevs, vbdev, vbdev_link);
-	}
-	spdk_bdev_unregister(vbdev, cb_fn, cb_arg);
 }
 
 int
@@ -2332,7 +2327,7 @@ spdk_bdev_part_base_hotremove(struct spdk_bdev *base_bdev, struct bdev_part_tail
 
 	TAILQ_FOREACH_SAFE(part, tailq, tailq, tmp) {
 		if (part->base->bdev == base_bdev) {
-			spdk_vbdev_unregister(&part->bdev, NULL, NULL);
+			spdk_bdev_unregister(&part->bdev, NULL, NULL);
 		}
 	}
 }
