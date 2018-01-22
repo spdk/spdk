@@ -760,7 +760,8 @@ spdk_iscsi_conn_stop_poller(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_tgt_node *target;
 
-	if (conn->sess != NULL && conn->sess->session_type == SESSION_TYPE_NORMAL &&
+	if (conn->state == ISCSI_CONN_STATE_EXITED && conn->sess != NULL &&
+	    conn->sess->session_type == SESSION_TYPE_NORMAL &&
 	    conn->full_feature) {
 		target = conn->sess->target;
 		pthread_mutex_lock(&target->mutex);
@@ -1391,12 +1392,10 @@ spdk_iscsi_conn_login_do_work(void *arg)
 			pthread_mutex_unlock(&target->mutex);
 		}
 
-		event = spdk_event_allocate(lcore, spdk_iscsi_conn_full_feature_migrate, conn, NULL);
+		spdk_iscsi_conn_stop_poller(conn);
 
-		__sync_fetch_and_sub(&g_num_connections[spdk_env_get_current_core()], 1);
 		__sync_fetch_and_add(&g_num_connections[lcore], 1);
-		spdk_net_framework_clear_socket_association(conn->sock);
-		spdk_poller_unregister(&conn->poller);
+		event = spdk_event_allocate(lcore, spdk_iscsi_conn_full_feature_migrate, conn, NULL);
 		spdk_event_call(event);
 	}
 }
