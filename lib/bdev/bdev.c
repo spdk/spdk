@@ -2154,9 +2154,10 @@ spdk_vbdev_unregister(struct spdk_bdev *vbdev, spdk_bdev_unregister_cb cb_fn, vo
 {
 	struct spdk_bdev *base_bdev;
 
-	assert(!TAILQ_EMPTY(&vbdev->base_bdevs));
-	TAILQ_FOREACH(base_bdev, &vbdev->base_bdevs, base_bdev_link) {
-		TAILQ_REMOVE(&base_bdev->vbdevs, vbdev, vbdev_link);
+	if (!TAILQ_EMPTY(&vbdev->base_bdevs)) {
+		TAILQ_FOREACH(base_bdev, &vbdev->base_bdevs, base_bdev_link) {
+			TAILQ_REMOVE(&base_bdev->vbdevs, vbdev, vbdev_link);
+		}
 	}
 	spdk_bdev_unregister(vbdev, cb_fn, cb_arg);
 }
