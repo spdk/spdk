@@ -2,6 +2,63 @@
   "comments": [
     {
       "key": {
+        "uuid": "5656e9eb_5dcadeaa",
+        "filename": "doc/user_guide.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-22T21:22:57Z",
+      "side": 1,
+      "message": "This file should probably not be called just \"doc/user_guide.md\" if it\u0027s about bdevs in particular. (Also, the existing doc/bdev.md is already essentially a bdev user guide - maybe we can merge this new text with the existing bdev.md.)",
+      "revId": "3b7ec54182055b153515cc9797cd818fea00a578",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b8e0166_5190b7f6",
+        "filename": "doc/user_guide.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-22T21:22:57Z",
+      "side": 1,
+      "message": "All of the #names are global to the whole Doxygen project - please make sure they\u0027re unique.  We typically do this by prefixing them with a unique value per file, e.g. #bdev_ug_introduction.",
+      "range": {
+        "startLine": 3,
+        "startChar": 17,
+        "endLine": 3,
+        "endChar": 29
+      },
+      "revId": "3b7ec54182055b153515cc9797cd818fea00a578",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4cbeeb7b_a6f250e7",
+        "filename": "doc/user_guide.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-22T21:22:57Z",
+      "side": 1,
+      "message": "The RPC documentation should live in doc/jsonrpc.md; you can link to it from here, but it\u0027s really a developer-oriented document.  User documentation should probably describe the scripts/rpc.py interface instead.",
+      "revId": "3b7ec54182055b153515cc9797cd818fea00a578",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "daf430c3_42786d3a",
         "filename": "doc/user_guide.md",
         "patchSetId": 5
