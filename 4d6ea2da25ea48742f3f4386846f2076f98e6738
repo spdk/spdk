@@ -22,6 +22,30 @@
       "revId": "4d6ea2da25ea48742f3f4386846f2076f98e6738",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4381647_47787be7",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1316,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-22T18:39:56Z",
+      "side": 1,
+      "message": "Good catch.  I will make this fix.",
+      "parentUuid": "de1e20af_ae378b62",
+      "range": {
+        "startLine": 1316,
+        "startChar": 2,
+        "endLine": 1316,
+        "endChar": 19
+      },
+      "revId": "4d6ea2da25ea48742f3f4386846f2076f98e6738",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
