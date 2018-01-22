@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8628d88a_02947ee1",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-22T05:10:20Z",
+      "side": 1,
+      "message": "calling spdk_scsi_dev_lun_removable(lun-\u003edev, lun-\u003eid) directly may be appropriate?",
+      "range": {
+        "startLine": 195,
+        "startChar": 1,
+        "endLine": 195,
+        "endChar": 59
+      },
+      "revId": "9e0e233a7b9bc6ed3bc609427d4cf70303cae83a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
