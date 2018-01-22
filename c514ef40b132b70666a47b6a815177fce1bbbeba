@@ -22,6 +22,30 @@
       "revId": "c514ef40b132b70666a47b6a815177fce1bbbeba",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ce76e99_b616e41f",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 488,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-22T23:06:56Z",
+      "side": 1,
+      "message": "Hi John, nice catch, thank you. I\u0027ll take this into another patch.",
+      "parentUuid": "220b10bc_1353784b",
+      "range": {
+        "startLine": 488,
+        "startChar": 6,
+        "endLine": 488,
+        "endChar": 51
+      },
+      "revId": "c514ef40b132b70666a47b6a815177fce1bbbeba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
