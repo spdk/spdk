@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "284127c8_4f42b705",
+        "filename": "lib/vhost/rte_vhost/rte_vhost.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 454,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-22T23:17:35Z",
+      "side": 0,
+      "message": "Unrelated whitespace change?",
+      "revId": "b5f4a259bd63523c597269c920584577bfa45dbe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a9865ebe_1e9a6b9c",
+        "filename": "lib/vhost/rte_vhost/vhost.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-22T23:17:35Z",
+      "side": 0,
+      "message": "Unrelated whitespace change?",
+      "revId": "b5f4a259bd63523c597269c920584577bfa45dbe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
