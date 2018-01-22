@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "220b10bc_1353784b",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 488,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-01-22T20:46:56Z",
+      "side": 1,
+      "message": "I think this comment need to be updated to something like host1:port1@cpumask1 to help others understand optional cpumask separator is @",
+      "range": {
+        "startLine": 488,
+        "startChar": 6,
+        "endLine": 488,
+        "endChar": 51
+      },
+      "revId": "c514ef40b132b70666a47b6a815177fce1bbbeba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
