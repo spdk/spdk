@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "efd40728_bc53f1f3",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 50
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-22T16:56:43Z",
+      "side": 1,
+      "message": "The description here isn\u0027t correct.",
+      "revId": "68e7d90aac31b5d8d0834dbef733d1312663637e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "90a0b343_1c1339d1",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 353,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-22T16:56:43Z",
+      "side": 1,
+      "message": "crename?",
+      "revId": "68e7d90aac31b5d8d0834dbef733d1312663637e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
