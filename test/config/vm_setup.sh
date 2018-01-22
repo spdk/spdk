@@ -63,7 +63,7 @@ sudo dnf install -y libuuid-devel
 
 cd ~
 
-mkdir spdk_repo
+mkdir -p spdk_repo
 
 # the configurations of username and email are needed later for applying patches to iscsiadm.
 git config --global user.name none
@@ -82,7 +82,7 @@ sudo make install
 cd ~
 
 cd spdk_repo
-mkdir output
+mkdir -p output
 git clone https://review.gerrithub.io/spdk/spdk
 cd spdk
 git submodule update --init --recursive
@@ -94,11 +94,11 @@ cd ~
 CURRENT_VERSION=$(iscsiadm --version)
 OPEN_ISCSI_VER='iscsiadm version 6.2.0.874'
 if [ "$CURRENT_VERSION" == "$OPEN_ISCSI_VER" ]; then
-    mkdir open-iscsi-install
+    mkdir -p open-iscsi-install
     cd open-iscsi-install
     sudo dnf download --source iscsi-initiator-utils
     rpm2cpio iscsi-initiator-utils-6.2.0.874-3.git86e8892.fc26.src.rpm | cpio -idmv
-    mkdir patches
+    mkdir -p patches
     mv 00* patches/
     git clone https://github.com/open-iscsi/open-iscsi
 
@@ -139,7 +139,7 @@ sudo mv FlameGraph /usr/local/FlameGraph
 # The SPDK branch of Qemu contains some extra functionality needed by SPDK. However, that branch is not currently
 # compatible with GCC 7. Some of the SPDK changes are currently out for review on Qemu's main branch. Until those
 # changes are merged, this specific review provides support for both spdk and GCC 7.
-mkdir vhost
+mkdir -p vhost
 cd vhost
 git clone https://review.gerrithub.io/spdk/qemu
 cd qemu
