@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "96ba5433_2448e2de",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-23T21:56:43Z",
+      "side": 1,
+      "message": "returns -1 on failure, not a negated errno\n\n-1 is -EPERM - guessing that\u0027s not really what you\u0027re intending to infer (and if it is, should probably spell out -EPERM instead)",
+      "revId": "cb0dccc37c8d9f81b72d1bdf15bf3a347399e13b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "19712d5d_9f92162f",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-23T21:56:43Z",
+      "side": 1,
+      "message": "returns -1 on failure",
+      "revId": "cb0dccc37c8d9f81b72d1bdf15bf3a347399e13b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3dba0208_fe2f2281",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-23T21:56:43Z",
+      "side": 1,
+      "message": "returns -1 on failure",
+      "revId": "cb0dccc37c8d9f81b72d1bdf15bf3a347399e13b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1fb5590a_ec68eb11",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 787,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-23T21:56:43Z",
+      "side": 1,
+      "message": "should this be return 0?  comments say 0 is returned on failure\n\nreturning -1 here is probably not a good idea anyways, since return type is unsigned",
+      "revId": "cb0dccc37c8d9f81b72d1bdf15bf3a347399e13b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
