@@ -210,6 +210,8 @@ test_spdk_nvmf_subsystem_add_ns(void)
 	/* NSID 1 is the first unused ID */
 	CU_ASSERT(nsid == 1);
 	CU_ASSERT(subsystem.max_nsid == 1);
+	CU_ASSERT(subsystem.ns != NULL)
+	SPDK_CU_ASSERT_FATAL(subsystem.ns != NULL);
 	CU_ASSERT(subsystem.ns[nsid - 1].bdev == &bdev1);
 
 	/* Request a specific NSID */
