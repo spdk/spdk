@@ -95,7 +95,8 @@ spdk_rpc_listen(const char *listen_addr)
 
 		if (access(g_rpc_listen_addr_unix.sun_path, F_OK) == 0) {
 			SPDK_ERRLOG("RPC Unix domain socket path already exists.\n");
-			return -1;
+			/* Delete the Unix socket file */
+			unlink(g_rpc_listen_addr_unix.sun_path);
 		}
 
 		g_jsonrpc_server = spdk_jsonrpc_server_listen(AF_UNIX, 0,
