@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "44d43213_329d1be4",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-23T04:49:17Z",
+      "side": 1,
+      "message": "would it be better to just specify the -m \u003ccore_mask\u003e command line option here?  Just one fewer INI config file option we need to change later\n\neverything else looks good",
+      "revId": "3baaa5c97c522831228ea001705473ab8c57e27c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
