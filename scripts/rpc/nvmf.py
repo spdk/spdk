@@ -54,6 +54,13 @@ def nvmf_subsystem_add_listener(args):
     args.client.call('nvmf_subsystem_add_listener', params)
 
 
+def nvmf_subsystem_add_host(args):
+    params = {'subnqn': args.subnqn,
+              'hostnqn': args.hostnqn}
+
+    args.client.call('nvmf_subsystem_add_host', params)
+
+
 def delete_nvmf_subsystem(args):
     params = {'nqn': args.subsystem_nqn}
     args.client.call('delete_nvmf_subsystem', params, verbose=args.verbose)
