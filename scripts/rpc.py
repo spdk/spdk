@@ -378,6 +378,22 @@ if __name__ == "__main__":
     p.add_argument('-e', '--eui64', help='Namespace EUI-64 identifier (optional)')
     p.set_defaults(func=rpc.nvmf.nvmf_subsystem_add_ns)
 
+    p = subparsers.add_parser('nvmf_subsystem_add_host', help='Add a host to an NVMe-oF subsystem')
+    p.add_argument('nqn', help='NVMe-oF subsystem NQN')
+    p.add_argument('host', help='Host NQN to allow')
+    p.set_defaults(func=rpc.nvmf.nvmf_subsystem_add_host)
+
+    p = subparsers.add_parser('nvmf_subsystem_remove_host', help='Remove a host from an NVMe-oF subsystem')
+    p.add_argument('nqn', help='NVMe-oF subsystem NQN')
+    p.add_argument('host', help='Host NQN to remove')
+    p.set_defaults(func=rpc.nvmf.nvmf_subsystem_remove_host)
+
+    p = subparsers.add_parser('nvmf_subsystem_allow_any_host', help='Allow any host to connect to the subsystem')
+    p.add_argument('nqn', help='NVMe-oF subsystem NQN')
+    p.add_argument('-e', '--enable', action='store_true', help='Enable allowing any host')
+    p.add_argument('-d', '--disable', action='store_true', help='Disable allowing any host')
+    p.set_defaults(func=rpc.nvmf.nvmf_subsystem_allow_any_host)
+
     # pmem
     p = subparsers.add_parser('create_pmem_pool', help='Create pmem pool')
     p.add_argument('pmem_file', help='Path to pmemblk pool file')
