@@ -1,0 +1,274 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b82358a1_3d28c25b",
+        "filename": "autotest.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-23T09:38:02Z",
+      "side": 1,
+      "message": "653 is out because resize still does not work right?",
+      "range": {
+        "startLine": 166,
+        "startChar": 50,
+        "endLine": 166,
+        "endChar": 61
+      },
+      "revId": "d580192ecd7e9b5aba962fed6d23e1c1747c682b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "99e29643_bd554b44",
+        "filename": "test/lvol/fio.job",
+        "patchSetId": 19
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-23T09:38:02Z",
+      "side": 1,
+      "message": "I\u0027d still recommend using either a string template in python script or just pass the arguments to FIO directly instead of \"sed\u0027ing\" fio.job file. I think that\u0027s be way simpler",
+      "revId": "d580192ecd7e9b5aba962fed6d23e1c1747c682b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "86d375b7_339e0cd3",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-23T09:38:02Z",
+      "side": 1,
+      "message": "changes like that should be mentioned in commit messages as small fixes not directly related to the main topic",
+      "range": {
+        "startLine": 56,
+        "startChar": 33,
+        "endLine": 56,
+        "endChar": 41
+      },
+      "revId": "d580192ecd7e9b5aba962fed6d23e1c1747c682b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "11305cad_3d3bda5f",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-23T09:38:02Z",
+      "side": 1,
+      "message": "How are you using -l for this RPC command if your commit is not rebased on top of this https://review.gerrithub.io/#/c/395126/ patch? :)",
+      "range": {
+        "startLine": 149,
+        "startChar": 27,
+        "endLine": 149,
+        "endChar": 63
+      },
+      "revId": "d580192ecd7e9b5aba962fed6d23e1c1747c682b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5540463c_4a40a4ad",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-23T09:38:02Z",
+      "side": 1,
+      "message": "This call will return info about desired lvol store in a one element list. What is the second \"[0]\" selector here for?",
+      "range": {
+        "startLine": 149,
+        "startChar": 64,
+        "endLine": 149,
+        "endChar": 71
+      },
+      "revId": "d580192ecd7e9b5aba962fed6d23e1c1747c682b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7eeb492e_ab30485f",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-23T09:38:02Z",
+      "side": 1,
+      "message": "You can use the bdev name you want to look up here and then you won\u0027t have to look for in manually in the loop below.",
+      "range": {
+        "startLine": 165,
+        "startChar": 32,
+        "endLine": 165,
+        "endChar": 52
+      },
+      "revId": "d580192ecd7e9b5aba962fed6d23e1c1747c682b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "18fe6d6a_dc1f2abd",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-23T09:38:02Z",
+      "side": 1,
+      "message": "As suggested in other place: I\u0027d encourage either using string template or calling FIO with arguments directly.",
+      "range": {
+        "startLine": 95,
+        "startChar": 4,
+        "endLine": 97,
+        "endChar": 52
+      },
+      "revId": "d580192ecd7e9b5aba962fed6d23e1c1747c682b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "53d1ed5b_aef961a0",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 751,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-23T09:38:02Z",
+      "side": 1,
+      "message": "These kind of calculations could use a comment what exactly is happening here.",
+      "range": {
+        "startLine": 750,
+        "startChar": 8,
+        "endLine": 751,
+        "endChar": 55
+      },
+      "revId": "d580192ecd7e9b5aba962fed6d23e1c1747c682b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f0322ae_3d9aada8",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 803,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-23T09:38:02Z",
+      "side": 1,
+      "message": "This line could use a comment, specifically - what is the result unit and why do you divide by 1048576",
+      "range": {
+        "startLine": 803,
+        "startChar": 7,
+        "endLine": 803,
+        "endChar": 82
+      },
+      "revId": "d580192ecd7e9b5aba962fed6d23e1c1747c682b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "783df6d3_289c4f60",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 809,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-23T09:38:02Z",
+      "side": 1,
+      "message": "You already have the bdev name in bdev_name variables after calling the \"construct\" so these lines are not needed.",
+      "range": {
+        "startLine": 808,
+        "startChar": 8,
+        "endLine": 809,
+        "endChar": 63
+      },
+      "revId": "d580192ecd7e9b5aba962fed6d23e1c1747c682b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "80013554_5b1e1793",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 810,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-23T09:38:02Z",
+      "side": 1,
+      "message": "I think it\u0027d be better to declare anything at top of the test case function",
+      "range": {
+        "startLine": 810,
+        "startChar": 8,
+        "endLine": 810,
+        "endChar": 31
+      },
+      "revId": "d580192ecd7e9b5aba962fed6d23e1c1747c682b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ba542da_9e9518ba",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 887,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-23T09:38:02Z",
+      "side": 1,
+      "message": "white spaces across file. Run check_format.sh",
+      "range": {
+        "startLine": 887,
+        "startChar": 0,
+        "endLine": 887,
+        "endChar": 8
+      },
+      "revId": "d580192ecd7e9b5aba962fed6d23e1c1747c682b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
