@@ -30,10 +30,11 @@ echo "NVMf target launched. pid: $nvmfpid"
 trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
 waitforlisten $nvmfpid
 echo "NVMf target has started."
-bdevs=$($rpc_py construct_malloc_bdev 64 512)
-$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 -s SPDK00000000000001 -n "$bdevs"
+bdev=$($rpc_py construct_malloc_bdev 64 512)
+$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 -s SPDK00000000000001
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t RDMA -a $NVMF_FIRST_TARGET_IP -s 4420
 $rpc_py nvmf_subsystem_add_host nqn.2016-06.io.spdk:cnode1 ANY
+$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 $bdev
 echo "NVMf subsystem created."
 
 timing_enter start_iscsi_tgt

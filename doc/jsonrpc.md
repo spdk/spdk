@@ -422,3 +422,42 @@ Example response:
   "result": true
 }
 ~~~
+
+## nvmf_subsystem_add_ns method {#rpc_nvmf_subsystem_add_ns}
+
+Add a namespace to a subsystem. The namespace ID is returned as the result.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+subnqn                  | Required | string      | Subsystem NQN
+bdev_name               | Required | string      | The name of the bdev to use as a namespace
+nsid                    | Optional | number      | Requested namespace ID. 0 means any available.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "nvmf_subsystem_add_ns",
+  "params": {
+    "subnqn": "nqn.2016-06.io.spdk:cnode1",
+    "bdev_name": "Nvme0n1",
+    "nsid": 0
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": 3
+}
+~~~
