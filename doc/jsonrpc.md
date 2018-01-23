@@ -242,8 +242,6 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 core                    | Optional | number      | Core to run the subsystem's poller on. Default: Automatically assign a core.
 nqn                     | Required | string      | Subsystem NQN
-hosts                   | Optional | array       | Array of strings containing allowed host NQNs. Default: No hosts allowed.
-allow_any_host          | Optional | boolean     | Allow any host (`true`) or enforce allowed host whitelist (`false`). Default: `false`.
 serial_number           | Required | string      | Serial number of virtual controller
 namespaces              | Optional | array       | Array of @ref rpc_construct_nvmf_subsystem_namespace objects. Default: No namespaces.
 
@@ -266,11 +264,6 @@ Example request:
   "params": {
     "core": 5,
     "nqn": "nqn.2016-06.io.spdk:cnode1",
-    "hosts": [
-      "nqn.2016-06.io.spdk:host1",
-      "nqn.2016-06.io.spdk:host2"
-    ],
-    "allow_any_host": false,
     "serial_number": "abcdef",
     "namespaces": [
       {"nsid": 1, "name": "Malloc2"},

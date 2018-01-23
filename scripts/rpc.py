@@ -312,10 +312,6 @@ if __name__ == "__main__":
 
     p = subparsers.add_parser('construct_nvmf_subsystem', help='Add a nvmf subsystem')
     p.add_argument('nqn', help='Target nqn(ASCII)')
-    p.add_argument('hosts', help="""Whitespace-separated list of host nqn list.
-    Format:  'nqn1 nqn2' etc
-    Example: 'nqn.2016-06.io.spdk:init nqn.2016-07.io.spdk:init'""")
-    p.add_argument("-a", "--allow-any-host", action='store_true', help="Allow any host to connect (don't enforce host NQN whitelist)")
     p.add_argument("-s", "--serial_number", help="""
     Format:  'sn' etc
     Example: 'SPDK00000000000001'""", default='0000:00:01.0')
@@ -338,6 +334,11 @@ if __name__ == "__main__":
     p.add_argument('-f', '--adrfam', help='NVMe-oF transport adrfam: e.g., ipv4, ipv6, ib, fc, intra_host')
     p.add_argument('-s', '--trsvcid', help='NVMe-oF transport service id: e.g., a port number')
     p.set_defaults(func=rpc.nvmf.nvmf_subsystem_add_listener)
+
+    p = subparsers.add_parser('nvmf_subsystem_add_host', help='Add a host to an NVMe-oF subsystem')
+    p.add_argument('subnqn', help='NVMe-oF subsystem NQN')
+    p.add_argument('hostnqn', help='Host NQN to allow. May also be "ANY" or "NONE".')
+    p.set_defaults(func=rpc.nvmf.nvmf_subsystem_add_host)
 
     # pmem
     p = subparsers.add_parser('create_pmem_pool', help='Create pmem pool')
