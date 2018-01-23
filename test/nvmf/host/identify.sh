@@ -29,11 +29,11 @@ trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
 waitforlisten $nvmfpid
 timing_exit start_nvmf_tgt
 
-bdevs="$bdevs $($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
-
-$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 -s SPDK00000000000001 -n "$bdevs"
+bdev=$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)
+$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 -s SPDK00000000000001
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t RDMA -a $NVMF_FIRST_TARGET_IP -s 4420
 $rpc_py nvmf_subsystem_add_host nqn.2016-06.io.spdk:cnode1 ANY
+$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 $bdev
 
 $rootdir/examples/nvme/identify/identify -r "\
         trtype:RDMA \
