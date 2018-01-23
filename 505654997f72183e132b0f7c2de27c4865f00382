@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "8b18a87e_c1bb4702",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-23T08:49:53Z",
+      "side": 1,
+      "message": "Do we really need that function?\nAlso: timeout is too long I\u0027d say. Lower that to 300 max.",
+      "range": {
+        "startLine": 125,
+        "startChar": 0,
+        "endLine": 128,
+        "endChar": 1
+      },
+      "revId": "505654997f72183e132b0f7c2de27c4865f00382",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed6d64f8_a95090d7",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-23T08:49:53Z",
+      "side": 1,
+      "message": "Couple of lines above you have almost identical function - could it be used instead of creating another function?\nI mean it\u0027s used in only 1 or 2 places so...",
+      "range": {
+        "startLine": 137,
+        "startChar": 0,
+        "endLine": 141,
+        "endChar": 27
+      },
+      "revId": "505654997f72183e132b0f7c2de27c4865f00382",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a2110dcf_55afafc5",
         "filename": "test/vhost/hotplug/common.sh",
         "patchSetId": 3
@@ -22,6 +68,76 @@
       "revId": "505654997f72183e132b0f7c2de27c4865f00382",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "36028cd1_61808bf7",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-23T08:49:53Z",
+      "side": 1,
+      "message": "This is tricky and I don\u0027t like it as well, but is there any other option?\nTest VMs run only with UIO but you have to consider that there is at least 1 physical server running the tests with VFIO.",
+      "parentUuid": "a2110dcf_55afafc5",
+      "range": {
+        "startLine": 254,
+        "startChar": 0,
+        "endLine": 266,
+        "endChar": 1
+      },
+      "revId": "505654997f72183e132b0f7c2de27c4865f00382",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8afa7215_44b9944c",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-23T08:49:53Z",
+      "side": 1,
+      "message": "Why 16? I imagine that you are using 1GB HP\u0027s and you meant \"reserve 16 one gig hugepages\", but HUGEMEM means total number of hp\u0027s reserved, so 32 seems way too low. For example 8192 would give you 4092x2MB hp\u0027s or 8*1GB hp\u0027s",
+      "range": {
+        "startLine": 278,
+        "startChar": 4,
+        "endLine": 278,
+        "endChar": 14
+      },
+      "revId": "505654997f72183e132b0f7c2de27c4865f00382",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d19bd35_45262009",
+        "filename": "test/vhost/hotplug/scsi_hotplug.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-23T08:49:53Z",
+      "side": 1,
+      "message": "Pretty sure we didn\u0027t have Mallocs in original test plan",
+      "range": {
+        "startLine": 22,
+        "startChar": 35,
+        "endLine": 22,
+        "endChar": 76
+      },
+      "revId": "505654997f72183e132b0f7c2de27c4865f00382",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
