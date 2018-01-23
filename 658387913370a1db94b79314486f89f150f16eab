@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "17d96f01_c63c8bb3",
+        "filename": "test/unit/lib/util/string.c/string_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-23T21:58:50Z",
+      "side": 1,
+      "message": "This should just be sizeof(str) unless there\u0027s a specific reason to limit it.",
+      "range": {
+        "startLine": 152,
+        "startChar": 15,
+        "endLine": 152,
+        "endChar": 17
+      },
+      "revId": "658387913370a1db94b79314486f89f150f16eab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
