@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c61fe0c8_b91d9697",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-23T08:03:53Z",
+      "side": 1,
+      "message": "\"with thin provisioned lvol bdevs\"",
+      "range": {
+        "startLine": 19,
+        "startChar": 5,
+        "endLine": 19,
+        "endChar": 21
+      },
+      "revId": "4522cd2b59ecba61756a0dc9ef2ca8f615434d63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "745f303b_45322bf5",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 738,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-23T08:03:53Z",
+      "side": 1,
+      "message": "Should they be available? What is the expected result here?",
+      "range": {
+        "startLine": 737,
+        "startChar": 2,
+        "endLine": 738,
+        "endChar": 15
+      },
+      "revId": "4522cd2b59ecba61756a0dc9ef2ca8f615434d63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec22fb0f_1479ec3b",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 740,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-23T08:03:53Z",
+      "side": 1,
+      "message": "I don\u0027t understand this point. Could you rephrase?\n\"check if data on two clones in unchanged after snapshot is deleted\", something like that?",
+      "range": {
+        "startLine": 739,
+        "startChar": 2,
+        "endLine": 740,
+        "endChar": 15
+      },
+      "revId": "4522cd2b59ecba61756a0dc9ef2ca8f615434d63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "99918c3d_03a68675",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 760,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-23T08:03:53Z",
+      "side": 1,
+      "message": "What you mean here is probably that we should check if data on clone and snapshot are the same.",
+      "range": {
+        "startLine": 760,
+        "startChar": 2,
+        "endLine": 760,
+        "endChar": 30
+      },
+      "revId": "4522cd2b59ecba61756a0dc9ef2ca8f615434d63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
