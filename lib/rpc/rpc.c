@@ -31,6 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/file.h>
+
 #include "spdk/stdinc.h"
 
 #include "spdk/queue.h"
@@ -42,6 +44,8 @@
 #define RPC_DEFAULT_PORT	"5260"
 
 static struct sockaddr_un g_rpc_listen_addr_unix = {};
+static char g_rpc_lock_path[sizeof(g_rpc_listen_addr_unix.sun_path) + sizeof(".lock") + 1];
+static int g_rpc_lock_fd = -1;
 
 static struct spdk_jsonrpc_server *g_jsonrpc_server = NULL;
 
@@ -93,15 +97,39 @@ spdk_rpc_listen(const char *listen_addr)
 			return -1;
 		}
 
-		if (access(g_rpc_listen_addr_unix.sun_path, F_OK) == 0) {
-			SPDK_ERRLOG("RPC Unix domain socket path already exists.\n");
+		snprintf(g_rpc_lock_path, sizeof(g_rpc_lock_path), "%s.lock",
+			 g_rpc_listen_addr_unix.sun_path);
+
+		g_rpc_lock_fd = open(g_rpc_lock_path, O_RDONLY | O_CREAT, 0600);
+		if (g_rpc_lock_fd == -1) {
+			SPDK_ERRLOG("Cannot open lock file %s: %s\n",
+				    g_rpc_lock_path, spdk_strerror(errno));
 			return -1;
 		}
+
+		rc = flock(g_rpc_lock_fd, LOCK_EX | LOCK_NB);
+		if (rc != 0) {
+			SPDK_ERRLOG("RPC Unix domain socket path %s in use. Specify another.\n",
+				    g_rpc_listen_addr_unix.sun_path);
+			return -1;
+		}
+
+		/*
+		 * Since we acquired the lock, it is safe to delete the Unix socket file
+		 * if it still exists from a previous process.
+		 */
+		unlink(g_rpc_listen_addr_unix.sun_path);
 
 		g_jsonrpc_server = spdk_jsonrpc_server_listen(AF_UNIX, 0,
 				   (struct sockaddr *)&g_rpc_listen_addr_unix,
 				   sizeof(g_rpc_listen_addr_unix),
 				   spdk_jsonrpc_handler);
+		if (g_jsonrpc_server == NULL) {
+			close(g_rpc_lock_fd);
+			g_rpc_lock_fd = -1;
+			unlink(g_rpc_lock_path);
+			g_rpc_lock_path[0] = '\0';
+		}
 	} else {
 		char *tmp;
 		char *host, *port;
@@ -183,6 +211,16 @@ spdk_rpc_close(void)
 
 		spdk_jsonrpc_server_shutdown(g_jsonrpc_server);
 		g_jsonrpc_server = NULL;
+
+		if (g_rpc_lock_fd != -1) {
+			close(g_rpc_lock_fd);
+			g_rpc_lock_fd = -1;
+		}
+
+		if (g_rpc_lock_path[0]) {
+			unlink(g_rpc_lock_path);
+			g_rpc_lock_path[0] = '\0';
+		}
 	}
 }
 
