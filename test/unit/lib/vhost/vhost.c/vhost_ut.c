@@ -164,31 +164,18 @@ desc_to_iov_test(void)
 	iov_index = 0;
 	rc = spdk_vhost_vring_desc_to_iov(vdev, iov, &iov_index, &desc);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(iov_index == 2);
+	CU_ASSERT(iov_index == 1);
 	CU_ASSERT(iov[0].iov_base == (void *)0x11F0000);
-	CU_ASSERT(iov[0].iov_len == 0x10000);
-	CU_ASSERT(iov[1].iov_base == (void *)0x1200000);
-	CU_ASSERT(iov[1].iov_len == 0x10000);
+	CU_ASSERT(iov[0].iov_len == 0x20000);
 	memset(iov, 0, sizeof(iov));
 
 	/* Same test, but ensure it respects the non-zero starting iov_index. */
-	iov_index = SPDK_VHOST_IOVS_MAX - 2;
+	iov_index = SPDK_VHOST_IOVS_MAX - 1;
 	rc = spdk_vhost_vring_desc_to_iov(vdev, iov, &iov_index, &desc);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(iov_index == SPDK_VHOST_IOVS_MAX);
-	CU_ASSERT(iov[SPDK_VHOST_IOVS_MAX - 2].iov_base == (void *)0x11F0000);
-	CU_ASSERT(iov[SPDK_VHOST_IOVS_MAX - 2].iov_len == 0x10000);
-	CU_ASSERT(iov[SPDK_VHOST_IOVS_MAX - 1].iov_base == (void *)0x1200000);
-	CU_ASSERT(iov[SPDK_VHOST_IOVS_MAX - 1].iov_len == 0x10000);
-	memset(iov, 0, sizeof(iov));
-
-	/*
-	 * This test should fail.  The first part of the descriptor will fit in the last
-	 * iov, but the part after the 2MB boundary would overflow.
-	 */
-	iov_index = SPDK_VHOST_IOVS_MAX - 1;
-	rc = spdk_vhost_vring_desc_to_iov(vdev, iov, &iov_index, &desc);
-	CU_ASSERT(rc != 0);
+	CU_ASSERT(iov[SPDK_VHOST_IOVS_MAX - 1].iov_base == (void *)0x11F0000);
+	CU_ASSERT(iov[SPDK_VHOST_IOVS_MAX - 1].iov_len == 0x20000);
 	memset(iov, 0, sizeof(iov));
 
 	/* Test case where iov spans a vhost memory region. */
