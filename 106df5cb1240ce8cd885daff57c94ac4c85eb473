@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eda10c88_cfea2c91",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-23T21:58:43Z",
+      "side": 1,
+      "message": "Please add a TOC, see https://review.gerrithub.io/#/c/384118/ for the main PG template and the current WIP example for blobstore",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b252a50e_65e690bf",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-23T21:58:43Z",
+      "side": 1,
+      "message": "I would suggest removing the ie from this sentence as you aren\u0027t giving an example of how the code can be divided you are explaining a division that we think makes sense.  Then list each of the numbered items as bullets on their own line instead of in sentence form.",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3fb58d7d_9d852aad",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-23T21:58:43Z",
+      "side": 1,
+      "message": "\"this guide only covers iSCSI\"... iSCSI what? The library, the protocol, the target? I\u0027d be very specific to avoid confusing readers as they read through this.",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b266825_d5bf3a1f",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-23T21:58:43Z",
+      "side": 1,
+      "message": "I don\u0027t think you meant to use the word \u0027reference\u0027 here.  Our target application is a reference but someone using the library can be constructing a real product of course",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "179193ff_d9ff502d",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-23T21:58:43Z",
+      "side": 1,
+      "message": "I\u0027m not sure what you are trying to say in this last sentence, probably a translation thing,  Can you reword it and I\u0027ll re-read or just explain it and I can suggest alternate wording?",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3fef0430_f8bde75e",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-23T21:58:43Z",
+      "side": 1,
+      "message": "This is a really good section!",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
