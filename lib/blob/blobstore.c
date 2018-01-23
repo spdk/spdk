@@ -1355,8 +1355,6 @@ _spdk_bs_allocate_and_copy_cluster(spdk_bs_sequence_t *seq, struct spdk_blob_dat
 	uint64_t cluster_start_lba = _spdk_bs_dev_page_to_lba(blob->back_bs_dev, cluster_start_page);
 	int rc;
 
-	set->channel->cluster_alloc_in_progress = true;
-
 	rc = _spdk_bs_allocate_cluster(blob, _spdk_bs_page_to_cluster(blob->bs,
 				       cluster_start_lba * blob->back_bs_dev->blocklen / SPDK_BS_PAGE_SIZE), &lfc);
 	if (rc != 0) {
@@ -1728,10 +1726,13 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *_blob, struct spdk_io_channel
 				cb_fn(cb_arg, -ENOMEM);
 			}
 			return;
+		} else if (!_spdk_bs_page_is_allocated(blob, offset) && !read) {
+			ch->cluster_alloc_in_progress = true;
 		}
 
 		seq = spdk_bs_sequence_start(_channel, &cpl);
 		if (!seq) {
+			ch->cluster_alloc_in_progress = false;
 			cb_fn(cb_arg, -ENOMEM);
 			return;
 		}
@@ -1747,6 +1748,7 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *_blob, struct spdk_io_channel
 			if (_spdk_bs_page_is_allocated(blob, offset) == false) {
 				op = spdk_bs_user_op_alloc(_channel, &cpl, SPDK_BLOB_WRITEV, _blob, iov, iovcnt, offset, length);
 				if (op == NULL) {
+					ch->cluster_alloc_in_progress = false;
 					cb_fn(cb_arg, -ENOMEM);
 					return;
 				}
