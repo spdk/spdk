@@ -249,6 +249,17 @@ int spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem,
 				 const char *hostnqn);
 
 /**
+ * Remove the given host NQN from the allowed hosts whitelist.
+ *
+ * May only be performed on subsystems in the PAUSED or INACTIVE states.
+ *
+ * \param subsystem Subsystem to remove host from
+ * \param host_nqn The NQN for the host
+ * \return 0 on success. Negated errno value on failure.
+ */
+int spdk_nvmf_subsystem_remove_host(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn);
+
+/**
  * Set whether a subsystem should allow any host or only hosts in the allowed list.
  *
  * May only be performed on subsystems in the PAUSED or INACTIVE states.
