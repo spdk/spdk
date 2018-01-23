@@ -34,8 +34,9 @@ timing_exit start_nvmf_tgt
 for i in `seq 1 10`
 do
 	bdevs="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
-	$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode${i} '' -a -s SPDK${i} -n "$bdevs"
+	$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode${i} -s SPDK${i} -n "$bdevs"
 	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode${i} -t RDMA -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+	$rpc_py nvmf_subsystem_add_host nqn.2016-06.io.spdk:cnode${i} ANY
 done
 
 # Kill nvmf tgt without removing any subsystem to check whether it can shutdown correctly
