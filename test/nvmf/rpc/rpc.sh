@@ -37,7 +37,7 @@ fi
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 
-bdevs="$bdevs $($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
+bdev=$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)
 
 # do frequent add delete.
 for i in `seq 1 $times`
@@ -45,9 +45,10 @@ do
 	j=0
 	for bdf in $bdfs; do
 		let j=j+1
-		$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode$j -s SPDK00000000000001 -n "$bdevs"
+		$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode$j -s SPDK00000000000001
 		$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$j -t RDMA -a $NVMF_FIRST_TARGET_IP -s 4420
 		$rpc_py nvmf_subsystem_add_host nqn.2016-06.io.spdk:cnode$j ANY
+		$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode$j $bdev
 	done
 
 	n=$j
