@@ -285,6 +285,10 @@ function reset_linux_pci {
 	driver_loaded=$?
 	set -e
 	for bdf in $(iter_pci_class_code 01 08 02); do
+		if pci_can_bind $bdf == "0" ; then
+			echo "Skipping un-whitelisted NVMe controller $blkname ($bdf)"
+			continue
+		fi
 		if [ $driver_loaded -eq 0 ]; then
 			linux_bind_driver "$bdf" nvme
 		else
@@ -304,6 +308,10 @@ function reset_linux_pci {
 	set -e
 	for dev_id in `cat $TMP`; do
 		for bdf in $(iter_pci_dev_id 8086 $dev_id); do
+			if pci_can_bind $bdf == "0" ; then
+				echo "Skipping un-whitelisted I/OAT device at $bdf"
+				continue
+			fi
 			if [ $driver_loaded -eq 0 ]; then
 				linux_bind_driver "$bdf" ioatdma
 			else
@@ -326,6 +334,10 @@ function reset_linux_pci {
 	modprobe virtio-pci || true
 	for dev_id in `cat $TMP`; do
 		for bdf in $(iter_pci_dev_id 1af4 $dev_id); do
+			if pci_can_bind $bdf == "0" ; then
+				echo "Skipping un-whitelisted Virtio device at $bdf"
+				continue
+			fi
 			linux_bind_driver "$bdf" virtio-pci
 		done
 	done
