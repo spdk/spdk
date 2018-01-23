@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0f0390e6_a7f4730e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2158,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-23T16:46:35Z",
+      "side": 1,
+      "message": "Can we just make the generic spdk_bdev_unregister() do this loop instead, and remove spdk_vbdev_unregister()?\n\nI think that would be less error-prone in the future, and the other callers of spdk_bdev_unregister() won\u0027t have to be fixed either (e.g. the shutdown path).",
+      "revId": "1324b856ae6db1f7cf59579052ca45045370ab12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
