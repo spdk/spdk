@@ -1355,7 +1355,6 @@ static void
 _spdk_bs_allocate_and_copy_cluster(spdk_bs_sequence_t *seq, struct spdk_blob_data *blob,
 				   uint64_t lba)
 {
-	struct spdk_bs_request_set *set = (struct spdk_bs_request_set *)seq;
 	struct spdk_blob_copy_cluster_ctx *ctx;
 	uint64_t lfc = 0;
 	uint64_t page = _spdk_bs_dev_lba_to_page(blob->back_bs_dev, lba);
@@ -1365,10 +1364,7 @@ _spdk_bs_allocate_and_copy_cluster(spdk_bs_sequence_t *seq, struct spdk_blob_dat
 				  cluster_start_lba * blob->back_bs_dev->blocklen / SPDK_BS_PAGE_SIZE);
 	int rc;
 
-	set->channel->cluster_alloc_in_progress = true;
-
 	rc = _spdk_bs_allocate_cluster(blob, cluster_number, &lfc, false);
-
 	if (rc != 0) {
 		_spdk_blob_write_copy_cpl(seq, NULL, rc);
 		return;
@@ -1483,6 +1479,7 @@ _spdk_blob_request_submit_op_single(struct spdk_io_channel *_ch, struct spdk_blo
 	struct spdk_bs_channel *ch = spdk_io_channel_get_ctx(_ch);
 	uint64_t lba;
 	uint32_t lba_count;
+	bool rc = false;
 
 	assert(blob != NULL);
 
@@ -1490,18 +1487,25 @@ _spdk_blob_request_submit_op_single(struct spdk_io_channel *_ch, struct spdk_blo
 	cpl.u.blob_basic.cb_fn = cb_fn;
 	cpl.u.blob_basic.cb_arg = cb_arg;
 
-	if (!_spdk_bs_page_is_allocated(blob, offset) && ch->cluster_alloc_in_progress) {
-		op = spdk_bs_user_op_alloc(_ch, &cpl, op_type, _blob, payload, 0, offset, length);
-		if (op != NULL) {
-			TAILQ_INSERT_TAIL(&ch->need_cluster_alloc, op, link);
-		} else {
-			cb_fn(cb_arg, -ENOMEM);
+	if (!_spdk_bs_page_is_allocated(blob, offset)) {
+		if (op_type == SPDK_BLOB_WRITE || op_type == SPDK_BLOB_WRITE_ZEROES) {
+			rc = __sync_bool_compare_and_swap(&ch->cluster_alloc_in_progress, false, true);
 		}
-		return;
+
+		if (!rc && ch->cluster_alloc_in_progress) {
+			op = spdk_bs_user_op_alloc(_ch, &cpl, op_type, _blob, payload, 0, offset, length);
+			if (op != NULL) {
+				TAILQ_INSERT_TAIL(&ch->need_cluster_alloc, op, link);
+			} else {
+				cb_fn(cb_arg, -ENOMEM);
+			}
+			return;
+		}
 	}
 
 	batch = spdk_bs_batch_open(_ch, &cpl);
 	if (!batch) {
+		ch->cluster_alloc_in_progress = false;
 		cb_fn(cb_arg, -ENOMEM);
 		return;
 	}
@@ -1517,6 +1521,7 @@ _spdk_blob_request_submit_op_single(struct spdk_io_channel *_ch, struct spdk_blo
 		case SPDK_BLOB_WRITE_ZEROES:
 			op = spdk_bs_user_op_alloc(_ch, &cpl, op_type, _blob, payload, 0, offset, length);
 			if (op == NULL) {
+				ch->cluster_alloc_in_progress = false;
 				spdk_bs_batch_set_errno(batch, -ENOMEM);
 				break;
 			}
@@ -1678,6 +1683,7 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *_blob, struct spdk_io_channel
 	spdk_bs_sequence_t		*seq;
 	struct spdk_bs_cpl		cpl;
 	spdk_bs_user_op_t 		*op;
+	bool				rc = false;
 
 	assert(blob != NULL);
 
@@ -1720,19 +1726,26 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *_blob, struct spdk_io_channel
 		cpl.u.blob_basic.cb_fn = cb_fn;
 		cpl.u.blob_basic.cb_arg = cb_arg;
 
-		if (!_spdk_bs_page_is_allocated(blob, offset) && ch->cluster_alloc_in_progress) {
-			op = spdk_bs_user_op_alloc(_channel, &cpl, read ? SPDK_BLOB_READV : SPDK_BLOB_WRITEV, _blob, iov,
-						   iovcnt, offset, length);
-			if (op != NULL) {
-				TAILQ_INSERT_TAIL(&ch->need_cluster_alloc, op, link);
-			} else {
-				cb_fn(cb_arg, -ENOMEM);
+		if (!_spdk_bs_page_is_allocated(blob, offset)) {
+			if (!read) {
+				rc = __sync_bool_compare_and_swap(&ch->cluster_alloc_in_progress, false, true);
 			}
-			return;
+
+			if (!rc && ch->cluster_alloc_in_progress) {
+				op = spdk_bs_user_op_alloc(_channel, &cpl, read ? SPDK_BLOB_READV : SPDK_BLOB_WRITEV, _blob, iov,
+							   iovcnt, offset, length);
+				if (op != NULL) {
+					TAILQ_INSERT_TAIL(&ch->need_cluster_alloc, op, link);
+				} else {
+					cb_fn(cb_arg, -ENOMEM);
+				}
+				return;
+			}
 		}
 
 		seq = spdk_bs_sequence_start(_channel, &cpl);
 		if (!seq) {
+			ch->cluster_alloc_in_progress = false;
 			cb_fn(cb_arg, -ENOMEM);
 			return;
 		}
@@ -1748,6 +1761,7 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *_blob, struct spdk_io_channel
 			if (_spdk_bs_page_is_allocated(blob, offset) == false) {
 				op = spdk_bs_user_op_alloc(_channel, &cpl, SPDK_BLOB_WRITEV, _blob, iov, iovcnt, offset, length);
 				if (op == NULL) {
+					ch->cluster_alloc_in_progress = false;
 					spdk_bs_sequence_finish(seq, -ENOMEM);
 					return;
 				}
