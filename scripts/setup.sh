@@ -44,7 +44,6 @@ function usage()
 	echo "                  To blacklist all PCI devices use a non-valid address."
 	echo "                  E.g. PCI_WHITELIST=\"none\""
 	echo "                  If empty or unset, all PCI devices will be bound."
-	echo "SKIP_PCI          Setting this variable to non-zero value will skip all PCI operations."
 	echo "TARGET_USER       User that will own hugepage mountpoint directory and vfio groups."
 	echo "                  By default the current user will be used."
 	exit 0
@@ -221,10 +220,7 @@ function configure_linux_pci {
 }
 
 function configure_linux {
-	if [ "$SKIP_PCI" == 0 ]; then
-		configure_linux_pci
-	fi
-
+	configure_linux_pci
 	hugetlbfs_mounts=$(linux_hugetlbfs_mounts)
 
 	if [ -z "$hugetlbfs_mounts" ]; then
@@ -347,10 +343,7 @@ function reset_linux_pci {
 }
 
 function reset_linux {
-	if [ "$SKIP_PCI" == 0 ]; then
-		reset_linux_pci
-	fi
-
+	reset_linux_pci
 	for mount in $(linux_hugetlbfs_mounts); do
 		rm -f "$mount"/spdk*map_*
 	done
@@ -426,10 +419,7 @@ function configure_freebsd_pci {
 }
 
 function configure_freebsd {
-	if [ "$SKIP_PCI" == 0 ]; then
-		configure_freebsd_pci
-	fi
-
+	configure_freebsd_pci
 	kldunload contigmem.ko || true
 	kenv hw.contigmem.num_buffers=$((HUGEMEM / 256))
 	kenv hw.contigmem.buffer_size=$((256 * 1024 * 1024))
@@ -438,10 +428,7 @@ function configure_freebsd {
 
 function reset_freebsd {
 	kldunload contigmem.ko || true
-
-	if [ "$SKIP_PCI" == 0 ]; then
-		kldunload nic_uio.ko || true
-	fi
+	kldunload nic_uio.ko || true
 }
 
 mode=$1
@@ -451,11 +438,14 @@ if [ -z "$mode" ]; then
 fi
 
 : ${HUGEMEM:=2048}
-: ${SKIP_PCI:=0}
 : ${PCI_WHITELIST:=""}
 
 if [ -n "$NVME_WHITELIST" ]; then
 	PCI_WHITELIST="$PCI_WHITELIST $NVME_WHITELIST"
+fi
+
+if [ -n "$SKIP_PCI" ]; then
+	PCI_WHITELIST="none"
 fi
 
 declare -a PCI_WHITELIST=(${PCI_WHITELIST})
