@@ -281,12 +281,18 @@ static const struct spdk_json_object_decoder rpc_ns_params_decoders[] = {
 };
 
 static void
+free_rpc_ns_params(struct spdk_nvmf_ns_params *ns_params)
+{
+	free(ns_params->bdev_name);
+}
+
+static void
 free_rpc_namespaces(struct rpc_namespaces *r)
 {
 	size_t i;
 
 	for (i = 0; i < r->num_ns; i++) {
-		free(r->ns_params[i].bdev_name);
+		free_rpc_ns_params(&r->ns_params[i]);
 	}
 }
 
@@ -668,3 +674,125 @@ nvmf_rpc_subsystem_add_listener(struct spdk_jsonrpc_request *request,
 	}
 }
 SPDK_RPC_REGISTER("nvmf_subsystem_add_listener", nvmf_rpc_subsystem_add_listener);
+
+
+struct nvmf_rpc_ns_ctx {
+	char *nqn;
+	struct spdk_nvmf_ns_params ns_params;
+
+	struct spdk_jsonrpc_request *request;
+	bool response_sent;
+};
+
+static const struct spdk_json_object_decoder nvmf_rpc_subsystem_ns_decoder[] = {
+	{"nqn", offsetof(struct nvmf_rpc_ns_ctx, nqn), spdk_json_decode_string},
+	{"namespace", offsetof(struct nvmf_rpc_ns_ctx, ns_params), decode_rpc_ns_params},
+};
+
+static void
+nvmf_rpc_ns_ctx_free(struct nvmf_rpc_ns_ctx *ctx)
+{
+	free(ctx->nqn);
+	free_rpc_ns_params(&ctx->ns_params);
+	free(ctx);
+}
+
+
+static void
+nvmf_rpc_ns_resumed(struct spdk_nvmf_subsystem *subsystem,
+		    void *cb_arg, int status)
+{
+	struct nvmf_rpc_ns_ctx *ctx = cb_arg;
+	struct spdk_jsonrpc_request *request = ctx->request;
+	uint32_t nsid = ctx->ns_params.nsid;
+	bool response_sent = ctx->response_sent;
+	struct spdk_json_write_ctx *w;
+
+	nvmf_rpc_ns_ctx_free(ctx);
+
+	if (response_sent) {
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_uint32(w, nsid);
+	spdk_jsonrpc_end_result(request, w);
+}
+
+static void
+nvmf_rpc_ns_paused(struct spdk_nvmf_subsystem *subsystem,
+		   void *cb_arg, int status)
+{
+	struct nvmf_rpc_ns_ctx *ctx = cb_arg;
+	struct spdk_bdev *bdev;
+
+	bdev = spdk_bdev_get_by_name(ctx->ns_params.bdev_name);
+	if (!bdev) {
+		SPDK_ERRLOG("No bdev with name %s\n", ctx->ns_params.bdev_name);
+		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		ctx->response_sent = true;
+		goto resume;
+	}
+
+	ctx->ns_params.nsid = spdk_nvmf_subsystem_add_ns(subsystem, bdev, ctx->ns_params.nsid);
+	if (ctx->ns_params.nsid == 0) {
+		SPDK_ERRLOG("Unable to add namespace\n");
+		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		ctx->response_sent = true;
+		goto resume;
+	}
+
+resume:
+	if (spdk_nvmf_subsystem_resume(subsystem, nvmf_rpc_ns_resumed, ctx)) {
+		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+		nvmf_rpc_ns_ctx_free(ctx);
+		return;
+	}
+}
+
+static void
+nvmf_rpc_subsystem_add_ns(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
+{
+	struct nvmf_rpc_ns_ctx *ctx;
+	struct spdk_nvmf_subsystem *subsystem;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Out of memory");
+		return;
+	}
+
+	if (spdk_json_decode_object(params, nvmf_rpc_subsystem_ns_decoder,
+				    SPDK_COUNTOF(nvmf_rpc_subsystem_ns_decoder),
+				    ctx)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		nvmf_rpc_ns_ctx_free(ctx);
+		return;
+	}
+
+	ctx->request = request;
+	ctx->response_sent = false;
+
+	subsystem = spdk_nvmf_tgt_find_subsystem(g_tgt.tgt, ctx->nqn);
+	if (!subsystem) {
+		SPDK_ERRLOG("Unable to find subsystem with NQN %s\n", ctx->nqn);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		nvmf_rpc_ns_ctx_free(ctx);
+		return;
+	}
+
+	if (spdk_nvmf_subsystem_pause(subsystem, nvmf_rpc_ns_paused, ctx)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+		nvmf_rpc_ns_ctx_free(ctx);
+		return;
+	}
+}
+SPDK_RPC_REGISTER("nvmf_subsystem_add_ns", nvmf_rpc_subsystem_add_ns)

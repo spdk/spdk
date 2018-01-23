@@ -345,6 +345,12 @@ if __name__ == "__main__":
     p.add_argument('-s', '--trsvcid', help='NVMe-oF transport service id: e.g., a port number')
     p.set_defaults(func=rpc.nvmf.nvmf_subsystem_add_listener)
 
+    p = subparsers.add_parser('nvmf_subsystem_add_ns', help='Add a namespace to an NVMe-oF subsystem')
+    p.add_argument('nqn', help='NVMe-oF subsystem NQN')
+    p.add_argument('bdev_name', help='The name of the bdev that will back this namespace')
+    p.add_argument('-n', '--nsid', help='The requested NSID (optional)', type=int)
+    p.set_defaults(func=rpc.nvmf.nvmf_subsystem_add_ns)
+
     # pmem
     p = subparsers.add_parser('create_pmem_pool', help='Create pmem pool')
     p.add_argument('pmem_file', help='Path to pmemblk pool file')
