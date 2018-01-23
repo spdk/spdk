@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ddab5242_84f3f07f",
+        "filename": "doc/user_guide.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-23T15:41:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5656e9eb_5dcadeaa",
+      "revId": "3b7ec54182055b153515cc9797cd818fea00a578",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4b8e0166_5190b7f6",
         "filename": "doc/user_guide.md",
         "patchSetId": 5
@@ -30,6 +48,30 @@
       "writtenOn": "2018-01-22T21:22:57Z",
       "side": 1,
       "message": "All of the #names are global to the whole Doxygen project - please make sure they\u0027re unique.  We typically do this by prefixing them with a unique value per file, e.g. #bdev_ug_introduction.",
+      "range": {
+        "startLine": 3,
+        "startChar": 17,
+        "endLine": 3,
+        "endChar": 29
+      },
+      "revId": "3b7ec54182055b153515cc9797cd818fea00a578",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36377b51_d7337c02",
+        "filename": "doc/user_guide.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-23T15:41:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4b8e0166_5190b7f6",
       "range": {
         "startLine": 3,
         "startChar": 17,
@@ -76,6 +118,24 @@
     },
     {
       "key": {
+        "uuid": "93fff17c_5da4b878",
+        "filename": "doc/user_guide.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-23T15:41:47Z",
+      "side": 1,
+      "message": "This means that if on any bdev we find GPT partition with specified GUID we will add it as a separate bdev. exposing through kernel stack means that we will create handle to bdev as user usually can find for other devices managed by kernel. This is how I understand this. I actually never used any of these - I copied that text from bdev guide that will be replaced by this guide.",
+      "parentUuid": "daf430c3_42786d3a",
+      "revId": "3b7ec54182055b153515cc9797cd818fea00a578",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f05a7db6_b9919066",
         "filename": "doc/user_guide.md",
         "patchSetId": 5
@@ -99,6 +159,30 @@
     },
     {
       "key": {
+        "uuid": "3f5bc191_4a6903cc",
+        "filename": "doc/user_guide.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-23T15:41:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f05a7db6_b9919066",
+      "range": {
+        "startLine": 273,
+        "startChar": 51,
+        "endLine": 273,
+        "endChar": 54
+      },
+      "revId": "3b7ec54182055b153515cc9797cd818fea00a578",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e0636fd5_eff3eb31",
         "filename": "doc/user_guide.md",
         "patchSetId": 5
@@ -110,6 +194,24 @@
       "writtenOn": "2018-01-19T00:04:15Z",
       "side": 1,
       "message": "RPC",
+      "revId": "3b7ec54182055b153515cc9797cd818fea00a578",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f22723ef_bf3019a7",
+        "filename": "doc/user_guide.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-23T15:41:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e0636fd5_eff3eb31",
       "revId": "3b7ec54182055b153515cc9797cd818fea00a578",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
