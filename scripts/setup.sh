@@ -84,7 +84,7 @@ function linux_bind_driver() {
 
 	iommu_group=$(basename $(readlink -f /sys/bus/pci/devices/$bdf/iommu_group))
 	if [ -e "/dev/vfio/$iommu_group" ]; then
-		if [ -z "$TARGET_USER" ]; then
+		if [ -n "$TARGET_USER" ]; then
 			chown "$TARGET_USER" "/dev/vfio/$iommu_group"
 		fi
 	fi
@@ -237,7 +237,7 @@ function configure_linux {
 	fi
 
 	if [ "$driver_name" = "vfio-pci" ]; then
-		if [ -z "$TARGET_USER" ]; then
+		if [ -n "$TARGET_USER" ]; then
 			chown "$TARGET_USER" "$hugetlbfs_mount"
 			chmod g+w "$hugetlbfs_mount"
 		fi
