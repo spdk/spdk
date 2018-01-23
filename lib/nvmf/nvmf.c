@@ -570,26 +570,20 @@ int
 spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 				      struct spdk_nvmf_subsystem *subsystem)
 {
-	struct spdk_nvmf_subsystem_poll_group *sgroup;
 	int rc;
 
 	if (subsystem->id >= group->num_sgroups) {
 		return -1;
 	}
 
-	sgroup = &group->sgroups[subsystem->id];
-	if (sgroup == NULL) {
-		return -1;
-	}
-
-	assert(sgroup->state == SPDK_NVMF_SUBSYSTEM_PAUSED);
+	assert(group->sgroups[subsystem->id].state == SPDK_NVMF_SUBSYSTEM_PAUSED);
 
 	rc = poll_group_update_subsystem(group, subsystem);
 	if (rc) {
 		return rc;
 	}
 
-	sgroup->state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
+	group->sgroups[subsystem->id].state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
 
 	return 0;
 }
