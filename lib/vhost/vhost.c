@@ -349,6 +349,10 @@ spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
 		remaining -= len;
 		payload += len;
 		(*iov_index)++;
+		if (remaining) {
+			SPDK_ERRLOG("split desc %p, no=%u, addr=%lx, maxlen=%x\n",
+				    iov, *iov_index, payload, remaining);
+		}
 	}
 
 	return 0;
