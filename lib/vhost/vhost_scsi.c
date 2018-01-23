@@ -520,12 +520,19 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 		task->used_len = sizeof(struct virtio_scsi_cmd_resp);
 	}
 
+	if (len > 512 * 1024) {
+		SPDK_ERRLOG("io size > 512KB, task=%p, size = %x\n", iovs, len);
+	}
+
 	task->scsi.iovcnt = iovcnt;
 	task->scsi.length = len;
 	task->scsi.transfer_len = len;
 	return 0;
 
 invalid_task:
+	if (len > 512 * 1024) {
+		SPDK_ERRLOG("io size > 512KB, task=%p, size = %x\n", iovs, len);
+	}
 	SPDK_DEBUGLOG(SPDK_LOG_VHOST_SCSI_DATA, "%s: Invalid task at index %"PRIu16".\n",
 		      vdev->name, task->req_idx);
 	return -1;
