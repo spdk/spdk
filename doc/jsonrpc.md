@@ -422,3 +422,114 @@ Example response:
   "result": 3
 }
 ~~~
+
+## nvmf_subsystem_add_host method {#rpc_nvmf_subsystem_add_host}
+
+Add a host NQN to the whitelist of allowed hosts.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+nqn                     | Required | string      | Subsystem NQN
+host                    | Required | string      | Host NQN to add to the list of allowed host NQNs
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "nvmf_subsystem_add_host",
+  "params": {
+    "nqn": "nqn.2016-06.io.spdk:cnode1",
+    "host": "nqn.2016-06.io.spdk:host1"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## nvmf_subsystem_remove_host method {#rpc_nvmf_subsystem_remove_host}
+
+Remove a host NQN from the whitelist of allowed hosts.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+nqn                     | Required | string      | Subsystem NQN
+host                    | Required | string      | Host NQN to remove from the list of allowed host NQNs
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "nvmf_subsystem_remove_host",
+  "params": {
+    "nqn": "nqn.2016-06.io.spdk:cnode1",
+    "host": "nqn.2016-06.io.spdk:host1"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## nvmf_subsystem_allow_any_host method {#rpc_nvmf_subsystem_allow_any_host}
+
+Configure a subsystem to allow any host to connect or to enforce the host NQN whitelist.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+nqn                     | Required | string      | Subsystem NQN
+allow_any_host          | Required | boolean     | Allow any host (`true`) or enforce allowed host whitelist (`false`).
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "nvmf_subsystem_allow_any_host",
+  "params": {
+    "nqn": "nqn.2016-06.io.spdk:cnode1",
+    "allow_any_host": true
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~

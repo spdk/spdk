@@ -76,6 +76,27 @@ def nvmf_subsystem_add_ns(args):
     args.client.call('nvmf_subsystem_add_ns', params)
 
 
+def nvmf_subsystem_add_host(args):
+    params = {'nqn': args.nqn,
+              'host': args.host}
+
+    args.client.call('nvmf_subsystem_add_host', params)
+
+
+def nvmf_subsystem_remove_host(args):
+    params = {'nqn': args.nqn,
+              'host': args.host}
+
+    args.client.call('nvmf_subsystem_remove_host', params)
+
+
+def nvmf_subsystem_allow_any_host(args):
+    params = {'nqn': args.nqn}
+    params['allow_any_host'] = False if args.disable else True
+
+    args.client.call('nvmf_subsystem_allow_any_host', params)
+
+
 def delete_nvmf_subsystem(args):
     params = {'nqn': args.subsystem_nqn}
     args.client.call('delete_nvmf_subsystem', params)
