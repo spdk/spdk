@@ -38,11 +38,11 @@ function usage()
 	echo "HUGENODE          Specific NUMA node to allocate hugepages on. To allocate"
 	echo "                  hugepages on multiple nodes run this script multiple times -"
 	echo "                  once for each node."
-	echo "NVME_WHITELIST    Whitespace separated list of NVMe devices to bind."
+	echo "PCI_WHITELIST     Whitespace separated list of PCI devices (NVMe, I/OAT, Virtio) to bind."
 	echo "                  Each device must be specified as a full PCI address."
-	echo "                  E.g. NVME_WHITELIST=\"0000:01:00.0 0000:02:00.0\""
-	echo "                  To blacklist all NVMe devices use a non-valid PCI address."
-	echo "                  E.g. NVME_WHITELIST=\"none\""
+	echo "                  E.g. PCI_WHITELIST=\"0000:01:00.0 0000:02:00.0\""
+	echo "                  To blacklist all PCI devices use a non-valid address."
+	echo "                  E.g. PCI_WHITELIST=\"none\""
 	echo "                  If empty or unset, all PCI devices will be bound."
 	echo "SKIP_PCI          Setting this variable to non-zero value will skip all PCI operations."
 	echo "TARGET_USER       User that will own hugepage mountpoint directory and vfio groups."
@@ -50,8 +50,13 @@ function usage()
 	exit 0
 }
 
-function nvme_whitelist_contains() {
-	for i in ${NVME_WHITELIST[@]}
+function pci_can_bind() {
+	if [[ ${#PCI_WHITELIST[@]} == 0 ]]; then
+		#no whitelist specified, bind all devices
+		return 1
+	fi
+
+	for i in ${PCI_WHITELIST[@]}
 	do
 		if [ "$i" == "$1" ] ; then
 			 return 1
@@ -153,7 +158,7 @@ function configure_linux_pci {
 	for bdf in $(iter_pci_class_code 01 08 02); do
 		blkname=''
 		get_nvme_name_from_bdf "$bdf" blkname
-		if [[ ${#NVME_WHITELIST[@]} != 0 ]] && nvme_whitelist_contains $bdf == "0" ; then
+		if pci_can_bind $bdf == "0" ; then
 			echo "Skipping un-whitelisted NVMe controller $blkname ($bdf)"
 			continue
 		fi
@@ -177,6 +182,10 @@ function configure_linux_pci {
 
 	for dev_id in `cat $TMP`; do
 		for bdf in $(iter_pci_dev_id 8086 $dev_id); do
+			if pci_can_bind $bdf == "0" ; then
+				echo "Skipping un-whitelisted I/OAT device at $bdf"
+				continue
+			fi
 			linux_bind_driver "$bdf" "$driver_name"
 		done
 	done
@@ -190,6 +199,10 @@ function configure_linux_pci {
 
 	for dev_id in `cat $TMP`; do
 		for bdf in $(iter_pci_dev_id 1af4 $dev_id); do
+			if pci_can_bind $bdf == "0" ; then
+				echo "Skipping un-whitelisted Virtio device at $bdf"
+				continue
+			fi
 			blknames=''
 			get_virtio_names_from_bdf "$bdf" blknames
 			for blkname in $blknames; do
@@ -427,8 +440,13 @@ fi
 
 : ${HUGEMEM:=2048}
 : ${SKIP_PCI:=0}
-: ${NVME_WHITELIST:=""}
-declare -a NVME_WHITELIST=(${NVME_WHITELIST})
+: ${PCI_WHITELIST:=""}
+
+if [ -n "$NVME_WHITELIST" ]; then
+	PCI_WHITELIST="$PCI_WHITELIST $NVME_WHITELIST"
+fi
+
+declare -a PCI_WHITELIST=(${PCI_WHITELIST})
 
 if [ -z "$TARGET_USER" ]; then
 	TARGET_USER="$SUDO_USER"
