@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fd5d3aeb_ee8417f8",
+        "filename": "test/lib/ut_multithread.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-23T07:10:11Z",
+      "side": 1,
+      "message": "This count of how many poller handling is not needed as if the poller is there. It will always be running in each loop. I introduced a temp list to move the pollers from the thread list to the temp list in each interaction and once done, restore the list to end the current loop.",
+      "range": {
+        "startLine": 188,
+        "startChar": 3,
+        "endLine": 188,
+        "endChar": 11
+      },
+      "revId": "c130c78e2efe84a050cc3942a39297fb9d31bab1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
