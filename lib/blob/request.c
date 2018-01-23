@@ -493,7 +493,7 @@ spdk_bs_user_op_alloc(struct spdk_io_channel *_channel, struct spdk_bs_cpl *cpl,
 	args = &set->u.user_op;
 
 	args->type = op_type;
-	args->iovcnt = 0;
+	args->iovcnt = iovcnt;
 	args->blob = blob;
 	args->offset = offset;
 	args->length = length;
