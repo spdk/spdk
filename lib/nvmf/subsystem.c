@@ -282,6 +282,14 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 	return subsystem;
 }
 
+static void
+_spdk_nvmf_subsystem_remove_host(struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_host *host)
+{
+	TAILQ_REMOVE(&subsystem->hosts, host, link);
+	free(host->nqn);
+	free(host);
+}
+
 void
 spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 {
@@ -304,9 +312,7 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 	}
 
 	TAILQ_FOREACH_SAFE(host, &subsystem->hosts, link, host_tmp) {
-		TAILQ_REMOVE(&subsystem->hosts, host, link);
-		free(host->nqn);
-		free(host);
+		_spdk_nvmf_subsystem_remove_host(subsystem, host);
 	}
 
 	TAILQ_FOREACH_SAFE(ctrlr, &subsystem->ctrlrs, link, ctrlr_tmp) {
@@ -558,6 +564,20 @@ spdk_nvmf_subsystem_get_next(struct spdk_nvmf_subsystem *subsystem)
 	return NULL;
 }
 
+static struct spdk_nvmf_host *
+_spdk_nvmf_subsystem_find_host(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn)
+{
+	struct spdk_nvmf_host *host = NULL;
+
+	TAILQ_FOREACH(host, &subsystem->hosts, link) {
+		if (strcmp(hostnqn, host->nqn) == 0) {
+			return host;
+		}
+	}
+
+	return NULL;
+}
+
 int
 spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn)
 {
@@ -570,6 +590,11 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *
 	if (!(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
 	      subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED)) {
 		return -EAGAIN;
+	}
+
+	if (_spdk_nvmf_subsystem_find_host(subsystem, hostnqn)) {
+		/* This subsystem already allows the specified host. */
+		return 0;
 	}
 
 	host = calloc(1, sizeof(*host));
@@ -585,6 +610,25 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *
 	TAILQ_INSERT_HEAD(&subsystem->hosts, host, link);
 	subsystem->tgt->discovery_genctr++;
 
+	return 0;
+}
+
+int
+spdk_nvmf_subsystem_remove_host(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn)
+{
+	struct spdk_nvmf_host *host;
+
+	if (!(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
+	      subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED)) {
+		return -EAGAIN;
+	}
+
+	host = _spdk_nvmf_subsystem_find_host(subsystem, hostnqn);
+	if (host == NULL) {
+		return -ENOENT;
+	}
+
+	_spdk_nvmf_subsystem_remove_host(subsystem, host);
 	return 0;
 }
 
@@ -610,8 +654,6 @@ spdk_nvmf_subsystem_get_allow_any_host(const struct spdk_nvmf_subsystem *subsyst
 bool
 spdk_nvmf_subsystem_host_allowed(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn)
 {
-	struct spdk_nvmf_host *host;
-
 	if (!hostnqn) {
 		return false;
 	}
@@ -620,13 +662,7 @@ spdk_nvmf_subsystem_host_allowed(struct spdk_nvmf_subsystem *subsystem, const ch
 		return true;
 	}
 
-	TAILQ_FOREACH(host, &subsystem->hosts, link) {
-		if (strcmp(hostnqn, host->nqn) == 0) {
-			return true;
-		}
-	}
-
-	return false;
+	return _spdk_nvmf_subsystem_find_host(subsystem, hostnqn) != NULL;
 }
 
 struct spdk_nvmf_host *
