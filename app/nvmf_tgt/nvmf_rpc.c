@@ -717,3 +717,99 @@ nvmf_rpc_subsystem_add_host(struct spdk_jsonrpc_request *request,
 	}
 }
 SPDK_RPC_REGISTER("nvmf_subsystem_add_host", nvmf_rpc_subsystem_add_host);
+
+struct nvmf_rpc_ns_ctx {
+	char *subnqn;
+	uint32_t nsid;
+	char *bdev_name;
+
+	struct spdk_jsonrpc_request *request;
+};
+
+static const struct spdk_json_object_decoder nvmf_rpc_subsystem_ns_decoder[] = {
+	{"subnqn", offsetof(struct nvmf_rpc_ns_ctx, subnqn), spdk_json_decode_string},
+	{"nsid", offsetof(struct nvmf_rpc_ns_ctx, nsid), spdk_json_decode_uint32, true},
+	{"bdev_name", offsetof(struct nvmf_rpc_ns_ctx, bdev_name), spdk_json_decode_string},
+};
+
+static void
+nvmf_rpc_ns_resumed(struct spdk_nvmf_subsystem *subsystem,
+		    void *cb_arg, int status)
+{
+	struct nvmf_rpc_ns_ctx *ctx = cb_arg;
+	struct spdk_jsonrpc_request *request;
+	uint32_t nsid;
+	struct spdk_json_write_ctx *w;
+
+	request = ctx->request;
+	nsid = ctx->nsid;
+	free(ctx);
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_uint32(w, nsid);
+	spdk_jsonrpc_end_result(request, w);
+}
+
+static void
+nvmf_rpc_ns_paused(struct spdk_nvmf_subsystem *subsystem,
+		   void *cb_arg, int status)
+{
+	struct nvmf_rpc_ns_ctx *ctx = cb_arg;
+	struct spdk_bdev *bdev;
+
+	bdev = spdk_bdev_get_by_name(ctx->bdev_name);
+	if (!bdev) {
+		SPDK_ERRLOG("No bdev with name %s\n", ctx->bdev_name);
+		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		return;
+	}
+
+	ctx->nsid = spdk_nvmf_subsystem_add_ns(subsystem, bdev, ctx->nsid);
+
+	if (spdk_nvmf_subsystem_resume(subsystem, nvmf_rpc_ns_resumed, ctx)) {
+		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+		return;
+	}
+}
+
+static void
+nvmf_rpc_subsystem_add_ns(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
+{
+	struct nvmf_rpc_ns_ctx *ctx;
+	struct spdk_nvmf_subsystem *subsystem;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Out of memory");
+		return;
+	}
+
+	if (spdk_json_decode_object(params, nvmf_rpc_subsystem_ns_decoder,
+				    SPDK_COUNTOF(nvmf_rpc_subsystem_ns_decoder),
+				    ctx)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		return;
+	}
+
+	ctx->request = request;
+
+	subsystem = spdk_nvmf_tgt_find_subsystem(g_tgt.tgt, ctx->subnqn);
+	if (!subsystem) {
+		SPDK_ERRLOG("Unable to find subsystem with NQN %s\n", ctx->subnqn);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		return;
+	}
+
+	if (spdk_nvmf_subsystem_pause(subsystem, nvmf_rpc_ns_paused, ctx)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+		return;
+	}
+}
+SPDK_RPC_REGISTER("nvmf_subsystem_add_ns", nvmf_rpc_subsystem_add_ns);

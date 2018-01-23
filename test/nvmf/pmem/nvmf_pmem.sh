@@ -62,9 +62,12 @@ for i in `seq 1 $SUBSYS_NR`; do
 		$rpc_py create_pmem_pool /tmp/pool_file${i}_${c} 32 512
 		bdevs+="$($rpc_py construct_pmem_bdev -n pmem${i}_${c} /tmp/pool_file${i}_${c}) "
 	done
-	$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode$i -s SPDK$i -n "$bdevs"
+	$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode$i -s SPDK$i
 	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$i -t RDMA -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 	$rpc_py nvmf_subsystem_add_host nqn.2016-06.io.spdk:cnode$i ANY
+	for bdev in $bdevs; do
+		$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode$i $bdev
+	done
 	PMEM_BDEVS+=$bdevs
 done
 timing_exit setup
