@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3bfc1883_24d042d0",
+        "filename": "autotest.sh",
+        "patchSetId": 31
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-23T21:45:05Z",
+      "side": 1,
+      "message": "This should really be under its own test flag (this is testing blob, not blobfs), but we can do that as a separate patch.",
+      "revId": "4906ad6c16a8c79dd809e8f4a7f6ec32958cccee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
