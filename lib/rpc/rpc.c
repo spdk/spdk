@@ -31,6 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/file.h>
+
 #include "spdk/stdinc.h"
 
 #include "spdk/queue.h"
@@ -77,12 +79,12 @@ spdk_rpc_listen(const char *listen_addr)
 {
 	struct addrinfo		hints;
 	struct addrinfo		*res;
+	char			lock_path[128];
+	int			rc, lock_fd;
 
 	memset(&g_rpc_listen_addr_unix, 0, sizeof(g_rpc_listen_addr_unix));
 
 	if (listen_addr[0] == '/') {
-		int rc;
-
 		g_rpc_listen_addr_unix.sun_family = AF_UNIX;
 		rc = snprintf(g_rpc_listen_addr_unix.sun_path,
 			      sizeof(g_rpc_listen_addr_unix.sun_path),
@@ -93,9 +95,27 @@ spdk_rpc_listen(const char *listen_addr)
 			return -1;
 		}
 
-		if (access(g_rpc_listen_addr_unix.sun_path, F_OK) == 0) {
-			SPDK_ERRLOG("RPC Unix domain socket path already exists.\n");
+		snprintf(lock_path, sizeof(lock_path), "%s.%s",
+			 g_rpc_listen_addr_unix.sun_path, "lock");
+
+		lock_fd = open(lock_path, O_RDONLY | O_CREAT, 0600);
+		if (lock_fd == -1) {
+			SPDK_ERRLOG("Can not open lock file %s\n", lock_path);
 			return -1;
+		}
+
+		rc = flock(lock_fd, LOCK_EX | LOCK_NB);
+		if (rc != 0) {
+			SPDK_ERRLOG("RPC Unix domain socket path %s in use. Specify another.\n",
+				    g_rpc_listen_addr_unix.sun_path);
+			return -1;
+		}
+
+		if (access(g_rpc_listen_addr_unix.sun_path, F_OK) == 0) {
+			SPDK_NOTICELOG("Remove the unused RPC Unix domain socket path %s\n",
+				       g_rpc_listen_addr_unix.sun_path);
+			/* Delete the Unix socket file */
+			unlink(g_rpc_listen_addr_unix.sun_path);
 		}
 
 		g_jsonrpc_server = spdk_jsonrpc_server_listen(AF_UNIX, 0,
