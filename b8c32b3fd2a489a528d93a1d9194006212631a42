@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "e4542a8f_0a752501",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-23T17:07:12Z",
+      "side": 1,
+      "message": "hogplug -\u003e hotplug",
+      "range": {
+        "startLine": 11,
+        "startChar": 7,
+        "endLine": 11,
+        "endChar": 19
+      },
+      "revId": "b8c32b3fd2a489a528d93a1d9194006212631a42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b0154754_c89eac11",
         "filename": "doc/nvme.md",
         "patchSetId": 1
@@ -87,6 +110,52 @@
         "startChar": 0,
         "endLine": 58,
         "endChar": 3
+      },
+      "revId": "b8c32b3fd2a489a528d93a1d9194006212631a42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "546037e1_d7cd7e03",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-23T17:07:12Z",
+      "side": 1,
+      "message": "read -\u003e reading",
+      "range": {
+        "startLine": 65,
+        "startChar": 56,
+        "endLine": 65,
+        "endChar": 60
+      },
+      "revId": "b8c32b3fd2a489a528d93a1d9194006212631a42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "06e246d2_6749ea23",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-23T17:07:12Z",
+      "side": 1,
+      "message": "These should have () so they get autolinked by Doxygen.",
+      "range": {
+        "startLine": 77,
+        "startChar": 0,
+        "endLine": 77,
+        "endChar": 22
       },
       "revId": "b8c32b3fd2a489a528d93a1d9194006212631a42",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
