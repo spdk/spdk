@@ -11,24 +11,8 @@ def construct_nvmf_subsystem(args):
         'listen_addresses': [],
         'hosts': [],
         'serial_number': args.serial_number,
+        'namespaces': [],
     }
-
-    if args.namespaces:
-        namespaces = []
-        for u in args.namespaces.strip().split(" "):
-            bdev_name = u
-            nsid = 0
-            if ':' in u:
-                (bdev_name, nsid) = u.split(":")
-
-            ns_params = {'bdev_name': bdev_name}
-
-            nsid = int(nsid)
-            if nsid != 0:
-                ns_params['nsid'] = nsid
-
-            namespaces.append(ns_params)
-        params['namespaces'] = namespaces
 
     args.client.call('construct_nvmf_subsystem', params, verbose=args.verbose)
 
@@ -56,6 +40,16 @@ def nvmf_subsystem_allow_any_host(args):
     params = {'subnqn': args.subnqn}
 
     args.client.call('nvmf_subsystem_allow_any_host', params)
+
+
+def nvmf_subsystem_add_ns(args):
+    params = {'subnqn': args.subnqn,
+              'bdev_name': args.bdev_name}
+
+    if args.nsid:
+        params['nsid'] = args.nsid
+
+    args.client.call('nvmf_subsystem_add_ns', params)
 
 
 def delete_nvmf_subsystem(args):

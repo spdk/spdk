@@ -316,10 +316,6 @@ if __name__ == "__main__":
     p.add_argument("-s", "--serial_number", help="""
     Format:  'sn' etc
     Example: 'SPDK00000000000001'""", default='0000:00:01.0')
-    p.add_argument("-n", "--namespaces", help="""Whitespace-separated list of namespaces
-    Format:  'bdev_name1[:nsid1] bdev_name2[:nsid2] bdev_name3[:nsid3]' etc
-    Example: '1:Malloc0 2:Malloc1 3:Malloc2'
-    *** The devices must pre-exist ***""")
     p.set_defaults(func=rpc.nvmf.construct_nvmf_subsystem)
 
     p = subparsers.add_parser('delete_nvmf_subsystem',
@@ -344,6 +340,12 @@ if __name__ == "__main__":
     p = subparsers.add_parser('nvmf_subsystem_allow_any_host', help='Allow any host to connect to the subsystem')
     p.add_argument('subnqn', help='NVMe-oF subsystem NQN')
     p.set_defaults(func=rpc.nvmf.nvmf_subsystem_allow_any_host)
+
+    p = subparsers.add_parser('nvmf_subsystem_add_ns', help='Add a namespace to an NVMe-oF subsystem')
+    p.add_argument('subnqn', help='NVMe-oF subsystem NQN')
+    p.add_argument('bdev_name', help='The name of the bdev that will back this namespace')
+    p.add_argument('-n', '--nsid', help='The requested NSID (optional)')
+    p.set_defaults(func=rpc.nvmf.nvmf_subsystem_add_ns)
 
     # pmem
     p = subparsers.add_parser('create_pmem_pool', help='Create pmem pool')
