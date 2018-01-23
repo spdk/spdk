@@ -31,6 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/file.h>
+
 #include "spdk/stdinc.h"
 
 #include "spdk/queue.h"
@@ -39,7 +41,9 @@
 #include "spdk/log.h"
 #include "spdk/string.h"
 
-#define RPC_DEFAULT_PORT	"5260"
+#define RPC_DEFAULT_PORT		"5260"
+
+#define SPDK_DEFAULT_RPC_LOCK_ADDR	"/var/tmp/spdk_sock.lock"
 
 static struct sockaddr_un g_rpc_listen_addr_unix = {};
 
@@ -77,12 +81,11 @@ spdk_rpc_listen(const char *listen_addr)
 {
 	struct addrinfo		hints;
 	struct addrinfo		*res;
+	int			rc, lock_fd;
 
 	memset(&g_rpc_listen_addr_unix, 0, sizeof(g_rpc_listen_addr_unix));
 
 	if (listen_addr[0] == '/') {
-		int rc;
-
 		g_rpc_listen_addr_unix.sun_family = AF_UNIX;
 		rc = snprintf(g_rpc_listen_addr_unix.sun_path,
 			      sizeof(g_rpc_listen_addr_unix.sun_path),
@@ -93,9 +96,22 @@ spdk_rpc_listen(const char *listen_addr)
 			return -1;
 		}
 
-		if (access(g_rpc_listen_addr_unix.sun_path, F_OK) == 0) {
-			SPDK_ERRLOG("RPC Unix domain socket path already exists.\n");
+		lock_fd = open(SPDK_DEFAULT_RPC_LOCK_ADDR, O_RDONLY | O_CREAT, 0600);
+		if (lock_fd == -1) {
+			SPDK_ERRLOG("Can not open lock file %s\n", SPDK_DEFAULT_RPC_LOCK_ADDR);
 			return -1;
+		}
+
+		if (access(g_rpc_listen_addr_unix.sun_path, F_OK) == 0) {
+			rc = flock(lock_fd, LOCK_EX | LOCK_NB);
+			if (rc != 0) {
+				SPDK_ERRLOG("RPC Unix domain socket path in use. Specify another.\n");
+				return -1;
+			} else {
+				SPDK_NOTICELOG("Remove the existing RPC Unix domain socket path\n");
+				/* Delete the Unix socket file */
+				unlink(g_rpc_listen_addr_unix.sun_path);
+			}
 		}
 
 		g_jsonrpc_server = spdk_jsonrpc_server_listen(AF_UNIX, 0,
