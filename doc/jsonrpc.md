@@ -385,3 +385,40 @@ Example response:
   "result": true
 }
 ~~~
+
+## nvmf_subsystem_add_host method {#rpc_nvmf_subsystem_add_host}
+
+Add a host NQN to the whitelist of allowed hosts.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+subnqn                  | Required | string      | Subsystem NQN
+hostnqn                 | Required | string      | Host NQN. May also be "ANY" or "NONE".
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "nvmf_subsystem_add_host",
+  "params": {
+    "subnqn": "nqn.2016-06.io.spdk:cnode1",
+    "hostnqn": "ANY"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
