@@ -1,0 +1,257 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b0154754_c89eac11",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-01-23T17:03:41Z",
+      "side": 1,
+      "message": "Why did you add this heading? Do we need it? The hello world example is already mentioned in the paragraph below",
+      "range": {
+        "startLine": 33,
+        "startChar": 0,
+        "endLine": 33,
+        "endChar": 23
+      },
+      "revId": "b8c32b3fd2a489a528d93a1d9194006212631a42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e10e637_9d0b84c6",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-01-23T17:03:41Z",
+      "side": 1,
+      "message": "I don\u0027t think we need this heading",
+      "range": {
+        "startLine": 47,
+        "startChar": 0,
+        "endLine": 47,
+        "endChar": 21
+      },
+      "revId": "b8c32b3fd2a489a528d93a1d9194006212631a42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cceada5e_6a97e783",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-01-23T17:03:41Z",
+      "side": 1,
+      "message": "Here is my suggestion for how to introduce perf and talk about why it was created and why they might want to use it\n\nThe fio tool is widely used because it very flexible. However, that flexibility adds overhead and reduced the efficiency of SPDK. Therefore, SPDK provides a perf benchmarking tool which has minimal overhead during benchmarking. We have measured up to 2.6 times more IOPS/core when using perf vs. fio with the 4K 100% Random Read workload.\nThe perf benchmarking tool provides several run time options to support the most common workload. The following examples demonstrate how to use perf.",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 52,
+        "endChar": 38
+      },
+      "revId": "b8c32b3fd2a489a528d93a1d9194006212631a42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3c8d8a3b_dab636ff",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-01-23T17:03:41Z",
+      "side": 1,
+      "message": "Lets break this up and provide a little bit more information on the workloads for those that are new SPDK perf\nHere is what I would suggest:\n\nExample: Using perf for 4K 100% Random Read workload to a local NVMe SSD for 300 seconds\n~~~{.sh}\nperf -q 128 -s 4096 -w randread -r \u0027trtype:PCIe traddr:0000:04:00.0\u0027 -t 300\n~~~\n\nExample: Using perf for 4K 100% Random Read workload to a remote NVMe SSD exported over the network via NVMe-oF\n~~~{.sh}\nperf -q 128 -s 4096 -w randread -r \u0027trtype:RDMA adrfam:IPv4 traddr:192.168.100.8 trsvcid:4420\u0027 -t 300\n~~~\n\nLets also show a mixed workload like this one\nExample: Using perf for 4K 70/30 Random Read/Write mix workload\n~~~{.sh}\nperf -q 128 -s 4096 -w randrw -M 70 -t 300\n~~~",
+      "range": {
+        "startLine": 54,
+        "startChar": 0,
+        "endLine": 58,
+        "endChar": 3
+      },
+      "revId": "b8c32b3fd2a489a528d93a1d9194006212631a42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2abdcf73_8a747181",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-01-23T17:03:41Z",
+      "side": 1,
+      "message": "I would reword to\n\nThe SPDK NVMe driver provides a zero-copy data transfer path, which means that there are no data buffers for I/O commands. However, some Admin commands have data copies depending on the API used by the user.",
+      "range": {
+        "startLine": 140,
+        "startChar": 0,
+        "endLine": 142,
+        "endChar": 80
+      },
+      "revId": "b8c32b3fd2a489a528d93a1d9194006212631a42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "70fe1f4a_222f9198",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-01-23T17:03:41Z",
+      "side": 1,
+      "message": "Lets change this from \"send from\" to \"submitted by the\"",
+      "range": {
+        "startLine": 144,
+        "startChar": 64,
+        "endLine": 144,
+        "endChar": 73
+      },
+      "revId": "b8c32b3fd2a489a528d93a1d9194006212631a42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bfc7a542_532333e7",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-01-23T17:03:41Z",
+      "side": 1,
+      "message": "End this sentence.",
+      "range": {
+        "startLine": 144,
+        "startChar": 80,
+        "endLine": 144,
+        "endChar": 81
+      },
+      "revId": "b8c32b3fd2a489a528d93a1d9194006212631a42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cfd80823_b10e2757",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-01-23T17:03:41Z",
+      "side": 1,
+      "message": "Begin new sentence with \"The\"",
+      "range": {
+        "startLine": 145,
+        "startChar": 0,
+        "endLine": 145,
+        "endChar": 3
+      },
+      "revId": "b8c32b3fd2a489a528d93a1d9194006212631a42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "31f49464_763afbfb",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-01-23T17:03:41Z",
+      "side": 1,
+      "message": "add \"the\"",
+      "range": {
+        "startLine": 145,
+        "startChar": 44,
+        "endLine": 145,
+        "endChar": 45
+      },
+      "revId": "b8c32b3fd2a489a528d93a1d9194006212631a42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b9f68bf_e4e50d63",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-01-23T17:03:41Z",
+      "side": 1,
+      "message": "I think you mean field. I also don\u0027t think you need the semicolon",
+      "range": {
+        "startLine": 146,
+        "startChar": 49,
+        "endLine": 146,
+        "endChar": 54
+      },
+      "revId": "b8c32b3fd2a489a528d93a1d9194006212631a42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c5848d2_f49a9c2c",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-01-23T17:03:41Z",
+      "side": 1,
+      "message": "I would recommend changing this to something like this:\n\nI/O queue pairs are allocated in host memory. Each submission queue entry (SQE) and completion queue entry (CQE) consumes 64 bytes and 16 bytes respectively\nTherefore, the maximum memory used for each I/O queue pair is (MQES + 1) * (64 + 16) Bytes",
+      "range": {
+        "startLine": 150,
+        "startChar": 0,
+        "endLine": 153,
+        "endChar": 32
+      },
+      "revId": "b8c32b3fd2a489a528d93a1d9194006212631a42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
