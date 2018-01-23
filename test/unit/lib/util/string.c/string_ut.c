@@ -149,7 +149,7 @@ test_parse_capacity(void)
 	CU_ASSERT(cap == 472);
 	CU_ASSERT(has_prefix == false);
 
-	sprintf(str, "%"PRIu64, UINT64_MAX);
+	snprintf(str, sizeof(str), "%"PRIu64, UINT64_MAX);
 	rc = spdk_parse_capacity(str, &cap, &has_prefix);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(cap == UINT64_MAX);
