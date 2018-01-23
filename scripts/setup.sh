@@ -105,7 +105,7 @@ function linux_unbind_driver() {
 	echo "$bdf ($ven_dev_id): $old_driver_name -> no driver"
 }
 
-function linux_hugetlbfs_mount() {
+function linux_hugetlbfs_mounts() {
 	mount | grep ' type hugetlbfs ' | awk '{ print $3 }'
 }
 
@@ -212,13 +212,13 @@ function configure_linux {
 		configure_linux_pci
 	fi
 
-	hugetlbfs_mount=$(linux_hugetlbfs_mount)
+	hugetlbfs_mounts=$(linux_hugetlbfs_mounts)
 
-	if [ -z "$hugetlbfs_mount" ]; then
-		hugetlbfs_mount=/mnt/huge
-		echo "Mounting hugetlbfs at $hugetlbfs_mount"
-		mkdir -p "$hugetlbfs_mount"
-		mount -t hugetlbfs nodev "$hugetlbfs_mount"
+	if [ -z "$hugetlbfs_mounts" ]; then
+		hugetlbfs_mounts=/mnt/huge
+		echo "Mounting hugetlbfs at $hugetlbfs_mounts"
+		mkdir -p "$hugetlbfs_mounts"
+		mount -t hugetlbfs nodev "$hugetlbfs_mounts"
 	fi
 
 	if [ -z "$HUGENODE" ]; then
@@ -238,8 +238,10 @@ function configure_linux {
 
 	if [ "$driver_name" = "vfio-pci" ]; then
 		if [ -n "$TARGET_USER" ]; then
-			chown "$TARGET_USER" "$hugetlbfs_mount"
-			chmod g+w "$hugetlbfs_mount"
+			for mount in $hugetlbfs_mounts; do
+				chown "$TARGET_USER" "$mount"
+				chmod g+w "$mount"
+			done
 		fi
 
 		MEMLOCK_AMNT=`ulimit -l`
@@ -324,8 +326,9 @@ function reset_linux {
 		reset_linux_pci
 	fi
 
-	hugetlbfs_mount=$(linux_hugetlbfs_mount)
-	rm -f "$hugetlbfs_mount"/spdk*map_*
+	for mount in $(linux_hugetlbfs_mounts); do
+		rm -f "$mount"/spdk*map_*
+	done
 	rm -f /run/.spdk*
 }
 
