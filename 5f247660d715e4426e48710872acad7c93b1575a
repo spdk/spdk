@@ -16,6 +16,24 @@
       "revId": "5f247660d715e4426e48710872acad7c93b1575a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1685b656_59974dd1",
+        "filename": "lib/env_dpdk/pci_virtio.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-23T19:51:50Z",
+      "side": 0,
+      "message": "Done",
+      "parentUuid": "b4c13c47_58e28b2b",
+      "revId": "5f247660d715e4426e48710872acad7c93b1575a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
