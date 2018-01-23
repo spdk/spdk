@@ -747,8 +747,8 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 		family = AF_INET6;
 		break;
 	default:
-		SPDK_ERRLOG("Unhandled ADRFAM %d\n", ctrlr->trid.adrfam);
-		return -1;
+		family = AF_UNSPEC;
+		break;
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "adrfam %d ai_family %d\n", ctrlr->trid.adrfam, family);
