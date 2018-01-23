@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "96715b8e_6e9fa5d6",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 38
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-23T13:12:11Z",
+      "side": 1,
+      "message": "Please fix alignment.",
+      "range": {
+        "startLine": 68,
+        "startChar": 9,
+        "endLine": 68,
+        "endChar": 37
+      },
+      "revId": "3c3d6bf02cae7a9ee7ac65905ef3cc33f194d3e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
