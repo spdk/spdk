@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c2c0acfc_9c94fdc3",
+        "filename": "test/unit/lib/nvmf/subsystem.c/subsystem_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-23T22:27:43Z",
+      "side": 1,
+      "message": "You don\u0027t need both of these (they are checking the same thing); just the SPDK_CU_ASSERT_FATAL() should be sufficient.",
+      "revId": "3a9254c223263f34286a7de2f8d7bec1918c49ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
