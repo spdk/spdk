@@ -297,7 +297,7 @@ host:~# taskset -c 2,3 qemu-system-x86_64 \
   -chardev socket,id=spdk_vhost_scsi0,path=/var/tmp/vhost.0 \
   -device vhost-user-scsi-pci,id=scsi0,chardev=spdk_vhost_scsi0,num_queues=4 \
   -chardev socket,id=spdk_vhost_blk0,path=/var/tmp/vhost.1 \
-  -device vhost-user-blk-pci,logical_block_size=512,size=64M,chardev=spdk_vhost_blk0,num_queues=4
+  -device vhost-user-blk-pci,chardev=spdk_vhost_blk0,num-queues=4
 ~~~
 
 Please note the following two commands are run on the guest VM.
@@ -392,3 +392,7 @@ The Windows `viostor` driver before version 0.1.130-1 is buggy and does not
 correctly support vhost-blk devices with non-512-byte block size.
 See the [bug report](https://bugzilla.redhat.com/show_bug.cgi?id=1411092) for
 more information.
+
+## QEMU vhost-user-blk
+QEMU [vhost-user-blk](https://git.qemu.org/?p=qemu.git;a=commit;h=00343e4b54ba) is
+supported from version 2.12.
