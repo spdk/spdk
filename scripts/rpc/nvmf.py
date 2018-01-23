@@ -11,15 +11,6 @@ def construct_nvmf_subsystem(args):
         'serial_number': args.serial_number,
     }
 
-    if args.hosts:
-        hosts = []
-        for u in args.hosts.strip().split(" "):
-            hosts.append(u)
-        params['hosts'] = hosts
-
-    if args.allow_any_host:
-        params['allow_any_host'] = True
-
     if args.namespaces:
         namespaces = []
         for u in args.namespaces.strip().split(" "):
@@ -52,6 +43,13 @@ def nvmf_subsystem_add_listener(args):
     params = {'trid': trid}
 
     args.client.call('nvmf_subsystem_add_listener', params)
+
+
+def nvmf_subsystem_add_host(args):
+    params = {'subnqn': args.subnqn,
+              'hostnqn': args.hostnqn}
+
+    args.client.call('nvmf_subsystem_add_host', params)
 
 
 def delete_nvmf_subsystem(args):
