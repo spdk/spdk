@@ -416,7 +416,7 @@ function vm_setup()
 
 	local os=""
 	local qemu_args=""
-	local disk_type=NOT_DEFINED
+	local disk_type_g=NOT_DEFINED
 	local disks=""
 	local raw_cache=""
 	local force_vm=""
@@ -429,7 +429,7 @@ function vm_setup()
 				os=*) local os="${OPTARG#*=}" ;;
 				os-mode=*) local os_mode="${OPTARG#*=}" ;;
 				qemu-args=*) local qemu_args="${qemu_args} ${OPTARG#*=}" ;;
-				disk-type=*) local disk_type="${OPTARG#*=}" ;;
+				disk-type=*) local disk_type_g="${OPTARG#*=}" ;;
 				disks=*) local disks="${OPTARG#*=}" ;;
 				raw-cache=*) local raw_cache=",cache${OPTARG#*=}" ;;
 				force=*) local force_vm=${OPTARG#*=} ;;
@@ -535,11 +535,18 @@ function vm_setup()
 	cmd+="-drive file=$os,if=none,id=os_disk ${eol}"
 	cmd+="-device ide-hd,drive=os_disk,bootindex=0 ${eol}"
 
-	if ( [[ $disks == '' ]] && [[ $disk_type == virtio* ]] ); then
+	if ( [[ $disks == '' ]] && [[ $disk_type_g == virtio* ]] ); then
 		disks=1
 	fi
 
 	for disk in ${disks//:/ }; do
+		if [[ $disk = *","* ]]; then
+			disk_type=${disk#*,}
+			disk=${disk%,*}
+		else
+			disk_type=$disk_type_g
+		fi
+
 		case $disk_type in
 			virtio)
 				local raw_name="RAWSCSI"
@@ -566,7 +573,7 @@ function vm_setup()
 					notice "Using existing image $raw_disk"
 				fi
 
-				cmd+="-device virtio-scsi-pci ${eol}"
+				cmd+="-device virtio-scsi-pci,num_queues=$queue_number ${eol}"
 				cmd+="-device scsi-hd,drive=hd$i,vendor=$raw_name ${eol}"
 				cmd+="-drive if=none,id=hd$i,file=$raw_disk,format=raw$raw_cache ${eol}"
 				;;
