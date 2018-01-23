@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "48e1a370_232ca39f",
+        "filename": "test/vhost/hotplug/scsi_hotdetach.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-23T15:22:44Z",
+      "side": 1,
+      "message": "Exact same operation happens in tc2,tc3 and tc4.\nInstead of just using it once @ line 241, maybe it\u0027d be good to call \"clear_after_test()\" as last step in each tc function?",
+      "range": {
+        "startLine": 234,
+        "startChar": 5,
+        "endLine": 234,
+        "endChar": 58
+      },
+      "revId": "a7cbcaeb6d2829e0ca71c335b8f6a34aa2e35bf2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
