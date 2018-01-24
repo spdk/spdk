@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "2250ec9f_277c14c3",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-24T21:53:50Z",
+      "side": 1,
+      "message": "Good catch.",
+      "parentUuid": "e705fb34_d8651e29",
+      "range": {
+        "startLine": 54,
+        "startChar": 7,
+        "endLine": 54,
+        "endChar": 13
+      },
+      "revId": "49785883268e80a02224f043ba2b5f4bb913a80a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "68ea5bb7_e54c5c0b",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 40
