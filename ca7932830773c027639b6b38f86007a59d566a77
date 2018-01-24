@@ -1,0 +1,276 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3b2cb896_471b9387",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-24T21:39:31Z",
+      "side": 1,
+      "message": "Is this still needed?",
+      "revId": "ca7932830773c027639b6b38f86007a59d566a77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d7434ded_97af051b",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-24T21:39:31Z",
+      "side": 1,
+      "message": "don\u0027t think this line applies here - there is no bs_dev parameter or field in opts",
+      "revId": "ca7932830773c027639b6b38f86007a59d566a77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b90549cb_7eb92f4b",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-24T21:39:31Z",
+      "side": 1,
+      "message": "per earlier discussion, this should take blobid as parameter instead of blob pointer",
+      "revId": "ca7932830773c027639b6b38f86007a59d566a77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a28e1a9_f66229c9",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-24T21:39:31Z",
+      "side": 1,
+      "message": "I think this should just return the blobid for the snapshot - not an open handle to it.  Similar to spdk_bs_create_blob.",
+      "revId": "ca7932830773c027639b6b38f86007a59d566a77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e2816f18_c1d09420",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-24T21:39:31Z",
+      "side": 1,
+      "message": "doesn\u0027t free(blob-\u003eback_bs_dev) work here?  and avoid the extra variable declaration",
+      "revId": "ca7932830773c027639b6b38f86007a59d566a77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c7a4f908_3efcc5d6",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 3250,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-24T21:39:31Z",
+      "side": 1,
+      "message": "need newline after declarations",
+      "revId": "ca7932830773c027639b6b38f86007a59d566a77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dd3499f1_b99c25d3",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 3251,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-24T21:39:31Z",
+      "side": 1,
+      "message": "check return code in case it is NULL",
+      "revId": "ca7932830773c027639b6b38f86007a59d566a77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d0640ed_3e24d641",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 3313,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-24T21:39:31Z",
+      "side": 1,
+      "message": "These are the types of changes I\u0027d like to see in separate patches.  This patch is already really big (because snapshots are a big feature) - making these kinds of changes in a separate patch makes it easier on the reviewers.",
+      "revId": "ca7932830773c027639b6b38f86007a59d566a77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e1f15273_813c5f39",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 3415,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-24T21:39:31Z",
+      "side": 1,
+      "message": "I don\u0027t think we try to do any of this.  If an spdk_blob_sync_md() fails, none of this is likely to work either.  I think we just assert() that the syncs do not fail, and return immediately that the snapshot operation failed.  Yes - it will leave some corrupted metadata, but there is no guarantee this is going to fix anything either.\n\nPlus there are no unit tests to test this path, so we are not really sure this works.  For 18.01, I say we remove it.",
+      "revId": "ca7932830773c027639b6b38f86007a59d566a77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ffd0563_bc71bb49",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 3451,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-24T21:39:31Z",
+      "side": 1,
+      "message": "how does this error get propagated back to the caller?",
+      "revId": "ca7932830773c027639b6b38f86007a59d566a77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc09c574_ab950552",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 3513,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-24T21:39:31Z",
+      "side": 1,
+      "message": "this should be an internal xattr\n\nalso, I think we should add this when creating the snapshot originally, using the opts structure - that may mean we need another extra parameter for specifying initial internal xattrs to the create blob function (note - we should obviously *not* add this to struct spdk_blob_opts)",
+      "revId": "ca7932830773c027639b6b38f86007a59d566a77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7e3c4877_43d8a56d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 3533,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-24T21:39:31Z",
+      "side": 1,
+      "message": "This can be simplified to just a memcpy and memset.  There is no need to have separate code for each cluster.  Worst case, we write a zero in the orgblob cluster array that was already zero.\n\nI think we really need to separate this out though.  Do a memcpy first into the new blob and sync it.  Then when that completes, zero the original blob, set it as thin provisioned, and sync it.\n\nOtherwise, you have a race like this:\n\n1) orgblob has cluster map zeroed here\n2) user calls spdk_blob_sync_md() on original blob\n3) system crashes before new blob\u0027s metadata gets synced",
+      "revId": "ca7932830773c027639b6b38f86007a59d566a77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d81cba43_003c0a86",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 3561,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-24T21:39:31Z",
+      "side": 1,
+      "message": "I really don\u0027t understand this.  :)  In spdk_bs_create_blob_snapshot(), we set cpl.u.blob_snapshot fields, but here we switch to blob_snapshot_fail?\n\nSee comments on next file - we should be using one of the existing structs in that union, adding a field if necessary, instead of having these new structures added only for snapshots.",
+      "revId": "ca7932830773c027639b6b38f86007a59d566a77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59c64e3c_40e46f4c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 3572,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-24T21:39:31Z",
+      "side": 1,
+      "message": "will need to do the open here, since you will now get a blobid instead of an opened blob",
+      "revId": "ca7932830773c027639b6b38f86007a59d566a77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "891541c8_3275a066",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 3591,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-24T21:39:31Z",
+      "side": 1,
+      "message": "why do we need to copy this into a separate structure on the stack?  I think just passing sopts to _spdk_bs_create_blob() should work - doesn\u0027t it handle a NULL opts structure already?",
+      "revId": "ca7932830773c027639b6b38f86007a59d566a77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "601d8747_7456b35b",
+        "filename": "lib/blob/request.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-24T21:39:31Z",
+      "side": 1,
+      "message": "any new fields required should be added to the blobid part of this union, instead of adding specific structures for snapshot and snapshot_fail\n\nall of the structures in this union are associated with the completion callback types - not the operations - i.e. there is no blob_create or blob_create_fail",
+      "revId": "ca7932830773c027639b6b38f86007a59d566a77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
