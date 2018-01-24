@@ -56,6 +56,9 @@ struct spdk_vhost_dev_event_ctx {
 	/** Index of the ctrlr to send event to. */
 	unsigned vdev_id;
 
+	/** Lcore this event was sent to. */
+	int32_t lcore;
+
 	/** User callback function to be executed on given lcore. */
 	spdk_vhost_event_fn cb_fn;
 
@@ -764,16 +767,24 @@ spdk_vhost_event_async_fn(void *arg1, void *arg2)
 	struct spdk_vhost_dev *vdev;
 	struct spdk_event *ev;
 
-	if (pthread_mutex_trylock(&g_spdk_vhost_mutex) != 0) {
-		ev = spdk_event_allocate(spdk_env_get_current_core(), spdk_vhost_event_async_fn, arg1, arg2);
-		spdk_event_call(ev);
-		return;
-	}
-
+	pthread_mutex_lock(&g_spdk_vhost_mutex);
 	vdev = g_spdk_vhost_devices[ctx->vdev_id];
 	if (vdev != ctx->vdev) {
 		/* vdev has been changed after enqueuing this event */
 		vdev = NULL;
+	}
+
+	if (vdev->lcore != ctx->lcore && vdev->lcore >= 0) {
+		/* if vdev has been relocated to other core, it is no longer thread-safe
+		 * to access its contents here. Even though we're running under global vhost
+		 * mutex, the controller itself (and its pollers) are not. We need to chase
+		 * the vdev thread as many times as necessary.
+		 */
+		ctx->lcore = vdev->lcore;
+		ev = spdk_event_allocate(ctx->lcore, spdk_vhost_event_async_fn, arg1, arg2);
+		spdk_event_call(ev);
+		pthread_mutex_unlock(&g_spdk_vhost_mutex);
+		return;
 	}
 
 	ctx->cb_fn(vdev, arg2);
@@ -800,10 +811,25 @@ spdk_vhost_event_async_foreach_fn(void *arg1, void *arg2)
 	}
 
 	vdev = g_spdk_vhost_devices[ctx->vdev_id];
-	if (vdev == ctx->vdev) {
-		ctx->cb_fn(vdev, arg2);
+	if (vdev != ctx->vdev) {
+		goto out_unlock_continue;
 	}
 
+	if (vdev->lcore != ctx->lcore && vdev->lcore >= 0) {
+		/* if vdev has been relocated to other core, it is no longer thread-safe
+		 * to access its contents here. Even though we're running under global vhost
+		 * mutex, the controller itself (and its pollers) are not. We need to chase
+		 * the vdev thread as many times as necessary.
+		 */
+		ctx->lcore = vdev->lcore;
+		ev = spdk_event_allocate(ctx->lcore, spdk_vhost_event_async_fn, arg1, arg2);
+		spdk_event_call(ev);
+		return;
+	}
+
+	ctx->cb_fn(vdev, arg2);
+
+out_unlock_continue:
 	spdk_vhost_external_event_foreach_continue(ctx->vdev_id, ctx->cb_fn, arg2);
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 
@@ -811,8 +837,8 @@ spdk_vhost_event_async_foreach_fn(void *arg1, void *arg2)
 }
 
 static int
-spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn,
-		      unsigned timeout_sec, const char *errmsg)
+_spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn,
+		       unsigned timeout_sec, const char *errmsg)
 {
 	struct spdk_vhost_dev_event_ctx ev_ctx = {0};
 	struct spdk_event *ev;
@@ -831,6 +857,7 @@ spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn,
 	ev = spdk_event_allocate(vdev->lcore, spdk_vhost_event_cb, &ev_ctx, NULL);
 	assert(ev);
 	spdk_event_call(ev);
+	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 
 	clock_gettime(CLOCK_REALTIME, &timeout);
 	timeout.tv_sec += timeout_sec;
@@ -842,6 +869,7 @@ spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn,
 	}
 
 	sem_destroy(&ev_ctx.sem);
+	pthread_mutex_lock(&g_spdk_vhost_mutex);
 	return ev_ctx.response;
 }
 
@@ -861,6 +889,7 @@ spdk_vhost_event_async_send(unsigned vdev_id, spdk_vhost_event_fn cb_fn, void *a
 
 	ev_ctx->vdev = g_spdk_vhost_devices[vdev_id];
 	ev_ctx->vdev_id = vdev_id;
+	ev_ctx->lcore = spdk_env_get_current_core();
 	ev_ctx->cb_fn = cb_fn;
 
 	fn = foreach ? spdk_vhost_event_async_foreach_fn : spdk_vhost_event_async_fn;
@@ -893,7 +922,7 @@ stop_device(int vid)
 		return;
 	}
 
-	rc = spdk_vhost_event_send(vdev, vdev->backend->stop_device, 3, "stop device");
+	rc = _spdk_vhost_event_send(vdev, vdev->backend->stop_device, 3, "stop device");
 	if (rc != 0) {
 		SPDK_ERRLOG("Couldn't stop device with vid %d.\n", vid);
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
@@ -972,7 +1001,7 @@ start_device(int vid)
 	}
 
 	vdev->lcore = spdk_vhost_allocate_reactor(vdev->cpumask);
-	rc = spdk_vhost_event_send(vdev, vdev->backend->start_device, 3, "start device");
+	rc = _spdk_vhost_event_send(vdev, vdev->backend->start_device, 3, "start device");
 	if (rc != 0) {
 		free(vdev->mem);
 		spdk_vhost_free_reactor(vdev->lcore);
