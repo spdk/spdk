@@ -1781,7 +1781,7 @@ spdk_bdev_scsi_process_primary(struct spdk_scsi_task *task)
 	int rc = 0;
 	int pllen, md = 0;
 	int pf, sp;
-	int bdlen, llba;
+	int bdlen = 0, llba;
 	int dbd, pc, page, subpage;
 	int cmd_parsed = 0;
 
