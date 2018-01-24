@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dade67fa_9dbdba4d",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-24T08:55:10Z",
+      "side": 1,
+      "message": "Please fix whitespace",
+      "range": {
+        "startLine": 354,
+        "startChar": 0,
+        "endLine": 354,
+        "endChar": 8
+      },
+      "revId": "e621fd5473497470a041f909895051b85de695eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a631e079_3cd7f145",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-24T08:55:10Z",
+      "side": 1,
+      "message": "Why 1/8 of size, while originally it was 1/2 (increase from 1/4) ?",
+      "range": {
+        "startLine": 356,
+        "startChar": 33,
+        "endLine": 356,
+        "endChar": 34
+      },
+      "revId": "e621fd5473497470a041f909895051b85de695eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

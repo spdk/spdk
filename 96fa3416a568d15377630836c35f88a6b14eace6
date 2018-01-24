@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "51f5d202_9e4965d5",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-24T08:55:10Z",
+      "side": 0,
+      "message": "Why were the check_get_bdevs_methods() removed ? It was used to verify if get_bdevs RPC reported correct bdev size.",
+      "range": {
+        "startLine": 358,
+        "startChar": 29,
+        "endLine": 359,
+        "endChar": 73
+      },
+      "revId": "96fa3416a568d15377630836c35f88a6b14eace6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
