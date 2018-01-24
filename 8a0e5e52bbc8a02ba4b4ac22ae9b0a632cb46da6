@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "72e42eb8_44e75248",
+        "filename": "lib/iscsi/iscsi_json_conf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-24T21:31:29Z",
+      "side": 1,
+      "message": "I think we need to free json_vals here as well.",
+      "revId": "8a0e5e52bbc8a02ba4b4ac22ae9b0a632cb46da6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
