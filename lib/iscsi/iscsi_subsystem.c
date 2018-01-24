@@ -561,6 +561,9 @@ spdk_iscsi_log_globals(void)
 			      "DiscoveryAuthGroup AuthGroup%d\n",
 			      g_spdk_iscsi.discovery_auth_group);
 	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "MinConnectionsPerCore%d\n",
+		      spdk_iscsi_conn_get_min_per_core());
 }
 
 static void

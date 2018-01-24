@@ -1414,6 +1414,12 @@ spdk_iscsi_conn_set_min_per_core(int count)
 	g_connections_per_lcore = count;
 }
 
+int
+spdk_iscsi_conn_get_min_per_core(void)
+{
+	return g_connections_per_lcore;
+}
+
 static uint32_t
 spdk_iscsi_conn_allocate_reactor(uint64_t cpumask)
 {
