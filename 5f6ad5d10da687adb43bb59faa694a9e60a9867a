@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a380bdc_5a4ec58a",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-24T21:44:14Z",
+      "side": 1,
+      "message": "this should take a blobid as a parameter (similar to create_snapshot)",
+      "revId": "5f6ad5d10da687adb43bb59faa694a9e60a9867a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66c6da71_2ca6fbba",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 3606,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-24T21:44:14Z",
+      "side": 1,
+      "message": "opts is space aligned instead of tabs\ncpl and bs_dev are not aligned with opts and snapshot",
+      "revId": "5f6ad5d10da687adb43bb59faa694a9e60a9867a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
