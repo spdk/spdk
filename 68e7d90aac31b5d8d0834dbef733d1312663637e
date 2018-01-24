@@ -80,6 +80,30 @@
       "revId": "68e7d90aac31b5d8d0834dbef733d1312663637e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ac8bd6f_6d6e7a27",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 1353,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-24T09:14:38Z",
+      "side": 1,
+      "message": "Please check the current patch set, it is no longer checked there. This comment was made as reference what should be still be present in newest patch set.",
+      "parentUuid": "72cb832e_7366cbe2",
+      "range": {
+        "startLine": 1351,
+        "startChar": 0,
+        "endLine": 1353,
+        "endChar": 53
+      },
+      "revId": "68e7d90aac31b5d8d0834dbef733d1312663637e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
