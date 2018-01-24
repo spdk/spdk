@@ -2,6 +2,7 @@
 #include "iscsi/iscsi.h"
 #include "iscsi/conn.h"
 #include "iscsi/acceptor.h"
+#include "iscsi/iscsi_json_conf.h"
 
 #include "spdk/env.h"
 #include "spdk/event.h"
@@ -16,9 +17,9 @@ SPDK_LOG_REGISTER_COMPONENT("iscsi", SPDK_LOG_ISCSI)
 
 TAILQ_HEAD(, spdk_iscsi_pdu) g_write_pdu_list;
 
-ssize_t
-spdk_json_parse(void *json, size_t size, struct spdk_json_val *values,
-		size_t num_values, void **end, uint32_t flags)
+int
+spdk_iscsi_chap_get_authinfo_json(struct iscsi_chap_auth *auth, const char *authfile,
+				  const char *authuser, int ag_tag)
 {
 	return 0;
 }
