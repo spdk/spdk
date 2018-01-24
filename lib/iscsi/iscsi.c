@@ -53,6 +53,7 @@
 #include "spdk/bdev.h"
 #include "iscsi/portal_grp.h"
 #include "iscsi/acceptor.h"
+#include "iscsi/iscsi_json_conf.h"
 
 #include "spdk_internal/log.h"
 
@@ -684,6 +685,7 @@ spdk_iscsi_chap_get_authinfo(struct iscsi_chap_auth *auth, const char *authfile,
 	const char *val;
 	const char *user, *muser;
 	const char *secret, *msecret;
+	const char *point;
 	int rc;
 	int i;
 
@@ -694,6 +696,14 @@ spdk_iscsi_chap_get_authinfo(struct iscsi_chap_auth *auth, const char *authfile,
 		free(auth->msecret);
 		auth->user = auth->secret = NULL;
 		auth->muser = auth->msecret = NULL;
+	}
+
+	point = strrchr(authfile, '.');
+	if (point != NULL) {
+		if (!strcmp(point, ".conf")) {
+			return spdk_iscsi_chap_get_authinfo_json(
+				       auth, authfile, authuser, ag_tag);
+		}
 	}
 
 	/* read config files */
