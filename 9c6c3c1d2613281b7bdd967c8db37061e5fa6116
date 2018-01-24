@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "29673afb_e2928012",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1089,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-24T17:54:28Z",
+      "side": 1,
+      "message": "This just looks like a bug fix for the patch that introduced this function; can it be squashed into that patch rather than being a separate patch?",
+      "revId": "9c6c3c1d2613281b7bdd967c8db37061e5fa6116",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
