@@ -101,6 +101,533 @@
       "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5cd4bb96_b0da4a92",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "Portal Group is defined but not \"network portal\"",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "32cee590_39f329b2",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "Some of these definitions have only the first word in caps, a few have all words in caps.",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "93114c7c_4724aa0d",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "\"For details\"",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8d7cca1_de420e5f",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "contains --\u003e contain",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0253bf7d_72fe5c05",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "\"contains information about several iSCSI tasks\" I think is what you mean right?",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc34ac9c_52e6059c",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "\"The following are considerations when designing and implementing...\"",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ab42b8a_6d007e40",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "suggest something like this instead: The SPDK iSCSI target uses several methods to improve per core CPU performance as compared to other common iSCSI taget implementations (Linux IO target, iSCSI tgt):",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d40f0fe6_c72ed498",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "\"on the simple\" --\u003e \"on a simple\"",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ce96561_04803bcb",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "I don\u0027t understand the sentence that starts with \"The only case...\". What are you trying to say?",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d81f8696_ccc987dd",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "\"If that\" --\u003e \"if the connection is active\"",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a7482fd1_564029f6",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "usynchronous -\u003e asynchronous",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f59dc16_f7d296b2",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "I would delete \"At least, we implement\" and just say \"The library implements\"",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fbf38ece_68f2e7ac",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "Suggest deleting the entire sentence that starts with \u0027Definitely\u0027",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f37fb30_fff3eeae",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "delete \"And obsolutely\"",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "75724415_8ceb0dea",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "replace \"So generaly, our design\" with \"The design\"",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59a5c357_8c80fdca",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "Delete \"Mainly,\"",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d6b7158_169b94bf",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "Remove \"Actually named\" and just say \"iscsi_tct.c is an iSCSI tgt based...\"",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d2eaed2b_fecfe21b",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "\"example that demonstrates\"",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a1430dc_1b34bc9c",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "delete \"you can\"",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da8fcfc6_2b3cb71f",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "I don\u0027t think we want to list all of the API\u0027s in these guides, it will just create maintenance overhead.  I think its OK to list the files and what, in general, they are for but no more detail than that.",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "df8eb758_f689726c",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "I think this is OK because its clear that this is just an indication of what the struct is and obviously you need to go to the code to get the details.",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3f12e13_62ba1430",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "again, lets not list APIs",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c44ef790_2ca63e6c",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "I\u0027m not sure listing these structs adds any value",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "348d8b3a_8b20f6a8",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "remove APIs",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c458d1d7_b2d8e63d",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "same comment, remove structs and API details",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b138cc6_e0aafece",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 318,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "same comment, remove structs and API details",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea4e75d4_f1cce6ee",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "same comment, remove structs and API details",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "07ffb7f6_1e8e6c47",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 391,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "same comment, remove structs and API details",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "df3ab127_2d6a8fe8",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 427,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "same comment, remove structs and API details",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "217a48bf_3256612b",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 463,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "same comment, remove structs and API details",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f05c2420_83f0bddd",
+        "filename": "doc/iscsi_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 505,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T16:06:37Z",
+      "side": 1,
+      "message": "same comment, remove structs and API details",
+      "revId": "106df5cb1240ce8cd885daff57c94ac4c85eb473",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
