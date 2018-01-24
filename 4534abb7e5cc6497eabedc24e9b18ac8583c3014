@@ -1,0 +1,101 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a29112e_d93ee2ef",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 649,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-24T17:48:37Z",
+      "side": 1,
+      "message": "Maybe \"spdk_bdev_qos_set_rate_limit()\" would be clearer.",
+      "range": {
+        "startLine": 649,
+        "startChar": 5,
+        "endLine": 649,
+        "endChar": 25
+      },
+      "revId": "4534abb7e5cc6497eabedc24e9b18ac8583c3014",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb61924b_6557d983",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 451,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-24T17:48:37Z",
+      "side": 1,
+      "message": "This should use SPDK_COUNTOF().",
+      "range": {
+        "startLine": 450,
+        "startChar": 8,
+        "endLine": 451,
+        "endChar": 45
+      },
+      "revId": "4534abb7e5cc6497eabedc24e9b18ac8583c3014",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a3ee370_a464e0c6",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 453,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-24T17:48:37Z",
+      "side": 1,
+      "message": "Leftover debug code?",
+      "revId": "4534abb7e5cc6497eabedc24e9b18ac8583c3014",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "207140b2_b723c546",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 477,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-24T17:48:37Z",
+      "side": 1,
+      "message": "I don\u0027t see why this should be an error; just silently continue, since the QoS rate is already configured the way the user wants it to be.",
+      "revId": "4534abb7e5cc6497eabedc24e9b18ac8583c3014",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "679afd0b_bb58eb0b",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 494,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-24T17:48:37Z",
+      "side": 1,
+      "message": "Why is this a separate function?  It\u0027s set up as if it were a callback to some asynchronous operation, but it\u0027s never actually used that way.",
+      "revId": "4534abb7e5cc6497eabedc24e9b18ac8583c3014",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
