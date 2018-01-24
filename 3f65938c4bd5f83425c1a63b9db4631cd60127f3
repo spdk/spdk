@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "708a1776_abd76e30",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 799,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-24T04:41:46Z",
+      "side": 1,
+      "message": "So I\u0027m wondering if we could simplify this code a lot for now but always making the zeroes back_bs_dev match the same blocklen as the blobstore\u0027s device.\n\nI know this adds more changes - but it means we no longer have to do *any* translations between different block lengths when computing LBAs and LBA counts.\n\nI will leave it up to you if you want to make these changes - it would mean you probably do not even need the new bs_dev conversion functions in blobstore.h - you could just add asserts in some places that blob-\u003eback_bs_dev-\u003eblocklen matches blob-\u003ebs-\u003ebs_dev-\u003eblocklen.",
+      "revId": "3f65938c4bd5f83425c1a63b9db4631cd60127f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4073fc76_6829fb6a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 1366,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-24T04:41:46Z",
+      "side": 1,
+      "message": "I think this should be an assert().\n\nWe only support 512 and 4096 blocklen currently.  We may support different blocklen in the future, but those would probably not be compatible with blobstore (or at least would need extra work).\n\nSo for now, since we cannot test these cases, let\u0027s just assert instead of trying to handle them with code that we cannot really test.",
+      "revId": "3f65938c4bd5f83425c1a63b9db4631cd60127f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "abe895e6_723cc3b9",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 1384,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-24T04:41:46Z",
+      "side": 1,
+      "message": "ctx-\u003elba should be changed to something like ctx-\u003eback_lba to make it clear this is the lba for the backing device (not the blob\u0027s device)",
+      "revId": "3f65938c4bd5f83425c1a63b9db4631cd60127f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9387bdce_eaa346ef",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 1496,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-24T04:41:46Z",
+      "side": 1,
+      "message": "I think the batch needs to be freed here.\n\nBut just calling spdk_bs_batch_close() doesn\u0027t work exactly - it will complete the batch with bserrno \u003d 0.  So I think you\u0027ll need to add something like spdk_bs_batch_set_errno().  Call that with -ENOMEM and break - then the spdk_bs_batch_close() at the end of this function will take care of the rest.",
+      "revId": "3f65938c4bd5f83425c1a63b9db4631cd60127f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "503a132e_c203d8d1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 1501,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-24T04:41:46Z",
+      "side": 1,
+      "message": "this function never returns NULL - so an assert(seq !\u003d NULL) would be sufficient",
+      "revId": "3f65938c4bd5f83425c1a63b9db4631cd60127f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
