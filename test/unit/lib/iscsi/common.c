@@ -6,6 +6,7 @@
 #include "spdk/env.h"
 #include "spdk/event.h"
 #include "spdk/net.h"
+#include "spdk/json.h"
 
 #include "spdk_internal/log.h"
 
@@ -14,6 +15,13 @@
 SPDK_LOG_REGISTER_COMPONENT("iscsi", SPDK_LOG_ISCSI)
 
 TAILQ_HEAD(, spdk_iscsi_pdu) g_write_pdu_list;
+
+ssize_t
+spdk_json_parse(void *json, size_t size, struct spdk_json_val *values,
+		size_t num_values, void **end, uint32_t flags)
+{
+	return 0;
+}
 
 struct spdk_iscsi_task *
 spdk_iscsi_task_get(struct spdk_iscsi_conn *conn,
