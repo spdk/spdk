@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a21daec4_44143002",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-01-24T15:22:08Z",
+      "side": 1,
+      "message": "By default all vms are run. I want to run only part of all vms.",
+      "parentUuid": "8b18a87e_c1bb4702",
+      "range": {
+        "startLine": 125,
+        "startChar": 0,
+        "endLine": 128,
+        "endChar": 1
+      },
+      "revId": "505654997f72183e132b0f7c2de27c4865f00382",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ed6d64f8_a95090d7",
         "filename": "test/vhost/hotplug/common.sh",
         "patchSetId": 3
@@ -129,6 +153,30 @@
       "writtenOn": "2018-01-23T08:49:53Z",
       "side": 1,
       "message": "Pretty sure we didn\u0027t have Mallocs in original test plan",
+      "range": {
+        "startLine": 22,
+        "startChar": 35,
+        "endLine": 22,
+        "endChar": 76
+      },
+      "revId": "505654997f72183e132b0f7c2de27c4865f00382",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "596fb587_02a36ad7",
+        "filename": "test/vhost/hotplug/scsi_hotplug.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-01-24T15:22:08Z",
+      "side": 1,
+      "message": "Yes, ok. But locally I don\u0027t have two nvme disk so I need to replace one nvme with malloc.",
+      "parentUuid": "0d19bd35_45262009",
       "range": {
         "startLine": 22,
         "startChar": 35,
