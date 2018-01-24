@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "404dd89f_89077d33",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 947,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-24T20:35:04Z",
+      "side": 1,
+      "message": "this new code seems to duplicate code in lines 1030-1038\n\ncould we make that code common instead of duplicating it here?\n\nthen you can also remove the goto label by calling that function in the failure paths (in general it\u0027s better to avoid gotos if possible)",
+      "revId": "dfccdd9a70d71e08f960aa74e77cbd5b2d5e9789",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
