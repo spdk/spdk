@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ce39c428_651f0ca4",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-24T07:39:44Z",
+      "side": 1,
+      "message": "I would drop these from here. I know that at the early stages of development SPDK virtio used to fail I/O when used with \"multisocket/multitarget/multiqueue\", but it\u0027s not very descriptive for anyone else who\u0027s reading this test plan.\n\nInstead, just mention that 4 concurrent jobs are run on simultaneously on 3 devices, so we always run with 12 virtqueues.",
+      "range": {
+        "startLine": 79,
+        "startChar": 0,
+        "endLine": 81,
+        "endChar": 76
+      },
+      "revId": "21e7519587a55a28b80513523e8936ada1fdc494",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "93b5be7a_9bbc0897",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-24T07:39:44Z",
+      "side": 1,
+      "message": "that\u0027s not really true. we\u0027re using a single NVMe disk with 6 splits on it.\n\"scsi controller with 6 NVMe splits\" would fit a bit better.",
+      "range": {
+        "startLine": 92,
+        "startChar": 25,
+        "endLine": 92,
+        "endChar": 36
+      },
+      "revId": "21e7519587a55a28b80513523e8936ada1fdc494",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7dc498e1_2266c59c",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-24T07:39:44Z",
+      "side": 1,
+      "message": "randwrite",
+      "range": {
+        "startLine": 98,
+        "startChar": 18,
+        "endLine": 98,
+        "endChar": 27
+      },
+      "revId": "21e7519587a55a28b80513523e8936ada1fdc494",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b099335a_35c1c20e",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-24T07:39:44Z",
+      "side": 1,
+      "message": "parallel",
+      "range": {
+        "startLine": 98,
+        "startChar": 44,
+        "endLine": 98,
+        "endChar": 53
+      },
+      "revId": "21e7519587a55a28b80513523e8936ada1fdc494",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8e7a6bf2_bf0a00fd",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-24T07:39:44Z",
+      "side": 1,
+      "message": "could we say that it\u0027s the same config as in TC#1?",
+      "range": {
+        "startLine": 107,
+        "startChar": 2,
+        "endLine": 107,
+        "endChar": 85
+      },
+      "revId": "21e7519587a55a28b80513523e8936ada1fdc494",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
