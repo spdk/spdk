@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "942a05ce_a3d3d392",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 632,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-24T17:50:19Z",
+      "side": 1,
+      "message": "This API looks like it will limit our future expansion to allow other types of QoS.\n\nCan we possibly split this into two steps, one to set the QoS rate limit in I/Os per second, and one to actually enable/disable QoS?\n\nEnabling QoS would just cause all I/O to get sent to the master channel; if no rate limit is set, all of the I/O will be submitted as normal (just on one thread).\n\nI think it should also be possible to change the rate limit while QoS is enabled, rather than enforcing that QoS can\u0027t be changed while enabled.",
+      "revId": "f49ddb3f57bf16b7fbbcd034d0f3fa6efa1ca813",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "24d211a4_06d21865",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 280,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-24T17:50:19Z",
+      "side": 1,
+      "message": "Please use SPDK_COUNTOF() here.",
+      "range": {
+        "startLine": 279,
+        "startChar": 8,
+        "endLine": 280,
+        "endChar": 45
+      },
+      "revId": "f49ddb3f57bf16b7fbbcd034d0f3fa6efa1ca813",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "730a5dc1_3f441c99",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-24T17:50:19Z",
+      "side": 1,
+      "message": "Leftover debugging code?",
+      "revId": "f49ddb3f57bf16b7fbbcd034d0f3fa6efa1ca813",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41bf48a3_8f626254",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-24T17:50:19Z",
+      "side": 1,
+      "message": "If we make \"set rate limit\" and \"enable QoS\" two separate RPC methods, then you wouldn\u0027t need to duplicate this checking for the ios_per_sec limit.",
+      "revId": "f49ddb3f57bf16b7fbbcd034d0f3fa6efa1ca813",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
