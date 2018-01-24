@@ -31,6 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "spdk/stdinc.h"
+#include "spdk/json.h"
 
 #include "CUnit/Basic.h"
 
@@ -46,6 +47,13 @@ static int
 test_setup(void)
 {
 	TAILQ_INIT(&g_spdk_iscsi.ig_head);
+	return 0;
+}
+
+ssize_t
+spdk_json_parse(void *json, size_t size, struct spdk_json_val *values,
+		size_t num_values, void **end, uint32_t flags)
+{
 	return 0;
 }
 
