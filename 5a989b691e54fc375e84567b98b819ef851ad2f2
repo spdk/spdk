@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f1c7dc84_e6c9e952",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1135,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-24T12:49:35Z",
+      "side": 1,
+      "message": "this if{} block is not guarded by bdev-\u003emutex.\n\nthis if{} block can be put into spdk_bdev_qos_channel_create() ?",
+      "range": {
+        "startLine": 1135,
+        "startChar": 1,
+        "endLine": 1135,
+        "endChar": 25
+      },
+      "revId": "5a989b691e54fc375e84567b98b819ef851ad2f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f20f6124_b9ed4a50",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1154,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-24T12:49:35Z",
+      "side": 1,
+      "message": "I would like to confirm the policy.\n\nEven if only one channel creation fails for a bdev, qos for the bdev is disabled?\n\nIf yes, you may have to describe it more clearly.",
+      "range": {
+        "startLine": 1154,
+        "startChar": 2,
+        "endLine": 1154,
+        "endChar": 51
+      },
+      "revId": "5a989b691e54fc375e84567b98b819ef851ad2f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e5260897_c49d73fc",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1221,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-24T12:49:35Z",
+      "side": 1,
+      "message": "As long as I understand, TAILQ_FOREACH_SAFE() is not thread safe.\nHence I think that this should be done by message eassing like submit.",
+      "range": {
+        "startLine": 1221,
+        "startChar": 1,
+        "endLine": 1221,
+        "endChar": 19
+      },
+      "revId": "5a989b691e54fc375e84567b98b819ef851ad2f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "efeb34aa_bea9d863",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1283,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-24T12:49:35Z",
+      "side": 1,
+      "message": "either one is OK but it may be easy to understand if _spdk_bdev_channel_destroy() is called in the spdk_bdev_qos_channel_destroy().\nThe reason is that _spdk_bdev_channel_create() is called in spdk_bdev_qos_channel_create().",
+      "range": {
+        "startLine": 1283,
+        "startChar": 2,
+        "endLine": 1283,
+        "endChar": 48
+      },
+      "revId": "5a989b691e54fc375e84567b98b819ef851ad2f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
