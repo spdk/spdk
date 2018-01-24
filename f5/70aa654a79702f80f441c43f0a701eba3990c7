@@ -1,0 +1,9 @@
+Code-Review+2: Daniel Verkamp <daniel.verkamp@intel.com>
+Verified+1: SPDK Automated Test System <sys_sgsw@intel.com>
+Code-Review+2: Changpeng Liu <changpeng.liu@intel.com>
+Code-Review+1: Dariusz Stojaczyk <dariuszx.stojaczyk@intel.com>
+Submitted-by: Jim Harris <james.r.harris@intel.com>
+Submitted-at: Wed, 24 Jan 2018 10:33:43 -0500
+Reviewed-on: https://review.gerrithub.io/396058
+Project: spdk/spdk
+Branch: refs/heads/master
