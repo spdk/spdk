@@ -65,6 +65,30 @@
     },
     {
       "key": {
+        "uuid": "a4ef330c_4f52aab8",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-01-24T09:21:07Z",
+      "side": 1,
+      "message": "Ok, but I will change this in another patch as this change affects almost all test cases.",
+      "parentUuid": "79025160_9c2fc7e1",
+      "range": {
+        "startLine": 147,
+        "startChar": 8,
+        "endLine": 147,
+        "endChar": 32
+      },
+      "revId": "bf430282bcb5fd1cd6a850b93d2e533ed44c5b9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3ae5d8e9_497256c2",
         "filename": "test/lvol/test_cases.py",
         "patchSetId": 14
@@ -214,6 +238,30 @@
       "writtenOn": "2018-01-18T10:49:47Z",
       "side": 1,
       "message": "self.total_size",
+      "range": {
+        "startLine": 813,
+        "startChar": 48,
+        "endLine": 813,
+        "endChar": 67
+      },
+      "revId": "bf430282bcb5fd1cd6a850b93d2e533ed44c5b9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "57e234d0_43cce051",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 813,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-01-24T09:21:07Z",
+      "side": 1,
+      "message": "I think that self.total_size is not equal to lvs size",
+      "parentUuid": "7c4093b7_046e7151",
       "range": {
         "startLine": 813,
         "startChar": 48,
