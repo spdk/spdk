@@ -33,6 +33,7 @@
 
 #include "spdk/log.h"
 #include "spdk/rpc.h"
+#include "spdk/util.h"
 
 #include "spdk_internal/bdev.h"
 
@@ -120,7 +121,7 @@ spdk_rpc_get_bdevs(struct spdk_jsonrpc_request *request,
 
 	if (params != NULL) {
 		if (spdk_json_decode_object(params, rpc_get_bdevs_decoders,
-					    sizeof(rpc_get_bdevs_decoders) / sizeof(*rpc_get_bdevs_decoders),
+					    SPDK_COUNTOF(rpc_get_bdevs_decoders),
 					    &req)) {
 			SPDK_ERRLOG("spdk_json_decode_object failed\n");
 			goto invalid;
@@ -206,7 +207,7 @@ spdk_rpc_delete_bdev(struct spdk_jsonrpc_request *request,
 	struct spdk_bdev *bdev;
 
 	if (spdk_json_decode_object(params, rpc_delete_bdev_decoders,
-				    sizeof(rpc_delete_bdev_decoders) / sizeof(*rpc_delete_bdev_decoders),
+				    SPDK_COUNTOF(rpc_delete_bdev_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;
