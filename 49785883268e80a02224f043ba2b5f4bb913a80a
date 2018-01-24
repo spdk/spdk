@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e705fb34_d8651e29",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-24T21:12:16Z",
+      "side": 1,
+      "message": "I don\u0027t think it makes sense for these functions to be marked \u0027inline\u0027, since they are used via function pointers.",
+      "range": {
+        "startLine": 54,
+        "startChar": 7,
+        "endLine": 54,
+        "endChar": 13
+      },
+      "revId": "49785883268e80a02224f043ba2b5f4bb913a80a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68ea5bb7_e54c5c0b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-24T21:12:16Z",
+      "side": 1,
+      "message": "This should probably be static.",
+      "revId": "49785883268e80a02224f043ba2b5f4bb913a80a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e492ed1f_a4a102dc",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 1501,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-24T21:12:16Z",
+      "side": 1,
+      "message": "__func__ is already included in the SPDK_ERRLOG() output.",
+      "revId": "49785883268e80a02224f043ba2b5f4bb913a80a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "70e1a895_648102e5",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 1520,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-24T21:12:16Z",
+      "side": 1,
+      "message": "Same here.",
+      "revId": "49785883268e80a02224f043ba2b5f4bb913a80a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
