@@ -1093,6 +1093,9 @@ spdk_rpc_get_iscsi_global_params(struct spdk_jsonrpc_request *request,
 	spdk_json_write_name(w, "default_time2wait");
 	spdk_json_write_uint32(w, g_spdk_iscsi.DefaultTime2Wait);
 
+	spdk_json_write_name(w, "default_time2retain");
+	spdk_json_write_uint32(w, g_spdk_iscsi.DefaultTime2Retain);
+
 	spdk_json_write_name(w, "immediate_data");
 	spdk_json_write_bool(w, g_spdk_iscsi.ImmediateData);
 
@@ -1120,11 +1123,11 @@ spdk_rpc_get_iscsi_global_params(struct spdk_jsonrpc_request *request,
 	}
 
 	spdk_json_write_name(w, "discovery_auth_group");
-	if (g_spdk_iscsi.discovery_auth_group == 0) {
-		spdk_json_write_string(w, "none");
-	} else {
-		spdk_json_write_int32(w, g_spdk_iscsi.discovery_auth_group);
-	}
+	spdk_json_write_int32(w, g_spdk_iscsi.discovery_auth_group);
+
+	spdk_json_write_name(w, "min_connections_per_core");
+	spdk_json_write_int32(w, spdk_iscsi_conn_get_min_per_core());
+
 	spdk_json_write_object_end(w);
 
 	spdk_jsonrpc_end_result(request, w);

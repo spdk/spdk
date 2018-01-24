@@ -175,6 +175,7 @@ void spdk_iscsi_conn_logout(struct spdk_iscsi_conn *conn);
 int spdk_iscsi_drop_conns(struct spdk_iscsi_conn *conn,
 			  const char *conn_match, int drop_all);
 void spdk_iscsi_conn_set_min_per_core(int count);
+int spdk_iscsi_conn_get_min_per_core(void);
 
 int spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int len,
 			      void *buf);
