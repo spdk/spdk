@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "96d6367e_27a03010",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T17:49:08Z",
+      "side": 1,
+      "message": "ation",
+      "parentUuid": "9ae64b49_e8ec218d",
+      "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2e1a8241_f2645279",
         "filename": "doc/bdal_pg.md",
         "patchSetId": 10
@@ -47,6 +65,75 @@
       "writtenOn": "2018-01-17T21:38:25Z",
       "side": 1,
       "message": "If you\u0027re going to have a table of contents, it would be good to link it to the sections below by assigning them {#bdev_pg_...} names and using @ref bdev_pg... here.",
+      "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aa339cf2_2d11962a",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T17:49:08Z",
+      "side": 1,
+      "message": "see https://review.gerrithub.io/#/c/384118/",
+      "parentUuid": "2e1a8241_f2645279",
+      "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e3320b8_d7ade0a2",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T17:49:08Z",
+      "side": 1,
+      "message": "\"to implement block device abstraction layer\" --\u003e \"a block device module\".  That is what you mean with section 4 right, authoring a new bdev? Calling it a backend implementation I think is a bit confusing assuming we are talking about the same things.",
+      "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63c14b9e_9d29b7db",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T17:49:08Z",
+      "side": 1,
+      "message": "The first part",
+      "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ce267ac7_bf74905f",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T17:49:08Z",
+      "side": 1,
+      "message": "integrate the bdev\nThe second part",
       "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -76,6 +163,47 @@
     },
     {
       "key": {
+        "uuid": "97d12852_f3976b44",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T17:49:08Z",
+      "side": 1,
+      "message": "you never define \"back end\" anywhere",
+      "parentUuid": "ec97bd2d_86f95ccb",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 96
+      },
+      "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c60a867_dfc417e6",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T17:49:08Z",
+      "side": 1,
+      "message": "Some of the bdev layer functions",
+      "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c8473118_5a4ada61",
         "filename": "doc/bdal_pg.md",
         "patchSetId": 10
@@ -93,6 +221,142 @@
         "endLine": 53,
         "endChar": 43
       },
+      "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bede63bc_9e10f754",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T17:49:08Z",
+      "side": 1,
+      "message": "Maybe \"Called\" instead of \"Given\"?",
+      "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "87291a86_229805c2",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T17:49:08Z",
+      "side": 1,
+      "message": "This could probably use a little more explanation.  When/why/what does \u0027finish\u0027 mean in the context of an application interfacing with an existing bdev?",
+      "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be883cda_c65eae9d",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T17:49:08Z",
+      "side": 1,
+      "message": "Called following the completion of an I/O operation. I believe we are safe to say that \"At this point the I/O and it\u0027s resources belong to the caller.\" Or something like that, Daniel?",
+      "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1dde48a2_5f11a1e8",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T17:49:08Z",
+      "side": 1,
+      "message": "Again, a little more explanation would be good here too",
+      "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e04334af_a97b102b",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T17:49:08Z",
+      "side": 1,
+      "message": "The Block",
+      "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b55fbe82_994e1786",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T17:49:08Z",
+      "side": 1,
+      "message": "We should expand on this a bit even though there may be a little repeat between this and other intro sections. We should explain what the different APIs are that this whole guide is talking about, I see them as (1) set of API to interface the bdev layer generically like enumeration  (2) set of APIs to interface with a specific bdev module like sending IOs and (3) what the bottom edge of a bdev looks like for someone authoring a new one.  This whole section is (1) correct? And what you are calling \u0027the second part\u0027 are the others?",
+      "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed791b54_7bc2c511",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T17:49:08Z",
+      "side": 1,
+      "message": "Is this something an app does or does this belong in the next section, something that a bdev module itself does?",
+      "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a99a596_03ed705f",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T17:49:08Z",
+      "side": 1,
+      "message": "Everywhere you start a sentence with \"Block device abstraction...\" you should use \"The\" first",
       "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -122,6 +386,47 @@
     },
     {
       "key": {
+        "uuid": "59c1f582_0a5ad228",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T17:49:08Z",
+      "side": 1,
+      "message": "trough (typo)\nAlso, it\u0027s not clear at all here what the init means to me as a developer trying to author a new bdev module.  Am I going to use the 2 API you mention here? Why? How?",
+      "parentUuid": "082a6e5e_f8f44c1a",
+      "range": {
+        "startLine": 91,
+        "startChar": 0,
+        "endLine": 91,
+        "endChar": 3
+      },
+      "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "edf48ec2_a74bf7a9",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T17:49:08Z",
+      "side": 1,
+      "message": "A block device",
+      "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "071f9f7e_030f807b",
         "filename": "doc/bdal_pg.md",
         "patchSetId": 10
@@ -145,6 +450,23 @@
     },
     {
       "key": {
+        "uuid": "859245b1_c22fabf1",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T17:49:08Z",
+      "side": 1,
+      "message": "about the specified including:",
+      "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dc90fcb1_4dbe32c2",
         "filename": "doc/bdal_pg.md",
         "patchSetId": 10
@@ -162,6 +484,74 @@
         "endLine": 125,
         "endChar": 4
       },
+      "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "18e9c9bf_01b5c128",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T17:49:08Z",
+      "side": 1,
+      "message": "Here\u0027s what I suggest.  Don\u0027t use this section for snippets, list the available samples and describe what they are.  For snippets, choose one example app (or test app) that is relevant for the \u0027using bdev\u0027 section and use it to explain the concepts of init, enueration, getting info, submitting IO, closing/finishing/whatever.  Then in the next section pick a simple bdev module and use it, again in each subsection, to explain the concepts. You don\u0027t need to fully pick apart every function in the code but for every section in the doc you should be able to refer to the relevant example and give the reader a good sense of how that section fits into the big picture.  Make sense?",
+      "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f79f7249_706514aa",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T17:49:08Z",
+      "side": 1,
+      "message": "\"if a buffer\"\n\"the bdev later\"\n\"to the application\"\n\"becomes the owner\"\nBasically you\u0027re missing a lot of articles, just English translation stuff. If you know where/how to address these that\u0027d be great otherwise its probably best to finish the content first and we can do a full grammar review at the end (Ben will love to help!)",
+      "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "df3791b7_9c85f713",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T17:49:08Z",
+      "side": 1,
+      "message": "I mention this before, there\u0027s no definition anywhere what what we mean by backend in the doc.  That should be clear up front.",
+      "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e15c92cb_2e5a1787",
+        "filename": "doc/bdal_pg.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-24T17:49:08Z",
+      "side": 1,
+      "message": "here is a good example of where you can use a code snippet from your \"example bdev\" that you use throughout this section to help explain the concepts",
       "revId": "9ed71031be887f584ce04e201fc9e274e6f722d5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
