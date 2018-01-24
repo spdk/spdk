@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a0313910_f806d945",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 799,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-24T16:31:59Z",
+      "side": 1,
+      "message": "It would be simpler but I made it with keeping in mind that in the future there will have different backing devices and this code will be more or less plug and play for these future implementations. That said I would keep that.",
+      "parentUuid": "708a1776_abd76e30",
+      "revId": "3f65938c4bd5f83425c1a63b9db4631cd60127f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4073fc76_6829fb6a",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 39
@@ -30,6 +48,24 @@
       "writtenOn": "2018-01-24T04:41:46Z",
       "side": 1,
       "message": "I think this should be an assert().\n\nWe only support 512 and 4096 blocklen currently.  We may support different blocklen in the future, but those would probably not be compatible with blobstore (or at least would need extra work).\n\nSo for now, since we cannot test these cases, let\u0027s just assert instead of trying to handle them with code that we cannot really test.",
+      "revId": "3f65938c4bd5f83425c1a63b9db4631cd60127f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "23119c11_86807413",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 1366,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-24T16:31:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4073fc76_6829fb6a",
       "revId": "3f65938c4bd5f83425c1a63b9db4631cd60127f3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "294a94d0_b13d6b11",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 1384,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-24T16:31:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "abe895e6_723cc3b9",
+      "revId": "3f65938c4bd5f83425c1a63b9db4631cd60127f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9387bdce_eaa346ef",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 39
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "7d8271e4_9fd85bb2",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 1496,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-24T16:31:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9387bdce_eaa346ef",
+      "revId": "3f65938c4bd5f83425c1a63b9db4631cd60127f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "503a132e_c203d8d1",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 39
@@ -81,6 +153,24 @@
       "writtenOn": "2018-01-24T04:41:46Z",
       "side": 1,
       "message": "this function never returns NULL - so an assert(seq !\u003d NULL) would be sufficient",
+      "revId": "3f65938c4bd5f83425c1a63b9db4631cd60127f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dcdc1d84_2058f2ab",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 1501,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-24T16:31:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "503a132e_c203d8d1",
       "revId": "3f65938c4bd5f83425c1a63b9db4631cd60127f3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
