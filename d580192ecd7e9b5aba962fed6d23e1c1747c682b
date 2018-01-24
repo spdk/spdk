@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f19b1148_36a93551",
+        "filename": "autotest.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-01-24T09:21:07Z",
+      "side": 1,
+      "message": "Yes, but it will be included",
+      "parentUuid": "b82358a1_3d28c25b",
+      "range": {
+        "startLine": 166,
+        "startChar": 50,
+        "endLine": 166,
+        "endChar": 61
+      },
+      "revId": "d580192ecd7e9b5aba962fed6d23e1c1747c682b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "99e29643_bd554b44",
         "filename": "test/lvol/fio.job",
         "patchSetId": 19
@@ -214,6 +238,30 @@
       "writtenOn": "2018-01-23T09:38:02Z",
       "side": 1,
       "message": "You already have the bdev name in bdev_name variables after calling the \"construct\" so these lines are not needed.",
+      "range": {
+        "startLine": 808,
+        "startChar": 8,
+        "endLine": 809,
+        "endChar": 63
+      },
+      "revId": "d580192ecd7e9b5aba962fed6d23e1c1747c682b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58afaada_a925a6d7",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 809,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-01-24T09:21:07Z",
+      "side": 1,
+      "message": "This is needed later in lvol_bdev0[\u0027block_size\u0027]",
+      "parentUuid": "783df6d3_289c4f60",
       "range": {
         "startLine": 808,
         "startChar": 8,
