@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e9b31f5c_b86670e6",
+        "filename": "lib/json/json_parse.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 670,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-24T21:29:37Z",
+      "side": 1,
+      "message": "size should be size_t like in spdk_json_parse().\n\nAlso, maybe we can pass in a maximum number of values rather than hard-coding SPDK_JSON_OBJ_MAX_VALUES; this would allow the user to choose a larger number of values later (1024 may be fairly limiting).\n\nIt also might be best to put this in json_util.c rather than json_parse.c, since it\u0027s not really part of the parser.",
+      "range": {
+        "startLine": 670,
+        "startChar": 34,
+        "endLine": 670,
+        "endChar": 42
+      },
+      "revId": "efcd6a1212f71733aa7b33c7be5d130d3da69af2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a3344dd4_c1448e2f",
+        "filename": "lib/json/json_parse.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 677,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-24T21:29:37Z",
+      "side": 1,
+      "message": "If the maximum number of values is hard-coded (SPDK_JSON_OBJ_MAX_VALUES) or passed as a parameter, then this first spdk_json_parse() call is not necessary - its only purpose is to check how many values are necessary.  We can skip directly to the DECODE_IN_PLACE step and only parse once.",
+      "revId": "efcd6a1212f71733aa7b33c7be5d130d3da69af2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
