@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "a964e63a_428a956d",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-01-24T01:20:20Z",
+      "side": 1,
+      "message": "I want to add some important tools(Perf) to the introduction, so moving Hello World/Perf/Fio_plugin to same Example section.",
+      "parentUuid": "b0154754_c89eac11",
+      "range": {
+        "startLine": 33,
+        "startChar": 0,
+        "endLine": 33,
+        "endChar": 23
+      },
+      "revId": "b8c32b3fd2a489a528d93a1d9194006212631a42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8e10e637_9d0b84c6",
         "filename": "doc/nvme.md",
         "patchSetId": 1
@@ -94,6 +118,30 @@
     },
     {
       "key": {
+        "uuid": "7b7e1609_541b653c",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-01-24T01:20:20Z",
+      "side": 1,
+      "message": "Thanks, will add it to description.",
+      "parentUuid": "cceada5e_6a97e783",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 52,
+        "endChar": 38
+      },
+      "revId": "b8c32b3fd2a489a528d93a1d9194006212631a42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3c8d8a3b_dab636ff",
         "filename": "doc/nvme.md",
         "patchSetId": 1
@@ -105,6 +153,30 @@
       "writtenOn": "2018-01-23T17:03:41Z",
       "side": 1,
       "message": "Lets break this up and provide a little bit more information on the workloads for those that are new SPDK perf\nHere is what I would suggest:\n\nExample: Using perf for 4K 100% Random Read workload to a local NVMe SSD for 300 seconds\n~~~{.sh}\nperf -q 128 -s 4096 -w randread -r \u0027trtype:PCIe traddr:0000:04:00.0\u0027 -t 300\n~~~\n\nExample: Using perf for 4K 100% Random Read workload to a remote NVMe SSD exported over the network via NVMe-oF\n~~~{.sh}\nperf -q 128 -s 4096 -w randread -r \u0027trtype:RDMA adrfam:IPv4 traddr:192.168.100.8 trsvcid:4420\u0027 -t 300\n~~~\n\nLets also show a mixed workload like this one\nExample: Using perf for 4K 70/30 Random Read/Write mix workload\n~~~{.sh}\nperf -q 128 -s 4096 -w randrw -M 70 -t 300\n~~~",
+      "range": {
+        "startLine": 54,
+        "startChar": 0,
+        "endLine": 58,
+        "endChar": 3
+      },
+      "revId": "b8c32b3fd2a489a528d93a1d9194006212631a42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "76483c2f_cb7f394a",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-01-24T01:20:20Z",
+      "side": 1,
+      "message": "Looks great.",
+      "parentUuid": "3c8d8a3b_dab636ff",
       "range": {
         "startLine": 54,
         "startChar": 0,
@@ -174,6 +246,30 @@
       "writtenOn": "2018-01-23T17:03:41Z",
       "side": 1,
       "message": "I would reword to\n\nThe SPDK NVMe driver provides a zero-copy data transfer path, which means that there are no data buffers for I/O commands. However, some Admin commands have data copies depending on the API used by the user.",
+      "range": {
+        "startLine": 140,
+        "startChar": 0,
+        "endLine": 142,
+        "endChar": 80
+      },
+      "revId": "b8c32b3fd2a489a528d93a1d9194006212631a42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "214eac1d_dca9f7f3",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-01-24T01:20:20Z",
+      "side": 1,
+      "message": "Ok.",
+      "parentUuid": "2abdcf73_8a747181",
       "range": {
         "startLine": 140,
         "startChar": 0,
@@ -312,6 +408,30 @@
       "writtenOn": "2018-01-23T17:03:41Z",
       "side": 1,
       "message": "I would recommend changing this to something like this:\n\nI/O queue pairs are allocated in host memory. Each submission queue entry (SQE) and completion queue entry (CQE) consumes 64 bytes and 16 bytes respectively\nTherefore, the maximum memory used for each I/O queue pair is (MQES + 1) * (64 + 16) Bytes",
+      "range": {
+        "startLine": 150,
+        "startChar": 0,
+        "endLine": 153,
+        "endChar": 32
+      },
+      "revId": "b8c32b3fd2a489a528d93a1d9194006212631a42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3238132_7c618188",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-01-24T01:20:20Z",
+      "side": 1,
+      "message": "Ok.",
+      "parentUuid": "4c5848d2_f49a9c2c",
       "range": {
         "startLine": 150,
         "startChar": 0,
