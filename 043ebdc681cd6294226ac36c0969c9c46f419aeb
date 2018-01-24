@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f1867a43_265e380e",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 414,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-24T13:43:15Z",
+      "side": 1,
+      "message": "See below.",
+      "range": {
+        "startLine": 414,
+        "startChar": 2,
+        "endLine": 414,
+        "endChar": 13
+      },
+      "revId": "043ebdc681cd6294226ac36c0969c9c46f419aeb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5cafcb4b_d80ae242",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 426,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-24T13:43:15Z",
+      "side": 1,
+      "message": "I don\u0027t think you would want to free those two in RPC call for rename.",
+      "range": {
+        "startLine": 425,
+        "startChar": 0,
+        "endLine": 426,
+        "endChar": 12
+      },
+      "revId": "043ebdc681cd6294226ac36c0969c9c46f419aeb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
