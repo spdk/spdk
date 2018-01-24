@@ -34,6 +34,7 @@
 #include "spdk_internal/utf.h"
 
 #define SPDK_JSON_MAX_NESTING_DEPTH	64
+#define SPDK_JSON_OBJ_MAX_VALUES	1024
 
 static int
 hex_value(uint8_t c)
@@ -663,4 +664,43 @@ done_rc:
 done_invalid:
 	rc = SPDK_JSON_PARSE_INVALID;
 	goto done_rc;
+}
+
+int
+spdk_json_load_object(void *json, int size, struct spdk_json_val **json_vals)
+{
+	struct spdk_json_val *tmp_vals;
+	void *end;
+	int rc;
+
+	/* Check to see if we have got a full JSON value */
+	rc = spdk_json_parse(json, size, NULL, 0, &end, 0);
+	if (rc < 0 || rc > SPDK_JSON_OBJ_MAX_VALUES) {
+		return -1;
+	}
+
+	tmp_vals = calloc(SPDK_JSON_OBJ_MAX_VALUES, sizeof(struct spdk_json_val));
+	if (tmp_vals == NULL) {
+		return -1;
+	}
+
+	/* Decode a second time now that there is a full JSON value available */
+	rc = spdk_json_parse(json, size, tmp_vals, SPDK_JSON_OBJ_MAX_VALUES,
+			     &end, SPDK_JSON_PARSE_FLAG_DECODE_IN_PLACE);
+	if (rc < 0 || rc > SPDK_JSON_OBJ_MAX_VALUES) {
+		goto error;
+	}
+
+	assert(end != NULL);
+
+	if (tmp_vals[0].type != SPDK_JSON_VAL_OBJECT_BEGIN) {
+		goto error;
+	}
+
+	*json_vals = tmp_vals;
+	return end - json;
+
+error:
+	free(tmp_vals);
+	return -1;
 }

@@ -71,6 +71,7 @@ bool spdk_conf_section_get_boolval(struct spdk_conf_section *sp, const char *key
 
 void spdk_conf_set_as_default(struct spdk_conf *cp);
 
+int spdk_conf_load_file(const char *file, void **buffer, int *buffer_size);
 #ifdef __cplusplus
 }
 #endif

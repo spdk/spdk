@@ -152,6 +152,8 @@ int spdk_json_decode_uint32(const struct spdk_json_val *val, void *out);
 int spdk_json_decode_uint64(const struct spdk_json_val *val, void *out);
 int spdk_json_decode_string(const struct spdk_json_val *val, void *out);
 
+int spdk_json_load_object(void *json, int size, struct spdk_json_val **json_vals);
+
 /**
  * Get length of a value in number of values.
  *

@@ -37,6 +37,7 @@
 #include "spdk/conf.h"
 #include "spdk/string.h"
 #include "spdk/log.h"
+#include "spdk/json.h"
 
 struct spdk_conf_value {
 	struct spdk_conf_value *next;
@@ -65,6 +66,7 @@ struct spdk_conf {
 #define CF_DELIM " \t"
 
 #define LIB_MAX_TMPBUF 1024
+#define SPDK_JSON_FILE_MAX_VALUES 1024
 
 static struct spdk_conf *default_config = NULL;
 
@@ -679,4 +681,38 @@ void
 spdk_conf_set_as_default(struct spdk_conf *cp)
 {
 	default_config = cp;
+}
+
+int
+spdk_conf_load_file(const char *file, void **buffer, int *buffer_size)
+{
+	FILE *fp;
+	char *temp;
+	int read_size;
+
+	fp = fopen(file, "r");
+	if (fp == NULL) {
+		return -1;
+	}
+
+	fseek(fp, 0, SEEK_END);
+	*buffer_size = (int)ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+
+	*buffer = malloc((*buffer_size) + 1);
+	if (*buffer == NULL) {
+		return -1;
+	}
+
+	read_size = fread(*buffer, 1, *buffer_size, fp);
+	fclose(fp);
+
+	if (*buffer_size != read_size) {
+		free(*buffer);
+		return -1;
+	}
+
+	temp[*buffer_size] = '\0';
+
+	return 0;
 }
