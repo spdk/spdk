@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bba2735c_dc6fc8de",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-01-24T16:54:34Z",
+      "side": 1,
+      "message": "There is a bit of a trade-off between the extra coverage we get with this test and not wanting to go way over the timeout value for the nightly test. building the kernel on all three file systems in series will probably takeover 35 minutes by itself. I think a good solution for this would be to make the kernel on a single file system on each of three different machines. i.e.\nfedora-02 runs ext4\nfedora-06 runs btrfs\nanother machine runs xfs\nThe easiest way i could see this working is as follows:\nYou could move lines 85-120 into a function, and make three separate function calls, one with each file system. before each call, you could do a conditional check based on specific flags. \nif [ $RUN_EXT4_FLAG -eq 1 ]; then\nfile system_make \"ext4\"\nfi\nThen I can specify the values for the file system flags in the spdk-autorun.conf file for each of the machines. This would allow your tests to run and give coverage on all three file systems while limiting the amount of time they take up, hopefully allowing us to keep the nightly timeout below 20 minutes.",
+      "revId": "e47629d4fafa5476707141ade8df4e776c4752d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

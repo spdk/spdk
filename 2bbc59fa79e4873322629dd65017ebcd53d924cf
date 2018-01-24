@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0b6b8889_e223aa6d",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-01-24T16:54:34Z",
+      "side": 0,
+      "message": "Was this an accidental deletion, or did you place this statement somewhere else?",
+      "revId": "2bbc59fa79e4873322629dd65017ebcd53d924cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
