@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "773cd715_55f4f124",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 20
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-24T09:43:55Z",
+      "side": 1,
+      "message": "Again - please take a look at PS19 comment. What is this second [0] for? I think it will fail\n\nAlso - you still are not based on commit which enables \"-l\" option for get_lvol_stores",
+      "range": {
+        "startLine": 149,
+        "startChar": 68,
+        "endLine": 149,
+        "endChar": 71
+      },
+      "revId": "7dd8b13c5d90e1ad8b76035bd2f4ce28056f1918",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b9024936_3dad922a",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 20
+      },
+      "lineNbr": 745,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-24T09:43:55Z",
+      "side": 1,
+      "message": "Whitespace",
+      "range": {
+        "startLine": 745,
+        "startChar": 48,
+        "endLine": 745,
+        "endChar": 49
+      },
+      "revId": "7dd8b13c5d90e1ad8b76035bd2f4ce28056f1918",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
