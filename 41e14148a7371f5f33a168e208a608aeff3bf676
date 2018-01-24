@@ -69,6 +69,29 @@
       "revId": "41e14148a7371f5f33a168e208a608aeff3bf676",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77025a1f_7ed794a5",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 52
+      },
+      "lineNbr": 1352,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-24T09:14:38Z",
+      "side": 1,
+      "message": "Lvol name is not checked in current patch set.",
+      "range": {
+        "startLine": 1351,
+        "startChar": 1,
+        "endLine": 1352,
+        "endChar": 20
+      },
+      "revId": "41e14148a7371f5f33a168e208a608aeff3bf676",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
