@@ -1256,11 +1256,13 @@ static int
 spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 		      const struct spdk_nvme_transport_id *trid)
 {
-	struct spdk_nvmf_rdma_transport *rtransport;
+	struct spdk_nvmf_rdma_transport	*rtransport;
 	struct spdk_nvmf_rdma_device	*device;
 	struct spdk_nvmf_rdma_port 	*port_tmp, *port;
-	struct sockaddr_in saddr;
-	int rc;
+	struct addrinfo			*res;
+	struct addrinfo			hints;
+	int				family;
+	int				rc;
 
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
 
@@ -1297,11 +1299,36 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 		return rc;
 	}
 
-	memset(&saddr, 0, sizeof(saddr));
-	saddr.sin_family = AF_INET;
-	saddr.sin_addr.s_addr = inet_addr(port->trid.traddr);
-	saddr.sin_port = htons((uint16_t)strtoul(port->trid.trsvcid, NULL, 10));
-	rc = rdma_bind_addr(port->id, (struct sockaddr *)&saddr);
+	switch (port->trid.adrfam) {
+	case SPDK_NVMF_ADRFAM_IPV4:
+		family = AF_INET;
+		break;
+	case SPDK_NVMF_ADRFAM_IPV6:
+		family = AF_INET6;
+		break;
+	default:
+		SPDK_ERRLOG("Unhandled ADRFAM %d\n", port->trid.adrfam);
+		free(port);
+		pthread_mutex_unlock(&rtransport->lock);
+		return -EINVAL;
+	}
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = family;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = 0;
+
+	rc = getaddrinfo(port->trid.traddr, port->trid.trsvcid, &hints, &res);
+	if (rc) {
+		SPDK_ERRLOG("getaddrinfo failed: %s (%d)\n", gai_strerror(rc), rc);
+		free(port);
+		pthread_mutex_unlock(&rtransport->lock);
+		return -EINVAL;
+	}
+
+	rc = rdma_bind_addr(port->id, res->ai_addr);
+	freeaddrinfo(res);
+
 	if (rc < 0) {
 		SPDK_ERRLOG("rdma_bind_addr() failed\n");
 		rdma_destroy_id(port->id);
