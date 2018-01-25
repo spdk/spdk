@@ -139,6 +139,7 @@ struct spdk_blob_data {
 	 * copying them unecessarily. Figure this out.
 	 */
 	TAILQ_HEAD(, spdk_xattr) xattrs;
+	TAILQ_HEAD(, spdk_xattr) xattrs_internal;
 
 	TAILQ_ENTRY(spdk_blob_data) link;
 };
@@ -217,6 +218,7 @@ struct spdk_bs_md_mask {
 #define SPDK_MD_DESCRIPTOR_TYPE_EXTENT 1
 #define SPDK_MD_DESCRIPTOR_TYPE_XATTR 2
 #define SPDK_MD_DESCRIPTOR_TYPE_FLAGS 3
+#define SPDK_MD_DESCRIPTOR_TYPE_XATTR_INTERNAL 4
 
 struct spdk_blob_md_descriptor_xattr {
 	uint8_t		type;
