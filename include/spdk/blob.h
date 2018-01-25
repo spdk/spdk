@@ -235,6 +235,17 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 void spdk_bs_create_blob(struct spdk_blob_store *bs,
 			 spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
 
+/* Create a snapshot of specified blob.
+ * This Function will create new blob that will become read-only
+ * snapshot of specified blob. All metadata will persist after this
+ * call automatically.
+ * param opts contain options like xattrs for created snapshot.
+ * Callback will provide handle to newly created snapshot blob.
+ */
+void spdk_bs_create_snapshot(struct spdk_blob_store *bs, spdk_blob_id blobid,
+			     const struct spdk_blob_xattr_opts *opts,
+			     spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
+
 /* Delete an existing blob. */
 void spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 			 spdk_blob_op_complete cb_fn, void *cb_arg);
