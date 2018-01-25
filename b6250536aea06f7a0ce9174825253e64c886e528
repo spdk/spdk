@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "bb41122c_e5ccf006",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 973,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-25T10:26:37Z",
+      "side": 1,
+      "message": "I looked closer to this issue and actually we check this at blob level when we try to resize it in line 893. So there won\u0027t be any problem when clusters get allocated between these two calls. First one is just an additional check so that we won\u0027t start any operations if already there is not enough clusters.",
+      "parentUuid": "853dab9a_383a0e08",
+      "revId": "b6250536aea06f7a0ce9174825253e64c886e528",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9124dff0_41770a55",
         "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
         "patchSetId": 14
