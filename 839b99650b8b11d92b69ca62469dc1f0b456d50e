@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ce01d466_e5927c18",
+        "filename": "test/config/vm_setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-25T19:25:59Z",
+      "side": 1,
+      "message": "mkdir normally exits with an error if the directory already exists; -p makes any parents as necessary, but also doesn\u0027t return an error if the directory exists.",
+      "revId": "839b99650b8b11d92b69ca62469dc1f0b456d50e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
