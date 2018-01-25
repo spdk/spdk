@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8411c903_53793ec6",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1314,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-25T17:40:25Z",
+      "side": 1,
+      "message": "the ordering needs to be looked at here, and also consider the case where we have operations queued for other clusters (not the one that was just allocated)\n\nthe code currently will run into an infinite loop if we have an op for a different cluster - we will will remove the op from the TAILQ, and then spdk_bs_user_op_execute() will put it back on the TAILQ\n\nI think you need to use TAILQ_SWAP here to make a temporary list, then execute each of the items from the temporary list",
+      "revId": "913dfbb3392cf3162231274766b5d8ae4761b092",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
