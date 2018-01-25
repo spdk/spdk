@@ -1,6 +1,6 @@
 import app
 import bdev
-import client
+from client import print_dict
 import iscsi
 import log
 import lvol
