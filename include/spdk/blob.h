@@ -220,6 +220,18 @@ struct spdk_blob_opts {
 				   const void **value, size_t *value_len);
 };
 
+struct spdk_blob_snapshot_opts {
+	/* Number of attributes */
+	size_t	xattr_count;
+	/* Array of attribute names. Caller should free this array after use. */
+	char	**xattr_names;
+	/* User context passed to get_xattr_value function */
+	void	*xattr_ctx;
+	/* Callback that will return value for each attribute name. */
+	void	(*get_xattr_value)(void *xattr_ctx, const char *name,
+				   const void **value, size_t *value_len);
+};
+
 /* Initialize an spdk_blob_opts structure to the default blob option values. */
 void spdk_blob_opts_init(struct spdk_blob_opts *opts);
 
@@ -230,6 +242,14 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 /* Create a new blob. */
 void spdk_bs_create_blob(struct spdk_blob_store *bs,
 			 spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
+
+/* Create a snapshot of specified blob. Specified blob will become a clone.
+ * This call automatically persists all changes in both blobs.
+ * param opts contain options like xattrs for created snapshot.
+ * Callback will provide handle to newly created snapshot blob.
+ * Snapshot blob is read-only */
+void spdk_bs_create_blob_snapshot(spdk_blob_id blobid, const struct spdk_blob_snapshot_opts *opts,
+				  spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
 
 /* Delete an existing blob. */
 void spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
