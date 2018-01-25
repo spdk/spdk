@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e3591a9e_8716962f",
+        "filename": "doc/template_pg.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-25T17:18:25Z",
+      "side": 1,
+      "message": "I think this dashed line was left over by accident.\n\nOtherwise looks good to me.",
+      "revId": "76488d22dff44c6eccd63ec2a2c0ff1f0a9ab822",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
