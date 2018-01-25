@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8ae95824_7ac38abf",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-25T18:35:30Z",
+      "side": 1,
+      "message": "need to free xattrs_internal too - probably a separate helper function (in different patch)\n\nthis is probably the cause of the test pool failures too",
+      "revId": "54aed6c380f03cbeaaef40ff38fbb08caa73fcc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bae87f31_53f8353c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 434,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-25T18:35:30Z",
+      "side": 1,
+      "message": "newline after declaration",
+      "revId": "54aed6c380f03cbeaaef40ff38fbb08caa73fcc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "129314d5_c1b109e3",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 732,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-25T18:35:30Z",
+      "side": 1,
+      "message": "This loop is an almost exact duplicate of the blob-\u003exattrs loop.  It should be broken out into a separate patch before this one.",
+      "revId": "54aed6c380f03cbeaaef40ff38fbb08caa73fcc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "604aea2a_6e311bf4",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1164,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-25T18:35:30Z",
+      "side": 1,
+      "message": "Would be better to test this through public interface (i.e. spdk_blob_get_xattr_value).\n\nShould also have some unit tests to test how these are persisted.",
+      "revId": "54aed6c380f03cbeaaef40ff38fbb08caa73fcc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
