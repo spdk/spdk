@@ -16,6 +16,24 @@
       "revId": "dfccdd9a70d71e08f960aa74e77cbd5b2d5e9789",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3fdd5c7c_0a2f3b43",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 947,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-25T01:38:56Z",
+      "side": 1,
+      "message": "Yes. Will have a common function and remove those \"goto\"",
+      "parentUuid": "404dd89f_89077d33",
+      "revId": "dfccdd9a70d71e08f960aa74e77cbd5b2d5e9789",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
