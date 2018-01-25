@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "939c64b4_60ab9d0a",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 17
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-25T15:09:42Z",
+      "side": 1,
+      "message": "Similar to get_lvol_store_with_name(), cant we request just one specific bdev ? RPC call for get_bdevs returns just one if name is provided, instead of list of all bdevs.",
+      "range": {
+        "startLine": 165,
+        "startChar": 41,
+        "endLine": 165,
+        "endChar": 56
+      },
+      "revId": "c132991739c23057d4cb63400405a784d2117b6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff28ac6a_d891180f",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 17
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-25T15:09:42Z",
+      "side": 1,
+      "message": "This command is already in this file in line 127",
+      "range": {
+        "startLine": 177,
+        "startChar": 0,
+        "endLine": 180,
+        "endChar": 17
+      },
+      "revId": "c132991739c23057d4cb63400405a784d2117b6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0388934f_5e4c88dd",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 17
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-25T15:09:42Z",
+      "side": 1,
+      "message": "This is no longer used.",
+      "range": {
+        "startLine": 95,
+        "startChar": 0,
+        "endLine": 97,
+        "endChar": 52
+      },
+      "revId": "c132991739c23057d4cb63400405a784d2117b6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "31b8a45c_7fc8bc67",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 17
+      },
+      "lineNbr": 726,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-25T15:09:42Z",
+      "side": 1,
+      "message": "Please use variable defined at top of the file as \"1024 * 1024\" and use it throughout those tests.",
+      "range": {
+        "startLine": 726,
+        "startChar": 75,
+        "endLine": 726,
+        "endChar": 82
+      },
+      "revId": "c132991739c23057d4cb63400405a784d2117b6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36a2b3e4_c61edb19",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 17
+      },
+      "lineNbr": 740,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-25T15:09:42Z",
+      "side": 1,
+      "message": "I don\u0027t there is a need to construct whole argument line here. Relevant ones can be passed as arguments. From what I gather something along the lines should be enough:\nrun_fio_test(name of device, size of data, offset, pattern, type of operation [r/w])",
+      "range": {
+        "startLine": 738,
+        "startChar": 44,
+        "endLine": 740,
+        "endChar": 92
+      },
+      "revId": "c132991739c23057d4cb63400405a784d2117b6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
