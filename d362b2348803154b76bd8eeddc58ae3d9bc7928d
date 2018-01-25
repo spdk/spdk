@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "031665ef_a5719cfb",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1127,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-25T18:53:05Z",
+      "side": 1,
+      "message": "Since there is already another comment requesting a code change, while you make that change can you rename this function to:\n\nspdk_bdev_notify_blockcnt_change\n\nI think that is clearer that the bdev module is notifying the generic bdev code that the size of the underlying device has changed.",
+      "revId": "d362b2348803154b76bd8eeddc58ae3d9bc7928d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "169075a6_c6b15225",
         "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
         "patchSetId": 15
