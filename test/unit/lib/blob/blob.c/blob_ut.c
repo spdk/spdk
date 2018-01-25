@@ -1152,6 +1152,18 @@ blob_xattr(void)
 	rc = spdk_blob_set_xattr(blob, "length", &length, sizeof(length));
 	CU_ASSERT(rc == 0);
 
+
+	/* Set internal xattr */
+	length = 3456;
+	rc = _spdk_blob_set_xattr(blob, "internal", &length, sizeof(length), true);
+	CU_ASSERT(rc == 0);
+	rc = _spdk_blob_get_xattr_value(blob, "internal", &value, &value_len, true);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(*(uint64_t *)value == length);
+	/* try to get public xattr with same name */
+	rc = _spdk_blob_get_xattr_value(blob, "internal", &value, &value_len, false);
+	CU_ASSERT(rc != 0);
+
 	/* get_xattr should still work even if md_ro flag is set. */
 	value = NULL;
 	__blob_to_data(blob)->md_ro = true;
