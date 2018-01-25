@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c1d1bf00_71af6acc",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 491,
+      "author": {
+        "id": 1012941
+      },
+      "writtenOn": "2018-01-25T12:22:24Z",
+      "side": 1,
+      "message": "I was decided that the function should be called only internally. So finally we leave the prototype here.",
+      "parentUuid": "231ac891_82286b9b",
+      "revId": "e6d52f34ae3aef47d0d9cd0e1c8aee1bfde251d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "58b18257_6259ebe3",
         "filename": "lib/bdev/aio/bdev_aio.c",
         "patchSetId": 10
