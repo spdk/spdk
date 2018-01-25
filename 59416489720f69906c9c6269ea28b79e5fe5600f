@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "58d3d745_a2fa05d1",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-25T17:50:53Z",
+      "side": 1,
+      "message": "Hi Maciek,\n\nCan you provide some more details here?  I\u0027m not understanding why we need this patch.  A channel is only accessed from one thread, so we don\u0027t need a lock or atomic operation on its data members.\n\n-Jim",
+      "revId": "59416489720f69906c9c6269ea28b79e5fe5600f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47948b2f_8268b920",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1492,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-25T17:50:53Z",
+      "side": 1,
+      "message": "We don\u0027t need an atomic compare and swap here - the channel is only accessed from one thread.",
+      "revId": "59416489720f69906c9c6269ea28b79e5fe5600f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d820ccf_7c9a3416",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1731,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-25T17:50:53Z",
+      "side": 1,
+      "message": "We don\u0027t need an atomic compare and swap here.  The channel is only accessed by one thread.",
+      "revId": "59416489720f69906c9c6269ea28b79e5fe5600f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
