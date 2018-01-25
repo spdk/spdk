@@ -143,6 +143,30 @@
     },
     {
       "key": {
+        "uuid": "12010cf2_880659fc",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1221,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-25T14:23:15Z",
+      "side": 1,
+      "message": "Will create a specific patch to address this. Thanks.",
+      "parentUuid": "e5260897_c49d73fc",
+      "range": {
+        "startLine": 1221,
+        "startChar": 1,
+        "endLine": 1221,
+        "endChar": 19
+      },
+      "revId": "5a989b691e54fc375e84567b98b819ef851ad2f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "efeb34aa_bea9d863",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 18
