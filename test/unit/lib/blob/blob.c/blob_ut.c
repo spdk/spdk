@@ -353,6 +353,93 @@ blob_create(void)
 }
 
 static void
+blob_create_internal(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_bs_dev *dev;
+	struct spdk_blob *blob;
+	struct spdk_blob_opts opts;
+	struct spdk_internal_blob_opts internal_opts;
+	spdk_blob_id blobid;
+
+	dev = init_dev();
+
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	/* Create read-only blob */
+
+	spdk_blob_opts_init(&opts);
+	opts.num_clusters = 10;
+	internal_opts.read_only = true;
+	internal_opts.back_bs_dev = NULL;
+	internal_opts.internal_xattrs.count = 0;
+	internal_opts.internal_xattrs.names = NULL;
+	internal_opts.internal_xattrs.get_value = NULL;
+	internal_opts.internal_xattrs.ctx = NULL;
+
+	_spdk_bs_create_blob(bs, &opts, &internal_opts, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10)
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Create blob with custom back_bs_dev */
+
+	spdk_blob_opts_init(&opts);
+	internal_opts.read_only = false;
+	internal_opts.back_bs_dev = dev;
+	internal_opts.internal_xattrs.count = 0;
+	internal_opts.internal_xattrs.names = NULL;
+	internal_opts.internal_xattrs.get_value = NULL;
+	internal_opts.internal_xattrs.ctx = NULL;
+
+	_spdk_bs_create_blob(bs, &opts, &internal_opts, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+	CU_ASSERT(__blob_to_data(blob)->back_bs_dev == dev);
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Create blob with NULL internal options  */
+
+	_spdk_bs_create_blob(bs, NULL, NULL, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+
+}
+
+static void
 blob_thin_provision(void)
 {
 	struct spdk_blob_store *bs;
@@ -2943,6 +3030,7 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "blob_init", blob_init) == NULL ||
 		CU_add_test(suite, "blob_open", blob_open) == NULL ||
 		CU_add_test(suite, "blob_create", blob_create) == NULL ||
+		CU_add_test(suite, "blob_create_internal", blob_create_internal) == NULL ||
 		CU_add_test(suite, "blob_thin_provision", blob_thin_provision) == NULL ||
 		CU_add_test(suite, "blob_delete", blob_delete) == NULL ||
 		CU_add_test(suite, "blob_resize", blob_resize) == NULL ||
