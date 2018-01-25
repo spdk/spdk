@@ -206,18 +206,22 @@ uint64_t spdk_blob_get_num_pages(struct spdk_blob *blob);
 /* Return the number of clusters allocated to the blob */
 uint64_t spdk_blob_get_num_clusters(struct spdk_blob *blob);
 
+struct spdk_blob_xattr_opts {
+	/* Number of attributes */
+	size_t	count;
+	/* Array of attribute names. Caller should free this array after use. */
+	char	**names;
+	/* User context passed to get_xattr_value function */
+	void	*ctx;
+	/* Callback that will return value for each attribute name. */
+	void	(*get_value)(void *xattr_ctx, const char *name,
+				   const void **value, size_t *value_len);
+};
+
 struct spdk_blob_opts {
 	uint64_t  num_clusters;
 	bool	thin_provision;
-	/* Number of attributes */
-	size_t	xattr_count;
-	/* Array of attribute names. Caller should free this array after use. */
-	char	**xattr_names;
-	/* User context passed to get_xattr_value function */
-	void	*xattr_ctx;
-	/* Callback that will return value for each attribute name. */
-	void	(*get_xattr_value)(void *xattr_ctx, const char *name,
-				   const void **value, size_t *value_len);
+	struct spdk_blob_xattr_opts *xattrs;
 };
 
 /* Initialize an spdk_blob_opts structure to the default blob option values. */
