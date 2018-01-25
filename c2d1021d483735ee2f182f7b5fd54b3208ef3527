@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4e4323f0_ea7c2c97",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 721,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-25T15:09:42Z",
+      "side": 1,
+      "message": "Can this be defined somewhere up top and used as variable ?",
+      "range": {
+        "startLine": 721,
+        "startChar": 75,
+        "endLine": 721,
+        "endChar": 82
+      },
+      "revId": "c2d1021d483735ee2f182f7b5fd54b3208ef3527",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab66bf4_4357f8f2",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 724,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-25T15:09:42Z",
+      "side": 1,
+      "message": "Is it needed ?",
+      "range": {
+        "startLine": 724,
+        "startChar": 60,
+        "endLine": 724,
+        "endChar": 63
+      },
+      "revId": "c2d1021d483735ee2f182f7b5fd54b3208ef3527",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "18df3fd1_a9937f4d",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 735,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-25T15:09:42Z",
+      "side": 1,
+      "message": "Is it needed to construct whole argument line in here ? I think having function with arguments should be enough. Like so, run_fio_test(device_name, size, offset, io_type[r/w], verify_pattern)",
+      "range": {
+        "startLine": 733,
+        "startChar": 31,
+        "endLine": 735,
+        "endChar": 91
+      },
+      "revId": "c2d1021d483735ee2f182f7b5fd54b3208ef3527",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d8b5ddce_142b555f",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 747,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-25T15:09:42Z",
+      "side": 1,
+      "message": "We already have cluster_size, why not simply multiply it by 1.5 ?",
+      "range": {
+        "startLine": 746,
+        "startChar": 17,
+        "endLine": 747,
+        "endChar": 55
+      },
+      "revId": "c2d1021d483735ee2f182f7b5fd54b3208ef3527",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a3926b04_705a32fa",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 761,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-25T15:09:42Z",
+      "side": 1,
+      "message": "cluster_size * 3 shouldn\u0027t be enough ?",
+      "range": {
+        "startLine": 760,
+        "startChar": 17,
+        "endLine": 761,
+        "endChar": 51
+      },
+      "revId": "c2d1021d483735ee2f182f7b5fd54b3208ef3527",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "12587b91_2e7e785f",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 812,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-25T15:09:42Z",
+      "side": 1,
+      "message": "Isn\u0027t this the same as calculated above bdev_size ?",
+      "range": {
+        "startLine": 812,
+        "startChar": 8,
+        "endLine": 812,
+        "endChar": 76
+      },
+      "revId": "c2d1021d483735ee2f182f7b5fd54b3208ef3527",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "60cb2390_aceee8ce",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 819,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-25T15:09:42Z",
+      "side": 1,
+      "message": "bdev_size",
+      "range": {
+        "startLine": 819,
+        "startChar": 15,
+        "endLine": 819,
+        "endChar": 76
+      },
+      "revId": "c2d1021d483735ee2f182f7b5fd54b3208ef3527",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bf481650_6f0a4adf",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 856,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-25T15:09:42Z",
+      "side": 1,
+      "message": "bdev_size",
+      "range": {
+        "startLine": 856,
+        "startChar": 7,
+        "endLine": 856,
+        "endChar": 74
+      },
+      "revId": "c2d1021d483735ee2f182f7b5fd54b3208ef3527",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db251aed_1ae2eaff",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 891,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-25T15:09:42Z",
+      "side": 1,
+      "message": "bdev_size",
+      "range": {
+        "startLine": 891,
+        "startChar": 8,
+        "endLine": 891,
+        "endChar": 74
+      },
+      "revId": "c2d1021d483735ee2f182f7b5fd54b3208ef3527",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
