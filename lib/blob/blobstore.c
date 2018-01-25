@@ -182,10 +182,10 @@ spdk_blob_opts_init(struct spdk_blob_opts *opts)
 {
 	opts->num_clusters = 0;
 	opts->thin_provision = false;
-	opts->xattr_count = 0;
-	opts->xattr_names = NULL;
-	opts->xattr_ctx = NULL;
-	opts->get_xattr_value = NULL;
+	opts->xattrs.count = 0;
+	opts->xattrs.names = NULL;
+	opts->xattrs.ctx = NULL;
+	opts->xattrs.get_value = NULL;
 }
 
 static struct spdk_blob_data *
@@ -3147,21 +3147,21 @@ _spdk_bs_create_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 }
 
 static int
-_spdk_blob_set_xattrs(struct spdk_blob	*blob, const struct spdk_blob_opts *opts)
+_spdk_blob_set_xattrs(struct spdk_blob	*blob, const struct spdk_blob_xattr_opts *xattrs)
 {
 	uint64_t i;
 	size_t value_len = 0;
 	int rc;
 	const void *value = NULL;
-	if (opts->xattr_count > 0 && opts->get_xattr_value == NULL) {
+	if (xattrs->count > 0 && xattrs->get_value == NULL) {
 		return -EINVAL;
 	}
-	for (i = 0; i < opts->xattr_count; i++) {
-		opts->get_xattr_value(opts->xattr_ctx, opts->xattr_names[i], &value, &value_len);
+	for (i = 0; i < xattrs->count; i++) {
+		xattrs->get_value(xattrs->ctx, xattrs->names[i], &value, &value_len);
 		if (value == NULL || value_len == 0) {
 			return -EINVAL;
 		}
-		rc = spdk_blob_set_xattr(blob, opts->xattr_names[i], value, value_len);
+		rc = spdk_blob_set_xattr(blob, xattrs->names[i], value, value_len);
 		if (rc < 0) {
 			return rc;
 		}
@@ -3209,7 +3209,8 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 		spdk_blob_opts_init(&opts_default);
 		opts = &opts_default;
 	}
-	rc = _spdk_blob_set_xattrs(__data_to_blob(blob), opts);
+	
+	rc = _spdk_blob_set_xattrs(__data_to_blob(blob), &opts->xattrs);
 	if (rc < 0) {
 		_spdk_blob_free(blob);
 		cb_fn(cb_arg, 0, rc);
