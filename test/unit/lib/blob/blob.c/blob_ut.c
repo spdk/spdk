@@ -2388,8 +2388,8 @@ bs_version(void)
 	 *  region on "disk".  We will use this to ensure blob IDs are
 	 *  correctly reconstructed.
 	 */
-	memset(&g_dev_buffer[super->used_blobid_mask_start * PAGE_SIZE], 0,
-	       super->used_blobid_mask_len * PAGE_SIZE);
+	memset(&g_dev_buffer[super->used_blobid_mask_start * SPDK_BS_PAGE_SIZE], 0,
+	       super->used_blobid_mask_len * SPDK_BS_PAGE_SIZE);
 	super->used_blobid_mask_start = 0;
 	super->used_blobid_mask_len = 0;
 	super->crc = _spdk_blob_md_page_calc_crc(super);
