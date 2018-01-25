@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ac2c06f3_b328e22c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 42
+      },
+      "lineNbr": 1379,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-25T18:01:45Z",
+      "side": 1,
+      "message": "Talked with Ben on IRC (you probably saw it) - let\u0027s squash the next patch with this one, so we don\u0027t have the data corruption bug on this patch.\n\nI know I originally asked you to make it a separate patch - I think that was good for us to do the initial reviews but now I think it makes sense to merge them.",
+      "parentUuid": "067a24a1_05cf2f3b",
+      "revId": "1c0cb2a31d5d19bc712c1ad7063a24676ec04c8e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9dd36ff3_e4d200b7",
         "filename": "lib/blob/request.c",
         "patchSetId": 42
