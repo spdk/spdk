@@ -646,6 +646,9 @@ int spdk_lvs_rename(struct spdk_lvol_store *lvs, const char *new_name,
 	req->lvol_store = lvs;
 	strncpy(req->new_name, new_name, SPDK_LVS_NAME_MAX);
 
+	/* _spdk_lvs_open_super(req, lvs->super_blob_id, 0); */
+	spdk_bs_create_blob(lvs->blobstore, _spdk_super_blob_create_cb, req);
+
 	rc = spdk_blob_set_xattr(blob, "name", new_name, strlen(new_name) + 1);
 	if (rc < 0) {
 		free(req);
@@ -653,6 +656,8 @@ int spdk_lvs_rename(struct spdk_lvol_store *lvs, const char *new_name,
 	}
 
 	spdk_blob_sync_md(blob, _spdk_lvs_rename_cb, req);
+
+	spdk_blob_close(blob, _spdk_close_super_cb, req);
 
 	return 0;
 
