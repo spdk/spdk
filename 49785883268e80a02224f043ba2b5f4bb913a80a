@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "36b062f9_38cd9c8d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-25T10:03:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2250ec9f_277c14c3",
+      "range": {
+        "startLine": 54,
+        "startChar": 7,
+        "endLine": 54,
+        "endChar": 13
+      },
+      "revId": "49785883268e80a02224f043ba2b5f4bb913a80a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "68ea5bb7_e54c5c0b",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 40
@@ -60,6 +84,24 @@
       "writtenOn": "2018-01-24T21:12:16Z",
       "side": 1,
       "message": "This should probably be static.",
+      "revId": "49785883268e80a02224f043ba2b5f4bb913a80a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "681ee662_92f5fb6f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-25T10:03:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "68ea5bb7_e54c5c0b",
       "revId": "49785883268e80a02224f043ba2b5f4bb913a80a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -83,6 +125,24 @@
     },
     {
       "key": {
+        "uuid": "7e1ea799_2cc52cf0",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 1501,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-25T10:03:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e492ed1f_a4a102dc",
+      "revId": "49785883268e80a02224f043ba2b5f4bb913a80a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "70e1a895_648102e5",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 40
@@ -94,6 +154,24 @@
       "writtenOn": "2018-01-24T21:12:16Z",
       "side": 1,
       "message": "Same here.",
+      "revId": "49785883268e80a02224f043ba2b5f4bb913a80a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "218091ea_d3294fdf",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 1520,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-25T10:03:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "70e1a895_648102e5",
       "revId": "49785883268e80a02224f043ba2b5f4bb913a80a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
