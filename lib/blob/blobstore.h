@@ -159,6 +159,8 @@ struct spdk_blob_store {
 	struct spdk_bit_array		*used_clusters;
 	struct spdk_bit_array		*used_blobids;
 
+	pthread_mutex_t			used_clusters_mutex;
+
 	uint32_t			cluster_sz;
 	uint64_t			total_clusters;
 	uint64_t			total_data_clusters;
