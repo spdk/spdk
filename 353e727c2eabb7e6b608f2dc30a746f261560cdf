@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6d93faf0_02f7ca20",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 549,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-25T00:28:36Z",
+      "side": 1,
+      "message": "why do you need to check dev-\u003ehas_new_mem_table here?  you just set it to 1 on line 544",
+      "revId": "353e727c2eabb7e6b608f2dc30a746f261560cdf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e7098ff_b90d7dcf",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1083,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-25T00:28:36Z",
+      "side": 1,
+      "message": "4096 is a big buffer to put on the stack - maybe we should just allocate this using malloc() when its needed?",
+      "revId": "353e727c2eabb7e6b608f2dc30a746f261560cdf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba6259d0_a8a89614",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1128,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-25T00:28:36Z",
+      "side": 1,
+      "message": "I think you can just set is_nvme to 1 - worst case, you overwrite 1 with 1 again.",
+      "revId": "353e727c2eabb7e6b608f2dc30a746f261560cdf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f2afa370_defdf4d0",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1137,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-25T00:28:36Z",
+      "side": 1,
+      "message": "shouldn\u0027t this be buf, or \u0026buf[0]?  maybe I\u0027m missing something or my brain is too tired...",
+      "revId": "353e727c2eabb7e6b608f2dc30a746f261560cdf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16b88b9e_6ed8627c",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 431,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-25T00:28:36Z",
+      "side": 1,
+      "message": "unneeded whitespace change",
+      "revId": "353e727c2eabb7e6b608f2dc30a746f261560cdf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6416d9db_bd718e16",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 786,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-25T00:28:36Z",
+      "side": 1,
+      "message": "unneeded whitespace change",
+      "revId": "353e727c2eabb7e6b608f2dc30a746f261560cdf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
