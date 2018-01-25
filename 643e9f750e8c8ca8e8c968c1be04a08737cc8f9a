@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ec9220fc_23836154",
+        "filename": "scripts/rpc/vhost.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-25T04:42:50Z",
+      "side": 1,
+      "message": "This looks like a typo (- vs _)",
+      "range": {
+        "startLine": 76,
+        "startChar": 58,
+        "endLine": 76,
+        "endChar": 59
+      },
+      "revId": "643e9f750e8c8ca8e8c968c1be04a08737cc8f9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
