@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "fceaf45f_2ae2bcf4",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1012941
+      },
+      "writtenOn": "2018-01-25T12:22:24Z",
+      "side": 1,
+      "message": "I have linked name of the new function spdk_bdev_set_num_blocks with already existing function spdk_bdev_get_num_blocks which proceed on the same field.",
+      "parentUuid": "2e483050_cdf5538d",
+      "range": {
+        "startLine": 308,
+        "startChar": 4,
+        "endLine": 308,
+        "endChar": 28
+      },
+      "revId": "3afb5255c879f6199d9647206d1a98542b5d3976",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ebaabb56_cdbe8566",
         "filename": "lib/bdev/aio/bdev_aio.c",
         "patchSetId": 1
