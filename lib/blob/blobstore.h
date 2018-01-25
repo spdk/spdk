@@ -200,6 +200,12 @@ enum spdk_blob_op_type {
 	SPDK_BLOB_READV,
 };
 
+struct spdk_internal_blob_opts {
+	bool	read_only;
+	struct spdk_blob_xattr_opts internal_xattrs;
+	struct spdk_bs_dev *back_bs_dev;
+};
+
 /* On-Disk Data Structures
  *
  * The following data structures exist on disk.
