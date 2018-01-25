@@ -248,7 +248,7 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 	int rc = 0;
 	uint64_t paddr;
 
-	if ((uintptr_t)vaddr & ~MASK_128TB) {
+	if ((uintptr_t)vaddr & ~MASK_256TB) {
 		DEBUG_PRINT("invalid usermode virtual address %p\n", vaddr);
 		return -EINVAL;
 	}

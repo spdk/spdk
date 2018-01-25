@@ -53,11 +53,11 @@ extern struct rte_pci_bus rte_pci_bus;
 #endif
 #include <rte_dev.h>
 
-/* x86-64 userspace virtual addresses use only the low 47 bits [0..46],
- * which is enough to cover 128 TB.
+/* x86-64 and ARM userspace virtual addresses use only the low 48 bits [0..47],
+ * which is enough to cover 256 TB.
  */
-#define SHIFT_128TB	47 /* (1 << 47) == 128 TB */
-#define MASK_128TB	((1ULL << SHIFT_128TB) - 1)
+#define SHIFT_256TB	48 /* (1 << 48) == 256 TB */
+#define MASK_256TB	((1ULL << SHIFT_256TB) - 1)
 
 #define SHIFT_1GB	30 /* (1 << 30) == 1 GB */
 #define MASK_1GB	((1ULL << SHIFT_1GB) - 1)
