@@ -3654,6 +3654,54 @@ void spdk_bs_create_snapshot(struct spdk_blob_store *bs, spdk_blob_id blobid,
 }
 /* END spdk_bs_create_blob_snapshot */
 
+/* START spdk_bs_create_blob_clone */
+
+static void
+_spdk_bs_xattr_clone(void *arg, const char *name,
+		     const void **value, size_t *value_len)
+{
+	if (!strcmp(name, BLOB_SNAPSHOT)) {
+		spdk_blob_id *blob_id = (spdk_blob_id *)arg;
+		*value = blob_id;
+		*value_len = sizeof(blob_id);
+	}
+}
+
+void spdk_bs_create_blob_clone(struct spdk_blob_store *bs, spdk_blob_id blobid,
+			       const struct spdk_blob_xattr_opts *clone_opts,
+			       spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
+{
+	struct spdk_blob_opts   opts;
+	struct spdk_internal_blob_opts internal_opts;
+	struct spdk_bs_cpl		cpl;
+	struct spdk_blob_data	*snapshot = __blob_to_data(blob);
+	char *xattr_names = BLOB_SNAPSHOT;
+
+	if (!snapshot->data_ro || !snapshot->md_ro) {
+		cb_fn(cb_arg, SPDK_BLOBID_INVALID, -EINVAL);
+		return;
+	}
+
+	bs_dev = _create_snapshot_bs_dev(__data_to_blob(snapshot));
+
+	spdk_blob_opts_init(&opts);
+	opts.thin_provision = true;
+	opts.num_clusters = spdk_blob_get_num_pages(blob);
+
+	cpl.u.blobid.cb_fn = cb_fn;
+	cpl.u.blobid.cb_arg = cb_arg;
+
+	internal_opts.read_only = false;
+	/* Set internal xattr BLOB_SNAPSHOT */
+	internal_opts.internal_xattrs.count = 1;
+	internal_opts.internal_xattrs.ctx = &blobid;
+	internal_opts.internal_xattrs.names = &xattr_names;
+	internal_opts.internal_xattrs.get_value = _spdk_bs_xattr_clone;
+
+	_spdk_bs_create_blob(snapshot->bs, &opts, &internal_opts, cb_fn, cb_arg);
+}
+/* END spdk_bs_create_blob_clone */
+
 /* START spdk_blob_resize */
 int
 spdk_blob_resize(struct spdk_blob *_blob, uint64_t sz)
