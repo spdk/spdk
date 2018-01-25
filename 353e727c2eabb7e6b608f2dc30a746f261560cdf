@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "58f1f04b_4f98168f",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 549,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-01-25T03:16:56Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "6d93faf0_02f7ca20",
+      "revId": "353e727c2eabb7e6b608f2dc30a746f261560cdf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9e7098ff_b90d7dcf",
         "filename": "lib/vhost/rte_vhost/vhost_user.c",
         "patchSetId": 16
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "0b29d331_bd2d4fe0",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1083,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-01-25T03:16:56Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "9e7098ff_b90d7dcf",
+      "revId": "353e727c2eabb7e6b608f2dc30a746f261560cdf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ba6259d0_a8a89614",
         "filename": "lib/vhost/rte_vhost/vhost_user.c",
         "patchSetId": 16
@@ -47,6 +83,24 @@
       "writtenOn": "2018-01-25T00:28:36Z",
       "side": 1,
       "message": "I think you can just set is_nvme to 1 - worst case, you overwrite 1 with 1 again.",
+      "revId": "353e727c2eabb7e6b608f2dc30a746f261560cdf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5d8ee0a_f99733c3",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1128,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-01-25T03:16:56Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "ba6259d0_a8a89614",
       "revId": "353e727c2eabb7e6b608f2dc30a746f261560cdf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -82,6 +136,24 @@
       "side": 1,
       "message": "ignore this comment - it\u0027s fine",
       "parentUuid": "f2afa370_defdf4d0",
+      "revId": "353e727c2eabb7e6b608f2dc30a746f261560cdf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6dc15f00_cb716997",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1137,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-01-25T03:16:56Z",
+      "side": 1,
+      "message": "Added a comment here, it\u0027s hard to understand.",
+      "parentUuid": "13c00fd2_2e8a5e56",
       "revId": "353e727c2eabb7e6b608f2dc30a746f261560cdf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
