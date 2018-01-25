@@ -76,13 +76,17 @@
 #### virtio initiator tests
 - virtio user mode: connect to vhost-scsi controller sockets directly on host
 - virtio pci mode: connect to virtual pci devices on guest virtual machine
-- 6 concurrent jobs are run simultaneously on 4 devices with 18 virtqueues
+- 6 concurrent jobs are run simultaneously on 5 devices, each with 8 virtqueues
 
 ##### kernel virtio-scsi-pci device
 - test support for kernel vhost-scsi device
 - create 1GB ramdisk using targetcli
 - create target and add ramdisk to it using targetcli
 - add created device to virtio pci tests
+
+##### emulated virtio-scsi-pci device
+- test support for QEMU emulated virtio-scsi-pci device
+- add emulated virtio device "Virtio0" to virtio pci tests
 
 ##### Test configuration
 - SPDK vhost application is used for testing
