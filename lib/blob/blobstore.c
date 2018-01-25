@@ -91,15 +91,18 @@ static int
 _spdk_bs_allocate_cluster(struct spdk_blob_data *blob, uint32_t cluster_num,
 			  uint64_t *lowest_free_cluster, bool update_map)
 {
+	pthread_mutex_lock(&blob->bs->used_clusters_mutex);
 	*lowest_free_cluster = spdk_bit_array_find_first_clear(blob->bs->used_clusters,
 			       *lowest_free_cluster);
 	if (*lowest_free_cluster >= blob->bs->total_clusters) {
 		/* No more free clusters. Cannot satisfy the request */
+		pthread_mutex_unlock(&blob->bs->used_clusters_mutex);
 		return -ENOSPC;
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Claiming cluster %lu for blob %lu\n", *lowest_free_cluster, blob->id);
 	_spdk_bs_claim_cluster(blob->bs, *lowest_free_cluster);
+	pthread_mutex_unlock(&blob->bs->used_clusters_mutex);
 
 	if (update_map) {
 		_spdk_blob_insert_cluster(blob, cluster_num, *lowest_free_cluster);
@@ -1809,6 +1812,8 @@ _spdk_bs_dev_destroy(void *io_device)
 		_spdk_blob_free(blob);
 	}
 
+	pthread_mutex_destroy(&bs->used_clusters_mutex);
+
 	spdk_bit_array_free(&bs->used_blobids);
 	spdk_bit_array_free(&bs->used_md_pages);
 	spdk_bit_array_free(&bs->used_clusters);
@@ -1902,11 +1907,14 @@ _spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts)
 	bs->used_md_pages = spdk_bit_array_create(1);
 	bs->used_blobids = spdk_bit_array_create(0);
 
+	pthread_mutex_init(&bs->used_clusters_mutex, NULL);
+
 	spdk_io_device_register(bs, _spdk_bs_channel_create, _spdk_bs_channel_destroy,
 				sizeof(struct spdk_bs_channel));
 	rc = spdk_bs_register_md_thread(bs);
 	if (rc == -1) {
 		spdk_io_device_unregister(bs, NULL);
+		pthread_mutex_destroy(&bs->used_clusters_mutex);
 		spdk_bit_array_free(&bs->used_blobids);
 		spdk_bit_array_free(&bs->used_md_pages);
 		spdk_bit_array_free(&bs->used_clusters);
