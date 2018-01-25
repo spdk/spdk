@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "169075a6_c6b15225",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-25T18:39:57Z",
+      "side": 1,
+      "message": "spdk_bdev_set_num_blocks() documentation says it should only be called on a registered bdev, so either these tests online 319-321 should be removed, or the spdk_bdev_unregister() call should be removed\n\nprobably removing spdk_bdev_unregister() call on line 316 is best",
+      "revId": "d362b2348803154b76bd8eeddc58ae3d9bc7928d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
