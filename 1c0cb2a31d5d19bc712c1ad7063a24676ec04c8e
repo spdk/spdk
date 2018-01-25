@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "067a24a1_05cf2f3b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 42
+      },
+      "lineNbr": 1379,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-25T17:51:04Z",
+      "side": 1,
+      "message": "You can\u0027t sync out the blob\u0027s metadata until the new cluster data is written. If you lose power after the sync but before the data is written, you\u0027ll end up with data corruption.",
+      "revId": "1c0cb2a31d5d19bc712c1ad7063a24676ec04c8e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9dd36ff3_e4d200b7",
+        "filename": "lib/blob/request.c",
+        "patchSetId": 42
+      },
+      "lineNbr": 485,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-25T17:51:04Z",
+      "side": 1,
+      "message": "This is only a valid operation if the batch has no outstanding ops. Otherwise, sequences completing can trounce the memory that tracks batch operations. You should verify outstanding ops is 0 here, then return a sequence without incrementing outstanding ops.",
+      "revId": "1c0cb2a31d5d19bc712c1ad7063a24676ec04c8e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
