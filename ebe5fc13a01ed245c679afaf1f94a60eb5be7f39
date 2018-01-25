@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cd2b4956_43b74b61",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1299,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-25T17:22:41Z",
+      "side": 1,
+      "message": "This needs to check if it is still zero.  Another thread may have set this cluster while this thread\u0027s allocation/copy was in process.\n\nThe check needs to be done with an atomic compare and swap.  If the exchange fails, release the cluster.\n\nSee __sync_val_compare_and_swap().",
+      "revId": "ebe5fc13a01ed245c679afaf1f94a60eb5be7f39",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
