@@ -284,6 +284,47 @@ _spdk_blob_mark_clean(struct spdk_blob_data *blob)
 }
 
 static int
+_spdk_blob_deserialize_xattr(struct spdk_blob_data *blob,
+			     struct spdk_blob_md_descriptor_xattr *desc_xattr)
+{
+	struct spdk_xattr                       *xattr;
+
+	if (desc_xattr->length != sizeof(desc_xattr->name_length) +
+	    sizeof(desc_xattr->value_length) +
+	    desc_xattr->name_length + desc_xattr->value_length) {
+		return -EINVAL;
+	}
+
+	xattr = calloc(1, sizeof(*xattr));
+	if (xattr == NULL) {
+		return -ENOMEM;
+	}
+
+	xattr->name = malloc(desc_xattr->name_length + 1);
+	if (xattr->name == NULL) {
+		free(xattr);
+		return -ENOMEM;
+	}
+	strncpy(xattr->name, desc_xattr->name, desc_xattr->name_length);
+	xattr->name[desc_xattr->name_length] = '\0';
+
+	xattr->value = malloc(desc_xattr->value_length);
+	if (xattr->value == NULL) {
+		free(xattr->name);
+		free(xattr);
+		return -ENOMEM;
+	}
+	xattr->value_len = desc_xattr->value_length;
+	memcpy(xattr->value,
+	       (void *)((uintptr_t)desc_xattr->name + desc_xattr->name_length),
+	       desc_xattr->value_length);
+
+	TAILQ_INSERT_TAIL(&blob->xattrs, xattr, link);
+	return 0;
+}
+
+
+static int
 _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob_data *blob)
 {
 	struct spdk_blob_md_descriptor *desc;
@@ -377,42 +418,12 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob_dat
 			}
 
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_XATTR) {
-			struct spdk_blob_md_descriptor_xattr	*desc_xattr;
-			struct spdk_xattr 			*xattr;
+			int rc;
 
-			desc_xattr = (struct spdk_blob_md_descriptor_xattr *)desc;
-
-			if (desc_xattr->length != sizeof(desc_xattr->name_length) +
-			    sizeof(desc_xattr->value_length) +
-			    desc_xattr->name_length + desc_xattr->value_length) {
-				return -EINVAL;
+			rc = _spdk_blob_deserialize_xattr(blob, (struct spdk_blob_md_descriptor_xattr *) desc);
+			if (rc != 0) {
+				return rc;
 			}
-
-			xattr = calloc(1, sizeof(*xattr));
-			if (xattr == NULL) {
-				return -ENOMEM;
-			}
-
-			xattr->name = malloc(desc_xattr->name_length + 1);
-			if (xattr->name == NULL) {
-				free(xattr);
-				return -ENOMEM;
-			}
-			strncpy(xattr->name, desc_xattr->name, desc_xattr->name_length);
-			xattr->name[desc_xattr->name_length] = '\0';
-
-			xattr->value = malloc(desc_xattr->value_length);
-			if (xattr->value == NULL) {
-				free(xattr->name);
-				free(xattr);
-				return -ENOMEM;
-			}
-			xattr->value_len = desc_xattr->value_length;
-			memcpy(xattr->value,
-			       (void *)((uintptr_t)desc_xattr->name + desc_xattr->name_length),
-			       desc_xattr->value_length);
-
-			TAILQ_INSERT_TAIL(&blob->xattrs, xattr, link);
 		} else {
 			/* Unrecognized descriptor type.  Do not fail - just continue to the
 			 *  next descriptor.  If this descriptor is associated with some feature
