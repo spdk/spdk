@@ -791,7 +791,10 @@ vbdev_lvol_resize(char *name, size_t sz,
 	rc = spdk_lvol_resize(lvol, sz, _vbdev_lvol_resize_cb, req);
 
 	if (rc == 0) {
-		bdev->blockcnt = sz * cluster_size / bdev->blocklen;
+		rc = spdk_bdev_set_num_blocks(bdev, sz * cluster_size / bdev->blocklen);
+		if (rc != 0) {
+			SPDK_ERRLOG("Could not change num blocks for bdev_lvol.\n");
+		}
 	}
 
 	return rc;

@@ -203,6 +203,13 @@ spdk_bs_get_page_size(struct spdk_blob_store *bs)
 	return BS_PAGE_SIZE;
 }
 
+int
+spdk_bdev_set_num_blocks(struct spdk_bdev *bdev, uint64_t size)
+{
+	bdev->blockcnt = size;
+	return 0;
+}
+
 static void
 init_dev(struct lvol_ut_bs_dev *dev)
 {
