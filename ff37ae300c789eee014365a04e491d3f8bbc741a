@@ -16,6 +16,23 @@
       "revId": "ff37ae300c789eee014365a04e491d3f8bbc741a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0be7781_38267c5e",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-25T17:39:06Z",
+      "side": 1,
+      "message": "We should probably also take the lock around this section as well.",
+      "revId": "ff37ae300c789eee014365a04e491d3f8bbc741a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
