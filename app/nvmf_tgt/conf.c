@@ -215,6 +215,12 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 			continue;
 		}
 
+		if (strchr(listen_addrs[num_listen_addrs].traddr, ':')) {
+			listen_addrs[num_listen_addrs].adrfam = "IPv6";
+		} else {
+			listen_addrs[num_listen_addrs].adrfam = "IPv4";
+		}
+
 		num_listen_addrs++;
 	}
 
