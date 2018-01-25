@@ -22,6 +22,30 @@
       "revId": "0fb8a622b3b5013cdddde89180309c346697d869",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dee1080f_5273a772",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 440,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-25T11:15:53Z",
+      "side": 1,
+      "message": "You are right that in current iteration, it would not read params (uuid and lvs_name) at all if both were supplied.\nInstead of handling this error in rpc.py, I think it would be better to always do so in RPC code itself. As it does currently.\n\nI\u0027ll change this to always read all arguments and let RPC decide anything regarding errors.\nThanks Karol, nice catch.",
+      "parentUuid": "f1146045_f4782eb4",
+      "range": {
+        "startLine": 440,
+        "startChar": 4,
+        "endLine": 440,
+        "endChar": 55
+      },
+      "revId": "0fb8a622b3b5013cdddde89180309c346697d869",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
