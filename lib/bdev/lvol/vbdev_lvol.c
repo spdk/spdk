@@ -745,6 +745,126 @@ vbdev_lvol_create(struct spdk_lvol_store *lvs, const char *name, size_t sz,
 	return rc;
 }
 
+/* START vbdev_lvol_create_snapshot */
+
+static void
+_vbdev_lvol_create_snapshot_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
+{
+	struct spdk_lvol_with_handle_req *req = cb_arg;
+	struct spdk_bdev *bdev = NULL;
+
+	if (lvolerrno < 0) {
+		goto end;
+	}
+
+	bdev = _create_lvol_disk(lvol);
+	if (bdev == NULL) {
+		lvolerrno = -ENODEV;
+		goto end;
+	}
+	lvol->bdev = bdev;
+
+end:
+	req->cb_fn(req->cb_arg, lvol, lvolerrno);
+	free(req);
+}
+
+int vbdev_lvol_create_snapshot(const char *name, const char *snapshot_name,
+			       spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvol *lvol;
+	struct spdk_bdev *bdev;
+	struct spdk_lvol_with_handle_req *req;
+	int rc;
+
+	lvol = vbdev_get_lvol_by_unique_id(name);
+	if (lvol == NULL) {
+		SPDK_ERRLOG("lvol '%s' does not exist\n", name);
+		return -ENODEV;
+	}
+
+	bdev = spdk_bdev_get_by_name(name);
+	if (bdev == NULL) {
+		SPDK_ERRLOG("bdev '%s' does not exist\n", name);
+		return -ENODEV;
+	}
+
+	req = calloc(1, sizeof(*req));
+
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+
+	rc = spdk_lvol_create_snapshot(lvol, snapshot_name, _vbdev_lvol_create_snapshot_cb, req);
+
+	if (rc != 0) {
+		free(req);
+	}
+
+	return rc;
+}
+
+/* END vbdev_lvol_create_snapshot */
+
+/* START vbdev_lvol_create_clone */
+
+static void
+_vbdev_lvol_create_clone_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
+{
+	struct spdk_lvol_with_handle_req *req = cb_arg;
+	struct spdk_bdev *bdev = NULL;
+
+	if (lvolerrno < 0) {
+		goto end;
+	}
+
+	bdev = _create_lvol_disk(lvol);
+	if (bdev == NULL) {
+		lvolerrno = -ENODEV;
+		goto end;
+	}
+	lvol->bdev = bdev;
+
+end:
+	req->cb_fn(req->cb_arg, lvol, lvolerrno);
+	free(req);
+}
+
+int vbdev_lvol_create_clone(const char *snapshot_name, const char *clone_name,
+			    spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvol *lvol;
+	struct spdk_bdev *bdev;
+	struct spdk_lvol_with_handle_req *req;
+	int rc;
+
+	lvol = vbdev_get_lvol_by_unique_id(snapshot_name);
+	if (lvol == NULL) {
+		SPDK_ERRLOG("lvol '%s' does not exist\n", snapshot_name);
+		return -ENODEV;
+	}
+
+	bdev = spdk_bdev_get_by_name(snapshot_name);
+	if (bdev == NULL) {
+		SPDK_ERRLOG("bdev '%s' does not exist\n", snapshot_name);
+		return -ENODEV;
+	}
+
+	req = calloc(1, sizeof(*req));
+
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+
+	rc = spdk_lvol_create_clone(lvol, clone_name, _vbdev_lvol_create_clone_cb, req);
+
+	if (rc != 0) {
+		free(req);
+	}
+
+	return rc;
+}
+
+/* END vbdev_lvol_create_clone */
+
 static void
 _vbdev_lvol_resize_cb(void *cb_arg, int lvolerrno)
 {

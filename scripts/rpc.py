@@ -395,6 +395,24 @@ p.add_argument('lvol_name', help='name for this lvol')
 p.add_argument('size', help='size in MiB for this bdev', type=int)
 p.set_defaults(func=construct_lvol_bdev)
 
+def snapshot_lvol_bdev(args):
+    params = {
+        'name': args.name,
+    }
+    print_array(jsonrpc_call('snapshot_lvol_bdev', params))
+p = subparsers.add_parser('snapshot_lvol_bdev', help='Create a snapshot of an lvol bdev')
+p.add_argument('name', help='lvol bdev name')
+p.set_defaults(func=snapshot_lvol_bdev)
+
+def clone_lvol_bdev(args):
+    params = {
+        'name': args.name,
+    }
+    print_array(jsonrpc_call('clone_lvol_bdev', params))
+p = subparsers.add_parser('clone_lvol_bdev', help='Create a clone of an lvol snapshot')
+p.add_argument('name', help='lvol snapshot bdev name')
+p.set_defaults(func=clone_lvol_bdev)
+
 # Logical volume resize feature is disabled, as it is currently work in progress
 #
 # def resize_lvol_bdev(args):
