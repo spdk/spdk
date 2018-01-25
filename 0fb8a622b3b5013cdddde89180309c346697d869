@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f1146045_f4782eb4",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 440,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-25T10:33:51Z",
+      "side": 1,
+      "message": "This will still execute even if we provide both -l and -u, but with no \"params\" and will return all configured lvol stores.\n\nOne solution is:\ndef get_lvol_stores(args):\n    params \u003d {}\n    if args.uuid:\n        params[\u0027uuid\u0027] \u003d args.uuid\n    if args.lvs_name:\n        params[\u0027lvs_name\u0027] \u003d args.lvs_name\n    print_dict(jsonrpc_call(\u0027get_lvol_stores\u0027, params))\np \u003d subparsers.add_parser(\u0027get_lvol_stores\u0027, help\u003d\u0027Display current logical volume store list\u0027)\ng \u003d p.add_mutually_exclusive_group()\ng.add_argument(\u0027-u\u0027, \u0027--uuid\u0027, help\u003d\u0027lvol store UUID\u0027, required\u003dFalse)\ng.add_argument(\u0027-l\u0027, \u0027--lvs_name\u0027, help\u003d\u0027lvol store name\u0027, required\u003dFalse)\np.set_defaults(func\u003dget_lvol_stores)",
+      "range": {
+        "startLine": 440,
+        "startChar": 4,
+        "endLine": 440,
+        "endChar": 55
+      },
+      "revId": "0fb8a622b3b5013cdddde89180309c346697d869",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
