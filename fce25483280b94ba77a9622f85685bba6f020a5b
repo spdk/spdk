@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1f08b461_9ed1ad02",
+        "filename": "include/spdk/cpuset.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-01-25T17:44:18Z",
+      "side": 1,
+      "message": "SPDK_CPUSET_SIZE may be useful when we need to know the capacity of cpuset. I\u0027m using it in the unit tests to select all possible CPUs.",
+      "parentUuid": "e36ee054_12a19a99",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b8c2d9b6_1c267da2",
         "filename": "include/spdk/cpuset.h",
         "patchSetId": 16
@@ -30,6 +48,24 @@
       "writtenOn": "2018-01-19T17:04:38Z",
       "side": 1,
       "message": "I\u0027d prefer not to do this - we don\u0027t use typedef\u0027d structs in the rest of the SPDK public API, so it would be inconsistent.",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b1b50ded_4958f3a6",
+        "filename": "include/spdk/cpuset.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-01-25T17:44:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b8c2d9b6_1c267da2",
       "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -59,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "f8963636_bc423fec",
+        "filename": "include/spdk/cpuset.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-01-25T17:44:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "eda33a75_029d4d0c",
+      "range": {
+        "startLine": 49,
+        "startChar": 3,
+        "endLine": 49,
+        "endChar": 9
+      },
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a777170d_9ee86770",
         "filename": "include/spdk/cpuset.h",
         "patchSetId": 16
@@ -70,6 +130,24 @@
       "writtenOn": "2018-01-19T17:04:38Z",
       "side": 1,
       "message": "This should probably document how the comparison works if they\u0027re not equal (does it provide a strcmp()-style \u003c 0, 0, \u003e 0 comparison?, or is it just 0, !\u003d 0?)",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0c8ef70_ec2894ae",
+        "filename": "include/spdk/cpuset.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-01-25T17:44:18Z",
+      "side": 1,
+      "message": "memcmp is used here, but I think it\u0027s better to return just true/false and change the name to \"spdk_cpuset_equal()\" to be more descriptive.",
+      "parentUuid": "a777170d_9ee86770",
       "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -99,6 +177,30 @@
     },
     {
       "key": {
+        "uuid": "40d77e16_a1839d47",
+        "filename": "include/spdk/cpuset.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-01-25T17:44:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a47cc0b0_303bcab3",
+      "range": {
+        "startLine": 69,
+        "startChar": 35,
+        "endLine": 69,
+        "endChar": 46
+      },
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ed019426_b8963cce",
         "filename": "include/spdk/event.h",
         "patchSetId": 16
@@ -110,6 +212,24 @@
       "writtenOn": "2018-01-19T17:04:38Z",
       "side": 1,
       "message": "This is probably okay, although maybe we could just return a const cpuset here, e.g.:\n\n   const struct spdk_cpuset *spdk_app_get_core_mask(void);\n\nWe could just allocate one up front during app startup, and then the caller wouldn\u0027t have to make a new instance each time it\u0027s called (which requires a bunch of messy error checking).",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "93d2d554_cab606e2",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-01-25T17:44:18Z",
+      "side": 1,
+      "message": "spdk_cpuset_fmt() requires that cpuset is writable to store hexadecimal string. If we use \"const\" here, we will not be able to print it out with current implementation.\nIn this patch set I have implemented it as non-const \"struct spdk_cpuset *spdk_app_get_core_mask(void)\".",
+      "parentUuid": "ed019426_b8963cce",
       "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -133,6 +253,24 @@
     },
     {
       "key": {
+        "uuid": "cd57146c_aca957ae",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-01-25T17:44:18Z",
+      "side": 1,
+      "message": "Yes, this line is not necessary",
+      "parentUuid": "707ade3d_63b94147",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8afd020a_52a5fe08",
         "filename": "lib/event/app.c",
         "patchSetId": 16
@@ -144,6 +282,24 @@
       "writtenOn": "2018-01-19T17:04:38Z",
       "side": 1,
       "message": "This needs an allocation failure check.",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2967e6bc_182a676d",
+        "filename": "lib/event/app.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-01-25T17:44:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8afd020a_52a5fe08",
       "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -167,6 +323,24 @@
     },
     {
       "key": {
+        "uuid": "09763d06_58c6799e",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 824,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-01-25T17:44:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a0241be4_fdd6b353",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "01598a89_569d1270",
         "filename": "lib/iscsi/portal_grp.c",
         "patchSetId": 16
@@ -178,6 +352,24 @@
       "writtenOn": "2018-01-19T17:04:38Z",
       "side": 1,
       "message": "Add allocation check.",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "53ec294c_d26bf65a",
+        "filename": "lib/iscsi/portal_grp.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-01-25T17:44:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "01598a89_569d1270",
       "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -235,6 +427,24 @@
     },
     {
       "key": {
+        "uuid": "75f14482_bbdf5ad5",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-01-25T17:44:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f2883eb6_886eda4f",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b10f478f_e90570a2",
         "filename": "lib/util/cpuset.c",
         "patchSetId": 16
@@ -246,6 +456,30 @@
       "writtenOn": "2018-01-19T17:04:38Z",
       "side": 1,
       "message": "This can be replaced with sizeof(set-\u003ecpus) in the uses below if we change the array in the struct to have its actual size.",
+      "range": {
+        "startLine": 42,
+        "startChar": 8,
+        "endLine": 42,
+        "endChar": 30
+      },
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10844f4b_b97d444e",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-01-25T17:44:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b10f478f_e90570a2",
       "range": {
         "startLine": 42,
         "startChar": 8,
@@ -281,6 +515,30 @@
     },
     {
       "key": {
+        "uuid": "d1d70479_be2d50f4",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-01-25T17:44:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bb67d21b_96675a4c",
+      "range": {
+        "startLine": 111,
+        "startChar": 25,
+        "endLine": 111,
+        "endChar": 29
+      },
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f88850cc_cee59777",
         "filename": "lib/util/cpuset.c",
         "patchSetId": 16
@@ -298,6 +556,24 @@
     },
     {
       "key": {
+        "uuid": "2ec0e83e_dbe7d94c",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-01-25T17:44:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f88850cc_cee59777",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4ba6d0b3_d8afd3d9",
         "filename": "lib/util/cpuset.c",
         "patchSetId": 16
@@ -309,6 +585,24 @@
       "writtenOn": "2018-01-19T17:04:38Z",
       "side": 1,
       "message": "We shouldn\u0027t rely on allocations always succeeding, and catching the error with assert() is not acceptable.\n\nA few options:\n- Make this function able to return an error (all callers would need to check it).\n- String could be pre-allocated as part of spdk_cpuset_alloc() so that we don\u0027t need an error check here.\n- Just pass the string buffer as (char *, size_t) like spdk_pci_addr_fmt(). (This would mean the caller somehow needs to know how big to make the string, though, which is not really desirable.)",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c78c65c_67a9affc",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-01-25T17:44:18Z",
+      "side": 1,
+      "message": "I will preallocate it.",
+      "parentUuid": "4ba6d0b3_d8afd3d9",
       "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -338,6 +632,30 @@
     },
     {
       "key": {
+        "uuid": "fa7a87fb_58c944f8",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-01-25T17:44:18Z",
+      "side": 1,
+      "message": "Yes, you\u0027re right.",
+      "parentUuid": "a1f2260f_28e30b2a",
+      "range": {
+        "startLine": 273,
+        "startChar": 47,
+        "endLine": 273,
+        "endChar": 54
+      },
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f8739c31_31cd7329",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 16
@@ -349,6 +667,24 @@
       "writtenOn": "2018-01-19T17:04:38Z",
       "side": 1,
       "message": "Add allocation check.",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "616071b0_29a05f69",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 522,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-01-25T17:44:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f8739c31_31cd7329",
       "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -372,6 +708,24 @@
     },
     {
       "key": {
+        "uuid": "7a499e5f_770d0c2a",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 474,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-01-25T17:44:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3883f3ef_8a1fde7c",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1c27ffab_a2047f03",
         "filename": "test/unit/lib/util/cpuset.c/cpuset_ut.c",
         "patchSetId": 16
@@ -389,6 +743,24 @@
     },
     {
       "key": {
+        "uuid": "697cdf94_50a47c74",
+        "filename": "test/unit/lib/util/cpuset.c/cpuset_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-01-25T17:44:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1c27ffab_a2047f03",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "afbd9a0e_d48675db",
         "filename": "test/unit/lib/util/cpuset.c/cpuset_ut.c",
         "patchSetId": 16
@@ -400,6 +772,24 @@
       "writtenOn": "2018-01-19T17:04:38Z",
       "side": 1,
       "message": "Rather than checking with an ASSERT + if, please use:\n\n  SPDK_CU_ASSERT_FATAL(hex_mask !\u003d NULL);",
+      "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "180a40c5_71dbbf70",
+        "filename": "test/unit/lib/util/cpuset.c/cpuset_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-01-25T17:44:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "afbd9a0e_d48675db",
       "revId": "fce25483280b94ba77a9622f85685bba6f020a5b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
