@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a67f32b8_3fa0776d",
+        "filename": "test/vhost/common/vm_setup.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-25T12:19:20Z",
+      "side": 1,
+      "message": "Capital letter",
+      "range": {
+        "startLine": 24,
+        "startChar": 57,
+        "endLine": 24,
+        "endChar": 58
+      },
+      "revId": "cb6c60fc4d3aabe6754a9d47e250341b6de56e66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3014e14_33ac48d1",
+        "filename": "test/vhost/common/vm_setup.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-25T12:19:20Z",
+      "side": 1,
+      "message": "overwrites",
+      "range": {
+        "startLine": 28,
+        "startChar": 81,
+        "endLine": 28,
+        "endChar": 92
+      },
+      "revId": "cb6c60fc4d3aabe6754a9d47e250341b6de56e66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
