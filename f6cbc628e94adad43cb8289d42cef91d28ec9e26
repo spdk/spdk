@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ca187c27_b49ea252",
+        "filename": "app/nvmf_tgt/nvmf_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 451,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-25T17:57:09Z",
+      "side": 1,
+      "message": "I\u0027d really prefer to keep the listen address specified as a JSON object with individual fields for traddr, adrfam, etc., rather than the NVMe library transport ID format.  This is consistent with the previous RPC parameters, as well as the output of the get_nvmf_subsystems RPC method. Also, using the trid format nests a different language inside JSON for no good reason.",
+      "revId": "f6cbc628e94adad43cb8289d42cef91d28ec9e26",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3015e325_0dcfefcc",
+        "filename": "app/nvmf_tgt/nvmf_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 537,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-25T17:57:09Z",
+      "side": 1,
+      "message": "All of these error paths leak ctx.",
+      "revId": "f6cbc628e94adad43cb8289d42cef91d28ec9e26",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42c07be6_50039b58",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-25T17:57:09Z",
+      "side": 1,
+      "message": "Please add documentation of the new method to this file.",
+      "revId": "f6cbc628e94adad43cb8289d42cef91d28ec9e26",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
