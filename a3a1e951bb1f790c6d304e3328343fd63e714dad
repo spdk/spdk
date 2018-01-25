@@ -16,6 +16,24 @@
       "revId": "a3a1e951bb1f790c6d304e3328343fd63e714dad",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b51981a_83d97938",
+        "filename": "test/lib/bdev/blockdev.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-01-25T05:24:48Z",
+      "side": 1,
+      "message": "Since each machine has at least one nvme disk, I think this check is not necessary, thanks.",
+      "parentUuid": "9d31f551_2b6b47ca",
+      "revId": "a3a1e951bb1f790c6d304e3328343fd63e714dad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
