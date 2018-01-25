@@ -68,7 +68,7 @@
 /* for defining the implmentation of wrappers for syscalls */
 #define DEFINE_WRAPPER(fn, ret, dargs, pargs, val) \
 	ret ut_ ## fn = val; \
-	ret __wrap_ ## fn dargs \
+	__attribute__((used)) ret __wrap_ ## fn dargs \
 	{ \
 		if (ut_ ## fn == (ret)MOCK_PASS_THRU) { \
 			return __real_ ## fn pargs; \
