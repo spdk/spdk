@@ -105,6 +105,7 @@ alloc_svdev(void)
 
 	SPDK_CU_ASSERT_FATAL(svdev != NULL);
 	svdev->vdev.registered = true;
+	svdev->vdev.backend = &spdk_vhost_scsi_device_backend;
 	return svdev;
 }
 
