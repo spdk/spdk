@@ -1,0 +1,73 @@
+Starting DPDK 17.11.0 initialization...
+[ DPDK EAL parameters: blobcli -c 0x1 --file-prefix=spdk_pid3878 ]
+EAL: Probing VFIO support...
+EAL: PCI device 0000:00:04.0 on NUMA socket 0
+EAL:   probe driver: 8086:6f20 spdk_ioat
+EAL: PCI device 0000:00:04.1 on NUMA socket 0
+EAL:   probe driver: 8086:6f21 spdk_ioat
+EAL: PCI device 0000:00:04.2 on NUMA socket 0
+EAL:   probe driver: 8086:6f22 spdk_ioat
+EAL: PCI device 0000:00:04.3 on NUMA socket 0
+EAL:   probe driver: 8086:6f23 spdk_ioat
+EAL: PCI device 0000:00:04.4 on NUMA socket 0
+EAL:   probe driver: 8086:6f24 spdk_ioat
+EAL: PCI device 0000:00:04.5 on NUMA socket 0
+EAL:   probe driver: 8086:6f25 spdk_ioat
+EAL: PCI device 0000:00:04.6 on NUMA socket 0
+EAL:   probe driver: 8086:6f26 spdk_ioat
+EAL: PCI device 0000:00:04.7 on NUMA socket 0
+EAL:   probe driver: 8086:6f27 spdk_ioat
+EAL: PCI device 0000:80:04.0 on NUMA socket 1
+EAL:   probe driver: 8086:6f20 spdk_ioat
+EAL: PCI device 0000:80:04.1 on NUMA socket 1
+EAL:   probe driver: 8086:6f21 spdk_ioat
+EAL: PCI device 0000:80:04.2 on NUMA socket 1
+EAL:   probe driver: 8086:6f22 spdk_ioat
+EAL: PCI device 0000:80:04.3 on NUMA socket 1
+EAL:   probe driver: 8086:6f23 spdk_ioat
+EAL: PCI device 0000:80:04.4 on NUMA socket 1
+EAL:   probe driver: 8086:6f24 spdk_ioat
+EAL: PCI device 0000:80:04.5 on NUMA socket 1
+EAL:   probe driver: 8086:6f25 spdk_ioat
+EAL: PCI device 0000:80:04.6 on NUMA socket 1
+EAL:   probe driver: 8086:6f26 spdk_ioat
+EAL: PCI device 0000:80:04.7 on NUMA socket 1
+EAL:   probe driver: 8086:6f27 spdk_ioat
+EAL: PCI device 0000:81:00.0 on NUMA socket 1
+EAL:   probe driver: 8086:953 spdk_nvme
+
+SCRIPT NOW PROCESSING: -i
+Init blobstore using bdev Product Name: TestPT
+blobstore init'd: ($(XX))
+
+SCRIPT NOW PROCESSING: -n 1
+New blob id 4294967296
+blob now has USED clusters of 1
+
+SCRIPT NOW PROCESSING: -x $B0 key val
+Xattr has been set.
+
+SCRIPT NOW PROCESSING: -r $B0 key
+Xattr has been removed.
+
+SCRIPT NOW PROCESSING: -s bs
+Blobstore Public Info:
+	Using bdev Product Name: TestPT
+	API Version: 3
+	super blob ID: none assigned
+	page size: 4096
+	cluster size: 1048576
+	# free clusters: $(N)
+	blobstore type:
+00000000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00   ................
+
+Blobstore Private Info:
+	Metadata start (pages): $(N)
+	Metadata length (pages): $(N)
+
+SCRIPT NOW PROCESSING: -l blobs
+
+List BLOBS:
+Found blob with ID# 4294967296
+
+SCRIPT NOW PROCESSING: -X
