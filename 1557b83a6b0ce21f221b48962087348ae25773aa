@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b05cf560_aeea8207",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 1361,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-26T19:59:30Z",
+      "side": 1,
+      "message": "The current rules are that you can\u0027t do a resize while also doing a sync, and further resizes and syncs must be issues from the same thread. This, however, can happen on any thread in response to a write. That causes data races and needs to be addressed.",
+      "revId": "1557b83a6b0ce21f221b48962087348ae25773aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36d0169e_c58275eb",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 1391,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-26T19:59:30Z",
+      "side": 1,
+      "message": "The metadata isn\u0027t dirty here. You want to sync after the cluster map has been updated.\n\nHowever, it isn\u0027t as simple as moving the sync to the end of this sequence because sync\u0027s currently aren\u0027t safe to issue from multiple threads at the same time. A patch to funnel all sync requests to a single thread, or some other coordination method, needs to be implemented first.",
+      "revId": "1557b83a6b0ce21f221b48962087348ae25773aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
