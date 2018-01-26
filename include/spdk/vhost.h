@@ -47,8 +47,10 @@
 extern "C" {
 #endif
 
+typedef void (*spdk_vhost_fini_cb)(void);
+
 int spdk_vhost_init(void);
-void spdk_vhost_fini(void);
+void spdk_vhost_fini(spdk_vhost_fini_cb fini_cb);
 
 /**
  * Init vhost application.  This is called once by SPDK app layer.
