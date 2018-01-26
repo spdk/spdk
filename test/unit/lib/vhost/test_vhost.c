@@ -115,6 +115,7 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 	}
 
 	g_spdk_vhost_device = vdev;
+	vdev->registered = true;
 	return 0;
 }
 
