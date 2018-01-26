@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "348d0321_5316d106",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 3500,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-26T13:29:59Z",
+      "side": 1,
+      "message": "To actually sync the changes in newblob it has to be marked to state SPDK_BLOB_STATE_DIRTY",
+      "revId": "311e7743ee54bb68c5085848b463df1f8ad34dcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14150561_15df120e",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 3559,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-26T13:29:59Z",
+      "side": 1,
+      "message": "Opts have to be initialized, as snapshot_xattrs can be NULL.",
+      "range": {
+        "startLine": 3559,
+        "startChar": 1,
+        "endLine": 3559,
+        "endChar": 5
+      },
+      "revId": "311e7743ee54bb68c5085848b463df1f8ad34dcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
