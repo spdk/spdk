@@ -105,8 +105,6 @@ main(int argc, char *argv[])
 		save_pid(g_pid_path);
 	}
 
-	opts.shutdown_cb = spdk_vhost_shutdown_cb;
-
 	/* Blocks until the application is exiting */
 	rc = spdk_app_start(&opts, spdk_vhost_startup, (void *)g_socket_path, NULL);
 
