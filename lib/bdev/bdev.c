@@ -1124,6 +1124,27 @@ spdk_bdev_has_write_cache(const struct spdk_bdev *bdev)
 	return bdev->write_cache;
 }
 
+int
+spdk_bdev_notify_blockcnt_change(struct spdk_bdev *bdev, uint64_t size)
+{
+	int ret;
+
+	pthread_mutex_lock(&bdev->mutex);
+
+	/* bdev has open descriptors */
+	if (!TAILQ_EMPTY(&bdev->open_descs) &&
+	    bdev->blockcnt > size) {
+		ret = -EBUSY;
+	} else {
+		bdev->blockcnt = size;
+		ret = 0;
+	}
+
+	pthread_mutex_unlock(&bdev->mutex);
+
+	return ret;
+}
+
 /*
  * Convert I/O offset and length from bytes to blocks.
  *
