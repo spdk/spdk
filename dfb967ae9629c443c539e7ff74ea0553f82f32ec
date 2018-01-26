@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d45469c1_4d03d35f",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 28
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-26T14:56:18Z",
+      "side": 1,
+      "message": "This is a disk name mainly used for IO test, so maybe change that var name to just \"disk\" ?",
+      "range": {
+        "startLine": 96,
+        "startChar": 27,
+        "endLine": 96,
+        "endChar": 37
+      },
+      "revId": "dfb967ae9629c443c539e7ff74ea0553f82f32ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fe659f0e_56be79f1",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 28
+      },
+      "lineNbr": 744,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-26T14:56:18Z",
+      "side": 1,
+      "message": "See comments from PS25",
+      "range": {
+        "startLine": 743,
+        "startChar": 8,
+        "endLine": 744,
+        "endChar": 59
+      },
+      "revId": "dfb967ae9629c443c539e7ff74ea0553f82f32ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
