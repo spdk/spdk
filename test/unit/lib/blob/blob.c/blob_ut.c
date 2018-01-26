@@ -2679,13 +2679,95 @@ blob_thin_prov_alloc(void)
 
 	spdk_bs_open_blob(g_bs, blobid, blob_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
-	CU_ASSERT(g_blob != NULL);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob = g_blob;
 	blob_data = __blob_to_data(blob);
 
 	/* Check that clusters allocation and size is still the same */
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
 	CU_ASSERT(blob_data->active.num_clusters == 3);
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_delete_blob(bs, blobid, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+}
+
+static void
+blob_insert_cluster_msg(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_bs_dev *dev;
+	struct spdk_blob *blob;
+	struct spdk_blob_data *blob_data;
+	struct spdk_blob_opts opts;
+	spdk_blob_id blobid;
+	uint64_t free_clusters;
+
+	dev = init_dev();
+
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+	free_clusters = spdk_bs_free_cluster_count(bs);
+
+	/* Set blob as thin provisioned */
+	spdk_blob_opts_init(&opts);
+	opts.thin_provision = true;
+	opts.num_clusters = 4;
+
+	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+	blob_data = __blob_to_data(blob);
+
+	CU_ASSERT(blob_data->active.num_clusters == 4);
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 4);
+	CU_ASSERT(blob_data->active.clusters[1] == 0);
+
+	_spdk_bs_claim_cluster(bs, 0xF);
+	_spdk_blob_insert_cluster_on_md_thread(blob_data, 1, 0xF, blob_op_complete, NULL);
+
+	CU_ASSERT(blob_data->active.clusters[1] != 0);
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Unload the blob store */
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+	g_blob = NULL;
+	g_blobid = 0;
+
+	/* Load an existing blob store */
+	dev = init_dev();
+	spdk_bs_load(dev, NULL, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	bs = g_bs;
+
+	spdk_bs_open_blob(g_bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	blob = g_blob;
+	blob_data = __blob_to_data(blob);
+
+	CU_ASSERT(blob_data->active.clusters[1] != 0);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -2746,7 +2828,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "blob_flags", blob_flags) == NULL ||
 		CU_add_test(suite, "bs_version", bs_version) == NULL ||
 		CU_add_test(suite, "blob_set_xattrs", blob_set_xattrs) == NULL ||
-		CU_add_test(suite, "blob_thin_prov_alloc", blob_thin_prov_alloc) == NULL
+		CU_add_test(suite, "blob_thin_prov_alloc", blob_thin_prov_alloc) == NULL ||
+		CU_add_test(suite, "blob_insert_cluster_msg", blob_insert_cluster_msg) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

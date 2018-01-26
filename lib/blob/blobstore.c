@@ -50,6 +50,8 @@
 static int spdk_bs_register_md_thread(struct spdk_blob_store *bs);
 static int spdk_bs_unregister_md_thread(struct spdk_blob_store *bs);
 static void _spdk_blob_close_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno);
+void _spdk_blob_insert_cluster_on_md_thread(struct spdk_blob_data *blob, uint32_t cluster_num,
+		uint64_t cluster, spdk_blob_op_complete cb_fn, void *cb_arg);
 
 static inline size_t
 divide_round_up(size_t num, size_t divisor)
@@ -3213,6 +3215,71 @@ spdk_blob_sync_md(struct spdk_blob *_blob, spdk_blob_op_complete cb_fn, void *cb
 }
 
 /* END spdk_blob_sync_md */
+
+struct spdk_blob_insert_cluster_ctx {
+	struct spdk_thread	*thread;
+	struct spdk_blob_data	*blob;
+	uint32_t		cluster_num;	/* cluster index in blob */
+	uint32_t		cluster;	/* cluster on disk */
+	int			rc;
+	spdk_blob_op_complete	cb_fn;
+	void			*cb_arg;
+};
+
+static void
+_spdk_blob_insert_cluster_msg_cpl(void *arg)
+{
+	struct spdk_blob_insert_cluster_ctx *ctx = arg;
+
+	ctx->cb_fn(ctx->cb_arg, ctx->rc);
+	free(ctx);
+}
+
+static void
+_spdk_blob_insert_cluster_msg_cb(void *arg, int bserrno)
+{
+	struct spdk_blob_insert_cluster_ctx *ctx = arg;
+
+	ctx->rc = bserrno;
+	spdk_thread_send_msg(ctx->thread, _spdk_blob_insert_cluster_msg_cpl, ctx);
+}
+
+static void
+_spdk_blob_insert_cluster_msg(void *arg)
+{
+	struct spdk_blob_insert_cluster_ctx *ctx = arg;
+
+	ctx->rc = _spdk_blob_insert_cluster(ctx->blob, ctx->cluster_num, ctx->cluster);
+	if (ctx->rc != 0) {
+		spdk_thread_send_msg(ctx->thread, _spdk_blob_insert_cluster_msg_cpl, ctx);
+		return;
+	}
+
+	ctx->blob->state = SPDK_BLOB_STATE_DIRTY;
+	_spdk_blob_sync_md(ctx->blob, _spdk_blob_insert_cluster_msg_cb, ctx);
+}
+
+void
+_spdk_blob_insert_cluster_on_md_thread(struct spdk_blob_data *blob, uint32_t cluster_num,
+				       uint64_t cluster, spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_blob_insert_cluster_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	ctx->thread = spdk_get_thread();
+	ctx->blob = blob;
+	ctx->cluster_num = cluster_num;
+	ctx->cluster = cluster;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	spdk_thread_send_msg(blob->bs->md_thread, _spdk_blob_insert_cluster_msg, ctx);
+}
 
 /* START spdk_blob_close */
 
