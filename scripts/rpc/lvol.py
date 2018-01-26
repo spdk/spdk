@@ -19,6 +19,8 @@ def construct_lvol_bdev(args):
         if args.lvs_name:
             params['lvs_name'] = args.lvs_name
         print_array(args.client.call('construct_lvol_bdev', params))
+    if args.thin_provisioned:
+        params['thin_provision'] = args.thin_provision
 
 
 # Logical volume resize feature is disabled, as it is currently work in progress

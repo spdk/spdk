@@ -258,6 +258,7 @@ if __name__ == "__main__":
     p = subparsers.add_parser('construct_lvol_bdev', help='Add a bdev with an logical volume backend')
     p.add_argument('-u', '--uuid', help='lvol store UUID', required=False)
     p.add_argument('-l', '--lvs_name', help='lvol store name', required=False)
+    p.add_argument('-t', '--thin-provision', action='store_true', help='create lvol bdev as thin provisioned')
     p.add_argument('lvol_name', help='name for this lvol')
     p.add_argument('size', help='size in MiB for this bdev', type=int)
     p.set_defaults(func=rpc.lvol.construct_lvol_bdev)
