@@ -62,7 +62,7 @@ typedef struct spdk_poller *(*spdk_start_poller)(void *thread_ctx,
 typedef void (*spdk_stop_poller)(struct spdk_poller *poller, void *thread_ctx);
 
 typedef int (*spdk_io_channel_create_cb)(void *io_device, void *ctx_buf);
-typedef void (*spdk_io_channel_destroy_cb)(void *io_device, void *ctx_buf);
+typedef int (*spdk_io_channel_destroy_cb)(void *io_device, void *ctx_buf);
 
 typedef void (*spdk_io_device_unregister_cb)(void *io_device);
 
@@ -84,6 +84,7 @@ struct spdk_io_channel {
 	uint32_t			ref;
 	TAILQ_ENTRY(spdk_io_channel)	tailq;
 	spdk_io_channel_destroy_cb	destroy_cb;
+	bool				destroying;
 
 	/*
 	 * Modules will allocate extra memory off the end of this structure

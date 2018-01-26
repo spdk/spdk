@@ -84,14 +84,14 @@ thread_send_msg(void)
 	 * Poll thread 1.  The message was sent to thread 0, so this should be
 	 *  a nop and done should still be false.
 	 */
-	poll_thread(1);
+	poll_thread(1, false);
 	CU_ASSERT(!done);
 
 	/*
 	 * Poll thread 0.  This should execute the message and done should then
 	 *  be true.
 	 */
-	poll_thread(0);
+	poll_thread(0, false);
 	CU_ASSERT(done);
 
 	free_threads();
@@ -121,7 +121,7 @@ thread_for_each(void)
 
 	/* Poll each thread to verify the message is passed to each */
 	for (i = 0; i < 3; i++) {
-		poll_thread(i);
+		poll_thread(i, false);
 		CU_ASSERT(count == (i + 1));
 	}
 
@@ -129,7 +129,7 @@ thread_for_each(void)
 	 * After each thread is called, the completion calls it
 	 * one more time.
 	 */
-	poll_thread(0);
+	poll_thread(0, false);
 	CU_ASSERT(count == 4);
 
 	free_threads();
@@ -141,9 +141,10 @@ channel_create(void *io_device, void *ctx_buf)
 	return 0;
 }
 
-static void
+static int
 channel_destroy(void *io_device, void *ctx_buf)
 {
+	return 0;
 }
 
 static void
@@ -190,7 +191,7 @@ for_each_channel_remove(void)
 	set_thread(0);
 	spdk_put_io_channel(ch0);
 	spdk_for_each_channel(&io_target, channel_msg, &count, channel_cpl);
-	poll_threads();
+	poll_threads(false);
 
 	/*
 	 * Case #2: Put the I/O channel after spdk_for_each_channel, but before
@@ -199,14 +200,14 @@ for_each_channel_remove(void)
 	ch0 = spdk_get_io_channel(&io_target);
 	spdk_for_each_channel(&io_target, channel_msg, &count, channel_cpl);
 	spdk_put_io_channel(ch0);
-	poll_threads();
+	poll_threads(false);
 
 	set_thread(1);
 	spdk_put_io_channel(ch1);
 	set_thread(2);
 	spdk_put_io_channel(ch2);
 	spdk_io_device_unregister(&io_target, NULL);
-	poll_threads();
+	poll_threads(false);
 
 	free_threads();
 }
@@ -267,7 +268,7 @@ for_each_channel_unreg(void)
 	CU_ASSERT(dev == TAILQ_FIRST(&g_io_devices));
 	CU_ASSERT(TAILQ_NEXT(dev, tailq) == NULL);
 
-	poll_thread(0);
+	poll_thread(0, false);
 	CU_ASSERT(ctx.ch_done == true);
 	CU_ASSERT(ctx.foreach_done == true);
 	/*
@@ -280,7 +281,7 @@ for_each_channel_unreg(void)
 	set_thread(0);
 	spdk_put_io_channel(ch0);
 
-	poll_threads();
+	poll_threads(false);
 
 	free_threads();
 }
@@ -328,12 +329,13 @@ create_cb_1(void *io_device, void *ctx_buf)
 	return 0;
 }
 
-static void
+static int
 destroy_cb_1(void *io_device, void *ctx_buf)
 {
 	CU_ASSERT(io_device == &device1);
 	CU_ASSERT(*(uint64_t *)ctx_buf == ctx1);
 	g_destroy_cb_calls++;
+	return 0;
 }
 
 static int
@@ -345,12 +347,13 @@ create_cb_2(void *io_device, void *ctx_buf)
 	return 0;
 }
 
-static void
+static int
 destroy_cb_2(void *io_device, void *ctx_buf)
 {
 	CU_ASSERT(io_device == &device2);
 	CU_ASSERT(*(uint64_t *)ctx_buf == ctx2);
 	g_destroy_cb_calls++;
+	return 0;
 }
 
 static int

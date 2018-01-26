@@ -39,8 +39,8 @@ static uint32_t g_ut_num_threads;
 
 int allocate_threads(int num_threads);
 void free_threads(void);
-void poll_threads(void);
-int poll_thread(uintptr_t thread_id);
+void poll_threads(bool skip_poller);
+int poll_thread(uintptr_t thread_id, bool skip_poller);
 
 struct ut_msg {
 	spdk_thread_fn		fn;
@@ -154,7 +154,7 @@ free_threads(void)
 }
 
 int
-poll_thread(uintptr_t thread_id)
+poll_thread(uintptr_t thread_id, bool skip_poller)
 {
 	int count = 0;
 	struct ut_thread *thread = &g_ut_threads[thread_id];
@@ -178,6 +178,12 @@ poll_thread(uintptr_t thread_id)
 		free(msg);
 	}
 
+	if (skip_poller == true) {
+		set_thread(original_thread_id);
+
+		return count;
+	}
+
 	TAILQ_INIT(&tmp_pollers);
 
 	while (!TAILQ_EMPTY(&thread->pollers)) {
@@ -199,7 +205,7 @@ poll_thread(uintptr_t thread_id)
 }
 
 void
-poll_threads(void)
+poll_threads(bool skip_poller)
 {
 	bool msg_processed;
 	uint32_t i, count;
@@ -208,7 +214,7 @@ poll_threads(void)
 		msg_processed = false;
 
 		for (i = 0; i < g_ut_num_threads; i++) {
-			count = poll_thread(i);
+			count = poll_thread(i, skip_poller);
 			if (count > 0) {
 				msg_processed = true;
 			}

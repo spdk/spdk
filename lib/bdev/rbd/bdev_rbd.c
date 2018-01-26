@@ -422,7 +422,7 @@ err:
 	return -1;
 }
 
-static void
+static int
 bdev_rbd_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct bdev_rbd_io_channel *io_channel = ctx_buf;
@@ -430,6 +430,8 @@ bdev_rbd_destroy_cb(void *io_device, void *ctx_buf)
 	bdev_rbd_free_channel(io_channel);
 
 	spdk_poller_unregister(&io_channel->poller);
+
+	return 0;
 }
 
 static struct spdk_io_channel *
