@@ -3166,12 +3166,29 @@ _spdk_blob_sync_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	spdk_bs_sequence_finish(seq, bserrno);
 }
 
+static void
+_spdk_blob_sync_md(struct spdk_blob_data *blob, spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_bs_cpl	cpl;
+	spdk_bs_sequence_t	*seq;
+
+	cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
+	cpl.u.blob_basic.cb_fn = cb_fn;
+	cpl.u.blob_basic.cb_arg = cb_arg;
+
+	seq = spdk_bs_sequence_start(blob->bs->md_channel, &cpl);
+	if (!seq) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	_spdk_blob_persist(seq, blob, _spdk_blob_sync_md_cpl, blob);
+}
+
 void
 spdk_blob_sync_md(struct spdk_blob *_blob, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_blob_data	*blob = __blob_to_data(_blob);
-	struct spdk_bs_cpl	cpl;
-	spdk_bs_sequence_t	*seq;
 
 	assert(blob != NULL);
 	assert(spdk_get_thread() == blob->bs->md_thread);
@@ -3192,17 +3209,7 @@ spdk_blob_sync_md(struct spdk_blob *_blob, spdk_blob_op_complete cb_fn, void *cb
 		return;
 	}
 
-	cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
-	cpl.u.blob_basic.cb_fn = cb_fn;
-	cpl.u.blob_basic.cb_arg = cb_arg;
-
-	seq = spdk_bs_sequence_start(blob->bs->md_channel, &cpl);
-	if (!seq) {
-		cb_fn(cb_arg, -ENOMEM);
-		return;
-	}
-
-	_spdk_blob_persist(seq, blob, _spdk_blob_sync_md_cpl, blob);
+	_spdk_blob_sync_md(blob, cb_fn, cb_arg);
 }
 
 /* END spdk_blob_sync_md */
