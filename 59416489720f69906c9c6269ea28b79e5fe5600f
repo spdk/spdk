@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1fa8ba3a_feebf959",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-26T15:12:37Z",
+      "side": 1,
+      "message": "You are right. We don\u0027t need that - I\u0027ll remove this patch.",
+      "parentUuid": "58d3d745_a2fa05d1",
+      "revId": "59416489720f69906c9c6269ea28b79e5fe5600f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "47948b2f_8268b920",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 5
