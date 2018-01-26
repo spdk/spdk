@@ -146,6 +146,7 @@ struct spdk_vhost_dev {
 	int task_cnt;
 	int32_t lcore;
 	struct spdk_cpuset *cpumask;
+	bool registered;
 
 	enum spdk_vhost_dev_type type;
 	const struct spdk_vhost_dev_backend *backend;

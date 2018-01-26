@@ -707,6 +707,7 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 	vdev->vid = -1;
 	vdev->lcore = -1;
 	vdev->cpumask = cpumask;
+	vdev->registered = true;
 	vdev->type = type;
 	vdev->backend = backend;
 
@@ -754,7 +755,7 @@ spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev)
 		return -ENOSPC;
 	}
 
-	if (rte_vhost_driver_unregister(vdev->path) != 0) {
+	if (vdev->registered && rte_vhost_driver_unregister(vdev->path) != 0) {
 		SPDK_ERRLOG("Could not unregister controller %s with vhost library\n"
 			    "Check if domain socket %s still exists\n",
 			    vdev->name, vdev->path);
@@ -1181,6 +1182,7 @@ session_shutdown(void *arg)
 		}
 
 		rte_vhost_driver_unregister(vdev->path);
+		vdev->registered = false;
 	}
 
 	SPDK_NOTICELOG("Exiting\n");
@@ -1337,13 +1339,28 @@ spdk_vhost_init(void)
 	return 0;
 }
 
+static int
+_spdk_vhost_fini_remove_vdev_cb(struct spdk_vhost_dev *vdev, void *arg)
+{
+	spdk_vhost_fini_cb fini_cb = arg;
+
+	if (vdev != NULL) {
+		spdk_vhost_dev_remove(vdev);
+		return 0;
+	}
+
+	/* All devices are removed now. */
+	free(g_num_ctrlrs);
+	fini_cb();
+	return 0;
+}
+
 static void
 _spdk_vhost_fini(void *arg1, void *arg2)
 {
 	spdk_vhost_fini_cb fini_cb = arg1;
 
-	free(g_num_ctrlrs);
-	fini_cb();
+	spdk_vhost_call_external_event_foreach(_spdk_vhost_fini_remove_vdev_cb, fini_cb);
 }
 
 void
