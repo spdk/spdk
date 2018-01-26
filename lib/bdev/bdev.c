@@ -2161,6 +2161,14 @@ spdk_bdev_unregister_done(struct spdk_bdev *bdev, int bdeverrno)
 	}
 }
 
+static void
+_remove_notify(void *arg)
+{
+	struct spdk_bdev_desc *desc = arg;
+
+	desc->remove_cb(desc->remove_ctx);
+}
+
 void
 spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
@@ -2185,10 +2193,14 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 
 	TAILQ_FOREACH_SAFE(desc, &bdev->open_descs, link, tmp) {
 		if (desc->remove_cb) {
-			pthread_mutex_unlock(&bdev->mutex);
 			do_destruct = false;
-			desc->remove_cb(desc->remove_ctx);
-			pthread_mutex_lock(&bdev->mutex);
+			/*
+			 * Defer invocation of the remove_cb to a separate message that will
+			 *  run later on this thread.  This ensures this context unwinds and
+			 *  we don't recursively unregister this bdev again if the remove_cb
+			 *  immediately closes its descriptor.
+			 */
+			spdk_thread_send_msg(spdk_get_thread(), _remove_notify, desc);
 		}
 	}
 
