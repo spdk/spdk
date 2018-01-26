@@ -11,6 +11,8 @@ def construct_lvol_store(args):
 def construct_lvol_bdev(args):
     num_bytes = (args.size * 1024 * 1024)
     params = {'lvol_name': args.lvol_name, 'size': num_bytes}
+    if args.thin_provision:
+        params['thin_provision'] = args.thin_provision
     if (args.uuid and args.lvs_name) or (not args.uuid and not args.lvs_name):
         print("You need to specify either uuid or name of lvolstore")
     else:
