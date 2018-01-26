@@ -611,6 +611,8 @@ spdk_vhost_blk_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_wr
 	spdk_json_write_object_end(w);
 }
 
+static int spdk_vhost_blk_destroy(struct spdk_vhost_dev *dev);
+
 static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 	.virtio_features = SPDK_VHOST_FEATURES |
 	(1ULL << VIRTIO_BLK_F_SIZE_MAX) | (1ULL << VIRTIO_BLK_F_SEG_MAX) |
@@ -625,7 +627,7 @@ static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 	.start_device =  spdk_vhost_blk_start,
 	.stop_device = spdk_vhost_blk_stop,
 	.dump_config_json = spdk_vhost_blk_dump_config_json,
-	.vhost_remove_controller = spdk_vhost_blk_destroy,
+	.remove_device = spdk_vhost_blk_destroy,
 };
 
 int
@@ -703,8 +705,8 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 
 	bvdev->bdev = bdev;
 	bvdev->readonly = readonly;
-	ret = spdk_vhost_dev_construct(&bvdev->vdev, name, cpumask, SPDK_VHOST_DEV_T_BLK,
-				       &vhost_blk_device_backend);
+	ret = spdk_vhost_dev_register(&bvdev->vdev, name, cpumask, SPDK_VHOST_DEV_T_BLK,
+				      &vhost_blk_device_backend);
 	if (ret != 0) {
 		spdk_bdev_close(bvdev->bdev_desc);
 		ret = -1;
@@ -715,7 +717,7 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 		SPDK_ERRLOG("Controller %s: failed to set as a readonly\n", name);
 		spdk_bdev_close(bvdev->bdev_desc);
 
-		if (spdk_vhost_dev_remove(&bvdev->vdev) != 0) {
+		if (spdk_vhost_dev_unregister(&bvdev->vdev) != 0) {
 			SPDK_ERRLOG("Controller %s: failed to remove controller\n", name);
 		}
 
@@ -732,7 +734,7 @@ out:
 	return ret;
 }
 
-int
+static int
 spdk_vhost_blk_destroy(struct spdk_vhost_dev *vdev)
 {
 	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
@@ -742,7 +744,7 @@ spdk_vhost_blk_destroy(struct spdk_vhost_dev *vdev)
 		return -EINVAL;
 	}
 
-	rc = spdk_vhost_dev_remove(&bvdev->vdev);
+	rc = spdk_vhost_dev_unregister(&bvdev->vdev);
 	if (rc != 0) {
 		return rc;
 	}

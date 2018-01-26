@@ -141,7 +141,7 @@ vhost_scsi_controller_construct_test(void)
 	CU_ASSERT(g_spdk_vhost_device != NULL);
 
 	/* Remove created device */
-	MOCK_SET(spdk_vhost_dev_remove_fail, bool, false);
+	MOCK_SET(spdk_vhost_dev_unregister_fail, bool, false);
 	rc = spdk_vhost_scsi_dev_remove(g_spdk_vhost_device);
 	CU_ASSERT(rc == 0);
 }
@@ -153,7 +153,7 @@ vhost_scsi_dev_remove_test(void)
 	struct spdk_vhost_scsi_dev *svdev = NULL;
 	struct spdk_scsi_dev *scsi_dev;
 
-	MOCK_SET(spdk_vhost_dev_remove_fail, bool, false);
+	MOCK_SET(spdk_vhost_dev_unregister_fail, bool, false);
 
 	/* Try to remove controller which is occupied */
 	svdev = alloc_svdev();
@@ -165,7 +165,7 @@ vhost_scsi_dev_remove_test(void)
 	svdev->scsi_dev[0] = NULL;
 
 	/* Failed to remove device */
-	MOCK_SET(spdk_vhost_dev_remove_fail, bool, true);
+	MOCK_SET(spdk_vhost_dev_unregister_fail, bool, true);
 	rc = spdk_vhost_scsi_dev_remove(&svdev->vdev);
 	CU_ASSERT(rc == -1);
 
@@ -178,7 +178,7 @@ vhost_scsi_dev_construct_test(void)
 	int rc;
 
 	/* Failed to construct vhost device */
-	MOCK_SET(spdk_vhost_dev_construct_fail, bool, true);
+	MOCK_SET(spdk_vhost_dev_register_fail, bool, true);
 	rc = spdk_vhost_scsi_dev_construct("vhost.0", "0x1");
 	CU_ASSERT(rc != 0);
 }

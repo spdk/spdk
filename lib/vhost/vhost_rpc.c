@@ -391,7 +391,7 @@ spdk_rpc_remove_vhost_controller_cb(struct spdk_vhost_dev *vdev, void *arg)
 		goto invalid;
 	}
 
-	rc = spdk_remove_vhost_controller(vdev);
+	rc = spdk_vhost_dev_remove(vdev);
 	if (rc < 0) {
 		goto invalid;
 	}
