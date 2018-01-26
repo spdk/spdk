@@ -100,17 +100,17 @@ DEFINE_STUB(spdk_json_write_array_begin, int, (struct spdk_json_write_ctx *w), 0
 DEFINE_STUB(spdk_json_write_object_end, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB(spdk_json_write_array_end, int, (struct spdk_json_write_ctx *w), 0);
 
-/* This sets spdk_vhost_dev_remove to either to fail or success */
-DEFINE_STUB(spdk_vhost_dev_remove_fail, bool, (void), false);
-/* This sets spdk_vhost_dev_construct to either to fail or success */
-DEFINE_STUB(spdk_vhost_dev_construct_fail, bool, (void), false);
+/* This sets spdk_vhost_dev_unregister to either to fail or success */
+DEFINE_STUB(spdk_vhost_dev_unregister_fail, bool, (void), false);
+/* This sets spdk_vhost_dev_register to either to fail or success */
+DEFINE_STUB(spdk_vhost_dev_register_fail, bool, (void), false);
 
 static struct spdk_vhost_dev *g_spdk_vhost_device;
 int
-spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
-			 enum spdk_vhost_dev_type type, const struct spdk_vhost_dev_backend *backend)
+spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
+			enum spdk_vhost_dev_type type, const struct spdk_vhost_dev_backend *backend)
 {
-	if (spdk_vhost_dev_construct_fail()) {
+	if (spdk_vhost_dev_register_fail()) {
 		return -1;
 	}
 
@@ -119,9 +119,9 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const ch
 }
 
 int
-spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev)
+spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev)
 {
-	if (spdk_vhost_dev_remove_fail()) {
+	if (spdk_vhost_dev_unregister_fail()) {
 		return -1;
 	}
 
