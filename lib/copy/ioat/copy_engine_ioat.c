@@ -207,13 +207,15 @@ ioat_create_cb(void *io_device, void *ctx_buf)
 	return 0;
 }
 
-static void
+static int
 ioat_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct ioat_io_channel *ch = ctx_buf;
 
 	ioat_free_device(ch->ioat_dev);
 	spdk_poller_unregister(&ch->poller);
+
+	return 0;
 }
 
 static struct spdk_io_channel *
