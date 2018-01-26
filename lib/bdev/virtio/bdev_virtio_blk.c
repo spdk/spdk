@@ -82,7 +82,7 @@ struct bdev_virtio_blk_io_channel {
 SPDK_DECLARE_BDEV_MODULE(virtio_blk);
 
 static int bdev_virtio_blk_ch_create_cb(void *io_device, void *ctx_buf);
-static void bdev_virtio_blk_ch_destroy_cb(void *io_device, void *ctx_buf);
+static int bdev_virtio_blk_ch_destroy_cb(void *io_device, void *ctx_buf);
 
 static struct virtio_blk_io_ctx *
 bdev_virtio_blk_init_io_vreq(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
@@ -283,7 +283,7 @@ bdev_virtio_blk_ch_create_cb(void *io_device, void *ctx_buf)
 	return 0;
 }
 
-static void
+static int
 bdev_virtio_blk_ch_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct virtio_blk_dev *bvdev = io_device;
@@ -293,6 +293,8 @@ bdev_virtio_blk_ch_destroy_cb(void *io_device, void *ctx_buf)
 
 	spdk_poller_unregister(&ch->poller);
 	virtio_dev_release_queue(vdev, vq->vq_queue_index);
+
+	return 0;
 }
 
 static int

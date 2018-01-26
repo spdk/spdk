@@ -367,13 +367,14 @@ bdev_aio_create_cb(void *io_device, void *ctx_buf)
 	return 0;
 }
 
-static void
+static int
 bdev_aio_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct bdev_aio_io_channel *io_channel = ctx_buf;
 
 	io_destroy(io_channel->io_ctx);
 	spdk_poller_unregister(&io_channel->poller);
+	return 0;
 }
 
 static struct spdk_io_channel *

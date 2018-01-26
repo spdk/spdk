@@ -147,9 +147,10 @@ memcpy_create_cb(void *io_device, void *ctx_buf)
 	return 0;
 }
 
-static void
+static int
 memcpy_destroy_cb(void *io_device, void *ctx_buf)
 {
+	return 0;
 }
 
 static struct spdk_io_channel *mem_get_io_channel(void)
@@ -196,12 +197,14 @@ copy_create_cb(void *io_device, void *ctx_buf)
 	return 0;
 }
 
-static void
+static int
 copy_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct copy_io_channel	*copy_ch = ctx_buf;
 
 	spdk_put_io_channel(copy_ch->ch);
+
+	return 0;
 }
 
 struct spdk_io_channel *

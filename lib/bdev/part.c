@@ -181,7 +181,7 @@ spdk_bdev_part_channel_create_cb(void *io_device, void *ctx_buf)
 	}
 }
 
-static void
+static int
 spdk_bdev_part_channel_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct spdk_bdev_part *part = (struct spdk_bdev_part *)io_device;
@@ -191,6 +191,8 @@ spdk_bdev_part_channel_destroy_cb(void *io_device, void *ctx_buf)
 		part->base->ch_destroy_cb(io_device, ctx_buf);
 	}
 	spdk_put_io_channel(ch->base_ch);
+
+	return 0;
 }
 
 int
