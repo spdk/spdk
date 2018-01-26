@@ -135,7 +135,7 @@ struct spdk_vhost_dev_backend {
 				uint32_t offset, uint32_t size, uint32_t flags);
 
 	void (*dump_config_json)(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
-	int (*vhost_remove_controller)(struct spdk_vhost_dev *vdev);
+	int (*remove_device)(struct spdk_vhost_dev *vdev);
 };
 
 struct spdk_vhost_dev {
@@ -240,9 +240,9 @@ int spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
 				 uint16_t *iov_index, const struct vring_desc *desc);
 bool spdk_vhost_dev_has_feature(struct spdk_vhost_dev *vdev, unsigned feature_id);
 
-int spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
-			     enum spdk_vhost_dev_type type, const struct spdk_vhost_dev_backend *backend);
-int spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev);
+int spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
+			    enum spdk_vhost_dev_type type, const struct spdk_vhost_dev_backend *backend);
+int spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev);
 
 int spdk_vhost_scsi_controller_construct(void);
 int spdk_vhost_blk_controller_construct(void);
@@ -250,6 +250,5 @@ void spdk_vhost_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_w
 void spdk_vhost_dev_backend_event_done(void *event_ctx, int response);
 void spdk_vhost_lock(void);
 void spdk_vhost_unlock(void);
-int spdk_remove_vhost_controller(struct spdk_vhost_dev *vdev);
 
 #endif /* SPDK_VHOST_INTERNAL_H */

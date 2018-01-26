@@ -98,8 +98,8 @@ vhost_blk_construct_test(void)
 	int rc;
 	struct spdk_bdev *ut_p_spdk_bdev = MOCK_PASS_THRU_P;
 
-	MOCK_SET(spdk_vhost_dev_remove_fail, bool, false);
-	MOCK_SET(spdk_vhost_dev_construct_fail, bool, false);
+	MOCK_SET(spdk_vhost_dev_unregister_fail, bool, false);
+	MOCK_SET(spdk_vhost_dev_register_fail, bool, false);
 
 	/* Create device with invalid name */
 	MOCK_SET_P(spdk_bdev_get_by_name, struct spdk_bdev *, NULL);
@@ -114,7 +114,7 @@ vhost_blk_construct_test(void)
 
 	/* Failed to construct controller */
 	MOCK_SET(spdk_bdev_open, int, 0);
-	MOCK_SET(spdk_vhost_dev_construct_fail, bool, true);
+	MOCK_SET(spdk_vhost_dev_register_fail, bool, true);
 	rc = spdk_vhost_blk_construct("vhost.0", "0x1", "Malloc0", true);
 	CU_ASSERT(rc != 0);
 
@@ -124,7 +124,7 @@ vhost_blk_construct_test(void)
 	CU_ASSERT(rc != 0);
 
 	/* Failed to set readonly as a feature and failde to remove controller */
-	MOCK_SET(spdk_vhost_dev_remove_fail, bool, true);
+	MOCK_SET(spdk_vhost_dev_unregister_fail, bool, true);
 	rc = spdk_vhost_blk_construct("vhost.0", "0x1", "Malloc0", true);
 	CU_ASSERT(rc != 0);
 }
@@ -144,7 +144,7 @@ vhost_blk_destroy_test(void)
 
 	/* Failed to remove device */
 	bvdev->vdev.type = SPDK_VHOST_DEV_T_BLK;
-	MOCK_SET(spdk_vhost_dev_remove_fail, bool, true);
+	MOCK_SET(spdk_vhost_dev_unregister_fail, bool, true);
 	rc = spdk_vhost_blk_destroy(&bvdev->vdev);
 	CU_ASSERT(rc == -1);
 

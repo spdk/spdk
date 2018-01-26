@@ -525,8 +525,8 @@ spdk_vhost_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 }
 
 int
-spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
-			 enum spdk_vhost_dev_type type, const struct spdk_vhost_dev_backend *backend)
+spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
+			enum spdk_vhost_dev_type type, const struct spdk_vhost_dev_backend *backend)
 {
 	unsigned ctrlr_num;
 	char path[PATH_MAX];
@@ -650,7 +650,7 @@ out:
 }
 
 int
-spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev)
+spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev)
 {
 	unsigned ctrlr_num;
 
@@ -1028,7 +1028,7 @@ out:
 }
 
 static void
-spdk_vhost_kill_cb(void)
+_spdk_vhost_kill_cb(void)
 {
 	spdk_app_stop(0);
 }
@@ -1067,7 +1067,7 @@ spdk_vhost_startup(void *arg1, void *arg2)
 	return;
 
 out:
-	spdk_vhost_fini(spdk_vhost_kill_cb);
+	spdk_vhost_fini(_spdk_vhost_kill_cb);
 }
 
 static void *
@@ -1099,9 +1099,9 @@ spdk_vhost_dump_config_json(struct spdk_vhost_dev *vdev,
 }
 
 int
-spdk_remove_vhost_controller(struct spdk_vhost_dev *vdev)
+spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev)
 {
-	return vdev->backend->vhost_remove_controller(vdev);
+	return vdev->backend->remove_device(vdev);
 }
 
 static int
@@ -1240,7 +1240,7 @@ spdk_vhost_init(void)
 }
 
 static void
-_spdk_vhost_fini(void *arg1, void *arg2)
+_spdk_vhost_fini_cb(void *arg1, void *arg2)
 {
 	void (*fini_cb)(void);
 
@@ -1260,9 +1260,9 @@ spdk_vhost_fini(spdk_vhost_fini_cb fini_cb)
 	struct spdk_event *fini_ev;
 
 	g_fini_cb = fini_cb;
-	fini_ev = spdk_event_allocate(spdk_env_get_current_core(), _spdk_vhost_fini, NULL, NULL);
+	fini_ev = spdk_event_allocate(spdk_env_get_current_core(), _spdk_vhost_fini_cb, NULL, NULL);
 
-	/* rte_vhost API for removing sockets is synchronous. Since it may call SPDK
+	/* rte_vhost API for removing sockets is not asynchronous. Since it may call SPDK
 	 * ops for stopping a device or removing a connection, we need to call it from
 	 * a separate thread to avoid deadlock.
 	 */

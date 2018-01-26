@@ -108,6 +108,7 @@ struct spdk_vhost_scsi_task {
 static int spdk_vhost_scsi_start(struct spdk_vhost_dev *, void *);
 static int spdk_vhost_scsi_stop(struct spdk_vhost_dev *, void *);
 static void spdk_vhost_scsi_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
+static int spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev);
 
 const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
 	.virtio_features = SPDK_VHOST_SCSI_FEATURES,
@@ -115,7 +116,7 @@ const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
 	.start_device =  spdk_vhost_scsi_start,
 	.stop_device = spdk_vhost_scsi_stop,
 	.dump_config_json = spdk_vhost_scsi_config_json,
-	.vhost_remove_controller = spdk_vhost_scsi_dev_remove,
+	.remove_device = spdk_vhost_scsi_dev_remove,
 };
 
 static void
@@ -697,8 +698,8 @@ spdk_vhost_scsi_dev_construct(const char *name, const char *cpumask)
 	}
 
 	spdk_vhost_lock();
-	rc = spdk_vhost_dev_construct(&svdev->vdev, name, cpumask, SPDK_VHOST_DEV_T_SCSI,
-				      &spdk_vhost_scsi_device_backend);
+	rc = spdk_vhost_dev_register(&svdev->vdev, name, cpumask, SPDK_VHOST_DEV_T_SCSI,
+				     &spdk_vhost_scsi_device_backend);
 
 	if (rc) {
 		spdk_dma_free(svdev);
@@ -708,7 +709,7 @@ spdk_vhost_scsi_dev_construct(const char *name, const char *cpumask)
 	return rc;
 }
 
-int
+static int
 spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev)
 {
 	struct spdk_vhost_scsi_dev *svdev = to_scsi_dev(vdev);
@@ -725,7 +726,7 @@ spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev)
 		}
 	}
 
-	rc = spdk_vhost_dev_remove(vdev);
+	rc = spdk_vhost_dev_unregister(vdev);
 	if (rc != 0) {
 		return rc;
 	}
