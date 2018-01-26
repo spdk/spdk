@@ -50,6 +50,24 @@ function nbd_function_test() {
 
 timing_enter bdev
 
+timing_enter bdev_passthru
+
+cp $testdir/passthru/pt.conf.in $testdir/passthru/pt.conf
+$rootdir/scripts/gen_nvme.sh >> $testdir/passthru/pt.conf
+cd $testdir/passthru
+$rootdir/examples/blob/cli/blobcli -c $testdir/passthru/pt.conf -b TestPT -T $testdir/passthru/test.bs > $testdir/passthru/pt_test.out
+cd -
+
+# the tool leaves some trailing whitespaces that we need to strip out
+sed -i 's/[[:space:]]*$//' $testdir/passthru/pt_test.out
+$rootdir/test/app/match/match -v $testdir/passthru/pt_test.out.match
+
+rm -f $testdir/passthru/test.bs
+rm -f $testdir/passthru/pt_test.out
+rm -f $testdir/passthru/pt.conf
+
+timing exit bdev_passthru
+
 # Create a file to be used as an AIO backend
 dd if=/dev/zero of=/tmp/aiofile bs=2048 count=5000
 
