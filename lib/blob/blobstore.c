@@ -1638,6 +1638,8 @@ _spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts)
 
 	TAILQ_INIT(&bs->blobs);
 	bs->dev = dev;
+	bs->md_thread = spdk_get_thread();
+	assert(bs->md_thread != NULL);
 
 	/*
 	 * Do not use _spdk_bs_lba_to_cluster() here since blockcnt may not be an
@@ -2934,6 +2936,7 @@ spdk_blob_resize(struct spdk_blob *_blob, uint64_t sz)
 	int			rc;
 
 	assert(blob != NULL);
+	assert(spdk_get_thread() == blob->bs->md_thread);
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Resizing blob %lu to %lu clusters\n", blob->id, sz);
 
@@ -3125,6 +3128,8 @@ void spdk_blob_set_read_only(struct spdk_blob *b)
 {
 	struct spdk_blob_data *blob = __blob_to_data(b);
 
+	assert(spdk_get_thread() == blob->bs->md_thread);
+
 	blob->data_ro_flags |= SPDK_BLOB_READ_ONLY;
 
 	blob->state = SPDK_BLOB_STATE_DIRTY;
@@ -3154,6 +3159,7 @@ spdk_blob_sync_md(struct spdk_blob *_blob, spdk_blob_op_complete cb_fn, void *cb
 	spdk_bs_sequence_t	*seq;
 
 	assert(blob != NULL);
+	assert(spdk_get_thread() == blob->bs->md_thread);
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Syncing blob %lu\n", blob->id);
 
@@ -3221,6 +3227,7 @@ void spdk_blob_close(struct spdk_blob *b, spdk_blob_op_complete cb_fn, void *cb_
 	assert(b != NULL);
 	blob = __blob_to_data(b);
 	assert(blob != NULL);
+	assert(spdk_get_thread() == blob->bs->md_thread);
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Closing blob %lu\n", blob->id);
 
