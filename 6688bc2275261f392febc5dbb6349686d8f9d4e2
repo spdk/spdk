@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "6e6aac11_1107f2b5",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-26T14:39:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0e15c763_69f128e6",
+      "revId": "6688bc2275261f392febc5dbb6349686d8f9d4e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "43db54a0_f011381a",
         "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
         "patchSetId": 24
@@ -30,6 +48,24 @@
       "writtenOn": "2018-01-25T17:45:23Z",
       "side": 1,
       "message": "Alignment is off.",
+      "revId": "6688bc2275261f392febc5dbb6349686d8f9d4e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a4b3f075_8ef0f6ea",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-26T14:39:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "43db54a0_f011381a",
       "revId": "6688bc2275261f392febc5dbb6349686d8f9d4e2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
