@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ec1f2c78_170e3a14",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 27
+      },
+      "lineNbr": 742,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-26T13:27:16Z",
+      "side": 1,
+      "message": "Like previously noted, is there a reason to type out cmd line in here ?\nInstead of:\n\nrv \u003d self.run_fio_test(nbd_name, \"--filename\u003d%s\" % nbd_name, \"--offset\u003d%s\" % offset,\n                               \"--size\u003d%s\" % size, \"--rw\u003dwrite\", \"--verify_pattern\u003d0xcc\")\n        if rv \u003d\u003d 1:\n            print(\"Fio test ended with unexpected failure\")\n            fail_count +\u003d 1\n\nmaybe:\n\n failcount +\u003d self.run_fio_test(nbd_name, offset, size, write, \"0xcc\")\n\nThen construct whole fio arg cmd line inside one run_fio_test function ?",
+      "range": {
+        "startLine": 741,
+        "startChar": 31,
+        "endLine": 742,
+        "endChar": 88
+      },
+      "revId": "fd611c59da0936d4758e8f7f5f3d4e3205867a64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
