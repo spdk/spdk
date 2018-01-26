@@ -248,6 +248,7 @@ struct rpc_construct_lvol_bdev {
 	char *lvs_name;
 	char *lvol_name;
 	uint64_t size;
+	bool thin_provision;
 };
 
 static void
@@ -263,6 +264,7 @@ static const struct spdk_json_object_decoder rpc_construct_lvol_bdev_decoders[] 
 	{"lvs_name", offsetof(struct rpc_construct_lvol_bdev, lvs_name), spdk_json_decode_string, true},
 	{"lvol_name", offsetof(struct rpc_construct_lvol_bdev, lvol_name), spdk_json_decode_string, true},
 	{"size", offsetof(struct rpc_construct_lvol_bdev, size), spdk_json_decode_uint64},
+	{"thin_provision", offsetof(struct rpc_construct_lvol_bdev, thin_provision), spdk_json_decode_bool, true},
 };
 
 static void
@@ -323,7 +325,8 @@ spdk_rpc_construct_lvol_bdev(struct spdk_jsonrpc_request *request,
 
 	sz = (size_t)req.size;
 
-	rc = vbdev_lvol_create(lvs, req.lvol_name, sz, _spdk_rpc_construct_lvol_bdev_cb, request);
+	rc = vbdev_lvol_create(lvs, req.lvol_name, sz, req.thin_provision,
+			       _spdk_rpc_construct_lvol_bdev_cb, request);
 	if (rc < 0) {
 		goto invalid;
 	}
