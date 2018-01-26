@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "96d9e6d8_bae2554d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 8
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-01-26T09:04:10Z",
+      "side": 1,
+      "message": "This sentence can be \"test nvmf target with 12 subsystem connection. Each subsystem uses one lvol bdev based on lvol store and nvme bdev.\"",
+      "range": {
+        "startLine": 9,
+        "startChar": 27,
+        "endLine": 10,
+        "endChar": 64
+      },
+      "revId": "663455143a014a951ae3d72e79886fdca0ef658a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
