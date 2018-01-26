@@ -120,6 +120,7 @@ vq_update_avail_ring(struct virtqueue *vq, uint16_t desc_idx)
 static inline int
 virtqueue_kick_prepare(struct virtqueue *vq)
 {
+	virtio_mb();
 	return !(vq->vq_ring.used->flags & VRING_USED_F_NO_NOTIFY);
 }
 
