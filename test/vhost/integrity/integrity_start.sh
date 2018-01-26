@@ -153,7 +153,7 @@ done
 
 # Run test on Virtual Machine
 $SCPCMD -r $basedir/integrity_vm.sh root@$VM_IP:~
-$SSHCMD root@$VM_IP "fs=$VM_FS ~/integrity_vm.sh $VHOST_MODE"
+$SSHCMD root@$VM_IP "~/integrity_vm.sh $VHOST_MODE $VM_FS"
 
 # Kill VM, cleanup config files
 cleanup_virsh

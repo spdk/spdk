@@ -17,7 +17,7 @@ fi
 
 trap "exit 1" SIGINT SIGTERM EXIT
 
-for fs in $fs; do
+for fs in $2; do
         for dev in $devs; do
                 mkfs_cmd="mkfs.$fs"
                 parted_cmd="parted -s /dev/${dev}"
