@@ -203,12 +203,14 @@ null_bdev_create_cb(void *io_device, void *ctx_buf)
 	return 0;
 }
 
-static void
+static int
 null_bdev_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct null_io_channel *ch = ctx_buf;
 
 	spdk_poller_unregister(&ch->poller);
+
+	return 0;
 }
 
 static int
