@@ -88,7 +88,7 @@ alloc_bvdev(void)
 					   SPDK_CACHE_LINE_SIZE, NULL);
 
 	SPDK_CU_ASSERT_FATAL(bvdev != NULL);
-	bvdev->vdev.type = SPDK_VHOST_DEV_T_BLK;
+	bvdev->vdev.backend = &vhost_blk_device_backend;
 	return bvdev;
 }
 
@@ -138,12 +138,12 @@ vhost_blk_destroy_test(void)
 	bvdev = alloc_bvdev();
 
 	/* Device has an incorrect type */
-	bvdev->vdev.type = SPDK_VHOST_DEV_T_SCSI;
+	bvdev->vdev.backend = NULL;;
 	rc = spdk_vhost_blk_destroy(&bvdev->vdev, false);
 	CU_ASSERT(rc == -EINVAL);
 
 	/* Failed to remove device */
-	bvdev->vdev.type = SPDK_VHOST_DEV_T_BLK;
+	bvdev->vdev.backend = &vhost_blk_device_backend;
 	MOCK_SET(spdk_vhost_dev_unregister_fail, bool, true);
 	rc = spdk_vhost_blk_destroy(&bvdev->vdev, false);
 	CU_ASSERT(rc == -1);

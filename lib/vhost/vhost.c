@@ -526,7 +526,7 @@ spdk_vhost_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 
 int
 spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
-			enum spdk_vhost_dev_type type, const struct spdk_vhost_dev_backend *backend)
+			const struct spdk_vhost_dev_backend *backend)
 {
 	unsigned ctrlr_num;
 	char path[PATH_MAX];
@@ -624,7 +624,6 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 	vdev->lcore = -1;
 	vdev->cpumask = cpumask;
 	vdev->registered = true;
-	vdev->type = type;
 	vdev->backend = backend;
 
 	spdk_vhost_set_coalescing(vdev, SPDK_VHOST_COALESCING_DELAY_BASE_US,
