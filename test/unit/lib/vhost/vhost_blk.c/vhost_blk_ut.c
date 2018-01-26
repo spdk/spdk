@@ -139,13 +139,13 @@ vhost_blk_destroy_test(void)
 
 	/* Device has an incorrect type */
 	bvdev->vdev.type = SPDK_VHOST_DEV_T_SCSI;
-	rc = spdk_vhost_blk_destroy(&bvdev->vdev);
+	rc = spdk_vhost_blk_destroy(&bvdev->vdev, false);
 	CU_ASSERT(rc == -EINVAL);
 
 	/* Failed to remove device */
 	bvdev->vdev.type = SPDK_VHOST_DEV_T_BLK;
 	MOCK_SET(spdk_vhost_dev_unregister_fail, bool, true);
-	rc = spdk_vhost_blk_destroy(&bvdev->vdev);
+	rc = spdk_vhost_blk_destroy(&bvdev->vdev, false);
 	CU_ASSERT(rc == -1);
 
 	if (rc != 0) {

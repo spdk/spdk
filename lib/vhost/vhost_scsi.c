@@ -108,7 +108,7 @@ struct spdk_vhost_scsi_task {
 static int spdk_vhost_scsi_start(struct spdk_vhost_dev *, void *);
 static int spdk_vhost_scsi_stop(struct spdk_vhost_dev *, void *);
 static void spdk_vhost_scsi_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
-static int spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev);
+static int spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev, bool force);
 
 const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
 	.virtio_features = SPDK_VHOST_SCSI_FEATURES,
@@ -710,7 +710,7 @@ spdk_vhost_scsi_dev_construct(const char *name, const char *cpumask)
 }
 
 static int
-spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev)
+spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev, bool force)
 {
 	struct spdk_vhost_scsi_dev *svdev = to_scsi_dev(vdev);
 	int rc, i;
@@ -721,8 +721,16 @@ spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev)
 
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; ++i) {
 		if (svdev->scsi_dev[i]) {
-			SPDK_ERRLOG("Trying to remove non-empty controller: %s.\n", vdev->name);
-			return -EBUSY;
+			if (!force) {
+				SPDK_ERRLOG("Trying to remove non-empty controller: %s.\n", vdev->name);
+				return -EBUSY;
+			}
+
+			rc = spdk_vhost_scsi_dev_remove_tgt(vdev, i, NULL, NULL);
+			if (rc != 0) {
+				SPDK_ERRLOG("%s: failed to force-remove target %d\n", vdev->name, i);
+				return rc;
+			}
 		}
 	}
 

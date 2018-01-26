@@ -106,6 +106,7 @@ DEFINE_STUB(spdk_vhost_dev_unregister_fail, bool, (void), false);
 DEFINE_STUB(spdk_vhost_dev_register_fail, bool, (void), false);
 
 static struct spdk_vhost_dev *g_spdk_vhost_device;
+
 int
 spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
 			enum spdk_vhost_dev_type type, const struct spdk_vhost_dev_backend *backend)
