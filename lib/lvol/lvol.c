@@ -1053,7 +1053,6 @@ spdk_lvol_resize(struct spdk_lvol *lvol, uint64_t sz,
 	return rc;
 
 invalid:
-	req->cb_fn(req->cb_arg, rc);
 	free(req);
 	return rc;
 }
