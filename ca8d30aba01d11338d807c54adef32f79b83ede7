@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "1925c6c7_8c9526b6",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 927,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-26T20:19:29Z",
+      "side": 1,
+      "message": "Is this supposed to be a warning? Seems like SPDK_DEBUGLOG might be more appropriate.",
+      "revId": "ca8d30aba01d11338d807c54adef32f79b83ede7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "958d21bb_e4dde324",
         "filename": "test/vhost/migration/migration.job",
         "patchSetId": 10
@@ -42,6 +59,40 @@
         "endLine": 33,
         "endChar": 10
       },
+      "revId": "ca8d30aba01d11338d807c54adef32f79b83ede7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "acea14d3_0faee1ed",
+        "filename": "test/vhost/migration/migration.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-26T20:19:29Z",
+      "side": 1,
+      "message": "Trailing whitespace",
+      "revId": "ca8d30aba01d11338d807c54adef32f79b83ede7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48fff8ed_9888bf06",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-26T20:19:29Z",
+      "side": 1,
+      "message": "Do we need both --fio-job and --fio-jobs? This looks like it might be a rebase mistake.",
       "revId": "ca8d30aba01d11338d807c54adef32f79b83ede7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
