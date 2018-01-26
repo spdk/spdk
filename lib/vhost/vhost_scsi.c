@@ -148,8 +148,8 @@ process_removed_devs(struct spdk_vhost_scsi_dev *svdev)
 
 		if (dev && state->removed && !spdk_scsi_dev_has_pending_tasks(dev)) {
 			spdk_scsi_dev_free_io_channels(dev);
-			spdk_scsi_dev_destruct(dev);
 			svdev->scsi_dev[i] = NULL;
+			spdk_scsi_dev_destruct(dev);
 			if (state->remove_cb) {
 				state->remove_cb(&svdev->vdev, state->remove_ctx);
 				state->remove_cb = NULL;
@@ -769,9 +769,7 @@ spdk_vhost_scsi_lun_hotremove(const struct spdk_scsi_lun *lun, void *arg)
 	}
 
 	if (scsi_dev_num == SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
-		SPDK_ERRLOG("Dev %s is not a part of vhost scsi controller '%s'.\n",
-			    spdk_scsi_dev_get_name(scsi_dev),
-			    svdev->vdev.name);
+		/* The entire device has been already removed. */
 		return;
 	}
 
@@ -870,8 +868,8 @@ spdk_vhost_scsi_dev_remove_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_nu
 
 	if (svdev->vdev.lcore == -1) {
 		/* controller is not in use, remove dev and exit */
-		spdk_scsi_dev_destruct(scsi_dev);
 		svdev->scsi_dev[scsi_tgt_num] = NULL;
+		spdk_scsi_dev_destruct(scsi_dev);
 		if (cb_fn) {
 			rc = cb_fn(vdev, cb_arg);
 		}
