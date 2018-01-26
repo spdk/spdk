@@ -69,7 +69,7 @@ Before running an SPDK application, some hugepages must be allocated and
 any NVMe and I/OAT devices must be unbound from the native kernel drivers.
 SPDK includes a script to automate this process on both Linux and FreeBSD.
 This script should be run as root. It only needs to be run once on the
-system. *Make sure you aren't using an NVMe device as your boot device.*
+system.
 
 ~~~{.sh}
 sudo scripts/setup.sh
@@ -90,6 +90,12 @@ sudo HUGEMEM=4096 scripts/setup.sh
 
 On Linux machines HUGEMEM will be rounded up to system-default huge page
 size boundary.
+
+All available params can be viewed by running
+
+~~~{.sh}
+scripts/setup.sh help
+~~~
 
 Example code is located in the examples directory. The examples are compiled
 automatically as part of the build process. Simply call any of the examples
