@@ -151,6 +151,8 @@ struct spdk_blob_store {
 	struct spdk_io_channel		*md_channel;
 	uint32_t			max_channel_ops;
 
+	struct spdk_thread		*md_thread;
+
 	struct spdk_bs_dev		*dev;
 
 	struct spdk_bit_array		*used_md_pages;
