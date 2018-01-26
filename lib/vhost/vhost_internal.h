@@ -94,11 +94,6 @@
 	(1ULL << VIRTIO_RING_F_EVENT_IDX) | \
 	(1ULL << VIRTIO_RING_F_INDIRECT_DESC))
 
-enum spdk_vhost_dev_type {
-	SPDK_VHOST_DEV_T_SCSI,//!< SPDK_VHOST_DEV_T_SCSI
-	SPDK_VHOST_DEV_T_BLK, //!< SPDK_VHOST_DEV_T_BLK
-};
-
 struct spdk_vhost_virtqueue {
 	struct rte_vhost_vring vring;
 	void *tasks;
@@ -149,7 +144,6 @@ struct spdk_vhost_dev {
 	struct spdk_cpuset *cpumask;
 	bool registered;
 
-	enum spdk_vhost_dev_type type;
 	const struct spdk_vhost_dev_backend *backend;
 
 	uint32_t coalescing_delay_time_base;
@@ -242,7 +236,7 @@ int spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
 bool spdk_vhost_dev_has_feature(struct spdk_vhost_dev *vdev, unsigned feature_id);
 
 int spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
-			    enum spdk_vhost_dev_type type, const struct spdk_vhost_dev_backend *backend);
+			    const struct spdk_vhost_dev_backend *backend);
 int spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev);
 
 int spdk_vhost_scsi_controller_construct(void);
