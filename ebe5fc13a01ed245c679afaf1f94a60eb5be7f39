@@ -16,6 +16,24 @@
       "revId": "ebe5fc13a01ed245c679afaf1f94a60eb5be7f39",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "09891d1f_7b55a080",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1299,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-26T13:04:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cd2b4956_43b74b61",
+      "revId": "ebe5fc13a01ed245c679afaf1f94a60eb5be7f39",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
