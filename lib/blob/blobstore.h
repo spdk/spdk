@@ -202,6 +202,15 @@ enum spdk_blob_op_type {
 	SPDK_BLOB_READV,
 };
 
+/* back bs_dev */
+
+#define BLOB_SNAPSHOT "BLOB_SNAPSHOT"
+
+struct spdk_blob_bs_dev {
+	struct spdk_bs_dev bs_dev;
+	struct spdk_blob *blob;
+};
+
 /* On-Disk Data Structures
  *
  * The following data structures exist on disk.
