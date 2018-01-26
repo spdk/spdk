@@ -221,6 +221,9 @@ struct spdk_bdev {
 	/** Indicate an async destroying event is on going */
 	bool qos_channel_destroying;
 
+	/** Indicate an async creating event is on going */
+	bool qos_channel_creating;
+
 	/** write cache enabled, not used at the moment */
 	int write_cache;
 
