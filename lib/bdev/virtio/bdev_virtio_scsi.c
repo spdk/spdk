@@ -191,7 +191,7 @@ static void virtio_scsi_dev_unregister_cb(void *io_device);
 static void virtio_scsi_dev_remove(struct virtio_scsi_dev *svdev,
 				   bdev_virtio_remove_cb cb_fn, void *cb_arg);
 static int bdev_virtio_scsi_ch_create_cb(void *io_device, void *ctx_buf);
-static void bdev_virtio_scsi_ch_destroy_cb(void *io_device, void *ctx_buf);
+static int bdev_virtio_scsi_ch_destroy_cb(void *io_device, void *ctx_buf);
 static void process_scan_resp(struct virtio_scsi_scan_base *base);
 static void bdev_virtio_mgmt_poll(void *arg);
 
@@ -938,7 +938,7 @@ bdev_virtio_scsi_ch_create_cb(void *io_device, void *ctx_buf)
 	return 0;
 }
 
-static void
+static int
 bdev_virtio_scsi_ch_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct bdev_virtio_io_channel *ch = ctx_buf;
@@ -948,6 +948,8 @@ bdev_virtio_scsi_ch_destroy_cb(void *io_device, void *ctx_buf)
 
 	spdk_poller_unregister(&ch->poller);
 	virtio_dev_release_queue(vdev, vq->vq_queue_index);
+
+	return 0;
 }
 
 static void
