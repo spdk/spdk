@@ -71,6 +71,9 @@ struct spdk_vhost_blk_dev {
 	bool readonly;
 };
 
+/* forward declaration */
+static const struct spdk_vhost_dev_backend vhost_blk_device_backend;
+
 static void
 blk_task_finish(struct spdk_vhost_blk_task *task)
 {
@@ -377,9 +380,8 @@ to_blk_dev(struct spdk_vhost_dev *vdev)
 		return NULL;
 	}
 
-	if (vdev->type != SPDK_VHOST_DEV_T_BLK) {
-		SPDK_ERRLOG("Controller %s: expected block controller (%d) but got %d\n",
-			    vdev->name, SPDK_VHOST_DEV_T_BLK, vdev->type);
+	if (vdev->backend != &vhost_blk_device_backend) {
+		SPDK_ERRLOG("%s: not a vhost-blk device\n", vdev->name);
 		return NULL;
 	}
 
@@ -705,8 +707,7 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 
 	bvdev->bdev = bdev;
 	bvdev->readonly = readonly;
-	ret = spdk_vhost_dev_register(&bvdev->vdev, name, cpumask, SPDK_VHOST_DEV_T_BLK,
-				      &vhost_blk_device_backend);
+	ret = spdk_vhost_dev_register(&bvdev->vdev, name, cpumask, &vhost_blk_device_backend);
 	if (ret != 0) {
 		spdk_bdev_close(bvdev->bdev_desc);
 		ret = -1;

@@ -677,13 +677,12 @@ to_scsi_dev(struct spdk_vhost_dev *ctrlr)
 		return NULL;
 	}
 
-	if (ctrlr->type != SPDK_VHOST_DEV_T_SCSI) {
-		SPDK_ERRLOG("Controller %s: expected SCSI controller (%d) but got %d\n",
-			    ctrlr->name, SPDK_VHOST_DEV_T_SCSI, ctrlr->type);
+	if (ctrlr->backend != &spdk_vhost_scsi_device_backend) {
+		SPDK_ERRLOG("%s: not a vhost-scsi device.\n", ctrlr->name);
 		return NULL;
 	}
 
-	return (struct spdk_vhost_scsi_dev *)ctrlr;
+	return SPDK_CONTAINEROF(ctrlr, struct spdk_vhost_scsi_dev, vdev);
 }
 
 int
@@ -698,7 +697,7 @@ spdk_vhost_scsi_dev_construct(const char *name, const char *cpumask)
 	}
 
 	spdk_vhost_lock();
-	rc = spdk_vhost_dev_register(&svdev->vdev, name, cpumask, SPDK_VHOST_DEV_T_SCSI,
+	rc = spdk_vhost_dev_register(&svdev->vdev, name, cpumask,
 				     &spdk_vhost_scsi_device_backend);
 
 	if (rc) {
