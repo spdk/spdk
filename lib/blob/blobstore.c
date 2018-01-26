@@ -71,6 +71,21 @@ _spdk_bs_claim_cluster(struct spdk_blob_store *bs, uint32_t cluster_num)
 }
 
 static int
+_spdk_blob_insert_cluster(struct spdk_blob_data *blob, uint32_t cluster_num, uint64_t cluster)
+{
+	uint64_t *cluster_lba = &blob->active.clusters[cluster_num];
+
+	assert(spdk_get_thread() == blob->bs->md_thread);
+
+	if (*cluster_lba != 0) {
+		return -EEXIST;
+	}
+
+	*cluster_lba = _spdk_bs_cluster_to_lba(blob->bs, cluster);
+	return 0;
+}
+
+static int
 _spdk_bs_allocate_cluster(struct spdk_blob_data *blob, uint32_t cluster_num,
 			  uint64_t *lowest_free_cluster)
 {
@@ -83,7 +98,7 @@ _spdk_bs_allocate_cluster(struct spdk_blob_data *blob, uint32_t cluster_num,
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Claiming cluster %lu for blob %lu\n", *lowest_free_cluster, blob->id);
 	_spdk_bs_claim_cluster(blob->bs, *lowest_free_cluster);
-	blob->active.clusters[cluster_num] = _spdk_bs_cluster_to_lba(blob->bs, *lowest_free_cluster);
+	_spdk_blob_insert_cluster(blob, cluster_num, *lowest_free_cluster);
 
 	return 0;
 }
