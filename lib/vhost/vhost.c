@@ -524,8 +524,8 @@ spdk_vhost_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 }
 
 int
-spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
-			 enum spdk_vhost_dev_type type, const struct spdk_vhost_dev_backend *backend)
+spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
+			enum spdk_vhost_dev_type type, const struct spdk_vhost_dev_backend *backend)
 {
 	unsigned ctrlr_num;
 	char path[PATH_MAX];
@@ -649,7 +649,7 @@ out:
 }
 
 int
-spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev)
+spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev)
 {
 	unsigned ctrlr_num;
 
@@ -1098,9 +1098,9 @@ spdk_vhost_dump_config_json(struct spdk_vhost_dev *vdev,
 }
 
 int
-spdk_remove_vhost_controller(struct spdk_vhost_dev *vdev)
+spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev)
 {
-	return vdev->backend->vhost_remove_controller(vdev);
+	return vdev->backend->remove_device(vdev);
 }
 
 static int
