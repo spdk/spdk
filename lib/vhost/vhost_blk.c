@@ -611,7 +611,7 @@ spdk_vhost_blk_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_wr
 	spdk_json_write_object_end(w);
 }
 
-static int spdk_vhost_blk_destroy(struct spdk_vhost_dev *dev);
+static int spdk_vhost_blk_destroy(struct spdk_vhost_dev *dev, bool force);
 
 static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 	.virtio_features = SPDK_VHOST_FEATURES |
@@ -735,7 +735,7 @@ out:
 }
 
 static int
-spdk_vhost_blk_destroy(struct spdk_vhost_dev *vdev)
+spdk_vhost_blk_destroy(struct spdk_vhost_dev *vdev, bool force)
 {
 	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
 	int rc;

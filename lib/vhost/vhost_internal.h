@@ -135,7 +135,7 @@ struct spdk_vhost_dev_backend {
 				uint32_t offset, uint32_t size, uint32_t flags);
 
 	void (*dump_config_json)(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
-	int (*remove_device)(struct spdk_vhost_dev *vdev);
+	int (*remove_device)(struct spdk_vhost_dev *vdev, bool force);
 };
 
 struct spdk_vhost_dev {
@@ -147,6 +147,7 @@ struct spdk_vhost_dev {
 	int task_cnt;
 	int32_t lcore;
 	struct spdk_cpuset *cpumask;
+	bool registered;
 
 	enum spdk_vhost_dev_type type;
 	const struct spdk_vhost_dev_backend *backend;
