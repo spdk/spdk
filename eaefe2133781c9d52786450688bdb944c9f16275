@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a8baeb45_ead7f7c0",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 25
+      },
+      "lineNbr": 725,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-26T08:51:33Z",
+      "side": 1,
+      "message": "Using \"bdev_name\" here would be just fine",
+      "range": {
+        "startLine": 725,
+        "startChar": 35,
+        "endLine": 725,
+        "endChar": 52
+      },
+      "revId": "eaefe2133781c9d52786450688bdb944c9f16275",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "207ea92f_b58ac617",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 25
+      },
+      "lineNbr": 747,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-26T08:51:33Z",
+      "side": 1,
+      "message": "There are already messages printed in run_fio_test() in case FIO fails. No need to add them here again.\nLet\u0027s shorten this piece by just doing:\nfailcount +\u003d self.run_fio_test()",
+      "range": {
+        "startLine": 743,
+        "startChar": 8,
+        "endLine": 747,
+        "endChar": 27
+      },
+      "revId": "eaefe2133781c9d52786450688bdb944c9f16275",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48189bde_c45320d4",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 25
+      },
+      "lineNbr": 766,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-26T08:51:33Z",
+      "side": 1,
+      "message": "You\u0027re not using this \"rc\" I think",
+      "range": {
+        "startLine": 766,
+        "startChar": 8,
+        "endLine": 766,
+        "endChar": 13
+      },
+      "revId": "eaefe2133781c9d52786450688bdb944c9f16275",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c9292fe_baff4c73",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 25
+      },
+      "lineNbr": 768,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-26T08:51:33Z",
+      "side": 1,
+      "message": "fail_count +\u003d self.c.delete_bdev()",
+      "range": {
+        "startLine": 767,
+        "startChar": 8,
+        "endLine": 768,
+        "endChar": 27
+      },
+      "revId": "eaefe2133781c9d52786450688bdb944c9f16275",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9f24e66_acf6596e",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 25
+      },
+      "lineNbr": 771,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-26T08:51:33Z",
+      "side": 1,
+      "message": "looks like could be removed",
+      "range": {
+        "startLine": 771,
+        "startChar": 8,
+        "endLine": 771,
+        "endChar": 56
+      },
+      "revId": "eaefe2133781c9d52786450688bdb944c9f16275",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "85e06ab4_38a5527f",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 25
+      },
+      "lineNbr": 775,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-26T08:51:33Z",
+      "side": 1,
+      "message": "fail_count +\u003d self.c.destroy_lvol_store()",
+      "range": {
+        "startLine": 774,
+        "startChar": 8,
+        "endLine": 775,
+        "endChar": 27
+      },
+      "revId": "eaefe2133781c9d52786450688bdb944c9f16275",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1ec3afd8_55d6bb11",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 25
+      },
+      "lineNbr": 801,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-26T08:51:33Z",
+      "side": 1,
+      "message": "No need to call get_lvol_bdev because construct_lvol_bdev provides sufficient bdev name in return",
+      "range": {
+        "startLine": 801,
+        "startChar": 35,
+        "endLine": 801,
+        "endChar": 53
+      },
+      "revId": "eaefe2133781c9d52786450688bdb944c9f16275",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "286e8c44_f2962434",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 25
+      },
+      "lineNbr": 821,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-26T08:51:33Z",
+      "side": 1,
+      "message": "fail_count +\u003d self.c.delete_bdev()",
+      "range": {
+        "startLine": 820,
+        "startChar": 8,
+        "endLine": 821,
+        "endChar": 27
+      },
+      "revId": "eaefe2133781c9d52786450688bdb944c9f16275",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
