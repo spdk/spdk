@@ -54,6 +54,10 @@ if [[ ! -x $VM_QEMU ]]; then
     echo "ERROR: QEMU binary not present in $VM_QEMU"
 fi
 
+if [[ -z $QEMU_IMG ]]; then
+    QEMU_IMG="$qemu_install_dir/bin/qemu-img"
+fi
+
 echo "Running test with filesystem: $VM_FS"
 
 function cleanup_virsh() {
@@ -90,7 +94,7 @@ function cleanup_lvol() {
 timing_enter integrity_test
 
 # Backing image for VM
-qemu-img create -f qcow2 -o backing_file=$VM_IMG $VM_BAK_IMG
+"$QEMU_IMG" create -f qcow2 -o backing_file=$VM_IMG $VM_BAK_IMG
 
 # Prepare vhost config
 cp $basedir/vhost.conf.in $basedir/vhost.conf
