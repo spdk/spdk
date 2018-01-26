@@ -1,5 +1,9 @@
+[passthru]
+  # PT <bdev name> <vbdev name>
+  PT Malloc3 TestPT
+
 [Malloc]
-  NumberOfLuns 3
+  NumberOfLuns 4
   LunSizeInMB 64
 
 [Split]
