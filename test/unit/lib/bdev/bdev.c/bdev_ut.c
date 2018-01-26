@@ -287,6 +287,36 @@ bytes_to_blocks_test(void)
 }
 
 static void
+num_blocks_test(void)
+{
+	struct spdk_bdev bdev;
+	struct spdk_bdev_desc *desc;
+
+	memset(&bdev, 0, sizeof(bdev));
+	bdev.name = "num_blocks";
+	bdev.fn_table = &fn_table;
+	bdev.module = SPDK_GET_BDEV_MODULE(bdev_ut);
+	spdk_bdev_register(&bdev);
+	spdk_bdev_notify_blockcnt_change(&bdev, 50);
+
+	/* Growing block number */
+	CU_ASSERT(spdk_bdev_notify_blockcnt_change(&bdev, 70) == 0);
+	/* Shrinking block number */
+	CU_ASSERT(spdk_bdev_notify_blockcnt_change(&bdev, 30) == 0);
+
+	/* In case bdev opened */
+	spdk_bdev_open(&bdev, false, NULL, NULL, &desc);
+
+	/* Growing block number */
+	CU_ASSERT(spdk_bdev_notify_blockcnt_change(&bdev, 80) == 0);
+	/* Shrinking block number */
+	CU_ASSERT(spdk_bdev_notify_blockcnt_change(&bdev, 20) != 0);
+
+	spdk_bdev_close(desc);
+	spdk_bdev_unregister(&bdev, NULL, NULL);
+}
+
+static void
 io_valid_test(void)
 {
 	struct spdk_bdev bdev;
@@ -294,7 +324,7 @@ io_valid_test(void)
 	memset(&bdev, 0, sizeof(bdev));
 
 	bdev.blocklen = 512;
-	bdev.blockcnt = 100;
+	spdk_bdev_notify_blockcnt_change(&bdev, 100);
 
 	/* All parameters valid */
 	CU_ASSERT(spdk_bdev_io_valid_blocks(&bdev, 1, 2) == true);
@@ -451,6 +481,7 @@ main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "bytes_to_blocks_test", bytes_to_blocks_test) == NULL ||
+		CU_add_test(suite, "num_blocks_test", num_blocks_test) == NULL ||
 		CU_add_test(suite, "io_valid", io_valid_test) == NULL ||
 		CU_add_test(suite, "open_write", open_write_test) == NULL ||
 		CU_add_test(suite, "part", part_test) == NULL ||
