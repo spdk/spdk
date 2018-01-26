@@ -69,6 +69,24 @@
       "revId": "ff37ae300c789eee014365a04e491d3f8bbc741a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "19152579_9c4f399a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-26T16:51:52Z",
+      "side": 1,
+      "message": "The mutex is in bs, not blob, right? I think we can just do:\n\n    pthread_mutex_lock(\u0026bs-\u003eused_clusters_mutex);",
+      "parentUuid": "832791fa_fb428da6",
+      "revId": "ff37ae300c789eee014365a04e491d3f8bbc741a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
