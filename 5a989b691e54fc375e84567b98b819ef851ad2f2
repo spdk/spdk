@@ -167,6 +167,30 @@
     },
     {
       "key": {
+        "uuid": "1e9bd15e_221e889e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1221,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-26T07:12:04Z",
+      "side": 1,
+      "message": "A new patch https://review.gerrithub.io/#/c/396531/ created to address this comment. Thanks for noticing this issue. This shall be a common case to drain the IOs on the QoS thread when the original IO channel is destroyed at any time. Thanks.",
+      "parentUuid": "12010cf2_880659fc",
+      "range": {
+        "startLine": 1221,
+        "startChar": 1,
+        "endLine": 1221,
+        "endChar": 19
+      },
+      "revId": "5a989b691e54fc375e84567b98b819ef851ad2f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "efeb34aa_bea9d863",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 18
