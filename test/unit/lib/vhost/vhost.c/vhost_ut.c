@@ -219,25 +219,25 @@ create_controller_test(void)
 
 	/* Create device with no name */
 	vdev = alloc_vdev();
-	ret = spdk_vhost_dev_construct(vdev, NULL, "0x1", SPDK_VHOST_DEV_T_BLK, &backend);
+	ret = spdk_vhost_dev_register(vdev, NULL, "0x1", SPDK_VHOST_DEV_T_BLK, &backend);
 	CU_ASSERT(ret != 0);
 
 	/* Create device with incorrect cpumask */
-	ret = spdk_vhost_dev_construct(vdev, "vdev_name_0", "0x2", SPDK_VHOST_DEV_T_BLK, &backend);
+	ret = spdk_vhost_dev_register(vdev, "vdev_name_0", "0x2", SPDK_VHOST_DEV_T_BLK, &backend);
 	CU_ASSERT(ret != 0);
 
 	/* Create device with too long name and path */
 	memset(long_name, 'x', sizeof(long_name));
 	long_name[PATH_MAX - 1] = 0;
 	snprintf(dev_dirname, sizeof(dev_dirname), "some_path/");
-	ret = spdk_vhost_dev_construct(vdev, long_name, "0x1", SPDK_VHOST_DEV_T_BLK, &backend);
+	ret = spdk_vhost_dev_register(vdev, long_name, "0x1", SPDK_VHOST_DEV_T_BLK, &backend);
 	CU_ASSERT(ret != 0);
 	dev_dirname[0] = 0;
 
 	/* Create device when device name is already taken */
 	vdev->name = strdup("vdev_name_0");
 	g_spdk_vhost_devices[0] = vdev;
-	ret = spdk_vhost_dev_construct(vdev, "vdev_name_0", "0x1", SPDK_VHOST_DEV_T_BLK, &backend);
+	ret = spdk_vhost_dev_register(vdev, "vdev_name_0", "0x1", SPDK_VHOST_DEV_T_BLK, &backend);
 	CU_ASSERT(ret != 0);
 
 	/* Create device when max number of devices is reached */
@@ -245,7 +245,7 @@ create_controller_test(void)
 		g_spdk_vhost_devices[ctrlr_num] = vdev;
 	}
 
-	ret = spdk_vhost_dev_construct(vdev, "vdev_name_1", "0x1", SPDK_VHOST_DEV_T_BLK, &backend);
+	ret = spdk_vhost_dev_register(vdev, "vdev_name_1", "0x1", SPDK_VHOST_DEV_T_BLK, &backend);
 	CU_ASSERT(ret != 0);
 
 	free_vdev(vdev);
