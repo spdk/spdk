@@ -1,0 +1,6 @@
+-i
+-n 1
+-x $B0 key val
+-r $B0 key
+-s bs
+-l blobs
