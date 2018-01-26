@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "33b843e8_e16b055c",
+        "filename": "test/vhost/test_plan.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-26T18:12:24Z",
+      "side": 1,
+      "message": "now that we\u0027re mentioning QEMU virtio-scsi-pci, I think we should also say that we test with SPDK vhost by default - this is very crucial.",
+      "revId": "47a077d1b5f792b92dec485fde589d74ce260d55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
