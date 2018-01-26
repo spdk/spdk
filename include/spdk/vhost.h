@@ -156,16 +156,6 @@ int spdk_vhost_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_u
 int spdk_vhost_scsi_dev_construct(const char *name, const char *cpumask);
 
 /**
- * Remove an empty vhost SCSI device.  The vdev must not
- * have any SCSI devices attached nor have any open connection on
- * it's socket.
- *
- * \param vdev vhost SCSI device
- * \return 0 on success, negative errno on error.
- */
-int spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev);
-
-/**
  * Construct and attach new SCSI target to the vhost SCSI device
  * on given (unoccupied) slot.  The device will be created with a single
  * LUN0 associated with given SPDK bdev. Currently only one LUN per
@@ -246,13 +236,13 @@ int spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *
 			     bool readonly);
 
 /**
- * Remove a vhost blk device. The device must not have any
- * open connections on it's socket.
+ * Remove a vhost device. The device must not have any open
+ * connections on it's socket.
  *
  * \param vdev vhost blk device
  * \return 0 on success, negative errno on error.
  */
-int spdk_vhost_blk_destroy(struct spdk_vhost_dev *dev);
+int spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev);
 
 /**
  * Get underlying SPDK bdev from vhost blk device.  The
