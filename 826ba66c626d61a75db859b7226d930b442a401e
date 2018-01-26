@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f8d23404_3832c774",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 873,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-26T18:42:24Z",
+      "side": 1,
+      "message": "instead of this patch - couldn\u0027t we just simplify all of this by using spdk_create_blob_ext()?  then we don\u0027t need to add any size or xattr checks - blobstore will do that for us",
+      "revId": "826ba66c626d61a75db859b7226d930b442a401e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
