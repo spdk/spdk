@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0664a418_80b79f29",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-26T17:32:19Z",
+      "side": 1,
+      "message": "I am a little concerned that rebuilding SPDK in the guest will take too long; it looks like the setup_vm timing section is about 2 minutes currently.\n\nIf we can ensure that the guest and host are running roughly the same Linux distro/version, we should be able to copy in the fio and fio_plugin binaries from the host build rather than rebuilding them inside the VM, which should be much quicker.",
+      "revId": "8d049350e3b0654025e95ef72c7aae6ff9e62ebe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
