@@ -104,6 +104,7 @@ alloc_svdev(void)
 					    SPDK_CACHE_LINE_SIZE, NULL);
 
 	SPDK_CU_ASSERT_FATAL(svdev != NULL);
+	svdev->vdev.backend = &spdk_vhost_scsi_device_backend;
 	return svdev;
 }
 
