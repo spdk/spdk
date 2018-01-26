@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a10e329_c16b487d",
+        "filename": "test/vhost/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-26T13:18:33Z",
+      "side": 1,
+      "message": "If we add another device then shouldn\u0027t line 79 be also somehow updated? We have 4 instead of 3 devices now.",
+      "range": {
+        "startLine": 83,
+        "startChar": 1,
+        "endLine": 83,
+        "endChar": 58
+      },
+      "revId": "b8fa472ffeaabadff4263ec56fec56ce1b280c5d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
