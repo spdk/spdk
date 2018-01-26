@@ -721,8 +721,16 @@ spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev)
 
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; ++i) {
 		if (svdev->scsi_dev[i]) {
-			SPDK_ERRLOG("Trying to remove non-empty controller: %s.\n", vdev->name);
-			return -EBUSY;
+			if (vdev->registered) {
+				SPDK_ERRLOG("Trying to remove non-empty controller: %s.\n", vdev->name);
+				return -EBUSY;
+			}
+
+			rc = spdk_vhost_scsi_dev_remove_tgt(vdev, i, NULL, NULL);
+			if (rc != 0) {
+				SPDK_ERRLOG("%s: failed to force-remove target %d\n", vdev->name, i);
+				return rc;
+			}
 		}
 	}
 
