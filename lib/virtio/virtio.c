@@ -464,6 +464,7 @@ virtqueue_req_flush(struct virtqueue *vq)
 	virtio_wmb();
 	vq->vq_ring.avail->idx = vq->vq_avail_idx;
 
+	virtio_mb();
 	if (spdk_unlikely(!(vq->vq_ring.used->flags & VRING_USED_F_NO_NOTIFY))) {
 		virtio_dev_backend_ops(vq->vdev)->notify_queue(vq->vdev, vq);
 		SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV, "Notified backend after xmit\n");
