@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "47eea836_c120199b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-26T15:19:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "86327885_b2e26368",
+      "revId": "ff37ae300c789eee014365a04e491d3f8bbc741a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e0be7781_38267c5e",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2018-01-25T17:39:06Z",
       "side": 1,
       "message": "We should probably also take the lock around this section as well.",
+      "revId": "ff37ae300c789eee014365a04e491d3f8bbc741a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "832791fa_fb428da6",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-26T15:19:11Z",
+      "side": 1,
+      "message": "Mutex is set per blob and we don\u0027t have blob here. Do we want to pass blob to this function?",
+      "parentUuid": "e0be7781_38267c5e",
       "revId": "ff37ae300c789eee014365a04e491d3f8bbc741a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
