@@ -1,0 +1,5 @@
+[Gpt]
+  Disable Yes
+[passthru]
+  # PT <bdev name> <vbdev name>
+  PT Nvme0n1 TestPT
