@@ -458,6 +458,7 @@ spdk_get_io_channel(void *io_device)
 	ch->destroy_cb = dev->destroy_cb;
 	ch->thread = thread;
 	ch->ref = 1;
+	ch->async_destroying = false;
 	TAILQ_INSERT_TAIL(&thread->io_channels, ch, tailq);
 
 	pthread_mutex_unlock(&g_devlist_mutex);
@@ -475,14 +476,31 @@ spdk_get_io_channel(void *io_device)
 }
 
 static void
+_spdk_put_io_channel_free_resource(struct spdk_io_channel *ch)
+{
+	/*
+	 * _spdk_io_device_attempt_free() will remove the ch from the thread after it
+	 *  acquires the g_devlist_mutex lock.
+	 */
+	_spdk_io_device_attempt_free(ch->dev, ch);
+	free(ch);
+}
+
+static void
 _spdk_put_io_channel(void *arg)
 {
 	struct spdk_io_channel *ch = arg;
+	int rc = 0;
 
 	assert(ch->thread == spdk_get_thread());
 
 	if (ch->ref == 0) {
-		SPDK_ERRLOG("ref already zero\n");
+		if (ch->async_destroying == false) {
+			SPDK_ERRLOG("ref already zero\n");
+		} else {
+			ch->async_destroying = false;
+			_spdk_put_io_channel_free_resource(ch);
+		}
 		return;
 	}
 
@@ -492,14 +510,13 @@ _spdk_put_io_channel(void *arg)
 		return;
 	}
 
-	ch->destroy_cb(ch->dev->io_device, spdk_io_channel_get_ctx(ch));
+	rc = ch->destroy_cb(ch->dev->io_device, spdk_io_channel_get_ctx(ch));
 
-	/*
-	 * _spdk_io_device_attempt_free() will remove the ch from the thread after it
-	 *  acquires the g_devlist_mutex lock.
-	 */
-	_spdk_io_device_attempt_free(ch->dev, ch);
-	free(ch);
+	if (rc == 0) {
+		_spdk_put_io_channel_free_resource(ch);
+	} else {
+		ch->async_destroying = true;
+	}
 }
 
 void

@@ -141,9 +141,10 @@ channel_create(void *io_device, void *ctx_buf)
 	return 0;
 }
 
-static void
+static int
 channel_destroy(void *io_device, void *ctx_buf)
 {
+	return 0;
 }
 
 static void
@@ -328,12 +329,13 @@ create_cb_1(void *io_device, void *ctx_buf)
 	return 0;
 }
 
-static void
+static int
 destroy_cb_1(void *io_device, void *ctx_buf)
 {
 	CU_ASSERT(io_device == &device1);
 	CU_ASSERT(*(uint64_t *)ctx_buf == ctx1);
 	g_destroy_cb_calls++;
+	return 0;
 }
 
 static int
@@ -345,12 +347,13 @@ create_cb_2(void *io_device, void *ctx_buf)
 	return 0;
 }
 
-static void
+static int
 destroy_cb_2(void *io_device, void *ctx_buf)
 {
 	CU_ASSERT(io_device == &device2);
 	CU_ASSERT(*(uint64_t *)ctx_buf == ctx2);
 	g_destroy_cb_calls++;
+	return 0;
 }
 
 static int
