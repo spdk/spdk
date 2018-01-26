@@ -71,6 +71,21 @@ _spdk_bs_claim_cluster(struct spdk_blob_store *bs, uint32_t cluster_num)
 }
 
 static int
+_spdk_blob_insert_cluster(struct spdk_blob_data *blob, uint32_t cluster_num, uint64_t cluster)
+{
+	uint64_t *cluster_lba = &blob->active.clusters[cluster_num];
+
+	assert(spdk_get_thread() == blob->bs->md_thread);
+
+	if (*cluster_lba != 0) {
+		return -EEXIST;
+	}
+
+	*cluster_lba = _spdk_bs_cluster_to_lba(blob->bs, cluster);
+	return 0;
+}
+
+static int
 _spdk_bs_allocate_cluster(struct spdk_blob_data *blob, uint32_t cluster_num,
 			  uint64_t *lowest_free_cluster)
 {
@@ -83,7 +98,7 @@ _spdk_bs_allocate_cluster(struct spdk_blob_data *blob, uint32_t cluster_num,
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Claiming cluster %lu for blob %lu\n", *lowest_free_cluster, blob->id);
 	_spdk_bs_claim_cluster(blob->bs, *lowest_free_cluster);
-	blob->active.clusters[cluster_num] = _spdk_bs_cluster_to_lba(blob->bs, *lowest_free_cluster);
+	_spdk_blob_insert_cluster(blob, cluster_num, *lowest_free_cluster);
 
 	return 0;
 }
@@ -289,9 +304,10 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob_dat
 
 			for (i = 0; i < desc_extent->length / sizeof(desc_extent->extents[0]); i++) {
 				for (j = 0; j < desc_extent->extents[i].length; j++) {
-					if (desc_extent->extents[i].cluster_idx != 0) {
-						blob->active.clusters[blob->active.num_clusters++] = _spdk_bs_cluster_to_lba(blob->bs,
-								desc_extent->extents[i].cluster_idx + j);
+					uint64_t cluster_idx = desc_extent->extents[i].cluster_idx;
+
+					if (cluster_idx != 0) {
+						_spdk_blob_insert_cluster(blob, blob->active.num_clusters++, cluster_idx + j);
 					} else if (spdk_blob_is_thin_provisioned(blob)) {
 						blob->active.clusters[blob->active.num_clusters++] = 0;
 					} else {
