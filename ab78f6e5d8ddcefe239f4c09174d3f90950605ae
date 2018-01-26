@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "990e31f2_3278acf5",
+        "filename": "test/vhost/test_plan.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-26T13:16:26Z",
+      "side": 1,
+      "message": "FIO job confuguration: [...]",
+      "revId": "ab78f6e5d8ddcefe239f4c09174d3f90950605ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a6daf7e6_b0df8d85",
+        "filename": "test/vhost/test_plan.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-26T13:16:26Z",
+      "side": 1,
+      "message": "multitarget; btw, I\u0027d agree with Darek to skip this part and not mention that. I\u0027s enough to say that we run a couple of jobs in parallel on multiple bdevs.",
+      "range": {
+        "startLine": 86,
+        "startChar": 39,
+        "endLine": 86,
+        "endChar": 49
+      },
+      "revId": "ab78f6e5d8ddcefe239f4c09174d3f90950605ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8789fd45_a34b1c24",
+        "filename": "test/vhost/test_plan.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-26T13:16:26Z",
+      "side": 1,
+      "message": "Other mentions of \u0027fio\u0027 use capitalized FIO, let\u0027s stick to that",
+      "range": {
+        "startLine": 96,
+        "startChar": 10,
+        "endLine": 96,
+        "endChar": 13
+      },
+      "revId": "ab78f6e5d8ddcefe239f4c09174d3f90950605ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
