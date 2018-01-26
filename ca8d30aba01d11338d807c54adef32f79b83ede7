@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "958d21bb_e4dde324",
+        "filename": "test/vhost/migration/migration.job",
+        "patchSetId": 10
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-26T12:51:15Z",
+      "side": 1,
+      "message": "We\u0027re operating on mallocs for now, so I suspect this is fine for now (because we write over whole disk in first job, so no matter what is the random offset we\u0027ll still have positive verification here because whole disk is filled with verification pattern). Nut what if we\u0027d use a bigger bdev like NVMe?",
+      "range": {
+        "startLine": 26,
+        "startChar": 0,
+        "endLine": 28,
+        "endChar": 9
+      },
+      "revId": "ca8d30aba01d11338d807c54adef32f79b83ede7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56d71990_98ec0f16",
+        "filename": "test/vhost/migration/migration.job",
+        "patchSetId": 10
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-26T12:51:15Z",
+      "side": 1,
+      "message": "This only applies to last job (read-2), but not to previous jobs. Are you sure that the job does not end prematurely if only last job is time-based? I\u0027d move it to global section",
+      "range": {
+        "startLine": 32,
+        "startChar": 0,
+        "endLine": 33,
+        "endChar": 10
+      },
+      "revId": "ca8d30aba01d11338d807c54adef32f79b83ede7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
