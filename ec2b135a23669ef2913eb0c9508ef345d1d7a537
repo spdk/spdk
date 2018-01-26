@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "30ef2092_3746a63b",
+        "filename": "doc/nvme.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-26T19:53:48Z",
+      "side": 1,
+      "message": "\"reduces\" would probably be better:\n\n...that flexibility adds overhead and reduces the efficiency of SPDK.",
+      "parentUuid": "ce6586b3_85c3bd1c",
+      "range": {
+        "startLine": 52,
+        "startChar": 13,
+        "endLine": 52,
+        "endChar": 20
+      },
+      "revId": "ec2b135a23669ef2913eb0c9508ef345d1d7a537",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a43725f5_2667c891",
         "filename": "doc/nvme.md",
         "patchSetId": 3
