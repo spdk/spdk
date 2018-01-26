@@ -85,6 +85,7 @@ const struct vhost_device_ops g_spdk_vhost_ops = {
 
 static struct spdk_vhost_dev *g_spdk_vhost_devices[MAX_VHOST_DEVICES];
 static pthread_mutex_t g_spdk_vhost_mutex = PTHREAD_MUTEX_INITIALIZER;
+static spdk_vhost_fini_cb g_fini_cb;
 
 void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr)
 {
@@ -1026,6 +1027,12 @@ out:
 	return rc;
 }
 
+static void
+spdk_vhost_kill_cb(void)
+{
+	spdk_app_stop(0);
+}
+
 void
 spdk_vhost_startup(void *arg1, void *arg2)
 {
@@ -1060,13 +1067,7 @@ spdk_vhost_startup(void *arg1, void *arg2)
 	return;
 
 out:
-	spdk_vhost_shutdown_cb();
-}
-
-static void
-session_app_stop(void *arg1, void *arg2)
-{
-	spdk_app_stop(0);
+	spdk_vhost_fini(spdk_vhost_kill_cb);
 }
 
 static void *
@@ -1087,26 +1088,6 @@ session_shutdown(void *arg)
 	SPDK_NOTICELOG("Exiting\n");
 	spdk_event_call((struct spdk_event *)arg);
 	return NULL;
-}
-
-/*
- * When we receive a INT signal. Execute shutdown in separate thread to avoid deadlock.
- */
-void
-spdk_vhost_shutdown_cb(void)
-{
-	pthread_t tid;
-	int rc;
-	struct spdk_event *vhost_app_stop;
-
-	vhost_app_stop = spdk_event_allocate(spdk_env_get_current_core(), session_app_stop, NULL, NULL);
-
-	rc = pthread_create(&tid, NULL, &session_shutdown, vhost_app_stop);
-	if (rc < 0) {
-		SPDK_ERRLOG("Failed to start session shutdown thread (%d): %s\n", rc, spdk_strerror(rc));
-		abort();
-	}
-	pthread_detach(tid);
 }
 
 void
@@ -1258,10 +1239,39 @@ spdk_vhost_init(void)
 	return 0;
 }
 
-void
-spdk_vhost_fini(void)
+static void
+_spdk_vhost_fini(void *arg1, void *arg2)
 {
+	void (*fini_cb)(void);
+
+	/* At this point all controllers are removed. */
+	fini_cb = g_fini_cb;
+	g_fini_cb = NULL;
+
 	free(g_num_ctrlrs);
+	fini_cb();
+}
+
+void
+spdk_vhost_fini(spdk_vhost_fini_cb fini_cb)
+{
+	pthread_t tid;
+	int rc;
+	struct spdk_event *fini_ev;
+
+	g_fini_cb = fini_cb;
+	fini_ev = spdk_event_allocate(spdk_env_get_current_core(), _spdk_vhost_fini, NULL, NULL);
+
+	/* rte_vhost API for removing sockets is synchronous. Since it may call SPDK
+	 * ops for stopping a device or removing a connection, we need to call it from
+	 * a separate thread to avoid deadlock.
+	 */
+	rc = pthread_create(&tid, NULL, &session_shutdown, fini_ev);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to start session shutdown thread (%d): %s\n", rc, spdk_strerror(rc));
+		abort();
+	}
+	pthread_detach(tid);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("vhost_ring", SPDK_LOG_VHOST_RING)
