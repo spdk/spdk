@@ -51,6 +51,24 @@
       "revId": "1c0cb2a31d5d19bc712c1ad7063a24676ec04c8e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "018366c8_83a73f13",
+        "filename": "lib/blob/request.c",
+        "patchSetId": 42
+      },
+      "lineNbr": 485,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-26T12:38:40Z",
+      "side": 1,
+      "message": "I treat that newly created sequence as one batch operation. In spdk_bs_sequence_to_batch_completion function I decrease outstanding_ops as if the batch operation finished. I think that we can end up with situation where we have some batch operations and our batch to sequence operation... When other batch operations finish they will call callback despite our sequence is still in progress (outstanding_ops \u003d\u003d 0) and after sequence is done we will call same callback again in spdk_bs_sequence_to_batch_completion function.\nPlease let me know if my understanding of this is incorrect.",
+      "parentUuid": "9dd36ff3_e4d200b7",
+      "revId": "1c0cb2a31d5d19bc712c1ad7063a24676ec04c8e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
