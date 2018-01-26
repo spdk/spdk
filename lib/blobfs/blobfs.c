@@ -356,7 +356,7 @@ _spdk_fs_io_channel_create(void *io_device, void *ctx_buf)
 	return _spdk_fs_channel_create(fs, channel, fs->io_target.max_ops);
 }
 
-static void
+static int
 _spdk_fs_channel_destroy(void *io_device, void *ctx_buf)
 {
 	struct spdk_fs_channel *channel = ctx_buf;
@@ -365,6 +365,8 @@ _spdk_fs_channel_destroy(void *io_device, void *ctx_buf)
 	if (channel->bs_channel != NULL) {
 		spdk_bs_free_io_channel(channel->bs_channel);
 	}
+
+	return 0;
 }
 
 static void

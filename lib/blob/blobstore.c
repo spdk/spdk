@@ -1899,7 +1899,7 @@ _spdk_bs_channel_create(void *io_device, void *ctx_buf)
 	return 0;
 }
 
-static void
+static int
 _spdk_bs_channel_destroy(void *io_device, void *ctx_buf)
 {
 	struct spdk_bs_channel *channel = ctx_buf;
@@ -1913,6 +1913,8 @@ _spdk_bs_channel_destroy(void *io_device, void *ctx_buf)
 
 	free(channel->req_mem);
 	channel->dev->destroy_channel(channel->dev, channel->dev_channel);
+
+	return 0;
 }
 
 static void
