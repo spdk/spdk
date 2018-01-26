@@ -819,8 +819,13 @@ _spdk_lvol_delete_blob_cb(void *cb_arg, int lvolerrno)
 	free(lvol);
 
 end:
-	lvol_req->cb_fn(lvol_req->cb_arg, lvolerrno);
-	free(lvol_req);
+	if (lvol_req != NULL) {
+		lvol_req->cb_fn(lvol_req->cb_arg, lvolerrno);
+		free(lvol_req);
+	}
+	if (req->cb_fn != NULL) {
+		req->cb_fn(req->cb_arg, NULL, lvolerrno);
+	}
 	free(req);
 }
 
@@ -874,45 +879,43 @@ _spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 
 	if (lvolerrno < 0) {
 		free(lvol);
-		goto invalid;
+		if (req->cb_fn != NULL) {
+			req->cb_fn(req->cb_arg, NULL, lvolerrno);
+		}
+		free(req);
+		return;
 	}
 
 	lvol->blob = blob;
 	lvol->blob_id = blob_id;
 
+	TAILQ_INSERT_TAIL(&lvol->lvol_store->lvols, lvol, link);
+
 	uuid_unparse(lvol->lvol_store->uuid, uuid);
 	lvol->unique_id = spdk_sprintf_alloc("%s_%"PRIu64, uuid, (uint64_t)blob_id);
 	if (!lvol->unique_id) {
-		spdk_blob_close(blob, _spdk_lvol_delete_blob_cb, lvol);
+		spdk_blob_close(blob, _spdk_lvol_delete_blob_cb, req);
 		SPDK_ERRLOG("Cannot alloc memory for lvol name\n");
-		lvolerrno = -ENOMEM;
 		free(lvol);
-		goto invalid;
+		return;
 	}
 
 	lvolerrno = spdk_blob_resize(blob, lvol->num_clusters);
 	if (lvolerrno < 0) {
-		spdk_blob_close(blob, _spdk_lvol_destroy_cb, lvol);
-		goto invalid;
+		spdk_blob_close(blob, _spdk_lvol_destroy_cb, req);
+		return;
 	}
 
 	lvolerrno = spdk_blob_set_xattr(blob, "name", lvol->name,
 					strnlen(lvol->name, SPDK_LVOL_NAME_MAX) + 1);
 	if (lvolerrno < 0) {
-		spdk_blob_close(blob, _spdk_lvol_destroy_cb, lvol);
-		goto invalid;
+		spdk_blob_close(blob, _spdk_lvol_destroy_cb, req);
+		return;
 	}
-
-	TAILQ_INSERT_TAIL(&lvol->lvol_store->lvols, lvol, link);
 
 	spdk_blob_sync_md(blob, _spdk_lvol_sync_cb, req);
 
 	return;
-
-invalid:
-	assert(req->cb_fn != NULL);
-	req->cb_fn(req->cb_arg, NULL, lvolerrno);
-	free(req);
 }
 
 static void
@@ -942,7 +945,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	struct spdk_blob_store *bs;
 	struct spdk_lvol *lvol, *tmp;
 	struct spdk_blob_opts opts;
-	uint64_t num_clusters, free_clusters;
+	uint64_t num_clusters;
 
 	if (lvs == NULL) {
 		SPDK_ERRLOG("lvol store does not exist\n");
@@ -968,14 +971,6 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 
 	bs = lvs->blobstore;
 
-	num_clusters = divide_round_up(sz, spdk_bs_get_cluster_size(bs));
-	free_clusters = spdk_bs_free_cluster_count(bs);
-	if (num_clusters > free_clusters) {
-		SPDK_ERRLOG("Not enough free clusters left (%zu) on lvol store to add lvol %zu clusters\n",
-			    free_clusters, num_clusters);
-		return -ENOMEM;
-	}
-
 	req = calloc(1, sizeof(*req));
 	if (!req) {
 		SPDK_ERRLOG("Cannot alloc memory for lvol request pointer\n");
@@ -992,6 +987,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	}
 
 	lvol->lvol_store = lvs;
+	num_clusters = divide_round_up(sz, spdk_bs_get_cluster_size(bs));
 	lvol->num_clusters = num_clusters;
 	lvol->close_only = false;
 	strncpy(lvol->name, name, SPDK_LVS_NAME_MAX);
