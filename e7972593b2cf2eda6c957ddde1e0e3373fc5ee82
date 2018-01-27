@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bb5c34ab_dee0521c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1045,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-27T12:50:50Z",
+      "side": 1,
+      "message": "Just confirmation. qos_channel is managed by ref_count of module_channel too?",
+      "range": {
+        "startLine": 1045,
+        "startChar": 32,
+        "endLine": 1045,
+        "endChar": 47
+      },
+      "revId": "e7972593b2cf2eda6c957ddde1e0e3373fc5ee82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "079d2aa8_257d28e1",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1098,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-27T12:50:50Z",
+      "side": 1,
+      "message": "bdev-\u003eqos_channel is freed in the next line, is this necessary?",
+      "range": {
+        "startLine": 1098,
+        "startChar": 0,
+        "endLine": 1098,
+        "endChar": 50
+      },
+      "revId": "e7972593b2cf2eda6c957ddde1e0e3373fc5ee82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3c22dad5_fd27e6d5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1101,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-27T12:50:50Z",
+      "side": 1,
+      "message": "I don\u0027t find any logical contradiction yet.\n\nI feel this looks speculative. the following order is possible?\n  spdk_poller_unregister(\u0026poller)\n  bdev-\u003eqos_thread\n\nIf current order is better, it\u0027s OK for me.",
+      "range": {
+        "startLine": 1101,
+        "startChar": 1,
+        "endLine": 1101,
+        "endChar": 25
+      },
+      "revId": "e7972593b2cf2eda6c957ddde1e0e3373fc5ee82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14e57da7_6d2daff6",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1151,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-27T12:50:50Z",
+      "side": 1,
+      "message": "This runs only when VTUNE is used but this is not guarded by mutex.",
+      "range": {
+        "startLine": 1150,
+        "startChar": 0,
+        "endLine": 1151,
+        "endChar": 52
+      },
+      "revId": "e7972593b2cf2eda6c957ddde1e0e3373fc5ee82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5eb288fb_b4de754b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1224,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-27T12:50:50Z",
+      "side": 1,
+      "message": "qos_io queue will be always empty except for qos_channel?\n\nIf so, it may be better to separate this qos_channel into another function?",
+      "range": {
+        "startLine": 1224,
+        "startChar": 1,
+        "endLine": 1224,
+        "endChar": 45
+      },
+      "revId": "e7972593b2cf2eda6c957ddde1e0e3373fc5ee82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
