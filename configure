@@ -274,6 +274,8 @@ if [[ -z "$python_command" ]] ; then
 	exit 1
 fi
 
+rm -f PYTHON_COMMAND
+echo $python_command > PYTHON_COMMAND
 $python_command scripts/genconfig.py > config.h
 
 echo "done."
