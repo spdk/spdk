@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8acc6a37_744658f5",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 22
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-27T12:50:50Z",
+      "side": 1,
+      "message": "outstanding is like unfinished. Hence \"active\" may be better word.",
+      "range": {
+        "startLine": 212,
+        "startChar": 15,
+        "endLine": 212,
+        "endChar": 26
+      },
+      "revId": "06f4d1aa6d762cedbef2f1c0b99f9d9a4378f8c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "837b35ba_86864f89",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 22
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-27T12:50:50Z",
+      "side": 1,
+      "message": "it looks that two bdev_channels to an io_channel on a qos_thread is not working for the current SPDK.",
+      "range": {
+        "startLine": 215,
+        "startChar": 1,
+        "endLine": 216,
+        "endChar": 39
+      },
+      "revId": "06f4d1aa6d762cedbef2f1c0b99f9d9a4378f8c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5058a367_7bea99a0",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 1069,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-27T12:50:50Z",
+      "side": 1,
+      "message": "a io_channel was created by the previous call on the qos_thread. hence io_channel is not created by this call and the qos_channel is not linked to the io_channel.",
+      "range": {
+        "startLine": 1069,
+        "startChar": 6,
+        "endLine": 1069,
+        "endChar": 31
+      },
+      "revId": "06f4d1aa6d762cedbef2f1c0b99f9d9a4378f8c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "634105c1_119bcd58",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 1101,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-27T12:50:50Z",
+      "side": 1,
+      "message": "these looks speculative. these should be done on the same thread as unregister_poller().",
+      "range": {
+        "startLine": 1098,
+        "startChar": 0,
+        "endLine": 1101,
+        "endChar": 25
+      },
+      "revId": "06f4d1aa6d762cedbef2f1c0b99f9d9a4378f8c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7093a133_f9b92368",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 1111,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-27T12:50:50Z",
+      "side": 1,
+      "message": "It may be better to send  spdk_bdev_qos_channel_destroy() itself by message. I think this follow SPDK\u0027s way and looks more comprehensive.",
+      "range": {
+        "startLine": 1111,
+        "startChar": 31,
+        "endLine": 1111,
+        "endChar": 62
+      },
+      "revId": "06f4d1aa6d762cedbef2f1c0b99f9d9a4378f8c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fbf751c8_6c95d994",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 1119,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-27T12:50:50Z",
+      "side": 1,
+      "message": "only normal bdev_channel is linked to the io_channel directly on the qos_thread.",
+      "range": {
+        "startLine": 1119,
+        "startChar": 1,
+        "endLine": 1119,
+        "endChar": 40
+      },
+      "revId": "06f4d1aa6d762cedbef2f1c0b99f9d9a4378f8c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4431e08e_96826355",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 1817,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-27T12:50:50Z",
+      "side": 1,
+      "message": "this cannot get qos_channel.",
+      "range": {
+        "startLine": 1817,
+        "startChar": 2,
+        "endLine": 1817,
+        "endChar": 39
+      },
+      "revId": "06f4d1aa6d762cedbef2f1c0b99f9d9a4378f8c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
