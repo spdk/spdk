@@ -68,7 +68,9 @@ mk/cc.mk:
 	rm -f $@.tmp
 
 config.h: CONFIG CONFIG.local scripts/genconfig.py
-	$(Q)python scripts/genconfig.py $(MAKEFLAGS) > $@.tmp; \
+	PYCMD=$$(cat PYTHON_COMMAND 2>/dev/null) ; \
+	test -z "$$PYCMD" && PYCMD=python ; \
+	$(Q)$$PYCMD scripts/genconfig.py $(MAKEFLAGS) > $@.tmp; \
 	cmp -s $@.tmp $@ || mv $@.tmp $@ ; \
 	rm -f $@.tmp
 
