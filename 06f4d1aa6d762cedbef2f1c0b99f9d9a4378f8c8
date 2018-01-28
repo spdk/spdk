@@ -119,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "a79b4ccd_a357365b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 1069,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-28T13:20:25Z",
+      "side": 1,
+      "message": "Yes. The QoS channel is not associated to any I/O channel. The basic idea here it not to link QoS channel to I/O channel as I/O channel can be get/put (create and destroy) at any that thus the QoS channel bound with an I/O channel will be not feasible. I\u0027ve also created patch https://review.gerrithub.io/#/c/396531/ to verify this for an arbitrary I/O channel to create and destroy while I/Os are active.",
+      "parentUuid": "5058a367_7bea99a0",
+      "range": {
+        "startLine": 1069,
+        "startChar": 6,
+        "endLine": 1069,
+        "endChar": 31
+      },
+      "revId": "06f4d1aa6d762cedbef2f1c0b99f9d9a4378f8c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "634105c1_119bcd58",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 22
@@ -142,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "f3017cbc_717e6661",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 1101,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-28T13:20:25Z",
+      "side": 1,
+      "message": "Yes. Thanks for this suggestion.",
+      "parentUuid": "634105c1_119bcd58",
+      "range": {
+        "startLine": 1098,
+        "startChar": 0,
+        "endLine": 1101,
+        "endChar": 25
+      },
+      "revId": "06f4d1aa6d762cedbef2f1c0b99f9d9a4378f8c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7093a133_f9b92368",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 22
@@ -153,6 +201,30 @@
       "writtenOn": "2018-01-27T12:50:50Z",
       "side": 1,
       "message": "It may be better to send  spdk_bdev_qos_channel_destroy() itself by message. I think this follow SPDK\u0027s way and looks more comprehensive.",
+      "range": {
+        "startLine": 1111,
+        "startChar": 31,
+        "endLine": 1111,
+        "endChar": 62
+      },
+      "revId": "06f4d1aa6d762cedbef2f1c0b99f9d9a4378f8c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bbd2b0d8_03f9f2ff",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 1111,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-28T13:20:25Z",
+      "side": 1,
+      "message": "Good suggestion. Thanks.",
+      "parentUuid": "7093a133_f9b92368",
       "range": {
         "startLine": 1111,
         "startChar": 31,
@@ -199,6 +271,30 @@
       "writtenOn": "2018-01-27T12:50:50Z",
       "side": 1,
       "message": "this cannot get qos_channel.",
+      "range": {
+        "startLine": 1817,
+        "startChar": 2,
+        "endLine": 1817,
+        "endChar": 39
+      },
+      "revId": "06f4d1aa6d762cedbef2f1c0b99f9d9a4378f8c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d8a2a264_5efc779d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 1817,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-28T13:20:25Z",
+      "side": 1,
+      "message": "That\u0027s right. The reset related patch is created at https://review.gerrithub.io/#/c/393181/ and also for the UT related code. Thanks.",
+      "parentUuid": "4431e08e_96826355",
       "range": {
         "startLine": 1817,
         "startChar": 2,
