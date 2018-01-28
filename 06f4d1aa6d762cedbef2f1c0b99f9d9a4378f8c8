@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a5687af9_8cf88d54",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 22
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-28T08:39:42Z",
+      "side": 1,
+      "message": "To be clear and also based on the below discussion, will update the comment as \"active channels on this bdev except the QoS channel\"",
+      "parentUuid": "8acc6a37_744658f5",
+      "range": {
+        "startLine": 212,
+        "startChar": 15,
+        "endLine": 212,
+        "endChar": 26
+      },
+      "revId": "06f4d1aa6d762cedbef2f1c0b99f9d9a4378f8c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "837b35ba_86864f89",
         "filename": "include/spdk_internal/bdev.h",
         "patchSetId": 22
@@ -36,6 +60,30 @@
       "writtenOn": "2018-01-27T12:50:50Z",
       "side": 1,
       "message": "it looks that two bdev_channels to an io_channel on a qos_thread is not working for the current SPDK.",
+      "range": {
+        "startLine": 215,
+        "startChar": 1,
+        "endLine": 216,
+        "endChar": 39
+      },
+      "revId": "06f4d1aa6d762cedbef2f1c0b99f9d9a4378f8c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3c6a36b4_4a8805c5",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 22
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-28T08:39:42Z",
+      "side": 1,
+      "message": "Yes. Through the public API like get_io_channel(), there will only be 1 io_channel on 1 thread. Thus 1 bdev channel within 1 io_channel. We add the channel_count as the count to determine the number of \"user\" created channels and also serve the purpose to indicate the proper time to cleanup the qos bdev channel when there is no \"user created\" channels.",
+      "parentUuid": "837b35ba_86864f89",
       "range": {
         "startLine": 215,
         "startChar": 1,
