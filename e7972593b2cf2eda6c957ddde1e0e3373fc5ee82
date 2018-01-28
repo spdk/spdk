@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ebfa86b1_a097142b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1045,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-28T13:20:25Z",
+      "side": 1,
+      "message": "Yes. The associated mgmt_channel and channel is same as a normal bdev channel for QoS bdev channel.",
+      "parentUuid": "bb5c34ab_dee0521c",
+      "range": {
+        "startLine": 1045,
+        "startChar": 32,
+        "endLine": 1045,
+        "endChar": 47
+      },
+      "revId": "e7972593b2cf2eda6c957ddde1e0e3373fc5ee82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "079d2aa8_257d28e1",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 19
@@ -36,6 +60,30 @@
       "writtenOn": "2018-01-27T12:50:50Z",
       "side": 1,
       "message": "bdev-\u003eqos_channel is freed in the next line, is this necessary?",
+      "range": {
+        "startLine": 1098,
+        "startChar": 0,
+        "endLine": 1098,
+        "endChar": 50
+      },
+      "revId": "e7972593b2cf2eda6c957ddde1e0e3373fc5ee82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d4beb75_00424f24",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1098,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-28T13:20:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "079d2aa8_257d28e1",
       "range": {
         "startLine": 1098,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "0054c26b_b8c85df5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1101,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-28T13:20:25Z",
+      "side": 1,
+      "message": "Here is to destroy the QoS channel related information. Both the QoS channel itself and the information on bdev will be cleared. The most important two variables on bdev is the qos_channel and qos_thread.",
+      "parentUuid": "3c22dad5_fd27e6d5",
+      "range": {
+        "startLine": 1101,
+        "startChar": 1,
+        "endLine": 1101,
+        "endChar": 25
+      },
+      "revId": "e7972593b2cf2eda6c957ddde1e0e3373fc5ee82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "14e57da7_6d2daff6",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 19
@@ -82,6 +154,30 @@
       "writtenOn": "2018-01-27T12:50:50Z",
       "side": 1,
       "message": "This runs only when VTUNE is used but this is not guarded by mutex.",
+      "range": {
+        "startLine": 1150,
+        "startChar": 0,
+        "endLine": 1151,
+        "endChar": 52
+      },
+      "revId": "e7972593b2cf2eda6c957ddde1e0e3373fc5ee82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4006a9e_08da915c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1151,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-28T13:20:25Z",
+      "side": 1,
+      "message": "Good points. Thanks for bringing this out. I think the thing to protect is the channel_count itself. The creation and destroy is not needed.",
+      "parentUuid": "14e57da7_6d2daff6",
       "range": {
         "startLine": 1150,
         "startChar": 0,
