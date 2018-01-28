@@ -102,13 +102,21 @@ spdk_vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *virtqueue, uint16_t *r
 	struct vring_avail *avail = vring->avail;
 	uint16_t size_mask = vring->size - 1;
 	uint16_t last_idx = vring->last_avail_idx, avail_idx = avail->idx;
-	uint16_t count = RTE_MIN((avail_idx - last_idx) & size_mask, reqs_len);
-	uint16_t i;
+	uint16_t count, i;
 
+	count = (avail_idx - last_idx) & ~(1 << 15);
 	if (spdk_likely(count == 0)) {
 		return 0;
 	}
 
+	if (spdk_unlikely(count > vring->size)) {
+		/* TODO: the queue is unrecoverably broken and should be marked so.
+		 * For now we will fail silently and report there are no new avail entries.
+		 */
+		return 0;
+	}
+
+	count = spdk_min(count, reqs_len);
 	vring->last_avail_idx += count;
 	for (i = 0; i < count; i++) {
 		reqs[i] = vring->avail->ring[(last_idx + i) & size_mask];
