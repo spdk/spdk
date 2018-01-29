@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1ce06671_0c7a3f9d",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 769,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-01-29T18:15:39Z",
+      "side": 1,
+      "message": "trylock is better as we are in poll mode and one vdev might not stop IO for others if mutex is not accesible right now.",
+      "range": {
+        "startLine": 769,
+        "startChar": 1,
+        "endLine": 769,
+        "endChar": 41
+      },
+      "revId": "83f107a67e6442ba2cd94d56f105a6b9e03df168",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
