@@ -815,19 +815,6 @@ spdk_iscsi_app_read_parameters(void)
 	return 0;
 }
 
-static void
-spdk_iscsi_setup(void *arg1, void *arg2)
-{
-	int rc;
-
-	/* open portals */
-	rc = spdk_iscsi_portal_grp_open_all();
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_iscsi_portal_grp_open_all() failed\n");
-		return;
-	}
-}
-
 int
 spdk_iscsi_init(void)
 {
@@ -856,11 +843,6 @@ spdk_iscsi_init(void)
 		SPDK_ERRLOG("spdk_initialize_iscsi_conns() failed\n");
 		return -1;
 	}
-
-	/*
-	 * Defer creation of listening sockets until the reactor has started.
-	 */
-	spdk_event_call(spdk_event_allocate(spdk_env_get_current_core(), spdk_iscsi_setup, NULL, NULL));
 
 	return 0;
 }
