@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "50e087e2_c0a5b18e",
+        "filename": "test/app/match/match",
+        "patchSetId": 1
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-29T23:05:06Z",
+      "side": 1,
+      "message": "Do you think we could work some more backslashes in somehow? :)",
+      "revId": "298087c2ce90669a5cd00d3109b9e66ef371fdd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1126518c_46c13260",
         "filename": "test/blobstore/blobstore.sh",
         "patchSetId": 1
@@ -13,6 +30,74 @@
       "writtenOn": "2018-01-29T22:44:27Z",
       "side": 1,
       "message": "oops, will remove these on next revision",
+      "revId": "298087c2ce90669a5cd00d3109b9e66ef371fdd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d98a624_fa26decd",
+        "filename": "test/blobstore/btest.out.match",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-29T23:05:06Z",
+      "side": 1,
+      "message": "Since the initialization log stuff from DPDK is in the ignore list, can we remove those parts from the .match file entirely? (Everything through the final \"EAL:\" message looks like startup junk that we don\u0027t want to match.)",
+      "revId": "298087c2ce90669a5cd00d3109b9e66ef371fdd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7c25963_65f69cd5",
+        "filename": "test/blobstore/btest.out.match",
+        "patchSetId": 1
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-29T23:05:06Z",
+      "side": 1,
+      "message": "This trailing whitespace is just an extra space in a printf() format before the \\n (should be an easy fix).",
+      "revId": "298087c2ce90669a5cd00d3109b9e66ef371fdd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e8d5742_720de706",
+        "filename": "test/blobstore/btest.out.match",
+        "patchSetId": 1
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-29T23:05:06Z",
+      "side": 1,
+      "message": "This trailing whitespace is from fdump(); I don\u0027t totally understand why it\u0027s padding the end of the string with spaces, but we should be able to just remove that padding.",
+      "revId": "298087c2ce90669a5cd00d3109b9e66ef371fdd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d2c1b41_7e4607b7",
+        "filename": "test/blobstore/btest.out.match",
+        "patchSetId": 1
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-29T23:05:06Z",
+      "side": 1,
+      "message": "This trailing whitespace looks like it\u0027s from the test.bs script change.",
       "revId": "298087c2ce90669a5cd00d3109b9e66ef371fdd0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
