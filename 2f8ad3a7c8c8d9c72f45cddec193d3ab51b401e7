@@ -16,6 +16,24 @@
       "revId": "2f8ad3a7c8c8d9c72f45cddec193d3ab51b401e7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb1984ae_4b58e2e3",
+        "filename": "scripts/common/fiocommon.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-01-29T04:54:22Z",
+      "side": 1,
+      "message": "Can you give more details why \"it should not work for randread\"? I have run the scripts with randread and read verification, all passed.",
+      "parentUuid": "517c8e22_2f7e0201",
+      "revId": "2f8ad3a7c8c8d9c72f45cddec193d3ab51b401e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
