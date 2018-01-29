@@ -34,6 +34,24 @@
       "revId": "2f8ad3a7c8c8d9c72f45cddec193d3ab51b401e7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "86abeaa3_4389ab00",
+        "filename": "scripts/common/fiocommon.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-01-29T05:05:00Z",
+      "side": 1,
+      "message": "randread will span all disk space, but you only performed write tests before randread.",
+      "parentUuid": "cb1984ae_4b58e2e3",
+      "revId": "2f8ad3a7c8c8d9c72f45cddec193d3ab51b401e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
