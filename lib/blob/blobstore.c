@@ -3834,6 +3834,92 @@ void spdk_bs_create_snapshot(struct spdk_blob_store *bs, spdk_blob_id blobid,
 }
 /* END spdk_bs_create_snapshot */
 
+/* START spdk_bs_create_clone */
+
+static void
+_spdk_bs_xattr_clone(void *arg, const char *name,
+		     const void **value, size_t *value_len)
+{
+	assert(strncmp(name, BLOB_SNAPSHOT, sizeof(BLOB_SNAPSHOT)) == 0);
+
+	struct spdk_blob *blob = (struct spdk_blob *)arg;
+	*value = &blob->id;
+	*value_len = sizeof(blob->id);
+}
+
+static void
+_spdk_bs_clone_newblob_create_cpl(void *cb_arg, spdk_blob_id blobid, int bserrno)
+{
+	struct spdk_clone_snapshot_ctx *ctx = (struct spdk_clone_snapshot_ctx *)cb_arg;
+
+	ctx->cpl.u.blobid.blobid = blobid;
+	_spdk_bs_clone_snapshot_origblob_cleanup(ctx, bserrno);
+}
+
+static void
+_spdk_bs_clone_origblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
+{
+	struct spdk_clone_snapshot_ctx	*ctx = (struct spdk_clone_snapshot_ctx *)cb_arg;
+	struct spdk_blob_opts		opts;
+	struct spdk_blob_xattr_opts internal_xattrs;
+	char *xattr_names[] = { BLOB_SNAPSHOT };
+
+	if (bserrno != 0) {
+		_spdk_bs_clone_snapshot_cleanup_finish(ctx, bserrno);
+		return;
+	}
+
+	ctx->original.blob = _blob;
+
+	if (!_blob->data_ro || !_blob->md_ro) {
+		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Clone not from read-only blob\n");
+		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, -EINVAL);
+		return;
+	}
+
+	spdk_blob_opts_init(&opts);
+	_spdk_blob_xattrs_init(&internal_xattrs);
+
+	opts.thin_provision = true;
+	opts.num_clusters = spdk_blob_get_num_clusters(_blob);
+	if (ctx->xattrs) {
+		memcpy(&opts.xattrs, ctx->xattrs, sizeof(*ctx->xattrs));
+	}
+
+	/* Set internal xattr BLOB_SNAPSHOT */
+	internal_xattrs.count = 1;
+	internal_xattrs.ctx = _blob;
+	internal_xattrs.names = xattr_names;
+	internal_xattrs.get_value = _spdk_bs_xattr_clone;
+
+	_spdk_bs_create_blob(_blob->bs, &opts, &internal_xattrs,
+			     _spdk_bs_clone_newblob_create_cpl, ctx);
+}
+
+void spdk_bs_create_clone(struct spdk_blob_store *bs, spdk_blob_id blobid,
+			  const struct spdk_blob_xattr_opts *clone_xattrs,
+			  spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
+{
+	struct spdk_clone_snapshot_ctx	*ctx = calloc(1, sizeof(*ctx));
+
+	if (!ctx) {
+		cb_fn(cb_arg, SPDK_BLOBID_INVALID, -ENOMEM);
+		return;
+	}
+
+	ctx->cpl.type = SPDK_BS_CPL_TYPE_BLOBID;
+	ctx->cpl.u.blobid.cb_fn = cb_fn;
+	ctx->cpl.u.blobid.cb_arg = cb_arg;
+	ctx->cpl.u.blobid.blobid = SPDK_BLOBID_INVALID;
+	ctx->bserrno = 0;
+	ctx->xattrs = clone_xattrs;
+	ctx->original.id = blobid;
+
+	spdk_bs_open_blob(bs, ctx->original.id, _spdk_bs_clone_origblob_open_cpl, ctx);
+}
+
+/* END spdk_bs_create_clone */
+
 /* START spdk_blob_resize */
 int
 spdk_blob_resize(struct spdk_blob *blob, uint64_t sz)
