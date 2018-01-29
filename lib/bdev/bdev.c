@@ -138,6 +138,12 @@ struct spdk_bdev_channel {
 
 	struct spdk_bdev_io_stat stat;
 
+	/*
+	 * Count of I/O submitted through this channel and waiting for completion.
+	 * Incremented before submit_request() is called on an spdk_bdev_io.
+	 */
+	uint64_t		io_outstanding;
+
 	bdev_io_tailq_t		queued_resets;
 
 	uint32_t		flags;
@@ -807,12 +813,14 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 
 	assert(bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING);
 
+	bdev_ch->io_outstanding++;
 	shared_ch->io_outstanding++;
 	bdev_io->in_submit_request = true;
 	if (spdk_likely(bdev_ch->flags == 0)) {
 		if (spdk_likely(TAILQ_EMPTY(&shared_ch->nomem_io))) {
 			bdev->fn_table->submit_request(ch, bdev_io);
 		} else {
+			bdev_ch->io_outstanding--;
 			shared_ch->io_outstanding--;
 			TAILQ_INSERT_TAIL(&shared_ch->nomem_io, bdev_io, link);
 		}
@@ -913,6 +921,7 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 	}
 
 	memset(&ch->stat, 0, sizeof(ch->stat));
+	ch->io_outstanding = 0;
 	TAILQ_INIT(&ch->queued_resets);
 	ch->flags = 0;
 	ch->module_ch = shared_ch;
@@ -981,6 +990,7 @@ _spdk_bdev_abort_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_channel *ch)
 			 *  that spdk_bdev_io_complete() will do.
 			 */
 			if (bdev_io->type != SPDK_BDEV_IO_TYPE_RESET) {
+				ch->io_outstanding++;
 				ch->module_ch->io_outstanding++;
 			}
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -1002,6 +1012,7 @@ spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_small, ch);
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_large, ch);
 
+	assert(ch->io_outstanding == 0);
 	assert(shared_ch->ref > 0);
 	shared_ch->ref--;
 	if (shared_ch->ref == 0) {
@@ -1818,6 +1829,7 @@ _spdk_bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch)
 	while (!TAILQ_EMPTY(&shared_ch->nomem_io)) {
 		bdev_io = TAILQ_FIRST(&shared_ch->nomem_io);
 		TAILQ_REMOVE(&shared_ch->nomem_io, bdev_io, link);
+		bdev_io->ch->io_outstanding++;
 		shared_ch->io_outstanding++;
 		bdev_io->status = SPDK_BDEV_IO_STATUS_PENDING;
 		bdev->fn_table->submit_request(bdev_io->ch->channel, bdev_io);
@@ -1891,7 +1903,9 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 			return;
 		}
 	} else {
+		assert(bdev_ch->io_outstanding > 0);
 		assert(shared_ch->io_outstanding > 0);
+		bdev_ch->io_outstanding--;
 		shared_ch->io_outstanding--;
 		if (spdk_likely(status != SPDK_BDEV_IO_STATUS_NOMEM)) {
 			if (spdk_unlikely(!TAILQ_EMPTY(&shared_ch->nomem_io))) {
