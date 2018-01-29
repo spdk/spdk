@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "66709a1a_1aed76ae",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 1300,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T11:37:16Z",
+      "side": 1,
+      "message": "When this succeeds mark blob-\u003estate as dirty. Otherwise it won\u0027t be persisted.",
+      "range": {
+        "startLine": 1300,
+        "startChar": 2,
+        "endLine": 1300,
+        "endChar": 99
+      },
+      "revId": "1557b83a6b0ce21f221b48962087348ae25773aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b05cf560_aeea8207",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 43
@@ -19,6 +42,29 @@
     },
     {
       "key": {
+        "uuid": "ad74c307_c26a2e93",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 1362,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T11:37:16Z",
+      "side": 1,
+      "message": "It would be worth adding comment addressing why we do not update cluster map here (last argument). Make it clear that it is delayed after completing the copy.",
+      "range": {
+        "startLine": 1362,
+        "startChar": 1,
+        "endLine": 1362,
+        "endChar": 67
+      },
+      "revId": "1557b83a6b0ce21f221b48962087348ae25773aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "36d0169e_c58275eb",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 43
@@ -30,6 +76,40 @@
       "writtenOn": "2018-01-26T19:59:30Z",
       "side": 1,
       "message": "The metadata isn\u0027t dirty here. You want to sync after the cluster map has been updated.\n\nHowever, it isn\u0027t as simple as moving the sync to the end of this sequence because sync\u0027s currently aren\u0027t safe to issue from multiple threads at the same time. A patch to funnel all sync requests to a single thread, or some other coordination method, needs to be implemented first.",
+      "revId": "1557b83a6b0ce21f221b48962087348ae25773aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e03f4392_e89c56f1",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 2762,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T11:37:16Z",
+      "side": 1,
+      "message": "Please check after write that free_clusters changed after writing data.",
+      "revId": "1557b83a6b0ce21f221b48962087348ae25773aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4bf98daa_33f262d4",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 2775,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T11:37:16Z",
+      "side": 1,
+      "message": "We could add UT that deletes the blob and checks if free_clusters changed. Or somehow combine UT above blob_thin_prov_alloc() to perform write and check free_clusters during all stages of bs load/unload and after blob delete.",
       "revId": "1557b83a6b0ce21f221b48962087348ae25773aa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
