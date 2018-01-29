@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "517c8e22_2f7e0201",
+        "filename": "scripts/common/fiocommon.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-01-29T04:35:04Z",
+      "side": 1,
+      "message": "For verify with read, I guess this should work, but it should not work for randread.",
+      "revId": "2f8ad3a7c8c8d9c72f45cddec193d3ab51b401e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
