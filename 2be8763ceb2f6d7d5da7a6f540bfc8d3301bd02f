@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b1cfacaf_a5fd77b1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T16:17:34Z",
+      "side": 1,
+      "message": "This name is confusing, especially that its functionality is hidden being blob argument being or not NULL.\n\nWouldn\u0027t it be easier to have to separate functions to explicitly set either or keep zeroes_bs_dev as static ?",
+      "range": {
+        "startLine": 160,
+        "startChar": 0,
+        "endLine": 160,
+        "endChar": 23
+      },
+      "revId": "2be8763ceb2f6d7d5da7a6f540bfc8d3301bd02f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b865e3cb_e6ec3302",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 886,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T16:17:34Z",
+      "side": 1,
+      "message": "With change suggested below, this check is not needed (unless as an assert).",
+      "range": {
+        "startLine": 886,
+        "startChar": 0,
+        "endLine": 886,
+        "endChar": 43
+      },
+      "revId": "2be8763ceb2f6d7d5da7a6f540bfc8d3301bd02f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da8dcf75_2b53146a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 915,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T16:17:34Z",
+      "side": 1,
+      "message": "Please align those.",
+      "range": {
+        "startLine": 914,
+        "startChar": 0,
+        "endLine": 915,
+        "endChar": 17
+      },
+      "revId": "2be8763ceb2f6d7d5da7a6f540bfc8d3301bd02f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58a527b2_3ea0abc7",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 971,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T16:17:34Z",
+      "side": 1,
+      "message": "There are three cases here:\n- blob with BLOB_SNAPSHOT set\n- only thin_provisioned blob\n- thick provisioned and non snapshot blob\n\nWhy not simpler path, only using callbacks when needed (blob open) ?\n\nif (spdk_blob_is_thin_provisioned){\n  rc \u003d get_xattr()\n  if (rc \u003d\u003d 0) {\n    open_blob()\n    return\n  } else {\n    blob-\u003eback_bs_dev \u003d \u0026zeroes_bs_dev;\n  }\n}\n_spdk_blob_mark_clean(blob);\n\nctx-\u003ecb_fn(ctx-\u003eseq, ctx-\u003ecb_arg, bserrno);\n\n/* Free the memory */\nspdk_dma_free(ctx-\u003epages);\nfree(ctx);",
+      "range": {
+        "startLine": 966,
+        "startChar": 1,
+        "endLine": 971,
+        "endChar": 2
+      },
+      "revId": "2be8763ceb2f6d7d5da7a6f540bfc8d3301bd02f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
