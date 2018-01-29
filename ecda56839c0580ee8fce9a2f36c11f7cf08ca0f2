@@ -1,0 +1,130 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5c274d1d_213629e9",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 6
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T16:38:31Z",
+      "side": 1,
+      "message": "Implementation of internal xattrs is done in preceding patches.",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 13,
+        "endChar": 41
+      },
+      "revId": "ecda56839c0580ee8fce9a2f36c11f7cf08ca0f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "80c5e158_6b055646",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3358,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T16:38:31Z",
+      "side": 1,
+      "message": "Why not copy what is done here for internal attrs ? If not passed, initialize defaults.",
+      "revId": "ecda56839c0580ee8fce9a2f36c11f7cf08ca0f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e11c0e8f_91cd4325",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3375,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T16:38:31Z",
+      "side": 1,
+      "message": "Similar to xattrs, _spdk_blob_set_xattrs should handle case when count is \u003d\u003d 0. Not need to check that.",
+      "range": {
+        "startLine": 3375,
+        "startChar": 22,
+        "endLine": 3375,
+        "endChar": 65
+      },
+      "revId": "ecda56839c0580ee8fce9a2f36c11f7cf08ca0f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4dc2262_46780ed6",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T16:38:31Z",
+      "side": 1,
+      "message": "Should the name suggest it means data_ro actually ?",
+      "range": {
+        "startLine": 215,
+        "startChar": 1,
+        "endLine": 215,
+        "endChar": 16
+      },
+      "revId": "ecda56839c0580ee8fce9a2f36c11f7cf08ca0f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4044935f_743c641e",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 416,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T16:38:31Z",
+      "side": 1,
+      "message": "Please create _spdk_blob_internal_opts_init() in blobstore.c with defaults.",
+      "range": {
+        "startLine": 413,
+        "startChar": 0,
+        "endLine": 416,
+        "endChar": 42
+      },
+      "revId": "ecda56839c0580ee8fce9a2f36c11f7cf08ca0f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "287ddabd_1791bfe0",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 428,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T16:38:31Z",
+      "side": 1,
+      "message": "Can you verify that it was set to read only by performing some operation ?",
+      "revId": "ecda56839c0580ee8fce9a2f36c11f7cf08ca0f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
