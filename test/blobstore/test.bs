@@ -1,8 +1,12 @@
 -i
 -l bdevs
 -n 1
--s bs
 -p $B0
--d $B0 M.blob
--x $B0 b0key boval
--r $B0 b0key
+-n 1
+-m $B1 test.pattern
+-d $B1 test.pattern.blob
+-x $B1 key val
+-s bs
+-s $B1
+-r $B1 key
+-s bs
