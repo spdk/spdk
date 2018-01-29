@@ -204,6 +204,15 @@ enum spdk_blob_op_type {
 	SPDK_BLOB_READV,
 };
 
+/* back bs_dev */
+
+#define BLOB_SNAPSHOT "BLOB_SNAPSHOT"
+
+struct spdk_blob_bs_dev {
+	struct spdk_bs_dev bs_dev;
+	struct spdk_blob *blob;
+};
+
 /* On-Disk Data Structures
  *
  * The following data structures exist on disk.
@@ -336,7 +345,17 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_bs_super_block) == 0x1000, "Invalid super 
 
 #pragma pack(pop)
 
+
+void _spdk_blob_request_submit_op(struct spdk_blob *_blob, struct spdk_io_channel *_channel,
+				  void *payload, uint64_t offset, uint64_t length,
+				  spdk_blob_op_complete cb_fn, void *cb_arg, enum spdk_blob_op_type op_type);
+void _spdk_blob_request_submit_rw_iov(struct spdk_blob *_blob,
+				      struct spdk_io_channel *_channel,
+				      struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
+				      spdk_blob_op_complete cb_fn, void *cb_arg, bool read);
+
 struct spdk_bs_dev *spdk_bs_create_zeroes_dev(void);
+struct spdk_bs_dev *spdk_bs_create_blob_bs_dev(struct spdk_blob *blob);
 
 /* Unit Conversions
  *
