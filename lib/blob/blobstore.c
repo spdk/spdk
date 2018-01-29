@@ -660,11 +660,60 @@ _spdk_blob_serialize_flags(const struct spdk_blob_data *blob,
 }
 
 static int
+_spdk_blob_serialize_xattrs(const struct spdk_blob_data *blob,
+			    const struct spdk_xattr_tailq *xattrs,
+			    struct spdk_blob_md_page **pages, struct spdk_blob_md_page *cur_page, uint32_t *page_count,
+			    uint8_t	**buf, size_t *remaining_sz)
+{
+	const struct spdk_xattr	*xattr;
+	int	rc;
+
+	TAILQ_FOREACH(xattr, xattrs, link) {
+		size_t required_sz = 0;
+
+		rc = _spdk_blob_serialize_xattr(xattr,
+						*buf, *remaining_sz,
+						&required_sz);
+		if (rc < 0) {
+			/* Need to add a new page to the chain */
+			rc = _spdk_blob_serialize_add_page(blob, pages, page_count,
+							   &cur_page);
+			if (rc < 0) {
+				spdk_dma_free(*pages);
+				*pages = NULL;
+				*page_count = 0;
+				return rc;
+			}
+
+			*buf = (uint8_t *)cur_page->descriptors;
+			*remaining_sz = sizeof(cur_page->descriptors);
+
+			/* Try again */
+			required_sz = 0;
+			rc = _spdk_blob_serialize_xattr(xattr,
+							*buf, *remaining_sz,
+							&required_sz);
+
+			if (rc < 0) {
+				spdk_dma_free(*pages);
+				*pages = NULL;
+				*page_count = 0;
+				return -1;
+			}
+		}
+
+		*remaining_sz -= required_sz;
+		*buf += required_sz;
+	}
+
+	return 0;
+}
+
+static int
 _spdk_blob_serialize(const struct spdk_blob_data *blob, struct spdk_blob_md_page **pages,
 		     uint32_t *page_count)
 {
 	struct spdk_blob_md_page		*cur_page;
-	const struct spdk_xattr			*xattr;
 	int 					rc;
 	uint8_t					*buf;
 	size_t					remaining_sz;
@@ -692,42 +741,8 @@ _spdk_blob_serialize(const struct spdk_blob_data *blob, struct spdk_blob_md_page
 	buf += sizeof(struct spdk_blob_md_descriptor_flags);
 
 	/* Serialize xattrs */
-	TAILQ_FOREACH(xattr, &blob->xattrs, link) {
-		size_t required_sz = 0;
-		rc = _spdk_blob_serialize_xattr(xattr,
-						buf, remaining_sz,
-						&required_sz);
-		if (rc < 0) {
-			/* Need to add a new page to the chain */
-			rc = _spdk_blob_serialize_add_page(blob, pages, page_count,
-							   &cur_page);
-			if (rc < 0) {
-				spdk_dma_free(*pages);
-				*pages = NULL;
-				*page_count = 0;
-				return rc;
-			}
-
-			buf = (uint8_t *)cur_page->descriptors;
-			remaining_sz = sizeof(cur_page->descriptors);
-
-			/* Try again */
-			required_sz = 0;
-			rc = _spdk_blob_serialize_xattr(xattr,
-							buf, remaining_sz,
-							&required_sz);
-
-			if (rc < 0) {
-				spdk_dma_free(*pages);
-				*pages = NULL;
-				*page_count = 0;
-				return -1;
-			}
-		}
-
-		remaining_sz -= required_sz;
-		buf += required_sz;
-	}
+	_spdk_blob_serialize_xattrs(blob, &blob->xattrs,
+				    pages, cur_page, page_count, &buf, &remaining_sz);
 
 	/* Serialize extents */
 	last_cluster = 0;
