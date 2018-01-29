@@ -971,10 +971,10 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	spdk_blob_opts_init(&opts);
 	opts.thin_provision = thin_provision;
 	opts.num_clusters = num_clusters;
-	opts.xattr_count = 1;
-	opts.xattr_names = &xattr_name;
-	opts.xattr_ctx = lvol;
-	opts.get_xattr_value = spdk_lvol_get_xattr_value;
+	opts.xattrs.count = 1;
+	opts.xattrs.names = &xattr_name;
+	opts.xattrs.ctx = lvol;
+	opts.xattrs.get_value = spdk_lvol_get_xattr_value;
 
 	spdk_bs_create_blob_ext(lvs->blobstore, &opts, _spdk_lvol_create_cb, req);
 
