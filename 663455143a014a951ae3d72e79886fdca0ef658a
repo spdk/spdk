@@ -22,6 +22,52 @@
       "revId": "663455143a014a951ae3d72e79886fdca0ef658a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d533a892_5f3149b4",
+        "filename": "test/nvmf/multiconnection/multiconnection.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-01-29T02:29:34Z",
+      "side": 1,
+      "message": "should be nvmf.",
+      "range": {
+        "startLine": 45,
+        "startChar": 23,
+        "endLine": 45,
+        "endChar": 28
+      },
+      "revId": "663455143a014a951ae3d72e79886fdca0ef658a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35260e49_e9ab8114",
+        "filename": "test/nvmf/multiconnection/multiconnection.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-01-29T02:29:34Z",
+      "side": 1,
+      "message": "change it to 11 from the sed command.",
+      "range": {
+        "startLine": 73,
+        "startChar": 62,
+        "endLine": 73,
+        "endChar": 64
+      },
+      "revId": "663455143a014a951ae3d72e79886fdca0ef658a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
