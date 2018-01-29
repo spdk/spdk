@@ -143,6 +143,30 @@
     },
     {
       "key": {
+        "uuid": "13f02433_49eb7994",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 1069,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-29T09:35:41Z",
+      "side": 1,
+      "message": "Thank you, I\u0027ll read and learn it.",
+      "parentUuid": "a79b4ccd_a357365b",
+      "range": {
+        "startLine": 1069,
+        "startChar": 6,
+        "endLine": 1069,
+        "endChar": 31
+      },
+      "revId": "06f4d1aa6d762cedbef2f1c0b99f9d9a4378f8c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "634105c1_119bcd58",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 22
@@ -295,6 +319,30 @@
       "side": 1,
       "message": "That\u0027s right. The reset related patch is created at https://review.gerrithub.io/#/c/393181/ and also for the UT related code. Thanks.",
       "parentUuid": "4431e08e_96826355",
+      "range": {
+        "startLine": 1817,
+        "startChar": 2,
+        "endLine": 1817,
+        "endChar": 39
+      },
+      "revId": "06f4d1aa6d762cedbef2f1c0b99f9d9a4378f8c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c65c863f_b0123df8",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 1817,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-29T09:35:41Z",
+      "side": 1,
+      "message": "Thank you. I\u0027ll read and learn it. Please wait shortly.",
+      "parentUuid": "d8a2a264_5efc779d",
       "range": {
         "startLine": 1817,
         "startChar": 2,
