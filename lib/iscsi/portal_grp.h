@@ -68,6 +68,7 @@ int spdk_iscsi_portal_grp_create_from_portal_list(int tag,
 void spdk_iscsi_portal_grp_release(struct spdk_iscsi_portal_grp *pg);
 int spdk_iscsi_portal_grp_array_create(void);
 void spdk_iscsi_portal_grp_array_destroy(void);
+struct spdk_iscsi_portal_grp *spdk_iscsi_portal_grp_unregister(int tag);
 struct spdk_iscsi_portal_grp *spdk_iscsi_portal_grp_find_by_tag(int tag);
 
 int spdk_iscsi_portal_grp_open_all(void);

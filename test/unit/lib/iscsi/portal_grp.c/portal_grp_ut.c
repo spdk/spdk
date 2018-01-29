@@ -45,6 +45,7 @@ static int
 test_setup(void)
 {
 	TAILQ_INIT(&g_spdk_iscsi.portal_head);
+	TAILQ_INIT(&g_spdk_iscsi.pg_head);
 	pthread_mutex_init(&g_spdk_iscsi.mutex, NULL);
 	return 0;
 }
@@ -303,6 +304,73 @@ portal_create_from_configline_ipv6_skip_port_and_cpumask_case(void)
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
 }
 
+static void
+portal_grp_register_unregister_case(void)
+{
+	struct spdk_iscsi_portal *p;
+	struct spdk_iscsi_portal_grp *pg1, *pg2;
+	int rc;
+	const char *host = "192.168.2.0";
+	const char *port = "3260";
+	const char *cpumask = "1";
+
+	pg1 = spdk_iscsi_portal_grp_create(1);
+	CU_ASSERT(pg1 != NULL);
+
+	p = spdk_iscsi_portal_create(host, port, cpumask);
+	CU_ASSERT(p != NULL);
+
+	spdk_iscsi_portal_grp_add_portal(pg1, p);
+
+	rc = spdk_iscsi_portal_grp_register(pg1);
+	CU_ASSERT(rc == 0);
+
+	pg2 = spdk_iscsi_portal_grp_unregister(1);
+	CU_ASSERT(pg2 != NULL);
+	CU_ASSERT(pg1 == pg2);
+
+	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.pg_head));
+
+	spdk_iscsi_portal_grp_destroy(pg1);
+
+	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
+}
+
+static void
+portal_grp_register_twice_case(void)
+{
+	struct spdk_iscsi_portal *p;
+	struct spdk_iscsi_portal_grp *pg1, *pg2;
+	int rc;
+	const char *host = "192.168.2.0";
+	const char *port = "3260";
+	const char *cpumask = "1";
+
+	pg1 = spdk_iscsi_portal_grp_create(1);
+	CU_ASSERT(pg1 != NULL);
+
+	p = spdk_iscsi_portal_create(host, port, cpumask);
+	CU_ASSERT(p != NULL);
+
+	spdk_iscsi_portal_grp_add_portal(pg1, p);
+
+	rc = spdk_iscsi_portal_grp_register(pg1);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_iscsi_portal_grp_register(pg1);
+	CU_ASSERT(rc != 0);
+
+	pg2 = spdk_iscsi_portal_grp_unregister(1);
+	CU_ASSERT(pg2 != NULL);
+	CU_ASSERT(pg1 == pg2);
+
+	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.pg_head));
+
+	spdk_iscsi_portal_grp_destroy(pg1);
+
+	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
+}
+
 int
 main(int argc, char **argv)
 {
@@ -346,6 +414,10 @@ main(int argc, char **argv)
 			       portal_create_from_configline_ipv4_skip_port_and_cpumask_case) == NULL
 		|| CU_add_test(suite, "portal create from configline ipv6 skip port and cpumask case",
 			       portal_create_from_configline_ipv6_skip_port_and_cpumask_case) == NULL
+		|| CU_add_test(suite, "portal group register/unregister case",
+			       portal_grp_register_unregister_case) == NULL
+		|| CU_add_test(suite, "portal group register twice case",
+			       portal_grp_register_twice_case) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
