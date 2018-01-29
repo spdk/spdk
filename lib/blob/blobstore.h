@@ -325,6 +325,8 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_bs_super_block) == 0x1000, "Invalid super 
 
 #pragma pack(pop)
 
+struct spdk_bs_dev *spdk_bs_create_zeroes_dev(void);
+
 /* Unit Conversions
  *
  * The blobstore works with several different units:
