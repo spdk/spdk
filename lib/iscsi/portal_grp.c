@@ -69,18 +69,13 @@ spdk_iscsi_portal_find_by_addr(const char *host, const char *port)
 struct spdk_iscsi_portal *
 spdk_iscsi_portal_create(const char *host, const char *port, const char *cpumask)
 {
-	struct spdk_iscsi_portal *p = NULL;
+	struct spdk_iscsi_portal *p = NULL, *tmp;
 	struct spdk_cpuset *core_mask = NULL;
 	int rc;
 
 	assert(host != NULL);
 	assert(port != NULL);
 
-	p = spdk_iscsi_portal_find_by_addr(host, port);
-	if (p != NULL) {
-		SPDK_ERRLOG("portal (%s, %s) already exists\n", host, port);
-		return NULL;
-	}
 
 	p = calloc(1, sizeof(*p));
 	if (!p) {
@@ -140,7 +135,16 @@ spdk_iscsi_portal_create(const char *host, const char *port, const char *cpumask
 	p->group = NULL; /* set at a later time by caller */
 	p->acceptor_poller = NULL;
 
+	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+	tmp = spdk_iscsi_portal_find_by_addr(host, port);
+	if (tmp != NULL) {
+		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+		SPDK_ERRLOG("portal (%s, %s) already exists\n", host, port);
+		goto error_out;
+	}
+
 	TAILQ_INSERT_TAIL(&g_spdk_iscsi.portal_head, p, g_tailq);
+	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 
 	return p;
 
@@ -159,11 +163,16 @@ spdk_iscsi_portal_destroy(struct spdk_iscsi_portal *p)
 	assert(p != NULL);
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_portal_destroy\n");
+
+	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	TAILQ_REMOVE(&g_spdk_iscsi.portal_head, p, g_tailq);
+	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+
 	free(p->host);
 	free(p->port);
 	spdk_cpuset_free(p->cpumask);
 	free(p);
+
 }
 
 static int
