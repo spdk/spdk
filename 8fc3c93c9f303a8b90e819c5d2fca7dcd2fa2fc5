@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fd415741_4c28e4a2",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1034,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-29T19:48:22Z",
+      "side": 1,
+      "message": "This probably shouldn\u0027t be a warning.",
+      "range": {
+        "startLine": 1034,
+        "startChar": 2,
+        "endLine": 1034,
+        "endChar": 14
+      },
+      "revId": "8fc3c93c9f303a8b90e819c5d2fca7dcd2fa2fc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02762ed2_c3cda2fe",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-29T19:48:22Z",
+      "side": 1,
+      "message": "This -snapshot should probably be removed since it\u0027s now in the $os_mode \u003d\u003d snapshot comparison below.",
+      "range": {
+        "startLine": 560,
+        "startChar": 99,
+        "endLine": 560,
+        "endChar": 108
+      },
+      "revId": "8fc3c93c9f303a8b90e819c5d2fca7dcd2fa2fc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a04247e_7f991c7d",
+        "filename": "test/vhost/migration/migration-malloc.job",
+        "patchSetId": 13
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-29T19:48:22Z",
+      "side": 1,
+      "message": "This rw\u003drandwrite is overridden in both jobs; I don\u0027t think it\u0027s necessary.",
+      "revId": "8fc3c93c9f303a8b90e819c5d2fca7dcd2fa2fc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be69a66a_0a76dd1c",
+        "filename": "test/vhost/migration/migration-malloc.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-29T19:48:22Z",
+      "side": 1,
+      "message": "These \"read\" calls should probably be removed now that the issues have been debugged; they will result in a timeout on the test pool if execution ever goes down this path.",
+      "revId": "8fc3c93c9f303a8b90e819c5d2fca7dcd2fa2fc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
