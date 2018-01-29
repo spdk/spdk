@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "60a3808f_109f8e7a",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-29T22:46:36Z",
+      "side": 1,
+      "message": "Hi Isaac,\n\nWould just \"ticks_rate\" work here?  ticks_us_rate is probably fine, but am thinking just putting the ticks per second rate here avoids a conversion in SPDK.  Clients may need to do extra conversions anyways if they want to show data in milliseconds for example.\n\nIdeally, we would have a system-level RPC to get the tsc rate for the application, but having this one here too is not a showstopper for me.\n\n-Jim",
+      "revId": "5bc926adda3bf991744e1e81eb17a37f09b45604",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
