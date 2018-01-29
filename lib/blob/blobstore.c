@@ -198,6 +198,10 @@ _spdk_blob_free(struct spdk_blob_data *blob)
 	_spdk_xattrs_free(&blob->xattrs);
 	_spdk_xattrs_free(&blob->xattrs_internal);
 
+	if (blob->back_bs_dev) {
+		blob->back_bs_dev->destroy(blob->back_bs_dev);
+	}
+
 	free(blob);
 }
 
@@ -739,6 +743,7 @@ struct spdk_blob_load_ctx {
 
 	struct spdk_blob_md_page	*pages;
 	uint32_t			num_pages;
+	spdk_bs_sequence_t	        *seq;
 
 	spdk_bs_sequence_cpl		cb_fn;
 	void				*cb_arg;
@@ -758,11 +763,56 @@ _spdk_blob_md_page_calc_crc(void *page)
 }
 
 static void
+_spdk_blob_load_final(void *cb_arg, int bserrno)
+{
+	struct spdk_blob_load_ctx 	*ctx = cb_arg;
+	struct spdk_blob_data 		*blob = ctx->blob;
+
+	_spdk_blob_mark_clean(blob);
+
+	ctx->cb_fn(ctx->seq, ctx->cb_arg, bserrno);
+
+	/* Free the memory */
+	spdk_dma_free(ctx->pages);
+	free(ctx);
+}
+
+static void
+_spdk_blob_load_snapshot_cpl(void *cb_arg, struct spdk_blob *snapshot, int bserrno)
+{
+	struct spdk_blob_load_ctx 	*ctx = cb_arg;
+	struct spdk_blob_data 		*blob = ctx->blob;
+
+	if (bserrno != 0) {
+		goto error;
+	}
+
+	blob->back_bs_dev = spdk_bs_create_blob_bs_dev(snapshot);
+
+	if (blob->back_bs_dev == NULL) {
+		bserrno = -ENOMEM;
+		goto error;
+	}
+
+	_spdk_blob_load_final(ctx, bserrno);
+	return;
+
+error:
+	SPDK_ERRLOG("Snapshot fail\n");
+	_spdk_blob_free(blob);
+	ctx->cb_fn(ctx->seq, NULL, bserrno);
+	spdk_dma_free(ctx->pages);
+	free(ctx);
+}
+
+static void
 _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_load_ctx 	*ctx = cb_arg;
 	struct spdk_blob_data 		*blob = ctx->blob;
 	struct spdk_blob_md_page	*page;
+	const void			*value;
+	size_t				len;
 	int				rc;
 	uint32_t			crc;
 
@@ -810,18 +860,32 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		free(ctx);
 		return;
 	}
+	ctx->seq = seq;
 
-	if (spdk_blob_is_thin_provisioned(blob) == true) {
-		blob->back_bs_dev = spdk_bs_create_zeroes_dev();
+
+	if (spdk_blob_is_thin_provisioned(blob)) {
+		rc = _spdk_blob_get_xattr_value(blob, BLOB_SNAPSHOT, &value, &len, true);
+		if (rc == 0) {
+			if (len != sizeof(spdk_blob_id)) {
+				_spdk_blob_free(blob);
+				ctx->cb_fn(seq, NULL, -EINVAL);
+				spdk_dma_free(ctx->pages);
+				free(ctx);
+				return;
+			}
+			/* open snapshot blob and continue in the callback function */
+			spdk_bs_open_blob(blob->bs, *(spdk_blob_id *)value,
+					  _spdk_blob_load_snapshot_cpl, ctx);
+			return;
+		} else {
+			/* add zeroes_dev for thin provisioned blob */
+			blob->back_bs_dev = spdk_bs_create_zeroes_dev();
+		}
+	} else {
+		/* standard blob */
+		blob->back_bs_dev = NULL;
 	}
-
-	_spdk_blob_mark_clean(blob);
-
-	ctx->cb_fn(seq, ctx->cb_arg, rc);
-
-	/* Free the memory */
-	spdk_dma_free(ctx->pages);
-	free(ctx);
+	_spdk_blob_load_final(ctx, bserrno);
 }
 
 /* Load a blob from disk given a blobid */

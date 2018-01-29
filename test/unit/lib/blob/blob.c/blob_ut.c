@@ -41,6 +41,7 @@
 #include "blobstore.c"
 #include "request.c"
 #include "zeroes.c"
+#include "blob_bs_dev.c"
 
 struct spdk_blob_store *g_bs;
 spdk_blob_id g_blobid;
