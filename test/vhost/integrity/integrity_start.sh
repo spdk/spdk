@@ -16,11 +16,12 @@ VM_PASS="root"
 VM_NAME="int_test_vm"
 VM_NET_NAME="int_test_net"
 VM_MAC="02:de:ad:de:ad:01"
-VM_BAK_IMG="/tmp/int_test_backing.img"
+VM_BAK_IMG="/home/sys_sgsw/int_test_backing.img"
 TIMEO=60
 SSHCMD="sshpass -p $VM_PASS ssh"
 SCPCMD="sshpass -p $VM_PASS scp"
-
+VM_QEMU="/usr/bin/qemu-system-x86_64"
+QEMU_IMG="/usr/bin/qemu-img"
 while getopts 'i:m:f:' optchar; do
     case $optchar in
         i) VM_IMG="${OPTARG#*=}" ;;
