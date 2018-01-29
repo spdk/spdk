@@ -1,0 +1,400 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d7145f6f_a531a574",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-29T19:06:42Z",
+      "side": 1,
+      "message": "Vhost-SCSI Initiator",
+      "range": {
+        "startLine": 14,
+        "startChar": 18,
+        "endLine": 14,
+        "endChar": 30
+      },
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "60432390_146ca342",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-29T19:06:42Z",
+      "side": 1,
+      "message": "we will eventually place a @ref here, so this sentence may be removed for now",
+      "range": {
+        "startLine": 19,
+        "startChar": 19,
+        "endLine": 19,
+        "endChar": 69
+      },
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fdd65733_b9bc6f6a",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-29T19:06:42Z",
+      "side": 1,
+      "message": "It\u0027s probably a good idea to add @refs instead",
+      "range": {
+        "startLine": 21,
+        "startChar": 8,
+        "endLine": 21,
+        "endChar": 30
+      },
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2ad7d84a_4528e186",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-29T19:06:42Z",
+      "side": 1,
+      "message": "uppercase?",
+      "range": {
+        "startLine": 84,
+        "startChar": 9,
+        "endLine": 84,
+        "endChar": 13
+      },
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "049a819f_e9903685",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-29T19:06:42Z",
+      "side": 1,
+      "message": "It can also be used to access a file on a Linux filesystem.",
+      "range": {
+        "startLine": 84,
+        "startChar": 61,
+        "endLine": 85,
+        "endChar": 21
+      },
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5f0a4eb0_85f608c8",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-29T19:06:42Z",
+      "side": 1,
+      "message": "We might want to add another example using e.g. /tmp/myfile file",
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2e8bb0a3_511b88ff",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-29T19:06:42Z",
+      "side": 1,
+      "message": "describe this",
+      "range": {
+        "startLine": 92,
+        "startChar": 42,
+        "endLine": 92,
+        "endChar": 46
+      },
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b68b87ea_7420ab96",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-29T19:06:42Z",
+      "side": 1,
+      "message": "uppercase?",
+      "range": {
+        "startLine": 96,
+        "startChar": 9,
+        "endLine": 96,
+        "endChar": 13
+      },
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "279754d7_784c240e",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-29T19:06:42Z",
+      "side": 1,
+      "message": "explain these.\n\nA good approach might be to say\nThe following command will create an RBD bdev named `rbd` with 512 block size from a `foo` path (whatever it is - again i\u0027m too lazy to check)",
+      "range": {
+        "startLine": 103,
+        "startChar": 27,
+        "endLine": 103,
+        "endChar": 38
+      },
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1c8238ee_b01bec29",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-29T19:06:42Z",
+      "side": 1,
+      "message": "This isn\u0027t really straightforward.\n\nIf I may, here\u0027s my suggestion:\n\n# GPT (GUID Partition Table) {#bdev_ug_gpt}\n\nThe GPT virtual bdev driver is enabled by default and doesn\u0027t require any configuration.\nIt will automatically detect an @ref bdev_ug_gpt_table on any attached bdev and will create possibly multiple virtual bdevs.\n\n## SPDK GPT partition table {#bdev_ug_gpt_table}\n\nThe SPDK partition type GUID is 7c5222bd-8f5d-4087-9c00-bf9843c7b58c.\nExisting SPDK bdevs can be exposed as Linux block devices via @ref nbd and then can be partitioned with standard partitioning tools.\nAfter partitioning, the bdevs will need to be deleted and attached again for the GPT bdev module to see any changes.",
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "613a65b1_4810229d",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-29T19:06:42Z",
+      "side": 1,
+      "message": "The following will expose an SPDK bdev `Malloc0` under the `/dev/nbd0`  block device",
+      "range": {
+        "startLine": 116,
+        "startChar": 0,
+        "endLine": 116,
+        "endChar": 15
+      },
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "643ef6c2_3128445f",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-29T19:06:42Z",
+      "side": 1,
+      "message": "It allows creating and managing virtual block devices with variable size on top of other bdevs.\n\nAlso, it might be a good idea to briefly describe cluster size here. (?)",
+      "range": {
+        "startLine": 134,
+        "startChar": 75,
+        "endLine": 135,
+        "endChar": 63
+      },
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f0a38821_f9b14035",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-29T19:06:42Z",
+      "side": 1,
+      "message": "I\u0027m not sure if this sentence fits here.",
+      "range": {
+        "startLine": 135,
+        "startChar": 64,
+        "endLine": 136,
+        "endChar": 37
+      },
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "de82cc5c_cdf287e1",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-29T19:06:42Z",
+      "side": 1,
+      "message": "volume",
+      "range": {
+        "startLine": 138,
+        "startChar": 11,
+        "endLine": 138,
+        "endChar": 18
+      },
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7e093356_c7d2ef60",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-29T19:06:42Z",
+      "side": 1,
+      "message": "Before creating any logical volumes (abbreviated lvol), an lvol store has to be created first. An lvol store is responsible for [...] (what is it responsible for? what is it anyway?)",
+      "range": {
+        "startLine": 140,
+        "startChar": 0,
+        "endLine": 141,
+        "endChar": 48
+      },
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0c594b78_a1bf6f49",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-29T19:06:42Z",
+      "side": 1,
+      "message": "Use the following command to create an lvol store named `lvs` with 4096 cluster size built on top of the `Malloc2` bdev",
+      "range": {
+        "startLine": 143,
+        "startChar": 0,
+        "endLine": 143,
+        "endChar": 15
+      },
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d05a91c5_3069357d",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-29T19:06:42Z",
+      "side": 1,
+      "message": "what is the uuid for?\nwhy would I use it in any RPC when I have a much more friendly `lvs` name?",
+      "range": {
+        "startLine": 154,
+        "startChar": 11,
+        "endLine": 154,
+        "endChar": 47
+      },
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "53785a9d_adfa385c",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-29T19:06:42Z",
+      "side": 1,
+      "message": "Somebody that\u0027s interested in using SPDK with PMDK probably knows what\u0027s it for and how it works overall, but it might be a good idea to describe these `pools` etc.",
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
