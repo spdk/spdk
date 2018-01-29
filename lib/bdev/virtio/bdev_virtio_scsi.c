@@ -258,7 +258,7 @@ virtio_scsi_dev_init(struct virtio_scsi_dev *svdev, uint16_t max_queues)
 	svdev->eventq_ios = spdk_dma_zmalloc(sizeof(*svdev->eventq_ios) * num_events,
 					     0, NULL);
 	if (svdev->eventq_ios == NULL) {
-		SPDK_ERRLOG("cannot allocate memory for %"PRIu16" eventq buffers \n",
+		SPDK_ERRLOG("cannot allocate memory for %"PRIu16" eventq buffers\n",
 			    num_events);
 		virtio_dev_release_queue(vdev, VIRTIO_SCSI_EVENTQ);
 		virtio_dev_release_queue(vdev, VIRTIO_SCSI_CONTROLQ);

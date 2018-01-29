@@ -799,7 +799,7 @@ spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num,
 	}
 
 	if (bdev_name == NULL) {
-		SPDK_ERRLOG("No lun name specified \n");
+		SPDK_ERRLOG("No lun name specified\n");
 		return -EINVAL;
 	}
 
