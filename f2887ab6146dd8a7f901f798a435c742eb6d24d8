@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a3c38f82_e8f1eafd",
+        "filename": "app/nvmf_tgt/nvmf_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 746,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-29T18:24:40Z",
+      "side": 1,
+      "message": "Need to free the strings inside ctx as well.",
+      "revId": "f2887ab6146dd8a7f901f798a435c742eb6d24d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "592bda75_2f3d8cf2",
+        "filename": "app/nvmf_tgt/nvmf_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 798,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-29T18:24:40Z",
+      "side": 1,
+      "message": "Error paths need to free ctx and the strings inside it.",
+      "revId": "f2887ab6146dd8a7f901f798a435c742eb6d24d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
