@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "ebdcd63b_a5334ac2",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 14
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-29T18:15:46Z",
+      "side": 1,
+      "message": "I believe this part of the commit message can be removed now.",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 46
+      },
+      "revId": "46b3cf1dd5daf3c4202651f88aecd960d644dc17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "38dc9106_5e98d76c",
         "filename": "app/nvmf_tgt/nvmf_rpc.c",
         "patchSetId": 14
