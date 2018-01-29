@@ -143,6 +143,16 @@ spdk_blob_opts_init(struct spdk_blob_opts *opts)
 	opts->xattrs.get_value = NULL;
 }
 
+static void
+_spdk_blob_internal_opts_init(struct spdk_internal_blob_opts *opts)
+{
+	opts->read_only = 0;
+	opts->internal_xattrs.count = 0;
+	opts->internal_xattrs.names = NULL;
+	opts->internal_xattrs.ctx = NULL;
+	opts->internal_xattrs.get_value = NULL;
+}
+
 static struct spdk_blob_data *
 _spdk_blob_alloc(struct spdk_blob_store *bs, spdk_blob_id id)
 {
@@ -3279,13 +3289,17 @@ _spdk_blob_set_thin_provision(struct spdk_blob_data *blob)
 	blob->state = SPDK_BLOB_STATE_DIRTY;
 }
 
-void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_opts *opts,
-			     spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
+static void
+_spdk_bs_create_blob(struct spdk_blob_store *bs,
+		     const struct spdk_blob_opts *opts,
+		     const struct spdk_internal_blob_opts *internal_opts,
+		     spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
 {
 	struct spdk_blob_data	*blob;
 	uint32_t		page_idx;
 	struct spdk_bs_cpl 	cpl;
 	struct spdk_blob_opts	opts_default;
+	struct spdk_internal_blob_opts internal_opts_default;
 	spdk_bs_sequence_t	*seq;
 	spdk_blob_id		id;
 	int rc;
@@ -3312,6 +3326,10 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 		spdk_blob_opts_init(&opts_default);
 		opts = &opts_default;
 	}
+	if (!internal_opts) {
+		_spdk_blob_internal_opts_init(&internal_opts_default);
+		internal_opts = &internal_opts_default;
+	}
 
 	rc = _spdk_blob_set_xattrs(blob, &opts->xattrs, false);
 	if (rc < 0) {
@@ -3319,6 +3337,14 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 		cb_fn(cb_arg, 0, rc);
 		return;
 	}
+
+	rc = _spdk_blob_set_xattrs(blob, &internal_opts->internal_xattrs, true);
+	if (rc < 0) {
+		_spdk_blob_free(blob);
+		cb_fn(cb_arg, 0, rc);
+		return;
+	}
+
 	if (opts->thin_provision) {
 		_spdk_blob_set_thin_provision(blob);
 	}
@@ -3329,6 +3355,11 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 		cb_fn(cb_arg, 0, rc);
 		return;
 	}
+
+	if (internal_opts->read_only) {
+		spdk_blob_set_read_only(__data_to_blob(blob));
+	}
+
 	cpl.type = SPDK_BS_CPL_TYPE_BLOBID;
 	cpl.u.blobid.cb_fn = cb_fn;
 	cpl.u.blobid.cb_arg = cb_arg;
@@ -3347,7 +3378,13 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 void spdk_bs_create_blob(struct spdk_blob_store *bs,
 			 spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
 {
-	spdk_bs_create_blob_ext(bs, NULL, cb_fn, cb_arg);
+	_spdk_bs_create_blob(bs, NULL, NULL, cb_fn, cb_arg);
+}
+
+void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_opts *opts,
+			     spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
+{
+	_spdk_bs_create_blob(bs, opts, NULL, cb_fn, cb_arg);
 }
 
 /* END spdk_bs_create_blob */

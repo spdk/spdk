@@ -212,6 +212,11 @@ struct spdk_blob_bs_dev {
 	struct spdk_blob *blob;
 };
 
+struct spdk_internal_blob_opts {
+	bool read_only;
+	struct spdk_blob_xattr_opts internal_xattrs;
+};
+
 /* On-Disk Data Structures
  *
  * The following data structures exist on disk.
