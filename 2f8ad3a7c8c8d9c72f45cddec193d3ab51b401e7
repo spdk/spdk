@@ -70,6 +70,24 @@
       "revId": "2f8ad3a7c8c8d9c72f45cddec193d3ab51b401e7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "09e21b59_58a7ed74",
+        "filename": "scripts/common/fiocommon.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-01-29T06:57:12Z",
+      "side": 1,
+      "message": "Hi Liang, I\u0027m not sure about this, if you can 100% sure about it, I\u0027m okay with it.",
+      "parentUuid": "b42df82f_a7fc7766",
+      "revId": "2f8ad3a7c8c8d9c72f45cddec193d3ab51b401e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
