@@ -42,6 +42,30 @@
     },
     {
       "key": {
+        "uuid": "1a856db4_05250c84",
+        "filename": "test/vhost/migration/migration.job",
+        "patchSetId": 10
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-01-29T09:23:56Z",
+      "side": 1,
+      "message": "Yes, I will remove this section.",
+      "parentUuid": "958d21bb_e4dde324",
+      "range": {
+        "startLine": 26,
+        "startChar": 0,
+        "endLine": 28,
+        "endChar": 9
+      },
+      "revId": "ca8d30aba01d11338d807c54adef32f79b83ede7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "56d71990_98ec0f16",
         "filename": "test/vhost/migration/migration.job",
         "patchSetId": 10
