@@ -241,6 +241,12 @@ void spdk_bs_create_snapshot(struct spdk_blob_store *bs, spdk_blob_id blobid,
 			     const struct spdk_blob_xattr_opts *snapshot_xattrs,
 			     spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
 
+/* Create a clone of specified snapshot. */
+void spdk_bs_create_clone(struct spdk_blob_store *bs, spdk_blob_id blobid,
+			  const struct spdk_blob_xattr_opts *clone_xattrs,
+			  spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
+
+
 /* Delete an existing blob. */
 void spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 			 spdk_blob_op_complete cb_fn, void *cb_arg);
