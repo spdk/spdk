@@ -46,6 +46,75 @@
       "revId": "0fd12921640fc3742a999af75d83742718f6f988",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b26a762_b88895a9",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 1068,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-29T23:31:40Z",
+      "side": 1,
+      "message": "This block is as same as the following block, line 1089 to 1107.\nIs it better to extract this block into a function and apply it to the following block too? New function name is _spdk_bdev_qos_channel_create()?",
+      "range": {
+        "startLine": 1056,
+        "startChar": 0,
+        "endLine": 1068,
+        "endChar": 2
+      },
+      "revId": "0fd12921640fc3742a999af75d83742718f6f988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d8eaf12d_15ba439a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 1263,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-29T23:31:40Z",
+      "side": 1,
+      "message": "It looks that \nfunc() calls _func1() may be better than _func1() calls func1(). \n\nno_underscore_prefix function calling underscore_prefix function may be better hierarchy.\n\nHow do you think removing \u0027_\u0027 from the line 1256 and adding \u0027_\u0027 to the line 1113?",
+      "range": {
+        "startLine": 1263,
+        "startChar": 1,
+        "endLine": 1263,
+        "endChar": 30
+      },
+      "revId": "0fd12921640fc3742a999af75d83742718f6f988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b028b52_b1afee7a",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-29T23:31:40Z",
+      "side": 1,
+      "message": "Can you test\n- first io was submitted\n- second io was still queued in the qos_io queue?\n\nYou says \"only 1 IO allowed per msec. More IOs will be queued.\" but it looks that both IOs completes successfully.",
+      "range": {
+        "startLine": 784,
+        "startChar": 1,
+        "endLine": 785,
+        "endChar": 51
+      },
+      "revId": "0fd12921640fc3742a999af75d83742718f6f988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
