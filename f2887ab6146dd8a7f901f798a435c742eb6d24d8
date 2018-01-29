@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "5ae1dfa7_564e7502",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-29T18:27:00Z",
+      "side": 1,
+      "message": "This section can be removed since you\u0027ve kept the original behavior as well.",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 54
+      },
+      "revId": "f2887ab6146dd8a7f901f798a435c742eb6d24d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a3c38f82_e8f1eafd",
         "filename": "app/nvmf_tgt/nvmf_rpc.c",
         "patchSetId": 5
@@ -30,6 +53,46 @@
       "writtenOn": "2018-01-29T18:24:40Z",
       "side": 1,
       "message": "Error paths need to free ctx and the strings inside it.",
+      "revId": "f2887ab6146dd8a7f901f798a435c742eb6d24d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "df970b7a_d2f88eff",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 436,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-29T18:27:00Z",
+      "side": 1,
+      "message": "I\u0027m not sure we want to document the 0 \u003d\u003d any available behavior; the user should really just omit the \"nsid\" parameter in that case.",
+      "range": {
+        "startLine": 436,
+        "startChar": 75,
+        "endLine": 436,
+        "endChar": 97
+      },
+      "revId": "f2887ab6146dd8a7f901f798a435c742eb6d24d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4bfd8387_6ccdd938",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 450,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-29T18:27:00Z",
+      "side": 1,
+      "message": "Same here; we should either provide a valid nsid in the example, or omit the parameter entirely.",
       "revId": "f2887ab6146dd8a7f901f798a435c742eb6d24d8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
