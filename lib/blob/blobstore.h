@@ -138,7 +138,7 @@ struct spdk_blob_data {
 	/* TODO: The xattrs are mutable, but we don't want to be
 	 * copying them unecessarily. Figure this out.
 	 */
-	TAILQ_HEAD(, spdk_xattr) xattrs;
+	TAILQ_HEAD(spdk_xattr_tailq, spdk_xattr) xattrs;
 
 	TAILQ_ENTRY(spdk_blob_data) link;
 };
