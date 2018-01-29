@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "765c1ff6_d3073d43",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 754,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T13:41:18Z",
+      "side": 0,
+      "message": "RC should still be checked.",
+      "range": {
+        "startLine": 754,
+        "startChar": 0,
+        "endLine": 754,
+        "endChar": 20
+      },
+      "revId": "4ab35d5eb91f69d4210cf2f6f38d7280521c89d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
