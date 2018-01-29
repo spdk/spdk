@@ -913,10 +913,8 @@ lvol_resize(void)
 
 	/* Fail resize */
 	g_resize_rc = -1;
-	g_lvserrno = 0;
 	rc = spdk_lvol_resize(g_lvol, 10, lvol_store_op_complete, NULL);
 	CU_ASSERT(rc != 0);
-	CU_ASSERT(g_lvserrno != 0);
 	g_resize_rc = 0;
 
 	g_resize_rc = 0;
