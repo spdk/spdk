@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "38dc9106_5e98d76c",
+        "filename": "app/nvmf_tgt/nvmf_rpc.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 555,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-29T18:13:27Z",
+      "side": 1,
+      "message": "spdk_nvme_transport_id_parse_adrfam() needs an error check.",
+      "revId": "46b3cf1dd5daf3c4202651f88aecd960d644dc17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c8187e6_b8552d61",
+        "filename": "app/nvmf_tgt/nvmf_rpc.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-29T18:13:27Z",
+      "side": 1,
+      "message": "This could potentially leave trid.traddr unterminated if ctx-\u003etraddr is too long; instead, we should use:\n\n  snprintf(trid.traddr, sizeof(trid.traddr), \"%s\", ctx-\u003etraddr);\n\n(Or better yet, check for a valid length, fail the request if it\u0027s too long, and just memcpy() once the length is known to fit.)",
+      "revId": "46b3cf1dd5daf3c4202651f88aecd960d644dc17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d877e1b_0c6749b1",
+        "filename": "app/nvmf_tgt/nvmf_rpc.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 561,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-29T18:13:27Z",
+      "side": 1,
+      "message": "Same for this strncpy() call.",
+      "revId": "46b3cf1dd5daf3c4202651f88aecd960d644dc17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f82d33ed_48e1ece0",
+        "filename": "app/nvmf_tgt/nvmf_rpc.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 606,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-29T18:13:27Z",
+      "side": 1,
+      "message": "spdk_json_decode_object() may have partially decoded the object and left allocated strings in ctx, so I think this should be nvmf_rpc_listener_ctx_free(ctx) rather than just free(ctx); anything that hasn\u0027t been filled in will still be NULL, which is safe to free().",
+      "revId": "46b3cf1dd5daf3c4202651f88aecd960d644dc17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
