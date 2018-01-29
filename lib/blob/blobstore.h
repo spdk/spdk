@@ -108,6 +108,8 @@ enum spdk_blob_state {
 	SPDK_BLOB_STATE_SYNCING,
 };
 
+TAILQ_HEAD(spdk_xattr_tailq, spdk_xattr);
+
 struct spdk_blob_data {
 	struct spdk_blob_store *bs;
 
@@ -138,7 +140,8 @@ struct spdk_blob_data {
 	/* TODO: The xattrs are mutable, but we don't want to be
 	 * copying them unecessarily. Figure this out.
 	 */
-	TAILQ_HEAD(spdk_xattr_tailq, spdk_xattr) xattrs;
+	struct spdk_xattr_tailq xattrs;
+	struct spdk_xattr_tailq xattrs_internal;
 
 	TAILQ_ENTRY(spdk_blob_data) link;
 };
@@ -223,6 +226,7 @@ struct spdk_bs_md_mask {
 #define SPDK_MD_DESCRIPTOR_TYPE_EXTENT 1
 #define SPDK_MD_DESCRIPTOR_TYPE_XATTR 2
 #define SPDK_MD_DESCRIPTOR_TYPE_FLAGS 3
+#define SPDK_MD_DESCRIPTOR_TYPE_XATTR_INTERNAL 4
 
 struct spdk_blob_md_descriptor_xattr {
 	uint8_t		type;
@@ -246,7 +250,8 @@ struct spdk_blob_md_descriptor_extent {
 };
 
 #define SPDK_BLOB_THIN_PROV (1ULL << 0)
-#define SPDK_BLOB_INVALID_FLAGS_MASK	SPDK_BLOB_THIN_PROV
+#define SPDK_BLOB_INTERNAL_XATTR (1ULL << 1)
+#define SPDK_BLOB_INVALID_FLAGS_MASK	(SPDK_BLOB_THIN_PROV | SPDK_BLOB_INTERNAL_XATTR)
 
 #define SPDK_BLOB_READ_ONLY (1ULL << 0)
 #define SPDK_BLOB_DATA_RO_FLAGS_MASK	SPDK_BLOB_READ_ONLY
