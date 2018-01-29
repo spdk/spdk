@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fd6052f1_a612f025",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 1052,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-29T11:07:16Z",
+      "side": 1,
+      "message": "Updated UT code has covered this new code path at http://spdk.intel.com/public/spdk/builds/review/9398cebaba6cc2fb6e1519c8b685d39d68f64437.1517203926/coverage/lib/bdev/bdev.c.gcov.html",
+      "range": {
+        "startLine": 1052,
+        "startChar": 0,
+        "endLine": 1052,
+        "endChar": 34
+      },
+      "revId": "0fd12921640fc3742a999af75d83742718f6f988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
