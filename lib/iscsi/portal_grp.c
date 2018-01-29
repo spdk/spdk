@@ -336,13 +336,6 @@ spdk_iscsi_portal_grp_create(int tag)
 		return NULL;
 	}
 
-	/* Make sure there are no duplicate portal group tags */
-	if (spdk_iscsi_portal_grp_find_by_tag(tag)) {
-		SPDK_ERRLOG("portal group creation failed.  duplicate portal group tag (%d)\n", tag);
-		free(pg);
-		return NULL;
-	}
-
 	pg->ref = 0;
 	pg->tag = tag;
 
@@ -367,15 +360,23 @@ spdk_iscsi_portal_grp_destroy(struct spdk_iscsi_portal_grp *pg)
 	free(pg);
 }
 
-static void
+static int
 spdk_iscsi_portal_grp_register(struct spdk_iscsi_portal_grp *pg)
 {
+	int rc = -1;
+	struct spdk_iscsi_portal_grp *tmp;
+
 	assert(pg != NULL);
 	assert(!TAILQ_EMPTY(&pg->head));
 
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	TAILQ_INSERT_TAIL(&g_spdk_iscsi.pg_head, pg, tailq);
+	tmp = spdk_iscsi_portal_grp_find_by_tag(pg->tag);
+	if (tmp == NULL) {
+		TAILQ_INSERT_TAIL(&g_spdk_iscsi.pg_head, pg, tailq);
+		rc = 0;
+	}
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	return rc;
 }
 
 static void
@@ -440,7 +441,10 @@ spdk_iscsi_portal_grp_create_from_portal_list(int tag,
 		}
 
 		/* Add portal group to the end of the pg list */
-		spdk_iscsi_portal_grp_register(pg);
+		rc = spdk_iscsi_portal_grp_register(pg);
+		if (rc != 0) {
+			spdk_iscsi_portal_grp_destroy(pg);
+		}
 	}
 
 	return rc;
@@ -478,20 +482,20 @@ spdk_iscsi_portal_grp_create_from_configfile(struct spdk_conf_section *sp)
 		rc = spdk_iscsi_portal_create_from_configline(portal, &p, 1);
 		if (rc < 0) {
 			SPDK_ERRLOG("parse portal error (%s)\n", portal);
-			goto error_out;
+			return -1;
 		}
 	}
 
 	portals = i;
 	if (portals > MAX_PORTAL) {
 		SPDK_ERRLOG("%d > MAX_PORTAL\n", portals);
-		goto error_out;
+		return -1;
 	}
 
 	pg = spdk_iscsi_portal_grp_create(spdk_conf_section_get_num(sp));
 	if (!pg) {
 		SPDK_ERRLOG("portal group malloc error (%s)\n", spdk_conf_section_get_name(sp));
-		goto error_out;
+		return -1;
 	}
 
 	for (i = 0; i < portals; i++) {
@@ -500,14 +504,14 @@ spdk_iscsi_portal_grp_create_from_configfile(struct spdk_conf_section *sp)
 		if (label == NULL || portal == NULL) {
 			spdk_iscsi_portal_grp_destroy(pg);
 			SPDK_ERRLOG("portal error\n");
-			goto error_out;
+			return -1;
 		}
 
 		rc = spdk_iscsi_portal_create_from_configline(portal, &p, 0);
 		if (rc < 0) {
 			spdk_iscsi_portal_grp_destroy(pg);
 			SPDK_ERRLOG("parse portal error (%s)\n", portal);
-			goto error_out;
+			return -1;
 		}
 
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
@@ -518,12 +522,14 @@ spdk_iscsi_portal_grp_create_from_configfile(struct spdk_conf_section *sp)
 	}
 
 	/* Add portal group to the end of the pg list */
-	spdk_iscsi_portal_grp_register(pg);
+	rc = spdk_iscsi_portal_grp_register(pg);
+	if (rc != 0) {
+		SPDK_ERRLOG("register portal failed\n");
+		spdk_iscsi_portal_grp_destroy(pg);
+		return -1;
+	}
 
 	return 0;
-
-error_out:
-	return -1;
 }
 
 struct spdk_iscsi_portal_grp *
@@ -639,30 +645,26 @@ spdk_iscsi_portal_grp_close_all(void)
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 }
 
-static inline void
-spdk_iscsi_portal_grp_unregister(struct spdk_iscsi_portal_grp *pg)
+struct spdk_iscsi_portal_grp *
+spdk_iscsi_portal_grp_unregister(int tag)
 {
-	struct spdk_iscsi_portal_grp *portal_group;
-	struct spdk_iscsi_portal_grp *portal_group_tmp;
-
-	assert(pg != NULL);
-	assert(!TAILQ_EMPTY(&pg->head));
+	struct spdk_iscsi_portal_grp *pg;
 
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	TAILQ_FOREACH_SAFE(portal_group, &g_spdk_iscsi.pg_head, tailq, portal_group_tmp) {
-		if (portal_group->tag == pg->tag) {
-			TAILQ_REMOVE(&g_spdk_iscsi.pg_head, portal_group, tailq);
+	TAILQ_FOREACH(pg, &g_spdk_iscsi.pg_head, tailq) {
+		if (pg->tag == tag) {
+			TAILQ_REMOVE(&g_spdk_iscsi.pg_head, pg, tailq);
+			pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+			return pg;
 		}
 	}
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	return NULL;
 }
 
 void
 spdk_iscsi_portal_grp_release(struct spdk_iscsi_portal_grp *pg)
 {
 	spdk_iscsi_portal_grp_close(pg);
-	spdk_iscsi_portal_grp_unregister(pg);
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	spdk_iscsi_portal_grp_destroy(pg);
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 }
