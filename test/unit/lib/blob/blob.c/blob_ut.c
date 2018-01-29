@@ -2526,10 +2526,10 @@ blob_set_xattrs(void)
 	/* Create blob with extra attributes */
 	spdk_blob_opts_init(&opts);
 
-	opts.xattr_names = g_xattr_names;
-	opts.get_xattr_value = _get_xattr_value;
-	opts.xattr_count = 3;
-	opts.xattr_ctx = &g_ctx;
+	opts.xattrs.names = g_xattr_names;
+	opts.xattrs.get_value = _get_xattr_value;
+	opts.xattrs.count = 3;
+	opts.xattrs.ctx = &g_ctx;
 
 	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -2575,10 +2575,10 @@ blob_set_xattrs(void)
 
 	/* NULL callback */
 	spdk_blob_opts_init(&opts);
-	opts.xattr_names = g_xattr_names;
-	opts.get_xattr_value = NULL;
-	opts.xattr_count = 1;
-	opts.xattr_ctx = &g_ctx;
+	opts.xattrs.names = g_xattr_names;
+	opts.xattrs.get_value = NULL;
+	opts.xattrs.count = 1;
+	opts.xattrs.ctx = &g_ctx;
 
 	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == -EINVAL);
@@ -2586,10 +2586,10 @@ blob_set_xattrs(void)
 
 	/* NULL values */
 	spdk_blob_opts_init(&opts);
-	opts.xattr_names = g_xattr_names;
-	opts.get_xattr_value = _get_xattr_value_null;
-	opts.xattr_count = 1;
-	opts.xattr_ctx = NULL;
+	opts.xattrs.names = g_xattr_names;
+	opts.xattrs.get_value = _get_xattr_value_null;
+	opts.xattrs.count = 1;
+	opts.xattrs.ctx = NULL;
 
 	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == -EINVAL);
