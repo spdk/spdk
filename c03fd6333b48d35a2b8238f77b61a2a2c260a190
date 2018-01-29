@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "52210c9f_4aa3164d",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 298,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-01-29T17:28:09Z",
+      "side": 1,
+      "message": "Can we place this in spdk_vhost_vq_used_signal() if we are moving this part around?",
+      "range": {
+        "startLine": 293,
+        "startChar": 0,
+        "endLine": 298,
+        "endChar": 12
+      },
+      "revId": "c03fd6333b48d35a2b8238f77b61a2a2c260a190",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
