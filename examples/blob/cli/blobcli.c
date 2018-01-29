@@ -405,7 +405,7 @@ show_bs_cb(void *arg1, spdk_blob_id blobid, int bserrno)
 	printf("\nBlobstore Private Info:\n");
 	printf("\tMetadata start (pages): %" PRIu64 "\n",
 	       cli_context->bs->md_start);
-	printf("\tMetadata length (pages): %d \n",
+	printf("\tMetadata length (pages): %d\n",
 	       cli_context->bs->md_len);
 
 	unload_bs(cli_context, "", 0);

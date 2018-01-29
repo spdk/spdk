@@ -954,7 +954,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 				printf("Wear Leveling Count:\n");
 				printf("  Normalized Value : %d\n",
 				       intel_smart_page.attributes[i].normalized_value);
-				printf("  Current Raw Value: \n");
+				printf("  Current Raw Value:\n");
 				printf("  Min: ");
 				print_uint_var_dec(&intel_smart_page.attributes[i].raw_value[0], 2);
 				printf("\n");
@@ -1010,7 +1010,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 				printf("Thermal Throttle Status:\n");
 				printf("  Normalized Value : %d\n",
 				       intel_smart_page.attributes[i].normalized_value);
-				printf("  Current Raw Value: \n");
+				printf("  Current Raw Value:\n");
 				printf("  Percentage: %d%%\n", intel_smart_page.attributes[i].raw_value[0]);
 				printf("  Throttling Event Count: ");
 				print_uint_var_dec(&intel_smart_page.attributes[i].raw_value[1], 4);

@@ -51,6 +51,19 @@ else
 fi
 rm -f comment.log
 
+echo -n "Checking trailing whitespace in output strings..."
+
+git grep --line-number -e ' \\n"' -- '*.[ch]' > whitespace.log || true
+
+if [ -s whitespace.log ]; then
+	echo " Incorrect trailing whitespace detected"
+	cat whitespace.log
+	rc=1
+else
+	echo " OK"
+fi
+rm -f whitespace.log
+
 echo -n "Checking for use of forbidden library functions..."
 
 git grep -w strcpy -- app examples lib test > badfunc.log || true
