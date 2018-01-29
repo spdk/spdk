@@ -286,11 +286,14 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_v
 	used->ring[last_idx].id = id;
 	used->ring[last_idx].len = len;
 
+	/* Ensure the used ring is filled before we increment used->idx. */
 	spdk_smp_wmb();
 	* (volatile uint16_t *) &used->idx = vring->last_used_idx;
 
 	virtqueue->used_req_cnt++;
 
+	/* Ensure all our used ring changes are visible to the guest at the time of interrupt. */
+	spdk_smp_wmb();
 	/* We need to signal every last_used_idx overflow. */
 	if (vring->last_used_idx == 0 ||
 	    (spdk_vhost_dev_has_feature(vdev, VIRTIO_F_NOTIFY_ON_EMPTY) &&
