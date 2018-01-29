@@ -22,6 +22,29 @@
       "revId": "02e147f8aa0469771741b4aa7526db0027fb9d24",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e72c3ee7_94a92db9",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 501,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T15:40:35Z",
+      "side": 1,
+      "message": "This could be good moment to actually check the bdev sizes after resize.",
+      "range": {
+        "startLine": 500,
+        "startChar": 0,
+        "endLine": 501,
+        "endChar": 27
+      },
+      "revId": "02e147f8aa0469771741b4aa7526db0027fb9d24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
