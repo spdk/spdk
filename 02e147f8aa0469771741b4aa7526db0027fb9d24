@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f234effc_90e489dd",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T15:22:12Z",
+      "side": 1,
+      "message": "Why change to 1/8 of size ? As comment states and original idea of the test, it was to be increased from first resize (1/4 to 1/2 of bdev size).",
+      "range": {
+        "startLine": 357,
+        "startChar": 7,
+        "endLine": 357,
+        "endChar": 34
+      },
+      "revId": "02e147f8aa0469771741b4aa7526db0027fb9d24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2b6107e8_5bab24bf",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T15:22:12Z",
+      "side": 0,
+      "message": "Why were the check_get_bdevs_methods removed ?",
+      "range": {
+        "startLine": 355,
+        "startChar": 0,
+        "endLine": 356,
+        "endChar": 73
+      },
+      "revId": "c221a9d7f0e4dc14db839e7dc1a38aa7ee748e71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
