@@ -21,14 +21,12 @@ def construct_lvol_bdev(args):
         print_array(args.client.call('construct_lvol_bdev', params))
 
 
-# Logical volume resize feature is disabled, as it is currently work in progress
-#
-# def resize_lvol_bdev(args):
-#     params = {
-#         'name': args.name,
-#         'size': args.size,
-#     }
-#     args.client.call('resize_lvol_bdev', params)
+def resize_lvol_bdev(args):
+     params = {
+         'name': args.name,
+         'size': args.size,
+     }
+     args.client.call('resize_lvol_bdev', params)
 
 
 def destroy_lvol_store(args):
