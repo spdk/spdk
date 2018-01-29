@@ -85,6 +85,39 @@ struct spdk_bs_super_block_ver1 {
 } __attribute__((packed));
 SPDK_STATIC_ASSERT(sizeof(struct spdk_bs_super_block_ver1) == 0x1000, "Invalid super block size");
 
+
+static void
+_get_xattr_value(void *arg, const char *name,
+		 const void **value, size_t *value_len)
+{
+	uint64_t i;
+
+	SPDK_CU_ASSERT_FATAL(value_len != NULL);
+	SPDK_CU_ASSERT_FATAL(value != NULL);
+	CU_ASSERT(arg == &g_ctx)
+
+	for (i = 0; i < sizeof(g_xattr_names); i++) {
+		if (!strcmp(name, g_xattr_names[i])) {
+			*value_len = strlen(g_xattr_values[i]);
+			*value = g_xattr_values[i];
+			break;
+		}
+	}
+}
+
+static void
+_get_xattr_value_null(void *arg, const char *name,
+		      const void **value, size_t *value_len)
+{
+	SPDK_CU_ASSERT_FATAL(value_len != NULL);
+	SPDK_CU_ASSERT_FATAL(value != NULL);
+	CU_ASSERT(arg == NULL)
+
+	*value_len = 0;
+	*value = NULL;
+}
+
+
 static void
 _bs_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 {
@@ -345,6 +378,111 @@ blob_create(void)
 
 	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == -ENOSPC);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+
+}
+
+static void
+blob_create_internal(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_bs_dev *dev;
+	struct spdk_blob *blob;
+	struct spdk_blob_opts opts;
+	struct spdk_internal_blob_opts internal_opts;
+	const void *value;
+	size_t value_len;
+	spdk_blob_id blobid;
+	int rc;
+
+	dev = init_dev();
+
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	/* Create read-only blob */
+
+	spdk_blob_opts_init(&opts);
+	opts.num_clusters = 10;
+	internal_opts.read_only = true;
+	internal_opts.internal_xattrs.count = 0;
+	internal_opts.internal_xattrs.names = NULL;
+	internal_opts.internal_xattrs.get_value = NULL;
+	internal_opts.internal_xattrs.ctx = NULL;
+
+	_spdk_bs_create_blob(bs, &opts, &internal_opts, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10)
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Create blob with custom xattrs */
+
+	spdk_blob_opts_init(&opts);
+	internal_opts.read_only = false;
+	internal_opts.internal_xattrs.count = 3;
+	internal_opts.internal_xattrs.names = g_xattr_names;
+	internal_opts.internal_xattrs.get_value = _get_xattr_value;
+	internal_opts.internal_xattrs.ctx = &g_ctx;
+
+	_spdk_bs_create_blob(bs, &opts, &internal_opts, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+
+	rc = _spdk_blob_get_xattr_value(__blob_to_data(blob), g_xattr_names[0], &value, &value_len, true);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(value != NULL);
+	CU_ASSERT(value_len == strlen(g_xattr_values[0]));
+	CU_ASSERT_NSTRING_EQUAL_FATAL(value, g_xattr_values[0], value_len);
+
+	rc = _spdk_blob_get_xattr_value(__blob_to_data(blob), g_xattr_names[1], &value, &value_len, true);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(value != NULL);
+	CU_ASSERT(value_len == strlen(g_xattr_values[1]));
+	CU_ASSERT_NSTRING_EQUAL((char *)value, g_xattr_values[1], value_len);
+
+	rc = _spdk_blob_get_xattr_value(__blob_to_data(blob), g_xattr_names[2], &value, &value_len, true);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(value != NULL);
+	CU_ASSERT(value_len == strlen(g_xattr_values[2]));
+	CU_ASSERT_NSTRING_EQUAL((char *)value, g_xattr_values[2], value_len);
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Create blob with NULL internal options  */
+
+	_spdk_bs_create_blob(bs, NULL, NULL, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
 
 	spdk_bs_unload(g_bs, bs_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -2509,37 +2647,6 @@ bs_version(void)
 }
 
 static void
-_get_xattr_value(void *arg, const char *name,
-		 const void **value, size_t *value_len)
-{
-	uint64_t i;
-
-	SPDK_CU_ASSERT_FATAL(value_len != NULL);
-	SPDK_CU_ASSERT_FATAL(value != NULL);
-	CU_ASSERT(arg == &g_ctx)
-
-	for (i = 0; i < sizeof(g_xattr_names); i++) {
-		if (!strcmp(name, g_xattr_names[i])) {
-			*value_len = strlen(g_xattr_values[i]);
-			*value = g_xattr_values[i];
-			break;
-		}
-	}
-}
-
-static void
-_get_xattr_value_null(void *arg, const char *name,
-		      const void **value, size_t *value_len)
-{
-	SPDK_CU_ASSERT_FATAL(value_len != NULL);
-	SPDK_CU_ASSERT_FATAL(value != NULL);
-	CU_ASSERT(arg == NULL)
-
-	*value_len = 0;
-	*value = NULL;
-}
-
-static void
 blob_set_xattrs(void)
 {
 	struct spdk_blob_store *bs;
@@ -3029,6 +3136,7 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "blob_init", blob_init) == NULL ||
 		CU_add_test(suite, "blob_open", blob_open) == NULL ||
 		CU_add_test(suite, "blob_create", blob_create) == NULL ||
+		CU_add_test(suite, "blob_create_internal", blob_create_internal) == NULL ||
 		CU_add_test(suite, "blob_thin_provision", blob_thin_provision) == NULL ||
 		CU_add_test(suite, "blob_delete", blob_delete) == NULL ||
 		CU_add_test(suite, "blob_resize", blob_resize) == NULL ||
