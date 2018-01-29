@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "fa38196b_c7e8c844",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 870,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T13:41:18Z",
+      "side": 1,
+      "message": "This will be removed.",
+      "range": {
+        "startLine": 854,
+        "startChar": 0,
+        "endLine": 870,
+        "endChar": 1
+      },
+      "revId": "826ba66c626d61a75db859b7226d930b442a401e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f8d23404_3832c774",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 1
@@ -13,6 +36,110 @@
       "writtenOn": "2018-01-26T18:42:24Z",
       "side": 1,
       "message": "instead of this patch - couldn\u0027t we just simplify all of this by using spdk_create_blob_ext()?  then we don\u0027t need to add any size or xattr checks - blobstore will do that for us",
+      "revId": "826ba66c626d61a75db859b7226d930b442a401e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b548ba7_fd4a8000",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 873,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T13:41:18Z",
+      "side": 1,
+      "message": "I would have to agree with Jim, size and xattr can be passed in opts.",
+      "parentUuid": "f8d23404_3832c774",
+      "revId": "826ba66c626d61a75db859b7226d930b442a401e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0551e363_a17ad190",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 879,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T13:41:18Z",
+      "side": 1,
+      "message": "There is some additional error path handling this patch tried to tackle, but please review and use following patch that resolves most of the error path troubles you\u0027ve hit.\nhttps://review.gerrithub.io/#/c/396939/",
+      "revId": "826ba66c626d61a75db859b7226d930b442a401e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dadaa6ff_ed8d706d",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 908,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T13:41:18Z",
+      "side": 1,
+      "message": "This will be num_clusters in opts.",
+      "range": {
+        "startLine": 904,
+        "startChar": 0,
+        "endLine": 908,
+        "endChar": 2
+      },
+      "revId": "826ba66c626d61a75db859b7226d930b442a401e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d90d19f4_6d95086c",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 915,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T13:41:18Z",
+      "side": 1,
+      "message": "xattr_ctx function can set name as passed to spdk_lvol_create().",
+      "range": {
+        "startLine": 910,
+        "startChar": 0,
+        "endLine": 915,
+        "endChar": 2
+      },
+      "revId": "826ba66c626d61a75db859b7226d930b442a401e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "03510e1a_6befb9a0",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 917,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T13:41:18Z",
+      "side": 1,
+      "message": "Syn won\u0027t be needed. All that needs to be done here is increase lvol-\u003eref_count and call cb_fn.",
+      "range": {
+        "startLine": 917,
+        "startChar": 1,
+        "endLine": 917,
+        "endChar": 50
+      },
       "revId": "826ba66c626d61a75db859b7226d930b442a401e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
