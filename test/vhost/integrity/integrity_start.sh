@@ -20,7 +20,7 @@ VM_BAK_IMG="/tmp/int_test_backing.img"
 TIMEO=60
 SSHCMD="sshpass -p $VM_PASS ssh"
 SCPCMD="sshpass -p $VM_PASS scp"
-
+VM_QEMU="/usr/bin/qemu-system-x86_64"
 while getopts 'i:m:f:' optchar; do
     case $optchar in
         i) VM_IMG="${OPTARG#*=}" ;;
