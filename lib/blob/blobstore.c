@@ -50,7 +50,11 @@
 static int spdk_bs_register_md_thread(struct spdk_blob_store *bs);
 static int spdk_bs_unregister_md_thread(struct spdk_blob_store *bs);
 static void _spdk_blob_close_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno);
-
+static int _spdk_blob_set_xattr(struct spdk_blob_data *blob, const char *name, const void *value,
+				uint16_t value_len, bool internal);
+static int _spdk_blob_get_xattr_value(struct spdk_blob_data *blob, const char *name,
+				      const void **value, size_t *value_len, bool internal);
+static int _spdk_blob_remove_xattr(struct spdk_blob_data *blob, const char *name, bool internal);
 static void
 _bdev_blob_read_zeroes(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, void *payload,
 		       uint64_t lba, uint32_t lba_count, struct spdk_bs_dev_cb_args *cb_args)
@@ -213,6 +217,7 @@ _spdk_blob_alloc(struct spdk_blob_store *bs, spdk_blob_id id)
 	blob->active.pages[0] = _spdk_bs_blobid_to_page(id);
 
 	TAILQ_INIT(&blob->xattrs);
+	TAILQ_INIT(&blob->xattrs_internal);
 
 	return blob;
 }
@@ -241,6 +246,7 @@ _spdk_blob_free(struct spdk_blob_data *blob)
 	free(blob->clean.pages);
 
 	_spdk_xattrs_free(&blob->xattrs);
+	_spdk_xattrs_free(&blob->xattrs_internal);
 
 	free(blob);
 }
@@ -292,7 +298,7 @@ _spdk_blob_mark_clean(struct spdk_blob_data *blob)
 
 static int
 _spdk_blob_deserialize_xattr(struct spdk_blob_data *blob,
-			     struct spdk_blob_md_descriptor_xattr *desc_xattr)
+			     struct spdk_blob_md_descriptor_xattr *desc_xattr, bool internal)
 {
 	struct spdk_xattr                       *xattr;
 
@@ -326,7 +332,8 @@ _spdk_blob_deserialize_xattr(struct spdk_blob_data *blob,
 	       (void *)((uintptr_t)desc_xattr->name + desc_xattr->name_length),
 	       desc_xattr->value_length);
 
-	TAILQ_INSERT_TAIL(&blob->xattrs, xattr, link);
+	TAILQ_INSERT_TAIL(internal ? &blob->xattrs_internal : &blob->xattrs, xattr, link);
+
 	return 0;
 }
 
@@ -426,8 +433,15 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob_dat
 
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_XATTR) {
 			int rc;
-
-			rc = _spdk_blob_deserialize_xattr(blob, (struct spdk_blob_md_descriptor_xattr *) desc);
+			rc = _spdk_blob_deserialize_xattr(blob,
+							  (struct spdk_blob_md_descriptor_xattr *) desc, false);
+			if (rc != 0) {
+				return rc;
+			}
+		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_XATTR_INTERNAL) {
+			int rc;
+			rc = _spdk_blob_deserialize_xattr(blob,
+							  (struct spdk_blob_md_descriptor_xattr *) desc, true);
 			if (rc != 0) {
 				return rc;
 			}
@@ -539,7 +553,7 @@ _spdk_blob_serialize_add_page(const struct spdk_blob_data *blob,
 static int
 _spdk_blob_serialize_xattr(const struct spdk_xattr *xattr,
 			   uint8_t *buf, size_t buf_sz,
-			   size_t *required_sz)
+			   size_t *required_sz, bool internal)
 {
 	struct spdk_blob_md_descriptor_xattr	*desc;
 
@@ -553,7 +567,7 @@ _spdk_blob_serialize_xattr(const struct spdk_xattr *xattr,
 
 	desc = (struct spdk_blob_md_descriptor_xattr *)buf;
 
-	desc->type = SPDK_MD_DESCRIPTOR_TYPE_XATTR;
+	desc->type = internal ? SPDK_MD_DESCRIPTOR_TYPE_XATTR_INTERNAL : SPDK_MD_DESCRIPTOR_TYPE_XATTR;
 	desc->length = sizeof(desc->name_length) +
 		       sizeof(desc->value_length) +
 		       strlen(xattr->name) +
@@ -650,7 +664,7 @@ _spdk_blob_serialize_flags(const struct spdk_blob_data *blob,
 
 static int
 _spdk_blob_serialize_xattrs(const struct spdk_blob_data *blob,
-			    const struct spdk_xattr_tailq *xattrs,
+			    const struct spdk_xattr_tailq *xattrs, bool internal,
 			    struct spdk_blob_md_page **pages, struct spdk_blob_md_page *cur_page, uint32_t *page_count,
 			    uint8_t	**buf, size_t *remaining_sz)
 {
@@ -662,7 +676,7 @@ _spdk_blob_serialize_xattrs(const struct spdk_blob_data *blob,
 
 		rc = _spdk_blob_serialize_xattr(xattr,
 						*buf, *remaining_sz,
-						&required_sz);
+						&required_sz, internal);
 		if (rc < 0) {
 			/* Need to add a new page to the chain */
 			rc = _spdk_blob_serialize_add_page(blob, pages, page_count,
@@ -681,7 +695,7 @@ _spdk_blob_serialize_xattrs(const struct spdk_blob_data *blob,
 			required_sz = 0;
 			rc = _spdk_blob_serialize_xattr(xattr,
 							*buf, *remaining_sz,
-							&required_sz);
+							&required_sz, internal);
 
 			if (rc < 0) {
 				spdk_dma_free(*pages);
@@ -730,7 +744,11 @@ _spdk_blob_serialize(const struct spdk_blob_data *blob, struct spdk_blob_md_page
 	buf += sizeof(struct spdk_blob_md_descriptor_flags);
 
 	/* Serialize xattrs */
-	_spdk_blob_serialize_xattrs(blob, &blob->xattrs,
+	_spdk_blob_serialize_xattrs(blob, &blob->xattrs, false,
+				    pages, cur_page, page_count, &buf, &remaining_sz);
+
+	/* Serialize internal xattrs */
+	_spdk_blob_serialize_xattrs(blob, &blob->xattrs_internal, true,
 				    pages, cur_page, page_count, &buf, &remaining_sz);
 
 	/* Serialize extents */
@@ -2347,6 +2365,8 @@ _spdk_bs_load_replay_md_parse_page(const struct spdk_blob_md_page *page, struct 
 			}
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_XATTR) {
 			/* Skip this item */
+		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_XATTR_INTERNAL) {
+			/* Skip this item */
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_FLAGS) {
 			/* Skip this item */
 		} else {
@@ -3163,7 +3183,8 @@ _spdk_bs_create_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 }
 
 static int
-_spdk_blob_set_xattrs(struct spdk_blob	*blob, const struct spdk_blob_xattr_opts *xattrs)
+_spdk_blob_set_xattrs(struct spdk_blob_data	*blob, const struct spdk_blob_xattr_opts *xattrs,
+		      bool internal)
 {
 	uint64_t i;
 	size_t value_len = 0;
@@ -3177,7 +3198,7 @@ _spdk_blob_set_xattrs(struct spdk_blob	*blob, const struct spdk_blob_xattr_opts 
 		if (value == NULL || value_len == 0) {
 			return -EINVAL;
 		}
-		rc = spdk_blob_set_xattr(blob, xattrs->names[i], value, value_len);
+		rc = _spdk_blob_set_xattr(blob, xattrs->names[i], value, value_len, internal);
 		if (rc < 0) {
 			return rc;
 		}
@@ -3226,7 +3247,7 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 		opts = &opts_default;
 	}
 
-	rc = _spdk_blob_set_xattrs(__data_to_blob(blob), &opts->xattrs);
+	rc = _spdk_blob_set_xattrs(blob, &opts->xattrs, false);
 	if (rc < 0) {
 		_spdk_blob_free(blob);
 		cb_fn(cb_arg, 0, rc);
@@ -3734,11 +3755,11 @@ spdk_bs_iter_next(struct spdk_blob_store *bs, struct spdk_blob *b,
 	spdk_blob_close(b, _spdk_bs_iter_close_cpl, ctx);
 }
 
-int
-spdk_blob_set_xattr(struct spdk_blob *_blob, const char *name, const void *value,
-		    uint16_t value_len)
+static int
+_spdk_blob_set_xattr(struct spdk_blob_data *blob, const char *name, const void *value,
+		     uint16_t value_len, bool internal)
 {
-	struct spdk_blob_data	*blob = __blob_to_data(_blob);
+	struct spdk_xattr_tailq *xattrs;
 	struct spdk_xattr 	*xattr;
 
 	assert(blob != NULL);
@@ -3750,7 +3771,9 @@ spdk_blob_set_xattr(struct spdk_blob *_blob, const char *name, const void *value
 		return -EPERM;
 	}
 
-	TAILQ_FOREACH(xattr, &blob->xattrs, link) {
+	xattrs = internal ? &blob->xattrs_internal : &blob->xattrs;
+
+	TAILQ_FOREACH(xattr, xattrs, link) {
 		if (!strcmp(name, xattr->name)) {
 			free(xattr->value);
 			xattr->value_len = value_len;
@@ -3771,7 +3794,7 @@ spdk_blob_set_xattr(struct spdk_blob *_blob, const char *name, const void *value
 	xattr->value_len = value_len;
 	xattr->value = malloc(value_len);
 	memcpy(xattr->value, value, value_len);
-	TAILQ_INSERT_TAIL(&blob->xattrs, xattr, link);
+	TAILQ_INSERT_TAIL(xattrs, xattr, link);
 
 	blob->state = SPDK_BLOB_STATE_DIRTY;
 
@@ -3779,9 +3802,16 @@ spdk_blob_set_xattr(struct spdk_blob *_blob, const char *name, const void *value
 }
 
 int
-spdk_blob_remove_xattr(struct spdk_blob *_blob, const char *name)
+spdk_blob_set_xattr(struct spdk_blob *blob, const char *name, const void *value,
+		    uint16_t value_len)
 {
-	struct spdk_blob_data	*blob = __blob_to_data(_blob);
+	return _spdk_blob_set_xattr(__blob_to_data(blob), name, value, value_len, false);
+}
+
+static int
+_spdk_blob_remove_xattr(struct spdk_blob_data *blob, const char *name, bool internal)
+{
+	struct spdk_xattr_tailq *xattrs;
 	struct spdk_xattr	*xattr;
 
 	assert(blob != NULL);
@@ -3792,10 +3822,11 @@ spdk_blob_remove_xattr(struct spdk_blob *_blob, const char *name)
 	if (blob->md_ro) {
 		return -EPERM;
 	}
+	xattrs = internal ? &blob->xattrs_internal : &blob->xattrs;
 
-	TAILQ_FOREACH(xattr, &blob->xattrs, link) {
+	TAILQ_FOREACH(xattr, xattrs, link) {
 		if (!strcmp(name, xattr->name)) {
-			TAILQ_REMOVE(&blob->xattrs, xattr, link);
+			TAILQ_REMOVE(xattrs, xattr, link);
 			free(xattr->value);
 			free(xattr->name);
 			free(xattr);
@@ -3810,21 +3841,35 @@ spdk_blob_remove_xattr(struct spdk_blob *_blob, const char *name)
 }
 
 int
-spdk_blob_get_xattr_value(struct spdk_blob *_blob, const char *name,
-			  const void **value, size_t *value_len)
+spdk_blob_remove_xattr(struct spdk_blob *blob, const char *name)
 {
-	struct spdk_blob_data	*blob = __blob_to_data(_blob);
-	struct spdk_xattr	*xattr;
+	return _spdk_blob_remove_xattr(__blob_to_data(blob), name, false);
+}
 
-	TAILQ_FOREACH(xattr, &blob->xattrs, link) {
+static int
+_spdk_blob_get_xattr_value(struct spdk_blob_data *blob, const char *name,
+			   const void **value, size_t *value_len, bool internal)
+{
+	struct spdk_xattr	*xattr;
+	struct spdk_xattr_tailq *xattrs;
+
+	xattrs = internal ? &blob->xattrs_internal : &blob->xattrs;
+
+	TAILQ_FOREACH(xattr, xattrs, link) {
 		if (!strcmp(name, xattr->name)) {
 			*value = xattr->value;
 			*value_len = xattr->value_len;
 			return 0;
 		}
 	}
-
 	return -ENOENT;
+}
+
+int
+spdk_blob_get_xattr_value(struct spdk_blob *blob, const char *name,
+			  const void **value, size_t *value_len)
+{
+	return _spdk_blob_get_xattr_value(__blob_to_data(blob), name, value, value_len, false);
 }
 
 struct spdk_xattr_names {
@@ -3832,14 +3877,13 @@ struct spdk_xattr_names {
 	const char	*names[0];
 };
 
-int
-spdk_blob_get_xattr_names(struct spdk_blob *_blob, struct spdk_xattr_names **names)
+static int
+_spdk_blob_get_xattr_names(struct spdk_xattr_tailq *xattrs, struct spdk_xattr_names **names)
 {
-	struct spdk_blob_data	*blob = __blob_to_data(_blob);
 	struct spdk_xattr	*xattr;
 	int			count = 0;
 
-	TAILQ_FOREACH(xattr, &blob->xattrs, link) {
+	TAILQ_FOREACH(xattr, xattrs, link) {
 		count++;
 	}
 
@@ -3848,11 +3892,17 @@ spdk_blob_get_xattr_names(struct spdk_blob *_blob, struct spdk_xattr_names **nam
 		return -ENOMEM;
 	}
 
-	TAILQ_FOREACH(xattr, &blob->xattrs, link) {
+	TAILQ_FOREACH(xattr, xattrs, link) {
 		(*names)->names[(*names)->count++] = xattr->name;
 	}
 
 	return 0;
+}
+
+int
+spdk_blob_get_xattr_names(struct spdk_blob *_blob, struct spdk_xattr_names **names)
+{
+	return _spdk_blob_get_xattr_names(&__blob_to_data(_blob)->xattrs, names);
 }
 
 uint32_t
