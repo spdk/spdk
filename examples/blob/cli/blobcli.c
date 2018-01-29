@@ -701,7 +701,7 @@ dump_imp_open_cb(void *cb_arg, struct spdk_blob *blob, int bserrno)
 	} else {
 		cli_context->fp = fopen(cli_context->file, "r");
 		if (cli_context->fp == NULL) {
-			printf("Error in opening file\n");
+			printf("Error in opening file: errno %d\n", errno);
 			spdk_blob_close(cli_context->blob, close_cb, cli_context);
 			return;
 		}
