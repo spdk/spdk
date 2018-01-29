@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "daabd1d2_e8465c47",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 9
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-29T18:03:22Z",
+      "side": 1,
+      "message": "Hi Liang,\n\nThanks for your work on this.  I would suggest improving the commit message to describe why you are doing the refactoring.  It should definitely mention reducing code duplication between testing iSCSI and NVMe-oF with fio.\n\n-Jim",
+      "revId": "8864cf0d379d517c66db7476b526444541427a2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6854885d_a5a83a69",
+        "filename": "scripts/common/fiocommon.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-29T18:03:22Z",
+      "side": 1,
+      "message": "It would be better for iscsi_fio.py and nvmf_fio.py to pass the device list to run_fio, rather than adding a per-test type check here.",
+      "revId": "8864cf0d379d517c66db7476b526444541427a2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec4851a2_4ddf5871",
+        "filename": "scripts/common/fiocommon.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-29T18:03:22Z",
+      "side": 1,
+      "message": "Can we call configure_devices on nvmf too?  I think for sure we want to disable merging (nomerges \u003d 2) on nvmf.\n\nIt would be nicer if we set these to the same parameters for all types, and not need this extra check here.",
+      "revId": "8864cf0d379d517c66db7476b526444541427a2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13b12947_8094a6c2",
+        "filename": "scripts/nvmf_fio.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-29T18:03:22Z",
+      "side": 1,
+      "message": "Is this really nvmf?  Or nvme and nvmf?\n\nI think if this should only be for nvmf, we need to determine which nvmeXnY devices are remote v. local, and only run fio on the remote namespaces.",
+      "revId": "8864cf0d379d517c66db7476b526444541427a2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
