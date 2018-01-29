@@ -218,10 +218,21 @@ _spdk_blob_alloc(struct spdk_blob_store *bs, spdk_blob_id id)
 }
 
 static void
-_spdk_blob_free(struct spdk_blob_data *blob)
+_spdk_xattrs_free(struct spdk_xattr_tailq *xattrs)
 {
 	struct spdk_xattr 	*xattr, *xattr_tmp;
 
+	TAILQ_FOREACH_SAFE(xattr, xattrs, link, xattr_tmp) {
+		TAILQ_REMOVE(xattrs, xattr, link);
+		free(xattr->name);
+		free(xattr->value);
+		free(xattr);
+	}
+}
+
+static void
+_spdk_blob_free(struct spdk_blob_data *blob)
+{
 	assert(blob != NULL);
 
 	free(blob->active.clusters);
@@ -229,12 +240,7 @@ _spdk_blob_free(struct spdk_blob_data *blob)
 	free(blob->active.pages);
 	free(blob->clean.pages);
 
-	TAILQ_FOREACH_SAFE(xattr, &blob->xattrs, link, xattr_tmp) {
-		TAILQ_REMOVE(&blob->xattrs, xattr, link);
-		free(xattr->name);
-		free(xattr->value);
-		free(xattr);
-	}
+	_spdk_xattrs_free(&blob->xattrs);
 
 	free(blob);
 }
