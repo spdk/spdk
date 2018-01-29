@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a5cad78_25499172",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T17:07:51Z",
+      "side": 1,
+      "message": "\"Create a read-only snapshot of specified blob with provided options. This will automatically sync specified blob.\"",
+      "range": {
+        "startLine": 239,
+        "startChar": 0,
+        "endLine": 243,
+        "endChar": 63
+      },
+      "revId": "63a0200f5dbfdb7ba7af83bef3c7da24917c7494",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2f87729a_b1376865",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T17:07:51Z",
+      "side": 1,
+      "message": "\"snapshot_xattrs\" might make it more clear.",
+      "range": {
+        "startLine": 246,
+        "startChar": 43,
+        "endLine": 246,
+        "endChar": 47
+      },
+      "revId": "63a0200f5dbfdb7ba7af83bef3c7da24917c7494",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "582f4977_8349152c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 3603,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T17:07:51Z",
+      "side": 1,
+      "message": "Please add SPDK_INFOLOG()",
+      "range": {
+        "startLine": 3603,
+        "startChar": 0,
+        "endLine": 3603,
+        "endChar": 39
+      },
+      "revId": "63a0200f5dbfdb7ba7af83bef3c7da24917c7494",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d6cfcb8_a6436ff6",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 3632,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T17:07:51Z",
+      "side": 1,
+      "message": "Too many new lines.",
+      "range": {
+        "startLine": 3631,
+        "startChar": 0,
+        "endLine": 3632,
+        "endChar": 0
+      },
+      "revId": "63a0200f5dbfdb7ba7af83bef3c7da24917c7494",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf7bd1ec_97a1b646",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 3645,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T17:07:51Z",
+      "side": 1,
+      "message": "I think this is a good place to initialize snapshot xattrs with defaults if not provided.",
+      "range": {
+        "startLine": 3645,
+        "startChar": 23,
+        "endLine": 3645,
+        "endChar": 39
+      },
+      "revId": "63a0200f5dbfdb7ba7af83bef3c7da24917c7494",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
