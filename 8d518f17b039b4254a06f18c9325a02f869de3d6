@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a1ecad97_dc7cfae7",
+        "filename": "doc/fio.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-29T17:41:13Z",
+      "side": 1,
+      "message": "The anchor name should be lower case ({#fio}) to match the rest of the page names.",
+      "range": {
+        "startLine": 1,
+        "startChar": 8,
+        "endLine": 1,
+        "endChar": 11
+      },
+      "revId": "8d518f17b039b4254a06f18c9325a02f869de3d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
