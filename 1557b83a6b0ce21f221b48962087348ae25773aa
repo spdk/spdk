@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "dfbc0f58_8a983a0b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 1300,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-29T17:05:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "66709a1a_1aed76ae",
+      "range": {
+        "startLine": 1300,
+        "startChar": 2,
+        "endLine": 1300,
+        "endChar": 99
+      },
+      "revId": "1557b83a6b0ce21f221b48962087348ae25773aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b05cf560_aeea8207",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 43
@@ -36,6 +60,24 @@
       "writtenOn": "2018-01-26T19:59:30Z",
       "side": 1,
       "message": "The current rules are that you can\u0027t do a resize while also doing a sync, and further resizes and syncs must be issues from the same thread. This, however, can happen on any thread in response to a write. That causes data races and needs to be addressed.",
+      "revId": "1557b83a6b0ce21f221b48962087348ae25773aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1bb6f63c_f4b932c5",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 1361,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-29T17:05:38Z",
+      "side": 1,
+      "message": "Rebased on Jim\u0027s patches that fix this issue.",
+      "parentUuid": "b05cf560_aeea8207",
       "revId": "1557b83a6b0ce21f221b48962087348ae25773aa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -82,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "2638faa9_2b800d0c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 1391,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-29T17:05:38Z",
+      "side": 1,
+      "message": "Rebased on Jim\u0027s patches that fix this issue.",
+      "parentUuid": "36d0169e_c58275eb",
+      "revId": "1557b83a6b0ce21f221b48962087348ae25773aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e03f4392_e89c56f1",
         "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
         "patchSetId": 43
@@ -99,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "612d0862_f717e78b",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 2762,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-29T17:05:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e03f4392_e89c56f1",
+      "revId": "1557b83a6b0ce21f221b48962087348ae25773aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4bf98daa_33f262d4",
         "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
         "patchSetId": 43
@@ -110,6 +188,24 @@
       "writtenOn": "2018-01-29T11:37:16Z",
       "side": 1,
       "message": "We could add UT that deletes the blob and checks if free_clusters changed. Or somehow combine UT above blob_thin_prov_alloc() to perform write and check free_clusters during all stages of bs load/unload and after blob delete.",
+      "revId": "1557b83a6b0ce21f221b48962087348ae25773aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a8e8ab1_1d3ab08d",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 2775,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-29T17:05:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4bf98daa_33f262d4",
       "revId": "1557b83a6b0ce21f221b48962087348ae25773aa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
