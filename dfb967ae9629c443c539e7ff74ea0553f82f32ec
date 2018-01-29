@@ -69,6 +69,30 @@
       "revId": "dfb967ae9629c443c539e7ff74ea0553f82f32ec",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aa62c5f4_61913f3e",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 28
+      },
+      "lineNbr": 744,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T07:38:05Z",
+      "side": 1,
+      "message": "Fio failure is quite distinct compared to other operations and some tests expect an fio failure. I would agree that those error messages can be left here.",
+      "parentUuid": "b82d8b70_14321f27",
+      "range": {
+        "startLine": 743,
+        "startChar": 8,
+        "endLine": 744,
+        "endChar": 59
+      },
+      "revId": "dfb967ae9629c443c539e7ff74ea0553f82f32ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
