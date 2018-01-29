@@ -52,6 +52,24 @@
       "revId": "2f8ad3a7c8c8d9c72f45cddec193d3ab51b401e7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b42df82f_a7fc7766",
+        "filename": "scripts/common/fiocommon.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-01-29T06:33:48Z",
+      "side": 1,
+      "message": "From the test result I have got, if we given fio the runsize parameter, the fio only run io on the specified region of the file. If we set runsize\u003d1G, fio only run sequentially 1GB space in the file.",
+      "parentUuid": "86abeaa3_4389ab00",
+      "revId": "2f8ad3a7c8c8d9c72f45cddec193d3ab51b401e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
