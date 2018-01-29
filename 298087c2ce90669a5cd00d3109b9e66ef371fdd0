@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1126518c_46c13260",
+        "filename": "test/blobstore/blobstore.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-01-29T22:44:27Z",
+      "side": 1,
+      "message": "oops, will remove these on next revision",
+      "revId": "298087c2ce90669a5cd00d3109b9e66ef371fdd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
