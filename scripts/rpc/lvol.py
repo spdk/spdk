@@ -46,4 +46,11 @@ def destroy_lvol_store(args):
 
 
 def get_lvol_stores(args):
-    print_dict(args.client.call('get_lvol_stores'))
+    params = {}
+    if (args.uuid and args.lvs_name):
+        print("You can only specify either uuid or name of lvolstore")
+    if args.uuid:
+        params['uuid'] = args.uuid
+    if args.lvs_name:
+        params['lvs_name'] = args.lvs_name
+    print_dict(args.client.call('get_lvol_stores', params))
