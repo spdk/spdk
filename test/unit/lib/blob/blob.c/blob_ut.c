@@ -1152,6 +1152,7 @@ blob_xattr(void)
 	rc = spdk_blob_set_xattr(blob, "length", &length, sizeof(length));
 	CU_ASSERT(rc == 0);
 
+
 	/* get_xattr should still work even if md_ro flag is set. */
 	value = NULL;
 	__blob_to_data(blob)->md_ro = true;
@@ -1191,9 +1192,45 @@ blob_xattr(void)
 	rc = spdk_blob_remove_xattr(blob, "foobar");
 	CU_ASSERT(rc == -ENOENT);
 
+	/* Set internal xattr */
+	length = 7898;
+	rc = _spdk_blob_set_xattr(__blob_to_data(blob), "internal", &length, sizeof(length), true);
+	CU_ASSERT(rc == 0);
+	rc = _spdk_blob_get_xattr_value(__blob_to_data(blob), "internal", &value, &value_len, true);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(*(uint64_t *)value == length);
+	/* try to get public xattr with same name */
+	rc = spdk_blob_get_xattr_value(blob, "internal", &value, &value_len);
+	CU_ASSERT(rc != 0);
+	rc = _spdk_blob_get_xattr_value(__blob_to_data(blob), "internal", &value, &value_len, false);
+	CU_ASSERT(rc != 0);
+
 	spdk_blob_close(blob, blob_op_complete, NULL);
 
 	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+
+	/* Check if xattrs are persisted */
+	dev = init_dev();
+
+	spdk_bs_load(dev, NULL, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	bs = g_bs;
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+
+	rc = _spdk_blob_get_xattr_value(__blob_to_data(blob), "internal", &value, &value_len, true);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(*(uint64_t *)value == length);
+
+	/* try to get internal xattr trough public call */
+	rc = spdk_blob_get_xattr_value(blob, "internal", &value, &value_len);
+	CU_ASSERT(rc != 0);
+
 	CU_ASSERT(g_bserrno == 0);
 	g_bs = NULL;
 }
