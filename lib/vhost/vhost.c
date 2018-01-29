@@ -286,7 +286,7 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_v
 	used->ring[last_idx].id = id;
 	used->ring[last_idx].len = len;
 
-	spdk_wmb();
+	spdk_smp_wmb();
 	* (volatile uint16_t *) &used->idx = vring->last_used_idx;
 
 	virtqueue->used_req_cnt++;
