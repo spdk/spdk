@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "903b61e3_72de5b53",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 415,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-29T22:25:49Z",
+      "side": 1,
+      "message": "I\u0027m not 100% sure I follow how this is supposed to work, but making vm_num a local here seems to break test/vhost/initiator/blockdev.sh, which sets $vm_no and calls vm_setup(), then expects $vm_num to be set.\n\nCan you look into this and either fix up the blockdev.sh script or this function?",
+      "range": {
+        "startLine": 415,
+        "startChar": 22,
+        "endLine": 415,
+        "endChar": 28
+      },
+      "revId": "6071788786f8f3668daec2d320d4bfdcb9e740fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
