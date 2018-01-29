@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9e3964aa_71c000c2",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1267,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-01-29T17:53:54Z",
+      "side": 1,
+      "message": "Can you merge those two functions?",
+      "range": {
+        "startLine": 1244,
+        "startChar": 0,
+        "endLine": 1267,
+        "endChar": 1
+      },
+      "revId": "511ce6f57284646469767f5bf4fe638d8c1cd7b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27fc1a93_da6a21bd",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-01-29T17:53:54Z",
+      "side": 1,
+      "message": "I think you can use vdev-\u003eregistered to avoid this parameter.",
+      "range": {
+        "startLine": 138,
+        "startChar": 50,
+        "endLine": 138,
+        "endChar": 61
+      },
+      "revId": "511ce6f57284646469767f5bf4fe638d8c1cd7b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0768c31a_e98eb817",
+        "filename": "test/unit/lib/vhost/test_vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-01-29T17:53:54Z",
+      "side": 1,
+      "message": "Line change.",
+      "revId": "511ce6f57284646469767f5bf4fe638d8c1cd7b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
