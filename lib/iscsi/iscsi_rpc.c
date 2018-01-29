@@ -826,7 +826,8 @@ spdk_rpc_add_portal_group(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
 	struct rpc_portal_group req = {};
-	struct spdk_iscsi_portal *portal_list[MAX_PORTAL] = {};
+	struct spdk_iscsi_portal_grp *pg = NULL;
+	struct spdk_iscsi_portal *portal;
 	struct spdk_json_write_ctx *w;
 	size_t i = 0;
 	int rc = -1;
@@ -838,21 +839,32 @@ spdk_rpc_add_portal_group(struct spdk_jsonrpc_request *request,
 		goto out;
 	}
 
+	pg = spdk_iscsi_portal_grp_create(req.tag);
+	if (pg == NULL) {
+		SPDK_ERRLOG("portal_grp_create failed\n");
+		goto out;
+	}
 	for (i = 0; i < req.portal_list.num_portals; i++) {
-		portal_list[i] = spdk_iscsi_portal_create(req.portal_list.portals[i].host,
-				 req.portal_list.portals[i].port,
-				 req.portal_list.portals[i].cpumask);
-		if (portal_list[i] == NULL) {
-			SPDK_ERRLOG("portal_list allocation failed\n");
+		portal = spdk_iscsi_portal_create(req.portal_list.portals[i].host,
+						  req.portal_list.portals[i].port,
+						  req.portal_list.portals[i].cpumask);
+		if (portal == NULL) {
+			SPDK_ERRLOG("portal_create failed\n");
 			goto out;
 		}
 	}
 
-	rc = spdk_iscsi_portal_grp_create_from_portal_list(req.tag, portal_list,
-			req.portal_list.num_portals);
+	rc = spdk_iscsi_portal_grp_register(pg);
+	if (rc != 0) {
+		SPDK_ERRLOG("portal_grp_register failed\n");
+		goto out;
+	}
 
-	if (rc < 0) {
-		SPDK_ERRLOG("create_from_portal_list failed\n");
+	rc = spdk_iscsi_portal_grp_open(pg);
+	if (rc != 0) {
+		SPDK_ERRLOG("portal_grp_open failed\n");
+		spdk_iscsi_portal_grp_close(pg);
+		goto out;
 	}
 
 out:
@@ -865,8 +877,8 @@ out:
 	} else {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 
-		for (; i > 0; --i) {
-			spdk_iscsi_portal_destroy(portal_list[i - 1]);
+		if (pg != NULL) {
+			spdk_iscsi_portal_grp_destroy(pg);
 		}
 	}
 	free_rpc_portal_group(&req);
