@@ -360,10 +360,10 @@ spdk_blob_opts_init(struct spdk_blob_opts *opts)
 {
 	opts->num_clusters = 0;
 	opts->thin_provision = false;
-	opts->xattr_count = 0;
-	opts->xattr_names = NULL;
-	opts->xattr_ctx = NULL;
-	opts->get_xattr_value = NULL;
+	opts->xattrs.count = 0;
+	opts->xattrs.names = NULL;
+	opts->xattrs.ctx = NULL;
+	opts->xattrs.get_value = NULL;
 }
 
 void
