@@ -365,6 +365,13 @@ void spdk_bs_create_snapshot(struct spdk_blob_store *bs, spdk_blob_id blobid,
 			     const struct spdk_blob_xattr_opts *snapshot_xattrs,
 			     spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
 
+/* Create a clone of specified read-only blob.
+ * Structure clone_xattrs as well as anything it references (like e.g. names
+ * array) must be valid until the completion is called. */
+void spdk_bs_create_clone(struct spdk_blob_store *bs, spdk_blob_id blobid,
+			  const struct spdk_blob_xattr_opts *clone_xattrs,
+			  spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
+
 /**
  * Delete an existing blob from the given blobstore.
  *
@@ -373,7 +380,7 @@ void spdk_bs_create_snapshot(struct spdk_blob_store *bs, spdk_blob_id blobid,
  * \param cb_fn Called when the operation is complete.
  * \param cb_arg Argument passed to function cb_fn.
  */
-=void spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
+void spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 			 spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /**
