@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ed7c8ead_f29b4ef7",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 3186,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T15:05:34Z",
+      "side": 1,
+      "message": "Please change tab here to single space.",
+      "range": {
+        "startLine": 3186,
+        "startChar": 43,
+        "endLine": 3186,
+        "endChar": 44
+      },
+      "revId": "bc05cb67abdb0fd44d712332d6638795acd36dde",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7821594_3f0f933b",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1155,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T15:05:34Z",
+      "side": 1,
+      "message": "Unnecessary change.",
+      "revId": "bc05cb67abdb0fd44d712332d6638795acd36dde",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
