@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-C_SRCS = blobstore.c request.c zeroes.c
+C_SRCS = blobstore.c request.c zeroes.c blob_bs_dev.c
 LIBNAME = blob
 
 DIRS-y += bdev
