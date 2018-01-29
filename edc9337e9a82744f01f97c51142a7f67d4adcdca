@@ -1,0 +1,107 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "956fca46_18f2b10a",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 45
+      },
+      "lineNbr": 637,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T14:35:44Z",
+      "side": 1,
+      "message": "This field refers to old blob pointer - probably one that was given during creation of the blob. Anyway it does not present anything meaningful and should not be used.",
+      "range": {
+        "startLine": 637,
+        "startChar": 26,
+        "endLine": 637,
+        "endChar": 41
+      },
+      "revId": "edc9337e9a82744f01f97c51142a7f67d4adcdca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c5d13aec_2c6e0054",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 45
+      },
+      "lineNbr": 643,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T14:35:44Z",
+      "side": 1,
+      "message": "Reason above might be why it fails during close.",
+      "range": {
+        "startLine": 643,
+        "startChar": 17,
+        "endLine": 643,
+        "endChar": 21
+      },
+      "revId": "edc9337e9a82744f01f97c51142a7f67d4adcdca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff43fb3a_7d111db5",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 45
+      },
+      "lineNbr": 654,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T14:35:44Z",
+      "side": 1,
+      "message": "There are two references to blobs, either blob pointer or blob_id. Blob pointer is valid as long as the blob is open, after it is closed it should no longer be used.\n\nThus opening blobs happens by using blob_id and in callback a blob pointer is presented. As highlighted here.",
+      "range": {
+        "startLine": 654,
+        "startChar": 39,
+        "endLine": 654,
+        "endChar": 61
+      },
+      "revId": "edc9337e9a82744f01f97c51142a7f67d4adcdca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d5f82d17_6db466e9",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 45
+      },
+      "lineNbr": 662,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T14:35:44Z",
+      "side": 1,
+      "message": "For now it might be best to assign blob pointer in this callback to lvs-\u003esuper_blob.",
+      "revId": "edc9337e9a82744f01f97c51142a7f67d4adcdca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "97529fec_deafb6a4",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 45
+      },
+      "lineNbr": 379,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T14:35:44Z",
+      "side": 1,
+      "message": "Please rebase on master and change RPC accordingly.",
+      "revId": "edc9337e9a82744f01f97c51142a7f67d4adcdca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
