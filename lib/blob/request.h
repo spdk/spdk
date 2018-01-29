@@ -212,11 +212,15 @@ void spdk_bs_batch_unmap_blob(spdk_bs_batch_t *batch, struct spdk_blob *blob,
 void spdk_bs_batch_write_zeroes_blob(spdk_bs_batch_t *batch, struct spdk_blob *blob,
 				     uint64_t offset, uint64_t length);
 
+void spdk_bs_batch_set_errno(spdk_bs_batch_t *batch, int bserrno);
+
 void spdk_bs_batch_close(spdk_bs_batch_t *batch);
 
 spdk_bs_batch_t *spdk_bs_sequence_to_batch(spdk_bs_sequence_t *seq,
 		spdk_bs_sequence_cpl cb_fn,
 		void *cb_arg);
+
+spdk_bs_sequence_t *spdk_bs_batch_to_sequence(spdk_bs_batch_t *batch);
 
 spdk_bs_user_op_t *spdk_bs_user_op_alloc(struct spdk_io_channel *channel, struct spdk_bs_cpl *cpl,
 		enum spdk_blob_op_type op_type, struct spdk_blob *blob,
@@ -225,5 +229,7 @@ spdk_bs_user_op_t *spdk_bs_user_op_alloc(struct spdk_io_channel *channel, struct
 void spdk_bs_user_op_execute(spdk_bs_user_op_t *op);
 
 void spdk_bs_user_op_abort(spdk_bs_user_op_t *op);
+
+void spdk_bs_sequence_to_batch_completion(void *cb_arg, int bserrno);
 
 #endif
