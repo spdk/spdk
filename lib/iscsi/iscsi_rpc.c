@@ -896,7 +896,7 @@ spdk_rpc_delete_portal_group(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	pg = spdk_iscsi_portal_grp_find_by_tag(req.tag);
+	pg = spdk_iscsi_portal_grp_unregister(req.tag);
 	if (!pg) {
 		goto invalid;
 	}
