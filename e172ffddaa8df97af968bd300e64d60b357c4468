@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dec2bd03_24e9af56",
+        "filename": "app/nvmf_tgt/nvmf_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 647,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-29T18:21:43Z",
+      "side": 1,
+      "message": "Need to free the strings inside ctx here as well.",
+      "revId": "e172ffddaa8df97af968bd300e64d60b357c4468",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c4ba614_e93aa6c6",
+        "filename": "app/nvmf_tgt/nvmf_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 665,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-29T18:21:43Z",
+      "side": 1,
+      "message": "I think I would prefer this as a separate RPC (nvmf_subsystem_allow_any_host) that would get the current state of the flag if sent with no parameters, or set the state if a bool \"enabled\" parameter is provided.  See the \"context_switch_monitor\" RPC for an example of how I think this should work.",
+      "revId": "e172ffddaa8df97af968bd300e64d60b357c4468",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac124848_2074a35b",
+        "filename": "app/nvmf_tgt/nvmf_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 701,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-29T18:21:43Z",
+      "side": 1,
+      "message": "Need to free the strings in ctx on all of the error paths.",
+      "revId": "e172ffddaa8df97af968bd300e64d60b357c4468",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
