@@ -22,6 +22,30 @@
       "revId": "229aa98d7e6e838da10bf84d3cf322d043caed57",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8f20ca9_07567e4f",
+        "filename": "test/iscsi_tgt/idle_migration/idle_migration.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-01-29T15:40:42Z",
+      "side": 1,
+      "message": "Yeah, I think that you\u0027re right there. I was just trying to match the all caps names of the bash variables (i.e. SPDK_TEST_UNITTEST) but I can see how we would want to limit that as much as possible.",
+      "parentUuid": "2be3f704_b4467aa5",
+      "range": {
+        "startLine": 58,
+        "startChar": 24,
+        "endLine": 58,
+        "endChar": 52
+      },
+      "revId": "229aa98d7e6e838da10bf84d3cf322d043caed57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
