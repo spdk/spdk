@@ -45,6 +45,7 @@ static int
 test_setup(void)
 {
 	TAILQ_INIT(&g_spdk_iscsi.portal_head);
+	pthread_mutex_init(&g_spdk_iscsi.mutex, NULL);
 	return 0;
 }
 
