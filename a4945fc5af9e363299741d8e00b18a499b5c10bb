@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da575987_36bc611e",
+        "filename": "scripts/rpc/lvol.py",
+        "patchSetId": 47
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-29T10:11:13Z",
+      "side": 1,
+      "message": "Please check the RPC before submitting. This should be above the client.call.",
+      "range": {
+        "startLine": 22,
+        "startChar": 0,
+        "endLine": 23,
+        "endChar": 54
+      },
+      "revId": "a4945fc5af9e363299741d8e00b18a499b5c10bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
