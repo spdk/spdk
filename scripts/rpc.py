@@ -275,6 +275,8 @@ if __name__ == "__main__":
     p.set_defaults(func=rpc.lvol.destroy_lvol_store)
 
     p = subparsers.add_parser('get_lvol_stores', help='Display current logical volume store list')
+    p.add_argument('-u', '--uuid', help='lvol store UUID', required=False)
+    p.add_argument('-l', '--lvs_name', help='lvol store name', required=False)
     p.set_defaults(func=rpc.lvol.get_lvol_stores)
 
     # nbd
