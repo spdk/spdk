@@ -469,7 +469,7 @@ bdev_malloc_get_spdk_running_config(FILE *fp)
 			"\n"
 			"# Users may change this section to create a different number or size of\n"
 			"# malloc LUNs.\n"
-			"# This will generate %d LUNs with a malloc-allocated backend. Each LUN \n"
+			"# This will generate %d LUNs with a malloc-allocated backend. Each LUN\n"
 			"# will be %" PRIu64 "MB in size and these will be named Malloc0 through Malloc%d.\n"
 			"# Not all LUNs defined here are necessarily used below.\n"
 			"[Malloc]\n"

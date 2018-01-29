@@ -426,7 +426,7 @@ dump_result(struct thread_entry *threads, uint32_t num_threads)
 		total_failed += t->xfer_failed;
 		total_failed += t->fill_failed;
 		if (t->xfer_completed || t->xfer_failed)
-			printf("lcore = %d, copy success = %ld, copy failed = %ld, fill success = %ld, fill failed = %ld \n",
+			printf("lcore = %d, copy success = %ld, copy failed = %ld, fill success = %ld, fill failed = %ld\n",
 			       t->lcore_id, t->xfer_completed, t->xfer_failed, t->fill_completed, t->fill_failed);
 	}
 	return total_failed ? 1 : 0;

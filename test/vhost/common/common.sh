@@ -555,7 +555,7 @@ function vm_setup()
 					[[ ! -e $raw_disk ]]; then
 					if [[ $raw_disk =~ /dev/.* ]]; then
 						error \
-							"ERROR: Virtio disk point to missing device ($raw_disk) - \n" \
+							"ERROR: Virtio disk point to missing device ($raw_disk) -\n" \
 							"       this is probably not what you want."
 							return 1
 					fi
