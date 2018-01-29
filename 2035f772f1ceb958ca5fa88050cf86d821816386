@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "04d1dbf7_da3d7f20",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1080,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-29T13:16:16Z",
+      "side": 1,
+      "message": "Thank you. I understood that ordering of the destroying flag and the qos_thread pointer looks correct and other library also utilizes async mechanism like this.",
+      "parentUuid": "f353a813_f1f33db5",
+      "range": {
+        "startLine": 1077,
+        "startChar": 0,
+        "endLine": 1080,
+        "endChar": 4
+      },
+      "revId": "2035f772f1ceb958ca5fa88050cf86d821816386",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e4883cf9_e0cc145b",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 28
