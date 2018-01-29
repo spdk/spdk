@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f353a813_f1f33db5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1080,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-29T10:57:05Z",
+      "side": 1,
+      "message": "Maybe here callback and the flag serves the same purpose. Use this flag is to send another create message after the destroy message as the message process is naturally serialized in SPDK application framework.",
+      "parentUuid": "065d8361_a9b67aed",
+      "range": {
+        "startLine": 1077,
+        "startChar": 0,
+        "endLine": 1080,
+        "endChar": 4
+      },
+      "revId": "2035f772f1ceb958ca5fa88050cf86d821816386",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e4883cf9_e0cc145b",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 28
@@ -59,6 +83,30 @@
       "writtenOn": "2018-01-29T09:25:00Z",
       "side": 1,
       "message": "Even if bdev-\u003echannel_count must be guarded by mutex, the value of count should be cached.\n\nTwo channel may observe count \u003d\u003d 0 simultaneously.\nthread 1: count-- -\u003e count \u003d 1\nthread 2: count-- -\u003e count \u003d 0\nboth thread 1 and thread 2 may observe count \u003d\u003d 0 in the if() condition.\n\n\npthread_mutex_lock(\u0026bdev-\u003emutex);\nbdev-\u003echannel_count--;\ncount \u003d bdev-\u003echannel_count;\npthread_mutex_unlock(\u0026bdev-\u003emutex);\nif (count \u003d\u003d 0 \u0026\u0026 ...)",
+      "range": {
+        "startLine": 1279,
+        "startChar": 5,
+        "endLine": 1279,
+        "endChar": 24
+      },
+      "revId": "2035f772f1ceb958ca5fa88050cf86d821816386",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a487b4a7_8060a9c1",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1279,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-29T10:57:05Z",
+      "side": 1,
+      "message": "Good point. Thanks.",
+      "parentUuid": "8bfb3079_b0430620",
       "range": {
         "startLine": 1279,
         "startChar": 5,
