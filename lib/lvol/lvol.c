@@ -43,6 +43,8 @@
 /* Default blob channel opts for lvol */
 #define SPDK_LVOL_BLOB_OPTS_CHANNEL_OPS 512
 
+#define LVOL_NAME "name"
+
 SPDK_LOG_REGISTER_COMPONENT("lvol", SPDK_LOG_LVOL)
 
 static TAILQ_HEAD(, spdk_lvol_store) g_lvol_stores = TAILQ_HEAD_INITIALIZER(g_lvol_stores);
@@ -842,24 +844,6 @@ _spdk_lvol_destroy_cb(void *cb_arg, int lvolerrno)
 	spdk_bs_delete_blob(bs, lvol->blob_id, _spdk_lvol_delete_blob_cb, req);
 }
 
-
-static void
-_spdk_lvol_sync_cb(void *cb_arg, int lvolerrno)
-{
-	struct spdk_lvol_with_handle_req *req = cb_arg;
-	struct spdk_lvol *lvol = req->lvol;
-
-	if (lvolerrno != 0) {
-		spdk_blob_close(lvol->blob, _spdk_lvol_destroy_cb, req);
-		return;
-	}
-	lvol->ref_count++;
-
-	assert(req->cb_fn != NULL);
-	req->cb_fn(req->cb_arg, req->lvol, lvolerrno);
-	free(req);
-}
-
 static void
 _spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 {
@@ -888,20 +872,11 @@ _spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 		return;
 	}
 
-	lvolerrno = spdk_blob_resize(blob, lvol->num_clusters);
-	if (lvolerrno < 0) {
-		spdk_blob_close(blob, _spdk_lvol_destroy_cb, req);
-		return;
-	}
+	lvol->ref_count++;
 
-	lvolerrno = spdk_blob_set_xattr(blob, "name", lvol->name,
-					strnlen(lvol->name, SPDK_LVOL_NAME_MAX) + 1);
-	if (lvolerrno < 0) {
-		spdk_blob_close(blob, _spdk_lvol_destroy_cb, req);
-		return;
-	}
-
-	spdk_blob_sync_md(blob, _spdk_lvol_sync_cb, req);
+	assert(req->cb_fn != NULL);
+	req->cb_fn(req->cb_arg, req->lvol, lvolerrno);
+	free(req);
 }
 
 static void
@@ -923,6 +898,18 @@ _spdk_lvol_create_cb(void *cb_arg, spdk_blob_id blobid, int lvolerrno)
 	spdk_bs_open_blob(bs, blobid, _spdk_lvol_create_open_cb, req);
 }
 
+static void
+spdk_lvol_get_xattr_value(void *xattr_ctx, const char *name,
+			  const void **value, size_t *value_len)
+{
+	struct spdk_lvol *lvol = xattr_ctx;
+
+	if (!strcmp(LVOL_NAME, name)) {
+		*value = lvol->name;
+		*value_len = SPDK_LVOL_NAME_MAX;
+	}
+}
+
 int
 spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 		 bool thin_provision, spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
@@ -931,7 +918,8 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	struct spdk_blob_store *bs;
 	struct spdk_lvol *lvol, *tmp;
 	struct spdk_blob_opts opts;
-	uint64_t num_clusters, free_clusters;
+	uint64_t num_clusters;
+	char *xattr_name = LVOL_NAME;
 
 	if (lvs == NULL) {
 		SPDK_ERRLOG("lvol store does not exist\n");
@@ -957,14 +945,6 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 
 	bs = lvs->blobstore;
 
-	num_clusters = divide_round_up(sz, spdk_bs_get_cluster_size(bs));
-	free_clusters = spdk_bs_free_cluster_count(bs);
-	if (num_clusters > free_clusters) {
-		SPDK_ERRLOG("Not enough free clusters left (%zu) on lvol store to add lvol %zu clusters\n",
-			    free_clusters, num_clusters);
-		return -ENOMEM;
-	}
-
 	req = calloc(1, sizeof(*req));
 	if (!req) {
 		SPDK_ERRLOG("Cannot alloc memory for lvol request pointer\n");
@@ -981,6 +961,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	}
 
 	lvol->lvol_store = lvs;
+	num_clusters = divide_round_up(sz, spdk_bs_get_cluster_size(bs));
 	lvol->num_clusters = num_clusters;
 	lvol->close_only = false;
 	strncpy(lvol->name, name, SPDK_LVS_NAME_MAX);
@@ -988,6 +969,11 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 
 	spdk_blob_opts_init(&opts);
 	opts.thin_provision = thin_provision;
+	opts.num_clusters = num_clusters;
+	opts.xattr_count = 1;
+	opts.xattr_names = &xattr_name;
+	opts.xattr_ctx = lvol;
+	opts.get_xattr_value = spdk_lvol_get_xattr_value;
 
 	spdk_bs_create_blob_ext(lvs->blobstore, &opts, _spdk_lvol_create_cb, req);
 
