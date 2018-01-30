@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "440fc975_740dc856",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 596,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-30T22:42:46Z",
+      "side": 1,
+      "message": "this line looks a bit long - maybe move page_count to next line?",
+      "revId": "4c4d4ce5fee76e6f46e84c3b17319c35cc7e8515",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb9c413d_0c2c749f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 597,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-30T22:42:46Z",
+      "side": 1,
+      "message": "buf should not be tabbed over",
+      "revId": "4c4d4ce5fee76e6f46e84c3b17319c35cc7e8515",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "923be641_f8ae92d5",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 676,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-30T22:42:46Z",
+      "side": 1,
+      "message": "this needs to check return code, and return immediately if it is !\u003d 0",
+      "revId": "4c4d4ce5fee76e6f46e84c3b17319c35cc7e8515",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
