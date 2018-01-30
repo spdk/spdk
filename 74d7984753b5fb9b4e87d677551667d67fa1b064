@@ -16,6 +16,24 @@
       "revId": "74d7984753b5fb9b4e87d677551667d67fa1b064",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "84d5430f_673ea8cb",
+        "filename": "etc/spdk/vhost.conf.in",
+        "patchSetId": 2
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-30T15:48:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c017abe9_8536ae23",
+      "revId": "74d7984753b5fb9b4e87d677551667d67fa1b064",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
