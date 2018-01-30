@@ -52,7 +52,12 @@ function usage() {
                                     601 'construct_lvol_store_with_cluster_size_min',
                                     650: 'tasting_positive',
                                     651: 'tasting_lvol_store_positive',
-                                    700: 'SIGTERM'
+                                    700: 'rename_positive',
+                                    701: 'rename_lvs_nonexistent',
+                                    702: 'rename_lvs_EEXIST',
+                                    703: 'rename_lvol_bdev_nonexistent',
+                                    704: 'rename_lvol_bdev_EEXIST',
+                                    800: 'SIGTERM'
                                     or
                                     all: This parameter runs all tests
                                     Ex: \"1,2,19,20\", default: all"
