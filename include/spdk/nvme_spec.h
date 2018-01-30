@@ -98,8 +98,12 @@ union spdk_nvme_cap_register {
 		/** command sets supported */
 		uint32_t css_nvm	: 1;
 
-		uint32_t css_reserved	: 3;
-		uint32_t reserved2	: 7;
+		uint32_t css_reserved	: 7;
+
+		/** boot partition support */
+		uint32_t bps		: 1;
+
+		uint32_t reserved2	: 2;
 
 		/** memory page size minimum */
 		uint32_t mpsmin		: 4;
