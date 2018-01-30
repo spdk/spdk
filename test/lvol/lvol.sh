@@ -50,9 +50,15 @@ function usage() {
                                     550: 'delete_bdev_positive',
                                     600: 'construct_lvol_store_with_cluster_size_max',
                                     601 'construct_lvol_store_with_cluster_size_min',
-                                    650: 'tasting_positive',
-                                    651: 'tasting_lvol_store_positive',
-                                    700: 'SIGTERM'
+                                    650: 'thin_provisioning_check_space',
+                                    651: 'thin_provisioning_read_empty_bdev',
+                                    652: 'thin_provisionind_data_integrity_test',
+                                    653: 'thin_provisioning_resize',
+                                    654: 'thin_overprovisioning',
+                                    655: 'thin_provisioning_filling_disks_less_than_lvs_size',
+                                    700: 'tasting_positive',
+                                    701: 'tasting_lvol_store_positive',
+                                    750: 'SIGTERM'
                                     or
                                     all: This parameter runs all tests
                                     Ex: \"1,2,19,20\", default: all"
@@ -85,6 +91,7 @@ source $TEST_DIR/scripts/autotest_common.sh
 ###  Function starts vhost app
 function vhost_start()
 {
+    modprobe nbd
     touch $BASE_DIR/vhost.conf
     $TEST_DIR/scripts/gen_nvme.sh >> $BASE_DIR/vhost.conf
     $TEST_DIR/app/vhost/vhost -c $BASE_DIR/vhost.conf &
@@ -102,6 +109,7 @@ function vhost_kill()
     fi
     rm $BASE_DIR/vhost.pid || true
     rm $BASE_DIR/vhost.conf || true
+    rmmod nbd || true
 }
 
 trap "vhost_kill; exit 1" SIGINT SIGTERM EXIT
