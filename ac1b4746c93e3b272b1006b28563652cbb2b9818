@@ -1,0 +1,153 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f6e6bdd4_51c61942",
+        "filename": "lib/blob/blob_bs_dev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-30T12:10:52Z",
+      "side": 1,
+      "message": "Please provide at least SPDK_ERRLOG() when bserrno is negative.",
+      "revId": "ac1b4746c93e3b272b1006b28563652cbb2b9818",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f098ed8f_f34ea17d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 781,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-30T12:10:52Z",
+      "side": 1,
+      "message": "This is identical for error path below, maybe a goto error to reduce code duplication ?",
+      "range": {
+        "startLine": 776,
+        "startChar": 0,
+        "endLine": 781,
+        "endChar": 9
+      },
+      "revId": "ac1b4746c93e3b272b1006b28563652cbb2b9818",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2149476c_f4133e92",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 804,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-30T12:10:52Z",
+      "side": 1,
+      "message": "Align please",
+      "range": {
+        "startLine": 803,
+        "startChar": 0,
+        "endLine": 804,
+        "endChar": 17
+      },
+      "revId": "ac1b4746c93e3b272b1006b28563652cbb2b9818",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff7d7869_aab6fd2a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 854,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-30T12:10:52Z",
+      "side": 1,
+      "message": "Please add comment describing which case is where.\nThis looks fine and might be nitpicking, wouldn\u0027t it look cleaner when:",
+      "revId": "ac1b4746c93e3b272b1006b28563652cbb2b9818",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "859f2c75_af2865bb",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 859,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-30T12:10:52Z",
+      "side": 1,
+      "message": "return after calling spdk_bs_open_blob",
+      "range": {
+        "startLine": 858,
+        "startChar": 2,
+        "endLine": 859,
+        "endChar": 42
+      },
+      "revId": "ac1b4746c93e3b272b1006b28563652cbb2b9818",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef2bb9ca_6178b781",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 863,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-30T12:10:52Z",
+      "side": 1,
+      "message": "No else statement and load_final - just assignment of back_bs_dev.",
+      "range": {
+        "startLine": 860,
+        "startChar": 0,
+        "endLine": 863,
+        "endChar": 3
+      },
+      "revId": "ac1b4746c93e3b272b1006b28563652cbb2b9818",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f22ce97e_75d368c8",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 866,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-30T12:10:52Z",
+      "side": 1,
+      "message": "This moved below (outside of else) to be called for both cases that are not snapshot blob ?",
+      "range": {
+        "startLine": 866,
+        "startChar": 1,
+        "endLine": 866,
+        "endChar": 38
+      },
+      "revId": "ac1b4746c93e3b272b1006b28563652cbb2b9818",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
