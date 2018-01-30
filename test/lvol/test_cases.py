@@ -20,7 +20,7 @@ def test_counter():
     '''
     :return: the number of tests
     '''
-    return 37
+    return 42
 
 
 def header(num):
@@ -61,6 +61,11 @@ def header(num):
         655: 'thin_provisioning_filling_disks_less_than_lvs_size',
         700: 'tasting_positive',
         701: 'tasting_lvol_store_positive',
+        800: 'rename_positive',
+        801: 'rename_lvs_nonexistent',
+        802: 'rename_lvs_EEXIST',
+        803: 'rename_lvol_bdev_nonexistent',
+        804: 'rename_lvol_bdev_EEXIST',
         10000: 'SIGTERM',
     }
     print("========================================================")
@@ -1065,6 +1070,224 @@ class TestCases(object):
         if self.c.destroy_lvol_store(uuid_store) != 0:
             fail_count += 1
         footer(701)
+        return fail_count
+
+    def test_case800(self):
+        header(800)
+        fail_count = 0
+
+        bdev_size = (self.total_size - 1) / 4
+        bdev_uuids = []
+        bdev_names = [self.lbd_name + str(i) for i in range(4)]
+        bdev_aliases = ["/".join([self.lvs_name, name]) for name in bdev_names]
+
+        # Create a lvol store with 4 lvol bdevs
+        base_name = self.c.construct_malloc_bdev(self.total_size,
+                                                 self.block_size)
+        lvs_uuid = self.c.construct_lvol_store(base_name,
+                                               self.lvs_name,
+                                               self.cluster_size)
+        fail_count += self.c.check_get_lvol_stores(base_name,
+                                                   lvs_uuid,
+                                                   self.cluster_size,
+                                                   self.lvs_name)
+        for name, alias in zip(bdev_names, bdev_aliases):
+            uuid = self.c.construct_lvol_bdev(lvs_uuid,
+                                              name,
+                                              bdev_size)
+            fail_count += self.c.check_get_bdevs_methods(uuid,
+                                                         bdev_size,
+                                                         alias)
+            bdev_uuids.append(uuid)
+
+        # Rename lvol store and check if lvol store name and
+        # lvol bdev aliases were updated properly
+        new_lvs_name = "lvs_new"
+        bdev_aliases = [alias.replace(self.lvs_name, new_lvs_name) for alias in bdev_aliases]
+
+        fail_count += self.c.rename_lvol_store(self.lvs_name, new_lvs_name)
+
+        fail_count += self.c.check_get_lvol_stores(base_name,
+                                                   lvs_uuid,
+                                                   self.cluster_size,
+                                                   new_lvs_name)
+
+        for uuid, alias in zip(bdev_uuids, bdev_aliases):
+            fail_count += self.c.check_get_bdevs_methods(uuid,
+                                                         bdev_size,
+                                                         alias)
+
+        # Now try to rename the bdevs using their uuid as "old_name"
+        bdev_names = ["lbd_new" + str(i) for i in range(4)]
+        bdev_aliases = ["/".join([new_lvs_name, name]) for name in bdev_names]
+        print(bdev_aliases)
+        for uuid, new_name, new_alias in zip(bdev_uuids, bdev_names, bdev_aliases):
+            fail_count += self.c.rename_lvol_bdev(uuid, new_name)
+            fail_count += self.c.check_get_bdevs_methods(uuid,
+                                                         bdev_size,
+                                                         new_alias)
+        # Same thing but only use aliases
+        bdev_names = ["lbd_even_newer" + str(i) for i in range(4)]
+        new_bdev_aliases = ["/".join([new_lvs_name, name]) for name in bdev_names]
+        print(bdev_aliases)
+        for uuid, old_alias, new_alias, new_name in zip(bdev_uuids, bdev_aliases, new_bdev_aliases, bdev_names):
+            fail_count += self.c.rename_lvol_bdev(old_alias, new_name)
+            fail_count += self.c.check_get_bdevs_methods(uuid,
+                                                         bdev_size,
+                                                         new_alias)
+
+        # Delete configuration using names after rename operation
+        for bdev in new_bdev_aliases:
+            fail_count += self.c.delete_bdev(bdev)
+        fail_count += self.c.destroy_lvol_store(new_lvs_name)
+        fail_count += self.c.delete_bdev(base_name)
+
+        footer(800)
+        return fail_count
+
+    def test_case801(self):
+        header(801)
+        fail_count = 0
+        if self.c.rename_lvol_store("NOTEXIST", "WHATEVER") == 0:
+            fail_count += 1
+        footer(801)
+        return fail_count
+
+    def test_case802(self):
+        header(802)
+        fail_count = 0
+
+        lvs_name_1 = "lvs_1"
+        lvs_name_2 = "lvs_2"
+
+        # Create lists with lvol bdev names and aliases for later use
+        bdev_names_1 = ["lvol_1_" + str(i) for i in range(4)]
+        bdev_aliases_1 = ["/".join([lvs_name_1, name]) for name in bdev_names_1]
+        bdev_uuids_1 = []
+        bdev_names_2 = ["lvol_2_" + str(i) for i in range(4)]
+        bdev_aliases_2 = ["/".join([lvs_name_2, name]) for name in bdev_names_2]
+        bdev_uuids_2 = []
+        bdev_size = (self.total_size - 1) / 4
+
+        base_bdev_1 = self.c.construct_malloc_bdev(self.total_size,
+                                                   self.block_size)
+        base_bdev_2 = self.c.construct_malloc_bdev(self.total_size,
+                                                   self.block_size)
+
+        # Create lvol store on each malloc bdev
+        lvs_uuid_1 = self.c.construct_lvol_store(base_bdev_1,
+                                                 lvs_name_1,
+                                                 self.cluster_size)
+        fail_count += self.c.check_get_lvol_stores(base_bdev_1,
+                                                   lvs_uuid_1,
+                                                   self.cluster_size,
+                                                   lvs_name_1)
+        lvs_uuid_2 = self.c.construct_lvol_store(base_bdev_2,
+                                                 lvs_name_2,
+                                                 self.cluster_size)
+        fail_count += self.c.check_get_lvol_stores(base_bdev_2,
+                                                   lvs_uuid_2,
+                                                   self.cluster_size,
+                                                   lvs_name_2)
+
+        # Create 4 lvol bdevs on top of each lvol store
+        for name, alias in zip(bdev_names_1, bdev_aliases_1):
+            uuid = self.c.construct_lvol_bdev(lvs_uuid_1,
+                                              name,
+                                              bdev_size)
+            fail_count += self.c.check_get_bdevs_methods(uuid,
+                                                         bdev_size,
+                                                         alias)
+            bdev_uuids_1.append(uuid)
+        for name, alias in zip(bdev_names_2, bdev_aliases_2):
+            uuid = self.c.construct_lvol_bdev(lvs_uuid_2,
+                                              name,
+                                              bdev_size)
+            fail_count += self.c.check_get_bdevs_methods(uuid,
+                                                         bdev_size,
+                                                         alias)
+            bdev_uuids_2.append(uuid)
+
+        # Try to rename lvol store to already existing name
+        if self.c.rename_lvol_store(lvs_name_1, lvs_name_2) == 0:
+            fail_count += 1
+
+        # Verify that names of lvol stores and lvol bdevs did not change
+        fail_count += self.c.check_get_lvol_stores(base_bdev_1,
+                                                   lvs_uuid_1,
+                                                   self.cluster_size,
+                                                   lvs_name_1)
+        fail_count += self.c.check_get_lvol_stores(base_bdev_2,
+                                                   lvs_uuid_2,
+                                                   self.cluster_size,
+                                                   lvs_name_2)
+
+        for name, alias, uuid in zip(bdev_names_1, bdev_aliases_1, bdev_uuids_1):
+            fail_count += self.c.check_get_bdevs_methods(uuid,
+                                                         bdev_size,
+                                                         alias)
+
+        for name, alias, uuid in zip(bdev_names_2, bdev_aliases_2, bdev_uuids_2):
+            fail_count += self.c.check_get_bdevs_methods(uuid,
+                                                         bdev_size,
+                                                         alias)
+
+        # Clean configuration
+        for lvol_uuid in bdev_uuids_1 + bdev_uuids_2:
+            fail_count += self.c.delete_bdev(lvol_uuid)
+        fail_count += self.c.destroy_lvol_store(lvs_uuid_1)
+        fail_count += self.c.destroy_lvol_store(lvs_uuid_2)
+        fail_count += self.c.delete_bdev(base_bdev_1)
+        fail_count += self.c.delete_bdev(base_bdev_2)
+
+        footer(802)
+        return fail_count
+
+    def test_case803(self):
+        header(803)
+        fail_count = 0
+        if self.c.rename_lvol_bdev("NOTEXIST", "WHATEVER") == 0:
+            fail_count += 1
+        footer(803)
+        return fail_count
+
+    def test_case804(self):
+        header(804)
+        fail_count = 0
+        bdev_size = (self.total_size - 1) / 2
+
+        base_bdev = self.c.construct_malloc_bdev(self.total_size,
+                                                 self.block_size)
+        lvs_uuid = self.c.construct_lvol_store(base_bdev,
+                                               self.lvs_name,
+                                               self.cluster_size)
+        fail_count += self.c.check_get_lvol_stores(base_bdev,
+                                                   lvs_uuid,
+                                                   self.cluster_size,
+                                                   self.lvs_name)
+        bdev_uuid_1 = self.c.construct_lvol_bdev(lvs_uuid,
+                                                 self.lbd_name + "1",
+                                                 bdev_size)
+        fail_count += self.c.check_get_bdevs_methods(bdev_uuid_1,
+                                                     bdev_size)
+        bdev_uuid_2 = self.c.construct_lvol_bdev(lvs_uuid,
+                                                 self.lbd_name + "2",
+                                                 bdev_size)
+        fail_count += self.c.check_get_bdevs_methods(bdev_uuid_2,
+                                                     bdev_size)
+
+        if self.c.rename_lvol_bdev(self.lbd_name + "1", self.lbd_name + "2") == 0:
+            fail_count += 1
+        fail_count += self.c.check_get_bdevs_methods(bdev_uuid_1,
+                                                     bdev_size,
+                                                     "/".join([self.lvs_name, self.lbd_name + "1"]))
+
+        fail_count += self.c.delete_bdev(bdev_uuid_1)
+        fail_count += self.c.delete_bdev(bdev_uuid_2)
+        fail_count += self.c.destroy_lvol_store(lvs_uuid)
+        fail_count += self.c.delete_bdev(base_bdev)
+
+        footer(804)
         return fail_count
 
     def test_case10000(self):
