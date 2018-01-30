@@ -836,6 +836,91 @@ Expected result:
 - calls successful, return code = 0
 - no other operation fails
 
+### logical volume rename tests
+
+#### TEST CASE 800 - Name: rename_positive
+Positive test for lvol store and lvol bdev rename.
+Steps:
+- create malloc bdev
+- construct lvol store on malloc bdev
+- create 4 lvol bdevs on top of previously created lvol store
+- rename lvol store; verify that lvol store friendly name was
+  updated in get_lvol_stores output; verify that prefix in lvol bdevs
+  friendly names were also updated
+- rename lvol bdevs; use lvols UUID's to point which lvol bdev name to change;
+  verify that all bdev names were successfully updated
+- rename lvol bdevs; use lvols alias name to point which lvol bdev
+  name to change; verify that all bdev names were successfully updated
+- clean running configuration: delete lvol bdevs, destroy lvol store,
+  delete malloc bdev; use lvol store and lvol bdev friendly names to for delete
+  and destroy commands to check if new names can be correctly used for performing
+  other RPC operations;
+
+Expected results:
+- lvol store and lvol bdevs correctly created
+- lvol store and lvol bdevs names updated after renaming operation
+- lvol store and lvol bdevs possible to delete using new names
+- no other operation fails
+
+#### TEST CASE 801 - Name: rename_lvs_nonexistent
+Negative test case for lvol store rename.
+Check that error is returned when trying to rename not exisitng lvol store.
+
+Steps:
+- call rename_lvol_store with name pointing to not exisitng lvol store
+
+Expected results:
+- rename_lvol_store return code != 0
+- no other operation fails
+
+#### TEST CASE 802 - Name: rename_lvs_EEXIST
+Negative test case for lvol store rename.
+Check that error is returned when trying to rename to a name which is already
+used by another lvol store.
+
+Steps:
+- create 2 malloc bdevs
+- construct lvol store on each malloc bdev
+- on each lvol store create 4 lvol bdevs
+- call rename_lvol_store on first lvol store and try to change its name to
+  the same name as used by second lvol store
+- verify that both lvol stores still have the same names as before
+- verify that lvol bdev have the same aliases as before
+
+Expected results:
+- rename_lvol_store return code != 0; not possible to rename to already
+  used name
+- no other operation fails
+
+#### TEST CASE 803 - Name: rename_lvol_bdev_nonexistent
+Negative test case for lvol bdev rename.
+Check that error is returned when trying to rename not exisitng lvol bdev.
+
+Steps:
+- call rename_lvol_bdev with name pointing to not exisitng lvol bdev
+
+Expected results:
+- rename_lvol_bdev return code != 0
+- no other operation fails
+
+#### TEST CASE 804 - Name: rename_lvol_bdev_EEXIST
+Negative test case for lvol bdev rename.
+Check that error is returned when trying to rename to a name which is already
+used by another lvol bdev.
+
+Steps:
+- create malloc bdev
+- construct lvol store on malloc bdev
+- construct 2 lvol bdevs on lvol store
+- call rename_lvol_bdev on first lvol bdev and try to change its name to
+  the same name as used by second lvol bdev
+- verify that both lvol bdev still have the same names as before
+
+Expected results:
+- rename_lvol_bdev return code != 0; not possible to rename to already
+  used name
+- no other operation fails
+
 ### SIGTERM
 
 #### TEST CASE 10000 - Name: SIGTERM
