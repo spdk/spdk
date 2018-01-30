@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a162e97_4b469273",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 30
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-30T08:31:11Z",
+      "side": 1,
+      "message": "This is not in test plan: https://review.gerrithub.io/#/c/391257/12/test/lvol/test_plan.md.\n\nUpdate it accordingly.",
+      "range": {
+        "startLine": 57,
+        "startChar": 41,
+        "endLine": 57,
+        "endChar": 92
+      },
+      "revId": "f6902eb34d795161c2b4923f8a0ad60925167fd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
