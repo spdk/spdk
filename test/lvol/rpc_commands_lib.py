@@ -28,15 +28,24 @@ class Commands_Rpc(object):
     def __init__(self, rpc_py):
         self.rpc = Spdk_Rpc(rpc_py)
 
-    def check_get_bdevs_methods(self, uuid_bdev, bdev_size_mb):
+    def check_get_bdevs_methods(self, uuid_bdev, bdev_size_mb, bdev_alias=""):
         print("INFO: Check RPC COMMAND get_bdevs")
         output = self.rpc.get_bdevs()[0]
         json_value = json.loads(output)
         for i in range(len(json_value)):
             uuid_json = json_value[i]['name']
+            aliases = json_value[i]['aliases']
+
             if uuid_bdev in [uuid_json]:
                 print("Info: UUID:{uuid} is found in RPC Command: "
                       "gets_bdevs response".format(uuid=uuid_bdev))
+                # Check if human-friendly alias is as expected
+                if bdev_alias and aliases:
+                    if bdev_alias not in aliases:
+                        print("ERROR: Expected bdev alias not found")
+                        print("Expected: {name}".format(name=bdev_alias))
+                        print("Actual: {aliases}".format(aliases=aliases))
+                        return 1
                 # num_block and block_size have values in bytes
                 num_blocks = json_value[i]['num_blocks']
                 block_size = json_value[i]['block_size']
@@ -52,7 +61,7 @@ class Commands_Rpc(object):
                                     json_value=json_value))
         return 1
 
-    def check_get_lvol_stores(self, base_name, uuid, cluster_size=None):
+    def check_get_lvol_stores(self, base_name, uuid, cluster_size=None, lvs_name=""):
         print("INFO: RPC COMMAND get_lvol_stores")
         json_value = self.get_lvol_stores()
         if json_value:
@@ -60,6 +69,7 @@ class Commands_Rpc(object):
                 json_uuid = json_value[i]['uuid']
                 json_cluster = json_value[i]['cluster_size']
                 json_base_name = json_value[i]['base_bdev']
+                json_name = json_value[i]['name']
 
                 if base_name in json_base_name \
                         and uuid in json_uuid:
@@ -77,6 +87,14 @@ class Commands_Rpc(object):
                             print("ERROR: Wrong cluster size in lvol store")
                             print("Expected:".format(cluster_size))
                             print("Actual:".format(json_cluster))
+                            return 1
+
+                    # Also check name if param is provided:
+                    if lvs_name:
+                        if lvs_name not in json_name:
+                            print("ERROR: Lvol store human-friendly name does not match")
+                            print("Expected: {lvs_name}".format(lvs_name=lvs_name))
+                            print("Actual: {name}".format(name=json_name))
                             return 1
                     return 0
             print("FAILED: UUID: lvol store {uuid} on base_bdev: "
@@ -172,3 +190,13 @@ class Commands_Rpc(object):
     def construct_nvme_bdev(self, nvme_name, trtype, traddr):
         print("INFO: Add NVMe bdev {nvme}".format(nvme=nvme_name))
         self.rpc.construct_nvme_bdev("-b", nvme_name, "-t", trtype, "-a", traddr)
+
+    def rename_lvol_store(self, old_name, new_name):
+        print("INFO: Renaming lvol store from {old} to {new}".format(old=old_name, new=new_name))
+        output, rc = self.rpc.rename_lvol_store(old_name, new_name)
+        return rc
+
+    def rename_lvol_bdev(self, old_name, new_name):
+        print("INFO: Renaming lvol bdev from {old} to {new}".format(old=old_name, new=new_name))
+        output, rc = self.rpc.rename_lvol_bdev(old_name, new_name)
+        return rc
