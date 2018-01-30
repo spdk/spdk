@@ -115,7 +115,7 @@ create_initiator_group_success_case(void)
 static void
 find_initiator_group_success_case(void)
 {
-	struct spdk_iscsi_init_grp *ig;
+	struct spdk_iscsi_init_grp *ig, *tmp;
 
 	ig = spdk_iscsi_init_grp_create(1);
 	CU_ASSERT(ig != NULL);
@@ -125,7 +125,8 @@ find_initiator_group_success_case(void)
 	ig = spdk_iscsi_init_grp_find_by_tag(1);
 	CU_ASSERT(ig != NULL);
 
-	spdk_initiator_group_unregister(ig);
+	tmp = spdk_iscsi_init_grp_unregister(ig->tag);
+	CU_ASSERT(ig == tmp);
 	spdk_iscsi_init_grp_destroy(ig);
 
 	ig = spdk_iscsi_init_grp_find_by_tag(1);
@@ -135,7 +136,7 @@ find_initiator_group_success_case(void)
 static void
 create_initiator_group_fail_case(void)
 {
-	struct spdk_iscsi_init_grp *ig;
+	struct spdk_iscsi_init_grp *ig, *tmp;
 
 	ig = spdk_iscsi_init_grp_create(1);
 	CU_ASSERT(ig != NULL);
@@ -148,7 +149,8 @@ create_initiator_group_fail_case(void)
 	ig = spdk_iscsi_init_grp_find_by_tag(1);
 	CU_ASSERT(ig != NULL);
 
-	spdk_initiator_group_unregister(ig);
+	tmp = spdk_iscsi_init_grp_unregister(ig->tag);
+	CU_ASSERT(tmp == ig);
 	spdk_iscsi_init_grp_destroy(ig);
 
 	ig = spdk_iscsi_init_grp_find_by_tag(1);
