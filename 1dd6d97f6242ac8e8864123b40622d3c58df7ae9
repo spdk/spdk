@@ -87,6 +87,24 @@
     },
     {
       "key": {
+        "uuid": "3d18e4d2_2fa0aac3",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 761,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-30T21:48:18Z",
+      "side": 1,
+      "message": "yeah - probably a couple of asserts would be better here",
+      "parentUuid": "91101764_1afc37bd",
+      "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "03dcb569_d872821d",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 58
@@ -98,6 +116,57 @@
       "writtenOn": "2018-01-30T17:24:01Z",
       "side": 1,
       "message": "Allocation needs a failure check.",
+      "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff84dcb2_dc17000e",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 847,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-30T21:48:18Z",
+      "side": 1,
+      "message": "just return rc always here - if rc \u003d\u003d 0 then this returns 0 and you don\u0027t need line 851",
+      "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f93a999_ae4acfbb",
+        "filename": "lib/bdev/lvol/vbdev_lvol.h",
+        "patchSetId": 58
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-30T21:48:18Z",
+      "side": 1,
+      "message": "a couple of nits here (since Daniel has already requested other changes)\n\nreturn type should be on same line as function name\nalso please add a newline after the function declaration and before the comment following it",
+      "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c738ff37_ba7ac051",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-30T21:48:18Z",
+      "side": 1,
+      "message": "can these all be shortened to \"old_name\" and \"new_name\"?\n\nadding \"lvol_bdev\" in here seems unnecessary - the name of the RPC itself already indicates these are related to lvol bdevs",
       "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -161,6 +230,23 @@
         "endLine": 429,
         "endChar": 16
       },
+      "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "09ba1908_d8d7baa4",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 1077,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-30T21:48:18Z",
+      "side": 1,
+      "message": "where do we check that an lvol with this name does not already exist in this lvolstore?",
       "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
