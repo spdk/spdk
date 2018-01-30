@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "93bcec27_70cabefe",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 1241,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-30T18:23:51Z",
+      "side": 1,
+      "message": "This isn\u0027t right - if you hit the -EEXIST condition now it won\u0027t resubmit queued user operations. There can be other user operations queued while the allocation is happening, so you can\u0027t leave those hanging.\n\nThe key to solving this is breaking the dependency of the internal sequence that does the cluster allocation and the user operation that triggered it.",
+      "revId": "b1939bab35b69c7ff7f9137983bb2dcd60e89f60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a567578a_ea107898",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 1475,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-30T18:23:51Z",
+      "side": 1,
+      "message": "You didn\u0027t actually need to queue up anything besides write/write zeroes. Reads can proceed during an allocation - they\u0027ll just go to the backing storage.",
+      "revId": "b1939bab35b69c7ff7f9137983bb2dcd60e89f60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ee55d8c_acff3ad2",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 1493,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-30T18:23:51Z",
+      "side": 1,
+      "message": "For this block of two switch statements, it ends up being easier to flip it inside out. Instead of allocating the batch first, then checking if the cluster is allocated, then doing the switch, it works out better if you do it in reverse order (switch, then check allocation, then create batch/sequence/op as needed). I think this was causing you all kinds of trouble, but now it should be easier to deal with.",
+      "revId": "b1939bab35b69c7ff7f9137983bb2dcd60e89f60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
