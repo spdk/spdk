@@ -22,6 +22,30 @@
       "revId": "6071788786f8f3668daec2d320d4bfdcb9e740fc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c27bf94e_2cd04216",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 415,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-01-30T09:57:29Z",
+      "side": 1,
+      "message": "We want those all variables to be local but pity fact is that the shell/bash by default add variables to global name space. \n\nI hit this issue several times when in subfunction reused some names eg \u0027i\u0027 name in for loop breaking outer function for loop. I will check blockdev.sh.",
+      "parentUuid": "903b61e3_72de5b53",
+      "range": {
+        "startLine": 415,
+        "startChar": 22,
+        "endLine": 415,
+        "endChar": 28
+      },
+      "revId": "6071788786f8f3668daec2d320d4bfdcb9e740fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
