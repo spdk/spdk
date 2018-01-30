@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "930e99c4_1ae76675",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 30
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-01-30T05:34:19Z",
+      "side": 1,
+      "message": "I think it can be changed to \"event for destroying\"",
+      "range": {
+        "startLine": 221,
+        "startChar": 23,
+        "endLine": 221,
+        "endChar": 33
+      },
+      "revId": "e59112dbeff6a48fdfab3ffe05ab364e004bcba6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
