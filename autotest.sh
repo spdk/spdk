@@ -176,6 +176,10 @@ if [ $SPDK_TEST_VHOST -eq 1 ]; then
 	run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-blk
 	timing_exit integrity_lvol_blk
 
+	timing_enter vhost_migration
+	run_test ./test/vhost/spdk_vhost.sh --migration
+	timing_exit vhost_migration
+
 	timing_exit vhost
 fi
 
