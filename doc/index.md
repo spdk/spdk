@@ -26,6 +26,7 @@
 
 - @ref directory_structure
 - [Public API header files](files.html)
+- @ref bdev_pg
 
 # Modules {#modules}
 

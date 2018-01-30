@@ -792,6 +792,7 @@ INPUT                  = ../include/spdk \
                          blob.md \
                          blobfs.md \
                          bdev.md \
+                         bdev_pg.md \
                          event.md \
                          ioat.md \
                          iscsi.md \
