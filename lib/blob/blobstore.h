@@ -216,6 +216,27 @@ struct spdk_internal_blob_opts {
 	struct spdk_blob_xattr_opts internal_xattrs;
 };
 
+enum spdk_snapshot_fail {
+	SPDK_BLOB_SNAPSHOT_FAIL_CLEAN,
+	SPDK_BLOB_SNAPSHOT_FAIL_CLOSE_ORGBLOB,
+	SPDK_BLOB_SNAPSHOT_FAIL_CLOSE_NEWBLOB
+};
+
+struct spdk_snapshot_ctx {
+	struct spdk_bs_cpl      cpl;
+	union {
+		spdk_blob_id id;
+		struct spdk_blob_data *ptr;
+	} orgblob;
+	union {
+		spdk_blob_id id;
+		struct spdk_blob_data *ptr;
+	} newblob;
+	int bserrno;
+	int cleanup;
+	const struct spdk_blob_xattr_opts *snapshot_xattrs;
+};
+
 /* On-Disk Data Structures
  *
  * The following data structures exist on disk.
@@ -268,6 +289,8 @@ struct spdk_blob_md_descriptor_extent {
 #define SPDK_BLOB_READ_ONLY (1ULL << 0)
 #define SPDK_BLOB_DATA_RO_FLAGS_MASK	SPDK_BLOB_READ_ONLY
 #define SPDK_BLOB_MD_RO_FLAGS_MASK	0
+
+#define SNAPSHOT_IN_PROGRESS "SNAPSHOT_IN_PROGRESS"
 
 #define spdk_blob_is_thin_provisioned(blob) (blob->invalid_flags & SPDK_BLOB_THIN_PROV)
 
