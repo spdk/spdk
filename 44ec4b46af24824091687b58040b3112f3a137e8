@@ -2,6 +2,75 @@
   "comments": [
     {
       "key": {
+        "uuid": "39f776fc_95015d08",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-30T10:54:07Z",
+      "side": 1,
+      "message": "Formatting could be improved here to match indentation.",
+      "range": {
+        "startLine": 42,
+        "startChar": 0,
+        "endLine": 46,
+        "endChar": 65
+      },
+      "revId": "44ec4b46af24824091687b58040b3112f3a137e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f14454f7_047df15a",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-30T10:54:07Z",
+      "side": 1,
+      "message": "formatting",
+      "range": {
+        "startLine": 86,
+        "startChar": 0,
+        "endLine": 88,
+        "endChar": 87
+      },
+      "revId": "44ec4b46af24824091687b58040b3112f3a137e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9415d2a4_6b576ce7",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-30T10:54:07Z",
+      "side": 1,
+      "message": "This can be removed as commented or added here from thin_provision test cases.",
+      "range": {
+        "startLine": 172,
+        "startChar": 0,
+        "endLine": 175,
+        "endChar": 58
+      },
+      "revId": "44ec4b46af24824091687b58040b3112f3a137e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "895354b3_5e234ebc",
         "filename": "test/lvol/test_cases.py",
         "patchSetId": 1
