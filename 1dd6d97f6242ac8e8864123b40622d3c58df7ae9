@@ -1,0 +1,169 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a213811f_341dcf82",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-30T17:24:01Z",
+      "side": 1,
+      "message": "This loop looks like it will leak memory if there is more than one alias (there is a check for alias_number after the loop, but that is too late).\n\nAdditionally, allocation needs a failure check, and this would be simpler as just strdup().",
+      "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "728eb000_e0ccd0d3",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-30T17:24:01Z",
+      "side": 1,
+      "message": "This path potentially leaks old_alias.",
+      "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c256b54f_2395c3a6",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-30T17:24:01Z",
+      "side": 1,
+      "message": "Can we do this in the other order (delete then add) so that old_alias doesn\u0027t need to be temporarily duplicated?",
+      "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "50c153d7_f9fc491d",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 738,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-30T17:24:01Z",
+      "side": 1,
+      "message": "This can be simplified to strdup() now (or just point directly at lvol-\u003eunique_id if its lifetime is guaranteed to be as long as that of the bdev).",
+      "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91101764_1afc37bd",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 761,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-30T17:24:01Z",
+      "side": 1,
+      "message": "Why the checks? Is it possible for either of these to be empty in a valid lvolstore?",
+      "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "03dcb569_d872821d",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 762,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-30T17:24:01Z",
+      "side": 1,
+      "message": "Allocation needs a failure check.",
+      "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "80231f8e_cdbb56f6",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-30T17:24:01Z",
+      "side": 1,
+      "message": "Please use spdk_strerror() instead.",
+      "range": {
+        "startLine": 380,
+        "startChar": 1,
+        "endLine": 380,
+        "endChar": 16
+      },
+      "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b1be01f1_82b061a0",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 411,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-30T17:24:01Z",
+      "side": 1,
+      "message": "Before we can interpret this as an lvol, we need to check that it\u0027s actually an lvol bdev and not some other kind of bdev.  This can be done by checking bdev-\u003emodule \u003d\u003d SPDK_GET_BDEV_MODULE(lvol).",
+      "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a30f3d1_937eb150",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-30T17:24:01Z",
+      "side": 1,
+      "message": "spdk_strerror()",
+      "range": {
+        "startLine": 429,
+        "startChar": 1,
+        "endLine": 429,
+        "endChar": 16
+      },
+      "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
