@@ -248,6 +248,14 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 void spdk_bs_create_blob(struct spdk_blob_store *bs,
 			 spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
 
+/* Create a read-only snapshot of specified blob with provided options.
+ * This will automatically sync specified blob.
+ * When operation is done, original blob is converted to the thin-provisioned
+ * blob with a newly created read-only snapshot set as a backing blob. */
+void spdk_bs_create_snapshot(struct spdk_blob_store *bs, spdk_blob_id blobid,
+			     const struct spdk_blob_xattr_opts *snapshot_xattrs,
+			     spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
+
 /* Delete an existing blob. */
 void spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 			 spdk_blob_op_complete cb_fn, void *cb_arg);
