@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c017abe9_8536ae23",
+        "filename": "etc/spdk/vhost.conf.in",
+        "patchSetId": 2
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-30T14:56:01Z",
+      "side": 1,
+      "message": "I don\u0027t think changes in this file belong here. Merging issue",
+      "revId": "74d7984753b5fb9b4e87d677551667d67fa1b064",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
