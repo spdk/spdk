@@ -167,11 +167,11 @@ if [ $SPDK_TEST_VHOST -eq 1 ]; then
 	fi
 
 	timing_enter integrity_lvol_scsi
-	run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-scsi
+	# run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-scsi
 	timing_exit integrity_lvol_scsi
 
 	timing_enter integrity_lvol_blk
-	run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-blk
+	# run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-blk
 	timing_exit integrity_lvol_blk
 
 	timing_exit vhost
@@ -181,7 +181,7 @@ if [ $SPDK_TEST_LVOL -eq 1 ]; then
 	timing_enter lvol
 	test_cases="1,50,51,52,53,100,101,102,250,251,252,253,255,"
 	test_cases+="300,301,450,451,452,550,600,601,650,651,652,654,655,"
-	test_cases+="700,701,750"
+	test_cases+="700,701,750,750,751,752,753,754,2000"
 	run_test ./test/lvol/lvol.sh --test-cases=$test_cases
 	timing_exit lvol
 fi
