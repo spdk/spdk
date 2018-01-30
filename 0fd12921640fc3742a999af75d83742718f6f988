@@ -163,6 +163,30 @@
       "revId": "0fd12921640fc3742a999af75d83742718f6f988",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69dd26e8_86ee2a44",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-30T04:03:26Z",
+      "side": 1,
+      "message": "Good question. This kind of testing is added at https://review.gerrithub.io/#/c/396531/5/test/unit/lib/bdev/mt/bdev.c/bdev_ut.c where I added a new change on poll_threads().\n\nThanks.",
+      "parentUuid": "7b028b52_b1afee7a",
+      "range": {
+        "startLine": 784,
+        "startChar": 1,
+        "endLine": 785,
+        "endChar": 51
+      },
+      "revId": "0fd12921640fc3742a999af75d83742718f6f988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
