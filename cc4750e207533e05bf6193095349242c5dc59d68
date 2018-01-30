@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a7577c9c_53e2a163",
+        "filename": "lib/blob/zeroes.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-30T16:03:20Z",
+      "side": 1,
+      "message": "Nitpick: maybe SPDK_BS_PAGE_SIZE would be a better choice here, but we can fix this up later.",
+      "range": {
+        "startLine": 106,
+        "startChar": 13,
+        "endLine": 106,
+        "endChar": 17
+      },
+      "revId": "cc4750e207533e05bf6193095349242c5dc59d68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
