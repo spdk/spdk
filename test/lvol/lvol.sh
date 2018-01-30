@@ -58,6 +58,11 @@ function usage() {
                                     655: 'thin_provisioning_filling_disks_less_than_lvs_size',
                                     700: 'tasting_positive',
                                     701: 'tasting_lvol_store_positive',
+                                    800: 'rename_positive',
+                                    801: 'rename_lvs_nonexistent',
+                                    802: 'rename_lvs_EEXIST',
+                                    803: 'rename_lvol_bdev_nonexistent',
+                                    804: 'rename_lvol_bdev_EEXIST',
                                     10000: 'SIGTERM'
                                     or
                                     all: This parameter runs all tests
