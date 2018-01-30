@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2d0e2ccf_139cdb04",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-01-30T17:45:23Z",
+      "side": 1,
+      "message": "Yes, I know, might seem like an unrelated change but it isn\u0027t.\nTest plan for thin provisioned is already merged at this time and has introduced new numbering in test_plan.md, but no update was done, so I had to do it.",
+      "range": {
+        "startLine": 53,
+        "startChar": 36,
+        "endLine": 54,
+        "endChar": 70
+      },
+      "revId": "18bc463573be6d5ec5b5a19e40ff5d4c48bc8d18",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
