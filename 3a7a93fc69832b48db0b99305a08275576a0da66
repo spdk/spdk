@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a9622eda_0adad197",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 1238,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-30T12:38:59Z",
+      "side": 1,
+      "message": "My idea was that when we fail we should still retry queued IO operations, but I can change this to fail present and queued operations.",
+      "parentUuid": "2964b5e7_77d4b840",
+      "revId": "3a7a93fc69832b48db0b99305a08275576a0da66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fec7b9c4_e45b448a",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 48
@@ -30,6 +48,24 @@
       "writtenOn": "2018-01-30T04:05:35Z",
       "side": 1,
       "message": "This is written in the opposite way of what my brain would expect. I\u0027d have written it this way:\n\nif (bserrno) {\n    _spdk_bs_release_cluster(...);\n    _spdk_blob_insert_cluster_cpl(...);\n    return;\n}\n\n_spdk_blob_insert_cluster_on_md_thread(...);",
+      "revId": "3a7a93fc69832b48db0b99305a08275576a0da66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3338d2eb_76e40513",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 1265,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-30T12:38:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fec7b9c4_e45b448a",
       "revId": "3a7a93fc69832b48db0b99305a08275576a0da66",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "0ac3caf0_24e481c4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 1316,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-30T12:38:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6030e18b_8801bae6",
+      "revId": "3a7a93fc69832b48db0b99305a08275576a0da66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d8eea4cc_373ae2bb",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 48
@@ -64,6 +118,24 @@
       "writtenOn": "2018-01-30T04:05:35Z",
       "side": 1,
       "message": "I think it might be simpler to do the queueing inside spdk_bs_allocate_and_copy_cluster.",
+      "revId": "3a7a93fc69832b48db0b99305a08275576a0da66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "26ae417f_d6bb2570",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 1463,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-30T12:38:59Z",
+      "side": 1,
+      "message": "Because of sequence finish leak I needed to add some more code here and because of that I created new function _spdk_bs_allocate_and_write that takes some common operations from here and from iov function.",
+      "parentUuid": "d8eea4cc_373ae2bb",
       "revId": "3a7a93fc69832b48db0b99305a08275576a0da66",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "645b1468_3d24d87f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 1464,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-30T12:38:59Z",
+      "side": 1,
+      "message": "I\u0027m still not sure if I understand that correctly. Here is what I see:\n1. Function spdk_bs_batch_to_sequence increase outstanding_ops\n2. spdk_bs_batch_close sets batch_closed to 1 and nothing more as outstanding_ops is !\u003d 0\n3. allocation and write code proceeds\n4. at the end spdk_bs_sequence_finish function is called\n5. it decrease outstanding_ops\n5. it calls spdk_bs_sequence_to_batch_completion\n6. if oustanding_ops \u003d\u003d 0 it calls callback (basically spdk_bs_batch_completion)\n\nMy concern about creating separate sequence is that we will call cb_fn passed to _spdk_blob_request_submit_op_single (at batch close) before we perform write operation - but the caller will think that write operation already finished.\n\nLet me know if I\u0027m wrong.",
+      "parentUuid": "2f6bd521_26a075a1",
+      "revId": "3a7a93fc69832b48db0b99305a08275576a0da66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d6914026_eebed771",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 48
@@ -98,6 +188,24 @@
       "writtenOn": "2018-01-30T04:05:35Z",
       "side": 1,
       "message": "The spdk_bs_sequence_t never actually gets completed when you go down this path, which means it leaks.",
+      "revId": "3a7a93fc69832b48db0b99305a08275576a0da66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9740a45e_a15046eb",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 1702,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-30T12:38:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d6914026_eebed771",
       "revId": "3a7a93fc69832b48db0b99305a08275576a0da66",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
