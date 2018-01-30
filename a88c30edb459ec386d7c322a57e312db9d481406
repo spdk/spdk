@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "40d98e53_82df0619",
+        "filename": "autotest.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-30T16:23:12Z",
+      "side": 1,
+      "message": "Trailing whitespace",
+      "revId": "a88c30edb459ec386d7c322a57e312db9d481406",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
