@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5b2f07bf_f83183e9",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-30T20:55:43Z",
+      "side": 1,
+      "message": "LOL - I think you meant Atomicity, not Atrocity.",
+      "revId": "d5bee1306ec34edab322ac3e875c2930146670af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a093f6d_69f50419",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-30T20:55:43Z",
+      "side": 1,
+      "message": "We\u0027ll need to update this for thin provisioning - since it introduces cases where metadata is synced implicitly (when a cluster is allocated).\n\nBut let\u0027s add that in a separate patch.",
+      "revId": "d5bee1306ec34edab322ac3e875c2930146670af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "97823dd6_816eebe9",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-30T20:55:43Z",
+      "side": 1,
+      "message": "DPDP \u003d\u003e DPDK",
+      "revId": "d5bee1306ec34edab322ac3e875c2930146670af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
