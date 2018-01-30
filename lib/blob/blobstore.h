@@ -206,6 +206,7 @@ enum spdk_blob_op_type {
 /* back bs_dev */
 
 #define BLOB_SNAPSHOT "SNAP"
+#define SNAPSHOT_IN_PROGRESS "SNAPTMP"
 
 struct spdk_blob_bs_dev {
 	struct spdk_bs_dev bs_dev;
