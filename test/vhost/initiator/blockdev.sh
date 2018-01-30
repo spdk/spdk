@@ -106,9 +106,19 @@ timing_enter setup_vm
 vm_no="0"
 vm_setup --disk-type=spdk_vhost_scsi --force=$vm_no --os=$os_image --disks="Nvme0n1:Malloc0:Malloc1" --queue_num=18 --memory=6144
 vm_run $vm_no
+
+timing_enter vm_wait_for_boot
 vm_wait_for_boot 600 $vm_no
+timing_exit vm_wait_for_boot
+
+timing_enter vm_scp_spdk
 vm_scp $vm_no -r $ROOT_DIR "127.0.0.1:/root/spdk"
+timing_exit vm_scp_spdk
+
+timing_enter vm_build_spdk
 vm_ssh $vm_no " cd spdk ; make clean ; ./configure --with-fio=/root/fio_src ; make -j2"
+timing_exit vm_build_spdk
+
 vm_ssh $vm_no "/root/spdk/scripts/setup.sh"
 vbdevs=$(vm_ssh $vm_no ". /root/spdk/scripts/autotest_common.sh && discover_bdevs /root/spdk \
  /root/spdk/test/vhost/initiator/bdev_pci.conf")
