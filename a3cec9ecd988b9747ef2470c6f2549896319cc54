@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "daa56fd7_d74d0bfc",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1034,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-30T10:05:48Z",
+      "side": 1,
+      "message": "We can also move move *_controller_construct() calls to spdk_vhost_init (module init). If we return -1 from there, we will get spdk_app_stop() automatically.",
+      "parentUuid": "8810eb03_3d4f1a5b",
+      "range": {
+        "startLine": 1030,
+        "startChar": 0,
+        "endLine": 1034,
+        "endChar": 1
+      },
+      "revId": "a3cec9ecd988b9747ef2470c6f2549896319cc54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "24c91d72_94660759",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 1
