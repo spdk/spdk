@@ -396,14 +396,23 @@ cleanup:
 	return rc;
 }
 
-static void
+int
 spdk_iscsi_init_grp_register(struct spdk_iscsi_init_grp *ig)
 {
+	struct spdk_iscsi_init_grp *tmp;
+	int rc = -1;
+
 	assert(ig != NULL);
 
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	TAILQ_INSERT_TAIL(&g_spdk_iscsi.ig_head, ig, tailq);
+	tmp = spdk_iscsi_init_grp_find_by_tag(ig->tag);
+	if (tmp == NULL) {
+		TAILQ_INSERT_TAIL(&g_spdk_iscsi.ig_head, ig, tailq);
+		rc = 0;
+	}
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+
+	return rc;
 }
 
 /*
@@ -446,15 +455,19 @@ spdk_iscsi_init_grp_create_from_initiator_list(int tag,
 		goto cleanup;
 	}
 
-	spdk_iscsi_init_grp_register(ig);
+	rc = spdk_iscsi_init_grp_register(ig);
+	if (rc < 0) {
+		SPDK_ERRLOG("initiator group register error (%d)\n", tag);
+		goto cleanup;
+	}
 	return 0;
 
 cleanup:
-	free(ig);
+	spdk_iscsi_init_grp_destroy(ig);
 	return rc;
 }
 
-static void
+void
 spdk_iscsi_init_grp_destroy(struct spdk_iscsi_init_grp *ig)
 {
 	if (!ig) {
@@ -518,28 +531,20 @@ spdk_iscsi_init_grp_array_destroy(void)
 	}
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 }
-static inline void
-spdk_initiator_group_unregister(struct spdk_iscsi_init_grp *ig)
-{
-	struct spdk_iscsi_init_grp *initiator_group;
-	struct spdk_iscsi_init_grp *initiator_group_tmp;
 
-	assert(ig != NULL);
+struct spdk_iscsi_init_grp *
+spdk_iscsi_init_grp_unregister(int tag)
+{
+	struct spdk_iscsi_init_grp *ig;
 
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	TAILQ_FOREACH_SAFE(initiator_group, &g_spdk_iscsi.ig_head, tailq, initiator_group_tmp) {
-		if (ig->tag == initiator_group->tag) {
-			TAILQ_REMOVE(&g_spdk_iscsi.ig_head, initiator_group, tailq);
+	TAILQ_FOREACH(ig, &g_spdk_iscsi.ig_head, tailq) {
+		if (ig->tag == tag) {
+			TAILQ_REMOVE(&g_spdk_iscsi.ig_head, ig, tailq);
+			pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+			return ig;
 		}
 	}
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
-}
-
-void
-spdk_iscsi_init_grp_release(struct spdk_iscsi_init_grp *ig)
-{
-	spdk_initiator_group_unregister(ig);
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	spdk_iscsi_init_grp_destroy(ig);
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	return NULL;
 }
