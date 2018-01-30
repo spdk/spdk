@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "418d2b0a_13d201ea",
+        "filename": "test/blobstore/blobstore.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-01-30T09:32:52Z",
+      "side": 1,
+      "message": "Should be diff $testdir/test.pattern $testdir/test.pattern.blob?\nI am busy in sorting out NIGHTLY error cases today and will verify your case carefully tomorrow.",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 28,
+        "endChar": 35
+      },
+      "revId": "2dedd4e850b108d5259b1c156d418bcce297771b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
