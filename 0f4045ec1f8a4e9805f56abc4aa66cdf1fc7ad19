@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "353178e0_a167fba2",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 633,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-30T16:10:05Z",
+      "side": 1,
+      "message": "Please use spaces in the string to match the other prints.",
+      "range": {
+        "startLine": 633,
+        "startChar": 22,
+        "endLine": 633,
+        "endChar": 26
+      },
+      "revId": "0f4045ec1f8a4e9805f56abc4aa66cdf1fc7ad19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "444e33ac_6e5f487c",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-30T16:10:05Z",
+      "side": 1,
+      "message": "This should have a comment, e.g. /** boot partition support */.  Also please add a blank line before and after it.",
+      "revId": "0f4045ec1f8a4e9805f56abc4aa66cdf1fc7ad19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
