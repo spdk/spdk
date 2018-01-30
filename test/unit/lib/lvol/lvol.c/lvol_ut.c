@@ -323,7 +323,12 @@ void spdk_blob_close(struct spdk_blob *b, spdk_blob_op_complete cb_fn, void *cb_
 int
 spdk_blob_resize(struct spdk_blob *blob, uint64_t sz)
 {
-	return g_resize_rc;
+	if (g_resize_rc != 0) {
+		return g_resize_rc;
+	} else if (sz > DEV_BUFFER_SIZE / BS_CLUSTER_SIZE) {
+		return -1;
+	}
+	return 0;
 }
 
 void
@@ -378,6 +383,11 @@ spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_opts 
 			spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
 {
 	struct spdk_blob *b;
+
+	if (opts && opts->num_clusters > DEV_BUFFER_SIZE / BS_CLUSTER_SIZE) {
+		cb_fn(cb_arg, 0, -1);
+		return;
+	}
 
 	b = calloc(1, sizeof(*b));
 	SPDK_CU_ASSERT_FATAL(b != NULL);
@@ -756,9 +766,11 @@ lvol_create_fail(void)
 	CU_ASSERT(rc != 0);
 	CU_ASSERT(g_lvol == NULL);
 
+	g_lvol = NULL;
 	rc = spdk_lvol_create(g_lvol_store, "lvol", DEV_BUFFER_SIZE + 1, false,
 			      lvol_op_with_handle_complete, NULL);
-	CU_ASSERT(rc != 0);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno != 0);
 	CU_ASSERT(g_lvol == NULL);
 
 	g_lvserrno = -1;
