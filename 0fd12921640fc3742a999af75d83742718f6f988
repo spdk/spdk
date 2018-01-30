@@ -187,6 +187,30 @@
       "revId": "0fd12921640fc3742a999af75d83742718f6f988",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "643da010_7c306e94",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-01-30T04:06:49Z",
+      "side": 1,
+      "message": "Also here I\u0027ve added the comment \"execute the QoS poller\", it will run in each \"poll_threads()\" operation to invoke the QoS poller and sends the queued IO on the list. So in the other patch, I\u0027ve added a parameter for poll_threads() to not invoke the QoS poller to handle the queued IOs.\n\nThanks for mentioning this.",
+      "parentUuid": "7b028b52_b1afee7a",
+      "range": {
+        "startLine": 784,
+        "startChar": 1,
+        "endLine": 785,
+        "endChar": 51
+      },
+      "revId": "0fd12921640fc3742a999af75d83742718f6f988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
