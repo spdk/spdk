@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "c9aa18f2_75f5e79c",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1267,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-30T10:40:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9e3964aa_71c000c2",
+      "range": {
+        "startLine": 1244,
+        "startChar": 0,
+        "endLine": 1267,
+        "endChar": 1
+      },
+      "revId": "511ce6f57284646469767f5bf4fe638d8c1cd7b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "27fc1a93_da6a21bd",
         "filename": "lib/vhost/vhost_internal.h",
         "patchSetId": 3
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "1d0534d7_168975eb",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-30T10:40:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "27fc1a93_da6a21bd",
+      "range": {
+        "startLine": 138,
+        "startChar": 50,
+        "endLine": 138,
+        "endChar": 61
+      },
+      "revId": "511ce6f57284646469767f5bf4fe638d8c1cd7b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0768c31a_e98eb817",
         "filename": "test/unit/lib/vhost/test_vhost.c",
         "patchSetId": 3
@@ -59,6 +107,24 @@
       "writtenOn": "2018-01-29T17:53:54Z",
       "side": 1,
       "message": "Line change.",
+      "revId": "511ce6f57284646469767f5bf4fe638d8c1cd7b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91328550_af677a97",
+        "filename": "test/unit/lib/vhost/test_vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-30T10:40:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0768c31a_e98eb817",
       "revId": "511ce6f57284646469767f5bf4fe638d8c1cd7b8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
