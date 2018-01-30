@@ -546,6 +546,119 @@ blob_thin_provision(void)
 }
 
 static void
+blob_snapshot(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_bs_dev *dev;
+	struct spdk_blob *blob;
+	struct spdk_blob *snapshot, *snapshot2;
+	struct spdk_blob_opts opts;
+	struct spdk_blob_xattr_opts xattrs;
+	spdk_blob_id blobid;
+	spdk_blob_id snapshotid;
+	const void *value;
+	size_t value_len;
+	int rc;
+	uint64_t i;
+
+	dev = init_dev();
+
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	/* Create blob with 10 clusters */
+	spdk_blob_opts_init(&opts);
+	opts.num_clusters = 10;
+
+	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10)
+
+	/* Create snapshot from blob */
+	spdk_bs_create_snapshot(bs, blobid, NULL, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	snapshotid = g_blobid;
+
+	spdk_bs_open_blob(bs, snapshotid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	snapshot = g_blob;
+	CU_ASSERT(__blob_to_data(snapshot)->data_ro == true)
+	CU_ASSERT(__blob_to_data(snapshot)->md_ro == true)
+	CU_ASSERT(spdk_blob_get_num_clusters(snapshot) == 10)
+
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10)
+	CU_ASSERT(__blob_to_data(blob)->invalid_flags & SPDK_BLOB_THIN_PROV);
+	for (i = 0; i < __blob_to_data(blob)->active.num_clusters; i++) {
+		CU_ASSERT(__blob_to_data(blob)->active.clusters[i] == 0)
+	}
+
+	/* Try to create snapshot from clone with xattrs */
+	xattrs.names = g_xattr_names;
+	xattrs.get_value = _get_xattr_value;
+	xattrs.count = 3;
+	xattrs.ctx = &g_ctx;
+	spdk_bs_create_snapshot(bs, blobid, &xattrs, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	snapshot2 = g_blob;
+	CU_ASSERT(__blob_to_data(snapshot2)->data_ro == true)
+	CU_ASSERT(__blob_to_data(snapshot2)->md_ro == true)
+	CU_ASSERT(spdk_blob_get_num_clusters(snapshot2) == 10)
+
+	rc = spdk_blob_get_xattr_value(snapshot2, g_xattr_names[0], &value, &value_len);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(value != NULL);
+	CU_ASSERT(value_len == strlen(g_xattr_values[0]));
+	CU_ASSERT_NSTRING_EQUAL_FATAL(value, g_xattr_values[0], value_len);
+
+	rc = spdk_blob_get_xattr_value(snapshot2, g_xattr_names[1], &value, &value_len);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(value != NULL);
+	CU_ASSERT(value_len == strlen(g_xattr_values[1]));
+	CU_ASSERT_NSTRING_EQUAL((char *)value, g_xattr_values[1], value_len);
+
+	rc = spdk_blob_get_xattr_value(snapshot2, g_xattr_names[2], &value, &value_len);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(value != NULL);
+	CU_ASSERT(value_len == strlen(g_xattr_values[2]));
+	CU_ASSERT_NSTRING_EQUAL((char *)value, g_xattr_values[2], value_len);
+
+	/* Try to create snapshot from snapshot */
+	spdk_bs_create_snapshot(bs, snapshotid, NULL, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == -EINVAL);
+	CU_ASSERT(g_blobid == SPDK_BLOBID_INVALID);
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_blob_close(snapshot, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_blob_close(snapshot2, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+}
+
+static void
 blob_delete(void)
 {
 	struct spdk_blob_store *bs;
@@ -3235,6 +3348,7 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "blob_create", blob_create) == NULL ||
 		CU_add_test(suite, "blob_create_internal", blob_create_internal) == NULL ||
 		CU_add_test(suite, "blob_thin_provision", blob_thin_provision) == NULL ||
+		CU_add_test(suite, "blob_snapshot", blob_snapshot) == NULL ||
 		CU_add_test(suite, "blob_delete", blob_delete) == NULL ||
 		CU_add_test(suite, "blob_resize", blob_resize) == NULL ||
 		CU_add_test(suite, "blob_read_only", blob_read_only) == NULL ||
