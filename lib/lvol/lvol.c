@@ -931,7 +931,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	struct spdk_blob_store *bs;
 	struct spdk_lvol *lvol, *tmp;
 	struct spdk_blob_opts opts;
-	uint64_t num_clusters, free_clusters;
+	uint64_t num_clusters;
 
 	if (lvs == NULL) {
 		SPDK_ERRLOG("lvol store does not exist\n");
@@ -957,14 +957,6 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 
 	bs = lvs->blobstore;
 
-	num_clusters = divide_round_up(sz, spdk_bs_get_cluster_size(bs));
-	free_clusters = spdk_bs_free_cluster_count(bs);
-	if (num_clusters > free_clusters) {
-		SPDK_ERRLOG("Not enough free clusters left (%zu) on lvol store to add lvol %zu clusters\n",
-			    free_clusters, num_clusters);
-		return -ENOMEM;
-	}
-
 	req = calloc(1, sizeof(*req));
 	if (!req) {
 		SPDK_ERRLOG("Cannot alloc memory for lvol request pointer\n");
@@ -981,6 +973,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	}
 
 	lvol->lvol_store = lvs;
+	num_clusters = divide_round_up(sz, spdk_bs_get_cluster_size(bs));
 	lvol->num_clusters = num_clusters;
 	lvol->close_only = false;
 	strncpy(lvol->name, name, SPDK_LVS_NAME_MAX);
