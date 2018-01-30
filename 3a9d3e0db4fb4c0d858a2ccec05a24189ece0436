@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9e3ec034_e8d38bb0",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 49
+      },
+      "lineNbr": 1243,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-30T15:59:37Z",
+      "side": 1,
+      "message": "You can\u0027t do this because the user op you allocated will also try and complete the sequence in its completion handler.\n\nAlso, if bserrno is -EEXIST, you want to set bserrno to 0 here so you don\u0027t fail all user ops. -EEXIST is not an error - it just means you have to release your cluster.",
+      "revId": "3a9d3e0db4fb4c0d858a2ccec05a24189ece0436",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4409cf08_2e2393ba",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 49
+      },
+      "lineNbr": 1314,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-30T15:59:37Z",
+      "side": 1,
+      "message": "If this fails, you don\u0027t have a cluster to release.",
+      "revId": "3a9d3e0db4fb4c0d858a2ccec05a24189ece0436",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
