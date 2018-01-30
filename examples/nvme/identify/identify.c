@@ -629,6 +629,9 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	printf("Command Sets Supported\n");
 	printf("  NVM Command Set:                     %s\n",
 	       cap.bits.css_nvm ? "Supported" : "Not Supported");
+	printf("Boot Partiton Support\n");
+	printf("Boot Partion:				%s\n",
+	       cap.bits.bps ? "Supported" : "Not Supported");
 	printf("Memory Page Size Minimum:              %" PRIu64 " bytes\n",
 	       (uint64_t)1 << (12 + cap.bits.mpsmin));
 	printf("Memory Page Size Maximum:              %" PRIu64 " bytes\n",
