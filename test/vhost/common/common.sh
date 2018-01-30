@@ -360,15 +360,25 @@ function vm_kill()
 	fi
 }
 
+# List all VM numbers in VM_BASE_DIR
+#
+function vm_list_all()
+{
+	shopt -s nullglob
+	if [[ ! -z "$(echo $VM_BASE_DIR/[0-9]*)" ]]; then
+		basename --multiple $VM_BASE_DIR/vms/[0-9]*
+	fi
+	shopt -u nullglob
+}
+
 # Kills all VM in $VM_BASE_DIR
 #
 function vm_kill_all()
 {
-	shopt -s nullglob
-	for vm in $VM_BASE_DIR/[0-9]*; do
-		vm_kill $(basename $vm)
+	local vm
+	for vm in $(vm_list_all); do
+		vm_kill $vm
 	done
-	shopt -u nullglob
 }
 
 # Shutdown all VM in $VM_BASE_DIR
@@ -378,8 +388,10 @@ function vm_shutdown_all()
 	local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
 	set +x
 
-	shopt -s nullglob
-	for vm in $VM_BASE_DIR/[0-9]*; do
+	local vms=$(vm_list_all)
+	local vm
+
+	for vm in $vms; do
 		vm_shutdown $(basename $vm)
 	done
 
@@ -387,7 +399,7 @@ function vm_shutdown_all()
 	timeo=10
 	while [[ $timeo -gt 0 ]]; do
 		all_vms_down=1
-		for vm in $VM_BASE_DIR/[0-9]*; do
+		for vm in $vms; do
 			if [[ -r $vm/qemu.pid ]] && pkill -0 -F "$vm/qemu.pid"; then
 				all_vms_down=0
 				break
@@ -396,7 +408,6 @@ function vm_shutdown_all()
 
 		if [[ $all_vms_down == 1 ]]; then
 			notice "All VMs successfully shut down"
-			shopt -u nullglob
 			$shell_restore_x
 			return 0
 		fi
@@ -404,8 +415,9 @@ function vm_shutdown_all()
 		((timeo-=1))
 		sleep 1
 	done
-	shopt -u nullglob
+
 	$shell_restore_x
+	error "Timout waiting for some VMs to shutdown"
 	return 1
 }
 
@@ -688,8 +700,10 @@ function vm_setup()
 
 function vm_run()
 {
-	local OPTIND optchar a
+	local OPTIND optchar vm
 	local run_all=false
+	local vms_to_run=""
+
 	while getopts 'a-:' optchar; do
 		case "$optchar" in
 			a) run_all=true ;;
@@ -700,11 +714,8 @@ function vm_run()
 		esac
 	done
 
-	local vms_to_run=""
-
 	if $run_all; then
-		shopt -s nullglob
-		vms_to_run=$VM_BASE_DIR/[0-9]*
+		vms_to_run="$(vm_list_all)"
 	else
 		shift $((OPTIND-1))
 		for vm in $@; do
@@ -713,18 +724,18 @@ function vm_run()
 				error "VM$vm not defined - setup it first"
 				return 1
 			fi
-			vms_to_run+=" $VM_BASE_DIR/$vm"
+			vms_to_run+=" $vm"
 		done
 	fi
 
 	for vm in $vms_to_run; do
-		if vm_is_running $(basename $vm); then
-			warning "VM$(basename $vm) ($vm) already running"
+		if vm_is_running $vm; then
+			warning "VM$vm ($VM_BASE_DIR/$vm) already running"
 			continue
 		fi
 
-		notice "running $vm/run.sh"
-		if ! $vm/run.sh; then
+		notice "running $VM_BASE_DIR$vm/run.sh"
+		if ! $VM_BASE_DIR/$vm/run.sh; then
 			error "FAILED to run vm $vm"
 			return 1
 		fi
