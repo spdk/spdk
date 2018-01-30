@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "44a63ec3_38f865c3",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-30T12:40:42Z",
+      "side": 1,
+      "message": "name?",
+      "range": {
+        "startLine": 83,
+        "startChar": 33,
+        "endLine": 83,
+        "endChar": 36
+      },
+      "revId": "6bf0804599f2ba1995aa744c67502ff67c86313c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
