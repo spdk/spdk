@@ -137,42 +137,58 @@ if [ $SPDK_TEST_VHOST -eq 1 ]; then
 	timing_exit negative
 
 	if [ $RUN_NIGHTLY -eq 1 ]; then
-		timing_enter integrity_blk
-		run_test ./test/vhost/spdk_vhost.sh --integrity-blk
-		timing_exit integrity_blk
+		if [ $SPDK_TEST_VHOST_MIGRATION -ne 1 ]; then
+			timing_enter integrity_blk
+			run_test ./test/vhost/spdk_vhost.sh --integrity-blk
+			timing_exit integrity_blk
+		fi
 
 		timing_enter integrity
 		run_test ./test/vhost/spdk_vhost.sh --integrity
 		timing_exit integrity
 
-		timing_enter readonly
-		run_test ./test/vhost/spdk_vhost.sh --readonly
-		timing_exit readonly
+		if [ $SPDK_TEST_VHOST_MIGRATION -ne 1 ]; then
+			timing_enter readonly
+			run_test ./test/vhost/spdk_vhost.sh --readonly
+			timing_exit readonly
+		fi
 
 		timing_enter fs_integrity_scsi
 		run_test ./test/vhost/spdk_vhost.sh --fs-integrity-scsi
 		timing_exit fs_integrity_scsi
 
-		timing_enter fs_integrity_blk
-		run_test ./test/vhost/spdk_vhost.sh --fs-integrity-blk
-		timing_exit fs_integrity_blk
+		if [ $SPDK_TEST_VHOST_MIGRATION -ne 1 ]; then
+			timing_enter fs_integrity_blk
+			run_test ./test/vhost/spdk_vhost.sh --fs-integrity-blk
+			timing_exit fs_integrity_blk
+		fi
 
 		timing_enter integrity_lvol_scsi_nightly
 		run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-scsi-nightly
 		timing_exit integrity_lvol_scsi_nightly
 
-		timing_enter integrity_lvol_blk_nightly
-		run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-blk-nightly
-		timing_exit integrity_lvol_blk_nightly
+		if [ $SPDK_TEST_VHOST_MIGRATION -ne 1 ]; then
+			timing_enter integrity_lvol_blk_nightly
+			run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-blk-nightly
+			timing_exit integrity_lvol_blk_nightly
+		fi
 	fi
 
 	timing_enter integrity_lvol_scsi
 	run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-scsi
 	timing_exit integrity_lvol_scsi
 
-	timing_enter integrity_lvol_blk
-	run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-blk
-	timing_exit integrity_lvol_blk
+	if [ $SPDK_TEST_VHOST_MIGRATION -ne 1 ]; then
+		# vhost live migration requires newest QEMU/master, which is currently
+		# not compatible with SPDK vhost-blk
+		timing_enter integrity_lvol_blk
+		run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-blk
+		timing_exit integrity_lvol_blk
+	else
+		timing_enter vhost_migration
+		run_test ./test/vhost/spdk_vhost.sh --migration
+		timing_exit vhost_migration
+	fi
 
 	timing_exit vhost
 fi
