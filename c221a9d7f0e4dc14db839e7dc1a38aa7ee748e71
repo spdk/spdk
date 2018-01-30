@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "4b4c3c20_2cdfced5",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1032,
+      "author": {
+        "id": 1012941
+      },
+      "writtenOn": "2018-01-30T08:44:07Z",
+      "side": 1,
+      "message": "ok, I will apply it",
+      "parentUuid": "171d863f_e25c3ed3",
+      "range": {
+        "startLine": 1025,
+        "startChar": 0,
+        "endLine": 1032,
+        "endChar": 2
+      },
+      "revId": "c221a9d7f0e4dc14db839e7dc1a38aa7ee748e71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c1721975_307fe5a2",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 7
@@ -36,6 +60,30 @@
       "writtenOn": "2018-01-29T15:29:20Z",
       "side": 1,
       "message": "This can fail, please check return values.",
+      "range": {
+        "startLine": 1049,
+        "startChar": 1,
+        "endLine": 1049,
+        "endChar": 54
+      },
+      "revId": "c221a9d7f0e4dc14db839e7dc1a38aa7ee748e71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef5c046e_304af0d0",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1049,
+      "author": {
+        "id": 1012941
+      },
+      "writtenOn": "2018-01-30T08:44:07Z",
+      "side": 1,
+      "message": "ok, I will apply it",
+      "parentUuid": "c1721975_307fe5a2",
       "range": {
         "startLine": 1049,
         "startChar": 1,
