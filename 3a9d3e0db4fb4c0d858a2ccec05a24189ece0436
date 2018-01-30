@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b5215733_3006d3b6",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 49
+      },
+      "lineNbr": 1243,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-30T16:31:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9e3ec034_e8d38bb0",
+      "revId": "3a9d3e0db4fb4c0d858a2ccec05a24189ece0436",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4409cf08_2e2393ba",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 49
@@ -30,6 +48,24 @@
       "writtenOn": "2018-01-30T15:59:37Z",
       "side": 1,
       "message": "If this fails, you don\u0027t have a cluster to release.",
+      "revId": "3a9d3e0db4fb4c0d858a2ccec05a24189ece0436",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "031f57c6_b818b4a1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 49
+      },
+      "lineNbr": 1314,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-30T16:31:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4409cf08_2e2393ba",
       "revId": "3a9d3e0db4fb4c0d858a2ccec05a24189ece0436",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
