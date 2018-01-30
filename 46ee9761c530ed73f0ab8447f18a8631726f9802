@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "539955d4_255207b2",
+        "filename": "scripts/rpc/lvol.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-30T16:16:22Z",
+      "side": 1,
+      "message": "This should in \u0027else\u0027 block because it will be called despite both params were given.",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 56,
+        "endChar": 59
+      },
+      "revId": "46ee9761c530ed73f0ab8447f18a8631726f9802",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
