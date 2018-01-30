@@ -12,11 +12,6 @@ controller. The host, after sending I/O to the real drive, will put the response
 back into the Virtio queue. Then, the response is received by the Virtio SCSI
 driver.
 
-The driver, just like the SPDK @ref vhost, is using pollers instead of standard
-interrupts to check for an I/O response. It bypasses kernel interrupt and context
-switching overhead of QEMU and guest kernel, significantly boosting the overall
-I/O performance.
-
 Virtio SCSI driver supports two different usage models:
 * PCI - This is the standard mode of operation when used in a guest virtual
 machine, where QEMU has presented the virtio-scsi controller as a virtual
@@ -24,18 +19,14 @@ PCI device.
 * User vhost - Can be used to connect to a vhost-scsi socket directly on the
 same host.
 
-# Multiqueue {#virtio_multiqueue}
-
-The Virtio SCSI controller will automatically manage virtio queue distribution.
-Currently each thread doing an I/O on a single bdev will get an exclusive queue.
-Multi-threaded I/O on bdevs from a single Virtio-SCSI controller is not supported.
+The driver, just like the SPDK @ref vhost, is using pollers instead of standard
+interrupts to check for an I/O response. If used inside a VM, it bypasses interrupt
+and context switching overhead of QEMU and guest kernel, significantly boosting
+the overall I/O performance.
 
 # Limitations {#virtio_limitations}
 
-The Virtio SCSI driver is still experimental.  Current implementation has many
-limitations:
+Current Virtio-SCSI implementation has a couple of limitations:
  * supports only up to 8 hugepages (implies only 1GB sized pages are practical)
  * single LUN per target
  * only SPDK vhost-scsi controllers supported
- * no RPC
- * no multi-threaded I/O for single-queue virtio devices
