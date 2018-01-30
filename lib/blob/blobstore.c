@@ -41,6 +41,7 @@
 #include "spdk/bit_array.h"
 #include "spdk/likely.h"
 
+#include "spdk_internal/assert.h"
 #include "spdk_internal/log.h"
 
 #include "blobstore.h"
@@ -3516,6 +3517,275 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 }
 
 /* END spdk_bs_create_blob */
+
+/* START blob_cleanup */
+
+struct spdk_clone_snapshot_ctx {
+	struct spdk_bs_cpl      cpl;
+	int bserrno;
+
+	struct {
+		spdk_blob_id id;
+		struct spdk_blob *blob;
+	} original;
+	struct {
+		spdk_blob_id id;
+		struct spdk_blob *blob;
+	} new;
+
+	/* xattrs specified for snapshot/clones only. They have no impact on
+	 * the original blobs xattrs. */
+	const struct spdk_blob_xattr_opts *xattrs;
+};
+
+static void
+_spdk_bs_cleanup_finish(void *cb_arg, int bserrno)
+{
+	struct spdk_clone_snapshot_ctx *ctx = cb_arg;
+	struct spdk_bs_cpl *cpl = &ctx->cpl;
+
+	if (bserrno != 0) {
+		if (ctx->bserrno != 0) {
+			SPDK_ERRLOG("Cleanup error %d\n", bserrno);
+		} else {
+			ctx->bserrno = bserrno;
+		}
+	}
+
+	switch (cpl->type) {
+	case SPDK_BS_CPL_TYPE_BLOBID:
+		cpl->u.blobid.cb_fn(cpl->u.blobid.cb_arg, cpl->u.blobid.blobid, ctx->bserrno);
+		break;
+	default:
+		SPDK_UNREACHABLE();
+		break;
+	}
+
+	free(ctx);
+}
+
+static void
+_spdk_bs_cleanup_origblob(void *cb_arg, int bserrno)
+{
+	struct spdk_clone_snapshot_ctx *ctx = (struct spdk_clone_snapshot_ctx *)cb_arg;
+	struct spdk_blob *origblob = ctx->original.blob;
+
+	if (bserrno != 0) {
+		if (ctx->bserrno != 0) {
+			SPDK_ERRLOG("Cleanup error %d\n", bserrno);
+		} else {
+			ctx->bserrno = bserrno;
+		}
+	}
+
+	ctx->original.id = origblob->id;
+	spdk_blob_close(origblob, _spdk_bs_cleanup_finish, ctx);
+}
+
+static void
+_spdk_bs_cleanup_newblob(void *cb_arg, int bserrno)
+{
+	struct spdk_clone_snapshot_ctx *ctx = (struct spdk_clone_snapshot_ctx *)cb_arg;
+	struct spdk_blob *newblob = ctx->new.blob;
+
+	if (bserrno != 0) {
+		if (ctx->bserrno != 0) {
+			SPDK_ERRLOG("Cleanup error %d\n", bserrno);
+		} else {
+			ctx->bserrno = bserrno;
+		}
+	}
+
+	ctx->new.id = newblob->id;
+	spdk_blob_close(newblob, _spdk_bs_cleanup_origblob, ctx);
+}
+
+/* END blob_cleanup */
+
+/* START spdk_bs_create_snapshot */
+
+static void
+_spdk_bs_snapshot_origblob_sync_cpl(void *cb_arg, int bserrno)
+{
+	struct spdk_clone_snapshot_ctx *ctx = (struct spdk_clone_snapshot_ctx *)cb_arg;
+	struct spdk_blob *newblob = ctx->new.blob;
+
+	if (bserrno != 0) {
+		_spdk_bs_cleanup_newblob(ctx, bserrno);
+		return;
+	}
+
+	/* Remove metadata descriptor SNAPSHOT_IN_PROGRESS */
+	bserrno = _spdk_blob_remove_xattr(newblob, SNAPSHOT_IN_PROGRESS, true);
+	if (bserrno != 0) {
+		_spdk_bs_cleanup_origblob(ctx, bserrno);
+		return;
+	}
+
+	spdk_blob_set_read_only(newblob);
+
+	/* sync snapshot metadata */
+	spdk_blob_sync_md(newblob, _spdk_bs_cleanup_origblob, cb_arg);
+}
+
+static void
+_spdk_bs_snapshot_newblob_sync_cpl(void *cb_arg, int bserrno)
+{
+	struct spdk_clone_snapshot_ctx *ctx = (struct spdk_clone_snapshot_ctx *)cb_arg;
+	struct spdk_blob *origblob = ctx->original.blob;
+	struct spdk_blob *newblob = ctx->new.blob;
+
+	if (bserrno != 0) {
+		_spdk_bs_cleanup_newblob(ctx, bserrno);
+		return;
+	}
+
+	/* Set internal xattr for snapshot id */
+	bserrno = _spdk_blob_set_xattr(origblob, BLOB_SNAPSHOT, &newblob->id, sizeof(spdk_blob_id), true);
+	if (bserrno != 0) {
+		_spdk_bs_cleanup_newblob(ctx, bserrno);
+		return;
+	}
+
+	/* Create new back_bs_dev for snapshot */
+	origblob->back_bs_dev = spdk_bs_create_blob_bs_dev(newblob);
+	if (origblob->back_bs_dev == NULL) {
+		_spdk_bs_cleanup_newblob(ctx, -EINVAL);
+		return;
+	}
+
+	/* set clone blob as thin provisioned */
+	_spdk_blob_set_thin_provision(origblob);
+
+	/* Zero out origblob cluster map */
+	memset(origblob->active.clusters, 0,
+	       origblob->active.num_clusters * sizeof(origblob->active.clusters));
+
+	/* sync clone metadata */
+	spdk_blob_sync_md(origblob, _spdk_bs_snapshot_origblob_sync_cpl, ctx);
+}
+
+static void
+_spdk_bs_snapshot_newblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
+{
+	struct spdk_clone_snapshot_ctx *ctx = (struct spdk_clone_snapshot_ctx *)cb_arg;
+	struct spdk_blob *origblob = ctx->original.blob;
+	struct spdk_blob *newblob = _blob;
+
+	if (bserrno != 0) {
+		_spdk_bs_cleanup_origblob(ctx, bserrno);
+		return;
+	}
+
+	ctx->new.blob = newblob;
+
+	/* set new back_bs_dev for snapshot */
+	newblob->back_bs_dev = origblob->back_bs_dev;
+	/* Set invalid flags from origblob */
+	newblob->invalid_flags = origblob->invalid_flags;
+
+	/* Copy cluster map to snapshot */
+	memcpy(newblob->active.clusters, origblob->active.clusters,
+	       origblob->active.num_clusters * sizeof(origblob->active.clusters));
+
+	/* sync snapshot metadata */
+	spdk_blob_sync_md(newblob, _spdk_bs_snapshot_newblob_sync_cpl, ctx);
+}
+
+static void
+_spdk_bs_snapshot_newblob_create_cpl(void *cb_arg, spdk_blob_id blobid, int bserrno)
+{
+	struct spdk_clone_snapshot_ctx *ctx = (struct spdk_clone_snapshot_ctx *)cb_arg;
+	struct spdk_blob *origblob = ctx->original.blob;
+
+	if (bserrno != 0) {
+		_spdk_bs_cleanup_origblob(ctx, bserrno);
+		return;
+	}
+
+	ctx->new.id = blobid;
+	ctx->cpl.u.blobid.blobid = blobid;
+
+	spdk_bs_open_blob(origblob->bs, ctx->new.id, _spdk_bs_snapshot_newblob_open_cpl, ctx);
+}
+
+
+static void
+_spdk_bs_xattr_snapshot(void *arg, const char *name,
+			const void **value, size_t *value_len)
+{
+	if (!strncmp(name, SNAPSHOT_IN_PROGRESS, sizeof(SNAPSHOT_IN_PROGRESS))) {
+		struct spdk_blob *blob = (struct spdk_blob *)arg;
+		*value = &blob->id;
+		*value_len = sizeof(blob->id);
+	}
+}
+
+static void
+_spdk_bs_snapshot_origblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
+{
+	struct spdk_clone_snapshot_ctx *ctx = (struct spdk_clone_snapshot_ctx *)cb_arg;
+	struct spdk_blob_opts opts;
+	struct spdk_blob_xattr_opts internal_xattrs;
+	char *xattrs_names[] = { SNAPSHOT_IN_PROGRESS };
+
+	if (bserrno != 0) {
+		_spdk_bs_cleanup_finish(ctx, bserrno);
+		return;
+	}
+
+	ctx->original.blob = _blob;
+
+	if (_blob->data_ro || _blob->md_ro) {
+		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Cannot create snapshot from read only blob with id %lu\n",
+			      _blob->id);
+		_spdk_bs_cleanup_origblob(ctx, -EINVAL);
+		return;
+	}
+
+	spdk_blob_opts_init(&opts);
+	_spdk_blob_xattrs_init(&internal_xattrs);
+
+	/* Change the size of new blob to the same as in original blob,
+	 * but do not allocate clusters */
+	opts.thin_provision = true;
+	opts.num_clusters = spdk_blob_get_num_clusters(_blob);
+
+	/* If there are any xattrs specified for snapshot, set them now */
+	if (ctx->xattrs) {
+		memcpy(&opts.xattrs, ctx->xattrs, sizeof(*ctx->xattrs));
+	}
+	/* Set internal xattr SNAPSHOT_IN_PROGRESS */
+	internal_xattrs.count = 1;
+	internal_xattrs.ctx = _blob;
+	internal_xattrs.names = xattrs_names;
+	internal_xattrs.get_value = _spdk_bs_xattr_snapshot;
+
+	_spdk_bs_create_blob(_blob->bs, &opts, &internal_xattrs,
+			     _spdk_bs_snapshot_newblob_create_cpl, ctx);
+}
+
+void spdk_bs_create_snapshot(struct spdk_blob_store *bs, spdk_blob_id blobid,
+			     const struct spdk_blob_xattr_opts *snapshot_xattrs,
+			     spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
+{
+	struct spdk_clone_snapshot_ctx *ctx = calloc(1, sizeof(*ctx));
+
+	if (!ctx) {
+		cb_fn(cb_arg, SPDK_BLOBID_INVALID, -ENOMEM);
+		return;
+	}
+	ctx->cpl.type = SPDK_BS_CPL_TYPE_BLOBID;
+	ctx->cpl.u.blobid.cb_fn = cb_fn;
+	ctx->cpl.u.blobid.cb_arg = cb_arg;
+	ctx->cpl.u.blobid.blobid = SPDK_BLOBID_INVALID;
+	ctx->bserrno = 0;
+	ctx->original.id = blobid;
+	ctx->xattrs = snapshot_xattrs;
+
+	spdk_bs_open_blob(bs, ctx->original.id, _spdk_bs_snapshot_origblob_open_cpl, ctx);
+}
+/* END spdk_bs_create_snapshot */
 
 /* START spdk_blob_resize */
 int
