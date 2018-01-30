@@ -1,6 +1,6 @@
 # Changelog
 
-## v18.01: (Upcoming Release)
+## v18.01: Blobstore Thin Provisioning
 
 ### Build System
 
@@ -76,6 +76,9 @@ rather than struct spdk_blob **.
 
 The function signature of spdk_bs_iter_next() has changed.  It now takes a struct spdk_blob * argument
 rather than struct spdk_blob **.
+
+Thin provisioning support has been added to the blobstore.  It can be enabled by setting the
+`thin_provision` flag in struct spdk_blob_opts when calling spdk_bs_create_blob_ext().
 
 ### NBD device
 
@@ -229,6 +232,10 @@ A userspace driver for Virtio SCSI devices has been added.
 The driver is capable of creating block devices on top of LUNs exposed by another SPDK vhost-scsi application.
 
 See the [Virtio SCSI](http://www.spdk.io/doc/virtio.html) documentation and [Getting Started](http://www.spdk.io/doc/bdev.html#bdev_config_virtio_scsi) guide for more information.
+
+### Vhost target
+
+The vhost target application now supports live migration between QEMU instances.
 
 
 ## v17.07: Build system improvements, userspace vhost-blk target, and GPT bdev
