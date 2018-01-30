@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2964b5e7_77d4b840",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 1238,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-30T04:05:35Z",
+      "side": 1,
+      "message": "If bserrno is set here you need to release the cluster. If bserrno is specifically -EEXIST, you should proceed as if the operation succeeded (but still release your cluster). Otherwise, fail.",
+      "revId": "3a7a93fc69832b48db0b99305a08275576a0da66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fec7b9c4_e45b448a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 1265,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-30T04:05:35Z",
+      "side": 1,
+      "message": "This is written in the opposite way of what my brain would expect. I\u0027d have written it this way:\n\nif (bserrno) {\n    _spdk_bs_release_cluster(...);\n    _spdk_blob_insert_cluster_cpl(...);\n    return;\n}\n\n_spdk_blob_insert_cluster_on_md_thread(...);",
+      "revId": "3a7a93fc69832b48db0b99305a08275576a0da66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6030e18b_8801bae6",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 1316,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-30T04:05:35Z",
+      "side": 1,
+      "message": "This path won\u0027t actually free the cluster because ctx is NULL.",
+      "revId": "3a7a93fc69832b48db0b99305a08275576a0da66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d8eea4cc_373ae2bb",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 1463,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-30T04:05:35Z",
+      "side": 1,
+      "message": "I think it might be simpler to do the queueing inside spdk_bs_allocate_and_copy_cluster.",
+      "revId": "3a7a93fc69832b48db0b99305a08275576a0da66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2f6bd521_26a075a1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 1464,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-30T04:05:35Z",
+      "side": 1,
+      "message": "You can\u0027t switch the batch to a sequence here because when this function exits, it calls spdk_bs_batch_close. That\u0027s going to stomp on the sequence memory. It might make more sense to have _spdk_bs_allocate_and_copy_cluster allocate its own sequence internally.",
+      "revId": "3a7a93fc69832b48db0b99305a08275576a0da66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d6914026_eebed771",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 1702,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-30T04:05:35Z",
+      "side": 1,
+      "message": "The spdk_bs_sequence_t never actually gets completed when you go down this path, which means it leaks.",
+      "revId": "3a7a93fc69832b48db0b99305a08275576a0da66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
