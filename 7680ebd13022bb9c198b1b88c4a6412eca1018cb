@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "86268669_681c1700",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-30T08:36:58Z",
+      "side": 1,
+      "message": "to be removed",
+      "range": {
+        "startLine": 336,
+        "startChar": 0,
+        "endLine": 336,
+        "endChar": 12
+      },
+      "revId": "7680ebd13022bb9c198b1b88c4a6412eca1018cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cdc550b5_cc8e231b",
+        "filename": "lib/env_dpdk/vtophys.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-30T08:36:58Z",
+      "side": 1,
+      "message": "can you add tailq directly to spdk_phys_region?\nUnless there\u0027s a good reason to keep it separately here - I don\u0027t see it.",
+      "range": {
+        "startLine": 83,
+        "startChar": 1,
+        "endLine": 83,
+        "endChar": 38
+      },
+      "revId": "7680ebd13022bb9c198b1b88c4a6412eca1018cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "126731c6_f25b1718",
+        "filename": "lib/env_dpdk/vtophys.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-30T08:36:58Z",
+      "side": 1,
+      "message": "it\u0027s almost c++\n:-)",
+      "range": {
+        "startLine": 257,
+        "startChar": 1,
+        "endLine": 257,
+        "endChar": 11
+      },
+      "revId": "7680ebd13022bb9c198b1b88c4a6412eca1018cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2b351017_146365b3",
+        "filename": "lib/env_dpdk/vtophys.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 331,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-30T08:36:58Z",
+      "side": 1,
+      "message": "could we check these before vtophys_get_paddr_pagemap?\nEven better - could we check these even before g_vfio.enabled check?\n\nI\u0027m thinking the g_phys_regions could be a global vtophys override map.\nWe could expose public spdk_vtophys_override(vaddr, len, paddr) API -\u003e then we wouldn\u0027t need to modify spdk_mem_register.\n\nNVMe could do:\nspdk_vtophys_override(cmb_vaddr, len, cmb_paddr);\nspdk_mem_register(cmb_vaddr, len);\n\ng_phys_region lookup is terribly inefficient now, but it\u0027s only used on memory register/unregister. It can be left as is.",
+      "range": {
+        "startLine": 331,
+        "startChar": 14,
+        "endLine": 331,
+        "endChar": 36
+      },
+      "revId": "7680ebd13022bb9c198b1b88c4a6412eca1018cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
