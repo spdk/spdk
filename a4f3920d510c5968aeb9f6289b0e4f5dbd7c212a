@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a11604b9_337da75e",
+        "filename": "doc/blob.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-31T17:38:15Z",
+      "side": 0,
+      "message": "This anchor is referred to from other places (e.g. \u0027@ref blob\u0027 in doc/lvol.md and doc/userspace.md), so we need to fix those up or keep the #blob name.",
+      "revId": "a4f3920d510c5968aeb9f6289b0e4f5dbd7c212a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
