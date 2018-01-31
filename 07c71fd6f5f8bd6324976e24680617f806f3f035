@@ -1,0 +1,293 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "586be321_7d4d98c3",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-31T20:48:51Z",
+      "side": 1,
+      "message": "This guide loses the \"Design Goals\" section from the previous document. I personally thought that was valuable to have as a justification for our design decisions. Was its removal intentional? Did you find it to be distracting?",
+      "revId": "07c71fd6f5f8bd6324976e24680617f806f3f035",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac808949_e37dffe1",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-31T20:48:51Z",
+      "side": 1,
+      "message": "The previous document had two groupings of \"things\" - the hierarchy of 3 units (block, page, cluster) and the primitives that the user interacts with (blob, blobstore). That\u0027s been lost here. Blobs and blobstore are not in the same hierarchy of abstractions, at least not in the same way, as the other units.",
+      "revId": "07c71fd6f5f8bd6324976e24680617f806f3f035",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "058a152b_bbe19e97",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-31T20:48:51Z",
+      "side": 1,
+      "message": "You can\u0027t really talk about atomicity until you talk about read and write granularity and metadata. The other document went into that after talking about the primitives for this reason.",
+      "revId": "07c71fd6f5f8bd6324976e24680617f806f3f035",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3abbfd13_529cefd6",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-31T20:48:51Z",
+      "side": 1,
+      "message": "\"Asynchronous Operation\" is probably a more appropriate title here - that\u0027s the \"theory\" you really want to talk about in this section.",
+      "revId": "07c71fd6f5f8bd6324976e24680617f806f3f035",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aa7f346c_d750b4ba",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-31T20:48:51Z",
+      "side": 1,
+      "message": "This isn\u0027t right - it doesn\u0027t call the callback function when the original call was made. It will call the callback when the operation completes.",
+      "revId": "07c71fd6f5f8bd6324976e24680617f806f3f035",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f38113b4_b12ed43f",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-31T20:48:51Z",
+      "side": 1,
+      "message": "I think this should say something like \"The blobstore performs operations on a backing block device by calling function pointers supplied to it at initialization time. For convenience, an implementation of these function pointers that route I/O to the bdev layer is available.\"",
+      "revId": "07c71fd6f5f8bd6324976e24680617f806f3f035",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dd3e6e10_7fb5b184",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-31T20:48:51Z",
+      "side": 1,
+      "message": "This was recently changed so that the calls no longer have \u0027md\u0027 in their name. Now there are just implicit rules around each function, so you\u0027ll need to list each function out here and say where it can be called. The metadata thread also isn\u0027t explicit anymore - it\u0027s the thread the blobstore was initially created on.\n\nThis was all in preparation for allowing users to perform any operation from any thread, and doing message passing internally to handle coordination. We just haven\u0027t gotten there yet.",
+      "revId": "07c71fd6f5f8bd6324976e24680617f806f3f035",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e56df2b1_e4d9de15",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-31T20:48:51Z",
+      "side": 1,
+      "message": "I\u0027m not sure this section is adding any value to the \"theory\" part. This seems to be more practical information that belongs in the Design Considerations portion (and which you already have there).",
+      "revId": "07c71fd6f5f8bd6324976e24680617f806f3f035",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "330e5e89_c9262608",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-31T20:48:51Z",
+      "side": 1,
+      "message": "The best way to explain this is probably to link to @ref concurrency and then say each thread must obtain a channel in order to perform I/O operations. Channels cannot be shared across threads.",
+      "revId": "07c71fd6f5f8bd6324976e24680617f806f3f035",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "40fce053_05360685",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-31T20:48:51Z",
+      "side": 1,
+      "message": "This could probably stand to be two sentences.",
+      "revId": "07c71fd6f5f8bd6324976e24680617f806f3f035",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ae42936_3fbd4dbf",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-31T20:48:51Z",
+      "side": 1,
+      "message": "This definitely belongs in the theory of operations section, and it should be positioned not as \"sub-page sized operations are not supported\" but instead as \"reads and writes are performed in units of pages\". You could have a section here outlining some strategies to perform sub-page sized updates (read/modify/write), but that may be out of scope of this document.",
+      "revId": "07c71fd6f5f8bd6324976e24680617f806f3f035",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e1fe554_dd344d52",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-31T20:48:51Z",
+      "side": 1,
+      "message": "The \u0027md in name\u0027 rule is no longer valid.",
+      "revId": "07c71fd6f5f8bd6324976e24680617f806f3f035",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ede20e42_bcee54f1",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-31T20:48:51Z",
+      "side": 1,
+      "message": "Explicitly call out spdk_dma_malloc and its variants.",
+      "revId": "07c71fd6f5f8bd6324976e24680617f806f3f035",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f6f43e2_68f6601b",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-31T20:48:51Z",
+      "side": 1,
+      "message": "Negated POSIX errno values.",
+      "revId": "07c71fd6f5f8bd6324976e24680617f806f3f035",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fe828977_6ec130fb",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-31T20:48:51Z",
+      "side": 1,
+      "message": "It would make more sense to have this section grouped in with the other discussion of Atomicity and power fail safety.",
+      "revId": "07c71fd6f5f8bd6324976e24680617f806f3f035",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7e90bd03_acb321c6",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-31T20:48:51Z",
+      "side": 1,
+      "message": "Why have this section if it was already described elsewhere?",
+      "revId": "07c71fd6f5f8bd6324976e24680617f806f3f035",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ecd3aa1_4aa33559",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-01-31T20:48:51Z",
+      "side": 1,
+      "message": "Maybe call this \"Blobstore Internals\"?",
+      "revId": "07c71fd6f5f8bd6324976e24680617f806f3f035",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
