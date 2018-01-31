@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a024b519_455c54ab",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-31T14:01:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a213811f_341dcf82",
+      "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "728eb000_e0ccd0d3",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 58
@@ -30,6 +48,24 @@
       "writtenOn": "2018-01-30T17:24:01Z",
       "side": 1,
       "message": "This path potentially leaks old_alias.",
+      "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "617e2a0d_e575533c",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-31T14:01:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "728eb000_e0ccd0d3",
       "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "64fceeac_6b7b0683",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-31T14:01:49Z",
+      "side": 1,
+      "message": "There is a reason why we first add an alias then delete.\nSuppose that removing an alias is successful and adding is not. Bdev will be left without alias, and such case should not occur.",
+      "parentUuid": "c256b54f_2395c3a6",
+      "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "50c153d7_f9fc491d",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 58
@@ -64,6 +118,24 @@
       "writtenOn": "2018-01-30T17:24:01Z",
       "side": 1,
       "message": "This can be simplified to strdup() now (or just point directly at lvol-\u003eunique_id if its lifetime is guaranteed to be as long as that of the bdev).",
+      "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b961fb1d_a0ab1fa0",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 738,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-31T14:01:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "50c153d7_f9fc491d",
       "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -122,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "83951a9e_af423b1f",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 762,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-31T14:01:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "03dcb569_d872821d",
+      "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ff84dcb2_dc17000e",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 58
@@ -133,6 +223,24 @@
       "writtenOn": "2018-01-30T21:48:18Z",
       "side": 1,
       "message": "just return rc always here - if rc \u003d\u003d 0 then this returns 0 and you don\u0027t need line 851",
+      "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "311614ff_bb9256b5",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 847,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-31T14:01:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ff84dcb2_dc17000e",
       "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -156,6 +264,24 @@
     },
     {
       "key": {
+        "uuid": "70608ead_628d0f7e",
+        "filename": "lib/bdev/lvol/vbdev_lvol.h",
+        "patchSetId": 58
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-31T14:01:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7f93a999_ae4acfbb",
+      "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c738ff37_ba7ac051",
         "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
         "patchSetId": 58
@@ -173,6 +299,24 @@
     },
     {
       "key": {
+        "uuid": "d43739b4_8fd38700",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-31T14:01:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c738ff37_ba7ac051",
+      "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "80231f8e_cdbb56f6",
         "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
         "patchSetId": 58
@@ -184,6 +328,30 @@
       "writtenOn": "2018-01-30T17:24:01Z",
       "side": 1,
       "message": "Please use spdk_strerror() instead.",
+      "range": {
+        "startLine": 380,
+        "startChar": 1,
+        "endLine": 380,
+        "endChar": 16
+      },
+      "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "05a1717d_4326e2e1",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-31T14:01:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "80231f8e_cdbb56f6",
       "range": {
         "startLine": 380,
         "startChar": 1,
@@ -236,6 +404,30 @@
     },
     {
       "key": {
+        "uuid": "cc34c467_f5612c87",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-31T14:01:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2a30f3d1_937eb150",
+      "range": {
+        "startLine": 429,
+        "startChar": 1,
+        "endLine": 429,
+        "endChar": 16
+      },
+      "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "09ba1908_d8d7baa4",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 58
@@ -247,6 +439,24 @@
       "writtenOn": "2018-01-30T21:48:18Z",
       "side": 1,
       "message": "where do we check that an lvol with this name does not already exist in this lvolstore?",
+      "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88c83a24_3915005c",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 1077,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-01-31T14:01:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "09ba1908_d8d7baa4",
       "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
