@@ -964,6 +964,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	num_clusters = divide_round_up(sz, spdk_bs_get_cluster_size(bs));
 	lvol->num_clusters = num_clusters;
 	lvol->close_only = false;
+	lvol->thin_provision = thin_provision;
 	strncpy(lvol->name, name, SPDK_LVS_NAME_MAX);
 	req->lvol = lvol;
 
