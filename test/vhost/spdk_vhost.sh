@@ -77,7 +77,7 @@ case $1 in
 		;;
 	-m|--migration)
 		echo 'Running migration suite...'
-		$WORKDIR/migration/migration-malloc.sh -x \
+		$WORKDIR/migration/migration.sh -x \
 		--fio-bin=$FIO_BIN --os=$VM_IMAGE
 		;;
 	-i|--integrity)
