@@ -32,13 +32,12 @@
 - @ref directory_structure
 - [Public API header files](files.html)
 - @ref event
+- @ref blob
 
 # Modules {#modules}
 
 - @ref nvme
 - @ref ioat
-- @ref blob
-
 - @ref virtio
 
 # Tools {#tools}
