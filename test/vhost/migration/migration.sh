@@ -10,6 +10,7 @@ declare -A vms_ctrlrs_disks
 
 # By default use Guest fio
 fio_bin=""
+test_cases=""
 
 function usage()
 {
@@ -26,6 +27,8 @@ function usage()
 	echo "                          incoming - set this VM to wait for incoming migration"
 	echo "                          If test-type=spdk_vhost_blk then each disk size is 20G e.g."
 	echo "                          --vm num=X,os=os.qcow,bdevs=Malloc0:Nvme0n1:Malloc1"
+	echo "    --test-cases=TESTS    Coma-separated list of tests to run. Implemented test cases are: 1"
+	echo "                          See test/vhost/test_plan.md for more info."
 	echo "-x                        set -x for script debug"
 }
 
@@ -38,6 +41,7 @@ for param in "$@"; do
 		--work-dir=*) TEST_DIR="${param#*=}" ;;
 		--os=*) os_image="${param#*=}" ;;
 		--fio-bin=*) fio_bin="${param}" ;;
+		--test-cases=*) test_cases="${param#*=}" ;;
 		-x) set -x ;;
 		-v) SPDK_VHOST_VERBOSE=true	;;
 		*)
@@ -47,6 +51,8 @@ for param in "$@"; do
 done
 
 . $(readlink -e "$(dirname $0)/../common/common.sh") || exit 1
+
+[[ ! -z "$test_cases" ]] || fail "Need '--test-cases=' parameter"
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' INT ERR EXIT
 
@@ -115,7 +121,13 @@ function is_fio_running()
 # FIXME: this shoul'd not be needed
 vm_kill_all
 
-source $BASE_DIR/migration-tc1.sh
+for test_case in ${test_cases//,/ }; do
+	assert_number "$test_case"
+	notice "==============================="
+	notice "Running Migration test case ${test_case}"
+	notice "==============================="
+	source $BASE_DIR/migration-tc${test_case}.sh
+done
 
 notice "Migration Test SUCCESS"
 notice "==============="
