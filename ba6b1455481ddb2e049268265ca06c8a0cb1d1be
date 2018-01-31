@@ -1,0 +1,136 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cd7e4391_176173f2",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-31T15:34:49Z",
+      "side": 1,
+      "message": "1MiB",
+      "range": {
+        "startLine": 7,
+        "startChar": 34,
+        "endLine": 7,
+        "endChar": 38
+      },
+      "revId": "ba6b1455481ddb2e049268265ca06c8a0cb1d1be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9e50ffa_f404b269",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-31T15:34:49Z",
+      "side": 1,
+      "message": "1MiB",
+      "range": {
+        "startLine": 9,
+        "startChar": 43,
+        "endLine": 9,
+        "endChar": 46
+      },
+      "revId": "ba6b1455481ddb2e049268265ca06c8a0cb1d1be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d84f4a6c_f23bd8f0",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-31T15:34:49Z",
+      "side": 1,
+      "message": "Blobstore",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 8
+      },
+      "revId": "ba6b1455481ddb2e049268265ca06c8a0cb1d1be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af05d056_5a12a94e",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-31T15:34:49Z",
+      "side": 1,
+      "message": "1GiB",
+      "range": {
+        "startLine": 10,
+        "startChar": 46,
+        "endLine": 10,
+        "endChar": 49
+      },
+      "revId": "ba6b1455481ddb2e049268265ca06c8a0cb1d1be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2373561f_98217581",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-31T15:34:49Z",
+      "side": 1,
+      "message": "Please add info that this is done due to thin provisioning allocating a cluster size buffer.",
+      "revId": "ba6b1455481ddb2e049268265ca06c8a0cb1d1be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b152a8d3_c294433c",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-31T15:34:49Z",
+      "side": 1,
+      "message": "1MiB",
+      "range": {
+        "startLine": 46,
+        "startChar": 64,
+        "endLine": 46,
+        "endChar": 67
+      },
+      "revId": "ba6b1455481ddb2e049268265ca06c8a0cb1d1be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
