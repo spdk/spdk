@@ -102,6 +102,7 @@ struct spdk_lvol {
 	char				*unique_id;
 	char				name[SPDK_LVOL_NAME_MAX];
 	bool				close_only;
+	bool				thin_provision;
 	struct spdk_bdev		*bdev;
 	int				ref_count;
 	bool				action_in_progress;

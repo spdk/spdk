@@ -480,6 +480,9 @@ vbdev_lvol_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
 	spdk_json_write_name(w, "base_bdev");
 	spdk_json_write_string(w, spdk_bdev_get_name(bdev));
 
+	spdk_json_write_name(w, "thin_provision");
+	spdk_json_write_bool(w, lvol->thin_provision);
+
 	spdk_json_write_object_end(w);
 
 	return 0;
