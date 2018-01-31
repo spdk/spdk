@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b67c2510_ef0c5516",
+        "filename": "lib/json/json_util.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-31T13:07:49Z",
+      "side": 1,
+      "message": "It looks that every comment is added to the above of the line that should be explained.",
+      "range": {
+        "startLine": 349,
+        "startChar": 44,
+        "endLine": 349,
+        "endChar": 85
+      },
+      "revId": "471d9063f55a03eb18e4e4b94bdbc3f4d7eacf79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
