@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "4d36a9e7_5d3de7e0",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1012941
+      },
+      "writtenOn": "2018-01-31T11:33:39Z",
+      "side": 1,
+      "message": "I changed it temporary to test. It should be 1/2.",
+      "parentUuid": "f234effc_90e489dd",
+      "range": {
+        "startLine": 357,
+        "startChar": 7,
+        "endLine": 357,
+        "endChar": 34
+      },
+      "revId": "02e147f8aa0469771741b4aa7526db0027fb9d24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e72c3ee7_94a92db9",
         "filename": "test/lvol/test_cases.py",
         "patchSetId": 7
@@ -36,6 +60,30 @@
       "writtenOn": "2018-01-29T15:40:35Z",
       "side": 1,
       "message": "This could be good moment to actually check the bdev sizes after resize.",
+      "range": {
+        "startLine": 500,
+        "startChar": 0,
+        "endLine": 501,
+        "endChar": 27
+      },
+      "revId": "02e147f8aa0469771741b4aa7526db0027fb9d24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d05b91f_e949253d",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 501,
+      "author": {
+        "id": 1012941
+      },
+      "writtenOn": "2018-01-31T11:33:39Z",
+      "side": 1,
+      "message": "Ok. I will add the check.",
+      "parentUuid": "e72c3ee7_94a92db9",
       "range": {
         "startLine": 500,
         "startChar": 0,
