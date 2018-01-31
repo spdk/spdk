@@ -26,6 +26,7 @@ A logical volume is implemented as an SPDK blob created from an lvolstore. An lv
 Representation of an SPDK block device (spdk_bdev) with an lvol implementation.
 A logical volume block device translates generic SPDK block device I/O (spdk_bdev_io) operations into the equivalent SPDK blob operations. Combination of lvol ID and lvolstore UUID gives lvol_bdev name in a form "uuid/lvolid". block_size of the created bdev is always 4096, due to blobstore page size. Cluster_size is configurable by parameter. By default it is 1GiB.
 Size of the new bdev will be rounded up to nearest multiple of cluster_size.
+By default lvol bdevs claim part of lvol store equal to their set size. When thin provision option is enabled, no space is taken from lvol store until data is written to lvol bdev.
 
 # Configuring Logical Volumes
 
@@ -50,16 +51,17 @@ destroy_lvol_store [-h] uuid
     single lvol requires using delete_bdev rpc call.
     optional arguments:
     -h, --help  show help
-get_lvol_stores [-h]
+get_lvol_stores [-h] [NAME]
     Display current logical volume store list
     optional arguments:
     -h, --help  show help
+    NAME, show details of specified lvol store
 ```
 
 RPC regarding lvol and spdk bdev:
 
 ```
-construct_lvol_bdev [-h] uuid size
+construct_lvol_bdev [-h] [-t] uuid size
     Creates lvol with specified size on lvolstore specified by its uuid.
     Then constructs spdk bdev on top of that lvol and presents it as spdk bdev.
     Returns the name of new spdk bdev
@@ -76,6 +78,5 @@ delete_bdev [-h] bdev_name
 
 # Restrictions
 
-- Unmap is not supported.
 - Nesting logical volumes on each other is not supported.
 - Resizing lvol bdev is experimental. Code is present but not used.
