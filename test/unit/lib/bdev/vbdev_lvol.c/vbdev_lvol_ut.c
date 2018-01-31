@@ -411,6 +411,12 @@ spdk_json_write_string(struct spdk_json_write_ctx *w, const char *val)
 }
 
 int
+spdk_json_write_bool(struct spdk_json_write_ctx *w, bool val)
+{
+	return 0;
+}
+
+int
 spdk_json_write_object_begin(struct spdk_json_write_ctx *w)
 {
 	return 0;
