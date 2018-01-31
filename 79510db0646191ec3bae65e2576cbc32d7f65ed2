@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1c11972c_5f6bf562",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1359,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-01-31T16:39:23Z",
+      "side": 1,
+      "message": "I would remove the suggestion about smaller cluster size.  Just keep the DMA allocation failure part.\n\nThe problem is that by time user sees this message, it is too late - you cannot change the cluster size on a blobstore.",
+      "revId": "79510db0646191ec3bae65e2576cbc32d7f65ed2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
