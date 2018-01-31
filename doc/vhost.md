@@ -1,4 +1,4 @@
-# vhost {#vhost}
+# vhost Target {#vhost}
 
 # Table of Contents {#vhost_toc}
 
