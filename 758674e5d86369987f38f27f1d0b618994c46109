@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "97bdb325_38de0e3a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-31T07:47:19Z",
+      "side": 1,
+      "message": "Unnecessary change",
+      "revId": "758674e5d86369987f38f27f1d0b618994c46109",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3c093c71_328bace8",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 737,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-31T07:47:19Z",
+      "side": 1,
+      "message": "Please align",
+      "range": {
+        "startLine": 737,
+        "startChar": 0,
+        "endLine": 737,
+        "endChar": 25
+      },
+      "revId": "758674e5d86369987f38f27f1d0b618994c46109",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4746f233_450dfc45",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 805,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-31T07:47:19Z",
+      "side": 1,
+      "message": "Align please",
+      "range": {
+        "startLine": 804,
+        "startChar": 0,
+        "endLine": 805,
+        "endChar": 17
+      },
+      "revId": "758674e5d86369987f38f27f1d0b618994c46109",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
