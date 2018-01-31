@@ -31,6 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "spdk/json.h"
+
 #include "spdk_internal/utf.h"
 
 struct spdk_json_write_ctx {
