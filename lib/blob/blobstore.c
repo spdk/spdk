@@ -1355,6 +1355,8 @@ _spdk_bs_allocate_and_copy_cluster(struct spdk_blob_data *blob,
 
 	ctx->buf = spdk_dma_malloc(blob->bs->cluster_sz, blob->back_bs_dev->blocklen, NULL);
 	if (!ctx->buf) {
+		SPDK_ERRLOG("DMA allocation for cluster of size = %d failed.\n",
+			    blob->bs->cluster_sz);
 		free(ctx);
 		spdk_bs_user_op_abort(op);
 		return;
