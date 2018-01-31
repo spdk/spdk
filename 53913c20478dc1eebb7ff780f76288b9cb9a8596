@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0ba4cd6a_3c6fbc1d",
+        "filename": "test/blobstore/blobstore.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-01-31T16:38:02Z",
+      "side": 1,
+      "message": "you should redirect output to $testdir/btest.out instead of btest.out. Autorun is run from the output directory so that artifacts created by the build pool (i.e. the logs) will be created in that directory. any references to ./ will reference theoutput directory. We keep track of the $testdir directory for each script in case we need to reference local config files or create temporary files for use with those tests.",
+      "range": {
+        "startLine": 21,
+        "startChar": 93,
+        "endLine": 21,
+        "endChar": 98
+      },
+      "revId": "53913c20478dc1eebb7ff780f76288b9cb9a8596",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d151df6_f620969b",
+        "filename": "test/blobstore/blobstore.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-01-31T16:38:02Z",
+      "side": 1,
+      "message": "$testdir/btest.out",
+      "revId": "53913c20478dc1eebb7ff780f76288b9cb9a8596",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "31ad72be_86301a29",
+        "filename": "test/blobstore/blobstore.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-01-31T16:38:02Z",
+      "side": 1,
+      "message": "$testdir/btest.out.match",
+      "revId": "53913c20478dc1eebb7ff780f76288b9cb9a8596",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d2ff6928_504cf46c",
+        "filename": "test/blobstore/blobstore.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-01-31T16:38:02Z",
+      "side": 1,
+      "message": "I think both of these need to be prepended with $testdir. test.pattern for sure because it shows up in that directory in the previous log, and maybe *.blob. I\u0027m not sure where or when those files are being created though.",
+      "revId": "53913c20478dc1eebb7ff780f76288b9cb9a8596",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
