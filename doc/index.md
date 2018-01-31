@@ -20,6 +20,7 @@
 
 - @ref iscsi
 - @ref nvmf
+- @ref bdev
 - @ref blobfs
 - @ref jsonrpc
 
@@ -35,7 +36,6 @@
 
 - @ref nvme
 - @ref ioat
-- @ref bdev
 - @ref blob
 - @ref vhost
 - @ref virtio
