@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0fe3d950_fe8a3e20",
+        "filename": "doc/bdev_module.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-31T20:39:08Z",
+      "side": 1,
+      "message": "Function names should have () appended so Doxygen will auto-link them.",
+      "range": {
+        "startLine": 139,
+        "startChar": 38,
+        "endLine": 139,
+        "endChar": 59
+      },
+      "revId": "60bc0d915490afe3c25588390b8122cc1fd1f475",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bc75019f_b049b9cd",
+        "filename": "doc/bdev_pg.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-31T20:39:08Z",
+      "side": 1,
+      "message": "4096 bytes (or 4 kilobytes)",
+      "range": {
+        "startLine": 11,
+        "startChar": 57,
+        "endLine": 11,
+        "endChar": 71
+      },
+      "revId": "60bc0d915490afe3c25588390b8122cc1fd1f475",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e08b1a5_66458a16",
+        "filename": "doc/bdev_pg.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-31T20:39:08Z",
+      "side": 1,
+      "message": "Add () to the function names in this file too.",
+      "range": {
+        "startLine": 54,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 20
+      },
+      "revId": "60bc0d915490afe3c25588390b8122cc1fd1f475",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "95877d94_c09cfbdc",
+        "filename": "doc/bdev_pg.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-31T20:39:08Z",
+      "side": 1,
+      "message": "This section should probably mention aliases as well.",
+      "revId": "60bc0d915490afe3c25588390b8122cc1fd1f475",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "093dfb32_ba2b62ad",
+        "filename": "doc/bdev_pg.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-31T20:39:08Z",
+      "side": 1,
+      "message": "it\u0027s -\u003e its",
+      "range": {
+        "startLine": 112,
+        "startChar": 0,
+        "endLine": 112,
+        "endChar": 4
+      },
+      "revId": "60bc0d915490afe3c25588390b8122cc1fd1f475",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
