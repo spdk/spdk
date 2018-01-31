@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a0814aa_aea289d4",
+        "filename": "test/blobstore/blobstore.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-01-31T08:44:42Z",
+      "side": 1,
+      "message": "$testdir/btest.out? Because autotest run blobstore.sh in rootdir.",
+      "range": {
+        "startLine": 21,
+        "startChar": 93,
+        "endLine": 21,
+        "endChar": 102
+      },
+      "revId": "0563e9e47f8a3db4e24462a280e8b824a01cfb3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fb42ffeb_3f954aa7",
+        "filename": "test/blobstore/blobstore.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-01-31T08:44:42Z",
+      "side": 1,
+      "message": "$testdir/btest.out",
+      "range": {
+        "startLine": 24,
+        "startChar": 27,
+        "endLine": 24,
+        "endChar": 38
+      },
+      "revId": "0563e9e47f8a3db4e24462a280e8b824a01cfb3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4cbe4903_c2591330",
+        "filename": "test/blobstore/blobstore.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-01-31T08:44:42Z",
+      "side": 1,
+      "message": "$testdir/btest.out.match",
+      "range": {
+        "startLine": 32,
+        "startChar": 30,
+        "endLine": 32,
+        "endChar": 47
+      },
+      "revId": "0563e9e47f8a3db4e24462a280e8b824a01cfb3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
