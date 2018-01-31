@@ -41,7 +41,7 @@
 #include <uuid/uuid.h>
 
 /* Default size of blobstore cluster */
-#define SPDK_LVS_OPTS_CLUSTER_SZ (1024 * 1024 * 1024)
+#define SPDK_LVS_OPTS_CLUSTER_SZ (4 * 1024 * 1024)
 
 /* Length of string returned from uuid_unparse() */
 #define UUID_STRING_LEN 37

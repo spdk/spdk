@@ -666,7 +666,8 @@ class TestCases(object):
     def test_case601(self):
         header(601)
         fail_count = 0
-        base_name = self.c.construct_malloc_bdev(self.total_size,
+        # Create malloc bdev smaller than default lvol cluster size
+        base_name = self.c.construct_malloc_bdev(1,
                                                  self.block_size)
         if self.c.construct_lvol_store(base_name,
                                        self.lvs_name, 0) == 0:
