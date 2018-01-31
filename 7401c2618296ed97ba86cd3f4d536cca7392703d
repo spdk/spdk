@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "008369b4_4e62e641",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 483,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-31T17:57:26Z",
+      "side": 1,
+      "message": "Looks okay to me, except I\u0027m not sure if we want to use \"thin_provision\" here just to be consistent.  (The grammar doesn\u0027t really make sense that way, but I think consistency would be more important in this case.)",
+      "revId": "7401c2618296ed97ba86cd3f4d536cca7392703d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
