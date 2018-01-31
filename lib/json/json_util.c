@@ -340,12 +340,14 @@ spdk_json_decode_array(const struct spdk_json_val *values, spdk_json_decode_fn d
 {
 	uint32_t i;
 	char *field;
+	size_t elem_size;
 
 	if (values == NULL || values->type != SPDK_JSON_VAL_ARRAY_BEGIN) {
 		return -1;
 	}
 
-	if (values->len > max_size) {
+	elem_size = spdk_json_val_len(&values[1]); /* if array is empty, this is set to 1 */
+	if (values->len > max_size * elem_size) {
 		return -1;
 	}
 
