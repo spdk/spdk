@@ -22,6 +22,29 @@
       "revId": "18bc463573be6d5ec5b5a19e40ff5d4c48bc8d18",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "07d9d4b3_bb40d692",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 759,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-01-31T08:10:40Z",
+      "side": 1,
+      "message": "In addition to what this test is already doing, can we create lvol bdev on each of lvol stores and verify their names didn\u0027t change as well ?",
+      "range": {
+        "startLine": 759,
+        "startChar": 0,
+        "endLine": 759,
+        "endChar": 44
+      },
+      "revId": "18bc463573be6d5ec5b5a19e40ff5d4c48bc8d18",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
