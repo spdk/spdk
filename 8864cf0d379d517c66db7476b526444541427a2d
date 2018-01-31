@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "58f4bb7c_b901969b",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 9
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-01-31T15:12:04Z",
+      "side": 1,
+      "message": "Done. Already add more info about this patch.",
+      "parentUuid": "daabd1d2_e8465c47",
+      "revId": "8864cf0d379d517c66db7476b526444541427a2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6854885d_a5a83a69",
         "filename": "scripts/common/fiocommon.py",
         "patchSetId": 9
@@ -30,6 +48,24 @@
       "writtenOn": "2018-01-29T18:03:22Z",
       "side": 1,
       "message": "It would be better for iscsi_fio.py and nvmf_fio.py to pass the device list to run_fio, rather than adding a per-test type check here.",
+      "revId": "8864cf0d379d517c66db7476b526444541427a2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a8afc0b_5597810e",
+        "filename": "scripts/common/fiocommon.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-01-31T15:12:04Z",
+      "side": 1,
+      "message": "I have added a property for FioCommon class to get the devices. then pass the devices to run_fio.",
+      "parentUuid": "6854885d_a5a83a69",
       "revId": "8864cf0d379d517c66db7476b526444541427a2d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "0163fbb8_d4da9cf6",
+        "filename": "scripts/common/fiocommon.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-01-31T15:12:04Z",
+      "side": 1,
+      "message": "Already removed this check and moved these lines into class initialization function.",
+      "parentUuid": "ec4851a2_4ddf5871",
+      "revId": "8864cf0d379d517c66db7476b526444541427a2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "13b12947_8094a6c2",
         "filename": "scripts/nvmf_fio.py",
         "patchSetId": 9
@@ -64,6 +118,24 @@
       "writtenOn": "2018-01-29T18:03:22Z",
       "side": 1,
       "message": "Is this really nvmf?  Or nvme and nvmf?\n\nI think if this should only be for nvmf, we need to determine which nvmeXnY devices are remote v. local, and only run fio on the remote namespaces.",
+      "revId": "8864cf0d379d517c66db7476b526444541427a2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aab2d83c_b052106d",
+        "filename": "scripts/nvmf_fio.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-01-31T15:12:04Z",
+      "side": 1,
+      "message": "I have checked the nvme tool. And I found that the model name of devices from SPDK NVMF target is \"SPDK bdev Controller\". So I used the model name to get the NVMF target devices. If nvme tool have new command to get the NVMF target devices like iscsiadm, then I can update the codes for the nvme tool.",
+      "parentUuid": "13b12947_8094a6c2",
       "revId": "8864cf0d379d517c66db7476b526444541427a2d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
