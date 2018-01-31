@@ -1355,6 +1355,8 @@ _spdk_bs_allocate_and_copy_cluster(struct spdk_blob_data *blob,
 
 	ctx->buf = spdk_dma_malloc(blob->bs->cluster_sz, blob->back_bs_dev->blocklen, NULL);
 	if (!ctx->buf) {
+		SPDK_ERRLOG("DMA allocation for cluster of size = %" PRIu32 " failed.\n",
+			    blob->bs->cluster_sz);
 		free(ctx);
 		spdk_bs_user_op_abort(op);
 		return;
@@ -1922,13 +1924,13 @@ _spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts)
 	dev_size = dev->blocklen * dev->blockcnt;
 	if (dev_size < opts->cluster_sz) {
 		/* Device size cannot be smaller than cluster size of blobstore */
-		SPDK_ERRLOG("Device size %" PRIu64 " is smaller than cluster size %d\n", dev_size,
-			    opts->cluster_sz);
+		SPDK_ERRLOG("Device size %" PRIu64 " is smaller than cluster size %" PRIu32 "\n",
+			    dev_size, opts->cluster_sz);
 		return NULL;
 	}
 	if (opts->cluster_sz < SPDK_BS_PAGE_SIZE) {
 		/* Cluster size cannot be smaller than page size */
-		SPDK_ERRLOG("Cluster size %d is smaller than page size %d\n",
+		SPDK_ERRLOG("Cluster size %" PRIu32 " is smaller than page size %d\n",
 			    opts->cluster_sz, SPDK_BS_PAGE_SIZE);
 		return NULL;
 	}
