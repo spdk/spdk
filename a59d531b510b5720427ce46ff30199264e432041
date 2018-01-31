@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "730f796f_7bb7db5a",
+        "filename": "autorun_post.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-31T00:39:11Z",
+      "side": 1,
+      "message": "Do these need to be updated to lower case to match autotest.sh?",
+      "range": {
+        "startLine": 87,
+        "startChar": 16,
+        "endLine": 87,
+        "endChar": 20
+      },
+      "revId": "a59d531b510b5720427ce46ff30199264e432041",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
