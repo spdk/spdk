@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "57ba5ab3_0923e1dc",
+        "filename": "doc/bdev_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-01-31T13:58:47Z",
+      "side": 1,
+      "message": "This is no longer the case. This restriction has been removed quite some time ago.\nOpening a descriptor might fail either because of memory allocation failure or because the bdev has been claimed.",
+      "range": {
+        "startLine": 63,
+        "startChar": 55,
+        "endLine": 65,
+        "endChar": 59
+      },
+      "revId": "a8bd28bf8e82328e955b740a9a39560676e05ca0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
