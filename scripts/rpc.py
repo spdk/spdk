@@ -262,11 +262,10 @@ if __name__ == "__main__":
     p.add_argument('size', help='size in MiB for this bdev', type=int)
     p.set_defaults(func=rpc.lvol.construct_lvol_bdev)
 
-    # Logical volume resize feature is disabled, as it is currently work in progress
-    # p = subparsers.add_parser('resize_lvol_bdev', help='Resize existing lvol bdev')
-    # p.add_argument('name', help='lvol bdev name')
-    # p.add_argument('size', help='new size in MiB for this bdev', type=int)
-    # p.set_defaults(func=rpc.lvol.resize_lvol_bdev)
+    p = subparsers.add_parser('resize_lvol_bdev', help='Resize existing lvol bdev')
+    p.add_argument('name', help='lvol bdev name')
+    p.add_argument('size', help='new size in MiB for this bdev', type=int)
+    p.set_defaults(func=rpc.lvol.resize_lvol_bdev)
 
     p = subparsers.add_parser('destroy_lvol_store', help='Destroy an logical volume store')
     p.add_argument('-u', '--uuid', help='lvol store UUID', required=False)

@@ -1028,7 +1028,7 @@ spdk_lvol_resize(struct spdk_lvol *lvol, uint64_t sz,
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 
-	rc = spdk_blob_resize(blob, sz);
+	rc = spdk_blob_resize(blob, new_clusters);
 	if (rc < 0) {
 		goto invalid;
 	}
