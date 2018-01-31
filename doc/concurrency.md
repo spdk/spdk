@@ -108,17 +108,16 @@ large portion of the code in each was implementing the basic message passing
 infrastructure required to call spdk_allocate_thread(). This includes spawning
 one thread per core, pinning each thread to a unique core, and allocating
 lockless rings between the threads for message passing. Instead of
-re-implementing that infrastructure for each example application, SPDK provides
-the SPDK [event framework](http://www.spdk.io/doc/event_8h.html). This library
-handles setting up all of the message passing infrastructure, installing signal
-handlers to cleanly shutdown, implements periodic pollers, and does basic
-command line parsing. When started through spdk_app_start(), the library
-automatically spawns all of the threads requested, pins them, and calls
-spdk_allocate_thread() with appropriate function pointers for each one. This
-makes it much easier to implement a brand new SPDK application and is the
-recommended method for those starting out. Only established applications with
-sufficient message passing infrastructure should consider directly integrating
-the lower level libraries.
+re-implementing that infrastructure for each example application, SPDK
+provides the SPDK @ref event. This library handles setting up all of the
+message passing infrastructure, installing signal handlers to cleanly
+shutdown, implements periodic pollers, and does basic command line parsing.
+When started through spdk_app_start(), the library automatically spawns all of
+the threads requested, pins them, and calls spdk_allocate_thread() with
+appropriate function pointers for each one. This makes it much easier to
+implement a brand new SPDK application and is the recommended method for those
+starting out. Only established applications with sufficient message passing
+infrastructure should consider directly integrating the lower level libraries.
 
 # Limitations of the C Language
 

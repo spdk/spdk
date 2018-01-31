@@ -27,10 +27,11 @@
 
 - @ref directory_structure
 - [Public API header files](files.html)
+- @ref event
 
 # Modules {#modules}
 
-- @ref event
+
 - @ref nvme
 - @ref nvmf
 - @ref ioat
