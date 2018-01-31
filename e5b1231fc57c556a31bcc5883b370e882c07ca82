@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "808ec85b_fb87e56a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1873,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-31T07:30:26Z",
+      "side": 1,
+      "message": "passing the whole function by message like others may be better.",
+      "range": {
+        "startLine": 1873,
+        "startChar": 0,
+        "endLine": 1873,
+        "endChar": 59
+      },
+      "revId": "e5b1231fc57c556a31bcc5883b370e882c07ca82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b4ac253_d6ed3452",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1880,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-31T07:30:26Z",
+      "side": 1,
+      "message": "this is not thread safe and should be the follwoing\n channel \u003d bdev-\u003eqos_channel;\n if (channel) {",
+      "range": {
+        "startLine": 1879,
+        "startChar": 0,
+        "endLine": 1880,
+        "endChar": 30
+      },
+      "revId": "e5b1231fc57c556a31bcc5883b370e882c07ca82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9b7716d_2183881b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1891,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-31T07:30:26Z",
+      "side": 1,
+      "message": "same as above. but as written in the line 1873, passing the whole function may be better.",
+      "range": {
+        "startLine": 1891,
+        "startChar": 2,
+        "endLine": 1891,
+        "endChar": 28
+      },
+      "revId": "e5b1231fc57c556a31bcc5883b370e882c07ca82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e650e52a_7243e04e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 2164,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-01-31T07:30:26Z",
+      "side": 1,
+      "message": "_spdk_bdev_reset_complete() is passed to the thread by message and go straight.\n\nI think adjusting the manner may be good like the following:\n\n\nin spdk_bdev_io_complete:\n  if (bdev-\u003eqos_channel) {\n    spdk_thread_send_msg(bdev-\u003eqos_thread,\n      _spdk_bdev_unfreeze_qos_channel, qos_channel);\n\n\n_spdk_bdev_unfreeze_qos_channel(qos_channel):\n  qos_channel-\u003eflags \u0026\u003d ~IN_PROGRESS;\n  spdk_bdev_qos_unregsiter_poller(qos_channel);",
+      "range": {
+        "startLine": 2164,
+        "startChar": 0,
+        "endLine": 2164,
+        "endChar": 55
+      },
+      "revId": "e5b1231fc57c556a31bcc5883b370e882c07ca82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
