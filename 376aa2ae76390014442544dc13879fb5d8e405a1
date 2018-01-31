@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "633c25ab_5f056efa",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1358,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-01-31T17:32:41Z",
+      "side": 1,
+      "message": "This should be %u (or better yet, PRIu32) to match the type of cluster_sz.",
+      "range": {
+        "startLine": 1358,
+        "startChar": 52,
+        "endLine": 1358,
+        "endChar": 54
+      },
+      "revId": "376aa2ae76390014442544dc13879fb5d8e405a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
