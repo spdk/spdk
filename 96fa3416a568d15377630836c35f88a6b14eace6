@@ -22,6 +22,30 @@
       "revId": "96fa3416a568d15377630836c35f88a6b14eace6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cce548ac_1d82c3fb",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1012941
+      },
+      "writtenOn": "2018-01-31T11:33:39Z",
+      "side": 0,
+      "message": "It doesn\u0027t work for resize.",
+      "parentUuid": "51f5d202_9e4965d5",
+      "range": {
+        "startLine": 358,
+        "startChar": 29,
+        "endLine": 359,
+        "endChar": 73
+      },
+      "revId": "96fa3416a568d15377630836c35f88a6b14eace6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
