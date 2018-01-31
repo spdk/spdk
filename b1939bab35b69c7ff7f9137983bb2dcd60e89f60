@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "9b59d118_41c284a4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 1475,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-31T08:50:09Z",
+      "side": 1,
+      "message": "Agree",
+      "parentUuid": "a567578a_ea107898",
+      "revId": "b1939bab35b69c7ff7f9137983bb2dcd60e89f60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2ee55d8c_acff3ad2",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 50
@@ -47,6 +65,24 @@
       "writtenOn": "2018-01-30T18:23:51Z",
       "side": 1,
       "message": "For this block of two switch statements, it ends up being easier to flip it inside out. Instead of allocating the batch first, then checking if the cluster is allocated, then doing the switch, it works out better if you do it in reverse order (switch, then check allocation, then create batch/sequence/op as needed). I think this was causing you all kinds of trouble, but now it should be easier to deal with.",
+      "revId": "b1939bab35b69c7ff7f9137983bb2dcd60e89f60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "97337ddd_dd032587",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 1493,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-01-31T08:50:09Z",
+      "side": 1,
+      "message": "I was more focused on how the code looks rather than easy path, but I agree that with your approach it is much easier.",
+      "parentUuid": "2ee55d8c_acff3ad2",
       "revId": "b1939bab35b69c7ff7f9137983bb2dcd60e89f60",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
