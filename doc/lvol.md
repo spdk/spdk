@@ -24,7 +24,7 @@ A logical volume is implemented as an SPDK blob created from an lvolstore. An lv
 * Type name: struct spdk_lvol_bdev
 
 Representation of an SPDK block device (spdk_bdev) with an lvol implementation.
-A logical volume block device translates generic SPDK block device I/O (spdk_bdev_io) operations into the equivalent SPDK blob operations. Combination of lvol ID and lvolstore UUID gives lvol_bdev name in a form "uuid/lvolid". block_size of the created bdev is always 4096, due to blobstore page size. Cluster_size is configurable by parameter. By default it is 1GiB.
+A logical volume block device translates generic SPDK block device I/O (spdk_bdev_io) operations into the equivalent SPDK blob operations. Combination of lvol ID and lvolstore UUID gives lvol_bdev name in a form "uuid/lvolid". block_size of the created bdev is always 4096, due to blobstore page size. Cluster_size is configurable by parameter. By default it is 1MiB.
 Size of the new bdev will be rounded up to nearest multiple of cluster_size.
 
 # Configuring Logical Volumes
