@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4fd151aa_872ceed6",
+        "filename": "doc/bdev_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-01-31T13:54:35Z",
+      "side": 1,
+      "message": "Can you put additional information that passing buffer allocated from spdk_dma_malloc() is a must hear?",
+      "range": {
+        "startLine": 120,
+        "startChar": 0,
+        "endLine": 120,
+        "endChar": 76
+      },
+      "revId": "44566ed6234859e60b3d5b4d053b185218b5f3ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "73362ffe_f994a5b1",
+        "filename": "doc/bdev_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-01-31T13:54:35Z",
+      "side": 1,
+      "message": "... and user must not modify it\u0027s content until complete_cb is invoked.",
+      "range": {
+        "startLine": 125,
+        "startChar": 56,
+        "endLine": 125,
+        "endChar": 77
+      },
+      "revId": "44566ed6234859e60b3d5b4d053b185218b5f3ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ba1abce_44113ba5",
+        "filename": "doc/bdev_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-01-31T13:54:35Z",
+      "side": 1,
+      "message": ".\n    ... In case of error buf must be freed.\n    */\n    spdk_dma_free(buf);",
+      "revId": "44566ed6234859e60b3d5b4d053b185218b5f3ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
