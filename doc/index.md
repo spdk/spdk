@@ -18,9 +18,9 @@
 
 # User Guides {#user_guides}
 
-- @ref iscsi_getting_started
-- @ref nvmf_getting_started
-- @ref blobfs_getting_started
+- @ref iscsi
+- @ref nvmf
+- @ref blobfs
 - @ref jsonrpc
 
 # Programmer Guides {#general}
@@ -33,14 +33,10 @@
 
 # Modules {#modules}
 
-
 - @ref nvme
-- @ref nvmf
 - @ref ioat
-- @ref iscsi
 - @ref bdev
 - @ref blob
-- @ref blobfs
 - @ref vhost
 - @ref virtio
 
