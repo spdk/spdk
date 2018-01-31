@@ -37,7 +37,6 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/endian.h"
-#include "spdk/json.h"
 #include "spdk/likely.h"
 #include "spdk/string.h"
 
