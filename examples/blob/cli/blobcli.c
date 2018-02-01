@@ -1296,6 +1296,13 @@ cli_shell(void *arg1, void *arg2)
 	printf("blob> ");
 	bytes_in = getline(&line, &buf_size, stdin);
 
+	/* If getline() failed (EOF), exit the shell. */
+	if (bytes_in < 0) {
+		free(line);
+		cli_context->action = CLI_SHELL_EXIT;
+		return true;
+	}
+
 	/* parse input and update cli_context so we can use common option parser */
 	if (bytes_in > 0) {
 		tok = strtok(line, " ");
