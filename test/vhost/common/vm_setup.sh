@@ -33,6 +33,7 @@ function usage()
 	echo "                              orginal - use file directly. Will modify the provided file"
 	echo "    --incoming=VM_NUM         Use VM_NUM as source migration VM."
 	echo "    --migrate-to=VM_NUM       Use VM_NUM as target migration VM."
+	echo "    --vhost-num=NUM       Optional: vhost instance NUM to be used by this VM. Default: 0"
 	echo "-x                            Turn on script debug (set -x)"
 	echo "-v                            Be more verbose"
 	exit 0

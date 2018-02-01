@@ -5,7 +5,7 @@ BASE_DIR=$(readlink -f $(dirname $0))
 [[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $BASE_DIR/../../../../ && pwd)"
 [[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $BASE_DIR/../common && pwd)"
 
-rpc_py="$BASE_DIR/../../../scripts/rpc.py "
+rpc_py="$BASE_DIR/../../../scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
 vm_img=""
 disk="Nvme0n1_size_1G"
@@ -121,7 +121,7 @@ function blk_ro_tc1()
 	vm_shutdown_all
 }
 
-spdk_vhost_run $BASE_DIR
+spdk_vhost_run --conf-path=$BASE_DIR
 if [[ -z $x ]]; then
 	set +x
 fi
