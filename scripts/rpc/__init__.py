@@ -9,6 +9,7 @@ import net
 import nvmf
 import pmem
 import vhost
+import jsonconf
 
 
 def get_rpc_methods(args):

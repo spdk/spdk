@@ -414,6 +414,19 @@ if __name__ == "__main__":
     p.add_argument('name', help='Virtio device name. E.g. VirtioUser0')
     p.set_defaults(func=rpc.vhost.remove_virtio_scsi_bdev)
 
+    # jsonconf
+    p = subparsers.add_parser('load_json_conf', help='Load JSON config from file')
+    p.add_argument('filename', help='File name of JSON config to load')
+    p.set_defaults(func=rpc.jsonconf.load)
+
+    p = subparsers.add_parser('dump_json_conf', help='Dump JSON config to file')
+    p.add_argument('method', help='JSON RPC method name to get config')
+    p.add_argument('filename', help='File name of JSON config to dump')
+    p.add_argument('-n', dest='indent', help='Indent level of dump', required=False)
+    p.add_argument('-k', dest='key_sep', help='Key-value separator. Default is \', \'.\'', required=False)
+    p.add_argument('-s', dest='item_sep', help='Item separator. Default is \'\" \'', required=False)
+    p.set_defaults(func=rpc.jsonconf.dump)
+
     args = parser.parse_args()
 
     args.client = rpc.client.JSONRPCClient(args.server_addr, args.port)
