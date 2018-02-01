@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "851f3d24_455fa98b",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 779,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-01T14:12:52Z",
+      "side": 1,
+      "message": "We must not resize blob until we make sure that it is not in use, and won\u0027t be in use until we resize bdev as well. Without that we can end up releasing clusters that someone is using right now.\n\nMy suggestion is to add bdev function that will do something like:\n\nint\nspdk_bdev_start_blockcnt_change(struct spdk_bdev *bdev, uint64_t size)\n{\n\tpthread_mutex_lock(\u0026bdev-\u003emutex);\n\n\t/* bdev has open descriptors */\n\tif (!TAILQ_EMPTY(\u0026bdev-\u003eopen_descs) \u0026\u0026\n\t    bdev-\u003eblockcnt \u003e size) {\n                pthread_mutex_unlock(\u0026bdev-\u003emutex);\n\t\treturn -EBUSY;\n\t}\n\n        return 0;\n}\n\nNow resize blob and call in resize callback:\n\nvoid\nspdk_bdev_finish_blockcnt_change(struct spdk_bdev *bdev, uint64_t size)\n{\n        bdev-\u003eblockcnt \u003d size;\n\tpthread_mutex_unlock(\u0026bdev-\u003emutex);\n}\n\nI would like also Jim\u0027s opinion on that before you start to change anything.",
+      "range": {
+        "startLine": 779,
+        "startChar": 1,
+        "endLine": 779,
+        "endChar": 61
+      },
+      "revId": "e1212f1045cecdc41c03044b1c25116cb4bc4c09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
