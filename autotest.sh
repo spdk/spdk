@@ -71,6 +71,7 @@ timing_exit cleanup
 # set up huge pages
 timing_enter afterboot
 ./scripts/setup.sh
+./scripts/setup.sh status
 timing_exit afterboot
 
 timing_enter nvmf_setup
