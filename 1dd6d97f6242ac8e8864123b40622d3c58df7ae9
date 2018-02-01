@@ -399,6 +399,24 @@
     },
     {
       "key": {
+        "uuid": "31ce63c7_ca890c02",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 411,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-01T09:53:13Z",
+      "side": 1,
+      "message": "I think that including spdk_internal/bdev.h should be fine here.",
+      "parentUuid": "70242b93_e4fa2f45",
+      "revId": "1dd6d97f6242ac8e8864123b40622d3c58df7ae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2a30f3d1_937eb150",
         "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
         "patchSetId": 58
