@@ -78,7 +78,7 @@ case $1 in
 	-m|--migration)
 		echo 'Running migration suite...'
 		$WORKDIR/migration/migration-malloc.sh -x \
-		--fio-bin=$FIO_BIN --os=$VM_IMAGE
+		--fio-bin=$FIO_BIN --os=$VM_IMAGE --test-cases=1,2
 		;;
 	-i|--integrity)
 		echo 'Running SCSI integrity suite...'
