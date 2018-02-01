@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9d1df2f3_a3ddaa4e",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-01T09:53:05Z",
+      "side": 1,
+      "message": "Small thing that came up during review of lvol rename series.\nhttps://review.gerrithub.io/#/c/391411/58/lib/bdev/lvol/vbdev_lvol_rpc.c@411\n\nPlease add this check as well here (best sync up with Sebastian to do it the same way, to ease up merge).",
+      "range": {
+        "startLine": 417,
+        "startChar": 1,
+        "endLine": 417,
+        "endChar": 19
+      },
+      "revId": "bd28eaa24dcc0724dccaf602664f0e974b9f49ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
