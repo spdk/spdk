@@ -120,7 +120,10 @@ for test_case in ${test_cases//,/ }; do
 	notice "==============================="
 	notice "Running Migration test case ${test_case}"
 	notice "==============================="
+
+	timing_enter migration-tc${test_case}
 	source $BASE_DIR/migration-tc${test_case}.sh
+	timing_exit migration-tc${test_case}
 done
 
 notice "Migration Test SUCCESS"
