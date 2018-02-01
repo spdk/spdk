@@ -173,7 +173,7 @@ usage(struct cli_context_t *cli_context, char *msg)
 		printf("%s", msg);
 	}
 
-	if (cli_context && cli_context->cli_mode == CLI_MODE_CMD) {
+	if (!cli_context || cli_context->cli_mode == CLI_MODE_CMD) {
 		printf("Version %s\n", SPDK_VERSION_STRING);
 		printf("Usage: %s [-c SPDK config_file] Command\n", program_name);
 		printf("\n%s is a command line tool for interacting with blobstore\n",
@@ -181,7 +181,7 @@ usage(struct cli_context_t *cli_context, char *msg)
 		printf("on the underlying device specified in the conf file passed\n");
 		printf("in as a command line option.\n");
 	}
-	if (cli_context && cli_context->cli_mode != CLI_MODE_SCRIPT) {
+	if (!cli_context || cli_context->cli_mode != CLI_MODE_SCRIPT) {
 		print_cmds();
 	}
 }
