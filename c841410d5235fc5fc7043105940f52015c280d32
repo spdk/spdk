@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "964dfe29_d328e206",
+        "filename": "test/lib/bdev/blockdev.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-01T17:51:43Z",
+      "side": 1,
+      "message": "Is there an actual GPT partition table on the NVMe device at this point? I don\u0027t see it in the test pool execution; bdevperf just runs on Nvme0n1, not a partition bdev.\n\nFor example, see the logs here and search for \"bdev_gpt.conf\":  https://ci.spdk.io/builds/review/c841410d5235fc5fc7043105940f52015c280d32.1517455933/centos6/build.log",
+      "revId": "c841410d5235fc5fc7043105940f52015c280d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
