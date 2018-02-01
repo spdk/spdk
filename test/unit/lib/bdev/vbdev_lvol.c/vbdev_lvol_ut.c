@@ -714,20 +714,9 @@ ut_lvol_resize(void)
 	SPDK_CU_ASSERT_FATAL(g_base_bdev->name != NULL);
 
 	/* Successful lvol resize */
-	rc = vbdev_lvol_resize(g_lvol->unique_id, 20, vbdev_lvol_resize_complete, NULL);
+	rc = vbdev_lvol_resize(g_lvol, 20, vbdev_lvol_resize_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_base_bdev->blockcnt == 20 * g_cluster_size / g_base_bdev->blocklen);
-
-	/* Resize with wrong bdev name */
-	rc = vbdev_lvol_resize("wrong name", 20, vbdev_lvol_resize_complete, NULL);
-	CU_ASSERT(rc != 0);
-
-	/* Resize with correct bdev name, but wrong lvol name */
-	free(g_lvol->unique_id);
-	g_lvol->unique_id = strdup("wrong name");
-	SPDK_CU_ASSERT_FATAL(g_lvol->unique_id != NULL);
-	rc = vbdev_lvol_resize(g_base_bdev->name, 20, vbdev_lvol_resize_complete, NULL);
-	CU_ASSERT(rc != 0);
 
 	/* Successful lvol destruct */
 	vbdev_lvol_destruct(g_lvol);

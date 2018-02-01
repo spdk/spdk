@@ -37,8 +37,11 @@
 #include "vbdev_lvol.h"
 #include "spdk/string.h"
 #include "spdk_internal/log.h"
+#include "spdk_internal/bdev.h"
 
 SPDK_LOG_REGISTER_COMPONENT("lvolrpc", SPDK_LOG_LVOL_RPC)
+
+SPDK_DECLARE_BDEV_MODULE(lvol);
 
 struct rpc_construct_lvol_store {
 	char *lvs_name;
@@ -387,6 +390,8 @@ spdk_rpc_resize_lvol_bdev(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
 	struct rpc_resize_lvol_bdev req = {};
+	struct spdk_bdev *bdev;
+	struct spdk_lvol *lvol;
 	int rc = 0;
 
 	SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "Resizing lvol\n");
@@ -405,7 +410,20 @@ spdk_rpc_resize_lvol_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	rc = vbdev_lvol_resize(req.name, (size_t)req.size, _spdk_rpc_resize_lvol_bdev_cb, request);
+	bdev = spdk_bdev_get_by_name(req.name);
+	if (bdev == NULL) {
+		SPDK_ERRLOG("no bdev for provided name %s\n", req.name);
+		rc = -ENODEV;
+		goto invalid;
+	}
+
+	if (bdev->module != SPDK_GET_BDEV_MODULE(lvol)) {
+		rc = -ENODEV;
+		goto invalid;
+	}
+
+	lvol = bdev->ctxt;
+	rc = vbdev_lvol_resize(lvol, (size_t)req.size, _spdk_rpc_resize_lvol_bdev_cb, request);
 	if (rc < 0) {
 		goto invalid;
 	}
