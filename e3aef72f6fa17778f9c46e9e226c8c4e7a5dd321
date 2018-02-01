@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3208988f_ee920069",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 743,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-01T14:12:52Z",
+      "side": 1,
+      "message": "You can use lvolerrno instead of rc here and then remove line 747.",
+      "range": {
+        "startLine": 743,
+        "startChar": 2,
+        "endLine": 743,
+        "endChar": 4
+      },
+      "revId": "e3aef72f6fa17778f9c46e9e226c8c4e7a5dd321",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d8f3dc1_f153fc5f",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 753,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-01T14:12:52Z",
+      "side": 1,
+      "message": "Double space.",
+      "range": {
+        "startLine": 753,
+        "startChar": 24,
+        "endLine": 753,
+        "endChar": 26
+      },
+      "revId": "e3aef72f6fa17778f9c46e9e226c8c4e7a5dd321",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
