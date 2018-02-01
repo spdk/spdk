@@ -76,6 +76,7 @@ function vm_migrate()
 		fail "source VM $1 or destination VM is not properly configured for live migration"
 	fi
 
+	timing_enter vm_migrate
 	notice "Migrating VM $1 to VM "$(basename $target_vm_dir)
 	echo -e \
 		"migrate_set_speed 1g\n" \
@@ -95,6 +96,7 @@ function vm_migrate()
 	fi
 
 	notice "Migration complete"
+	timing_exit vm_migrate
 }
 
 function is_fio_running()
@@ -120,7 +122,10 @@ for test_case in ${test_cases//,/ }; do
 	notice "==============================="
 	notice "Running Migration test case ${test_case}"
 	notice "==============================="
+
+	timing_enter migration-tc${test_case}
 	source $BASE_DIR/migration-tc${test_case}.sh
+	timing_exit migration-tc${test_case}
 done
 
 notice "Migration Test SUCCESS"
