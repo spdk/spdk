@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5a1c840a_cc2ecdf9",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-01T11:44:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d7145f6f_a531a574",
+      "range": {
+        "startLine": 14,
+        "startChar": 18,
+        "endLine": 14,
+        "endChar": 30
+      },
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "60432390_146ca342",
         "filename": "doc/bdev.md",
         "patchSetId": 8
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "0eb678c2_68bd3132",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-01T11:44:02Z",
+      "side": 1,
+      "message": "I would prefer to leave it for now and later replace it with @ref",
+      "parentUuid": "60432390_146ca342",
+      "range": {
+        "startLine": 19,
+        "startChar": 19,
+        "endLine": 19,
+        "endChar": 69
+      },
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fdd65733_b9bc6f6a",
         "filename": "doc/bdev.md",
         "patchSetId": 8
@@ -59,6 +107,30 @@
       "writtenOn": "2018-01-29T19:06:42Z",
       "side": 1,
       "message": "It\u0027s probably a good idea to add @refs instead",
+      "range": {
+        "startLine": 21,
+        "startChar": 8,
+        "endLine": 21,
+        "endChar": 30
+      },
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5c4857d4_082388bb",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-01T11:44:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fdd65733_b9bc6f6a",
       "range": {
         "startLine": 21,
         "startChar": 8,
@@ -117,6 +189,30 @@
     },
     {
       "key": {
+        "uuid": "c864caa8_c02ad011",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-01T11:44:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "049a819f_e9903685",
+      "range": {
+        "startLine": 84,
+        "startChar": 61,
+        "endLine": 85,
+        "endChar": 21
+      },
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5f0a4eb0_85f608c8",
         "filename": "doc/bdev.md",
         "patchSetId": 8
@@ -157,6 +253,48 @@
     },
     {
       "key": {
+        "uuid": "1ecf705f_f0e06fb0",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-01T11:44:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5f0a4eb0_85f608c8",
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3b7ecf5f_2029f2b3",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-01T11:44:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2e8bb0a3_511b88ff",
+      "range": {
+        "startLine": 92,
+        "startChar": 42,
+        "endLine": 92,
+        "endChar": 46
+      },
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b68b87ea_7420ab96",
         "filename": "doc/bdev.md",
         "patchSetId": 8
@@ -180,6 +318,30 @@
     },
     {
       "key": {
+        "uuid": "2a6d9c30_58cbb17d",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-01T11:44:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b68b87ea_7420ab96",
+      "range": {
+        "startLine": 96,
+        "startChar": 9,
+        "endLine": 96,
+        "endChar": 13
+      },
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "279754d7_784c240e",
         "filename": "doc/bdev.md",
         "patchSetId": 8
@@ -191,6 +353,30 @@
       "writtenOn": "2018-01-29T19:06:42Z",
       "side": 1,
       "message": "explain these.\n\nA good approach might be to say\nThe following command will create an RBD bdev named `rbd` with 512 block size from a `foo` path (whatever it is - again i\u0027m too lazy to check)",
+      "range": {
+        "startLine": 103,
+        "startChar": 27,
+        "endLine": 103,
+        "endChar": 38
+      },
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "efd70097_36f26093",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-01T11:44:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "279754d7_784c240e",
       "range": {
         "startLine": 103,
         "startChar": 27,
@@ -243,6 +429,30 @@
     },
     {
       "key": {
+        "uuid": "57bb7815_763e074a",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-01T11:44:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "613a65b1_4810229d",
+      "range": {
+        "startLine": 116,
+        "startChar": 0,
+        "endLine": 116,
+        "endChar": 15
+      },
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "643ef6c2_3128445f",
         "filename": "doc/bdev.md",
         "patchSetId": 8
@@ -254,6 +464,30 @@
       "writtenOn": "2018-01-29T19:06:42Z",
       "side": 1,
       "message": "It allows creating and managing virtual block devices with variable size on top of other bdevs.\n\nAlso, it might be a good idea to briefly describe cluster size here. (?)",
+      "range": {
+        "startLine": 134,
+        "startChar": 75,
+        "endLine": 135,
+        "endChar": 63
+      },
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "89fb943c_c965cbb1",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-01T11:44:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "643ef6c2_3128445f",
       "range": {
         "startLine": 134,
         "startChar": 75,
@@ -312,6 +546,30 @@
     },
     {
       "key": {
+        "uuid": "8aa0b555_bcab6650",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-01T11:44:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "de82cc5c_cdf287e1",
+      "range": {
+        "startLine": 138,
+        "startChar": 11,
+        "endLine": 138,
+        "endChar": 18
+      },
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7e093356_c7d2ef60",
         "filename": "doc/bdev.md",
         "patchSetId": 8
@@ -323,6 +581,30 @@
       "writtenOn": "2018-01-29T19:06:42Z",
       "side": 1,
       "message": "Before creating any logical volumes (abbreviated lvol), an lvol store has to be created first. An lvol store is responsible for [...] (what is it responsible for? what is it anyway?)",
+      "range": {
+        "startLine": 140,
+        "startChar": 0,
+        "endLine": 141,
+        "endChar": 48
+      },
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "01c89da9_464d15cf",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-01T11:44:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7e093356_c7d2ef60",
       "range": {
         "startLine": 140,
         "startChar": 0,
@@ -358,6 +640,30 @@
     },
     {
       "key": {
+        "uuid": "ac575065_6fdeada0",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-01T11:44:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0c594b78_a1bf6f49",
+      "range": {
+        "startLine": 143,
+        "startChar": 0,
+        "endLine": 143,
+        "endChar": 15
+      },
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d05a91c5_3069357d",
         "filename": "doc/bdev.md",
         "patchSetId": 8
@@ -381,6 +687,30 @@
     },
     {
       "key": {
+        "uuid": "41e84201_652d7e47",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-01T11:44:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d05a91c5_3069357d",
+      "range": {
+        "startLine": 154,
+        "startChar": 11,
+        "endLine": 154,
+        "endChar": 47
+      },
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "53785a9d_adfa385c",
         "filename": "doc/bdev.md",
         "patchSetId": 8
@@ -392,6 +722,24 @@
       "writtenOn": "2018-01-29T19:06:42Z",
       "side": 1,
       "message": "Somebody that\u0027s interested in using SPDK with PMDK probably knows what\u0027s it for and how it works overall, but it might be a good idea to describe these `pools` etc.",
+      "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "947ce3c9_8e862c6e",
+        "filename": "doc/bdev.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-01T11:44:02Z",
+      "side": 1,
+      "message": "Add information that user can refer to PMDK docs.",
+      "parentUuid": "53785a9d_adfa385c",
       "revId": "418be2fabd845b122c98a3ba3a46bc7d120db8fc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
