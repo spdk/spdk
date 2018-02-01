@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d0e5f0f7_33d285c5",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 642,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-01T20:25:09Z",
+      "side": 1,
+      "message": "The offset parameter for aio_submit() is in bytes, not blocks, so LBA needs to be multiplied by block size.",
+      "range": {
+        "startLine": 642,
+        "startChar": 22,
+        "endLine": 642,
+        "endChar": 31
+      },
+      "revId": "b1f57e22af7e4850c677bde9889a16b718c5181a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "20288c97_e74cb567",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 667,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-01T20:25:09Z",
+      "side": 1,
+      "message": "Same here.",
+      "range": {
+        "startLine": 667,
+        "startChar": 22,
+        "endLine": 667,
+        "endChar": 31
+      },
+      "revId": "b1f57e22af7e4850c677bde9889a16b718c5181a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
