@@ -1,0 +1,191 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ffd3130d_a16df39f",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 42
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-02-01T21:01:11Z",
+      "side": 1,
+      "message": "I think for the programming guide that we should focus on how to use lib/nvmf. The user guide can cover the NVMe-oF target application.",
+      "revId": "7b1beca690a2622ec20872eed7082e89cef5683b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "03f3cfda_f9c58f5f",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 42
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-02-01T21:01:11Z",
+      "side": 1,
+      "message": "I think this section can be removed if we\u0027re just focusing on lib/nvmf.",
+      "revId": "7b1beca690a2622ec20872eed7082e89cef5683b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "54b134fc_47f2b931",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 42
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-02-01T21:01:11Z",
+      "side": 1,
+      "message": "I combined your \"Key Data structures\" section below with this one, since they contained mostly the same stuff. I also added a few more - target, qpair, and host.",
+      "revId": "7b1beca690a2622ec20872eed7082e89cef5683b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb6f9ee9_174ad4af",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 42
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-02-01T21:01:11Z",
+      "side": 1,
+      "message": "Instead of a separate section for this, I just mention it in several places when I\u0027m describing a namespace.",
+      "revId": "7b1beca690a2622ec20872eed7082e89cef5683b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db925321_56cd3a71",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 42
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-02-01T21:01:11Z",
+      "side": 1,
+      "message": "This section and the one after it still exist - they\u0027re just lower down and the diff isn\u0027t lining up.",
+      "revId": "7b1beca690a2622ec20872eed7082e89cef5683b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "123869c9_1bb27033",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 42
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-02-01T21:01:11Z",
+      "side": 1,
+      "message": "I combined what you said here with the other discussion about threading model.",
+      "revId": "7b1beca690a2622ec20872eed7082e89cef5683b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ad7bb4b6_066e90de",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 42
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-02-01T21:01:11Z",
+      "side": 1,
+      "message": "I didn\u0027t keep this as a separate section because I think the reworked section \"The Basics\" makes it fairly clear.",
+      "revId": "7b1beca690a2622ec20872eed7082e89cef5683b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa9f8bd7_431e8931",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 42
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-02-01T21:01:11Z",
+      "side": 1,
+      "message": "I renamed this \"Scaling Across CPU Cores\", but the message is more or less the same.",
+      "revId": "7b1beca690a2622ec20872eed7082e89cef5683b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2f46270a_3a3e36ee",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 42
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-02-01T21:01:11Z",
+      "side": 1,
+      "message": "From about here down, you get into describing the actual implementation details of the target. Those are subject to change and if someone really wants to know those, they can read the code. Instead, I tried to keep this document higher level - explaining \"why\" more than \"how\".",
+      "revId": "7b1beca690a2622ec20872eed7082e89cef5683b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e27ce1cb_2ecd1cdd",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 42
+      },
+      "lineNbr": 398,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-02-01T21:01:11Z",
+      "side": 1,
+      "message": "You were definitely right to talk about RDMA in this document, but I think this is going into too much detail about the implementation of the RDMA transport. I added a section that explains a few of the trickier parts, but stays away from talking about each code path.",
+      "revId": "7b1beca690a2622ec20872eed7082e89cef5683b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9680cd77_a04120f5",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 42
+      },
+      "lineNbr": 547,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-02-01T21:01:11Z",
+      "side": 1,
+      "message": "I kept this section, more or less.",
+      "revId": "7b1beca690a2622ec20872eed7082e89cef5683b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
