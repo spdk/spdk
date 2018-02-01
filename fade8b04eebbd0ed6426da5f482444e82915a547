@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ce5ecd89_c06157ea",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 388,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-01T11:27:22Z",
+      "side": 1,
+      "message": "Sorry about doing this review piecemeal. Since we are using this function now, this attribute is no longer needed.",
+      "range": {
+        "startLine": 388,
+        "startChar": 11,
+        "endLine": 388,
+        "endChar": 35
+      },
+      "revId": "fade8b04eebbd0ed6426da5f482444e82915a547",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
