@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "22f22229_60f3f84b",
+        "filename": "app/nvmf_tgt/nvmf_rpc.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 521,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-01T20:43:09Z",
+      "side": 1,
+      "message": "I think this is missing a free() for ctx-\u003etrtype.  Also, it would be nice to keep this in the same order as the fields in the struct to make it easier to see that all of them are freed.",
+      "revId": "818fb5354b12f4d7ee9f5613e5c28d39df2753a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7236a676_46c20b2f",
+        "filename": "app/nvmf_tgt/nvmf_rpc.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 553,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-01T20:43:09Z",
+      "side": 1,
+      "message": "spdk_nvme_transport_id_parse_trtype() is missing an error check.",
+      "range": {
+        "startLine": 553,
+        "startChar": 1,
+        "endLine": 553,
+        "endChar": 36
+      },
+      "revId": "818fb5354b12f4d7ee9f5613e5c28d39df2753a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c278efb1_75594568",
+        "filename": "app/nvmf_tgt/nvmf_rpc.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 576,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-01T20:43:09Z",
+      "side": 1,
+      "message": "This should probably be len + 1 so the null terminator is copied. (It happens to end up terminated in this case because ctx is zero-filled, but it would be good to be explicit here.)",
+      "range": {
+        "startLine": 576,
+        "startChar": 34,
+        "endLine": 576,
+        "endChar": 37
+      },
+      "revId": "818fb5354b12f4d7ee9f5613e5c28d39df2753a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ab6a66d_63d32f3f",
+        "filename": "app/nvmf_tgt/nvmf_rpc.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 587,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-01T20:43:09Z",
+      "side": 1,
+      "message": "Same as above - should be len + 1.",
+      "range": {
+        "startLine": 587,
+        "startChar": 36,
+        "endLine": 587,
+        "endChar": 39
+      },
+      "revId": "818fb5354b12f4d7ee9f5613e5c28d39df2753a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
