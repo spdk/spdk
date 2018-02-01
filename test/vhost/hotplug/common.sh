@@ -63,7 +63,7 @@ tmp_attach_job=$BASE_DIR/fio_jobs/fio_attach.job.tmp
 tmp_detach_job=$BASE_DIR/fio_jobs/fio_detach.job.tmp
 . $BASE_DIR/../common/common.sh
 
-rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py "
+rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
 function print_test_fio_header() {
     notice "==============="
@@ -81,7 +81,7 @@ function run_vhost() {
     notice ""
     notice "running SPDK"
     notice ""
-    spdk_vhost_run $BASE_DIR
+    spdk_vhost_run --conf-path=$BASE_DIR
     notice ""
 }
 
