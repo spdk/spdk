@@ -366,7 +366,7 @@ function print_backtrace() {
 }
 
 function part_dev_by_gpt () {
-	if [ $(uname -s) = Linux ] && hash sgdisk; then
+	if [ $(uname -s) = Linux ] && hash sgdisk && modprobe nbd; then
 		conf=$1
 		devname=$2
 		rootdir=$3
@@ -386,7 +386,6 @@ function part_dev_by_gpt () {
 		echo "[Gpt]" >> ${conf}.gpt
 		echo "  Disable Yes" >> ${conf}.gpt
 
-		modprobe nbd
 		$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 -c ${conf}.gpt &
 		nbd_pid=$!
 		echo "Process nbd pid: $nbd_pid"
