@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "241ae237_da20c67b",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 42
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-01T13:17:39Z",
+      "side": 1,
+      "message": "unused",
+      "range": {
+        "startLine": 161,
+        "startChar": 8,
+        "endLine": 161,
+        "endChar": 19
+      },
+      "revId": "bf1467cc2e8b2a88bfc3c03c4305c2b3602c9985",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9811076d_01796d2d",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 42
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-01T13:17:39Z",
+      "side": 1,
+      "message": "It would be simpler if we did:\n\nif len(rpc_output) \u003e 0\n    return rpc_output[0]\n\nreturn None",
+      "range": {
+        "startLine": 163,
+        "startChar": 0,
+        "endLine": 168,
+        "endChar": 25
+      },
+      "revId": "bf1467cc2e8b2a88bfc3c03c4305c2b3602c9985",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb43a7ce_38c475b5",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 42
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-01T13:17:39Z",
+      "side": 1,
+      "message": "It would be easier to make test_num as a global and here just return len(test_name). Maybe also change name from test_name to tests_list in that case?",
+      "range": {
+        "startLine": 25,
+        "startChar": 4,
+        "endLine": 25,
+        "endChar": 13
+      },
+      "revId": "bf1467cc2e8b2a88bfc3c03c4305c2b3602c9985",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ae0e76fb_cb3392c5",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 42
+      },
+      "lineNbr": 726,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-01T13:17:39Z",
+      "side": 1,
+      "message": "In many tests we assign result of start_nbd_disk to rc but we never use it. We should fail test if rc !\u003d0 at this point and don\u0027t proceed further.",
+      "range": {
+        "startLine": 726,
+        "startChar": 8,
+        "endLine": 726,
+        "endChar": 13
+      },
+      "revId": "bf1467cc2e8b2a88bfc3c03c4305c2b3602c9985",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c53b15d2_01152ce9",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 42
+      },
+      "lineNbr": 731,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-01T13:17:39Z",
+      "side": 1,
+      "message": "We could add just one print in run_fio_test instead of printing out same message after every if rv \u003d\u003d1. Additionally we are getting now two prints if we fall in catch in run_fio_test.",
+      "range": {
+        "startLine": 731,
+        "startChar": 12,
+        "endLine": 731,
+        "endChar": 48
+      },
+      "revId": "bf1467cc2e8b2a88bfc3c03c4305c2b3602c9985",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
