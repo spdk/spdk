@@ -127,7 +127,6 @@ function spdk_vhost_run()
 		esac
 	done
 
-
 	local vhost_dir="$(get_vhost_dir $vhost_num)"
 	if [[ -z "$vhost_conf_path" ]]; then
 		error "Missing mandatory parameter '--conf-path'"
@@ -170,6 +169,7 @@ function spdk_vhost_run()
 	notice "Socket:      $vhost_socket"
 	notice "Command:     $cmd"
 
+	timing_enter vhost_start
 	cd $vhost_dir; $cmd &
 	vhost_pid=$!
 	echo $vhost_pid > $vhost_pid_file
@@ -177,12 +177,14 @@ function spdk_vhost_run()
 	notice "waiting for app to run..."
 	waitforlisten "$vhost_pid" "$vhost_dir/rpc.sock"
 	notice "vhost started - pid=$vhost_pid"
+	timing_exit vhost_start
 
 	rm $vhost_conf_file
 }
 
 function spdk_vhost_kill()
 {
+	local rc=0
 	local vhost_num=0
 	if [[ ! -z "$1" ]]; then
 		vhost_num=$1
@@ -196,6 +198,7 @@ function spdk_vhost_kill()
 		return 0
 	fi
 
+	timing_enter vhost_kill
 	local vhost_pid="$(cat $vhost_pid_file)"
 	notice "killing vhost (PID $vhost_pid) app"
 
@@ -213,19 +216,24 @@ function spdk_vhost_kill()
 			error "ERROR: vhost was NOT killed - sending SIGABRT"
 			/bin/kill -ABRT $vhost_pid
 			rm $vhost_pid_file
-			return 1
+			rc=1
+		else
+			#check vhost return code, activate trap on error
+			wait $vhost_pid
 		fi
-
-		#check vhost return code, activate trap on error
-		wait $vhost_pid
 	elif /bin/kill -0 $vhost_pid; then
 		error "vhost NOT killed - you need to kill it manually"
-		return 1
+		rc=1
 	else
 		notice "vhost was no running"
 	fi
 
-	rm $vhost_pid_file
+	timing_exit vhost_kill
+	if [[ $rc == 0 ]]; then
+		rm $vhost_pid_file
+	fi
+	
+	return $rc
 }
 
 ###
