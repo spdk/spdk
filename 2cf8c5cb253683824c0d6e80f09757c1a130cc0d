@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8f94e6c3_14103f5c",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 43
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-02-01T21:01:11Z",
+      "side": 1,
+      "message": "I took your \"Constructing the Subsystem\", \"Poll Group Support\", and \"Subsystem Functions\" sections, plus some of the \"Key Workflows\" section, and reworked them into a single overview of how the target works called \"The Basics\". I think this section provides a nice high level overview of how the target is structured.",
+      "revId": "2cf8c5cb253683824c0d6e80f09757c1a130cc0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d9876f6_567d3c6f",
+        "filename": "doc/nvmf_tgt_pg.md",
+        "patchSetId": 43
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-02-01T21:01:11Z",
+      "side": 1,
+      "message": "I added this section and the one after it. I think they\u0027re important concepts that weren\u0027t present in the previous guide.",
+      "revId": "2cf8c5cb253683824c0d6e80f09757c1a130cc0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
