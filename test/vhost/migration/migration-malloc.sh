@@ -103,7 +103,7 @@ function vm_migrate()
 # FIXME: this shoul'd not be needed
 vm_kill_all
 
-rpc="python $SPDK_BUILD_DIR/scripts/rpc.py "
+rpc="python $SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
 # Use 2 VMs:
 # incoming VM - the one we want to migrate
@@ -116,7 +116,7 @@ target_vm_ctrlr=naa.Malloc0.$target_vm
 vm_setup --os="$os_image" --force=$incoming_vm --disk-type=spdk_vhost_scsi --disks=Malloc0 --migrate-to=$target_vm
 vm_setup --force=$target_vm --disk-type=spdk_vhost_scsi --disks=Malloc0 --incoming=$incoming_vm
 
-spdk_vhost_run $BASE_DIR
+spdk_vhost_run --conf-path=$BASE_DIR
 
 notice "==============="
 notice ""
