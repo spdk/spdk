@@ -84,19 +84,66 @@ else
 	set +x
 fi
 
+function get_vhost_dir()
+{
+	if [[ ! -z "$1" ]]; then
+		assert_number "$1"
+		local vhost_num=$1
+	else
+		local vhost_num=0
+	fi
+
+	echo "$SPDK_VHOST_SCSI_TEST_DIR${vhost_num}"
+}
+
+function spdk_vhost_list_all()
+{
+	shopt -s nullglob
+	local vhost_list="$(echo $SPDK_VHOST_SCSI_TEST_DIR[0-9]*)"
+	shopt -u nullglob
+	
+	if [[ ! -z "$vhost_list" ]]; then
+		vhost_list="$(basename --multiple $vhost_list)"
+		echo "${vhost_list//vhost /}"
+	fi		
+}
+
 function spdk_vhost_run()
 {
-	local vhost_conf_path="$1"
+	local param
+	local vhost_num=0
+	local vhost_conf_path=""
+	
+	for param in "$@"; do
+		case $param in
+			--vhost-num=*)
+				vhost_num="${param#*=}"
+				assert_number "$vhost_num"
+				;;
+			--conf-path=*) local vhost_conf_path="${param#*=}" ;;
+			*)
+				error "Invalid parameter '$param'"
+				return 1
+				;;
+		esac
+	done
+	
+	
+	local vhost_dir="$(get_vhost_dir $vhost_num)"
+	if [[ -z "$vhost_conf_path" ]]; then
+		error "Missing mandatory parameter '--conf-path'"
+		return 1
+	fi
 	local vhost_app="$SPDK_BUILD_DIR/app/vhost/vhost"
-	local vhost_log_file="$SPDK_VHOST_SCSI_TEST_DIR/vhost.log"
-	local vhost_pid_file="$SPDK_VHOST_SCSI_TEST_DIR/vhost.pid"
-	local vhost_socket="$SPDK_VHOST_SCSI_TEST_DIR/usvhost"
+	local vhost_log_file="$vhost_dir/vhost.log"
+	local vhost_pid_file="$vhost_dir/vhost.pid"
+	local vhost_socket="$vhost_dir/usvhost"
 	local vhost_conf_template="$vhost_conf_path/vhost.conf.in"
 	local vhost_conf_file="$vhost_conf_path/vhost.conf"
 	notice "starting vhost app in background"
-	[[ -r "$vhost_pid_file" ]] && spdk_vhost_kill
-	[[ -d $SPDK_VHOST_SCSI_TEST_DIR ]] && rm -f $SPDK_VHOST_SCSI_TEST_DIR/*
-	mkdir -p $SPDK_VHOST_SCSI_TEST_DIR
+	[[ -r "$vhost_pid_file" ]] && spdk_vhost_kill $vhost_num
+	[[ -d $vhost_dir ]] && rm -f $vhost_dir/*
+	mkdir -p $vhost_dir
 
 	if [[ ! -x $vhost_app ]]; then
 		error "application not found: $vhost_app"
@@ -111,14 +158,14 @@ function spdk_vhost_run()
 	cp $vhost_conf_template $vhost_conf_file
 	$SPDK_BUILD_DIR/scripts/gen_nvme.sh >> $vhost_conf_file
 
-	local cmd="$vhost_app -m $vhost_reactor_mask -p $vhost_master_core -c $vhost_conf_file"
+	local cmd="$vhost_app -m $vhost_reactor_mask -p $vhost_master_core -c $vhost_conf_file -r $vhost_dir/rpc.sock"
 
 	notice "Loging to:   $vhost_log_file"
 	notice "Config file: $vhost_conf_file"
 	notice "Socket:      $vhost_socket"
 	notice "Command:     $cmd"
 
-	cd $SPDK_VHOST_SCSI_TEST_DIR; $cmd &
+	cd $vhost_dir; $cmd &
 	vhost_pid=$!
 	echo $vhost_pid > $vhost_pid_file
 
@@ -131,7 +178,13 @@ function spdk_vhost_run()
 
 function spdk_vhost_kill()
 {
-	local vhost_pid_file="$SPDK_VHOST_SCSI_TEST_DIR/vhost.pid"
+	local vhost_num=0
+	if [[ ! -z "$1" ]]; then
+		vhost_num=$1
+		assert_number "$vhost_num"
+	fi
+	 
+	local vhost_pid_file="$(get_vhost_dir $vhost_num)/vhost.pid"
 
 	if [[ ! -r $vhost_pid_file ]]; then
 		warning "no vhost pid file found"
@@ -425,6 +478,7 @@ function vm_setup()
 	local force_vm=""
 	local guest_memory=1024
 	local queue_number=""
+	local vhost_dir="$(get_vhost_dir)"
 	while getopts ':-:' optchar; do
 		case "$optchar" in
 			-)
@@ -440,6 +494,7 @@ function vm_setup()
 				queue_num=*) local queue_number=${OPTARG#*=} ;;
 				incoming=*) local vm_incoming="${OPTARG#*=}" ;;
 				migrate-to=*) local vm_migrate_to="${OPTARG#*=}" ;;
+				vhost-num=*) local vhost_dir="$(get_vhost_dir ${OPTARG#=*})" ;;
 				*)
 					error "unknown argument $OPTARG"
 					return 1
@@ -607,8 +662,8 @@ function vm_setup()
 				cmd+="-drive if=none,id=hd$i,file=$raw_disk,format=raw$raw_cache ${eol}"
 				;;
 			spdk_vhost_scsi)
-				notice "using socket $SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num"
-				cmd+="-chardev socket,id=char_$disk,path=$SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num ${eol}"
+				notice "using socket $vhost_dir/naa.$disk.$vm_num"
+				cmd+="-chardev socket,id=char_$disk,path=$vhost_dir/naa.$disk.$vm_num ${eol}"
 				cmd+="-device vhost-user-scsi-pci,id=scsi_$disk,num_queues=$queue_number,chardev=char_$disk ${eol}"
 				;;
 			spdk_vhost_blk)
@@ -618,8 +673,8 @@ function vm_setup()
 					size="20G"
 				fi
 				disk=${disk%%_*}
-				notice "using socket $SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num"
-				cmd+="-chardev socket,id=char_$disk,path=$SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num ${eol}"
+				notice "using socket $vhost_dir/naa.$disk.$vm_num"
+				cmd+="-chardev socket,id=char_$disk,path=$vhost_dir/naa.$disk.$vm_num ${eol}"
 				cmd+="-device vhost-user-blk-pci,num_queues=$queue_number,chardev=char_$disk,"
 				cmd+="logical_block_size=4096,size=$size ${eol}"
 				;;
@@ -948,12 +1003,17 @@ function run_fio()
 #
 function at_app_exit()
 {
+	local vhost_num
+	
 	notice "APP EXITING"
 	notice "killing all VMs"
 	vm_kill_all
 	# Kill vhost application
 	notice "killing vhost app"
-	spdk_vhost_kill
+	
+	for vhost_num in $(spdk_vhost_list_all); do
+		spdk_vhost_kill $vhost_num
+	done
 
 	notice "EXIT DONE"
 }

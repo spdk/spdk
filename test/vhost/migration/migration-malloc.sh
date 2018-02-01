@@ -116,7 +116,7 @@ target_vm_ctrlr=naa.Malloc0.$target_vm
 vm_setup --os="$os_image" --force=$incoming_vm --disk-type=spdk_vhost_scsi --disks=Malloc0 --migrate-to=$target_vm
 vm_setup --force=$target_vm --disk-type=spdk_vhost_scsi --disks=Malloc0 --incoming=$incoming_vm
 
-spdk_vhost_run $BASE_DIR
+spdk_vhost_run --conf-path=$BASE_DIR
 
 notice "==============="
 notice ""

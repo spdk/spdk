@@ -6,7 +6,7 @@ BASE_DIR=$(readlink -f $(dirname $0))
 ROOT_DIR=$(readlink -f $BASE_DIR/../../..)
 
 PLUGIN_DIR=$ROOT_DIR/examples/bdev/fio_plugin
-RPC_PY="$ROOT_DIR/scripts/rpc.py"
+RPC_PY="$ROOT_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 FIO_BIN="/usr/src/fio/fio"
 virtio_bdevs=""
 virtio_with_unmap=""
@@ -85,7 +85,7 @@ function create_bdev_config()
 }
 
 timing_enter spdk_vhost_run
-spdk_vhost_run $BASE_DIR
+spdk_vhost_run --conf-path=$BASE_DIR
 timing_exit spdk_vhost_run
 
 timing_enter create_bdev_config
