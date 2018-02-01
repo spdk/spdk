@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0849135c_f9528758",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1895,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-01T13:11:36Z",
+      "side": 1,
+      "message": "all outstanding IOs are canceled by abort_io()s and BDEV_CH_RESET_IN_PROGRESS works. Hence it looks that unregistering poller is not required. Is this unregistering added for just in case or any specific reason?",
+      "range": {
+        "startLine": 1893,
+        "startChar": 0,
+        "endLine": 1895,
+        "endChar": 3
+      },
+      "revId": "9be5e4c0185fd52f1e571e40492e1feaec5ff90a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc7d1627_52beb398",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 2175,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-01T13:11:36Z",
+      "side": 1,
+      "message": "Same as above",
+      "range": {
+        "startLine": 2175,
+        "startChar": 2,
+        "endLine": 2175,
+        "endChar": 51
+      },
+      "revId": "9be5e4c0185fd52f1e571e40492e1feaec5ff90a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
