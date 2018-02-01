@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7b487f0d_27e4f3ad",
+        "filename": "doc/bdev_pg.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-01T17:26:19Z",
+      "side": 1,
+      "message": "What about io channels? They should be close too I think?",
+      "range": {
+        "startLine": 89,
+        "startChar": 41,
+        "endLine": 90,
+        "endChar": 75
+      },
+      "revId": "e8f32c952b86bd9a6cd05f4a89fbbf013362c3a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
