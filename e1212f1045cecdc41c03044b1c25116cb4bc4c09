@@ -22,6 +22,30 @@
       "revId": "e1212f1045cecdc41c03044b1c25116cb4bc4c09",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42065bff_55573159",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 779,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-01T15:30:14Z",
+      "side": 1,
+      "message": "You are right there has to be something stopping from opening the bdev descriptors when doing resize.\n\nWhen we were trying to do similar thing with io channels (instead of open bdev descriptors), patch that allows locking allocating new io channels was created:\nhttps://review.gerrithub.io/#/c/393229/\n\nMaybe that or similar could be a solution. Definitely would like to hear what others think.",
+      "parentUuid": "851f3d24_455fa98b",
+      "range": {
+        "startLine": 779,
+        "startChar": 1,
+        "endLine": 779,
+        "endChar": 61
+      },
+      "revId": "e1212f1045cecdc41c03044b1c25116cb4bc4c09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
