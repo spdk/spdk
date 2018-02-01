@@ -9,7 +9,7 @@ BASE_DIR=$(readlink -f $(dirname $0))
 [[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $BASE_DIR/../common && pwd)"
 
 . $COMMON_DIR/common.sh
-rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py "
+rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
 vm_count=1
 max_disks=""
@@ -121,7 +121,7 @@ trap 'error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
 vm_kill_all
 
 notice "running SPDK vhost"
-spdk_vhost_run $BASE_DIR
+spdk_vhost_run --conf-path=$BASE_DIR
 notice "..."
 
 trap 'clean_lvol_cfg; error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR

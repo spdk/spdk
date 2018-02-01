@@ -9,7 +9,7 @@ rootdir=$(readlink -f $basedir/../../..)
 testdir=$(readlink -f $rootdir/..)
 MAKE="make -j$(( $(nproc)  * 2 ))"
 
-rpc_py="python $rootdir/scripts/rpc.py "
+rpc_py="python $rootdir/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 HOST_IP=192.200.200.1
 VM_IP=192.200.200.254
 VM_UNAME="root"
