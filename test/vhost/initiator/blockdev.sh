@@ -5,13 +5,6 @@ BASE_DIR=$(readlink -f $(dirname $0))
 [[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $BASE_DIR/../common && pwd)"
 ROOT_DIR=$(readlink -f $BASE_DIR/../../..)
 
-PLUGIN_DIR=$ROOT_DIR/examples/bdev/fio_plugin
-RPC_PY="$ROOT_DIR/scripts/rpc.py"
-FIO_BIN="/usr/src/fio/fio"
-virtio_bdevs=""
-virtio_with_unmap=""
-os_image="/home/sys_sgsw/vhost_vm_image.qcow2"
-
 function usage()
 {
 	[[ ! -z $2 ]] && ( echo "$2"; echo ""; )
@@ -38,6 +31,12 @@ while getopts 'h-:' optchar; do
 done
 
 source $COMMON_DIR/common.sh
+PLUGIN_DIR=$ROOT_DIR/examples/bdev/fio_plugin
+RPC_PY="$ROOT_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
+FIO_BIN="/usr/src/fio/fio"
+virtio_bdevs=""
+virtio_with_unmap=""
+os_image="/home/sys_sgsw/vhost_vm_image.qcow2"
 
 if [ ! -x $FIO_BIN ]; then
 	error "Invalid path of fio binary"
@@ -85,7 +84,7 @@ function create_bdev_config()
 }
 
 timing_enter spdk_vhost_run
-spdk_vhost_run $BASE_DIR
+spdk_vhost_run --conf-path=$BASE_DIR
 timing_exit spdk_vhost_run
 
 timing_enter create_bdev_config

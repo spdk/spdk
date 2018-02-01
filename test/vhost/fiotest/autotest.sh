@@ -82,7 +82,7 @@ if [[ $test_type =~ "spdk_vhost" ]]; then
 	notice ""
 	notice "running SPDK"
 	notice ""
-	spdk_vhost_run $BASE_DIR
+	spdk_vhost_run --conf-path=$BASE_DIR
 	notice ""
 fi
 
@@ -91,7 +91,7 @@ notice ""
 notice "Setting up VM"
 notice ""
 
-rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py "
+rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
 for vm_conf in ${vms[@]}; do
 	IFS=',' read -ra conf <<< "$vm_conf"
