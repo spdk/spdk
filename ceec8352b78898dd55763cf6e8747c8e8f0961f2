@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da0aa8a7_512981c3",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 386,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-02T22:49:58Z",
+      "side": 1,
+      "message": "need newlines after end of declarations",
+      "revId": "ceec8352b78898dd55763cf6e8747c8e8f0961f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02fa4205_b89fd74b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 392,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-02T22:49:58Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "ceec8352b78898dd55763cf6e8747c8e8f0961f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e1e6c17_94a28077",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 394,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-02T22:49:58Z",
+      "side": 1,
+      "message": "don\u0027t we need to use one of our new flags here?  for example, if v18.01 blobstore tries to load a blob with XATTR_INTERNAL descriptor type, we want it to fail to load\n\nsee comment below on line 399 - just because it does not recognize the descriptor type does not mean it will not load the blob - we need a feature flag to prevent that from happening",
+      "revId": "ceec8352b78898dd55763cf6e8747c8e8f0961f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
