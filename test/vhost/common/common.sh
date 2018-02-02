@@ -404,7 +404,8 @@ function vm_shutdown_all()
 			return 0
 		fi
 
-		((timeo-=1))
+		#((timeo-=1))
+        timeo=$(($timeo-1))
 		sleep 1
 	done
 	shopt -u nullglob
