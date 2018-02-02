@@ -71,6 +71,30 @@
     },
     {
       "key": {
+        "uuid": "f78bc3c6_45d7b392",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 42
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-02-02T09:24:49Z",
+      "side": 1,
+      "message": "This can be done in another commit",
+      "parentUuid": "bb43a7ce_38c475b5",
+      "range": {
+        "startLine": 25,
+        "startChar": 4,
+        "endLine": 25,
+        "endChar": 13
+      },
+      "revId": "bf1467cc2e8b2a88bfc3c03c4305c2b3602c9985",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ae0e76fb_cb3392c5",
         "filename": "test/lvol/test_cases.py",
         "patchSetId": 42
@@ -105,6 +129,30 @@
       "writtenOn": "2018-02-01T13:17:39Z",
       "side": 1,
       "message": "We could add just one print in run_fio_test instead of printing out same message after every if rv \u003d\u003d1. Additionally we are getting now two prints if we fall in catch in run_fio_test.",
+      "range": {
+        "startLine": 731,
+        "startChar": 12,
+        "endLine": 731,
+        "endChar": 48
+      },
+      "revId": "bf1467cc2e8b2a88bfc3c03c4305c2b3602c9985",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22d8fad2_ea0be3d0",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 42
+      },
+      "lineNbr": 731,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-02-02T09:24:49Z",
+      "side": 1,
+      "message": "Sometime we expect 0, but sometimes 1 (Fio test ended with unexpected success). We log \"enexpected exception\" as this is strange behaviour, maybe not related to fio.",
+      "parentUuid": "c53b15d2_01152ce9",
       "range": {
         "startLine": 731,
         "startChar": 12,
