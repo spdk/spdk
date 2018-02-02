@@ -937,6 +937,22 @@ vbdev_lvs_examine(struct spdk_bdev *bdev)
 
 	spdk_lvs_load(bs_dev, _vbdev_lvs_examine_cb, req);
 }
+
+struct spdk_lvol *
+vbdev_lvol_get_from_bdev(struct spdk_bdev *bdev)
+{
+	if (!bdev || bdev->module != SPDK_GET_BDEV_MODULE(lvol)) {
+		return NULL;
+	}
+
+	if (bdev->ctxt == NULL) {
+		SPDK_ERRLOG("No lvol ctx assigned to bdev %s\n", bdev->name);
+		return NULL;
+	}
+
+	return (struct spdk_lvol *)bdev->ctxt;
+}
+
 SPDK_BDEV_MODULE_REGISTER(lvol, vbdev_lvs_init, NULL, NULL, vbdev_lvs_get_ctx_size,
 			  vbdev_lvs_examine)
 SPDK_LOG_REGISTER_COMPONENT("vbdev_lvol", SPDK_LOG_VBDEV_LVOL);
