@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "2a4be104_c3004f3b",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 752,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-02T08:30:50Z",
+      "side": 1,
+      "message": "Register lvol-\u003ebdev back.",
+      "revId": "e1212f1045cecdc41c03044b1c25116cb4bc4c09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0622a693_cf1c5337",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 778,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-02T08:30:50Z",
+      "side": 1,
+      "message": "Just as Jim noted, it might be the most straightforward solution. Unregister lvol-\u003ebdev here.",
+      "revId": "e1212f1045cecdc41c03044b1c25116cb4bc4c09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "851f3d24_455fa98b",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 12
