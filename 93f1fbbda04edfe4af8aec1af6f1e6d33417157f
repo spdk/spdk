@@ -1,0 +1,136 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "19bfdb29_c28bfcb0",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-02T12:04:15Z",
+      "side": 1,
+      "message": "I\u0027m not sure we need it so complicated right now. If we want more complicated test cases for _vbdev_lvol_change_alias() alias for certain bdev could be changed directly within that UT.\n\nRight now this function could assert if bdev and alias is not NULL, assert that tailq for aliases is empty and then insert it into tailq.",
+      "range": {
+        "startLine": 63,
+        "startChar": 0,
+        "endLine": 63,
+        "endChar": 19
+      },
+      "revId": "93f1fbbda04edfe4af8aec1af6f1e6d33417157f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3197e820_c300c32e",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-02T12:04:15Z",
+      "side": 1,
+      "message": "Don\u0027t think we need it here. spdk_bdev_alias_add/del is unit tested in bdev_ut.",
+      "range": {
+        "startLine": 72,
+        "startChar": 0,
+        "endLine": 75,
+        "endChar": 2
+      },
+      "revId": "93f1fbbda04edfe4af8aec1af6f1e6d33417157f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14f2d509_5322ae53",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-02T12:04:15Z",
+      "side": 1,
+      "message": "Similar to above:\n- assert that bdev/alias are not NULL\n- search for that alias in tailq and remove it\n- assert that tailq is empty.",
+      "range": {
+        "startLine": 96,
+        "startChar": 0,
+        "endLine": 96,
+        "endChar": 19
+      },
+      "revId": "93f1fbbda04edfe4af8aec1af6f1e6d33417157f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "55464513_9e5e2804",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 822,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-02T12:04:15Z",
+      "side": 1,
+      "message": "This part here and in a lot of places in this UT can be removed. Please see comment below.",
+      "range": {
+        "startLine": 819,
+        "startChar": 0,
+        "endLine": 822,
+        "endChar": 43
+      },
+      "revId": "93f1fbbda04edfe4af8aec1af6f1e6d33417157f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59adf560_9d527989",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 830,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-02T12:04:15Z",
+      "side": 1,
+      "message": "In a lot of places g_base_bdev-\u003ename is added because of spdk_get_bdev_by_name() stub. I would avoid using it, since this function is used in vbdev_lvol_rpc.c only and vbdev_lvol_rename() takes lvol pointer as argument.\nspdk_get_bdev_by_name() is used in resize currently - but will be moved to rpc as well.",
+      "range": {
+        "startLine": 828,
+        "startChar": 0,
+        "endLine": 830,
+        "endChar": 49
+      },
+      "revId": "93f1fbbda04edfe4af8aec1af6f1e6d33417157f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e47e262_61194a7d",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1399,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-02T12:04:15Z",
+      "side": 1,
+      "message": "Please add UT where spdk_lvol_rename is attempted with name already existing on another lvol within the same lvol store.",
+      "revId": "93f1fbbda04edfe4af8aec1af6f1e6d33417157f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
