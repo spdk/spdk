@@ -147,6 +147,8 @@ struct spdk_blob {
 	struct spdk_xattr_tailq xattrs_internal;
 
 	TAILQ_ENTRY(spdk_blob) link;
+
+	bool frozen_io;
 };
 
 struct spdk_blob_store {
@@ -192,6 +194,7 @@ struct spdk_bs_channel {
 	struct spdk_io_channel		*dev_channel;
 
 	TAILQ_HEAD(, spdk_bs_request_set) need_cluster_alloc;
+	TAILQ_HEAD(, spdk_bs_request_set) queued_io;
 };
 
 /** operation type */
