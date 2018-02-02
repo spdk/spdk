@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a39320c1_25a9d81a",
+        "filename": "test/lib/ut_multithread.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-02T23:18:21Z",
+      "side": 1,
+      "message": "newline after declarations",
+      "revId": "7411297d198b8b02f04e162e192cc85fbe28b0db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
