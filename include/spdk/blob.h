@@ -460,6 +460,11 @@ bool spdk_blob_is_thin_provisioned(struct spdk_blob *blob);
 void spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 			 spdk_blob_op_complete cb_fn, void *cb_arg);
 
+/* Allocate all unallocated clusters in this blob and copy data from backing blob.
+ * This call removes dependency on backing blob. */
+void spdk_bs_inflate_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
+			  spdk_blob_op_complete cb_fn, void *cb_arg);
+
 /**
  * Open a blob from the given blobstore.
  *
