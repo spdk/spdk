@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "c60e98c4_ad1fdb3d",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-02T14:36:30Z",
+      "side": 1,
+      "message": "We could change this function to return more information (like spdk_blob_get_xattr_names) - everything that we require here. Check for alias_number would be still outside this function, but this function will return this number, so you won\u0027t need to count it by yourself.",
+      "parentUuid": "01c415cc_1948049a",
+      "range": {
+        "startLine": 82,
+        "startChar": 0,
+        "endLine": 98,
+        "endChar": 2
+      },
+      "revId": "587444dedbdd0007e9b3fe91c51ee1f84e53ba37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5e8dc0aa_eacd93c5",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 63
@@ -131,6 +155,30 @@
       "side": 1,
       "message": "If alias is NULL then is no point in calling spdk_bdev_alias_del(). It will do nothing.",
       "parentUuid": "5e8dc0aa_eacd93c5",
+      "range": {
+        "startLine": 509,
+        "startChar": 0,
+        "endLine": 514,
+        "endChar": 2
+      },
+      "revId": "587444dedbdd0007e9b3fe91c51ee1f84e53ba37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fccf2172_6c03abc2",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 514,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-02T14:36:30Z",
+      "side": 1,
+      "message": "Actually in this case we probably won\u0027t be able to perform any other operation as well. We could just return -ENOMEM on NULL, but this won\u0027t change much as this is destruct function. You can leave this code as it is I think.",
+      "parentUuid": "bbeb73bb_0c84c2fa",
       "range": {
         "startLine": 509,
         "startChar": 0,
