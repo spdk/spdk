@@ -1650,7 +1650,7 @@ _spdk_blob_request_submit_op_single(struct spdk_io_channel *_ch, struct spdk_blo
 
 	_spdk_blob_calculate_lba_and_lba_count(blob, offset, length, &lba, &lba_count);
 
-	if(blob->invalid_flags & SPDK_BLOB_FREEZE_IO) {
+	if (blob->invalid_flags & SPDK_BLOB_FREEZE_IO) {
 		spdk_bs_user_op_t *op;
 
 		op = spdk_bs_user_op_alloc(_ch, &cpl, op_type, blob, payload, 0, offset, length);
@@ -1887,7 +1887,7 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *_blob, struct spdk_io_channel
 		return;
 	}
 
-	if(ctx->blob->invalid_flags & SPDK_BLOB_FREEZE_IO) {
+	if (ctx->blob->invalid_flags & SPDK_BLOB_FREEZE_IO) {
 		spdk_bs_user_op_t *op;
 
 		op = spdk_bs_user_op_alloc(_ch, &cpl, op_type, ctx->blob, payload, 0, offset, length);
@@ -3487,6 +3487,9 @@ _spdk_bs_cleanup_finish(void *cb_arg, int bserrno)
 	case SPDK_BS_CPL_TYPE_BLOBID:
 		cpl->u.blobid.cb_fn(cpl->u.blobid.cb_arg, cpl->u.blobid.blobid, ctx->bserrno);
 		break;
+	case SPDK_BS_CPL_TYPE_BLOB_BASIC:
+		cpl->u.blob_basic.cb_fn(cpl->u.blob_basic.cb_arg, ctx->bserrno);
+		break;
 	default:
 		assert(false);
 		break;
@@ -3501,7 +3504,7 @@ _spdk_bs_cleanup_orgblob(void *cb_arg, int bserrno)
 	struct spdk_double_blob_ctx *ctx = (struct spdk_double_blob_ctx *)cb_arg;
 	struct spdk_blob *orgblob = __data_to_blob(ctx->orgblob.ptr);
 
-	if(bserrno != 0 || ctx->bserrno != 0 ) {
+	if (bserrno != 0 || ctx->bserrno != 0) {
 		spdk_bs_user_op_queue_abort(orgblob);
 	}
 
@@ -3523,7 +3526,7 @@ _spdk_bs_cleanup_newblob(void *cb_arg, int bserrno)
 	struct spdk_double_blob_ctx *ctx = (struct spdk_double_blob_ctx *)cb_arg;
 	struct spdk_blob *newblob = __data_to_blob(ctx->newblob.ptr);
 
-	if(bserrno != 0 || ctx->bserrno != 0 ) {
+	if (bserrno != 0 || ctx->bserrno != 0) {
 		spdk_bs_user_op_queue_abort(newblob);
 	}
 
@@ -3824,6 +3827,91 @@ void spdk_bs_create_clone(struct spdk_blob_store *bs, spdk_blob_id blobid,
 }
 
 /* END spdk_bs_create_blob_clone */
+
+/* START spdk_bs_inflate_blob */
+
+static void
+_spdk_bs_inflate_blob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
+{
+	struct spdk_double_blob_ctx	*ctx = (struct spdk_double_blob_ctx *)cb_arg;
+	struct spdk_blob_data		*orgblob = __blob_to_data(_blob);
+	uint64_t lfc; /* lowest free cluster */
+	uint64_t i;
+
+	if (bserrno != 0) {
+		ctx->bserrno = bserrno;
+		_spdk_bs_cleanup_finish(ctx, 0);
+		return;
+	}
+	ctx->orgblob.ptr = orgblob;
+
+	if (spdk_blob_is_thin_provisioned(orgblob) == false) {
+		/* This is not thin provisioned blob, return error */
+		ctx->bserrno = -EALREADY;
+		_spdk_bs_cleanup_orgblob(ctx, 0);
+		return;
+	}
+
+	/* Do two passes - one to verify that we can obtain enough clusters
+	 * and another to actually claim them.
+	 */
+	lfc = 0;
+	for (i = 0; i < orgblob->active.num_clusters; i++) {
+		if (orgblob->active.clusters[i] == 0) {
+			lfc = spdk_bit_array_find_first_clear(orgblob->bs->used_clusters, lfc);
+			if (lfc >= orgblob->bs->total_clusters) {
+				/* No more free clusters. Cannot satisfy the request */
+				ctx->bserrno = -ENOSPC;
+				_spdk_bs_cleanup_orgblob(ctx, 0);
+				return;
+			}
+			lfc++;
+		}
+	}
+
+	lfc = 0;
+	for (i = 0; i < orgblob->active.num_clusters; i++) {
+		if (orgblob->active.clusters[i] == 0) {
+			_spdk_bs_allocate_cluster(orgblob, i, &lfc, true);
+			/* TODO: copy contents of cluster */
+			/* use: _spdk_bs_allocate_and_copy_cluster()
+			 * with no additional i/o operations */
+		}
+	}
+	/* TODO: Postpone next operations to callback in _spdk_bs_allocate_and_copy_cluster() */
+
+	/* Unset thin provision */
+	orgblob->invalid_flags = orgblob->invalid_flags & ~SPDK_BLOB_THIN_PROV;
+
+	/* Destroy back_bs_dev */
+
+	orgblob->back_bs_dev->destroy(orgblob->back_bs_dev);
+	orgblob->back_bs_dev = NULL;
+
+	_spdk_bs_cleanup_orgblob(ctx, 0);
+
+}
+
+void spdk_bs_inflate_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
+			  spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_double_blob_ctx	*ctx = calloc(1, sizeof(*ctx));
+
+	if (!ctx) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+	ctx->cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
+	ctx->cpl.u.bs_basic.cb_fn = cb_fn;
+	ctx->cpl.u.bs_basic.cb_arg = cb_arg;
+	ctx->bserrno = 0;
+	ctx->orgblob.id = blobid;
+
+	spdk_bs_open_blob(bs, ctx->orgblob.id, _spdk_bs_inflate_blob_open_cpl, ctx);
+
+}
+
+/* END spdk_bs_inflate_blob */
 
 /* START spdk_blob_resize */
 int
