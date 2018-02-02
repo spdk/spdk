@@ -1,5 +1,13 @@
 # Changelog
 
+## v18.04: (Upcoming Release)
+
+### RPC
+
+The Rpc configuration file section, which was deprecated in v18.01, has been removed.
+Users should switch to the `-r` command-line parameter instead.
+
+
 ## v18.01: Blobstore Thin Provisioning
 
 ### Build System

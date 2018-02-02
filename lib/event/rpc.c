@@ -45,19 +45,6 @@
 
 static struct spdk_poller *g_rpc_poller = NULL;
 
-static const char *
-rpc_get_listen_addr(void)
-{
-	struct spdk_conf_section *sp;
-
-	sp = spdk_conf_find_section(NULL, "Rpc");
-	if (sp == NULL) {
-		return NULL;
-	}
-
-	return spdk_conf_section_get_val(sp, "Listen");
-}
-
 static void
 spdk_rpc_subsystem_poll(void *arg)
 {
@@ -68,10 +55,6 @@ void
 spdk_rpc_initialize(const char *listen_addr)
 {
 	int rc;
-
-	if (listen_addr == NULL) {
-		listen_addr = rpc_get_listen_addr();
-	}
 
 	if (listen_addr == NULL) {
 		return;
@@ -93,22 +76,4 @@ spdk_rpc_finish(void)
 {
 	spdk_rpc_close();
 	spdk_poller_unregister(&g_rpc_poller);
-}
-
-void
-spdk_rpc_config_text(FILE *fp)
-{
-	const char *listen_addr;
-
-	listen_addr = rpc_get_listen_addr();
-	if (listen_addr == NULL) {
-		return;
-	}
-
-	fprintf(fp,
-		"\n"
-		"[Rpc]\n"
-		"  # Listen address for the RPC service.\n"
-		"  # May be an IP address or an absolute path to a Unix socket.\n"
-		"  Listen %s\n", listen_addr);
 }
