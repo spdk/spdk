@@ -122,6 +122,8 @@ struct spdk_blob {
 
 	enum spdk_blob_state		state;
 
+	bool frozen_io;
+
 	/* Two copies of the mutable data. One is a version
 	 * that matches the last known data on disk (clean).
 	 * The other (active) is the current data. Syncing
@@ -147,6 +149,8 @@ struct spdk_blob {
 	struct spdk_xattr_tailq xattrs_internal;
 
 	TAILQ_ENTRY(spdk_blob) link;
+
+	TAILQ_HEAD(, spdk_bs_request_set) queued_io;
 };
 
 struct spdk_blob_store {
