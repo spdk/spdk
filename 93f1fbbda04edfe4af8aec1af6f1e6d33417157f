@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "2c0baebf_75c5d1fc",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1067,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-02T13:24:24Z",
+      "side": 1,
+      "message": "Function name should start with \u0027vbdev\u0027. My suggestion is to name this function: vbdev_lvol_get_from_bdev or vbdev_lvol_get_lvol_from_bdev.",
+      "range": {
+        "startLine": 1067,
+        "startChar": 0,
+        "endLine": 1067,
+        "endChar": 18
+      },
+      "revId": "93f1fbbda04edfe4af8aec1af6f1e6d33417157f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "19bfdb29_c28bfcb0",
         "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
         "patchSetId": 64
