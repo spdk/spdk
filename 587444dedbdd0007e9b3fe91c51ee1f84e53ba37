@@ -1,0 +1,107 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2b972913_170ebd20",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-02T13:13:55Z",
+      "side": 1,
+      "message": "to iterate",
+      "range": {
+        "startLine": 79,
+        "startChar": 47,
+        "endLine": 79,
+        "endChar": 63
+      },
+      "revId": "587444dedbdd0007e9b3fe91c51ee1f84e53ba37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21bf0c9a_bd79ed0c",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-02T13:13:55Z",
+      "side": 1,
+      "message": "We have add alias and delete alias functions and it would be nice to have a get aliases function as well. It can be done like spdk_blob_get_xattr_names function and then we could use it here. This can be done as separate patch.",
+      "range": {
+        "startLine": 82,
+        "startChar": 0,
+        "endLine": 98,
+        "endChar": 2
+      },
+      "revId": "587444dedbdd0007e9b3fe91c51ee1f84e53ba37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e8dc0aa_eacd93c5",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 514,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-02T13:13:55Z",
+      "side": 1,
+      "message": "I would do this other way:\nif (alias \u003d\u003d NULL) {\n    errorlog\n}\n\naliast_del...",
+      "range": {
+        "startLine": 509,
+        "startChar": 0,
+        "endLine": 514,
+        "endChar": 2
+      },
+      "revId": "587444dedbdd0007e9b3fe91c51ee1f84e53ba37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d419dc81_041ebcfa",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 860,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-02T13:13:55Z",
+      "side": 1,
+      "message": "I will need to look closer to unit tests, but for now I see that we missing some negative test cases.",
+      "revId": "587444dedbdd0007e9b3fe91c51ee1f84e53ba37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "946fd439_8e74bbad",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 1407,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-02T13:13:55Z",
+      "side": 1,
+      "message": "Add also negative test cases.",
+      "revId": "587444dedbdd0007e9b3fe91c51ee1f84e53ba37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
