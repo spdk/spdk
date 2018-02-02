@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5e4b9280_9825e34c",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 858,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-02T23:58:53Z",
+      "side": 1,
+      "message": "This is main difference now between spdk_rpc_add_portal_group and spdk_iscsi_portal_grp_create_from_configfile.\n\nThis patch is fine - but I think we can do more changes later.  For example, I think from configfile function, it can also immediately open the portal_grp.  Then we can get rid of spdk_iscsi_portal_grp_open_all().",
+      "revId": "574e29ce9e75957f776624fd9d56875531b5910d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
