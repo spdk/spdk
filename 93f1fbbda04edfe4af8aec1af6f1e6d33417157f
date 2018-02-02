@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "47e09d12_933c15de",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1067,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-02T13:55:07Z",
+      "side": 1,
+      "message": "I believe this comment should be addresed here -\u003e https://review.gerrithub.io/#/c/398178/1/lib/bdev/lvol/vbdev_lvol.c",
+      "parentUuid": "2c0baebf_75c5d1fc",
+      "range": {
+        "startLine": 1067,
+        "startChar": 0,
+        "endLine": 1067,
+        "endChar": 18
+      },
+      "revId": "93f1fbbda04edfe4af8aec1af6f1e6d33417157f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "19bfdb29_c28bfcb0",
         "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
         "patchSetId": 64
@@ -59,6 +83,30 @@
       "writtenOn": "2018-02-02T12:04:15Z",
       "side": 1,
       "message": "Don\u0027t think we need it here. spdk_bdev_alias_add/del is unit tested in bdev_ut.",
+      "range": {
+        "startLine": 72,
+        "startChar": 0,
+        "endLine": 75,
+        "endChar": 2
+      },
+      "revId": "93f1fbbda04edfe4af8aec1af6f1e6d33417157f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e22eafb_e0c0f55b",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-02T13:55:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3197e820_c300c32e",
       "range": {
         "startLine": 72,
         "startChar": 0,
