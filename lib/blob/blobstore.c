@@ -1705,6 +1705,14 @@ _spdk_blob_request_submit_op_single(struct spdk_io_channel *_ch, struct spdk_blo
 
 	_spdk_blob_calculate_lba_and_lba_count(blob, offset, length, &lba, &lba_count);
 
+	if (blob->invalid_flags & SPDK_BLOB_FREEZE_IO) {
+		spdk_bs_user_op_t *op;
+
+		op = spdk_bs_user_op_alloc(_ch, &cpl, op_type, blob, payload, 0, offset, length);
+		spdk_bs_user_op_queue(_ch, op);
+		return;
+	}
+
 	switch (op_type) {
 	case SPDK_BLOB_READ: {
 		spdk_bs_batch_t *batch;
@@ -1928,6 +1936,14 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel 
 
 	if (offset + length > blob->active.num_clusters * blob->bs->pages_per_cluster) {
 		cb_fn(cb_arg, -EINVAL);
+		return;
+	}
+
+	if (ctx->blob->invalid_flags & SPDK_BLOB_FREEZE_IO) {
+		spdk_bs_user_op_t *op;
+
+		op = spdk_bs_user_op_alloc(_ch, &cpl, op_type, ctx->blob, payload, 0, offset, length);
+		spdk_bs_user_op_queue(ctx->channel, op);
 		return;
 	}
 
@@ -3669,6 +3685,10 @@ _spdk_bs_clone_snapshot_origblob_cleanup(void *cb_arg, int bserrno)
 	struct spdk_clone_snapshot_ctx *ctx = (struct spdk_clone_snapshot_ctx *)cb_arg;
 	struct spdk_blob *origblob = ctx->original.blob;
 
+	if (bserrno != 0 || ctx->bserrno != 0) {
+		spdk_bs_user_op_queue_abort(orgblob);
+	}
+
 	if (bserrno != 0) {
 		if (ctx->bserrno != 0) {
 			SPDK_ERRLOG("Cleanup error %d\n", bserrno);
@@ -3686,6 +3706,10 @@ _spdk_bs_clone_snapshot_newblob_cleanup(void *cb_arg, int bserrno)
 {
 	struct spdk_clone_snapshot_ctx *ctx = (struct spdk_clone_snapshot_ctx *)cb_arg;
 	struct spdk_blob *newblob = ctx->new.blob;
+
+	if (bserrno != 0 || ctx->bserrno != 0) {
+		spdk_bs_user_op_queue_abort(newblob);
+	}
 
 	if (bserrno != 0) {
 		if (ctx->bserrno != 0) {
@@ -3722,6 +3746,13 @@ _spdk_bs_snapshot_origblob_sync_cpl(void *cb_arg, int bserrno)
 	}
 
 	spdk_blob_set_read_only(newblob);
+	TAILQ_INSERT_TAIL(&newblob->clones, ctx->original.blob, next_clone);
+	_spdk_bs_blob_list_add(ctx->original.blob);
+
+	/* Unfreeze IO on newblob */
+	newblob->invalid_flags &= ~SPDK_BLOB_FREEZE_IO;
+
+	spdk_blob_set_read_only(__data_to_blob(newblob));
 
 	/* sync snapshot metadata */
 	spdk_blob_sync_md(newblob, _spdk_bs_clone_snapshot_origblob_cleanup, cb_arg);
@@ -3760,6 +3791,10 @@ _spdk_bs_snapshot_newblob_sync_cpl(void *cb_arg, int bserrno)
 	memset(origblob->active.clusters, 0,
 	       origblob->active.num_clusters * sizeof(origblob->active.clusters));
 
+	/* Unfreeze IO on orgblob */
+	orgblob->invalid_flags &= ~SPDK_BLOB_FREEZE_IO;
+
+
 	/* sync clone metadata */
 	spdk_blob_sync_md(origblob, _spdk_bs_snapshot_origblob_sync_cpl, ctx);
 }
@@ -3777,6 +3812,10 @@ _spdk_bs_snapshot_newblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bs
 	}
 
 	ctx->new.blob = newblob;
+
+	/* Freeze I/O on orgblob */
+	orgblob->invalid_flags |= SPDK_BLOB_FREEZE_IO;
+	newblob->invalid_flags |= SPDK_BLOB_FREEZE_IO;
 
 	/* set new back_bs_dev for snapshot */
 	newblob->back_bs_dev = origblob->back_bs_dev;
