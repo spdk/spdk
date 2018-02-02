@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7659bf08_a643362b",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 65
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-02T13:33:51Z",
+      "side": 1,
+      "message": "This name suggests that we change alias of lvol (which is done by spdk_lvol_rename), not bdev on top of lvol. Let\u0027s change name to _vbdev_lvol_change_bdev_alias.",
+      "range": {
+        "startLine": 70,
+        "startChar": 0,
+        "endLine": 70,
+        "endChar": 24
+      },
+      "revId": "787a225b196699f94fd5be356393ae2279b01665",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
