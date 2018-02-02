@@ -75,6 +75,7 @@ dev_read(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, void *payload
 
 	offset = lba * DEV_BUFFER_BLOCKLEN;
 	length = lba_count * DEV_BUFFER_BLOCKLEN;
+
 	SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
 	memcpy(payload, &g_dev_buffer[offset], length);
 	spdk_thread_send_msg(spdk_get_thread(), dev_complete, cb_args);
