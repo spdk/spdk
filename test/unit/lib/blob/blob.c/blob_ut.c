@@ -780,6 +780,81 @@ blob_clone(void)
 }
 
 static void
+blob_inflate(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_bs_dev *dev;
+	struct spdk_blob_opts opts;
+	struct spdk_blob *blob, *snapshot;
+	spdk_blob_id blobid, snapshotid;
+
+	dev = init_dev();
+
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	/* Create blob with 10 clusters */
+
+	spdk_blob_opts_init(&opts);
+	opts.num_clusters = 10;
+
+	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10)
+	CU_ASSERT(spdk_blob_is_thin_provisioned(__blob_to_data(blob)) == false);
+
+	/* Create snapshot */
+	spdk_bs_create_snapshot(bs, blobid, NULL, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	snapshotid = g_blobid;
+
+	CU_ASSERT(spdk_blob_is_thin_provisioned(__blob_to_data(blob)) == true);
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10)
+
+	spdk_bs_open_blob(bs, snapshotid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	snapshot = g_blob;
+	CU_ASSERT(__blob_to_data(snapshot)->data_ro == true)
+	CU_ASSERT(__blob_to_data(snapshot)->md_ro == true)
+	CU_ASSERT(spdk_blob_get_num_clusters(snapshot) == 10);
+
+	spdk_blob_close(snapshot, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+
+	/* Inflate blob */
+	spdk_bs_inflate_blob(bs, blobid, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Now, it should be possible to delete snapshot */
+	spdk_bs_delete_blob(bs, snapshotid, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10)
+	CU_ASSERT(spdk_blob_is_thin_provisioned(__blob_to_data(blob)) == false);
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+
+}
+
+static void
 blob_delete(void)
 {
 	struct spdk_blob_store *bs;
@@ -3471,6 +3546,7 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "blob_thin_provision", blob_thin_provision) == NULL ||
 		CU_add_test(suite, "blob_snapshot", blob_snapshot) == NULL ||
 		CU_add_test(suite, "blob_clone", blob_clone) == NULL ||
+		CU_add_test(suite, "blob_inflate", blob_inflate) == NULL ||
 		CU_add_test(suite, "blob_delete", blob_delete) == NULL ||
 		CU_add_test(suite, "blob_resize", blob_resize) == NULL ||
 		CU_add_test(suite, "blob_read_only", blob_read_only) == NULL ||
