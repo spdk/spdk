@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5bb5231f_bbdc94b6",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1895,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-02T03:43:49Z",
+      "side": 1,
+      "message": "Just in case to remove all related data structures on the reset request. I think it could be not necessary to unregister the poller. Let me make the change. Thanks.",
+      "parentUuid": "0849135c_f9528758",
+      "range": {
+        "startLine": 1893,
+        "startChar": 0,
+        "endLine": 1895,
+        "endChar": 3
+      },
+      "revId": "9be5e4c0185fd52f1e571e40492e1feaec5ff90a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dc7d1627_52beb398",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 16
