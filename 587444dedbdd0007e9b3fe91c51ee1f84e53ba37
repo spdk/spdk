@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a1caa410_6e81445a",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-02T13:55:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2b972913_170ebd20",
+      "range": {
+        "startLine": 79,
+        "startChar": 47,
+        "endLine": 79,
+        "endChar": 63
+      },
+      "revId": "587444dedbdd0007e9b3fe91c51ee1f84e53ba37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "21bf0c9a_bd79ed0c",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 63
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "01c415cc_1948049a",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-02T13:55:07Z",
+      "side": 1,
+      "message": "There is a spdk_bdev_get_aliases() function (bdev.c:1088). But it\u0027s working area is much smaller than You marked here.",
+      "parentUuid": "21bf0c9a_bd79ed0c",
+      "range": {
+        "startLine": 82,
+        "startChar": 0,
+        "endLine": 98,
+        "endChar": 2
+      },
+      "revId": "587444dedbdd0007e9b3fe91c51ee1f84e53ba37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5e8dc0aa_eacd93c5",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 63
@@ -59,6 +107,30 @@
       "writtenOn": "2018-02-02T13:13:55Z",
       "side": 1,
       "message": "I would do this other way:\nif (alias \u003d\u003d NULL) {\n    errorlog\n}\n\naliast_del...",
+      "range": {
+        "startLine": 509,
+        "startChar": 0,
+        "endLine": 514,
+        "endChar": 2
+      },
+      "revId": "587444dedbdd0007e9b3fe91c51ee1f84e53ba37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bbeb73bb_0c84c2fa",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 514,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-02T13:55:07Z",
+      "side": 1,
+      "message": "If alias is NULL then is no point in calling spdk_bdev_alias_del(). It will do nothing.",
+      "parentUuid": "5e8dc0aa_eacd93c5",
       "range": {
         "startLine": 509,
         "startChar": 0,
