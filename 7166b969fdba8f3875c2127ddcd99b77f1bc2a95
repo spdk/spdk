@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "45fdd831_18bbc3cc",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-02T23:30:30Z",
+      "side": 1,
+      "message": "Instead of hardcoding all of this to one millisecond, could it potentially be variable?\n\nWhat I mean is, instead of \"per_ms\" and \"this_ms\", it is \"per_timeslice\" and \"this_timeslice\".  Then if we find a use case where we want to increase or decrease the time slice, the variable names do not need to be modified.\n\nFor example, maybe we decide that 0.5ms is a better number than 1ms when we start benchmarking.\n\nThen we just need a separate field - maybe timeslice_in_us (number of microseconds per time slice).",
+      "revId": "7166b969fdba8f3875c2127ddcd99b77f1bc2a95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
