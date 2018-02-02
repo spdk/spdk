@@ -185,6 +185,7 @@ _spdk_blob_alloc(struct spdk_blob_store *bs, spdk_blob_id id)
 
 	TAILQ_INIT(&blob->xattrs);
 	TAILQ_INIT(&blob->xattrs_internal);
+	TAILQ_INIT(&blob->queued_io);
 
 	return blob;
 }
@@ -220,6 +221,64 @@ _spdk_blob_free(struct spdk_blob *blob)
 	}
 
 	free(blob);
+}
+struct spdk_freeze_io_ctx {
+	spdk_blob_op_complete cb_fn;
+	void *cb_arg;
+};
+
+static void
+_spdk_blob_freeze_io_cb(void *cb_arg)
+{
+	struct spdk_freeze_io_ctx *ctx = (struct spdk_freeze_io_ctx *)cb_arg;
+
+	ctx->cb_fn(ctx->cb_arg, 0);
+	free(ctx);
+}
+
+static void
+_spdk_blob_freeze_io(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb_arg,
+		     spdk_thread_fn thread_cb_fn)
+{
+
+	struct spdk_freeze_io_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	/* Freeze I/O on blob */
+	blob->frozen_io = true;
+
+	/* make sure that every thread is aware of frozen i/o */
+	spdk_for_each_thread(thread_cb_fn, ctx, _spdk_blob_freeze_io_cb);
+}
+
+static void
+_spdk_blob_unfreeze_io(struct spdk_blob *blob, int bserrno)
+{
+	TAILQ_HEAD(, spdk_bs_request_set) requests;
+	spdk_bs_user_op_t *op;
+
+	blob->frozen_io = false;
+
+	TAILQ_INIT(&requests);
+	TAILQ_SWAP(&blob->queued_io, &requests, spdk_bs_request_set, link);
+
+	/* Unfreeze IO on orgblob */
+	while (!TAILQ_EMPTY(&requests)) {
+		op = TAILQ_FIRST(&requests);
+		TAILQ_REMOVE(&requests, op, link);
+		if (bserrno == 0) {
+			spdk_bs_user_op_execute(op);
+		} else {
+			spdk_bs_user_op_abort(op);
+		}
+	}
 }
 
 static int
@@ -1696,22 +1755,34 @@ _spdk_blob_request_submit_op_single(struct spdk_io_channel *_ch, struct spdk_blo
 	case SPDK_BLOB_WRITE:
 	case SPDK_BLOB_WRITE_ZEROES: {
 		if (_spdk_bs_page_is_allocated(blob, offset)) {
-			/* Write to the blob */
-			spdk_bs_batch_t *batch;
+			if (blob->frozen_io) {
+				/* This blob I/O is freezed */
+				spdk_bs_user_op_t *op;
 
-			batch = spdk_bs_batch_open(_ch, &cpl);
-			if (!batch) {
-				cb_fn(cb_arg, -ENOMEM);
-				return;
-			}
-
-			if (op_type == SPDK_BLOB_WRITE) {
-				spdk_bs_batch_write_dev(batch, payload, lba, lba_count);
+				op = spdk_bs_user_op_alloc(_ch, &cpl, op_type, blob, payload, 0, offset, length);
+				if (!op) {
+					cb_fn(cb_arg, -ENOMEM);
+					return;
+				}
+				TAILQ_INSERT_TAIL(&blob->queued_io, op, link);
 			} else {
-				spdk_bs_batch_write_zeroes_dev(batch, lba, lba_count);
-			}
+				/* Write to the blob */
+				spdk_bs_batch_t *batch;
 
-			spdk_bs_batch_close(batch);
+				batch = spdk_bs_batch_open(_ch, &cpl);
+				if (!batch) {
+					cb_fn(cb_arg, -ENOMEM);
+					return;
+				}
+
+				if (op_type == SPDK_BLOB_WRITE) {
+					spdk_bs_batch_write_dev(batch, payload, lba, lba_count);
+				} else {
+					spdk_bs_batch_write_zeroes_dev(batch, lba, lba_count);
+				}
+
+				spdk_bs_batch_close(batch);
+			}
 		} else {
 			/* Queue this operation and allocate the cluster */
 			spdk_bs_user_op_t *op;
@@ -1914,6 +1985,18 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel 
 		cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
 		cpl.u.blob_basic.cb_fn = cb_fn;
 		cpl.u.blob_basic.cb_arg = cb_arg;
+		if (blob->frozen_io) {
+			/* This blob I/O is frozen */
+			spdk_bs_user_op_t *op;
+
+			op = spdk_bs_user_op_alloc(_channel, &cpl, read, blob, iov, iovcnt, offset, length);
+			if (!op) {
+				cb_fn(cb_arg, -ENOMEM);
+				return;
+			}
+			TAILQ_INSERT_TAIL(&blob->queued_io, op, link);
+			return;
+		}
 
 		if (read) {
 			spdk_bs_sequence_t *seq;
@@ -3624,6 +3707,7 @@ _spdk_bs_create_blob(struct spdk_blob_store *bs,
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Creating blob with id %lu at page %u\n", id, page_idx);
 
+
 	blob = _spdk_blob_alloc(bs, id);
 	if (!blob) {
 		cb_fn(cb_arg, 0, -ENOMEM);
@@ -3712,6 +3796,17 @@ struct spdk_clone_snapshot_ctx {
 	const struct spdk_blob_xattr_opts *xattrs;
 };
 
+
+static void
+_spdk_freeze_io_threads(void *cb_arg)
+{
+	struct spdk_freeze_io_ctx *ctx_freeze = (struct spdk_freeze_io_ctx *)cb_arg;
+	struct spdk_clone_snapshot_ctx *ctx = (struct spdk_clone_snapshot_ctx *)ctx_freeze->cb_arg;
+
+	/* Do not need to do anything here */
+	assert(ctx->original.blob->frozen_io);
+}
+
 static void
 _spdk_bs_clone_snapshot_cleanup_finish(void *cb_arg, int bserrno)
 {
@@ -3751,6 +3846,8 @@ _spdk_bs_clone_snapshot_origblob_cleanup(void *cb_arg, int bserrno)
 			ctx->bserrno = bserrno;
 		}
 	}
+	/* Unfreeze any outstanding I/O */
+	_spdk_blob_unfreeze_io(origblob, bserrno);
 
 	ctx->original.id = origblob->id;
 	spdk_blob_close(origblob, _spdk_bs_clone_snapshot_cleanup_finish, ctx);
@@ -3845,6 +3942,26 @@ _spdk_bs_snapshot_newblob_sync_cpl(void *cb_arg, int bserrno)
 }
 
 static void
+_spdk_bs_snapshot_freeze_cpl(void *cb_arg, int rc)
+{
+	struct spdk_clone_snapshot_ctx *ctx = (struct spdk_clone_snapshot_ctx *)cb_arg;
+	struct spdk_blob *origblob = ctx->original.blob;
+	struct spdk_blob *newblob = ctx->new.blob;
+
+	/* set new back_bs_dev for snapshot */
+	newblob->back_bs_dev = origblob->back_bs_dev;
+	/* Set invalid flags from origblob */
+	newblob->invalid_flags = origblob->invalid_flags;
+
+	/* Copy cluster map to snapshot */
+	memcpy(newblob->active.clusters, origblob->active.clusters,
+	       origblob->active.num_clusters * sizeof(origblob->active.clusters));
+
+	/* sync snapshot metadata */
+	spdk_blob_sync_md(newblob, _spdk_bs_snapshot_newblob_sync_cpl, ctx);
+}
+
+static void
 _spdk_bs_snapshot_newblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
 {
 	struct spdk_clone_snapshot_ctx *ctx = (struct spdk_clone_snapshot_ctx *)cb_arg;
@@ -3858,17 +3975,7 @@ _spdk_bs_snapshot_newblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bs
 
 	ctx->new.blob = newblob;
 
-	/* set new back_bs_dev for snapshot */
-	newblob->back_bs_dev = origblob->back_bs_dev;
-	/* Set invalid flags from origblob */
-	newblob->invalid_flags = origblob->invalid_flags;
-
-	/* Copy cluster map to snapshot */
-	memcpy(newblob->active.clusters, origblob->active.clusters,
-	       origblob->active.num_clusters * sizeof(origblob->active.clusters));
-
-	/* sync snapshot metadata */
-	spdk_blob_sync_md(newblob, _spdk_bs_snapshot_newblob_sync_cpl, ctx);
+	_spdk_blob_freeze_io(origblob, _spdk_bs_snapshot_freeze_cpl, ctx, _spdk_freeze_io_threads);
 }
 
 static void
