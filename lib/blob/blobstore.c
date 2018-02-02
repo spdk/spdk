@@ -1650,6 +1650,14 @@ _spdk_blob_request_submit_op_single(struct spdk_io_channel *_ch, struct spdk_blo
 
 	_spdk_blob_calculate_lba_and_lba_count(blob, offset, length, &lba, &lba_count);
 
+	if(blob->invalid_flags & SPDK_BLOB_FREEZE_IO) {
+		spdk_bs_user_op_t *op;
+
+		op = spdk_bs_user_op_alloc(_ch, &cpl, op_type, blob, payload, 0, offset, length);
+		spdk_bs_user_op_queue(_ch, op);
+		return;
+	}	
+
 	switch (op_type) {
 	case SPDK_BLOB_READ: {
 		spdk_bs_batch_t *batch;
@@ -1878,6 +1886,14 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *_blob, struct spdk_io_channel
 		cb_fn(cb_arg, -EINVAL);
 		return;
 	}
+
+	if(ctx->blob->invalid_flags & SPDK_BLOB_FREEZE_IO) {
+		spdk_bs_user_op_t *op;
+
+		op = spdk_bs_user_op_alloc(_ch, &cpl, op_type, ctx->blob, payload, 0, offset, length);
+		spdk_bs_user_op_queue(ctx->channel, op);
+		return;
+	}	
 
 	/*
 	 * For now, we implement readv/writev using a sequence (instead of a batch) to account for having
@@ -3486,6 +3502,10 @@ _spdk_bs_cleanup_orgblob(void *cb_arg, int bserrno)
 	struct spdk_double_blob_ctx *ctx = (struct spdk_double_blob_ctx *)cb_arg;
 	struct spdk_blob *orgblob = __data_to_blob(ctx->orgblob.ptr);
 
+	if(bserrno != 0 || ctx->bserrno != 0 ) {
+		spdk_bs_user_op_queue_abort(orgblob);
+	}
+
 	if (bserrno != 0) {
 		if (ctx->bserrno != 0) {
 			SPDK_ERRLOG("Cleanup error %d\n", bserrno);
@@ -3503,6 +3523,10 @@ _spdk_bs_cleanup_newblob(void *cb_arg, int bserrno)
 {
 	struct spdk_double_blob_ctx *ctx = (struct spdk_double_blob_ctx *)cb_arg;
 	struct spdk_blob *newblob = __data_to_blob(ctx->newblob.ptr);
+
+	if(bserrno != 0 || ctx->bserrno != 0 ) {
+		spdk_bs_user_op_queue_abort(newblob);
+	}
 
 	if (bserrno != 0) {
 		if (ctx->bserrno != 0) {
@@ -3537,6 +3561,9 @@ _spdk_bs_snapshot_orgblob_sync_cpl(void *cb_arg, int bserrno)
 		_spdk_bs_cleanup_orgblob(ctx, bserrno);
 		return;
 	}
+
+	/* Unfreeze IO on newblob */
+	newblob->invalid_flags &= ~SPDK_BLOB_FREEZE_IO;
 
 	spdk_blob_set_read_only(__data_to_blob(newblob));
 
@@ -3573,6 +3600,9 @@ _spdk_bs_snapshot_newblob_sync_cpl(void *cb_arg, int bserrno)
 	/* set clone blob as thin provisioned */
 	_spdk_blob_set_thin_provision(orgblob);
 
+	/* Unfreeze IO on orgblob */
+	orgblob->invalid_flags &= ~SPDK_BLOB_FREEZE_IO;
+
 	/* Zero out orglob cluster map */
 	memset(orgblob->active.clusters, 0,
 	       orgblob->active.num_clusters * sizeof(orgblob->active.clusters));
@@ -3594,6 +3624,10 @@ _spdk_bs_snapshot_newblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bs
 	}
 
 	ctx->newblob.ptr = newblob;
+
+	/* Freeze I/O on orgblob */
+	orgblob->invalid_flags |= SPDK_BLOB_FREEZE_IO;
+	newblob->invalid_flags |= SPDK_BLOB_FREEZE_IO;
 
 	/* set new back_bs_dev for snapshot */
 	newblob->back_bs_dev = orgblob->back_bs_dev;
