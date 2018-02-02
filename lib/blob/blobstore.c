@@ -1696,22 +1696,34 @@ _spdk_blob_request_submit_op_single(struct spdk_io_channel *_ch, struct spdk_blo
 	case SPDK_BLOB_WRITE:
 	case SPDK_BLOB_WRITE_ZEROES: {
 		if (_spdk_bs_page_is_allocated(blob, offset)) {
-			/* Write to the blob */
-			spdk_bs_batch_t *batch;
+			if (blob->invalid_flags & SPDK_BLOB_FREEZE_IO) {
+				/* This blob I/O is freezed */
+				spdk_bs_user_op_t *op;
 
-			batch = spdk_bs_batch_open(_ch, &cpl);
-			if (!batch) {
-				cb_fn(cb_arg, -ENOMEM);
-				return;
-			}
-
-			if (op_type == SPDK_BLOB_WRITE) {
-				spdk_bs_batch_write_dev(batch, payload, lba, lba_count);
+				op = spdk_bs_user_op_alloc(_ch, &cpl, op_type, blob, payload, 0, offset, length);
+				if (!op) {
+					cb_fn(cb_arg, -ENOMEM);
+					return;
+				}
+				TAILQ_INSERT_TAIL(&blob->freezed_io, op, link);
 			} else {
-				spdk_bs_batch_write_zeroes_dev(batch, lba, lba_count);
-			}
+				/* Write to the blob */
+				spdk_bs_batch_t *batch;
 
-			spdk_bs_batch_close(batch);
+				batch = spdk_bs_batch_open(_ch, &cpl);
+				if (!batch) {
+					cb_fn(cb_arg, -ENOMEM);
+					return;
+				}
+
+				if (op_type == SPDK_BLOB_WRITE) {
+					spdk_bs_batch_write_dev(batch, payload, lba, lba_count);
+				} else {
+					spdk_bs_batch_write_zeroes_dev(batch, lba, lba_count);
+				}
+
+				spdk_bs_batch_close(batch);
+			}
 		} else {
 			/* Queue this operation and allocate the cluster */
 			spdk_bs_user_op_t *op;
@@ -3852,6 +3864,8 @@ _spdk_bs_snapshot_newblob_sync_cpl(void *cb_arg, int bserrno)
 	struct spdk_clone_snapshot_ctx *ctx = (struct spdk_clone_snapshot_ctx *)cb_arg;
 	struct spdk_blob *origblob = ctx->original.blob;
 	struct spdk_blob *newblob = ctx->new.blob;
+	TAILQ_HEAD(, spdk_bs_request_set) requests;
+	spdk_bs_user_op_t *op;
 
 	if (bserrno != 0) {
 		_spdk_bs_clone_snapshot_newblob_cleanup(ctx, bserrno);
@@ -3882,6 +3896,21 @@ _spdk_bs_snapshot_newblob_sync_cpl(void *cb_arg, int bserrno)
 	memset(origblob->active.clusters, 0,
 	       origblob->active.num_clusters * sizeof(origblob->active.clusters));
 
+	TAILQ_INIT(&requests);
+	TAILQ_SWAP(&origblob->freezed_io, &requests, spdk_bs_request_set, link);
+
+	/* Unfreeze IO on orgblob */
+	while (!TAILQ_EMPTY(&requests)) {
+		op = TAILQ_FIRST(&requests);
+		TAILQ_REMOVE(&requests, op, link);
+		if (bserrno == 0) {
+			spdk_bs_user_op_execute(op);
+		} else {
+			spdk_bs_user_op_abort(op);
+		}
+	}
+	origblob->invalid_flags &= ~SPDK_BLOB_FREEZE_IO;
+
 	/* sync clone metadata */
 	spdk_blob_sync_md(origblob, _spdk_bs_snapshot_origblob_sync_cpl, ctx);
 }
@@ -3899,6 +3928,9 @@ _spdk_bs_snapshot_newblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bs
 	}
 
 	ctx->new.blob = newblob;
+
+	/* Freeze I/O on blobs */
+	origblob->invalid_flags |= SPDK_BLOB_FREEZE_IO;
 
 	/* set new back_bs_dev for snapshot */
 	newblob->back_bs_dev = origblob->back_bs_dev;
