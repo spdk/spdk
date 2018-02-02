@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "37286f6e_cd38975a",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1067,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-02T14:18:40Z",
+      "side": 1,
+      "message": "Agree. Just noticed new patch underneath this one :)",
+      "parentUuid": "47e09d12_933c15de",
+      "range": {
+        "startLine": 1067,
+        "startChar": 0,
+        "endLine": 1067,
+        "endChar": 18
+      },
+      "revId": "93f1fbbda04edfe4af8aec1af6f1e6d33417157f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "19bfdb29_c28bfcb0",
         "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
         "patchSetId": 64
