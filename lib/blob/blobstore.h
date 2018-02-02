@@ -147,6 +147,10 @@ struct spdk_blob {
 	struct spdk_xattr_tailq xattrs_internal;
 
 	TAILQ_ENTRY(spdk_blob) link;
+
+	bool frozen_io;
+	pthread_spinlock_t queue_lock;
+	TAILQ_HEAD(, spdk_bs_request_set) queued_io;
 };
 
 struct spdk_blob_store {
