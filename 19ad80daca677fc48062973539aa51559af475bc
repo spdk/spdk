@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f02362e4_3fe36e4b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-02T23:08:05Z",
+      "side": 1,
+      "message": "I don\u0027t see g_hist_ack_rdma_read nor g_hist_total_rdma_read being used.",
+      "revId": "19ad80daca677fc48062973539aa51559af475bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
