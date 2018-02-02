@@ -25,7 +25,7 @@ timing_enter start_nvmf_tgt
 $NVMF_APP -c $testdir/../nvmf.conf &
 pid=$!
 
-trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
+trap "killprocess $pid; nvmfcleanup; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid
 timing_exit start_nvmf_tgt
@@ -37,10 +37,24 @@ do
 	$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode${i} "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" '' -a -s SPDK${i} -n "$bdevs"
 done
 
+# SoftRoce does not have enough queues available for
+# this test. Detect if we're using software RDMA.
+# If so, don't connect the kernel host.
+if ! check_ip_is_soft_roce "$NVMF_FIRST_TARGET_IP"; then
+	# Connect kernel host to subsystems
+	modprobe -v nvme-rdma
+	modprobe -v nvme-fabrics
+	for i in `seq 1 10`; do
+		nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode${i}" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+	done
+fi
+
 # Kill nvmf tgt without removing any subsystem to check whether it can shutdown correctly
 rm -f ./local-job0-0-verify.state
 
 trap - SIGINT SIGTERM EXIT
 
 killprocess $pid
+
+nvmfcleanup
 timing_exit shutdown
