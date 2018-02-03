@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fedc4570_833fa1d5",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-03T00:02:46Z",
+      "side": 1,
+      "message": "can you remove this check, since you now check it in register function?\n\nthis is similar to change you made for portal_grp_create in previous patch",
+      "revId": "ac5effe92e39ca67b63c448154ce2cf22166cd5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
