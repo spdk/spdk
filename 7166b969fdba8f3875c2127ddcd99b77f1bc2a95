@@ -16,6 +16,24 @@
       "revId": "7166b969fdba8f3875c2127ddcd99b77f1bc2a95",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9caeb7a2_3459f3c7",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-04T23:19:14Z",
+      "side": 1,
+      "message": "Hi Gang,\n\nJim\u0027s idea makes sense and if we want to do that, the pair of qos_max_ios_per_period and qos_max_ios_period_ms may be a candidate for that.\n\nThe above pair may be extensible to the leaky bucket type of rate limiting KVM and Linux kernel have supported.",
+      "parentUuid": "45fdd831_18bbc3cc",
+      "revId": "7166b969fdba8f3875c2127ddcd99b77f1bc2a95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
