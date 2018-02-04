@@ -41,6 +41,7 @@ int allocate_threads(int num_threads);
 void free_threads(void);
 void poll_threads(void);
 int poll_thread(uintptr_t thread_id);
+void set_thread_passed_ticks(uintptr_t thread_id, uint64_t passed_ticks);
 
 struct ut_msg {
 	spdk_thread_fn		fn;
@@ -53,6 +54,7 @@ struct ut_thread {
 	struct spdk_io_channel	*ch;
 	TAILQ_HEAD(, ut_msg)	msgs;
 	TAILQ_HEAD(, ut_poller)	pollers;
+	uint64_t		passed_ticks;
 };
 
 struct ut_thread *g_ut_threads;
@@ -61,6 +63,7 @@ struct ut_poller {
 	spdk_poller_fn		fn;
 	void			*arg;
 	TAILQ_ENTRY(ut_poller)	tailq;
+	uint64_t		period_ticks;
 };
 
 static void
@@ -87,6 +90,7 @@ __start_poller(void *thread_ctx, spdk_thread_fn fn, void *arg, uint64_t period_m
 
 	poller->fn = fn;
 	poller->arg = arg;
+	poller->period_ticks = period_microseconds;
 
 	TAILQ_INSERT_TAIL(&thread->pollers, poller, tailq);
 
@@ -134,6 +138,7 @@ allocate_threads(int num_threads)
 		g_ut_threads[i].thread = thread;
 		TAILQ_INIT(&g_ut_threads[i].msgs);
 		TAILQ_INIT(&g_ut_threads[i].pollers);
+		g_ut_threads[i].passed_ticks = 0;
 	}
 
 	set_thread(MOCK_PASS_THRU);
@@ -153,6 +158,14 @@ free_threads(void)
 	g_ut_num_threads = 0;
 	free(g_ut_threads);
 	g_ut_threads = NULL;
+}
+
+void
+set_thread_passed_ticks(uintptr_t thread_id, uint64_t passed_ticks)
+{
+	struct ut_thread *thread = &g_ut_threads[thread_id];
+
+	thread->passed_ticks = passed_ticks;
 }
 
 int
@@ -186,8 +199,10 @@ poll_thread(uintptr_t thread_id)
 		poller = TAILQ_FIRST(&thread->pollers);
 		TAILQ_REMOVE(&thread->pollers, poller, tailq);
 
-		if (poller->fn) {
-			poller->fn(poller->arg);
+		if (thread->passed_ticks > poller->period_ticks) {
+			if (poller->fn) {
+				poller->fn(poller->arg);
+			}
 		}
 
 		TAILQ_INSERT_TAIL(&tmp_pollers, poller, tailq);
