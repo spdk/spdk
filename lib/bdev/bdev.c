@@ -869,6 +869,31 @@ spdk_bdev_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 	return 0;
 }
 
+static void
+_spdk_bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
+{
+	struct spdk_bdev_mgmt_channel	*mgmt_channel;
+	struct spdk_bdev_module_channel	*shared_ch = ch->module_ch;
+
+	if (ch->channel) {
+		spdk_put_io_channel(ch->channel);
+	}
+
+	if (ch->mgmt_channel) {
+		if (shared_ch) {
+			assert(shared_ch->ref > 0);
+			shared_ch->ref--;
+			if (shared_ch->ref == 0) {
+				mgmt_channel = spdk_io_channel_get_ctx(ch->mgmt_channel);
+				assert(shared_ch->io_outstanding == 0);
+				TAILQ_REMOVE(&mgmt_channel->module_channels, shared_ch, link);
+				free(shared_ch);
+			}
+		}
+		spdk_put_io_channel(ch->mgmt_channel);
+	}
+}
+
 static int
 spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 {
@@ -880,12 +905,13 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 	ch->bdev = io_device;
 	ch->channel = bdev->fn_table->get_io_channel(bdev->ctxt);
 	if (!ch->channel) {
+		_spdk_bdev_channel_destroy_resource(ch);
 		return -1;
 	}
 
 	ch->mgmt_channel = spdk_get_io_channel(&g_bdev_mgr);
 	if (!ch->mgmt_channel) {
-		spdk_put_io_channel(ch->channel);
+		_spdk_bdev_channel_destroy_resource(ch);
 		return -1;
 	}
 
@@ -900,8 +926,7 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 	if (shared_ch == NULL) {
 		shared_ch = calloc(1, sizeof(*shared_ch));
 		if (!shared_ch) {
-			spdk_put_io_channel(ch->channel);
-			spdk_put_io_channel(ch->mgmt_channel);
+			_spdk_bdev_channel_destroy_resource(ch);
 			return -1;
 		}
 
@@ -924,8 +949,7 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 		__itt_init_ittlib(NULL, 0);
 		name = spdk_sprintf_alloc("spdk_bdev_%s_%p", ch->bdev->name, ch);
 		if (!name) {
-			spdk_put_io_channel(ch->channel);
-			spdk_put_io_channel(ch->mgmt_channel);
+			_spdk_bdev_channel_destroy_resource(ch);
 			return -1;
 		}
 		ch->handle = __itt_string_handle_create(name);
@@ -1003,15 +1027,7 @@ spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_small, ch);
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_large, ch);
 
-	assert(shared_ch->ref > 0);
-	shared_ch->ref--;
-	if (shared_ch->ref == 0) {
-		assert(shared_ch->io_outstanding == 0);
-		TAILQ_REMOVE(&mgmt_channel->module_channels, shared_ch, link);
-		free(shared_ch);
-	}
-	spdk_put_io_channel(ch->channel);
-	spdk_put_io_channel(ch->mgmt_channel);
+	_spdk_bdev_channel_destroy_resource(ch);
 }
 
 int
