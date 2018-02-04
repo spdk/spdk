@@ -284,10 +284,21 @@ spdk_vhost_dev_used_signal(struct spdk_vhost_dev *vdev)
 	struct spdk_vhost_virtqueue *virtqueue;
 	uint64_t now;
 	uint16_t q_idx;
+	bool barriered = false;
 
 	if (vdev->coalescing_delay_time_base == 0) {
 		for (q_idx = 0; q_idx < vdev->num_queues; q_idx++) {
 			virtqueue = &vdev->virtqueue[q_idx];
+
+			if (!barriered && virtqueue->used_req_cnt > 0) {
+				/* Ensure all our used ring changes are visible to the guest
+				 * at the time of interrupt. TODO: this is currently an sfence
+				 * on x86. For other architectures we will most likely need
+				 * an smp_mb(), but smp_mb() is an overkill for x86.
+				 */
+				spdk_wmb();
+				barriered = true;
+			}
 
 			if (virtqueue->vring.avail->flags & VRING_AVAIL_F_NO_INTERRUPT) {
 				continue;
@@ -301,6 +312,12 @@ spdk_vhost_dev_used_signal(struct spdk_vhost_dev *vdev)
 
 		for (q_idx = 0; q_idx < vdev->num_queues; q_idx++) {
 			virtqueue = &vdev->virtqueue[q_idx];
+
+			if (!barriered && virtqueue->used_req_cnt > 0) {
+				/* See the comment above */
+				spdk_wmb();
+				barriered = true;
+			}
 
 			/* No need for event right now */
 			if (now < virtqueue->next_event_time ||
@@ -367,13 +384,6 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_v
 	spdk_vhost_log_used_vring_elem(vdev, virtqueue, last_idx);
 	* (volatile uint16_t *) &used->idx = vring->last_used_idx;
 	spdk_vhost_log_used_vring_idx(vdev, virtqueue);
-
-	/* Ensure all our used ring changes are visible to the guest at the time
-	 * of interrupt.
-	 * TODO: this is currently an sfence on x86. For other architectures we
-	 * will most likely need an smp_mb(), but smp_mb() is an overkill for x86.
-	 */
-	spdk_wmb();
 
 	virtqueue->used_req_cnt++;
 }
