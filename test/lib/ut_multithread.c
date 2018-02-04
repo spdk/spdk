@@ -36,11 +36,14 @@
 #include "spdk_internal/mock.h"
 
 static uint32_t g_ut_num_threads;
+static uint64_t g_current_time_in_us = 0;
 
 int allocate_threads(int num_threads);
 void free_threads(void);
 void poll_threads(void);
 int poll_thread(uintptr_t thread_id);
+void increment_time(uint64_t time_in_us);
+void reset_time(void);
 
 struct ut_msg {
 	spdk_thread_fn		fn;
@@ -61,6 +64,8 @@ struct ut_poller {
 	spdk_poller_fn		fn;
 	void			*arg;
 	TAILQ_ENTRY(ut_poller)	tailq;
+	uint64_t		period_us;
+	uint64_t		next_expiration_in_us;
 };
 
 static void
@@ -87,6 +92,8 @@ __start_poller(void *thread_ctx, spdk_thread_fn fn, void *arg, uint64_t period_m
 
 	poller->fn = fn;
 	poller->arg = arg;
+	poller->period_us = period_microseconds;
+	poller->next_expiration_in_us = g_current_time_in_us + poller->period_us;
 
 	TAILQ_INSERT_TAIL(&thread->pollers, poller, tailq);
 
@@ -153,6 +160,41 @@ free_threads(void)
 	g_ut_threads = NULL;
 }
 
+void
+increment_time(uint64_t time_in_us)
+{
+	g_current_time_in_us += time_in_us;
+}
+
+static void
+reset_pollers(void)
+{
+	uint32_t		i = 0;
+	struct ut_thread	*thread = NULL;
+	struct ut_poller	*poller = NULL;
+	uintptr_t		original_thread_id = g_thread_id;
+
+	CU_ASSERT(g_current_time_in_us == 0);
+
+	for (i = 0; i < g_ut_num_threads; i++) {
+		set_thread(i);
+		thread = &g_ut_threads[i];
+
+		TAILQ_FOREACH(poller, &thread->pollers, tailq) {
+			poller->next_expiration_in_us = g_current_time_in_us + poller->period_us;
+		}
+	}
+
+	set_thread(original_thread_id);
+}
+
+void
+reset_time(void)
+{
+	g_current_time_in_us = 0;
+	reset_pollers();
+}
+
 int
 poll_thread(uintptr_t thread_id)
 {
@@ -184,8 +226,16 @@ poll_thread(uintptr_t thread_id)
 		poller = TAILQ_FIRST(&thread->pollers);
 		TAILQ_REMOVE(&thread->pollers, poller, tailq);
 
-		if (poller->fn) {
-			poller->fn(poller->arg);
+		while (g_current_time_in_us >= poller->next_expiration_in_us) {
+			if (poller->fn) {
+				poller->fn(poller->arg);
+			}
+
+			if (poller->period_us == 0) {
+				break;
+			} else {
+				poller->next_expiration_in_us += poller->period_us;
+			}
 		}
 
 		TAILQ_INSERT_TAIL(&tmp_pollers, poller, tailq);
