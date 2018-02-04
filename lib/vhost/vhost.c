@@ -376,10 +376,8 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_v
 
 	virtqueue->used_req_cnt++;
 
-	/* We need to signal every last_used_idx overflow. */
-	if (vring->last_used_idx == 0 ||
-	    (spdk_vhost_dev_has_feature(vdev, VIRTIO_F_NOTIFY_ON_EMPTY) &&
-	     spdk_unlikely(vring->avail->idx == vring->last_avail_idx))) {
+	if (spdk_vhost_dev_has_feature(vdev, VIRTIO_F_NOTIFY_ON_EMPTY) &&
+	    spdk_unlikely(vring->avail->idx == vring->last_avail_idx)) {
 		spdk_vhost_vq_used_signal(vdev, virtqueue);
 	}
 }
