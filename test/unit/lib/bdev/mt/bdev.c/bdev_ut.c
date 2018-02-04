@@ -248,6 +248,68 @@ basic(void)
 }
 
 static void
+poller_run_done(void *ctx)
+{
+	bool	*poller_run = ctx;
+
+	*poller_run = true;
+}
+
+static void
+poller_run_times_done(void *ctx)
+{
+	int	*poller_run_times = ctx;
+
+	(*poller_run_times)++;
+}
+
+static void
+basic_poller(void)
+{
+	struct spdk_poller	*poller = NULL;
+	bool			poller_run = false;
+	int			poller_run_times = 0;
+
+	setup_test();
+
+	set_thread(0);
+	poller = spdk_poller_register(poller_run_done, &poller_run, 1000);
+	CU_ASSERT(poller != NULL);
+
+	set_thread_passed_ticks(0, 0);
+	poll_thread(0);
+	CU_ASSERT(poller_run == false);
+
+	set_thread_passed_ticks(0, 1000);
+	poll_thread(0);
+	CU_ASSERT(poller_run == true);
+
+	spdk_poller_unregister(&poller);
+	CU_ASSERT(poller == NULL);
+
+	poller = spdk_poller_register(poller_run_times_done, &poller_run_times, 1000);
+	CU_ASSERT(poller != NULL);
+
+	set_thread_passed_ticks(0, 0);
+	poll_thread(0);
+	CU_ASSERT(poller_run_times == 0);
+
+	set_thread_passed_ticks(0, 1000);
+	poll_thread(0);
+	CU_ASSERT(poller_run_times == 1);
+
+	poller_run_times = 0;
+	set_thread_passed_ticks(0, 2000);
+	poll_thread(0);
+	CU_ASSERT(poller_run_times == 2);
+
+	spdk_poller_unregister(&poller);
+	CU_ASSERT(poller == NULL);
+
+	teardown_test();
+}
+
+static void
 reset_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	bool *done = cb_arg;
@@ -667,6 +729,7 @@ main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "basic", basic) == NULL ||
+		CU_add_test(suite, "basic_poller", basic_poller) == NULL ||
 		CU_add_test(suite, "put_channel_during_reset", put_channel_during_reset) == NULL ||
 		CU_add_test(suite, "aborted_reset", aborted_reset) == NULL ||
 		CU_add_test(suite, "io_during_reset", io_during_reset) == NULL ||
