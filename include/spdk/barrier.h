@@ -101,8 +101,10 @@ extern "C" {
 #define spdk_smp_mb()	spdk_mb()
 #elif defined(__aarch64__)
 #define spdk_smp_mb()	__asm volatile("dmb ish" ::: "memory")
-#elif defined(__i386__) || defined(__x86_64__)
-#define spdk_smp_mb()	spdk_mb()
+#elif defined(__x86_64__)
+#define spdk_smp_mb()	__asm volatile("lock; addl $0,-132(%%rsp)" ::: "memory", "cc")
+#elif defined(__i386__)
+#define spdk_smp_mb()	__asm volatile("lock; addl $0,-4(%%esp)" ::: "memory", "cc")
 #else
 #define spdk_smp_mb()
 #error Unknown architecture
