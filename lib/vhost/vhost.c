@@ -359,10 +359,11 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_v
 	vring->last_used_idx++;
 	used->ring[last_idx].id = id;
 	used->ring[last_idx].len = len;
-	spdk_vhost_log_used_vring_elem(vdev, virtqueue, last_idx);
 
-	/* Ensure the used ring is updated before we increment used->idx. */
+	/* Ensure the used ring is updated before we log it or increment used->idx. */
 	spdk_smp_wmb();
+
+	spdk_vhost_log_used_vring_elem(vdev, virtqueue, last_idx);
 	* (volatile uint16_t *) &used->idx = vring->last_used_idx;
 	spdk_vhost_log_used_vring_idx(vdev, virtqueue);
 
