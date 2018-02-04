@@ -66,7 +66,7 @@ extern "C" {
 #elif defined(__aarch64__)
 #define spdk_mb()	__asm volatile("dsb sy" ::: "memory")
 #elif defined(__i386__) || defined(__x86_64__)
-#define spdk_mb()	__asm volatile("mfence" ::: "memory")
+#define spdk_mb()	__asm volatile("lock; addl $0,-132(%%rsp)" ::: "memory", "cc")
 #else
 #define spdk_mb()
 #error Unknown architecture
