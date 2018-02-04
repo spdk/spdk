@@ -375,11 +375,6 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_v
 	spdk_wmb();
 
 	virtqueue->used_req_cnt++;
-
-	if (spdk_vhost_dev_has_feature(vdev, VIRTIO_F_NOTIFY_ON_EMPTY) &&
-	    spdk_unlikely(vring->avail->idx == vring->last_avail_idx)) {
-		spdk_vhost_vq_used_signal(vdev, virtqueue);
-	}
 }
 
 int
