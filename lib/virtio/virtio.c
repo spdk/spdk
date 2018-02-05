@@ -81,48 +81,6 @@ vring_desc_init(struct vring_desc *dp, uint16_t n)
 	dp[i].next = VQ_RING_DESC_CHAIN_END;
 }
 
-/**
- * Tell the backend not to interrupt us.
- */
-static inline void
-virtqueue_disable_intr(struct virtqueue *vq)
-{
-	vq->vq_ring.avail->flags |= VRING_AVAIL_F_NO_INTERRUPT;
-}
-
-#define VIRTQUEUE_NUSED(vq) ((uint16_t)((vq)->vq_ring.used->idx - (vq)->vq_used_cons_idx))
-
-static inline void
-vq_update_avail_idx(struct virtqueue *vq)
-{
-	virtio_wmb();
-	vq->vq_ring.avail->idx = vq->vq_avail_idx;
-}
-
-static inline void
-vq_update_avail_ring(struct virtqueue *vq, uint16_t desc_idx)
-{
-	uint16_t avail_idx;
-	/*
-	 * Place the head of the descriptor chain into the next slot and make
-	 * it usable to the host. The chain is made available now rather than
-	 * deferring to virtqueue_notify() in the hopes that if the host is
-	 * currently running on another CPU, we can keep it processing the new
-	 * descriptor.
-	 */
-	avail_idx = (uint16_t)(vq->vq_avail_idx & (vq->vq_nentries - 1));
-	if (spdk_unlikely(vq->vq_ring.avail->ring[avail_idx] != desc_idx)) {
-		vq->vq_ring.avail->ring[avail_idx] = desc_idx;
-	}
-	vq->vq_avail_idx++;
-}
-
-static inline int
-virtqueue_kick_prepare(struct virtqueue *vq)
-{
-	return !(vq->vq_ring.used->flags & VRING_USED_F_NO_NOTIFY);
-}
-
 static void
 virtio_init_vring(struct virtqueue *vq)
 {
@@ -146,10 +104,8 @@ virtio_init_vring(struct virtqueue *vq)
 
 	vring_desc_init(vr->desc, size);
 
-	/*
-	 * Disable device(host) interrupting guest
-	 */
-	virtqueue_disable_intr(vq);
+	/* Tell the backend not to interrupt us. */
+	vq->vq_ring.avail->flags |= VRING_AVAIL_F_NO_INTERRUPT;
 }
 
 static int
@@ -480,6 +436,7 @@ void
 virtqueue_req_flush(struct virtqueue *vq)
 {
 	struct vring_desc *desc;
+	uint16_t avail_idx;
 
 	if (vq->req_start == VQ_RING_DESC_CHAIN_END) {
 		/* no requests have been started */
@@ -489,10 +446,25 @@ virtqueue_req_flush(struct virtqueue *vq)
 	desc = &vq->vq_ring.desc[vq->req_end];
 	desc->flags &= ~VRING_DESC_F_NEXT;
 
-	vq_update_avail_ring(vq, vq->req_start);
+	/*
+	 * Place the head of the descriptor chain into the next slot and make
+	 * it usable to the host. The chain is made available now rather than
+	 * deferring to virtqueue_notify() in the hopes that if the host is
+	 * currently running on another CPU, we can keep it processing the new
+	 * descriptor.
+	 */
+	avail_idx = (uint16_t)(vq->vq_avail_idx & (vq->vq_nentries - 1));
+	if (spdk_unlikely(vq->vq_ring.avail->ring[avail_idx] != vq->req_start)) {
+		vq->vq_ring.avail->ring[avail_idx] = vq->req_start;
+	}
+
+	vq->vq_avail_idx++;
 	vq->req_start = VQ_RING_DESC_CHAIN_END;
-	vq_update_avail_idx(vq);
-	if (spdk_unlikely(virtqueue_kick_prepare(vq))) {
+
+	virtio_wmb();
+	vq->vq_ring.avail->idx = vq->vq_avail_idx;
+
+	if (spdk_unlikely(!(vq->vq_ring.used->flags & VRING_USED_F_NO_NOTIFY))) {
 		virtio_dev_backend_ops(vq->vdev)->notify_queue(vq->vdev, vq);
 		SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV, "Notified backend after xmit\n");
 	}
@@ -569,8 +541,7 @@ virtio_recv_pkts(struct virtqueue *vq, void **io, uint32_t *len, uint16_t nb_pkt
 {
 	uint16_t nb_used, num;
 
-	nb_used = VIRTQUEUE_NUSED(vq);
-
+	nb_used = vq->vq_ring.used->idx - vq->vq_used_cons_idx;
 	virtio_rmb();
 
 	num = (uint16_t)(spdk_likely(nb_used <= nb_pkts) ? nb_used : nb_pkts);
