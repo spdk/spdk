@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "fc831400_4183543f",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 752,
+      "author": {
+        "id": 1012941
+      },
+      "writtenOn": "2018-02-05T14:30:51Z",
+      "side": 1,
+      "message": "ok, I will do it",
+      "parentUuid": "2a4be104_c3004f3b",
+      "revId": "e1212f1045cecdc41c03044b1c25116cb4bc4c09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0622a693_cf1c5337",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 12
@@ -30,6 +48,24 @@
       "writtenOn": "2018-02-02T08:30:50Z",
       "side": 1,
       "message": "Just as Jim noted, it might be the most straightforward solution. Unregister lvol-\u003ebdev here.",
+      "revId": "e1212f1045cecdc41c03044b1c25116cb4bc4c09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f23ae77a_dcab72a8",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 778,
+      "author": {
+        "id": 1012941
+      },
+      "writtenOn": "2018-02-05T14:30:51Z",
+      "side": 1,
+      "message": "ok, I will do it",
+      "parentUuid": "0622a693_cf1c5337",
       "revId": "e1212f1045cecdc41c03044b1c25116cb4bc4c09",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -94,6 +130,30 @@
       "writtenOn": "2018-02-05T08:36:35Z",
       "side": 1,
       "message": "For this part please see just added functionality to determine if bdev is an lvol bdev:\nhttps://review.gerrithub.io/#/c/398178/",
+      "range": {
+        "startLine": 420,
+        "startChar": 0,
+        "endLine": 425,
+        "endChar": 19
+      },
+      "revId": "e1212f1045cecdc41c03044b1c25116cb4bc4c09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47cc2f3d_8b243b3a",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 425,
+      "author": {
+        "id": 1012941
+      },
+      "writtenOn": "2018-02-05T14:30:51Z",
+      "side": 1,
+      "message": "ok, I will use the function vbdev_lvol_get_from_bdev()",
+      "parentUuid": "3c70cade_6b5f6563",
       "range": {
         "startLine": 420,
         "startChar": 0,
