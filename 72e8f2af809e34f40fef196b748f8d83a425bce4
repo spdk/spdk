@@ -1,0 +1,112 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0fbabb7f_9b4ce884",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 3473,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-05T12:31:10Z",
+      "side": 1,
+      "message": "Unnecessary empty line.",
+      "revId": "72e8f2af809e34f40fef196b748f8d83a425bce4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "965afd53_356e8133",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 3565,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-05T12:31:10Z",
+      "side": 1,
+      "message": "Unnecessary empty line.",
+      "revId": "72e8f2af809e34f40fef196b748f8d83a425bce4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "61db83fb_0881611d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 3623,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-05T12:31:10Z",
+      "side": 1,
+      "message": "Before we finish whole operation it would be nice to mark snapshot as thick provisioned. I know that this will still work as the map of snapshot is fully allocated, but snapshot will displayed as thin provisioned.",
+      "range": {
+        "startLine": 3623,
+        "startChar": 1,
+        "endLine": 3623,
+        "endChar": 28
+      },
+      "revId": "72e8f2af809e34f40fef196b748f8d83a425bce4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed9e3d25_6578ee5d",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 585,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-05T12:31:10Z",
+      "side": 1,
+      "message": "Unnecessary empty line.",
+      "revId": "72e8f2af809e34f40fef196b748f8d83a425bce4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ceaba604_efaac9ba",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 613,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-05T12:31:10Z",
+      "side": 1,
+      "message": "We can also check if clone is thin provisioned at this stage and the map is empty.",
+      "revId": "72e8f2af809e34f40fef196b748f8d83a425bce4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b79d806e_e863ae59",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 650,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-05T12:31:10Z",
+      "side": 1,
+      "message": "Too many empty lines.",
+      "revId": "72e8f2af809e34f40fef196b748f8d83a425bce4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
