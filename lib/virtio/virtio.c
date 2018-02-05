@@ -459,8 +459,6 @@ virtqueue_req_start(struct virtqueue *vq, void *cookie, int iovcnt)
 	struct vring_desc *desc;
 	struct vq_desc_extra *dxp;
 
-	assert(virtio_dev_get_status(vq->vdev) & VIRTIO_CONFIG_S_DRIVER_OK);
-
 	if (iovcnt > vq->vq_free_cnt) {
 		return iovcnt > vq->vq_nentries ? -EINVAL : -ENOMEM;
 	}
@@ -570,8 +568,6 @@ uint16_t
 virtio_recv_pkts(struct virtqueue *vq, void **io, uint32_t *len, uint16_t nb_pkts)
 {
 	uint16_t nb_used, num;
-
-	assert(virtio_dev_get_status(vq->vdev) & VIRTIO_CONFIG_S_DRIVER_OK);
 
 	nb_used = VIRTQUEUE_NUSED(vq);
 
