@@ -15,7 +15,7 @@ def construct_vhost_scsi_controller(args):
         params['cpumask'] = args.cpumask
 
     args.client.call('construct_vhost_scsi_controller',
-                     params, verbose=args.verbose)
+                     params)
 
 
 def add_vhost_scsi_lun(args):
@@ -24,7 +24,7 @@ def add_vhost_scsi_lun(args):
         'bdev_name': args.bdev_name,
         'scsi_target_num': args.scsi_target_num
     }
-    args.client.call('add_vhost_scsi_lun', params, verbose=args.verbose)
+    args.client.call('add_vhost_scsi_lun', params)
 
 
 def remove_vhost_scsi_target(args):
