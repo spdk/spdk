@@ -2,7 +2,7 @@ from client import print_dict, print_array, int_arg
 
 
 def get_nvmf_subsystems(args):
-    print_dict(args.client.call('get_nvmf_subsystems', verbose=args.verbose))
+    print_dict(args.client.call('get_nvmf_subsystems'))
 
 
 def construct_nvmf_subsystem(args):
@@ -41,9 +41,9 @@ def construct_nvmf_subsystem(args):
             namespaces.append(ns_params)
         params['namespaces'] = namespaces
 
-    args.client.call('construct_nvmf_subsystem', params, verbose=args.verbose)
+    args.client.call('construct_nvmf_subsystem', params)
 
 
 def delete_nvmf_subsystem(args):
     params = {'nqn': args.subsystem_nqn}
-    args.client.call('delete_nvmf_subsystem', params, verbose=args.verbose)
+    args.client.call('delete_nvmf_subsystem', params)

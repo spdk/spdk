@@ -20,7 +20,8 @@ def int_arg(arg):
 
 
 class JSONRPCClient(object):
-    def __init__(self, addr, port=None):
+    def __init__(self, addr, port=None, verbose=False):
+        self.verbose = verbose
         if addr.startswith('/'):
             self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             self.sock.connect(addr)
@@ -39,6 +40,8 @@ class JSONRPCClient(object):
         if (params):
             req['params'] = params
         reqstr = json.dumps(req)
+
+        verbose = verbose or self.verbose
 
         if verbose:
             print("request:")

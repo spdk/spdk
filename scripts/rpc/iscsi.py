@@ -2,19 +2,19 @@ from client import print_dict, print_array, int_arg
 
 
 def get_luns(args):
-    print_dict(args.client.call('get_luns', verbose=args.verbose))
+    print_dict(args.client.call('get_luns'))
 
 
 def get_portal_groups(args):
-    print_dict(args.client.call('get_portal_groups', verbose=args.verbose))
+    print_dict(args.client.call('get_portal_groups'))
 
 
 def get_initiator_groups(args):
-    print_dict(args.client.call('get_initiator_groups', verbose=args.verbose))
+    print_dict(args.client.call('get_initiator_groups'))
 
 
 def get_target_nodes(args):
-    print_dict(args.client.call('get_target_nodes', verbose=args.verbose))
+    print_dict(args.client.call('get_target_nodes'))
 
 
 def construct_target_node(args):
@@ -47,7 +47,7 @@ def construct_target_node(args):
         params['header_digest'] = args.header_digest
     if args.data_digest:
         params['data_digest'] = args.data_digest
-    args.client.call('construct_target_node', params, verbose=args.verbose)
+    args.client.call('construct_target_node', params)
 
 
 def target_node_add_lun(args):
@@ -105,7 +105,7 @@ def add_portal_group(args):
             portals.append({'host': ip, 'port': port, 'cpumask': cpumask})
 
     params = {'tag': args.tag, 'portals': portals}
-    args.client.call('add_portal_group', params, verbose=args.verbose)
+    args.client.call('add_portal_group', params)
 
 
 def add_initiator_group(args):
@@ -117,26 +117,26 @@ def add_initiator_group(args):
         netmasks.append(n)
 
     params = {'tag': args.tag, 'initiators': initiators, 'netmasks': netmasks}
-    args.client.call('add_initiator_group', params, verbose=args.verbose)
+    args.client.call('add_initiator_group', params)
 
 
 def delete_target_node(args):
     params = {'name': args.target_node_name}
-    args.client.call('delete_target_node', params, verbose=args.verbose)
+    args.client.call('delete_target_node', params)
 
 
 def delete_portal_group(args):
     params = {'tag': args.tag}
-    args.client.call('delete_portal_group', params, verbose=args.verbose)
+    args.client.call('delete_portal_group', params)
 
 
 def delete_initiator_group(args):
     params = {'tag': args.tag}
-    args.client.call('delete_initiator_group', params, verbose=args.verbose)
+    args.client.call('delete_initiator_group', params)
 
 
 def get_iscsi_connections(args):
-    print_dict(args.client.call('get_iscsi_connections', verbose=args.verbose))
+    print_dict(args.client.call('get_iscsi_connections'))
 
 
 def get_iscsi_global_params(args):
@@ -144,4 +144,4 @@ def get_iscsi_global_params(args):
 
 
 def get_scsi_devices(args):
-    print_dict(args.client.call('get_scsi_devices', verbose=args.verbose))
+    print_dict(args.client.call('get_scsi_devices'))
