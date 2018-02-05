@@ -309,12 +309,11 @@ spdk_sock_accept(int sock)
 {
 	vppcom_endpt_t endpt;
 	uint8_t ip[16];
-	double wait_time = -1.0;
 	int rc;
 
 	endpt.ip = ip;
 
-	rc = vppcom_session_accept(sock, &endpt, O_NONBLOCK, wait_time);
+	rc = vppcom_session_accept(sock, &endpt, O_NONBLOCK);
 	if (rc < 0) {
 		errno = -rc;
 		return -1;
