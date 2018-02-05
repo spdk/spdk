@@ -20,7 +20,8 @@ def int_arg(arg):
 
 
 class JSONRPCClient(object):
-    def __init__(self, addr, port=None):
+    def __init__(self, addr, port=None, verbose=False):
+        self.verbose = verbose
         if addr.startswith('/'):
             self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             self.sock.connect(addr)
@@ -31,7 +32,7 @@ class JSONRPCClient(object):
     def __del__(self):
         self.sock.close()
 
-    def call(self, method, params={}, verbose=False):
+    def call(self, method, params={}):
         req = {}
         req['jsonrpc'] = '2.0'
         req['method'] = method
@@ -40,7 +41,7 @@ class JSONRPCClient(object):
             req['params'] = params
         reqstr = json.dumps(req)
 
-        if verbose:
+        if self.verbose:
             print("request:")
             print(json.dumps(req, indent=2))
 
@@ -74,7 +75,7 @@ class JSONRPCClient(object):
             print_dict(response['error'])
             exit(1)
 
-        if verbose:
+        if self.verbose:
             print("response:")
             print(json.dumps(response, indent=2))
 

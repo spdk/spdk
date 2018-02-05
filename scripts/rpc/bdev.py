@@ -7,7 +7,7 @@ def construct_malloc_bdev(args):
     if args.name:
         params['name'] = args.name
     print_array(args.client.call(
-        'construct_malloc_bdev', params, verbose=args.verbose))
+        'construct_malloc_bdev', params))
 
 
 def construct_null_bdev(args):
@@ -15,7 +15,7 @@ def construct_null_bdev(args):
     params = {'name': args.name, 'num_blocks': num_blocks,
               'block_size': args.block_size}
     print_array(args.client.call(
-        'construct_null_bdev', params, verbose=args.verbose))
+        'construct_null_bdev', params))
 
 
 def construct_aio_bdev(args):
@@ -26,7 +26,7 @@ def construct_aio_bdev(args):
         params['block_size'] = args.block_size
 
     print_array(args.client.call(
-        'construct_aio_bdev', params, verbose=args.verbose))
+        'construct_aio_bdev', params))
 
 
 def construct_nvme_bdev(args):
@@ -43,7 +43,7 @@ def construct_nvme_bdev(args):
     if args.subnqn:
         params['subnqn'] = args.subnqn
 
-    args.client.call('construct_nvme_bdev', params, verbose=args.verbose)
+    args.client.call('construct_nvme_bdev', params)
 
 
 def construct_rbd_bdev(args):
@@ -53,12 +53,12 @@ def construct_rbd_bdev(args):
         'block_size': args.block_size,
     }
     print_array(args.client.call(
-        'construct_rbd_bdev', params, verbose=args.verbose))
+        'construct_rbd_bdev', params))
 
 
 def construct_error_bdev(args):
     params = {'base_name': args.base_name}
-    args.client.call('construct_error_bdev', params, verbose=args.verbose)
+    args.client.call('construct_error_bdev', params)
 
 
 def construct_pmem_bdev(args):
@@ -78,7 +78,7 @@ def get_bdevs(args):
 
 def delete_bdev(args):
     params = {'name': args.bdev_name}
-    args.client.call('delete_bdev', params, verbose=args.verbose)
+    args.client.call('delete_bdev', params)
 
 
 def bdev_inject_error(args):
@@ -89,7 +89,7 @@ def bdev_inject_error(args):
         'num': args.num,
     }
 
-    args.client.call('bdev_inject_error', params, verbose=args.verbose)
+    args.client.call('bdev_inject_error', params)
 
 def apply_firmware(args):
     params = {
