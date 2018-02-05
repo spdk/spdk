@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b728a35f_80bfd5bb",
+        "filename": "include/spdk/barrier.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-05T18:04:39Z",
+      "side": 1,
+      "message": "Is this safe? [rsp - 132] is outside the 128-byte red zone guaranteed by the x86-64 ABI. (Is the 132 value special in some way or just randomly selected?)\n\nAlso, this won\u0027t compile on 32-bit x86, so we should probably have a separate case for __i386__ vs __x86_64__ if we do use this method.\n\nI\u0027m also not confident that a locked instruction is sufficient for the definition of spdk_mb() - the Linux kernel change you\u0027re referencing only uses it for smp_mb(), which is a weaker guarantee than mb().  Should this be changing spdk_spdk_mb() instead?",
+      "revId": "9058e2809f6fc31ba45fcd7166a3d0e97fd43788",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
