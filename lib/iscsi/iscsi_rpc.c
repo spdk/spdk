@@ -229,12 +229,12 @@ spdk_rpc_delete_initiator_group(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	ig = spdk_iscsi_init_grp_find_by_tag(req.tag);
+	ig = spdk_iscsi_init_grp_unregister(req.tag);
 	if (!ig) {
 		goto invalid;
 	}
 	spdk_iscsi_tgt_node_delete_map(NULL, ig);
-	spdk_iscsi_init_grp_release(ig);
+	spdk_iscsi_init_grp_destroy(ig);
 
 	w = spdk_jsonrpc_begin_result(request);
 	if (w == NULL) {
