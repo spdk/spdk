@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "e81fb11f_feb7b536",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 743,
+      "author": {
+        "id": 1012941
+      },
+      "writtenOn": "2018-02-05T14:30:51Z",
+      "side": 1,
+      "message": "ok, to fix",
+      "parentUuid": "3208988f_ee920069",
+      "range": {
+        "startLine": 743,
+        "startChar": 2,
+        "endLine": 743,
+        "endChar": 4
+      },
+      "revId": "e3aef72f6fa17778f9c46e9e226c8c4e7a5dd321",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0d8f3dc1_f153fc5f",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 11
@@ -36,6 +60,30 @@
       "writtenOn": "2018-02-01T14:12:52Z",
       "side": 1,
       "message": "Double space.",
+      "range": {
+        "startLine": 753,
+        "startChar": 24,
+        "endLine": 753,
+        "endChar": 26
+      },
+      "revId": "e3aef72f6fa17778f9c46e9e226c8c4e7a5dd321",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "902569ab_a8af788e",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 753,
+      "author": {
+        "id": 1012941
+      },
+      "writtenOn": "2018-02-05T14:30:51Z",
+      "side": 1,
+      "message": "ok, to fix",
+      "parentUuid": "0d8f3dc1_f153fc5f",
       "range": {
         "startLine": 753,
         "startChar": 24,
