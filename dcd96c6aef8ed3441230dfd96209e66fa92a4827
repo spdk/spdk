@@ -1,0 +1,95 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a7c2ff4c_bcfa52d4",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-05T17:56:23Z",
+      "side": 1,
+      "message": "Instead of hard-coding these values, please source test/iscsi_tgt/common.sh like the other iscsi_tgt test scripts.",
+      "revId": "dcd96c6aef8ed3441230dfd96209e66fa92a4827",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82f513bd_50ad6a65",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-05T17:56:23Z",
+      "side": 1,
+      "message": "The [Rpc] section is deprecated and no longer necessary (RPC is enabled by default).  Please remove it.",
+      "revId": "dcd96c6aef8ed3441230dfd96209e66fa92a4827",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "76d8e8c4_a202b0ab",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-05T17:56:23Z",
+      "side": 1,
+      "message": "Can this be implemented differently? A fixed line number like this is very fragile.",
+      "revId": "dcd96c6aef8ed3441230dfd96209e66fa92a4827",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b87ccc4_ac9e9d31",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-05T17:56:23Z",
+      "side": 1,
+      "message": "waitforlisten has been modified to work with the new default UNIX domain socket RPC path (/var/tmp/spdk.sock) instead of TCP ports; the ${RPC_PORT} parameter should be removed.",
+      "range": {
+        "startLine": 68,
+        "startChar": 24,
+        "endLine": 68,
+        "endChar": 35
+      },
+      "revId": "dcd96c6aef8ed3441230dfd96209e66fa92a4827",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3493ca1_e6bc005f",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-05T17:56:23Z",
+      "side": 1,
+      "message": "The split vbdev doesn\u0027t actually create any partitions on disk; what is this section trying to accomplish?\n\nIf you are just trying to remove the lvols, the destroy_lvol_store RPC you called earlier should be sufficient.\n\nWe should try as much as possible to avoid re-running setup.sh in the middle of the test run, since it is fairly slow.",
+      "revId": "dcd96c6aef8ed3441230dfd96209e66fa92a4827",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
