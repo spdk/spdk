@@ -193,10 +193,6 @@ function create_pmem_pool_tc3()
 		error "Failed to delete pool file!"
 	fi
 
-	if $rpc_py pmem_pool_info $default_pool_file; then
-		error "Got pmem file info but file should be deleted"
-	fi
-
 	if [ -f $default_pool_file ]; then
 		error "Failed to delete pmem file!"
 	fi
@@ -416,10 +412,6 @@ function delete_pmem_pool_tc3()
 
 	if ! $rpc_py delete_pmem_pool $default_pool_file; then
 		error "Failed to delete pmem pool file!"
-	fi
-
-	if $rpc_py pmem_pool_info $default_pool_file; then
-		error "Pmem pool file exists after using pmem_pool_info!"
 	fi
 
 	return 0
