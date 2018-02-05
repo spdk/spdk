@@ -52,31 +52,36 @@ class Commands_Rpc(object):
                                     json_value=json_value))
         return 1
 
-    def check_get_lvol_stores(self, base_name, uuid, cluster_size):
+    def check_get_lvol_stores(self, base_name, uuid, cluster_size=None):
         print("INFO: RPC COMMAND get_lvol_stores")
         json_value = self.get_lvol_stores()
         if json_value:
             for i in range(len(json_value)):
-                uuid_json_response = json_value[i]['uuid']
-                cluster_size_response = json_value[i]['cluster_size']
-                base_bdev_json_reponse = json_value[i]['base_bdev']
-                if base_name in [base_bdev_json_reponse] \
-                        and uuid in [uuid_json_response] \
-                        and cluster_size in [cluster_size_response]:
+                json_uuid = json_value[i]['uuid']
+                json_cluster = json_value[i]['cluster_size']
+                json_base_name = json_value[i]['base_bdev']
+
+                if base_name in json_base_name \
+                        and uuid in json_uuid:
                     print("INFO: base_name:{base_name} is found in RPC "
                           "Command: get_lvol_stores "
                           "response".format(base_name=base_name))
                     print("INFO: UUID:{uuid} is found in RPC Command: "
                           "get_lvol_stores response".format(uuid=uuid))
-                    print("INFO: Cluster size :{cluster_size} is found in RPC "
-                          "Commnad: get_lvol_stores "
-                          "response".format(cluster_size=cluster_size))
+                    if cluster_size:
+                        if str(cluster_size) in str(json_cluster):
+                            print("Info: Cluster size :{cluster_size} is found in RPC "
+                                  "Command: get_lvol_stores "
+                                  "response".format(cluster_size=cluster_size))
+                        else:
+                            print("ERROR: Wrong cluster size in lvol store")
+                            print("Expected:".format(cluster_size))
+                            print("Actual:".format(json_cluster))
+                            return 1
                     return 0
-            print("FAILED: UUID: {uuid} or base_name: {base_name} or "
-                  "cluster size: {cluster_size} not found in RPC COMMAND "
-                  "get_bdevs: {json_value}".format(uuid=uuid,
-                                                   base_name=base_name,
-                                                   json_value=json_value))
+            print("FAILED: UUID: lvol store {uuid} on base_bdev: "
+                  "{base_name} not found in get_lvol_stores()".format(uuid=uuid,
+                                                                      base_name=base_name))
             return 1
         else:
             print("INFO: Lvol store not exist")

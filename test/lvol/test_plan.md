@@ -544,13 +544,14 @@ Expected result:
 
 #### TEST CASE 601 - Name: construct_lvol_store_with_cluster_size_min
 Negative test for constructing a new lvol store.
-Call construct_lvol_store with cluster size = 0.
+Call construct_lvol_store with cluster size smaller than minimal value of 8192.
 Steps:
 - create a malloc bdev
-- construct_lvol_store on correct, exisitng malloc bdev and cluster size 0
+- try construct lvol store on malloc bdev with cluster size 8191
+- verify that lvol store was not created
 
 Expected result:
-- return code != 0
+- construct lvol store return code != 0
 - Error code response printed to stdout
 
 ### Provisioning
