@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "1270820c_4e25b567",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 297,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-02-05T08:54:35Z",
+      "side": 1,
+      "message": "The virtqueue-\u003evring.avail-\u003eflags load might be reordered before vring-\u003eused-\u003eidx store. This might happen even on x86. Sfence doesn\u0027t protect us from it, only mfence or lock can. Even if we serialize all stores, we get absolutely no guarantee that avail-\u003eflags hasn\u0027t been loaded earlier. StoreLoad reordering is only fenced by smp_mb()\n\nWe can replace (currently useless) wmb with either:\na) smp_wmb(), then use AVAIL_F_NO_INTERRUPT only as an optimization. We\u0027re poll-mode so we will send an interrupt sooner or later. Even if we read stale avail-\u003eflags value, we will send the interrupt with the next tick - no big deal\nb) smp_wmb() and drop AVAIL_F_NO_INTERRUPT check - not really an option since it will increase vhost load and decrease general throughput\nc) smp_mb() and reset used_req_cnt [1] if VRING_AVAIL_F_NO_INTERRUPT is set. This will limit some unnecessary interrupts.\n\nMy benchmarks don\u0027t show any difference between these 3, so this needs some more thought.\n\n[1] \tvirtqueue-\u003ereq_cnt +\u003d virtqueue-\u003eused_req_cnt;\n\tvirtqueue-\u003eused_req_cnt \u003d 0;",
+      "parentUuid": "c2b8c8cf_2fbeb4e2",
+      "range": {
+        "startLine": 296,
+        "startChar": 14,
+        "endLine": 297,
+        "endChar": 56
+      },
+      "revId": "7965a036f15632a37fc4110d745cecc3aac63997",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e1a748ec_4a5975c5",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2018-02-05T08:26:06Z",
       "side": 1,
       "message": "This might not work as spdk_vhost_dev_used_signal() is not called from destroy_device_poller_cb() so wmb() will not be issued. Also I think call to spm_wmb() better fit into spdk_vhost_vq_used_signal() rather than here.",
+      "range": {
+        "startLine": 293,
+        "startChar": 3,
+        "endLine": 301,
+        "endChar": 4
+      },
+      "revId": "7965a036f15632a37fc4110d745cecc3aac63997",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a3d5a756_5628c345",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-02-05T08:54:35Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "e1a748ec_4a5975c5",
       "range": {
         "startLine": 293,
         "startChar": 3,
