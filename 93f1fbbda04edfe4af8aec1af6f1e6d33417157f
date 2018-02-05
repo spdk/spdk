@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "35a2d2d0_27fc2c2c",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-05T07:47:44Z",
+      "side": 1,
+      "message": "Can we assert if tailq for aliases is empty? What about _vbdev_lvol_change_bdev_alias()? We have an old alias and in order to change it, we should add a new one, then remove ole one.\nAsserting if bdev and alias is not null sound good.",
+      "parentUuid": "19bfdb29_c28bfcb0",
+      "range": {
+        "startLine": 63,
+        "startChar": 0,
+        "endLine": 63,
+        "endChar": 19
+      },
+      "revId": "93f1fbbda04edfe4af8aec1af6f1e6d33417157f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3197e820_c300c32e",
         "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
         "patchSetId": 64
@@ -166,6 +190,30 @@
     },
     {
       "key": {
+        "uuid": "22376cea_94c1b0d4",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-05T07:47:44Z",
+      "side": 1,
+      "message": "After executing _vbdev_lvol_change_bdev_alias() tailq will not be empty. There will be a new alias on a list.",
+      "parentUuid": "14f2d509_5322ae53",
+      "range": {
+        "startLine": 96,
+        "startChar": 0,
+        "endLine": 96,
+        "endChar": 19
+      },
+      "revId": "93f1fbbda04edfe4af8aec1af6f1e6d33417157f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "55464513_9e5e2804",
         "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
         "patchSetId": 64
@@ -223,6 +271,24 @@
       "writtenOn": "2018-02-02T12:04:15Z",
       "side": 1,
       "message": "Please add UT where spdk_lvol_rename is attempted with name already existing on another lvol within the same lvol store.",
+      "revId": "93f1fbbda04edfe4af8aec1af6f1e6d33417157f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "40e1e02e_b54ed977",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1399,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-05T07:47:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5e47e262_61194a7d",
       "revId": "93f1fbbda04edfe4af8aec1af6f1e6d33417157f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
