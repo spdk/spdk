@@ -62,6 +62,7 @@ struct spdk_iscsi_pg_map {
 struct spdk_iscsi_tgt_node {
 	int num;
 	char *name;
+
 	char *alias;
 
 	pthread_mutex_t mutex;
