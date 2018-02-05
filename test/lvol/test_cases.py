@@ -656,22 +656,24 @@ class TestCases(object):
         fail_count = 0
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
-        if self.c.construct_lvol_store(base_name,
-                                       self.lvs_name,
-                                       (self.total_size * 1024 * 1024) + 1) == 0:
+        lvol_uuid = self.c.construct_lvol_store(base_name,
+                                                self.lvs_name,
+                                                (self.total_size * 1024 * 1024) + 1) == 0
+        if self.c.check_get_lvol_stores(base_name, lvol_uuid) == 0:
             fail_count += 1
+        fail_count += self.c.delete_bdev(base_name)
         footer(600)
         return fail_count
 
     def test_case601(self):
         header(601)
         fail_count = 0
-        # Create malloc bdev smaller than default lvol cluster size
-        base_name = self.c.construct_malloc_bdev(1,
+        base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
-        if self.c.construct_lvol_store(base_name,
-                                       self.lvs_name, 0) == 0:
+        lvol_uuid = self.c.construct_lvol_store(base_name, self.lvs_name, 8191)
+        if self.c.check_get_lvol_stores(base_name, lvol_uuid) == 0:
             fail_count += 1
+        fail_count += self.c.delete_bdev(base_name)
         footer(601)
         return fail_count
 
