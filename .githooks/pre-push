@@ -1,0 +1,118 @@
+#!/bin/sh
+# Verify what is about to be pushed.  Called by "git
+# push" after it has checked the remote status, but before anything has been
+# pushed.  If this script exits with a non-zero status nothing will be pushed.
+#
+# This hook is called with the following parameters:
+#
+# $1 -- Name of the remote to which the push is being done
+# $2 -- URL to which the push is being done
+#
+# If pushing without using a named remote those arguments will be equal.
+#
+# Information about the commits which are being pushed is supplied as lines to
+# the standard input in the form:
+#
+#   <local ref> <local sha1> <remote ref> <remote sha1>
+#
+
+rc=0
+
+# Redirect output to stderr.
+exec 1>&2
+
+echo "Running make with gcc ..."
+echo "make clean -j8" > make.log
+make clean -j8 >> make.log 2>&1
+echo "make CONFIG_DEBUG=n CONFIG_WERROR=y -j8" >> make.log
+make CONFIG_DEBUG=n CONFIG_WERROR=y -j8 >> make.log 2>&1
+rc=$?
+if [[ $rc -ne 0 ]]; then
+   tail -20 make.log
+   echo ""
+   echo "ERROR make returned errors!"
+   echo "ERROR Fix the problem and use 'git commit' to update your changes."
+   echo "ERROR See `pwd`/make.log for more information."
+   echo ""
+   exit $rc
+fi
+
+echo "make clean -j8" >> make.log
+make clean -j8 >> make.log 2>&1
+echo "make CONFIG_DEBUG=y CONFIG_WERROR=y -j8" >> make.log
+make CONFIG_DEBUG=y CONFIG_WERROR=y -j8 >> make.log 2>&1
+rc=$?
+if [[ $rc -ne 0 ]]; then
+   tail -20 make.log
+   echo ""
+   echo "ERROR make returned errors!"
+   echo "ERROR Fix the problem and use 'git commit' to update your changes."
+   echo "ERROR See `pwd`/make.log for more information."
+   echo ""
+   exit $rc
+fi
+
+echo "Running unittest.sh ..."
+echo "./test/unit/unittest.sh" >> make.log
+"./test/unit/unittest.sh" >> make.log 2>&1
+rc=$?
+if [[ $rc -ne 0 ]]; then
+   tail -20 make.log
+   echo ""
+   echo "ERROR unittest returned errors!"
+   echo "ERROR Fix the problem and use 'git commit' to update your changes."
+   echo "ERROR See `pwd`/make.log for more information."
+   echo ""
+   exit $rc
+fi
+
+echo "Running make with clang ..."
+echo "make clean -j8" >> make.log
+make clean -j8 >> make.log 2>&1
+echo "make CONFIG_DEBUG=n CONFIG_WERROR=y CC=clang CXX=clang++ -j8" >> make.log
+make CONFIG_DEBUG=n CONFIG_WERROR=y CC=clang CXX=clang++ -j8 >> make.log 2>&1
+rc=$?
+if [[ $rc -ne 0 ]]; then
+   tail -20 make.log
+   echo ""
+   echo "ERROR make CC=clang CXX=clang++ returned errors!"
+   echo "ERROR Fix the problem and use 'git commit' to update your changes."
+   echo "ERROR See `pwd`/make.log for more information."
+   echo ""
+   exit $rc
+fi
+
+echo "make clean CC=clang CXX=clang++ -j8" >> make.log
+make clean CC=clang CXX=clang++ -j8 >> make.log 2>&1
+echo "make CONFIG_DEBUG=y CONFIG_WERROR=y CC=clang CXX=clang++ -j8" >> make.log
+make CONFIG_DEBUG=y CONFIG_WERROR=y CC=clang CXX=clang++ -j8 >> make.log 2>&1
+rc=$?
+if [[ $rc -ne 0 ]]; then
+   tail -20 make.log
+   echo ""
+   echo "ERROR make CC=clang CXX=clang++ returned errors!"
+   echo "ERROR Fix the problem and use 'git commit' to update your changes."
+   echo "ERROR See `pwd`/make.log for more information."
+   echo ""
+   exit $rc
+fi
+
+echo "Running unittest.sh ..."
+echo "./test/unit/unittest.sh" >> make.log
+"./test/unit/unittest.sh" >> make.log 2>&1
+rc=$?
+if [[ $rc -ne 0 ]]; then
+   tail -20 make.log
+   echo ""
+   echo "ERROR unittest returned errors!"
+   echo "ERROR Fix the problem and use 'git commit' to update your changes."
+   echo "ERROR See `pwd`/make.log for more information."
+   echo ""
+   exit $rc
+fi
+
+make clean CC=clang CXX=clang++ -j8 2> /dev/null
+
+echo "Pushing to $1 $2"
+
+exit $rc
