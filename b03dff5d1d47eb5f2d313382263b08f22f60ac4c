@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "0b215298_262d6858",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 31
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-02-05T07:55:00Z",
+      "side": 1,
+      "message": "remove this line since it is not used.",
+      "range": {
+        "startLine": 57,
+        "startChar": 11,
+        "endLine": 57,
+        "endChar": 18
+      },
+      "revId": "b03dff5d1d47eb5f2d313382263b08f22f60ac4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "72b665d0_d3d379e8",
         "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
         "patchSetId": 31
