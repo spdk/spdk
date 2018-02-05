@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6f799271_02fc09d0",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 691,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-05T14:34:15Z",
+      "side": 1,
+      "message": "Unnecessary line.",
+      "revId": "dc62e4e316f82012e7f79949fb17404f2ef38f9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "531880b8_bfc2ae86",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 760,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-05T14:34:15Z",
+      "side": 1,
+      "message": "Unnecessary line.",
+      "revId": "dc62e4e316f82012e7f79949fb17404f2ef38f9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f56b5f24_5fbd2171",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 797,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-05T14:34:15Z",
+      "side": 1,
+      "message": "Unnecessary line.",
+      "revId": "dc62e4e316f82012e7f79949fb17404f2ef38f9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd0d6e93_e0ab8b3b",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 799,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-05T14:34:15Z",
+      "side": 1,
+      "message": "Please also add unit test for read/write.",
+      "revId": "dc62e4e316f82012e7f79949fb17404f2ef38f9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
