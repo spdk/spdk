@@ -120,6 +120,30 @@
     },
     {
       "key": {
+        "uuid": "6f5c9283_794b6d5e",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-05T07:47:44Z",
+      "side": 1,
+      "message": "This change would need some additional code refactoring (bdev_rpc.c:58). I\u0027m not sure it is not outside of this patch scope .",
+      "parentUuid": "c60e98c4_ad1fdb3d",
+      "range": {
+        "startLine": 82,
+        "startChar": 0,
+        "endLine": 98,
+        "endChar": 2
+      },
+      "revId": "587444dedbdd0007e9b3fe91c51ee1f84e53ba37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5e8dc0aa_eacd93c5",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 63
@@ -219,6 +243,24 @@
       "writtenOn": "2018-02-02T13:13:55Z",
       "side": 1,
       "message": "Add also negative test cases.",
+      "revId": "587444dedbdd0007e9b3fe91c51ee1f84e53ba37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dac1c18a_f79efdc4",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 1407,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-05T07:47:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "946fd439_8e74bbad",
       "revId": "587444dedbdd0007e9b3fe91c51ee1f84e53ba37",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
