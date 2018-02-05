@@ -16,6 +16,24 @@
       "revId": "9058e2809f6fc31ba45fcd7166a3d0e97fd43788",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb7ce8b6_23d0de60",
+        "filename": "include/spdk/barrier.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-02-05T20:33:12Z",
+      "side": 1,
+      "message": "\u003e Is this safe? [rsp - 132] is outside the 128-byte red zone guaranteed by the x86-64 ABI. \n\nAren\u0027t we screwed anyway when we have less than 132 bytes available on the stack? This seems quite unlikely.\nWe might want to use [rsp - 128] because it\u0027s guaranteed to be available and still highly unlikely to be used, but since there was a separate patch to switch from 128 to 132 I believe there are some benchmarks and CPU magic behind this.\n\n\u003e (Is the 132 value special in some way or just randomly selected?)\n\nIt\u0027s just because it\u0027s guaranteed to be unused (redzone_size - 4). Going deeper into the stack doesn\u0027t make much sense.\n\n\u003e Also, this won\u0027t compile on 32-bit x86, so we should probably have a separate case for __i386__ vs __x86_64__ if we do use this method.\n\nk, I\u0027ll change it to [esp - 4] for i386\n\n\u003e I\u0027m also not confident that a locked instruction is sufficient for the definition of spdk_mb() - the Linux kernel change you\u0027re referencing only uses it for smp_mb(), which is a weaker guarantee than mb().  Should this be changing spdk_spdk_mb() instead?\n\nTrue. I still think mb() as an sfence is not required for any I/O use-case, but being incompliant with mb() definition seems like a strong point. I\u0027ll leave mb() as mfence in the next patchset unless somebody else from pcie code has a good point on this.",
+      "parentUuid": "b728a35f_80bfd5bb",
+      "revId": "9058e2809f6fc31ba45fcd7166a3d0e97fd43788",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
