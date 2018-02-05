@@ -115,17 +115,20 @@ create_initiator_group_success_case(void)
 static void
 find_initiator_group_success_case(void)
 {
-	struct spdk_iscsi_init_grp *ig;
+	struct spdk_iscsi_init_grp *ig, *tmp;
+	int rc;
 
 	ig = spdk_iscsi_init_grp_create(1);
 	CU_ASSERT(ig != NULL);
 
-	spdk_iscsi_init_grp_register(ig);
+	rc = spdk_iscsi_init_grp_register(ig);
+	CU_ASSERT(rc == 0);
 
 	ig = spdk_iscsi_init_grp_find_by_tag(1);
 	CU_ASSERT(ig != NULL);
 
-	spdk_initiator_group_unregister(ig);
+	tmp = spdk_iscsi_init_grp_unregister(1);
+	CU_ASSERT(ig == tmp);
 	spdk_iscsi_init_grp_destroy(ig);
 
 	ig = spdk_iscsi_init_grp_find_by_tag(1);
@@ -133,22 +136,25 @@ find_initiator_group_success_case(void)
 }
 
 static void
-create_initiator_group_fail_case(void)
+register_initiator_group_twice_case(void)
 {
-	struct spdk_iscsi_init_grp *ig;
+	struct spdk_iscsi_init_grp *ig, *tmp;
+	int rc;
 
 	ig = spdk_iscsi_init_grp_create(1);
 	CU_ASSERT(ig != NULL);
 
-	spdk_iscsi_init_grp_register(ig);
+	rc = spdk_iscsi_init_grp_register(ig);
+	CU_ASSERT(rc == 0);
 
-	ig = spdk_iscsi_init_grp_create(1);
-	CU_ASSERT(ig == NULL);
+	rc = spdk_iscsi_init_grp_register(ig);
+	CU_ASSERT(rc != 0);
 
 	ig = spdk_iscsi_init_grp_find_by_tag(1);
 	CU_ASSERT(ig != NULL);
 
-	spdk_initiator_group_unregister(ig);
+	tmp = spdk_iscsi_init_grp_unregister(1);
+	CU_ASSERT(tmp == ig);
 	spdk_iscsi_init_grp_destroy(ig);
 
 	ig = spdk_iscsi_init_grp_find_by_tag(1);
@@ -158,6 +164,7 @@ create_initiator_group_fail_case(void)
 static void
 add_initiator_name_success_case(void)
 {
+
 	int rc;
 	struct spdk_iscsi_init_grp *ig;
 	struct spdk_iscsi_initiator_name *iname;
@@ -475,8 +482,8 @@ main(int argc, char **argv)
 			       create_initiator_group_success_case) == NULL
 		|| CU_add_test(suite, "find initiator group success case",
 			       find_initiator_group_success_case) == NULL
-		|| CU_add_test(suite, "create initiator group fail case",
-			       create_initiator_group_fail_case) == NULL
+		|| CU_add_test(suite, "register initiator group twice case",
+			       register_initiator_group_twice_case) == NULL
 		|| CU_add_test(suite, "add initiator name success case",
 			       add_initiator_name_success_case) == NULL
 		|| CU_add_test(suite, "add initiator name fail case",
