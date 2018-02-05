@@ -80,6 +80,29 @@
       "revId": "e1212f1045cecdc41c03044b1c25116cb4bc4c09",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3c70cade_6b5f6563",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 425,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-05T08:36:35Z",
+      "side": 1,
+      "message": "For this part please see just added functionality to determine if bdev is an lvol bdev:\nhttps://review.gerrithub.io/#/c/398178/",
+      "range": {
+        "startLine": 420,
+        "startChar": 0,
+        "endLine": 425,
+        "endChar": 19
+      },
+      "revId": "e1212f1045cecdc41c03044b1c25116cb4bc4c09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
