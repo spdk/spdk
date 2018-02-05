@@ -16,6 +16,24 @@
       "revId": "574e29ce9e75957f776624fd9d56875531b5910d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c221835_4492a8a9",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 858,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-05T01:05:40Z",
+      "side": 1,
+      "message": "Thank you Jim.\n\nI agree with you.\n\nCurrently to minimize the gap between listen() and accept(), open_all_portals() is done after starting poller, but the gap can be ignored.\n\nAdditionally open/close_portal can be decoupled with portal_group because accept_poller is not dependent on portal group.\n\nI will do your feedback in the following patches.",
+      "parentUuid": "5e4b9280_9825e34c",
+      "revId": "574e29ce9e75957f776624fd9d56875531b5910d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
