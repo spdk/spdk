@@ -19,6 +19,69 @@
     },
     {
       "key": {
+        "uuid": "61ba7c1a_9697c0c3",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 3488,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-05T16:03:26Z",
+      "side": 1,
+      "message": "This could be removed, please see comment in _spdk_bs_snapshot_orgblob_open_cpl().",
+      "range": {
+        "startLine": 3486,
+        "startChar": 0,
+        "endLine": 3488,
+        "endChar": 40
+      },
+      "revId": "72e8f2af809e34f40fef196b748f8d83a425bce4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fb7e74da_4d20b1eb",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 3496,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-05T16:03:26Z",
+      "side": 1,
+      "message": "Here calling spdk_blob_set_read_only(newblob) should be fine. Since it takes spdk_blob_sync_md to sync read_only status. It should be fine to sync it along with removing SNAPSHOT_IN_PROGRESS.",
+      "revId": "72e8f2af809e34f40fef196b748f8d83a425bce4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b9a8eb9c_4b5989f6",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 3553,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-05T16:03:26Z",
+      "side": 1,
+      "message": "This could be removed, please see comment in _spdk_bs_snapshot_orgblob_open_cpl().",
+      "range": {
+        "startLine": 3552,
+        "startChar": 0,
+        "endLine": 3553,
+        "endChar": 24
+      },
+      "revId": "72e8f2af809e34f40fef196b748f8d83a425bce4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "965afd53_356e8133",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 40
@@ -30,6 +93,52 @@
       "writtenOn": "2018-02-05T12:31:10Z",
       "side": 1,
       "message": "Unnecessary empty line.",
+      "revId": "72e8f2af809e34f40fef196b748f8d83a425bce4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "84e243d1_5fd51555",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 3610,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-05T16:03:26Z",
+      "side": 1,
+      "message": "Why not use orgblob, since we already assigned it a value.",
+      "range": {
+        "startLine": 3610,
+        "startChar": 20,
+        "endLine": 3610,
+        "endChar": 42
+      },
+      "revId": "72e8f2af809e34f40fef196b748f8d83a425bce4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "61f77965_f3d166df",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 3613,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-05T16:03:26Z",
+      "side": 1,
+      "message": "Please describe what fails, \"Cannot create snapshot from read only blob with id\" and provide blob_id.",
+      "range": {
+        "startLine": 3613,
+        "startChar": 32,
+        "endLine": 3613,
+        "endChar": 61
+      },
       "revId": "72e8f2af809e34f40fef196b748f8d83a425bce4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -52,6 +161,29 @@
         "startChar": 1,
         "endLine": 3623,
         "endChar": 28
+      },
+      "revId": "72e8f2af809e34f40fef196b748f8d83a425bce4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "09826247_8ef22cf4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 3630,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-05T16:03:26Z",
+      "side": 1,
+      "message": "I\u0027m not sure this works as indented. If we create blob (snapshot) with read_only already set, then as in current implementation above, it has to be temporarily removed for sync to work. It works only due to convoluted way of changing spdk_blob_data-\u003emd_ro in functions above.\n\nAt time of creation flag SNAPSHOT_IN_PROGRESS is set, so on power failure during this whole snapshot progress - it is known that blob is not to be used.\nIt should not be necessary to set blob (snapshot) as read only until very last sync. It is not presented to the user till last callback.",
+      "range": {
+        "startLine": 3630,
+        "startChar": 1,
+        "endLine": 3630,
+        "endChar": 32
       },
       "revId": "72e8f2af809e34f40fef196b748f8d83a425bce4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
