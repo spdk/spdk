@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "72b665d0_d3d379e8",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 31
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-02-05T07:38:14Z",
+      "side": 1,
+      "message": "Added these, the next case follow it can avoid possible failure. Refer to patch set 29 and before.",
+      "range": {
+        "startLine": 106,
+        "startChar": 0,
+        "endLine": 111,
+        "endChar": 7
+      },
+      "revId": "b03dff5d1d47eb5f2d313382263b08f22f60ac4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
