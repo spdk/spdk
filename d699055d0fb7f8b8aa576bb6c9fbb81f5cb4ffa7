@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "7972718e_75f25ec3",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 757,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-05T15:51:48Z",
+      "side": 1,
+      "message": "I\u0027d assign rc to lvolerrno, please see below.",
+      "revId": "d699055d0fb7f8b8aa576bb6c9fbb81f5cb4ffa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c49cc56c_9ff6c9d3",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 13
@@ -13,6 +30,30 @@
       "writtenOn": "2018-02-05T14:50:34Z",
       "side": 1,
       "message": "If we got error in line 775 we will still return 0 here. We should use lvserrno instead rc in line 755.",
+      "range": {
+        "startLine": 760,
+        "startChar": 25,
+        "endLine": 760,
+        "endChar": 34
+      },
+      "revId": "d699055d0fb7f8b8aa576bb6c9fbb81f5cb4ffa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ae9d50cf_eec0e541",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 760,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-05T15:51:48Z",
+      "side": 1,
+      "message": "I\u0027d argue that its fine keeping lvolerrno here as one of two things (that cannot occur at once):\n- error when doing spdk_lvol_resize()\n- error when spdk_bdev_notify_blockcnt_change()\n\nThe only issue occurs when its not possible to register bdev again, it leaves lvol not usable. Its more important error than one from resize. In that case it would overwrite lvolerrno with return code from spdk_bdev_register().",
+      "parentUuid": "c49cc56c_9ff6c9d3",
       "range": {
         "startLine": 760,
         "startChar": 25,
@@ -41,6 +82,53 @@
         "startChar": 34,
         "endLine": 786,
         "endChar": 44
+      },
+      "revId": "d699055d0fb7f8b8aa576bb6c9fbb81f5cb4ffa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f38beb9_65e78d88",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 786,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-05T15:51:48Z",
+      "side": 1,
+      "message": "Not only that, but in that case spdk_lvol_resize() should be called in that callback in spdk_bdev_unregister().",
+      "parentUuid": "9c867fda_04ddc31a",
+      "range": {
+        "startLine": 786,
+        "startChar": 34,
+        "endLine": 786,
+        "endChar": 44
+      },
+      "revId": "d699055d0fb7f8b8aa576bb6c9fbb81f5cb4ffa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1e86e47_28335eaa",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-05T15:51:48Z",
+      "side": 1,
+      "message": "This function already returns spdk_lvol pointer, it can be assigned here to lvol variable.",
+      "range": {
+        "startLine": 417,
+        "startChar": 5,
+        "endLine": 417,
+        "endChar": 35
       },
       "revId": "d699055d0fb7f8b8aa576bb6c9fbb81f5cb4ffa7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
