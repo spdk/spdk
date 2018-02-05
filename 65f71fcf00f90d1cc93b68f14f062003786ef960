@@ -22,6 +22,30 @@
       "revId": "65f71fcf00f90d1cc93b68f14f062003786ef960",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "23d74391_2b5b1353",
+        "filename": "test/lib/ut_multithread.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-05T14:22:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "38fb01bf_7542bdb1",
+      "range": {
+        "startLine": 202,
+        "startChar": 6,
+        "endLine": 202,
+        "endChar": 49
+      },
+      "revId": "65f71fcf00f90d1cc93b68f14f062003786ef960",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
