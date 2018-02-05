@@ -1,0 +1,28 @@
+#!/bin/sh
+#
+# Verify what is about to be committed.
+# Called by "git commit" with no arguments.  The hook should
+# exit with non-zero status after issuing an appropriate message if
+# it wants to stop the commit.
+
+rc=0
+
+# Redirect output to stderr.
+exec 1>&2
+
+# If there are formatting errors, print the offending file names and fail.
+if [ -x "./scripts/check_format.sh" ]; then
+	echo "Running check_format.sh ..."
+	"./scripts/check_format.sh" > check_format.log 2>&1
+	rc=$?
+	if [ $rc -ne 0 ]; then
+		cat check_format.log
+		echo ""
+		echo "ERROR check_format.sh returned errors!"
+		echo "ERROR Fix the problem and use 'git add' to update your changes."
+		echo "ERROR See `pwd`/check_format.log for more information."
+		echo ""
+	fi
+fi
+
+exit $rc

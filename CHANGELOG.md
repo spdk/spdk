@@ -2,6 +2,17 @@
 
 ## v18.07: (Upcoming Release)
 
+### git pre-commit and pre-push hooks
+
+The pre-commit hook will run `scripts/check_format.sh` and verify there are no formating
+errors before allowing `git commit` to run. The pre-push hook runs `make CONFIG_WERROR=y`
+with and without `CONFIG_DEBUG=y` using both the gcc and clang compiler before allowing
+`git push` to run.  Following each DEBUG build `test/unit/unittest.sh` is run and verified.
+Results are recorded in the `make.log` file.
+
+To enable type: 'git config core.hooksPath .githooks'. To override after configuration use
+the `git --no-verify` flag.
+
 ## v18.04: Logical Volume Snapshot/Clone, iSCSI Initiator, Bdev QoS, VPP Userspace TCP/IP
 
 ### vhost
