@@ -263,6 +263,16 @@ if __name__ == "__main__":
     p.add_argument('size', help='size in MiB for this bdev', type=int)
     p.set_defaults(func=rpc.lvol.construct_lvol_bdev)
 
+    p = subparsers.add_parser('snapshot_lvol_bdev', help='Create a snapshot of an lvol bdev')
+    p.add_argument('lvol_name', help='lvol bdev name')
+    p.add_argument('snapshot_name', help='lvol snapshot name')
+    p.set_defaults(func=rpc.lvol.snapshot_lvol_bdev)
+
+    p = subparsers.add_parser('clone_lvol_bdev', help='Create a clone of an lvol snapshot')
+    p.add_argument('snapshot_name', help='lvol snapshot name')
+    p.add_argument('clone_name', help='lvol clone name')
+    p.set_defaults(func=rpc.lvol.clone_lvol_bdev)
+
     # Logical volume resize feature is disabled, as it is currently work in progress
     # p = subparsers.add_parser('resize_lvol_bdev', help='Resize existing lvol bdev')
     # p.add_argument('name', help='lvol bdev name')
