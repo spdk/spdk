@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "24c8f500_a662c756",
+        "filename": "lib/blob/blob_bs_dev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-05T11:09:58Z",
+      "side": 1,
+      "message": "Backing device should only be used for reads, so we should never end up here. We should change this to:\ncb_args-\u003ecb_fn(cb_args-\u003echannel, cb_args-\u003ecb_arg, -EPERM);\nassert(false);",
+      "range": {
+        "startLine": 64,
+        "startChar": 1,
+        "endLine": 64,
+        "endChar": 54
+      },
+      "revId": "114a77221ae77afbafa105fc37088ee196ce7e43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b895f5a_e5f81fca",
+        "filename": "lib/blob/blob_bs_dev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-05T11:09:58Z",
+      "side": 1,
+      "message": "Same as above.",
+      "range": {
+        "startLine": 72,
+        "startChar": 1,
+        "endLine": 72,
+        "endChar": 54
+      },
+      "revId": "114a77221ae77afbafa105fc37088ee196ce7e43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
