@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d0f7c9e6_b9de2b39",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-05T08:40:40Z",
+      "side": 1,
+      "message": "Why it doesn\u0027t fit wit poll-mode? Any source? From wha I can see DPDK developers have different opinion http://dpdk.org/browse/dpdk/commit/lib/librte_vhost/vhost.h?id\u003de37ff954405addb8ea422426a2d162d00dcad196.\n\nI *probaly* rebase event idx patches in this release.",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 21
+      },
+      "revId": "6a796ecfcbb3bbac03df3515e53d2c52b3e9eebb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
