@@ -23,6 +23,16 @@ def construct_lvol_bdev(args):
         print_array(args.client.call('construct_lvol_bdev', params))
 
 
+def snapshot_lvol_bdev(args):
+    params = {'lvol_name': args.lvol_name, 'snapshot_name': args.snapshot_name}
+    print_array(args.client.call('snapshot_lvol_bdev', params))
+
+
+def clone_lvol_bdev(args):
+    params = {'snapshot_name': args.snapshot_name, 'clone_name': args.clone_name}
+    print_array(args.client.call('clone_lvol_bdev', params))
+
+
 # Logical volume resize feature is disabled, as it is currently work in progress
 #
 # def resize_lvol_bdev(args):
