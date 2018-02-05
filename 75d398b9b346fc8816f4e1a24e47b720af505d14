@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "30137b71_b0c0d44c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 3931,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-05T20:40:11Z",
+      "side": 1,
+      "message": "This should be ~, not !.  Unit tests should be fixed to catch this error too.",
+      "revId": "75d398b9b346fc8816f4e1a24e47b720af505d14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
