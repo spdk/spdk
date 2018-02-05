@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4a9800c8_3baf6001",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-05T16:00:21Z",
+      "side": 1,
+      "message": "All of these members should go into spdk_histogram_data instead - they can be easily tracked there along with the rest of the tally data.",
+      "revId": "5e8118c0ca284b3b88f01cfee939cda8d7d916f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "81b9a970_a5cf8ce9",
+        "filename": "lib/histogram/histogram.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-05T16:00:21Z",
+      "side": 1,
+      "message": "Is there a need to define a max ID?\n\nI guess I\u0027m trying to understand where the limit is - there is no global allocation of objects.  Is this trying to limit the number of histograms that are allocated at any given time?",
+      "revId": "5e8118c0ca284b3b88f01cfee939cda8d7d916f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "87e1bd87_7007e029",
+        "filename": "lib/histogram/histogram.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-05T16:00:21Z",
+      "side": 1,
+      "message": "Just trying to understand what happens once 999 histograms are allocated and then freed.  HIST_MAX_HIST_ID would be exceeded and we would no longer be able to allocate any more histograms?",
+      "revId": "5e8118c0ca284b3b88f01cfee939cda8d7d916f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bbf57bd3_d5405015",
+        "filename": "lib/histogram/histogram.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-05T16:00:21Z",
+      "side": 1,
+      "message": "For almost all of these, we should just ASSERT(hg !\u003d NULL).  Users should not be calling these functions with a null histogram pointer - if they do, we actually want it to seg fault immediately rather than silently do nothing.",
+      "revId": "5e8118c0ca284b3b88f01cfee939cda8d7d916f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5546cbb8_13c9c016",
+        "filename": "lib/histogram/histogram.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-05T16:00:21Z",
+      "side": 1,
+      "message": "This should use spdk_histogram_data_iterate() instead of directly iterating over the internal data structures of spdk_histogram_data.",
+      "revId": "5e8118c0ca284b3b88f01cfee939cda8d7d916f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
