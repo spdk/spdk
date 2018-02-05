@@ -22,6 +22,29 @@
       "revId": "e59112dbeff6a48fdfab3ffe05ab364e004bcba6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6aa5893b_e0145f14",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 796,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-05T00:16:41Z",
+      "side": 1,
+      "message": "Not testing guarding IOs by limit in UT still doesn\u0027t sit right for me. Would you consider taking Jim\u0027s idea in https://review.gerrithub.io/#/c/393012/ ?",
+      "range": {
+        "startLine": 796,
+        "startChar": 1,
+        "endLine": 796,
+        "endChar": 16
+      },
+      "revId": "e59112dbeff6a48fdfab3ffe05ab364e004bcba6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
