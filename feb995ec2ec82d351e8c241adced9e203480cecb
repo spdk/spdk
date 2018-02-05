@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6dee13e2_d3626a5d",
+        "filename": "app/nvmf_tgt/nvmf_rpc.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 512,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-05T23:59:55Z",
+      "side": 1,
+      "message": "This is duplicating the rpc_listen_address decoder; it would be nice to just use that to decode a nested \"listen_address\" object for consistency with the existing API.",
+      "range": {
+        "startLine": 509,
+        "startChar": 1,
+        "endLine": 512,
+        "endChar": 91
+      },
+      "revId": "feb995ec2ec82d351e8c241adced9e203480cecb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a72a9e7a_6d90f17e",
+        "filename": "app/nvmf_tgt/nvmf_rpc.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 559,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-05T23:59:55Z",
+      "side": 1,
+      "message": "It looks like all of the error paths in nvmf_rpc_listen_paused() leave the subsystem in paused state; shouldn\u0027t we be resuming even if an error occurred?\n\nMost of these could be avoided by doing the translation to trid before pausing the subsystem, but the actual listen calls need to be done while paused, so those should still resume the subsystem in case of error.",
+      "revId": "feb995ec2ec82d351e8c241adced9e203480cecb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
