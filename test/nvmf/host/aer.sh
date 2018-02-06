@@ -16,6 +16,11 @@ if [ -z $NVMF_FIRST_TARGET_IP ]; then
 	exit 0
 fi
 
+if check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
+        echo "Bypass AER tests for softRoCE NIC"
+        exit 0
+fi
+
 timing_enter aer
 timing_enter start_nvmf_tgt
 
@@ -27,19 +32,64 @@ trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
 waitforlisten $nvmfpid
 timing_exit start_nvmf_tgt
 
-bdevs="$bdevs $($rpc_py construct_malloc_bdev 64 512)"
-$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" '' -a -s SPDK00000000000001 -n "$bdevs"
+modprobe -v nvme-rdma
 
-$rootdir/test/nvme/aer/aer -r "\
-        trtype:RDMA \
-        adrfam:IPv4 \
-        traddr:$NVMF_FIRST_TARGET_IP \
-        trsvcid:$NVMF_PORT \
-        subnqn:nqn.2014-08.org.nvmexpress.discovery"
+$rpc_py construct_malloc_bdev 64 512 --name Malloc0
+$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" '' -a -s SPDK00000000000001 -n Malloc0
+
+# TODO: this aer test tries to invoke an AER completion by setting the temperature
+#threshold to a very low value.  This does not work with emulated controllers
+#though so currently the test is disabled.
+
+#$rootdir/test/nvme/aer/aer -r "\
+#        trtype:RDMA \
+#        adrfam:IPv4 \
+#        traddr:$NVMF_FIRST_TARGET_IP \
+#        trsvcid:$NVMF_PORT \
+#        subnqn:nqn.2014-08.org.nvmexpress.discovery"
+
+# Namespace Attribute Notice Tests with kernel initiator
+nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+sleep 2
 sync
+
+function get_nvme_name {
+	bdevs=$(lsblk -d | cut -d " " -f 1 | grep "^nvme[0-9]n2") || true
+}
+
+bdevs=""
+get_nvme_name
+
+if [ -n "$bdevs" ]; then
+	echo "Ignore adding Namespace 2 test"
+	$rpc_py delete_bdev Malloc0
+	nvmfcleanup
+	killprocess $nvmfpid
+	exit 0
+fi
+
+# Add a new namespace
+$rpc_py construct_malloc_bdev 128 4096 --name Malloc1
+$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc1 -n 2
+sleep 3
+sync
+
+bdevs=""
+get_nvme_name
+
+if [ -z "$bdevs" ]; then
+        echo "AER for adding a Namespace test failed"
+	nvmfcleanup
+	killprocess $nvmfpid
+        exit 1
+fi
+
+$rpc_py delete_bdev Malloc0
+$rpc_py delete_bdev Malloc1
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 
 trap - SIGINT SIGTERM EXIT
 
+nvmfcleanup
 killprocess $nvmfpid
 timing_exit aer
