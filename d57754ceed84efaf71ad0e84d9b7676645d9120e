@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8fec5606_068c3cf0",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 724,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-06T07:03:55Z",
+      "side": 1,
+      "message": "This code is better than the following?\n\n  if (vdev-\u003eregistered) {\n    for (i \u003d 0; i \u003c MAX_DEVS; ++i) {\n      if (svdev-\u003escsi_dev[i])\n        return -EBUSY;\n    }\n  } else {\n    for (i \u003d 0; i \u003c MAX_DEVS; ++i) {\n      rc \u003d spdk_vhost_scsi_dev_remove_tgt(vdev, i);\n      if (rc !\u003d 0)\n        return rc;\n    }\n  }",
+      "range": {
+        "startLine": 724,
+        "startChar": 0,
+        "endLine": 724,
+        "endChar": 26
+      },
+      "revId": "d57754ceed84efaf71ad0e84d9b7676645d9120e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
