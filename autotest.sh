@@ -149,13 +149,13 @@ if [ $SPDK_TEST_VHOST -eq 1 ]; then
 		run_test ./test/vhost/spdk_vhost.sh --readonly
 		timing_exit readonly
 
-		# timing_enter fs_integrity_scsi
-		# run_test ./test/vhost/spdk_vhost.sh --fs-integrity-scsi
-		# timing_exit fs_integrity_scsi
+		timing_enter fs_integrity_scsi
+		run_test ./test/vhost/spdk_vhost.sh --fs-integrity-scsi
+		timing_exit fs_integrity_scsi
 
-		# timing_enter fs_integrity_blk
-		# run_test ./test/vhost/spdk_vhost.sh --fs-integrity-blk
-		# timing_exit fs_integrity_blk
+		timing_enter fs_integrity_blk
+		run_test ./test/vhost/spdk_vhost.sh --fs-integrity-blk
+		timing_exit fs_integrity_blk
 
 		timing_enter integrity_lvol_scsi_nightly
 		run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-scsi-nightly
@@ -166,12 +166,20 @@ if [ $SPDK_TEST_VHOST -eq 1 ]; then
 		timing_exit integrity_lvol_blk_nightly
 	fi
 
+	timing_enter fs_integrity_scsi
+	run_test ./test/vhost/spdk_vhost.sh --fs-integrity-scsi
+	timing_exit fs_integrity_scsi
+
+	timing_enter fs_integrity_blk
+	run_test ./test/vhost/spdk_vhost.sh --fs-integrity-blk
+	timing_exit fs_integrity_blk
+
 	timing_enter integrity_lvol_scsi
-	run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-scsi
+	#run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-scsi
 	timing_exit integrity_lvol_scsi
 
 	timing_enter integrity_lvol_blk
-	run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-blk
+	#run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-blk
 	timing_exit integrity_lvol_blk
 
 	timing_exit vhost
