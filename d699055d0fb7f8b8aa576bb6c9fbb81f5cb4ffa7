@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "519a61a9_3956a1c6",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 757,
+      "author": {
+        "id": 1012941
+      },
+      "writtenOn": "2018-02-06T08:44:48Z",
+      "side": 1,
+      "message": "I will add the assignation here: lvolerrno \u003d rc;",
+      "parentUuid": "7972718e_75f25ec3",
+      "revId": "d699055d0fb7f8b8aa576bb6c9fbb81f5cb4ffa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c49cc56c_9ff6c9d3",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 13
@@ -124,6 +142,30 @@
       "writtenOn": "2018-02-05T15:51:48Z",
       "side": 1,
       "message": "This function already returns spdk_lvol pointer, it can be assigned here to lvol variable.",
+      "range": {
+        "startLine": 417,
+        "startChar": 5,
+        "endLine": 417,
+        "endChar": 35
+      },
+      "revId": "d699055d0fb7f8b8aa576bb6c9fbb81f5cb4ffa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec640a81_ec284099",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1012941
+      },
+      "writtenOn": "2018-02-06T08:44:48Z",
+      "side": 1,
+      "message": "ok, I will add the assignation above the condition and remove bellow assignation lvol \u003d bdev-\u003ectxt",
+      "parentUuid": "c1e86e47_28335eaa",
       "range": {
         "startLine": 417,
         "startChar": 5,
