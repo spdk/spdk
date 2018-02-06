@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "787f5dc8_43ed827d",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 570,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-06T00:58:47Z",
+      "side": 1,
+      "message": "just outputting this as io_per_second_in_the_last_period is enough? we know this dump is taken once per a second.",
+      "range": {
+        "startLine": 570,
+        "startChar": 4,
+        "endLine": 570,
+        "endChar": 30
+      },
+      "revId": "06082ce481aafece6b3a0129eee746f20623aa99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
