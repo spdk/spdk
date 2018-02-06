@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f4110381_b1cf8eb6",
+        "filename": "app/nvmf_tgt/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 659,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-06T19:33:46Z",
+      "side": 1,
+      "message": "While you\u0027re mucking with this - should we change \"Invalid parameters\" to something more descriptive?\n\nI\u0027m fine if you want to leave this patch as-is and clean this up later.",
+      "revId": "cfaea779b21dd5b10bebc8832c0fe98a294fbbd3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
