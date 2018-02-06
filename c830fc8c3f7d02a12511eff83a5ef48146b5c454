@@ -16,6 +16,23 @@
       "revId": "c830fc8c3f7d02a12511eff83a5ef48146b5c454",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ecbd411_e84f6ef4",
+        "filename": "test/blobstore/blobstore.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-06T23:05:05Z",
+      "side": 1,
+      "message": "I think we can remove this now.  Daniel\u0027s patch went in that removes trailing whitespaces.  It even adds a check in check_format.sh to ensure we don\u0027t get more added in later.",
+      "revId": "c830fc8c3f7d02a12511eff83a5ef48146b5c454",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
