@@ -1750,6 +1750,21 @@ struct __attribute__((packed)) spdk_nvme_health_information_page {
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_health_information_page) == 512, "Incorrect size");
 
 /**
+ * Asynchronous Event Configuration
+ */
+union spdk_nvme_async_event_config {
+	uint32_t raw;
+	struct {
+		union spdk_nvme_critical_warning_state crit_warn;
+		uint32_t ns_attr_notice		: 1;
+		uint32_t fw_activation_notice	: 1;
+		uint32_t telemetry_log_notice	: 1;
+		uint32_t reserved		: 21;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_async_event_config) == 4, "Incorrect size");
+
+/**
  * Firmware slot information page (\ref SPDK_NVME_LOG_FIRMWARE_SLOT)
  */
 struct spdk_nvme_firmware_page {

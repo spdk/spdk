@@ -178,14 +178,7 @@ struct spdk_nvmf_ctrlr {
 	int num_qpairs;
 	int max_qpairs_allowed;
 	uint32_t kato;
-	union {
-		uint32_t raw;
-		struct {
-			union spdk_nvme_critical_warning_state crit_warn;
-			uint8_t ns_attr_notice : 1;
-			uint8_t fw_activation_notice : 1;
-		} bits;
-	} async_event_config;
+	union spdk_nvme_async_event_config async_event_config;
 	struct spdk_nvmf_request *aer_req;
 	uint8_t hostid[16];
 
