@@ -1899,7 +1899,7 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 			if (spdk_unlikely(!TAILQ_EMPTY(&shared_ch->nomem_io))) {
 				_spdk_bdev_ch_retry_io(bdev_ch);
 			}
-		} else {
+		} else if (shared_ch->io_outstanding != 0) {
 			TAILQ_INSERT_HEAD(&shared_ch->nomem_io, bdev_io, link);
 			/*
 			 * Wait for some of the outstanding I/O to complete before we
@@ -1909,6 +1909,9 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 			 */
 			shared_ch->nomem_threshold = spdk_max((int64_t)shared_ch->io_outstanding / 2,
 							      (int64_t)shared_ch->io_outstanding - NOMEM_THRESHOLD_COUNT);
+			return;
+		} else {
+			_spdk_bdev_io_complete(bdev_io);
 			return;
 		}
 	}
