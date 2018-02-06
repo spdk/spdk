@@ -16,6 +16,24 @@
       "revId": "7ff3e0a8418aef8c715fa2c1e834194af18b8818",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "64cb88ab_f33b2d24",
+        "filename": "lib/virtio/virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 463,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-02-06T06:09:14Z",
+      "side": 1,
+      "message": "I thought nobody would notice :)\nK, i\u0027ll keep it as it was. This is a micro-micro-optimization - not worth a separate patch.",
+      "parentUuid": "01e38b84_a16924a9",
+      "revId": "7ff3e0a8418aef8c715fa2c1e834194af18b8818",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
