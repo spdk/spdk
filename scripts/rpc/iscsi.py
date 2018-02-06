@@ -120,6 +120,34 @@ def add_initiator_group(args):
     args.client.call('add_initiator_group', params)
 
 
+def add_initiator_to_initiator_group(args):
+    initiators = []
+    netmasks = []
+    if args.initiator_list:
+        for i in args.initiator_list.strip().split(' '):
+            initiators.append(i)
+    if args.netmask_list:
+        for n in args.netmask_list.strip().split(' '):
+            netmasks.append(n)
+
+    params = {'tag': args.tag, 'initiators': initiators, 'netmasks': netmasks}
+    args.client.call('add_initiator_to_initiator_group', params)
+
+
+def delete_initiator_from_initiator_group(args):
+    initiators = []
+    netmasks = []
+    if args.initiator_list:
+        for i in args.initiator_list.strip().split(' '):
+            initiators.append(i)
+    if args.netmask_list:
+        for n in args.netmask_list.strip().split(' '):
+            netmasks.append(n)
+
+    params = {'tag': args.tag, 'initiators': initiators, 'netmasks': netmasks}
+    args.client.call('delete_initiator_from_initiator_group', params)
+
+
 def delete_target_node(args):
     params = {'name': args.target_node_name}
     args.client.call('delete_target_node', params)

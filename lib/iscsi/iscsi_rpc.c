@@ -206,6 +206,91 @@ invalid:
 }
 SPDK_RPC_REGISTER("add_initiator_group", spdk_rpc_add_initiator_group)
 
+static const struct spdk_json_object_decoder rpc_add_or_delete_initiator_decoders[] = {
+	{"tag", offsetof(struct rpc_initiator_group, tag), spdk_json_decode_int32},
+	{"initiators", offsetof(struct rpc_initiator_group, initiator_list), decode_rpc_initiator_list, true},
+	{"netmasks", offsetof(struct rpc_initiator_group, netmask_list), decode_rpc_netmask_list, true},
+};
+
+static void
+spdk_rpc_add_initiator_to_initiator_group(struct spdk_jsonrpc_request *request,
+		const struct spdk_json_val *params)
+{
+	struct rpc_initiator_group req = {};
+	struct spdk_json_write_ctx *w;
+
+	if (spdk_json_decode_object(params, rpc_add_or_delete_initiator_decoders,
+				    SPDK_COUNTOF(rpc_add_or_delete_initiator_decoders), &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		goto invalid;
+	}
+
+	if (spdk_iscsi_init_grp_add_initiator_from_initiator_list(req.tag,
+			req.initiator_list.num_initiators,
+			req.initiator_list.initiators,
+			req.netmask_list.num_netmasks,
+			req.netmask_list.netmasks)) {
+		SPDK_ERRLOG("add_initiator_from_initiator_list failed\n");
+		goto invalid;
+	}
+
+	free_rpc_initiator_group(&req);
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	free_rpc_initiator_group(&req);
+}
+SPDK_RPC_REGISTER("add_initiator_to_initiator_group", spdk_rpc_add_initiator_to_initiator_group)
+
+static void
+spdk_rpc_delete_initiator_from_initiator_group(struct spdk_jsonrpc_request *request,
+		const struct spdk_json_val *params)
+{
+	struct rpc_initiator_group req = {};
+	struct spdk_json_write_ctx *w;
+
+	if (spdk_json_decode_object(params, rpc_add_or_delete_initiator_decoders,
+				    SPDK_COUNTOF(rpc_add_or_delete_initiator_decoders), &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		goto invalid;
+	}
+
+	if (spdk_iscsi_init_grp_delete_initiator_from_initiator_list(req.tag,
+			req.initiator_list.num_initiators,
+			req.initiator_list.initiators,
+			req.netmask_list.num_netmasks,
+			req.netmask_list.netmasks)) {
+		SPDK_ERRLOG("delete_initiator_from_initiator_list failed\n");
+		goto invalid;
+	}
+
+	free_rpc_initiator_group(&req);
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	free_rpc_initiator_group(&req);
+}
+SPDK_RPC_REGISTER("delete_initiator_from_initiator_group",
+		  spdk_rpc_delete_initiator_from_initiator_group)
+
 struct rpc_delete_initiator_group {
 	int32_t tag;
 };

@@ -167,6 +167,31 @@ spdk_iscsi_init_grp_delete_all_initiators(struct spdk_iscsi_init_grp *ig)
 	}
 }
 
+static int
+spdk_iscsi_init_grp_delete_initiators(struct spdk_iscsi_init_grp *ig, int num_inames, char **inames)
+{
+	int i;
+	int rc;
+
+	for (i = 0; i < num_inames; i++) {
+		rc = spdk_iscsi_init_grp_delete_initiator(ig, inames[i]);
+		if (rc < 0) {
+			goto cleanup;
+		}
+	}
+	return 0;
+
+cleanup:
+	for (; i > 0; --i) {
+		rc = spdk_iscsi_init_grp_add_initiator(ig, inames[i - 1]);
+		if (rc != 0) {
+			spdk_iscsi_init_grp_delete_all_initiators(ig);
+			break;
+		}
+	}
+	return -1;
+}
+
 static struct spdk_iscsi_initiator_netmask *
 spdk_iscsi_init_grp_find_netmask(struct spdk_iscsi_init_grp *ig, const char *mask)
 {
@@ -275,6 +300,30 @@ spdk_iscsi_init_grp_delete_all_netmasks(struct spdk_iscsi_init_grp *ig)
 	}
 }
 
+static int
+spdk_iscsi_init_grp_delete_netmasks(struct spdk_iscsi_init_grp *ig, int num_imasks, char **imasks)
+{
+	int i;
+	int rc;
+
+	for (i = 0; i < num_imasks; i++) {
+		rc = spdk_iscsi_init_grp_delete_netmask(ig, imasks[i]);
+		if (rc != 0) {
+			goto cleanup;
+		}
+	}
+	return 0;
+
+cleanup:
+	for (; i > 0; --i) {
+		rc = spdk_iscsi_init_grp_add_netmask(ig, imasks[i - 1]);
+		if (rc != 0) {
+			spdk_iscsi_init_grp_delete_all_netmasks(ig);
+			break;
+		}
+	}
+	return -1;
+}
 
 /* Read spdk iscsi target's config file and create initiator group */
 static int
@@ -458,6 +507,98 @@ spdk_iscsi_init_grp_create_from_initiator_list(int tag,
 
 cleanup:
 	spdk_iscsi_init_grp_destroy(ig);
+	return rc;
+}
+
+int
+spdk_iscsi_init_grp_add_initiator_from_initiator_list(int tag,
+		int num_initiator_names,
+		char **initiator_names,
+		int num_initiator_masks,
+		char **initiator_masks)
+{
+	int rc = -1;
+	struct spdk_iscsi_init_grp *ig;
+
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
+		      "add initiator to initiator group: tag=%d, #initiators=%d, #masks=%d\n",
+		      tag, num_initiator_names, num_initiator_masks);
+
+	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+	ig = spdk_iscsi_init_grp_find_by_tag(tag);
+	if (!ig) {
+		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+		SPDK_ERRLOG("initiator group (%d) is not found\n", tag);
+		return rc;
+	}
+
+	rc = spdk_iscsi_init_grp_add_initiators(ig, num_initiator_names,
+						initiator_names);
+	if (rc < 0) {
+		SPDK_ERRLOG("add initiator name error\n");
+		goto error;
+	}
+
+	rc = spdk_iscsi_init_grp_add_netmasks(ig, num_initiator_masks,
+					      initiator_masks);
+	if (rc < 0) {
+		SPDK_ERRLOG("add initiator netmask error\n");
+		spdk_iscsi_init_grp_delete_initiators(ig, num_initiator_names,
+						      initiator_names);
+		goto error;
+	}
+
+	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	return 0;
+
+error:
+	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	return rc;
+}
+
+int
+spdk_iscsi_init_grp_delete_initiator_from_initiator_list(int tag,
+		int num_initiator_names,
+		char **initiator_names,
+		int num_initiator_masks,
+		char **initiator_masks)
+{
+	int rc = -1;
+	struct spdk_iscsi_init_grp *ig;
+
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
+		      "delete initiator from initiator group: tag=%d, #initiators=%d, #masks=%d\n",
+		      tag, num_initiator_names, num_initiator_masks);
+
+	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+	ig = spdk_iscsi_init_grp_find_by_tag(tag);
+	if (!ig) {
+		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+		SPDK_ERRLOG("initiator group (%d) is not found\n", tag);
+		return rc;
+	}
+
+	rc = spdk_iscsi_init_grp_delete_initiators(ig, num_initiator_names,
+			initiator_names);
+	if (rc < 0) {
+		SPDK_ERRLOG("delete initiator name error\n");
+		goto error;
+	}
+
+	rc = spdk_iscsi_init_grp_delete_netmasks(ig, num_initiator_masks,
+			initiator_masks);
+	if (rc < 0) {
+		SPDK_ERRLOG("delete initiator netmask error\n");
+		spdk_iscsi_init_grp_add_initiators(ig, num_initiator_names,
+						   initiator_names);
+		goto error;
+	}
+
+	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	return 0;
+
+error:
+	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 	return rc;
 }
 
