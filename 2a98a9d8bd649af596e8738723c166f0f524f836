@@ -68,6 +68,322 @@
       "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba1c5f87_04dedf62",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 919,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-06T11:12:01Z",
+      "side": 1,
+      "message": "mistype ?",
+      "range": {
+        "startLine": 919,
+        "startChar": 15,
+        "endLine": 919,
+        "endChar": 21
+      },
+      "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33c31660_22549f0a",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 920,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-06T11:12:01Z",
+      "side": 1,
+      "message": "Please use nbd_name0 variable. This repeats throughout this file, please use the variables to avoid hard coding those strings where possible.",
+      "range": {
+        "startLine": 920,
+        "startChar": 31,
+        "endLine": 920,
+        "endChar": 42
+      },
+      "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a25c5f56_59af6af4",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 926,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-06T11:12:01Z",
+      "side": 1,
+      "message": "Please note that snapshot_lvol_bdev RPC returns full bdev name as in uuid_blobid (not alias lvs_name/snapshot_name). This return can be used when necessary.\nIn this case return from snapshot_lvol_bdev should be checked, as it can fail.",
+      "range": {
+        "startLine": 926,
+        "startChar": 7,
+        "endLine": 926,
+        "endChar": 33
+      },
+      "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69f1ce48_ed91efbd",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 929,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-06T11:12:01Z",
+      "side": 1,
+      "message": "Please use snapshot_name variable",
+      "range": {
+        "startLine": 929,
+        "startChar": 30,
+        "endLine": 929,
+        "endChar": 51
+      },
+      "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d26387b6_5d3e258c",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 929,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-06T11:12:01Z",
+      "side": 1,
+      "message": "Isn\u0027t get_lvol_bdev_with_name() function added for this reason ?",
+      "range": {
+        "startLine": 927,
+        "startChar": 0,
+        "endLine": 929,
+        "endChar": 51
+      },
+      "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3202e4d2_22c17543",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 930,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-06T11:12:01Z",
+      "side": 1,
+      "message": "Let\u0027s keep in mind this is a stub for now, will let you know when and how read only property of bdev can be checked. (It will be either field read_only and/or supported_io_type for writes will be set to false)",
+      "range": {
+        "startLine": 930,
+        "startChar": 16,
+        "endLine": 930,
+        "endChar": 46
+      },
+      "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e0743a3_74b0cebe",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 938,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-06T11:12:01Z",
+      "side": 1,
+      "message": "Shouldn\u0027t nbd_name1 be used here ? after all we try to write to snapshot and expect failure.",
+      "range": {
+        "startLine": 938,
+        "startChar": 31,
+        "endLine": 938,
+        "endChar": 42
+      },
+      "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1693f89a_33be96e2",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 940,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-06T11:12:01Z",
+      "side": 1,
+      "message": "The best kind of success :P j/k",
+      "range": {
+        "startLine": 940,
+        "startChar": 39,
+        "endLine": 940,
+        "endChar": 57
+      },
+      "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f86d4664_2482435c",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 996,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-06T11:12:01Z",
+      "side": 1,
+      "message": "As noted in previous test case. Please check return code and if successful - return can be used as bdev-\u003ename.",
+      "range": {
+        "startLine": 996,
+        "startChar": 15,
+        "endLine": 996,
+        "endChar": 33
+      },
+      "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e9e48dff_9196ac11",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 1001,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-06T11:12:01Z",
+      "side": 1,
+      "message": "What is being done here ? Shouldn\u0027t it be starting nbd on nbd_name2 as defined above ?",
+      "range": {
+        "startLine": 1001,
+        "startChar": 68,
+        "endLine": 1001,
+        "endChar": 85
+      },
+      "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f86dd0a_503a1e0e",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 1001,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-06T11:12:01Z",
+      "side": 1,
+      "message": "return from snapshot_lvol_bdev can be used here.",
+      "range": {
+        "startLine": 1001,
+        "startChar": 30,
+        "endLine": 1001,
+        "endChar": 66
+      },
+      "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e008a4c2_ad8815db",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 1002,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-06T11:12:01Z",
+      "side": 1,
+      "message": "Why isn\u0027t nbd started for this disk ?",
+      "range": {
+        "startLine": 1002,
+        "startChar": 8,
+        "endLine": 1002,
+        "endChar": 31
+      },
+      "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c3dc623_1a0a72ea",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 1003,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-06T11:12:01Z",
+      "side": 1,
+      "message": "Why not use variables defined above ?",
+      "range": {
+        "startLine": 1003,
+        "startChar": 36,
+        "endLine": 1003,
+        "endChar": 72
+      },
+      "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bdc8b121_8223263d",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 1016,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-06T11:12:01Z",
+      "side": 1,
+      "message": "Please see test plan, shouldn\u0027t comparison be done here after run_fio_test?",
+      "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
