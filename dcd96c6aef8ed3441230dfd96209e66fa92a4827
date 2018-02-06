@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "753dbd90_b79ad731",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-02-06T07:33:42Z",
+      "side": 1,
+      "message": "Fixed.",
+      "parentUuid": "a7c2ff4c_bcfa52d4",
+      "revId": "dcd96c6aef8ed3441230dfd96209e66fa92a4827",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "82f513bd_50ad6a65",
         "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
         "patchSetId": 32
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "92ae7447_e0c810ce",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-02-06T07:33:42Z",
+      "side": 1,
+      "message": "Removed.",
+      "parentUuid": "82f513bd_50ad6a65",
+      "revId": "dcd96c6aef8ed3441230dfd96209e66fa92a4827",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "76d8e8c4_a202b0ab",
         "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
         "patchSetId": 32
@@ -47,6 +83,24 @@
       "writtenOn": "2018-02-05T17:56:23Z",
       "side": 1,
       "message": "Can this be implemented differently? A fixed line number like this is very fragile.",
+      "revId": "dcd96c6aef8ed3441230dfd96209e66fa92a4827",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d8fa4ceb_81f67520",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-02-06T07:33:42Z",
+      "side": 1,
+      "message": "Fixed.",
+      "parentUuid": "76d8e8c4_a202b0ab",
       "revId": "dcd96c6aef8ed3441230dfd96209e66fa92a4827",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -76,6 +130,30 @@
     },
     {
       "key": {
+        "uuid": "2677e827_8a1e527e",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-02-06T07:33:42Z",
+      "side": 1,
+      "message": "Removed.",
+      "parentUuid": "2b87ccc4_ac9e9d31",
+      "range": {
+        "startLine": 68,
+        "startChar": 24,
+        "endLine": 68,
+        "endChar": 35
+      },
+      "revId": "dcd96c6aef8ed3441230dfd96209e66fa92a4827",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c3493ca1_e6bc005f",
         "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
         "patchSetId": 32
@@ -87,6 +165,24 @@
       "writtenOn": "2018-02-05T17:56:23Z",
       "side": 1,
       "message": "The split vbdev doesn\u0027t actually create any partitions on disk; what is this section trying to accomplish?\n\nIf you are just trying to remove the lvols, the destroy_lvol_store RPC you called earlier should be sufficient.\n\nWe should try as much as possible to avoid re-running setup.sh in the middle of the test run, since it is fairly slow.",
+      "revId": "dcd96c6aef8ed3441230dfd96209e66fa92a4827",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8b5c260_7916db74",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-02-06T07:33:42Z",
+      "side": 1,
+      "message": "OK,I removed it,and then will not split Nvme.",
+      "parentUuid": "c3493ca1_e6bc005f",
       "revId": "dcd96c6aef8ed3441230dfd96209e66fa92a4827",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
