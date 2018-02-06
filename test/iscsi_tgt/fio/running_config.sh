@@ -10,7 +10,7 @@ if [[ -z "$pid" ]]; then
 fi
 
 # delete any existing temporary iscsi.conf files
-rm -f /tmp/iscsi.conf.*
+rm -f /tmp/iscsi.conf*
 
 kill -USR1 "$pid"
 
