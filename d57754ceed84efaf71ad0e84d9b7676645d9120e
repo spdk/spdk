@@ -22,6 +22,30 @@
       "revId": "d57754ceed84efaf71ad0e84d9b7676645d9120e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d5e3809a_b7938893",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 724,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-02-06T07:40:52Z",
+      "side": 1,
+      "message": "\u003e     for (i \u003d 0; i \u003c MAX_DEVS; ++i) {\n\u003e      rc \u003d spdk_vhost_scsi_dev_remove_tgt(vdev, i);\n\nThis will print a lot of error messages as most of the device slots are usually unoccupied. You create an empty SCSI controller (SCSI vhost device, svdev) and then separately attach SCSI devices as you like. In our tests we mostly attach just 1 device.\n\nI don\u0027t see much point of splitting this code into two separate branches. This isn\u0027t a hot I/O path, and even then branch predictor will most likely guess `if (vdev-\u003eregistered)` correctly most of the time.",
+      "parentUuid": "8fec5606_068c3cf0",
+      "range": {
+        "startLine": 724,
+        "startChar": 0,
+        "endLine": 724,
+        "endChar": 26
+      },
+      "revId": "d57754ceed84efaf71ad0e84d9b7676645d9120e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
