@@ -2,6 +2,74 @@
   "comments": [
     {
       "key": {
+        "uuid": "085a8b52_90f18e32",
+        "filename": "test/lib/ut_multithread.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-06T15:45:03Z",
+      "side": 1,
+      "message": "Suggest using \"increment_time\" as the name - it makes it more clear exactly what this function is doing.  It also ensures that time only increases so that unit tests can just do things like:\n\n/* do some operations */\nincrement_time(1000); /* increment time 1000us \u003d 1ms */\n/* do some operations */\nincrement_time(1000); /* increment time another 1000us */",
+      "revId": "7fd6b95989aa90d0fc4817f8f21910c6bd2e5db3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf81f46d_839d34dd",
+        "filename": "test/lib/ut_multithread.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-06T15:45:03Z",
+      "side": 1,
+      "message": "Should the ticks be saved globally, instead of per-thread?  I think for almost all unit test use cases, a global tick count would be OK and simpler to use.\n\nI would also suggest using a name like \"current_time_in_us\".  \"ticks\" are usually not equivalent to microseconds, so putting \"us\" in the name makes it clear that this is tracking time in terms of microseconds.",
+      "revId": "7fd6b95989aa90d0fc4817f8f21910c6bd2e5db3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d7f89e73_83bc4926",
+        "filename": "test/lib/ut_multithread.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-06T15:45:03Z",
+      "side": 1,
+      "message": "period_us\n\nI think we also should have a field called something like \"next_expiration_in_us\".  Then we can keep track of when this poller should run again.",
+      "revId": "7fd6b95989aa90d0fc4817f8f21910c6bd2e5db3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "90d27572_59c055eb",
+        "filename": "test/lib/ut_multithread.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-06T15:45:03Z",
+      "side": 1,
+      "message": "current_us",
+      "revId": "7fd6b95989aa90d0fc4817f8f21910c6bd2e5db3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c5f320f2_17605108",
         "filename": "test/lib/ut_multithread.c",
         "patchSetId": 5
