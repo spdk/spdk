@@ -318,6 +318,18 @@ int spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 				     struct spdk_nvme_transport_id *trid);
 
 /**
+ * Stop accepting new connections on the address provided
+ *
+ * May only be performed on subsystems in the PAUSED or INACTIVE states.
+ *
+ * \param subsystem Subsystem to remove listener from
+ * \param trid The address to no longer accept connections from
+ * \return 0 on success. Negated errno value on failure.
+ */
+int spdk_nvmf_subsystem_remove_listener(struct spdk_nvmf_subsystem *subsystem,
+					const struct spdk_nvme_transport_id *trid);
+
+/**
  * Check if connections originated from the given address are allowed to connect to the subsystem.
  *
  * \param subsystem The subsystem to query
