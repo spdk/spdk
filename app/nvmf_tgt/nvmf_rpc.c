@@ -204,6 +204,47 @@ free_rpc_listen_address(struct rpc_listen_address *r)
 }
 
 static int
+rpc_listen_address_to_trid(const struct rpc_listen_address *address,
+			   struct spdk_nvme_transport_id *trid)
+{
+	size_t len;
+
+	memset(trid, 0, sizeof(*trid));
+
+	if (spdk_nvme_transport_id_parse_trtype(&trid->trtype, address->transport)) {
+		SPDK_ERRLOG("Invalid transport type: %s\n", address->transport);
+		return -EINVAL;
+	}
+
+	if (address->adrfam) {
+		if (spdk_nvme_transport_id_parse_adrfam(&trid->adrfam, address->adrfam)) {
+			SPDK_ERRLOG("Invalid adrfam: %s\n", address->adrfam);
+			return -EINVAL;
+		}
+	} else {
+		trid->adrfam = SPDK_NVMF_ADRFAM_IPV4;
+	}
+
+	len = strlen(address->traddr);
+	if (len > sizeof(trid->traddr) - 1) {
+		SPDK_ERRLOG("Transport address longer than %zu characters: %s\n",
+			    sizeof(trid->traddr) - 1, address->traddr);
+		return -EINVAL;
+	}
+	memcpy(trid->traddr, address->traddr, len + 1);
+
+	len = strlen(address->trsvcid);
+	if (len > sizeof(trid->trsvcid) - 1) {
+		SPDK_ERRLOG("Transport service id longer than %zu characters: %s\n",
+			    sizeof(trid->trsvcid) - 1, address->trsvcid);
+		return -EINVAL;
+	}
+	memcpy(trid->trsvcid, address->trsvcid, len + 1);
+
+	return 0;
+}
+
+static int
 decode_rpc_listen_addresses(const struct spdk_json_val *val, void *out)
 {
 	struct rpc_listen_addresses *listen_addresses = out;
@@ -587,7 +628,6 @@ nvmf_rpc_subsystem_add_listener(struct spdk_jsonrpc_request *request,
 {
 	struct nvmf_rpc_listener_ctx *ctx;
 	struct spdk_nvmf_subsystem *subsystem;
-	size_t len;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
@@ -614,47 +654,12 @@ nvmf_rpc_subsystem_add_listener(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	if (spdk_nvme_transport_id_parse_trtype(&ctx->trid.trtype, ctx->address.transport)) {
-		SPDK_ERRLOG("Invalid transport type: %s\n", ctx->address.transport);
+	if (rpc_listen_address_to_trid(&ctx->address, &ctx->trid)) {
 		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
 		nvmf_rpc_listener_ctx_free(ctx);
 		return;
 	}
-
-	if (ctx->address.adrfam) {
-		if (spdk_nvme_transport_id_parse_adrfam(&ctx->trid.adrfam, ctx->address.adrfam)) {
-			SPDK_ERRLOG("Invalid adrfam: %s\n", ctx->address.adrfam);
-			spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-							 "Invalid parameters");
-			nvmf_rpc_listener_ctx_free(ctx);
-			return;
-		}
-	} else {
-		ctx->trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
-	}
-
-	len = strlen(ctx->address.traddr);
-	if (len > sizeof(ctx->trid.traddr) - 1) {
-		SPDK_ERRLOG("Transport address longer than %zu characters: %s\n",
-			    sizeof(ctx->trid.traddr) - 1, ctx->address.traddr);
-		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "Invalid parameters");
-		nvmf_rpc_listener_ctx_free(ctx);
-		return;
-	}
-	memcpy(ctx->trid.traddr, ctx->address.traddr, len + 1);
-
-	len = strlen(ctx->address.trsvcid);
-	if (len > sizeof(ctx->trid.trsvcid) - 1) {
-		SPDK_ERRLOG("Transport service id longer than %zu characters: %s\n",
-			    sizeof(ctx->trid.trsvcid) - 1, ctx->address.trsvcid);
-		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "Invalid parameters");
-		nvmf_rpc_listener_ctx_free(ctx);
-		return;
-	}
-	memcpy(ctx->trid.trsvcid, ctx->address.trsvcid, len + 1);
 
 	if (spdk_nvmf_subsystem_pause(subsystem, nvmf_rpc_listen_paused, ctx)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
