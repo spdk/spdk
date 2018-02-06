@@ -22,6 +22,30 @@
       "revId": "7a0342b17282aadc0c219ea598a6e8f768cec621",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "317b46f0_1f14c6c2",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-06T06:56:07Z",
+      "side": 1,
+      "message": "Yes. So the confusing point here is that the passed ticks shall really reflect the exact iterations of poller running instead of one-shot timer?",
+      "parentUuid": "e4975158_c420d521",
+      "range": {
+        "startLine": 273,
+        "startChar": 1,
+        "endLine": 273,
+        "endChar": 34
+      },
+      "revId": "7a0342b17282aadc0c219ea598a6e8f768cec621",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
