@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1660a9c3_c7d619f1",
+        "filename": "test/lib/ut_multithread.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-06T15:48:07Z",
+      "side": 1,
+      "message": "cast to \"struct ut_poller\" is not needed here",
+      "revId": "bc682c593147f04661ac1ad8f3cb6d4303417e84",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "207d497f_5b72e0e3",
+        "filename": "test/lib/ut_multithread.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-06T15:48:07Z",
+      "side": 1,
+      "message": "setting to NULL is not needed",
+      "revId": "bc682c593147f04661ac1ad8f3cb6d4303417e84",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
