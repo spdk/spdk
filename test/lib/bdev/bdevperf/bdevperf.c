@@ -206,6 +206,8 @@ bdevperf_construct_targets(void)
 		rc = spdk_bdev_open(bdev, true, NULL, NULL, &target->bdev_desc);
 		if (rc != 0) {
 			SPDK_ERRLOG("Could not open leaf bdev %s, error=%d\n", spdk_bdev_get_name(bdev), rc);
+			free(target->name);
+			free(target);
 			bdev = spdk_bdev_next_leaf(bdev);
 			continue;
 		}
