@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "36add2de_5f926b5c",
+        "filename": "autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-06T12:18:46Z",
+      "side": 1,
+      "message": "Temporary, just for test pool to run it. Will remove before merging.",
+      "range": {
+        "startLine": 169,
+        "startChar": 0,
+        "endLine": 171,
+        "endChar": 29
+      },
+      "revId": "fd397f1ab0c02f8cd1447c55fb9c8b18169db8da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c364e35e_78e7a8c2",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-06T12:18:46Z",
+      "side": 1,
+      "message": "Not sure if VM qcow images have all spdk deps installed. So commented for now so that this doesn\u0027t fail.\nNeed Seth\u0027s input on this one.",
+      "range": {
+        "startLine": 43,
+        "startChar": 0,
+        "endLine": 45,
+        "endChar": 10
+      },
+      "revId": "fd397f1ab0c02f8cd1447c55fb9c8b18169db8da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2f5f3eb9_2ca9908b",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-06T12:18:46Z",
+      "side": 1,
+      "message": "Temporary, will restore all file systems.",
+      "range": {
+        "startLine": 102,
+        "startChar": 61,
+        "endLine": 102,
+        "endChar": 75
+      },
+      "revId": "fd397f1ab0c02f8cd1447c55fb9c8b18169db8da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
