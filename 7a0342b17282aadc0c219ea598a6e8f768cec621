@@ -46,6 +46,30 @@
       "revId": "7a0342b17282aadc0c219ea598a6e8f768cec621",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "848ac795_f17983f5",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-06T07:12:08Z",
+      "side": 1,
+      "message": "Yes if possible. \n\nRate limit function may add leaky bucket mechanism as you proposed bringing unused quota to the next period to allow some burst IOs. I hope periodic timer mechanism in UT will be helpful at least for that.",
+      "parentUuid": "317b46f0_1f14c6c2",
+      "range": {
+        "startLine": 273,
+        "startChar": 1,
+        "endLine": 273,
+        "endChar": 34
+      },
+      "revId": "7a0342b17282aadc0c219ea598a6e8f768cec621",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
