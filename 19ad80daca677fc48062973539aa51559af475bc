@@ -16,6 +16,24 @@
       "revId": "19ad80daca677fc48062973539aa51559af475bc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a7d9325_18a51600",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2018-02-06T17:46:47Z",
+      "side": 1,
+      "message": "We missed these additional probe points to track histograms related to acknowledgement of rdma request and total rdma time taken including host and target time. We can remove this or add spdk_histogram_tally functions in rdma.c at places which represent rdma acknowledgement. Since rdma.c probe points serves ar reference example, we can ignore these probe points. And rdma developer can come up with their own probe points where they want to track variation of metric via histogram",
+      "parentUuid": "f02362e4_3fe36e4b",
+      "revId": "19ad80daca677fc48062973539aa51559af475bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
