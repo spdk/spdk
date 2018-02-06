@@ -240,8 +240,6 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 	qpair->qid = cmd->qid;
 
 	if (cmd->qid == 0) {
-		qpair->type = QPAIR_TYPE_AQ;
-
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Connect Admin Queue for controller ID 0x%x\n", data->cntlid);
 
 		if (data->cntlid != 0xFFFF) {
@@ -259,7 +257,6 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
 	} else {
-		qpair->type = QPAIR_TYPE_IOQ;
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Connect I/O Queue for controller id 0x%x\n", data->cntlid);
 
 		ctrlr = spdk_nvmf_subsystem_get_ctrlr(subsystem, data->cntlid);
@@ -1169,7 +1166,7 @@ spdk_nvmf_ctrlr_process_fabrics_cmd(struct spdk_nvmf_request *req)
 			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
-	} else if (qpair->type == QPAIR_TYPE_AQ) {
+	} else if (spdk_nvmf_qpair_is_admin_queue(qpair)) {
 		/*
 		 * Controller session is established, and this is an admin queue.
 		 * Disallow Connect and allow other fabrics commands.

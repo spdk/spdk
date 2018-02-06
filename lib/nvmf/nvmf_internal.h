@@ -141,16 +141,10 @@ struct spdk_nvmf_ns {
 	bool allocated;
 };
 
-enum spdk_nvmf_qpair_type {
-	QPAIR_TYPE_AQ = 0,
-	QPAIR_TYPE_IOQ = 1,
-};
-
 struct spdk_nvmf_qpair {
 	struct spdk_nvmf_transport		*transport;
 	struct spdk_nvmf_ctrlr			*ctrlr;
 	struct spdk_nvmf_poll_group		*group;
-	enum spdk_nvmf_qpair_type		type;
 
 	uint16_t				qid;
 	uint16_t				sq_head;
@@ -266,6 +260,12 @@ _spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid
 	}
 
 	return ns;
+}
+
+static inline bool
+spdk_nvmf_qpair_is_admin_queue(struct spdk_nvmf_qpair *qpair)
+{
+	return qpair->qid == 0;
 }
 
 #define OBJECT_NVMF_IO				0x30

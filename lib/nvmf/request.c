@@ -67,7 +67,7 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 }
 
 static void
-nvmf_trace_command(union nvmf_h2c_msg *h2c_msg, enum spdk_nvmf_qpair_type qpair_type)
+nvmf_trace_command(union nvmf_h2c_msg *h2c_msg, bool is_admin_queue)
 {
 	struct spdk_nvmf_capsule_cmd *cap_hdr = &h2c_msg->nvmf_cmd;
 	struct spdk_nvme_cmd *cmd = &h2c_msg->nvme_cmd;
@@ -77,12 +77,12 @@ nvmf_trace_command(union nvmf_h2c_msg *h2c_msg, enum spdk_nvmf_qpair_type qpair_
 	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
 		opc = cap_hdr->fctype;
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "%s Fabrics cmd: fctype 0x%02x cid %u\n",
-			      qpair_type == QPAIR_TYPE_AQ ? "Admin" : "I/O",
+			      is_admin_queue ? "Admin" : "I/O",
 			      cap_hdr->fctype, cap_hdr->cid);
 	} else {
 		opc = cmd->opc;
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "%s cmd: opc 0x%02x fuse %u cid %u nsid %u cdw10 0x%08x\n",
-			      qpair_type == QPAIR_TYPE_AQ ? "Admin" : "I/O",
+			      is_admin_queue ? "Admin" : "I/O",
 			      cmd->opc, cmd->fuse, cmd->cid, cmd->nsid, cmd->cdw10);
 		if (cmd->mptr) {
 			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "mptr 0x%" PRIx64 "\n", cmd->mptr);
@@ -116,7 +116,7 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 	spdk_nvmf_request_exec_status status;
 
-	nvmf_trace_command(req->cmd, qpair->type);
+	nvmf_trace_command(req->cmd, spdk_nvmf_qpair_is_admin_queue(qpair));
 
 	/* Check if the subsystem is paused (if there is a subsystem) */
 	if (qpair->ctrlr) {
@@ -133,7 +133,7 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 
 	if (spdk_unlikely(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC)) {
 		status = spdk_nvmf_ctrlr_process_fabrics_cmd(req);
-	} else if (spdk_unlikely(qpair->type == QPAIR_TYPE_AQ)) {
+	} else if (spdk_unlikely(spdk_nvmf_qpair_is_admin_queue(qpair))) {
 		status = spdk_nvmf_ctrlr_process_admin_cmd(req);
 	} else {
 		status = spdk_nvmf_ctrlr_process_io_cmd(req);
