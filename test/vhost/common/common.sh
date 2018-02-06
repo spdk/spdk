@@ -157,6 +157,9 @@ function spdk_vhost_kill()
 			rm $vhost_pid_file
 			return 1
 		fi
+
+		#check vhost return code, activate trap on error
+		wait $vhost_pid
 	elif /bin/kill -0 $vhost_pid; then
 		error "vhost NOT killed - you need to kill it manually"
 		return 1
