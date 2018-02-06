@@ -41,8 +41,9 @@
 #### Filesystem integrity
 - runs SPDK with 1 VM with 1 NVMe device attached.
 - creates a partition table and filesystem on passed device, and mounts it
-- runs Linux kernel source compilation
-- Tested file systems: ext2, ext3, ext4, brtfs, ntfs, fat
+- 1GB test file is created on mounted file system and FIO randrw traffic
+  (with enabled verification) is run
+- Tested file systems: ext4, brtfs, ntfs, xfs
 - runs against vhost scsi and vhost blk
 
 #### Windows HCK SCSI Compliance Test 2.0.

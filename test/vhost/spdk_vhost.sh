@@ -104,13 +104,13 @@ case $1 in
 		report_test_completion "nightly_vhost_integrity_blk"
 		;;
 	-fs|--fs-integrity-scsi)
-		echo 'Running filesystem integrity suite...'
-		$WORKDIR/integrity/integrity_start.sh -i $VM_IMAGE -m scsi -f "xfs ntfs btrfs ext4"
+		echo 'Running filesystem integrity suite with SCSI...'
+		$WORKDIR/integrity/integrity_start.sh --ctrl-type=spdk_vhost_scsi --fs="xfs ntfs btrfs ext4"
 		report_test_completion "vhost_fs_integrity_scsi"
 		;;
 	-fb|--fs-integrity-blk)
-		echo 'Running filesystem integrity suite...'
-		$WORKDIR/integrity/integrity_start.sh -i $VM_IMAGE -m blk -f "xfs ntfs btrfs ext4"
+		echo 'Running filesystem integrity suite with BLK...'
+		$WORKDIR/integrity/integrity_start.sh --ctrl-type=spdk_vhost_blk --fs="xfs ntfs btrfs ext4"
 		report_test_completion "vhost_fs_integrity_blk"
 		;;
 	-ils|--integrity-lvol-scsi)
