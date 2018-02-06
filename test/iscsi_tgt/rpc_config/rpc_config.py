@@ -257,6 +257,43 @@ def verify_initiator_groups_rpc_methods(rpc_py, rpc_param):
         verify(value['netmasks'][0] == rpc_param['netmask'][idx], 1,
                "netmasks value is {}, expected {}".format(value['netmasks'][0], rpc_param['netmask'][idx]))
 
+    for idx, value in enumerate(rpc_param['netmask']):
+        tag = idx + 1
+        rpc.delete_initiators_from_initiator_group(tag, '-n', rpc_param['initiator_name'], '-m', value)
+
+    output = rpc.get_initiator_groups()
+    jsonvalues = json.loads(output)
+    verify(len(jsonvalues) == tag, 1,
+           "get_initiator_groups returned {} groups, expected {}".format(len(jsonvalues), tag))
+
+    for idx, value in enumerate(jsonvalues):
+        verify(value['tag'] == idx + 1, 1,
+               "tag value is {}, expected {}".format(value['tag'], idx + 1))
+        initiators = value.get('initiators')
+        verify(len(initiators) == 0, 1,
+               "length of initiator list is {}, expected 0".format(len(initiators)))
+        netmasks = value.get('netmasks')
+        verify(len(netmasks) == 0, 1,
+               "length of netmask list is {}, expected 0".format(len(netmasks)))
+
+    for idx, value in enumerate(rpc_param['netmask']):
+        tag = idx + 1
+        rpc.add_initiators_to_initiator_group(tag, '-n', rpc_param['initiator_name'], '-m', value)
+    output = rpc.get_initiator_groups()
+    jsonvalues = json.loads(output)
+    verify(len(jsonvalues) == tag, 1,
+           "get_initiator_groups returned {} groups, expected {}".format(len(jsonvalues), tag))
+
+    tag_list = []
+    for idx, value in enumerate(jsonvalues):
+        verify(value['initiators'][0] == rpc_param['initiator_name'], 1,
+               "initiator value is {}, expected {}".format(value['initiators'][0], rpc_param['initiator_name']))
+        tag_list.append(value['tag'])
+        verify(value['tag'] == idx + 1, 1,
+               "tag value is {}, expected {}".format(value['tag'], idx + 1))
+        verify(value['netmasks'][0] == rpc_param['netmask'][idx], 1,
+               "netmasks value is {}, expected {}".format(value['netmasks'][0], rpc_param['netmask'][idx]))
+
     for idx, value in enumerate(tag_list):
         rpc.delete_initiator_group(value)
         output = rpc.get_initiator_groups()
