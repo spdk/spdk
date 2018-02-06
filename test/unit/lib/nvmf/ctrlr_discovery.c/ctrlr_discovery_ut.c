@@ -188,6 +188,12 @@ all_zero(const void *buf, size_t size)
 	return true;
 }
 
+int
+spdk_nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	return 0;
+}
+
 static void
 test_discovery_log(void)
 {

@@ -768,6 +768,7 @@ int
 spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
 {
 	struct spdk_nvmf_ns *ns;
+	struct spdk_nvmf_ctrlr *ctrlr, *ctrlr_tmp;
 
 	assert(subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED ||
 	       subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE);
@@ -789,6 +790,10 @@ spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t ns
 	spdk_bdev_close(ns->desc);
 	ns->allocated = false;
 	subsystem->num_allocated_nsid--;
+
+	TAILQ_FOREACH_SAFE(ctrlr, &subsystem->ctrlrs, link, ctrlr_tmp) {
+		spdk_nvmf_ctrlr_async_event_ns_notice(ctrlr);
+	}
 
 	return 0;
 }
@@ -821,6 +826,7 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 			   uint32_t nsid)
 {
 	struct spdk_nvmf_ns *ns;
+	struct spdk_nvmf_ctrlr *ctrlr, *ctrlr_tmp;
 	uint32_t i;
 	int rc;
 
@@ -843,11 +849,6 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 			new_max_nsid = nsid;
 		} else {
 			new_max_nsid = subsystem->max_nsid + 1;
-		}
-
-		if (!TAILQ_EMPTY(&subsystem->ctrlrs)) {
-			SPDK_ERRLOG("Can't extend NSID range with active connections\n");
-			return 0;
 		}
 
 		new_ns_array = realloc(subsystem->ns, sizeof(struct spdk_nvmf_ns) * new_max_nsid);
@@ -894,6 +895,10 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 		return 0;
 	}
 	ns->allocated = true;
+
+	TAILQ_FOREACH_SAFE(ctrlr, &subsystem->ctrlrs, link, ctrlr_tmp) {
+		spdk_nvmf_ctrlr_async_event_ns_notice(ctrlr);
+	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Subsystem %s: bdev %s assigned nsid %" PRIu32 "\n",
 		      spdk_nvmf_subsystem_get_nqn(subsystem),
