@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c0968d9e_6fabf682",
+        "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-06T19:51:09Z",
+      "side": 1,
+      "message": "Hi Wenzhong,\n\nShould these changes be test/nvmf?  Most of these are are using $bdfs which implies PCI direct-attached NVMe, not NVMe over Fabrics.\n\nThis script does not depend on any direct-attached NVMe devices currently.  If a system had the nvme-cli directory, but no PCI NVMe SSDs, this test would fail.\n\nI think it would be better to create a new test script under test/lib/nvme, and call it from test/lib/nvme/nvme.sh.\n\nThanks,\n\n-Jim",
+      "revId": "27fa26510267c8654f1c20cfcebb8e19c3bbe004",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "81f14abb_8b787b14",
+        "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-06T19:51:09Z",
+      "side": 1,
+      "message": "should spsk be spdk?",
+      "revId": "27fa26510267c8654f1c20cfcebb8e19c3bbe004",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
