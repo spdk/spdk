@@ -667,6 +667,14 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 		return -EINVAL;
 	}
 
+	TAILQ_FOREACH(listener, &subsystem->listeners, link) {
+		if (listener->transport == transport &&
+		    spdk_nvme_transport_id_compare(&listener->trid, trid) == 0) {
+			/* Listener already exists in this subsystem */
+			return 0;
+		}
+	}
+
 	listener = calloc(1, sizeof(*listener));
 	if (!listener) {
 		return -ENOMEM;
