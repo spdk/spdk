@@ -22,6 +22,30 @@
       "revId": "8895a20d3b7af19b2fef6d3e92e539922403bee6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "647918ab_6ee0eb20",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-06T23:29:40Z",
+      "side": 1,
+      "message": "I pushed my local workaround by mistake... \n\nThis workaround will be covered by https://review.gerrithub.io/#/c/396089/ and we will use file locking as you suggest.\n\nThank you for providing good reference and it\u0027s very helpful.",
+      "parentUuid": "277762c7_8ac3da05",
+      "range": {
+        "startLine": 96,
+        "startChar": 2,
+        "endLine": 96,
+        "endChar": 42
+      },
+      "revId": "8895a20d3b7af19b2fef6d3e92e539922403bee6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
