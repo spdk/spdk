@@ -192,6 +192,26 @@ if __name__ == "__main__":
     Example: '255.255.0.0 255.248.0.0' etc""")
     p.set_defaults(func=rpc.iscsi.add_initiator_group)
 
+    p = subparsers.add_parser('add_initiators_to_initiator_group',
+                              help='Add initiators to an existing initiator group')
+    p.add_argument(
+        'tag', help='Initiator group tag (unique, integer > 0)', type=int)
+    p.add_argument('-n', dest='initiator_list', help="""Whitespace-separated list of initiator hostnames or IP addresses,
+    enclosed in quotes.  This parameter can be omitted.  Example: 'ANY' or '127.0.0.1 192.168.200.100'""", required=False)
+    p.add_argument('-m', dest='netmask_list', help="""Whitespace-separated list of initiator netmasks enclosed in quotes.
+    This parameter can be omitted.  Example: '255.255.0.0 255.248.0.0' etc""", required=False)
+    p.set_defaults(func=rpc.iscsi.add_initiators_to_initiator_group)
+
+    p = subparsers.add_parser('delete_initiators_from_initiator_group',
+                              help='Delete initiators from an existing initiator group')
+    p.add_argument(
+        'tag', help='Initiator group tag (unique, integer > 0)', type=int)
+    p.add_argument('-n', dest='initiator_list', help="""Whitespace-separated list of initiator hostnames or IP addresses,
+    enclosed in quotes.  This parameter can be omitted.  Example: 'ANY' or '127.0.0.1 192.168.200.100'""", required=False)
+    p.add_argument('-m', dest='netmask_list', help="""Whitespace-separated list of initiator netmasks enclosed in quotes.
+    This parameter can be omitted.  Example: '255.255.0.0 255.248.0.0' etc""", required=False)
+    p.set_defaults(func=rpc.iscsi.delete_initiators_from_initiator_group)
+
     p = subparsers.add_parser('delete_target_node',
                               help='Delete a target node')
     p.add_argument('target_node_name',
