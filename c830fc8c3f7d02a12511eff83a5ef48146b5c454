@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "149b7b2b_b344d2ae",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 704,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-06T22:55:31Z",
+      "side": 1,
+      "message": "This is fine as-is, but it might be useful to add spdk_strerror(errno) as well.",
+      "revId": "c830fc8c3f7d02a12511eff83a5ef48146b5c454",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
