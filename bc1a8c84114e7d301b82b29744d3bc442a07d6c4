@@ -33,6 +33,24 @@
       "revId": "bc1a8c84114e7d301b82b29744d3bc442a07d6c4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c854f6e_cea159b1",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 268,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-06T23:10:01Z",
+      "side": 1,
+      "message": "Thank you. \n\nFor example if user register\n- ANY as common to all initiators to initiator_list,\n- each initiator\u0027s IP address to netmask_list,\n\nfirst  call has both parameters, but second call and later will have only netmask parameter.\n\nI can imagine the opposite use case too.\n\nHence I would like to treat 0 as a valid case for both add and delete.\n\n\nIdeally it may be better for iSCSI to be able to ignore already added parameters, but it will require reference count and be a little complex as a first effort.",
+      "parentUuid": "8788584c_0e335fb8",
+      "revId": "bc1a8c84114e7d301b82b29744d3bc442a07d6c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
