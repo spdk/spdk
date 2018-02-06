@@ -219,6 +219,16 @@ bdevperf_construct_targets(void)
 		target->current_queue_depth = 0;
 		target->offset_in_ios = 0;
 		target->io_size_blocks = g_io_size / spdk_bdev_get_block_size(bdev);
+		if (target->io_size_blocks == 0) {
+			SPDK_ERRLOG("IO size (%d) is bigger than blocksize of bdev %s (%"PRIu32")\n",
+				    g_io_size, spdk_bdev_get_name(bdev), spdk_bdev_get_block_size(bdev));
+			spdk_bdev_close(target->bdev_desc);
+			free(target->name);
+			free(target);
+			bdev = spdk_bdev_next_leaf(bdev);
+			continue;
+		}
+
 		target->size_in_ios = spdk_bdev_get_num_blocks(bdev) / target->io_size_blocks;
 		align = spdk_bdev_get_buf_align(bdev);
 		/*
