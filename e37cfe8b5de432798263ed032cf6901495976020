@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "00b792b7_38fe4aba",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-02-06T18:47:58Z",
+      "side": 1,
+      "message": "I know this is technically possible (blobstore calloc() failures etc), but did this actually happen somewhere?",
+      "range": {
+        "startLine": 9,
+        "startChar": 39,
+        "endLine": 11,
+        "endChar": 14
+      },
+      "revId": "e37cfe8b5de432798263ed032cf6901495976020",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
