@@ -75,7 +75,7 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 
 	TAILQ_INIT(&ctrlr->qpairs);
 	ctrlr->kato = connect_cmd->kato;
-	ctrlr->async_event_config.raw = 0;
+	ctrlr->async_event_config.bits.ns_attr_notice = 1;
 	ctrlr->num_qpairs = 0;
 	ctrlr->subsys = subsystem;
 	ctrlr->max_qpairs_allowed = tgt->opts.max_qpairs_per_ctrlr;
@@ -698,10 +698,20 @@ static int
 spdk_nvmf_ctrlr_set_features_async_event_configuration(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Async Event Configuration, cdw11 0x%08x\n",
 		      cmd->cdw11);
+
+	/* Only namespce attribute notice is supported,
+	 * bit8 for namespace attribute notice.
+	 */
+	if (cmd->cdw11 & 0xfffffefful) {
+		SPDK_ERRLOG("Set Features - Invalid Async Event Configuration Options\n");
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
 	ctrlr->async_event_config.raw = cmd->cdw11;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
@@ -725,15 +735,14 @@ spdk_nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Async Event Request\n");
 
-	/* Only one asynchronous event is supported for now */
-	if (ctrlr->aer_req != NULL) {
+	if (ctrlr->nr_aer_req >= SPDK_NVMF_MAX_ASYNC_EVENT) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "AERL exceeded\n");
 		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		rsp->status.sc = SPDK_NVME_SC_ASYNC_EVENT_REQUEST_LIMIT_EXCEEDED;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	ctrlr->aer_req = req;
+	ctrlr->aer_req[ctrlr->nr_aer_req++] = req;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 }
 
@@ -853,12 +862,11 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
 		spdk_strcpy_pad(cdata->mn, MODEL_NUMBER, sizeof(cdata->mn), ' ');
 		spdk_strcpy_pad(cdata->sn, spdk_nvmf_subsystem_get_sn(subsystem), sizeof(cdata->sn), ' ');
-		cdata->aerl = 0;
 		cdata->kas = 10;
 
 		cdata->rab = 6;
 		cdata->ctratt.host_id_exhid_supported = 1;
-		cdata->aerl = 0;
+		cdata->aerl = SPDK_NVMF_MAX_ASYNC_EVENT - 1;
 		cdata->frmw.slot1_ro = 1;
 		cdata->frmw.num_slots = 1;
 
@@ -1194,4 +1202,35 @@ spdk_nvmf_ctrlr_process_fabrics_cmd(struct spdk_nvmf_request *req)
 		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_OPCODE;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
+}
+
+int
+spdk_nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	struct spdk_nvmf_request *req;
+	struct spdk_nvme_cpl *rsp;
+	union spdk_nvme_async_event_completion aer_rsp = {0};
+
+	if (!ctrlr->nr_aer_req) {
+		return 0;
+	}
+
+	/* Users may disable the event notification */
+	if (!ctrlr->async_event_config.bits.ns_attr_notice) {
+		return 0;
+	}
+
+	req = ctrlr->aer_req[--ctrlr->nr_aer_req];
+	if (!req) {
+		return -1;
+	}
+	rsp = &req->rsp->nvme_cpl;
+	aer_rsp.bits.async_event_type = SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE;
+	aer_rsp.bits.async_event_info = SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED;
+
+	rsp->cdw0 = aer_rsp.raw;
+
+	spdk_nvmf_request_complete(req);
+
+	return 0;
 }

@@ -44,6 +44,7 @@
 #include "spdk/util.h"
 
 #define SPDK_NVMF_DEFAULT_NUM_CTRLRS_PER_LCORE 1
+#define SPDK_NVMF_MAX_ASYNC_EVENT 4
 
 enum spdk_nvmf_subsystem_state {
 	SPDK_NVMF_SUBSYSTEM_INACTIVE = 0,
@@ -179,7 +180,8 @@ struct spdk_nvmf_ctrlr {
 	int max_qpairs_allowed;
 	uint32_t kato;
 	union spdk_nvme_async_event_config async_event_config;
-	struct spdk_nvmf_request *aer_req;
+	struct spdk_nvmf_request *aer_req[SPDK_NVMF_MAX_ASYNC_EVENT];
+	uint32_t nr_aer_req;
 	uint8_t hostid[16];
 
 	TAILQ_ENTRY(spdk_nvmf_ctrlr) 		link;
@@ -249,6 +251,7 @@ void spdk_nvmf_subsystem_remove_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 				      struct spdk_nvmf_ctrlr *ctrlr);
 struct spdk_nvmf_ctrlr *spdk_nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 		uint16_t cntlid);
+int spdk_nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr);
 
 static inline struct spdk_nvmf_ns *
 _spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
