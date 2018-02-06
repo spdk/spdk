@@ -160,6 +160,11 @@ struct spdk_nvmf_ctrlr_feat {
 	union spdk_nvme_feat_keep_alive_timer keep_alive_timer;
 };
 
+struct spdk_nvmf_async_event {
+	TAILQ_ENTRY(spdk_nvmf_async_event)	link;
+	union spdk_nvme_async_event_completion	e;
+};
+
 /*
  * This structure represents an NVMe-oF controller,
  * which is like a "session" in networking terms.
@@ -181,6 +186,7 @@ struct spdk_nvmf_ctrlr {
 	TAILQ_HEAD(, spdk_nvmf_qpair) qpairs;
 	int num_qpairs;
 	int max_qpairs_allowed;
+	TAILQ_HEAD(, spdk_nvmf_async_event) notice_event_head;
 	struct spdk_nvmf_request *aer_req;
 	uint8_t hostid[16];
 
@@ -254,6 +260,7 @@ void spdk_nvmf_subsystem_remove_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 				      struct spdk_nvmf_ctrlr *ctrlr);
 struct spdk_nvmf_ctrlr *spdk_nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 		uint16_t cntlid);
+int spdk_nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr);
 
 static inline struct spdk_nvmf_ns *
 _spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
