@@ -700,6 +700,28 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 	return 0;
 }
 
+int
+spdk_nvmf_subsystem_remove_listener(struct spdk_nvmf_subsystem *subsystem,
+				    const struct spdk_nvme_transport_id *trid)
+{
+	struct spdk_nvmf_listener *listener;
+
+	if (!(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
+	      subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED)) {
+		return -EAGAIN;
+	}
+
+	listener = _spdk_nvmf_subsystem_find_listener(subsystem, trid);
+	if (listener == NULL) {
+		return -ENOENT;
+	}
+
+	TAILQ_REMOVE(&subsystem->listeners, listener, link);
+	free(listener);
+
+	return 0;
+}
+
 /*
  * TODO: this is the whitelist and will be called during connection setup
  */
