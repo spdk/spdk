@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "68b3b165_79813a40",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 47
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-06T13:14:29Z",
+      "side": 1,
+      "message": "This string concat can still be avaoided :P take a closer look at scripts/fio.py\nCtrl+F -\u003e \"verify_template\"",
+      "range": {
+        "startLine": 100,
+        "startChar": 12,
+        "endLine": 100,
+        "endChar": 119
+      },
+      "revId": "c6784cd87073f7c256d93f534ce287f8cfee5688",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "95a93fd8_5b3f2af8",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 47
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-06T13:14:29Z",
+      "side": 1,
+      "message": "\"direct\" should be enabled at all times, so you can move it outside of \"if\"",
+      "range": {
+        "startLine": 100,
+        "startChar": 25,
+        "endLine": 100,
+        "endChar": 35
+      },
+      "revId": "c6784cd87073f7c256d93f534ce287f8cfee5688",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
