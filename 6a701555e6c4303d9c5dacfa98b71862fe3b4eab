@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ad8f2b9f_661e94a2",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 45
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-06T11:51:46Z",
+      "side": 1,
+      "message": "May I suggest - instead of concating string multiple times you can use a template string and fill it with arguments just once.\nTake a look at scripts/fio.py for example.",
+      "range": {
+        "startLine": 97,
+        "startChar": 8,
+        "endLine": 101,
+        "endChar": 119
+      },
+      "revId": "6a701555e6c4303d9c5dacfa98b71862fe3b4eab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "40c9b0ef_96d696c0",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 45
+      },
+      "lineNbr": 743,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-06T11:51:46Z",
+      "side": 1,
+      "message": "I am nitpicking here, but this is copy-pasted all over the place.\nMaybe you could move the expected return value to on of run_fio_test() arguments and check results + print the Info/Error message inside the function itself?\n\nThat way we could shorten these 4 lines down 2 or even maybe just 1:\nfail_count +\u003d self.run_fio_test()",
+      "range": {
+        "startLine": 740,
+        "startChar": 8,
+        "endLine": 743,
+        "endChar": 27
+      },
+      "revId": "6a701555e6c4303d9c5dacfa98b71862fe3b4eab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
