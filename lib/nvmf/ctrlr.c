@@ -74,8 +74,9 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	}
 
 	TAILQ_INIT(&ctrlr->qpairs);
+	TAILQ_INIT(&ctrlr->notice_event_head);
 	ctrlr->kato = connect_cmd->kato;
-	ctrlr->async_event_config.raw = 0;
+	ctrlr->async_event_config.bits.ns_attr_notice = 1;
 	ctrlr->num_qpairs = 0;
 	ctrlr->subsys = subsystem;
 	ctrlr->max_qpairs_allowed = tgt->opts.max_qpairs_per_ctrlr;
@@ -772,6 +773,7 @@ spdk_nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+	struct spdk_nvmf_async_event *entry;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Async Event Request\n");
 
@@ -784,6 +786,14 @@ spdk_nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 	}
 
 	ctrlr->aer_req = req;
+	if (!TAILQ_EMPTY(&ctrlr->notice_event_head)) {
+		entry = TAILQ_FIRST(&ctrlr->notice_event_head);
+		TAILQ_REMOVE(&ctrlr->notice_event_head, entry, link);
+		rsp->cdw0 = entry->e.raw;
+		ctrlr->aer_req = NULL;
+		free(entry);
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 }
 
@@ -903,7 +913,6 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
 		spdk_strcpy_pad(cdata->mn, MODEL_NUMBER, sizeof(cdata->mn), ' ');
 		spdk_strcpy_pad(cdata->sn, spdk_nvmf_subsystem_get_sn(subsystem), sizeof(cdata->sn), ' ');
-		cdata->aerl = 0;
 		cdata->kas = 10;
 
 		cdata->rab = 6;
@@ -1244,4 +1253,54 @@ spdk_nvmf_ctrlr_process_fabrics_cmd(struct spdk_nvmf_request *req)
 		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_OPCODE;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
+}
+
+int
+spdk_nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	struct spdk_nvmf_request *req;
+	struct spdk_nvme_cpl *rsp;
+	struct spdk_nvmf_async_event *entry;
+	union spdk_nvme_async_event_completion event = {0};
+
+	/* Users may disable the event notification */
+	if (!ctrlr->async_event_config.bits.ns_attr_notice) {
+		return 0;
+	}
+
+	event.bits.async_event_type = SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE;
+	event.bits.async_event_info = SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED;
+	/* Alternatively, host may request Changed Namespace List log(04h)
+	 * to determine which namespaces have changed. While here, we
+	 * set invalid log page identifier to indicate that host doesn't
+	 * need to send such log page.
+	 */
+	event.bits.log_page_identifier = 0;
+
+	/* Queued the event */
+	if (!ctrlr->aer_req) {
+		/* Only Namespace attribute notice is
+		 * supported right now.
+		 */
+		if (!TAILQ_EMPTY(&ctrlr->notice_event_head)) {
+			return 0;
+		}
+		entry = calloc(1, sizeof(*entry));
+		if (!entry) {
+			return -1;
+		}
+		entry->e.raw = event.raw;
+		TAILQ_INSERT_TAIL(&ctrlr->notice_event_head, entry, link);
+		return 0;
+	}
+
+	req = ctrlr->aer_req;
+	rsp = &req->rsp->nvme_cpl;
+
+	rsp->cdw0 = event.raw;
+
+	spdk_nvmf_request_complete(req);
+	ctrlr->aer_req = NULL;
+
+	return 0;
 }
