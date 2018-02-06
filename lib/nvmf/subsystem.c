@@ -649,6 +649,21 @@ spdk_nvmf_host_get_nqn(struct spdk_nvmf_host *host)
 	return host->nqn;
 }
 
+static struct spdk_nvmf_listener *
+_spdk_nvmf_subsystem_find_listener(struct spdk_nvmf_subsystem *subsystem,
+				   const struct spdk_nvme_transport_id *trid)
+{
+	struct spdk_nvmf_listener *listener;
+
+	TAILQ_FOREACH(listener, &subsystem->listeners, link) {
+		if (spdk_nvme_transport_id_compare(&listener->trid, trid) == 0) {
+			return listener;
+		}
+	}
+
+	return NULL;
+}
+
 int
 spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 				 struct spdk_nvme_transport_id *trid)
@@ -659,6 +674,11 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 	if (!(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
 	      subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED)) {
 		return -EAGAIN;
+	}
+
+	if (_spdk_nvmf_subsystem_find_listener(subsystem, trid)) {
+		/* Listener already exists in this subsystem */
+		return 0;
 	}
 
 	transport = spdk_nvmf_tgt_get_transport(subsystem->tgt, trid->trtype);
