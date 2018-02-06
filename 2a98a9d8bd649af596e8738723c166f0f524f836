@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8464fac8_d1698c6d",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-06T08:57:46Z",
+      "side": 1,
+      "message": "Why is this needed ? Can\u0027t run_fio_test() function be copied from patch https://review.gerrithub.io/#/c/391492. Then after it is merged, a rebase would resolve all conflicts ?",
+      "range": {
+        "startLine": 21,
+        "startChar": 0,
+        "endLine": 42,
+        "endChar": 84
+      },
+      "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "74f09248_2be396c8",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-06T08:57:46Z",
+      "side": 1,
+      "message": "This is not a direct copy of function in https://review.gerrithub.io/#/c/391492, please use it as reference.",
+      "range": {
+        "startLine": 136,
+        "startChar": 0,
+        "endLine": 153,
+        "endChar": 17
+      },
+      "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c651094d_1e30f93a",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 905,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-06T08:57:46Z",
+      "side": 1,
+      "message": "Debug I suppose ? Please remove all prints that are not relevant.\nOf course it is fine to report steps of test being currently done, but usually with more details.",
+      "range": {
+        "startLine": 905,
+        "startChar": 15,
+        "endLine": 905,
+        "endChar": 20
+      },
+      "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
