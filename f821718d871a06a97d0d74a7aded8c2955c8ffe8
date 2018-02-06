@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da791858_6d652bd9",
+        "filename": "test/iscsi_tgt/fio/running_config.sh",
+        "patchSetId": 27
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-02-06T05:20:23Z",
+      "side": 1,
+      "message": "Please submit another patch for this modification.",
+      "range": {
+        "startLine": 13,
+        "startChar": 17,
+        "endLine": 13,
+        "endChar": 21
+      },
+      "revId": "f821718d871a06a97d0d74a7aded8c2955c8ffe8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
