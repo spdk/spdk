@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "47bdd360_8d754067",
+        "filename": "scripts/common/fiocommon.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-02-06T03:03:10Z",
+      "side": 1,
+      "message": "Yes, I agree with Jim, it\u0027s better to pass device list to run_fio function, @liang, I know this is not involved by you, so I\u0027m okay to change this part with another patch.",
+      "parentUuid": "3a8afc0b_5597810e",
+      "revId": "8864cf0d379d517c66db7476b526444541427a2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ec4851a2_4ddf5871",
         "filename": "scripts/common/fiocommon.py",
         "patchSetId": 9
@@ -136,6 +154,24 @@
       "side": 1,
       "message": "I have checked the nvme tool. And I found that the model name of devices from SPDK NVMF target is \"SPDK bdev Controller\". So I used the model name to get the NVMF target devices. If nvme tool have new command to get the NVMF target devices like iscsiadm, then I can update the codes for the nvme tool.",
       "parentUuid": "13b12947_8094a6c2",
+      "revId": "8864cf0d379d517c66db7476b526444541427a2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "85f4d708_fb5fad1c",
+        "filename": "scripts/nvmf_fio.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-02-06T03:03:10Z",
+      "side": 1,
+      "message": "Hi Liang, nvme_cli discover command may help you get the *real* NVMeoF devices.",
+      "parentUuid": "aab2d83c_b052106d",
       "revId": "8864cf0d379d517c66db7476b526444541427a2d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
