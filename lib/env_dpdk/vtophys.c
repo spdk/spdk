@@ -240,12 +240,40 @@ vtophys_get_paddr_pagemap(uint64_t vaddr)
 	return paddr;
 }
 
+/* Try to get the paddr from pci devices */
+static uint64_t
+vtophys_get_paddr_pci(uint64_t vaddr)
+{
+	uintptr_t paddr;
+	struct rte_pci_device	*dev;
+	struct rte_mem_resource *res;
+	unsigned r;
+
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 2)
+	FOREACH_DEVICE_ON_PCIBUS(dev) {
+#else
+	TAILQ_FOREACH(dev, &pci_device_list, next) {
+#endif
+		for (r = 0; r < PCI_MAX_RESOURCE; r++) {
+			res = &dev->mem_resource[r];
+			if (res->phys_addr && vaddr >= (uint64_t)res->addr &&
+			    vaddr < (uint64_t)res->addr + res->len) {
+				paddr = res->phys_addr + (vaddr - (uint64_t)res->addr);
+				DEBUG_PRINT("%s: %p -> %p\n", __func__, (void *)vaddr,
+					    (void *)paddr);
+				return paddr;
+			}
+		}
+	}
+	return  SPDK_VTOPHYS_ERROR;
+}
+
 static int
 spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 		    enum spdk_mem_map_notify_action action,
 		    void *vaddr, size_t len)
 {
-	int rc = 0;
+	int rc = 0, phys = 0;
 	uint64_t paddr;
 
 	if ((uintptr_t)vaddr & ~MASK_256TB) {
@@ -286,13 +314,18 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 					/* Get the physical address from /proc/self/pagemap. */
 					paddr = vtophys_get_paddr_pagemap((uint64_t)vaddr);
 					if (paddr == SPDK_VTOPHYS_ERROR) {
-						DEBUG_PRINT("could not get phys addr for %p\n", vaddr);
-						return -EFAULT;
+						/* Get the physical address from PCI devices */
+						paddr = vtophys_get_paddr_pci((uint64_t)vaddr);
+						if (paddr == SPDK_VTOPHYS_ERROR) {
+							DEBUG_PRINT("could not get phys addr for %p\n", vaddr);
+							return -EFAULT;
+						}
+						phys = 1;
 					}
 				}
 			}
-
-			if (paddr & MASK_2MB) {
+			/* Since PHYS can break the 2MiB physical alginment skip this check for that. */
+			if (!phys && (paddr & MASK_2MB)) {
 				DEBUG_PRINT("invalid paddr 0x%" PRIx64 " - must be 2MB aligned\n", paddr);
 				return -EINVAL;
 			}
