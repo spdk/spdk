@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "01e38b84_a16924a9",
+        "filename": "lib/virtio/virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 463,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-06T00:11:35Z",
+      "side": 1,
+      "message": "Should we keep these in the same order?\n\nThe commit message seems to indicate this is just inlining the functions, but code is reordered too\n\nFor example, original code would increment vq-\u003evq_avail_idx before the virtio_wmb().\n\nIf the reordering is important, I\u0027d suggest adding something to the commit message indicating why.  Or if it\u0027s not, I\u0027d just stick with the original ordering.",
+      "revId": "7ff3e0a8418aef8c715fa2c1e834194af18b8818",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
