@@ -45,6 +45,30 @@
       "revId": "f34844a678e40c54f63f8dbb42882c4a6e0652c7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b9b21a0_2bed0762",
+        "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-02-06T09:38:00Z",
+      "side": 1,
+      "message": "Hi Gang,\n\nI find commands: \"./nvme intel internal-log $bdfs\" can\u0027t work,So I delete it. And I create a jira issue Css-986. The other spdk/nvme-cli commands all passed on test pool machine.(See build log for patch20).\n\nThanks\nWenzhong",
+      "parentUuid": "71f6c9bc_26c9a97d",
+      "range": {
+        "startLine": 82,
+        "startChar": 1,
+        "endLine": 82,
+        "endChar": 19
+      },
+      "revId": "f34844a678e40c54f63f8dbb42882c4a6e0652c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
