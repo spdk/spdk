@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "153fc4a4_ba79d1d9",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 44
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-06T08:35:53Z",
+      "side": 1,
+      "message": "I don\u0027t think this line is needed if FIO runs with \"--verify_state_save\u003d0\" option. Can you please verify that and remove it if not necessary ?",
+      "range": {
+        "startLine": 121,
+        "startChar": 0,
+        "endLine": 121,
+        "endChar": 45
+      },
+      "revId": "9459d7eff569ca68565019c54c47fd77d62b984a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d291aeff_7a0235ae",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 44
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-06T08:35:53Z",
+      "side": 1,
+      "message": "This should not be needed if direct io is used in FIO by \"direct\u003d1\" flag.",
+      "range": {
+        "startLine": 110,
+        "startChar": 0,
+        "endLine": 111,
+        "endChar": 84
+      },
+      "revId": "9459d7eff569ca68565019c54c47fd77d62b984a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
