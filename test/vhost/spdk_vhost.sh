@@ -96,11 +96,11 @@ case $1 in
 		;;
 	-fs|--fs-integrity-scsi)
 		echo 'Running filesystem integrity suite...'
-		$WORKDIR/integrity/integrity_start.sh -i $VM_IMAGE -m scsi -f "xfs ntfs btrfs ext4"
+		$WORKDIR/integrity/integrity_start.sh --ctrl-type=spdk_vhost_scsi --fs "xfs ntfs btrfs ext4"
 		;;
 	-fb|--fs-integrity-blk)
 		echo 'Running filesystem integrity suite...'
-		$WORKDIR/integrity/integrity_start.sh -i $VM_IMAGE -m blk -f "xfs ntfs btrfs ext4"
+		$WORKDIR/integrity/integrity_start.sh --ctrl-type=spdk_vhost_blk --fs="xfs ntfs btrfs ext4"
 		;;
 	-ils|--integrity-lvol-scsi)
 		echo 'Running lvol integrity suite...'
