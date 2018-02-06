@@ -186,6 +186,7 @@ struct spdk_nvmf_ctrlr {
 	int num_qpairs;
 	int max_qpairs_allowed;
 	struct spdk_nvmf_request *aer_req;
+	union spdk_nvme_async_event_completion notice_event;
 	uint8_t hostid[16];
 
 	TAILQ_ENTRY(spdk_nvmf_ctrlr)		link;
@@ -260,6 +261,7 @@ void spdk_nvmf_subsystem_remove_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 				      struct spdk_nvmf_ctrlr *ctrlr);
 struct spdk_nvmf_ctrlr *spdk_nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 		uint16_t cntlid);
+int spdk_nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr);
 
 static inline struct spdk_nvmf_ns *
 _spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
