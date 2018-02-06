@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8750e9c9_bdb653c8",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-06T14:39:31Z",
+      "side": 1,
+      "message": "These new RPC methods should be added to scripts/rpc.py and scripts/rpc/iscsi.py.\n\nIdeally, some test scripts that call these new methods via rpc.py would be added too.  Maybe it would be possible to modify an existing iscsi_tgt test to configure the initiator group via this RPC instead of by static configuration?",
+      "revId": "bc1a8c84114e7d301b82b29744d3bc442a07d6c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8788584c_0e335fb8",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 268,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-06T14:39:31Z",
+      "side": 1,
+      "message": "Is this num \u003d\u003d 0 check also needed for the add_initiator_to_initiator_group case?\n\nAlternatively, we could treat 0 as a valid case for delete as well.",
+      "revId": "bc1a8c84114e7d301b82b29744d3bc442a07d6c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
