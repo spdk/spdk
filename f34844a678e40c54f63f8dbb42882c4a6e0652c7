@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "74a3c565_a3e52873",
+        "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-02-06T03:29:32Z",
+      "side": 1,
+      "message": "Can we move this line into the line above?",
+      "range": {
+        "startLine": 59,
+        "startChar": 1,
+        "endLine": 59,
+        "endChar": 5
+      },
+      "revId": "f34844a678e40c54f63f8dbb42882c4a6e0652c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "71f6c9bc_26c9a97d",
         "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
         "patchSetId": 13
