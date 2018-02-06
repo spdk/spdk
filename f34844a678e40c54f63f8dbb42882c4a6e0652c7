@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "71f6c9bc_26c9a97d",
+        "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-06T03:26:54Z",
+      "side": 1,
+      "message": "As Intel plugin has been supported, you can also add:\n\n./nvme intel internal-log $bdfs\n./nvme intel smart-log-add $bdfs\n./nvme intel temp-stats $bdfs\n./nvme intel lat-stats $bdfs",
+      "range": {
+        "startLine": 82,
+        "startChar": 1,
+        "endLine": 82,
+        "endChar": 19
+      },
+      "revId": "f34844a678e40c54f63f8dbb42882c4a6e0652c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
