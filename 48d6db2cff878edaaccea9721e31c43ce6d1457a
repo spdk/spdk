@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "5357da7e_ebd252e2",
+        "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2018-02-06T01:42:38Z",
+      "side": 1,
+      "message": "As there is failure in the nightly log, it shows SSD PCI address is claimed by process 57436(stub)\n\ncan you change the shm_id \u003d0 in file /home/sys_sgsw/nvme-cli/spdk.conf at the very begining of this patch to fix this issue?",
+      "revId": "48d6db2cff878edaaccea9721e31c43ce6d1457a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f0378402_25405b96",
         "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
         "patchSetId": 10
