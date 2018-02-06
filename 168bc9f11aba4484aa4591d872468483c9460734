@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0b7cb6f4_f05488b5",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-06T14:43:22Z",
+      "side": 0,
+      "message": "What makes them unnecessary? Is it because the -f check below is sufficient?",
+      "revId": "168bc9f11aba4484aa4591d872468483c9460734",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
