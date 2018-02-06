@@ -195,6 +195,12 @@ spdk_bdev_get_name(const struct spdk_bdev *bdev)
 	return "test";
 }
 
+int
+spdk_nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	return 0;
+}
+
 static void
 test_spdk_nvmf_subsystem_add_ns(void)
 {
