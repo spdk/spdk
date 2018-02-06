@@ -148,6 +148,8 @@ function spdk_vhost_kill()
 				echo "."
 				sleep 1
 			else
+				#check vhost return code, activate trap on error
+				wait $vhost_pid
 				break
 			fi
 		done
