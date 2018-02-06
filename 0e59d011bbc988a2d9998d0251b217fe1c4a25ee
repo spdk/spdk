@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "db7d6de8_28bb4d5f",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-06T03:57:21Z",
+      "side": 1,
+      "message": "shall add tab and space to align the first parameter \"struct spdk_bdev...\"",
+      "range": {
+        "startLine": 123,
+        "startChar": 1,
+        "endLine": 123,
+        "endChar": 2
+      },
+      "revId": "0e59d011bbc988a2d9998d0251b217fe1c4a25ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "23a7b154_bc0cd1b1",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 729,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-06T03:57:21Z",
+      "side": 1,
+      "message": "Comment required on this new API\n\nMaybe change to: spdk_bdev_get_iostats",
+      "range": {
+        "startLine": 729,
+        "startChar": 0,
+        "endLine": 729,
+        "endChar": 10
+      },
+      "revId": "0e59d011bbc988a2d9998d0251b217fe1c4a25ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6672f012_3d0bda07",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1678,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-06T03:57:21Z",
+      "side": 1,
+      "message": "Also add a check for Non-NULL callback",
+      "range": {
+        "startLine": 1678,
+        "startChar": 34,
+        "endLine": 1678,
+        "endChar": 36
+      },
+      "revId": "0e59d011bbc988a2d9998d0251b217fe1c4a25ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "177abceb_0da0389a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1681,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-06T03:57:21Z",
+      "side": 1,
+      "message": "Please add the NULL check here for bdev_ctx and stat",
+      "range": {
+        "startLine": 1681,
+        "startChar": 34,
+        "endLine": 1681,
+        "endChar": 40
+      },
+      "revId": "0e59d011bbc988a2d9998d0251b217fe1c4a25ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e47b608_b789ac8f",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-06T03:57:21Z",
+      "side": 1,
+      "message": "Display current I/O statistics of all the blockdevs or required blockdev",
+      "range": {
+        "startLine": 92,
+        "startChar": 34,
+        "endLine": 92,
+        "endChar": 90
+      },
+      "revId": "0e59d011bbc988a2d9998d0251b217fe1c4a25ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c18df9ec_3bc59d3d",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-06T03:57:21Z",
+      "side": 1,
+      "message": "This API is to get all the io_stat on all bdevs?\n\nMay change to: get_bdevs_iostat().\n\nAnd also prefer to have an optional parameter to assign a specific bdev name like the above \"get_bdevs\" API.",
+      "range": {
+        "startLine": 92,
+        "startChar": 9,
+        "endLine": 92,
+        "endChar": 25
+      },
+      "revId": "0e59d011bbc988a2d9998d0251b217fe1c4a25ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
