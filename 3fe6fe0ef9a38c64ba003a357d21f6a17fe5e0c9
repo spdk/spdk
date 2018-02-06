@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d9f83bed_45d72d13",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-06T12:03:40Z",
+      "side": 1,
+      "message": "In HUGEMEM you specify the total amount of memory to allocate for hugepages, not the number of hugepages.\nI believe what you wanted to do here is HUGEMEM\u003d16384. Not sure this will work however - tests are run on VM with 16G of RAM, so this is too much in my opinion",
+      "range": {
+        "startLine": 247,
+        "startChar": 4,
+        "endLine": 247,
+        "endChar": 14
+      },
+      "revId": "3fe6fe0ef9a38c64ba003a357d21f6a17fe5e0c9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eb1418ac_0d39c335",
+        "filename": "test/vhost/hotplug/scsi_hotplug.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-06T12:03:40Z",
+      "side": 1,
+      "message": "Weren\u0027t we supposed to run tests on Mallocs?",
+      "range": {
+        "startLine": 22,
+        "startChar": 4,
+        "endLine": 24,
+        "endChar": 76
+      },
+      "revId": "3fe6fe0ef9a38c64ba003a357d21f6a17fe5e0c9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7288dca4_a42c4164",
+        "filename": "test/vhost/hotplug/scsi_hotplug.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-06T12:03:40Z",
+      "side": 1,
+      "message": "How many vms do we run?\nCould this be change to something like:\nvm_run_with_arg $used_vms?",
+      "range": {
+        "startLine": 48,
+        "startChar": 4,
+        "endLine": 48,
+        "endChar": 29
+      },
+      "revId": "3fe6fe0ef9a38c64ba003a357d21f6a17fe5e0c9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b80f7366_03f8a8a8",
+        "filename": "test/vhost/hotplug/scsi_hotremove.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-06T12:03:40Z",
+      "side": 1,
+      "message": "Is it needed?",
+      "range": {
+        "startLine": 39,
+        "startChar": 4,
+        "endLine": 39,
+        "endChar": 21
+      },
+      "revId": "3fe6fe0ef9a38c64ba003a357d21f6a17fe5e0c9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4b8f940_1e87c71c",
+        "filename": "test/vhost/hotplug/scsi_hotremove.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-06T12:03:40Z",
+      "side": 1,
+      "message": "What if I run only TC1? I suspect that HotInNVME will not exist then and TC2 will fail at this step.",
+      "range": {
+        "startLine": 40,
+        "startChar": 4,
+        "endLine": 40,
+        "endChar": 63
+      },
+      "revId": "3fe6fe0ef9a38c64ba003a357d21f6a17fe5e0c9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8321600_c598c15d",
+        "filename": "test/vhost/hotplug/scsi_hotremove.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-06T12:03:40Z",
+      "side": 1,
+      "message": "Mallocs? Weren\u0027t we supposed to run tests on NVMe?",
+      "range": {
+        "startLine": 41,
+        "startChar": 4,
+        "endLine": 41,
+        "endChar": 56
+      },
+      "revId": "3fe6fe0ef9a38c64ba003a357d21f6a17fe5e0c9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
