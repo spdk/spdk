@@ -34,6 +34,24 @@
       "revId": "9058e2809f6fc31ba45fcd7166a3d0e97fd43788",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab2a0d65_b77a2e02",
+        "filename": "include/spdk/barrier.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-02-06T06:14:16Z",
+      "side": 1,
+      "message": "\u003e (Is the 132 value special in some way or just randomly selected?)\n\nAnd we want this to be unused to avoid additional data dependencies as pointed out in https://shipilev.net/blog/2014/on-the-fence-with-dependencies/",
+      "parentUuid": "cb7ce8b6_23d0de60",
+      "revId": "9058e2809f6fc31ba45fcd7166a3d0e97fd43788",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
