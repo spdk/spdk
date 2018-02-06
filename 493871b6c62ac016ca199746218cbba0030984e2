@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "878858b4_4c96244c",
+        "filename": "doc/fio.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-06T03:44:52Z",
+      "side": 1,
+      "message": "As Changpeng mentioned, split into a new line.",
+      "range": {
+        "startLine": 7,
+        "startChar": 95,
+        "endLine": 7,
+        "endChar": 98
+      },
+      "revId": "493871b6c62ac016ca199746218cbba0030984e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0beed986_d600996a",
+        "filename": "doc/fio.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-06T03:44:52Z",
+      "side": 1,
+      "message": "Maybe have a SPDK sample here instead for the libaio and /dev/nvmeX filename.",
+      "range": {
+        "startLine": 69,
+        "startChar": 0,
+        "endLine": 69,
+        "endChar": 21
+      },
+      "revId": "493871b6c62ac016ca199746218cbba0030984e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
