@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "277762c7_8ac3da05",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-06T14:53:56Z",
+      "side": 1,
+      "message": "If you want to to reuse the socket you shoul at least check if this path point to socket and not to some kind of arbitrary file. We had the same issue in the vhost and we did this https://github.com/spdk/spdk/blob/a54e7e584ba7837d990bc5a865f46b0eec4dcb96/lib/vhost/vhost.c#L667\n\nAlso, as there is no SO_REUSEADDR for AF_UNIX, the file locking would be good to add here.",
+      "range": {
+        "startLine": 96,
+        "startChar": 2,
+        "endLine": 96,
+        "endChar": 42
+      },
+      "revId": "8895a20d3b7af19b2fef6d3e92e539922403bee6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
