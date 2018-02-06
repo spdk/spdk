@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c5f320f2_17605108",
+        "filename": "test/lib/ut_multithread.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-06T07:45:59Z",
+      "side": 1,
+      "message": "If ut_poller has current_ticks as member, ut_poller bring the state to the next poll_thread() call. However this is for UT and I think rewinding every time is better as you propose.",
+      "range": {
+        "startLine": 203,
+        "startChar": 2,
+        "endLine": 203,
+        "endChar": 15
+      },
+      "revId": "7fd6b95989aa90d0fc4817f8f21910c6bd2e5db3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
