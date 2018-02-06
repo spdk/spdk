@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "57251efd_caa5fdfd",
+        "filename": "scripts/rpc/iscsi.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-06T14:42:29Z",
+      "side": 1,
+      "message": "These \u0027verbose\u003dargs.verbose\u0027 parameters can be removed now after commit a54e7e584b (\"rpc.py: make \u0027verbose\u0027 a client parameter\")",
+      "range": {
+        "startLine": 134,
+        "startChar": 63,
+        "endLine": 134,
+        "endChar": 85
+      },
+      "revId": "4bf4a78fa10e55dc73f91655d6e81c0b3f95540b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
