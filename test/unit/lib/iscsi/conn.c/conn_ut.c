@@ -98,43 +98,44 @@ spdk_event_call(struct spdk_event *event)
 }
 
 int
-spdk_sock_getaddr(int sock, char *saddr, int slen, char *caddr, int clen)
+spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, char *caddr, int clen)
 {
 	return 0;
 }
 
 int
-spdk_sock_close(int sock)
+spdk_sock_close(struct spdk_sock **sock)
+{
+	*sock = NULL;
+	return 0;
+}
+
+ssize_t
+spdk_sock_recv(struct spdk_sock *sock, void *buf, size_t len)
 {
 	return 0;
 }
 
 ssize_t
-spdk_sock_recv(int sock, void *buf, size_t len)
-{
-	return 0;
-}
-
-ssize_t
-spdk_sock_writev(int sock, struct iovec *iov, int iovcnt)
+spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 {
 	return 0;
 }
 
 int
-spdk_sock_set_recvlowat(int s, int nbytes)
+spdk_sock_set_recvlowat(struct spdk_sock *s, int nbytes)
 {
 	return 0;
 }
 
 int
-spdk_sock_set_recvbuf(int sock, int sz)
+spdk_sock_set_recvbuf(struct spdk_sock *sock, int sz)
 {
 	return 0;
 }
 
 int
-spdk_sock_set_sendbuf(int sock, int sz)
+spdk_sock_set_sendbuf(struct spdk_sock *sock, int sz)
 {
 	return 0;
 }
