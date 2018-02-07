@@ -2208,6 +2208,8 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	if (rc < 0) {
 		SPDK_ERRLOG("destruct failed\n");
 	}
+	bdev->ctxt = NULL;
+
 	if (rc <= 0 && cb_fn != NULL) {
 		cb_fn(cb_arg, rc);
 	}
