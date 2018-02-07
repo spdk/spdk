@@ -1750,6 +1750,99 @@ struct __attribute__((packed)) spdk_nvme_health_information_page {
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_health_information_page) == 512, "Incorrect size");
 
 /**
+ * Asynchronous Event Type
+ */
+enum spdk_nvme_async_event_type {
+	/* Error Status */
+	SPDK_NVME_ASYNC_EVENT_TYPE_ERROR	= 0x0,
+	/* SMART/Health Status */
+	SPDK_NVME_ASYNC_EVENT_TYPE_SMART	= 0x1,
+	/* Notice */
+	SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE	= 0x2,
+	/* 0x3 - 0x5 Reserved */
+
+	/* I/O Command Set Specific Status */
+	SPDK_NVME_ASYNC_EVENT_TYPE_IO		= 0x6,
+	/* Vendor Specific */
+	SPDK_NVME_ASYNC_EVENT_TYPE_VENDOR	= 0x7,
+};
+
+/**
+ * Asynchronous Event Information for Error Status
+ */
+enum spdk_nvme_async_event_info_error {
+	/* Write to Invalid Doorbell Register */
+	SPDK_NVME_ASYNC_EVENT_WRITE_INVALID_DB		= 0x0,
+	/* Invalid Doorbell Register Write Value */
+	SPDK_NVME_ASYNC_EVENT_INVALID_DB_WRITE		= 0x1,
+	/* Diagnostic Failure */
+	SPDK_NVME_ASYNC_EVENT_DIAGNOSTIC_FAILURE	= 0x2,
+	/* Persistent Internal Error */
+	SPDK_NVME_ASYNC_EVENT_PERSISTENT_INTERNAL	= 0x3,
+	/* Transient Internal Error */
+	SPDK_NVME_ASYNC_EVENT_TRANSIENT_INTERNAL	= 0x4,
+	/* Firmware Image Load Error */
+	SPDK_NVME_ASYNC_EVENT_FW_IMAGE_LOAD		= 0x5,
+
+	/* 0x6 - 0xFF Reserved */
+};
+
+/**
+ * Asynchronous Event Information for SMART/Health Status
+ */
+enum spdk_nvme_async_event_info_smart {
+	/* NVM Subsystem Reliability */
+	SPDK_NVME_ASYNC_EVENT_SUBSYSTEM_RELIABILITY	= 0x0,
+	/* Temperature Threshold */
+	SPDK_NVME_ASYNC_EVENT_TEMPERATURE_THRESHOLD	= 0x1,
+	/* Spare Below Threshold */
+	SPDK_NVME_ASYNC_EVENT_SPARE_BELOW_THRESHOLD	= 0x2,
+
+	/* 0x3 - 0xFF Reserved */
+};
+
+/**
+ * Asynchronous Event Information for Notice
+ */
+enum spdk_nvme_async_event_info_notice {
+	/* Namespace Attribute Changed */
+	SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED		= 0x0,
+	/* Firmware Activation Starting */
+	SPDK_NVME_ASYNC_EVENT_FW_ACTIVATION_START	= 0x1,
+	/* Telemetry Log Changed */
+	SPDK_NVME_ASYNC_EVENT_TELEMETRY_LOG_CHANGED	= 0x2,
+
+	/* 0x3 - 0xFF Reserved */
+};
+
+/**
+ * Asynchronous Event Information for NVM Command Set Specific Status
+ */
+enum spdk_nvme_async_event_info_nvm_command_set {
+	/* Reservation Log Page Avaiable */
+	SPDK_NVME_ASYNC_EVENT_RESERVATION_LOG_AVAIL	= 0x0,
+	/* Sanitize Operation Completed */
+	SPDK_NVME_ASYNC_EVENT_SANITIZE_COMPLETED	= 0x1,
+
+	/* 0x2 - 0xFF Reserved */
+};
+
+/**
+ * Asynchronous Event Request Completion
+ */
+union spdk_nvme_async_event_completion {
+	uint32_t raw;
+	struct {
+		uint32_t async_event_type	: 3;
+		uint32_t reserved1		: 5;
+		uint32_t async_event_info	: 8;
+		uint32_t log_page_identifier	: 8;
+		uint32_t reserved2		: 8;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_async_event_completion) == 4, "Incorrect size");
+
+/**
  * Asynchronous Event Configuration
  */
 union spdk_nvme_async_event_config {
