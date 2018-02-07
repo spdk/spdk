@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ace4ef49_7f5fc000",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-07T17:12:58Z",
+      "side": 1,
+      "message": "I think all of the async_event_config bits should start as 0 unless the host enables them via Set Features. (I couldn\u0027t find anything in the spec that clarifies this either way, so if you have a spec reference that defines what should happen here, please provide it.)",
+      "revId": "c30e2ce9deffbc675acddbea2ed77183c1886656",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "592a7f0e_046b22c3",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 710,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-07T17:12:58Z",
+      "side": 1,
+      "message": "The spec is not totally clear on this, but I think we should accept any bits in the Set command and just ignore ones we don\u0027t support, rather than failing the command if there are unexpected bits set.",
+      "revId": "c30e2ce9deffbc675acddbea2ed77183c1886656",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a775a15_cb4c44d8",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 738,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-07T17:12:58Z",
+      "side": 1,
+      "message": "Could the change to support more than one AER be split into another patch?\n\nI also think supporting multiple AERs is going to be a little more complicated; the spec says:\n\n\u003e When the controller posts a completion queue entry for an outstanding Asynchronous Event Request command and thus reports an asynchronous event, subsequent events of that  event type are automatically masked by the controller until the host clears that event.\n\nIf we only support one AER, that requirement becomes very simple to support (we can\u0027t possibly post another completion until the previous AER is finished), but if we want to support more than one, we will need to somehow track which AER event types are currently outstanding and avoid sending a second completion for that type.",
+      "revId": "c30e2ce9deffbc675acddbea2ed77183c1886656",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a8e22d9_1afbf058",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1214,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-07T17:12:58Z",
+      "side": 1,
+      "message": "If there are no unused AERs available when we need to post an event, I think we are supposed to queue the event internally and post it the next time an AER is submitted:\n\n\u003e If the controller needs to report an event and there are no outstanding Asynchronous Event Request commands, the controller should send a single notification of that Asynchronous Event Type when an Asynchronous Event Request command is received.",
+      "revId": "c30e2ce9deffbc675acddbea2ed77183c1886656",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
