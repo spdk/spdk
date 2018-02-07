@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "2509852f_b7cc4485",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 62
+      },
+      "lineNbr": 642,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-07T12:59:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7b2cb97e_b2534785",
+      "range": {
+        "startLine": 642,
+        "startChar": 2,
+        "endLine": 642,
+        "endChar": 15
+      },
+      "revId": "2c6eb53e65c4da9e08fa3a8d876a3f2de56653d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "df8406fb_325359d2",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 62
@@ -36,6 +60,30 @@
       "writtenOn": "2018-02-07T12:23:05Z",
       "side": 1,
       "message": "At this point super_blob was opened, so it should be closed on error.",
+      "range": {
+        "startLine": 667,
+        "startChar": 2,
+        "endLine": 667,
+        "endChar": 15
+      },
+      "revId": "2c6eb53e65c4da9e08fa3a8d876a3f2de56653d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9204c16d_51dd5b29",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 62
+      },
+      "lineNbr": 667,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-07T12:59:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "df8406fb_325359d2",
       "range": {
         "startLine": 667,
         "startChar": 2,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "0a0825fa_f4b17263",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 62
+      },
+      "lineNbr": 1190,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-07T12:59:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0411fe39_54c79c91",
+      "range": {
+        "startLine": 1189,
+        "startChar": 0,
+        "endLine": 1190,
+        "endChar": 49
+      },
+      "revId": "2c6eb53e65c4da9e08fa3a8d876a3f2de56653d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5278a908_62e2a34a",
         "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
         "patchSetId": 62
@@ -88,6 +160,24 @@
     },
     {
       "key": {
+        "uuid": "c672cc29_9accf670",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 62
+      },
+      "lineNbr": 1201,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-07T12:59:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5278a908_62e2a34a",
+      "revId": "2c6eb53e65c4da9e08fa3a8d876a3f2de56653d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ff169f70_f29de329",
         "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
         "patchSetId": 62
@@ -99,6 +189,54 @@
       "writtenOn": "2018-02-07T12:23:05Z",
       "side": 1,
       "message": "Since we expect specific errno, please check for EEXISTS.",
+      "range": {
+        "startLine": 1205,
+        "startChar": 11,
+        "endLine": 1205,
+        "endChar": 20
+      },
+      "revId": "2c6eb53e65c4da9e08fa3a8d876a3f2de56653d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b35d4aea_05bee6c6",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 62
+      },
+      "lineNbr": 1205,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-07T12:59:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ff169f70_f29de329",
+      "range": {
+        "startLine": 1205,
+        "startChar": 11,
+        "endLine": 1205,
+        "endChar": 20
+      },
+      "revId": "2c6eb53e65c4da9e08fa3a8d876a3f2de56653d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "97393d13_87424b41",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 62
+      },
+      "lineNbr": 1205,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-07T12:59:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ff169f70_f29de329",
       "range": {
         "startLine": 1205,
         "startChar": 11,
