@@ -725,6 +725,8 @@ spdk_rpc_resize_lvol_bdev(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
 	struct rpc_resize_lvol_bdev req = {};
+	struct spdk_bdev *bdev;
+	struct spdk_lvol *lvol;
 	int rc = 0;
 
 	SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "Resizing lvol\n");
@@ -743,10 +745,20 @@ spdk_rpc_resize_lvol_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	rc = vbdev_lvol_resize(req.name, (size_t)req.size, _spdk_rpc_resize_lvol_bdev_cb, request);
-	if (rc < 0) {
+	bdev = spdk_bdev_get_by_name(req.name);
+	if (bdev == NULL) {
+		SPDK_ERRLOG("no bdev for provided name %s\n", req.name);
+		rc = -ENODEV;
 		goto invalid;
 	}
+
+	lvol = vbdev_lvol_get_from_bdev(bdev);
+	if (lvol == NULL) {
+		rc = -ENODEV;
+		goto invalid;
+	}
+
+	vbdev_lvol_resize(lvol, req.size, _spdk_rpc_resize_lvol_bdev_cb, request);
 
 	free_rpc_resize_lvol_bdev(&req);
 	return;
