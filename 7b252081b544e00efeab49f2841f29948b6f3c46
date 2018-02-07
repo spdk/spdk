@@ -22,6 +22,47 @@
       "revId": "7b252081b544e00efeab49f2841f29948b6f3c46",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c6460785_bea60457",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 68
+      },
+      "lineNbr": 888,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-07T10:33:07Z",
+      "side": 1,
+      "message": "It should not fail.\nPay attention to vbdev_lvol.c:858 and vbdev_lvol_ut.c:63. Since in unit test in spdk_bdev_alias_add() we do not check if alias already exists, renaming will always be successful. It means, even if spdk_lvol_rename() fails, alias stil be renamed. That\u0027s why it need to be removed like this. \nSorry, should\u0027ve expanded comment, to explain this.",
+      "parentUuid": "d56910ac_b1d1fe57",
+      "range": {
+        "startLine": 888,
+        "startChar": 1,
+        "endLine": 888,
+        "endChar": 70
+      },
+      "revId": "7b252081b544e00efeab49f2841f29948b6f3c46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "62a255db_0092a3d9",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 68
+      },
+      "lineNbr": 918,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-07T10:33:07Z",
+      "side": 1,
+      "message": "le",
+      "revId": "7b252081b544e00efeab49f2841f29948b6f3c46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
