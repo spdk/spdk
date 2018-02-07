@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a1d218f2_0decf85d",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 655,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-07T13:37:14Z",
+      "side": 1,
+      "message": "You are calling req-\u003ecb_fn and free(req) twice - once in _spdk_lvs_rename_sync_failed_cb and csecond time in \u0027invalid\u0027 section.\n\nIf you follow my next comment (below) you can actually just set req-\u003elvolerrno here instead of calling spdk_blob_close.",
+      "range": {
+        "startLine": 654,
+        "startChar": 0,
+        "endLine": 655,
+        "endChar": 15
+      },
+      "revId": "8949d38de6306043a9d37014096eed6c92c146db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b10a7556_98324d17",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 669,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-07T13:37:14Z",
+      "side": 1,
+      "message": "This function does exactly the same thing that _spdk_lvs_rename_sync_failed_cb function. Remove this one and rename previous one to something more generic. Also, in both functions, you will return lvserrno \u003d 0, because close operation will probably succeed. You need to pass lvserrno through req from function that call spdk_blob_close and here return errno from req, not from close.\n\nYou can actually just use _spdk_lvs_rename_cb and change at the beginning something to like this:\n\n\nif (lvolerrno !\u003d 0) {\n    SPDK_ERRLOG(\"Close error message here\\n\");\n}\nif (req-\u003elvolerrno) {\n    lvolerrno \u003d req-\u003elvolerrno;\n    SPKD_ERRLOG(\"Rename error message here\\n\");\n} else {\n    strncpy(req-\u003elvol_store-\u003ename, req-\u003enew_name, SPDK_LVS_NAME_MAX);\n}\n\nThat should do the job.\nIn case of close failure we will overwrite close error, but I think that in this case information that rename failed is more important.",
+      "range": {
+        "startLine": 669,
+        "startChar": 0,
+        "endLine": 669,
+        "endChar": 36
+      },
+      "revId": "8949d38de6306043a9d37014096eed6c92c146db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa254bef_bc007bfb",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 692,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-07T13:37:14Z",
+      "side": 1,
+      "message": "Same as before: you are calling req-\u003ecb_fn and free(req) twice.",
+      "range": {
+        "startLine": 691,
+        "startChar": 0,
+        "endLine": 692,
+        "endChar": 15
+      },
+      "revId": "8949d38de6306043a9d37014096eed6c92c146db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
