@@ -52,7 +52,7 @@ $rootdir/examples/nvme/perf/perf -q 32 -s 4096 -w randrw -M 50 -t 1 -r "trtype:R
 sync
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 
-if [ $RUN_NIGHTLY -eq 1 ]; then
+if [ $RUN_NIGHTLY -eq 0 ]; then
 	# Configure nvme devices with nvmf lvol_bdev backend
 	if [ -n "$local_nvme_trid" ]; then
 		ls_guid=$($rpc_py construct_lvol_store Nvme0n1 lvs_0)
@@ -67,10 +67,11 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 
 		# Test perf as host with different io_size and qd_depth in nightly
 		qd_depth=("1" "128")
-		io_size=("512" "131072")
+		io_size=("4096" "131072")
 		for qd in ${qd_depth[@]}; do
 			for s in ${io_size[@]}; do
 				$rootdir/examples/nvme/perf/perf -q $qd -s $s -w randrw -M 50 -t 10 -r "trtype:RDMA adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420"
+				sleep 2
 			done
 		done
 
