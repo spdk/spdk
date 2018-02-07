@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "696b5bbd_25f88bd0",
+        "filename": "test/lib/ut_multithread.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-07T05:23:06Z",
+      "side": 1,
+      "message": "Please remove this.",
+      "range": {
+        "startLine": 58,
+        "startChar": 1,
+        "endLine": 58,
+        "endChar": 24
+      },
+      "revId": "1408e366bcefab9303da2e4f23ae87a281998caf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b32fa582_6ecdf458",
+        "filename": "test/lib/ut_multithread.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-07T05:23:06Z",
+      "side": 1,
+      "message": "same as above.",
+      "range": {
+        "startLine": 142,
+        "startChar": 2,
+        "endLine": 142,
+        "endChar": 35
+      },
+      "revId": "1408e366bcefab9303da2e4f23ae87a281998caf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f746828_75e444eb",
+        "filename": "test/lib/ut_multithread.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-07T05:23:06Z",
+      "side": 1,
+      "message": "I think the operation to reset g_current_time_in_us will be helpful.\n\nreset_time(void)\n{\n  g_current_time_in_us \u003d 0;\n}",
+      "range": {
+        "startLine": 167,
+        "startChar": 1,
+        "endLine": 167,
+        "endChar": 21
+      },
+      "revId": "1408e366bcefab9303da2e4f23ae87a281998caf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ac97f6d_fb513ce3",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-07T05:23:06Z",
+      "side": 1,
+      "message": "reset_time() will be better if you want to set 0 to curr_time.",
+      "range": {
+        "startLine": 301,
+        "startChar": 1,
+        "endLine": 301,
+        "endChar": 19
+      },
+      "revId": "1408e366bcefab9303da2e4f23ae87a281998caf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
