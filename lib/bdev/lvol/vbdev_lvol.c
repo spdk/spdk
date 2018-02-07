@@ -477,26 +477,6 @@ vbdev_get_lvol_store_by_name(const char *name)
 	return NULL;
 }
 
-static struct spdk_lvol *
-vbdev_get_lvol_by_unique_id(const char *name)
-{
-	struct spdk_lvol *lvol, *tmp_lvol;
-	struct lvol_store_bdev *lvs_bdev, *tmp_lvs_bdev;
-
-	TAILQ_FOREACH_SAFE(lvs_bdev, &g_spdk_lvol_pairs, lvol_stores, tmp_lvs_bdev) {
-		if (lvs_bdev->req != NULL) {
-			continue;
-		}
-		TAILQ_FOREACH_SAFE(lvol, &lvs_bdev->lvs->lvols, link, tmp_lvol) {
-			if (!strcmp(lvol->unique_id, name)) {
-				return lvol;
-			}
-		}
-	}
-
-	return NULL;
-}
-
 static void
 _vbdev_lvol_close_cb(void *cb_arg, int lvserrno)
 {
@@ -971,54 +951,55 @@ static void
 _vbdev_lvol_resize_cb(void *cb_arg, int lvolerrno)
 {
 	struct spdk_lvol_req *req = cb_arg;
-	uint64_t cluster_size;
-	int rc;
+	struct spdk_lvol *lvol = req->lvol;
+	uint64_t total_size;
 
-	if (lvolerrno == 0) {
-		cluster_size = spdk_bs_get_cluster_size(req->lvol->lvol_store->blobstore);
-		rc = spdk_bdev_notify_blockcnt_change(req->bdev, req->sz * cluster_size / req->bdev->blocklen);
-		if (rc != 0) {
-			SPDK_ERRLOG("Could not change num blocks for bdev_lvol.\n");
-		}
+	/* change bdev size */
+	if (lvolerrno != 0) {
+		SPDK_ERRLOG("CB function for bdev lvol %s receive error no: %d.\n", lvol->name, lvolerrno);
+		goto finish;
 	}
 
-	req->cb_fn(req->cb_arg,  lvolerrno);
+	total_size = spdk_blob_get_num_clusters(lvol->blob) *
+		     spdk_bs_get_cluster_size(lvol->lvol_store->blobstore);
+	assert((total_size % lvol->bdev->blocklen) == 0);
+
+	lvolerrno = spdk_bdev_notify_blockcnt_change(lvol->bdev, total_size / lvol->bdev->blocklen);
+	if (lvolerrno != 0) {
+		SPDK_ERRLOG("Could not change num blocks for bdev lvol %s with error no: %d.\n",
+			    lvol->name, lvolerrno);
+	}
+
+finish:
+	req->cb_fn(req->cb_arg, lvolerrno);
 	free(req);
 }
 
-int
-vbdev_lvol_resize(char *name, size_t sz,
-		  spdk_lvol_op_complete cb_fn, void *cb_arg)
+void
+vbdev_lvol_resize(struct spdk_lvol *lvol, size_t sz, spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvol_req *req;
-	struct spdk_bdev *bdev;
-	struct spdk_lvol *lvol;
 
-	lvol = vbdev_get_lvol_by_unique_id(name);
 	if (lvol == NULL) {
-		SPDK_ERRLOG("lvol '%s' does not exist\n", name);
-		return -ENODEV;
+		SPDK_ERRLOG("lvol does not exist\n");
+		cb_fn(cb_arg, -EINVAL);
+		return;
 	}
 
-	bdev = spdk_bdev_get_by_name(name);
-	if (bdev == NULL) {
-		SPDK_ERRLOG("bdev '%s' does not exist\n", name);
-		return -ENODEV;
-	}
+	assert(lvol->bdev != NULL);
 
 	req = calloc(1, sizeof(*req));
 	if (req == NULL) {
-		cb_fn(cb_arg, -1);
-		return -ENOMEM;
+		cb_fn(cb_arg, -ENOMEM);
+		return;
 	}
+
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 	req->sz = sz;
-	req->bdev = bdev;
 	req->lvol = lvol;
 
-	spdk_lvol_resize(lvol, sz, _vbdev_lvol_resize_cb, req);
-	return 0;
+	spdk_lvol_resize(req->lvol, req->sz, _vbdev_lvol_resize_cb, req);
 }
 
 static int
