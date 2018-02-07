@@ -34,7 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/log.h"
-#include "spdk/net.h"
+#include "spdk/sock.h"
 
 #define MAX_TMPBUF 1024
 #define PORTNUMLEN 32
