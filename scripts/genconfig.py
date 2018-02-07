@@ -44,7 +44,7 @@ for config in ('CONFIG', 'CONFIG.local'):
     except IOError:
         continue
 
-for key, value in defs.items():
+for key, value in sorted(defs.items()):
     if value == 0:
         print("#undef {0}".format(key))
     else:
