@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "4d8a323a_13705e66",
+        "filename": "test/lib/ut_multithread.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-07T04:25:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "085a8b52_90f18e32",
+      "revId": "7fd6b95989aa90d0fc4817f8f21910c6bd2e5db3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cf81f46d_839d34dd",
         "filename": "test/lib/ut_multithread.c",
         "patchSetId": 5
@@ -30,6 +48,24 @@
       "writtenOn": "2018-02-06T15:45:03Z",
       "side": 1,
       "message": "Should the ticks be saved globally, instead of per-thread?  I think for almost all unit test use cases, a global tick count would be OK and simpler to use.\n\nI would also suggest using a name like \"current_time_in_us\".  \"ticks\" are usually not equivalent to microseconds, so putting \"us\" in the name makes it clear that this is tracking time in terms of microseconds.",
+      "revId": "7fd6b95989aa90d0fc4817f8f21910c6bd2e5db3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fbe9242a_8a3de6d0",
+        "filename": "test/lib/ut_multithread.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-07T04:25:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cf81f46d_839d34dd",
       "revId": "7fd6b95989aa90d0fc4817f8f21910c6bd2e5db3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -64,6 +100,24 @@
       "writtenOn": "2018-02-06T15:45:03Z",
       "side": 1,
       "message": "current_us",
+      "revId": "7fd6b95989aa90d0fc4817f8f21910c6bd2e5db3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a660d8f_56045f6a",
+        "filename": "test/lib/ut_multithread.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-07T04:25:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "90d27572_59c055eb",
       "revId": "7fd6b95989aa90d0fc4817f8f21910c6bd2e5db3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
