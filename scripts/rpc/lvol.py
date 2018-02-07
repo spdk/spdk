@@ -52,14 +52,13 @@ def rename_lvol_bdev(client, args):
     return client.call('rename_lvol_bdev', params)
 
 
-# Logical volume resize feature is disabled, as it is currently work in progress
-#
-# def resize_lvol_bdev(client, args):
-#     params = {
-#         'name': args.name,
-#         'size': args.size,
-#     }
-#     return client.call('resize_lvol_bdev', params)
+def resize_lvol_bdev(client, args):
+    num_bytes = (args.size * 1024 * 1024)
+    params = {
+        'name': args.name,
+        'size': num_bytes,
+    }
+    return client.call('resize_lvol_bdev', params)
 
 
 def destroy_lvol_store(client, args):

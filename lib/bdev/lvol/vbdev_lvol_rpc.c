@@ -720,7 +720,7 @@ invalid:
 					 spdk_strerror(-lvolerrno));
 }
 
-static void __attribute__((unused))
+static void
 spdk_rpc_resize_lvol_bdev(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
@@ -769,8 +769,7 @@ invalid:
 	free_rpc_resize_lvol_bdev(&req);
 }
 
-/* Logical volume resize feature is disabled, as it is currently work in progress
-SPDK_RPC_REGISTER("resize_lvol_bdev", spdk_rpc_resize_lvol_bdev) */
+SPDK_RPC_REGISTER("resize_lvol_bdev", spdk_rpc_resize_lvol_bdev)
 
 struct rpc_get_lvol_stores {
 	char *uuid;
