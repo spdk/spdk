@@ -72,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "fb4910fd_6c4e5fd8",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-07T11:13:54Z",
+      "side": 1,
+      "message": "After discussion with Tomek we agreed that this can be done as separate patch.",
+      "parentUuid": "6ba5f28a_83998322",
+      "range": {
+        "startLine": 284,
+        "startChar": 0,
+        "endLine": 284,
+        "endChar": 3
+      },
+      "revId": "2012a052d1f8b8bfc5c4fc6fa1e3dcdb496903d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a9a65553_fc8adf97",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 57
