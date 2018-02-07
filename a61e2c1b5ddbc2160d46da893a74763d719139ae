@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d07d3b42_b57725b5",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-07T09:00:48Z",
+      "side": 1,
+      "message": "Hi Chen! You should either describe that in the message commit why you\u0027re increasing the timeout or have it in a separate commit. Either way is fine.",
+      "range": {
+        "startLine": 390,
+        "startChar": 1,
+        "endLine": 390,
+        "endChar": 9
+      },
+      "revId": "a61e2c1b5ddbc2160d46da893a74763d719139ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
