@@ -130,7 +130,7 @@ spdk_sock_create(const char *ip, int port, enum spdk_sock_create_type type)
 	char portnum[PORTNUMLEN];
 	char *p;
 	struct addrinfo hints, *res, *res0;
-	int sock, flag;
+	int fd, flag;
 	int val = 1;
 	int rc;
 
@@ -160,35 +160,35 @@ spdk_sock_create(const char *ip, int port, enum spdk_sock_create_type type)
 	}
 
 	/* try listen */
-	sock = -1;
+	fd = -1;
 	for (res = res0; res != NULL; res = res->ai_next) {
 retry:
-		sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-		if (sock < 0) {
+		fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+		if (fd < 0) {
 			/* error */
 			continue;
 		}
-		rc = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &val, sizeof val);
+		rc = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof val);
 		if (rc != 0) {
-			close(sock);
+			close(fd);
 			/* error */
 			continue;
 		}
-		rc = setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &val, sizeof val);
+		rc = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &val, sizeof val);
 		if (rc != 0) {
-			close(sock);
+			close(fd);
 			/* error */
 			continue;
 		}
 
 		if (type == SPDK_SOCK_CREATE_LISTEN) {
-			rc = bind(sock, res->ai_addr, res->ai_addrlen);
+			rc = bind(fd, res->ai_addr, res->ai_addrlen);
 			if (rc != 0) {
 				SPDK_ERRLOG("bind() failed, errno = %d\n", errno);
 				switch (errno) {
 				case EINTR:
 					/* interrupted? */
-					close(sock);
+					close(fd);
 					goto retry;
 				case EADDRNOTAVAIL:
 					SPDK_ERRLOG("IP address %s not available. "
@@ -198,45 +198,45 @@ retry:
 				/* FALLTHROUGH */
 				default:
 					/* try next family */
-					close(sock);
-					sock = -1;
+					close(fd);
+					fd = -1;
 					continue;
 				}
 			}
 			/* bind OK */
-			rc = listen(sock, 512);
+			rc = listen(fd, 512);
 			if (rc != 0) {
 				SPDK_ERRLOG("listen() failed, errno = %d\n", errno);
-				close(sock);
-				sock = -1;
+				close(fd);
+				fd = -1;
 				break;
 			}
 		} else if (type == SPDK_SOCK_CREATE_CONNECT) {
-			rc = connect(sock, res->ai_addr, res->ai_addrlen);
+			rc = connect(fd, res->ai_addr, res->ai_addrlen);
 			if (rc != 0) {
 				SPDK_ERRLOG("connect() failed, errno = %d\n", errno);
 				/* try next family */
-				close(sock);
-				sock = -1;
+				close(fd);
+				fd = -1;
 				continue;
 			}
 		}
 
-		flag = fcntl(sock, F_GETFL);
-		if (fcntl(sock, F_SETFL, flag | O_NONBLOCK) < 0) {
-			SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%d)\n", sock, errno);
-			close(sock);
-			sock = -1;
+		flag = fcntl(fd, F_GETFL);
+		if (fcntl(fd, F_SETFL, flag | O_NONBLOCK) < 0) {
+			SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%d)\n", fd, errno);
+			close(fd);
+			fd = -1;
 			break;
 		}
 		break;
 	}
 	freeaddrinfo(res0);
 
-	if (sock < 0) {
+	if (fd < 0) {
 		return -1;
 	}
-	return sock;
+	return fd;
 }
 
 int
