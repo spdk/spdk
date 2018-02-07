@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0c8d9231_73325295",
+        "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-02-07T08:42:36Z",
+      "side": 1,
+      "message": "Hi Jim,\n\nThank you very much for you review and comments.\n1.Agree with you suggestion,create test/lib/nvme/spdk_nvme_cli.sh to test the commands which not not NVMe over Fabrics.\n\n2.For PCI NVMe SSDs $bdfs check:\nSeth told me all of our test pool machine has one nvme ssd(qemu virtual machine also has a virtual PCI NVME SSD). So I dont\u0027t check $bdfs is NULL or not.\n\nThanks\nWenzhong",
+      "parentUuid": "c0968d9e_6fabf682",
+      "revId": "27fa26510267c8654f1c20cfcebb8e19c3bbe004",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "81f14abb_8b787b14",
         "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
         "patchSetId": 20
@@ -30,6 +48,24 @@
       "writtenOn": "2018-02-06T19:51:09Z",
       "side": 1,
       "message": "should spsk be spdk?",
+      "revId": "27fa26510267c8654f1c20cfcebb8e19c3bbe004",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16b5df9b_63642779",
+        "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-02-07T08:42:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "81f14abb_8b787b14",
       "revId": "27fa26510267c8654f1c20cfcebb8e19c3bbe004",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
