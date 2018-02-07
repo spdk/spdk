@@ -37,7 +37,7 @@
 #include "spdk/env.h"
 #include "spdk/io_channel.h"
 #include "spdk/log.h"
-#include "spdk/net.h"
+#include "spdk/sock.h"
 #include "spdk/string.h"
 #include "iscsi/acceptor.h"
 #include "iscsi/conn.h"
