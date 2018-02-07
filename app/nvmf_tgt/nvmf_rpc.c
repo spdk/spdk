@@ -542,7 +542,7 @@ invalid:
 SPDK_RPC_REGISTER("delete_nvmf_subsystem", spdk_rpc_delete_nvmf_subsystem)
 
 struct nvmf_rpc_listener_ctx {
-	char				*subnqn;
+	char				*nqn;
 	struct rpc_listen_address	address;
 
 	struct spdk_jsonrpc_request	*request;
@@ -551,14 +551,14 @@ struct nvmf_rpc_listener_ctx {
 };
 
 static const struct spdk_json_object_decoder nvmf_rpc_listener_decoder[] = {
-	{"subnqn", offsetof(struct nvmf_rpc_listener_ctx, subnqn), spdk_json_decode_string},
+	{"nqn", offsetof(struct nvmf_rpc_listener_ctx, nqn), spdk_json_decode_string},
 	{"listen_address", offsetof(struct nvmf_rpc_listener_ctx, address), decode_rpc_listen_address},
 };
 
 static void
 nvmf_rpc_listener_ctx_free(struct nvmf_rpc_listener_ctx *ctx)
 {
-	free(ctx->subnqn);
+	free(ctx->nqn);
 	free_rpc_listen_address(&ctx->address);
 	free(ctx);
 }
@@ -646,9 +646,9 @@ nvmf_rpc_subsystem_add_listener(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	subsystem = spdk_nvmf_tgt_find_subsystem(g_tgt.tgt, ctx->subnqn);
+	subsystem = spdk_nvmf_tgt_find_subsystem(g_tgt.tgt, ctx->nqn);
 	if (!subsystem) {
-		SPDK_ERRLOG("Unable to find subsystem with NQN %s\n", ctx->subnqn);
+		SPDK_ERRLOG("Unable to find subsystem with NQN %s\n", ctx->nqn);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 		nvmf_rpc_listener_ctx_free(ctx);
 		return;

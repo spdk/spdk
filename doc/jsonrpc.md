@@ -351,7 +351,7 @@ Add a new listen address to an NVMe-oF subsystem.
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
-subnqn                  | Required | string      | Subsystem NQN
+nqn                     | Required | string      | Subsystem NQN
 listen_address          | Required | object      | @ref rpc_construct_nvmf_subsystem_listen_address object
 
 ### Example
@@ -364,7 +364,7 @@ Example request:
   "id": 1,
   "method": "nvmf_subsystem_add_listener",
   "params": {
-    "subnqn": "nqn.2016-06.io.spdk:cnode1",
+    "nqn": "nqn.2016-06.io.spdk:cnode1",
     "listen_address": {
       "trtype": "RDMA",
       "adrfam": "IPv4",
