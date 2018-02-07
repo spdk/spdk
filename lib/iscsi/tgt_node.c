@@ -35,7 +35,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/conf.h"
-#include "spdk/net.h"
+#include "spdk/sock.h"
 #include "spdk/scsi.h"
 
 #include "spdk_internal/log.h"

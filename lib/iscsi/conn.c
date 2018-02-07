@@ -47,6 +47,7 @@
 #include "spdk/queue.h"
 #include "spdk/trace.h"
 #include "spdk/net.h"
+#include "spdk/sock.h"
 #include "spdk/string.h"
 
 #include "spdk_internal/log.h"
