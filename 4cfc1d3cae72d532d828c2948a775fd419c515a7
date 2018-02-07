@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "23ca0495_83548936",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 70
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-07T22:59:19Z",
+      "side": 1,
+      "message": "TAILQ_FIRST(\u0026lvol-\u003ebdev-\u003ealiases)-\u003ealias\n\ntqh_first is an implementation detail and not part of the TAILQ API - SPDK always accesses this through TAILQ_FIRST instead",
+      "revId": "4cfc1d3cae72d532d828c2948a775fd419c515a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "798e71ca_42b42e37",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 70
+      },
+      "lineNbr": 358,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-07T22:59:19Z",
+      "side": 1,
+      "message": "lvol_bdev should be removed from the RPC parameter names too\n\nrpc.py needs to be modified too",
+      "revId": "4cfc1d3cae72d532d828c2948a775fd419c515a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28b261d3_83ee8359",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 70
+      },
+      "lineNbr": 1066,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-07T22:59:19Z",
+      "side": 1,
+      "message": "I think before this check, we should compare new_name with lvol-\u003ename - if they are the same, just return success.\n\nI know it\u0027s a silly example, but returning success in this case is more accurate in my opinion.",
+      "revId": "4cfc1d3cae72d532d828c2948a775fd419c515a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
