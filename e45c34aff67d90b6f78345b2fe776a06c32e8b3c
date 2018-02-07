@@ -22,6 +22,30 @@
       "revId": "e45c34aff67d90b6f78345b2fe776a06c32e8b3c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb868c22_a851456d",
+        "filename": "test/nvmf/multiconnection/multiconnection.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-02-07T12:52:37Z",
+      "side": 1,
+      "message": "OK, I removed the line 73.",
+      "parentUuid": "207c27ef_e55f94ca",
+      "range": {
+        "startLine": 73,
+        "startChar": 0,
+        "endLine": 73,
+        "endChar": 46
+      },
+      "revId": "e45c34aff67d90b6f78345b2fe776a06c32e8b3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
