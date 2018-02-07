@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "46863799_0ffc9aca",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 48
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-07T09:10:17Z",
+      "side": 1,
+      "message": "These are not used",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 16
+      },
+      "revId": "6be35eea80ad2172a8a9e6f8446d2d0a192fcf89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
