@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fc480713_806c2b62",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 630,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-07T11:13:30Z",
+      "side": 1,
+      "message": "Does not seem necessary, please see ut_lvol_rename() comment.",
+      "range": {
+        "startLine": 628,
+        "startChar": 0,
+        "endLine": 630,
+        "endChar": 49
+      },
+      "revId": "310d1a8b5ccf974b5022e7781b8adbd59405fd28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c5a43b84_5ca56a27",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 801,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-07T11:13:30Z",
+      "side": 1,
+      "message": "Does not seem necessary, please see ut_lvol_rename() comment.",
+      "range": {
+        "startLine": 799,
+        "startChar": 0,
+        "endLine": 801,
+        "endChar": 49
+      },
+      "revId": "310d1a8b5ccf974b5022e7781b8adbd59405fd28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b2302da_f130919d",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 922,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-07T11:13:30Z",
+      "side": 1,
+      "message": "Does not seem necessary, please see ut_lvol_rename() comment.",
+      "range": {
+        "startLine": 920,
+        "startChar": 0,
+        "endLine": 922,
+        "endChar": 49
+      },
+      "revId": "310d1a8b5ccf974b5022e7781b8adbd59405fd28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "537951aa_995a642a",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 994,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-07T11:13:30Z",
+      "side": 1,
+      "message": "Does not seem necessary, please see ut_lvol_rename() comment.",
+      "range": {
+        "startLine": 992,
+        "startChar": 0,
+        "endLine": 994,
+        "endChar": 49
+      },
+      "revId": "310d1a8b5ccf974b5022e7781b8adbd59405fd28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
