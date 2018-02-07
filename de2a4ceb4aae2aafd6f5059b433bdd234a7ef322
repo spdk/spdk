@@ -1,0 +1,191 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a49ed71_42864dce",
+        "filename": "lib/blob/blob_bs_dev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-07T18:39:44Z",
+      "side": 1,
+      "message": "I like returning -EPERM for write/writev - shouldn\u0027t we do that here too?",
+      "revId": "de2a4ceb4aae2aafd6f5059b433bdd234a7ef322",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82e782c1_63fd603b",
+        "filename": "lib/blob/blob_bs_dev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-07T18:39:44Z",
+      "side": 1,
+      "message": "-EPERM instead of 0?",
+      "revId": "de2a4ceb4aae2aafd6f5059b433bdd234a7ef322",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b5974be_77bdb2fe",
+        "filename": "lib/blob/blob_bs_dev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-07T18:39:44Z",
+      "side": 1,
+      "message": "please put a newline after declarations\n\nI know we can\u0027t catch this with the check_format.sh script, but would really appreciate if you could try to catch these before pushing patches out for review.  I\u0027ve commented on this a bunch of times on your reviews.  :)  Thanks!",
+      "revId": "de2a4ceb4aae2aafd6f5059b433bdd234a7ef322",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3245c429_2825f9af",
+        "filename": "lib/blob/blob_bs_dev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-07T18:39:44Z",
+      "side": 1,
+      "message": "newline",
+      "revId": "de2a4ceb4aae2aafd6f5059b433bdd234a7ef322",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68c8bf30_49334975",
+        "filename": "lib/blob/blob_bs_dev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-07T18:39:44Z",
+      "side": 1,
+      "message": "Can this just call spdk_bs_io_read_blob() instead of the internal function in blobstore.c?",
+      "revId": "de2a4ceb4aae2aafd6f5059b433bdd234a7ef322",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b4e614a_939382a9",
+        "filename": "lib/blob/blob_bs_dev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-07T18:39:44Z",
+      "side": 1,
+      "message": "newline",
+      "revId": "de2a4ceb4aae2aafd6f5059b433bdd234a7ef322",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e6e02288_36fed677",
+        "filename": "lib/blob/blob_bs_dev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-07T18:39:44Z",
+      "side": 1,
+      "message": "Can this just call spdk_bs_io_readv_blob()?",
+      "revId": "de2a4ceb4aae2aafd6f5059b433bdd234a7ef322",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c19ae7d7_83cb6830",
+        "filename": "lib/blob/blob_bs_dev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-07T18:39:44Z",
+      "side": 1,
+      "message": "Piotr,\n\nThis is not correct.  active.num_pages is the number of metadata pages used for the blob - not how many pages of data in the blob.\n\nYou want active.num_clusters * blob-\u003ebs-\u003epages_per_cluster instead.\n\nBut this is concerning to me - how have these patches been tested?  I would expect this to cause all kinds of problems as it is currently.\n\n-Jim",
+      "revId": "de2a4ceb4aae2aafd6f5059b433bdd234a7ef322",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fb4ed8fa_95798927",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 792,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-07T18:39:44Z",
+      "side": 1,
+      "message": "should set bserrno \u003d -ENOMEM here before goto error",
+      "revId": "de2a4ceb4aae2aafd6f5059b433bdd234a7ef322",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b14532c0_6d4aa375",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 802,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-07T18:39:44Z",
+      "side": 1,
+      "message": "this should return bserrno instead of -EINVAL",
+      "revId": "de2a4ceb4aae2aafd6f5059b433bdd234a7ef322",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16249264_9e6087d2",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 867,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-07T18:39:44Z",
+      "side": 1,
+      "message": "should check here that len \u003d\u003d sizeof(spdk_blob_id) - if it doesn\u0027t, we should fail loading this blob",
+      "revId": "de2a4ceb4aae2aafd6f5059b433bdd234a7ef322",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
