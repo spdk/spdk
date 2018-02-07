@@ -1,0 +1,159 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2d430f00_43858d27",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-07T11:41:37Z",
+      "side": 1,
+      "message": "if it is started with \"-i 1\", then there is no need for the s/shm_id\u003d1/shm_id\u003d0/g operation",
+      "range": {
+        "startLine": 14,
+        "startChar": 20,
+        "endLine": 14,
+        "endChar": 39
+      },
+      "revId": "40fc0a89b72e67a04a081e806bd68ed1df52cf91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb69c46b_09ca2edb",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-07T11:41:37Z",
+      "side": 1,
+      "message": "Can change base on above comment.",
+      "range": {
+        "startLine": 23,
+        "startChar": 1,
+        "endLine": 23,
+        "endChar": 41
+      },
+      "revId": "40fc0a89b72e67a04a081e806bd68ed1df52cf91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "65f01976_e1536e3a",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-07T11:41:37Z",
+      "side": 1,
+      "message": "-c 0x0 is preferred to test the \"zero\" based block count",
+      "range": {
+        "startLine": 39,
+        "startChar": 26,
+        "endLine": 39,
+        "endChar": 32
+      },
+      "revId": "40fc0a89b72e67a04a081e806bd68ed1df52cf91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "93929c2d_fa36eea3",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-07T11:41:37Z",
+      "side": 1,
+      "message": "-c 0x0 is preferred to test the \"zero\" based block count",
+      "range": {
+        "startLine": 40,
+        "startChar": 37,
+        "endLine": 40,
+        "endChar": 41
+      },
+      "revId": "40fc0a89b72e67a04a081e806bd68ed1df52cf91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "09a67345_ee8db110",
+        "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-07T11:41:37Z",
+      "side": 1,
+      "message": "Test spdk/nvme-cli NVMe-oF commands: discover, connect and disconnet",
+      "revId": "40fc0a89b72e67a04a081e806bd68ed1df52cf91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "883226d8_ef296fa0",
+        "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-07T11:41:37Z",
+      "side": 1,
+      "message": "By the way, how to measure whether the connect succeeded here? I can see it expects the command itself has no failure.\n\nMaybe we can check ll /dev/nvme* to see number of new nvme devices after the connect to the remote subsystem?\n\nSame for disconnect, the /dev/nvme* is expected to go away.",
+      "range": {
+        "startLine": 61,
+        "startChar": 1,
+        "endLine": 62,
+        "endChar": 50
+      },
+      "revId": "40fc0a89b72e67a04a081e806bd68ed1df52cf91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "67b471af_da1e7092",
+        "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-07T11:41:37Z",
+      "side": 1,
+      "message": "This can be removed if the stub is started with \"-i 1\". If it is started with \"-i 0\", then it needs to make sure for the same shm_id. Thanks.",
+      "range": {
+        "startLine": 64,
+        "startChar": 8,
+        "endLine": 64,
+        "endChar": 36
+      },
+      "revId": "40fc0a89b72e67a04a081e806bd68ed1df52cf91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
