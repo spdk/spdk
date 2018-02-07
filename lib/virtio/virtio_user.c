@@ -201,14 +201,35 @@ static void
 virtio_user_read_dev_config(struct virtio_dev *vdev, size_t offset,
 			    void *dst, int length)
 {
-	SPDK_ERRLOG("not supported offset=%zu, len=%d\n", offset, length);
+	struct virtio_user_dev *dev = vdev->ctx;
+	struct vhost_user_config cfg = {0};
+
+	cfg.offset = 0;
+	cfg.size = VHOST_USER_MAX_CONFIG_SIZE;
+
+	if (dev->ops->send_request(dev, VHOST_USER_GET_CONFIG, &cfg) < 0) {
+		SPDK_ERRLOG("get_config failed: %s\n", spdk_strerror(errno));
+		return;
+	}
+
+	memcpy(dst, cfg.region + offset, length);
 }
 
 static void
 virtio_user_write_dev_config(struct virtio_dev *vdev, size_t offset,
 			     const void *src, int length)
 {
-	SPDK_ERRLOG("not supported offset=%zu, len=%d\n", offset, length);
+	struct virtio_user_dev *dev = vdev->ctx;
+	struct vhost_user_config cfg = {0};
+
+	cfg.offset = offset;
+	cfg.size = length;
+	memcpy(cfg.region, src, length);
+
+	if (dev->ops->send_request(dev, VHOST_USER_SET_CONFIG, &cfg) < 0) {
+		SPDK_ERRLOG("set_config failed: %s\n", spdk_strerror(errno));
+		return;
+	}
 }
 
 static void

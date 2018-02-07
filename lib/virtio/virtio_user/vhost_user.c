@@ -63,6 +63,7 @@ struct vhost_user_msg {
 		struct vhost_vring_state state;
 		struct vhost_vring_addr addr;
 		struct vhost_memory_padded memory;
+		struct vhost_user_config cfg;
 	} payload;
 	int fds[VHOST_MEMORY_MAX_NREGIONS];
 } __attribute((packed));
@@ -279,7 +280,9 @@ static const char *const vhost_msg_strings[VHOST_USER_MAX] = {
 	[VHOST_USER_SET_VRING_KICK] = "VHOST_SET_VRING_KICK",
 	[VHOST_USER_SET_MEM_TABLE] = "VHOST_SET_MEM_TABLE",
 	[VHOST_USER_SET_VRING_ENABLE] = "VHOST_SET_VRING_ENABLE",
-	[VHOST_USER_GET_QUEUE_NUM] = "VHOST_USER_GET_QUEUE_NUM"
+	[VHOST_USER_GET_QUEUE_NUM] = "VHOST_USER_GET_QUEUE_NUM",
+	[VHOST_USER_GET_CONFIG] = "VHOST_USER_GET_CONFIG",
+	[VHOST_USER_SET_CONFIG] = "VHOST_USER_SET_CONFIG",
 };
 
 static int
@@ -362,6 +365,17 @@ vhost_user_sock(struct virtio_user_dev *dev,
 		}
 		break;
 
+	case VHOST_USER_GET_CONFIG:
+		memcpy(&msg.payload.cfg, arg, sizeof(msg.payload.cfg));
+		msg.size = sizeof(msg.payload.cfg);
+		need_reply = 1;
+		break;
+
+	case VHOST_USER_SET_CONFIG:
+		memcpy(&msg.payload.cfg, arg, sizeof(msg.payload.cfg));
+		msg.size = sizeof(msg.payload.cfg);
+		break;
+
 	default:
 		SPDK_ERRLOG("trying to send unhandled msg type\n");
 		return -1;
@@ -406,6 +420,13 @@ vhost_user_sock(struct virtio_user_dev *dev,
 			}
 			memcpy(arg, &msg.payload.state,
 			       sizeof(struct vhost_vring_state));
+			break;
+		case VHOST_USER_GET_CONFIG:
+			if (msg.size != sizeof(msg.payload.cfg)) {
+				SPDK_WARNLOG("Received bad msg size\n");
+				return -1;
+			}
+			memcpy(arg, &msg.payload.cfg, sizeof(msg.payload.cfg));
 			break;
 		default:
 			SPDK_WARNLOG("Received unexpected msg type\n");

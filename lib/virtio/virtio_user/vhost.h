@@ -41,6 +41,8 @@
 #include "spdk_internal/log.h"
 #include "spdk_internal/virtio.h"
 
+#define VHOST_USER_MAX_CONFIG_SIZE 256
+
 enum vhost_user_request {
 	VHOST_USER_NONE = 0,
 	VHOST_USER_GET_FEATURES = 1,
@@ -61,6 +63,8 @@ enum vhost_user_request {
 	VHOST_USER_SET_PROTOCOL_FEATURES = 16,
 	VHOST_USER_GET_QUEUE_NUM = 17,
 	VHOST_USER_SET_VRING_ENABLE = 18,
+	VHOST_USER_GET_CONFIG = 24,
+	VHOST_USER_SET_CONFIG = 25,
 	VHOST_USER_MAX
 };
 
@@ -86,6 +90,14 @@ struct virtio_user_backend_ops {
 	int (*send_request)(struct virtio_user_dev *dev,
 			    enum vhost_user_request req,
 			    void *arg);
+};
+
+/* get/set config msg */
+struct vhost_user_config {
+	uint32_t offset;
+	uint32_t size;
+	uint32_t flags;
+	uint8_t region[VHOST_USER_MAX_CONFIG_SIZE];
 };
 
 extern struct virtio_user_backend_ops ops_user;
