@@ -69,6 +69,30 @@
       "revId": "f34844a678e40c54f63f8dbb42882c4a6e0652c7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c097179f_93a3302f",
+        "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-02-07T08:42:36Z",
+      "side": 1,
+      "message": "Hi Gang,\n\nFor Intel plugin,When your patch is merged,I will add Intel plugin commads testing.\n\nThanks\nWenzhong",
+      "parentUuid": "9b9b21a0_2bed0762",
+      "range": {
+        "startLine": 82,
+        "startChar": 1,
+        "endLine": 82,
+        "endChar": 19
+      },
+      "revId": "f34844a678e40c54f63f8dbb42882c4a6e0652c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
