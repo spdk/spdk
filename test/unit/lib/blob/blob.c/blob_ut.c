@@ -2087,13 +2087,13 @@ super_block_crc(void)
 }
 
 /* For blob dirty shutdown test case we do the following sub-test cases:
- * 1 Initialize new blob store and create 1 blob with some xattrs, then we
+ * 1 Initialize new blob store and create 1 super blob with some xattrs, then we
  *   dirty shutdown and reload the blob store and verify the xattrs.
  * 2 Resize the blob from 10 clusters to 20 clusters and then dirty shutdown,
  *   reload the blob store and verify the clusters number.
  * 3 Create the second blob and then dirty shutdown, reload the blob store
  *   and verify the second blob.
- * 4 Delete the second blob and then dirty shutdown, reload teh blob store
+ * 4 Delete the second blob and then dirty shutdown, reload the blob store
  *   and verify the second blob is invalid.
  * 5 Create the second blob again and also create the third blob, modify the
  *   md of second blob which makes the md invalid, and then dirty shutdown,
@@ -2146,6 +2146,10 @@ blob_dirty_shutdown(void)
 	rc = spdk_blob_resize(blob, 10);
 	CU_ASSERT(rc == 0);
 
+	/* Set the blob as the super blob */
+	spdk_bs_set_super(g_bs, blobid1, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
 	free_clusters = spdk_bs_free_cluster_count(g_bs);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
@@ -2161,6 +2165,11 @@ blob_dirty_shutdown(void)
 	spdk_bs_opts_init(&opts);
 	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
+
+	/* Get the super blob */
+	spdk_bs_get_super(g_bs, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(blobid1 == g_blobid);
 
 	spdk_bs_open_blob(g_bs, blobid1, blob_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
