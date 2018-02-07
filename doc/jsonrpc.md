@@ -199,7 +199,6 @@ Example response:
   "id": 1,
   "result": [
     {
-      "core": 0,
       "nqn": "nqn.2014-08.org.nvmexpress.discovery",
       "subtype": "Discovery"
       "listen_addresses": [],
@@ -207,7 +206,6 @@ Example response:
       "allow_any_host": true
     },
     {
-      "core": 5,
       "nqn": "nqn.2016-06.io.spdk:cnode1",
       "subtype": "NVMe",
       "listen_addresses": [
@@ -240,7 +238,6 @@ Construct an NVMe over Fabrics target subsystem.
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
-core                    | Optional | number      | Core to run the subsystem's poller on. Default: Automatically assign a core.
 nqn                     | Required | string      | Subsystem NQN
 listen_addresses        | Optional | array       | Array of @ref rpc_construct_nvmf_subsystem_listen_address objects
 hosts                   | Optional | array       | Array of strings containing allowed host NQNs. Default: No hosts allowed.
@@ -274,7 +271,6 @@ Example request:
   "id": 1,
   "method": "construct_nvmf_subsystem",
   "params": {
-    "core": 5,
     "nqn": "nqn.2016-06.io.spdk:cnode1",
     "listen_addresses": [
       {
