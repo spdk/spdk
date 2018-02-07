@@ -144,6 +144,30 @@
     },
     {
       "key": {
+        "uuid": "821ac8d1_04c103fe",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-07T10:08:40Z",
+      "side": 1,
+      "message": "OK, for now we can leave it as it is. This will require more changes in bdev layer, so we can do this with separate patches.",
+      "parentUuid": "6f5c9283_794b6d5e",
+      "range": {
+        "startLine": 82,
+        "startChar": 0,
+        "endLine": 98,
+        "endChar": 2
+      },
+      "revId": "587444dedbdd0007e9b3fe91c51ee1f84e53ba37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5e8dc0aa_eacd93c5",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 63
