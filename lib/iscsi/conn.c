@@ -391,7 +391,7 @@ int spdk_initialize_iscsi_conns(void)
  */
 int
 spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
-			  int sock)
+			  struct spdk_sock *sock)
 {
 	struct spdk_iscsi_conn *conn;
 	int bufsize, i, rc;
@@ -692,7 +692,7 @@ void spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 	}
 
 	spdk_clear_all_transfer_task(conn, NULL);
-	spdk_sock_close(conn->sock);
+	spdk_sock_close(&conn->sock);
 	spdk_poller_unregister(&conn->logout_timer);
 	spdk_poller_unregister(&conn->flush_poller);
 
@@ -895,8 +895,8 @@ spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int bytes,
 		if (errno == EAGAIN || errno == EWOULDBLOCK) {
 			return 0;
 		} else {
-			SPDK_ERRLOG("spdk_sock_recv() failed (fd=%d), errno %d: %s\n",
-				    conn->sock, errno, spdk_strerror(errno));
+			SPDK_ERRLOG("spdk_sock_recv() failed, errno %d: %s\n",
+				    errno, spdk_strerror(errno));
 		}
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
@@ -1152,8 +1152,8 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 		if (errno == EWOULDBLOCK || errno == EAGAIN) {
 			return 1;
 		} else {
-			SPDK_ERRLOG("spdk_sock_writev() failed (fd=%d), errno %d: %s\n",
-				    conn->sock, errno, spdk_strerror(errno));
+			SPDK_ERRLOG("spdk_sock_writev() failed, errno %d: %s\n",
+				    errno, spdk_strerror(errno));
 			return -1;
 		}
 	}

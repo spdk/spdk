@@ -44,20 +44,22 @@
 extern "C" {
 #endif
 
-int spdk_sock_getaddr(int sock, char *saddr, int slen, char *caddr, int clen);
-int spdk_sock_connect(const char *ip, int port);
-int spdk_sock_listen(const char *ip, int port);
-int spdk_sock_accept(int sock);
-int spdk_sock_close(int sock);
-ssize_t spdk_sock_recv(int sock, void *buf, size_t len);
-ssize_t spdk_sock_writev(int sock, struct iovec *iov, int iovcnt);
+struct spdk_sock;
 
-int spdk_sock_set_recvlowat(int sock, int nbytes);
-int spdk_sock_set_recvbuf(int sock, int sz);
-int spdk_sock_set_sendbuf(int sock, int sz);
+int spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, char *caddr, int clen);
+struct spdk_sock *spdk_sock_connect(const char *ip, int port);
+struct spdk_sock *spdk_sock_listen(const char *ip, int port);
+struct spdk_sock *spdk_sock_accept(struct spdk_sock *sock);
+int spdk_sock_close(struct spdk_sock **sock);
+ssize_t spdk_sock_recv(struct spdk_sock *sock, void *buf, size_t len);
+ssize_t spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
 
-bool spdk_sock_is_ipv6(int sock);
-bool spdk_sock_is_ipv4(int sock);
+int spdk_sock_set_recvlowat(struct spdk_sock *sock, int nbytes);
+int spdk_sock_set_recvbuf(struct spdk_sock *sock, int sz);
+int spdk_sock_set_sendbuf(struct spdk_sock *sock, int sz);
+
+bool spdk_sock_is_ipv6(struct spdk_sock *sock);
+bool spdk_sock_is_ipv4(struct spdk_sock *sock);
 
 #ifdef __cplusplus
 }

@@ -128,7 +128,7 @@ spdk_iscsi_portal_create(const char *host, const char *port, const char *cpumask
 
 	p->cpumask = core_mask;
 
-	p->sock = -1;
+	p->sock = NULL;
 	p->group = NULL; /* set at a later time by caller */
 	p->acceptor_poller = NULL;
 
@@ -175,9 +175,10 @@ spdk_iscsi_portal_destroy(struct spdk_iscsi_portal *p)
 static int
 spdk_iscsi_portal_open(struct spdk_iscsi_portal *p)
 {
-	int port, sock;
+	struct spdk_sock *sock;
+	int port;
 
-	if (p->sock >= 0) {
+	if (p->sock != NULL) {
 		SPDK_ERRLOG("portal (%s, %s) is already opened\n",
 			    p->host, p->port);
 		return -1;
@@ -185,7 +186,7 @@ spdk_iscsi_portal_open(struct spdk_iscsi_portal *p)
 
 	port = (int)strtol(p->port, NULL, 0);
 	sock = spdk_sock_listen(p->host, port);
-	if (sock < 0) {
+	if (sock == NULL) {
 		SPDK_ERRLOG("listen error %.64s.%d\n", p->host, port);
 		return -1;
 	}
@@ -207,12 +208,11 @@ spdk_iscsi_portal_open(struct spdk_iscsi_portal *p)
 static void
 spdk_iscsi_portal_close(struct spdk_iscsi_portal *p)
 {
-	if (p->sock >= 0) {
+	if (p->sock) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "close portal (%s, %s)\n",
 			      p->host, p->port);
 		spdk_iscsi_acceptor_stop(p);
-		spdk_sock_close(p->sock);
-		p->sock = -1;
+		spdk_sock_close(&p->sock);
 	}
 }
 

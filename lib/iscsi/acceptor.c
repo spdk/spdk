@@ -49,19 +49,19 @@ static void
 spdk_iscsi_portal_accept(void *arg)
 {
 	struct spdk_iscsi_portal	*portal = arg;
-	int				rc, sock;
+	struct spdk_sock		*sock;
+	int				rc;
 
-	if (portal->sock < 0) {
+	if (portal->sock == NULL) {
 		return;
 	}
 
 	while (1) {
-		rc = spdk_sock_accept(portal->sock);
-		if (rc >= 0) {
-			sock = rc;
+		sock = spdk_sock_accept(portal->sock);
+		if (sock != NULL) {
 			rc = spdk_iscsi_conn_construct(portal, sock);
 			if (rc < 0) {
-				spdk_sock_close(sock);
+				spdk_sock_close(&sock);
 				SPDK_ERRLOG("spdk_iscsi_connection_construct() failed\n");
 				break;
 			}
