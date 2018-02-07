@@ -16,6 +16,24 @@
       "revId": "bca72d3be7fdd0553b09df5fc67449e3073d4dab",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1643d29f_f265b842",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 681,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-02-07T04:08:41Z",
+      "side": 1,
+      "message": "0 should be fine here, -EEXIST will not tolerate duplicate addresses.",
+      "parentUuid": "a24b9bc6_84b15dd1",
+      "revId": "bca72d3be7fdd0553b09df5fc67449e3073d4dab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
