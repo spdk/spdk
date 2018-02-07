@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa2fc587_75eac6a6",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 770,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-07T11:04:38Z",
+      "side": 1,
+      "message": "Can you revert this logic to something like this:\n\n    if (bserrno !\u003d 0) {\n        goto invalid;\n    }\n\n\n    ...\n    ...\n\n\n    return;\n\n\ninvalid:\n    req-\u003ecb_fn...\n    free(req);\n\n\nand then also use goto invalid in line 783.",
+      "revId": "1000c02bd3c3ed495b6aaf56ac2e66b7830942ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
