@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "207c27ef_e55f94ca",
+        "filename": "test/nvmf/multiconnection/multiconnection.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-07T09:15:17Z",
+      "side": 1,
+      "message": "It does not hurt, but I think that discarding any other NVMe disk than first is not needed.\nIn script you don\u0027t iterate over NVMe\u0027s - you just use Nvme0n1, so Nvme1n1, Nvme2n1, etc. are not used in test configuration even if they exist.",
+      "range": {
+        "startLine": 73,
+        "startChar": 0,
+        "endLine": 73,
+        "endChar": 46
+      },
+      "revId": "e45c34aff67d90b6f78345b2fe776a06c32e8b3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
