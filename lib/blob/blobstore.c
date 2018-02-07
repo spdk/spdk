@@ -3094,13 +3094,91 @@ spdk_bs_unload(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn, void *cb_a
 
 /* END spdk_bs_unload */
 
+/* START spdk_bs_set_super */
+
+struct spdk_bs_set_super_ctx {
+	struct spdk_blob_store		*bs;
+	struct spdk_bs_super_block	*super;
+};
+
+static void
+_spdk_bs_set_super_write_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_bs_set_super_ctx	*ctx = cb_arg;
+
+	if (bserrno != 0) {
+		SPDK_ERRLOG("Unable to write to super block of blobstore\n");
+	}
+
+	spdk_dma_free(ctx->super);
+
+	spdk_bs_sequence_finish(seq, bserrno);
+
+	free(ctx);
+}
+
+static void
+_spdk_bs_set_super_read_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_bs_set_super_ctx	*ctx = cb_arg;
+
+	if (bserrno != 0) {
+		SPDK_ERRLOG("Unable to read super block of blobstore\n");
+		spdk_dma_free(ctx->super);
+		spdk_bs_sequence_finish(seq, bserrno);
+		free(ctx);
+		return;
+	}
+
+	_spdk_bs_write_super(seq, ctx->bs, ctx->super, _spdk_bs_set_super_write_cpl, ctx);
+}
+
 void
 spdk_bs_set_super(struct spdk_blob_store *bs, spdk_blob_id blobid,
 		  spdk_bs_op_complete cb_fn, void *cb_arg)
 {
+	struct spdk_bs_cpl		cpl;
+	spdk_bs_sequence_t		*seq;
+	struct spdk_bs_set_super_ctx	*ctx;
+
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Setting super blob id on blobstore\n");
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	ctx->bs = bs;
+
+	ctx->super = spdk_dma_zmalloc(sizeof(*ctx->super), 0x1000, NULL);
+	if (!ctx->super) {
+		free(ctx);
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	cpl.type = SPDK_BS_CPL_TYPE_BS_BASIC;
+	cpl.u.bs_basic.cb_fn = cb_fn;
+	cpl.u.bs_basic.cb_arg = cb_arg;
+
+	seq = spdk_bs_sequence_start(bs->md_channel, &cpl);
+	if (!seq) {
+		spdk_dma_free(ctx->super);
+		free(ctx);
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
 	bs->super_blob = blobid;
-	cb_fn(cb_arg, 0);
+
+	/* Read super block */
+	spdk_bs_sequence_read_dev(seq, ctx->super, _spdk_bs_page_to_lba(bs, 0),
+				  _spdk_bs_byte_to_lba(bs, sizeof(*ctx->super)),
+				  _spdk_bs_set_super_read_cpl, ctx);
 }
+
+/* END spdk_bs_set_super */
 
 void
 spdk_bs_get_super(struct spdk_blob_store *bs,
