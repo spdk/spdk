@@ -46,8 +46,6 @@
 extern "C" {
 #endif
 
-#define IDLE_INTERVAL_TIME_IN_US 5000
-
 int spdk_interface_init(void);
 void spdk_interface_destroy(void);
 
