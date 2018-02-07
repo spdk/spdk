@@ -59,6 +59,12 @@ bool lvol_store_initialize_cb_fail = false;
 bool lvol_already_opened = false;
 bool g_examine_done = false;
 
+int
+spdk_bdev_register(struct spdk_bdev *bdev)
+{
+	return 0;
+}
+
 void
 spdk_bdev_unregister_done(struct spdk_bdev *bdev, int bdeverrno)
 {
@@ -112,8 +118,14 @@ spdk_bs_bdev_claim(struct spdk_bs_dev *bs_dev, struct spdk_bdev_module_if *modul
 void
 spdk_bdev_unregister(struct spdk_bdev *vbdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
+	int rc;
+
 	SPDK_CU_ASSERT_FATAL(vbdev != NULL);
-	vbdev->fn_table->destruct(vbdev->ctxt);
+	rc = vbdev->fn_table->destruct(vbdev->ctxt);
+
+	if (rc <= 0 && cb_fn != NULL) {
+		cb_fn(cb_arg, rc);
+	}
 }
 
 void
@@ -313,6 +325,7 @@ spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_
 			free(destruct_req);
 		}
 	}
+
 	g_lvol = NULL;
 	free(lvol->unique_id);
 	free(lvol);
@@ -720,20 +733,9 @@ ut_lvol_resize(void)
 	SPDK_CU_ASSERT_FATAL(g_base_bdev->name != NULL);
 
 	/* Successful lvol resize */
-	rc = vbdev_lvol_resize(g_lvol->unique_id, 20, vbdev_lvol_resize_complete, NULL);
+	rc = vbdev_lvol_resize(g_lvol, 20, vbdev_lvol_resize_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_base_bdev->blockcnt == 20 * g_cluster_size / g_base_bdev->blocklen);
-
-	/* Resize with wrong bdev name */
-	rc = vbdev_lvol_resize("wrong name", 20, vbdev_lvol_resize_complete, NULL);
-	CU_ASSERT(rc != 0);
-
-	/* Resize with correct bdev name, but wrong lvol name */
-	free(g_lvol->unique_id);
-	g_lvol->unique_id = strdup("wrong name");
-	SPDK_CU_ASSERT_FATAL(g_lvol->unique_id != NULL);
-	rc = vbdev_lvol_resize(g_base_bdev->name, 20, vbdev_lvol_resize_complete, NULL);
-	CU_ASSERT(rc != 0);
 
 	/* Successful lvol destruct */
 	vbdev_lvol_destruct(g_lvol);
