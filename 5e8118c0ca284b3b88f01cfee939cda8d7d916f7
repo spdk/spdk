@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "b6a08bc3_cfe45539",
+        "filename": "lib/histogram/histogram.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2018-02-07T06:30:30Z",
+      "side": 1,
+      "message": "This is indeed a global allocation of histogram objects identified by ids",
+      "parentUuid": "81b9a970_a5cf8ce9",
+      "revId": "5e8118c0ca284b3b88f01cfee939cda8d7d916f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "87e1bd87_7007e029",
         "filename": "lib/histogram/histogram.c",
         "patchSetId": 18
@@ -47,6 +65,24 @@
       "writtenOn": "2018-02-05T16:00:21Z",
       "side": 1,
       "message": "Just trying to understand what happens once 999 histograms are allocated and then freed.  HIST_MAX_HIST_ID would be exceeded and we would no longer be able to allocate any more histograms?",
+      "revId": "5e8118c0ca284b3b88f01cfee939cda8d7d916f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "561be76d_565be6aa",
+        "filename": "lib/histogram/histogram.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2018-02-07T06:30:30Z",
+      "side": 1,
+      "message": "All histograms are allocated during respective module load and de-allocated during module unload. Hence it is fixed during compilation time. We won\u0027t be having so many modules/histograms at a given time.",
+      "parentUuid": "87e1bd87_7007e029",
       "revId": "5e8118c0ca284b3b88f01cfee939cda8d7d916f7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -70,6 +106,24 @@
     },
     {
       "key": {
+        "uuid": "7bf2e876_b8afed4d",
+        "filename": "lib/histogram/histogram.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2018-02-07T06:30:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bbf57bd3_d5405015",
+      "revId": "5e8118c0ca284b3b88f01cfee939cda8d7d916f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5546cbb8_13c9c016",
         "filename": "lib/histogram/histogram.c",
         "patchSetId": 18
@@ -81,6 +135,24 @@
       "writtenOn": "2018-02-05T16:00:21Z",
       "side": 1,
       "message": "This should use spdk_histogram_data_iterate() instead of directly iterating over the internal data structures of spdk_histogram_data.",
+      "revId": "5e8118c0ca284b3b88f01cfee939cda8d7d916f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77599f32_ec9eb8ca",
+        "filename": "lib/histogram/histogram.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2018-02-07T06:30:30Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "5546cbb8_13c9c016",
       "revId": "5e8118c0ca284b3b88f01cfee939cda8d7d916f7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
