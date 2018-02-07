@@ -39,6 +39,10 @@
 #define MAX_TMPBUF 1024
 #define PORTNUMLEN 32
 
+struct spdk_sock {
+	int fd;
+};
+
 static int get_addr_str(struct sockaddr *sa, char *host, size_t hlen)
 {
 	const char *result = NULL;
@@ -68,15 +72,17 @@ static int get_addr_str(struct sockaddr *sa, char *host, size_t hlen)
 }
 
 int
-spdk_sock_getaddr(int sock, char *saddr, int slen, char *caddr, int clen)
+spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, char *caddr, int clen)
 {
 	struct sockaddr_storage sa;
 	socklen_t salen;
 	int rc;
 
+	assert(sock != NULL);
+
 	memset(&sa, 0, sizeof sa);
 	salen = sizeof sa;
-	rc = getsockname(sock, (struct sockaddr *) &sa, &salen);
+	rc = getsockname(sock->fd, (struct sockaddr *) &sa, &salen);
 	if (rc != 0) {
 		SPDK_ERRLOG("getsockname() failed (errno=%d)\n", errno);
 		return -1;
@@ -103,7 +109,7 @@ spdk_sock_getaddr(int sock, char *saddr, int slen, char *caddr, int clen)
 
 	memset(&sa, 0, sizeof sa);
 	salen = sizeof sa;
-	rc = getpeername(sock, (struct sockaddr *) &sa, &salen);
+	rc = getpeername(sock->fd, (struct sockaddr *) &sa, &salen);
 	if (rc != 0) {
 		SPDK_ERRLOG("getpeername() failed (errno=%d)\n", errno);
 		return -1;
@@ -123,9 +129,10 @@ enum spdk_sock_create_type {
 	SPDK_SOCK_CREATE_CONNECT,
 };
 
-static int
+static struct spdk_sock *
 spdk_sock_create(const char *ip, int port, enum spdk_sock_create_type type)
 {
+	struct spdk_sock *sock;
 	char buf[MAX_TMPBUF];
 	char portnum[PORTNUMLEN];
 	char *p;
@@ -135,7 +142,7 @@ spdk_sock_create(const char *ip, int port, enum spdk_sock_create_type type)
 	int rc;
 
 	if (ip == NULL) {
-		return -1;
+		return NULL;
 	}
 	if (ip[0] == '[') {
 		snprintf(buf, sizeof(buf), "%s", ip + 1);
@@ -156,7 +163,7 @@ spdk_sock_create(const char *ip, int port, enum spdk_sock_create_type type)
 	rc = getaddrinfo(ip, portnum, &hints, &res0);
 	if (rc != 0) {
 		SPDK_ERRLOG("getaddrinfo() failed (errno=%d)\n", errno);
-		return -1;
+		return NULL;
 	}
 
 	/* try listen */
@@ -234,60 +241,114 @@ retry:
 	freeaddrinfo(res0);
 
 	if (fd < 0) {
-		return -1;
+		return NULL;
 	}
-	return fd;
+
+	sock = calloc(1, sizeof(*sock));
+	if (sock == NULL) {
+		SPDK_ERRLOG("sock allocation failed\n");
+		close(fd);
+		return NULL;
+	}
+
+	sock->fd = fd;
+	return sock;
 }
 
-int
+struct spdk_sock *
 spdk_sock_listen(const char *ip, int port)
 {
 	return spdk_sock_create(ip, port, SPDK_SOCK_CREATE_LISTEN);
 }
 
-int
+struct spdk_sock *
 spdk_sock_connect(const char *ip, int port)
 {
 	return spdk_sock_create(ip, port, SPDK_SOCK_CREATE_CONNECT);
 }
 
-int
-spdk_sock_accept(int sock)
+struct spdk_sock *
+spdk_sock_accept(struct spdk_sock *sock)
 {
 	struct sockaddr_storage		sa;
 	socklen_t			salen;
+	int				rc;
+	struct spdk_sock		*new_sock;
 
 	memset(&sa, 0, sizeof(sa));
 	salen = sizeof(sa);
-	return accept(sock, (struct sockaddr *)&sa, &salen);
+
+	assert(sock != NULL);
+
+	rc = accept(sock->fd, (struct sockaddr *)&sa, &salen);
+
+	if (rc == -1) {
+		return NULL;
+	}
+
+	new_sock = calloc(1, sizeof(*sock));
+	if (new_sock == NULL) {
+		SPDK_ERRLOG("sock allocation failed\n");
+		close(rc);
+		return NULL;
+	}
+
+	new_sock->fd = rc;
+	return new_sock;
 }
 
 int
-spdk_sock_close(int sock)
+spdk_sock_close(struct spdk_sock **sock)
 {
-	return close(sock);
+	int rc;
+
+	if (*sock == NULL) {
+		errno = EBADF;
+		return -1;
+	}
+
+	rc = close((*sock)->fd);
+
+	if (rc == 0) {
+		free(*sock);
+		*sock = NULL;
+	}
+
+	return rc;
 }
 
 ssize_t
-spdk_sock_recv(int sock, void *buf, size_t len)
+spdk_sock_recv(struct spdk_sock *sock, void *buf, size_t len)
 {
-	return recv(sock, buf, len, MSG_DONTWAIT);
+	if (sock == NULL) {
+		errno = EBADF;
+		return -1;
+	}
+
+	return recv(sock->fd, buf, len, MSG_DONTWAIT);
 }
 
 ssize_t
-spdk_sock_writev(int sock, struct iovec *iov, int iovcnt)
+spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 {
-	return writev(sock, iov, iovcnt);
+	if (sock == NULL) {
+		errno = EBADF;
+		return -1;
+	}
+
+	return writev(sock->fd, iov, iovcnt);
 }
 
 int
-spdk_sock_set_recvlowat(int s, int nbytes)
+spdk_sock_set_recvlowat(struct spdk_sock *sock, int nbytes)
 {
 	int val;
 	int rc;
 
+	assert(sock != NULL);
+
 	val = nbytes;
-	rc = setsockopt(s, SOL_SOCKET, SO_RCVLOWAT, &val, sizeof val);
+	rc = setsockopt(sock->fd, SOL_SOCKET, SO_RCVLOWAT, &val, sizeof val);
 	if (rc != 0) {
 		return -1;
 	}
@@ -295,29 +356,35 @@ spdk_sock_set_recvlowat(int s, int nbytes)
 }
 
 int
-spdk_sock_set_recvbuf(int sock, int sz)
+spdk_sock_set_recvbuf(struct spdk_sock *sock, int sz)
 {
-	return setsockopt(sock, SOL_SOCKET, SO_RCVBUF,
+	assert(sock != NULL);
+
+	return setsockopt(sock->fd, SOL_SOCKET, SO_RCVBUF,
 			  &sz, sizeof(sz));
 }
 
 int
-spdk_sock_set_sendbuf(int sock, int sz)
+spdk_sock_set_sendbuf(struct spdk_sock *sock, int sz)
 {
-	return setsockopt(sock, SOL_SOCKET, SO_SNDBUF,
+	assert(sock != NULL);
+
+	return setsockopt(sock->fd, SOL_SOCKET, SO_SNDBUF,
 			  &sz, sizeof(sz));
 }
 
 bool
-spdk_sock_is_ipv6(int sock)
+spdk_sock_is_ipv6(struct spdk_sock *sock)
 {
 	struct sockaddr_storage sa;
 	socklen_t salen;
 	int rc;
 
+	assert(sock != NULL);
+
 	memset(&sa, 0, sizeof sa);
 	salen = sizeof sa;
-	rc = getsockname(sock, (struct sockaddr *) &sa, &salen);
+	rc = getsockname(sock->fd, (struct sockaddr *) &sa, &salen);
 	if (rc != 0) {
 		SPDK_ERRLOG("getsockname() failed (errno=%d)\n", errno);
 		return false;
@@ -327,15 +394,17 @@ spdk_sock_is_ipv6(int sock)
 }
 
 bool
-spdk_sock_is_ipv4(int sock)
+spdk_sock_is_ipv4(struct spdk_sock *sock)
 {
 	struct sockaddr_storage sa;
 	socklen_t salen;
 	int rc;
 
+	assert(sock != NULL);
+
 	memset(&sa, 0, sizeof sa);
 	salen = sizeof sa;
-	rc = getsockname(sock, (struct sockaddr *) &sa, &salen);
+	rc = getsockname(sock->fd, (struct sockaddr *) &sa, &salen);
 	if (rc != 0) {
 		SPDK_ERRLOG("getsockname() failed (errno=%d)\n", errno);
 		return false;
