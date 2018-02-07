@@ -386,22 +386,24 @@ class TestCases(object):
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
         # size is equal to one quarter of size malloc bdev
-        uuid_bdev = self.c.construct_lvol_bdev(uuid_store,
-                                               self.lbd_name,
-                                               self.total_size / 4)
-        fail_count += self.c.check_get_bdevs_methods(uuid_bdev,
-                                                     self.total_size / 4)
+        size = self.total_size / 4
+        uuid_bdev = self.c.construct_lvol_bdev(uuid_store, self.lbd_name, size)
+        fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size)
+
         # size is equal to half  of size malloc bdev
-        self.c.resize_lvol_bdev(uuid_bdev, self.total_size / 2)
-        fail_count += self.c.check_get_bdevs_methods(uuid_bdev,
-                                                     self.total_size / 2)
+        size = self.total_size / 2
+        self.c.resize_lvol_bdev(uuid_bdev, size)
+        fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size)
+
         # size is smaller by 1 MB
-        self.c.resize_lvol_bdev(uuid_bdev, self.total_size - 1)
-        fail_count += self.c.check_get_bdevs_methods(uuid_bdev,
-                                                     self.total_size - 1)
+        size = self.total_size - 1
+        self.c.resize_lvol_bdev(uuid_bdev, size)
+        fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size)
+
         # size is equal 0 MiB
-        self.c.resize_lvol_bdev(uuid_bdev, 0)
-        fail_count += self.c.check_get_bdevs_methods(uuid_bdev, 0)
+        size = 0
+        self.c.resize_lvol_bdev(uuid_bdev, size)
+        fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size)
 
         self.c.delete_bdev(uuid_bdev)
         self.c.destroy_lvol_store(uuid_store)
@@ -525,16 +527,23 @@ class TestCases(object):
         uuid_bdev = self.c.construct_lvol_bdev(uuid_store,
                                                self.lbd_name,
                                                size)
-        fail_count += self.c.check_get_bdevs_methods(uuid_bdev,
-                                                     size)
+        fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size)
 
-        # TODO: Improve resize_lvol_bdev tests to verify if bdev was actually
-        # correctly resized
-        fail_count += self.c.resize_lvol_bdev(uuid_bdev, size + 1)
-        fail_count += self.c.resize_lvol_bdev(uuid_bdev, size * 2)
-        fail_count += self.c.resize_lvol_bdev(uuid_bdev, size * 3)
-        fail_count += self.c.resize_lvol_bdev(uuid_bdev, (size * 4) - 1)
-        fail_count += self.c.resize_lvol_bdev(uuid_bdev, 0)
+        sz = size + 1
+        self.c.resize_lvol_bdev(uuid_bdev, sz)
+        fail_count += self.c.check_get_bdevs_methods(uuid_bdev, sz)
+        sz = size * 2
+        self.c.resize_lvol_bdev(uuid_bdev, sz)
+        fail_count += self.c.check_get_bdevs_methods(uuid_bdev, sz)
+        sz = size * 3
+        self.c.resize_lvol_bdev(uuid_bdev, sz)
+        fail_count += self.c.check_get_bdevs_methods(uuid_bdev, sz)
+        sz = (size * 4) - 1
+        self.c.resize_lvol_bdev(uuid_bdev, sz)
+        fail_count += self.c.check_get_bdevs_methods(uuid_bdev, sz)
+        sz = 0
+        self.c.resize_lvol_bdev(uuid_bdev, sz)
+        fail_count += self.c.check_get_bdevs_methods(uuid_bdev, sz)
 
         self.c.destroy_lvol_store(uuid_store)
         if self.c.check_get_lvol_stores("", "", "") == 1:

@@ -536,15 +536,14 @@ if __name__ == "__main__":
     p.add_argument('new_name', help='new lvol name')
     p.set_defaults(func=rename_lvol_bdev)
 
-    # Logical volume resize feature is disabled, as it is currently work in progress
-    # @call_cmd
-    # def resize_lvol_bdev(args):
-    #     rpc.lvol.resize_bdev(args.client, args)
-    #
-    # p = subparsers.add_parser('resize_lvol_bdev', help='Resize existing lvol bdev')
-    # p.add_argument('name', help='lvol bdev name')
-    # p.add_argument('size', help='new size in MiB for this bdev', type=int)
-    # p.set_defaults(func=resize_lvol_bdev)
+    @call_cmd
+    def resize_lvol_bdev(args):
+        rpc.lvol.resize_lvol_bdev(args.client, args)
+
+    p = subparsers.add_parser('resize_lvol_bdev', help='Resize existing lvol bdev')
+    p.add_argument('name', help='lvol bdev name')
+    p.add_argument('size', help='new size in MiB for this bdev', type=int)
+    p.set_defaults(func=resize_lvol_bdev)
 
     @call_cmd
     def destroy_lvol_store(args):
