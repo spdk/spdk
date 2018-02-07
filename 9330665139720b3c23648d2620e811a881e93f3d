@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1e8d02da_5fcdce77",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 3089,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-07T14:44:06Z",
+      "side": 1,
+      "message": "\u0027used_clusters\u0027 doesn\u0027t quite fit in the name of this function.",
+      "range": {
+        "startLine": 3089,
+        "startChar": 25,
+        "endLine": 3089,
+        "endChar": 38
+      },
+      "revId": "9330665139720b3c23648d2620e811a881e93f3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "deb23775_03491ad4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 3092,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-07T14:44:06Z",
+      "side": 1,
+      "message": "What happen if bserrno !\u003d 0? Will we try to write some garbage to super block?",
+      "revId": "9330665139720b3c23648d2620e811a881e93f3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
