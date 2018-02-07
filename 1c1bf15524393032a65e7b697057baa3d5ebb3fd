@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b1704c6c_cd0f999e",
+        "filename": "test/lib/ut_multithread.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-07T17:36:27Z",
+      "side": 1,
+      "message": "reset_time() is an OK idea - but it should also reset next_expiration_in_us for all existing pollers.  Then unit tests can be written which do not have to unregister all pollers between tests.",
+      "revId": "1c1bf15524393032a65e7b697057baa3d5ebb3fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9225c22d_a257069b",
+        "filename": "test/lib/ut_multithread.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-07T17:36:27Z",
+      "side": 1,
+      "message": "This will not support pollers with period_us \u003d\u003d 0 - it will enter infinite loop.\n\nI think you should add this before you increment next_expiration_in_us:\n\nif (poller-\u003eperiod_us \u003d\u003d 0) {\n  break;\n}",
+      "revId": "1c1bf15524393032a65e7b697057baa3d5ebb3fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
