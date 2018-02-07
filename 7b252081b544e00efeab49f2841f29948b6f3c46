@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "b3efb916_ed5db807",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 68
+      },
+      "lineNbr": 888,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-07T11:13:30Z",
+      "side": 1,
+      "message": "I wouldn\u0027t call it at all in UT. In line 878, we want to check what happens when spdk_bdev_alias_add() reports that alias already exists on some bdev. \nInstead of re-implementing what is already in bdev.c, maybe direct that via a global. Before rename on lines 878, set g_bdev_alias_already_exits to true, and after change it back to false. Meanwhile spdk_bdev_alias_add() stub would act according to it.",
+      "parentUuid": "c6460785_bea60457",
+      "range": {
+        "startLine": 888,
+        "startChar": 1,
+        "endLine": 888,
+        "endChar": 70
+      },
+      "revId": "7b252081b544e00efeab49f2841f29948b6f3c46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "62a255db_0092a3d9",
         "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
         "patchSetId": 68
