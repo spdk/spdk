@@ -62,13 +62,13 @@ DEFINE_STUB(spdk_scsi_lun_get_id,
 	    0);
 
 bool
-spdk_sock_is_ipv6(int sock)
+spdk_sock_is_ipv6(struct spdk_sock *sock)
 {
 	return false;
 }
 
 bool
-spdk_sock_is_ipv4(int sock)
+spdk_sock_is_ipv4(struct spdk_sock *sock)
 {
 	return false;
 }

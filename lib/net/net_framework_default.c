@@ -51,6 +51,6 @@ void spdk_net_framework_fini(void)
 }
 
 __attribute__((weak))
-void spdk_net_framework_clear_socket_association(int sock)
+void spdk_net_framework_clear_socket_association(struct spdk_sock *sock)
 {
 }
