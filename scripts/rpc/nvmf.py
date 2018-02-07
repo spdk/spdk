@@ -52,7 +52,7 @@ def nvmf_subsystem_add_listener(args):
     if args.adrfam:
         listen_address['adrfam'] = args.adrfam
 
-    params = {'subnqn': args.nqn,
+    params = {'nqn': args.nqn,
               'listen_address': listen_address}
 
     args.client.call('nvmf_subsystem_add_listener', params)
