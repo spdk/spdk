@@ -284,6 +284,30 @@
     },
     {
       "key": {
+        "uuid": "7b7dd793_c0c32449",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 830,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-07T11:13:30Z",
+      "side": 1,
+      "message": "But why was it removed only in lvol_rename UT ? I don\u0027t think it should be necessary in any UT in this file.",
+      "parentUuid": "47465d06_3d26579d",
+      "range": {
+        "startLine": 828,
+        "startChar": 0,
+        "endLine": 830,
+        "endChar": 49
+      },
+      "revId": "93f1fbbda04edfe4af8aec1af6f1e6d33417157f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5e47e262_61194a7d",
         "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
         "patchSetId": 64
