@@ -34,6 +34,24 @@
       "revId": "bca72d3be7fdd0553b09df5fc67449e3073d4dab",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98b39177_ef5def45",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 681,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-07T17:19:57Z",
+      "side": 1,
+      "message": "This silently ignores duplicates, which is probably okay, but I might rework this to return -EEXIST instead, since that might be more useful for API users.",
+      "parentUuid": "1643d29f_f265b842",
+      "revId": "bca72d3be7fdd0553b09df5fc67449e3073d4dab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
