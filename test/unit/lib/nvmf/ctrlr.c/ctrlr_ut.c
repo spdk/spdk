@@ -231,6 +231,7 @@ test_connect(void)
 	struct spdk_nvmf_transport transport;
 	struct spdk_nvmf_subsystem subsystem;
 	struct spdk_nvmf_request req;
+	struct spdk_nvmf_qpair admin_qpair;
 	struct spdk_nvmf_qpair qpair;
 	struct spdk_nvmf_qpair qpair2;
 	struct spdk_nvmf_ctrlr ctrlr;
@@ -255,6 +256,10 @@ test_connect(void)
 	ctrlr.vcprop.cc.bits.iocqes = 4;
 	ctrlr.max_qpairs_allowed = 3;
 
+	memset(&admin_qpair, 0, sizeof(admin_qpair));
+	TAILQ_INSERT_TAIL(&ctrlr.qpairs, &admin_qpair, link);
+	admin_qpair.group = &group;
+
 	memset(&tgt, 0, sizeof(tgt));
 	tgt.opts.max_queue_depth = 64;
 	tgt.opts.max_qpairs_per_ctrlr = 3;
@@ -264,6 +269,7 @@ test_connect(void)
 
 	memset(&qpair, 0, sizeof(qpair));
 	qpair.transport = &transport;
+	qpair.group = &group;
 
 	memset(&connect_data, 0, sizeof(connect_data));
 	memcpy(connect_data.hostid, hostid, sizeof(hostid));
@@ -495,6 +501,7 @@ test_connect(void)
 	/* I/O connect with duplicate queue ID */
 	memset(&rsp, 0, sizeof(rsp));
 	memset(&qpair2, 0, sizeof(qpair2));
+	qpair2.group = &group;
 	qpair2.qid = 1;
 	TAILQ_INSERT_TAIL(&ctrlr.qpairs, &qpair, link);
 	cmd.connect_cmd.qid = 1;
