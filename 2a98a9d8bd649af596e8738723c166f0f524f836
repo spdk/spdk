@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "5ce793fb_0bc1db70",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-08T11:20:12Z",
+      "side": 1,
+      "message": "not used",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 11,
+        "endChar": 16
+      },
+      "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8464fac8_d1698c6d",
         "filename": "test/lvol/test_cases.py",
         "patchSetId": 6
@@ -94,6 +117,29 @@
     },
     {
       "key": {
+        "uuid": "b3ebec87_a52f9f66",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 910,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-08T11:20:12Z",
+      "side": 1,
+      "message": "Remember to remove debug messages.\nIf you feel that some prints are worth having then add \"INFO:\" prefix to them (or something similar) so that output is easier to find in logs",
+      "range": {
+        "startLine": 910,
+        "startChar": 8,
+        "endLine": 910,
+        "endChar": 30
+      },
+      "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ba1c5f87_04dedf62",
         "filename": "test/lvol/test_cases.py",
         "patchSetId": 6
@@ -133,6 +179,29 @@
         "startChar": 31,
         "endLine": 920,
         "endChar": 42
+      },
+      "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "170628f6_d23f8f62",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 923,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-08T11:20:12Z",
+      "side": 1,
+      "message": "As already suggested in thin provisioning patch:\nthis can be shortened to\nfail_ount +\u003d self.run_fio_test()",
+      "range": {
+        "startLine": 921,
+        "startChar": 8,
+        "endLine": 923,
+        "endChar": 27
       },
       "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
@@ -450,6 +519,29 @@
     },
     {
       "key": {
+        "uuid": "697f8825_ef2aeb79",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 1059,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-08T11:20:12Z",
+      "side": 1,
+      "message": "Probably no need to do lvol_bdev[\u0027name\u0027]. You could just use uuid_bdev as both alias and uuid should work for commands like these.",
+      "range": {
+        "startLine": 1059,
+        "startChar": 41,
+        "endLine": 1059,
+        "endChar": 58
+      },
+      "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "93bd3be3_edb8e14f",
         "filename": "test/lvol/test_cases.py",
         "patchSetId": 6
@@ -535,6 +627,29 @@
       "writtenOn": "2018-02-08T11:10:32Z",
       "side": 1,
       "message": "Following tests are not described in test plan. Please update test plan.",
+      "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fb0e8ba1_89de8a9c",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 1352,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-08T11:20:12Z",
+      "side": 1,
+      "message": "Cant see this method defined anywhere",
+      "range": {
+        "startLine": 1352,
+        "startChar": 19,
+        "endLine": 1352,
+        "endChar": 68
+      },
       "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
