@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7bc3a5d0_f56290e9",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 1068,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-08T09:08:45Z",
+      "side": 1,
+      "message": "If you don\u0027t call callback function you will have memory leak, because you allocated callback context and never free it. This will also happen below.",
+      "range": {
+        "startLine": 1068,
+        "startChar": 3,
+        "endLine": 1068,
+        "endChar": 11
+      },
+      "revId": "6bf19d642162c48fcdd0b4c4f733cd2c6fc9d3e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
