@@ -5,6 +5,15 @@ BASE_DIR=$(readlink -f $(dirname $0))
 [[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $BASE_DIR/../common && pwd)"
 ROOT_DIR=$(readlink -f $BASE_DIR/../../..)
 
+PLUGIN_DIR=$ROOT_DIR/examples/bdev/fio_plugin
+RPC_PY="$ROOT_DIR/scripts/rpc.py"
+FIO_BIN="/usr/src/fio/fio"
+virtio_bdevs=""
+virtio_with_unmap=""
+os_image="/home/sys_sgsw/vhost_vm_image.qcow2"
+targetcli_rd_name=""
+kernel_vhost_disk="naa.5012345678901234"
+
 function usage()
 {
 	[[ ! -z $2 ]] && ( echo "$2"; echo ""; )
@@ -48,7 +57,19 @@ if [[ $EUID -ne 0 ]]; then
 	exit 1
 fi
 
-trap 'rm -f *.state $ROOT_DIR/spdk.tar.gz; error_exit "${FUNCNAME}""${LINENO}"' ERR SIGTERM SIGABRT
+if [ $(lsb_release -i -s) == "Ubuntu" ]; then
+	targetcli_rd_name="rd_mcp"
+else
+	targetcli_rd_name="ramdisk"
+fi
+
+function remove_kernel_vhost()
+{
+	targetcli "/vhost delete $kernel_vhost_disk"
+	targetcli "/backstores/$targetcli_rd_name delete ramdisk"
+}
+
+trap 'rm -f *.state $ROOT_DIR/spdk.tar.gz; remove_kernel_vhost; error_exit "${FUNCNAME}""${LINENO}"' ERR SIGTERM SIGABRT
 function run_spdk_fio() {
 	LD_PRELOAD=$PLUGIN_DIR/fio_plugin $FIO_BIN --ioengine=spdk_bdev\
          "$@" --spdk_mem=1024
@@ -102,10 +123,16 @@ run_spdk_fio $BASE_DIR/bdev.fio --filename=$virtio_with_unmap --spdk_conf=$BASE_
 	--spdk_conf=$BASE_DIR/bdev.conf
 timing_exit run_spdk_fio_unmap
 
+timing_enter create_kernel_vhost
+targetcli "/backstores/$targetcli_rd_name create name=ramdisk size=1GB"
+targetcli "/vhost create $kernel_vhost_disk"
+targetcli "/vhost/$kernel_vhost_disk/tpg1/luns create /backstores/$targetcli_rd_name/ramdisk"
+timing_exit create_kernel_vhost
+
 timing_enter setup_vm
 vm_no="0"
 vm_setup --disk-type=spdk_vhost_scsi --force=$vm_no --os=$os_image \
- --disks="Nvme0n1:Malloc0:Malloc1" \
+ --disks="Nvme0n1:Malloc0:Malloc1:$kernel_vhost_disk,kernel_vhost" \
  --queue_num=8 --memory=6144
 vm_run $vm_no
 
@@ -151,6 +178,10 @@ vm_shutdown_all
 timing_exit vm_shutdown_all
 
 rm -f *.state $ROOT_DIR/spdk.tar.gz
+timing_enter remove_kernel_vhost
+remove_kernel_vhost
+timing_exit remove_kernel_vhost
+
 timing_enter spdk_vhost_kill
 spdk_vhost_kill
 timing_exit spdk_vhost_kill
