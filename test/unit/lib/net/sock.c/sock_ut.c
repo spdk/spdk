@@ -37,6 +37,10 @@
 
 #include "sock.c"
 
+bool g_read_data_called;
+ssize_t g_bytes_read;
+char g_buf[256];
+
 static void
 sock(void)
 {
@@ -98,6 +102,114 @@ sock(void)
 	CU_ASSERT(rc == 0);
 }
 
+static void
+read_data(void *cb_arg, struct spdk_sock_group *group, struct spdk_sock *sock)
+{
+	struct spdk_sock *server_sock = cb_arg;
+
+	CU_ASSERT(server_sock == sock);
+
+	g_read_data_called = true;
+	g_bytes_read += spdk_sock_recv(server_sock, g_buf + g_bytes_read, sizeof(g_buf) - g_bytes_read);
+}
+
+static void
+sock_group(void)
+{
+	struct spdk_sock_group *group;
+	struct spdk_sock *listen_sock;
+	struct spdk_sock *server_sock;
+	struct spdk_sock *client_sock;
+	char *test_string = "abcdef";
+	ssize_t bytes_written;
+	struct iovec iov;
+	int rc;
+
+	listen_sock = spdk_sock_listen("127.0.0.1", 3260);
+	SPDK_CU_ASSERT_FATAL(listen_sock != NULL);
+
+	server_sock = spdk_sock_accept(listen_sock);
+	CU_ASSERT(server_sock == NULL);
+	CU_ASSERT(errno == EAGAIN || errno == EWOULDBLOCK);
+
+	client_sock = spdk_sock_connect("127.0.0.1", 3260);
+	SPDK_CU_ASSERT_FATAL(client_sock != NULL);
+
+	usleep(1000);
+
+	server_sock = spdk_sock_accept(listen_sock);
+	SPDK_CU_ASSERT_FATAL(server_sock != NULL);
+
+	group = spdk_sock_group_create();
+	SPDK_CU_ASSERT_FATAL(group != NULL);
+
+	/* pass null cb_fn */
+	rc = spdk_sock_group_add_sock(group, server_sock, NULL, NULL);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(errno == EINVAL);
+
+	rc = spdk_sock_group_add_sock(group, server_sock, read_data, server_sock);
+	CU_ASSERT(rc == 0);
+
+	/* try adding sock a second time */
+	rc = spdk_sock_group_add_sock(group, server_sock, read_data, server_sock);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(errno == EBUSY);
+
+	g_read_data_called = false;
+	g_bytes_read = 0;
+	rc = spdk_sock_group_poll(group);
+
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_read_data_called == false);
+
+	iov.iov_base = test_string;
+	iov.iov_len = 7;
+	bytes_written = spdk_sock_writev(client_sock, &iov, 1);
+	CU_ASSERT(bytes_written == 7);
+
+	usleep(1000);
+
+	g_read_data_called = false;
+	g_bytes_read = 0;
+	rc = spdk_sock_group_poll(group);
+
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_read_data_called == true);
+	CU_ASSERT(g_bytes_read == 7);
+
+	CU_ASSERT(strncmp(test_string, g_buf, 7) == 0);
+
+	rc = spdk_sock_close(&client_sock);
+	CU_ASSERT(client_sock == NULL);
+	CU_ASSERT(rc == 0);
+
+	/* Try to close sock_group while it still has sockets. */
+	rc = spdk_sock_group_close(&group);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(errno == EBUSY);
+
+	/* Try to close sock while it is still part of a sock_group. */
+	rc = spdk_sock_close(&server_sock);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(errno == EBUSY);
+
+	rc = spdk_sock_group_remove_sock(group, server_sock);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_sock_group_close(&group);
+	CU_ASSERT(group == NULL);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_sock_close(&server_sock);
+	CU_ASSERT(server_sock == NULL);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_sock_close(&listen_sock);
+	CU_ASSERT(listen_sock == NULL);
+	CU_ASSERT(rc == 0);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -115,7 +227,8 @@ main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "sock", sock) == NULL) {
+		CU_add_test(suite, "sock", sock) == NULL ||
+		CU_add_test(suite, "sock_group", sock_group) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
