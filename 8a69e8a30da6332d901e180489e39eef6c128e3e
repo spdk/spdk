@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7fa34238_384bcc6c",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-08T21:03:35Z",
+      "side": 1,
+      "message": "There\u0027s another patch out for review which will change this test to use qemu directly rather than through virsh; once that\u0027s merged, we should be able to use test/vhost/common/common.sh from this file so that the QEMU prefix path can be updated in just one place.",
+      "revId": "8a69e8a30da6332d901e180489e39eef6c128e3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
