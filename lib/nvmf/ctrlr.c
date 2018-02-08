@@ -73,6 +73,7 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		return NULL;
 	}
 
+	ctrlr->thread = spdk_get_thread();
 	TAILQ_INIT(&ctrlr->qpairs);
 	ctrlr->kato = connect_cmd->kato;
 	ctrlr->async_event_config.raw = 0;
@@ -121,6 +122,34 @@ static void ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 {
 	spdk_nvmf_subsystem_remove_ctrlr(ctrlr->subsys, ctrlr);
 	free(ctrlr);
+}
+
+static void
+ctrlr_add_qpair(void *ctx)
+{
+	struct spdk_nvmf_qpair *qpair = ctx;
+	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
+
+	assert(qpair->ctrlr != NULL);
+	ctrlr->num_qpairs++;
+	TAILQ_INSERT_HEAD(&ctrlr->qpairs, qpair, link);
+}
+
+static void
+ctrlr_delete_qpair(void *ctx)
+{
+	struct spdk_nvmf_qpair *qpair = ctx;
+	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
+
+	assert(ctrlr != NULL);
+
+	ctrlr->num_qpairs--;
+	TAILQ_REMOVE(&ctrlr->qpairs, qpair, link);
+	spdk_nvmf_transport_qpair_fini(qpair);
+
+	if (ctrlr->num_qpairs == 0) {
+		ctrlr_destruct(ctrlr);
+	}
 }
 
 void
@@ -308,9 +337,12 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 		}
 	}
 
-	ctrlr->num_qpairs++;
-	TAILQ_INSERT_HEAD(&ctrlr->qpairs, qpair, link);
 	qpair->ctrlr = ctrlr;
+	if (spdk_get_thread() != ctrlr->thread) {
+		spdk_thread_send_msg(ctrlr->thread, ctrlr_add_qpair, qpair);
+	} else {
+		ctrlr_add_qpair(qpair);
+	}
 
 	rsp->status.sc = SPDK_NVME_SC_SUCCESS;
 	rsp->status_code_specific.success.cntlid = ctrlr->cntlid;
@@ -325,13 +357,10 @@ spdk_nvmf_ctrlr_disconnect(struct spdk_nvmf_qpair *qpair)
 	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
 
 	assert(ctrlr != NULL);
-	ctrlr->num_qpairs--;
-	TAILQ_REMOVE(&ctrlr->qpairs, qpair, link);
-
-	spdk_nvmf_transport_qpair_fini(qpair);
-
-	if (ctrlr->num_qpairs == 0) {
-		ctrlr_destruct(ctrlr);
+	if (spdk_get_thread() != ctrlr->thread) {
+		spdk_thread_send_msg(ctrlr->thread, ctrlr_delete_qpair, qpair);
+	} else {
+		ctrlr_delete_qpair(qpair);
 	}
 }
 
