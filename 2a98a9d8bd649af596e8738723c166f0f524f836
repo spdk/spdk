@@ -25,6 +25,29 @@
     },
     {
       "key": {
+        "uuid": "8c8bec02_fa60173d",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-08T11:10:32Z",
+      "side": 1,
+      "message": "This should be updated.",
+      "range": {
+        "startLine": 49,
+        "startChar": 11,
+        "endLine": 49,
+        "endChar": 13
+      },
+      "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "74f09248_2be396c8",
         "filename": "test/lvol/test_cases.py",
         "patchSetId": 6
@@ -255,6 +278,29 @@
     },
     {
       "key": {
+        "uuid": "2159d315_f727d8bc",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 946,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-08T11:10:32Z",
+      "side": 1,
+      "message": "You have to delete bdev first and then snapshot. Deleting snapshot when any bdev is using it won\u0027t be possible.",
+      "range": {
+        "startLine": 945,
+        "startChar": 0,
+        "endLine": 946,
+        "endChar": 59
+      },
+      "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f86d4664_2482435c",
         "filename": "test/lvol/test_cases.py",
         "patchSetId": 6
@@ -381,6 +427,114 @@
       "writtenOn": "2018-02-06T11:12:01Z",
       "side": 1,
       "message": "Please see test plan, shouldn\u0027t comparison be done here after run_fio_test?",
+      "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9babe530_4d9cbcff",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 1022,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-08T11:10:32Z",
+      "side": 1,
+      "message": "Remove also snapshots.",
+      "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "93bd3be3_edb8e14f",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 1060,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-08T11:10:32Z",
+      "side": 1,
+      "message": "Remove also snapshot.",
+      "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a05d13d1_792d7ec9",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 1082,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-08T11:10:32Z",
+      "side": 1,
+      "message": "Wrong print.",
+      "range": {
+        "startLine": 1082,
+        "startChar": 8,
+        "endLine": 1082,
+        "endChar": 27
+      },
+      "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0958da2c_9661ad6a",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 1087,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-08T11:10:32Z",
+      "side": 1,
+      "message": "Remove also snapshot.",
+      "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e59f7dc4_1c3751a1",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 1125,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-08T11:10:32Z",
+      "side": 1,
+      "message": "Remove also snapshot and clone.",
+      "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2770d3b6_8df57cfb",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 1131,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-08T11:10:32Z",
+      "side": 1,
+      "message": "Following tests are not described in test plan. Please update test plan.",
       "revId": "2a98a9d8bd649af596e8738723c166f0f524f836",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
