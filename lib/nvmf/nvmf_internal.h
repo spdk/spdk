@@ -94,6 +94,7 @@ struct spdk_nvmf_subsystem_poll_group {
 };
 
 struct spdk_nvmf_poll_group {
+	struct spdk_thread				*thread;
 	struct spdk_poller				*poller;
 
 	TAILQ_HEAD(, spdk_nvmf_transport_poll_group)	tgroups;
