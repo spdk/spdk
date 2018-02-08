@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba1102ec_8ce7ded5",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 3407,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-08T08:45:39Z",
+      "side": 1,
+      "message": "This argument is never used. You could add ERRLOG if bserrno !\u003d 0.",
+      "range": {
+        "startLine": 3407,
+        "startChar": 38,
+        "endLine": 3407,
+        "endChar": 49
+      },
+      "revId": "d8a411b449a8ec4a7a2e50240e7522502f73d74e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "45b3677e_8545101c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 3431,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-08T08:45:39Z",
+      "side": 1,
+      "message": "We should try to close a blob despite an error. You can just add ERRLOG here.",
+      "range": {
+        "startLine": 3429,
+        "startChar": 0,
+        "endLine": 3431,
+        "endChar": 2
+      },
+      "revId": "d8a411b449a8ec4a7a2e50240e7522502f73d74e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48d01d03_b04d015d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 3438,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-08T08:45:39Z",
+      "side": 1,
+      "message": "This one is never used. Do see any scenarios that this one can be used?",
+      "range": {
+        "startLine": 3438,
+        "startChar": 39,
+        "endLine": 3438,
+        "endChar": 50
+      },
+      "revId": "d8a411b449a8ec4a7a2e50240e7522502f73d74e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cbe44923_6be97e5a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 3445,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-08T08:45:39Z",
+      "side": 1,
+      "message": "We should try to close a blob despite an error.",
+      "range": {
+        "startLine": 3443,
+        "startChar": 0,
+        "endLine": 3445,
+        "endChar": 2
+      },
+      "revId": "d8a411b449a8ec4a7a2e50240e7522502f73d74e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9fa721d5_8e3c0ded",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 3476,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-08T08:45:39Z",
+      "side": 1,
+      "message": "Set snapshot as thick provisioned here.",
+      "revId": "d8a411b449a8ec4a7a2e50240e7522502f73d74e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
