@@ -63,6 +63,8 @@ test/lib/blobfs/blobfs_sync_ut/blobfs_sync_ut
 
 $valgrind test/unit/lib/event/subsystem.c/subsystem_ut
 
+$valgrind test/unit/lib/net/sock.c/sock_ut
+
 $valgrind test/unit/lib/nvme/nvme.c/nvme_ut
 $valgrind test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut
 $valgrind test/unit/lib/nvme/nvme_ctrlr_cmd.c/nvme_ctrlr_cmd_ut
