@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8ef6a2f3_69643828",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 506,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-08T04:44:48Z",
+      "side": 1,
+      "message": "If cmb_bar_virt_addr + offset is already 2MiB aligned, adding 0x200000 I think wastes 2MiB of the cmb.\n\nI think adding 0x200000 - 1 would work better.",
+      "revId": "7443d18bf243647b9af17c55f52a0e3db068679b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
