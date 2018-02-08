@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "33ca5e34_7bd3986c",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 76
+      },
+      "lineNbr": 1076,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-08T11:17:11Z",
+      "side": 1,
+      "message": "Here call cb_fn with -EEXIST instead of free too.",
+      "range": {
+        "startLine": 1076,
+        "startChar": 3,
+        "endLine": 1076,
+        "endChar": 16
+      },
+      "revId": "ece83f81213f8f4113682d873d0b61eafc573cbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "994f0e84_2a58b9b3",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 76
+      },
+      "lineNbr": 1084,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-08T11:17:11Z",
+      "side": 1,
+      "message": "Same here with -ENOMEM.",
+      "range": {
+        "startLine": 1084,
+        "startChar": 2,
+        "endLine": 1084,
+        "endChar": 15
+      },
+      "revId": "ece83f81213f8f4113682d873d0b61eafc573cbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f248c2b_385b70df",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 76
+      },
+      "lineNbr": 1094,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-08T11:17:11Z",
+      "side": 1,
+      "message": "Here also additionally call cb_fn with rc as errno.",
+      "revId": "ece83f81213f8f4113682d873d0b61eafc573cbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
