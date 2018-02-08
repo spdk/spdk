@@ -152,6 +152,89 @@ spdk_nvmf_invalid_connect_response(struct spdk_nvmf_fabric_connect_rsp *rsp,
 #define SPDK_NVMF_INVALID_CONNECT_DATA(rsp, field)	\
 	spdk_nvmf_invalid_connect_response(rsp, 1, offsetof(struct spdk_nvmf_fabric_connect_data, field))
 
+static void
+ctrlr_add_qpair(void *ctx)
+{
+	struct spdk_nvmf_request *req = ctx;
+	struct spdk_nvmf_fabric_connect_cmd *cmd = &req->cmd->connect_cmd;
+	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
+	struct spdk_nvmf_qpair *qpair = req->qpair;
+	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
+
+	qpair->ctrlr = NULL;
+	if (cmd->qid == 0) {
+		goto end;
+	}
+
+	if (ctrlr->subsys->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+		SPDK_ERRLOG("I/O connect not allowed on discovery controller\n");
+		SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
+		return;
+	}
+
+	if (!ctrlr->vcprop.cc.bits.en) {
+		SPDK_ERRLOG("Got I/O connect before ctrlr was enabled\n");
+		SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
+		return;
+	}
+
+	if (1u << ctrlr->vcprop.cc.bits.iosqes != sizeof(struct spdk_nvme_cmd)) {
+		SPDK_ERRLOG("Got I/O connect with invalid IOSQES %u\n",
+			    ctrlr->vcprop.cc.bits.iosqes);
+		SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
+		return;
+	}
+
+	if (1u << ctrlr->vcprop.cc.bits.iocqes != sizeof(struct spdk_nvme_cpl)) {
+		SPDK_ERRLOG("Got I/O connect with invalid IOCQES %u\n",
+			    ctrlr->vcprop.cc.bits.iocqes);
+		SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
+		return;
+	}
+
+	if (spdk_nvmf_ctrlr_get_qpair(ctrlr, cmd->qid)) {
+		SPDK_ERRLOG("Got I/O connect with duplicate QID %u\n", cmd->qid);
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+		return;
+	}
+
+	/* check if we would exceed ctrlr connection limit */
+	if (ctrlr->num_qpairs >= ctrlr->max_qpairs_allowed) {
+		SPDK_ERRLOG("qpair limit %d\n", ctrlr->num_qpairs);
+		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+		rsp->status.sc = SPDK_NVMF_FABRIC_SC_CONTROLLER_BUSY;
+		return;
+	}
+
+end:
+	qpair->ctrlr = ctrlr;
+	ctrlr->num_qpairs++;
+	TAILQ_INSERT_HEAD(&ctrlr->qpairs, qpair, link);
+
+	rsp->status.sc = SPDK_NVME_SC_SUCCESS;
+	rsp->status_code_specific.success.cntlid = ctrlr->cntlid;
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "connect capsule response: cntlid = 0x%04x\n",
+		      rsp->status_code_specific.success.cntlid);
+}
+
+static void
+ctrlr_delete_qpair(void *ctx)
+{
+	struct spdk_nvmf_qpair *qpair = ctx;
+	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
+
+	assert(ctrlr != NULL);
+
+	ctrlr->num_qpairs--;
+	TAILQ_REMOVE(&ctrlr->qpairs, qpair, link);
+	spdk_nvmf_transport_qpair_fini(qpair);
+
+	if (ctrlr->num_qpairs == 0) {
+		ctrlr_destruct(ctrlr);
+	}
+}
+
 static int
 spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 {
@@ -265,74 +348,17 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 			SPDK_NVMF_INVALID_CONNECT_DATA(rsp, cntlid);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
-
-		if (ctrlr->subsys->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
-			SPDK_ERRLOG("I/O connect not allowed on discovery controller\n");
-			SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		}
-
-		if (!ctrlr->vcprop.cc.bits.en) {
-			SPDK_ERRLOG("Got I/O connect before ctrlr was enabled\n");
-			SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		}
-
-		if (1u << ctrlr->vcprop.cc.bits.iosqes != sizeof(struct spdk_nvme_cmd)) {
-			SPDK_ERRLOG("Got I/O connect with invalid IOSQES %u\n",
-				    ctrlr->vcprop.cc.bits.iosqes);
-			SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		}
-
-		if (1u << ctrlr->vcprop.cc.bits.iocqes != sizeof(struct spdk_nvme_cpl)) {
-			SPDK_ERRLOG("Got I/O connect with invalid IOCQES %u\n",
-				    ctrlr->vcprop.cc.bits.iocqes);
-			SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		}
-
-		if (spdk_nvmf_ctrlr_get_qpair(ctrlr, cmd->qid)) {
-			SPDK_ERRLOG("Got I/O connect with duplicate QID %u\n", cmd->qid);
-			rsp->status.sct = SPDK_NVME_SCT_GENERIC;
-			rsp->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		}
-
-		/* check if we would exceed ctrlr connection limit */
-		if (ctrlr->num_qpairs >= ctrlr->max_qpairs_allowed) {
-			SPDK_ERRLOG("qpair limit %d\n", ctrlr->num_qpairs);
-			rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
-			rsp->status.sc = SPDK_NVMF_FABRIC_SC_CONTROLLER_BUSY;
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		}
 	}
 
-	ctrlr->num_qpairs++;
-	TAILQ_INSERT_HEAD(&ctrlr->qpairs, qpair, link);
 	qpair->ctrlr = ctrlr;
-
-	rsp->status.sc = SPDK_NVME_SC_SUCCESS;
-	rsp->status_code_specific.success.cntlid = ctrlr->cntlid;
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "connect capsule response: cntlid = 0x%04x\n",
-		      rsp->status_code_specific.success.cntlid);
+	ctrlr_add_qpair(req);
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
 void
 spdk_nvmf_ctrlr_disconnect(struct spdk_nvmf_qpair *qpair)
 {
-	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
-
-	assert(ctrlr != NULL);
-	ctrlr->num_qpairs--;
-	TAILQ_REMOVE(&ctrlr->qpairs, qpair, link);
-
-	spdk_nvmf_transport_qpair_fini(qpair);
-
-	if (ctrlr->num_qpairs == 0) {
-		ctrlr_destruct(ctrlr);
-	}
+	ctrlr_delete_qpair(qpair);
 }
 
 struct spdk_nvmf_qpair *
