@@ -22,6 +22,30 @@
       "revId": "21e37b5e05bf1fc9b01271e3a9ddd728fcd7fe03",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ca02c528_4002c11f",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 648,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-02-08T06:25:22Z",
+      "side": 1,
+      "message": "It\u0027s a little tricky here, QEMU vhost uses VHOST_USER_GET_QUEUE_NUM to get maximum queue number, and it also allow users to input the desired number of I/O queues(num_queues should \u003c\u003d the maximum queue number), for the purpose to fully support this, we need to refactor the vhost_dev_init(get virtio configuration information before initializing the queues) API in QEMU, I choose to the simple way to keep the original logic, so currently the value here does not take effect.",
+      "parentUuid": "ddc4b32f_9c8e65fb",
+      "range": {
+        "startLine": 648,
+        "startChar": 1,
+        "endLine": 648,
+        "endChar": 24
+      },
+      "revId": "21e37b5e05bf1fc9b01271e3a9ddd728fcd7fe03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
