@@ -94,6 +94,7 @@ struct spdk_nvmf_subsystem_poll_group {
 };
 
 struct spdk_nvmf_poll_group {
+	struct spdk_thread				*thread;
 	struct spdk_poller				*poller;
 
 	TAILQ_HEAD(, spdk_nvmf_transport_poll_group)	tgroups;
@@ -168,6 +169,7 @@ struct spdk_nvmf_ctrlr {
 		union spdk_nvme_csts_register	csts;
 	} vcprop; /* virtual controller properties */
 
+	struct spdk_nvmf_qpair *admin_qpair;
 	TAILQ_HEAD(, spdk_nvmf_qpair) qpairs;
 	int num_qpairs;
 	int max_qpairs_allowed;
