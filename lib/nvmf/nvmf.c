@@ -362,6 +362,7 @@ spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 	struct spdk_nvmf_transport_poll_group *tgroup;
 
 	qpair->group = group;
+	qpair->thread = spdk_get_thread();
 
 	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
 		if (tgroup->transport == qpair->transport) {
