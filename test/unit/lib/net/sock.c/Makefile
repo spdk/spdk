@@ -31,17 +31,25 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-DIRS-y = bdev blob blobfs event ioat iscsi json jsonrpc log lvol net nvme nvmf scsi util
-ifeq ($(OS),Linux)
-DIRS-$(CONFIG_VHOST) += vhost
-endif
+CFLAGS += -I$(SPDK_ROOT_DIR)/test
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/net
 
-.PHONY: all clean $(DIRS-y)
+APP = sock_ut
+C_SRCS := sock_ut.c
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+SPDK_LIB_LIST = log util
+LIBS += $(SPDK_LIB_LINKER_ARGS) -lcunit
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+all : $(APP)
+
+$(APP) : $(OBJS) $(SPDK_LIBS)
+	$(LINK_C)
+
+clean :
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
