@@ -45,6 +45,7 @@ extern "C" {
 #endif
 
 struct spdk_sock;
+struct spdk_sock_group;
 
 int spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, char *caddr, int clen);
 struct spdk_sock *spdk_sock_connect(const char *ip, int port);
@@ -60,6 +61,16 @@ int spdk_sock_set_sendbuf(struct spdk_sock *sock, int sz);
 
 bool spdk_sock_is_ipv6(struct spdk_sock *sock);
 bool spdk_sock_is_ipv4(struct spdk_sock *sock);
+
+typedef void (*spdk_sock_cb)(void *arg, struct spdk_sock_group *group, struct spdk_sock *sock);
+
+struct spdk_sock_group *spdk_sock_group_create(void);
+int spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
+			     spdk_sock_cb cb_fn, void *cb_arg);
+int spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *sock);
+int spdk_sock_group_poll(struct spdk_sock_group *group);
+int spdk_sock_group_poll_count(struct spdk_sock_group *group, int max_events);
+int spdk_sock_group_close(struct spdk_sock_group **group);
 
 #ifdef __cplusplus
 }
