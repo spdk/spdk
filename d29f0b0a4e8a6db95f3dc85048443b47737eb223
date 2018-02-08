@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "0a628391_616500ba",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-02-08T16:25:05Z",
+      "side": 1,
+      "message": "I think this won\u0027t work on Ubuntu",
+      "parentUuid": "02b931ea_f9469b67",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 56,
+        "endChar": 1
+      },
+      "revId": "d29f0b0a4e8a6db95f3dc85048443b47737eb223",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2e684f8c_0f7f6322",
         "filename": "test/vhost/initiator/blockdev.sh",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2018-02-08T13:53:14Z",
       "side": 1,
       "message": "Do we need that much for a ramdisk?\nI\u0027m concerned about tests for offset above 4G, this may not work. Or will we not run 4G+ on kernel vhost scsi devs?",
+      "range": {
+        "startLine": 113,
+        "startChar": 55,
+        "endLine": 113,
+        "endChar": 58
+      },
+      "revId": "d29f0b0a4e8a6db95f3dc85048443b47737eb223",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3fe03e0a_9446f3e5",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-02-08T16:25:05Z",
+      "side": 1,
+      "message": "We won\u0027t be able to run 4G+ tests on ramdisk",
+      "parentUuid": "2e684f8c_0f7f6322",
       "range": {
         "startLine": 113,
         "startChar": 55,
