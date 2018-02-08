@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aa3358cf_b0c9107e",
+        "filename": "examples/nvme/cmb_copy/cmb_copy.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-08T05:05:32Z",
+      "side": 1,
+      "message": "this should probably add a note that it\u0027s likely the buffer allocation failed because the specified controller doesn\u0027t have a CMB - otherwise someone will run this on one of the millions of non-CMB controllers out there today and think there\u0027s a bug in the example app (yes, I know that should be obvious but I\u0027m sure it will happen)",
+      "revId": "bc9b4b9e9171a68d9dbb12e3cf3f38041729cda2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49b6bc02_ae088251",
+        "filename": "examples/nvme/cmb_copy/cmb_copy.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-08T05:05:32Z",
+      "side": 1,
+      "message": "should this be if (get_rw(trid) \u003d\u003d CMD_COPY_WRITE) instead of an else?  for the case where read and write controller are the same\n\nI think for that case, the get_nsid() call on line 191 will also need rework.",
+      "revId": "bc9b4b9e9171a68d9dbb12e3cf3f38041729cda2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4bbd96b1_f154ffba",
+        "filename": "examples/nvme/cmb_copy/cmb_copy.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-08T05:05:32Z",
+      "side": 1,
+      "message": "it would be good to put the read/write parameter format here",
+      "revId": "bc9b4b9e9171a68d9dbb12e3cf3f38041729cda2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
