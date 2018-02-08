@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8ab7927e_bf964833",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 658,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-08T10:11:49Z",
+      "side": 1,
+      "message": "You don\u0027t have to close blob here as open function failed and blob hasn\u0027t been opened. Just call _spdk_lvs_rename_cb and return.",
+      "revId": "ef61c7765f77c35e577a3701af770235de4ec962",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a4b5132_28914692",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 664,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-08T10:11:49Z",
+      "side": 1,
+      "message": "Please add return.",
+      "revId": "ef61c7765f77c35e577a3701af770235de4ec962",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
