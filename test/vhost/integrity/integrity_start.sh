@@ -2,10 +2,11 @@
 
 set -xe
 
+: ${QEMU_PREFIX="/usr/local/qemu/spdk-2.12-pre"}
+
 basedir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $basedir/../../..)
 testdir=$(readlink -f $rootdir/..)
-qemu_install_dir="$testdir/root"
 MAKE="make -j$(( $(nproc)  * 2 ))"
 
 rpc_py="python $rootdir/scripts/rpc.py "
@@ -47,7 +48,7 @@ fi
 
 # Check if Qemu binary is present
 if [[ -z $VM_QEMU ]]; then
-    VM_QEMU="$qemu_install_dir/bin/qemu-system-x86_64"
+    VM_QEMU="$QEMU_PREFIX/bin/qemu-system-x86_64"
 fi
 
 if [[ ! -x $VM_QEMU ]]; then
@@ -55,7 +56,7 @@ if [[ ! -x $VM_QEMU ]]; then
 fi
 
 if [[ -z $QEMU_IMG ]]; then
-    QEMU_IMG="$qemu_install_dir/bin/qemu-img"
+    QEMU_IMG="$QEMU_PREFIX/bin/qemu-img"
 fi
 
 echo "Running test with filesystem: $VM_FS"

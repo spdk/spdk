@@ -1,6 +1,7 @@
 set -e
 
 : ${SPDK_VHOST_VERBOSE=false}
+: ${QEMU_PREFIX="/usr/local/qemu/spdk-2.12-pre"}
 
 BASE_DIR=$(readlink -f $(dirname $0))
 
@@ -65,8 +66,6 @@ echo "Using SSH key file $SPDK_VHOST_SSH_KEY_FILE"
 
 VM_BASE_DIR="$TEST_DIR/vms"
 
-
-INSTALL_DIR="$TEST_DIR/root"
 
 mkdir -p $TEST_DIR
 
@@ -501,7 +500,7 @@ function vm_setup()
 
 	if [[ "$os_mode" == "backing" ]]; then
 		notice "Creating backing file for OS image file: $os"
-		if ! $INSTALL_DIR/bin/qemu-img create -f qcow2 -b $os $vm_dir/os.qcow2; then
+		if ! $QEMU_PREFIX/bin/qemu-img create -f qcow2 -b $os $vm_dir/os.qcow2; then
 			error "Failed to create OS backing file in '$vm_dir/os.qcow2' using '$os'"
 			return 1
 		fi
@@ -534,7 +533,7 @@ function vm_setup()
 	local task_mask=${!qemu_mask_param}
 
 	notice "TASK MASK: $task_mask"
-	local cmd="taskset -a $task_mask $INSTALL_DIR/bin/qemu-system-x86_64 ${eol}"
+	local cmd="taskset -a $task_mask $QEMU_PREFIX/bin/qemu-system-x86_64 ${eol}"
 	local vm_socket_offset=$(( 10000 + 100 * vm_num ))
 
 	local ssh_socket=$(( vm_socket_offset + 0 ))

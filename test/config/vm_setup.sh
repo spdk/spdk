@@ -62,6 +62,7 @@ sudo dnf install -y lcov
 sudo dnf install -y libuuid-devel
 sudo dnf install -y elfutils-libelf-devel
 sudo dnf install -y flex
+sudo dnf install -y bison
 
 cd ~
 
@@ -137,15 +138,16 @@ git clone https://github.com/brendangregg/FlameGraph.git
 mkdir -p /usr/local
 sudo mv FlameGraph /usr/local/FlameGraph
 
-
-# The SPDK branch of Qemu contains some extra functionality needed by SPDK. However, that branch is not currently
-# compatible with GCC 7. Some of the SPDK changes are currently out for review on Qemu's main branch. Until those
-# changes are merged, this specific review provides support for both spdk and GCC 7.
-mkdir -p vhost
-cd vhost
-git clone https://review.gerrithub.io/spdk/qemu
+SPDK_QEMU_BRANCH=spdk-2.12-pre
+mkdir -p qemu
 cd qemu
-./configure --prefix=/home/sys_sgsw/spdk_repo/root --target-list="x86_64-softmmu" --enable-kvm --enable-linux-aio --enable-numa
+git clone https://github.com/spdk/qemu -b "$SPDK_QEMU_BRANCH" "$SPDK_QEMU_BRANCH"
+cd "$SPDK_QEMU_BRANCH"
+if hash tsocks &> /dev/null; then
+    git_param="--with-git='tsocks git'"
+fi
+./configure "$git_param" --prefix=/usr/local/qemu/$SPDK_QEMU_BRANCH --target-list="x86_64-softmmu" --enable-kvm --enable-linux-aio --enable-numa
+make
 sudo make install
 cd ~
 
