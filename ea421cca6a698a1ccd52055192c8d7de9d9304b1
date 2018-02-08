@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "98685b3e_0a315e14",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 74
+      },
+      "lineNbr": 1068,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-08T10:03:33Z",
+      "side": 1,
+      "message": "You can\u0027t call free on cb_arg, because you don\u0027t know what user of our library passed to your function. It could be even simple int or it can be structure of allocated objects which need to be also freed. Callback function is responsible for freeing whatever is passed to your function, so you have to call cb_fn here so that user will have a chance to clean own memory allocations and whatever is needed.",
+      "range": {
+        "startLine": 1068,
+        "startChar": 2,
+        "endLine": 1068,
+        "endChar": 15
+      },
+      "revId": "ea421cca6a698a1ccd52055192c8d7de9d9304b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
