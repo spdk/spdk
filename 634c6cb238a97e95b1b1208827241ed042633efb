@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d76dbeb1_47dfe46a",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-02-08T06:45:47Z",
+      "side": 1,
+      "message": "Done.Remove extra single trap.",
+      "parentUuid": "efede2c0_89b0c812",
+      "range": {
+        "startLine": 48,
+        "startChar": 8,
+        "endLine": 48,
+        "endChar": 34
+      },
+      "revId": "634c6cb238a97e95b1b1208827241ed042633efb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5b01caa3_d6674154",
         "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
         "patchSetId": 28
@@ -36,6 +60,30 @@
       "writtenOn": "2018-02-08T06:23:28Z",
       "side": 1,
       "message": "Maybe just move this code block after line 70 after the normal disconnect and spdk.conf update.",
+      "range": {
+        "startLine": 64,
+        "startChar": 0,
+        "endLine": 67,
+        "endChar": 3
+      },
+      "revId": "634c6cb238a97e95b1b1208827241ed042633efb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "11e1e910_c4862bed",
+        "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-02-08T06:45:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5b01caa3_d6674154",
       "range": {
         "startLine": 64,
         "startChar": 0,
