@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ae72143d_708cd2b0",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-02-08T05:50:20Z",
+      "side": 1,
+      "message": "Hi,Gang\n\nWith \"-i 1\" on test pool machine stub will time out,So I perf to use -i 0.\n\nThanks\nWenzhong",
+      "parentUuid": "2d430f00_43858d27",
+      "range": {
+        "startLine": 14,
+        "startChar": 20,
+        "endLine": 14,
+        "endChar": 39
+      },
+      "revId": "40fc0a89b72e67a04a081e806bd68ed1df52cf91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bb69c46b_09ca2edb",
         "filename": "test/lib/nvme/spdk_nvme_cli.sh",
         "patchSetId": 26
@@ -36,6 +60,30 @@
       "writtenOn": "2018-02-07T11:41:37Z",
       "side": 1,
       "message": "Can change base on above comment.",
+      "range": {
+        "startLine": 23,
+        "startChar": 1,
+        "endLine": 23,
+        "endChar": 41
+      },
+      "revId": "40fc0a89b72e67a04a081e806bd68ed1df52cf91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af693e25_c4ef3824",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-02-08T05:50:20Z",
+      "side": 1,
+      "message": "Hi Gang,\n\nUse \"-i 0\",So need to changed the configure file.\n\nThanks\nWenzhong",
+      "parentUuid": "bb69c46b_09ca2edb",
       "range": {
         "startLine": 23,
         "startChar": 1,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "fa4c04aa_ce77f7d1",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-02-08T05:50:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "65f01976_e1536e3a",
+      "range": {
+        "startLine": 39,
+        "startChar": 26,
+        "endLine": 39,
+        "endChar": 32
+      },
+      "revId": "40fc0a89b72e67a04a081e806bd68ed1df52cf91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "93929c2d_fa36eea3",
         "filename": "test/lib/nvme/spdk_nvme_cli.sh",
         "patchSetId": 26
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "d5caa4a6_7dcf72e0",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-02-08T05:50:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "93929c2d_fa36eea3",
+      "range": {
+        "startLine": 40,
+        "startChar": 37,
+        "endLine": 40,
+        "endChar": 41
+      },
+      "revId": "40fc0a89b72e67a04a081e806bd68ed1df52cf91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "09a67345_ee8db110",
         "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
         "patchSetId": 26
@@ -105,6 +201,24 @@
       "writtenOn": "2018-02-07T11:41:37Z",
       "side": 1,
       "message": "Test spdk/nvme-cli NVMe-oF commands: discover, connect and disconnet",
+      "revId": "40fc0a89b72e67a04a081e806bd68ed1df52cf91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8710bbaa_22867ca3",
+        "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-02-08T05:50:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "09a67345_ee8db110",
       "revId": "40fc0a89b72e67a04a081e806bd68ed1df52cf91",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -158,6 +272,30 @@
     },
     {
       "key": {
+        "uuid": "c07a3c13_fe4d3607",
+        "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-02-08T05:50:20Z",
+      "side": 1,
+      "message": "Done. Check the number of nvme devices before connect and when connect is finshed.",
+      "parentUuid": "2d428c3b_ce2f788f",
+      "range": {
+        "startLine": 61,
+        "startChar": 1,
+        "endLine": 62,
+        "endChar": 50
+      },
+      "revId": "40fc0a89b72e67a04a081e806bd68ed1df52cf91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "67b471af_da1e7092",
         "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
         "patchSetId": 26
@@ -169,6 +307,30 @@
       "writtenOn": "2018-02-07T11:41:37Z",
       "side": 1,
       "message": "This can be removed if the stub is started with \"-i 1\". If it is started with \"-i 0\", then it needs to make sure for the same shm_id. Thanks.",
+      "range": {
+        "startLine": 64,
+        "startChar": 8,
+        "endLine": 64,
+        "endChar": 36
+      },
+      "revId": "40fc0a89b72e67a04a081e806bd68ed1df52cf91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c461b531_0944db3e",
+        "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-02-08T05:50:20Z",
+      "side": 1,
+      "message": "start stub with \"-i 1\" may cause stub time out on test pool machine,So I still use \"-i 0\".",
+      "parentUuid": "67b471af_da1e7092",
       "range": {
         "startLine": 64,
         "startChar": 8,
