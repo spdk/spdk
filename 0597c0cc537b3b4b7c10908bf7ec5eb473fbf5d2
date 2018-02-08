@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5f75b568_55a40db8",
+        "filename": "lib/blob/blob_bs_dev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-08T11:27:22Z",
+      "side": 1,
+      "message": "It should be num_clusters.",
+      "range": {
+        "startLine": 136,
+        "startChar": 51,
+        "endLine": 136,
+        "endChar": 60
+      },
+      "revId": "0597c0cc537b3b4b7c10908bf7ec5eb473fbf5d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab8b19f2_48180391",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 871,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-08T11:27:22Z",
+      "side": 1,
+      "message": "You will return 0 here, which is incorrect.",
+      "range": {
+        "startLine": 871,
+        "startChar": 26,
+        "endLine": 871,
+        "endChar": 28
+      },
+      "revId": "0597c0cc537b3b4b7c10908bf7ec5eb473fbf5d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
