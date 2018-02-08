@@ -198,6 +198,24 @@
       "revId": "d8a411b449a8ec4a7a2e50240e7522502f73d74e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d85c2add_4ed44482",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 3476,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-08T09:39:02Z",
+      "side": 1,
+      "message": "Ok, it works :)",
+      "parentUuid": "e2ce204d_614bd971",
+      "revId": "d8a411b449a8ec4a7a2e50240e7522502f73d74e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
