@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "02b931ea_f9469b67",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-08T13:53:14Z",
+      "side": 1,
+      "message": "command \"targetcli clearconfig confirm\u003dTrue\" can be used to replace this function",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 56,
+        "endChar": 1
+      },
+      "revId": "d29f0b0a4e8a6db95f3dc85048443b47737eb223",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e684f8c_0f7f6322",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-08T13:53:14Z",
+      "side": 1,
+      "message": "Do we need that much for a ramdisk?\nI\u0027m concerned about tests for offset above 4G, this may not work. Or will we not run 4G+ on kernel vhost scsi devs?",
+      "range": {
+        "startLine": 113,
+        "startChar": 55,
+        "endLine": 113,
+        "endChar": 58
+      },
+      "revId": "d29f0b0a4e8a6db95f3dc85048443b47737eb223",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
