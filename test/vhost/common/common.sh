@@ -640,7 +640,7 @@ function vm_setup()
 					return 1
 				fi
 				notice "Using kernel vhost disk wwn=$disk"
-				cmd+=" -device vhost-scsi-pci,wwpn=$disk ${eol}"
+				cmd+=" -device vhost-scsi-pci,wwpn=$disk,num_queues=$queue_number ${eol}"
 				;;
 			*)
 				error "unknown mode '$disk_type', use: virtio, spdk_vhost_scsi, spdk_vhost_blk or kernel_vhost"
