@@ -153,6 +153,14 @@ spdk_nvmf_invalid_connect_response(struct spdk_nvmf_fabric_connect_rsp *rsp,
 	spdk_nvmf_invalid_connect_response(rsp, 1, offsetof(struct spdk_nvmf_fabric_connect_data, field))
 
 static void
+_spdk_nvmf_request_complete(void *ctx)
+{
+	struct spdk_nvmf_request *req = ctx;
+
+	spdk_nvmf_request_complete(req);
+}
+
+static void
 ctrlr_add_qpair(void *ctx)
 {
 	struct spdk_nvmf_request *req = ctx;
@@ -160,6 +168,7 @@ ctrlr_add_qpair(void *ctx)
 	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
+	struct spdk_nvmf_qpair *admin_qpair = ctrlr->admin_qpair;
 
 	qpair->ctrlr = NULL;
 	if (cmd->qid == 0) {
@@ -169,34 +178,34 @@ ctrlr_add_qpair(void *ctx)
 	if (ctrlr->subsys->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
 		SPDK_ERRLOG("I/O connect not allowed on discovery controller\n");
 		SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
-		return;
+		goto end0;
 	}
 
 	if (!ctrlr->vcprop.cc.bits.en) {
 		SPDK_ERRLOG("Got I/O connect before ctrlr was enabled\n");
 		SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
-		return;
+		goto end0;
 	}
 
 	if (1u << ctrlr->vcprop.cc.bits.iosqes != sizeof(struct spdk_nvme_cmd)) {
 		SPDK_ERRLOG("Got I/O connect with invalid IOSQES %u\n",
 			    ctrlr->vcprop.cc.bits.iosqes);
 		SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
-		return;
+		goto end0;
 	}
 
 	if (1u << ctrlr->vcprop.cc.bits.iocqes != sizeof(struct spdk_nvme_cpl)) {
 		SPDK_ERRLOG("Got I/O connect with invalid IOCQES %u\n",
 			    ctrlr->vcprop.cc.bits.iocqes);
 		SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
-		return;
+		goto end0;
 	}
 
 	if (spdk_nvmf_ctrlr_get_qpair(ctrlr, cmd->qid)) {
 		SPDK_ERRLOG("Got I/O connect with duplicate QID %u\n", cmd->qid);
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
 		rsp->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
-		return;
+		goto end0;
 	}
 
 	/* check if we would exceed ctrlr connection limit */
@@ -204,7 +213,7 @@ ctrlr_add_qpair(void *ctx)
 		SPDK_ERRLOG("qpair limit %d\n", ctrlr->num_qpairs);
 		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		rsp->status.sc = SPDK_NVMF_FABRIC_SC_CONTROLLER_BUSY;
-		return;
+		goto end0;
 	}
 
 end:
@@ -216,6 +225,11 @@ end:
 	rsp->status_code_specific.success.cntlid = ctrlr->cntlid;
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "connect capsule response: cntlid = 0x%04x\n",
 		      rsp->status_code_specific.success.cntlid);
+
+end0:
+	if ((admin_qpair != NULL) && (admin_qpair->group->thread != qpair->group->thread)) {
+		spdk_thread_send_msg(qpair->group->thread, _spdk_nvmf_request_complete, req);
+	}
 }
 
 static void
@@ -244,6 +258,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 	struct spdk_nvmf_tgt *tgt = qpair->transport->tgt;
 	struct spdk_nvmf_ctrlr *ctrlr;
+	struct spdk_nvmf_qpair *admin_qpair = NULL;
 	struct spdk_nvmf_subsystem *subsystem;
 	const char *subnqn, *hostnqn;
 	void *end;
@@ -339,6 +354,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
+		ctrlr->admin_qpair = qpair;
 	} else {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Connect I/O Queue for controller id 0x%x\n", data->cntlid);
 
@@ -348,17 +364,31 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 			SPDK_NVMF_INVALID_CONNECT_DATA(rsp, cntlid);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
+		admin_qpair = ctrlr->admin_qpair;
 	}
 
 	qpair->ctrlr = ctrlr;
-	ctrlr_add_qpair(req);
-	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	if ((admin_qpair != NULL)  && (qpair->group->thread != admin_qpair->group->thread)) {
+		spdk_thread_send_msg(admin_qpair->group->thread, ctrlr_add_qpair, req);
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
+	} else {
+		ctrlr_add_qpair(req);
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
 }
 
 void
 spdk_nvmf_ctrlr_disconnect(struct spdk_nvmf_qpair *qpair)
 {
-	ctrlr_delete_qpair(qpair);
+	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
+	struct spdk_nvmf_qpair *admin_qpair = ctrlr->admin_qpair;
+
+	assert(ctrlr != NULL);
+	if ((admin_qpair != NULL) && qpair->group->thread != admin_qpair->group->thread) {
+		spdk_thread_send_msg(admin_qpair->group->thread, ctrlr_delete_qpair, qpair);
+	} else {
+		ctrlr_delete_qpair(qpair);
+	}
 }
 
 struct spdk_nvmf_qpair *
