@@ -33,14 +33,31 @@
 
 #include "spdk/stdinc.h"
 
+#if defined(__linux__)
+#include <sys/epoll.h>
+#elif defined(__FreeBSD__)
+#include <sys/event.h>
+#endif
+
 #include "spdk/log.h"
 #include "spdk/sock.h"
+#include "spdk/queue.h"
 
 #define MAX_TMPBUF 1024
 #define PORTNUMLEN 32
 
+#define MAX_EVENTS_PER_POLL 32
+
 struct spdk_sock {
-	int fd;
+	int			fd;
+	spdk_sock_cb		cb_fn;
+	void			*cb_arg;
+	TAILQ_ENTRY(spdk_sock)	link;
+};
+
+struct spdk_sock_group {
+	int			fd;
+	TAILQ_HEAD(, spdk_sock)	socks;
 };
 
 static int get_addr_str(struct sockaddr *sa, char *host, size_t hlen)
@@ -307,6 +324,12 @@ spdk_sock_close(struct spdk_sock **sock)
 		return -1;
 	}
 
+	if ((*sock)->cb_fn != NULL) {
+		/* This sock is still part of a sock_group. */
+		errno = EBUSY;
+		return -1;
+	}
+
 	rc = close((*sock)->fd);
 
 	if (rc == 0) {
@@ -411,4 +434,185 @@ spdk_sock_is_ipv4(struct spdk_sock *sock)
 	}
 
 	return (sa.ss_family == AF_INET);
+}
+
+struct spdk_sock_group *
+spdk_sock_group_create(void)
+{
+	struct spdk_sock_group *sock_group;
+	int fd;
+
+#if defined(__linux__)
+	fd = epoll_create1(0);
+#elif defined(__FreeBSD__)
+	fd = kqueue();
+#endif
+	if (fd == -1) {
+		return NULL;
+	}
+
+	sock_group = calloc(1, sizeof(*sock_group));
+	if (sock_group == NULL) {
+		SPDK_ERRLOG("sock_group allocation failed\n");
+		close(fd);
+		return NULL;
+	}
+
+	sock_group->fd = fd;
+	TAILQ_INIT(&sock_group->socks);
+
+	return sock_group;
+}
+
+int
+spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
+			 spdk_sock_cb cb_fn, void *cb_arg)
+{
+	int rc;
+
+	if (cb_fn == NULL) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	if (sock->cb_fn != NULL) {
+		/*
+		 * This sock is already part of a sock_group.  Currently we don't
+		 *  support this.
+		 */
+		errno = EBUSY;
+		return -1;
+	}
+
+#if defined(__linux__)
+	struct epoll_event event;
+
+	event.events = EPOLLIN;
+	event.data.ptr = sock;
+
+	rc = epoll_ctl(group->fd, EPOLL_CTL_ADD, sock->fd, &event);
+#elif defined(__FreeBSD__)
+	struct kevent event;
+	struct timespec ts = {0};
+
+	EV_SET(&event, sock->fd, EVFILT_READ, EV_ADD, 0, 0, sock);
+
+	rc = kevent(group->fd, &event, 1, NULL, 0, &ts);
+#endif
+	if (rc == 0) {
+		TAILQ_INSERT_TAIL(&group->socks, sock, link);
+		sock->cb_fn = cb_fn;
+		sock->cb_arg = cb_arg;
+	}
+
+	return rc;
+}
+
+int
+spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *sock)
+{
+	int rc;
+#if defined(__linux__)
+	struct epoll_event event;
+
+	/* Event parameter is ignored but some old kernel version still require it. */
+	rc = epoll_ctl(group->fd, EPOLL_CTL_DEL, sock->fd, &event);
+#elif defined(__FreeBSD__)
+	struct kevent event;
+	struct timespec ts = {0};
+
+	EV_SET(&event, sock->fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+
+	rc = kevent(group->fd, &event, 1, NULL, 0, &ts);
+	if (rc == 0 && event.flags & EV_ERROR) {
+		rc = -1;
+		errno = event.data;
+	}
+#endif
+	if (rc == 0) {
+		TAILQ_REMOVE(&group->socks, sock, link);
+		sock->cb_fn = NULL;
+		sock->cb_arg = NULL;
+	}
+
+	return rc;
+}
+
+int
+spdk_sock_group_poll_count(struct spdk_sock_group *group, int max_events)
+{
+	struct spdk_sock *sock;
+	int num_events, i;
+
+	if (max_events < 1) {
+		errno = -EINVAL;
+		return -1;
+	}
+
+	/*
+	 * Only poll for up to 32 events at a time - if more events are pending,
+	 *  the next call to this function will reap them.
+	 */
+	if (max_events > MAX_EVENTS_PER_POLL) {
+		max_events = MAX_EVENTS_PER_POLL;
+	}
+
+#if defined(__linux__)
+	struct epoll_event events[MAX_EVENTS_PER_POLL];
+
+	num_events = epoll_wait(group->fd, events, max_events, 0);
+#elif defined(__FreeBSD__)
+	struct kevent events[MAX_EVENTS_PER_POLL];
+	struct timespec ts = {0};
+
+	num_events = kevent(group->fd, NULL, 0, events, max_events, &ts);
+#endif
+
+	if (num_events == -1) {
+		return -1;
+	}
+
+	for (i = 0; i < num_events; i++) {
+#if defined(__linux__)
+		sock = events[i].data.ptr;
+#elif defined(__FreeBSD__)
+		sock = events[i].udata;
+#endif
+
+		assert(sock->cb_fn != NULL);
+		sock->cb_fn(sock->cb_arg, group, sock);
+	}
+
+	return 0;
+}
+
+int
+spdk_sock_group_poll(struct spdk_sock_group *group)
+{
+	return spdk_sock_group_poll_count(group, MAX_EVENTS_PER_POLL);
+}
+
+int
+spdk_sock_group_close(struct spdk_sock_group **group)
+{
+	int rc;
+
+	if (*group == NULL) {
+		errno = EBADF;
+		return -1;
+	}
+
+	if (!TAILQ_EMPTY(&(*group)->socks)) {
+		errno = EBUSY;
+		return -1;
+	}
+
+	rc = close((*group)->fd);
+
+	if (rc == 0) {
+		free(*group);
+		*group = NULL;
+	}
+
+	return rc;
 }
