@@ -31,13 +31,15 @@ fi
 timing_exit build_kmod
 
 scanbuild=''
+make_timing_label='make'
 if [ $SPDK_RUN_SCANBUILD -eq 1 ] && hash scan-build; then
 	scanbuild="scan-build -o $out/scan-build-tmp --status-bugs"
+	make_timing_label='scanbuild_make'
 fi
 echo $scanbuild
 $MAKE $MAKEFLAGS clean
 
-timing_enter scanbuild_make
+timing_enter "$make_timing_label"
 fail=0
 time $scanbuild $MAKE $MAKEFLAGS || fail=1
 if [ $fail -eq 1 ]; then
@@ -51,18 +53,21 @@ if [ $fail -eq 1 ]; then
 else
 	rm -rf $out/scan-build-tmp
 fi
-timing_exit scanbuild_make
+timing_exit "$make_timing_label"
 
 # Check for generated files that are not listed in .gitignore
+timing_enter generated_files_check
 if [ `git status --porcelain | wc -l` -ne 0 ]; then
 	echo "Generated files missing from .gitignore:"
 	git status --porcelain
 	exit 1
 fi
+timing_exit generated_files_check
 
 # Check that header file dependencies are working correctly by
 #  capturing a binary's stat data before and after touching a
 #  header file and re-making.
+timing_enter dependency_check
 STAT1=`stat examples/nvme/identify/identify`
 sleep 1
 touch lib/nvme/nvme_internal.h
@@ -73,13 +78,16 @@ if [ "$STAT1" == "$STAT2" ]; then
 	echo "Header dependency check failed"
 	exit 1
 fi
+timing_exit dependency_check
 
 # Test 'make install'
+timing_enter make_install
 rm -rf /tmp/spdk
 mkdir /tmp/spdk
 $MAKE $MAKEFLAGS install DESTDIR=/tmp/spdk prefix=/usr
 ls -lR /tmp/spdk
 rm -rf /tmp/spdk
+timing_exit make_install
 
 timing_enter doxygen
 if [ $SPDK_BUILD_DOC -eq 1 ] && hash doxygen; then
