@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c2293a9b_c168c9aa",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-08T04:51:12Z",
+      "side": 1,
+      "message": "This should be moved into a new section under 18.04 at the top of the CHANGELOG now that 18.01 has been released.\n\nMaybe we should temper this a bit, since there\u0027s no real allocator for the CMB memory yet.  Maybe just add \"This support is experimental pending a functional allocator to free and reallocate CMB buffers.\"",
+      "revId": "d70dda617b40d8c099eef8313f5b959c01530d3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fd3cd6ab_e7a8066f",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 599,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-08T04:51:12Z",
+      "side": 1,
+      "message": "I think we should add an SPDK_ERRLOG in here for now just to warn the user that buffers aren\u0027t really freed.",
+      "revId": "d70dda617b40d8c099eef8313f5b959c01530d3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
