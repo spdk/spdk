@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f49b5a89_73de0451",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 77
+      },
+      "lineNbr": 1094,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-08T11:35:08Z",
+      "side": 1,
+      "message": "free(req) was correct here (we wanted to remove only free(cb_arg), so we want something like this here:\n\nif (rc \u003c 0) {\n    free(req);\n    cb_fn(cb_arg, rc);\n    return rc;\n}",
+      "range": {
+        "startLine": 1094,
+        "startChar": 2,
+        "endLine": 1094,
+        "endChar": 20
+      },
+      "revId": "af386c972fd217bc46eb385e54e08a1b7f736686",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
