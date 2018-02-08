@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "21ab1c13_2e649a99",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1689,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-08T17:17:32Z",
+      "side": 1,
+      "message": "should keep \"static\" here",
+      "revId": "9a7cbafe04e2fdd06be461c424055f124c01e54b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6aca8c48_fa051803",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1808,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-08T17:17:32Z",
+      "side": 1,
+      "message": "should keep \"static\" here",
+      "revId": "9a7cbafe04e2fdd06be461c424055f124c01e54b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba34b39d_b0982580",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-08T17:17:32Z",
+      "side": 1,
+      "message": "These should be removed now - they are no longer referenced from new file.",
+      "revId": "9a7cbafe04e2fdd06be461c424055f124c01e54b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
