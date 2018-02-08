@@ -142,6 +142,7 @@ struct spdk_nvmf_ns {
 };
 
 struct spdk_nvmf_qpair {
+	struct spdk_thread			*thread;
 	struct spdk_nvmf_transport		*transport;
 	struct spdk_nvmf_ctrlr			*ctrlr;
 	struct spdk_nvmf_poll_group		*group;
@@ -158,6 +159,7 @@ struct spdk_nvmf_qpair {
  * which is like a "session" in networking terms.
  */
 struct spdk_nvmf_ctrlr {
+	struct spdk_thread		*thread;
 	uint16_t			cntlid;
 	struct spdk_nvmf_subsystem 	*subsys;
 
