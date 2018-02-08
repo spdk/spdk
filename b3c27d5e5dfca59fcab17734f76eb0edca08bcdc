@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f98f41c_0682e076",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 3366,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-08T17:31:47Z",
+      "side": 1,
+      "message": "extra newline added",
+      "revId": "b3c27d5e5dfca59fcab17734f76eb0edca08bcdc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e3096d40_63457fa3",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-08T17:31:47Z",
+      "side": 1,
+      "message": "spdk_blob_internal_opts would be better\n\nBut would it be possible to add read_only to spdk_blob_opts and just use that for internally created blobs?\n\nIf so, let\u0027s do that as a separate patch, before this one, and then remove spdk_internal_blob_opts.",
+      "revId": "b3c27d5e5dfca59fcab17734f76eb0edca08bcdc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "214a28a0_66dfbdcd",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-08T17:31:47Z",
+      "side": 1,
+      "message": "would be good to also verify that spdk_blob_get_xattr_value() does not work for any of these internal xattrs.",
+      "revId": "b3c27d5e5dfca59fcab17734f76eb0edca08bcdc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
