@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bbc5ec8b_815f8885",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 67
+      },
+      "lineNbr": 647,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-08T09:29:16Z",
+      "side": 1,
+      "message": "We\u0027re almost there. Please remove these two lines and whole invalid section. Do same thing in _spdk_lvs_rename_open_cb. In _spdk_lvs_rename_cb add assert for cb_fn before calling callback and free(req) after. Currently, when you call _spdk_lvs_rename_cb, req is already freed.",
+      "range": {
+        "startLine": 646,
+        "startChar": 0,
+        "endLine": 647,
+        "endChar": 15
+      },
+      "revId": "15d171bec170759188f1c46ffdb2773feaf76de8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
