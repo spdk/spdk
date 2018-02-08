@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3e28d023_75166516",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-02-08T01:57:38Z",
+      "side": 1,
+      "message": "I didn\u0027t find the description about it too, :). Because currently the Linux kernel driver will not send SET FEATURES for asynchronous event, but it will send AER request for Namespace Attribute Notice, if we set this bit to 0, then we can\u0027t send aer notice to host, so we can\u0027t test it with Linux kernel.",
+      "parentUuid": "ace4ef49_7f5fc000",
+      "revId": "c30e2ce9deffbc675acddbea2ed77183c1886656",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "592a7f0e_046b22c3",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2018-02-07T17:12:58Z",
       "side": 1,
       "message": "The spec is not totally clear on this, but I think we should accept any bits in the Set command and just ignore ones we don\u0027t support, rather than failing the command if there are unexpected bits set.",
+      "revId": "c30e2ce9deffbc675acddbea2ed77183c1886656",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2eb8334a_d850ed98",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 710,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-02-08T01:57:38Z",
+      "side": 1,
+      "message": "Agreed, I will remove the reserved bits masks, for this patch, I\u0027m thinking just add Namespace Attribute Notice right now, we can add other bits in future.",
+      "parentUuid": "592a7f0e_046b22c3",
       "revId": "c30e2ce9deffbc675acddbea2ed77183c1886656",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "23c741c3_a9a648f4",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 738,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-02-08T01:57:38Z",
+      "side": 1,
+      "message": "With the logic you mentioned above, the code will become much more complicated, I\u0027d like to keep just 1 AER now, :). I saw the specification recommended at least 4 AERs, this should be another patch.",
+      "parentUuid": "0a775a15_cb4c44d8",
+      "revId": "c30e2ce9deffbc675acddbea2ed77183c1886656",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7a8e22d9_1afbf058",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 2
@@ -64,6 +118,24 @@
       "writtenOn": "2018-02-07T17:12:58Z",
       "side": 1,
       "message": "If there are no unused AERs available when we need to post an event, I think we are supposed to queue the event internally and post it the next time an AER is submitted:\n\n\u003e If the controller needs to report an event and there are no outstanding Asynchronous Event Request commands, the controller should send a single notification of that Asynchronous Event Type when an Asynchronous Event Request command is received.",
+      "revId": "c30e2ce9deffbc675acddbea2ed77183c1886656",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d5275d7_34a70450",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1214,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-02-08T01:57:38Z",
+      "side": 1,
+      "message": "Okay, will queue the event when there is no available request.",
+      "parentUuid": "7a8e22d9_1afbf058",
       "revId": "c30e2ce9deffbc675acddbea2ed77183c1886656",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
