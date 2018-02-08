@@ -55,105 +55,104 @@ fi
 DISKS_NUMBER=`lspci -mm -n | grep 0108 | tr -d '"' | awk -F " " '{print "0000:"$1}'| wc -l`
 
 WORKDIR=$(readlink -f $(dirname $0))
-cd $WORKDIR
 
 case $1 in
 	-n|--negative)
 		echo 'Negative tests suite...'
-		./other/negative.sh
+		$WORKDIR/other/negative.sh
 		;;
 	-p|--performance)
 		echo 'Running performance suite...'
-		./fiotest/autotest.sh --fio-bin=$FIO_BIN \
+		$WORKDIR/fiotest/autotest.sh --fio-bin=$FIO_BIN \
 		--vm=0,$VM_IMAGE,Nvme0n1p0 \
 		--test-type=spdk_vhost_scsi \
 		--fio-job=$WORKDIR/common/fio_jobs/default_performance.job
 		;;
 	-pb|--performance-blk)
 		echo 'Running blk performance suite...'
-		./fiotest/autotest.sh --fio-bin=$FIO_BIN \
+		$WORKDIR/fiotest/autotest.sh --fio-bin=$FIO_BIN \
 		--vm=0,$VM_IMAGE,Nvme0n1p0 \
 		--test-type=spdk_vhost_blk \
 		--fio-job=$WORKDIR/common/fio_jobs/default_performance.job
 		;;
 	-m|--migration)
 		echo 'Running migration suite...'
-		./migration/migration-malloc.sh -x \
+		$WORKDIR/migration/migration-malloc.sh -x \
 		--fio-bin=$FIO_BIN --os=$VM_IMAGE
 		;;
 	-i|--integrity)
 		echo 'Running SCSI integrity suite...'
-		./fiotest/autotest.sh -x --fio-bin=$FIO_BIN \
+		$WORKDIR/fiotest/autotest.sh -x --fio-bin=$FIO_BIN \
 		--vm=0,$VM_IMAGE,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
 		--test-type=spdk_vhost_scsi \
 		--fio-job=$WORKDIR/common/fio_jobs/default_integrity.job
 		;;
 	-ib|--integrity-blk)
 		echo 'Running blk integrity suite...'
-		./fiotest/autotest.sh -x --fio-bin=$FIO_BIN \
+		$WORKDIR/fiotest/autotest.sh -x --fio-bin=$FIO_BIN \
 		--vm=0,$VM_IMAGE,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
 		--test-type=spdk_vhost_blk \
 		--fio-job=$WORKDIR/common/fio_jobs/default_integrity.job
 		;;
 	-fs|--fs-integrity-scsi)
 		echo 'Running filesystem integrity suite...'
-		./integrity/integrity_start.sh -i $VM_IMAGE -m scsi -f "xfs ntfs btrfs ext4"
+		$WORKDIR/integrity/integrity_start.sh -i $VM_IMAGE -m scsi -f "xfs ntfs btrfs ext4"
 		;;
 	-fb|--fs-integrity-blk)
 		echo 'Running filesystem integrity suite...'
-		./integrity/integrity_start.sh -i $VM_IMAGE -m blk -f "xfs ntfs btrfs ext4"
+		$WORKDIR/integrity/integrity_start.sh -i $VM_IMAGE -m blk -f "xfs ntfs btrfs ext4"
 		;;
 	-ils|--integrity-lvol-scsi)
 		echo 'Running lvol integrity suite...'
-		./lvol/lvol_test.sh -x --fio-bin=$FIO_BIN \
+		$WORKDIR/lvol/lvol_test.sh -x --fio-bin=$FIO_BIN \
 		--ctrl-type=spdk_vhost_scsi --thin-provisioning
 		;;
 	-ilb|--integrity-lvol-blk)
 		echo 'Running lvol integrity suite...'
-		./lvol/lvol_test.sh -x --fio-bin=$FIO_BIN \
+		$WORKDIR/lvol/lvol_test.sh -x --fio-bin=$FIO_BIN \
 		--ctrl-type=spdk_vhost_blk --thin-provisioning
 		;;
 	-ilsn|--integrity-lvol-scsi-nightly)
 		if [[ $DISKS_NUMBER -ge 2 ]]; then
 			echo 'Running lvol integrity nightly suite with two cores and two controllers'
-			./lvol/lvol_test.sh --fio-bin=$FIO_BIN \
+			$WORKDIR/lvol/lvol_test.sh --fio-bin=$FIO_BIN \
 			--ctrl-type=spdk_vhost_scsi --max-disks=2 --distribute-cores --vm-count=2
 
 			echo 'Running lvol integrity nightly suite with one core and two controllers'
-			./lvol/lvol_test.sh --fio-bin=$FIO_BIN \
+			$WORKDIR/lvol/lvol_test.sh --fio-bin=$FIO_BIN \
 			--ctrl-type=spdk_vhost_scsi --max-disks=2 --vm-count=2
 		fi
 		if [[ -e $CENTOS_VM_IMAGE ]]; then
 			echo 'Running lvol integrity nightly suite with different os types'
-			./lvol/lvol_test.sh --fio-bin=$CENTOS_FIO_BIN \
+			$WORKDIR/lvol/lvol_test.sh --fio-bin=$CENTOS_FIO_BIN \
 			--ctrl-type=spdk_vhost_scsi --vm-count=2 --multi-os
 		fi
 		echo 'Running lvol integrity nightly suite with one core and one controller'
-		./lvol/lvol_test.sh --fio-bin=$FIO_BIN \
+		$WORKDIR/lvol/lvol_test.sh --fio-bin=$FIO_BIN \
 		--ctrl-type=spdk_vhost_scsi --max-disks=1
 		;;
 	-ilbn|--integrity-lvol-blk-nightly)
 		if [[ $DISKS_NUMBER -ge 2 ]]; then
 			echo 'Running lvol integrity nightly suite with two cores and two controllers'
-			./lvol/lvol_test.sh --fio-bin=$FIO_BIN \
+			$WORKDIR/lvol/lvol_test.sh --fio-bin=$FIO_BIN \
 			--ctrl-type=spdk_vhost_blk --max-disks=2 --distribute-cores --vm-count=2
 
 			echo 'Running lvol integrity nightly suite with one core and two controllers'
-			./lvol/lvol_test.sh --fio-bin=$FIO_BIN \
+			$WORKDIR/lvol/lvol_test.sh --fio-bin=$FIO_BIN \
 			--ctrl-type=spdk_vhost_blk --max-disks=2 --vm-count=2
 		fi
 		if [[ -e $CENTOS_VM_IMAGE ]]; then
 			echo 'Running lvol integrity nightly suite with different os types'
-			./lvol/lvol_test.sh --fio-bin=$CENTOS_FIO_BIN \
+			$WORKDIR/lvol/lvol_test.sh --fio-bin=$CENTOS_FIO_BIN \
 			--ctrl-type=spdk_vhost_blk --vm-count=2 --multi-os
 		fi
 		echo 'Running lvol integrity nightly suite with one core and one controller'
-		./lvol/lvol_test.sh --fio-bin=$FIO_BIN \
+		$WORKDIR/lvol/lvol_test.sh --fio-bin=$FIO_BIN \
 		--ctrl-type=spdk_vhost_blk --max-disks=1
 		;;
 	-hp|--hotplug)
 		echo 'Running hotplug tests suite...'
-		./hotplug/scsi_hotplug.sh --fio-bin=$FIO_BIN \
+		$WORKDIR/hotplug/scsi_hotplug.sh --fio-bin=$FIO_BIN \
 			--vm=0,$VM_IMAGE,Nvme0n1p0:Nvme0n1p1 \
 			--vm=1,$VM_IMAGE,Nvme0n1p2:Nvme0n1p3 \
 			--vm=2,$VM_IMAGE,Nvme0n1p4:Nvme0n1p5 \
@@ -163,7 +162,7 @@ case $1 in
 		;;
 	-ro|--readonly)
 		echo 'Running readonly tests suite...'
-		./readonly/readonly.sh --vm_image=$VM_IMAGE --disk=Nvme0n1_size_1G
+		$WORKDIR/readonly/readonly.sh --vm_image=$VM_IMAGE --disk=Nvme0n1_size_1G
 		;;
 	*)
 		echo "unknown test type: $1"
