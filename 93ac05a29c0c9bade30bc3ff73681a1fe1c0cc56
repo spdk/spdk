@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b7a53f65_f9b91a62",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 367,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-02-09T17:28:15Z",
+      "side": 1,
+      "message": "It\u0027s probably better to not check if we\u0027re on the right thread and instead always send a message. Sending a message is less expensive than calling spdk_get_thread.",
+      "revId": "93ac05a29c0c9bade30bc3ff73681a1fe1c0cc56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b41ce99_b6f3a339",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 382,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-02-09T17:28:15Z",
+      "side": 1,
+      "message": "Same here - just always send the message.",
+      "revId": "93ac05a29c0c9bade30bc3ff73681a1fe1c0cc56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "93d52067_73bb19a0",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-02-09T17:28:15Z",
+      "side": 1,
+      "message": "The thread is implied by the poll group. No need to store it here.",
+      "revId": "93ac05a29c0c9bade30bc3ff73681a1fe1c0cc56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "57cc8095_b496d641",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-02-09T17:28:15Z",
+      "side": 1,
+      "message": "The thread is implied by the poll group for the admin queue.\n\nI think we should really be storing a pointer to the admin queue here so we can get to it quickly, instead of just having it reside inside the qpairs list. Can you add a patch that adds a pointer to the adminq to this structure and changes the qpairs list to io_qpairs?",
+      "revId": "93ac05a29c0c9bade30bc3ff73681a1fe1c0cc56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
