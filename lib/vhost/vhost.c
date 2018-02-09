@@ -53,7 +53,7 @@ struct spdk_vhost_dev_event_ctx {
 	/** Pointer to the controller obtained before enqueuing the event */
 	struct spdk_vhost_dev *vdev;
 
-	/** Index of the ctrlr to send event to. */
+	/** ID of the vdev to send event to. */
 	unsigned vdev_id;
 
 	/** User callback function to be executed on given lcore. */
@@ -471,6 +471,22 @@ spdk_vhost_dev_has_feature(struct spdk_vhost_dev *vdev, unsigned feature_id)
 }
 
 static struct spdk_vhost_dev *
+spdk_vhost_dev_find_by_id(unsigned id)
+{
+	unsigned i;
+	struct spdk_vhost_dev *vdev;
+
+	for (i = 0; i < MAX_VHOST_DEVICES; i++) {
+		vdev = g_spdk_vhost_devices[i];
+		if (vdev && vdev->id == id) {
+			return vdev;
+		}
+	}
+
+	return NULL;
+}
+
+static struct spdk_vhost_dev *
 spdk_vhost_dev_find_by_vid(int vid)
 {
 	unsigned i;
@@ -704,6 +720,7 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 
 	vdev->name = strdup(name);
 	vdev->path = strdup(path);
+	vdev->id = ctrlr_num;
 	vdev->vid = -1;
 	vdev->lcore = -1;
 	vdev->cpumask = cpumask;
@@ -736,22 +753,9 @@ out:
 int
 spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev)
 {
-	unsigned ctrlr_num;
-
 	if (vdev->vid != -1) {
 		SPDK_ERRLOG("Controller %s has still valid connection.\n", vdev->name);
 		return -ENODEV;
-	}
-
-	for (ctrlr_num = 0; ctrlr_num < MAX_VHOST_DEVICES; ctrlr_num++) {
-		if (g_spdk_vhost_devices[ctrlr_num] == vdev) {
-			break;
-		}
-	}
-
-	if (ctrlr_num == MAX_VHOST_DEVICES) {
-		SPDK_ERRLOG("Trying to remove invalid controller: %s.\n", vdev->name);
-		return -ENOSPC;
 	}
 
 	if (vdev->registered && rte_vhost_driver_unregister(vdev->path) != 0) {
@@ -766,22 +770,20 @@ spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev)
 	free(vdev->name);
 	free(vdev->path);
 	spdk_cpuset_free(vdev->cpumask);
-	g_spdk_vhost_devices[ctrlr_num] = NULL;
+	g_spdk_vhost_devices[vdev->id] = NULL;
 	return 0;
 }
 
-static int
+static struct spdk_vhost_dev *
 spdk_vhost_dev_next(int i)
 {
 	for (i++; i < MAX_VHOST_DEVICES; i++) {
-		if (g_spdk_vhost_devices[i] == NULL) {
-			continue;
+		if (g_spdk_vhost_devices[i]) {
+			return g_spdk_vhost_devices[i];
 		}
-
-		return i;
 	}
 
-	return -1;
+	return NULL;
 }
 
 const char *
@@ -853,7 +855,7 @@ spdk_vhost_event_async_fn(void *arg1, void *arg2)
 		return;
 	}
 
-	vdev = g_spdk_vhost_devices[ctx->vdev_id];
+	vdev = spdk_vhost_dev_find_by_id(ctx->vdev_id);
 	if (vdev != ctx->vdev) {
 		/* vdev has been changed after enqueuing this event */
 		vdev = NULL;
@@ -882,7 +884,7 @@ spdk_vhost_event_async_foreach_fn(void *arg1, void *arg2)
 		return;
 	}
 
-	vdev = g_spdk_vhost_devices[ctx->vdev_id];
+	vdev = spdk_vhost_dev_find_by_id(ctx->vdev_id);
 	if (vdev == ctx->vdev) {
 		ctx->cb_fn(vdev, arg2);
 	}
@@ -929,7 +931,7 @@ spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn,
 }
 
 static int
-spdk_vhost_event_async_send(unsigned vdev_id, spdk_vhost_event_fn cb_fn, void *arg,
+spdk_vhost_event_async_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn, void *arg,
 			    bool foreach)
 {
 	struct spdk_vhost_dev_event_ctx *ev_ctx;
@@ -942,8 +944,8 @@ spdk_vhost_event_async_send(unsigned vdev_id, spdk_vhost_event_fn cb_fn, void *a
 		return -ENOMEM;
 	}
 
-	ev_ctx->vdev = g_spdk_vhost_devices[vdev_id];
-	ev_ctx->vdev_id = vdev_id;
+	ev_ctx->vdev = vdev;
+	ev_ctx->vdev_id = vdev->id;
 	ev_ctx->cb_fn = cb_fn;
 
 	fn = foreach ? spdk_vhost_event_async_foreach_fn : spdk_vhost_event_async_fn;
@@ -1251,22 +1253,20 @@ void
 spdk_vhost_call_external_event(const char *ctrlr_name, spdk_vhost_event_fn fn, void *arg)
 {
 	struct spdk_vhost_dev *vdev;
-	int vdev_id;
 
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
-	vdev_id = spdk_vhost_dev_find_id(ctrlr_name);
+	vdev = spdk_vhost_dev_find(ctrlr_name);
 
-	if (vdev_id == -1) {
+	if (vdev == NULL) {
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
 		fn(NULL, arg);
 		return;
 	}
 
-	vdev = g_spdk_vhost_devices[vdev_id];
 	if (vdev->lcore == -1) {
 		fn(vdev, arg);
 	} else {
-		spdk_vhost_event_async_send(vdev_id, fn, arg, false);
+		spdk_vhost_event_async_send(vdev, fn, arg, false);
 	}
 
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
@@ -1277,24 +1277,22 @@ spdk_vhost_external_event_foreach_continue(int vdev_id, spdk_vhost_event_fn fn, 
 {
 	struct spdk_vhost_dev *vdev;
 
-	vdev_id = spdk_vhost_dev_next(vdev_id);
-	if (vdev_id == -1) {
+	vdev = spdk_vhost_dev_next(vdev_id);
+	if (vdev == NULL) {
 		fn(NULL, arg);
 		return;
 	}
 
-	vdev = g_spdk_vhost_devices[vdev_id];
 	while (vdev->lcore == -1) {
 		fn(vdev, arg);
-		vdev_id = spdk_vhost_dev_next(vdev_id);
-		if (vdev_id == -1) {
+		vdev = spdk_vhost_dev_next(vdev->id);
+		if (vdev == NULL) {
 			fn(NULL, arg);
 			return;
 		}
-		vdev = g_spdk_vhost_devices[vdev_id];
 	}
 
-	spdk_vhost_event_async_send(vdev_id, fn, arg, true);
+	spdk_vhost_event_async_send(vdev, fn, arg, true);
 }
 
 void
