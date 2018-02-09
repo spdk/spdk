@@ -649,7 +649,7 @@ spdk_vhost_blk_get_config(struct spdk_vhost_dev *vdev, uint8_t *config,
 	/*  -2 for REQ and RESP and -1 for region boundary splitting */
 	blkcfg->seg_max = SPDK_VHOST_IOVS_MAX - 2 - 1;
 	/* QEMU can overwrite this value when started */
-	blkcfg->num_queues = 1;
+	blkcfg->num_queues = SPDK_VHOST_MAX_VQUEUES;
 
 	return 0;
 }
