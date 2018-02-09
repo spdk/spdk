@@ -91,6 +91,30 @@
       "revId": "54aefd1144cffdb914689b56a38ce5da9b176596",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a92bc4fd_bd1cc885",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 318,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-09T12:17:32Z",
+      "side": 1,
+      "message": "The returned rc is used at the input parameter to indicate the operation status.",
+      "parentUuid": "9b9e1551_af04de7b",
+      "range": {
+        "startLine": 317,
+        "startChar": 1,
+        "endLine": 318,
+        "endChar": 49
+      },
+      "revId": "54aefd1144cffdb914689b56a38ce5da9b176596",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
