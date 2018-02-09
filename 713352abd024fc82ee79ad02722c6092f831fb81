@@ -16,6 +16,24 @@
       "revId": "713352abd024fc82ee79ad02722c6092f831fb81",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd1509a6_d9dcaf01",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1012364
+      },
+      "writtenOn": "2018-02-09T06:17:20Z",
+      "side": 1,
+      "message": "Here is used to test hotplug, Can you tell me why should be removed this line?",
+      "parentUuid": "481ab730_a4b606da",
+      "revId": "713352abd024fc82ee79ad02722c6092f831fb81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
