@@ -58,7 +58,7 @@ function usage() {
                                     655: 'thin_provisioning_filling_disks_less_than_lvs_size',
                                     700: 'tasting_positive',
                                     701: 'tasting_lvol_store_positive',
-                                    750: 'SIGTERM'
+                                    10000: 'SIGTERM'
                                     or
                                     all: This parameter runs all tests
                                     Ex: \"1,2,19,20\", default: all"

@@ -61,7 +61,7 @@ def header(num):
         655: 'thin_provisioning_filling_disks_less_than_lvs_size',
         700: 'tasting_positive',
         701: 'tasting_lvol_store_positive',
-        750: 'SIGTERM',
+        10000: 'SIGTERM',
     }
     print("========================================================")
     print("Test Case {num}: Start".format(num=num))
@@ -1067,8 +1067,8 @@ class TestCases(object):
         footer(701)
         return fail_count
 
-    def test_case750(self):
-        header(750)
+    def test_case10000(self):
+        header(10000)
         pid_path = path.join(self.path, 'vhost.pid')
 
         base_name = self.c.construct_malloc_bdev(self.total_size,
@@ -1080,5 +1080,5 @@ class TestCases(object):
                                                   self.cluster_size)
 
         fail_count += self._stop_vhost(pid_path)
-        footer(750)
+        footer(10000)
         return fail_count
