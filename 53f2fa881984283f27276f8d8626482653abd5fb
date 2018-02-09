@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "be5c0828_2269376d",
+        "filename": "lib/env_dpdk/vtophys.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 515,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-09T17:01:09Z",
+      "side": 1,
+      "message": "Since we aren\u0027t using this property anymore, I think it would be clearer to just remove this assert and the comment block above.  (It was a micro-optimization anyway - I don\u0027t think it will cause any performance difference in practice.)\n\nTo avoid churn, I\u0027m OK with cleaning this up in another patch if this one doesn\u0027t need any other revisions.",
+      "revId": "53f2fa881984283f27276f8d8626482653abd5fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
