@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a7ff10ce_82f9e05a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-09T21:01:48Z",
+      "side": 1,
+      "message": "The commit hash doesn\u0027t match up to what\u0027s in master; I think this is 808a2b05c2cf1476e55d5659e0cde561c6ab468a.",
+      "range": {
+        "startLine": 9,
+        "startChar": 6,
+        "endLine": 9,
+        "endChar": 14
+      },
+      "revId": "dbbabe429b97e6953cfd3d365339a6e9b0219f75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
