@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0ef474fb_93f1aedc",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 45
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-09T23:54:03Z",
+      "side": 1,
+      "message": "Let\u0027s not use Split here.  Instead, just create one logical volume store on Nvme0n1 and create 30 logical volumes in the one logical volume store.\n\nMaybe creating 30 logical volume stores is a good test - but this is an iSCSI multi-connect test, so let\u0027s focus testing on that instead.",
+      "revId": "c86ad1c3237cf7a8ae207b7ffda323fb2e32ff1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1e536095_6d3b520f",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 45
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-09T23:54:03Z",
+      "side": 1,
+      "message": "could we try testing with more than 30 connections?  ideally, we should be able to support up to 128\n\nBut it is OK to leave this at 30 for now and increase it later.",
+      "revId": "c86ad1c3237cf7a8ae207b7ffda323fb2e32ff1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
