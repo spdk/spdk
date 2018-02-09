@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5b824876_1d2ada44",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1012364
+      },
+      "writtenOn": "2018-02-09T06:17:20Z",
+      "side": 1,
+      "message": "This function does not grab system disk, If no usable disk, the script will return 1, I need run the aiobackend case in the usable disk without system files.",
+      "parentUuid": "1ee537de_56397b1b",
+      "range": {
+        "startLine": 162,
+        "startChar": 0,
+        "endLine": 162,
+        "endChar": 32
+      },
+      "revId": "cfd9956c83331afb686c64f9f67325b571097fb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "264c5331_9fea1a92",
         "filename": "test/iscsi_tgt/fio/fio.sh",
         "patchSetId": 11
@@ -36,6 +60,30 @@
       "writtenOn": "2017-11-13T08:42:57Z",
       "side": 1,
       "message": "as in previous comment:\ntabs/spaces consistency across file is needed (tabs are preferred)",
+      "range": {
+        "startLine": 164,
+        "startChar": 1,
+        "endLine": 164,
+        "endChar": 8
+      },
+      "revId": "cfd9956c83331afb686c64f9f67325b571097fb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d6db2105_d84252f5",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1012364
+      },
+      "writtenOn": "2018-02-09T06:17:20Z",
+      "side": 1,
+      "message": "The code block in the  brace is awk code. From awk  to the END is one cmd.",
+      "parentUuid": "264c5331_9fea1a92",
       "range": {
         "startLine": 164,
         "startChar": 1,
