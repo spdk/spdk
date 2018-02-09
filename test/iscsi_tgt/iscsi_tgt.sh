@@ -58,6 +58,7 @@ if [ $SPDK_TEST_NVMF -eq 1 ]; then
 fi
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
+	run_test ./test/iscsi_tgt/fio/nvme_lvol.sh
 	run_test ./test/iscsi_tgt/multiconnection/multiconnection.sh
 fi
 
