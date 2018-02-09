@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "90b094ab_52ae22e6",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 632,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-09T09:09:33Z",
+      "side": 1,
+      "message": "Good suggestion. For the last comment, there is also another patch \"adjust_bdev_qos\" to change the rate limit through RPC at runtime.",
+      "parentUuid": "942a05ce_a3d3d392",
+      "revId": "f49ddb3f57bf16b7fbbcd034d0f3fa6efa1ca813",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "24d211a4_06d21865",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 15
