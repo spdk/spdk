@@ -720,24 +720,9 @@ Expected result:
 - calls successful (lvol store should be tasted correctly), return code = 0
 - no other operation fails
 
-### SIGTERM
-
-#### TEST CASE 750 - Name: SIGTERM
-Call CTRL+C (SIGTERM) occurs after creating lvol store
-Steps:
-- create a malloc bdev
-- construct_lvol_store on created malloc bdev
-- check correct uuid values in response get_lvol_stores command
-- Send SIGTERM signal to the application
-
-Expected result:
-- calls successful, return code = 0
-- get_bdevs: no change
-- no other operation fails
-
 ### snapshot and clone
 
-#### TEST CASE 800 - Name: snapshot_readonly
+#### TEST CASE 750 - Name: snapshot_readonly
 - constrcut malloc bdev
 - construct lvol store on malloc bdev
 - construct lvol bdev
@@ -754,7 +739,7 @@ Expected result:
 - calls successful, return code = 0
 - no other operation fails
 
-#### TEST CASE 801 - Name: snapshot_compare_with_lvol_bdev
+#### TEST CASE 751 - Name: snapshot_compare_with_lvol_bdev
 - construct malloc bdev
 - construct lvol store on malloc bdev
 - construct thin provisioned lvol bdev with size less than 25% of lvs
@@ -776,7 +761,7 @@ Expected result:
 - removing snapshot should always end with success
 - no other operation fails
 
-#### TEST CASE 802 - Name: snapshot_during_io_traffic
+#### TEST CASE 752 - Name: snapshot_during_io_traffic
 - construct malloc bdev
 - construct lvol store on malloc bdev
 - construct thin provisioned lvol bdev
@@ -792,7 +777,7 @@ Expected result:
 - calls successful, return code = 0
 - no other operation fails
 
-#### TEST CASE 803 - Name: snapshot_of_snapshot
+#### TEST CASE 753 - Name: snapshot_of_snapshot
 - construct malloc bdev
 - construct lvol store on malloc bdev
 - construct thick provisioned lvol bdev
@@ -808,7 +793,7 @@ Expected result:
 - creating snapshot of snapshot should fail
 - no other operation fails
 
-#### TEST CASE 804 - Name: clone_bdev_only
+#### TEST CASE 754 - Name: clone_bdev_only
 - construct malloc bdev
 - construct lvol store on malloc
 - construct thick provisioned lvol bdev
@@ -831,7 +816,7 @@ Expected result:
 - cloning thick provisioned lvol bdev should fail
 - no other operation fails
 
-#### TEST CASE 806 - Name: clone_writing_to_clone
+#### TEST CASE 755 - Name: clone_writing_to_clone
 - construct with malloc bdev
 - construct lvol store on malloc bdev
 - construct thick provisioned lvol bdev
@@ -849,4 +834,19 @@ Expected result:
 
 Expected result:
 - calls successful, return code = 0
+- no other operation fails
+
+### SIGTERM
+
+#### TEST CASE 10000 - Name: SIGTERM
+Call CTRL+C (SIGTERM) occurs after creating lvol store
+Steps:
+- create a malloc bdev
+- construct_lvol_store on created malloc bdev
+- check correct uuid values in response get_lvol_stores command
+- Send SIGTERM signal to the application
+
+Expected result:
+- calls successful, return code = 0
+- get_bdevs: no change
 - no other operation fails
