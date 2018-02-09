@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "405e4117_4f5b1939",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 635,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-09T09:06:00Z",
+      "side": 1,
+      "message": "Daniel\u0027s feedback about this looks reasonable to me too.",
+      "range": {
+        "startLine": 635,
+        "startChar": 48,
+        "endLine": 635,
+        "endChar": 69
+      },
+      "revId": "54aefd1144cffdb914689b56a38ce5da9b176596",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0addca62_46556102",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-09T09:06:00Z",
+      "side": 1,
+      "message": "same",
+      "range": {
+        "startLine": 280,
+        "startChar": 7,
+        "endLine": 281,
+        "endChar": 45
+      },
+      "revId": "54aefd1144cffdb914689b56a38ce5da9b176596",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ffbe7dc_33bfe700",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 283,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-09T09:06:00Z",
+      "side": 1,
+      "message": "This will be NULL. This is already in the Daniel\u0027s feedback too.",
+      "range": {
+        "startLine": 283,
+        "startChar": 26,
+        "endLine": 283,
+        "endChar": 34
+      },
+      "revId": "54aefd1144cffdb914689b56a38ce5da9b176596",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b9e1551_af04de7b",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 318,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-09T09:06:00Z",
+      "side": 1,
+      "message": "if spdk_bdev_enable_qos() fails, should this go to invalid?\nsuccess return with result of fail is normal manner in SPDK?",
+      "range": {
+        "startLine": 317,
+        "startChar": 1,
+        "endLine": 318,
+        "endChar": 49
+      },
+      "revId": "54aefd1144cffdb914689b56a38ce5da9b176596",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
