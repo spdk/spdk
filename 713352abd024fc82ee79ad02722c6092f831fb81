@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "481ab730_a4b606da",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-02-09T05:43:14Z",
+      "side": 1,
+      "message": "the line should be removed, otherwise looks good to me.",
+      "revId": "713352abd024fc82ee79ad02722c6092f831fb81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
