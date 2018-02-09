@@ -46,6 +46,30 @@
       "revId": "21e37b5e05bf1fc9b01271e3a9ddd728fcd7fe03",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "143d6a47_5e710e76",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 648,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-02-09T07:41:15Z",
+      "side": 1,
+      "message": "I\u0027m suggesting to change this num_queues value because of the SPDK virtio driver [1]\n\nIn our virtio drivers we use a generic virtio library that abstracts away vhost-user/virtio-pci. The cross-platform way to read the number of queues would be to read it from device config. For virtio-pci it will do MMIO reads, for vhost-user it will send GET_CONFIG.\n\nAlso, VHOST_USER_GET_QUEUE_NUM returns the number of all virtqueues (not just request queues).\nIt doesn\u0027t matter for virtio-blk, as there aren\u0027t any queues other than requestq, but the SPDK virtio library has been designed for all virtio backends.\n\nI\u0027m asking if this num_queues value can be changed because it won\u0027t hurt anything and could simplify SPDK virtio-blk driver implementation.\n\n[1] https://review.gerrithub.io/c/393056/",
+      "parentUuid": "ca02c528_4002c11f",
+      "range": {
+        "startLine": 648,
+        "startChar": 1,
+        "endLine": 648,
+        "endChar": 24
+      },
+      "revId": "21e37b5e05bf1fc9b01271e3a9ddd728fcd7fe03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
