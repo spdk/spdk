@@ -63,6 +63,7 @@ static bool g_shutdown_sig_received = false;
 static spdk_event_fn g_app_start_fn;
 static void *g_app_start_arg1;
 static void *g_app_start_arg2;
+static const char *g_pid_path = NULL;
 
 int
 spdk_app_get_shm_id(void)
@@ -273,6 +274,21 @@ start_rpc(void *arg1, void *arg2)
 	g_app_start_fn(g_app_start_arg1, g_app_start_arg2);
 }
 
+static int
+save_pid(const char *pid_path)
+{
+	FILE *pid_file;
+
+	pid_file = fopen(pid_path, "w");
+	if (pid_file == NULL) {
+		return -errno;
+	}
+
+	fprintf(pid_file, "%d\n", getpid());
+	fclose(pid_file);
+	return 0;
+}
+
 int
 spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	       void *arg1, void *arg2)
@@ -285,6 +301,15 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	char			*end;
 	struct spdk_env_opts env_opts = {};
 	struct spdk_event *app_start_event;
+
+	if (g_pid_path) {
+		rc = save_pid(g_pid_path);
+		if (rc != 0) {
+			SPDK_ERRLOG("Couldn't create pid file '%s': %s\n",
+				    g_pid_path, spdk_strerror(-rc));
+			exit(EXIT_FAILURE);
+		}
+	}
 
 	if (!opts) {
 		SPDK_ERRLOG("opts should not be NULL\n");
@@ -475,6 +500,7 @@ usage(char *executable_name, struct spdk_app_opts *default_opts, void (*app_usag
 	printf(" -c config  config file (default %s)\n", default_opts->config_file);
 	printf(" -d         disable coredump file enabling\n");
 	printf(" -e mask    tracepoint group mask for spdk trace buffers (default 0x0)\n");
+	printf(" -f pidfile save pid to file under given path\n");
 	printf(" -h         show this usage\n");
 	printf(" -i shared memory ID (optional)\n");
 	printf(" -m mask    core mask for DPDK\n");
@@ -523,6 +549,9 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			break;
 		case 'e':
 			opts->tpoint_group_mask = optarg;
+			break;
+		case 'f':
+			g_pid_path = optarg;
 			break;
 		case 'h':
 			usage(argv[0], &default_opts, app_usage);

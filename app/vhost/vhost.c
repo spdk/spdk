@@ -45,7 +45,6 @@
 #define SPDK_VHOST_DEFAULT_MEM_SIZE 1024
 
 static const char *g_socket_path = NULL;
-static const char *g_pid_path = NULL;
 
 static void
 vhost_app_opts_init(struct spdk_app_opts *opts)
@@ -59,32 +58,13 @@ vhost_app_opts_init(struct spdk_app_opts *opts)
 static void
 vhost_usage(void)
 {
-	printf(" -f pidfile save pid to file under given path\n");
 	printf(" -S dir     directory where to create vhost sockets (default: pwd)\n");
-}
-
-static void
-save_pid(const char *pid_path)
-{
-	FILE *pid_file;
-
-	pid_file = fopen(pid_path, "w");
-	if (pid_file == NULL) {
-		fprintf(stderr, "Couldn't create pid file '%s': %s\n", pid_path, strerror(errno));
-		exit(EXIT_FAILURE);
-	}
-
-	fprintf(pid_file, "%d\n", getpid());
-	fclose(pid_file);
 }
 
 static void
 vhost_parse_arg(int ch, char *arg)
 {
 	switch (ch) {
-	case 'f':
-		g_pid_path = arg;
-		break;
 	case 'S':
 		g_socket_path = arg;
 		break;
@@ -99,11 +79,7 @@ main(int argc, char *argv[])
 
 	vhost_app_opts_init(&opts);
 
-	spdk_app_parse_args(argc, argv, &opts, "f:S:", vhost_parse_arg, vhost_usage);
-
-	if (g_pid_path) {
-		save_pid(g_pid_path);
-	}
+	spdk_app_parse_args(argc, argv, &opts, "S:", vhost_parse_arg, vhost_usage);
 
 	/* Blocks until the application is exiting */
 	rc = spdk_app_start(&opts, spdk_vhost_startup, (void *)g_socket_path, NULL);

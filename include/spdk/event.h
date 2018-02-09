@@ -158,7 +158,7 @@ int spdk_app_get_core_count(void) __attribute__((deprecated));
  */
 uint32_t spdk_app_get_current_core(void) __attribute__((deprecated));
 
-#define SPDK_APP_GETOPT_STRING "c:de:hi:m:n:p:qr:s:t:"
+#define SPDK_APP_GETOPT_STRING "c:de:f:hi:m:n:p:qr:s:t:"
 
 /**
  * \brief Helper function for parsing arguments and printing usage messages.
