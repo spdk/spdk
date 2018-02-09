@@ -137,6 +137,10 @@ struct spdk_vhost_dev {
 	char *name;
 	char *path;
 
+	/* Unique device ID. */
+	unsigned id;
+
+	/* rte_vhost device ID. */
 	int vid;
 	int task_cnt;
 	int32_t lcore;
