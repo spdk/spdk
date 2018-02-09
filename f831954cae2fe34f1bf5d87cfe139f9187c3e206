@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba94923b_3f8ad83f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-09T09:13:16Z",
+      "side": 1,
+      "message": "Timeslice connect me to CPU time sharing by OS.\n\nThis rate limiting mechanism is periodic one and hence how do you think qos_max_ios_per_period?",
+      "range": {
+        "startLine": 64,
+        "startChar": 22,
+        "endLine": 64,
+        "endChar": 31
+      },
+      "revId": "f831954cae2fe34f1bf5d87cfe139f9187c3e206",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
