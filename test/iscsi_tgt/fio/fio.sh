@@ -17,7 +17,7 @@ function running_config() {
 	killprocess $pid
 	trap "iscsicleanup; exit 1" SIGINT SIGTERM EXIT
 
-	timing_enter start_iscsi_tgt2
+	timing_enter $1
 
 	$ISCSI_APP -c /tmp/iscsi.conf &
 	pid=$!
@@ -26,10 +26,15 @@ function running_config() {
 	waitforlisten $pid
 	echo "iscsi_tgt is listening. Running tests..."
 
-	timing_exit start_iscsi_tgt2
+	timing_exit $1
 
 	sleep 1
 	$fio_py 4096 1 randrw 5
+}
+
+function cleanup_lvol_config() {
+	$rpc_py delete_bdev "$lb_name" || true
+	$rpc_py destroy_lvol_store -l lvs0 || true
 }
 
 if [ -z "$TARGET_IP" ]; then
@@ -91,12 +96,13 @@ $fio_py 131072 32 randrw 1 verify
 $fio_py 524288 128 randrw 1 verify
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
-	$fio_py 4096 1 write 300 verify
+	$fio_py 4096 1 randwrite 60 verify
+	$fio_py 1048576 128 rw 60 verify
 
 	# Run the running_config test which will generate a config file from the
 	#  running iSCSI target, then kill and restart the iSCSI target using the
 	#  generated config file
-	running_config
+	running_config start_iscsi_tgt2
 fi
 
 # Start hotplug test case.
@@ -119,19 +125,35 @@ if [ $fio_status -eq 0 ]; then
 else
        echo "iscsi hotplug test: fio failed as expected"
 fi
-
 set -e
 
 iscsicleanup
 $rpc_py delete_target_node 'iqn.2016-06.io.spdk:Target3'
 
-rm -f ./local-job0-0-verify.state
+if [ $RUN_NIGHTLY -eq 1 ]; then
+	ls_guid=$($rpc_py construct_lvol_store HotInNvme0n1 lvs0)
+	lb_name=$($rpc_py construct_lvol_bdev -u $ls_guid lbd0 8192)
+	$rpc_py construct_target_node Target1 Target1_alias "$lb_name:0" 1:2 64 -d
+	sleep 1
+
+	iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$PORT
+	iscsiadm -m node --login -p $TARGET_IP:$PORT
+
+	trap "cleanup_lvol_config; iscsicleanup; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
+	sleep 1
+
+	$fio_py 4096 1 randwrite 60 verify
+	running_config start_iscsi_tgt3
+	$fio_py 1048576 128 rw 60 verify
+
+	iscsicleanup
+	$rpc_py delete_target_node 'iqn.2016-06.io.spdk:Target1'
+	cleanup_lvol_config
+fi
+
 trap - SIGINT SIGTERM EXIT
-iscsicleanup
+rm -f ./local-job*
 rm -f $testdir/iscsi.conf
 killprocess $pid
-#echo 1 > /sys/bus/pci/rescan
-#sleep 2
-$rootdir/scripts/setup.sh
 
 timing_exit fio
