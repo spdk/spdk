@@ -559,8 +559,8 @@ spdk_vhost_free_reactor(uint32_t lcore)
 	g_num_ctrlrs[lcore]--;
 }
 
-static int
-spdk_vhost_dev_find_id(const char *ctrlr_name)
+struct spdk_vhost_dev *
+spdk_vhost_dev_find(const char *ctrlr_name)
 {
 	unsigned i;
 	size_t dev_dirname_len = strlen(dev_dirname);
@@ -575,24 +575,11 @@ spdk_vhost_dev_find_id(const char *ctrlr_name)
 		}
 
 		if (strcmp(g_spdk_vhost_devices[i]->name, ctrlr_name) == 0) {
-			return i;
+			return g_spdk_vhost_devices[i];
 		}
 	}
 
-	return -1;
-}
-
-struct spdk_vhost_dev *
-spdk_vhost_dev_find(const char *ctrlr_name)
-{
-	int id;
-
-	id = spdk_vhost_dev_find_id(ctrlr_name);
-	if (id == -1) {
-		return NULL;
-	}
-
-	return g_spdk_vhost_devices[id];
+	return NULL;
 }
 
 static int
