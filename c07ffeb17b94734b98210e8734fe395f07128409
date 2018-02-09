@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cc54f9db_05363a60",
+        "filename": "doc/vhost.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-09T18:03:13Z",
+      "side": 1,
+      "message": "This duplicates the previous sentence.",
+      "revId": "c07ffeb17b94734b98210e8734fe395f07128409",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
