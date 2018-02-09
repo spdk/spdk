@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1f0b7556_517b5fcd",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1077,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-09T15:19:29Z",
+      "side": 1,
+      "message": "I realize this was requested by Maciek, but I\u0027m not sure that we want to give errors in two places via return and callback.\n\nOther functions in lvol.c or vbdev_lvol.c always return error code immediately when possible, or via callback only after some async operation.\nIt could be changed to do the other way around (always use callback and functions return void instead of int), but it would be for another patch.\nEither way two paths to return error do not seem like correct choice.",
+      "range": {
+        "startLine": 1076,
+        "startChar": 3,
+        "endLine": 1077,
+        "endChar": 18
+      },
+      "revId": "a294451f657d291ad47f98921c697929c6293917",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
