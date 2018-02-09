@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4c2ebdcf_dd937527",
+        "filename": "lib/net/sock.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 548,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-09T04:41:04Z",
+      "side": 1,
+      "message": "if more than 32 events are coming, is it OK to defer remaining to the next period?",
+      "range": {
+        "startLine": 548,
+        "startChar": 44,
+        "endLine": 548,
+        "endChar": 63
+      },
+      "revId": "26c28d9e8333de6fe1069cd6e81b0120808d1bbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9456f593_fb804d1d",
+        "filename": "lib/net/sock.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 556,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-09T04:41:04Z",
+      "side": 1,
+      "message": "errno will be set in this case.",
+      "range": {
+        "startLine": 556,
+        "startChar": 2,
+        "endLine": 556,
+        "endChar": 12
+      },
+      "revId": "26c28d9e8333de6fe1069cd6e81b0120808d1bbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
