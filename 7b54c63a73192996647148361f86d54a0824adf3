@@ -1,0 +1,234 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4763484a_a94c7ff7",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-09T21:13:10Z",
+      "side": 1,
+      "message": "Please don\u0027t use bash script wrappers - they are intended for homans (also developers :P) to run vm previously configured. Use vm_run function from common.sh directly.",
+      "range": {
+        "startLine": 122,
+        "startChar": 4,
+        "endLine": 122,
+        "endChar": 60
+      },
+      "revId": "7b54c63a73192996647148361f86d54a0824adf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "311db332_a8af0c9a",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-09T21:13:10Z",
+      "side": 1,
+      "message": "SPDK_BASE_DIR from test/vhost/common.sh point directly to spdk directory so this \u0027../../../\u0027 is not requited.",
+      "range": {
+        "startLine": 215,
+        "startChar": 19,
+        "endLine": 215,
+        "endChar": 57
+      },
+      "revId": "7b54c63a73192996647148361f86d54a0824adf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1251494c_ba6ac6e0",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-09T21:13:10Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 238,
+        "startChar": 7,
+        "endLine": 238,
+        "endChar": 26
+      },
+      "revId": "7b54c63a73192996647148361f86d54a0824adf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8bd4944e_e9d8f245",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-09T21:13:10Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 241,
+        "startChar": 4,
+        "endLine": 241,
+        "endChar": 23
+      },
+      "revId": "7b54c63a73192996647148361f86d54a0824adf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b279da54_5bf5da74",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-09T21:13:10Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 242,
+        "startChar": 42,
+        "endLine": 242,
+        "endChar": 61
+      },
+      "revId": "7b54c63a73192996647148361f86d54a0824adf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c8b59d94_4567f8a7",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-09T21:13:10Z",
+      "side": 1,
+      "message": "For god sake - introduce some DRIVER_NAME to setup.sh or something, but don\u0027t sed the scripts!",
+      "range": {
+        "startLine": 242,
+        "startChar": 4,
+        "endLine": 242,
+        "endChar": 42
+      },
+      "revId": "7b54c63a73192996647148361f86d54a0824adf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28050449_03c419f3",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-09T21:13:10Z",
+      "side": 1,
+      "message": "I wonder, what if one of those modules refuse to unload?\nIf you do \"|| true\" you pls at least check that `lsmod` don\u0027t return one of those.",
+      "range": {
+        "startLine": 243,
+        "startChar": 0,
+        "endLine": 246,
+        "endChar": 22
+      },
+      "revId": "7b54c63a73192996647148361f86d54a0824adf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "07703f30_c8575d19",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-09T21:13:10Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 247,
+        "startChar": 13,
+        "endLine": 247,
+        "endChar": 32
+      },
+      "revId": "7b54c63a73192996647148361f86d54a0824adf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d8cf3743_0228b757",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-09T21:13:10Z",
+      "side": 1,
+      "message": "Did you mean \"HUGEMEM\" ?",
+      "range": {
+        "startLine": 247,
+        "startChar": 4,
+        "endLine": 247,
+        "endChar": 12
+      },
+      "revId": "7b54c63a73192996647148361f86d54a0824adf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7afbacee_29ed4f3b",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-09T21:13:10Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 250,
+        "startChar": 0,
+        "endLine": 261,
+        "endChar": 1
+      },
+      "revId": "7b54c63a73192996647148361f86d54a0824adf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
