@@ -52,8 +52,8 @@ for i in "$@"; do
 	esac
 done
 
-CC_TYPE=$($CC -v 2>&1 | grep -o -E '\w+ version' | awk '{ print $1 }')
-CXX_TYPE=$($CXX -v 2>&1 | grep -o -E '\w+ version' | awk '{ print $1 }')
+CC_TYPE=$($CC -v 2>&1 | grep -o -E '\w+ version' | head -1 | awk '{ print $1 }')
+CXX_TYPE=$($CXX -v 2>&1 | grep -o -E '\w+ version' | head -1 | awk '{ print $1 }')
 LD_TYPE=$(ld -v 2>&1 | awk '{print $2}')
 
 if [ "$CC_TYPE" != "$CXX_TYPE" ]; then
