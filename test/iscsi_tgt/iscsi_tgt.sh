@@ -48,6 +48,8 @@ fi
 trap - SIGINT SIGTERM EXIT
 kill_stub
 
+run_test ./test/iscsi_tgt/fio/nvme_lovl.sh
+
 if [ $SPDK_TEST_NVMF -eq 1 ]; then
 	# TODO: enable remote NVMe controllers with multi-process so that
 	#  we can use the stub for this test
