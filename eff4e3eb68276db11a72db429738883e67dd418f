@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a343e60e_d400d651",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 31
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-02-09T04:35:29Z",
+      "side": 1,
+      "message": "I think you can put `git clone -b spdk https://github.com/spdk/nvme-cli.git \u0026\u0026 cd nvme-cli \u0026\u0026 make clean \u0026\u0026 make` before staring the tests, and you can check the latest commit is updated or not, if not, just compile only once.",
+      "revId": "eff4e3eb68276db11a72db429738883e67dd418f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
