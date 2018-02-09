@@ -60,6 +60,30 @@
     },
     {
       "key": {
+        "uuid": "3a69d7c2_e8560b59",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 280,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-09T12:10:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "24d211a4_06d21865",
+      "range": {
+        "startLine": 279,
+        "startChar": 8,
+        "endLine": 280,
+        "endChar": 45
+      },
+      "revId": "f49ddb3f57bf16b7fbbcd034d0f3fa6efa1ca813",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "730a5dc1_3f441c99",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 15
@@ -77,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "d473c46c_0b90c275",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-09T12:10:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "730a5dc1_3f441c99",
+      "revId": "f49ddb3f57bf16b7fbbcd034d0f3fa6efa1ca813",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "41bf48a3_8f626254",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 15
@@ -88,6 +130,24 @@
       "writtenOn": "2018-01-24T17:50:19Z",
       "side": 1,
       "message": "If we make \"set rate limit\" and \"enable QoS\" two separate RPC methods, then you wouldn\u0027t need to duplicate this checking for the ios_per_sec limit.",
+      "revId": "f49ddb3f57bf16b7fbbcd034d0f3fa6efa1ca813",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e1fbc6c4_646489c9",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-09T12:10:38Z",
+      "side": 1,
+      "message": "I\u0027ve added an optional parameter to the required IOPS and still use the single RPC call. Please let me know whether need to split into two RPC calls. Thanks.",
+      "parentUuid": "41bf48a3_8f626254",
       "revId": "f49ddb3f57bf16b7fbbcd034d0f3fa6efa1ca813",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
