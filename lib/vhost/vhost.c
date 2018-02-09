@@ -1125,12 +1125,6 @@ out:
 	return rc;
 }
 
-static void
-spdk_vhost_kill_cb(void)
-{
-	spdk_app_stop(0);
-}
-
 void
 spdk_vhost_startup(void *arg1, void *arg2)
 {
@@ -1165,7 +1159,7 @@ spdk_vhost_startup(void *arg1, void *arg2)
 	return;
 
 out:
-	spdk_vhost_fini(spdk_vhost_kill_cb);
+	spdk_app_stop(-1);
 }
 
 static void *
