@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f6894b9f_da154c78",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-02-09T11:25:58Z",
+      "side": 1,
+      "message": "could you refactor it as\n\nif [ $(lsb_release -i -s) \u003d\u003d \"Fedora\" ]; then\n\t targetcli_rd_name\u003d\"ramdisk\"\nelse\n\t targetcli_rd_name\u003d\"rd_mcp\"\nfi \n\nso that the code is self-explanatory?",
+      "range": {
+        "startLine": 53,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 2
+      },
+      "revId": "00deeec5182923d2e05534a9ff6f5339d3ec6753",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
