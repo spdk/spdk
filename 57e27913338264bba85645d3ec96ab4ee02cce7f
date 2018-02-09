@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "27fb55e3_905256ca",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 33
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-02-09T01:39:08Z",
+      "side": 1,
+      "message": "Line 126 function cleanup_lvol_config also will do this, just delete it.",
+      "revId": "57e27913338264bba85645d3ec96ab4ee02cce7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b94b5ea_f43c205e",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 33
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-02-09T01:39:08Z",
+      "side": 1,
+      "message": "cleanup_lvol_config should be called after delete_target_node.",
+      "revId": "57e27913338264bba85645d3ec96ab4ee02cce7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
