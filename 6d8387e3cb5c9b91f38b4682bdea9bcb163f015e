@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5d9baf4e_2686b393",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-09T21:34:38Z",
+      "side": 1,
+      "message": "This is no \"fix double\" but fix of double teardown path. Beside that it is fine.",
+      "range": {
+        "startLine": 7,
+        "startChar": 7,
+        "endLine": 7,
+        "endChar": 44
+      },
+      "revId": "6d8387e3cb5c9b91f38b4682bdea9bcb163f015e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
