@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "60fad85a_e09e49d7",
+        "filename": "lib/net/sock.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 548,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-09T15:46:26Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nResponding to your earlier comment - yes, if more than 32 events are pending, it means additional events will not be reaped until next call to spdk_sock_group_poll().\n\nWe could add a loop to continue reaping events until no more are left.  But I was concerned that on a core with many busy connections, it would be better to return from this poll function and allow some other work to be done.  Then next call to this function will reap more events.\n\nBut I am open to changing this to reap all events.  Please provide your thoughts.\n\nThanks,\n\n-Jim",
+      "revId": "89c47e652802aeeb5ef607c1e7c20ba60579a5c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e1569ca9_8179b78a",
+        "filename": "lib/net/sock.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-09T15:46:26Z",
+      "side": 1,
+      "message": "Yes - errno will be set here.  Do you see any change needed to my patch for it?",
+      "revId": "89c47e652802aeeb5ef607c1e7c20ba60579a5c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
