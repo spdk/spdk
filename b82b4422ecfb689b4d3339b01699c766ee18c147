@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "661c5840_ce3771a2",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1012364
+      },
+      "writtenOn": "2018-02-09T06:17:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fcc1af5b_f4c5b575",
+      "range": {
+        "startLine": 35,
+        "startChar": 0,
+        "endLine": 42,
+        "endChar": 1
+      },
+      "revId": "b82b4422ecfb689b4d3339b01699c766ee18c147",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9166c94c_f7178786",
         "filename": "test/iscsi_tgt/fio/fio.sh",
         "patchSetId": 20
@@ -36,6 +60,30 @@
       "writtenOn": "2017-12-21T08:38:36Z",
       "side": 1,
       "message": "I understand that if there are no NVMe disks available then we skip the test rather than fail it? I think some info message should be echoed here so that we know what\u0027s going on.\n\nBTW, are we even OK to skip the test whatsoever? I didn\u0027t see that done in any other script.",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 67,
+        "endChar": 56
+      },
+      "revId": "b82b4422ecfb689b4d3339b01699c766ee18c147",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b18c26f_f3c63bb4",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1012364
+      },
+      "writtenOn": "2018-02-09T06:17:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9166c94c_f7178786",
       "range": {
         "startLine": 67,
         "startChar": 0,
@@ -100,6 +148,24 @@
     },
     {
       "key": {
+        "uuid": "2476819e_677a85a3",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1012364
+      },
+      "writtenOn": "2018-02-09T06:17:20Z",
+      "side": 1,
+      "message": "Question 1\nJust test iscsi fio cases.\n\nQuestion 2\nThe nightly test time may be too short. The time value in line 111 is 10, the purpose is having enough time to test hotplug.",
+      "parentUuid": "73919fa8_39150e07",
+      "revId": "b82b4422ecfb689b4d3339b01699c766ee18c147",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3ed441a2_acdb9915",
         "filename": "test/iscsi_tgt/fio/fio.sh",
         "patchSetId": 20
@@ -134,6 +200,30 @@
       "writtenOn": "2017-12-21T08:39:01Z",
       "side": 1,
       "message": "Is this change needed?",
+      "range": {
+        "startLine": 50,
+        "startChar": 0,
+        "endLine": 50,
+        "endChar": 36
+      },
+      "revId": "b82b4422ecfb689b4d3339b01699c766ee18c147",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "969bd9be_c89c848b",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1012364
+      },
+      "writtenOn": "2018-02-09T06:17:20Z",
+      "side": 1,
+      "message": "stub process has side effect on fio nvme case.",
+      "parentUuid": "39a96e72_ed3ef6ae",
       "range": {
         "startLine": 50,
         "startChar": 0,
