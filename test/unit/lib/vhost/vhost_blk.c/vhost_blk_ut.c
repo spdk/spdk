@@ -141,7 +141,7 @@ vhost_blk_construct_test(void)
 	rc = spdk_vhost_blk_construct("vhost.0", "0x1", "Malloc0", true);
 	CU_ASSERT(rc != 0);
 
-	/* Failed to set readonly as a feature and failde to remove controller */
+	/* Failed to set readonly as a feature and failed to remove controller */
 	MOCK_SET(spdk_vhost_dev_unregister_fail, bool, true);
 	rc = spdk_vhost_blk_construct("vhost.0", "0x1", "Malloc0", true);
 	CU_ASSERT(rc != 0);
