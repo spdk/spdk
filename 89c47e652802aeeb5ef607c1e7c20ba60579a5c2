@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "fe19e483_678015b3",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-09T20:21:02Z",
+      "side": 1,
+      "message": "It might be nice to provide the spdk_sock_group and spdk_sock as callback parameters as well.",
+      "revId": "89c47e652802aeeb5ef607c1e7c20ba60579a5c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6dd7394f_90709d67",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-09T20:21:02Z",
+      "side": 1,
+      "message": "We should document that a given sock can only be in one group at a time.  (This header should also have Doxygen comments added for all functions.)",
+      "revId": "89c47e652802aeeb5ef607c1e7c20ba60579a5c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "60fad85a_e09e49d7",
         "filename": "lib/net/sock.c",
         "patchSetId": 4
