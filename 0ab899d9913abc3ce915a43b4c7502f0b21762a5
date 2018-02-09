@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f1119b85_2a6b8840",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 842,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-09T20:04:49Z",
+      "side": 1,
+      "message": "Nitpick: Ctrl+C sends SIGINT, not SIGTERM.\n\n(This patch is just moving the text around, so we can merge this as-is as long as we fix it up in another patch.)",
+      "revId": "0ab899d9913abc3ce915a43b4c7502f0b21762a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
