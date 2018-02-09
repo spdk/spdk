@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "4917547b_36b80a72",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 33
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1012364
+      },
+      "writtenOn": "2018-02-09T06:17:20Z",
+      "side": 1,
+      "message": "Here simulates unplugging the hardware",
+      "parentUuid": "27fb55e3_905256ca",
+      "revId": "57e27913338264bba85645d3ec96ab4ee02cce7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4b94b5ea_f43c205e",
         "filename": "test/iscsi_tgt/fio/fio.sh",
         "patchSetId": 33
