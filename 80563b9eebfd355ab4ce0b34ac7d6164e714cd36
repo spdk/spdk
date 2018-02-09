@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dadf8ea9_0973c7eb",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-09T10:32:04Z",
+      "side": 1,
+      "message": "Please see comment below",
+      "range": {
+        "startLine": 210,
+        "startChar": 1,
+        "endLine": 210,
+        "endChar": 83
+      },
+      "revId": "80563b9eebfd355ab4ce0b34ac7d6164e714cd36",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf948b04_0b5574a9",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-09T10:32:04Z",
+      "side": 1,
+      "message": "Buf is not changed in this call at all. It would have to be assigned to return from spdk_strerror().\nBetter yet would be to simply use that return directly, like so:\n\nspdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));",
+      "range": {
+        "startLine": 247,
+        "startChar": 78,
+        "endLine": 247,
+        "endChar": 81
+      },
+      "revId": "80563b9eebfd355ab4ce0b34ac7d6164e714cd36",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
