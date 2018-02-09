@@ -9,6 +9,7 @@ verify=md5
 verify_backlog=1024
 iodepth=128
 bs=4K
+serialize_overlap=1
 runtime=10
 size=13%
 
