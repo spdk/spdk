@@ -7,7 +7,7 @@ ROOT_DIR=$(readlink -f $BASE_DIR/../../..)
 
 PLUGIN_DIR=$ROOT_DIR/examples/bdev/fio_plugin
 RPC_PY="$ROOT_DIR/scripts/rpc.py"
-FIO_BIN="/usr/src/fio/fio"
+FIO_SRC_DIR="/usr/src/fio"
 virtio_bdevs=""
 virtio_with_unmap=""
 os_image="/home/sys_sgsw/vhost_vm_image.qcow2"
@@ -16,10 +16,10 @@ function usage()
 {
 	[[ ! -z $2 ]] && ( echo "$2"; echo ""; )
 	echo "Script for running vhost initiator tests."
-	echo "Usage: $(basename $1) [-h|--help] [--fiobin=PATH]"
+	echo "Usage: $(basename $1) [-h|--help] [--fiodir=PATH]"
 	echo "-h, --help            Print help and exit"
 	echo "    --vm_image=PATH   Path to VM image used in these tests [default=/home/sys_sgsw/vhost_vm_image.qcow2]"
-	echo "    --fiobin=PATH     Path to fio binary on host [default=/usr/src/fio/fio]"
+	echo "    --fiodir=PATH     Path to the fio sources directory [default=/usr/src/fio]"
 }
 
 while getopts 'h-:' optchar; do
@@ -27,7 +27,7 @@ while getopts 'h-:' optchar; do
 		-)
 		case "$OPTARG" in
 			help) usage $0 && exit 0 ;;
-			fiobin=*) FIO_BIN="${OPTARG#*=}" ;;
+			fiodir=*) FIO_SRC_DIR="${OPTARG#*=}" ;;
 			vm_image=*) os_image="${OPTARG#*=}" ;;
 			*) usage $0 echo "Invalid argument '$OPTARG'" && exit 1 ;;
 		esac
@@ -39,8 +39,12 @@ done
 
 source $COMMON_DIR/common.sh
 
-if [ ! -x $FIO_BIN ]; then
-	error "Invalid path of fio binary"
+if [ ! -d "$FIO_SRC_DIR" ]; then
+	error "Invalid path to fio sources"
+fi
+
+if [ ! -x "$FIO_SRC_DIR/fio" ]; then
+	error "Missing fio binary in the fio sources directory. Fio must be precompiled first"
 fi
 
 if [[ $EUID -ne 0 ]]; then
@@ -50,7 +54,7 @@ fi
 
 trap 'rm -f *.state; error_exit "${FUNCNAME}""${LINENO}"' ERR SIGTERM SIGABRT
 function run_spdk_fio() {
-	LD_PRELOAD=$PLUGIN_DIR/fio_plugin $FIO_BIN --ioengine=spdk_bdev\
+	LD_PRELOAD=$PLUGIN_DIR/fio_plugin "$FIO_SRC_DIR/fio" --ioengine=spdk_bdev\
          "$@" --spdk_mem=1024
 }
 
@@ -112,9 +116,17 @@ timing_enter vm_wait_for_boot
 vm_wait_for_boot 600 $vm_no
 timing_exit vm_wait_for_boot
 
+timing_enter vm_scp_fio
+vm_scp $vm_no -r "$FIO_SRC_DIR/" "127.0.0.1:/root/fio_src"
+timing_exit vm_scp_fio
+
 timing_enter vm_scp_spdk
 vm_scp $vm_no -r $ROOT_DIR "127.0.0.1:/root/spdk"
 timing_exit vm_scp_spdk
+
+timing_enter vm_build_fio
+vm_ssh $vm_no " cd fio_src ; make clean ; ./configure ; make -j2"
+timing_exit vm_build_fio
 
 timing_enter vm_build_spdk
 vm_ssh $vm_no " cd spdk ; make clean ; ./configure --with-fio=/root/fio_src ; make -j2"
