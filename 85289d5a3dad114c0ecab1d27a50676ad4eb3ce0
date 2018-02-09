@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2ea2e316_ba8730b5",
+        "filename": "autotest.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-09T15:00:02Z",
+      "side": 1,
+      "message": "Forgot to restore that",
+      "range": {
+        "startLine": 170,
+        "startChar": 0,
+        "endLine": 174,
+        "endChar": 59
+      },
+      "revId": "85289d5a3dad114c0ecab1d27a50676ad4eb3ce0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "784ad4ab_749b2917",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-09T15:00:02Z",
+      "side": 1,
+      "message": "Change numbering accorindg to Pawel K other commit to avoid conflicts on merge",
+      "range": {
+        "startLine": 61,
+        "startChar": 36,
+        "endLine": 65,
+        "endChar": 67
+      },
+      "revId": "85289d5a3dad114c0ecab1d27a50676ad4eb3ce0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ae9d8dd_3686e337",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-09T15:00:02Z",
+      "side": 1,
+      "message": "Use 10000 according to Pawel K. other commit",
+      "range": {
+        "startLine": 66,
+        "startChar": 36,
+        "endLine": 66,
+        "endChar": 51
+      },
+      "revId": "85289d5a3dad114c0ecab1d27a50676ad4eb3ce0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
