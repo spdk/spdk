@@ -159,6 +159,12 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		return;
 	}
 
+	if (!spdk_nvme_ns_is_active(ns)) {
+		SPDK_ERRLOG("Inactive namespace by ns_id=%d\n", ns_id);
+		g_error = true;
+		return;
+	}
+
 	fio_qpair = fio_thread->fio_qpair;
 	while (fio_qpair != NULL) {
 		if ((fio_qpair->f == f) ||
