@@ -22,6 +22,30 @@
       "revId": "a294451f657d291ad47f98921c697929c6293917",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66695ea8_23846930",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1077,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-10T09:06:06Z",
+      "side": 1,
+      "message": "So, revert code to previous state?\nWith \u0027invalid\u0027 section?",
+      "parentUuid": "1f0b7556_517b5fcd",
+      "range": {
+        "startLine": 1076,
+        "startChar": 3,
+        "endLine": 1077,
+        "endChar": 18
+      },
+      "revId": "a294451f657d291ad47f98921c697929c6293917",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
