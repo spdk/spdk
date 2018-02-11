@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a4bfcdcb_2b3e2ac3",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1265,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-11T08:01:42Z",
+      "side": 1,
+      "message": "Here a new member destroying added which only take effect when the channel reference is zero and an async destroy happened. No more bdev channel destroy will be called. The common IO channel resource will be cleaned up. The UT code has been added to examine this new logic.",
+      "parentUuid": "713ecbcd_f03bbd0c",
+      "range": {
+        "startLine": 1265,
+        "startChar": 3,
+        "endLine": 1265,
+        "endChar": 22
+      },
+      "revId": "249e50550b096deeb71bcf696bb2e6e5b8f76f27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cc3c539f_c5441e38",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 5
@@ -36,6 +60,30 @@
       "writtenOn": "2018-01-30T00:28:46Z",
       "side": 1,
       "message": "Same as below. this is already ensured before arriving here?",
+      "range": {
+        "startLine": 1309,
+        "startChar": 4,
+        "endLine": 1310,
+        "endChar": 35
+      },
+      "revId": "249e50550b096deeb71bcf696bb2e6e5b8f76f27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bae5fb2f_5adc7f4b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1310,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-11T08:01:42Z",
+      "side": 1,
+      "message": "This is for the I/O channel associated thread. Could be different than the qos_thread.",
+      "parentUuid": "cc3c539f_c5441e38",
       "range": {
         "startLine": 1309,
         "startChar": 4,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "d27f429d_a4382e72",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1324,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-11T08:01:42Z",
+      "side": 1,
+      "message": "This is in the async path and not duplicate the line 1339 for the sync path. Once all the IOs are aborted in the above code block, it will cleanup resource.",
+      "parentUuid": "29a43da0_fdfbb2ea",
+      "range": {
+        "startLine": 1320,
+        "startChar": 0,
+        "endLine": 1324,
+        "endChar": 2
+      },
+      "revId": "249e50550b096deeb71bcf696bb2e6e5b8f76f27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "52ffee3a_27285517",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 5
@@ -82,6 +154,30 @@
       "writtenOn": "2018-01-30T00:28:46Z",
       "side": 1,
       "message": "And it looks that (spdk_get_thread() \u003d\u003d bdev-\u003eqos_thread) is already decided in the spdk_bdev_channel_destroy().\nThis if condition and the following sending message are duplicated?",
+      "range": {
+        "startLine": 1333,
+        "startChar": 2,
+        "endLine": 1333,
+        "endChar": 46
+      },
+      "revId": "249e50550b096deeb71bcf696bb2e6e5b8f76f27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b9714c1c_ec234e66",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1333,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-11T08:01:42Z",
+      "side": 1,
+      "message": "This could be a normal bdev hannel. So that the qos_thread and another thread can be different.",
+      "parentUuid": "52ffee3a_27285517",
       "range": {
         "startLine": 1333,
         "startChar": 2,
