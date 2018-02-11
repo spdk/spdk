@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7d1bcdb8_c8af7ab4",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 45
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-02-11T10:05:46Z",
+      "side": 1,
+      "message": "OK, fixed.",
+      "parentUuid": "0ef474fb_93f1aedc",
+      "revId": "c86ad1c3237cf7a8ae207b7ffda323fb2e32ff1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1e536095_6d3b520f",
         "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
         "patchSetId": 45
@@ -30,6 +48,24 @@
       "writtenOn": "2018-02-09T23:54:03Z",
       "side": 1,
       "message": "could we try testing with more than 30 connections?  ideally, we should be able to support up to 128\n\nBut it is OK to leave this at 30 for now and increase it later.",
+      "revId": "c86ad1c3237cf7a8ae207b7ffda323fb2e32ff1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a45c4f79_13edca63",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 45
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-02-11T10:05:46Z",
+      "side": 1,
+      "message": "OK ,the local 128 connections test have no problem, but in the building pool it is not very stable.",
+      "parentUuid": "1e536095_6d3b520f",
       "revId": "c86ad1c3237cf7a8ae207b7ffda323fb2e32ff1e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
