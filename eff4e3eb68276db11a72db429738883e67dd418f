@@ -33,6 +33,24 @@
       "revId": "eff4e3eb68276db11a72db429738883e67dd418f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "468e4c4c_4f94681f",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 31
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-02-11T01:41:40Z",
+      "side": 1,
+      "message": "I think this can be another patch.",
+      "parentUuid": "db7ab13f_b04ee976",
+      "revId": "eff4e3eb68276db11a72db429738883e67dd418f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
