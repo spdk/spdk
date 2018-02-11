@@ -16,6 +16,23 @@
       "revId": "eff4e3eb68276db11a72db429738883e67dd418f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db7ab13f_b04ee976",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 31
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-02-11T01:40:36Z",
+      "side": 1,
+      "message": "Daniel have a patch changed the QEMU binary from ./ to use the absolute path, I think that\u0027s good, whil",
+      "revId": "eff4e3eb68276db11a72db429738883e67dd418f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
