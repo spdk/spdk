@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0dbf7c5b_ff35728a",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 609,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-02-12T17:56:36Z",
+      "side": 1,
+      "message": "\u003e are we always calling this under a mutex or on a particular thread to make this safe?\n\nYes, we are always calling this function under a mutex. There\u0027s a set of spdk_vhost_lock/unlock() functions that were added just for this purpose.\n\nI see now that it\u0027s not documented anywhere. I\u0027ll add some docs in a separate patch.\n\nIs this fine for now?",
+      "parentUuid": "977fa0aa_7e3e1cb3",
+      "revId": "fb826a483274281d5c4ca29d9113125cd1e4367c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3ef414e8_039c5890",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 6
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "568d1b4b_90878f11",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 689,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-02-12T17:56:36Z",
+      "side": 1,
+      "message": "\u003e It would probably be good to add a sanity check here for overflow.\n\nAck\n\n\u003e or maybe search for an unused id?\n\nI\u0027m not mentioning this anywhere,  but I rely on the fact that subsequent devices in g_spdk_vhost_devices have bigger ids. That\u0027s required for spdk_vhost_dev_next() implementation to work. I will add a short note about this in v2.\n\nI could try to allow random, unused ids and then sort g_spdk_vhost_devices, but that seems to be an overkill for such a case.",
+      "parentUuid": "3ef414e8_039c5890",
+      "revId": "fb826a483274281d5c4ca29d9113125cd1e4367c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "824bd309_3d7e4612",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 6
@@ -47,6 +83,24 @@
       "writtenOn": "2018-02-12T17:40:58Z",
       "side": 1,
       "message": "It might be better to do the cast the other way around, i.e. if (vdev-\u003eid \u003e (unsigned)i), to avoid problems with id \u003e INT_MAX.  (Does this function need to deal with i \u003c 0?)\n\nAlternatively, we could change the parameter to be unsigned to match the vdev-\u003eid type, but I don\u0027t know if that has other implications for the functions that use this one.",
+      "revId": "fb826a483274281d5c4ca29d9113125cd1e4367c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "112dbaf4_7fdf8024",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 749,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-02-12T17:56:36Z",
+      "side": 1,
+      "message": "\u003e (Does this function need to deal with i \u003c 0?)\n\nYes. i \u003d\u003d -1 when we want the very first device.\n\nI\u0027ll just add a separate check for i \u003c 0 and then cast it to unsigned. Ack",
+      "parentUuid": "824bd309_3d7e4612",
       "revId": "fb826a483274281d5c4ca29d9113125cd1e4367c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
