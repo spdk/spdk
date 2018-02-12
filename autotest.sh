@@ -38,6 +38,8 @@ if hash lcov; then
 		--rc geninfo_all_blocks=1
 		"
 	export LCOV="lcov $LCOV_OPTS --no-external"
+	# Print lcov version to log
+	$LCOV -v
 	# zero out coverage data
 	$LCOV -q -c -i -t "Baseline" -d $src -o cov_base.info
 fi
