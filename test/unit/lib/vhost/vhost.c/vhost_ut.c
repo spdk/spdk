@@ -228,7 +228,6 @@ create_controller_test(void)
 {
 	struct spdk_vhost_dev *vdev, *vdev2;
 	int ret;
-	unsigned ctrlr_num;
 	char long_name[PATH_MAX];
 	struct spdk_vhost_dev_backend backend;
 
@@ -257,22 +256,10 @@ create_controller_test(void)
 	vdev2 = alloc_vdev();
 	ret = spdk_vhost_dev_register(vdev2, "vdev_name_0", "0x1", &backend);
 	CU_ASSERT(ret != 0);
-
-	/* Create device when max number of devices is reached */
-	for (ctrlr_num = 0; ctrlr_num < MAX_VHOST_DEVICES; ctrlr_num ++) {
-		g_spdk_vhost_devices[ctrlr_num] = vdev;
-	}
-
-	ret = spdk_vhost_dev_register(vdev2, "vdev_name_1", "0x1", &backend);
-	CU_ASSERT(ret != 0);
 	free_vdev(vdev2);
 
 	spdk_vhost_dev_unregister(vdev);
 	free_vdev(vdev);
-
-	for (ctrlr_num = 0; ctrlr_num < MAX_VHOST_DEVICES; ctrlr_num ++) {
-		g_spdk_vhost_devices[ctrlr_num] = NULL;
-	}
 }
 
 static void

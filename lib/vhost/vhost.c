@@ -47,8 +47,6 @@ static uint32_t *g_num_ctrlrs;
 /* Path to folder where character device will be created. Can be set by user. */
 static char dev_dirname[PATH_MAX] = "";
 
-#define MAX_VHOST_DEVICES	64
-
 struct spdk_vhost_dev_event_ctx {
 	/** Pointer to the controller obtained before enqueuing the event */
 	struct spdk_vhost_dev *vdev;
@@ -83,7 +81,8 @@ const struct vhost_device_ops g_spdk_vhost_ops = {
 	.destroy_connection = destroy_connection,
 };
 
-static struct spdk_vhost_dev *g_spdk_vhost_devices[MAX_VHOST_DEVICES];
+static TAILQ_HEAD(, spdk_vhost_dev) g_spdk_vhost_devices = TAILQ_HEAD_INITIALIZER(
+			g_spdk_vhost_devices);
 static pthread_mutex_t g_spdk_vhost_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr)
@@ -473,12 +472,10 @@ spdk_vhost_dev_has_feature(struct spdk_vhost_dev *vdev, unsigned feature_id)
 static struct spdk_vhost_dev *
 spdk_vhost_dev_find_by_id(unsigned id)
 {
-	unsigned i;
 	struct spdk_vhost_dev *vdev;
 
-	for (i = 0; i < MAX_VHOST_DEVICES; i++) {
-		vdev = g_spdk_vhost_devices[i];
-		if (vdev && vdev->id == id) {
+	TAILQ_FOREACH(vdev, &g_spdk_vhost_devices, tailq) {
+		if (vdev->id == id) {
 			return vdev;
 		}
 	}
@@ -489,12 +486,10 @@ spdk_vhost_dev_find_by_id(unsigned id)
 static struct spdk_vhost_dev *
 spdk_vhost_dev_find_by_vid(int vid)
 {
-	unsigned i;
 	struct spdk_vhost_dev *vdev;
 
-	for (i = 0; i < MAX_VHOST_DEVICES; i++) {
-		vdev = g_spdk_vhost_devices[i];
-		if (vdev && vdev->vid == vid) {
+	TAILQ_FOREACH(vdev, &g_spdk_vhost_devices, tailq) {
+		if (vdev->vid == vid) {
 			return vdev;
 		}
 	}
@@ -562,20 +557,16 @@ spdk_vhost_free_reactor(uint32_t lcore)
 struct spdk_vhost_dev *
 spdk_vhost_dev_find(const char *ctrlr_name)
 {
-	unsigned i;
+	struct spdk_vhost_dev *vdev;
 	size_t dev_dirname_len = strlen(dev_dirname);
 
 	if (strncmp(ctrlr_name, dev_dirname, dev_dirname_len) == 0) {
 		ctrlr_name += dev_dirname_len;
 	}
 
-	for (i = 0; i < MAX_VHOST_DEVICES; i++) {
-		if (g_spdk_vhost_devices[i] == NULL) {
-			continue;
-		}
-
-		if (strcmp(g_spdk_vhost_devices[i]->name, ctrlr_name) == 0) {
-			return g_spdk_vhost_devices[i];
+	TAILQ_FOREACH(vdev, &g_spdk_vhost_devices, tailq) {
+		if (strcmp(vdev->name, ctrlr_name) == 0) {
+			return vdev;
 		}
 	}
 
@@ -615,7 +606,7 @@ int
 spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
 			const struct spdk_vhost_dev_backend *backend)
 {
-	unsigned ctrlr_num;
+	static unsigned ctrlr_num;
 	char path[PATH_MAX];
 	struct stat file_stat;
 	struct spdk_cpuset *cpumask;
@@ -644,18 +635,6 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 	if (spdk_vhost_dev_find(name)) {
 		SPDK_ERRLOG("vhost controller %s already exists.\n", name);
 		rc = -EEXIST;
-		goto out;
-	}
-
-	for (ctrlr_num = 0; ctrlr_num < MAX_VHOST_DEVICES; ctrlr_num++) {
-		if (g_spdk_vhost_devices[ctrlr_num] == NULL) {
-			break;
-		}
-	}
-
-	if (ctrlr_num == MAX_VHOST_DEVICES) {
-		SPDK_ERRLOG("Max controllers reached (%d).\n", MAX_VHOST_DEVICES);
-		rc = -ENOSPC;
 		goto out;
 	}
 
@@ -707,7 +686,7 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 
 	vdev->name = strdup(name);
 	vdev->path = strdup(path);
-	vdev->id = ctrlr_num;
+	vdev->id = ctrlr_num++;
 	vdev->vid = -1;
 	vdev->lcore = -1;
 	vdev->cpumask = cpumask;
@@ -720,7 +699,7 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 	vdev->stats_check_interval = SPDK_VHOST_DEV_STATS_CHECK_INTERVAL_MS * spdk_get_ticks_hz() /
 				     1000UL;
 
-	g_spdk_vhost_devices[ctrlr_num] = vdev;
+	TAILQ_INSERT_TAIL(&g_spdk_vhost_devices, vdev, tailq);
 
 	if (rte_vhost_driver_start(path) != 0) {
 		SPDK_ERRLOG("Failed to start vhost driver for controller %s (%d): %s\n", name, errno,
@@ -757,16 +736,18 @@ spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev)
 	free(vdev->name);
 	free(vdev->path);
 	spdk_cpuset_free(vdev->cpumask);
-	g_spdk_vhost_devices[vdev->id] = NULL;
+	TAILQ_REMOVE(&g_spdk_vhost_devices, vdev, tailq);
 	return 0;
 }
 
 static struct spdk_vhost_dev *
 spdk_vhost_dev_next(int i)
 {
-	for (i++; i < MAX_VHOST_DEVICES; i++) {
-		if (g_spdk_vhost_devices[i]) {
-			return g_spdk_vhost_devices[i];
+	struct spdk_vhost_dev *vdev;
+
+	TAILQ_FOREACH(vdev, &g_spdk_vhost_devices, tailq) {
+		if ((int) vdev->id > i) {
+			return vdev;
 		}
 	}
 
@@ -1161,14 +1142,8 @@ static void *
 session_shutdown(void *arg)
 {
 	struct spdk_vhost_dev *vdev = NULL;
-	int i;
 
-	for (i = 0; i < MAX_VHOST_DEVICES; i++) {
-		vdev = g_spdk_vhost_devices[i];
-		if (vdev == NULL) {
-			continue;
-		}
-
+	TAILQ_FOREACH(vdev, &g_spdk_vhost_devices, tailq) {
 		rte_vhost_driver_unregister(vdev->path);
 		vdev->registered = false;
 	}

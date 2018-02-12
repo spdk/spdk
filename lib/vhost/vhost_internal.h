@@ -165,6 +165,8 @@ struct spdk_vhost_dev {
 	uint64_t negotiated_features;
 
 	struct spdk_vhost_virtqueue virtqueue[SPDK_VHOST_MAX_VQUEUES];
+
+	TAILQ_ENTRY(spdk_vhost_dev) tailq;
 };
 
 struct spdk_vhost_dev *spdk_vhost_dev_find(const char *ctrlr_name);
