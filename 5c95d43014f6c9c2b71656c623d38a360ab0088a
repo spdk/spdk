@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "d820ebf8_4f204154",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 927,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-12T21:10:32Z",
+      "side": 1,
+      "message": "We might want to add an alignment parameter here to allow the user to pick the alignment (the current implementation hard-codes it to 4 bytes, which may not be sufficient for some uses).",
+      "revId": "5c95d43014f6c9c2b71656c623d38a360ab0088a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "097090fc_5103cc14",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 936,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-12T21:10:32Z",
+      "side": 1,
+      "message": "We probably don\u0027t need to provide \u0027size\u0027 here - I think it is acceptable to make the NVMe library internally track the allocations so it can find the size of a given allocation itself.",
+      "revId": "5c95d43014f6c9c2b71656c623d38a360ab0088a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9e694bdf_6ca6fab2",
         "filename": "lib/nvme/nvme_pcie.c",
         "patchSetId": 4
