@@ -189,7 +189,7 @@ test_cpuset_fmt(void)
 	int i;
 	uint32_t lcore;
 	struct spdk_cpuset *core_mask = spdk_cpuset_alloc();
-	char *hex_mask;
+	const char *hex_mask;
 	char hex_mask_ref[SPDK_CPUSET_SIZE / 4 + 1];
 
 	/* Clear coremask. hex_mask should be "0" */

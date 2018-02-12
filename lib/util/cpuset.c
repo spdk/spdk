@@ -132,9 +132,10 @@ spdk_cpuset_count(const struct spdk_cpuset *set)
 	return count;
 }
 
-char *
-spdk_cpuset_fmt(struct spdk_cpuset *set)
+const char *
+spdk_cpuset_fmt(const struct spdk_cpuset *_set)
 {
+	struct spdk_cpuset *set = (struct spdk_cpuset *)_set;
 	uint32_t lcore, lcore_max = 0;
 	int val, i, n;
 	char *ptr;
