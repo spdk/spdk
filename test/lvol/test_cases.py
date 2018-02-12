@@ -956,9 +956,9 @@ class TestCases(object):
                                                    uuid_store,
                                                    self.cluster_size)
 
-        # size = approx 10% of total NVMe disk size
+        # size = approx 2% of total NVMe disk size
         _ = self.c.get_lvol_stores()[0]
-        size = int(_["free_clusters"] / 10)
+        size = int(_["free_clusters"] / 50)
 
         for i in range(5):
             uuid_bdev = self.c.construct_lvol_bdev(uuid_store,
@@ -975,7 +975,7 @@ class TestCases(object):
         remove(pid_path)
         if self._start_vhost(vhost_path, config_path, pid_path) != 0:
             fail_count += 1
-            footer(650)
+            footer(700)
             return fail_count
 
         # Check if configuration was properly loaded after tasting
@@ -1002,7 +1002,7 @@ class TestCases(object):
                 pprint.pprint([o, n])
 
         if fail_count != 0:
-            footer(650)
+            footer(700)
             return fail_count
 
         # Try modifying loaded configuration
