@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "df99b70e_39ff5124",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 45
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-02-12T10:17:14Z",
+      "side": 1,
+      "message": "OK, fixed.",
+      "parentUuid": "f17f5f2a_c0509071",
+      "revId": "c86ad1c3237cf7a8ae207b7ffda323fb2e32ff1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1e536095_6d3b520f",
         "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
         "patchSetId": 45
