@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d46a25e5_3cc71cca",
+        "filename": "autotest.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-12T12:11:18Z",
+      "side": 1,
+      "message": "Add you new tests (75*) to autotest so that they run on commit",
+      "range": {
+        "startLine": 183,
+        "startChar": 33,
+        "endLine": 183,
+        "endChar": 58
+      },
+      "revId": "61f0533d74a0836240a021271224e206af7d299b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3377d24_5cdd1bde",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-12T12:11:18Z",
+      "side": 1,
+      "message": "Question was asked by Tomek, but was not answered. Why do we need that class?\n\nA couple of lines below we already have a function to run FIO, plus it\u0027s already merged in tthin prov test cases.",
+      "range": {
+        "startLine": 21,
+        "startChar": 0,
+        "endLine": 21,
+        "endChar": 34
+      },
+      "revId": "61f0533d74a0836240a021271224e206af7d299b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bee04cf5_f22a252b",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 917,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-12T12:11:18Z",
+      "side": 1,
+      "message": "Remove if commented out?",
+      "range": {
+        "startLine": 916,
+        "startChar": 8,
+        "endLine": 917,
+        "endChar": 29
+      },
+      "revId": "61f0533d74a0836240a021271224e206af7d299b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1609b7f7_360ff109",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 964,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-12T12:11:18Z",
+      "side": 1,
+      "message": "Unnecessary prints in this test case",
+      "range": {
+        "startLine": 964,
+        "startChar": 8,
+        "endLine": 964,
+        "endChar": 42
+      },
+      "revId": "61f0533d74a0836240a021271224e206af7d299b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c96d7dad_ef2befae",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 1154,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-12T12:11:18Z",
+      "side": 1,
+      "message": "Could this be simplified in similar fashion to fio function?\nfail_count +\u003d self.compare_two_disks() ?",
+      "range": {
+        "startLine": 1151,
+        "startChar": 8,
+        "endLine": 1154,
+        "endChar": 27
+      },
+      "revId": "61f0533d74a0836240a021271224e206af7d299b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
