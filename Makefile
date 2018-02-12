@@ -76,4 +76,11 @@ config.h: CONFIG CONFIG.local scripts/genconfig.py
 	cmp -s $@.tmp $@ || mv $@.tmp $@ ; \
 	rm -f $@.tmp
 
+cc_version: mk/cc.mk
+	$(Q)echo "SPDK using CC=$(CC)"
+	$(Q)$(CC) -v
+
+cxx_version: mk/cc.mk
+	$(Q)echo "SPDK using CXX=$(CXX)"
+	$(Q)$(CXX) -v
 include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
