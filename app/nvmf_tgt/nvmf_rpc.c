@@ -268,6 +268,10 @@ decode_rpc_hosts(const struct spdk_json_val *val, void *out)
 }
 
 
+struct spdk_nvmf_ns_params {
+	char *bdev_name;
+	uint32_t nsid;
+};
 
 struct rpc_namespaces {
 	size_t num_ns;
@@ -419,6 +423,8 @@ spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_subsystem req = {};
 	struct spdk_nvmf_subsystem *subsystem;
+	size_t i;
+
 	req.core = -1;	/* Explicitly set the core as the uninitialized value */
 
 	if (spdk_json_decode_object(params, rpc_subsystem_decoders,
@@ -456,10 +462,29 @@ spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_request *request,
 			req.listen_addresses.num_listen_address,
 			req.listen_addresses.addresses,
 			req.hosts.num_hosts, req.hosts.hosts, req.allow_any_host,
-			req.serial_number,
-			req.namespaces.num_ns, req.namespaces.ns_params);
+			req.serial_number);
 	if (!subsystem) {
 		goto invalid;
+	}
+
+	for (i = 0; i < req.namespaces.num_ns; i++) {
+		struct spdk_nvmf_ns_params *ns_params = &req.namespaces.ns_params[i];
+		struct spdk_bdev *bdev;
+		struct spdk_nvmf_ns_opts ns_opts;
+
+		bdev = spdk_bdev_get_by_name(ns_params->bdev_name);
+		if (bdev == NULL) {
+			SPDK_ERRLOG("Could not find namespace bdev '%s'\n", ns_params->bdev_name);
+			goto invalid;
+		}
+
+		spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
+		ns_opts.nsid = ns_params->nsid;
+
+		if (spdk_nvmf_subsystem_add_ns(subsystem, bdev, &ns_opts, sizeof(ns_opts)) == 0) {
+			SPDK_ERRLOG("Unable to add namespace\n");
+			goto invalid;
+		}
 	}
 
 	free_rpc_subsystem(&req);
