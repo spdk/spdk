@@ -137,7 +137,7 @@ uint32_t spdk_cpuset_count(const struct spdk_cpuset *set);
  * \return Pointer to hexadecimal representation of CPU set. Buffer to store a
  * string is dynamically allocated internally and freed with CPU set object.
  */
-char *spdk_cpuset_fmt(struct spdk_cpuset *set);
+char *spdk_cpuset_fmt(const struct spdk_cpuset *set);
 
 /**
  * Convert a string containing a CPU core mask into a CPU set.
