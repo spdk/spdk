@@ -57,7 +57,23 @@ struct spdk_cpuset *spdk_app_get_core_mask(void)
 	return g_app_core_mask;
 }
 
-DEFINE_STUB(spdk_app_parse_core_mask, int, (const char *mask, struct spdk_cpuset *cpumask), 0);
+int
+spdk_app_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
+{
+	int ret;
+	struct spdk_cpuset *validmask;
+
+	ret = spdk_cpuset_parse(cpumask, mask);
+	if (ret < 0) {
+		return ret;
+	}
+
+	validmask = spdk_app_get_core_mask();
+	spdk_cpuset_and(cpumask, validmask);
+
+	return 0;
+}
+
 DEFINE_STUB(spdk_env_get_first_core, uint32_t, (void), 0);
 DEFINE_STUB(spdk_env_get_next_core, uint32_t, (uint32_t prev_core), 0);
 DEFINE_STUB(spdk_env_get_last_core, uint32_t, (void), 0);
