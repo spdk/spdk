@@ -22,6 +22,53 @@
       "revId": "cef684edf30cfcca633add1431db682c220f94d7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "90d0cccb_91ff997d",
+        "filename": "test/unit/lib/vhost/vhost.c/vhost_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-02-12T17:35:37Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "e0f64327_9a28f729",
+      "range": {
+        "startLine": 273,
+        "startChar": 61,
+        "endLine": 273,
+        "endChar": 62
+      },
+      "revId": "cef684edf30cfcca633add1431db682c220f94d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7cc700db_1e77beb9",
+        "filename": "test/unit/lib/vhost/vhost.c/vhost_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-02-12T17:35:37Z",
+      "side": 1,
+      "message": "woops, this probably deserves a separate patch",
+      "range": {
+        "startLine": 310,
+        "startChar": 1,
+        "endLine": 310,
+        "endChar": 15
+      },
+      "revId": "cef684edf30cfcca633add1431db682c220f94d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
