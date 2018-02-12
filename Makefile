@@ -38,7 +38,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 DIRS-y += lib test examples app include
 
-.PHONY: all clean $(DIRS-y) config.h CONFIG.local mk/cc.mk
+.PHONY: all clean $(DIRS-y) config.h CONFIG.local mk/cc.mk cc_version cxx_version
 
 ifeq ($(CURDIR)/dpdk/build,$(CONFIG_DPDK_DIR))
 ifneq ($(SKIP_DPDK_BUILD),1)
@@ -75,5 +75,11 @@ config.h: CONFIG CONFIG.local scripts/genconfig.py
 	$$PYCMD scripts/genconfig.py $(MAKEFLAGS) > $@.tmp; \
 	cmp -s $@.tmp $@ || mv $@.tmp $@ ; \
 	rm -f $@.tmp
+
+cc_version: mk/cc.mk
+	$(Q)echo "SPDK using CC=$(CC)"; $(CC) -v
+
+cxx_version: mk/cc.mk
+	$(Q)echo "SPDK using CXX=$(CXX)"; $(CXX) -v
 
 include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk

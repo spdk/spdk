@@ -30,6 +30,10 @@ if [ $SPDK_BUILD_IOAT_KMOD -eq 1 ]; then
 fi
 timing_exit build_kmod
 
+# Print compiler versions to log
+$MAKE cc_version
+$MAKE cxx_version
+
 scanbuild=''
 make_timing_label='make'
 if [ $SPDK_RUN_SCANBUILD -eq 1 ] && hash scan-build; then
