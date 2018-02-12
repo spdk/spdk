@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "977fa0aa_7e3e1cb3",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 609,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-12T17:40:58Z",
+      "side": 1,
+      "message": "This looks like it has the potential to be easily missed when considering thread safety concerns; could we make this a global variable instead for clarity? (I don\u0027t know what the current thread safety situation is for this function; are we always calling this under a mutex or on a particular thread to make this safe?)",
+      "revId": "fb826a483274281d5c4ca29d9113125cd1e4367c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ef414e8_039c5890",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 689,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-12T17:40:58Z",
+      "side": 1,
+      "message": "It would probably be good to add a sanity check here for overflow.\n\nctrlr_num is an unsigned int, so if ctrlr_num \u003d\u003d UINT_MAX, we have run out of ids to assign. (This is 2^32 - 1 on normal architectures, so quite a lot, but potentially still reachable.)\n\nWe should at least return an error in this case, or maybe search for an unused id?",
+      "revId": "fb826a483274281d5c4ca29d9113125cd1e4367c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "824bd309_3d7e4612",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 749,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-12T17:40:58Z",
+      "side": 1,
+      "message": "It might be better to do the cast the other way around, i.e. if (vdev-\u003eid \u003e (unsigned)i), to avoid problems with id \u003e INT_MAX.  (Does this function need to deal with i \u003c 0?)\n\nAlternatively, we could change the parameter to be unsigned to match the vdev-\u003eid type, but I don\u0027t know if that has other implications for the functions that use this one.",
+      "revId": "fb826a483274281d5c4ca29d9113125cd1e4367c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
