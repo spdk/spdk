@@ -156,8 +156,6 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	char *hosts[MAX_HOSTS];
 	bool allow_any_host;
 	const char *sn;
-	size_t num_ns;
-	struct spdk_nvmf_ns_params ns_list[MAX_NAMESPACES] = {};
 	struct spdk_nvmf_subsystem *subsystem;
 
 	nqn = spdk_conf_section_get_val(sp, "NQN");
@@ -235,14 +233,35 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 
 	sn = spdk_conf_section_get_val(sp, "SN");
 
-	num_ns = 0;
-	for (i = 0; i < SPDK_COUNTOF(ns_list); i++) {
+	subsystem = spdk_nvmf_construct_subsystem(nqn,
+			num_listen_addrs, listen_addrs,
+			num_hosts, hosts, allow_any_host,
+			sn);
+
+	if (subsystem == NULL) {
+		goto done;
+	}
+
+	for (i = 0; ; i++) {
+		struct spdk_nvmf_ns_opts ns_opts;
+		struct spdk_bdev *bdev;
+		const char *bdev_name;
 		char *nsid_str;
 
-		ns_list[i].bdev_name = spdk_conf_section_get_nmval(sp, "Namespace", i, 0);
-		if (!ns_list[i].bdev_name) {
+		bdev_name = spdk_conf_section_get_nmval(sp, "Namespace", i, 0);
+		if (!bdev_name) {
 			break;
 		}
+
+		bdev = spdk_bdev_get_by_name(bdev_name);
+		if (bdev == NULL) {
+			SPDK_ERRLOG("Could not find namespace bdev '%s'\n", bdev_name);
+			spdk_nvmf_subsystem_destroy(subsystem);
+			subsystem = NULL;
+			goto done;
+		}
+
+		spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
 
 		nsid_str = spdk_conf_section_get_nmval(sp, "Namespace", i, 1);
 		if (nsid_str) {
@@ -251,24 +270,26 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 
 			if (*end != '\0' || nsid_ul == 0 || nsid_ul >= UINT32_MAX) {
 				SPDK_ERRLOG("Invalid NSID %s\n", nsid_str);
-				return -1;
+				spdk_nvmf_subsystem_destroy(subsystem);
+				subsystem = NULL;
+				goto done;
 			}
 
-			ns_list[i].nsid = (uint32_t)nsid_ul;
-		} else {
-			/* Automatically assign the next available NSID. */
-			ns_list[i].nsid = 0;
+			ns_opts.nsid = (uint32_t)nsid_ul;
 		}
 
-		num_ns++;
+		if (spdk_nvmf_subsystem_add_ns(subsystem, bdev, &ns_opts, sizeof(ns_opts)) == 0) {
+			SPDK_ERRLOG("Unable to add namespace\n");
+			spdk_nvmf_subsystem_destroy(subsystem);
+			subsystem = NULL;
+			goto done;
+		}
+
+		SPDK_NOTICELOG("Attaching block device %s to subsystem %s\n",
+			       spdk_bdev_get_name(bdev), spdk_nvmf_subsystem_get_nqn(subsystem));
 	}
 
-	subsystem = spdk_nvmf_construct_subsystem(nqn,
-			num_listen_addrs, listen_addrs,
-			num_hosts, hosts, allow_any_host,
-			sn,
-			num_ns, ns_list);
-
+done:
 	for (i = 0; i < MAX_LISTEN_ADDRESSES; i++) {
 		free(listen_addrs_str[i]);
 	}
@@ -319,12 +340,10 @@ struct spdk_nvmf_subsystem *
 	spdk_nvmf_construct_subsystem(const char *name,
 			      int num_listen_addresses, struct rpc_listen_address *addresses,
 			      int num_hosts, char *hosts[], bool allow_any_host,
-			      const char *sn, size_t num_ns, struct spdk_nvmf_ns_params *ns_list)
+			      const char *sn)
 {
 	struct spdk_nvmf_subsystem *subsystem;
 	int i, rc;
-	size_t j;
-	struct spdk_bdev *bdev;
 
 	if (name == NULL) {
 		SPDK_ERRLOG("No NQN specified for subsystem\n");
@@ -341,7 +360,7 @@ struct spdk_nvmf_subsystem *
 		return NULL;
 	}
 
-	subsystem = nvmf_tgt_create_subsystem(name, SPDK_NVMF_SUBTYPE_NVME, num_ns);
+	subsystem = nvmf_tgt_create_subsystem(name, SPDK_NVMF_SUBTYPE_NVME, 0);
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("Subsystem creation failed\n");
 		return NULL;
@@ -389,33 +408,6 @@ struct spdk_nvmf_subsystem *
 	if (spdk_nvmf_subsystem_set_sn(subsystem, sn)) {
 		SPDK_ERRLOG("Subsystem %s: invalid serial number '%s'\n", name, sn);
 		goto error;
-	}
-
-	for (j = 0; j < num_ns; j++) {
-		struct spdk_nvmf_ns_params *ns_params = &ns_list[j];
-		struct spdk_nvmf_ns_opts ns_opts;
-
-		if (!ns_params->bdev_name) {
-			SPDK_ERRLOG("Namespace missing bdev name\n");
-			goto error;
-		}
-
-		bdev = spdk_bdev_get_by_name(ns_params->bdev_name);
-		if (bdev == NULL) {
-			SPDK_ERRLOG("Could not find namespace bdev '%s'\n", ns_params->bdev_name);
-			goto error;
-		}
-
-		spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
-		ns_opts.nsid = ns_params->nsid;
-
-		if (spdk_nvmf_subsystem_add_ns(subsystem, bdev, &ns_opts, sizeof(ns_opts)) == 0) {
-			goto error;
-		}
-
-		SPDK_NOTICELOG("Attaching block device %s to subsystem %s\n",
-			       spdk_bdev_get_name(bdev), spdk_nvmf_subsystem_get_nqn(subsystem));
-
 	}
 
 	return subsystem;
