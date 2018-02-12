@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "69e52823_6fdb9bce",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-12T17:59:53Z",
+      "side": 1,
+      "message": "Why is this set to NULL here? It looks like we always set qpair-\u003ectrlr \u003d ctrl later.",
+      "revId": "d1d1e2875217765112196b83a3a85c6a0933c373",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "03cd6e87_1dfc7c9e",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-12T17:59:53Z",
+      "side": 1,
+      "message": "Rather than using a \u0027goto\u0027 and skipping the rest of the function for admin queues, can we make this function ctrlr_add_io_qpair() and only use it for I/O qpairs?\n\nThen, we could factor out the final part of the function (the statements after the \u0027end\u0027 label) into a separate function that can be called directly for admin queues.",
+      "revId": "d1d1e2875217765112196b83a3a85c6a0933c373",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
