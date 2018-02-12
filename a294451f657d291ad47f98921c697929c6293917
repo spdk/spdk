@@ -46,6 +46,30 @@
       "revId": "a294451f657d291ad47f98921c697929c6293917",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ae694e9_a318420b",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1077,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-12T09:28:15Z",
+      "side": 1,
+      "message": "I agree that doing both don\u0027t look \"clean\", but we agreed that refactor for \"return vs callback\" is a topic for another patch and if we won\u0027t use callback we will get a memory leak. We should leave it as it is or do the refactoring right now. Tomek do you see any other option?",
+      "parentUuid": "66695ea8_23846930",
+      "range": {
+        "startLine": 1076,
+        "startChar": 3,
+        "endLine": 1077,
+        "endChar": 18
+      },
+      "revId": "a294451f657d291ad47f98921c697929c6293917",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
