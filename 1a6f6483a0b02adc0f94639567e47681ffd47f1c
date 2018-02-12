@@ -1,0 +1,215 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "03fc8a75_6d19edd8",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-12T22:12:12Z",
+      "side": 1,
+      "message": "This should use tabs for indentation for consistency.",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 8
+      },
+      "revId": "1a6f6483a0b02adc0f94639567e47681ffd47f1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f99e44a3_0c173e33",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-12T22:12:12Z",
+      "side": 1,
+      "message": "Does this handle the case where there is more than one NVMe controller attached to the system? All of the calls below look like they\u0027re assuming $bdfs only contains one address.",
+      "revId": "1a6f6483a0b02adc0f94639567e47681ffd47f1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "50f5eb93_f12a158c",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-12T22:12:12Z",
+      "side": 1,
+      "message": "Where does this spdk.conf come from? Won\u0027t it have the wrong contents after this script runs once?",
+      "revId": "1a6f6483a0b02adc0f94639567e47681ffd47f1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d43e783_aa1685eb",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-12T22:12:12Z",
+      "side": 1,
+      "message": "A lot of these commands look like they could benefit from the \u0027match\u0027 tool that Paul recently introduced - that would allow us to check whether the output looks reasonable. (We can do this in a follow-up patch, though - no need to complicate this one.)",
+      "revId": "1a6f6483a0b02adc0f94639567e47681ffd47f1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e369f0aa_7e628e64",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-12T22:12:12Z",
+      "side": 1,
+      "message": "Is this actually activating a potentially different firmware image? That doesn\u0027t seem safe. (Also, it will presumably fail on the VM-based test systems that use the QEMU emulated NVMe device, which doesn\u0027t have modifiable firmware.)",
+      "revId": "1a6f6483a0b02adc0f94639567e47681ffd47f1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "491851d7_9e84b817",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-12T22:12:12Z",
+      "side": 1,
+      "message": "Why 520? What happens if the device is formatted as 512-byte sectors?",
+      "range": {
+        "startLine": 38,
+        "startChar": 53,
+        "endLine": 38,
+        "endChar": 56
+      },
+      "revId": "1a6f6483a0b02adc0f94639567e47681ffd47f1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac27faf4_87edd454",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-12T22:12:12Z",
+      "side": 1,
+      "message": "Write Uncorrectable is an optional NVM command, so the controller may not support it; what happens if we run this on a controller that doesn\u0027t have it? (I would expect that this nvme command should return a non-zero error code, failing the test.)  We probably need to detect whether the controller supports this command, or just remove it from the test - it isn\u0027t testing any SPDK-specific details (it should just use the normal passthru I/O command case).",
+      "revId": "1a6f6483a0b02adc0f94639567e47681ffd47f1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4fd4382e_f64026c1",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-12T22:12:12Z",
+      "side": 1,
+      "message": "I don\u0027t think gen-hostnqn uses the SPDK code at all - what is this trying to test?",
+      "revId": "1a6f6483a0b02adc0f94639567e47681ffd47f1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4566356e_14274d48",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-12T22:12:12Z",
+      "side": 1,
+      "message": "Spaces to tabs here too.",
+      "range": {
+        "startLine": 46,
+        "startChar": 0,
+        "endLine": 46,
+        "endChar": 8
+      },
+      "revId": "1a6f6483a0b02adc0f94639567e47681ffd47f1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36316e4f_a809751b",
+        "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-12T22:12:12Z",
+      "side": 1,
+      "message": "How does this \u0027nvme connect\u0027 test involve SPDK? The code below makes it look like it\u0027s connecting the kernel host, not the SPDK one.",
+      "revId": "1a6f6483a0b02adc0f94639567e47681ffd47f1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33e7e054_7b348150",
+        "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-12T22:12:12Z",
+      "side": 1,
+      "message": "I think this is meant to be -le rather than just le.",
+      "range": {
+        "startLine": 67,
+        "startChar": 16,
+        "endLine": 67,
+        "endChar": 18
+      },
+      "revId": "1a6f6483a0b02adc0f94639567e47681ffd47f1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
