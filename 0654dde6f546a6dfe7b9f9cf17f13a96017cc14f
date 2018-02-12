@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bca7b4e7_78c91f8c",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 46
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-12T10:44:15Z",
+      "side": 1,
+      "message": "For operations like that please use arithmetic expression, like: $((free_mb+1)).\n\nThis loop will fail in first iteration because you try to create a lvol bdev which is larger than lvol store in total.",
+      "range": {
+        "startLine": 68,
+        "startChar": 48,
+        "endLine": 68,
+        "endChar": 60
+      },
+      "revId": "0654dde6f546a6dfe7b9f9cf17f13a96017cc14f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
