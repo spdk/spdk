@@ -110,21 +110,6 @@ nvmf_tgt_create_subsystem(const char *name, enum spdk_nvmf_subtype subtype, uint
 	return subsystem;
 }
 
-int
-nvmf_tgt_shutdown_subsystem_by_nqn(const char *nqn)
-{
-	struct spdk_nvmf_subsystem *subsystem;
-
-	subsystem = spdk_nvmf_tgt_find_subsystem(g_tgt.tgt, nqn);
-	if (!subsystem) {
-		return -EINVAL;
-	}
-
-	spdk_nvmf_subsystem_destroy(subsystem);
-
-	return 0;
-}
-
 static void
 nvmf_tgt_poll_group_add(void *arg1, void *arg2)
 {

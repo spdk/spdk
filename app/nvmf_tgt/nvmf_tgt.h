@@ -93,9 +93,6 @@ struct spdk_nvmf_subsystem *spdk_nvmf_construct_subsystem(const char *name,
 		int num_hosts, char *hosts[], bool allow_any_host,
 		const char *sn, size_t num_ns, struct spdk_nvmf_ns_params *ns_list);
 
-int
-nvmf_tgt_shutdown_subsystem_by_nqn(const char *nqn);
-
 int spdk_nvmf_tgt_start(struct spdk_app_opts *opts);
 
 #endif
