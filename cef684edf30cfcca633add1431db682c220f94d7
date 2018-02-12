@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e0f64327_9a28f729",
+        "filename": "test/unit/lib/vhost/vhost.c/vhost_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-12T17:31:09Z",
+      "side": 1,
+      "message": "Accidental whitespace addition between ctrlr_num and ++?",
+      "range": {
+        "startLine": 273,
+        "startChar": 61,
+        "endLine": 273,
+        "endChar": 62
+      },
+      "revId": "cef684edf30cfcca633add1431db682c220f94d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
