@@ -71,6 +71,9 @@ int spdk_interface_add_ip_address(int ifc_index, char *ip_addr);
 int spdk_interface_delete_ip_address(int ifc_index, char *ip_addr);
 void *spdk_interface_get_list(void);
 
+void spdk_sock_init(void);
+void spdk_sock_fini(void);
+
 #ifdef __cplusplus
 }
 #endif
