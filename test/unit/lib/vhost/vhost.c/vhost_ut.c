@@ -278,7 +278,6 @@ static void
 remove_controller_test(void)
 {
 	struct spdk_vhost_dev *vdev;
-	char long_name[PATH_MAX];
 	int ret;
 
 	vdev = alloc_vdev();
@@ -296,25 +295,8 @@ remove_controller_test(void)
 	vdev->lcore = -1;
 	ret = spdk_vhost_dev_unregister(vdev);
 	CU_ASSERT(ret != 0);
-	if (ret != 0) {
-		free(vdev->name);
-	}
-
-	/* Remove device with too long name and path */
-	memset(long_name, 'x', sizeof(long_name));
-	long_name[PATH_MAX - 1] = 0;
-	snprintf(dev_dirname, sizeof(dev_dirname), "some_path/");
-	vdev->name = strdup(long_name);
-	g_spdk_vhost_devices[0] = vdev;
-	ret = spdk_vhost_dev_unregister(vdev);
-	CU_ASSERT(ret != 0);
-	if (ret == 0) {
-		vdev->name = NULL;
-	}
 
 	free_vdev(vdev);
-	g_spdk_vhost_devices[0] = NULL;
-	dev_dirname[0] = 0;
 }
 
 int
