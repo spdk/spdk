@@ -70,6 +70,30 @@
       "revId": "a294451f657d291ad47f98921c697929c6293917",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b9c50618_62407cf1",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1077,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-12T10:13:46Z",
+      "side": 1,
+      "message": "There is a card to do exactly that separate patch https://trello.com/c/6ZJrIUuD, which should be tackled next.\nLets leave return error without a callback in this patch right now.",
+      "parentUuid": "6ae694e9_a318420b",
+      "range": {
+        "startLine": 1076,
+        "startChar": 3,
+        "endLine": 1077,
+        "endChar": 18
+      },
+      "revId": "a294451f657d291ad47f98921c697929c6293917",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
