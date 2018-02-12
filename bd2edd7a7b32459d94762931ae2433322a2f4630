@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "98295af6_ec311d75",
+        "filename": "examples/nvme/cmb_copy/cmb_copy.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-12T21:27:20Z",
+      "side": 1,
+      "message": "Minor nitpick: all of the \u0027\u0026g_config.read.trid.traddr[0]\u0027 instances could be written as \u0027g_config.read.trid.traddr\u0027. \n\nAlthough I don\u0027t particularly mind either way, it might be less confusing without the extra \u0026/[0].",
+      "range": {
+        "startLine": 72,
+        "startChar": 27,
+        "endLine": 72,
+        "endChar": 56
+      },
+      "revId": "bd2edd7a7b32459d94762931ae2433322a2f4630",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cbaf2a7d_510d2633",
+        "filename": "examples/nvme/cmb_copy/cmb_copy.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-12T21:27:20Z",
+      "side": 1,
+      "message": "The parameter you passed here is declared as \u0027int rw\u0027 in the calling function - this should match up to avoid confusion.\n\nAlternatively, we could just have two callback functions (one for read and one for write).",
+      "range": {
+        "startLine": 95,
+        "startChar": 1,
+        "endLine": 95,
+        "endChar": 9
+      },
+      "revId": "bd2edd7a7b32459d94762931ae2433322a2f4630",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c296992d_591b7705",
+        "filename": "examples/nvme/cmb_copy/cmb_copy.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-12T21:27:20Z",
+      "side": 1,
+      "message": "Double semicolon",
+      "range": {
+        "startLine": 107,
+        "startChar": 15,
+        "endLine": 107,
+        "endChar": 17
+      },
+      "revId": "bd2edd7a7b32459d94762931ae2433322a2f4630",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dbb35e22_157a4916",
+        "filename": "examples/nvme/cmb_copy/cmb_copy.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-12T21:27:20Z",
+      "side": 1,
+      "message": "The rest of trid is left uninitialized here, which could be problematic; either memset() it all to 0 or just pass NULL instead of \u0026trid here (scanning the PCIe bus is the default behavior).",
+      "revId": "bd2edd7a7b32459d94762931ae2433322a2f4630",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
