@@ -188,11 +188,6 @@ spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt)
 	struct spdk_nvmf_transport *transport, *transport_tmp;
 	uint32_t i;
 
-	TAILQ_FOREACH_SAFE(transport, &tgt->transports, link, transport_tmp) {
-		TAILQ_REMOVE(&tgt->transports, transport, link);
-		spdk_nvmf_transport_destroy(transport);
-	}
-
 	if (tgt->discovery_log_page) {
 		free(tgt->discovery_log_page);
 	}
@@ -204,6 +199,11 @@ spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt)
 			}
 		}
 		free(tgt->subsystems);
+	}
+
+	TAILQ_FOREACH_SAFE(transport, &tgt->transports, link, transport_tmp) {
+		TAILQ_REMOVE(&tgt->transports, transport, link);
+		spdk_nvmf_transport_destroy(transport);
 	}
 
 	free(tgt);
