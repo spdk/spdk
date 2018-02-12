@@ -288,6 +288,8 @@ struct spdk_iscsi_globals {
 	struct spdk_mempool *task_pool;
 
 	struct spdk_iscsi_sess	**session;
+
+	uint32_t core; /* Round-robin tracking of cores for connection assignment */
 };
 
 #define ISCSI_SECURITY_NEGOTIATION_PHASE	0
