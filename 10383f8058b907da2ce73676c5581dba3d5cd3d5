@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc4a695c_f2c47a98",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1076,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-12T14:40:20Z",
+      "side": 1,
+      "message": "Please also remove this call.",
+      "range": {
+        "startLine": 1076,
+        "startChar": 3,
+        "endLine": 1076,
+        "endChar": 26
+      },
+      "revId": "10383f8058b907da2ce73676c5581dba3d5cd3d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ce87cb2_e06f069f",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1084,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-12T14:40:20Z",
+      "side": 1,
+      "message": "Please also remove this call.",
+      "range": {
+        "startLine": 1084,
+        "startChar": 2,
+        "endLine": 1084,
+        "endChar": 25
+      },
+      "revId": "10383f8058b907da2ce73676c5581dba3d5cd3d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
