@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "27c15eee_79015421",
+        "filename": "doc/bdev.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-12T20:36:46Z",
+      "side": 0,
+      "message": "It looks like the documentation for the Null bdev got removed.",
+      "revId": "ad9b3ef5a558c5acc569c07f5071534cb93f021e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
