@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bc791821_1d7d0f6e",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 371,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-12T17:56:48Z",
+      "side": 1,
+      "message": "There\u0027s an extra space here.\n\nThis logic also looks quite complicated; can we just always send a message to simplify it?",
+      "range": {
+        "startLine": 371,
+        "startChar": 26,
+        "endLine": 371,
+        "endChar": 28
+      },
+      "revId": "32b3e2480160bab564059085b1cad96dd255db3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "20828872_a4c9232a",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 386,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-12T17:56:48Z",
+      "side": 1,
+      "message": "This assert(ctrlr !\u003d NULL) is after we already dereferenced ctrlr-\u003eadmin_qpair above; it may get flagged by static analyzers.  I think we can just remove it.",
+      "revId": "32b3e2480160bab564059085b1cad96dd255db3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a21fff0c_57a0f360",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 388,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-12T17:56:48Z",
+      "side": 1,
+      "message": "Is there any reason we can\u0027t just always send a message? Disconnect is not a performance path, so I think the simplification is worth the small message passing overhead.",
+      "revId": "32b3e2480160bab564059085b1cad96dd255db3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
