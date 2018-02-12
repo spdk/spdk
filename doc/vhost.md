@@ -187,6 +187,7 @@ must be specified in this format with share=on.
 
 ~~~{.sh}
 -object memory-backend-file,id=mem,size=1G,mem-path=/dev/hugepages,share=on
+-numa node,memdev=mem
 ~~~
 
 Second, ensure QEMU boots from the virtual machine image and not the
