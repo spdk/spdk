@@ -791,12 +791,11 @@ spdk_vhost_dev_get_name(struct spdk_vhost_dev *vdev)
 	return vdev->name;
 }
 
-void
-spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *vdev, struct spdk_cpuset *cpumask)
+const struct spdk_cpuset *
+spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *vdev)
 {
 	assert(vdev != NULL);
-	assert(cpumask != NULL);
-	spdk_cpuset_copy(cpumask, vdev->cpumask);
+	return vdev->cpumask;
 }
 
 static uint32_t

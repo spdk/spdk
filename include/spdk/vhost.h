@@ -107,10 +107,9 @@ const char *spdk_vhost_dev_get_name(struct spdk_vhost_dev *vdev);
  * of SPDK app cpuset vhost was started with.
  *
  * \param dev vhost device
- * \param cpuset pointer to the cpuset of the vdev.
+ * \return cpuset of the vdev.
  */
-void spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *vdev,
-				struct spdk_cpuset *cpuset);
+const struct spdk_cpuset *spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *vdev);
 
 /**
  * By default, events are generated when asked, but for high queue depth and
