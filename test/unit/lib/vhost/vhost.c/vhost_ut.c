@@ -133,7 +133,6 @@ alloc_vdev(void)
 	vdev->mem->regions[1].guest_phys_addr = 0x400000;
 	vdev->mem->regions[1].size = 0x400000; /* 4 MB */
 	vdev->mem->regions[1].host_user_addr = 0x2000000;
-	vdev->vid = 0x10;
 
 	return vdev;
 }
@@ -141,7 +140,6 @@ alloc_vdev(void)
 static void
 free_vdev(struct spdk_vhost_dev *vdev)
 {
-	free(vdev->name);
 	free(vdev->mem);
 	free(vdev);
 }
@@ -228,7 +226,7 @@ desc_to_iov_test(void)
 static void
 create_controller_test(void)
 {
-	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_dev *vdev, *vdev2;
 	int ret;
 	unsigned ctrlr_num;
 	char long_name[PATH_MAX];
@@ -254,9 +252,10 @@ create_controller_test(void)
 	dev_dirname[0] = 0;
 
 	/* Create device when device name is already taken */
-	vdev->name = strdup("vdev_name_0");
-	g_spdk_vhost_devices[0] = vdev;
 	ret = spdk_vhost_dev_register(vdev, "vdev_name_0", "0x1", &backend);
+	CU_ASSERT(ret == 0);
+	vdev2 = alloc_vdev();
+	ret = spdk_vhost_dev_register(vdev2, "vdev_name_0", "0x1", &backend);
 	CU_ASSERT(ret != 0);
 
 	/* Create device when max number of devices is reached */
@@ -264,10 +263,13 @@ create_controller_test(void)
 		g_spdk_vhost_devices[ctrlr_num] = vdev;
 	}
 
-	ret = spdk_vhost_dev_register(vdev, "vdev_name_1", "0x1", &backend);
+	ret = spdk_vhost_dev_register(vdev2, "vdev_name_1", "0x1", &backend);
 	CU_ASSERT(ret != 0);
+	free_vdev(vdev2);
 
+	spdk_vhost_dev_unregister(vdev);
 	free_vdev(vdev);
+
 	for (ctrlr_num = 0; ctrlr_num < MAX_VHOST_DEVICES; ctrlr_num++) {
 		g_spdk_vhost_devices[ctrlr_num] = NULL;
 	}
@@ -276,33 +278,46 @@ create_controller_test(void)
 static void
 dev_find_by_vid_test(void)
 {
-	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_dev *vdev, *tmp;
+	struct spdk_vhost_dev_backend backend;
+	int rc;
 
-	g_spdk_vhost_devices[0] = alloc_vdev();
-	vdev = spdk_vhost_dev_find_by_vid(0x10);
-	CU_ASSERT(vdev != NULL);
+	vdev = alloc_vdev();
+	rc = spdk_vhost_dev_register(vdev, "vdev_name_0", "0x1", &backend);
+	CU_ASSERT(rc == 0);
+
+	tmp = spdk_vhost_dev_find_by_vid(vdev->vid);
+	CU_ASSERT(tmp == vdev);
 
 	/* Search for a device with incorrect vid */
-	vdev = spdk_vhost_dev_find_by_vid(0xFF);
-	CU_ASSERT(vdev == NULL);
+	tmp = spdk_vhost_dev_find_by_vid(vdev->vid + 0xFF);
+	CU_ASSERT(tmp == NULL);
 
-	free_vdev(g_spdk_vhost_devices[0]);
-	g_spdk_vhost_devices[0] = NULL;
+	spdk_vhost_dev_unregister(vdev);
+	free_vdev(vdev);
 }
 
 static void
 remove_controller_test(void)
 {
 	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_dev_backend backend;
 	int ret;
 
 	vdev = alloc_vdev();
-	vdev->lcore = 0;
-	vdev->name = strdup("vdev_name_0");
+	ret = spdk_vhost_dev_register(vdev, "vdev_name_0", "0x1", &backend);
+	CU_ASSERT(ret == 0);
 
 	/* Remove device when controller is in use */
+	vdev->vid = 0;
+	vdev->lcore = 0;
 	ret = spdk_vhost_dev_unregister(vdev);
 	CU_ASSERT(ret != 0);
+
+	vdev->vid = -1;
+	vdev->lcore = -1;
+	ret = spdk_vhost_dev_unregister(vdev);
+	CU_ASSERT(ret == 0);
 	free_vdev(vdev);
 }
 
