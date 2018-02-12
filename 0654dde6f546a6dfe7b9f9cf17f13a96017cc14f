@@ -22,6 +22,30 @@
       "revId": "0654dde6f546a6dfe7b9f9cf17f13a96017cc14f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e844141_7190d6fd",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 46
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-02-12T11:28:31Z",
+      "side": 1,
+      "message": "OK, but $((free_mb+1)) here also will error. I understood wrong before, I should assign size for each lvol_bdev from total free_mb. Thanks.",
+      "parentUuid": "bca7b4e7_78c91f8c",
+      "range": {
+        "startLine": 68,
+        "startChar": 48,
+        "endLine": 68,
+        "endChar": 60
+      },
+      "revId": "0654dde6f546a6dfe7b9f9cf17f13a96017cc14f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
