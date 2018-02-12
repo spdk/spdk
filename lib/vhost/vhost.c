@@ -631,7 +631,7 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 	cpumask = spdk_cpuset_alloc();
 	if (!cpumask) {
 		SPDK_ERRLOG("spdk_cpuset_alloc failed\n");
-		return -1;
+		return -ENOMEM;
 	}
 
 	if (spdk_vhost_parse_core_mask(mask_str, cpumask) != 0) {
