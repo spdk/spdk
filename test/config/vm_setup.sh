@@ -21,6 +21,8 @@
 
 set -e
 
+jobs=$(($(nproc)*2))
+
 sudo dnf upgrade -y
 sudo dnf install -y gcc
 sudo dnf install -y gcc-c++
@@ -80,7 +82,7 @@ sudo dnf install -y perl-Switch librdmacm-utils libibverbs-utils
 
 cd librxe-dev
 ./configure --libdir=/usr/lib64/ --prefix=
-make
+make -j${jobs}
 sudo make install
 cd ~
 
@@ -111,7 +113,7 @@ if [ "$CURRENT_VERSION" == "$OPEN_ISCSI_VER" ]; then
         git am ../patches/$patch
     done
     sed -i '427s/.*/-1);/' usr/session_info.c
-    make
+    make -j${jobs}
     sudo make install
     cd ~
 fi
@@ -129,7 +131,7 @@ sudo mv fio /usr/src/
 (
     cd /usr/src/fio &&
     git checkout fio-3.3 &&
-    make &&
+    make -j${jobs} &&
     sudo make install
 )
 cd ~
@@ -147,7 +149,7 @@ if hash tsocks &> /dev/null; then
     git_param="--with-git='tsocks git'"
 fi
 ./configure "$git_param" --prefix=/usr/local/qemu/$SPDK_QEMU_BRANCH --target-list="x86_64-softmmu" --enable-kvm --enable-linux-aio --enable-numa
-make
+make -j${jobs}
 sudo make install
 cd ~
 
@@ -157,7 +159,7 @@ git clone https://github.com/sahlberg/libiscsi
 cd libiscsi
 ./autogen.sh
 ./configure --prefix=/usr/local/libiscsi
-make
+make -j${jobs}
 sudo make install
 
 
