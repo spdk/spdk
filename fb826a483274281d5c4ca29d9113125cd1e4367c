@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "3bb46947_f715289e",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 609,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-12T21:00:32Z",
+      "side": 1,
+      "message": "OK, comments documenting this would be good, but it\u0027s fine for now.",
+      "parentUuid": "0dbf7c5b_ff35728a",
+      "revId": "fb826a483274281d5c4ca29d9113125cd1e4367c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3ef414e8_039c5890",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 6
@@ -72,6 +90,24 @@
     },
     {
       "key": {
+        "uuid": "b7d6eddf_666815cb",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 689,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-12T21:00:32Z",
+      "side": 1,
+      "message": "Yes, for now, let\u0027s just make it check for the max value and fail if we reach it.",
+      "parentUuid": "568d1b4b_90878f11",
+      "revId": "fb826a483274281d5c4ca29d9113125cd1e4367c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "824bd309_3d7e4612",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 6
@@ -101,6 +137,24 @@
       "side": 1,
       "message": "\u003e (Does this function need to deal with i \u003c 0?)\n\nYes. i \u003d\u003d -1 when we want the very first device.\n\nI\u0027ll just add a separate check for i \u003c 0 and then cast it to unsigned. Ack",
       "parentUuid": "824bd309_3d7e4612",
+      "revId": "fb826a483274281d5c4ca29d9113125cd1e4367c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0fad22cc_d1f301f8",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 749,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-12T21:00:32Z",
+      "side": 1,
+      "message": "i \u003c 0 will catch anything \u003e INT_MAX (but still \u003c\u003d UINT_MAX), so we should be sure to limit the range when checking for overflow as in the comments above.  Maybe vdev-\u003eid should just be int to simplify things...",
+      "parentUuid": "112dbaf4_7fdf8024",
       "revId": "fb826a483274281d5c4ca29d9113125cd1e4367c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
