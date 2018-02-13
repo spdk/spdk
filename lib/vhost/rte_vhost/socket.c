@@ -791,7 +791,6 @@ int
 rte_vhost_driver_start(const char *path)
 {
 	struct vhost_user_socket *vsocket;
-	static pthread_t fdset_tid;
 
 	pthread_mutex_lock(&vhost_user.mutex);
 	vsocket = find_vhost_user_socket(path);
@@ -799,14 +798,6 @@ rte_vhost_driver_start(const char *path)
 
 	if (!vsocket)
 		return -1;
-
-	if (fdset_tid == 0) {
-		int ret = pthread_create(&fdset_tid, NULL, fdset_event_dispatch,
-				     &vhost_user.fdset);
-		if (ret < 0)
-			RTE_LOG(ERR, VHOST_CONFIG,
-				"failed to create fdset handling thread");
-	}
 
 	if (vsocket->is_server)
 		return vhost_user_start_server(vsocket);
