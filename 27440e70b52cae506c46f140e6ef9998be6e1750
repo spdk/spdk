@@ -1,0 +1,533 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a92edab7_3396328b",
+        "filename": "autotest.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-13T14:17:42Z",
+      "side": 1,
+      "message": "line 152-158 run the same test. Copy-paste?",
+      "range": {
+        "startLine": 169,
+        "startChar": 0,
+        "endLine": 175,
+        "endChar": 29
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "183a51ac_94386d44",
+        "filename": "autotest.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-13T14:17:42Z",
+      "side": 1,
+      "message": "Commited by mistake?",
+      "range": {
+        "startLine": 177,
+        "startChar": 0,
+        "endLine": 183,
+        "endChar": 31
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d7b81f1_08a2fdb0",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-13T14:17:42Z",
+      "side": 1,
+      "message": "You don\u0027t need \u0027rootdir\u0027 After sourcing $COMMON_DIR/common.sh you have SPDK_BUILD_DIR pointing to SPDK source.",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 5,
+        "endChar": 35
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7ac01ff_ef3deab7",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-13T14:17:42Z",
+      "side": 1,
+      "message": "can you support \u0027--work-dir\u003dWORK_DIR\u0027 parameter like in other scripts?",
+      "range": {
+        "startLine": 9,
+        "startChar": 8,
+        "endLine": 9,
+        "endChar": 16
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "087b4a90_23503227",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-13T14:17:42Z",
+      "side": 1,
+      "message": "Can you do it like here https://review.gerrithub.io/#/c/398750/7/test/vhost/migration/migration.sh@49\n\nThis will setup all those variables.",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 13,
+        "endChar": 47
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d6c58243_85fae01a",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-13T14:17:42Z",
+      "side": 1,
+      "message": "This should not be needed anymore.",
+      "range": {
+        "startLine": 86,
+        "startChar": 1,
+        "endLine": 86,
+        "endChar": 57
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6855c450_8782350a",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-13T14:17:42Z",
+      "side": 1,
+      "message": "\" \" can be omitted",
+      "range": {
+        "startLine": 91,
+        "startChar": 7,
+        "endLine": 91,
+        "endChar": 10
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "df1821f7_6fa5dc62",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-13T14:17:42Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 92,
+        "startChar": 20,
+        "endLine": 92,
+        "endChar": 24
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f11d7a33_8d5557cc",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-13T14:17:42Z",
+      "side": 1,
+      "message": "Can you use?\n\ntar --exclude\u003d\"*.o\" --exclude\u003d\"*.d\" --exclude\u003d\"*.git\" -C $SPDK_BUILD_DIR -zcf $SPDK_BUILD_DIR/spdk.tar.gz .",
+      "range": {
+        "startLine": 96,
+        "startChar": 0,
+        "endLine": 96,
+        "endChar": 85
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1923e17e_356a2dc7",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-13T14:17:42Z",
+      "side": 1,
+      "message": "Why mv and cd ? U can use archive file directly",
+      "range": {
+        "startLine": 97,
+        "startChar": 0,
+        "endLine": 98,
+        "endChar": 12
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cdc5922d_9c094cb3",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-13T14:17:42Z",
+      "side": 1,
+      "message": "\" \" can be omitted",
+      "range": {
+        "startLine": 102,
+        "startChar": 7,
+        "endLine": 102,
+        "endChar": 10
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f91c9f5d_ba51c510",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-13T14:17:42Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 103,
+        "startChar": 7,
+        "endLine": 103,
+        "endChar": 10
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "34a86427_591a3f26",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-13T14:17:42Z",
+      "side": 1,
+      "message": "You pass one argument as script parameter one as env variable. Pls unify.",
+      "range": {
+        "startLine": 104,
+        "startChar": 12,
+        "endLine": 104,
+        "endChar": 54
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e5ed36f2_944042ba",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-13T14:17:42Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 104,
+        "startChar": 7,
+        "endLine": 104,
+        "endChar": 10
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ae8fe09e_bff5da0b",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-13T14:17:42Z",
+      "side": 1,
+      "message": "Why sleep? vm_shutdown_all wait for all VMs.",
+      "range": {
+        "startLine": 108,
+        "startChar": 0,
+        "endLine": 108,
+        "endChar": 7
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "30cf10e2_1f7b02ce",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-13T14:17:42Z",
+      "side": 1,
+      "message": "U can use this trick\nhttps://review.gerrithub.io/#/c/397092/11/test/vhost/common/common.sh@370\nso, if no sd* disks, it will expand to nothing instead to \u0027/sys/block/sd*\u0027",
+      "range": {
+        "startLine": 9,
+        "startChar": 14,
+        "endLine": 9,
+        "endChar": 28
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "23eda714_cd0a771b",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-13T14:17:42Z",
+      "side": 1,
+      "message": "I think you need space here \ndevs+\u003d\"$(basename $entry) \"",
+      "range": {
+        "startLine": 11,
+        "startChar": 3,
+        "endLine": 11,
+        "endChar": 29
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "284a91c7_ff2bce0e",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-13T14:17:42Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 15,
+        "startChar": 6,
+        "endLine": 15,
+        "endChar": 32
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29931b34_1223c161",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-13T14:17:42Z",
+      "side": 1,
+      "message": "Pls don\u0027t \"use force Luke\". Why you need it?",
+      "range": {
+        "startLine": 23,
+        "startChar": 4,
+        "endLine": 25,
+        "endChar": 6
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c97831f2_1d9fdfad",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-13T14:17:42Z",
+      "side": 1,
+      "message": "Why sleep? If you wait for partition use partprobe or simmilar tool. 2s sleep look odd.",
+      "range": {
+        "startLine": 32,
+        "startChar": 4,
+        "endLine": 32,
+        "endChar": 11
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59d13728_1fb4c386",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-13T14:17:42Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 43,
+        "startChar": 4,
+        "endLine": 43,
+        "endChar": 11
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "40d64b8f_70eb21f4",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-13T14:17:42Z",
+      "side": 1,
+      "message": "Wrong indentation.",
+      "range": {
+        "startLine": 20,
+        "startChar": 0,
+        "endLine": 71,
+        "endChar": 4
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de5fbdc7_970a4f5c",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-13T14:17:42Z",
+      "side": 1,
+      "message": "\u0027\u003d\u0027 missing",
+      "range": {
+        "startLine": 99,
+        "startChar": 72,
+        "endLine": 99,
+        "endChar": 73
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
