@@ -675,7 +675,7 @@ Steps:
 - construct lvol store on NVMe bdev
 - using get_lvol_stores command verify lvol store was correctly created
 - construct five lvol bdevs on previously created lvol store;
-  each lvol bdev size is approximately equal to 10% of total lvol store size
+  each lvol bdev size is approximately equal to 2% of total lvol store size
   (approximately because of the lvol metadata which consumes some of the space)
 - using get_bdevs command verify lvol bdevs were correctly created
 - shutdown vhost application by sending SIGTERM signal
