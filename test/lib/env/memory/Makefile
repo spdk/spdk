@@ -36,22 +36,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
 CFLAGS += $(ENV_CFLAGS)
-CFLAGS += -I$(SPDK_ROOT_DIR)/test
 CFLAGS += -I$(SPDK_ROOT_DIR)/test/lib
-CFLAGS += -I$(SPDK_ROOT_DIR)/lib/env_dpdk
-APP = memory_ut
-C_SRCS := memory_ut.c
+TEST_FILE = memory_ut.c
 
-SPDK_LIB_LIST = util
-
-LIBS += $(SPDK_LIB_LINKER_ARGS) -lcunit
-
-all : $(APP)
-
-$(APP) : $(OBJS) $(SPDK_LIB_FILES)
-	$(LINK_C)
-
-clean :
-	$(CLEAN_C) $(APP)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk

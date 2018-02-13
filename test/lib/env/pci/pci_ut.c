@@ -33,9 +33,9 @@
 
 #include "spdk/stdinc.h"
 
-#include "spdk/env.h"
-
 #include "CUnit/Basic.h"
+
+#include "env_dpdk/pci.c"
 
 static void
 pci_test(void)
