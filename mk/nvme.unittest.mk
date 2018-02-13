@@ -31,13 +31,11 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-NVME_DIR := $(SPDK_ROOT_DIR)/lib/nvme
-
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.mock.unittest.mk
 
-C_SRCS = $(TEST_FILE) $(OTHER_FILES)
+C_SRCS = $(TEST_FILE)
 
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 CFLAGS += -I$(SPDK_ROOT_DIR)/test
@@ -55,8 +53,5 @@ $(APP) : $(OBJS) $(SPDK_LIB_FILES)
 
 clean:
 	$(CLEAN_C) $(APP)
-
-%.o: $(NVME_DIR)/%.c %.d $(MAKEFILE_LIST)
-	$(COMPILE_C)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
