@@ -8,7 +8,7 @@ BASE_DIR=$(readlink -f $(dirname $0))
 rpc_py="$BASE_DIR/../../../scripts/rpc.py "
 
 vm_img=""
-disk="Nvme0n1_size_1G"
+disk="Nvme0n1"
 x=""
 
 function usage()
@@ -21,10 +21,9 @@ function usage()
 	echo
 	echo "-h, --help                Print help and exit"
 	echo "    --vm_image=           Path to VM image"
-	echo "    --disk=               Disk name and size. Disk can have additional size parameter,"
-	echo "                          e.g. --disk=Nvme0n1_size_35G; unit can be M or G; default - 20G."
+	echo "    --disk=               Disk name."
 	echo "                          If disk=malloc, then creates malloc disk. For malloc disks, size is always 512M,"
-	echo "                          e.g. --disk=malloc. (Default: Nvme0n1_size_1G)"
+	echo "                          e.g. --disk=malloc. (Default: Nvme0n1)"
 	echo "-x                        set -x for script debug"
 }
 
@@ -74,7 +73,7 @@ function blk_ro_tc1()
 			fail "Failed to create malloc bdev"
 		fi
 
-		disk=$disk_name"_size_512M"
+		disk=$disk_name
 	else
 		disk_name=${disk%%_*}
 		if ! $rpc_py get_bdevs | jq -r '.[] .name' | grep -qi $disk_name$; then

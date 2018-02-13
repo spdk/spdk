@@ -621,12 +621,6 @@ function vm_setup()
 				cmd+="-device vhost-user-scsi-pci,id=scsi_$disk,num_queues=$queue_number,chardev=char_$disk ${eol}"
 				;;
 			spdk_vhost_blk)
-				[[ $disk =~ _size_([0-9]+[MG]?) ]] || true
-				size=${BASH_REMATCH[1]}
-				if [ -z "$size" ]; then
-					size="20G"
-				fi
-				disk=${disk%%_*}
 				notice "using socket $SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num"
 				cmd+="-chardev socket,id=char_$disk,path=$SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num ${eol}"
 				cmd+="-device vhost-user-blk-pci,num-queues=$queue_number,chardev=char_$disk ${eol}"
