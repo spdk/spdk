@@ -1671,6 +1671,12 @@ nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cap_reg
 }
 
 void
+nvme_ctrlr_destruct_finish(struct spdk_nvme_ctrlr *ctrlr)
+{
+	pthread_mutex_destroy(&ctrlr->ctrlr_lock);
+}
+
+void
 nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct spdk_nvme_qpair *qpair, *tmp;
@@ -1686,8 +1692,6 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	nvme_ctrlr_destruct_namespaces(ctrlr);
 
 	spdk_bit_array_free(&ctrlr->free_io_qids);
-
-	pthread_mutex_destroy(&ctrlr->ctrlr_lock);
 
 	nvme_transport_ctrlr_destruct(ctrlr);
 }

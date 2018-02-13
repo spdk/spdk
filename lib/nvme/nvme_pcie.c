@@ -890,6 +890,8 @@ nvme_pcie_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 		nvme_pcie_qpair_destroy(ctrlr->adminq);
 	}
 
+	nvme_ctrlr_destruct_finish(ctrlr);
+
 	nvme_ctrlr_free_processes(ctrlr);
 
 	nvme_pcie_ctrlr_free_bars(pctrlr);

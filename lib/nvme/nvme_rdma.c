@@ -1361,6 +1361,8 @@ nvme_rdma_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 		nvme_rdma_qpair_destroy(ctrlr->adminq);
 	}
 
+	nvme_ctrlr_destruct_finish(ctrlr);
+
 	free(rctrlr);
 
 	return 0;
