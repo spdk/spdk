@@ -64,6 +64,12 @@ def nvmf_subsystem_add_ns(args):
     if args.nsid:
         ns['nsid'] = args.nsid
 
+    if args.nguid:
+        ns['nguid'] = args.nguid
+
+    if args.eui64:
+        ns['eui64'] = args.eui64
+
     params = {'nqn': args.nqn,
               'namespace': ns}
 

@@ -117,7 +117,7 @@ DEFINE_STUB(spdk_nvmf_ctrlr_write_zeroes_supported,
 
 DEFINE_STUB(spdk_nvmf_bdev_ctrlr_identify_ns,
 	    int,
-	    (struct spdk_bdev *bdev, struct spdk_nvme_ns_data *nsdata),
+	    (struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *nsdata),
 	    -1)
 
 DEFINE_STUB_V(spdk_nvmf_get_discovery_log_page,
