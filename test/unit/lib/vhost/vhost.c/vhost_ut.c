@@ -303,15 +303,6 @@ remove_controller_test(void)
 	/* Remove device when controller is in use */
 	ret = spdk_vhost_dev_unregister(vdev);
 	CU_ASSERT(ret != 0);
-	if (ret == 0) {
-		vdev->name = strdup("vdev_name_0");
-	}
-
-	/* Remove nonexistent device */
-	vdev->lcore = -1;
-	ret = spdk_vhost_dev_unregister(vdev);
-	CU_ASSERT(ret != 0);
-
 	free_vdev(vdev);
 }
 
