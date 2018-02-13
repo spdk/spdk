@@ -156,7 +156,10 @@ fdset_init(struct fdset *pfdset)
 		pfdset->fd[i].dat = NULL;
 	}
 	pfdset->num = 0;
+	pfdset->polling = 0;
 }
+
+static void *fdset_event_dispatch(void *arg);
 
 /**
  * Register the fd in the fdset with read/write handler and context.
@@ -164,7 +167,7 @@ fdset_init(struct fdset *pfdset)
 int
 fdset_add(struct fdset *pfdset, int fd, fd_cb rcb, fd_cb wcb, void *dat)
 {
-	int i;
+	int i, rc;
 
 	if (pfdset == NULL || fd == -1)
 		return -1;
@@ -172,14 +175,28 @@ fdset_add(struct fdset *pfdset, int fd, fd_cb rcb, fd_cb wcb, void *dat)
 	pthread_mutex_lock(&pfdset->fd_mutex);
 	i = pfdset->num < MAX_FDS ? pfdset->num++ : -1;
 	if (i == -1) {
-		pthread_mutex_unlock(&pfdset->fd_mutex);
-		return -2;
+		rc = -2;
+		goto out;
 	}
 
 	fdset_add_nolock(pfdset, i, fd, rcb, wcb, dat);
-	pthread_mutex_unlock(&pfdset->fd_mutex);
+	if (pfdset->polling) {
+		rc = 0;
+		goto out;
+	}
 
-	return 0;
+	rc = pthread_create(&pfdset->tid, NULL, fdset_event_dispatch,
+			    pfdset);
+	if (rc < 0) {
+		fdset_del_nolock(pfdset, i);
+		goto out;
+	}
+
+	pfdset->polling = 1;
+	rc = 0;
+out:
+	pthread_mutex_unlock(&pfdset->fd_mutex);
+	return rc;
 }
 
 int
@@ -213,7 +230,7 @@ fdset_del(struct fdset *pfdset, int fd)
  * will wait until the flag is reset to zero(which indicates the callback is
  * finished), then it could free the context after fdset_del.
  */
-void *
+static void *
 fdset_event_dispatch(void *arg)
 {
 	int i;
@@ -240,6 +257,11 @@ fdset_event_dispatch(void *arg)
 		 */
 		pthread_mutex_lock(&pfdset->fd_mutex);
 		numfds = pfdset->num;
+		if (numfds == 0) {
+			pfdset->polling = 0;
+			pthread_mutex_unlock(&pfdset->fd_mutex);
+			break;
+		}
 		pthread_mutex_unlock(&pfdset->fd_mutex);
 
 		poll(pfdset->rwfds, numfds, 1000 /* millisecs */);

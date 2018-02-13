@@ -54,6 +54,8 @@ struct fdset {
 	struct fdentry fd[MAX_FDS];
 	pthread_mutex_t fd_mutex;
 	int num;	/* current fd number of this fdset */
+	int polling;
+	pthread_t tid;
 };
 
 
@@ -63,7 +65,5 @@ int fdset_add(struct fdset *pfdset, int fd,
 	fd_cb rcb, fd_cb wcb, void *dat);
 
 int fdset_del(struct fdset *pfdset, int fd);
-
-void *fdset_event_dispatch(void *arg);
 
 #endif
