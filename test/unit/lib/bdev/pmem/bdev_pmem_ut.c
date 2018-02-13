@@ -35,7 +35,7 @@
 
 #include "lib/test_env.c"
 
-#include "pmem/bdev_pmem.c"
+#include "bdev/pmem/bdev_pmem.c"
 
 static struct spdk_bdev_module_if *g_bdev_pmem_module;
 static int g_bdev_module_cnt;

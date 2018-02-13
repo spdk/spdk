@@ -34,7 +34,7 @@
 #include "spdk_cunit.h"
 #include "spdk/string.h"
 
-#include "vbdev_lvol.c"
+#include "bdev/lvol/vbdev_lvol.c"
 
 #define SPDK_BS_PAGE_SIZE 0x1000
 
