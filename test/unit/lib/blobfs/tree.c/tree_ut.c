@@ -32,9 +32,8 @@
  */
 
 #include "spdk_cunit.h"
-#include "tree.h"
 
-#include "tree.c"
+#include "blobfs/tree.c"
 
 void
 spdk_cache_buffer_free(struct cache_buffer *cache_buffer)
