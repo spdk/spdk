@@ -12,6 +12,11 @@ Users should switch to the `-r` command-line parameter instead.
 EXPERIMENTAL: Adds support for WDS and RDS capable CMBs in NVMe controllers. This support is
 experimental pending a functional allocator to free and reallocate CMB buffers.
 
+### NVMe-oF Target
+
+Namespaces may now be assigned unique identifiers via new optional "eui64" and "nguid" parameters
+to the `nvmf_subsystem_add_ns` RPC method.
+
 ## v18.01: Blobstore Thin Provisioning
 
 ### Build System
