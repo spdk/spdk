@@ -35,22 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-SPDK_LIB_LIST = log conf util cunit
+SPDK_LIB_LIST = conf
+TEST_FILE = tgt_node_ut.c
 
-CFLAGS += -I$(SPDK_ROOT_DIR)/test
-CFLAGS += -I$(SPDK_ROOT_DIR)/lib
-LIBS += $(SPDK_LIB_LINKER_ARGS)
-LIBS += -lcunit
-
-APP = tgt_node_ut
-C_SRCS = tgt_node_ut.c
-
-all: $(APP)
-
-$(APP): $(OBJS) $(SPDK_LIB_FILES)
-	$(LINK_C)
-
-clean:
-	$(CLEAN_C) $(APP)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
