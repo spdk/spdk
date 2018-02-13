@@ -133,10 +133,16 @@ struct spdk_nvmf_request {
 	union nvmf_c2h_msg		*rsp;
 };
 
+struct spdk_nvmf_ns_remove_ctx {
+	struct spdk_nvmf_subsystem *subsystem;
+	uint32_t nsid;
+};
+
 struct spdk_nvmf_ns {
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc;
+	struct spdk_nvmf_ns_remove_ctx *remove_ctx;
 	uint32_t id;
 	bool allocated;
 };
