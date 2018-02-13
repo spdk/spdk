@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ef3e2831_4551734e",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 50
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-02-13T08:19:46Z",
+      "side": 1,
+      "message": "The point is MaxSessions 160(default is 16). This is for expansion to 128 future. One less file is better. Next step,conf files will be removed in other iscsi tests.",
+      "parentUuid": "5982508c_5bed31b8",
+      "range": {
+        "startLine": 33,
+        "startChar": 0,
+        "endLine": 43,
+        "endChar": 3
+      },
+      "revId": "d9cfb9ecf236b23bb08301df96fd3663173dfd7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d5efdd08_bd458e97",
         "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
         "patchSetId": 50
@@ -36,6 +60,30 @@
       "writtenOn": "2018-02-13T07:47:09Z",
       "side": 1,
       "message": "This should be just after \"set -e\" (in lines 34-46 you do two operations - cat and gen_nvme.sh, small operations but they still should count into total test time)",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 28
+      },
+      "revId": "d9cfb9ecf236b23bb08301df96fd3663173dfd7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4b4ec0f_bd4418b1",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 50
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2018-02-13T08:19:46Z",
+      "side": 1,
+      "message": "OK, fixed.",
+      "parentUuid": "d5efdd08_bd458e97",
       "range": {
         "startLine": 48,
         "startChar": 0,
