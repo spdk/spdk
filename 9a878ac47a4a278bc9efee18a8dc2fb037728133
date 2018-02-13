@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a8b83e84_e9b23e9b",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 695,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-13T14:44:47Z",
+      "side": 1,
+      "message": "I think this should fail explicitly - not just an assert().  assert() is fine, but should be something like:\n\nif (ctrlr_num \u003d\u003d UINT_MAX) {\n  assert(false);\n  rc \u003d -ENOMEM; /* or ENOSPC? */\n  goto out;\n}",
+      "revId": "9a878ac47a4a278bc9efee18a8dc2fb037728133",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
