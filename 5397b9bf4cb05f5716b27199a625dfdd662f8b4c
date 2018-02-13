@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1e0feec3_f46aff91",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 25
+      },
+      "lineNbr": 855,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-13T07:38:09Z",
+      "side": 1,
+      "message": "I believe both words are not necessary. One should be enough.",
+      "range": {
+        "startLine": 855,
+        "startChar": 66,
+        "endLine": 855,
+        "endChar": 72
+      },
+      "revId": "5397b9bf4cb05f5716b27199a625dfdd662f8b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "149c219a_a43a9dd3",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 25
+      },
+      "lineNbr": 867,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-13T07:38:09Z",
+      "side": 1,
+      "message": "existing",
+      "range": {
+        "startLine": 867,
+        "startChar": 55,
+        "endLine": 867,
+        "endChar": 63
+      },
+      "revId": "5397b9bf4cb05f5716b27199a625dfdd662f8b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "859227d7_2c0e1575",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 25
+      },
+      "lineNbr": 870,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-13T07:38:09Z",
+      "side": 1,
+      "message": "existing",
+      "range": {
+        "startLine": 870,
+        "startChar": 51,
+        "endLine": 870,
+        "endChar": 59
+      },
+      "revId": "5397b9bf4cb05f5716b27199a625dfdd662f8b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ba9299b_92b6982b",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 25
+      },
+      "lineNbr": 897,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-13T07:38:09Z",
+      "side": 1,
+      "message": "existing",
+      "range": {
+        "startLine": 897,
+        "startChar": 55,
+        "endLine": 897,
+        "endChar": 63
+      },
+      "revId": "5397b9bf4cb05f5716b27199a625dfdd662f8b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bbaa8d55_fea80ce8",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 25
+      },
+      "lineNbr": 900,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-13T07:38:09Z",
+      "side": 1,
+      "message": "existing",
+      "range": {
+        "startLine": 900,
+        "startChar": 50,
+        "endLine": 900,
+        "endChar": 58
+      },
+      "revId": "5397b9bf4cb05f5716b27199a625dfdd662f8b4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
