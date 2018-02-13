@@ -127,6 +127,19 @@ hex_dump(const void *data, size_t size)
 	}
 }
 
+static bool
+all_zero(const void *data, size_t size)
+{
+	const uint8_t *buf = data;
+
+	while (size--) {
+		if (*buf++ != 0) {
+			return false;
+		}
+	}
+	return true;
+}
+
 static void
 get_feature_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 {
@@ -404,6 +417,16 @@ get_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 static void
+print_hex_be(const void *v, size_t size)
+{
+	const uint8_t *buf = v;
+
+	while (size--) {
+		printf("%02X", *buf++);
+	}
+}
+
+static void
 print_uint128_hex(uint64_t *v)
 {
 	unsigned long long lo = v[0], hi = v[1];
@@ -497,6 +520,16 @@ print_namespace(struct spdk_nvme_ns *ns)
 	       (long long)nsdata->nuse / 1024 / 1024);
 	if (nsdata->noiob) {
 		printf("Optimal I/O Boundary:        %u blocks\n", nsdata->noiob);
+	}
+	if (!all_zero(nsdata->nguid, sizeof(nsdata->nguid))) {
+		printf("NGUID:                       ");
+		print_hex_be(nsdata->nguid, sizeof(nsdata->nguid));
+		printf("\n");
+	}
+	if (!all_zero(&nsdata->eui64, sizeof(nsdata->eui64))) {
+		printf("EUI64:                       ");
+		print_hex_be(&nsdata->eui64, sizeof(nsdata->eui64));
+		printf("\n");
 	}
 	printf("Thin Provisioning:           %s\n",
 	       nsdata->nsfeat.thin_prov ? "Supported" : "Not Supported");
