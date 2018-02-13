@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5982508c_5bed31b8",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 50
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-13T07:47:09Z",
+      "side": 1,
+      "message": "I don\u0027t see any variables so that we\u0027d have to generate a fresh config on every test run. Why not just have it as a file in commit like in other iscsi tests?",
+      "range": {
+        "startLine": 33,
+        "startChar": 0,
+        "endLine": 43,
+        "endChar": 3
+      },
+      "revId": "d9cfb9ecf236b23bb08301df96fd3663173dfd7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d5efdd08_bd458e97",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 50
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-13T07:47:09Z",
+      "side": 1,
+      "message": "This should be just after \"set -e\" (in lines 34-46 you do two operations - cat and gen_nvme.sh, small operations but they still should count into total test time)",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 28
+      },
+      "revId": "d9cfb9ecf236b23bb08301df96fd3663173dfd7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
