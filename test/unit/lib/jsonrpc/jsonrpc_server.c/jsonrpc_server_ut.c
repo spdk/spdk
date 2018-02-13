@@ -35,7 +35,7 @@
 
 #include "spdk_cunit.h"
 
-#include "jsonrpc_server.c"
+#include "jsonrpc/jsonrpc_server.c"
 
 #define MAX_PARAMS	100
 #define MAX_REQS	100

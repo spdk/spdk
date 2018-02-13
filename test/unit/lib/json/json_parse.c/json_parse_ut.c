@@ -35,7 +35,7 @@
 
 #include "spdk_cunit.h"
 
-#include "json_parse.c"
+#include "json/json_parse.c"
 
 static uint8_t g_buf[1000];
 static void *g_end;

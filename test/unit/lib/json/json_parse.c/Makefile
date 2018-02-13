@@ -35,4 +35,4 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 
 TEST_FILE = json_parse_ut.c
 
-include $(SPDK_ROOT_DIR)/mk/json.unittest.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk

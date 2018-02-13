@@ -35,7 +35,7 @@
 
 #include "spdk_cunit.h"
 
-#include "json_util.c"
+#include "json/json_util.c"
 
 #define NUM_SETUP(x) \
 	snprintf(buf, sizeof(buf), "%s", x); \
