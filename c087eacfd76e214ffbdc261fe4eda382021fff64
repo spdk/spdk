@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "86e7bb46_3d3c7a00",
+        "filename": "test/nvmf/fio/fio.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-13T17:47:02Z",
+      "side": 1,
+      "message": "This tests the hot-remove case with dynamically-added namespaces.",
+      "revId": "c087eacfd76e214ffbdc261fe4eda382021fff64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
