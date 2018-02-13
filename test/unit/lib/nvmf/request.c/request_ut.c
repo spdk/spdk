@@ -35,7 +35,7 @@
 
 #include "spdk_cunit.h"
 
-#include "request.c"
+#include "nvmf/request.c"
 
 SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 
