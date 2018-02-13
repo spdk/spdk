@@ -206,10 +206,8 @@ for (( i=0; i<$vm_count; i++)); do
     elif [[ "$ctrl_type" == "spdk_vhost_blk" ]]; then
         disk=""
         for (( j=0; j<${#bdevs[@]}; j++)); do
-            blk_dev_size=$(get_bdev_size "${bdevs[$j]}")
-
             $rpc_py construct_vhost_blk_controller naa.$j.$i ${bdevs[$j]} $mask_arg
-            disk+="${j}_size_${blk_dev_size}M:"
+            disk+="${j}:"
         done
         disk="${disk::-1}"
         setup_cmd+=" --disks=$disk"

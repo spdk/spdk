@@ -162,7 +162,7 @@ case $1 in
 		;;
 	-ro|--readonly)
 		echo 'Running readonly tests suite...'
-		$WORKDIR/readonly/readonly.sh --vm_image=$VM_IMAGE --disk=Nvme0n1_size_1G
+		$WORKDIR/readonly/readonly.sh --vm_image=$VM_IMAGE --disk=Nvme0n1
 		;;
 	*)
 		echo "unknown test type: $1"
