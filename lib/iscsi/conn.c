@@ -170,6 +170,24 @@ int spdk_initialize_iscsi_conns(void)
 	return 0;
 }
 
+static void
+spdk_iscsi_poll_group_add_conn(struct spdk_iscsi_conn *conn,
+			       spdk_iscsi_conn_fn fn)
+{
+	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
+
+	conn->fn = fn;
+	STAILQ_INSERT_TAIL(&poll_group->connections, conn, link);
+}
+
+static void
+spdk_iscsi_poll_group_remove_conn(struct spdk_iscsi_conn *conn)
+{
+	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
+
+	STAILQ_REMOVE(&poll_group->connections, conn, spdk_iscsi_conn, link);
+}
+
 /**
  * \brief Create an iSCSI connection from the given parameters and schedule it
  *        on a reactor.
@@ -285,8 +303,8 @@ error_return:
 
 	conn->lcore = spdk_env_get_current_core();
 	__sync_fetch_and_add(&g_num_connections[conn->lcore], 1);
-	conn->poller = spdk_poller_register(spdk_iscsi_conn_login_do_work, conn, 0);
 
+	spdk_iscsi_poll_group_add_conn(conn, spdk_iscsi_conn_login_do_work);
 	return 0;
 }
 
@@ -563,8 +581,9 @@ spdk_iscsi_conn_stop_poller(struct spdk_iscsi_conn *conn)
 		assert(conn->dev != NULL);
 		spdk_scsi_dev_free_io_channels(conn->dev);
 	}
+
 	__sync_fetch_and_sub(&g_num_connections[spdk_env_get_current_core()], 1);
-	spdk_poller_unregister(&conn->poller);
+	spdk_iscsi_poll_group_remove_conn(conn);
 }
 
 void spdk_shutdown_iscsi_conns(void)
@@ -1144,8 +1163,7 @@ spdk_iscsi_conn_full_feature_migrate(void *arg1, void *arg2)
 
 	/* The poller has been unregistered, so now we can re-register it on the new core. */
 	conn->lcore = spdk_env_get_current_core();
-	conn->poller = spdk_poller_register(spdk_iscsi_conn_full_feature_do_work, conn,
-					    0);
+	spdk_iscsi_poll_group_add_conn(conn, spdk_iscsi_conn_full_feature_do_work);
 }
 
 void
@@ -1195,7 +1213,8 @@ spdk_iscsi_conn_login_do_work(void *arg)
 		spdk_iscsi_conn_stop_poller(conn);
 
 		__sync_fetch_and_add(&g_num_connections[lcore], 1);
-		event = spdk_event_allocate(lcore, spdk_iscsi_conn_full_feature_migrate, conn, NULL);
+		event = spdk_event_allocate(lcore, spdk_iscsi_conn_full_feature_migrate,
+					    conn, NULL);
 		spdk_event_call(event);
 	}
 }

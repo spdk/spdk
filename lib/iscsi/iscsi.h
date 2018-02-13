@@ -39,6 +39,8 @@
 
 #include "spdk/bdev.h"
 #include "spdk/iscsi_spec.h"
+#include "spdk/event.h"
+#include "spdk/io_channel.h"
 
 #include "iscsi/param.h"
 #include "iscsi/tgt_node.h"
@@ -254,6 +256,12 @@ struct spdk_iscsi_sess {
 	uint32_t current_text_itt;
 };
 
+struct spdk_iscsi_poll_group {
+	uint32_t					core;
+	struct spdk_poller				*poller;
+	STAILQ_HEAD(connections, spdk_iscsi_conn)	connections;
+};
+
 struct spdk_iscsi_globals {
 	char *authfile;
 	char *nodebase;
@@ -288,6 +296,7 @@ struct spdk_iscsi_globals {
 	struct spdk_mempool *task_pool;
 
 	struct spdk_iscsi_sess	**session;
+	struct spdk_iscsi_poll_group *poll_group;
 };
 
 #define ISCSI_SECURITY_NEGOTIATION_PHASE	0
