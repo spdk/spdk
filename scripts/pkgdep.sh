@@ -17,7 +17,7 @@ if [ -s /etc/redhat-release ]; then
 	# Additional dependencies for DPDK
 	yum install -y numactl-devel
 	# Additional dependencies for building docs
-	yum install -y doxygen mscgen
+	yum install -y doxygen mscgen graphviz
 	# Additional dependencies for building nvml based backends
 	yum install -y libpmemblk-devel || true
 elif [ -f /etc/debian_version ]; then
@@ -29,12 +29,12 @@ elif [ -f /etc/debian_version ]; then
 	# Additional dependencies for DPDK
 	apt-get install -y libnuma-dev
 	# Additional dependencies for building docs
-	apt-get install -y doxygen mscgen
+	apt-get install -y doxygen mscgen graphviz
 elif [ $SYSTEM = "FreeBSD" ] ; then
 	pkg install gmake cunit openssl git devel/astyle bash devel/pep8 \
 		python misc/e2fsprogs-libuuid sysutils/sg3_utils
 	# Additional dependencies for building docs
-	pkg install doxygen mscgen
+	pkg install doxygen mscgen graphviz
 else
 	echo "pkgdep: unknown system type."
 	exit 1
