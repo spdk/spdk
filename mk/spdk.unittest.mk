@@ -47,6 +47,7 @@ LIBS += -lcunit $(SPDK_LIB_LINKER_ARGS)
 APP = $(TEST_FILE:.c=)
 
 all: $(APP)
+	@:
 
 $(APP) : $(OBJS) $(SPDK_LIB_FILES)
 	$(LINK_C)
