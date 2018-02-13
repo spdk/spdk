@@ -35,8 +35,8 @@
 
 #include "spdk_cunit.h"
 
-#include "task.c"
-#include "lun.c"
+#include "scsi/task.c"
+#include "scsi/lun.c"
 
 #include "spdk_internal/mock.h"
 

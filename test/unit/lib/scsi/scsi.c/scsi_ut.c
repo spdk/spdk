@@ -37,7 +37,7 @@
 
 #include "spdk_cunit.h"
 
-#include "scsi.c"
+#include "scsi/scsi.c"
 
 static void
 scsi_init(void)

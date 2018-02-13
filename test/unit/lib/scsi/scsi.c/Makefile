@@ -35,22 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-SPDK_LIB_LIST = log conf trace util
+SPDK_LIB_LIST = trace
+TEST_FILE = scsi_ut.c
 
-CFLAGS += -I$(SPDK_ROOT_DIR)/lib/scsi
-CFLAGS += -I$(SPDK_ROOT_DIR)/test
-LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
-LIBS += -lcunit
-
-APP = scsi_ut
-C_SRCS = scsi_ut.c
-
-all: $(APP)
-
-$(APP): $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
-	$(LINK_C)
-
-clean:
-	$(CLEAN_C) $(APP)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
