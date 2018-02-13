@@ -36,8 +36,8 @@
 #include "spdk_cunit.h"
 #include "spdk/log.h"
 
-#include "log.c"
-#include "log_flags.c"
+#include "log/log.c"
+#include "log/log_flags.c"
 
 static void
 log_test(void)
