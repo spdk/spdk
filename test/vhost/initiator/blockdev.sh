@@ -126,7 +126,7 @@ timing_enter setup_vm
 vm_no="0"
 vm_setup --disk-type=spdk_vhost_scsi --force=$vm_no --os=$os_image \
  --disks="Nvme0n1:Malloc0:Malloc1:$kernel_vhost_disk,kernel_vhost" \
- --queue_num=18 --memory=6144
+ --queue_num=8 --memory=6144
 vm_run $vm_no
 
 timing_enter vm_wait_for_boot
