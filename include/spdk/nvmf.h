@@ -376,6 +376,20 @@ struct spdk_nvmf_ns_opts {
 	 * Set to 0 to automatically assign a free NSID.
 	 */
 	uint32_t nsid;
+
+	/**
+	 * Namespace Globally Unique Identifier
+	 *
+	 * Fill with 0s if not specified.
+	 */
+	uint8_t nguid[16];
+
+	/**
+	 * IEEE Extended Unique Identifier
+	 *
+	 * Fill with 0s if not specified.
+	 */
+	uint8_t eui64[8];
 };
 
 /**

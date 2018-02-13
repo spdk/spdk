@@ -374,6 +374,8 @@ if __name__ == "__main__":
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
     p.add_argument('bdev_name', help='The name of the bdev that will back this namespace')
     p.add_argument('-n', '--nsid', help='The requested NSID (optional)', type=int)
+    p.add_argument('-g', '--nguid', help='Namespace globally unique identifier (optional)')
+    p.add_argument('-e', '--eui64', help='Namespace EUI-64 identifier (optional)')
     p.set_defaults(func=rpc.nvmf.nvmf_subsystem_add_ns)
 
     # pmem
