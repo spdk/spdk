@@ -318,6 +318,7 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 		if (ns->bdev == NULL) {
 			continue;
 		}
+		free(ns->remove_ctx);
 		spdk_bdev_close(ns->desc);
 	}
 
@@ -786,6 +787,7 @@ spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t ns
 		return -1;
 	}
 
+	free(ns->remove_ctx);
 	spdk_bdev_close(ns->desc);
 	ns->allocated = false;
 	subsystem->num_allocated_nsid--;
@@ -799,16 +801,24 @@ _spdk_nvmf_ns_hot_remove(struct spdk_nvmf_subsystem *subsystem,
 {
 	struct spdk_nvmf_ns *ns = cb_arg;
 
-	spdk_nvmf_subsystem_remove_ns(ns->subsystem, ns->id);
+	spdk_nvmf_subsystem_remove_ns(subsystem, ns->id);
 
 	spdk_nvmf_subsystem_resume(subsystem, NULL, NULL);
 }
 
 static void
-spdk_nvmf_ns_hot_remove(void *remove_ctx)
+spdk_nvmf_ns_hot_remove(void *_remove_ctx)
 {
-	struct spdk_nvmf_ns *ns = remove_ctx;
+	struct spdk_nvmf_ns_remove_ctx *remove_ctx = _remove_ctx;
+	struct spdk_nvmf_ns *ns;
 	int rc;
+
+	ns = spdk_nvmf_subsystem_get_ns(remove_ctx->subsystem, remove_ctx->nsid);
+	if (ns == NULL) {
+		SPDK_ERRLOG("Could not find nsid %u in subsystem %s\n",
+			    remove_ctx->nsid, spdk_nvmf_subsystem_get_nqn(remove_ctx->subsystem));
+		return;
+	}
 
 	rc = spdk_nvmf_subsystem_pause(ns->subsystem, _spdk_nvmf_ns_hot_remove, ns);
 	if (rc) {
@@ -887,10 +897,20 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	ns->bdev = bdev;
 	ns->id = nsid;
 	ns->subsystem = subsystem;
-	rc = spdk_bdev_open(bdev, true, spdk_nvmf_ns_hot_remove, ns, &ns->desc);
+	ns->remove_ctx = calloc(1, sizeof(*ns->remove_ctx));
+	if (ns->remove_ctx == NULL) {
+		SPDK_ERRLOG("remove_ctx allocation failed\n");
+		return 0;
+	}
+
+	ns->remove_ctx->subsystem = subsystem;
+	ns->remove_ctx->nsid = nsid;
+
+	rc = spdk_bdev_open(bdev, true, spdk_nvmf_ns_hot_remove, ns->remove_ctx, &ns->desc);
 	if (rc != 0) {
 		SPDK_ERRLOG("Subsystem %s: bdev %s cannot be opened, error=%d\n",
 			    subsystem->subnqn, spdk_bdev_get_name(bdev), rc);
+		free(ns->remove_ctx);
 		return 0;
 	}
 	ns->allocated = true;

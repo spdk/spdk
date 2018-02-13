@@ -229,6 +229,9 @@ test_spdk_nvmf_subsystem_add_ns(void)
 	CU_ASSERT(nsid == 0);
 	CU_ASSERT(subsystem.max_nsid == 5);
 
+	spdk_nvmf_subsystem_remove_ns(&subsystem, 1);
+	spdk_nvmf_subsystem_remove_ns(&subsystem, 5);
+
 	free(subsystem.ns);
 }
 
