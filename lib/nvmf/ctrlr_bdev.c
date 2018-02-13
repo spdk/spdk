@@ -103,8 +103,9 @@ nvmf_bdev_ctrlr_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
 }
 
 int
-spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_bdev *bdev, struct spdk_nvme_ns_data *nsdata)
+spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *nsdata)
 {
+	struct spdk_bdev *bdev = ns->bdev;
 	uint64_t num_blocks;
 
 	num_blocks = spdk_bdev_get_num_blocks(bdev);
@@ -116,6 +117,12 @@ spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_bdev *bdev, struct spdk_nvme_ns_dat
 	nsdata->flbas.format = 0;
 	nsdata->lbaf[0].lbads = spdk_u32log2(spdk_bdev_get_block_size(bdev));
 	nsdata->noiob = spdk_bdev_get_optimal_io_boundary(bdev);
+
+	SPDK_STATIC_ASSERT(sizeof(nsdata->nguid) == sizeof(ns->opts.nguid), "size mismatch");
+	memcpy(nsdata->nguid, ns->opts.nguid, sizeof(nsdata->nguid));
+
+	SPDK_STATIC_ASSERT(sizeof(nsdata->eui64) == sizeof(ns->opts.eui64), "size mismatch");
+	memcpy(&nsdata->eui64, ns->opts.eui64, sizeof(nsdata->eui64));
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
