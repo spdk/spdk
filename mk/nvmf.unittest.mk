@@ -53,7 +53,4 @@ $(APP) : $(OBJS) $(SPDK_LIB_FILES)
 clean:
 	$(CLEAN_C) $(APP)
 
-%.o: $(SPDK_ROOT_DIR)/lib/nvmf/%.c %.d $(MAKEFILE_LIST)
-	$(COMPILE_C)
-
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
