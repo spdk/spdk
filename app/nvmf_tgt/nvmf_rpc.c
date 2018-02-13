@@ -43,6 +43,142 @@
 
 #include "nvmf_tgt.h"
 
+static bool
+all_zero(const void *data, size_t size)
+{
+	const uint8_t *buf = data;
+
+	while (size--) {
+		if (*buf++ != 0) {
+			return false;
+		}
+	}
+	return true;
+}
+
+static int
+json_write_hex_str(struct spdk_json_write_ctx *w, const void *data, size_t size)
+{
+	static const char hex_char[16] = "0123456789ABCDEF";
+	const uint8_t *buf = data;
+	char *str;
+	int rc;
+
+	str = malloc(size * 2 + 1);
+	if (str == NULL) {
+		return -1;
+	}
+
+	while (size--) {
+		unsigned byte = *buf++;
+
+		str[0] = hex_char[(byte >> 4) & 0xF];
+		str[1] = hex_char[byte & 0xF];
+
+		str += 2;
+	}
+	*str = '\0';
+
+	rc = spdk_json_write_string(w, str);
+	free(str);
+
+	return rc;
+}
+
+static int
+hex_nybble_to_num(char c)
+{
+	if (c >= '0' && c <= '9') {
+		return c - '0';
+	}
+
+	if (c >= 'a' && c <= 'f') {
+		return c - 'a' + 0xA;
+	}
+
+	if (c >= 'A' && c <= 'F') {
+		return c - 'A' + 0xA;
+	}
+
+	return -1;
+}
+
+static int
+hex_byte_to_num(const char *str)
+{
+	int hi, lo;
+
+	hi = hex_nybble_to_num(str[0]);
+	if (hi < 0) {
+		return hi;
+	}
+
+	lo = hex_nybble_to_num(str[1]);
+	if (lo < 0) {
+		return lo;
+	}
+
+	return hi * 16 + lo;
+}
+
+static int
+decode_hex_string_be(const char *str, uint8_t *out, size_t size)
+{
+	size_t i;
+
+	/* Decode a string in "ABCDEF012345" format to its binary representation */
+	for (i = 0; i < size; i++) {
+		int num = hex_byte_to_num(str);
+
+		if (num < 0) {
+			/* Invalid hex byte or end of string */
+			return -1;
+		}
+
+		out[i] = (uint8_t)num;
+		str += 2;
+	}
+
+	if (i != size || *str != '\0') {
+		/* Length mismatch */
+		return -1;
+	}
+
+	return 0;
+}
+
+static int
+decode_ns_nguid(const struct spdk_json_val *val, void *out)
+{
+	char *str = NULL;
+	int rc;
+
+	rc = spdk_json_decode_string(val, &str);
+	if (rc == 0) {
+		/* 16-byte NGUID */
+		rc = decode_hex_string_be(str, out, 16);
+	}
+
+	free(str);
+	return rc;
+}
+
+static int
+decode_ns_eui64(const struct spdk_json_val *val, void *out)
+{
+	char *str = NULL;
+	int rc;
+
+	rc = spdk_json_decode_string(val, &str);
+	if (rc == 0) {
+		/* 8-byte EUI-64 */
+		rc = decode_hex_string_be(str, out, 8);
+	}
+
+	free(str);
+	return rc;
+}
+
 static void
 dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *subsystem)
 {
@@ -112,6 +248,7 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 
 	if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_NVME) {
 		struct spdk_nvmf_ns *ns;
+		struct spdk_nvmf_ns_opts ns_opts;
 
 		spdk_json_write_name(w, "serial_number");
 		spdk_json_write_string(w, spdk_nvmf_subsystem_get_sn(subsystem));
@@ -119,6 +256,7 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 		spdk_json_write_array_begin(w);
 		for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
 		     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
+			spdk_nvmf_ns_get_opts(ns, &ns_opts, sizeof(ns_opts));
 			spdk_json_write_object_begin(w);
 			spdk_json_write_name(w, "nsid");
 			spdk_json_write_int32(w, spdk_nvmf_ns_get_id(ns));
@@ -127,6 +265,17 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 			/* NOTE: "name" is kept for compatibility only - new code should use bdev_name. */
 			spdk_json_write_name(w, "name");
 			spdk_json_write_string(w, spdk_bdev_get_name(spdk_nvmf_ns_get_bdev(ns)));
+
+			if (!all_zero(ns_opts.nguid, sizeof(ns_opts.nguid))) {
+				spdk_json_write_name(w, "nguid");
+				json_write_hex_str(w, ns_opts.nguid, sizeof(ns_opts.nguid));
+			}
+
+			if (!all_zero(ns_opts.eui64, sizeof(ns_opts.eui64))) {
+				spdk_json_write_name(w, "eui64");
+				json_write_hex_str(w, ns_opts.eui64, sizeof(ns_opts.eui64));
+			}
+
 			spdk_json_write_object_end(w);
 		}
 		spdk_json_write_array_end(w);
@@ -271,6 +420,8 @@ decode_rpc_hosts(const struct spdk_json_val *val, void *out)
 struct spdk_nvmf_ns_params {
 	char *bdev_name;
 	uint32_t nsid;
+	char nguid[16];
+	char eui64[8];
 };
 
 struct rpc_namespaces {
@@ -282,6 +433,8 @@ struct rpc_namespaces {
 static const struct spdk_json_object_decoder rpc_ns_params_decoders[] = {
 	{"nsid", offsetof(struct spdk_nvmf_ns_params, nsid), spdk_json_decode_uint32, true},
 	{"bdev_name", offsetof(struct spdk_nvmf_ns_params, bdev_name), spdk_json_decode_string},
+	{"nguid", offsetof(struct spdk_nvmf_ns_params, nguid), decode_ns_nguid, true},
+	{"eui64", offsetof(struct spdk_nvmf_ns_params, eui64), decode_ns_eui64, true},
 };
 
 static void
@@ -481,6 +634,12 @@ spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_request *request,
 
 		spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
 		ns_opts.nsid = ns_params->nsid;
+
+		SPDK_STATIC_ASSERT(sizeof(ns_opts.nguid) == sizeof(ns_params->nguid), "size mismatch");
+		memcpy(ns_opts.nguid, ns_params->nguid, sizeof(ns_opts.nguid));
+
+		SPDK_STATIC_ASSERT(sizeof(ns_opts.eui64) == sizeof(ns_params->eui64), "size mismatch");
+		memcpy(ns_opts.nguid, ns_params->eui64, sizeof(ns_opts.eui64));
 
 		if (spdk_nvmf_subsystem_add_ns(subsystem, bdev, &ns_opts, sizeof(ns_opts)) == 0) {
 			SPDK_ERRLOG("Unable to add namespace\n");
