@@ -35,7 +35,7 @@
 
 #include "spdk_cunit.h"
 
-#include "sock.c"
+#include "net/sock.c"
 
 bool g_read_data_called;
 ssize_t g_bytes_read;
