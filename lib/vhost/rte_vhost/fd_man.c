@@ -154,6 +154,7 @@ fdset_init(struct fdset *pfdset)
 		pfdset->fd[i].dat = NULL;
 	}
 	pfdset->num = 0;
+	pfdset->polling = 0;
 }
 
 /**
@@ -162,7 +163,7 @@ fdset_init(struct fdset *pfdset)
 int
 fdset_add(struct fdset *pfdset, int fd, fd_cb rcb, fd_cb wcb, void *dat)
 {
-	int i;
+	int i, rc;
 
 	if (pfdset == NULL || fd == -1)
 		return -1;
@@ -170,14 +171,28 @@ fdset_add(struct fdset *pfdset, int fd, fd_cb rcb, fd_cb wcb, void *dat)
 	pthread_mutex_lock(&pfdset->fd_mutex);
 	i = pfdset->num < MAX_FDS ? pfdset->num++ : -1;
 	if (i == -1) {
-		pthread_mutex_unlock(&pfdset->fd_mutex);
-		return -2;
+		rc = -2;
+		goto out;
 	}
 
 	fdset_add_nolock(pfdset, i, fd, rcb, wcb, dat);
-	pthread_mutex_unlock(&pfdset->fd_mutex);
+	if (pfdset->polling) {
+		rc = 0;
+		goto out;
+	}
 
-	return 0;
+	rc = pthread_create(&pfdset->tid, NULL, fdset_event_dispatch,
+			    pfdset);
+	if (rc < 0) {
+		fdset_del_nolock(pfdset, i);
+		goto out;
+	}
+
+	pfdset->polling = 1;
+	rc = 0;
+out:
+	pthread_mutex_unlock(&pfdset->fd_mutex);
+	return rc;
 }
 
 /**
@@ -228,11 +243,12 @@ fdset_event_dispatch(void *arg)
 	int remove1, remove2;
 	int need_shrink;
 	struct fdset *pfdset = arg;
+	int running = 1;
 
 	if (pfdset == NULL)
 		return NULL;
 
-	while (1) {
+	while (running) {
 
 		/*
 		 * When poll is blocked, other threads might unregister
@@ -243,6 +259,10 @@ fdset_event_dispatch(void *arg)
 		 */
 		pthread_mutex_lock(&pfdset->fd_mutex);
 		numfds = pfdset->num;
+		if (numfds == 0) {
+			pfdset->polling = 0;
+			running = 0;
+		}
 		pthread_mutex_unlock(&pfdset->fd_mutex);
 
 		poll(pfdset->rwfds, numfds, 1000 /* millisecs */);

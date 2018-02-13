@@ -54,6 +54,8 @@ struct fdset {
 	struct fdentry fd[MAX_FDS];
 	pthread_mutex_t fd_mutex;
 	int num;	/* current fd number of this fdset */
+	int polling;
+	pthread_t tid;
 };
 
 
