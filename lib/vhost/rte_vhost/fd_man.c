@@ -155,12 +155,8 @@ fdset_add(struct fdset *pfdset, int fd, fd_cb rcb, fd_cb wcb, void *dat)
 	pthread_mutex_lock(&pfdset->fd_mutex);
 	i = pfdset->num < MAX_FDS ? pfdset->num++ : -1;
 	if (i == -1) {
-		fdset_shrink_nolock(pfdset);
-		i = pfdset->num < MAX_FDS ? pfdset->num++ : -1;
-		if (i == -1) {
-			pthread_mutex_unlock(&pfdset->fd_mutex);
-			return -2;
-		}
+		pthread_mutex_unlock(&pfdset->fd_mutex);
+		return -2;
 	}
 
 	fdset_add_fd(pfdset, i, fd, rcb, wcb, dat);
@@ -193,6 +189,7 @@ fdset_del(struct fdset *pfdset, int fd)
 			pfdset->fd[i].rcb = pfdset->fd[i].wcb = NULL;
 			pfdset->fd[i].dat = NULL;
 			i = -1;
+			fdset_shrink_nolock(pfdset);
 		}
 		pthread_mutex_unlock(&pfdset->fd_mutex);
 	} while (i != -1);
