@@ -32,7 +32,7 @@
 
 #include "spdk_cunit.h"
 
-#include "scsi_nvme.c"
+#include "bdev/scsi_nvme.c"
 
 static int
 null_init(void)
