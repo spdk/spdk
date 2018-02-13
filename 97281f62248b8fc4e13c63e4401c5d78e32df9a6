@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0e00df45_5d11bd19",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 439,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-13T22:25:06Z",
+      "side": 1,
+      "message": "This path leaks pt_node (see the scan-build results from fedora-01).",
+      "revId": "97281f62248b8fc4e13c63e4401c5d78e32df9a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3abb3d88_fd43f325",
+        "filename": "test/lib/bdev/blockdev.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-13T22:25:06Z",
+      "side": 1,
+      "message": "I don\u0027t think we want to be calling blobcli in the blockdev.sh tests; can we just add a passthru vbdev to the bdev.conf.in file in this directory so the bdevio tests will run on it?",
+      "revId": "97281f62248b8fc4e13c63e4401c5d78e32df9a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
