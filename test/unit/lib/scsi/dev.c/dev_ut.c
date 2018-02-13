@@ -38,8 +38,8 @@
 
 #include "spdk/util.h"
 
-#include "dev.c"
-#include "port.c"
+#include "scsi/dev.c"
+#include "scsi/port.c"
 
 /* Unit test bdev mockup */
 struct spdk_bdev {

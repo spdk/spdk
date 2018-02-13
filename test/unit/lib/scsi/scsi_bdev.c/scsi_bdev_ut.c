@@ -33,8 +33,8 @@
 
 #include "spdk/stdinc.h"
 
-#include "task.c"
-#include "scsi_bdev.c"
+#include "scsi/task.c"
+#include "scsi/scsi_bdev.c"
 
 #include "spdk_cunit.h"
 
