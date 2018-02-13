@@ -35,7 +35,8 @@
 
 #include "spdk_cunit.h"
 
-#include "json_write.c"
+#include "json/json_write.c"
+#include "json/json_parse.c"
 
 #include "spdk/util.h"
 
