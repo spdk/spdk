@@ -38,9 +38,9 @@
 
 #include "lib/test_env.c"
 #include "../bs_dev_common.c"
-#include "blobstore.c"
-#include "request.c"
-#include "zeroes.c"
+#include "blob/blobstore.c"
+#include "blob/request.c"
+#include "blob/zeroes.c"
 
 struct spdk_blob_store *g_bs;
 spdk_blob_id g_blobid;

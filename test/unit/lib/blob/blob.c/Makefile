@@ -36,21 +36,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.mock.unittest.mk
 
-APP = blob_ut
+TEST_FILE = blob_ut.c
 
-C_SRCS := blob_ut.c
-CFLAGS += -I$(SPDK_ROOT_DIR)/lib/blob -I$(SPDK_ROOT_DIR)/test
-
-SPDK_LIB_LIST = util log spdk_mock
-
-LIBS += $(SPDK_LIB_LINKER_ARGS) -lcunit
-
-all : $(APP)
-
-$(APP) : $(OBJS) $(SPDK_LIB_FILES)
-	$(LINK_C)
-
-clean :
-	$(CLEAN_C) $(APP)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
