@@ -18,7 +18,7 @@ function run_fio()
 }
 
 source $rootdir/scripts/autotest_common.sh
-source $testdir/nbd/nbd_common.sh
+source $testdir/nbd_common.sh
 
 function nbd_function_test() {
 	if [ $(uname -s) = Linux ] && modprobe -n nbd; then
