@@ -34,19 +34,6 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-CFLAGS += -I$(SPDK_ROOT_DIR)/test
-LIBS += $(SPDK_LIB_LINKER_ARGS)
-LIBS += -lcunit
+TEST_FILE = histogram_ut.c
 
-APP = histogram_ut
-C_SRCS = histogram_ut.c
-
-all: $(APP)
-
-$(APP): $(OBJS) $(SPDK_LIB_FILES)
-	$(LINK_C)
-
-clean:
-	$(CLEAN_C) $(APP)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
