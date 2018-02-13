@@ -36,7 +36,7 @@
 #include "spdk_cunit.h"
 #include "spdk_internal/mock.h"
 
-#include "ctrlr.c"
+#include "nvmf/ctrlr.c"
 
 SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 
