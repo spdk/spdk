@@ -32,6 +32,7 @@
  */
 
 #include "spdk/net.h"
+#include "spdk/sock.h"
 
 __attribute__((weak))
 const char *spdk_net_framework_get_name(void)
@@ -42,12 +43,14 @@ const char *spdk_net_framework_get_name(void)
 __attribute__((weak))
 int spdk_net_framework_start(void)
 {
+	spdk_sock_init();
 	return 0;
 }
 
 __attribute__((weak))
 void spdk_net_framework_fini(void)
 {
+	spdk_sock_fini();
 }
 
 __attribute__((weak))

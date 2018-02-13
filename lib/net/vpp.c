@@ -33,15 +33,10 @@
 
 #include "spdk/stdinc.h"
 
-#if defined(__linux__)
-#include <sys/epoll.h>
-#elif defined(__FreeBSD__)
-#include <sys/event.h>
-#endif
-
 #include "spdk/log.h"
 #include "spdk/sock.h"
 #include "spdk/queue.h"
+#include <vcl/vppcom.h>
 
 #define MAX_TMPBUF 1024
 #define PORTNUMLEN 32
@@ -88,6 +83,106 @@ static int get_addr_str(struct sockaddr *sa, char *host, size_t hlen)
 	}
 }
 
+static int
+getsockname_vpp(int fd, struct sockaddr *addr, socklen_t *len)
+{
+	vppcom_endpt_t ep;
+	uint32_t size = sizeof(ep);
+	int rc;
+
+	if (!addr || !len) {
+		return -EFAULT;
+	}
+
+	ep.ip = (uint8_t *) & ((const struct sockaddr_in *) addr)->sin_addr;
+
+	rc = vppcom_session_attr(fd, VPPCOM_ATTR_GET_LCL_ADDR, &ep, &size);
+	if (rc == 0) {
+		if (ep.vrf == VPPCOM_VRF_DEFAULT) {
+			addr->sa_family = ep.is_ip4 == VPPCOM_IS_IP4 ? AF_INET : AF_INET6;
+			switch (addr->sa_family) {
+			case AF_INET:
+				((struct sockaddr_in *) addr)->sin_port = ep.port;
+				*len = sizeof(struct sockaddr_in);
+				break;
+
+			case AF_INET6:
+				((struct sockaddr_in6 *) addr)->sin6_port = ep.port;
+				*len = sizeof(struct sockaddr_in6);
+				break;
+
+			default:
+				break;
+			}
+		}
+	}
+
+	return rc;
+}
+
+static inline int
+vcom_socket_copy_ep_to_sockaddr(struct sockaddr *addr, socklen_t *len, vppcom_endpt_t *ep)
+{
+	int rc = 0;
+	int sa_len, copy_len;
+
+	addr->sa_family = (ep->is_ip4 == VPPCOM_IS_IP4) ? AF_INET : AF_INET6;
+	switch (addr->sa_family) {
+	case AF_INET:
+		((struct sockaddr_in *) addr)->sin_port = ep->port;
+		if (*len > sizeof(struct sockaddr_in)) {
+			*len = sizeof(struct sockaddr_in);
+		}
+		sa_len = sizeof(struct sockaddr_in) - sizeof(struct in_addr);
+		copy_len = *len - sa_len;
+		if (copy_len > 0) {
+			memcpy(&((struct sockaddr_in *) addr)->sin_addr, ep->ip, copy_len);
+		}
+		break;
+
+	case AF_INET6:
+		((struct sockaddr_in6 *) addr)->sin6_port = ep->port;
+		if (*len > sizeof(struct sockaddr_in6)) {
+			*len = sizeof(struct sockaddr_in6);
+		}
+		sa_len = sizeof(struct sockaddr_in6) - sizeof(struct in6_addr);
+		copy_len = *len - sa_len;
+		if (copy_len > 0)
+			memcpy(((struct sockaddr_in6 *) addr)->sin6_addr.
+			       __in6_u.__u6_addr8, ep->ip, copy_len);
+		break;
+
+	default:
+		/* Not possible */
+		rc = -EAFNOSUPPORT;
+		break;
+	}
+
+	return rc;
+}
+
+static int
+getpeername_vpp(int sock, struct sockaddr *addr, socklen_t *len)
+{
+	int rc = -1;
+	uint8_t src_addr[sizeof(struct sockaddr_in6)];
+	vppcom_endpt_t ep;
+	uint32_t size = sizeof(ep);
+
+	if (!addr || !len) {
+		return -EFAULT;
+	}
+
+	ep.ip = src_addr;
+
+	rc = vppcom_session_attr(sock, VPPCOM_ATTR_GET_PEER_ADDR, &ep, &size);
+	if (rc != 0) {
+		return rc;
+	}
+
+	return vcom_socket_copy_ep_to_sockaddr(addr, len, &ep);
+}
+
 int
 spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, char *caddr, int clen)
 {
@@ -99,8 +194,9 @@ spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, char *caddr, in
 
 	memset(&sa, 0, sizeof sa);
 	salen = sizeof sa;
-	rc = getsockname(sock->fd, (struct sockaddr *) &sa, &salen);
+	rc = getsockname_vpp(sock->fd, (struct sockaddr *) &sa, &salen);
 	if (rc != 0) {
+		errno = -rc;
 		SPDK_ERRLOG("getsockname() failed (errno=%d)\n", errno);
 		return -1;
 	}
@@ -126,8 +222,9 @@ spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, char *caddr, in
 
 	memset(&sa, 0, sizeof sa);
 	salen = sizeof sa;
-	rc = getpeername(sock->fd, (struct sockaddr *) &sa, &salen);
+	rc = getpeername_vpp(sock->fd, (struct sockaddr *) &sa, &salen);
 	if (rc != 0) {
+		errno = -rc;
 		SPDK_ERRLOG("getpeername() failed (errno=%d)\n", errno);
 		return -1;
 	}
@@ -150,113 +247,60 @@ static struct spdk_sock *
 spdk_sock_create(const char *ip, int port, enum spdk_sock_create_type type)
 {
 	struct spdk_sock *sock;
-	char buf[MAX_TMPBUF];
-	char portnum[PORTNUMLEN];
-	char *p;
-	struct addrinfo hints, *res, *res0;
-	int fd, flag;
-	int val = 1;
-	int rc;
+	int fd, rc;
+	vppcom_endpt_t endpt;
+	struct sockaddr_in servaddr;
 
 	if (ip == NULL) {
 		return NULL;
 	}
-	if (ip[0] == '[') {
-		snprintf(buf, sizeof(buf), "%s", ip + 1);
-		p = strchr(buf, ']');
-		if (p != NULL) {
-			*p = '\0';
-		}
-		ip = (const char *) &buf[0];
-	}
 
-	snprintf(portnum, sizeof portnum, "%d", port);
-	memset(&hints, 0, sizeof hints);
-	hints.ai_family = PF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = AI_NUMERICSERV;
-	hints.ai_flags |= AI_PASSIVE;
-	hints.ai_flags |= AI_NUMERICHOST;
-	rc = getaddrinfo(ip, portnum, &hints, &res0);
-	if (rc != 0) {
-		SPDK_ERRLOG("getaddrinfo() failed (errno=%d)\n", errno);
+	fd = vppcom_session_create(VPPCOM_VRF_DEFAULT, VPPCOM_PROTO_TCP, 1 /* is_nonblocking */);
+	if (fd < 0) {
+		errno = -fd;
+		SPDK_ERRLOG("vppcom_session_create() failed, errno = %d\n", errno);
 		return NULL;
 	}
 
-	/* try listen */
-	fd = -1;
-	for (res = res0; res != NULL; res = res->ai_next) {
-retry:
-		fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-		if (fd < 0) {
-			/* error */
-			continue;
-		}
-		rc = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof val);
-		if (rc != 0) {
-			close(fd);
-			/* error */
-			continue;
-		}
-		rc = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &val, sizeof val);
-		if (rc != 0) {
-			close(fd);
-			/* error */
-			continue;
-		}
+	/* TODO: Check for IPv6 */
+	servaddr.sin_family = AF_INET;
+	inet_pton(AF_INET, ip, &(servaddr.sin_addr));
+	servaddr.sin_port = htons(port);
 
-		if (type == SPDK_SOCK_CREATE_LISTEN) {
-			rc = bind(fd, res->ai_addr, res->ai_addrlen);
-			if (rc != 0) {
-				SPDK_ERRLOG("bind() failed, errno = %d\n", errno);
-				switch (errno) {
-				case EINTR:
-					/* interrupted? */
-					close(fd);
-					goto retry;
-				case EADDRNOTAVAIL:
-					SPDK_ERRLOG("IP address %s not available. "
-						    "Verify IP address in config file "
-						    "and make sure setup script is "
-						    "run before starting spdk app.\n", ip);
-				/* FALLTHROUGH */
-				default:
-					/* try next family */
-					close(fd);
-					fd = -1;
-					continue;
-				}
-			}
-			/* bind OK */
-			rc = listen(fd, 512);
-			if (rc != 0) {
-				SPDK_ERRLOG("listen() failed, errno = %d\n", errno);
-				close(fd);
-				fd = -1;
-				break;
-			}
-		} else if (type == SPDK_SOCK_CREATE_CONNECT) {
-			rc = connect(fd, res->ai_addr, res->ai_addrlen);
-			if (rc != 0) {
-				SPDK_ERRLOG("connect() failed, errno = %d\n", errno);
-				/* try next family */
-				close(fd);
-				fd = -1;
-				continue;
-			}
-		}
+	endpt.vrf = VPPCOM_VRF_DEFAULT;
+	endpt.is_ip4 = (servaddr.sin_family == AF_INET);
+	endpt.ip = (uint8_t *) & servaddr.sin_addr;
+	endpt.port = htons(port);
 
-		flag = fcntl(fd, F_GETFL);
-		if (fcntl(fd, F_SETFL, flag | O_NONBLOCK) < 0) {
-			SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%d)\n", fd, errno);
-			close(fd);
+	if (type == SPDK_SOCK_CREATE_LISTEN) {
+		rc = vppcom_session_bind(fd, &endpt);
+		if (rc != 0) {
+			errno = -rc;
+			SPDK_ERRLOG("vppcom_session_bind() failed, errno = %d\n", errno);
+			vppcom_session_close(fd);
 			fd = -1;
-			break;
+			goto end;
 		}
-		break;
-	}
-	freeaddrinfo(res0);
 
+		rc = vppcom_session_listen(fd, 10);
+		if (rc) {
+			errno = -rc;
+			SPDK_ERRLOG("vppcom_session_listen() failed, errno = %d\n", errno);
+			vppcom_session_close(fd);
+			fd = -1;
+			goto end;
+		}
+	} else if (type == SPDK_SOCK_CREATE_CONNECT) {
+		rc = vppcom_session_connect(fd, &endpt);
+		if (rc) {
+			errno = -rc;
+			SPDK_ERRLOG("vppcom_session_connect() failed, errno = %d\n", errno);
+			vppcom_session_close(fd);
+			fd = -1;
+			goto end;
+		}
+	}
+end:
 	if (fd < 0) {
 		return NULL;
 	}
@@ -264,7 +308,7 @@ retry:
 	sock = calloc(1, sizeof(*sock));
 	if (sock == NULL) {
 		SPDK_ERRLOG("sock allocation failed\n");
-		close(fd);
+		vppcom_session_close(fd);
 		return NULL;
 	}
 
@@ -287,19 +331,17 @@ spdk_sock_connect(const char *ip, int port)
 struct spdk_sock *
 spdk_sock_accept(struct spdk_sock *sock)
 {
-	struct sockaddr_storage		sa;
-	socklen_t			salen;
-	int				rc;
-	struct spdk_sock		*new_sock;
+	vppcom_endpt_t		endpt;
+	uint8_t			ip[16];
+	int			rc;
+	struct spdk_sock	*new_sock;
+	double			wait_time = -1.0;
 
-	memset(&sa, 0, sizeof(sa));
-	salen = sizeof(sa);
+	endpt.ip = ip;
 
-	assert(sock != NULL);
-
-	rc = accept(sock->fd, (struct sockaddr *)&sa, &salen);
-
-	if (rc == -1) {
+	rc = vppcom_session_accept(sock->fd, &endpt, O_NONBLOCK, wait_time);
+	if (rc < 0) {
+		errno = -rc;
 		return NULL;
 	}
 
@@ -330,7 +372,7 @@ spdk_sock_close(struct spdk_sock **sock)
 		return -1;
 	}
 
-	rc = close((*sock)->fd);
+	rc = vppcom_session_close((*sock)->fd);
 
 	if (rc == 0) {
 		free(*sock);
@@ -343,38 +385,61 @@ spdk_sock_close(struct spdk_sock **sock)
 ssize_t
 spdk_sock_recv(struct spdk_sock *sock, void *buf, size_t len)
 {
+	int rc;
+
 	if (sock == NULL) {
 		errno = EBADF;
 		return -1;
 	}
 
-	return recv(sock->fd, buf, len, MSG_DONTWAIT);
+	rc = vppcom_session_read(sock->fd, buf, len);
+	if (rc < 0) {
+		errno = -rc;
+		return -1;
+	}
+	return rc;
 }
 
 ssize_t
-spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
+spdk_sock_writev(struct spdk_sock *sock, struct iovec *__iov, int __iovcnt)
 {
+	int rc = -1;
+	ssize_t total = 0;
+	int i;
+
 	if (sock == NULL) {
 		errno = EBADF;
 		return -1;
 	}
 
-	return writev(sock->fd, iov, iovcnt);
+
+	if (__iov == 0 || __iovcnt == 0 || __iovcnt > IOV_MAX) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	for (i = 0; i < __iovcnt; ++i) {
+		rc = vppcom_session_write(sock->fd, __iov[i].iov_base,
+					  __iov[i].iov_len);
+		if (rc < 0) {
+			if (total > 0) {
+				break;
+			} else {
+				errno = -rc;
+				return -1;
+			}
+		} else {
+			total += rc;
+		}
+	}
+	return total;
 }
 
 int
 spdk_sock_set_recvlowat(struct spdk_sock *sock, int nbytes)
 {
-	int val;
-	int rc;
-
 	assert(sock != NULL);
 
-	val = nbytes;
-	rc = setsockopt(sock->fd, SOL_SOCKET, SO_RCVLOWAT, &val, sizeof val);
-	if (rc != 0) {
-		return -1;
-	}
 	return 0;
 }
 
@@ -383,8 +448,7 @@ spdk_sock_set_recvbuf(struct spdk_sock *sock, int sz)
 {
 	assert(sock != NULL);
 
-	return setsockopt(sock->fd, SOL_SOCKET, SO_RCVBUF,
-			  &sz, sizeof(sz));
+	return 0;
 }
 
 int
@@ -392,8 +456,7 @@ spdk_sock_set_sendbuf(struct spdk_sock *sock, int sz)
 {
 	assert(sock != NULL);
 
-	return setsockopt(sock->fd, SOL_SOCKET, SO_SNDBUF,
-			  &sz, sizeof(sz));
+	return 0;
 }
 
 bool
@@ -407,8 +470,9 @@ spdk_sock_is_ipv6(struct spdk_sock *sock)
 
 	memset(&sa, 0, sizeof sa);
 	salen = sizeof sa;
-	rc = getsockname(sock->fd, (struct sockaddr *) &sa, &salen);
+	rc = getsockname_vpp(sock->fd, (struct sockaddr *) &sa, &salen);
 	if (rc != 0) {
+		errno = -rc;
 		SPDK_ERRLOG("getsockname() failed (errno=%d)\n", errno);
 		return false;
 	}
@@ -427,8 +491,9 @@ spdk_sock_is_ipv4(struct spdk_sock *sock)
 
 	memset(&sa, 0, sizeof sa);
 	salen = sizeof sa;
-	rc = getsockname(sock->fd, (struct sockaddr *) &sa, &salen);
+	rc = getsockname_vpp(sock->fd, (struct sockaddr *) &sa, &salen);
 	if (rc != 0) {
+		errno = -rc;
 		SPDK_ERRLOG("getsockname() failed (errno=%d)\n", errno);
 		return false;
 	}
@@ -442,11 +507,7 @@ spdk_sock_group_create(void)
 	struct spdk_sock_group *sock_group;
 	int fd;
 
-#if defined(__linux__)
-	fd = epoll_create1(0);
-#elif defined(__FreeBSD__)
-	fd = kqueue();
-#endif
+	fd = vppcom_epoll_create();
 	if (fd == -1) {
 		return NULL;
 	}
@@ -484,21 +545,12 @@ spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 		return -1;
 	}
 
-#if defined(__linux__)
 	struct epoll_event event;
 
 	event.events = EPOLLIN;
 	event.data.ptr = sock;
 
-	rc = epoll_ctl(group->fd, EPOLL_CTL_ADD, sock->fd, &event);
-#elif defined(__FreeBSD__)
-	struct kevent event;
-	struct timespec ts = {0};
-
-	EV_SET(&event, sock->fd, EVFILT_READ, EV_ADD, 0, 0, sock);
-
-	rc = kevent(group->fd, &event, 1, NULL, 0, &ts);
-#endif
+	rc = vppcom_epoll_ctl(group->fd, EPOLL_CTL_ADD, sock->fd, &event);
 	if (rc == 0) {
 		TAILQ_INSERT_TAIL(&group->socks, sock, link);
 		sock->cb_fn = cb_fn;
@@ -512,23 +564,10 @@ int
 spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *sock)
 {
 	int rc;
-#if defined(__linux__)
 	struct epoll_event event;
 
 	/* Event parameter is ignored but some old kernel version still require it. */
-	rc = epoll_ctl(group->fd, EPOLL_CTL_DEL, sock->fd, &event);
-#elif defined(__FreeBSD__)
-	struct kevent event;
-	struct timespec ts = {0};
-
-	EV_SET(&event, sock->fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-
-	rc = kevent(group->fd, &event, 1, NULL, 0, &ts);
-	if (rc == 0 && event.flags & EV_ERROR) {
-		rc = -1;
-		errno = event.data;
-	}
-#endif
+	rc = vppcom_epoll_ctl(group->fd, EPOLL_CTL_DEL, sock->fd, &event);
 	if (rc == 0) {
 		TAILQ_REMOVE(&group->socks, sock, link);
 		sock->cb_fn = NULL;
@@ -543,6 +582,7 @@ spdk_sock_group_poll_count(struct spdk_sock_group *group, int max_events)
 {
 	struct spdk_sock *sock;
 	int num_events, i;
+	struct epoll_event events[MAX_EVENTS_PER_POLL];
 
 	if (max_events < 1) {
 		errno = -EINVAL;
@@ -557,27 +597,14 @@ spdk_sock_group_poll_count(struct spdk_sock_group *group, int max_events)
 		max_events = MAX_EVENTS_PER_POLL;
 	}
 
-#if defined(__linux__)
-	struct epoll_event events[MAX_EVENTS_PER_POLL];
-
-	num_events = epoll_wait(group->fd, events, max_events, 0);
-#elif defined(__FreeBSD__)
-	struct kevent events[MAX_EVENTS_PER_POLL];
-	struct timespec ts = {0};
-
-	num_events = kevent(group->fd, NULL, 0, events, max_events, &ts);
-#endif
+	num_events = vppcom_epoll_wait(group->fd, events, max_events, 0);
 
 	if (num_events == -1) {
 		return -1;
 	}
 
 	for (i = 0; i < num_events; i++) {
-#if defined(__linux__)
 		sock = events[i].data.ptr;
-#elif defined(__FreeBSD__)
-		sock = events[i].udata;
-#endif
 
 		assert(sock->cb_fn != NULL);
 		sock->cb_fn(sock->cb_arg, group, sock);
@@ -607,7 +634,7 @@ spdk_sock_group_close(struct spdk_sock_group **group)
 		return -1;
 	}
 
-	rc = close((*group)->fd);
+	rc = vppcom_session_close((*group)->fd);
 
 	if (rc == 0) {
 		free(*group);
@@ -620,9 +647,11 @@ spdk_sock_group_close(struct spdk_sock_group **group)
 void
 spdk_sock_init(void)
 {
+	vppcom_app_create("SPDK_APP");
 }
 
 void
 spdk_sock_fini(void)
 {
+	vppcom_app_destroy();
 }
