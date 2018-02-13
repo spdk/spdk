@@ -260,6 +260,8 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 nsid                    | Optional | number      | Namespace ID between 1 and 4294967294, inclusive. Default: Automatically assign NSID.
 bdev_name               | Required | string      | Name of bdev to expose as a namespace.
+nguid                   | Optional | string      | 16-byte namespace globally unique identifier in hexadecimal (e.g. "ABCDEF0123456789ABCDEF0123456789")
+eui64                   | Optional | string      | 8-byte namespace EUI-64 in hexadecimal (e.g. "ABCDEF0123456789")
 
 ### Example
 

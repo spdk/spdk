@@ -376,6 +376,20 @@ struct spdk_nvmf_ns_opts {
 	 * Set to 0 to automatically assign a free NSID.
 	 */
 	uint32_t nsid;
+
+	/**
+	 * Namespace Globally Unique Identifier
+	 *
+	 * Fill with 0s if not specified.
+	 */
+	uint8_t nguid[16];
+
+	/**
+	 * IEEE Extended Unique Identifier
+	 *
+	 * Fill with 0s if not specified.
+	 */
+	uint8_t eui64[8];
 };
 
 /**
@@ -456,6 +470,16 @@ uint32_t spdk_nvmf_ns_get_id(const struct spdk_nvmf_ns *ns);
  * \return Backing bdev of ns.
  */
 struct spdk_bdev *spdk_nvmf_ns_get_bdev(struct spdk_nvmf_ns *ns);
+
+/**
+ * Get the options specified for a namespace.
+ *
+ * \param ns Namespace to query.
+ * \param opts Output parameter for options.
+ * \param opts_size sizeof(*opts)
+ */
+void spdk_nvmf_ns_get_opts(const struct spdk_nvmf_ns *ns, struct spdk_nvmf_ns_opts *opts,
+			   size_t opts_size);
 
 const char *spdk_nvmf_subsystem_get_sn(const struct spdk_nvmf_subsystem *subsystem);
 
