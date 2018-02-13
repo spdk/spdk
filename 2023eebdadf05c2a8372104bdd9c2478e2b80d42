@@ -1,0 +1,182 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "baf722c2_40f82500",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 907,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-13T12:02:45Z",
+      "side": 1,
+      "message": "Could we move declarations like this to top of the test function?",
+      "range": {
+        "startLine": 907,
+        "startChar": 8,
+        "endLine": 907,
+        "endChar": 31
+      },
+      "revId": "2023eebdadf05c2a8372104bdd9c2478e2b80d42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c37c878f_44e4d325",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 915,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-13T12:02:45Z",
+      "side": 1,
+      "message": "Remove?",
+      "range": {
+        "startLine": 914,
+        "startChar": 8,
+        "endLine": 915,
+        "endChar": 29
+      },
+      "revId": "2023eebdadf05c2a8372104bdd9c2478e2b80d42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5960382f_21a414af",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 951,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-13T12:02:45Z",
+      "side": 1,
+      "message": "Instead of creating each nbd_nameX variable separately - could we move this declaration and use single-line list comprehension and create all names at once?",
+      "range": {
+        "startLine": 951,
+        "startChar": 8,
+        "endLine": 951,
+        "endChar": 17
+      },
+      "revId": "2023eebdadf05c2a8372104bdd9c2478e2b80d42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1eb00c90_c2383f81",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 966,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-13T12:02:45Z",
+      "side": 1,
+      "message": "remove?",
+      "range": {
+        "startLine": 966,
+        "startChar": 8,
+        "endLine": 966,
+        "endChar": 70
+      },
+      "revId": "2023eebdadf05c2a8372104bdd9c2478e2b80d42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8029a10b_e05e4656",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 981,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-13T12:02:45Z",
+      "side": 1,
+      "message": "This could use a loop",
+      "range": {
+        "startLine": 978,
+        "startChar": 0,
+        "endLine": 981,
+        "endChar": 53
+      },
+      "revId": "2023eebdadf05c2a8372104bdd9c2478e2b80d42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b5a20bc_1818fd67",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 1045,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-13T12:02:45Z",
+      "side": 1,
+      "message": "\"should fail\"\nAlso, Id rephrase this sentence.\n\"Error: creating snapshot of snapshot unexpectedly succeeded\"?",
+      "range": {
+        "startLine": 1045,
+        "startChar": 63,
+        "endLine": 1045,
+        "endChar": 69
+      },
+      "revId": "2023eebdadf05c2a8372104bdd9c2478e2b80d42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e411652_2ba809e8",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 1112,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-13T12:02:45Z",
+      "side": 1,
+      "message": "Similar as in previous test cases - try to move variables like that t top of the function and maybe use list comprehension where possible to create all needed values/strings at once instead on doing it separately",
+      "range": {
+        "startLine": 1112,
+        "startChar": 8,
+        "endLine": 1112,
+        "endChar": 31
+      },
+      "revId": "2023eebdadf05c2a8372104bdd9c2478e2b80d42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9270a707_745418e8",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 1137,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-13T12:02:45Z",
+      "side": 1,
+      "message": "Somewhere here I suppose you should stop NBD bdevs.",
+      "revId": "2023eebdadf05c2a8372104bdd9c2478e2b80d42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
