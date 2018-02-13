@@ -35,7 +35,7 @@
 
 #include "spdk_cunit.h"
 
-#include "sock.c"
+#include "net/sock.c"
 
 static void
 sock(void)

@@ -38,7 +38,7 @@
 
 #include "lib/test_env.c"
 
-#include "lvol.c"
+#include "lvol/lvol.c"
 
 #define DEV_BUFFER_SIZE (64 * 1024 * 1024)
 #define DEV_BUFFER_BLOCKLEN (4096)
