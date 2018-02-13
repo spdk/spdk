@@ -39,7 +39,7 @@
 #include "spdk_internal/mock.h"
 #include "lib/test_env.c"
 
-#include "vhost.c"
+#include "vhost/vhost.c"
 
 DEFINE_STUB(rte_vhost_driver_unregister, int, (const char *path), 0);
 DEFINE_STUB(spdk_event_allocate, struct spdk_event *,

@@ -38,7 +38,7 @@
 #include "spdk_internal/mock.h"
 #include "lib/test_env.c"
 
-#include "vhost_blk.c"
+#include "vhost/vhost_blk.c"
 #include "unit/lib/vhost/test_vhost.c"
 
 #include "spdk_internal/bdev.h"
