@@ -36,4 +36,4 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 TEST_FILE = ioat_ut.c
 
-include $(SPDK_ROOT_DIR)/mk/ioat.unittest.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
