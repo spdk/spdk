@@ -35,7 +35,7 @@
 
 #include "spdk_cunit.h"
 
-#include "subsystem.c"
+#include "event/subsystem.c"
 
 static struct spdk_subsystem g_ut_subsystems[8];
 static struct spdk_subsystem_depend g_ut_subsystem_deps[8];
