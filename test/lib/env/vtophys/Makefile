@@ -35,18 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-APP = vtophys
+LIBS += $(ENV_LINKER_ARGS)
+TEST_FILE = vtophys.c
 
-C_SRCS = vtophys.c
-
-LIBS += $(SPDK_LIBS) $(ENV_LINKER_ARGS)
-
-all: $(APP)
-
-$(APP): $(OBJS) $(SPDK_LIBS) $(ENV_LIBS)
-	$(LINK_C)
-
-clean:
-	$(CLEAN_C) $(APP)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk

@@ -31,7 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "memory.c"
+#include "env_dpdk/memory.c"
 
 #include "test_env.c"
 #include "spdk_cunit.h"
