@@ -1675,6 +1675,7 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct spdk_nvme_qpair *qpair, *tmp;
 
+	SPDK_DEBUGLOG(SPDK_LOG_NVME, "Prepare to destruct ctrlr: %s\n", ctrlr->trid.traddr);
 	TAILQ_FOREACH_SAFE(qpair, &ctrlr->active_io_qpairs, tailq, tmp) {
 		spdk_nvme_ctrlr_free_io_qpair(qpair);
 	}
