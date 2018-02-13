@@ -35,7 +35,7 @@
 
 #include "spdk_cunit.h"
 
-#include "crc16.c"
+#include "util/crc16.c"
 
 static void
 test_crc16_t10dif(void)
