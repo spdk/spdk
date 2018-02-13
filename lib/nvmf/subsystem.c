@@ -995,6 +995,14 @@ spdk_nvmf_ns_get_bdev(struct spdk_nvmf_ns *ns)
 	return ns->bdev;
 }
 
+void
+spdk_nvmf_ns_get_opts(const struct spdk_nvmf_ns *ns, struct spdk_nvmf_ns_opts *opts,
+		      size_t opts_size)
+{
+	memset(opts, 0, opts_size);
+	memcpy(opts, &ns->opts, spdk_min(sizeof(ns->opts), opts_size));
+}
+
 const char *
 spdk_nvmf_subsystem_get_sn(const struct spdk_nvmf_subsystem *subsystem)
 {
