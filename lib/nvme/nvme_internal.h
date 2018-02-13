@@ -568,6 +568,7 @@ int	nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid, void *devhandle,
 			 spdk_nvme_probe_cb probe_cb, void *cb_ctx);
 
 int	nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr);
+void	nvme_ctrlr_destruct_finish(struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove);
 int	nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr);
