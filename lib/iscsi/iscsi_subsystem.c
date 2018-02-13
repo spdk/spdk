@@ -818,7 +818,6 @@ spdk_iscsi_app_read_parameters(void)
 	return 0;
 }
 
-
 static void
 spdk_iscsi_init_complete(int rc)
 {
@@ -829,6 +828,52 @@ spdk_iscsi_init_complete(int rc)
 	g_init_cb_arg = NULL;
 
 	cb_fn(cb_arg, rc);
+}
+
+static void
+spdk_iscsi_poll_group_poll(void *ctx)
+{
+	struct spdk_iscsi_poll_group *group = ctx;
+	struct spdk_iscsi_conn *conn, *tmp;
+
+	STAILQ_FOREACH_SAFE(conn, &group->connections, link, tmp) {
+		conn->fn(conn);
+	}
+}
+
+static void
+iscsi_create_poll_group_done(void *ctx)
+{
+	spdk_iscsi_init_complete(0);
+}
+
+static void
+iscsi_create_poll_group(void *ctx)
+{
+	struct spdk_iscsi_poll_group *pg;
+
+	pg = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
+	pg->core = spdk_env_get_current_core();
+	assert(pg != NULL);
+
+	STAILQ_INIT(&pg->connections);
+	pg->poller = spdk_poller_register(spdk_iscsi_poll_group_poll, pg, 0);
+}
+
+static void
+spdk_initialize_iscsi_poll_group(void)
+{
+	size_t g_num_poll_groups = spdk_env_get_last_core() + 1;
+
+	g_spdk_iscsi.poll_group = calloc(g_num_poll_groups, sizeof(struct spdk_iscsi_poll_group));
+	if (!g_spdk_iscsi.poll_group) {
+		SPDK_ERRLOG("Failed to allocated iscsi poll group\n");
+		spdk_iscsi_init_complete(-1);
+		return;
+	}
+
+	/* Send a message to each thread and create a poll group */
+	spdk_for_each_thread(iscsi_create_poll_group, NULL, iscsi_create_poll_group_done);
 }
 
 void
@@ -868,7 +913,7 @@ spdk_iscsi_init(spdk_iscsi_init_cb cb_fn, void *cb_arg)
 		return;
 	}
 
-	spdk_iscsi_init_complete(0);
+	spdk_initialize_iscsi_poll_group();
 }
 
 void
@@ -892,6 +937,7 @@ spdk_iscsi_fini_done(void)
 	spdk_iscsi_portal_grp_array_destroy();
 	free(g_spdk_iscsi.authfile);
 	free(g_spdk_iscsi.nodebase);
+	free(g_spdk_iscsi.poll_group);
 
 	pthread_mutex_destroy(&g_spdk_iscsi.mutex);
 	g_fini_cb_fn(g_fini_cb_arg);
