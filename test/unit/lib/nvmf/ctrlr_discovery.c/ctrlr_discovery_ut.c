@@ -36,6 +36,7 @@
 #include "spdk_cunit.h"
 
 #include "ctrlr_discovery.c"
+#include "subsystem.c"
 
 SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 

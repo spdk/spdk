@@ -45,6 +45,7 @@ struct spdk_trace_flag SPDK_LOG_NVME = {
 };
 
 #include "nvme/nvme_ctrlr.c"
+#include "nvme/nvme_quirks.c"
 
 struct nvme_driver _g_nvme_driver = {
 	.lock = PTHREAD_MUTEX_INITIALIZER,
