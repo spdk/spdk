@@ -162,6 +162,12 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 void
+nvme_ctrlr_destruct_finish(struct spdk_nvme_ctrlr *ctrlr)
+{
+	abort();
+}
+
+void
 nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
 	abort();
