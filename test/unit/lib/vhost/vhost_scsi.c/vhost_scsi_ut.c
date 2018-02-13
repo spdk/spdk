@@ -39,8 +39,8 @@
 #include "lib/test_env.c"
 
 #include "spdk/scsi.h"
-#include "vhost_scsi.c"
-#include "../scsi/scsi_internal.h"
+#include "vhost/vhost_scsi.c"
+#include "scsi/scsi_internal.h"
 #include "unit/lib/vhost/test_vhost.c"
 
 #include "spdk/env.h"
