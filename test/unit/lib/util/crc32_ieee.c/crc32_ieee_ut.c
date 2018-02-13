@@ -35,8 +35,8 @@
 
 #include "spdk_cunit.h"
 
-#include "crc32.c"
-#include "crc32_ieee.c"
+#include "util/crc32.c"
+#include "util/crc32_ieee.c"
 
 static void
 test_crc32_ieee(void)

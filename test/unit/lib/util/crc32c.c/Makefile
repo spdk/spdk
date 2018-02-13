@@ -35,19 +35,6 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-CFLAGS += -I$(SPDK_ROOT_DIR)/test
-CFLAGS += -I$(SPDK_ROOT_DIR)/lib/util
-APP = crc32c_ut
-C_SRCS := crc32c_ut.c
+TEST_FILE = crc32c_ut.c
 
-LIBS += -lcunit
-
-all : $(APP)
-
-$(APP) : $(OBJS) $(SPDK_LIBS)
-	$(LINK_C)
-
-clean :
-	$(CLEAN_C) $(APP)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk

@@ -35,7 +35,7 @@
 
 #include "spdk_cunit.h"
 
-#include "string.c"
+#include "util/string.c"
 
 static void
 test_parse_ip_addr(void)

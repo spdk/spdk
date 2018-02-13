@@ -35,8 +35,8 @@
 
 #include "spdk_cunit.h"
 
-#include "crc32.c"
-#include "crc32c.c"
+#include "util/crc32.c"
+#include "util/crc32c.c"
 
 static void
 test_crc32c(void)
