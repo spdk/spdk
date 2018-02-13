@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "278e6d0b_6199640c",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-13T15:39:49Z",
+      "side": 1,
+      "message": "This file is for sourcing. Can you remove header (shebang and variables declaration) as all those variables are set in scripts that source this file?",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 4,
+        "endChar": 70
+      },
+      "revId": "509d1ad3ef63017545ea55e7c61b1da6c475b2c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1a2b9bf_bfecfb90",
+        "filename": "test/vhost/hotplug/scsi_hotplug.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-13T15:39:49Z",
+      "side": 1,
+      "message": "This should be already set by including\ntest/vhost/hotplug/common.sh -\u003e . $BASE_DIR/../common/common.sh\n\nCan you remove it?",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 4,
+        "endChar": 70
+      },
+      "revId": "509d1ad3ef63017545ea55e7c61b1da6c475b2c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0f3ad2a1_32f440bd",
+        "filename": "test/vhost/hotplug/scsi_hotplug.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-13T15:39:49Z",
+      "side": 1,
+      "message": "Is this working as you this is working? if \"$used_vms\" have mutliple  vms, is this starting all of them or only first one?",
+      "range": {
+        "startLine": 42,
+        "startChar": 4,
+        "endLine": 42,
+        "endChar": 29
+      },
+      "revId": "509d1ad3ef63017545ea55e7c61b1da6c475b2c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c75ec4da_8a558285",
+        "filename": "test/vhost/hotplug/scsi_hotplug.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-13T15:39:49Z",
+      "side": 1,
+      "message": "Can you just source this file to reduce log size?",
+      "range": {
+        "startLine": 86,
+        "startChar": 4,
+        "endLine": 86,
+        "endChar": 86
+      },
+      "revId": "509d1ad3ef63017545ea55e7c61b1da6c475b2c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
