@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "54b98c90_fb64a771",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1265,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-13T09:36:36Z",
+      "side": 1,
+      "message": "OK, thank you.",
+      "parentUuid": "a4bfcdcb_2b3e2ac3",
+      "range": {
+        "startLine": 1265,
+        "startChar": 3,
+        "endLine": 1265,
+        "endChar": 22
+      },
+      "revId": "249e50550b096deeb71bcf696bb2e6e5b8f76f27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cc3c539f_c5441e38",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 5
@@ -84,6 +108,30 @@
       "side": 1,
       "message": "This is for the I/O channel associated thread. Could be different than the qos_thread.",
       "parentUuid": "cc3c539f_c5441e38",
+      "range": {
+        "startLine": 1309,
+        "startChar": 4,
+        "endLine": 1310,
+        "endChar": 35
+      },
+      "revId": "249e50550b096deeb71bcf696bb2e6e5b8f76f27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9fcc83e5_a5ab326e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1310,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-13T09:36:36Z",
+      "side": 1,
+      "message": "Both of this and the following make sense.",
+      "parentUuid": "bae5fb2f_5adc7f4b",
       "range": {
         "startLine": 1309,
         "startChar": 4,
@@ -178,6 +226,30 @@
       "side": 1,
       "message": "This could be a normal bdev hannel. So that the qos_thread and another thread can be different.",
       "parentUuid": "52ffee3a_27285517",
+      "range": {
+        "startLine": 1333,
+        "startChar": 2,
+        "endLine": 1333,
+        "endChar": 46
+      },
+      "revId": "249e50550b096deeb71bcf696bb2e6e5b8f76f27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d2fac95_ebe91d2c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1333,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-13T09:36:36Z",
+      "side": 1,
+      "message": "OK, thank you.",
+      "parentUuid": "b9714c1c_ec234e66",
       "range": {
         "startLine": 1333,
         "startChar": 2,
