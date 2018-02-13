@@ -91,6 +91,52 @@
       "revId": "509d1ad3ef63017545ea55e7c61b1da6c475b2c2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da63e6cc_3d9e1f7c",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-13T15:41:16Z",
+      "side": 1,
+      "message": "Wrong indentation.",
+      "range": {
+        "startLine": 25,
+        "startChar": 32,
+        "endLine": 25,
+        "endChar": 72
+      },
+      "revId": "509d1ad3ef63017545ea55e7c61b1da6c475b2c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1318d7e_e082d5c5",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-13T15:41:16Z",
+      "side": 1,
+      "message": "Wrong indentation.",
+      "range": {
+        "startLine": 167,
+        "startChar": 2,
+        "endLine": 171,
+        "endChar": 60
+      },
+      "revId": "509d1ad3ef63017545ea55e7c61b1da6c475b2c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
