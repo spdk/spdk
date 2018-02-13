@@ -38,6 +38,7 @@ LIB := $(call spdk_lib_list_to_files,$(LIBNAME))
 .PHONY: all clean $(DIRS-y)
 
 all: $(LIB) $(DIRS-y)
+	@:
 
 clean: $(DIRS-y)
 	$(CLEAN_C) $(LIB)
