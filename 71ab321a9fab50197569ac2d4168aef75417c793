@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0de1efbe_d88c916f",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-14T21:09:10Z",
+      "side": 1,
+      "message": "Agreed, but I chose the current formulation so that integer overflow can\u0027t occur (assuming we don\u0027t have a bug elsewhere - this depends on the assumption that request-\u003esend_buf_size \u003e\u003d request-\u003esend_len).",
+      "parentUuid": "9fe9d7f0_2891fb80",
+      "revId": "71ab321a9fab50197569ac2d4168aef75417c793",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "428b91d9_fa0dd3b0",
         "filename": "lib/jsonrpc/jsonrpc_server.c",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2018-02-14T21:02:49Z",
       "side": 1,
       "message": "I think this should be \u003e\u003d.",
+      "revId": "71ab321a9fab50197569ac2d4168aef75417c793",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5afd996f_9e89b877",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-14T21:09:10Z",
+      "side": 1,
+      "message": "Right, I\u0027ll fix that up.",
+      "parentUuid": "428b91d9_fa0dd3b0",
       "revId": "71ab321a9fab50197569ac2d4168aef75417c793",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
