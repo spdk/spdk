@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a4c51e7_0dac8e2d",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-14T23:55:45Z",
+      "side": 1,
+      "message": "This will fail if Nvme0n1 is smaller than 50GB.  We should probably handle that case somehow, since emulated NVMe disks (or even real devices with multiple namespace support) could possibly be smaller.",
+      "revId": "b40e2332e245f8c221ffa6f89eff38f96654302f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
