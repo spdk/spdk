@@ -233,14 +233,10 @@ nvmf_tgt_advance_state(void *arg1, void *arg2)
 
 		switch (g_tgt.state) {
 		case NVMF_TGT_INIT_NONE: {
-			uint32_t core;
-
 			g_tgt.state = NVMF_TGT_INIT_PARSE_CONFIG;
 
 			/* Find the maximum core number */
-			SPDK_ENV_FOREACH_CORE(core) {
-				g_num_poll_groups = spdk_max(g_num_poll_groups, core + 1);
-			}
+			g_num_poll_groups = spdk_env_get_last_core() + 1;
 			assert(g_num_poll_groups > 0);
 
 			g_poll_groups = calloc(g_num_poll_groups, sizeof(*g_poll_groups));
