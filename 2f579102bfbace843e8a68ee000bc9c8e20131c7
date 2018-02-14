@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "229da8a1_c48be25b",
+        "filename": "doc/README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-14T17:41:14Z",
+      "side": 1,
+      "message": "This @ref won\u0027t work, since this file isn\u0027t built by Doxygen - especially relevant since this file is about how to get Doxygen installed in the first place. :)  This is intended to be rendered as GitHub markdown when viewed from the repository browser: https://github.com/spdk/spdk/blob/master/doc/README.md\n\nYou can just use a normal Markdown link here, e.g.:\n\n    see the [Installing Prerequisites](http://www.spdk.io/doc/getting_started.html) guide for more details",
+      "range": {
+        "startLine": 12,
+        "startChar": 60,
+        "endLine": 13,
+        "endChar": 29
+      },
+      "revId": "2f579102bfbace843e8a68ee000bc9c8e20131c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
