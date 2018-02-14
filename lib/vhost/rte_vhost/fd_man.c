@@ -119,6 +119,7 @@ fdset_add_nolock(struct fdset *pfdset, int idx, int fd,
 	pfdentry->rcb = rcb;
 	pfdentry->wcb = wcb;
 	pfdentry->dat = dat;
+	pfdentry->removed = 0;
 
 	pfd->fd = fd;
 	pfd->events  = rcb ? POLLIN : 0;
@@ -129,14 +130,10 @@ fdset_add_nolock(struct fdset *pfdset, int idx, int fd,
 static int
 fdset_del_nolock(struct fdset *pfdset, int idx)
 {
-	if (pfdset->fd[idx].busy) {
-		/* busy indicates r/wcb is executing! */
-		return -1;
-	}
-
 	pfdset->fd[idx].fd = -1;
 	pfdset->fd[idx].rcb = pfdset->fd[idx].wcb = NULL;
 	pfdset->fd[idx].dat = NULL;
+	pfdset->fd[idx].removed = 0;
 	fdset_shrink_nolock(pfdset);
 	return 0;
 }
@@ -203,15 +200,12 @@ fdset_del(struct fdset *pfdset, int fd)
 	if (pfdset == NULL || fd == -1)
 		return -1;
 
-	do {
-		pthread_mutex_lock(&pfdset->fd_mutex);
-
-		i = fdset_find_fd(pfdset, fd);
-		if (i != -1 && fdset_del_nolock(pfdset, i) == 0) {
-			i = -1;
-		}
-		pthread_mutex_unlock(&pfdset->fd_mutex);
-	} while (i != -1);
+	pthread_mutex_lock(&pfdset->fd_mutex);
+	i = fdset_find_fd(pfdset, fd);
+	if (i != -1) {
+		pfdset->fd[i].removed = 1;
+	}
+	pthread_mutex_unlock(&pfdset->fd_mutex);
 
 	return 0;
 }
@@ -270,7 +264,8 @@ fdset_event_dispatch(void *arg)
 			fd = pfdentry->fd;
 			pfd = &pfdset->rwfds[i];
 
-			if (fd < 0) {
+			if (fd < 0 || pfdentry->removed) {
+				pfdentry->fd = -1;
 				need_shrink = 1;
 				pthread_mutex_unlock(&pfdset->fd_mutex);
 				continue;
@@ -286,7 +281,6 @@ fdset_event_dispatch(void *arg)
 			rcb = pfdentry->rcb;
 			wcb = pfdentry->wcb;
 			dat = pfdentry->dat;
-			pfdentry->busy = 1;
 
 			pthread_mutex_unlock(&pfdset->fd_mutex);
 
@@ -294,7 +288,6 @@ fdset_event_dispatch(void *arg)
 				rcb(fd, dat, &remove1);
 			if (wcb && pfd->revents & (POLLOUT | FDPOLLERR))
 				wcb(fd, dat, &remove2);
-			pfdentry->busy = 0;
 			/*
 			 * fdset_del needs to check busy flag.
 			 * We don't allow fdset_del to be called in callback

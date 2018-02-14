@@ -52,7 +52,7 @@ struct fdentry {
 	fd_cb rcb;	/* callback when this fd is readable. */
 	fd_cb wcb;	/* callback when this fd is writeable. */
 	void *dat;	/* fd context */
-	int busy;	/* whether this entry is being used in cb. */
+	int removed;	/* fd was requested to be removed from its fdset. */
 };
 
 struct fdset {
