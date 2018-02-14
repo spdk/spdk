@@ -211,13 +211,15 @@ test_spdk_nvmf_subsystem_add_ns(void)
 	CU_ASSERT(nsid == 1);
 	CU_ASSERT(subsystem.max_nsid == 1);
 	SPDK_CU_ASSERT_FATAL(subsystem.ns != NULL);
-	CU_ASSERT(subsystem.ns[nsid - 1].bdev == &bdev1);
+	SPDK_CU_ASSERT_FATAL(subsystem.ns[nsid - 1] != NULL);
+	CU_ASSERT(subsystem.ns[nsid - 1]->bdev == &bdev1);
 
 	/* Request a specific NSID */
 	nsid = spdk_nvmf_subsystem_add_ns(&subsystem, &bdev2, 5);
 	CU_ASSERT(nsid == 5);
 	CU_ASSERT(subsystem.max_nsid == 5);
-	CU_ASSERT(subsystem.ns[nsid - 1].bdev == &bdev2);
+	SPDK_CU_ASSERT_FATAL(subsystem.ns[nsid - 1] != NULL);
+	CU_ASSERT(subsystem.ns[nsid - 1]->bdev == &bdev2);
 
 	/* Request an NSID that is already in use */
 	nsid = spdk_nvmf_subsystem_add_ns(&subsystem, &bdev2, 5);
@@ -228,6 +230,9 @@ test_spdk_nvmf_subsystem_add_ns(void)
 	nsid = spdk_nvmf_subsystem_add_ns(&subsystem, &bdev2, 0xFFFFFFFF);
 	CU_ASSERT(nsid == 0);
 	CU_ASSERT(subsystem.max_nsid == 5);
+
+	spdk_nvmf_subsystem_remove_ns(&subsystem, 1);
+	spdk_nvmf_subsystem_remove_ns(&subsystem, 5);
 
 	free(subsystem.ns);
 }
