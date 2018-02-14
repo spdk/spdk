@@ -46,7 +46,7 @@
 #define MAX_TMPBUF 1024
 #define PORTNUMLEN 32
 
-#define MAX_EVENTS_PER_POLL 32
+#define MAX_EVENTS_PER_POLL 4096
 
 struct spdk_sock {
 	int			fd;
