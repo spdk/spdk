@@ -35,22 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-APP = blobfs_async_ut
+SPDK_LIB_LIST = blob
+TEST_FILE = blobfs_async_ut.c
 
-C_SRCS := blobfs_async_ut.c
-CFLAGS += -I$(SPDK_ROOT_DIR)/lib/blobfs -I$(SPDK_ROOT_DIR)/lib/blob
-CFLAGS += -I$(SPDK_ROOT_DIR)/test
-
-SPDK_LIB_LIST = blob log util
-
-LIBS += $(SPDK_LIB_LINKER_ARGS) -lcunit
-
-all : $(APP)
-
-$(APP) : $(OBJS) $(SPDK_LIB_FILES)
-	$(LINK_C)
-
-clean :
-	$(CLEAN_C) $(APP)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
