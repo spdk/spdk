@@ -38,8 +38,8 @@
 #include "lib/test_env.c"
 
 #include "spdk_cunit.h"
-#include "blobfs.c"
-#include "tree.c"
+#include "blobfs/blobfs.c"
+#include "blobfs/tree.c"
 
 #include "unit/lib/blob/bs_dev_common.c"
 

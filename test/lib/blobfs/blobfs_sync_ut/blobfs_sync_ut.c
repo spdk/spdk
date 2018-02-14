@@ -42,8 +42,8 @@
 #include "spdk_cunit.h"
 #include "unit/lib/blob/bs_dev_common.c"
 #include "lib/test_env.c"
-#include "blobfs.c"
-#include "tree.c"
+#include "blobfs/blobfs.c"
+#include "blobfs/tree.c"
 
 struct spdk_filesystem *g_fs;
 struct spdk_file *g_file;
