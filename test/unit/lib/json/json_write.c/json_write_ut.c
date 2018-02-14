@@ -109,6 +109,9 @@ write_cb(void *cb_ctx, const void *data, size_t size)
 #define VAL_INT32(i) CU_ASSERT(spdk_json_write_int32(w, i) == 0);
 #define VAL_UINT32(u) CU_ASSERT(spdk_json_write_uint32(w, u) == 0);
 
+#define VAL_INT64(i) CU_ASSERT(spdk_json_write_int64(w, i) == 0);
+#define VAL_UINT64(u) CU_ASSERT(spdk_json_write_uint64(w, u) == 0);
+
 #define VAL_ARRAY_BEGIN() CU_ASSERT(spdk_json_write_array_begin(w) == 0)
 #define VAL_ARRAY_END() CU_ASSERT(spdk_json_write_array_end(w) == 0)
 
@@ -346,6 +349,62 @@ test_write_number_uint32(void)
 	BEGIN();
 	VAL_UINT32(4294967295);
 	END("4294967295");
+}
+
+static void
+test_write_number_int64(void)
+{
+	struct spdk_json_write_ctx *w;
+
+	BEGIN();
+	VAL_INT64(0);
+	END("0");
+
+	BEGIN();
+	VAL_INT64(1);
+	END("1");
+
+	BEGIN();
+	VAL_INT64(123);
+	END("123");
+
+	BEGIN();
+	VAL_INT64(-123);
+	END("-123");
+
+	BEGIN();
+	VAL_INT64(INT64_MAX);
+	END("9223372036854775807");
+
+	BEGIN();
+	VAL_INT64(INT64_MIN);
+	END("-9223372036854775808");
+}
+
+static void
+test_write_number_uint64(void)
+{
+	struct spdk_json_write_ctx *w;
+
+	BEGIN();
+	VAL_UINT64(0);
+	END("0");
+
+	BEGIN();
+	VAL_UINT64(1);
+	END("1");
+
+	BEGIN();
+	VAL_UINT64(123);
+	END("123");
+
+	BEGIN();
+	VAL_UINT64(INT64_MAX);
+	END("9223372036854775807");
+
+	BEGIN();
+	VAL_UINT64(UINT64_MAX);
+	END("18446744073709551615");
 }
 
 static void
@@ -665,6 +724,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "write_string_utf16le", test_write_string_utf16le) == NULL ||
 		CU_add_test(suite, "write_number_int32", test_write_number_int32) == NULL ||
 		CU_add_test(suite, "write_number_uint32", test_write_number_uint32) == NULL ||
+		CU_add_test(suite, "write_number_int64", test_write_number_int64) == NULL ||
+		CU_add_test(suite, "write_number_uint64", test_write_number_uint64) == NULL ||
 		CU_add_test(suite, "write_array", test_write_array) == NULL ||
 		CU_add_test(suite, "write_object", test_write_object) == NULL ||
 		CU_add_test(suite, "write_nesting", test_write_nesting) == NULL ||
