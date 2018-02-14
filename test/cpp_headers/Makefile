@@ -43,6 +43,7 @@ CXX_SRCS := $(patsubst %.h,%.cpp,$(notdir $(HEADERS)))
 	echo '#include "spdk/$(notdir $<)"' > $@
 
 all : $(CXX_SRCS) $(OBJS)
+	@:
 
 clean :
 	$(CLEAN_C) $(CXX_SRCS)

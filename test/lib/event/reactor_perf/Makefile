@@ -43,6 +43,7 @@ SPDK_LIB_LIST = event trace conf util log rpc jsonrpc json
 LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
 
 all : $(APP)
+	@:
 
 $(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
 	$(LINK_C)

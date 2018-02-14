@@ -41,6 +41,7 @@ $(DESTDIR)$(includedir)%.h:
 	$(INSTALL_HEADER)
 
 all:
+	@:
 
 clean:
 

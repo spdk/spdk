@@ -42,6 +42,7 @@ CXX_SRCS = iscsi_top.cpp
 APP = iscsi_top
 
 all: $(APP)
+	@:
 
 $(APP) : $(OBJS)
 	$(LINK_CXX)

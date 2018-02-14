@@ -39,6 +39,8 @@ DIRS-$(CONFIG_FIO_PLUGIN) = fio_plugin
 .PHONY: all clean $(DIRS-y)
 
 all: $(DIRS-y)
+	@:
+
 clean: $(DIRS-y)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
