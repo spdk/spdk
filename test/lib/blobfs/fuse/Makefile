@@ -49,6 +49,7 @@ LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
 LIBS+= -L/usr/local/lib -lfuse3
 
 all : $(APP)
+	@:
 
 $(APP) : $(OBJS) $(SPDK_LIB_FILES)
 	$(LINK_C)

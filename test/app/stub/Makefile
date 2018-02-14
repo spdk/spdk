@@ -49,6 +49,7 @@ LIBS += -libverbs -lrdmacm
 endif
 
 all : $(APP)
+	@:
 
 $(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
 	$(LINK_C)

@@ -40,6 +40,7 @@ CXX_SRCS := trace.cpp
 APP = spdk_trace
 
 all: $(APP)
+	@:
 
 $(APP): $(OBJS) $(SPDK_LIBS)
 	$(LINK_CXX)
