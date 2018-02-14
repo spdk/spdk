@@ -103,7 +103,6 @@ rm -f scripts/posix.log
 if hash pep8; then
 	echo -n "Checking Python style..."
 
-	PEP8_ARGS+=" --ignore=E302" # ignore 'E302 expected 2 blank lines, found 1'
 	PEP8_ARGS+=" --max-line-length=140"
 
 	error=0

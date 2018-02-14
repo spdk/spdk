@@ -78,6 +78,7 @@ def verify_trace_flag_rpc_methods(rpc_py, rpc_param):
 
     print "verify_trace_flag_rpc_methods passed"
 
+
 def verify_iscsi_connection_rpc_methods(rpc_py):
     rpc = spdk_rpc(rpc_py)
     output = rpc.get_iscsi_connections()
@@ -120,6 +121,7 @@ def verify_iscsi_connection_rpc_methods(rpc_py):
            "get_iscsi_connections returned {}, expected empty".format(jsonvalues))
 
     print "verify_iscsi_connection_rpc_methods passed"
+
 
 def verify_scsi_devices_rpc_methods(rpc_py):
     rpc = spdk_rpc(rpc_py)
@@ -357,6 +359,7 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
 
     print "verify_target_nodes_rpc_methods passed."
 
+
 def verify_get_interfaces(rpc_py):
     rpc = spdk_rpc(rpc_py)
     nics = json.loads(rpc.get_interfaces())
@@ -366,6 +369,7 @@ def verify_get_interfaces(rpc_py):
     verify(nics_names == ifcfg_nics, 1, "get_interfaces returned {}".format(nics))
     print "verify_get_interfaces passed."
 
+
 def help_get_interface_ip_list(rpc_py, nic_name):
     rpc = spdk_rpc(rpc_py)
     nics = json.loads(rpc.get_interfaces())
@@ -373,6 +377,7 @@ def help_get_interface_ip_list(rpc_py, nic_name):
     verify(len(nic) != 0, 1,
            "Nic name: {} is not found in {}".format(nic_name, [x["name"] for x in nics]))
     return nic[0]["ip_addr"]
+
 
 def verify_add_delete_ip_address(rpc_py):
     rpc = spdk_rpc(rpc_py)
@@ -408,6 +413,7 @@ def verify_add_delete_ip_address(rpc_py):
                    (faked_ip, x["name"]))
     print "verify_add_delete_ip_address passed."
 
+
 def verify_add_nvme_bdev_rpc_methods(rpc_py):
     rpc = spdk_rpc(rpc_py)
     test_pass = 0
@@ -428,6 +434,7 @@ def verify_add_nvme_bdev_rpc_methods(rpc_py):
             pass
         verify(test_pass == 1, 1, "add nvme device passed second time")
     print "verify_add_nvme_bdev_rpc_methods passed."
+
 
 if __name__ == "__main__":
 

@@ -36,6 +36,7 @@ run_time = ['60']
 # set iter_num = ['1', '2', '3'] to repeat each test 3 times
 iter_num = ['1']
 
+
 def run_fio(io_size_bytes, qd, rw_mix, cpu_mask, run_num, workload, run_time_sec):
     print "Running Test: IO Size=", io_size_bytes, " QD=", qd, " Mix=", rw_mix, "CPU Mask=", cpu_mask
     string = "s_" + str(io_size_bytes) + "_q_" + str(qd) + "_m_" + str(rw_mix) + "_c_" + str(cpu_mask) + "_run_" + str(run_num)
@@ -50,6 +51,7 @@ def run_fio(io_size_bytes, qd, rw_mix, cpu_mask, run_num, workload, run_time_sec
 
     print "Finished Test: IO Size=", io_size_bytes, " QD=", qd, " Mix=", rw_mix, " CPU Mask=", cpu_mask
     return
+
 
 def parse_results(io_size_bytes, qd, rw_mix, cpu_mask, run_num, workload, run_time_sec):
     results_array = []
@@ -107,19 +109,23 @@ def parse_results(io_size_bytes, qd, rw_mix, cpu_mask, run_num, workload, run_ti
         results_array = []
     return
 
+
 def get_nvme_devices_count():
     output = check_output('lspci | grep -i Non | wc -l', shell=True)
     return int(output)
+
 
 def get_nvme_devices_bdf():
     output = check_output('lspci | grep -i Non | awk \'{print $1}\'', shell=True)
     output = output.split()
     return output
 
+
 def add_filename_to_conf(conf_file_name, bdf):
     filestring = "filename=trtype=PCIe traddr=0000." + bdf.replace(":", ".") + " ns=1"
     with open(conf_file_name, "a") as conf_file:
         conf_file.write(filestring + "\n")
+
 
 if len(sys.argv) != 4:
     print "usage: python ", sys.argv[0], " path_to_fio_conf path_to_ioengine num_ssds"

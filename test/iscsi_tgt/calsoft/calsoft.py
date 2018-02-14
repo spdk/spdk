@@ -32,6 +32,7 @@ known_failed_cases = ['tc_ffp_15_2', 'tc_ffp_29_2', 'tc_ffp_29_3',
                       'tc_err_3_4', 'tc_err_5_1', 'tc_login_3_1',
                       'tc_login_11_2', 'tc_login_11_4', 'tc_login_2_2']
 
+
 def run_case(case, result_list, log_dir_path):
     try:
         case_log = subprocess.check_output("{}/{}".format(CALSOFT_BIN_PATH, case), stderr=subprocess.STDOUT, shell=True)
@@ -42,6 +43,7 @@ def run_case(case, result_list, log_dir_path):
         result_list.append({"Name": case, "Result": "PASS"})
     with open(log_dir_path + case + '.txt', 'w') as f:
         f.write(case_log)
+
 
 def main():
     if not os.path.exists(CALSOFT_BIN_PATH):
@@ -105,6 +107,7 @@ def main():
             print "Test case %s failed." % (x["Name"])
             failed = 1
     exit(failed)
+
 
 if __name__ == '__main__':
     main()

@@ -91,6 +91,7 @@ def bdev_inject_error(args):
 
     args.client.call('bdev_inject_error', params)
 
+
 def apply_firmware(args):
     params = {
         'filename': args.filename,
