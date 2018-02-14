@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7f54a0b6_3be2055b",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-14T23:09:03Z",
+      "side": 1,
+      "message": "let\u0027s remove this if statement, and always call spdk_thread_send_msg()\n\nworst case, we send a message to our current thread - but this is not in main I/O path, so I think simpler code would be better",
+      "revId": "02ffe5f325e2907178d1d0b5b057d1515c5adfbe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "668c3a70_a27d4eaf",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-14T23:09:03Z",
+      "side": 1,
+      "message": "same here - just always call spdk_thread_send_msg - even if it means we send a message to the current thread",
+      "revId": "02ffe5f325e2907178d1d0b5b057d1515c5adfbe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
