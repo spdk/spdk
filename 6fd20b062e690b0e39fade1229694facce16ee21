@@ -93,6 +93,30 @@
       "revId": "6fd20b062e690b0e39fade1229694facce16ee21",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "32a0dc7e_6a062bf1",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 844,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-14T02:28:19Z",
+      "side": 1,
+      "message": "Hi Ziye, thank you. I agree with you that the poller is NOP if no connections and this feedback is not high for me.",
+      "parentUuid": "2754fe53_f9958e4b",
+      "range": {
+        "startLine": 844,
+        "startChar": 0,
+        "endLine": 844,
+        "endChar": 70
+      },
+      "revId": "6fd20b062e690b0e39fade1229694facce16ee21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
