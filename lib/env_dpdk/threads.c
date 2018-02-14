@@ -57,13 +57,8 @@ spdk_env_get_first_core(void)
 uint32_t
 spdk_env_get_last_core(void)
 {
-	uint32_t i;
-	static uint32_t last_core = UINT32_MAX;
-
-	/* Already know the last_core, just return */
-	if (last_core != UINT32_MAX) {
-		return last_core;
-	}
+	uint32_t i = 0;
+	uint32_t last_core = UINT32_MAX;
 
 	SPDK_ENV_FOREACH_CORE(i) {
 		last_core = i;
