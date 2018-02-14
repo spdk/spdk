@@ -38,6 +38,12 @@
 #include <poll.h>
 
 #define MAX_FDS 1024
+#define RTE_FDSET_INITIALIZER { \
+		.fd = { [0 ... MAX_FDS - 1] = {-1, NULL, NULL, NULL, 0} }, \
+		.fd_mutex = PTHREAD_MUTEX_INITIALIZER, \
+		.num = 0, \
+		.polling = 0 \
+	}
 
 typedef void (*fd_cb)(int fd, void *dat, int *remove);
 
@@ -57,7 +63,6 @@ struct fdset {
 	int polling;
 	pthread_t tid;
 };
-
 
 void fdset_init(struct fdset *pfdset);
 
