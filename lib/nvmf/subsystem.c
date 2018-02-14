@@ -268,7 +268,7 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 	TAILQ_INIT(&subsystem->ctrlrs);
 
 	if (num_ns != 0) {
-		subsystem->ns = calloc(num_ns, sizeof(struct spdk_nvmf_ns));
+		subsystem->ns = calloc(num_ns, sizeof(struct spdk_nvmf_ns *));
 		if (subsystem->ns == NULL) {
 			SPDK_ERRLOG("Namespace memory allocation failed\n");
 			free(subsystem);
@@ -313,12 +313,12 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 		spdk_nvmf_ctrlr_destruct(ctrlr);
 	}
 
-	for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
-	     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
-		if (ns->bdev == NULL) {
-			continue;
-		}
-		spdk_bdev_close(ns->desc);
+	ns = spdk_nvmf_subsystem_get_first_ns(subsystem);
+	while (ns != NULL) {
+		struct spdk_nvmf_ns *next_ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns);
+
+		spdk_nvmf_subsystem_remove_ns(subsystem, ns->id);
+		ns = next_ns;
 	}
 
 	free(subsystem->ns);
@@ -781,13 +781,13 @@ spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t ns
 		return -1;
 	}
 
-	ns = &subsystem->ns[nsid - 1];
-	if (ns->allocated == false) {
+	ns = subsystem->ns[nsid - 1];
+	if (!ns) {
 		return -1;
 	}
 
 	spdk_bdev_close(ns->desc);
-	ns->allocated = false;
+	free(ns);
 	subsystem->num_allocated_nsid--;
 
 	return 0;
@@ -836,7 +836,7 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 
 	if (nsid > subsystem->max_nsid ||
 	    (nsid == 0 && subsystem->num_allocated_nsid == subsystem->max_nsid)) {
-		struct spdk_nvmf_ns *new_ns_array;
+		struct spdk_nvmf_ns **new_ns_array;
 		uint32_t new_max_nsid;
 
 		if (nsid > subsystem->max_nsid) {
@@ -850,14 +850,14 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 			return 0;
 		}
 
-		new_ns_array = realloc(subsystem->ns, sizeof(struct spdk_nvmf_ns) * new_max_nsid);
+		new_ns_array = realloc(subsystem->ns, sizeof(struct spdk_nvmf_ns *) * new_max_nsid);
 		if (new_ns_array == NULL) {
 			SPDK_ERRLOG("Memory allocation error while resizing namespace array.\n");
 			return 0;
 		}
 
 		memset(new_ns_array + subsystem->max_nsid, 0,
-		       sizeof(struct spdk_nvmf_ns) * (new_max_nsid - subsystem->max_nsid));
+		       sizeof(struct spdk_nvmf_ns *) * (new_max_nsid - subsystem->max_nsid));
 		subsystem->ns = new_ns_array;
 		subsystem->max_nsid = new_max_nsid;
 	}
@@ -882,8 +882,12 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 		}
 	}
 
-	ns = &subsystem->ns[nsid - 1];
-	memset(ns, 0, sizeof(*ns));
+	ns = calloc(1, sizeof(*ns));
+	if (ns == NULL) {
+		SPDK_ERRLOG("Namespace allocation failed\n");
+		return 0;
+	}
+
 	ns->bdev = bdev;
 	ns->id = nsid;
 	ns->subsystem = subsystem;
@@ -891,9 +895,10 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	if (rc != 0) {
 		SPDK_ERRLOG("Subsystem %s: bdev %s cannot be opened, error=%d\n",
 			    subsystem->subnqn, spdk_bdev_get_name(bdev), rc);
+		free(ns);
 		return 0;
 	}
-	ns->allocated = true;
+	subsystem->ns[nsid - 1] = ns;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Subsystem %s: bdev %s assigned nsid %" PRIu32 "\n",
 		      spdk_nvmf_subsystem_get_nqn(subsystem),
@@ -917,7 +922,7 @@ spdk_nvmf_subsystem_get_next_allocated_nsid(struct spdk_nvmf_subsystem *subsyste
 	}
 
 	for (nsid = prev_nsid + 1; nsid <= subsystem->max_nsid; nsid++) {
-		if (subsystem->ns[nsid - 1].allocated) {
+		if (subsystem->ns[nsid - 1]) {
 			return nsid;
 		}
 	}
