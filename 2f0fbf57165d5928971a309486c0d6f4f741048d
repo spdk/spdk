@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "727a6158_3a529ae3",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 900,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-14T20:45:37Z",
+      "side": 1,
+      "message": "This looks a bit weird allocating a remove_ctx in the add_ns function.  Probably good to add a comment - something like \"create a remove_ctx here which will be used if this namespace is hot removed\".",
+      "revId": "2f0fbf57165d5928971a309486c0d6f4f741048d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
