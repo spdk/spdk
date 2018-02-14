@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7bc33aa7_5efa219f",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 551,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-14T23:41:24Z",
+      "side": 1,
+      "message": "I think these two lines can be removed.  rc will equal 0 here, so fall through will still do the right thing.",
+      "revId": "e4892fd58f34d85f4851464c3932423bf33e6192",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "453e00ca_627771fb",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 597,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-14T23:41:24Z",
+      "side": 1,
+      "message": "I think these two lines can be removed.  rc will equal 0 here, so fall through will still do the right thing.",
+      "revId": "e4892fd58f34d85f4851464c3932423bf33e6192",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "daf5e760_f2782fb4",
+        "filename": "lib/iscsi/init_grp.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-14T23:41:24Z",
+      "side": 1,
+      "message": "small nit - should probably be add_initiators instead of add_initiator, since this allows adding more than one initiator\n\nsame for delete function below\n\nsimilar changes should probably be made to RPC functions too",
+      "revId": "e4892fd58f34d85f4851464c3932423bf33e6192",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1ab57aa7_e54d0db8",
+        "filename": "test/unit/lib/iscsi/init_grp.c/init_grp_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 683,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-14T23:41:24Z",
+      "side": 1,
+      "message": "nonexisting (or nonexistent) is the more proper word",
+      "revId": "e4892fd58f34d85f4851464c3932423bf33e6192",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a0b3043_3db6e01e",
+        "filename": "test/unit/lib/iscsi/init_grp.c/init_grp_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 685,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-14T23:41:24Z",
+      "side": 1,
+      "message": "netmaskss \u003d\u003e netmasks",
+      "revId": "e4892fd58f34d85f4851464c3932423bf33e6192",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
