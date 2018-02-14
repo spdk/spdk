@@ -44,6 +44,7 @@ all:
 	@:
 
 clean:
+	@:
 
 install: $(INSTALLED_HEADERS)
 
