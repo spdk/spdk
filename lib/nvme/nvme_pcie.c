@@ -516,7 +516,7 @@ nvme_pcie_ctrlr_map_cmb(struct nvme_pcie_ctrlr *pctrlr)
 		SPDK_ERRLOG("spdk_mem_register() failed\n");
 		goto exit;
 	}
-	pctrlr->cmb_current_offset = mem_register_start - ((uint64_t)pctrlr->cmb_bar_virt_addr + offset);
+	pctrlr->cmb_current_offset = mem_register_start - (uint64_t)pctrlr->cmb_bar_virt_addr;
 	pctrlr->cmb_io_data_supported = true;
 
 	return;
