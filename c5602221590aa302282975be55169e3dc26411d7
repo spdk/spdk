@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0a28a501_41cfcddd",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 17
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-14T10:29:15Z",
+      "side": 1,
+      "message": "Fio parameters are still wrong.\n\nI suggest doing a rebase and solving merge conflicts with thin-prov tests.",
+      "range": {
+        "startLine": 23,
+        "startChar": 0,
+        "endLine": 31,
+        "endChar": 59
+      },
+      "revId": "c5602221590aa302282975be55169e3dc26411d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0559da8b_72ac12dc",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 17
+      },
+      "lineNbr": 982,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-14T10:29:15Z",
+      "side": 1,
+      "message": "Since latest agreements on tiger team we\u0027d like to move to having test documentation as in-line. For example:\n\ndef test_case752(self):\n\"\"\"docstring with general description of the test, e.g.\nsnapshot_test_01 - positive test for blah blah blah\"\n\nAlso add comments in the code itself to describe test steps.\n\n\nI think we can do that kind of change as part of this commit and update rest of the test cases in the next one",
+      "range": {
+        "startLine": 982,
+        "startChar": 3,
+        "endLine": 982,
+        "endChar": 27
+      },
+      "revId": "c5602221590aa302282975be55169e3dc26411d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db3161ba_3938b776",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 17
+      },
+      "lineNbr": 1118,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-14T10:29:15Z",
+      "side": 1,
+      "message": "size",
+      "range": {
+        "startLine": 1118,
+        "startChar": 24,
+        "endLine": 1118,
+        "endChar": 27
+      },
+      "revId": "c5602221590aa302282975be55169e3dc26411d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
