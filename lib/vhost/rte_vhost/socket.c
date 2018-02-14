@@ -100,8 +100,8 @@ struct vhost_user {
 
 #define MAX_VIRTIO_BACKLOG 128
 
-static void vhost_user_server_new_connection(int fd, void *data, int *remove);
-static void vhost_user_read_cb(int fd, void *dat, int *remove);
+static void vhost_user_server_new_connection(int fd, void *data);
+static void vhost_user_read_cb(int fd, void *dat);
 static int create_unix_socket(struct vhost_user_socket *vsocket);
 static int vhost_user_start_client(struct vhost_user_socket *vsocket);
 
@@ -267,7 +267,7 @@ err:
 
 /* call back when there is new vhost-user connection from client  */
 static void
-vhost_user_server_new_connection(int fd, void *dat, int *remove __rte_unused)
+vhost_user_server_new_connection(int fd, void *dat)
 {
 	struct vhost_user_socket *vsocket = dat;
 
@@ -280,7 +280,7 @@ vhost_user_server_new_connection(int fd, void *dat, int *remove __rte_unused)
 }
 
 static void
-vhost_user_read_cb(int connfd, void *dat, int *remove)
+vhost_user_read_cb(int connfd, void *dat)
 {
 	struct vhost_user_connection *conn = dat;
 	struct vhost_user_socket *vsocket = conn->vsocket;
@@ -289,7 +289,7 @@ vhost_user_read_cb(int connfd, void *dat, int *remove)
 	ret = vhost_user_msg_handler(conn->vid, connfd);
 	if (ret < 0) {
 		close(connfd);
-		*remove = 1;
+		fdset_del(&vhost_user.fdset, connfd);
 		vhost_destroy_device(conn->vid);
 
 		if (vsocket->notify_ops->destroy_connection)

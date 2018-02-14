@@ -81,17 +81,6 @@ fdset_shrink_nolock(struct fdset *pfdset)
 	pfdset->num = last_valid_idx + 1;
 }
 
-/*
- * Find deleted fd entries and remove them
- */
-static void
-fdset_shrink(struct fdset *pfdset)
-{
-	pthread_mutex_lock(&pfdset->fd_mutex);
-	fdset_shrink_nolock(pfdset);
-	pthread_mutex_unlock(&pfdset->fd_mutex);
-}
-
 /**
  * Returns the index in the fdset for a given fd.
  * @return
@@ -131,15 +120,9 @@ fdset_del_nolock(struct fdset *pfdset, int idx)
 {
 	struct fdentry *pfdentry = &pfdset->fd[idx];
 
-	if (pfdentry->busy) {
-		/* busy indicates r/wcb is executing! */
-		return -1;
-	}
-
 	pfdentry->fd = -1;
 	pfdentry->rcb = pfdentry->wcb = NULL;
 	pfdentry->dat = NULL;
-	fdset_shrink_nolock(pfdset);
 	return 0;
 }
 
@@ -207,15 +190,12 @@ fdset_del(struct fdset *pfdset, int fd)
 	if (pfdset == NULL || fd == -1)
 		return -1;
 
-	do {
-		pthread_mutex_lock(&pfdset->fd_mutex);
-
-		i = fdset_find_fd(pfdset, fd);
-		if (i != -1 && fdset_del_nolock(pfdset, i) == 0) {
-			i = -1;
-		}
-		pthread_mutex_unlock(&pfdset->fd_mutex);
-	} while (i != -1);
+	pthread_mutex_lock(&pfdset->fd_mutex);
+	i = fdset_find_fd(pfdset, fd);
+	if (i != -1) {
+		fdset_del_nolock(pfdset, i);
+	}
+	pthread_mutex_unlock(&pfdset->fd_mutex);
 
 	return 0;
 }
@@ -224,11 +204,6 @@ fdset_del(struct fdset *pfdset, int fd)
 /**
  * This functions runs in infinite blocking loop until there is no fd in
  * pfdset. It calls corresponding r/w handler if there is event on the fd.
- *
- * Before the callback is called, we set the flag to busy status; If other
- * thread(now rte_vhost_driver_unregister) calls fdset_del concurrently, it
- * will wait until the flag is reset to zero(which indicates the callback is
- * finished), then it could free the context after fdset_del.
  */
 static void *
 fdset_event_dispatch(void *arg)
@@ -239,8 +214,6 @@ fdset_event_dispatch(void *arg)
 	fd_cb rcb, wcb;
 	void *dat;
 	int fd, numfds;
-	int remove1, remove2;
-	int need_shrink;
 	struct fdset *pfdset = arg;
 
 	if (pfdset == NULL)
@@ -266,7 +239,6 @@ fdset_event_dispatch(void *arg)
 
 		poll(pfdset->rwfds, numfds, 1000 /* millisecs */);
 
-		need_shrink = 0;
 		for (i = 0; i < numfds; i++) {
 			pthread_mutex_lock(&pfdset->fd_mutex);
 
@@ -275,7 +247,7 @@ fdset_event_dispatch(void *arg)
 			pfd = &pfdset->rwfds[i];
 
 			if (fd < 0) {
-				need_shrink = 1;
+				fdset_shrink_nolock(pfdset);
 				pthread_mutex_unlock(&pfdset->fd_mutex);
 				continue;
 			}
@@ -285,40 +257,24 @@ fdset_event_dispatch(void *arg)
 				continue;
 			}
 
-			remove1 = remove2 = 0;
-
 			rcb = pfdentry->rcb;
 			wcb = pfdentry->wcb;
 			dat = pfdentry->dat;
-			pfdentry->busy = 1;
 
 			pthread_mutex_unlock(&pfdset->fd_mutex);
 
 			if (rcb && pfd->revents & (POLLIN | FDPOLLERR))
-				rcb(fd, dat, &remove1);
+				rcb(fd, dat);
 			if (wcb && pfd->revents & (POLLOUT | FDPOLLERR))
-				wcb(fd, dat, &remove2);
-			pfdentry->busy = 0;
-			/*
-			 * fdset_del needs to check busy flag.
-			 * We don't allow fdset_del to be called in callback
-			 * directly.
-			 */
-			/*
-			 * When we are to clean up the fd from fdset,
-			 * because the fd is closed in the cb,
-			 * the old fd val could be reused by when creates new
-			 * listen fd in another thread, we couldn't call
-			 * fd_set_del.
-			 */
-			if (remove1 || remove2) {
-				pfdentry->fd = -1;
-				need_shrink = 1;
-			}
-		}
+				wcb(fd, dat);
 
-		if (need_shrink)
-			fdset_shrink(pfdset);
+			/* The pfdentry could be removed inside the callback */
+			pthread_mutex_lock(&pfdset->fd_mutex);
+			if (pfdentry->fd == -1) {
+				fdset_shrink_nolock(pfdset);
+			}
+			pthread_mutex_unlock(&pfdset->fd_mutex);
+		}
 	}
 
 	return NULL;

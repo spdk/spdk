@@ -39,20 +39,19 @@
 
 #define MAX_FDS 1024
 #define RTE_FDSET_INITIALIZER { \
-		.fd = { [0 ... MAX_FDS - 1] = {-1, NULL, NULL, NULL, 0} }, \
+		.fd = { [0 ... MAX_FDS - 1] = {-1, NULL, NULL, NULL} }, \
 		.fd_mutex = PTHREAD_MUTEX_INITIALIZER, \
 		.num = 0, \
 		.polling = 0 \
 	}
 
-typedef void (*fd_cb)(int fd, void *dat, int *remove);
+typedef void (*fd_cb)(int fd, void *dat);
 
 struct fdentry {
 	int fd;		/* -1 indicates this entry is empty */
 	fd_cb rcb;	/* callback when this fd is readable. */
 	fd_cb wcb;	/* callback when this fd is writeable. */
 	void *dat;	/* fd context */
-	int busy;	/* whether this entry is being used in cb. */
 };
 
 struct fdset {
