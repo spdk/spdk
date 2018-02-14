@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c30cfab6_4c0d8017",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-02-14T14:11:15Z",
+      "side": 1,
+      "message": "does it really shorten anything?\nvhost app doesn\u0027t do much on it\u0027s own unless there are Vhost* sections in the config file.",
+      "range": {
+        "startLine": 8,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 55
+      },
+      "revId": "a125cefa1e2d6f993a23f6f4de8e73a3a18f9411",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
