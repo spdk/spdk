@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "3846c774_abed7ae3",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1369,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-02-14T02:16:17Z",
+      "side": 1,
+      "message": "Will cast it",
+      "parentUuid": "848cd93d_f7d0c047",
+      "range": {
+        "startLine": 1369,
+        "startChar": 38,
+        "endLine": 1369,
+        "endChar": 42
+      },
+      "revId": "6fd20b062e690b0e39fade1229694facce16ee21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "65c8ab17_f0c2ef20",
         "filename": "lib/iscsi/iscsi_subsystem.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2018-02-14T01:55:05Z",
       "side": 1,
       "message": "Is it possible to do the following?\n- start the poller when the first connection is registered to the poll group\n- stop the poller when the last connection is unregistered from the poll group.\n\nThe reason why I propose this is that NVMf-tgt do this.",
+      "range": {
+        "startLine": 844,
+        "startChar": 0,
+        "endLine": 844,
+        "endChar": 70
+      },
+      "revId": "6fd20b062e690b0e39fade1229694facce16ee21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2754fe53_f9958e4b",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 844,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-02-14T02:16:17Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nThe poller will not consume time if there is no connections. If do it in the way you described (on demand), there could be frequently create/delete poll group, that\u0027s big overhead.",
+      "parentUuid": "65c8ab17_f0c2ef20",
       "range": {
         "startLine": 844,
         "startChar": 0,
