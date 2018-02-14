@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4c96783c_b6b0102d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-14T18:39:49Z",
+      "side": 1,
+      "message": "Hi Pan,\n\nThank you for your patch!  Printing the transport ID is a very good idea.\n\nFor SPDK, we like to format the first line like this:\n\nnvme: add transport id to some log messages\n\nThe first word usually is the library affected by the change - so could be nvme, bdev, nvmf, etc.  \"test\" or \"build\" are also used for changes to test code or the build system.\n\nThe first line should also fit within 70-80 characters - this makes git log --oneline more readable.\n\nThanks,\n\n-Jim",
+      "revId": "0f4592a813585f5a38e5f65f3bd83da4a4e3e8af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3d4ab29_4c716e29",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 391,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-14T18:39:49Z",
+      "side": 1,
+      "message": "I would suggest removing \"maybe disk error\".  Many people think of \"disk error\" as error in reading data from the disk.  But in this case, if nvme_ctrlr_process_init() fails, it is definitely not related to a failed data read.",
+      "revId": "0f4592a813585f5a38e5f65f3bd83da4a4e3e8af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8565e3ef_c53d8e5b",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1678,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-14T18:39:49Z",
+      "side": 1,
+      "message": "SPDK_NOTICELOG is always printed.  Since nvme_ctrlr_destruct() is always called during shutdown, this will add extra prints that are not normally needed.\n\nIt would be better to add this as SPDK_DEBUGLOG(SPDK_LOG_NVME, xxx).  Then most users will not see it, but users can enable it by specifying \"nvme\" debug flag (i.e. -t nvme).",
+      "revId": "0f4592a813585f5a38e5f65f3bd83da4a4e3e8af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
