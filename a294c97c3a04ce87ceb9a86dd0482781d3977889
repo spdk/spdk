@@ -34,6 +34,24 @@
       "revId": "a294c97c3a04ce87ceb9a86dd0482781d3977889",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1744f043_7ce61e4c",
+        "filename": "test/unit/lib/bdev/bdev.c/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-14T15:50:41Z",
+      "side": 1,
+      "message": "We can leave them for now - I think they can be removed, but that can be another cleanup pass.",
+      "parentUuid": "a716be68_512c2be7",
+      "revId": "a294c97c3a04ce87ceb9a86dd0482781d3977889",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
