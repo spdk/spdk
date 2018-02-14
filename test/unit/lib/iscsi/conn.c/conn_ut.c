@@ -140,6 +140,19 @@ spdk_sock_set_sendbuf(struct spdk_sock *sock, int sz)
 	return 0;
 }
 
+int
+spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
+			 spdk_sock_cb cb_fn, void *cb_arg)
+{
+	return 0;
+}
+
+int
+spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *sock)
+{
+	return 0;
+}
+
 void
 spdk_scsi_task_put(struct spdk_scsi_task *task)
 {

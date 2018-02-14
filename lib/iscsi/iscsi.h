@@ -259,7 +259,7 @@ struct spdk_iscsi_sess {
 struct spdk_iscsi_poll_group {
 	uint32_t					core;
 	struct spdk_poller				*poller;
-	STAILQ_HEAD(connections, spdk_iscsi_conn)	connections;
+	struct spdk_sock_group				*sock_group;
 };
 
 struct spdk_iscsi_globals {
