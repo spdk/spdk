@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c387bc31_e71f64ab",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-14T09:56:28Z",
+      "side": 1,
+      "message": "Not sure what will happen with timing stats if you start more than 1 vhost - will the first be overwritten, or will there be 2 separate time measures in graph.",
+      "range": {
+        "startLine": 172,
+        "startChar": 0,
+        "endLine": 180,
+        "endChar": 24
+      },
+      "revId": "f526603ffc8847f5d4ab20b6e32e7a172cec0d40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d8c15eb2_d34a12d4",
+        "filename": "test/vhost/migration/migration-tc2.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-14T09:56:28Z",
+      "side": 1,
+      "message": "Could also use some timings here, starting from line to...",
+      "range": {
+        "startLine": 75,
+        "startChar": 0,
+        "endLine": 79,
+        "endChar": 51
+      },
+      "revId": "f526603ffc8847f5d4ab20b6e32e7a172cec0d40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed40fab2_b99c9927",
+        "filename": "test/vhost/migration/migration-tc2.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-14T09:56:28Z",
+      "side": 1,
+      "message": "...to here, line 101.",
+      "revId": "f526603ffc8847f5d4ab20b6e32e7a172cec0d40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b879b1a8_a23b6206",
+        "filename": "test/vhost/migration/migration-tc2.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-14T09:56:28Z",
+      "side": 1,
+      "message": "And next timing here, for VMs",
+      "range": {
+        "startLine": 102,
+        "startChar": 1,
+        "endLine": 113,
+        "endChar": 28
+      },
+      "revId": "f526603ffc8847f5d4ab20b6e32e7a172cec0d40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
