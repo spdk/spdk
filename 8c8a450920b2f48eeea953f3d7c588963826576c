@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "36fb07d0_4f184b3e",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-14T21:20:50Z",
+      "side": 1,
+      "message": "Sorry - one more comment here.\n\nWe can leave out \"BLOB_\" from the string.  This will save some extra bytes in the metadata.  \"SNAPSHOT\" is fine, \"SNAP\" would be even better.  Using fewer bytes means less chance that we will need an extra metadata page to describe xattrs + cluster array.",
+      "revId": "8c8a450920b2f48eeea953f3d7c588963826576c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
