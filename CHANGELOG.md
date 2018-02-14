@@ -7,6 +7,9 @@
 The Rpc configuration file section, which was deprecated in v18.01, has been removed.
 Users should switch to the `-r` command-line parameter instead.
 
+The JSON-RPC server implementation now allows arbitrarily large responses; previously,
+the response was limited to 32 kilobytes.
+
 ### NVMe Driver
 
 EXPERIMENTAL: Adds support for WDS and RDS capable CMBs in NVMe controllers. This support is
