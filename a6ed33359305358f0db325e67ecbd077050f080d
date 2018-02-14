@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "26cb15e2_9cee6c31",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 519,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-14T21:13:49Z",
+      "side": 1,
+      "message": "I\u0027m not sure yet about this change, but I think there are other bugs that need to be fixed which might make this line go away completely.  See below.",
+      "revId": "a6ed33359305358f0db325e67ecbd077050f080d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f220984d_3bc00039",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-14T21:13:49Z",
+      "side": 1,
+      "message": "Here we are using cmb_size to determine when we have run out of cmb space.  But cmb_size is the actual size of the CMB - not the size of the space that we actually registered.\n\nSo I think we need a cmb_registered_size, then have cmb_current_offset represent the offset into the registered region.\n\nOr something like that - I think you get my meaning.",
+      "revId": "a6ed33359305358f0db325e67ecbd077050f080d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
