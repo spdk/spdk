@@ -139,22 +139,39 @@ class TestCases(object):
         return 0
 
     def _start_vhost(self, vhost_path, config_path, pid_path):
-        subprocess.call("{app} -c {config} -f "
-                        "{pid} &".format(app=vhost_path,
-                                         config=config_path,
-                                         pid=pid_path), shell=True)
-        for timeo in range(10):
-            if timeo == 9:
-                print("ERROR: Timeout on waiting for app start")
-                return 1
-            if not path.exists(pid_path):
-                print("Info: Waiting for PID file...")
-                sleep(1)
-                continue
-            else:
-                break
+        print (pid_path)
+        print (vhost_path)
+        print (config_path)
+        try:
+            p = subprocess.Popen("{app} -c {config} &".format(app=vhost_path,
+                                         config=config_path), shell=False)
+#             p = subprocess.Popen(["{app}", "-c", "{config}"])
+        except Exception as a:
+            print "a %s" % a 
 
-        # Wait for RPC to open
+#         for timeo in range(10):
+#             if timeo == 9:
+#                 print("ERROR: Timeout on waiting for app start")
+#                 return 1
+#             if not path.exists(pid_path):
+#                 print("Info: Waiting for PID file...")
+#                 sleep(1)
+#                 continue
+#             else:
+#                 break
+        sleep(1)
+        print '================================='
+        print (pid_path)
+        vhost_pid = p.pid
+        print vhost_pid
+        print 'open'
+        try:
+            with open(pid_path, 'w') as pid_file:
+                pid_file.write(str(vhost_pid))
+            print 'write'
+        except Exception as a:
+            print "a %s" % a 
+#         io.write(vhost_pid)
         sock = socket.socket(socket.AF_UNIX)
         for timeo in range(30):
             if timeo == 29:
@@ -942,7 +959,8 @@ class TestCases(object):
         base_name = "Nvme0n1"
 
         base_path = path.dirname(sys.argv[0])
-        vhost_path = path.join(self.app_path, 'vhost')
+#         vhost_path = path.join(self.app_path, 'vhost')
+        vhost_path = path.join(self.app_path, 'bdev_svc')
         config_path = path.join(base_path, 'vhost.conf')
         pid_path = path.join(base_path, 'vhost.pid')
 

@@ -115,7 +115,7 @@ function vhost_kill()
 trap "vhost_kill; exit 1" SIGINT SIGTERM EXIT
 
 vhost_start
-$BASE_DIR/lvol_test.py $rpc_py $total_size $block_size $cluster_sz $BASE_DIR $TEST_DIR/app/vhost "${test_cases[@]}"
+$BASE_DIR/lvol_test.py $rpc_py $total_size $block_size $cluster_sz $BASE_DIR $TEST_DIR/test/app/bdev_svc "${test_cases[@]}"
 
 vhost_kill
 trap - SIGINT SIGTERM EXIT
