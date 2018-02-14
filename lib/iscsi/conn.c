@@ -171,6 +171,28 @@ int spdk_initialize_iscsi_conns(void)
 }
 
 static void
+spdk_iscsi_conn_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock *sock)
+{
+	struct spdk_iscsi_conn *conn = arg;
+	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
+
+	assert(conn != NULL);
+
+	spdk_sock_group_remove_sock(poll_group->sock_group, conn->sock);
+	STAILQ_INSERT_TAIL(&poll_group->connections, conn, link);
+	conn->last_activity_tsc = spdk_get_ticks();
+}
+
+static void
+spdk_iscsi_conn_add_sock(struct spdk_iscsi_conn *conn)
+{
+	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
+
+	STAILQ_REMOVE(&poll_group->connections, conn, spdk_iscsi_conn, link);
+	spdk_sock_group_add_sock(poll_group->sock_group, conn->sock, spdk_iscsi_conn_sock_cb, conn);
+}
+
+static void
 spdk_iscsi_poll_group_add_conn(struct spdk_iscsi_conn *conn,
 			       spdk_iscsi_conn_fn fn)
 {
@@ -298,6 +320,7 @@ error_return:
 	SPDK_NOTICELOG("Launching connection on acceptor thread\n");
 	conn->pending_task_cnt = 0;
 	conn->pending_activate_event = false;
+	conn->last_activity_tsc = spdk_get_ticks();
 
 	/*
 	 * Since we are potentially moving control of this socket to a different
@@ -726,6 +749,7 @@ spdk_iscsi_task_mgmt_cpl(struct spdk_scsi_task *scsi_task)
 {
 	struct spdk_iscsi_task *task = spdk_iscsi_task_from_scsi_task(scsi_task);
 
+	task->conn->last_activity_tsc = spdk_get_ticks();
 	spdk_iscsi_task_mgmt_response(task->conn, task);
 	spdk_iscsi_task_put(task);
 }
@@ -798,6 +822,7 @@ spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task)
 	struct spdk_iscsi_task *task = spdk_iscsi_task_from_scsi_task(scsi_task);
 	struct spdk_iscsi_conn *conn = task->conn;
 
+	conn->last_activity_tsc = spdk_get_ticks();
 	spdk_trace_record(TRACE_ISCSI_TASK_DONE, conn->id, 0, (uintptr_t)task, 0);
 
 	primary = spdk_iscsi_task_get_primary(task);
@@ -1228,8 +1253,20 @@ void
 spdk_iscsi_conn_full_feature_do_work(void *arg)
 {
 	struct spdk_iscsi_conn	*conn = arg;
+	int rc;
+	uint64_t current_tsc = spdk_get_ticks();
 
-	spdk_iscsi_conn_execute(conn);
+	rc = spdk_iscsi_conn_execute(conn);
+	if(rc < 0) {
+		return;
+	} else if (rc > 0) {
+		conn->last_activity_tsc = spdk_get_ticks();
+	}
+
+	if (((int64_t)(current_tsc - conn->last_activity_tsc)) >= 1 &&
+	    conn->pending_task_cnt == 0) {
+		spdk_iscsi_conn_add_sock(conn);
+	}
 }
 
 void
