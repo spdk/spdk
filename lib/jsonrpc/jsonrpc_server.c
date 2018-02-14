@@ -144,6 +144,13 @@ spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, void *json, si
 	request->id.type = SPDK_JSON_VAL_INVALID;
 	request->send_offset = 0;
 	request->send_len = 0;
+	request->send_buf_size = SPDK_JSONRPC_SEND_BUF_SIZE_INIT;
+	request->send_buf = malloc(request->send_buf_size);
+	if (request->send_buf == NULL) {
+		SPDK_ERRLOG("Failed to allocate send_buf (%zu bytes)\n", request->send_buf_size);
+		free(request);
+		return -1;
+	}
 
 	if (rc < 0 || rc > SPDK_JSONRPC_MAX_VALUES) {
 		SPDK_DEBUGLOG(SPDK_LOG_RPC, "JSON parse error\n");
@@ -184,10 +191,28 @@ static int
 spdk_jsonrpc_server_write_cb(void *cb_ctx, const void *data, size_t size)
 {
 	struct spdk_jsonrpc_request *request = cb_ctx;
+	size_t new_size = request->send_buf_size;
 
-	if (SPDK_JSONRPC_SEND_BUF_SIZE - request->send_len < size) {
-		SPDK_ERRLOG("Not enough space in send buf\n");
-		return -1;
+	while (new_size - request->send_len < size) {
+		if (new_size == SPDK_JSONRPC_SEND_BUF_SIZE_MAX) {
+			break;
+		}
+
+		new_size *= 2;
+	}
+
+	if (new_size != request->send_buf_size) {
+		uint8_t *new_buf;
+
+		new_buf = realloc(request->send_buf, new_size);
+		if (new_buf == NULL) {
+			SPDK_ERRLOG("Resizing send_buf failed (current size %zu, new size %zu)\n",
+				    request->send_buf_size, new_size);
+			return -1;
+		}
+
+		request->send_buf = new_buf;
+		request->send_buf_size = new_size;
 	}
 
 	memcpy(request->send_buf + request->send_len, data, size);
@@ -229,6 +254,7 @@ void
 spdk_jsonrpc_free_request(struct spdk_jsonrpc_request *request)
 {
 	request->conn->outstanding_requests--;
+	free(request->send_buf);
 	free(request);
 }
 
