@@ -61,14 +61,21 @@ static size_t g_num_reqs;
 	memcpy(g_buf, in, sizeof(in) - 1); \
 	g_num_reqs = 0; \
 	g_cur_req = NULL; \
-	CU_ASSERT(spdk_jsonrpc_parse_request(conn, g_buf, sizeof(in) - 1) == sizeof(in) - sizeof(trailing))
+	CU_ASSERT(spdk_jsonrpc_parse_request(conn, g_buf, sizeof(in) - 1) == sizeof(in) - sizeof(trailing)); \
+	if (g_cur_req && g_cur_req->request) { \
+		free(g_cur_req->request->send_buf); \
+		g_cur_req->request->send_buf = NULL; \
+	}
 
 #define PARSE_FAIL(in) \
 	memcpy(g_buf, in, sizeof(in) - 1); \
 	g_num_reqs = 0; \
 	g_cur_req = 0; \
-	CU_ASSERT(spdk_jsonrpc_parse_request(conn, g_buf, sizeof(in) - 1) < 0)
-
+	CU_ASSERT(spdk_jsonrpc_parse_request(conn, g_buf, sizeof(in) - 1) < 0); \
+	if (g_cur_req && g_cur_req->request) { \
+		free(g_cur_req->request->send_buf); \
+		g_cur_req->request->send_buf = NULL; \
+	}
 
 #define REQ_BEGIN(expected_error) \
 	if (g_cur_req == NULL) { \
@@ -148,6 +155,9 @@ static size_t g_num_reqs;
 	g_params++
 
 #define FREE_REQUEST() \
+	if (g_reqs->request) { \
+		free(g_reqs->request->send_buf); \
+	} \
 	free(g_reqs->request); \
 	g_reqs->request = NULL
 
