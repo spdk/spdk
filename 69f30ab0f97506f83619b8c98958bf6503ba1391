@@ -22,6 +22,30 @@
       "revId": "69f30ab0f97506f83619b8c98958bf6503ba1391",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4a85e6b_231ce047",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 584,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-02-14T02:16:17Z",
+      "side": 1,
+      "message": "You mean creating a spate function?",
+      "parentUuid": "aebdb7ea_459ff1ca",
+      "range": {
+        "startLine": 583,
+        "startChar": 0,
+        "endLine": 584,
+        "endChar": 37
+      },
+      "revId": "69f30ab0f97506f83619b8c98958bf6503ba1391",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
