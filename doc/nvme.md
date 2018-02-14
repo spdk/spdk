@@ -93,7 +93,7 @@ spdk_nvme_ns_cmd_read_with_md()             | @copybrief spdk_nvme_ns_cmd_read_w
 spdk_nvme_ns_cmd_write()                    | @copybrief spdk_nvme_ns_cmd_write()
 spdk_nvme_ns_cmd_writev()                   | @copybrief spdk_nvme_ns_cmd_writev()
 spdk_nvme_ns_cmd_write_with_md()            | @copybrief spdk_nvme_ns_cmd_write_with_md()
-spdk_nvme_ns_cmd_write_zeroes()             | @cooybrief spdk_nvme_ns_cmd_write_zeroes()
+spdk_nvme_ns_cmd_write_zeroes()             | @copybrief spdk_nvme_ns_cmd_write_zeroes()
 spdk_nvme_ns_cmd_dataset_management()       | @copybrief spdk_nvme_ns_cmd_dataset_management()
 spdk_nvme_ns_cmd_flush()                    | @copybrief spdk_nvme_ns_cmd_flush()
 spdk_nvme_qpair_process_completions()       | @copybrief spdk_nvme_qpair_process_completions()
