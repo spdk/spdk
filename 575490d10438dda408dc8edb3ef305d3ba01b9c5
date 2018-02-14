@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "87aa451c_08fdec1d",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-14T08:32:24Z",
+      "side": 1,
+      "message": "Fio parameters here have errors (in run_fio_test() function too). Please take a look at current state of these argments on latest master commit and update.\n(For example you have --verify-pattern two times, lack of direct\u003d1, etc.)",
+      "range": {
+        "startLine": 44,
+        "startChar": 8,
+        "endLine": 50,
+        "endChar": 82
+      },
+      "revId": "575490d10438dda408dc8edb3ef305d3ba01b9c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38675765_73f7ad14",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-14T08:32:24Z",
+      "side": 1,
+      "message": "But... why? I say we should remove this chunk. Currently we have 3 FIO related blocks - 2 functions and 1 class (for threading). Isn\u0027t it possible to remove this run_fio_test() function here and use the other function? \n\nI mean - do we really need 2 functions which basically do the same thing?",
+      "range": {
+        "startLine": 154,
+        "startChar": 4,
+        "endLine": 164,
+        "endChar": 51
+      },
+      "revId": "575490d10438dda408dc8edb3ef305d3ba01b9c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
