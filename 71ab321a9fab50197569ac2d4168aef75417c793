@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9fe9d7f0_2891fb80",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-14T21:02:49Z",
+      "side": 1,
+      "message": "Personally I think this is easier to understand if its:\n\nwhile (new_size \u003c request-\u003esend_len + size) {\n\nbut I\u0027m ok either way.",
+      "revId": "71ab321a9fab50197569ac2d4168aef75417c793",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "428b91d9_fa0dd3b0",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-14T21:02:49Z",
+      "side": 1,
+      "message": "I think this should be \u003e\u003d.",
+      "revId": "71ab321a9fab50197569ac2d4168aef75417c793",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
