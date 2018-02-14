@@ -46,6 +46,30 @@
       "revId": "69f30ab0f97506f83619b8c98958bf6503ba1391",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c85edf0_9e13a164",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 584,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-14T02:28:19Z",
+      "side": 1,
+      "message": "Yes, because you create poll_group_remove_add_conn() as a function and it looks nice to me.",
+      "parentUuid": "d4a85e6b_231ce047",
+      "range": {
+        "startLine": 583,
+        "startChar": 0,
+        "endLine": 584,
+        "endChar": 37
+      },
+      "revId": "69f30ab0f97506f83619b8c98958bf6503ba1391",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
