@@ -171,19 +171,30 @@ int spdk_initialize_iscsi_conns(void)
 }
 
 static void
+spdk_iscsi_conn_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock *sock)
+{
+	struct spdk_iscsi_conn *conn = arg;
+
+	assert(conn != NULL);
+	conn->fn(conn);
+}
+
+static void
 spdk_iscsi_poll_group_add_conn(struct spdk_iscsi_conn *conn,
 			       spdk_iscsi_conn_fn fn)
 {
+	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
+
 	conn->fn = fn;
-	STAILQ_INSERT_TAIL(&g_spdk_iscsi.poll_group[spdk_env_get_current_core()].connections,
-			   conn, link);
+	spdk_sock_group_add_sock(poll_group->sock_group, conn->sock, spdk_iscsi_conn_sock_cb, conn);
 }
 
 static void
 spdk_iscsi_poll_group_remove_conn(struct spdk_iscsi_conn *conn)
 {
-	STAILQ_REMOVE(&g_spdk_iscsi.poll_group[spdk_env_get_current_core()].connections,
-		      conn, spdk_iscsi_conn, link);
+	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
+
+	spdk_sock_group_remove_sock(poll_group->sock_group, conn->sock);
 }
 
 /**

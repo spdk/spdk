@@ -35,6 +35,7 @@
 #include "spdk/stdinc.h"
 #include "spdk/env.h"
 #include "spdk/string.h"
+#include "spdk/sock.h"
 
 #include "iscsi/iscsi.h"
 #include "iscsi/init_grp.h"
@@ -819,10 +820,11 @@ static void
 spdk_iscsi_poll_group_poll(void *ctx)
 {
 	struct spdk_iscsi_poll_group *group = ctx;
-	struct spdk_iscsi_conn *conn, *tmp;
+	int rc;
 
-	STAILQ_FOREACH_SAFE(conn, &group->connections, link, tmp) {
-		conn->fn(conn);
+	rc = spdk_sock_group_poll(group->sock_group);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to poll sock_group=%p\n", group->sock_group);
 	}
 }
 
@@ -840,14 +842,18 @@ iscsi_create_poll_group(void *ctx)
 	pg->core = spdk_env_get_current_core();
 	assert(pg != NULL);
 
-	STAILQ_INIT(&pg->connections);
+	pg->sock_group = spdk_sock_group_create();
+	assert(pg->sock_group != NULL);
+
 	pg->poller = spdk_poller_register(spdk_iscsi_poll_group_poll, pg, 0);
 }
+
+static size_t g_num_poll_groups;
 
 static int
 spdk_initialize_iscsi_poll_group(void)
 {
-	size_t g_num_poll_groups = spdk_env_get_last_core() + 1;
+	g_num_poll_groups = spdk_env_get_last_core() + 1;
 
 	assert(g_num_poll_groups > 0);
 	g_spdk_iscsi.poll_group = calloc(g_num_poll_groups, sizeof(struct spdk_iscsi_poll_group));
@@ -910,6 +916,19 @@ spdk_iscsi_fini(spdk_iscsi_fini_cb cb_fn, void *cb_arg)
 	spdk_shutdown_iscsi_conns();
 }
 
+static void
+spdk_iscsi_destroy_poll_group(void)
+{
+	size_t i;
+
+	for (i = 0; i < g_num_poll_groups; i++) {
+		free(g_spdk_iscsi.poll_group[i].sock_group);
+
+	}
+
+	free(g_spdk_iscsi.poll_group);
+}
+
 void
 spdk_iscsi_fini_done(void)
 {
@@ -921,7 +940,7 @@ spdk_iscsi_fini_done(void)
 	spdk_iscsi_portal_grp_array_destroy();
 	free(g_spdk_iscsi.authfile);
 	free(g_spdk_iscsi.nodebase);
-	free(g_spdk_iscsi.poll_group);
+	spdk_iscsi_destroy_poll_group();
 
 	pthread_mutex_destroy(&g_spdk_iscsi.mutex);
 	g_fini_cb_fn(g_fini_cb_arg);
