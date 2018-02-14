@@ -5,6 +5,7 @@ def kill_instance(args):
     params = {'sig_name': args.sig_name}
     args.client.call('kill_instance', params)
 
+
 def context_switch_monitor(args):
     params = {}
     if args.enable:

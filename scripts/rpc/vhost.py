@@ -1,5 +1,6 @@
 from client import print_dict, print_array, int_arg
 
+
 def set_vhost_controller_coalescing(args):
     params = {
         'ctrlr': args.ctrlr,
@@ -7,6 +8,7 @@ def set_vhost_controller_coalescing(args):
         'iops_threshold': args.iops_threshold,
     }
     args.client.call('set_vhost_controller_coalescing', params)
+
 
 def construct_vhost_scsi_controller(args):
     params = {'ctrlr': args.ctrlr}

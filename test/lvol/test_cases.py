@@ -16,6 +16,7 @@ from uuid import uuid4
 
 MEGABYTE = 1024 * 1024
 
+
 def test_counter():
     '''
     :return: the number of tests
@@ -68,9 +69,11 @@ def header(num):
     print("Test Name: {name}".format(name=test_name[num]))
     print("========================================================")
 
+
 def footer(num):
     print("Test Case {num}: END\n".format(num=num))
     print("========================================================")
+
 
 class TestCases(object):
 

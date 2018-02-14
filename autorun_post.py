@@ -7,6 +7,7 @@ import os
 import glob
 import re
 
+
 def generateCoverageReport(output_dir, repo_dir):
     with open(os.path.join(output_dir, 'coverage.log'), 'w+') as log_file:
         coveragePath = os.path.join(output_dir, '**', 'cov_total.info')
