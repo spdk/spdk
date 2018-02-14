@@ -551,7 +551,7 @@ class TestCases(object):
     def test_case255(self):
         header(255)
         base_path = path.dirname(sys.argv[0])
-        base_name = "Nvme0n1"
+        base_name = "Nvme0n1p0"
         uuid_store = self.c.construct_lvol_store(base_name,
                                                  self.lvs_name,
                                                  self.cluster_size)
@@ -939,7 +939,7 @@ class TestCases(object):
         header(700)
         fail_count = 0
         uuid_bdevs = []
-        base_name = "Nvme0n1"
+        base_name = "Nvme0n1p0"
 
         base_path = path.dirname(sys.argv[0])
         vhost_path = path.join(self.app_path, 'vhost')
@@ -1045,7 +1045,7 @@ class TestCases(object):
 
     def test_case701(self):
         header(701)
-        base_name = "Nvme0n1"
+        base_name = "Nvme0n1p0"
         uuid_store = self.c.construct_lvol_store(base_name,
                                                  self.lvs_name,
                                                  self.cluster_size)
