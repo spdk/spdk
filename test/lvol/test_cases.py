@@ -20,7 +20,7 @@ def test_counter():
     '''
     :return: the number of tests
     '''
-    return 37
+    return ['test_case' in i for i in dir(TestCases)].count(True)
 
 
 def header(num):
