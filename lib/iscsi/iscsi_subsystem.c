@@ -35,6 +35,7 @@
 #include "spdk/stdinc.h"
 #include "spdk/env.h"
 #include "spdk/string.h"
+#include "spdk/sock.h"
 
 #include "iscsi/iscsi.h"
 #include "iscsi/init_grp.h"
@@ -835,6 +836,14 @@ spdk_iscsi_poll_group_poll(void *ctx)
 {
 	struct spdk_iscsi_poll_group *group = ctx;
 	struct spdk_iscsi_conn *conn, *tmp;
+	int rc;
+
+	if (!STAILQ_EMPTY(&group->connections)) {
+		rc = spdk_sock_group_poll(group->sock_group);
+		if (rc < 0) {
+			SPDK_ERRLOG("Failed to poll sock_group=%p\n", group->sock_group);
+		}
+	}
 
 	STAILQ_FOREACH_SAFE(conn, &group->connections, link, tmp) {
 		conn->fn(conn);
@@ -857,6 +866,9 @@ iscsi_create_poll_group(void *ctx)
 	assert(pg != NULL);
 
 	STAILQ_INIT(&pg->connections);
+	pg->sock_group = spdk_sock_group_create();
+	assert(pg->sock_group != NULL);
+
 	pg->poller = spdk_poller_register(spdk_iscsi_poll_group_poll, pg, 0);
 }
 
@@ -941,6 +953,10 @@ iscsi_destroy_poll_group(void *ctx)
 
 	pg = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
 	assert(pg != NULL);
+
+	if (pg->sock_group) {
+		spdk_sock_group_close(&pg->sock_group);
+	}
 
 	spdk_poller_unregister(&pg->poller);
 }
