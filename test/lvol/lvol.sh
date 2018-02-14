@@ -93,6 +93,10 @@ function vhost_start()
 {
     modprobe nbd
     touch $BASE_DIR/vhost.conf
+    # Use Split to make a bdev using just the first 50GB
+    #  of the NVMe namespace
+    echo "[Split]" >> $BASE_DIR/vhost.conf
+    echo "  Split Nvme0n1 1 50000" >> $BASE_DIR/vhost.conf
     $TEST_DIR/scripts/gen_nvme.sh >> $BASE_DIR/vhost.conf
     $TEST_DIR/app/vhost/vhost -c $BASE_DIR/vhost.conf &
     vhost_pid=$!
