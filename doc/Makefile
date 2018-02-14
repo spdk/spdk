@@ -1,4 +1,5 @@
 all: doc
+	@:
 
 .PHONY: all doc clean
 
@@ -11,7 +12,7 @@ changelog.md: ../CHANGELOG.md
 	    -e '/# v..\...:/s/\./-/2' \
 	    < $< > $@
 
-output: Doxyfile changelog.md
+output: Doxyfile changelog.md $(wildcard *.md) $(wildcard ../include/spdk/*.h)
 	rm -rf $@
 	doxygen Doxyfile
 
