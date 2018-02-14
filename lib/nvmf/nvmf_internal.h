@@ -139,7 +139,6 @@ struct spdk_nvmf_ns {
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc;
 	uint32_t id;
-	bool allocated;
 };
 
 struct spdk_nvmf_qpair {
@@ -194,8 +193,8 @@ struct spdk_nvmf_subsystem {
 
 	char sn[SPDK_NVME_CTRLR_SN_LEN + 1];
 
-	/* Array of namespaces of size max_nsid indexed by nsid - 1 */
-	struct spdk_nvmf_ns			*ns;
+	/* Array of pointers to namespaces of size max_nsid indexed by nsid - 1 */
+	struct spdk_nvmf_ns			**ns;
 	uint32_t 				max_nsid;
 	uint32_t				num_allocated_nsid;
 
@@ -249,19 +248,12 @@ struct spdk_nvmf_ctrlr *spdk_nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem
 static inline struct spdk_nvmf_ns *
 _spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
 {
-	struct spdk_nvmf_ns *ns;
-
 	/* NOTE: This implicitly also checks for 0, since 0 - 1 wraps around to UINT32_MAX. */
 	if (spdk_unlikely(nsid - 1 >= subsystem->max_nsid)) {
 		return NULL;
 	}
 
-	ns = &subsystem->ns[nsid - 1];
-	if (!ns->allocated) {
-		return NULL;
-	}
-
-	return ns;
+	return subsystem->ns[nsid - 1];
 }
 
 static inline bool

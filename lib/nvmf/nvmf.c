@@ -462,8 +462,8 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 
 		/* Initialize new channels */
 		for (i = old_num_channels; i < new_num_channels; i++) {
-			ns = &subsystem->ns[i];
-			if (ns->allocated) {
+			ns = subsystem->ns[i];
+			if (ns) {
 				sgroup->channels[i] = spdk_bdev_get_io_channel(ns->desc);
 			} else {
 				sgroup->channels[i] = NULL;
@@ -497,8 +497,8 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 
 		/* Initialize new channels */
 		for (i = old_num_channels; i < new_num_channels; i++) {
-			ns = &subsystem->ns[i];
-			if (ns->allocated) {
+			ns = subsystem->ns[i];
+			if (ns) {
 				sgroup->channels[i] = spdk_bdev_get_io_channel(ns->desc);
 			} else {
 				sgroup->channels[i] = NULL;
