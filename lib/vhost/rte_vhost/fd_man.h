@@ -41,8 +41,7 @@
 #define RTE_FDSET_INITIALIZER { \
 		.fd = { [0 ... MAX_FDS - 1] = {-1, NULL, NULL, NULL} }, \
 		.fd_mutex = PTHREAD_MUTEX_INITIALIZER, \
-		.num = 0, \
-		.polling = 0 \
+		.num = 0 \
 	}
 
 typedef void (*fd_cb)(int fd, void *dat);
@@ -59,7 +58,6 @@ struct fdset {
 	struct fdentry fd[MAX_FDS];
 	pthread_mutex_t fd_mutex;
 	int num;	/* current fd number of this fdset */
-	int polling;
 	pthread_t tid;
 };
 
