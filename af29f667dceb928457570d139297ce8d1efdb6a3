@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "71bc691a_f57c0b32",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-14T22:27:44Z",
+      "side": 1,
+      "message": "Mutable attribute is for fields that are not accesible outside class members. Returning pointer or reference to mutable field might be considered as an error.\n\nAnyway, we are not in C++, so rely on const object that is changing it\u0027s internal representation (string content here) is quite undefined if someone cache the pointer.\n\nI think that declaration might be changed to \nconst char *spdk_cpuset_fmt(struct spdk_cpuset *set);\n\nWith additional info in documentation that it is unsafe to cache returned pointer as its memory might change if cpumask will be changed.",
+      "range": {
+        "startLine": 11,
+        "startChar": 19,
+        "endLine": 12,
+        "endChar": 17
+      },
+      "revId": "af29f667dceb928457570d139297ce8d1efdb6a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
