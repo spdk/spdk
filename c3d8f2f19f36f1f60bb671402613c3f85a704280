@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab3a0be0_ba90b2e5",
+        "filename": "test/vhost/migration/migration-tc2.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-14T08:09:22Z",
+      "side": 1,
+      "message": "This script and also TC1 could use timing_enter and timing_exit functions so we kow how much time we spend in each test.\n\ntiming_enter live-mig-tc2\nmigration_tc2\ntiming_exit live-mig-tc2\n\nI think it\u0027d be also a good idea to use that for some more time consuming setup steps (like starting nvmf_tgt and vhosts, running the migration process, etc.)",
+      "range": {
+        "startLine": 173,
+        "startChar": 0,
+        "endLine": 173,
+        "endChar": 13
+      },
+      "revId": "c3d8f2f19f36f1f60bb671402613c3f85a704280",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
