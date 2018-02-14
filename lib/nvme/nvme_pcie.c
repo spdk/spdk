@@ -516,7 +516,7 @@ nvme_pcie_ctrlr_map_cmb(struct nvme_pcie_ctrlr *pctrlr)
 		SPDK_ERRLOG("spdk_mem_register() failed\n");
 		goto exit;
 	}
-	pctrlr->cmb_current_offset = mem_register_start - ((uint64_t)pctrlr->cmb_bar_virt_addr + offset);
+	pctrlr->cmb_current_offset = 0;
 	pctrlr->cmb_io_data_supported = true;
 
 	return;
@@ -553,16 +553,17 @@ nvme_pcie_ctrlr_alloc_cmb(struct spdk_nvme_ctrlr *ctrlr, uint64_t length, uint64
 {
 	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
 	uint64_t round_offset;
+	uint64_t start_address;
 
-	round_offset = pctrlr->cmb_current_offset;
-	round_offset = (round_offset + (aligned - 1)) & ~(aligned - 1);
+	start_address = (uintptr_t)pctrlr->cmb_mem_register_addr + pctrlr->cmb_current_offset;
+	round_offset = (start_address + (aligned - 1)) & ~(aligned - 1);
 
-	if (round_offset + length > pctrlr->cmb_size) {
+	if (round_offset + length > pctrlr->cmb_mem_register_size) {
 		return -1;
 	}
 
 	*offset = round_offset;
-	pctrlr->cmb_current_offset = round_offset + length;
+	pctrlr->cmb_current_offset = round_offset + length - start_address;
 
 	return 0;
 }
