@@ -42,7 +42,8 @@
 #include "spdk_internal/log.h"
 
 #define SPDK_JSONRPC_RECV_BUF_SIZE	(32 * 1024)
-#define SPDK_JSONRPC_SEND_BUF_SIZE	(32 * 1024)
+#define SPDK_JSONRPC_SEND_BUF_SIZE_INIT	(32 * 1024)
+#define SPDK_JSONRPC_SEND_BUF_SIZE_MAX	(32 * 1024 * 1024)
 #define SPDK_JSONRPC_ID_MAX_LEN		128
 #define SPDK_JSONRPC_MAX_CONNS		64
 #define SPDK_JSONRPC_MAX_VALUES		1024
@@ -54,9 +55,15 @@ struct spdk_jsonrpc_request {
 	struct spdk_json_val id;
 	uint8_t id_data[SPDK_JSONRPC_ID_MAX_LEN];
 
+	/* Total space allocated for send_buf */
+	size_t send_buf_size;
+
+	/* Number of bytes used in send_buf (<= send_buf_size) */
 	size_t send_len;
+
 	size_t send_offset;
-	uint8_t send_buf[SPDK_JSONRPC_SEND_BUF_SIZE];
+
+	uint8_t *send_buf;
 };
 
 struct spdk_jsonrpc_server_conn {
