@@ -88,34 +88,34 @@ shift $(( OPTIND - 1 ))
 
 source $TEST_DIR/scripts/autotest_common.sh
 
-###  Function starts vhost app
-function vhost_start()
+###  Function starts bdev_svc app
+function bdev_svc_start()
 {
     modprobe nbd
-    touch $BASE_DIR/vhost.conf
-    $TEST_DIR/scripts/gen_nvme.sh >> $BASE_DIR/vhost.conf
-    $TEST_DIR/app/vhost/vhost -c $BASE_DIR/vhost.conf &
-    vhost_pid=$!
-    echo $vhost_pid > $BASE_DIR/vhost.pid
-    waitforlisten $vhost_pid
+    touch $BASE_DIR/bdev_svc.conf
+    $TEST_DIR/scripts/gen_nvme.sh >> $BASE_DIR/bdev_svc.conf
+    $TEST_DIR/test/app/bdev_svc/bdev_svc -c $BASE_DIR/bdev_svc.conf &
+    bdev_svc_pid=$!
+    echo $bdev_svc_pid > $BASE_DIR/bdev_svc.pid
+    waitforlisten $bdev_svc_pid
 }
 
-###  Function stops vhost app
-function vhost_kill()
+###  Function stops bdev_svc app
+function bdev_svc_kill()
 {
     ### Kill with SIGKILL param
-    if pkill -F $BASE_DIR/vhost.pid; then
+    if pkill -F $BASE_DIR/bdev_svc.pid; then
         sleep 1
     fi
-    rm $BASE_DIR/vhost.pid || true
-    rm $BASE_DIR/vhost.conf || true
+    rm $BASE_DIR/bdev_svc.pid || true
+    rm $BASE_DIR/bdev_svc.conf || true
     rmmod nbd || true
 }
 
-trap "vhost_kill; exit 1" SIGINT SIGTERM EXIT
+trap "bdev_svc_kill; exit 1" SIGINT SIGTERM EXIT
 
-vhost_start
-$BASE_DIR/lvol_test.py $rpc_py $total_size $block_size $cluster_sz $BASE_DIR $TEST_DIR/app/vhost "${test_cases[@]}"
+bdev_svc_start
+$BASE_DIR/lvol_test.py $rpc_py $total_size $block_size $cluster_sz $BASE_DIR $TEST_DIR/test/app/bdev_svc "${test_cases[@]}"
 
-vhost_kill
+bdev_svc_kill
 trap - SIGINT SIGTERM EXIT
