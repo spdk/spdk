@@ -393,7 +393,7 @@ function vm_shutdown_all()
 	local vm
 
 	for vm in $vms; do
-		vm_shutdown $(basename $vm)
+		vm_shutdown $vm
 	done
 
 	notice "Waiting for VMs to shutdown..."
@@ -401,7 +401,7 @@ function vm_shutdown_all()
 	while [[ $timeo -gt 0 ]]; do
 		all_vms_down=1
 		for vm in $vms; do
-			if [[ -r $vm/qemu.pid ]] && pkill -0 -F "$vm/qemu.pid"; then
+			if [[ -r $VM_BASE_DIR/$vm/qemu.pid ]] && pkill -0 -F "$VM_BASE_DIR/$vm/qemu.pid"; then
 				all_vms_down=0
 				break
 			fi
@@ -418,7 +418,7 @@ function vm_shutdown_all()
 	done
 
 	$shell_restore_x
-	error "Timout waiting for some VMs to shutdown"
+	error "Timeout waiting for some VMs to shutdown"
 	return 1
 }
 
@@ -735,7 +735,7 @@ function vm_run()
 			continue
 		fi
 
-		notice "running $VM_BASE_DIR$vm/run.sh"
+		notice "running $VM_BASE_DIR/$vm/run.sh"
 		if ! $VM_BASE_DIR/$vm/run.sh; then
 			error "FAILED to run vm $vm"
 			return 1
