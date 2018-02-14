@@ -81,6 +81,8 @@ void spdk_iscsi_conn_full_feature_do_work(void *arg);
 
 static void spdk_iscsi_conn_full_feature_migrate(void *arg1, void *arg2);
 static void spdk_iscsi_conn_stop_poller(struct spdk_iscsi_conn *conn);
+static void spdk_iscsi_conn_sock_cb(void *arg, struct spdk_sock_group *group,
+				    struct spdk_sock *sock);
 
 static struct spdk_iscsi_conn *
 allocate_conn(void)
@@ -175,17 +177,27 @@ spdk_iscsi_poll_group_add_conn(struct spdk_iscsi_conn *conn,
 			       spdk_iscsi_conn_fn fn)
 {
 	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
+	int rc;
 
 	conn->fn = fn;
 	STAILQ_INSERT_TAIL(&poll_group->connections, conn, link);
+	rc = spdk_sock_group_add_sock(poll_group->sock_group, conn->sock, spdk_iscsi_conn_sock_cb, conn);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to add sock=%p of conn=%p\n", conn->sock, conn);
+	}
 }
 
 static void
 spdk_iscsi_poll_group_remove_conn(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
+	int rc;
 
 	STAILQ_REMOVE(&poll_group->connections, conn, spdk_iscsi_conn, link);
+	rc = spdk_sock_group_remove_sock(poll_group->sock_group, conn->sock);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to remove sock=%p of conn=%p\n", conn->sock, conn);
+	}
 }
 
 /**
@@ -482,6 +494,7 @@ _spdk_iscsi_conn_check_shutdown(void *arg)
 	spdk_poller_unregister(&conn->shutdown_timer);
 
 	spdk_iscsi_conn_stop_poller(conn);
+	spdk_sock_close(&conn->sock);
 	_spdk_iscsi_conn_free(conn);
 }
 
@@ -500,7 +513,6 @@ void spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 	}
 
 	spdk_clear_all_transfer_task(conn, NULL);
-	spdk_sock_close(&conn->sock);
 	spdk_poller_unregister(&conn->logout_timer);
 	spdk_poller_unregister(&conn->flush_poller);
 
@@ -1106,11 +1118,27 @@ spdk_iscsi_conn_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 	return i;
 }
 
+static void
+spdk_iscsi_conn_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock *sock)
+{
+	struct spdk_iscsi_conn *conn = arg;
+	int rc;
+
+	assert(conn != NULL);
+
+	/* Handle incoming PDUs */
+	rc = spdk_iscsi_conn_handle_incoming_pdus(conn);
+	if (rc < 0) {
+		conn->state = ISCSI_CONN_STATE_EXITING;
+		spdk_iscsi_conn_flush_pdus(conn);
+		spdk_iscsi_conn_destruct(conn);
+	}
+}
+
 static int
 spdk_iscsi_conn_execute(struct spdk_iscsi_conn *conn)
 {
 	int				rc = 0;
-	bool				conn_active = false;
 
 	if (conn->state == ISCSI_CONN_STATE_EXITED) {
 		return -1;
@@ -1126,21 +1154,18 @@ spdk_iscsi_conn_execute(struct spdk_iscsi_conn *conn)
 		goto conn_exit;
 	}
 
-	/* Handle incoming PDUs */
-	rc = spdk_iscsi_conn_handle_incoming_pdus(conn);
-	if (rc < 0) {
-		conn->state = ISCSI_CONN_STATE_EXITING;
-		spdk_iscsi_conn_flush_pdus(conn);
-		goto conn_exit;
-	} else if (rc > 0) {
-		conn_active = true;
+	if (conn->login_phase != ISCSI_FULL_FEATURE_PHASE) {
+		/* Handle incoming PDUs */
+		rc = spdk_iscsi_conn_handle_incoming_pdus(conn);
+		if (rc < 0) {
+			conn->state = ISCSI_CONN_STATE_EXITING;
+			spdk_iscsi_conn_flush_pdus(conn);
+			goto conn_exit;
+		}
 	}
 
 	spdk_iscsi_conn_handle_queued_datain_tasks(conn);
 
-	if (conn_active) {
-		return 1;
-	}
 
 conn_exit:
 	if (conn->state == ISCSI_CONN_STATE_EXITING) {
