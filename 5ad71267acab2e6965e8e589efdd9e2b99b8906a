@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "91aea9a6_2a7b2532",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-14T07:31:36Z",
+      "side": 1,
+      "message": "this function call add_qpair_and_update_rsp(). Hence spdk_nvmf_ctrlr_add_io_qpair_and_update_rsp() is meaningful?",
+      "range": {
+        "startLine": 171,
+        "startChar": 0,
+        "endLine": 171,
+        "endChar": 28
+      },
+      "revId": "5ad71267acab2e6965e8e589efdd9e2b99b8906a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
