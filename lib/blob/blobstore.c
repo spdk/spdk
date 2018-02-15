@@ -1962,6 +1962,8 @@ spdk_bs_opts_init(struct spdk_bs_opts *opts)
 	opts->max_md_ops = SPDK_BLOB_OPTS_MAX_MD_OPS;
 	opts->max_channel_ops = SPDK_BLOB_OPTS_DEFAULT_CHANNEL_OPS;
 	memset(&opts->bstype, 0, sizeof(opts->bstype));
+	opts->iter_cb_fn = NULL;
+	opts->iter_cb_arg = NULL;
 }
 
 static int
@@ -2058,6 +2060,10 @@ struct spdk_bs_load_ctx {
 	uint32_t			cur_page;
 	struct spdk_blob_md_page	*page;
 	bool				is_load;
+
+	spdk_bs_sequence_t			*seq;
+	spdk_blob_op_with_handle_complete	iter_cb_fn;
+	void					*iter_cb_arg;
 };
 
 static void
@@ -2184,9 +2190,45 @@ _spdk_bs_write_used_blobids(spdk_bs_sequence_t *seq, void *arg, spdk_bs_sequence
 	spdk_bs_sequence_write_dev(seq, ctx->mask, lba, lba_count, cb_fn, arg);
 }
 
+static void _spdk_bs_load_complete(spdk_bs_sequence_t *seq, struct spdk_bs_load_ctx *ctx,
+				   int bserrno);
+
+static void
+_spdk_bs_load_iter(void *arg, struct spdk_blob *blob, int bserrno)
+{
+	struct spdk_bs_load_ctx *ctx = arg;
+
+	if (bserrno == 0) {
+		ctx->iter_cb_fn(ctx->iter_cb_arg, blob, 0);
+		spdk_bs_iter_next(ctx->bs, blob, _spdk_bs_load_iter, ctx);
+		return;
+	}
+
+	if (bserrno == -ENOENT) {
+		bserrno = 0;
+	} else {
+		/*
+		 * This case needs to be looked at further.  Same problem
+		 *  exists with applications that rely on explicit blob
+		 *  iteration.  We should just skip the blob that failed
+		 *  to load and coontinue on to the next one.
+		 */
+		SPDK_ERRLOG("Error in iterating blobs\n");
+	}
+
+	ctx->iter_cb_fn = NULL;
+	_spdk_bs_load_complete(ctx->seq, ctx, bserrno);
+}
+
 static void
 _spdk_bs_load_complete(spdk_bs_sequence_t *seq, struct spdk_bs_load_ctx *ctx, int bserrno)
 {
+	if (ctx->iter_cb_fn) {
+		ctx->seq = seq;
+		spdk_bs_iter_first(ctx->bs, _spdk_bs_load_iter, ctx);
+		return;
+	}
+
 	spdk_dma_free(ctx->super);
 	spdk_dma_free(ctx->mask);
 	free(ctx);
@@ -2674,6 +2716,8 @@ spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 
 	ctx->bs = bs;
 	ctx->is_load = true;
+	ctx->iter_cb_fn = opts.iter_cb_fn;
+	ctx->iter_cb_arg = opts.iter_cb_arg;
 
 	/* Allocate memory for the super block */
 	ctx->super = spdk_dma_zmalloc(sizeof(*ctx->super), 0x1000, NULL);

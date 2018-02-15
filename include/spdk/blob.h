@@ -163,6 +163,12 @@ struct spdk_bs_opts {
 
 	/** Blobstore type */
 	struct spdk_bs_type bstype;
+
+	/** Callback function to invoke for each blob. */
+	spdk_blob_op_with_handle_complete iter_cb_fn;
+
+	/** Argument passed to iter_cb_fn for each blob. */
+	void *iter_cb_arg;
 };
 
 /* Initialize an spdk_bs_opts structure to the default blobstore option values. */
