@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c72ebc81_71e30aa2",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T20:54:58Z",
+      "side": 1,
+      "message": "Hi John,\n\nThe first word should be something like \"vagrant\" followed by a very brief description.  The first line should be no more than 70 characters or so.\n\nWould be good to explain why this package is needed too.  Should this go in pkgdep.sh instead of the vagrant-specific file?\n\n-Jim",
+      "revId": "7f1091058f9638cfa53b10c5547a0fee820c3246",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
