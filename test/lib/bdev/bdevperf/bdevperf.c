@@ -64,6 +64,7 @@ static uint64_t g_time_in_usec;
 static int g_show_performance_real_time = 0;
 static uint64_t g_show_performance_period_in_usec = 1000000;
 static uint64_t g_show_performance_period_num = 0;
+static uint64_t g_show_performance_ema_period = 0;
 static bool g_run_failed = false;
 static bool g_shutdown = false;
 static uint64_t g_shutdown_tsc;
@@ -85,6 +86,8 @@ struct io_target {
 	struct io_target		*next;
 	unsigned			lcore;
 	uint64_t			io_completed;
+	uint64_t			prev_io_completed;
+	double				ema_io_per_second;
 	int				current_queue_depth;
 	uint64_t			size_in_ios;
 	uint64_t			offset_in_ios;
@@ -570,11 +573,41 @@ static void usage(char *program_name)
 	printf("\t\t(read, write, randread, randwrite, rw, randrw, verify, reset)]\n");
 	printf("\t[-M rwmixread (100 for reads, 0 for writes)]\n");
 	printf("\t[-t time in seconds]\n");
+	printf("\t[-P Number of moving average period]\n");
+	printf("\t\t(only valid with -S)\n");
 	printf("\t[-S Show performance result in real time in seconds]\n");
 }
 
+/*
+ * Cumulative Moving Average (CMA): average of all data up to current
+ * Exponential Moving Average (EMA): weighted mean of the previous n data and more weight is given to recent
+ * Simple Moving Average (SMA): unweighted mean of the previous n data
+ *
+ * Bdevperf supports CMA and EMA.
+ */
+static double
+get_cma_io_per_second(struct io_target *target, uint64_t io_time_in_usec)
+{
+	return (double)target->io_completed * 1000000 / io_time_in_usec;
+}
+
+static double
+get_ema_io_per_second(struct io_target *target, uint64_t ema_period)
+{
+	double io_completed, io_per_second;
+
+	io_completed = target->io_completed;
+	io_per_second = (double)(io_completed - target->prev_io_completed) * 1000000
+			/ g_show_performance_period_in_usec;
+	target->prev_io_completed = io_completed;
+
+	target->ema_io_per_second += (io_per_second - target->ema_io_per_second) * 2
+				     / (ema_period + 1);
+	return target->ema_io_per_second;
+}
+
 static void
-performance_dump(uint64_t io_time_in_usec)
+performance_dump(uint64_t io_time_in_usec, uint64_t ema_period)
 {
 	uint32_t index;
 	unsigned lcore_id;
@@ -591,10 +624,12 @@ performance_dump(uint64_t io_time_in_usec)
 			printf("\r Logical core: %u\n", lcore_id);
 		}
 		while (target != NULL) {
-			io_per_second = (double)target->io_completed * 1000000 /
-					io_time_in_usec;
-			mb_per_second = io_per_second * g_io_size /
-					(1024 * 1024);
+			if (ema_period == 0) {
+				io_per_second = get_cma_io_per_second(target, io_time_in_usec);
+			} else {
+				io_per_second = get_ema_io_per_second(target, ema_period);
+			}
+			mb_per_second = io_per_second * g_io_size / (1024 * 1024);
 			printf("\r %-20s: %10.2f IO/s %10.2f MB/s\n",
 			       target->name, io_per_second, mb_per_second);
 			total_io_per_second += io_per_second;
@@ -614,7 +649,8 @@ static void
 performance_statistics_thread(void *arg)
 {
 	g_show_performance_period_num++;
-	performance_dump(g_show_performance_period_num * g_show_performance_period_in_usec);
+	performance_dump(g_show_performance_period_num * g_show_performance_period_in_usec,
+			 g_show_performance_ema_period);
 }
 
 static int
@@ -771,7 +807,7 @@ main(int argc, char **argv)
 	mix_specified = false;
 	core_mask = NULL;
 
-	while ((op = getopt(argc, argv, "c:d:m:q:s:t:w:M:S:")) != -1) {
+	while ((op = getopt(argc, argv, "c:d:m:q:s:t:w:M:P:S:")) != -1) {
 		switch (op) {
 		case 'c':
 			config_file = optarg;
@@ -797,6 +833,9 @@ main(int argc, char **argv)
 		case 'M':
 			g_rw_percentage = atoi(optarg);
 			mix_specified = true;
+			break;
+		case 'P':
+			g_show_performance_ema_period = atoi(optarg);
 			break;
 		case 'S':
 			g_show_performance_real_time = 1;
@@ -896,10 +935,16 @@ main(int argc, char **argv)
 	    !strcmp(workload_type, "randrw")) {
 		if (g_rw_percentage < 0 || g_rw_percentage > 100) {
 			fprintf(stderr,
-				"-M must be specified to value from 0 to 100 "
+				"-M option must be specified to value from 0 to 100 "
 				"for rw or randrw.\n");
 			exit(1);
 		}
+	}
+
+	if (g_show_performance_ema_period > 0 &&
+	    g_show_performance_real_time == 0) {
+		fprintf(stderr, "-P option must be specified with -S option\n");
+		exit(1);
 	}
 
 	if (!strcmp(workload_type, "read") ||
@@ -936,7 +981,7 @@ main(int argc, char **argv)
 	}
 
 	if (g_time_in_usec) {
-		performance_dump(g_time_in_usec);
+		performance_dump(g_time_in_usec, g_show_performance_ema_period);
 	} else {
 		printf("Test time less than one microsecond, no performance data will be shown\n");
 	}
