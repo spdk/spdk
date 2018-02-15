@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1396d67d_e3f0238e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1282,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-15T00:37:03Z",
+      "side": 1,
+      "message": "this check is duplicated with the following code block in the _spdk_put_io_channel(ch).\n\n  if (ch-\u003eref \u003d\u003d 0) {\n    if (ch-\u003edestroying) {\n      ch-\u003edestroying \u003d false;\n\t  _spdk_put_io_channel_free_resource(ch);\n    }\n    return;\n  }\n\nExtracting the above code block into here is reasonable?",
+      "range": {
+        "startLine": 1282,
+        "startChar": 2,
+        "endLine": 1282,
+        "endChar": 34
+      },
+      "revId": "6242128844206efde2176fcee060fd03fb6822c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ac6358c_d4d10c0d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1306,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-15T00:37:03Z",
+      "side": 1,
+      "message": "I understood that io_thread is io submitter and qos_thread is qos poller. Thanks for your detailed explanation.",
+      "range": {
+        "startLine": 1306,
+        "startChar": 22,
+        "endLine": 1306,
+        "endChar": 31
+      },
+      "revId": "6242128844206efde2176fcee060fd03fb6822c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8652c1d2_228874a7",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1351,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-15T00:37:03Z",
+      "side": 1,
+      "message": "let\u0027s call simply\n spdk_thread_send_msg(bdev-\u003eqos_thread, _spdk_bdev_abort_qos_queued_io, ch);\n\nlike https://review.gerrithub.io/#/c/398904/",
+      "range": {
+        "startLine": 1351,
+        "startChar": 0,
+        "endLine": 1351,
+        "endChar": 46
+      },
+      "revId": "6242128844206efde2176fcee060fd03fb6822c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66475e80_33028dbf",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1392,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-15T00:37:03Z",
+      "side": 1,
+      "message": "This code is already added by previous patches, but would you change to call simply spdk_thread_send_msg() even on the qos_thread as same as the above?",
+      "range": {
+        "startLine": 1392,
+        "startChar": 2,
+        "endLine": 1392,
+        "endChar": 46
+      },
+      "revId": "6242128844206efde2176fcee060fd03fb6822c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35173379_30226e5e",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 481,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-15T00:37:03Z",
+      "side": 1,
+      "message": "Extract this block into bdev.c is reasonable?",
+      "range": {
+        "startLine": 476,
+        "startChar": 0,
+        "endLine": 481,
+        "endChar": 3
+      },
+      "revId": "6242128844206efde2176fcee060fd03fb6822c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "23427c52_943137e4",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 496,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-15T00:37:03Z",
+      "side": 1,
+      "message": "async_destroying is a little meaningful because you added a comment in other place?",
+      "range": {
+        "startLine": 496,
+        "startChar": 6,
+        "endLine": 496,
+        "endChar": 16
+      },
+      "revId": "6242128844206efde2176fcee060fd03fb6822c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
