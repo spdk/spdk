@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "2cbcadc8_25a46d7e",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-15T09:55:18Z",
+      "side": 1,
+      "message": "shebang left. Files for sourcing should not have shebang.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 19
+      },
+      "revId": "4ff1606e7cdfa6208bc0862d54686dd3f5e9876e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f5a475aa_bdf60f7d",
         "filename": "test/vhost/hotplug/common.sh",
         "patchSetId": 13
@@ -45,6 +68,76 @@
       "revId": "4ff1606e7cdfa6208bc0862d54686dd3f5e9876e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d5df2970_2213a43b",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 207,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-15T09:55:18Z",
+      "side": 1,
+      "message": "eval \u003d\u003d evil\nIt would be much better to use some variable name here.\n\nAlso please make all local variables \u0027local\u0027 : line, traddr, word etc",
+      "parentUuid": "d00d4ed7_235bc84a",
+      "range": {
+        "startLine": 207,
+        "startChar": 25,
+        "endLine": 207,
+        "endChar": 35
+      },
+      "revId": "4ff1606e7cdfa6208bc0862d54686dd3f5e9876e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "23016bd1_16d244d2",
+        "filename": "test/vhost/hotplug/scsi_hotplug.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-15T09:55:18Z",
+      "side": 1,
+      "message": "vm_run_with_arg \"0 1 2 3\"\nis not equal to\nvm_run_with_arg \"0\" \"1\" \"2\" \"3\"\nPlease fix by using \"$@\" in vm_run_with_arg instead this hack.",
+      "range": {
+        "startLine": 40,
+        "startChar": 20,
+        "endLine": 40,
+        "endChar": 31
+      },
+      "revId": "4ff1606e7cdfa6208bc0862d54686dd3f5e9876e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9f21037_3ed51743",
+        "filename": "test/vhost/hotplug/scsi_hotremove.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-15T09:55:18Z",
+      "side": 1,
+      "message": "Removed from scsi_hotplug.sh but not from here.",
+      "range": {
+        "startLine": 3,
+        "startChar": 0,
+        "endLine": 5,
+        "endChar": 70
+      },
+      "revId": "4ff1606e7cdfa6208bc0862d54686dd3f5e9876e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
