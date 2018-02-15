@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "62829267_5f7510d7",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T16:01:41Z",
+      "side": 1,
+      "message": "I think you should keep the STAILQ_INSERT_TAIL().  You will need it for periodic poller for spdk_iscsi_conn_handle_nop() functionality.  NOP handling cannot be done via spdk_sock_group.",
+      "revId": "fa894adbc4fe555f58e04828336380d5f5440478",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d7c41e17_a9ae3576",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 925,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T16:01:41Z",
+      "side": 1,
+      "message": "should call spdk_sock_group_close() instead\n\nbut instead of this for loop, I think you should do spdk_for_each_thread() like you did for creating the poll groups\n\nthen when the spdk_for_each_thread() is done, free g_spdk_iscsi.poll_group, destroy the global mutex and call g_fini_cb_fn().",
+      "revId": "fa894adbc4fe555f58e04828336380d5f5440478",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d3bccb9_a8f27773",
+        "filename": "lib/net/sock.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T16:01:41Z",
+      "side": 1,
+      "message": "why is this needed?\n\nthe idea is that we will only process 32 connections at a time, per call to the poll function\n\nif there are more connections ready with data, they will get processed next time poll function is called",
+      "revId": "fa894adbc4fe555f58e04828336380d5f5440478",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
