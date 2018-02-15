@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3bf34437_cf845154",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T00:13:30Z",
+      "side": 1,
+      "message": "This might be easier to read by creating separate variable for \u0026g_spdk_iscsi.poll_group[spdk_env_get_current_core()].\n\nBut since this code will be deleted in next patch, I am OK if you leave it as is.",
+      "revId": "56dfeae10fe05af3a19cd0ef1d4ad53f409cc84a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63250b57_b0909a36",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T00:13:30Z",
+      "side": 1,
+      "message": "Same comment as above.",
+      "revId": "56dfeae10fe05af3a19cd0ef1d4ad53f409cc84a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38fbd416_32d6e997",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1171,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T00:13:30Z",
+      "side": 1,
+      "message": "I think here you can just pass spdk_iscsi_conn_full_feature_do_work as the second parameter.",
+      "revId": "56dfeae10fe05af3a19cd0ef1d4ad53f409cc84a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "331dca3a_3f342770",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1221,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T00:13:30Z",
+      "side": 1,
+      "message": "I think this parameter can still be NULL.",
+      "revId": "56dfeae10fe05af3a19cd0ef1d4ad53f409cc84a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "64e66bfa_58cf46c8",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 852,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T00:13:30Z",
+      "side": 1,
+      "message": "I think this assert can be removed.  spdk_env_get_last_core() returns uint32_t and we add 1 to it, so it is not possible that this could be false.\n\nIf somehow spdk_env_get_last_core() returned UINT32_MAX, we would have problems before this point.  Maybe an assert in spdk_env_get_last_core() would be better (as separate patch).",
+      "revId": "56dfeae10fe05af3a19cd0ef1d4ad53f409cc84a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a9f9fcf3_d1b1da0f",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 894,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T00:13:30Z",
+      "side": 1,
+      "message": "This might work, but really we should wait until all threads have created their poll group before iscsi subsystem reports completion.\n\nSee spdk_iscsi_subsystem_init().  Initialization is always synchronous.  But probably it needs to be changed to something like spdk_bdev_initialize().\n\nCan you make iscsi_subsystem_init asynchronous - but in a separate patch before this one?\n\nThen in your iscsi_create_poll_group_done() function, you would call this completion callback function passed to spdk_iscsi_init().",
+      "revId": "56dfeae10fe05af3a19cd0ef1d4ad53f409cc84a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
