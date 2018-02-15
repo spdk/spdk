@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ae8dc819_53124457",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-15T12:48:43Z",
+      "side": 1,
+      "message": "this is not necessary",
+      "range": {
+        "startLine": 89,
+        "startChar": 12,
+        "endLine": 89,
+        "endChar": 29
+      },
+      "revId": "f9770975375f84db8c21bb983e24b4546dbbebad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0269f971_5b91df08",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 602,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-15T12:48:43Z",
+      "side": 1,
+      "message": "instead of this, target-\u003eio_completed should be cleared to 0.",
+      "range": {
+        "startLine": 602,
+        "startChar": 1,
+        "endLine": 602,
+        "endChar": 42
+      },
+      "revId": "f9770975375f84db8c21bb983e24b4546dbbebad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d484b76_e720108a",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 984,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-15T12:48:43Z",
+      "side": 1,
+      "message": "this should not be called if EMA is enabled.",
+      "range": {
+        "startLine": 984,
+        "startChar": 2,
+        "endLine": 984,
+        "endChar": 66
+      },
+      "revId": "f9770975375f84db8c21bb983e24b4546dbbebad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
