@@ -458,8 +458,10 @@ function vm_shutdown_all()
 	notice "Waiting for VMs to shutdown..."
 	timeo=15
 	while [[ $timeo -gt 0 ]]; do
+		echo "timeo=$timeo"
 		all_vms_down=1
 		for vm in $vms; do
+			echo "killing vm $vm"
 			if [[ -r $VM_BASE_DIR/$vm/qemu.pid ]] && pkill -0 -F "$VM_BASE_DIR/$vm/qemu.pid"; then
 				all_vms_down=0
 				break
