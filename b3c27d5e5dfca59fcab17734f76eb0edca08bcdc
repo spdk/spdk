@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "e3d70c45_7c42b036",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-02-15T09:30:56Z",
+      "side": 1,
+      "message": "Jim, that\u0027s my mistake. I have changed this patch to pass only intal spdk_blob_xattr_opts into create function. This structure is therefore useless.",
+      "parentUuid": "e3096d40_63457fa3",
+      "revId": "b3c27d5e5dfca59fcab17734f76eb0edca08bcdc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "214a28a0_66dfbdcd",
         "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
         "patchSetId": 18
