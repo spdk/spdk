@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f7a975c_7af0c3a8",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 311,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-15T20:09:20Z",
+      "side": 0,
+      "message": "If we do decide to do a one-time API break as mentioned above, that would be a good time to actually convert these to bool (along with the corresponding parameters in the construct method).",
+      "revId": "28ddb20a5d491fc757fe9166b535c1d4a4200369",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

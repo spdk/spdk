@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "53a562fb_518eabdc",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-15T20:09:20Z",
+      "side": 1,
+      "message": "I am open to other opinions, but I would prefer to keep the dump code the way it is (each LUN is an object inside of an array, rather than parallel arrays of lun_ids and bdev_names where the index match up; the same applies to the pg_ig_maps vs. pg_tags/ig_tags arrays above).\n\nTo make these consistent, we would then need to change the construct_target_node RPC method instead; this does mean breaking backwards compatibility, but I think we can make this change now to allow greater flexibility in the future (e.g. the LUN object could have new, optional fields added as needed without breaking backwards compatibility).",
+      "revId": "9366f1161a8e26460f5780665c8d7cd39dcd8c55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
