@@ -38,6 +38,9 @@ function detect_soft_roce_nics()
 		all_nics=("${all_nics[@]/"Iface"}")
 		non_rdma_nics=$(echo "$rdma_nics $all_nics" | sort | uniq -u)
 		for nic in $non_rdma_nics; do
+			if [[ -d /sys/class/net/${nic}/bridge ]]; then
+				continue
+			fi
 			rxe_cfg add $nic || true
 		done
 	fi
