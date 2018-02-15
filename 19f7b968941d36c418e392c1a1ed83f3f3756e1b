@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "0b0a21bf_46ed29ea",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 492,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2018-02-15T05:12:05Z",
+      "side": 1,
+      "message": "I think we can remove this line.",
+      "parentUuid": "bdf2d5ef_84f25589",
+      "range": {
+        "startLine": 492,
+        "startChar": 1,
+        "endLine": 492,
+        "endChar": 37
+      },
+      "revId": "19f7b968941d36c418e392c1a1ed83f3f3756e1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "262437d8_6d87c87d",
         "filename": "lib/nvme/nvme_pcie.c",
         "patchSetId": 2
@@ -59,6 +83,30 @@
       "writtenOn": "2018-02-15T02:07:56Z",
       "side": 1,
       "message": "(round_start - pctrlr-\u003ecmb_mem_register_addr) should be inserted?",
+      "range": {
+        "startLine": 565,
+        "startChar": 11,
+        "endLine": 565,
+        "endChar": 23
+      },
+      "revId": "19f7b968941d36c418e392c1a1ed83f3f3756e1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "138f70b8_41d8a5ac",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 565,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2018-02-15T05:12:05Z",
+      "side": 1,
+      "message": "I think we should use round_start - pctrlr-\u003ecmb_bar_virt_addr ? because we use pctrlr-\u003ecmb_bar_virt_addr as the base address outside the function.",
+      "parentUuid": "d4ff124a_d1db71ea",
       "range": {
         "startLine": 565,
         "startChar": 11,
