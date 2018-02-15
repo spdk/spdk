@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bdf2d5ef_84f25589",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 492,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-15T02:07:56Z",
+      "side": 1,
+      "message": "this is cleared to be 0 below.",
+      "range": {
+        "startLine": 492,
+        "startChar": 1,
+        "endLine": 492,
+        "endChar": 37
+      },
+      "revId": "19f7b968941d36c418e392c1a1ed83f3f3756e1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "262437d8_6d87c87d",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 559,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-15T02:07:56Z",
+      "side": 1,
+      "message": "This is round_start?",
+      "range": {
+        "startLine": 559,
+        "startChar": 1,
+        "endLine": 559,
+        "endChar": 13
+      },
+      "revId": "19f7b968941d36c418e392c1a1ed83f3f3756e1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4ff124a_d1db71ea",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 565,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-15T02:07:56Z",
+      "side": 1,
+      "message": "(round_start - pctrlr-\u003ecmb_mem_register_addr) should be inserted?",
+      "range": {
+        "startLine": 565,
+        "startChar": 11,
+        "endLine": 565,
+        "endChar": 23
+      },
+      "revId": "19f7b968941d36c418e392c1a1ed83f3f3756e1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
