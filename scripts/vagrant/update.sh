@@ -36,7 +36,7 @@ if [ $DISTRIB_ID == "Ubuntu" ]; then
     apt-get upgrade ${APT_OPTS}
 
     # Install useful but non-mandatory tools
-    apt-get install -y gdb git
+    apt-get install -y gdb git gdisk
 elif [ $DISTRIB_ID == "CentOS" ]; then
     # Standard update + upgrade dance
     yum check-update
