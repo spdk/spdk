@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "681b48d1_8fbc68f4",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-15T06:08:21Z",
+      "side": 1,
+      "message": "Looks better. I hesitated to use abbreviation \"ema\".",
+      "parentUuid": "4dd837f7_b87e173d",
+      "revId": "8c35eb74ab348e12522a889008c0f3977bae28ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "24246bd7_de746bb9",
         "filename": "test/lib/bdev/bdevperf/bdevperf.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2018-02-15T04:41:47Z",
       "side": 1,
       "message": "ema_io_per_second?",
+      "revId": "8c35eb74ab348e12522a889008c0f3977bae28ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63a9269d_329899d7",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-15T06:08:21Z",
+      "side": 1,
+      "message": "Looks better.",
+      "parentUuid": "24246bd7_de746bb9",
       "revId": "8c35eb74ab348e12522a889008c0f3977bae28ac",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "47ba53cf_9c0f9fcb",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 577,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-15T06:08:21Z",
+      "side": 1,
+      "message": "Yes, this is necessary.",
+      "parentUuid": "92b7cd9f_4aff2091",
+      "revId": "8c35eb74ab348e12522a889008c0f3977bae28ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d653e5f8_58cc87da",
         "filename": "test/lib/bdev/bdevperf/bdevperf.c",
         "patchSetId": 1
@@ -64,6 +118,24 @@
       "writtenOn": "2018-02-15T04:41:47Z",
       "side": 1,
       "message": "I think it would be more clear to take ema_period as parameter, instead of bool.  Then this function can set local bool cma variable based on this value.\n\nI think it makes the calling code more clear.",
+      "revId": "8c35eb74ab348e12522a889008c0f3977bae28ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f27657a_e39c18e9",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 609,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-15T06:08:21Z",
+      "side": 1,
+      "message": "OK. \nI used bool to output CMA at the end (the line 978) even if EMA is enabled.  CMA is not needed if EMA is enabled.",
+      "parentUuid": "d653e5f8_58cc87da",
       "revId": "8c35eb74ab348e12522a889008c0f3977bae28ac",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
