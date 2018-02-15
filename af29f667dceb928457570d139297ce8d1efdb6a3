@@ -22,6 +22,30 @@
       "revId": "af29f667dceb928457570d139297ce8d1efdb6a3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "347825ea_cd94f9d4",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-02-15T11:37:27Z",
+      "side": 1,
+      "message": "\u003e const char *spdk_cpuset_fmt(struct spdk_cpuset *set);\n\ndone",
+      "parentUuid": "71bc691a_f57c0b32",
+      "range": {
+        "startLine": 11,
+        "startChar": 19,
+        "endLine": 12,
+        "endChar": 17
+      },
+      "revId": "af29f667dceb928457570d139297ce8d1efdb6a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
