@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4dd837f7_b87e173d",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T04:41:47Z",
+      "side": 1,
+      "message": "maybe g_show_performance_ema_period?",
+      "revId": "8c35eb74ab348e12522a889008c0f3977bae28ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "24246bd7_de746bb9",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T04:41:47Z",
+      "side": 1,
+      "message": "ema_io_per_second?",
+      "revId": "8c35eb74ab348e12522a889008c0f3977bae28ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92b7cd9f_4aff2091",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 577,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T04:41:47Z",
+      "side": 1,
+      "message": "Should add:\n\nprintf(\"\\t\\t(only valid with -S)\\n\");",
+      "revId": "8c35eb74ab348e12522a889008c0f3977bae28ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d653e5f8_58cc87da",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 609,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T04:41:47Z",
+      "side": 1,
+      "message": "I think it would be more clear to take ema_period as parameter, instead of bool.  Then this function can set local bool cma variable based on this value.\n\nI think it makes the calling code more clear.",
+      "revId": "8c35eb74ab348e12522a889008c0f3977bae28ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51243123_059fcc5b",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 810,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T04:41:47Z",
+      "side": 1,
+      "message": "we try to keep the options in alphabetical order\n\nso should be:\n\nM:P:S:",
+      "revId": "8c35eb74ab348e12522a889008c0f3977bae28ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c61efcb_0157375d",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 851,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T04:41:47Z",
+      "side": 1,
+      "message": "should we add a check which exit(1) if g_show_num_mov_avg_period \u003e 0 but g_show_performance_real_time \u003d\u003d 0?",
+      "revId": "8c35eb74ab348e12522a889008c0f3977bae28ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
