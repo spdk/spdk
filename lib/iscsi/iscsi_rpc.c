@@ -45,13 +45,39 @@
 #include "spdk_internal/log.h"
 
 static void
+dump_initiator_group(struct spdk_json_write_ctx *w, struct spdk_iscsi_init_grp *ig)
+{
+	struct spdk_iscsi_initiator_name *iname;
+	struct spdk_iscsi_initiator_netmask *imask;
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "initiators");
+	spdk_json_write_array_begin(w);
+	TAILQ_FOREACH(iname, &ig->initiator_head, tailq) {
+		spdk_json_write_string(w, iname->name);
+	}
+	spdk_json_write_array_end(w);
+
+	spdk_json_write_name(w, "tag");
+	spdk_json_write_int32(w, ig->tag);
+
+	spdk_json_write_name(w, "netmasks");
+	spdk_json_write_array_begin(w);
+	TAILQ_FOREACH(imask, &ig->netmask_head, tailq) {
+		spdk_json_write_string(w, imask->mask);
+	}
+	spdk_json_write_array_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
+static void
 spdk_rpc_get_initiator_groups(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_iscsi_init_grp *ig;
-	struct spdk_iscsi_initiator_name *iname;
-	struct spdk_iscsi_initiator_netmask *imask;
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -67,26 +93,7 @@ spdk_rpc_get_initiator_groups(struct spdk_jsonrpc_request *request,
 	spdk_json_write_array_begin(w);
 
 	TAILQ_FOREACH(ig, &g_spdk_iscsi.ig_head, tailq) {
-		spdk_json_write_object_begin(w);
-
-		spdk_json_write_name(w, "initiators");
-		spdk_json_write_array_begin(w);
-		TAILQ_FOREACH(iname, &ig->initiator_head, tailq) {
-			spdk_json_write_string(w, iname->name);
-		}
-		spdk_json_write_array_end(w);
-
-		spdk_json_write_name(w, "tag");
-		spdk_json_write_int32(w, ig->tag);
-
-		spdk_json_write_name(w, "netmasks");
-		spdk_json_write_array_begin(w);
-		TAILQ_FOREACH(imask, &ig->netmask_head, tailq) {
-			spdk_json_write_string(w, imask->mask);
-		}
-		spdk_json_write_array_end(w);
-
-		spdk_json_write_object_end(w);
+		dump_initiator_group(w, ig);
 	}
 
 	spdk_json_write_array_end(w);
@@ -336,14 +343,86 @@ invalid:
 SPDK_RPC_REGISTER("delete_initiator_group", spdk_rpc_delete_initiator_group)
 
 static void
+dump_target_node(struct spdk_json_write_ctx *w, struct spdk_iscsi_tgt_node *tgtnode)
+{
+	struct spdk_iscsi_pg_map *pg_map;
+	struct spdk_iscsi_ig_map *ig_map;
+	int i;
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "name");
+	spdk_json_write_string(w, tgtnode->name);
+
+	if (tgtnode->alias) {
+		spdk_json_write_name(w, "alias_name");
+		spdk_json_write_string(w, tgtnode->alias);
+	}
+
+	spdk_json_write_name(w, "pg_ig_maps");
+	spdk_json_write_array_begin(w);
+	TAILQ_FOREACH(pg_map, &tgtnode->pg_map_head, tailq) {
+		TAILQ_FOREACH(ig_map, &pg_map->ig_map_head, tailq) {
+			spdk_json_write_object_begin(w);
+			spdk_json_write_name(w, "pg_tag");
+			spdk_json_write_int32(w, pg_map->pg->tag);
+			spdk_json_write_name(w, "ig_tag");
+			spdk_json_write_int32(w, ig_map->ig->tag);
+			spdk_json_write_object_end(w);
+		}
+	}
+	spdk_json_write_array_end(w);
+
+	spdk_json_write_name(w, "luns");
+	spdk_json_write_array_begin(w);
+	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+		struct spdk_scsi_lun *lun = spdk_scsi_dev_get_lun(tgtnode->dev, i);
+
+		if (lun) {
+			spdk_json_write_object_begin(w);
+			spdk_json_write_name(w, "bdev_name");
+			spdk_json_write_string(w, spdk_scsi_lun_get_bdev_name(lun));
+			spdk_json_write_name(w, "id");
+			spdk_json_write_int32(w, spdk_scsi_lun_get_id(lun));
+			spdk_json_write_object_end(w);
+		}
+	}
+	spdk_json_write_array_end(w);
+
+	spdk_json_write_name(w, "queue_depth");
+	spdk_json_write_int32(w, tgtnode->queue_depth);
+
+	/*
+	 * TODO: convert these to bool
+	 */
+
+	spdk_json_write_name(w, "chap_disabled");
+	spdk_json_write_int32(w, tgtnode->auth_chap_disabled);
+
+	spdk_json_write_name(w, "chap_required");
+	spdk_json_write_int32(w, tgtnode->auth_chap_required);
+
+	spdk_json_write_name(w, "chap_mutual");
+	spdk_json_write_int32(w, tgtnode->auth_chap_mutual);
+
+	spdk_json_write_name(w, "chap_auth_group");
+	spdk_json_write_int32(w, tgtnode->auth_group);
+
+	spdk_json_write_name(w, "header_digest");
+	spdk_json_write_int32(w, tgtnode->header_digest);
+
+	spdk_json_write_name(w, "data_digest");
+	spdk_json_write_int32(w, tgtnode->data_digest);
+
+	spdk_json_write_object_end(w);
+}
+
+static void
 spdk_rpc_get_target_nodes(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_iscsi_tgt_node *tgtnode;
-	struct spdk_iscsi_pg_map *pg_map;
-	struct spdk_iscsi_ig_map *ig_map;
-	int i;
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -359,73 +438,9 @@ spdk_rpc_get_target_nodes(struct spdk_jsonrpc_request *request,
 	spdk_json_write_array_begin(w);
 
 	TAILQ_FOREACH(tgtnode, &g_spdk_iscsi.target_head, tailq) {
-		spdk_json_write_object_begin(w);
-
-		spdk_json_write_name(w, "name");
-		spdk_json_write_string(w, tgtnode->name);
-
-		if (tgtnode->alias) {
-			spdk_json_write_name(w, "alias_name");
-			spdk_json_write_string(w, tgtnode->alias);
-		}
-
-		spdk_json_write_name(w, "pg_ig_maps");
-		spdk_json_write_array_begin(w);
-		TAILQ_FOREACH(pg_map, &tgtnode->pg_map_head, tailq) {
-			TAILQ_FOREACH(ig_map, &pg_map->ig_map_head, tailq) {
-				spdk_json_write_object_begin(w);
-				spdk_json_write_name(w, "pg_tag");
-				spdk_json_write_int32(w, pg_map->pg->tag);
-				spdk_json_write_name(w, "ig_tag");
-				spdk_json_write_int32(w, ig_map->ig->tag);
-				spdk_json_write_object_end(w);
-			}
-		}
-		spdk_json_write_array_end(w);
-
-		spdk_json_write_name(w, "luns");
-		spdk_json_write_array_begin(w);
-		for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
-			struct spdk_scsi_lun *lun = spdk_scsi_dev_get_lun(tgtnode->dev, i);
-
-			if (lun) {
-				spdk_json_write_object_begin(w);
-				spdk_json_write_name(w, "bdev_name");
-				spdk_json_write_string(w, spdk_scsi_lun_get_bdev_name(lun));
-				spdk_json_write_name(w, "id");
-				spdk_json_write_int32(w, spdk_scsi_lun_get_id(lun));
-				spdk_json_write_object_end(w);
-			}
-		}
-		spdk_json_write_array_end(w);
-
-		spdk_json_write_name(w, "queue_depth");
-		spdk_json_write_int32(w, tgtnode->queue_depth);
-
-		/*
-		 * TODO: convert these to bool
-		 */
-
-		spdk_json_write_name(w, "chap_disabled");
-		spdk_json_write_int32(w, tgtnode->auth_chap_disabled);
-
-		spdk_json_write_name(w, "chap_required");
-		spdk_json_write_int32(w, tgtnode->auth_chap_required);
-
-		spdk_json_write_name(w, "chap_mutual");
-		spdk_json_write_int32(w, tgtnode->auth_chap_mutual);
-
-		spdk_json_write_name(w, "chap_auth_group");
-		spdk_json_write_int32(w, tgtnode->auth_group);
-
-		spdk_json_write_name(w, "header_digest");
-		spdk_json_write_int32(w, tgtnode->header_digest);
-
-		spdk_json_write_name(w, "data_digest");
-		spdk_json_write_int32(w, tgtnode->data_digest);
-
-		spdk_json_write_object_end(w);
+		dump_target_node(w, tgtnode);
 	}
+
 	spdk_json_write_array_end(w);
 
 	spdk_jsonrpc_end_result(request, w);
@@ -786,12 +801,38 @@ invalid:
 SPDK_RPC_REGISTER("delete_target_node", spdk_rpc_delete_target_node)
 
 static void
+dump_portal_group(struct spdk_json_write_ctx *w, struct spdk_iscsi_portal_grp *pg)
+{
+	struct spdk_iscsi_portal *portal;
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "portals");
+	spdk_json_write_array_begin(w);
+	TAILQ_FOREACH(portal, &pg->head, per_pg_tailq) {
+		spdk_json_write_object_begin(w);
+		spdk_json_write_name(w, "host");
+		spdk_json_write_string(w, portal->host);
+		spdk_json_write_name(w, "port");
+		spdk_json_write_string(w, portal->port);
+		spdk_json_write_name(w, "cpumask");
+		spdk_json_write_string_fmt(w, "0x%s", spdk_cpuset_fmt(portal->cpumask));
+		spdk_json_write_object_end(w);
+	}
+	spdk_json_write_array_end(w);
+
+	spdk_json_write_name(w, "tag");
+	spdk_json_write_int32(w, pg->tag);
+
+	spdk_json_write_object_end(w);
+}
+
+static void
 spdk_rpc_get_portal_groups(struct spdk_jsonrpc_request *request,
 			   const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_iscsi_portal_grp *pg;
-	struct spdk_iscsi_portal *portal;
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -807,26 +848,7 @@ spdk_rpc_get_portal_groups(struct spdk_jsonrpc_request *request,
 	spdk_json_write_array_begin(w);
 
 	TAILQ_FOREACH(pg, &g_spdk_iscsi.pg_head, tailq) {
-		spdk_json_write_object_begin(w);
-
-		spdk_json_write_name(w, "portals");
-		spdk_json_write_array_begin(w);
-		TAILQ_FOREACH(portal, &pg->head, per_pg_tailq) {
-			spdk_json_write_object_begin(w);
-			spdk_json_write_name(w, "host");
-			spdk_json_write_string(w, portal->host);
-			spdk_json_write_name(w, "port");
-			spdk_json_write_string(w, portal->port);
-			spdk_json_write_name(w, "cpumask");
-			spdk_json_write_string_fmt(w, "0x%s", spdk_cpuset_fmt(portal->cpumask));
-			spdk_json_write_object_end(w);
-		}
-		spdk_json_write_array_end(w);
-
-		spdk_json_write_name(w, "tag");
-		spdk_json_write_int32(w, pg->tag);
-
-		spdk_json_write_object_end(w);
+		dump_portal_group(w, pg);
 	}
 
 	spdk_json_write_array_end(w);
