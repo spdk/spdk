@@ -575,15 +575,7 @@ iter_cb(void *ctx, struct spdk_blob *blob, int rc)
 	uint32_t *is_deleted;
 	size_t value_len;
 
-	if (rc == -ENOENT) {
-		/* Finished iterating */
-		if (_handle_deleted_files(req) == 0) {
-			return;
-		}
-		args->fn.fs_op_with_handle(args->arg, fs, 0);
-		free_fs_request(req);
-		return;
-	} else if (rc < 0) {
+	if (rc < 0) {
 		args->fn.fs_op_with_handle(args->arg, fs, rc);
 		free_fs_request(req);
 		return;
@@ -635,8 +627,6 @@ iter_cb(void *ctx, struct spdk_blob *blob, int rc)
 		deleted_file->id = spdk_blob_get_id(blob);
 		TAILQ_INSERT_TAIL(&args->op.fs_load.deleted_files, deleted_file, tailq);
 	}
-
-	spdk_bs_iter_next(fs->bs, blob, iter_cb, req);
 }
 
 static void
@@ -671,7 +661,11 @@ load_cb(void *ctx, struct spdk_blob_store *bs, int bserrno)
 	}
 
 	common_fs_bs_init(fs, bs);
-	spdk_bs_iter_first(fs->bs, iter_cb, req);
+	if (_handle_deleted_files(req) == 0) {
+		return;
+	}
+	args->fn.fs_op_with_handle(args->arg, fs, 0);
+	free_fs_request(req);
 }
 
 void
@@ -681,6 +675,7 @@ spdk_fs_load(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 	struct spdk_filesystem *fs;
 	struct spdk_fs_cb_args *args;
 	struct spdk_fs_request *req;
+	struct spdk_bs_opts	bs_opts;
 
 	fs = fs_alloc(dev, send_request_fn);
 	if (fs == NULL) {
@@ -707,7 +702,10 @@ spdk_fs_load(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 	args->arg = cb_arg;
 	args->fs = fs;
 	TAILQ_INIT(&args->op.fs_load.deleted_files);
-	spdk_bs_load(dev, NULL, load_cb, req);
+	spdk_bs_opts_init(&bs_opts);
+	bs_opts.iter_cb_fn = iter_cb;
+	bs_opts.iter_cb_arg = req;
+	spdk_bs_load(dev, &bs_opts, load_cb, req);
 }
 
 static void
