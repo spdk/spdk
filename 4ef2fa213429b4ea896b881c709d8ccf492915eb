@@ -1,0 +1,310 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e14258d1_6b7a7e3c",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T05:14:39Z",
+      "side": 1,
+      "message": "just set old_alias here:\n\nold_alias \u003d tmp-\u003ealias;\nthen assert(old_alias !\u003d NULL)\n\nthere is no case where bdev should allow an alias that is NULL",
+      "revId": "4ef2fa213429b4ea896b881c709d8ccf492915eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3f14a80_340026da",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T05:14:39Z",
+      "side": 1,
+      "message": "we did not allocate old_alias here so we should not free it",
+      "revId": "4ef2fa213429b4ea896b881c709d8ccf492915eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6965de98_5a936230",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 383,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T05:14:39Z",
+      "side": 1,
+      "message": "this is a nop - i think you mean to use this in place of buf on the next line\n\nthen buf variable is not needed",
+      "revId": "4ef2fa213429b4ea896b881c709d8ccf492915eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a7dcfe0_b43d4e15",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1056,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T05:14:39Z",
+      "side": 1,
+      "message": "this should be void\n\nreturn values are done using callback function",
+      "revId": "4ef2fa213429b4ea896b881c709d8ccf492915eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ad6a5f5b_f11ad9d3",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1067,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T05:14:39Z",
+      "side": 1,
+      "message": "should use strncmp with SPDK_LVOL_NAME_MAX",
+      "revId": "4ef2fa213429b4ea896b881c709d8ccf492915eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83502ef4_623d7552",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1068,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T05:14:39Z",
+      "side": 1,
+      "message": "this should be:\n\ncb_fn(cb_arg, 0);\nreturn;",
+      "revId": "4ef2fa213429b4ea896b881c709d8ccf492915eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "64eda215_bb8ad1c5",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1073,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T05:14:39Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "4ef2fa213429b4ea896b881c709d8ccf492915eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15837a5b_143b551d",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1075,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T05:14:39Z",
+      "side": 1,
+      "message": "cb_fn(cb_arg, -EEXIST);\nreturn;",
+      "revId": "4ef2fa213429b4ea896b881c709d8ccf492915eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35592a91_535a0258",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1083,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T05:14:39Z",
+      "side": 1,
+      "message": "return;",
+      "revId": "4ef2fa213429b4ea896b881c709d8ccf492915eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d056bcd_46682768",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1092,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T05:14:39Z",
+      "side": 1,
+      "message": "cb_fn(cb_arg, rc);\nreturn;",
+      "revId": "4ef2fa213429b4ea896b881c709d8ccf492915eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "874e2fbf_b88f7b2b",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1098,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T05:14:39Z",
+      "side": 1,
+      "message": "remove return 0",
+      "revId": "4ef2fa213429b4ea896b881c709d8ccf492915eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41177f1a_16a153c0",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T05:14:39Z",
+      "side": 1,
+      "message": "a lot of these can be simplified - for example, just do:\n\nCU_ASSERT(alias !\u003d NULL);\nCU_ASSERT(bdev !\u003d NULL);\n\nno need to do SPDK_ERRLOGs or worry about returning different values - lvol code should never be passing NULL values here and if it did, the CU_ASSERT would fail the unit test",
+      "revId": "4ef2fa213429b4ea896b881c709d8ccf492915eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e39d51ed_924e66fa",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T05:14:39Z",
+      "side": 1,
+      "message": "just do SPDK_CU_ASSERT_FATAL(tmp !\u003d NULL)",
+      "revId": "4ef2fa213429b4ea896b881c709d8ccf492915eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6bd564d7_f5dcc837",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T05:14:39Z",
+      "side": 1,
+      "message": "SPDK_CU_ASSERT_FATAL(tmp-\u003ealias !\u003d NULL);",
+      "revId": "4ef2fa213429b4ea896b881c709d8ccf492915eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "499cb83b_bdfe6644",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T05:14:39Z",
+      "side": 1,
+      "message": "same as above",
+      "revId": "4ef2fa213429b4ea896b881c709d8ccf492915eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "70691408_35475ecf",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T05:14:39Z",
+      "side": 1,
+      "message": "void",
+      "revId": "4ef2fa213429b4ea896b881c709d8ccf492915eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14bdd5e7_8b36d06a",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T05:14:39Z",
+      "side": 1,
+      "message": "strncmp",
+      "revId": "4ef2fa213429b4ea896b881c709d8ccf492915eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec256fbc_467a6798",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T05:14:39Z",
+      "side": 1,
+      "message": "strncmp",
+      "revId": "4ef2fa213429b4ea896b881c709d8ccf492915eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
