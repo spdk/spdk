@@ -16,6 +16,40 @@
       "revId": "7f1091058f9638cfa53b10c5547a0fee820c3246",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b9a4f49_81855a47",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-15T20:55:14Z",
+      "side": 1,
+      "message": "Please add a component prefix to the first line of the commit message.\n\nIn this case, something like \"vagrant: add gdisk package for sgdisk\" might be appropriate.",
+      "revId": "7f1091058f9638cfa53b10c5547a0fee820c3246",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "39e2639f_83992f5f",
+        "filename": "scripts/vagrant/update.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-15T20:55:14Z",
+      "side": 1,
+      "message": "Instead of adding gdisk here, can we put this into scripts/pkgdep.sh?  We should also add the corresponding package for the other supported distros.\n\nI believe pkgdep.sh should already get executed inside the VM (see scripts/vagrant/build.sh).",
+      "revId": "7f1091058f9638cfa53b10c5547a0fee820c3246",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
