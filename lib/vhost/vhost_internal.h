@@ -165,6 +165,9 @@ struct spdk_vhost_dev {
 
 	uint64_t negotiated_features;
 
+	/* VHOST_F_LOG_ALL is set. */
+	bool log_all;
+
 	struct spdk_vhost_virtqueue virtqueue[SPDK_VHOST_MAX_VQUEUES];
 
 	TAILQ_ENTRY(spdk_vhost_dev) tailq;
