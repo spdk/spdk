@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "58395dc1_4f2b881d",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-15T19:59:28Z",
+      "side": 1,
+      "message": "this should be:\n\nif (round_start + length \u003e pctrlr-\u003ecmb_mem_register_addr + pctrlr-\u003ecmb_mem_register_size)\n\nThere are some unit tests commented out in test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c - these should be refactored and moved to nvme_pcie.c unit tests.  Then we can test this code better.  :-)",
+      "revId": "cf0d7bb853203a0ae3377563428673d477b1ed37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
