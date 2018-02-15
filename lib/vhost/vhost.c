@@ -98,7 +98,7 @@ spdk_vhost_log_req_desc(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue
 	uint32_t desc_table_size;
 	int rc;
 
-	if (spdk_likely(!spdk_vhost_dev_has_feature(vdev, VHOST_F_LOG_ALL))) {
+	if (spdk_likely(!vdev->log_all)) {
 		return;
 	}
 
@@ -127,7 +127,7 @@ spdk_vhost_log_used_vring_elem(struct spdk_vhost_dev *vdev, struct spdk_vhost_vi
 	uint64_t offset, len;
 	uint16_t vq_idx;
 
-	if (spdk_likely(!spdk_vhost_dev_has_feature(vdev, VHOST_F_LOG_ALL))) {
+	if (spdk_likely(!vdev->log_all)) {
 		return;
 	}
 
@@ -144,7 +144,7 @@ spdk_vhost_log_used_vring_idx(struct spdk_vhost_dev *vdev, struct spdk_vhost_vir
 	uint64_t offset, len;
 	uint16_t vq_idx;
 
-	if (spdk_likely(!spdk_vhost_dev_has_feature(vdev, VHOST_F_LOG_ALL))) {
+	if (spdk_likely(!vdev->log_all)) {
 		return;
 	}
 
@@ -1025,6 +1025,8 @@ start_device(int vid)
 		SPDK_ERRLOG("vhost device %d: Failed to get negotiated driver features\n", vid);
 		goto out;
 	}
+
+	vdev->log_all = spdk_vhost_dev_has_feature(vdev, VHOST_F_LOG_ALL);
 
 	if (rte_vhost_get_mem_table(vid, &vdev->mem) != 0) {
 		SPDK_ERRLOG("vhost device %d: Failed to get guest memory table\n", vid);
