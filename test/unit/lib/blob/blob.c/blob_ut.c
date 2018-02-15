@@ -3121,6 +3121,103 @@ blob_thin_prov_rw_iov(void)
 	g_blobid = 0;
 }
 
+struct iter_ctx {
+	int		current_iter;
+	spdk_blob_id	blobid[4];
+};
+
+static void
+test_iter(void *arg, struct spdk_blob *blob, int bserrno)
+{
+	struct iter_ctx *iter_ctx = arg;
+	spdk_blob_id blobid;
+
+	CU_ASSERT(bserrno == 0);
+	blobid = spdk_blob_get_id(blob);
+	CU_ASSERT(blobid == iter_ctx->blobid[iter_ctx->current_iter++]);
+}
+
+static void
+bs_load_iter(void)
+{
+	struct spdk_bs_dev *dev;
+	struct iter_ctx iter_ctx = { 0 };
+	struct spdk_blob *blob;
+	int i, rc;
+	struct spdk_bs_opts opts;
+
+	dev = init_dev();
+	spdk_bs_opts_init(&opts);
+	strncpy(opts.bstype.bstype, "TESTTYPE", SPDK_BLOBSTORE_TYPE_LENGTH);
+
+	/* Initialize a new blob store */
+	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	for (i = 0; i < 4; i++) {
+		g_bserrno = -1;
+		g_blobid = SPDK_BLOBID_INVALID;
+		spdk_bs_create_blob(g_bs, blob_op_with_id_complete, NULL);
+		CU_ASSERT(g_bserrno == 0);
+		CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+		iter_ctx.blobid[i] = g_blobid;
+
+		g_bserrno = -1;
+		g_blob = NULL;
+		spdk_bs_open_blob(g_bs, g_blobid, blob_op_with_handle_complete, NULL);
+		CU_ASSERT(g_bserrno == 0);
+		CU_ASSERT(g_blob != NULL);
+		blob = g_blob;
+
+		/* Just save the blobid as an xattr for testing purposes. */
+		rc = spdk_blob_set_xattr(blob, "blobid", &g_blobid, sizeof(g_blobid));
+		CU_ASSERT(rc == 0);
+
+		/* Resize the blob */
+		rc = spdk_blob_resize(blob, i);
+		CU_ASSERT(rc == 0);
+
+		spdk_blob_close(blob, blob_op_complete, NULL);
+		CU_ASSERT(g_bserrno == 0);
+	}
+
+	g_bserrno = -1;
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	dev = init_dev();
+	spdk_bs_opts_init(&opts);
+	strncpy(opts.bstype.bstype, "TESTTYPE", SPDK_BLOBSTORE_TYPE_LENGTH);
+	opts.iter_cb_fn = test_iter;
+	opts.iter_cb_arg = &iter_ctx;
+
+	/* Test blob iteration during load after a clean shutdown. */
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	/* Dirty shutdown */
+	_spdk_bs_free(g_bs);
+
+	dev = init_dev();
+	spdk_bs_opts_init(&opts);
+	strncpy(opts.bstype.bstype, "TESTTYPE", SPDK_BLOBSTORE_TYPE_LENGTH);
+	opts.iter_cb_fn = test_iter;
+	iter_ctx.current_iter = 0;
+	opts.iter_cb_arg = &iter_ctx;
+
+	/* Test blob iteration during load after a dirty shutdown. */
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -3173,7 +3270,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "blob_thin_prov_alloc", blob_thin_prov_alloc) == NULL ||
 		CU_add_test(suite, "blob_insert_cluster_msg", blob_insert_cluster_msg) == NULL ||
 		CU_add_test(suite, "blob_thin_prov_rw", blob_thin_prov_rw) == NULL ||
-		CU_add_test(suite, "blob_thin_prov_rw_iov", blob_thin_prov_rw_iov) == NULL
+		CU_add_test(suite, "blob_thin_prov_rw_iov", blob_thin_prov_rw_iov) == NULL ||
+		CU_add_test(suite, "bs_load_iter", bs_load_iter) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
