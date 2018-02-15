@@ -35,6 +35,10 @@ elif [ $SYSTEM = "FreeBSD" ] ; then
 		python misc/e2fsprogs-libuuid sysutils/sg3_utils
 	# Additional dependencies for building docs
 	pkg install doxygen mscgen graphviz
+elif [[ `uname -a` = *"Linux clr"* ]]; then
+	swupd bundle-add c-basic
+	swupd bundle-add storage-utils-dev
+fi
 else
 	echo "pkgdep: unknown system type."
 	exit 1
