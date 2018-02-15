@@ -2185,6 +2185,15 @@ _spdk_bs_write_used_blobids(spdk_bs_sequence_t *seq, void *arg, spdk_bs_sequence
 }
 
 static void
+_spdk_bs_load_complete(spdk_bs_sequence_t *seq, struct spdk_bs_load_ctx *ctx, int bserrno)
+{
+	spdk_dma_free(ctx->super);
+	spdk_dma_free(ctx->mask);
+	free(ctx);
+	spdk_bs_sequence_finish(seq, bserrno);
+}
+
+static void
 _spdk_bs_load_used_blobids_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_load_ctx *ctx = cb_arg;
@@ -2219,11 +2228,7 @@ _spdk_bs_load_used_blobids_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrn
 		}
 	}
 
-	spdk_dma_free(ctx->super);
-	spdk_dma_free(ctx->mask);
-	free(ctx);
-
-	spdk_bs_sequence_finish(seq, bserrno);
+	_spdk_bs_load_complete(seq, ctx, bserrno);
 }
 
 static void
@@ -2420,10 +2425,7 @@ _spdk_bs_load_write_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int
 {
 	struct spdk_bs_load_ctx	*ctx = cb_arg;
 
-	spdk_dma_free(ctx->mask);
-	spdk_dma_free(ctx->super);
-	spdk_bs_sequence_finish(seq, bserrno);
-	free(ctx);
+	_spdk_bs_load_complete(seq, ctx, bserrno);
 }
 
 static void
