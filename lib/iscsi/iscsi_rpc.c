@@ -274,42 +274,46 @@ dump_target_node(struct spdk_json_write_ctx *w, struct spdk_iscsi_tgt_node *tgtn
 		spdk_json_write_string(w, tgtnode->alias);
 	}
 
-	spdk_json_write_name(w, "pg_ig_maps");
+	spdk_json_write_name(w, "pg_tags");
 	spdk_json_write_array_begin(w);
 	TAILQ_FOREACH(pg_map, &tgtnode->pg_map_head, tailq) {
 		TAILQ_FOREACH(ig_map, &pg_map->ig_map_head, tailq) {
-			spdk_json_write_object_begin(w);
-			spdk_json_write_name(w, "pg_tag");
 			spdk_json_write_int32(w, pg_map->pg->tag);
-			spdk_json_write_name(w, "ig_tag");
-			spdk_json_write_int32(w, ig_map->ig->tag);
-			spdk_json_write_object_end(w);
 		}
 	}
 	spdk_json_write_array_end(w);
 
-	spdk_json_write_name(w, "luns");
+	spdk_json_write_name(w, "ig_tags");
+	spdk_json_write_array_begin(w);
+	TAILQ_FOREACH(pg_map, &tgtnode->pg_map_head, tailq) {
+		TAILQ_FOREACH(ig_map, &pg_map->ig_map_head, tailq) {
+			spdk_json_write_int32(w, ig_map->ig->tag);
+		}
+	}
+	spdk_json_write_array_end(w);
+
+	spdk_json_write_name(w, "lun_ids");
 	spdk_json_write_array_begin(w);
 	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
 		struct spdk_scsi_lun *lun = spdk_scsi_dev_get_lun(tgtnode->dev, i);
-
 		if (lun) {
-			spdk_json_write_object_begin(w);
-			spdk_json_write_name(w, "bdev_name");
-			spdk_json_write_string(w, spdk_scsi_lun_get_bdev_name(lun));
-			spdk_json_write_name(w, "id");
 			spdk_json_write_int32(w, spdk_scsi_lun_get_id(lun));
-			spdk_json_write_object_end(w);
+		}
+	}
+	spdk_json_write_array_end(w);
+
+	spdk_json_write_name(w, "bdev_names");
+	spdk_json_write_array_begin(w);
+	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+		struct spdk_scsi_lun *lun = spdk_scsi_dev_get_lun(tgtnode->dev, i);
+		if (lun) {
+			spdk_json_write_string(w, spdk_scsi_lun_get_bdev_name(lun));
 		}
 	}
 	spdk_json_write_array_end(w);
 
 	spdk_json_write_name(w, "queue_depth");
 	spdk_json_write_int32(w, tgtnode->queue_depth);
-
-	/*
-	 * TODO: convert these to bool
-	 */
 
 	spdk_json_write_name(w, "chap_disabled");
 	spdk_json_write_int32(w, tgtnode->auth_chap_disabled);
