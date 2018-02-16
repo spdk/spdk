@@ -491,23 +491,10 @@ spdk_posix_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_soc
 }
 
 static int
-spdk_posix_sock_group_poll_count(struct spdk_sock_group *group, int max_events)
+spdk_posix_sock_group_poll_count(struct spdk_sock_group *group, int max_events,
+				 struct spdk_sock **socks)
 {
-	struct spdk_sock *sock;
 	int num_events, i;
-
-	if (max_events < 1) {
-		errno = -EINVAL;
-		return -1;
-	}
-
-	/*
-	 * Only poll for up to 32 events at a time - if more events are pending,
-	 *  the next call to this function will reap them.
-	 */
-	if (max_events > MAX_EVENTS_PER_POLL) {
-		max_events = MAX_EVENTS_PER_POLL;
-	}
 
 #if defined(__linux__)
 	struct epoll_event events[MAX_EVENTS_PER_POLL];
@@ -526,16 +513,13 @@ spdk_posix_sock_group_poll_count(struct spdk_sock_group *group, int max_events)
 
 	for (i = 0; i < num_events; i++) {
 #if defined(__linux__)
-		sock = events[i].data.ptr;
+		socks[i] = events[i].data.ptr;
 #elif defined(__FreeBSD__)
-		sock = events[i].udata;
+		socks[i] = events[i].udata;
 #endif
-
-		assert(sock->cb_fn != NULL);
-		sock->cb_fn(sock->cb_arg, group, sock);
 	}
 
-	return 0;
+	return num_events;
 }
 
 static int
@@ -703,7 +687,34 @@ spdk_sock_group_poll(struct spdk_sock_group *group)
 int
 spdk_sock_group_poll_count(struct spdk_sock_group *group, int max_events)
 {
-	return spdk_posix_sock_group_poll_count(group, max_events);
+	struct spdk_sock *socks[MAX_EVENTS_PER_POLL];
+	int num_events, i;
+
+	if (max_events < 1) {
+		errno = -EINVAL;
+		return -1;
+	}
+
+	/*
+	 * Only poll for up to 32 events at a time - if more events are pending,
+	 *  the next call to this function will reap them.
+	 */
+	if (max_events > MAX_EVENTS_PER_POLL) {
+		max_events = MAX_EVENTS_PER_POLL;
+	}
+
+	num_events = spdk_posix_sock_group_poll_count(group, max_events, socks);
+	if (num_events == -1) {
+		return -1;
+	}
+
+	for (i = 0; i < num_events; i++) {
+		struct spdk_sock *sock = socks[i];
+
+		assert(sock->cb_fn != NULL);
+		sock->cb_fn(sock->cb_arg, group, sock);
+	}
+	return 0;
 }
 
 int
