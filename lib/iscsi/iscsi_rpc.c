@@ -392,18 +392,14 @@ dump_target_node(struct spdk_json_write_ctx *w, struct spdk_iscsi_tgt_node *tgtn
 	spdk_json_write_name(w, "queue_depth");
 	spdk_json_write_int32(w, tgtnode->queue_depth);
 
-	/*
-	 * TODO: convert these to bool
-	 */
-
 	spdk_json_write_name(w, "chap_disabled");
-	spdk_json_write_int32(w, tgtnode->auth_chap_disabled);
+	spdk_json_write_bool(w, tgtnode->auth_chap_disabled);
 
 	spdk_json_write_name(w, "chap_required");
-	spdk_json_write_int32(w, tgtnode->auth_chap_required);
+	spdk_json_write_bool(w, tgtnode->auth_chap_required);
 
 	spdk_json_write_name(w, "chap_mutual");
-	spdk_json_write_int32(w, tgtnode->auth_chap_mutual);
+	spdk_json_write_bool(w, tgtnode->auth_chap_mutual);
 
 	spdk_json_write_name(w, "chap_auth_group");
 	spdk_json_write_int32(w, tgtnode->auth_group);
@@ -528,9 +524,9 @@ struct rpc_target_node {
 	struct rpc_lun_ids lun_ids;
 
 	int32_t queue_depth;
-	int32_t chap_disabled;
-	int32_t chap_required;
-	int32_t chap_mutual;
+	bool chap_disabled;
+	bool chap_required;
+	bool chap_mutual;
 	int32_t chap_auth_group;
 
 	int32_t header_digest;
@@ -553,9 +549,9 @@ static const struct spdk_json_object_decoder rpc_target_node_decoders[] = {
 	{"bdev_names", offsetof(struct rpc_target_node, bdev_names), decode_rpc_bdev_names},
 	{"lun_ids", offsetof(struct rpc_target_node, lun_ids), decode_rpc_lun_ids},
 	{"queue_depth", offsetof(struct rpc_target_node, queue_depth), spdk_json_decode_int32},
-	{"chap_disabled", offsetof(struct rpc_target_node, chap_disabled), spdk_json_decode_int32},
-	{"chap_required", offsetof(struct rpc_target_node, chap_required), spdk_json_decode_int32},
-	{"chap_mutual", offsetof(struct rpc_target_node, chap_mutual), spdk_json_decode_int32},
+	{"chap_disabled", offsetof(struct rpc_target_node, chap_disabled), spdk_json_decode_bool},
+	{"chap_required", offsetof(struct rpc_target_node, chap_required), spdk_json_decode_bool},
+	{"chap_mutual", offsetof(struct rpc_target_node, chap_mutual), spdk_json_decode_bool},
 	{"chap_auth_group", offsetof(struct rpc_target_node, chap_auth_group), spdk_json_decode_int32},
 	{"header_digest", offsetof(struct rpc_target_node, header_digest), spdk_json_decode_int32, true},
 	{"data_digest", offsetof(struct rpc_target_node, data_digest), spdk_json_decode_int32, true},

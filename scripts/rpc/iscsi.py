@@ -1,6 +1,13 @@
 from client import print_dict, print_array, int_arg
 
 
+def int2bool(v):
+    if v != 0:
+        return True
+    else:
+        return False
+
+
 def get_luns(args):
     print_dict(args.client.call('get_luns'))
 
@@ -37,11 +44,11 @@ def construct_target_node(args):
         'bdev_names': bdev_names,
         'lun_ids': lun_ids,
         'queue_depth': args.queue_depth,
-        'chap_disabled': args.chap_disabled,
-        'chap_required': args.chap_required,
-        'chap_mutual': args.chap_mutual,
         'chap_auth_group': args.chap_auth_group,
     }
+    params['chap_disabled'] = int2bool(args.chap_disabled)
+    params['chap_required'] = int2bool(args.chap_required)
+    params['chap_mutual'] = int2bool(args.chap_mutual)
 
     if args.header_digest:
         params['header_digest'] = args.header_digest
