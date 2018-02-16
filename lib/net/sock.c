@@ -315,29 +315,9 @@ spdk_posix_sock_accept(struct spdk_sock *sock)
 }
 
 static int
-spdk_posix_sock_close(struct spdk_sock **sock)
+spdk_posix_sock_close(struct spdk_sock *sock)
 {
-	int rc;
-
-	if (*sock == NULL) {
-		errno = EBADF;
-		return -1;
-	}
-
-	if ((*sock)->cb_fn != NULL) {
-		/* This sock is still part of a sock_group. */
-		errno = EBUSY;
-		return -1;
-	}
-
-	rc = close((*sock)->fd);
-
-	if (rc == 0) {
-		free(*sock);
-		*sock = NULL;
-	}
-
-	return rc;
+	return close(sock->fd);
 }
 
 static ssize_t
@@ -587,28 +567,9 @@ spdk_posix_sock_group_poll_count(struct spdk_sock_group *group, int max_events)
 }
 
 static int
-spdk_posix_sock_group_close(struct spdk_sock_group **group)
+spdk_posix_sock_group_close(struct spdk_sock_group *group)
 {
-	int rc;
-
-	if (*group == NULL) {
-		errno = EBADF;
-		return -1;
-	}
-
-	if (!TAILQ_EMPTY(&(*group)->socks)) {
-		errno = EBUSY;
-		return -1;
-	}
-
-	rc = close((*group)->fd);
-
-	if (rc == 0) {
-		free(*group);
-		*group = NULL;
-	}
-
-	return rc;
+	return close(group->fd);
 }
 
 int
@@ -638,7 +599,26 @@ spdk_sock_accept(struct spdk_sock *sock)
 int
 spdk_sock_close(struct spdk_sock **sock)
 {
-	return spdk_posix_sock_close(sock);
+	int rc;
+
+	if (*sock == NULL) {
+		errno = EBADF;
+		return -1;
+	}
+
+	if ((*sock)->cb_fn != NULL) {
+		/* This sock is still part of a sock_group. */
+		errno = EBUSY;
+		return -1;
+	}
+
+	rc = spdk_posix_sock_close(*sock);
+	if (rc == 0) {
+		free(*sock);
+		*sock = NULL;
+	}
+
+	return rc;
 }
 
 ssize_t
@@ -718,5 +698,23 @@ spdk_sock_group_poll_count(struct spdk_sock_group *group, int max_events)
 int
 spdk_sock_group_close(struct spdk_sock_group **group)
 {
-	return spdk_posix_sock_group_close(group);
+	int rc;
+
+	if (*group == NULL) {
+		errno = EBADF;
+		return -1;
+	}
+
+	if (!TAILQ_EMPTY(&(*group)->socks)) {
+		errno = EBUSY;
+		return -1;
+	}
+
+	rc = spdk_posix_sock_group_close(*group);
+	if (rc == 0) {
+		free(*group);
+		*group = NULL;
+	}
+
+	return rc;
 }
