@@ -70,8 +70,8 @@ struct spdk_iscsi_tgt_node {
 	bool chap_required;
 	bool chap_mutual;
 	int chap_auth_group;
-	int header_digest;
-	int data_digest;
+	bool header_digest;
+	bool data_digest;
 	int queue_depth;
 
 	struct spdk_scsi_dev *dev;
@@ -114,7 +114,7 @@ spdk_iscsi_tgt_node_construct(int target_index,
 			      int queue_depth,
 			      bool chap_disabled, bool chap_required, bool chap_mutual,
 			      int chap_auth_group,
-			      int header_digest, int data_digest);
+			      bool header_digest, bool data_digest);
 
 int spdk_iscsi_tgt_node_add_pg_ig_maps(struct spdk_iscsi_tgt_node *target,
 				       int *pg_tag_list, int *ig_tag_list,

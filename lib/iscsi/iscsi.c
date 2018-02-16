@@ -570,17 +570,17 @@ spdk_iscsi_build_iovecs(struct spdk_iscsi_conn *conn, struct iovec *iovec,
 {
 	int iovec_cnt = 0;
 	uint32_t crc32c;
-	int enable_digest;
+	bool enable_digest;
 	int total_ahs_len;
 	int data_len;
 
 	total_ahs_len = pdu->bhs.total_ahs_len;
 	data_len = DGET24(pdu->bhs.data_segment_len);
 
-	enable_digest = 1;
+	enable_digest = true;
 	if (pdu->bhs.opcode == ISCSI_OP_LOGIN_RSP) {
 		/* this PDU should be sent without digest */
-		enable_digest = 0;
+		enable_digest = false;
 	}
 
 	/* BHS */

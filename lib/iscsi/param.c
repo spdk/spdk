@@ -1110,10 +1110,10 @@ spdk_iscsi_copy_param2var(struct spdk_iscsi_conn *conn)
 	}
 	if (strcasecmp(val, "CRC32C") == 0) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "set HeaderDigest=1\n");
-		conn->header_digest = 1;
+		conn->header_digest = true;
 	} else {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "set HeaderDigest=0\n");
-		conn->header_digest = 0;
+		conn->header_digest = false;
 	}
 	val = spdk_iscsi_param_get_val(conn->params, "DataDigest");
 	if (val == NULL) {
@@ -1122,10 +1122,10 @@ spdk_iscsi_copy_param2var(struct spdk_iscsi_conn *conn)
 	}
 	if (strcasecmp(val, "CRC32C") == 0) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "set DataDigest=1\n");
-		conn->data_digest = 1;
+		conn->data_digest = true;
 	} else {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "set DataDigest=0\n");
-		conn->data_digest = 0;
+		conn->data_digest = false;
 	}
 
 	val = spdk_iscsi_param_get_val(conn->sess->params, "MaxConnections");

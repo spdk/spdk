@@ -869,7 +869,7 @@ spdk_iscsi_tgt_node_construct(int target_index,
 			      int queue_depth,
 			      bool chap_disabled, bool chap_required, bool chap_mutual,
 			      int chap_auth_group,
-			      int header_digest, int data_digest)
+			      bool header_digest, bool data_digest)
 {
 	char				fullname[MAX_TMPBUF];
 	struct spdk_iscsi_tgt_node	*target;
@@ -991,7 +991,7 @@ spdk_cf_add_iscsi_tgt_node(struct spdk_conf_section *sp)
 	const char *ag_tag;
 	const char *val, *name;
 	int target_num, chap_auth_group, pg_tag_i, ig_tag_i;
-	int header_digest, data_digest;
+	bool header_digest, data_digest;
 	bool chap_disabled, chap_required, chap_mutual;
 	int i;
 	int lun_id_list[SPDK_SCSI_DEV_MAX_LUN];
@@ -1002,8 +1002,8 @@ spdk_cf_add_iscsi_tgt_node(struct spdk_conf_section *sp)
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "add unit %d\n", target_num);
 
-	data_digest = 0;
-	header_digest = 0;
+	data_digest = false;
+	header_digest = false;
 
 	name = spdk_conf_section_get_val(sp, "TargetName");
 
@@ -1132,19 +1132,19 @@ spdk_cf_add_iscsi_tgt_node(struct spdk_conf_section *sp)
 				break;
 			}
 			if (strcasecmp(val, "Header") == 0) {
-				header_digest = 1;
+				header_digest = true;
 			} else if (strcasecmp(val, "Data") == 0) {
-				data_digest = 1;
+				data_digest = true;
 			} else if (strcasecmp(val, "Auto") == 0) {
-				header_digest = 0;
-				data_digest = 0;
+				header_digest = false;
+				data_digest = false;
 			} else {
 				SPDK_ERRLOG("tgt_node%d: unknown digest\n", target_num);
 				return -1;
 			}
 		}
 	}
-	if (header_digest == 0 && data_digest == 0) {
+	if (!header_digest && !data_digest) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "UseDigest Auto\n");
 	} else {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "UseDigest %s %s\n",
