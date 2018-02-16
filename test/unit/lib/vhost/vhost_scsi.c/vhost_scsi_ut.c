@@ -208,7 +208,6 @@ vhost_scsi_dev_remove_dev_test(void)
 	svdev->vdev.lcore = 0;
 	scsi_dev = alloc_scsi_dev();
 	svdev->scsi_dev[0] = scsi_dev;
-	MOCK_SET(spdk_vhost_dev_has_feature, bool, false);
 	rc = spdk_vhost_scsi_dev_remove_tgt(&svdev->vdev, 0, NULL, NULL);
 	CU_ASSERT(rc == -ENOTSUP);
 	free(scsi_dev);
@@ -231,7 +230,6 @@ vhost_scsi_dev_add_dev_test(void)
 
 	svdev = alloc_svdev();
 	vdev = &svdev->vdev;
-	MOCK_SET(spdk_vhost_dev_has_feature, bool, false);
 
 	/* Add device when max devices is reached */
 	rc = spdk_vhost_scsi_dev_add_tgt(vdev,
