@@ -51,10 +51,14 @@ def construct_target_node(args):
         params['chap_mutual'] = True
     else:
         params['chap_mutual'] = False
-    if args.header_digest:
-        params['header_digest'] = args.header_digest
-    if args.data_digest:
-        params['data_digest'] = args.data_digest
+    if args.header_digest != 0:
+        params['header_digest'] = True
+    else:
+        params['header_digest'] = False
+    if args.data_digest != 0:
+        params['data_digest'] = True
+    else:
+        params['data_digest'] = False
     args.client.call('construct_target_node', params)
 
 

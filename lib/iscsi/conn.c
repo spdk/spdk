@@ -818,14 +818,15 @@ spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task)
 }
 
 static int
-spdk_iscsi_get_pdu_length(struct spdk_iscsi_pdu *pdu, int header_digest,
-			  int data_digest)
+spdk_iscsi_get_pdu_length(struct spdk_iscsi_pdu *pdu, bool header_digest,
+			  bool data_digest)
 {
-	int data_len, enable_digest, total;
+	int data_len, total;
+	bool enable_digest;
 
-	enable_digest = 1;
+	enable_digest = true;
 	if (pdu->bhs.opcode == ISCSI_OP_LOGIN_RSP) {
-		enable_digest = 0;
+		enable_digest = false;
 	}
 
 	total = ISCSI_BHS_LEN;
