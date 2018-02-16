@@ -457,12 +457,6 @@ spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
 	return 0;
 }
 
-bool
-spdk_vhost_dev_has_feature(struct spdk_vhost_dev *vdev, unsigned feature_id)
-{
-	return vdev->negotiated_features & (1ULL << feature_id);
-}
-
 static struct spdk_vhost_dev *
 spdk_vhost_dev_find_by_id(unsigned id)
 {
