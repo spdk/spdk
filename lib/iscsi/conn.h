@@ -125,8 +125,8 @@ struct spdk_iscsi_conn {
 	struct spdk_scsi_dev		*dev;
 
 	/* for fast access */
-	int header_digest;
-	int data_digest;
+	bool header_digest;
+	bool data_digest;
 	int full_feature;
 
 	struct iscsi_param *params;

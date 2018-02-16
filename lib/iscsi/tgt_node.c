@@ -1002,8 +1002,8 @@ spdk_cf_add_iscsi_tgt_node(struct spdk_conf_section *sp)
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "add unit %d\n", target_num);
 
-	data_digest = 0;
-	header_digest = 0;
+	data_digest = false;
+	header_digest = false;
 
 	name = spdk_conf_section_get_val(sp, "TargetName");
 
@@ -1132,19 +1132,19 @@ spdk_cf_add_iscsi_tgt_node(struct spdk_conf_section *sp)
 				break;
 			}
 			if (strcasecmp(val, "Header") == 0) {
-				header_digest = 1;
+				header_digest = true;
 			} else if (strcasecmp(val, "Data") == 0) {
-				data_digest = 1;
+				data_digest = true;
 			} else if (strcasecmp(val, "Auto") == 0) {
-				header_digest = 0;
-				data_digest = 0;
+				header_digest = false;
+				data_digest = false;
 			} else {
 				SPDK_ERRLOG("tgt_node%d: unknown digest\n", target_num);
 				return -1;
 			}
 		}
 	}
-	if (header_digest == 0 && data_digest == 0) {
+	if (!header_digest && !data_digest) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "UseDigest Auto\n");
 	} else {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "UseDigest %s %s\n",
