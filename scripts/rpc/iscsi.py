@@ -51,9 +51,9 @@ def construct_target_node(args):
     params['chap_mutual'] = int2bool(args.chap_mutual)
 
     if args.header_digest:
-        params['header_digest'] = args.header_digest
+        params['header_digest'] = int2bool(args.header_digest)
     if args.data_digest:
-        params['data_digest'] = args.data_digest
+        params['data_digest'] = int2bool(args.data_digest)
     args.client.call('construct_target_node', params)
 
 
