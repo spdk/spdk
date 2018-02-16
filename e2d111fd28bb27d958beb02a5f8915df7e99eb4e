@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "60adb9b7_e18341f5",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1185,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-16T10:44:14Z",
+      "side": 1,
+      "message": "This part could be replaced with g_lvol, as this is one and only lvol created on this lvs. We already hold reference to it.\n\nSorry should\u0027ve mentioned that in previous patch set review.",
+      "range": {
+        "startLine": 1185,
+        "startChar": 36,
+        "endLine": 1185,
+        "endChar": 61
+      },
+      "revId": "e2d111fd28bb27d958beb02a5f8915df7e99eb4e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
