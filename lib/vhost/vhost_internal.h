@@ -238,7 +238,12 @@ bool spdk_vhost_vring_desc_is_wr(struct vring_desc *cur_desc);
 
 int spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
 				 uint16_t *iov_index, const struct vring_desc *desc);
-bool spdk_vhost_dev_has_feature(struct spdk_vhost_dev *vdev, unsigned feature_id);
+
+__attribute__((always_inline)) inline static bool
+spdk_vhost_dev_has_feature(struct spdk_vhost_dev *vdev, unsigned feature_id)
+{
+	return vdev->negotiated_features & (1ULL << feature_id);
+}
 
 int spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
 			    const struct spdk_vhost_dev_backend *backend);
