@@ -439,30 +439,14 @@ spdk_posix_sock_group_create(void)
 	}
 
 	sock_group->fd = fd;
-	TAILQ_INIT(&sock_group->socks);
 
 	return sock_group;
 }
 
 static int
-spdk_posix_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
-			       spdk_sock_cb cb_fn, void *cb_arg)
+spdk_posix_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock)
 {
 	int rc;
-
-	if (cb_fn == NULL) {
-		errno = EINVAL;
-		return -1;
-	}
-
-	if (sock->cb_fn != NULL) {
-		/*
-		 * This sock is already part of a sock_group.  Currently we don't
-		 *  support this.
-		 */
-		errno = EBUSY;
-		return -1;
-	}
 
 #if defined(__linux__)
 	struct epoll_event event;
@@ -479,12 +463,6 @@ spdk_posix_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *
 
 	rc = kevent(group->fd, &event, 1, NULL, 0, &ts);
 #endif
-	if (rc == 0) {
-		TAILQ_INSERT_TAIL(&group->socks, sock, link);
-		sock->cb_fn = cb_fn;
-		sock->cb_arg = cb_arg;
-	}
-
 	return rc;
 }
 
@@ -509,12 +487,6 @@ spdk_posix_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_soc
 		errno = event.data;
 	}
 #endif
-	if (rc == 0) {
-		TAILQ_REMOVE(&group->socks, sock, link);
-		sock->cb_fn = NULL;
-		sock->cb_arg = NULL;
-	}
-
 	return rc;
 }
 
@@ -667,20 +639,59 @@ spdk_sock_is_ipv4(struct spdk_sock *sock)
 struct spdk_sock_group *
 spdk_sock_group_create(void)
 {
-	return spdk_posix_sock_group_create();
+	struct spdk_sock_group *group;
+
+	group = spdk_posix_sock_group_create();
+	if (group != NULL) {
+		TAILQ_INIT(&group->socks);
+	}
+
+	return group;
 }
 
 int
 spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 			 spdk_sock_cb cb_fn, void *cb_arg)
 {
-	return spdk_posix_sock_group_add_sock(group, sock, cb_fn, cb_arg);
+	int rc;
+
+	if (cb_fn == NULL) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	if (sock->cb_fn != NULL) {
+		/*
+		 * This sock is already part of a sock_group.  Currently we don't
+		 *  support this.
+		 */
+		errno = EBUSY;
+		return -1;
+	}
+
+	rc = spdk_posix_sock_group_add_sock(group, sock);
+	if (rc == 0) {
+		TAILQ_INSERT_TAIL(&group->socks, sock, link);
+		sock->cb_fn = cb_fn;
+		sock->cb_arg = cb_arg;
+	}
+
+	return rc;
 }
 
 int
 spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *sock)
 {
-	return spdk_posix_sock_group_remove_sock(group, sock);
+	int rc;
+
+	rc = spdk_posix_sock_group_remove_sock(group, sock);
+	if (rc == 0) {
+		TAILQ_REMOVE(&group->socks, sock, link);
+		sock->cb_fn = NULL;
+		sock->cb_arg = NULL;
+	}
+
+	return rc;
 }
 
 int
