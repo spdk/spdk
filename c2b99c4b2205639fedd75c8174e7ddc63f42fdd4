@@ -93,6 +93,144 @@
       "revId": "c2b99c4b2205639fedd75c8174e7ddc63f42fdd4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d2cdb0f_96fe8dad",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 628,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-16T08:55:20Z",
+      "side": 1,
+      "message": "_spdk_lvs_rename_cb is always callback from spdk_blob_close(). If this failed it seems the most important information (when compared to set_xattr or sync). Since we only support returning single error code, I think it might be the the one to return.\n\nTurning it the other way around accomplishes that.\n\nif (lvolerrno !\u003d 0) {\n    req-\u003elvserrno \u003d lvolerrno;\n}\nif (req-\u003elvserrno !\u003d 0 {\n   ERRLOG\n} else {\n....",
+      "range": {
+        "startLine": 624,
+        "startChar": 0,
+        "endLine": 628,
+        "endChar": 54
+      },
+      "revId": "c2b99c4b2205639fedd75c8174e7ddc63f42fdd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bce5ad99_40f0d5d5",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 633,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-16T08:55:20Z",
+      "side": 1,
+      "message": "If changes above are made, then return here req-\u003elvolerrno.",
+      "range": {
+        "startLine": 633,
+        "startChar": 42,
+        "endLine": 633,
+        "endChar": 51
+      },
+      "revId": "c2b99c4b2205639fedd75c8174e7ddc63f42fdd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8409977a_c4d45b40",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 657,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-16T08:55:20Z",
+      "side": 1,
+      "message": "Since lvolerrno is passed directly in _spdk_lvs_rename_cb(), don\u0027t think this assignment is needed here.",
+      "range": {
+        "startLine": 657,
+        "startChar": 2,
+        "endLine": 657,
+        "endChar": 28
+      },
+      "revId": "c2b99c4b2205639fedd75c8174e7ddc63f42fdd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7c603ae_92a1dcae",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 664,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-16T08:55:20Z",
+      "side": 1,
+      "message": "Having error here means that super_blob was opened right, then we had error when setting xattr. It means we should assign req-\u003elvserrno \u003d rc.\n\nThen in _spdk_lvs_rename_cb(), this rc should be used when spdk_blob_close was succesful. Otherwise when both spdk_blob_set_xattr and spdk_blob_close return error - one from closing the blob should be returned.",
+      "range": {
+        "startLine": 664,
+        "startChar": 18,
+        "endLine": 664,
+        "endChar": 27
+      },
+      "revId": "c2b99c4b2205639fedd75c8174e7ddc63f42fdd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b32b9010_24f3cc9c",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 682,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-16T08:55:20Z",
+      "side": 1,
+      "message": "Can we change this to:\nstrncmp(lvs-\u003ename, new_name, SPDK_LVS_NAME_MAX)",
+      "range": {
+        "startLine": 682,
+        "startChar": 5,
+        "endLine": 682,
+        "endChar": 32
+      },
+      "revId": "c2b99c4b2205639fedd75c8174e7ddc63f42fdd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a72bc45e_4160f4da",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1185,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-16T08:55:20Z",
+      "side": 1,
+      "message": "Why not use TAILQ_FIRST directly here ?",
+      "range": {
+        "startLine": 1185,
+        "startChar": 24,
+        "endLine": 1185,
+        "endChar": 76
+      },
+      "revId": "c2b99c4b2205639fedd75c8174e7ddc63f42fdd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
