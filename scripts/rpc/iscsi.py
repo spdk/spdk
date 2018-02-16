@@ -37,12 +37,20 @@ def construct_target_node(args):
         'bdev_names': bdev_names,
         'lun_ids': lun_ids,
         'queue_depth': args.queue_depth,
-        'chap_disabled': args.chap_disabled,
-        'chap_required': args.chap_required,
-        'chap_mutual': args.chap_mutual,
         'chap_auth_group': args.chap_auth_group,
     }
-
+    if args.chap_disabled != 0:
+        params['chap_disabled'] = True
+    else:
+        params['chap_disabled'] = False
+    if args.chap_required != 0:
+        params['chap_required'] = True
+    else:
+        params['chap_required'] = False
+    if args.chap_mutual != 0:
+        params['chap_mutual'] = True
+    else:
+        params['chap_mutual'] = False
     if args.header_digest:
         params['header_digest'] = args.header_digest
     if args.data_digest:
