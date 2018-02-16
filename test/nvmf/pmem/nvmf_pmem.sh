@@ -67,6 +67,8 @@ for i in `seq 1 $SUBSYS_NR`; do
 done
 timing_exit setup
 
+sleep 1
+
 timing_enter nvmf_connect
 for i in `seq 1 $SUBSYS_NR`; do
 	nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode${i}" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"

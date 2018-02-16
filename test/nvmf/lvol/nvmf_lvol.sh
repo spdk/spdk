@@ -70,6 +70,8 @@ for i in `seq 1 $SUBSYS_NR`; do
 	$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode$i "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" '' -a -s SPDK$i -n "$ns_bdevs"
 done
 
+sleep 1
+
 for i in `seq 1 $SUBSYS_NR`; do
 	nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode${i}" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 done
