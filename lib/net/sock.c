@@ -41,12 +41,15 @@
 
 #include "spdk/log.h"
 #include "spdk/sock.h"
+#include "spdk_internal/sock.h"
 #include "spdk/queue.h"
 
 #define MAX_TMPBUF 1024
 #define PORTNUMLEN 32
 
 #define MAX_EVENTS_PER_POLL 32
+
+STAILQ_HEAD(, spdk_net_impl) g_net_impls = STAILQ_HEAD_INITIALIZER(g_net_impls);
 
 struct spdk_sock {
 	spdk_sock_cb		cb_fn;
@@ -771,4 +774,10 @@ spdk_sock_group_close(struct spdk_sock_group **group)
 	}
 
 	return rc;
+}
+
+void
+spdk_net_impl_register(struct spdk_net_impl *impl)
+{
+	STAILQ_INSERT_TAIL(&g_net_impls, impl, link);
 }
