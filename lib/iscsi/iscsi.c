@@ -770,7 +770,7 @@ spdk_iscsi_get_authinfo(struct spdk_iscsi_conn *conn, const char *authuser)
 	int rc;
 
 	if (conn->sess->target != NULL) {
-		ag_tag = conn->sess->target->auth_group;
+		ag_tag = conn->sess->target->chap_auth_group;
 	} else {
 		ag_tag = -1;
 	}
@@ -1256,14 +1256,14 @@ spdk_iscsi_op_login_session_discovery_chap(struct spdk_iscsi_conn *conn)
 	int rc = 0;
 
 	if (g_spdk_iscsi.no_discovery_auth) {
-		conn->req_auth = 0;
+		conn->req_auth = false;
 		rc = spdk_iscsi_op_login_update_param(conn, "AuthMethod",
 						      "None", "None");
 		if (rc < 0) {
 			return rc;
 		}
 	} else if (g_spdk_iscsi.req_discovery_auth) {
-		conn->req_auth = 1;
+		conn->req_auth = true;
 		rc = spdk_iscsi_op_login_update_param(conn, "AuthMethod",
 						      "CHAP", "CHAP");
 		if (rc < 0) {
@@ -1271,7 +1271,7 @@ spdk_iscsi_op_login_session_discovery_chap(struct spdk_iscsi_conn *conn)
 		}
 	}
 	if (g_spdk_iscsi.req_discovery_auth_mutual) {
-		conn->req_mutual = 1;
+		conn->req_mutual = true;
 	}
 
 	return rc;
@@ -1291,15 +1291,15 @@ spdk_iscsi_op_login_negotiate_chap_param(struct spdk_iscsi_conn *conn,
 {
 	int rc;
 
-	if (target->auth_chap_disabled) {
-		conn->req_auth = 0;
+	if (target->chap_disabled) {
+		conn->req_auth = false;
 		rc = spdk_iscsi_op_login_update_param(conn, "AuthMethod",
 						      "None", "None");
 		if (rc < 0) {
 			return rc;
 		}
-	} else if (target->auth_chap_required) {
-		conn->req_auth = 1;
+	} else if (target->chap_required) {
+		conn->req_auth = true;
 		rc = spdk_iscsi_op_login_update_param(conn, "AuthMethod",
 						      "CHAP", "CHAP");
 		if (rc < 0) {
@@ -1307,8 +1307,8 @@ spdk_iscsi_op_login_negotiate_chap_param(struct spdk_iscsi_conn *conn,
 		}
 	}
 
-	if (target->auth_chap_mutual) {
-		conn->req_mutual = 1;
+	if (target->chap_mutual) {
+		conn->req_mutual = true;
 	}
 
 	if (target->header_digest) {
