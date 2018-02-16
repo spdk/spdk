@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5c09ffe3_75b8a6da",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-16T13:16:39Z",
+      "side": 1,
+      "message": "Is it OK not to change \"namespace array\" to \"Array of pointers to namespaces\" in subsystem.c ?",
+      "range": {
+        "startLine": 194,
+        "startChar": 4,
+        "endLine": 194,
+        "endChar": 35
+      },
+      "revId": "0673ec10a78a6a1a2ba4880efa3010357ba0198e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "393f8582_0311889e",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-16T13:16:39Z",
+      "side": 1,
+      "message": "Memory allocation for array of pointers to namespaces failed?",
+      "range": {
+        "startLine": 273,
+        "startChar": 16,
+        "endLine": 273,
+        "endChar": 43
+      },
+      "revId": "0673ec10a78a6a1a2ba4880efa3010357ba0198e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6fefcceb_e9677c36",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 857,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-16T13:16:39Z",
+      "side": 1,
+      "message": "array of pointers to namespaces?",
+      "range": {
+        "startLine": 857,
+        "startChar": 55,
+        "endLine": 857,
+        "endChar": 70
+      },
+      "revId": "0673ec10a78a6a1a2ba4880efa3010357ba0198e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
