@@ -37,7 +37,6 @@
 #include "CUnit/Basic.h"
 
 #include "iscsi/conn.c"
-#include "net/net_framework_default.c"
 
 SPDK_LOG_REGISTER_COMPONENT("iscsi", SPDK_LOG_ISCSI)
 
