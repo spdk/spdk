@@ -478,46 +478,51 @@ decode_rpc_pg_ig_maps(const struct spdk_json_val *val, void *out)
 				      &pg_ig_maps->num_maps, sizeof(*pg_ig_maps));
 }
 
-#define RPC_CONSTRUCT_TARGET_NODE_MAX_LUN	64
+#define RPC_CONSTRUCT_TGTNODE_MAX_LUN	64
 
-struct rpc_bdev_names {
-	size_t num_names;
-	char *names[RPC_CONSTRUCT_TARGET_NODE_MAX_LUN];
+struct rpc_bdev_name_id_pair {
+	char *bdev_name;
+	int32_t lun_id;
+};
+
+static const struct spdk_json_object_decoder rpc_bdev_name_id_pair_decoders[] = {
+	{"bdev_name", offsetof(struct rpc_bdev_name_id_pair, bdev_name), spdk_json_decode_string},
+	{"lun_id", offsetof(struct rpc_bdev_name_id_pair, lun_id), spdk_json_decode_int32},
 };
 
 static int
-decode_rpc_bdev_names(const struct spdk_json_val *val, void *out)
+decode_rpc_bdev_name_id_pair(const struct spdk_json_val *val, void *out)
 {
-	struct rpc_bdev_names *bdev_names = out;
+	struct rpc_bdev_name_id_pair *bdev_name_id_pair = out;
 
-	return spdk_json_decode_array(val, spdk_json_decode_string, bdev_names->names,
-				      RPC_CONSTRUCT_TARGET_NODE_MAX_LUN,
-				      &bdev_names->num_names, sizeof(char *));
+	return spdk_json_decode_object(val, rpc_bdev_name_id_pair_decoders,
+				       SPDK_COUNTOF(rpc_bdev_name_id_pair_decoders),
+				       bdev_name_id_pair);
+}
+
+struct rpc_luns {
+	size_t num_pairs;
+	struct rpc_bdev_name_id_pair bdev_name_id_pairs[RPC_CONSTRUCT_TGTNODE_MAX_LUN];
+};
+
+static int
+decode_rpc_luns(const struct spdk_json_val *val, void *out)
+{
+	struct rpc_luns *luns = out;
+
+	return spdk_json_decode_array(val, decode_rpc_bdev_name_id_pair,
+				      luns->bdev_name_id_pairs, RPC_CONSTRUCT_TGTNODE_MAX_LUN,
+				      &luns->num_pairs, sizeof(*luns));
 }
 
 static void
-free_rpc_bdev_names(struct rpc_bdev_names *r)
+free_rpc_luns(struct rpc_luns *p)
 {
 	size_t i;
 
-	for (i = 0; i < r->num_names; i++) {
-		free(r->names[i]);
+	for (i = 0; i < p->num_pairs; i++) {
+		free(p->bdev_name_id_pairs[i].bdev_name);
 	}
-}
-
-struct rpc_lun_ids {
-	size_t num_ids;
-	int32_t ids[RPC_CONSTRUCT_TARGET_NODE_MAX_LUN];
-};
-
-static int
-decode_rpc_lun_ids(const struct spdk_json_val *val, void *out)
-{
-	struct rpc_lun_ids *lun_ids = out;
-
-	return spdk_json_decode_array(val, spdk_json_decode_int32, lun_ids->ids,
-				      RPC_CONSTRUCT_TARGET_NODE_MAX_LUN,
-				      &lun_ids->num_ids, sizeof(int32_t));
 }
 
 struct rpc_target_node {
@@ -525,9 +530,7 @@ struct rpc_target_node {
 	char *alias_name;
 
 	struct rpc_pg_ig_maps pg_ig_maps;
-
-	struct rpc_bdev_names bdev_names;
-	struct rpc_lun_ids lun_ids;
+	struct rpc_luns luns;
 
 	int32_t queue_depth;
 	bool chap_disabled;
@@ -544,15 +547,14 @@ free_rpc_target_node(struct rpc_target_node *req)
 {
 	free(req->name);
 	free(req->alias_name);
-	free_rpc_bdev_names(&req->bdev_names);
+	free_rpc_luns(&req->luns);
 }
 
 static const struct spdk_json_object_decoder rpc_target_node_decoders[] = {
 	{"name", offsetof(struct rpc_target_node, name), spdk_json_decode_string},
 	{"alias_name", offsetof(struct rpc_target_node, alias_name), spdk_json_decode_string},
 	{"pg_ig_maps", offsetof(struct rpc_target_node, pg_ig_maps), decode_rpc_pg_ig_maps},
-	{"bdev_names", offsetof(struct rpc_target_node, bdev_names), decode_rpc_bdev_names},
-	{"lun_ids", offsetof(struct rpc_target_node, lun_ids), decode_rpc_lun_ids},
+	{"luns", offsetof(struct rpc_target_node, luns), decode_rpc_luns},
 	{"queue_depth", offsetof(struct rpc_target_node, queue_depth), spdk_json_decode_int32},
 	{"chap_disabled", offsetof(struct rpc_target_node, chap_disabled), spdk_json_decode_bool},
 	{"chap_required", offsetof(struct rpc_target_node, chap_required), spdk_json_decode_bool},
@@ -570,6 +572,8 @@ spdk_rpc_construct_target_node(struct spdk_jsonrpc_request *request,
 	struct spdk_json_write_ctx *w;
 	struct spdk_iscsi_tgt_node *target;
 	int32_t pg_tags[MAX_TARGET_MAP] = {0}, ig_tags[MAX_TARGET_MAP] = {0};
+	char *bdev_names[RPC_CONSTRUCT_TGTNODE_MAX_LUN] = {0};
+	int32_t lun_ids[RPC_CONSTRUCT_TGTNODE_MAX_LUN] = {0};
 	size_t i;
 
 	req.header_digest = false;
@@ -582,14 +586,14 @@ spdk_rpc_construct_target_node(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	if (req.bdev_names.num_names != req.lun_ids.num_ids) {
-		SPDK_ERRLOG("bdev_names/lun_ids count mismatch\n");
-		goto invalid;
-	}
-
 	for (i = 0; i < req.pg_ig_maps.num_maps; i++) {
 		pg_tags[i] = req.pg_ig_maps.maps[i].pg_tag;
 		ig_tags[i] = req.pg_ig_maps.maps[i].ig_tag;
+	}
+
+	for (i = 0; i < req.luns.num_pairs; i++) {
+		bdev_names[i] = req.luns.bdev_name_id_pairs[i].bdev_name;
+		lun_ids[i] = req.luns.bdev_name_id_pairs[i].lun_id;
 	}
 
 	/*
@@ -601,9 +605,9 @@ spdk_rpc_construct_target_node(struct spdk_jsonrpc_request *request,
 					       pg_tags,
 					       ig_tags,
 					       req.pg_ig_maps.num_maps,
-					       (const char **)req.bdev_names.names,
-					       req.lun_ids.ids,
-					       req.bdev_names.num_names,
+					       (const char **)bdev_names,
+					       lun_ids,
+					       req.luns.num_pairs,
 					       req.queue_depth,
 					       req.chap_disabled,
 					       req.chap_required,
