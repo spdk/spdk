@@ -88,8 +88,8 @@ static int get_addr_str(struct sockaddr *sa, char *host, size_t hlen)
 	}
 }
 
-int
-spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, char *caddr, int clen)
+static int
+spdk_posix_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, char *caddr, int clen)
 {
 	struct sockaddr_storage sa;
 	socklen_t salen;
@@ -141,13 +141,13 @@ spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, char *caddr, in
 	return 0;
 }
 
-enum spdk_sock_create_type {
+enum spdk_posix_sock_create_type {
 	SPDK_SOCK_CREATE_LISTEN,
 	SPDK_SOCK_CREATE_CONNECT,
 };
 
 static struct spdk_sock *
-spdk_sock_create(const char *ip, int port, enum spdk_sock_create_type type)
+spdk_posix_sock_create(const char *ip, int port, enum spdk_posix_sock_create_type type)
 {
 	struct spdk_sock *sock;
 	char buf[MAX_TMPBUF];
@@ -272,20 +272,20 @@ retry:
 	return sock;
 }
 
-struct spdk_sock *
-spdk_sock_listen(const char *ip, int port)
+static struct spdk_sock *
+spdk_posix_sock_listen(const char *ip, int port)
 {
-	return spdk_sock_create(ip, port, SPDK_SOCK_CREATE_LISTEN);
+	return spdk_posix_sock_create(ip, port, SPDK_SOCK_CREATE_LISTEN);
 }
 
-struct spdk_sock *
-spdk_sock_connect(const char *ip, int port)
+static struct spdk_sock *
+spdk_posix_sock_connect(const char *ip, int port)
 {
-	return spdk_sock_create(ip, port, SPDK_SOCK_CREATE_CONNECT);
+	return spdk_posix_sock_create(ip, port, SPDK_SOCK_CREATE_CONNECT);
 }
 
-struct spdk_sock *
-spdk_sock_accept(struct spdk_sock *sock)
+static struct spdk_sock *
+spdk_posix_sock_accept(struct spdk_sock *sock)
 {
 	struct sockaddr_storage		sa;
 	socklen_t			salen;
@@ -314,8 +314,8 @@ spdk_sock_accept(struct spdk_sock *sock)
 	return new_sock;
 }
 
-int
-spdk_sock_close(struct spdk_sock **sock)
+static int
+spdk_posix_sock_close(struct spdk_sock **sock)
 {
 	int rc;
 
@@ -340,8 +340,8 @@ spdk_sock_close(struct spdk_sock **sock)
 	return rc;
 }
 
-ssize_t
-spdk_sock_recv(struct spdk_sock *sock, void *buf, size_t len)
+static ssize_t
+spdk_posix_sock_recv(struct spdk_sock *sock, void *buf, size_t len)
 {
 	if (sock == NULL) {
 		errno = EBADF;
@@ -351,8 +351,8 @@ spdk_sock_recv(struct spdk_sock *sock, void *buf, size_t len)
 	return recv(sock->fd, buf, len, MSG_DONTWAIT);
 }
 
-ssize_t
-spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
+static ssize_t
+spdk_posix_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 {
 	if (sock == NULL) {
 		errno = EBADF;
@@ -362,8 +362,8 @@ spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 	return writev(sock->fd, iov, iovcnt);
 }
 
-int
-spdk_sock_set_recvlowat(struct spdk_sock *sock, int nbytes)
+static int
+spdk_posix_sock_set_recvlowat(struct spdk_sock *sock, int nbytes)
 {
 	int val;
 	int rc;
@@ -378,8 +378,8 @@ spdk_sock_set_recvlowat(struct spdk_sock *sock, int nbytes)
 	return 0;
 }
 
-int
-spdk_sock_set_recvbuf(struct spdk_sock *sock, int sz)
+static int
+spdk_posix_sock_set_recvbuf(struct spdk_sock *sock, int sz)
 {
 	assert(sock != NULL);
 
@@ -387,8 +387,8 @@ spdk_sock_set_recvbuf(struct spdk_sock *sock, int sz)
 			  &sz, sizeof(sz));
 }
 
-int
-spdk_sock_set_sendbuf(struct spdk_sock *sock, int sz)
+static int
+spdk_posix_sock_set_sendbuf(struct spdk_sock *sock, int sz)
 {
 	assert(sock != NULL);
 
@@ -396,8 +396,8 @@ spdk_sock_set_sendbuf(struct spdk_sock *sock, int sz)
 			  &sz, sizeof(sz));
 }
 
-bool
-spdk_sock_is_ipv6(struct spdk_sock *sock)
+static bool
+spdk_posix_sock_is_ipv6(struct spdk_sock *sock)
 {
 	struct sockaddr_storage sa;
 	socklen_t salen;
@@ -416,8 +416,8 @@ spdk_sock_is_ipv6(struct spdk_sock *sock)
 	return (sa.ss_family == AF_INET6);
 }
 
-bool
-spdk_sock_is_ipv4(struct spdk_sock *sock)
+static bool
+spdk_posix_sock_is_ipv4(struct spdk_sock *sock)
 {
 	struct sockaddr_storage sa;
 	socklen_t salen;
@@ -436,8 +436,8 @@ spdk_sock_is_ipv4(struct spdk_sock *sock)
 	return (sa.ss_family == AF_INET);
 }
 
-struct spdk_sock_group *
-spdk_sock_group_create(void)
+static struct spdk_sock_group *
+spdk_posix_sock_group_create(void)
 {
 	struct spdk_sock_group *sock_group;
 	int fd;
@@ -464,9 +464,9 @@ spdk_sock_group_create(void)
 	return sock_group;
 }
 
-int
-spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
-			 spdk_sock_cb cb_fn, void *cb_arg)
+static int
+spdk_posix_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
+			       spdk_sock_cb cb_fn, void *cb_arg)
 {
 	int rc;
 
@@ -508,8 +508,8 @@ spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 	return rc;
 }
 
-int
-spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *sock)
+static int
+spdk_posix_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *sock)
 {
 	int rc;
 #if defined(__linux__)
@@ -538,8 +538,8 @@ spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *soc
 	return rc;
 }
 
-int
-spdk_sock_group_poll_count(struct spdk_sock_group *group, int max_events)
+static int
+spdk_posix_sock_group_poll_count(struct spdk_sock_group *group, int max_events)
 {
 	struct spdk_sock *sock;
 	int num_events, i;
@@ -586,14 +586,8 @@ spdk_sock_group_poll_count(struct spdk_sock_group *group, int max_events)
 	return 0;
 }
 
-int
-spdk_sock_group_poll(struct spdk_sock_group *group)
-{
-	return spdk_sock_group_poll_count(group, MAX_EVENTS_PER_POLL);
-}
-
-int
-spdk_sock_group_close(struct spdk_sock_group **group)
+static int
+spdk_posix_sock_group_close(struct spdk_sock_group **group)
 {
 	int rc;
 
@@ -615,4 +609,114 @@ spdk_sock_group_close(struct spdk_sock_group **group)
 	}
 
 	return rc;
+}
+
+int
+spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, char *caddr, int clen)
+{
+	return spdk_posix_sock_getaddr(sock, saddr, slen, caddr, clen);
+}
+
+struct spdk_sock *
+spdk_sock_connect(const char *ip, int port)
+{
+	return spdk_posix_sock_connect(ip, port);
+}
+
+struct spdk_sock *
+spdk_sock_listen(const char *ip, int port)
+{
+	return spdk_posix_sock_listen(ip, port);
+}
+
+struct spdk_sock *
+spdk_sock_accept(struct spdk_sock *sock)
+{
+	return spdk_posix_sock_accept(sock);
+}
+
+int
+spdk_sock_close(struct spdk_sock **sock)
+{
+	return spdk_posix_sock_close(sock);
+}
+
+ssize_t
+spdk_sock_recv(struct spdk_sock *sock, void *buf, size_t len)
+{
+	return spdk_posix_sock_recv(sock, buf, len);
+}
+
+ssize_t
+spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
+{
+	return spdk_posix_sock_writev(sock, iov, iovcnt);
+}
+
+
+int
+spdk_sock_set_recvlowat(struct spdk_sock *sock, int nbytes)
+{
+	return spdk_posix_sock_set_recvlowat(sock, nbytes);
+}
+
+int
+spdk_sock_set_recvbuf(struct spdk_sock *sock, int sz)
+{
+	return spdk_posix_sock_set_recvbuf(sock, sz);
+}
+
+int
+spdk_sock_set_sendbuf(struct spdk_sock *sock, int sz)
+{
+	return spdk_posix_sock_set_sendbuf(sock, sz);
+}
+
+bool
+spdk_sock_is_ipv6(struct spdk_sock *sock)
+{
+	return spdk_posix_sock_is_ipv6(sock);
+}
+
+bool
+spdk_sock_is_ipv4(struct spdk_sock *sock)
+{
+	return spdk_posix_sock_is_ipv4(sock);
+}
+
+struct spdk_sock_group *
+spdk_sock_group_create(void)
+{
+	return spdk_posix_sock_group_create();
+}
+
+int
+spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
+			 spdk_sock_cb cb_fn, void *cb_arg)
+{
+	return spdk_posix_sock_group_add_sock(group, sock, cb_fn, cb_arg);
+}
+
+int
+spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *sock)
+{
+	return spdk_posix_sock_group_remove_sock(group, sock);
+}
+
+int
+spdk_sock_group_poll(struct spdk_sock_group *group)
+{
+	return spdk_sock_group_poll_count(group, MAX_EVENTS_PER_POLL);
+}
+
+int
+spdk_sock_group_poll_count(struct spdk_sock_group *group, int max_events)
+{
+	return spdk_posix_sock_group_poll_count(group, max_events);
+}
+
+int
+spdk_sock_group_close(struct spdk_sock_group **group)
+{
+	return spdk_posix_sock_group_close(group);
 }
