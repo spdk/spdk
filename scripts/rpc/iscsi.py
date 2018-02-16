@@ -25,9 +25,10 @@ def get_target_nodes(args):
 
 
 def construct_target_node(args):
-    bdev_name_id_dict = dict(u.split(":") for u in args.bdev_name_id_pairs.strip().split(" "))
-    bdev_names = bdev_name_id_dict.keys()
-    lun_ids = list(map(int, bdev_name_id_dict.values()))
+    luns = []
+    for u in args.bdev_name_id_pairs.strip().split(" "):
+        bdev_name, lun_id = u.split(":")
+        luns.append({"bdev_name": bdev_name, "lun_id": int(lun_id)})
 
     pg_ig_maps = []
     for u in args.pg_ig_mappings.strip().split(" "):
@@ -38,8 +39,7 @@ def construct_target_node(args):
         'name': args.name,
         'alias_name': args.alias_name,
         'pg_ig_maps': pg_ig_maps,
-        'bdev_names': bdev_names,
-        'lun_ids': lun_ids,
+        'luns': luns,
         'queue_depth': args.queue_depth,
         'chap_disabled': int2bool(args.chap_disabled),
         'chap_required': int2bool(args.chap_required),
