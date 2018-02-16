@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "acf07c0b_a4721b36",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-16T11:27:01Z",
+      "side": 1,
+      "message": "not used",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 16
+      },
+      "revId": "9725223d2670dd337de3434feffc5e734932df81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ccf5b1c_86690f99",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 1300,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-16T11:27:01Z",
+      "side": 1,
+      "message": "move to top of function",
+      "range": {
+        "startLine": 1300,
+        "startChar": 8,
+        "endLine": 1300,
+        "endChar": 34
+      },
+      "revId": "9725223d2670dd337de3434feffc5e734932df81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
