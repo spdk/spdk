@@ -268,18 +268,18 @@ spdk_iscsi_config_dump_target_nodes(FILE *fp)
 			}
 		}
 
-		if (target->auth_chap_disabled) {
+		if (target->chap_disabled) {
 			authmethod = "None";
-		} else if (!target->auth_chap_required) {
+		} else if (!target->chap_required) {
 			authmethod = "Auto";
-		} else if (target->auth_chap_mutual) {
+		} else if (target->chap_mutual) {
 			authmethod = "CHAP Mutual";
 		} else {
 			authmethod = "CHAP";
 		}
 
-		if (target->auth_group > 0) {
-			snprintf(authgroup, sizeof(authgroup), "AuthGroup%d", target->auth_group);
+		if (target->chap_auth_group > 0) {
+			snprintf(authgroup, sizeof(authgroup), "AuthGroup%d", target->chap_auth_group);
 		}
 
 		if (target->header_digest) {
