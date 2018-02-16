@@ -49,15 +49,23 @@
 #define MAX_EVENTS_PER_POLL 32
 
 struct spdk_sock {
-	int			fd;
 	spdk_sock_cb		cb_fn;
 	void			*cb_arg;
 	TAILQ_ENTRY(spdk_sock)	link;
 };
 
-struct spdk_sock_group {
+struct spdk_posix_sock {
+	struct spdk_sock	base;
 	int			fd;
+};
+
+struct spdk_sock_group {
 	TAILQ_HEAD(, spdk_sock)	socks;
+};
+
+struct spdk_posix_sock_group {
+	struct spdk_sock_group	base;
+	int			fd;
 };
 
 static int get_addr_str(struct sockaddr *sa, char *host, size_t hlen)
@@ -88,9 +96,13 @@ static int get_addr_str(struct sockaddr *sa, char *host, size_t hlen)
 	}
 }
 
+#define __posix_sock(sock) (struct spdk_posix_sock *)sock
+#define __posix_group(group) (struct spdk_posix_sock_group *)group
+
 static int
-spdk_posix_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, char *caddr, int clen)
+spdk_posix_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, char *caddr, int clen)
 {
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
 	struct sockaddr_storage sa;
 	socklen_t salen;
 	int rc;
@@ -149,7 +161,7 @@ enum spdk_posix_sock_create_type {
 static struct spdk_sock *
 spdk_posix_sock_create(const char *ip, int port, enum spdk_posix_sock_create_type type)
 {
-	struct spdk_sock *sock;
+	struct spdk_posix_sock *sock;
 	char buf[MAX_TMPBUF];
 	char portnum[PORTNUMLEN];
 	char *p;
@@ -269,7 +281,7 @@ retry:
 	}
 
 	sock->fd = fd;
-	return sock;
+	return &sock->base;
 }
 
 static struct spdk_sock *
@@ -285,12 +297,13 @@ spdk_posix_sock_connect(const char *ip, int port)
 }
 
 static struct spdk_sock *
-spdk_posix_sock_accept(struct spdk_sock *sock)
+spdk_posix_sock_accept(struct spdk_sock *_sock)
 {
+	struct spdk_posix_sock		*sock = __posix_sock(_sock);
 	struct sockaddr_storage		sa;
 	socklen_t			salen;
 	int				rc;
-	struct spdk_sock		*new_sock;
+	struct spdk_posix_sock		*new_sock;
 
 	memset(&sa, 0, sizeof(sa));
 	salen = sizeof(sa);
@@ -311,18 +324,22 @@ spdk_posix_sock_accept(struct spdk_sock *sock)
 	}
 
 	new_sock->fd = rc;
-	return new_sock;
+	return &new_sock->base;
 }
 
 static int
-spdk_posix_sock_close(struct spdk_sock *sock)
+spdk_posix_sock_close(struct spdk_sock *_sock)
 {
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
+
 	return close(sock->fd);
 }
 
 static ssize_t
-spdk_posix_sock_recv(struct spdk_sock *sock, void *buf, size_t len)
+spdk_posix_sock_recv(struct spdk_sock *_sock, void *buf, size_t len)
 {
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
+
 	if (sock == NULL) {
 		errno = EBADF;
 		return -1;
@@ -332,8 +349,10 @@ spdk_posix_sock_recv(struct spdk_sock *sock, void *buf, size_t len)
 }
 
 static ssize_t
-spdk_posix_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
+spdk_posix_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 {
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
+
 	if (sock == NULL) {
 		errno = EBADF;
 		return -1;
@@ -343,8 +362,9 @@ spdk_posix_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 }
 
 static int
-spdk_posix_sock_set_recvlowat(struct spdk_sock *sock, int nbytes)
+spdk_posix_sock_set_recvlowat(struct spdk_sock *_sock, int nbytes)
 {
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
 	int val;
 	int rc;
 
@@ -359,8 +379,10 @@ spdk_posix_sock_set_recvlowat(struct spdk_sock *sock, int nbytes)
 }
 
 static int
-spdk_posix_sock_set_recvbuf(struct spdk_sock *sock, int sz)
+spdk_posix_sock_set_recvbuf(struct spdk_sock *_sock, int sz)
 {
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
+
 	assert(sock != NULL);
 
 	return setsockopt(sock->fd, SOL_SOCKET, SO_RCVBUF,
@@ -368,8 +390,10 @@ spdk_posix_sock_set_recvbuf(struct spdk_sock *sock, int sz)
 }
 
 static int
-spdk_posix_sock_set_sendbuf(struct spdk_sock *sock, int sz)
+spdk_posix_sock_set_sendbuf(struct spdk_sock *_sock, int sz)
 {
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
+
 	assert(sock != NULL);
 
 	return setsockopt(sock->fd, SOL_SOCKET, SO_SNDBUF,
@@ -377,8 +401,9 @@ spdk_posix_sock_set_sendbuf(struct spdk_sock *sock, int sz)
 }
 
 static bool
-spdk_posix_sock_is_ipv6(struct spdk_sock *sock)
+spdk_posix_sock_is_ipv6(struct spdk_sock *_sock)
 {
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
 	struct sockaddr_storage sa;
 	socklen_t salen;
 	int rc;
@@ -397,8 +422,9 @@ spdk_posix_sock_is_ipv6(struct spdk_sock *sock)
 }
 
 static bool
-spdk_posix_sock_is_ipv4(struct spdk_sock *sock)
+spdk_posix_sock_is_ipv4(struct spdk_sock *_sock)
 {
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
 	struct sockaddr_storage sa;
 	socklen_t salen;
 	int rc;
@@ -419,7 +445,7 @@ spdk_posix_sock_is_ipv4(struct spdk_sock *sock)
 static struct spdk_sock_group *
 spdk_posix_sock_group_create(void)
 {
-	struct spdk_sock_group *sock_group;
+	struct spdk_posix_sock_group *sock_group;
 	int fd;
 
 #if defined(__linux__)
@@ -440,12 +466,14 @@ spdk_posix_sock_group_create(void)
 
 	sock_group->fd = fd;
 
-	return sock_group;
+	return &sock_group->base;
 }
 
 static int
-spdk_posix_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock)
+spdk_posix_sock_group_add_sock(struct spdk_sock_group *_group, struct spdk_sock *_sock)
 {
+	struct spdk_posix_sock_group *group = __posix_group(_group);
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
 	int rc;
 
 #if defined(__linux__)
@@ -467,8 +495,10 @@ spdk_posix_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *
 }
 
 static int
-spdk_posix_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *sock)
+spdk_posix_sock_group_remove_sock(struct spdk_sock_group *_group, struct spdk_sock *_sock)
 {
+	struct spdk_posix_sock_group *group = __posix_group(_group);
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
 	int rc;
 #if defined(__linux__)
 	struct epoll_event event;
@@ -491,8 +521,9 @@ spdk_posix_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_soc
 }
 
 static int
-spdk_posix_sock_group_poll_count(struct spdk_sock_group *group, int max_events, struct spdk_sock **socks)
+spdk_posix_sock_group_poll_count(struct spdk_sock_group *_group, int max_events, struct spdk_sock **socks)
 {
+	struct spdk_posix_sock_group *group = __posix_group(_group);
 	int num_events, i;
 
 #if defined(__linux__)
@@ -522,8 +553,10 @@ spdk_posix_sock_group_poll_count(struct spdk_sock_group *group, int max_events, 
 }
 
 static int
-spdk_posix_sock_group_close(struct spdk_sock_group *group)
+spdk_posix_sock_group_close(struct spdk_sock_group *_group)
 {
+	struct spdk_posix_sock_group *group = __posix_group(_group);
+
 	return close(group->fd);
 }
 
