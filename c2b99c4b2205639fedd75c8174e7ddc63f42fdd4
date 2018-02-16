@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "681b71f2_8dd22481",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-16T08:05:22Z",
+      "side": 1,
+      "message": "Please remove this.",
+      "range": {
+        "startLine": 193,
+        "startChar": 0,
+        "endLine": 193,
+        "endChar": 14
+      },
+      "revId": "c2b99c4b2205639fedd75c8174e7ddc63f42fdd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b947aab_9af20c44",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-16T08:05:22Z",
+      "side": 1,
+      "message": "spdk_strerror can be used directly",
+      "range": {
+        "startLine": 210,
+        "startChar": 78,
+        "endLine": 210,
+        "endChar": 81
+      },
+      "revId": "c2b99c4b2205639fedd75c8174e7ddc63f42fdd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
