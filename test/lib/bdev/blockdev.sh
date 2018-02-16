@@ -25,7 +25,7 @@ function nbd_function_test() {
 		local rpc_server=/var/tmp/spdk-nbd.sock
 		local conf=$1
 		local nbd_num=6
-		local nbd_all=(`ls /dev/nbd*`)
+		local nbd_all=(`ls /dev/nbd* | egrep -v 'p[0-9]'`)
 		local bdev_all=($bdevs_name)
 		local nbd_list=(${nbd_all[@]:0:$nbd_num})
 		local bdev_list=(${bdev_all[@]:0:$nbd_num})
