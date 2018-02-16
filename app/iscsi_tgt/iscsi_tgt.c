@@ -105,7 +105,6 @@ main(int argc, char **argv)
 	opts.shutdown_cb = NULL;
 	opts.usr1_handler = spdk_sigusr1;
 
-	printf("Using net framework %s\n", spdk_net_framework_get_name());
 	/* Blocks until the application is exiting */
 	rc = spdk_app_start(&opts, spdk_startup, NULL, NULL);
 

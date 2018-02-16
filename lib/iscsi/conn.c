@@ -283,12 +283,7 @@ error_return:
 	conn->pending_task_cnt = 0;
 	conn->pending_activate_event = false;
 
-	/*
-	 * Since we are potentially moving control of this socket to a different
-	 *  core, suspend the connection here.
-	 */
 	conn->lcore = spdk_env_get_current_core();
-	spdk_net_framework_clear_socket_association(conn->sock);
 	__sync_fetch_and_add(&g_num_connections[conn->lcore], 1);
 	conn->poller = spdk_poller_register(spdk_iscsi_conn_login_do_work, conn, 0);
 
@@ -569,7 +564,6 @@ spdk_iscsi_conn_stop_poller(struct spdk_iscsi_conn *conn)
 		spdk_scsi_dev_free_io_channels(conn->dev);
 	}
 	__sync_fetch_and_sub(&g_num_connections[spdk_env_get_current_core()], 1);
-	spdk_net_framework_clear_socket_association(conn->sock);
 	spdk_poller_unregister(&conn->poller);
 }
 

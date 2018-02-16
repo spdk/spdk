@@ -33,24 +33,11 @@
 
 #include "spdk/net.h"
 
-__attribute__((weak))
-const char *spdk_net_framework_get_name(void)
-{
-	return "default";
-}
-
-__attribute__((weak))
 int spdk_net_framework_start(void)
 {
 	return 0;
 }
 
-__attribute__((weak))
 void spdk_net_framework_fini(void)
-{
-}
-
-__attribute__((weak))
-void spdk_net_framework_clear_socket_association(struct spdk_sock *sock)
 {
 }
