@@ -447,32 +447,39 @@ spdk_rpc_get_target_nodes(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("get_target_nodes", spdk_rpc_get_target_nodes)
 
-struct rpc_pg_tags {
-	size_t num_tags;
-	int32_t tags[MAX_TARGET_MAP];
+struct rpc_pg_ig_map {
+	int32_t pg_tag;
+	int32_t ig_tag;
+};
+
+static const struct spdk_json_object_decoder rpc_pg_ig_map_decoders[] = {
+	{"pg_tag", offsetof(struct rpc_pg_ig_map, pg_tag), spdk_json_decode_int32},
+	{"ig_tag", offsetof(struct rpc_pg_ig_map, ig_tag), spdk_json_decode_int32},
 };
 
 static int
-decode_rpc_pg_tags(const struct spdk_json_val *val, void *out)
+decode_rpc_pg_ig_map(const struct spdk_json_val *val, void *out)
 {
-	struct rpc_pg_tags *pg_tags = out;
+	struct rpc_pg_ig_map *pg_ig_map = out;
 
-	return spdk_json_decode_array(val, spdk_json_decode_int32, pg_tags->tags, MAX_TARGET_MAP,
-				      &pg_tags->num_tags, sizeof(int32_t));
+	return spdk_json_decode_object(val, rpc_pg_ig_map_decoders,
+				       SPDK_COUNTOF(rpc_pg_ig_map_decoders),
+				       pg_ig_map);
 }
 
-struct rpc_ig_tags {
-	size_t num_tags;
-	int32_t tags[MAX_TARGET_MAP];
+struct rpc_pg_ig_maps {
+	size_t num_maps;
+	struct rpc_pg_ig_map maps[MAX_TARGET_MAP];
 };
 
 static int
-decode_rpc_ig_tags(const struct spdk_json_val *val, void *out)
+decode_rpc_pg_ig_maps(const struct spdk_json_val *val, void *out)
 {
-	struct rpc_ig_tags *ig_tags = out;
+	struct rpc_pg_ig_maps *pg_ig_maps = out;
 
-	return spdk_json_decode_array(val, spdk_json_decode_int32, ig_tags->tags, MAX_TARGET_MAP,
-				      &ig_tags->num_tags, sizeof(int32_t));
+	return spdk_json_decode_array(val, decode_rpc_pg_ig_map, pg_ig_maps->maps,
+				      MAX_TARGET_MAP, &pg_ig_maps->num_maps,
+				      sizeof(struct rpc_pg_ig_map));
 }
 
 #define RPC_CONSTRUCT_TARGET_NODE_MAX_LUN	64
@@ -521,8 +528,7 @@ struct rpc_target_node {
 	char *name;
 	char *alias_name;
 
-	struct rpc_pg_tags pg_tags;
-	struct rpc_ig_tags ig_tags;
+	struct rpc_pg_ig_maps pg_ig_maps;
 
 	struct rpc_bdev_names bdev_names;
 	struct rpc_lun_ids lun_ids;
@@ -548,8 +554,7 @@ free_rpc_target_node(struct rpc_target_node *req)
 static const struct spdk_json_object_decoder rpc_target_node_decoders[] = {
 	{"name", offsetof(struct rpc_target_node, name), spdk_json_decode_string},
 	{"alias_name", offsetof(struct rpc_target_node, alias_name), spdk_json_decode_string},
-	{"pg_tags", offsetof(struct rpc_target_node, pg_tags), decode_rpc_pg_tags},
-	{"ig_tags", offsetof(struct rpc_target_node, ig_tags), decode_rpc_ig_tags},
+	{"pg_ig_maps", offsetof(struct rpc_target_node, pg_ig_maps), decode_rpc_pg_ig_maps},
 	{"bdev_names", offsetof(struct rpc_target_node, bdev_names), decode_rpc_bdev_names},
 	{"lun_ids", offsetof(struct rpc_target_node, lun_ids), decode_rpc_lun_ids},
 	{"queue_depth", offsetof(struct rpc_target_node, queue_depth), spdk_json_decode_int32},
@@ -568,6 +573,8 @@ spdk_rpc_construct_target_node(struct spdk_jsonrpc_request *request,
 	struct rpc_target_node req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_iscsi_tgt_node *target;
+	int32_t pg_tags[MAX_TARGET_MAP] = {0}, ig_tags[MAX_TARGET_MAP] = {0};
+	size_t i;
 
 	req.header_digest = 0;
 	req.data_digest = 0;
@@ -579,14 +586,14 @@ spdk_rpc_construct_target_node(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	if (req.pg_tags.num_tags != req.ig_tags.num_tags) {
-		SPDK_ERRLOG("pg_tags/ig_tags count mismatch\n");
-		goto invalid;
-	}
-
 	if (req.bdev_names.num_names != req.lun_ids.num_ids) {
 		SPDK_ERRLOG("bdev_names/lun_ids count mismatch\n");
 		goto invalid;
+	}
+
+	for (i = 0; i < req.pg_ig_maps.num_maps; i++) {
+		pg_tags[i] = req.pg_ig_maps.maps[i].pg_tag;
+		ig_tags[i] = req.pg_ig_maps.maps[i].ig_tag;
 	}
 
 	/*
@@ -596,9 +603,9 @@ spdk_rpc_construct_target_node(struct spdk_jsonrpc_request *request,
 	 *  0, 0 = disable header/data digests
 	 */
 	target = spdk_iscsi_tgt_node_construct(-1, req.name, req.alias_name,
-					       req.pg_tags.tags,
-					       req.ig_tags.tags,
-					       req.pg_tags.num_tags,
+					       pg_tags,
+					       ig_tags,
+					       req.pg_ig_maps.num_maps,
 					       (const char **)req.bdev_names.names,
 					       req.lun_ids.ids,
 					       req.bdev_names.num_names,
@@ -631,36 +638,31 @@ invalid:
 }
 SPDK_RPC_REGISTER("construct_target_node", spdk_rpc_construct_target_node)
 
-struct rpc_pg_ig_maps {
+struct rpc_tgt_node_pg_ig_maps {
 	char *name;
-	struct rpc_pg_tags pg_tags;
-	struct rpc_ig_tags ig_tags;
+	struct rpc_pg_ig_maps pg_ig_maps;
 };
 
-static const struct spdk_json_object_decoder rpc_pg_ig_maps_decoders[] = {
-	{"name", offsetof(struct rpc_pg_ig_maps, name), spdk_json_decode_string},
-	{"pg_tags", offsetof(struct rpc_pg_ig_maps, pg_tags), decode_rpc_pg_tags},
-	{"ig_tags", offsetof(struct rpc_pg_ig_maps, ig_tags), decode_rpc_ig_tags},
+static const struct spdk_json_object_decoder rpc_tgt_node_pg_ig_maps_decoders[] = {
+	{"name", offsetof(struct rpc_tgt_node_pg_ig_maps, name), spdk_json_decode_string},
+	{"pg_ig_maps", offsetof(struct rpc_tgt_node_pg_ig_maps, pg_ig_maps), decode_rpc_pg_ig_maps},
 };
 
 static void
 spdk_rpc_add_pg_ig_maps(struct spdk_jsonrpc_request *request,
 			const struct spdk_json_val *params)
 {
-	struct rpc_pg_ig_maps req = {};
+	struct rpc_tgt_node_pg_ig_maps req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_iscsi_tgt_node *target;
+	int32_t pg_tags[MAX_TARGET_MAP] = {0}, ig_tags[MAX_TARGET_MAP] = {0};
+	size_t i;
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_pg_ig_maps_decoders,
-				    SPDK_COUNTOF(rpc_pg_ig_maps_decoders),
+	if (spdk_json_decode_object(params, rpc_tgt_node_pg_ig_maps_decoders,
+				    SPDK_COUNTOF(rpc_tgt_node_pg_ig_maps_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
-		goto invalid;
-	}
-
-	if (req.pg_tags.num_tags != req.ig_tags.num_tags) {
-		SPDK_ERRLOG("pg_tags/ig_tags count mismatch\n");
 		goto invalid;
 	}
 
@@ -670,9 +672,13 @@ spdk_rpc_add_pg_ig_maps(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	rc = spdk_iscsi_tgt_node_add_pg_ig_maps(target, req.pg_tags.tags,
-						req.ig_tags.tags,
-						req.pg_tags.num_tags);
+	for (i = 0; i < req.pg_ig_maps.num_maps; i++) {
+		pg_tags[i] = req.pg_ig_maps.maps[i].pg_tag;
+		ig_tags[i] = req.pg_ig_maps.maps[i].ig_tag;
+	}
+
+	rc = spdk_iscsi_tgt_node_add_pg_ig_maps(target, pg_tags, ig_tags,
+						req.pg_ig_maps.num_maps);
 	if (rc < 0) {
 		SPDK_ERRLOG("add pg-ig maps failed\n");
 		goto invalid;
@@ -698,20 +704,17 @@ static void
 spdk_rpc_delete_pg_ig_maps(struct spdk_jsonrpc_request *request,
 			   const struct spdk_json_val *params)
 {
-	struct rpc_pg_ig_maps req = {};
+	struct rpc_tgt_node_pg_ig_maps req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_iscsi_tgt_node *target;
+	int32_t pg_tags[MAX_TARGET_MAP] = {0}, ig_tags[MAX_TARGET_MAP] = {0};
+	size_t i;
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_pg_ig_maps_decoders,
-				    SPDK_COUNTOF(rpc_pg_ig_maps_decoders),
+	if (spdk_json_decode_object(params, rpc_tgt_node_pg_ig_maps_decoders,
+				    SPDK_COUNTOF(rpc_tgt_node_pg_ig_maps_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
-		goto invalid;
-	}
-
-	if (req.pg_tags.num_tags != req.ig_tags.num_tags) {
-		SPDK_ERRLOG("pg_tags/ig_tags count mismatch\n");
 		goto invalid;
 	}
 
@@ -721,9 +724,13 @@ spdk_rpc_delete_pg_ig_maps(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	rc = spdk_iscsi_tgt_node_delete_pg_ig_maps(target, req.pg_tags.tags,
-			req.ig_tags.tags,
-			req.pg_tags.num_tags);
+	for (i = 0; i < req.pg_ig_maps.num_maps; i++) {
+		pg_tags[i] = req.pg_ig_maps.maps[i].pg_tag;
+		ig_tags[i] = req.pg_ig_maps.maps[i].ig_tag;
+	}
+
+	rc = spdk_iscsi_tgt_node_delete_pg_ig_maps(target, pg_tags, ig_tags,
+			req.pg_ig_maps.num_maps);
 	if (rc < 0) {
 		SPDK_ERRLOG("remove pg-ig maps failed\n");
 		goto invalid;
