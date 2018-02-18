@@ -22,18 +22,15 @@ def construct_target_node(args):
     bdev_names = bdev_name_id_dict.keys()
     lun_ids = list(map(int, bdev_name_id_dict.values()))
 
-    pg_tags = []
-    ig_tags = []
+    pg_ig_maps = []
     for u in args.pg_ig_mappings.strip().split(" "):
         pg, ig = u.split(":")
-        pg_tags.append(int(pg))
-        ig_tags.append(int(ig))
+        pg_ig_maps.append({"pg_tag": int(pg), "ig_tag": int(ig)})
 
     params = {
         'name': args.name,
         'alias_name': args.alias_name,
-        'pg_tags': pg_tags,
-        'ig_tags': ig_tags,
+        'pg_ig_maps': pg_ig_maps,
         'bdev_names': bdev_names,
         'lun_ids': lun_ids,
         'queue_depth': args.queue_depth,
@@ -61,31 +58,25 @@ def target_node_add_lun(args):
 
 
 def delete_pg_ig_maps(args):
-    pg_tags = []
-    ig_tags = []
+    pg_ig_maps = []
     for u in args.pg_ig_mappings.strip().split(" "):
         pg, ig = u.split(":")
-        pg_tags.append(int(pg))
-        ig_tags.append(int(ig))
+        pg_ig_maps.append({"pg_tag": int(pg), "ig_tag": int(ig)})
     params = {
         'name': args.name,
-        'pg_tags': pg_tags,
-        'ig_tags': ig_tags,
+        'pg_ig_maps': pg_ig_maps,
     }
     args.client.call('delete_pg_ig_maps', params)
 
 
 def add_pg_ig_maps(args):
-    pg_tags = []
-    ig_tags = []
+    pg_ig_maps = []
     for u in args.pg_ig_mappings.strip().split(" "):
         pg, ig = u.split(":")
-        pg_tags.append(int(pg))
-        ig_tags.append(int(ig))
+        pg_ig_maps.append({"pg_tag": int(pg), "ig_tag": int(ig)})
     params = {
         'name': args.name,
-        'pg_tags': pg_tags,
-        'ig_tags': ig_tags,
+        'pg_ig_maps': pg_ig_maps,
     }
     args.client.call('add_pg_ig_maps', params)
 
