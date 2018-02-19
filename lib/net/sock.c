@@ -343,11 +343,6 @@ spdk_posix_sock_recv(struct spdk_sock *_sock, void *buf, size_t len)
 {
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
 
-	if (sock == NULL) {
-		errno = EBADF;
-		return -1;
-	}
-
 	return recv(sock->fd, buf, len, MSG_DONTWAIT);
 }
 
@@ -355,11 +350,6 @@ static ssize_t
 spdk_posix_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 {
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
-
-	if (sock == NULL) {
-		errno = EBADF;
-		return -1;
-	}
 
 	return writev(sock->fd, iov, iovcnt);
 }
@@ -616,12 +606,22 @@ spdk_sock_close(struct spdk_sock **sock)
 ssize_t
 spdk_sock_recv(struct spdk_sock *sock, void *buf, size_t len)
 {
+	if (sock == NULL) {
+		errno = EBADF;
+		return -1;
+	}
+
 	return spdk_posix_sock_recv(sock, buf, len);
 }
 
 ssize_t
 spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 {
+	if (sock == NULL) {
+		errno = EBADF;
+		return -1;
+	}
+
 	return spdk_posix_sock_writev(sock, iov, iovcnt);
 }
 
