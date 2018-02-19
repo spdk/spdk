@@ -64,13 +64,18 @@ struct spdk_posix_sock {
 };
 
 struct spdk_sock_group {
-	struct spdk_net_impl	*net_impl;
-	TAILQ_HEAD(, spdk_sock)	socks;
+	struct spdk_net_impl		*net_impl;
+	struct spdk_sock_group_impl	*group_impl;
+	TAILQ_HEAD(, spdk_sock)		socks;
 };
 
-struct spdk_posix_sock_group {
-	struct spdk_sock_group	base;
-	int			fd;
+struct spdk_sock_group_impl {
+	TAILQ_ENTRY(spdk_sock_group_impl)	link;
+};
+
+struct spdk_posix_sock_group_impl {
+	struct spdk_sock_group_impl	base;
+	int				fd;
 };
 
 static int get_addr_str(struct sockaddr *sa, char *host, size_t hlen)
@@ -102,7 +107,7 @@ static int get_addr_str(struct sockaddr *sa, char *host, size_t hlen)
 }
 
 #define __posix_sock(sock) (struct spdk_posix_sock *)sock
-#define __posix_group(group) (struct spdk_posix_sock_group *)group
+#define __posix_group_impl(group) (struct spdk_posix_sock_group_impl *)group
 
 static int
 spdk_posix_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, char *caddr, int clen)
@@ -437,10 +442,10 @@ spdk_posix_sock_is_ipv4(struct spdk_sock *_sock)
 	return (sa.ss_family == AF_INET);
 }
 
-static struct spdk_sock_group *
-spdk_posix_sock_group_create(void)
+static struct spdk_sock_group_impl *
+spdk_posix_sock_group_impl_create(void)
 {
-	struct spdk_posix_sock_group *sock_group;
+	struct spdk_posix_sock_group_impl *group_impl;
 	int fd;
 
 #if defined(__linux__)
@@ -452,22 +457,22 @@ spdk_posix_sock_group_create(void)
 		return NULL;
 	}
 
-	sock_group = calloc(1, sizeof(*sock_group));
-	if (sock_group == NULL) {
-		SPDK_ERRLOG("sock_group allocation failed\n");
+	group_impl = calloc(1, sizeof(*group_impl));
+	if (group_impl == NULL) {
+		SPDK_ERRLOG("group_impl allocation failed\n");
 		close(fd);
 		return NULL;
 	}
 
-	sock_group->fd = fd;
+	group_impl->fd = fd;
 
-	return &sock_group->base;
+	return &group_impl->base;
 }
 
 static int
-spdk_posix_sock_group_add_sock(struct spdk_sock_group *_group, struct spdk_sock *_sock)
+spdk_posix_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group, struct spdk_sock *_sock)
 {
-	struct spdk_posix_sock_group *group = __posix_group(_group);
+	struct spdk_posix_sock_group_impl *group = __posix_group_impl(_group);
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
 	int rc;
 
@@ -490,9 +495,9 @@ spdk_posix_sock_group_add_sock(struct spdk_sock_group *_group, struct spdk_sock 
 }
 
 static int
-spdk_posix_sock_group_remove_sock(struct spdk_sock_group *_group, struct spdk_sock *_sock)
+spdk_posix_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group, struct spdk_sock *_sock)
 {
-	struct spdk_posix_sock_group *group = __posix_group(_group);
+	struct spdk_posix_sock_group_impl *group = __posix_group_impl(_group);
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
 	int rc;
 #if defined(__linux__)
@@ -516,9 +521,10 @@ spdk_posix_sock_group_remove_sock(struct spdk_sock_group *_group, struct spdk_so
 }
 
 static int
-spdk_posix_sock_group_poll(struct spdk_sock_group *_group, int max_events, struct spdk_sock **socks)
+spdk_posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
+				struct spdk_sock **socks)
 {
-	struct spdk_posix_sock_group *group = __posix_group(_group);
+	struct spdk_posix_sock_group_impl *group = __posix_group_impl(_group);
 	int num_events, i;
 
 #if defined(__linux__)
@@ -548,9 +554,9 @@ spdk_posix_sock_group_poll(struct spdk_sock_group *_group, int max_events, struc
 }
 
 static int
-spdk_posix_sock_group_close(struct spdk_sock_group *_group)
+spdk_posix_sock_group_impl_close(struct spdk_sock_group_impl *_group)
 {
-	struct spdk_posix_sock_group *group = __posix_group(_group);
+	struct spdk_posix_sock_group_impl *group = __posix_group_impl(_group);
 
 	return close(group->fd);
 }
@@ -569,11 +575,11 @@ static struct spdk_net_impl g_posix_net_impl = {
 	.set_sendbuf	= spdk_posix_sock_set_sendbuf,
 	.is_ipv6	= spdk_posix_sock_is_ipv6,
 	.is_ipv4	= spdk_posix_sock_is_ipv4,
-	.group_create	= spdk_posix_sock_group_create,
-	.group_add_sock	= spdk_posix_sock_group_add_sock,
-	.group_remove_sock = spdk_posix_sock_group_remove_sock,
-	.group_poll	= spdk_posix_sock_group_poll,
-	.group_close	= spdk_posix_sock_group_close,
+	.group_impl_create	= spdk_posix_sock_group_impl_create,
+	.group_impl_add_sock	= spdk_posix_sock_group_impl_add_sock,
+	.group_impl_remove_sock = spdk_posix_sock_group_impl_remove_sock,
+	.group_impl_poll	= spdk_posix_sock_group_impl_poll,
+	.group_impl_close	= spdk_posix_sock_group_impl_close,
 };
 
 SPDK_NET_IMPL_REGISTER(posix, &g_posix_net_impl);
@@ -713,11 +719,18 @@ struct spdk_sock_group *
 spdk_sock_group_create(void)
 {
 	struct spdk_sock_group *group;
+	struct spdk_sock_group_impl *group_impl;
 
-	group = STAILQ_FIRST(&g_net_impls)->group_create();
-	if (group != NULL) {
+	group = calloc(1, sizeof(*group));
+	if (group == NULL) {
+		return NULL;
+	}
+
+	group_impl = STAILQ_FIRST(&g_net_impls)->group_impl_create();
+	if (group_impl != NULL) {
 		TAILQ_INIT(&group->socks);
 		group->net_impl = STAILQ_FIRST(&g_net_impls);
+		group->group_impl = group_impl;
 	}
 
 	return group;
@@ -743,7 +756,7 @@ spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 		return -1;
 	}
 
-	rc = group->net_impl->group_add_sock(group, sock);
+	rc = group->net_impl->group_impl_add_sock(group->group_impl, sock);
 	if (rc == 0) {
 		TAILQ_INSERT_TAIL(&group->socks, sock, link);
 		sock->cb_fn = cb_fn;
@@ -758,7 +771,7 @@ spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *soc
 {
 	int rc;
 
-	rc = group->net_impl->group_remove_sock(group, sock);
+	rc = group->net_impl->group_impl_remove_sock(group->group_impl, sock);
 	if (rc == 0) {
 		TAILQ_REMOVE(&group->socks, sock, link);
 		sock->cb_fn = NULL;
@@ -793,7 +806,7 @@ spdk_sock_group_poll_count(struct spdk_sock_group *group, int max_events)
 		max_events = MAX_EVENTS_PER_POLL;
 	}
 
-	num_events = group->net_impl->group_poll(group, max_events, socks);
+	num_events = group->net_impl->group_impl_poll(group->group_impl, max_events, socks);
 	if (num_events == -1) {
 		return -1;
 	}
@@ -822,8 +835,9 @@ spdk_sock_group_close(struct spdk_sock_group **group)
 		return -1;
 	}
 
-	rc = (*group)->net_impl->group_close(*group);
+	rc = (*group)->net_impl->group_impl_close((*group)->group_impl);
 	if (rc == 0) {
+		free((*group)->group_impl);
 		free(*group);
 		*group = NULL;
 	}

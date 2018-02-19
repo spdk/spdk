@@ -66,11 +66,12 @@ struct spdk_net_impl {
 	bool (*is_ipv6)(struct spdk_sock *sock);
 	bool (*is_ipv4)(struct spdk_sock *sock);
 
-	struct spdk_sock_group *(*group_create)(void);
-	int (*group_add_sock)(struct spdk_sock_group *group, struct spdk_sock *sock);
-	int (*group_remove_sock)(struct spdk_sock_group *group, struct spdk_sock *sock);
-	int (*group_poll)(struct spdk_sock_group *group, int max_events, struct spdk_sock **socks);
-	int (*group_close)(struct spdk_sock_group *group);
+	struct spdk_sock_group_impl *(*group_impl_create)(void);
+	int (*group_impl_add_sock)(struct spdk_sock_group_impl *group, struct spdk_sock *sock);
+	int (*group_impl_remove_sock)(struct spdk_sock_group_impl *group, struct spdk_sock *sock);
+	int (*group_impl_poll)(struct spdk_sock_group_impl *group, int max_events,
+			       struct spdk_sock **socks);
+	int (*group_impl_close)(struct spdk_sock_group_impl *group);
 
 	STAILQ_ENTRY(spdk_net_impl) link;
 };
