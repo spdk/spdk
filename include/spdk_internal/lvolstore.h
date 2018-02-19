@@ -106,6 +106,7 @@ struct spdk_lvol {
 	struct spdk_bdev		*bdev;
 	int				ref_count;
 	bool				action_in_progress;
+	struct spdk_lvol		*snapshot_of;
 	TAILQ_ENTRY(spdk_lvol) link;
 };
 
