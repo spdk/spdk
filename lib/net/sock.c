@@ -64,13 +64,13 @@ struct spdk_posix_sock {
 };
 
 struct spdk_sock_group {
-	struct spdk_net_impl		*net_impl;
-	struct spdk_sock_group_impl	*group_impl;
-	TAILQ_HEAD(, spdk_sock)		socks;
+	STAILQ_HEAD(, spdk_sock_group_impl)	group_impls;
 };
 
 struct spdk_sock_group_impl {
-	TAILQ_ENTRY(spdk_sock_group_impl)	link;
+	struct spdk_net_impl			*net_impl;
+	TAILQ_HEAD(, spdk_sock)			socks;
+	STAILQ_ENTRY(spdk_sock_group_impl)	link;
 };
 
 struct spdk_posix_sock_group_impl {
@@ -718,6 +718,7 @@ spdk_sock_is_ipv4(struct spdk_sock *sock)
 struct spdk_sock_group *
 spdk_sock_group_create(void)
 {
+	struct spdk_net_impl *impl = NULL;
 	struct spdk_sock_group *group;
 	struct spdk_sock_group_impl *group_impl;
 
@@ -726,11 +727,14 @@ spdk_sock_group_create(void)
 		return NULL;
 	}
 
-	group_impl = STAILQ_FIRST(&g_net_impls)->group_impl_create();
-	if (group_impl != NULL) {
-		TAILQ_INIT(&group->socks);
-		group->net_impl = STAILQ_FIRST(&g_net_impls);
-		group->group_impl = group_impl;
+	STAILQ_INIT(&group->group_impls);
+
+	STAILQ_FOREACH_FROM(impl, &g_net_impls, link) {
+		group_impl = impl->group_impl_create();
+		assert(group_impl != NULL);
+		STAILQ_INSERT_TAIL(&group->group_impls, group_impl, link);
+		TAILQ_INIT(&group_impl->socks);
+		group_impl->net_impl = impl;
 	}
 
 	return group;
@@ -740,6 +744,7 @@ int
 spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 			 spdk_sock_cb cb_fn, void *cb_arg)
 {
+	struct spdk_sock_group_impl *group_impl = NULL;
 	int rc;
 
 	if (cb_fn == NULL) {
@@ -756,9 +761,20 @@ spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 		return -1;
 	}
 
-	rc = group->net_impl->group_impl_add_sock(group->group_impl, sock);
+	STAILQ_FOREACH_FROM(group_impl, &group->group_impls, link) {
+		if (sock->net_impl == group_impl->net_impl) {
+			break;
+		}
+	}
+
+	if (group_impl == NULL) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	rc = group_impl->net_impl->group_impl_add_sock(group_impl, sock);
 	if (rc == 0) {
-		TAILQ_INSERT_TAIL(&group->socks, sock, link);
+		TAILQ_INSERT_TAIL(&group_impl->socks, sock, link);
 		sock->cb_fn = cb_fn;
 		sock->cb_arg = cb_arg;
 	}
@@ -769,11 +785,23 @@ spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 int
 spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *sock)
 {
+	struct spdk_sock_group_impl *group_impl = NULL;
 	int rc;
 
-	rc = group->net_impl->group_impl_remove_sock(group->group_impl, sock);
+	STAILQ_FOREACH_FROM(group_impl, &group->group_impls, link) {
+		if (sock->net_impl == group_impl->net_impl) {
+			break;
+		}
+	}
+
+	if (group_impl == NULL) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	rc = group_impl->net_impl->group_impl_remove_sock(group_impl, sock);
 	if (rc == 0) {
-		TAILQ_REMOVE(&group->socks, sock, link);
+		TAILQ_REMOVE(&group_impl->socks, sock, link);
 		sock->cb_fn = NULL;
 		sock->cb_arg = NULL;
 	}
@@ -787,26 +815,19 @@ spdk_sock_group_poll(struct spdk_sock_group *group)
 	return spdk_sock_group_poll_count(group, MAX_EVENTS_PER_POLL);
 }
 
-int
-spdk_sock_group_poll_count(struct spdk_sock_group *group, int max_events)
+static int
+spdk_sock_group_impl_poll_count(struct spdk_sock_group_impl *group_impl,
+				struct spdk_sock_group *group,
+				int max_events)
 {
 	struct spdk_sock *socks[MAX_EVENTS_PER_POLL];
 	int num_events, i;
 
-	if (max_events < 1) {
-		errno = -EINVAL;
-		return -1;
+	if (TAILQ_EMPTY(&group_impl->socks)) {
+		return 0;
 	}
 
-	/*
-	 * Only poll for up to 32 events at a time - if more events are pending,
-	 *  the next call to this function will reap them.
-	 */
-	if (max_events > MAX_EVENTS_PER_POLL) {
-		max_events = MAX_EVENTS_PER_POLL;
-	}
-
-	num_events = group->net_impl->group_impl_poll(group->group_impl, max_events, socks);
+	num_events = group_impl->net_impl->group_impl_poll(group_impl, max_events, socks);
 	if (num_events == -1) {
 		return -1;
 	}
@@ -821,8 +842,40 @@ spdk_sock_group_poll_count(struct spdk_sock_group *group, int max_events)
 }
 
 int
+spdk_sock_group_poll_count(struct spdk_sock_group *group, int max_events)
+{
+	struct spdk_sock_group_impl *group_impl = NULL;
+	int rc, final_rc = 0;
+
+	if (max_events < 1) {
+		errno = -EINVAL;
+		return -1;
+	}
+
+	/*
+	 * Only poll for up to 32 events at a time - if more events are pending,
+	 *  the next call to this function will reap them.
+	 */
+	if (max_events > MAX_EVENTS_PER_POLL) {
+		max_events = MAX_EVENTS_PER_POLL;
+	}
+
+	STAILQ_FOREACH_FROM(group_impl, &group->group_impls, link) {
+		rc = spdk_sock_group_impl_poll_count(group_impl, group, max_events);
+		if (rc != 0) {
+			final_rc = rc;
+			SPDK_ERRLOG("group_impl_poll_count for net(%s) failed\n",
+				    group_impl->net_impl->name);
+		}
+	}
+
+	return final_rc;
+}
+
+int
 spdk_sock_group_close(struct spdk_sock_group **group)
 {
+	struct spdk_sock_group_impl *group_impl = NULL, *tmp;
 	int rc;
 
 	if (*group == NULL) {
@@ -830,23 +883,34 @@ spdk_sock_group_close(struct spdk_sock_group **group)
 		return -1;
 	}
 
-	if (!TAILQ_EMPTY(&(*group)->socks)) {
-		errno = EBUSY;
-		return -1;
+	STAILQ_FOREACH_SAFE(group_impl, &(*group)->group_impls, link, tmp) {
+		if (!TAILQ_EMPTY(&group_impl->socks)) {
+			errno = EBUSY;
+			return -1;
+		}
 	}
 
-	rc = (*group)->net_impl->group_impl_close((*group)->group_impl);
-	if (rc == 0) {
-		free((*group)->group_impl);
-		free(*group);
-		*group = NULL;
+	STAILQ_FOREACH_SAFE(group_impl, &(*group)->group_impls, link, tmp) {
+		rc = group_impl->net_impl->group_impl_close(group_impl);
+		if (rc != 0) {
+			SPDK_ERRLOG("group_impl_close for net(%s) failed\n",
+				    group_impl->net_impl->name);
+		}
+		free(group_impl);
 	}
 
-	return rc;
+	free(*group);
+	*group = NULL;
+
+	return 0;
 }
 
 void
 spdk_net_impl_register(struct spdk_net_impl *impl)
 {
-	STAILQ_INSERT_TAIL(&g_net_impls, impl, link);
+	if (!strcmp("posix", impl->name)) {
+		STAILQ_INSERT_TAIL(&g_net_impls, impl, link);
+	} else {
+		STAILQ_INSERT_HEAD(&g_net_impls, impl, link);
+	}
 }
