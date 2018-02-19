@@ -437,7 +437,7 @@ bdev_rbd_get_io_channel(void *ctx)
 {
 	struct bdev_rbd *rbd_bdev = ctx;
 
-	return spdk_get_io_channel(&rbd_bdev->info);
+	return spdk_get_io_channel(rbd_bdev);
 }
 
 static int
@@ -519,12 +519,12 @@ spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block
 
 	SPDK_NOTICELOG("Add %s rbd disk to lun\n", rbd->disk.name);
 
-	spdk_io_device_register(&rbd->info, bdev_rbd_create_cb,
+	spdk_io_device_register(rbd, bdev_rbd_create_cb,
 				bdev_rbd_destroy_cb,
 				sizeof(struct bdev_rbd_io_channel));
 	ret = spdk_bdev_register(&rbd->disk);
 	if (ret) {
-		spdk_io_device_unregister(&rbd->info, NULL);
+		spdk_io_device_unregister(rbd, NULL);
 		bdev_rbd_free(rbd);
 		return NULL;
 	}

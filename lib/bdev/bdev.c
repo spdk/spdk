@@ -2381,7 +2381,7 @@ spdk_bdev_part_free(struct spdk_bdev_part *part)
 	assert(part->base);
 
 	base = part->base;
-	spdk_io_device_unregister(&part->base, NULL);
+	spdk_io_device_unregister(part, NULL);
 	TAILQ_REMOVE(base->tailq, part, tailq);
 	free(part->bdev.name);
 	free(part);
@@ -2417,7 +2417,7 @@ spdk_bdev_part_get_io_channel(void *_part)
 {
 	struct spdk_bdev_part *part = _part;
 
-	return spdk_get_io_channel(&part->base);
+	return spdk_get_io_channel(part);
 }
 
 static void
@@ -2612,7 +2612,7 @@ spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base
 		base->claimed = true;
 	}
 
-	spdk_io_device_register(&part->base, spdk_bdev_part_channel_create_cb,
+	spdk_io_device_register(part, spdk_bdev_part_channel_create_cb,
 				spdk_bdev_part_channel_destroy_cb,
 				base->channel_size);
 	spdk_vbdev_register(&part->bdev, &base->bdev, 1);
