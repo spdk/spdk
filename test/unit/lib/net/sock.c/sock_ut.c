@@ -32,18 +32,273 @@
  */
 
 #include "spdk/stdinc.h"
+#include "spdk/util.h"
 
 #include "spdk_cunit.h"
 
 #include "net/sock.c"
 
+#define UT_IP	"test_ip"
+#define UT_PORT	1234
+
 bool g_read_data_called;
 ssize_t g_bytes_read;
 char g_buf[256];
 struct spdk_sock *g_server_sock_read;
+int g_ut_accept_count;
+struct spdk_ut_sock *g_ut_listen_sock;
+struct spdk_ut_sock *g_ut_client_sock;
+
+struct spdk_ut_sock {
+	struct spdk_sock	base;
+	struct spdk_ut_sock	*peer;
+	size_t			bytes_avail;
+	char			buf[256];
+};
+
+struct spdk_ut_sock_group_impl {
+	struct spdk_sock_group_impl	base;
+	struct spdk_ut_sock		*sock;
+};
+
+#define __ut_sock(sock) (struct spdk_ut_sock *)sock
+#define __ut_group(group) (struct spdk_ut_sock_group_impl *)group
+
+static int
+spdk_ut_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, char *caddr, int clen)
+{
+	return 0;
+}
+
+static struct spdk_sock *
+spdk_ut_sock_listen(const char *ip, int port)
+{
+	struct spdk_ut_sock *sock;
+
+	if (strcmp(ip, UT_IP) || port != UT_PORT) {
+		return NULL;
+	}
+
+	CU_ASSERT(g_ut_listen_sock == NULL);
+
+	sock = calloc(1, sizeof(*sock));
+	SPDK_CU_ASSERT_FATAL(sock != NULL);
+	g_ut_listen_sock = sock;
+
+	return &sock->base;
+}
+
+static struct spdk_sock *
+spdk_ut_sock_connect(const char *ip, int port)
+{
+	struct spdk_ut_sock *sock;
+
+	if (strcmp(ip, UT_IP) || port != UT_PORT) {
+		return NULL;
+	}
+
+	sock = calloc(1, sizeof(*sock));
+	SPDK_CU_ASSERT_FATAL(sock != NULL);
+	g_ut_accept_count++;
+	CU_ASSERT(g_ut_client_sock == NULL);
+	g_ut_client_sock = sock;
+
+	return &sock->base;
+}
+
+static struct spdk_sock *
+spdk_ut_sock_accept(struct spdk_sock *_sock)
+{
+	struct spdk_ut_sock *sock = __ut_sock(_sock);
+	struct spdk_ut_sock *new_sock;
+
+	CU_ASSERT(sock == g_ut_listen_sock);
+
+	if (g_ut_accept_count == 0) {
+		errno = EAGAIN;
+		return NULL;
+	}
+
+	g_ut_accept_count--;
+	new_sock = calloc(1, sizeof(*sock));
+	if (new_sock == NULL) {
+		SPDK_ERRLOG("sock allocation failed\n");
+		return NULL;
+	}
+
+	CU_ASSERT(g_ut_client_sock != NULL);
+	g_ut_client_sock->peer = new_sock;
+
+	return &new_sock->base;
+}
+
+static int
+spdk_ut_sock_close(struct spdk_sock *_sock)
+{
+	struct spdk_ut_sock *sock = __ut_sock(_sock);
+
+	if (sock == g_ut_listen_sock) {
+		g_ut_listen_sock = NULL;
+	}
+	if (sock == g_ut_client_sock) {
+		g_ut_client_sock = NULL;
+	}
+
+	return 0;
+}
+
+static ssize_t
+spdk_ut_sock_recv(struct spdk_sock *_sock, void *buf, size_t len)
+{
+	struct spdk_ut_sock *sock = __ut_sock(_sock);
+	char tmp[256];
+
+	len = spdk_min(len, sock->bytes_avail);
+
+	if (len == 0) {
+		errno = EAGAIN;
+		return -1;
+	}
+
+	memcpy(buf, sock->buf, len);
+	memcpy(tmp, &sock->buf[len], sock->bytes_avail - len);
+	memcpy(sock->buf, tmp, sock->bytes_avail - len);
+	sock->bytes_avail -= len;
+
+	return len;
+}
+
+static ssize_t
+spdk_ut_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
+{
+	struct spdk_ut_sock *sock = __ut_sock(_sock);
+	struct spdk_ut_sock *peer;
+
+	SPDK_CU_ASSERT_FATAL(sock->peer != NULL);
+	peer = sock->peer;
+
+	/* Test implementation only supports single iov for now. */
+	CU_ASSERT(iovcnt == 1);
+
+	memcpy(&peer->buf[peer->bytes_avail], iov[0].iov_base, iov[0].iov_len);
+	peer->bytes_avail += iov[0].iov_len;
+
+	return iov[0].iov_len;
+}
+
+static int
+spdk_ut_sock_set_recvlowat(struct spdk_sock *_sock, int nbytes)
+{
+	return 0;
+}
+
+static int
+spdk_ut_sock_set_recvbuf(struct spdk_sock *_sock, int sz)
+{
+	return 0;
+}
+
+static int
+spdk_ut_sock_set_sendbuf(struct spdk_sock *_sock, int sz)
+{
+	return 0;
+}
+
+static bool
+spdk_ut_sock_is_ipv6(struct spdk_sock *_sock)
+{
+	return false;
+}
+
+static bool
+spdk_ut_sock_is_ipv4(struct spdk_sock *_sock)
+{
+	return true;
+}
+
+static struct spdk_sock_group_impl *
+spdk_ut_sock_group_impl_create(void)
+{
+	struct spdk_ut_sock_group_impl *group_impl;
+
+	group_impl = calloc(1, sizeof(*group_impl));
+	SPDK_CU_ASSERT_FATAL(group_impl != NULL);
+
+	return &group_impl->base;
+}
+
+static int
+spdk_ut_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group, struct spdk_sock *_sock)
+{
+	struct spdk_ut_sock_group_impl *group = __ut_group(_group);
+	struct spdk_ut_sock *sock = __ut_sock(_sock);
+
+	group->sock = sock;
+
+	return 0;
+}
+
+static int
+spdk_ut_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group, struct spdk_sock *_sock)
+{
+	struct spdk_ut_sock_group_impl *group = __ut_group(_group);
+	struct spdk_ut_sock *sock = __ut_sock(_sock);
+
+	CU_ASSERT(group->sock == sock);
+	group->sock = NULL;
+
+	return 0;
+}
+
+static int
+spdk_ut_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
+			     struct spdk_sock **socks)
+{
+	struct spdk_ut_sock_group_impl *group = __ut_group(_group);
+
+	if (group->sock != NULL && group->sock->bytes_avail > 0) {
+		socks[0] = &group->sock->base;
+		return 1;
+	}
+
+	return 0;
+}
+
+static int
+spdk_ut_sock_group_impl_close(struct spdk_sock_group_impl *_group)
+{
+	struct spdk_ut_sock_group_impl *group = __ut_group(_group);
+
+	CU_ASSERT(group->sock == NULL);
+
+	return 0;
+}
+
+static struct spdk_net_impl g_ut_net_impl = {
+	.name		= "ut",
+	.getaddr	= spdk_ut_sock_getaddr,
+	.connect	= spdk_ut_sock_connect,
+	.listen		= spdk_ut_sock_listen,
+	.accept		= spdk_ut_sock_accept,
+	.close		= spdk_ut_sock_close,
+	.recv		= spdk_ut_sock_recv,
+	.writev		= spdk_ut_sock_writev,
+	.set_recvlowat	= spdk_ut_sock_set_recvlowat,
+	.set_recvbuf	= spdk_ut_sock_set_recvbuf,
+	.set_sendbuf	= spdk_ut_sock_set_sendbuf,
+	.is_ipv6	= spdk_ut_sock_is_ipv6,
+	.is_ipv4	= spdk_ut_sock_is_ipv4,
+	.group_impl_create	= spdk_ut_sock_group_impl_create,
+	.group_impl_add_sock	= spdk_ut_sock_group_impl_add_sock,
+	.group_impl_remove_sock = spdk_ut_sock_group_impl_remove_sock,
+	.group_impl_poll	= spdk_ut_sock_group_impl_poll,
+	.group_impl_close	= spdk_ut_sock_group_impl_close,
+};
+
+SPDK_NET_IMPL_REGISTER(ut, &g_ut_net_impl);
 
 static void
-sock(void)
+_sock(const char *ip, int port)
 {
 	struct spdk_sock *listen_sock;
 	struct spdk_sock *server_sock;
@@ -54,14 +309,14 @@ sock(void)
 	struct iovec iov;
 	int rc;
 
-	listen_sock = spdk_sock_listen("127.0.0.1", 3260);
+	listen_sock = spdk_sock_listen(ip, port);
 	SPDK_CU_ASSERT_FATAL(listen_sock != NULL);
 
 	server_sock = spdk_sock_accept(listen_sock);
 	CU_ASSERT(server_sock == NULL);
 	CU_ASSERT(errno == EAGAIN || errno == EWOULDBLOCK);
 
-	client_sock = spdk_sock_connect("127.0.0.1", 3260);
+	client_sock = spdk_sock_connect(ip, port);
 	SPDK_CU_ASSERT_FATAL(client_sock != NULL);
 
 	/*
@@ -104,6 +359,18 @@ sock(void)
 }
 
 static void
+sock(void)
+{
+	_sock("127.0.0.1", 3260);
+}
+
+static void
+ut_sock(void)
+{
+	_sock(UT_IP, UT_PORT);
+}
+
+static void
 read_data(void *cb_arg, struct spdk_sock_group *group, struct spdk_sock *sock)
 {
 	struct spdk_sock *server_sock = cb_arg;
@@ -115,7 +382,7 @@ read_data(void *cb_arg, struct spdk_sock_group *group, struct spdk_sock *sock)
 }
 
 static void
-sock_group(void)
+_sock_group(const char *ip, int port)
 {
 	struct spdk_sock_group *group;
 	struct spdk_sock *listen_sock;
@@ -126,14 +393,14 @@ sock_group(void)
 	struct iovec iov;
 	int rc;
 
-	listen_sock = spdk_sock_listen("127.0.0.1", 3260);
+	listen_sock = spdk_sock_listen(ip, port);
 	SPDK_CU_ASSERT_FATAL(listen_sock != NULL);
 
 	server_sock = spdk_sock_accept(listen_sock);
 	CU_ASSERT(server_sock == NULL);
 	CU_ASSERT(errno == EAGAIN || errno == EWOULDBLOCK);
 
-	client_sock = spdk_sock_connect("127.0.0.1", 3260);
+	client_sock = spdk_sock_connect(ip, port);
 	SPDK_CU_ASSERT_FATAL(client_sock != NULL);
 
 	usleep(1000);
@@ -209,6 +476,18 @@ sock_group(void)
 	rc = spdk_sock_close(&listen_sock);
 	CU_ASSERT(listen_sock == NULL);
 	CU_ASSERT(rc == 0);
+}
+
+static void
+sock_group(void)
+{
+	_sock_group("127.0.0.1", 3260);
+}
+
+static void
+ut_sock_group(void)
+{
+	_sock_group(UT_IP, UT_PORT);
 }
 
 static void
@@ -342,7 +621,9 @@ main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "sock", sock) == NULL ||
+		CU_add_test(suite, "ut_sock", ut_sock) == NULL ||
 		CU_add_test(suite, "sock_group", sock_group) == NULL ||
+		CU_add_test(suite, "ut_sock_group", ut_sock_group) == NULL ||
 		CU_add_test(suite, "sock_group_fairness", sock_group_fairness) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
