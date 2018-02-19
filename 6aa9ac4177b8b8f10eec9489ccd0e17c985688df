@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2555f2cb_19f52b9d",
+        "filename": "lib/net/sock.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 441,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-19T23:06:03Z",
+      "side": 1,
+      "message": "It looks that freeing sock_group is done in not posix layer but general socket layer.\n\n- spdk_posix_sock_group_create() creates and returns fd\n- spdk_sock_group_create() allocates and initilize sock_group by using returned fd\n\nis more symmetric?",
+      "range": {
+        "startLine": 434,
+        "startChar": 0,
+        "endLine": 441,
+        "endChar": 21
+      },
+      "revId": "6aa9ac4177b8b8f10eec9489ccd0e17c985688df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
