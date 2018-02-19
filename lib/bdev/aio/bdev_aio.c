@@ -274,7 +274,7 @@ bdev_aio_reset_retry_timer(void *arg)
 		spdk_poller_unregister(&fdisk->reset_retry_timer);
 	}
 
-	spdk_for_each_channel(&fdisk->fd,
+	spdk_for_each_channel(fdisk,
 			      _bdev_aio_get_io_inflight,
 			      fdisk,
 			      _bdev_aio_get_io_inflight_done);
@@ -381,7 +381,7 @@ bdev_aio_get_io_channel(void *ctx)
 {
 	struct file_disk *fdisk = ctx;
 
-	return spdk_get_io_channel(&fdisk->fd);
+	return spdk_get_io_channel(fdisk);
 }
 
 
@@ -501,11 +501,11 @@ create_aio_disk(const char *name, const char *filename, uint32_t block_size)
 
 	fdisk->disk.fn_table = &aio_fn_table;
 
-	spdk_io_device_register(&fdisk->fd, bdev_aio_create_cb, bdev_aio_destroy_cb,
+	spdk_io_device_register(fdisk, bdev_aio_create_cb, bdev_aio_destroy_cb,
 				sizeof(struct bdev_aio_io_channel));
 	rc = spdk_bdev_register(&fdisk->disk);
 	if (rc) {
-		spdk_io_device_unregister(&fdisk->fd, NULL);
+		spdk_io_device_unregister(fdisk, NULL);
 		goto error_return;
 	}
 
