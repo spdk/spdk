@@ -153,6 +153,9 @@ struct spdk_bdev_channel {
 
 };
 
+#define __bdev_to_io_dev(bdev)		(((char *)bdev) + 1)
+#define __bdev_from_io_dev(io_dev)	((struct spdk_bdev *)(((char *)io_dev) - 1))
+
 /*
  * Per-module (or per-io_device) channel. Multiple bdevs built on the same io_device
  * will queue here their IO that awaits retry. It makes it posible to retry sending
@@ -872,11 +875,11 @@ spdk_bdev_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 static int
 _spdk_bdev_channel_create(struct spdk_bdev_channel *ch, void *io_device)
 {
-	struct spdk_bdev		*bdev = io_device;
+	struct spdk_bdev		*bdev = __bdev_from_io_dev(io_device);
 	struct spdk_bdev_mgmt_channel	*mgmt_ch;
 	struct spdk_bdev_module_channel	*shared_ch;
 
-	ch->bdev = io_device;
+	ch->bdev = bdev;
 	ch->channel = bdev->fn_table->get_io_channel(bdev->ctxt);
 	if (!ch->channel) {
 		return -1;
@@ -1101,7 +1104,7 @@ spdk_bdev_alias_del(struct spdk_bdev *bdev, const char *alias)
 struct spdk_io_channel *
 spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc)
 {
-	return spdk_get_io_channel(desc->bdev);
+	return spdk_get_io_channel(__bdev_to_io_dev(desc->bdev));
 }
 
 const char *
@@ -1630,7 +1633,7 @@ _spdk_bdev_start_reset(void *ctx)
 {
 	struct spdk_bdev_channel *ch = ctx;
 
-	spdk_for_each_channel(ch->bdev, _spdk_bdev_reset_freeze_channel,
+	spdk_for_each_channel(__bdev_to_io_dev(ch->bdev), _spdk_bdev_reset_freeze_channel,
 			      ch, _spdk_bdev_reset_dev);
 }
 
@@ -1651,7 +1654,7 @@ _spdk_bdev_channel_start_reset(struct spdk_bdev_channel *ch)
 		 *  progress.  We will release the reference when this reset is
 		 *  completed.
 		 */
-		bdev->reset_in_progress->u.reset.ch_ref = spdk_get_io_channel(bdev);
+		bdev->reset_in_progress->u.reset.ch_ref = spdk_get_io_channel(__bdev_to_io_dev(bdev));
 		_spdk_bdev_start_reset(ch);
 	}
 	pthread_mutex_unlock(&bdev->mutex);
@@ -1920,8 +1923,8 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 		pthread_mutex_unlock(&bdev->mutex);
 
 		if (unlock_channels) {
-			spdk_for_each_channel(bdev, _spdk_bdev_unfreeze_channel, bdev_io,
-					      _spdk_bdev_reset_complete);
+			spdk_for_each_channel(__bdev_to_io_dev(bdev), _spdk_bdev_unfreeze_channel,
+					      bdev_io, _spdk_bdev_reset_complete);
 			return;
 		}
 	} else {
@@ -2111,7 +2114,8 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 
 	bdev->reset_in_progress = NULL;
 
-	spdk_io_device_register(bdev, spdk_bdev_channel_create, spdk_bdev_channel_destroy,
+	spdk_io_device_register(__bdev_to_io_dev(bdev),
+				spdk_bdev_channel_create, spdk_bdev_channel_destroy,
 				sizeof(struct spdk_bdev_channel));
 
 	pthread_mutex_init(&bdev->mutex, NULL);
@@ -2214,7 +2218,7 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 
 	pthread_mutex_destroy(&bdev->mutex);
 
-	spdk_io_device_unregister(bdev, NULL);
+	spdk_io_device_unregister(__bdev_to_io_dev(bdev), NULL);
 
 	rc = bdev->fn_table->destruct(bdev->ctxt);
 	if (rc < 0) {
