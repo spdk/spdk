@@ -153,6 +153,8 @@ struct spdk_bdev_channel {
 
 };
 
+#define __bdev_io_device(bdev)	(((char *)bdev) + 1)
+
 /*
  * Per-module (or per-io_device) channel. Multiple bdevs built on the same io_device
  * will queue here their IO that awaits retry. It makes it posible to retry sending
@@ -1101,7 +1103,7 @@ spdk_bdev_alias_del(struct spdk_bdev *bdev, const char *alias)
 struct spdk_io_channel *
 spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc)
 {
-	return spdk_get_io_channel(desc->bdev);
+	return spdk_get_io_channel(__bdev_io_device(desc->bdev));
 }
 
 const char *
@@ -1651,7 +1653,7 @@ _spdk_bdev_channel_start_reset(struct spdk_bdev_channel *ch)
 		 *  progress.  We will release the reference when this reset is
 		 *  completed.
 		 */
-		bdev->reset_in_progress->u.reset.ch_ref = spdk_get_io_channel(bdev);
+		bdev->reset_in_progress->u.reset.ch_ref = spdk_get_io_channel(__bdev_io_device(bdev));
 		_spdk_bdev_start_reset(ch);
 	}
 	pthread_mutex_unlock(&bdev->mutex);
@@ -2111,7 +2113,8 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 
 	bdev->reset_in_progress = NULL;
 
-	spdk_io_device_register(bdev, spdk_bdev_channel_create, spdk_bdev_channel_destroy,
+	spdk_io_device_register(__bdev_io_device(bdev),
+				spdk_bdev_channel_create, spdk_bdev_channel_destroy,
 				sizeof(struct spdk_bdev_channel));
 
 	pthread_mutex_init(&bdev->mutex, NULL);
@@ -2214,7 +2217,7 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 
 	pthread_mutex_destroy(&bdev->mutex);
 
-	spdk_io_device_unregister(bdev, NULL);
+	spdk_io_device_unregister(__bdev_io_device(bdev), NULL);
 
 	rc = bdev->fn_table->destruct(bdev->ctxt);
 	if (rc < 0) {
