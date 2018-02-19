@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9c67893a_2deb4575",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 1171,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-19T11:02:30Z",
+      "side": 1,
+      "message": "+\u003d bacause fail_count\u003d0 is just after header",
+      "range": {
+        "startLine": 1171,
+        "startChar": 19,
+        "endLine": 1171,
+        "endChar": 20
+      },
+      "revId": "c062f901ae584653d467a47fb92cff5190cc06fe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ef7a704_e3b8b9d8",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 1174,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-19T11:02:30Z",
+      "side": 1,
+      "message": "Possible improvement in multiple places: get_lvol_stores with -name option should be available now. Using that you could remove accessing [0] index from RPC response",
+      "range": {
+        "startLine": 1173,
+        "startChar": 8,
+        "endLine": 1174,
+        "endChar": 89
+      },
+      "revId": "c062f901ae584653d467a47fb92cff5190cc06fe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5b5b594b_e710378e",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 1176,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-19T11:02:30Z",
+      "side": 1,
+      "message": "Can we move this to top of function and do it similar as for nbd_name?",
+      "range": {
+        "startLine": 1175,
+        "startChar": 8,
+        "endLine": 1176,
+        "endChar": 42
+      },
+      "revId": "c062f901ae584653d467a47fb92cff5190cc06fe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9bc6e6e1_5cd17883",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 1260,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-19T11:02:30Z",
+      "side": 1,
+      "message": "This could be possibly changed into a function something like \"get_lvol_store_free_space\" instead of copy-pasta in multiple places",
+      "range": {
+        "startLine": 1260,
+        "startChar": 19,
+        "endLine": 1260,
+        "endChar": 73
+      },
+      "revId": "c062f901ae584653d467a47fb92cff5190cc06fe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
