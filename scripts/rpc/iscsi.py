@@ -41,9 +41,9 @@ def construct_target_node(args):
     }
 
     if args.header_digest:
-        params['header_digest'] = args.header_digest
+        params['header_digest'] = True
     if args.data_digest:
-        params['data_digest'] = args.data_digest
+        params['data_digest'] = True
     args.client.call('construct_target_node', params)
 
 
