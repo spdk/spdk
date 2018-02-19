@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1fb28633_6b002c77",
+        "filename": "lib/net/sock.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-19T22:55:06Z",
+      "side": 1,
+      "message": "SPDK_POSIX_SOCK_CREATE_LISTEN ?",
+      "range": {
+        "startLine": 145,
+        "startChar": 1,
+        "endLine": 145,
+        "endChar": 24
+      },
+      "revId": "6f2d966c890b764678ae79249e529a12a50a12f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
