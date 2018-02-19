@@ -25,6 +25,11 @@ class JSONRPCClient(object):
         if addr.startswith('/'):
             self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             self.sock.connect(addr)
+        elif ':' in addr:
+            for res in socket.getaddrinfo(addr, port, socket.AF_INET6, socket.SOCK_STREAM, socket.SOL_TCP):
+                af, socktype, proto, canonname, sa = res
+            self.sock = socket.socket(af, socktype, proto)
+            self.sock.connect(sa)
         else:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.sock.connect((addr, port))
