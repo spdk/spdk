@@ -198,6 +198,14 @@ void spdk_reactor_enable_context_switch_monitor(bool enabled);
  */
 bool spdk_reactor_context_switch_monitor_enabled(void);
 
+/**
+ * Return array of subsystem dependency.
+ * \param dst array of susbsystems name. Caller must free each \c dst element and \c dst itself
+ * \param name name of subsystem dependency to write. If NULL  all subsystems in init order are written.
+ * \return Value greater or equal zero - the length of \c dst array or negative error code.
+ */
+int spdk_get_subsystem_dependency(char ***dst, const char *name);
+
 #ifdef __cplusplus
 }
 #endif

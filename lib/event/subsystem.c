@@ -244,3 +244,65 @@ spdk_subsystem_config(FILE *fp)
 		}
 	}
 }
+
+int spdk_get_subsystem_dependency(char ***dst, const char *name)
+{
+	struct spdk_subsystem *subsystem;
+	struct spdk_subsystem_depend *depends;
+	int n;
+	char **deps_tmp;
+	char **deps;
+
+	if (name != NULL && spdk_subsystem_find(&g_subsystems, name) == NULL) {
+		return -ENOENT;
+	}
+
+	n = 0;
+	deps = NULL;
+	if (name == NULL) {
+		TAILQ_FOREACH(subsystem, &g_subsystems, tailq) {
+			deps_tmp = realloc(deps, (n + 1) * sizeof(*deps));
+			if (!deps_tmp) {
+				goto err_nomem;
+			}
+
+			deps = deps_tmp;
+			deps[n] = strdup(subsystem->name);
+			if (!deps[n]) {
+				goto err_nomem;
+			}
+
+			n++;
+		}
+	} else {
+		TAILQ_FOREACH(depends, &g_depends, tailq) {
+			if (strcmp(name, depends->name) != 0) {
+				continue;
+			}
+
+			deps_tmp = realloc(deps, (n + 1) * sizeof(*deps));
+			if (!deps_tmp) {
+				goto err_nomem;
+			}
+
+			deps = deps_tmp;
+			deps[n] = strdup(depends->depends_on);
+			if (!deps[n]) {
+				goto err_nomem;
+			}
+
+			n++;
+		}
+	}
+
+	*dst = deps;
+	return n;
+
+err_nomem:
+	for (; n > 0; n--) {
+		free(deps[n]);
+	}
+
+	free(deps);
+	return -ENOMEM;
+}
