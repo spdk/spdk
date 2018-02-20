@@ -462,7 +462,7 @@ show_blob(struct cli_context_t *cli_context)
 	 * may be useful for debug of blobstore based applications.
 	 */
 	printf("\nBlob Private Info:\n");
-	switch (__blob_to_data(cli_context->blob)->state) {
+	switch (cli_context->blob->state) {
 	case SPDK_BLOB_STATE_DIRTY:
 		printf("state: DIRTY\n");
 		break;
@@ -480,7 +480,7 @@ show_blob(struct cli_context_t *cli_context)
 		break;
 	}
 	printf("open ref count: %d\n",
-	       __blob_to_data(cli_context->blob)->open_ref);
+	       cli_context->blob->open_ref);
 
 	spdk_xattr_names_free(names);
 }

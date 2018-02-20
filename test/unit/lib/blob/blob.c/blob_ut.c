@@ -389,7 +389,7 @@ blob_thin_provision(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob = g_blob;
-	CU_ASSERT(__blob_to_data(blob)->invalid_flags & SPDK_BLOB_THIN_PROV);
+	CU_ASSERT(blob->invalid_flags & SPDK_BLOB_THIN_PROV);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -411,7 +411,7 @@ blob_thin_provision(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob = g_blob;
-	CU_ASSERT(__blob_to_data(blob)->invalid_flags & SPDK_BLOB_THIN_PROV);
+	CU_ASSERT(blob->invalid_flags & SPDK_BLOB_THIN_PROV);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -483,10 +483,10 @@ blob_resize(void)
 	blob = g_blob;
 
 	/* Confirm that resize fails if blob is marked read-only. */
-	__blob_to_data(blob)->md_ro = true;
+	blob->md_ro = true;
 	rc = spdk_blob_resize(blob, 5);
 	CU_ASSERT(rc == -EPERM);
-	__blob_to_data(blob)->md_ro = false;
+	blob->md_ro = false;
 
 	/* The blob started at 0 clusters. Resize it to be 5. */
 	rc = spdk_blob_resize(blob, 5);
@@ -532,7 +532,6 @@ blob_read_only(void)
 	struct spdk_blob_store *bs;
 	struct spdk_bs_dev *dev;
 	struct spdk_blob *blob;
-	struct spdk_blob_data *blob_data;
 	struct spdk_bs_opts opts;
 	spdk_blob_id blobid;
 
@@ -557,15 +556,14 @@ blob_read_only(void)
 
 	spdk_blob_set_read_only(blob);
 
-	blob_data = __blob_to_data(blob);
-	CU_ASSERT(blob_data->data_ro == false);
-	CU_ASSERT(blob_data->md_ro == false);
+	CU_ASSERT(blob->data_ro == false);
+	CU_ASSERT(blob->md_ro == false);
 
 	spdk_blob_sync_md(blob, bs_op_complete, NULL);
 
-	CU_ASSERT(blob_data->data_ro == true);
-	CU_ASSERT(blob_data->md_ro == true);
-	CU_ASSERT(blob_data->data_ro_flags & SPDK_BLOB_READ_ONLY);
+	CU_ASSERT(blob->data_ro == true);
+	CU_ASSERT(blob->md_ro == true);
+	CU_ASSERT(blob->data_ro_flags & SPDK_BLOB_READ_ONLY);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -575,10 +573,9 @@ blob_read_only(void)
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob = g_blob;
 
-	blob_data = __blob_to_data(blob);
-	CU_ASSERT(blob_data->data_ro == true);
-	CU_ASSERT(blob_data->md_ro == true);
-	CU_ASSERT(blob_data->data_ro_flags & SPDK_BLOB_READ_ONLY);
+	CU_ASSERT(blob->data_ro == true);
+	CU_ASSERT(blob->md_ro == true);
+	CU_ASSERT(blob->data_ro_flags & SPDK_BLOB_READ_ONLY);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -601,10 +598,9 @@ blob_read_only(void)
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob = g_blob;
 
-	blob_data = __blob_to_data(blob);
-	CU_ASSERT(blob_data->data_ro == true);
-	CU_ASSERT(blob_data->md_ro == true);
-	CU_ASSERT(blob_data->data_ro_flags & SPDK_BLOB_READ_ONLY);
+	CU_ASSERT(blob->data_ro == true);
+	CU_ASSERT(blob->md_ro == true);
+	CU_ASSERT(blob->data_ro_flags & SPDK_BLOB_READ_ONLY);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -681,10 +677,10 @@ blob_write(void)
 	CU_ASSERT(rc == 0);
 
 	/* Confirm that write fails if blob is marked read-only. */
-	__blob_to_data(blob)->data_ro = true;
+	blob->data_ro = true;
 	spdk_bs_io_write_blob(blob, channel, payload, 0, 1, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == -EPERM);
-	__blob_to_data(blob)->data_ro = false;
+	blob->data_ro = false;
 
 	/* Write to the blob */
 	spdk_bs_io_write_blob(blob, channel, payload, 0, 1, blob_op_complete, NULL);
@@ -753,10 +749,10 @@ blob_read(void)
 	CU_ASSERT(rc == 0);
 
 	/* Confirm that read passes if blob is marked read-only. */
-	__blob_to_data(blob)->data_ro = true;
+	blob->data_ro = true;
 	spdk_bs_io_read_blob(blob, channel, payload, 0, 1, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
-	__blob_to_data(blob)->data_ro = false;
+	blob->data_ro = false;
 
 	/* Read from the blob */
 	spdk_bs_io_read_blob(blob, channel, payload, 0, 1, blob_op_complete, NULL);
@@ -881,9 +877,9 @@ blob_rw_verify_iov(void)
 	 *  that cross cluster boundaries.  Start by asserting that the allocated
 	 *  clusters are where we expect before modifying the second cluster.
 	 */
-	CU_ASSERT(__blob_to_data(blob)->active.clusters[0] == 1 * 256);
-	CU_ASSERT(__blob_to_data(blob)->active.clusters[1] == 2 * 256);
-	__blob_to_data(blob)->active.clusters[1] = 3 * 256;
+	CU_ASSERT(blob->active.clusters[0] == 1 * 256);
+	CU_ASSERT(blob->active.clusters[1] == 2 * 256);
+	blob->active.clusters[1] = 3 * 256;
 
 	memset(payload_write, 0xE5, sizeof(payload_write));
 	iov_write[0].iov_base = payload_write;
@@ -1043,7 +1039,7 @@ blob_rw_iov_read_only(void)
 	CU_ASSERT(rc == 0);
 
 	/* Verify that writev failed if read_only flag is set. */
-	__blob_to_data(blob)->data_ro = true;
+	blob->data_ro = true;
 	iov_write.iov_base = payload_write;
 	iov_write.iov_len = sizeof(payload_write);
 	spdk_bs_io_writev_blob(blob, channel, &iov_write, 1, 0, 1, blob_op_complete, NULL);
@@ -1071,7 +1067,6 @@ blob_unmap(void)
 	struct spdk_blob_store *bs;
 	struct spdk_bs_dev *dev;
 	struct spdk_blob *blob;
-	struct spdk_blob_data *_blob;
 	struct spdk_io_channel *channel;
 	spdk_blob_id blobid;
 	struct spdk_blob_opts opts;
@@ -1101,7 +1096,6 @@ blob_unmap(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob = g_blob;
-	_blob = __blob_to_data(blob);
 
 	rc = spdk_blob_resize(blob, 10);
 	CU_ASSERT(rc == 0);
@@ -1127,11 +1121,11 @@ blob_unmap(void)
 	}
 
 	/* Mark some clusters as unallocated */
-	_blob->active.clusters[1] = 0;
-	_blob->active.clusters[2] = 0;
-	_blob->active.clusters[3] = 0;
-	_blob->active.clusters[6] = 0;
-	_blob->active.clusters[8] = 0;
+	blob->active.clusters[1] = 0;
+	blob->active.clusters[2] = 0;
+	blob->active.clusters[3] = 0;
+	blob->active.clusters[6] = 0;
+	blob->active.clusters[8] = 0;
 
 	/* Unmap clusters by resizing to 0 */
 	rc = spdk_blob_resize(blob, 0);
@@ -1238,11 +1232,11 @@ blob_xattr(void)
 	blob = g_blob;
 
 	/* Test that set_xattr fails if md_ro flag is set. */
-	__blob_to_data(blob)->md_ro = true;
+	blob->md_ro = true;
 	rc = spdk_blob_set_xattr(blob, "name", "log.txt", strlen("log.txt") + 1);
 	CU_ASSERT(rc == -EPERM);
 
-	__blob_to_data(blob)->md_ro = false;
+	blob->md_ro = false;
 	rc = spdk_blob_set_xattr(blob, "name", "log.txt", strlen("log.txt") + 1);
 	CU_ASSERT(rc == 0);
 
@@ -1257,13 +1251,13 @@ blob_xattr(void)
 
 	/* get_xattr should still work even if md_ro flag is set. */
 	value = NULL;
-	__blob_to_data(blob)->md_ro = true;
+	blob->md_ro = true;
 	rc = spdk_blob_get_xattr_value(blob, "length", &value, &value_len);
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(value != NULL);
 	CU_ASSERT(*(uint64_t *)value == length);
 	CU_ASSERT(value_len == 8);
-	__blob_to_data(blob)->md_ro = false;
+	blob->md_ro = false;
 
 	rc = spdk_blob_get_xattr_value(blob, "foobar", &value, &value_len);
 	CU_ASSERT(rc == -ENOENT);
@@ -1283,11 +1277,11 @@ blob_xattr(void)
 	spdk_xattr_names_free(names);
 
 	/* Confirm that remove_xattr fails if md_ro is set to true. */
-	__blob_to_data(blob)->md_ro = true;
+	blob->md_ro = true;
 	rc = spdk_blob_remove_xattr(blob, "name");
 	CU_ASSERT(rc == -EPERM);
 
-	__blob_to_data(blob)->md_ro = false;
+	blob->md_ro = false;
 	rc = spdk_blob_remove_xattr(blob, "name");
 	CU_ASSERT(rc == 0);
 
@@ -1296,18 +1290,18 @@ blob_xattr(void)
 
 	/* Set internal xattr */
 	length = 7898;
-	rc = _spdk_blob_set_xattr(__blob_to_data(blob), "internal", &length, sizeof(length), true);
+	rc = _spdk_blob_set_xattr(blob, "internal", &length, sizeof(length), true);
 	CU_ASSERT(rc == 0);
-	rc = _spdk_blob_get_xattr_value(__blob_to_data(blob), "internal", &value, &value_len, true);
+	rc = _spdk_blob_get_xattr_value(blob, "internal", &value, &value_len, true);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(*(uint64_t *)value == length);
 	/* try to get public xattr with same name */
 	rc = spdk_blob_get_xattr_value(blob, "internal", &value, &value_len);
 	CU_ASSERT(rc != 0);
-	rc = _spdk_blob_get_xattr_value(__blob_to_data(blob), "internal", &value, &value_len, false);
+	rc = _spdk_blob_get_xattr_value(blob, "internal", &value, &value_len, false);
 	CU_ASSERT(rc != 0);
 	/* Check if SPDK_BLOB_INTERNAL_XATTR is set */
-	CU_ASSERT((__blob_to_data(blob)->invalid_flags & SPDK_BLOB_INTERNAL_XATTR) ==
+	CU_ASSERT((blob->invalid_flags & SPDK_BLOB_INTERNAL_XATTR) ==
 		  SPDK_BLOB_INTERNAL_XATTR)
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
@@ -1328,7 +1322,7 @@ blob_xattr(void)
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob = g_blob;
 
-	rc = _spdk_blob_get_xattr_value(__blob_to_data(blob), "internal", &value, &value_len, true);
+	rc = _spdk_blob_get_xattr_value(blob, "internal", &value, &value_len, true);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(*(uint64_t *)value == length);
 
@@ -1336,10 +1330,10 @@ blob_xattr(void)
 	rc = spdk_blob_get_xattr_value(blob, "internal", &value, &value_len);
 	CU_ASSERT(rc != 0);
 
-	rc = _spdk_blob_remove_xattr(__blob_to_data(blob), "internal", true);
+	rc = _spdk_blob_remove_xattr(blob, "internal", true);
 	CU_ASSERT(rc == 0);
 
-	CU_ASSERT((__blob_to_data(blob)->invalid_flags & SPDK_BLOB_INTERNAL_XATTR) == 0);
+	CU_ASSERT((blob->invalid_flags & SPDK_BLOB_INTERNAL_XATTR) == 0);
 
 	CU_ASSERT(g_bserrno == 0);
 	g_bs = NULL;
@@ -2448,12 +2442,12 @@ blob_flags(void)
 	rc = spdk_blob_set_xattr(blob_md_ro, "name", "log.txt", strlen("log.txt") + 1);
 	CU_ASSERT(rc == 0);
 
-	__blob_to_data(blob_invalid)->invalid_flags = (1ULL << 63);
-	__blob_to_data(blob_invalid)->state = SPDK_BLOB_STATE_DIRTY;
-	__blob_to_data(blob_data_ro)->data_ro_flags = (1ULL << 62);
-	__blob_to_data(blob_data_ro)->state = SPDK_BLOB_STATE_DIRTY;
-	__blob_to_data(blob_md_ro)->md_ro_flags = (1ULL << 61);
-	__blob_to_data(blob_md_ro)->state = SPDK_BLOB_STATE_DIRTY;
+	blob_invalid->invalid_flags = (1ULL << 63);
+	blob_invalid->state = SPDK_BLOB_STATE_DIRTY;
+	blob_data_ro->data_ro_flags = (1ULL << 62);
+	blob_data_ro->state = SPDK_BLOB_STATE_DIRTY;
+	blob_md_ro->md_ro_flags = (1ULL << 61);
+	blob_md_ro->state = SPDK_BLOB_STATE_DIRTY;
 
 	g_bserrno = -1;
 	spdk_blob_sync_md(blob_invalid, blob_op_complete, NULL);
@@ -2505,8 +2499,8 @@ blob_flags(void)
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob_data_ro = g_blob;
 	/* If an unknown data_ro flag was found, the blob should be marked both data and md read-only. */
-	CU_ASSERT(__blob_to_data(blob_data_ro)->data_ro == true);
-	CU_ASSERT(__blob_to_data(blob_data_ro)->md_ro == true);
+	CU_ASSERT(blob_data_ro->data_ro == true);
+	CU_ASSERT(blob_data_ro->md_ro == true);
 	CU_ASSERT(spdk_blob_get_num_clusters(blob_data_ro) == 10);
 
 	g_blob = NULL;
@@ -2515,8 +2509,8 @@ blob_flags(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob_md_ro = g_blob;
-	CU_ASSERT(__blob_to_data(blob_md_ro)->data_ro == false);
-	CU_ASSERT(__blob_to_data(blob_md_ro)->md_ro == true);
+	CU_ASSERT(blob_md_ro->data_ro == false);
+	CU_ASSERT(blob_md_ro->md_ro == true);
 
 	g_bserrno = -1;
 	spdk_blob_sync_md(blob_md_ro, blob_op_complete, NULL);
@@ -2752,7 +2746,6 @@ blob_thin_prov_alloc(void)
 	struct spdk_blob_store *bs;
 	struct spdk_bs_dev *dev;
 	struct spdk_blob *blob;
-	struct spdk_blob_data *blob_data;
 	struct spdk_blob_opts opts;
 	spdk_blob_id blobid;
 	uint64_t free_clusters;
@@ -2780,30 +2773,29 @@ blob_thin_prov_alloc(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob = g_blob;
-	blob_data = __blob_to_data(blob);
 
-	CU_ASSERT(blob_data->active.num_clusters == 0);
+	CU_ASSERT(blob->active.num_clusters == 0);
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 0);
 
 	/* The blob started at 0 clusters. Resize it to be 5, but still unallocated. */
 	rc = spdk_blob_resize(blob, 5);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
-	CU_ASSERT(blob_data->active.num_clusters == 5);
+	CU_ASSERT(blob->active.num_clusters == 5);
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 5);
 
 	/* Shrink the blob to 3 clusters - still unallocated */
 	rc = spdk_blob_resize(blob, 3);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
-	CU_ASSERT(blob_data->active.num_clusters == 3);
+	CU_ASSERT(blob->active.num_clusters == 3);
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 3);
 
 	spdk_blob_sync_md(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	/* Sync must not change anything */
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
-	CU_ASSERT(blob_data->active.num_clusters == 3);
+	CU_ASSERT(blob->active.num_clusters == 3);
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 3);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
@@ -2828,11 +2820,10 @@ blob_thin_prov_alloc(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob = g_blob;
-	blob_data = __blob_to_data(blob);
 
 	/* Check that clusters allocation and size is still the same */
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
-	CU_ASSERT(blob_data->active.num_clusters == 3);
+	CU_ASSERT(blob->active.num_clusters == 3);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -2851,7 +2842,6 @@ blob_insert_cluster_msg(void)
 	struct spdk_blob_store *bs;
 	struct spdk_bs_dev *dev;
 	struct spdk_blob *blob;
-	struct spdk_blob_data *blob_data;
 	struct spdk_blob_opts opts;
 	spdk_blob_id blobid;
 	uint64_t free_clusters;
@@ -2879,16 +2869,15 @@ blob_insert_cluster_msg(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob = g_blob;
-	blob_data = __blob_to_data(blob);
 
-	CU_ASSERT(blob_data->active.num_clusters == 4);
+	CU_ASSERT(blob->active.num_clusters == 4);
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 4);
-	CU_ASSERT(blob_data->active.clusters[1] == 0);
+	CU_ASSERT(blob->active.clusters[1] == 0);
 
 	_spdk_bs_claim_cluster(bs, 0xF);
-	_spdk_blob_insert_cluster_on_md_thread(blob_data, 1, 0xF, blob_op_complete, NULL);
+	_spdk_blob_insert_cluster_on_md_thread(blob, 1, 0xF, blob_op_complete, NULL);
 
-	CU_ASSERT(blob_data->active.clusters[1] != 0);
+	CU_ASSERT(blob->active.clusters[1] != 0);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -2912,9 +2901,8 @@ blob_insert_cluster_msg(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob = g_blob;
-	blob_data = __blob_to_data(blob);
 
-	CU_ASSERT(blob_data->active.clusters[1] != 0);
+	CU_ASSERT(blob->active.clusters[1] != 0);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -2934,7 +2922,6 @@ blob_thin_prov_rw(void)
 	struct spdk_blob_store *bs;
 	struct spdk_bs_dev *dev;
 	struct spdk_blob *blob;
-	struct spdk_blob_data *blob_data;
 	struct spdk_io_channel *channel;
 	struct spdk_blob_opts 	opts;
 	spdk_blob_id blobid;
@@ -2967,21 +2954,20 @@ blob_thin_prov_rw(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob = g_blob;
-	blob_data = __blob_to_data(blob);
 
-	CU_ASSERT(blob_data->active.num_clusters == 0);
+	CU_ASSERT(blob->active.num_clusters == 0);
 
 	/* The blob started at 0 clusters. Resize it to be 5, but still unallocated. */
 	rc = spdk_blob_resize(blob, 5);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
-	CU_ASSERT(blob_data->active.num_clusters == 5);
+	CU_ASSERT(blob->active.num_clusters == 5);
 
 	spdk_blob_sync_md(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	/* Sync must not change anything */
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
-	CU_ASSERT(blob_data->active.num_clusters == 5);
+	CU_ASSERT(blob->active.num_clusters == 5);
 
 	/* Payload should be all zeros from unallocated clusters */
 	memset(payload_read, 0xFF, sizeof(payload_read));
@@ -3022,7 +3008,6 @@ blob_thin_prov_rw_iov(void)
 	struct spdk_blob_store *bs;
 	struct spdk_bs_dev *dev;
 	struct spdk_blob *blob;
-	struct spdk_blob_data *blob_data;
 	struct spdk_io_channel *channel;
 	struct spdk_blob_opts 	opts;
 	spdk_blob_id blobid;
@@ -3058,21 +3043,20 @@ blob_thin_prov_rw_iov(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob = g_blob;
-	blob_data = __blob_to_data(blob);
 
-	CU_ASSERT(blob_data->active.num_clusters == 0);
+	CU_ASSERT(blob->active.num_clusters == 0);
 
 	/* The blob started at 0 clusters. Resize it to be 5, but still unallocated. */
 	rc = spdk_blob_resize(blob, 5);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
-	CU_ASSERT(blob_data->active.num_clusters == 5);
+	CU_ASSERT(blob->active.num_clusters == 5);
 
 	spdk_blob_sync_md(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	/* Sync must not change anything */
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
-	CU_ASSERT(blob_data->active.num_clusters == 5);
+	CU_ASSERT(blob->active.num_clusters == 5);
 
 	/* Payload should be all zeros from unallocated clusters */
 	memset(payload_read, 0xAA, sizeof(payload_read));
