@@ -46,6 +46,54 @@
       "revId": "6aa9ac4177b8b8f10eec9489ccd0e17c985688df",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c93f646_d5af95f7",
+        "filename": "lib/net/sock.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 441,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-20T14:31:28Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nI am not sure I understand your question.  spdk_sock_group_create() does not know about the fd - the fd is part of posix-specific spdk_posix_sock_group structure.\n\nI could change these patches to have the implementation-specific routines free the memory since they also allocate the memory though.\n\n-Jim",
+      "parentUuid": "2555f2cb_19f52b9d",
+      "range": {
+        "startLine": 434,
+        "startChar": 0,
+        "endLine": 441,
+        "endChar": 21
+      },
+      "revId": "6aa9ac4177b8b8f10eec9489ccd0e17c985688df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cfabcf43_a24cbe1b",
+        "filename": "lib/net/sock.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 441,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-20T14:31:28Z",
+      "side": 1,
+      "message": "spdk_posix_sock_group_close() does not return the fd.  It returns the return code of close(fd).\n\nWe cannot initialize and free spdk_sock_group in the the general layer - the general layer knows nothing about the implementation specific details.  The implementation specific code *has* to do the allocation - only it knows how much extra memory is needed for these details.\n\nNow, maybe implementation specific code should also free that memory - I can make those changes.",
+      "parentUuid": "5172e03f_79f410de",
+      "range": {
+        "startLine": 434,
+        "startChar": 0,
+        "endLine": 441,
+        "endChar": 21
+      },
+      "revId": "6aa9ac4177b8b8f10eec9489ccd0e17c985688df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
