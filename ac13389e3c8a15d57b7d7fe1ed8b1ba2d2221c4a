@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1cb8a0ad_0a3d9435",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-20T17:15:27Z",
+      "side": 1,
+      "message": "This tab should be replaced with spaces.\n\nYou can run scripts/check_format.py to automatically verify that the formatting is correct (you will need python-pep8 to check Python code).",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 28,
+        "endChar": 1
+      },
+      "revId": "ac13389e3c8a15d57b7d7fe1ed8b1ba2d2221c4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
