@@ -50,14 +50,14 @@
 static int spdk_bs_register_md_thread(struct spdk_blob_store *bs);
 static int spdk_bs_unregister_md_thread(struct spdk_blob_store *bs);
 static void _spdk_blob_close_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno);
-void _spdk_blob_insert_cluster_on_md_thread(struct spdk_blob_data *blob, uint32_t cluster_num,
+void _spdk_blob_insert_cluster_on_md_thread(struct spdk_blob *blob, uint32_t cluster_num,
 		uint64_t cluster, spdk_blob_op_complete cb_fn, void *cb_arg);
 
-static int _spdk_blob_set_xattr(struct spdk_blob_data *blob, const char *name, const void *value,
+static int _spdk_blob_set_xattr(struct spdk_blob *blob, const char *name, const void *value,
 				uint16_t value_len, bool internal);
-static int _spdk_blob_get_xattr_value(struct spdk_blob_data *blob, const char *name,
+static int _spdk_blob_get_xattr_value(struct spdk_blob *blob, const char *name,
 				      const void **value, size_t *value_len, bool internal);
-static int _spdk_blob_remove_xattr(struct spdk_blob_data *blob, const char *name, bool internal);
+static int _spdk_blob_remove_xattr(struct spdk_blob *blob, const char *name, bool internal);
 
 static inline size_t
 divide_round_up(size_t num, size_t divisor)
@@ -79,7 +79,7 @@ _spdk_bs_claim_cluster(struct spdk_blob_store *bs, uint32_t cluster_num)
 }
 
 static int
-_spdk_blob_insert_cluster(struct spdk_blob_data *blob, uint32_t cluster_num, uint64_t cluster)
+_spdk_blob_insert_cluster(struct spdk_blob *blob, uint32_t cluster_num, uint64_t cluster)
 {
 	uint64_t *cluster_lba = &blob->active.clusters[cluster_num];
 
@@ -94,7 +94,7 @@ _spdk_blob_insert_cluster(struct spdk_blob_data *blob, uint32_t cluster_num, uin
 }
 
 static int
-_spdk_bs_allocate_cluster(struct spdk_blob_data *blob, uint32_t cluster_num,
+_spdk_bs_allocate_cluster(struct spdk_blob *blob, uint32_t cluster_num,
 			  uint64_t *lowest_free_cluster, bool update_map)
 {
 	pthread_mutex_lock(&blob->bs->used_clusters_mutex);
@@ -143,10 +143,10 @@ spdk_blob_opts_init(struct spdk_blob_opts *opts)
 	opts->xattrs.get_value = NULL;
 }
 
-static struct spdk_blob_data *
+static struct spdk_blob *
 _spdk_blob_alloc(struct spdk_blob_store *bs, spdk_blob_id id)
 {
-	struct spdk_blob_data *blob;
+	struct spdk_blob *blob;
 
 	blob = calloc(1, sizeof(*blob));
 	if (!blob) {
@@ -186,7 +186,7 @@ _spdk_xattrs_free(struct spdk_xattr_tailq *xattrs)
 }
 
 static void
-_spdk_blob_free(struct spdk_blob_data *blob)
+_spdk_blob_free(struct spdk_blob *blob)
 {
 	assert(blob != NULL);
 
@@ -202,7 +202,7 @@ _spdk_blob_free(struct spdk_blob_data *blob)
 }
 
 static int
-_spdk_blob_mark_clean(struct spdk_blob_data *blob)
+_spdk_blob_mark_clean(struct spdk_blob *blob)
 {
 	uint64_t *clusters = NULL;
 	uint32_t *pages = NULL;
@@ -247,7 +247,7 @@ _spdk_blob_mark_clean(struct spdk_blob_data *blob)
 }
 
 static int
-_spdk_blob_deserialize_xattr(struct spdk_blob_data *blob,
+_spdk_blob_deserialize_xattr(struct spdk_blob *blob,
 			     struct spdk_blob_md_descriptor_xattr *desc_xattr, bool internal)
 {
 	struct spdk_xattr                       *xattr;
@@ -289,7 +289,7 @@ _spdk_blob_deserialize_xattr(struct spdk_blob_data *blob,
 
 
 static int
-_spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob_data *blob)
+_spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *blob)
 {
 	struct spdk_blob_md_descriptor *desc;
 	size_t	cur_desc = 0;
@@ -419,7 +419,7 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob_dat
 
 static int
 _spdk_blob_parse(const struct spdk_blob_md_page *pages, uint32_t page_count,
-		 struct spdk_blob_data *blob)
+		 struct spdk_blob *blob)
 {
 	const struct spdk_blob_md_page *page;
 	uint32_t i;
@@ -457,7 +457,7 @@ _spdk_blob_parse(const struct spdk_blob_md_page *pages, uint32_t page_count,
 }
 
 static int
-_spdk_blob_serialize_add_page(const struct spdk_blob_data *blob,
+_spdk_blob_serialize_add_page(const struct spdk_blob *blob,
 			      struct spdk_blob_md_page **pages,
 			      uint32_t *page_count,
 			      struct spdk_blob_md_page **last_page)
@@ -536,7 +536,7 @@ _spdk_blob_serialize_xattr(const struct spdk_xattr *xattr,
 }
 
 static void
-_spdk_blob_serialize_extent(const struct spdk_blob_data *blob,
+_spdk_blob_serialize_extent(const struct spdk_blob *blob,
 			    uint64_t start_cluster, uint64_t *next_cluster,
 			    uint8_t *buf, size_t buf_sz)
 {
@@ -593,7 +593,7 @@ _spdk_blob_serialize_extent(const struct spdk_blob_data *blob,
 }
 
 static void
-_spdk_blob_serialize_flags(const struct spdk_blob_data *blob,
+_spdk_blob_serialize_flags(const struct spdk_blob *blob,
 			   uint8_t *buf, size_t *buf_sz)
 {
 	struct spdk_blob_md_descriptor_flags *desc;
@@ -615,7 +615,7 @@ _spdk_blob_serialize_flags(const struct spdk_blob_data *blob,
 }
 
 static int
-_spdk_blob_serialize_xattrs(const struct spdk_blob_data *blob,
+_spdk_blob_serialize_xattrs(const struct spdk_blob *blob,
 			    const struct spdk_xattr_tailq *xattrs, bool internal,
 			    struct spdk_blob_md_page **pages,
 			    struct spdk_blob_md_page *cur_page,
@@ -667,7 +667,7 @@ _spdk_blob_serialize_xattrs(const struct spdk_blob_data *blob,
 }
 
 static int
-_spdk_blob_serialize(const struct spdk_blob_data *blob, struct spdk_blob_md_page **pages,
+_spdk_blob_serialize(const struct spdk_blob *blob, struct spdk_blob_md_page **pages,
 		     uint32_t *page_count)
 {
 	struct spdk_blob_md_page		*cur_page;
@@ -735,7 +735,7 @@ _spdk_blob_serialize(const struct spdk_blob_data *blob, struct spdk_blob_md_page
 }
 
 struct spdk_blob_load_ctx {
-	struct spdk_blob_data 		*blob;
+	struct spdk_blob 		*blob;
 
 	struct spdk_blob_md_page	*pages;
 	uint32_t			num_pages;
@@ -761,7 +761,7 @@ static void
 _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_load_ctx 	*ctx = cb_arg;
-	struct spdk_blob_data 		*blob = ctx->blob;
+	struct spdk_blob 		*blob = ctx->blob;
 	struct spdk_blob_md_page	*page;
 	int				rc;
 	uint32_t			crc;
@@ -826,7 +826,7 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 
 /* Load a blob from disk given a blobid */
 static void
-_spdk_blob_load(spdk_bs_sequence_t *seq, struct spdk_blob_data *blob,
+_spdk_blob_load(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 		spdk_bs_sequence_cpl cb_fn, void *cb_arg)
 {
 	struct spdk_blob_load_ctx *ctx;
@@ -869,7 +869,7 @@ _spdk_blob_load(spdk_bs_sequence_t *seq, struct spdk_blob_data *blob,
 }
 
 struct spdk_blob_persist_ctx {
-	struct spdk_blob_data 		*blob;
+	struct spdk_blob 		*blob;
 
 	struct spdk_blob_md_page	*pages;
 
@@ -883,7 +883,7 @@ static void
 _spdk_blob_persist_complete(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_persist_ctx 	*ctx = cb_arg;
-	struct spdk_blob_data 		*blob = ctx->blob;
+	struct spdk_blob 		*blob = ctx->blob;
 
 	if (bserrno == 0) {
 		_spdk_blob_mark_clean(blob);
@@ -901,7 +901,7 @@ static void
 _spdk_blob_persist_unmap_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_persist_ctx 	*ctx = cb_arg;
-	struct spdk_blob_data 		*blob = ctx->blob;
+	struct spdk_blob 		*blob = ctx->blob;
 	struct spdk_blob_store		*bs = blob->bs;
 	void				*tmp;
 	size_t				i;
@@ -934,7 +934,7 @@ static void
 _spdk_blob_persist_unmap_clusters(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_persist_ctx 	*ctx = cb_arg;
-	struct spdk_blob_data 		*blob = ctx->blob;
+	struct spdk_blob 		*blob = ctx->blob;
 	struct spdk_blob_store		*bs = blob->bs;
 	spdk_bs_batch_t			*batch;
 	size_t				i;
@@ -990,7 +990,7 @@ static void
 _spdk_blob_persist_zero_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_persist_ctx	*ctx = cb_arg;
-	struct spdk_blob_data 		*blob = ctx->blob;
+	struct spdk_blob 		*blob = ctx->blob;
 	struct spdk_blob_store		*bs = blob->bs;
 	size_t				i;
 
@@ -1017,7 +1017,7 @@ static void
 _spdk_blob_persist_zero_pages(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_persist_ctx 	*ctx = cb_arg;
-	struct spdk_blob_data 		*blob = ctx->blob;
+	struct spdk_blob 		*blob = ctx->blob;
 	struct spdk_blob_store		*bs = blob->bs;
 	uint64_t			lba;
 	uint32_t			lba_count;
@@ -1056,7 +1056,7 @@ static void
 _spdk_blob_persist_write_page_root(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_persist_ctx	*ctx = cb_arg;
-	struct spdk_blob_data		*blob = ctx->blob;
+	struct spdk_blob		*blob = ctx->blob;
 	struct spdk_blob_store		*bs = blob->bs;
 	uint64_t			lba;
 	uint32_t			lba_count;
@@ -1082,7 +1082,7 @@ static void
 _spdk_blob_persist_write_page_chain(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_persist_ctx 	*ctx = cb_arg;
-	struct spdk_blob_data 		*blob = ctx->blob;
+	struct spdk_blob 		*blob = ctx->blob;
 	struct spdk_blob_store		*bs = blob->bs;
 	uint64_t 			lba;
 	uint32_t			lba_count;
@@ -1114,7 +1114,7 @@ _spdk_blob_persist_write_page_chain(spdk_bs_sequence_t *seq, void *cb_arg, int b
 }
 
 static int
-_spdk_resize_blob(struct spdk_blob_data *blob, uint64_t sz)
+_spdk_resize_blob(struct spdk_blob *blob, uint64_t sz)
 {
 	uint64_t	i;
 	uint64_t	*tmp;
@@ -1189,7 +1189,7 @@ _spdk_resize_blob(struct spdk_blob_data *blob, uint64_t sz)
 
 /* Write a blob to disk */
 static void
-_spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob_data *blob,
+_spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 		   spdk_bs_sequence_cpl cb_fn, void *cb_arg)
 {
 	struct spdk_blob_persist_ctx *ctx;
@@ -1285,7 +1285,7 @@ _spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob_data *blob,
 }
 
 struct spdk_blob_copy_cluster_ctx {
-	struct spdk_blob_data *blob;
+	struct spdk_blob *blob;
 	uint8_t *buf;
 	uint64_t page;
 	uint64_t new_cluster;
@@ -1376,7 +1376,7 @@ _spdk_blob_write_copy(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 }
 
 static void
-_spdk_bs_allocate_and_copy_cluster(struct spdk_blob_data *blob,
+_spdk_bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 				   struct spdk_io_channel *_ch,
 				   uint64_t offset, spdk_bs_user_op_t *op)
 {
@@ -1456,7 +1456,7 @@ _spdk_bs_allocate_and_copy_cluster(struct spdk_blob_data *blob,
 }
 
 static void
-_spdk_blob_calculate_lba_and_lba_count(struct spdk_blob_data *blob, uint64_t page, uint64_t length,
+_spdk_blob_calculate_lba_and_lba_count(struct spdk_blob *blob, uint64_t page, uint64_t length,
 				       uint64_t *lba,	uint32_t *lba_count)
 {
 	*lba_count = _spdk_bs_page_to_lba(blob->bs, length);
@@ -1471,13 +1471,12 @@ _spdk_blob_calculate_lba_and_lba_count(struct spdk_blob_data *blob, uint64_t pag
 }
 
 static void
-_spdk_blob_request_submit_op_split(struct spdk_io_channel *ch, struct spdk_blob *_blob,
+_spdk_blob_request_submit_op_split(struct spdk_io_channel *ch, struct spdk_blob *blob,
 				   void *payload, uint64_t offset, uint64_t length,
 				   spdk_blob_op_complete cb_fn, void *cb_arg, enum spdk_blob_op_type op_type)
 {
 	spdk_bs_batch_t		*batch;
 	struct spdk_bs_cpl	cpl;
-	struct spdk_blob_data	*blob = __blob_to_data(_blob);
 	uint64_t		op_length;
 	uint8_t			*buf;
 
@@ -1499,16 +1498,16 @@ _spdk_blob_request_submit_op_split(struct spdk_io_channel *ch, struct spdk_blob 
 
 		switch (op_type) {
 		case SPDK_BLOB_READ:
-			spdk_bs_batch_read_blob(batch, _blob, buf, offset, op_length);
+			spdk_bs_batch_read_blob(batch, blob, buf, offset, op_length);
 			break;
 		case SPDK_BLOB_WRITE:
-			spdk_bs_batch_write_blob(batch, _blob, buf, offset, op_length);
+			spdk_bs_batch_write_blob(batch, blob, buf, offset, op_length);
 			break;
 		case SPDK_BLOB_UNMAP:
-			spdk_bs_batch_unmap_blob(batch, _blob, offset, op_length);
+			spdk_bs_batch_unmap_blob(batch, blob, offset, op_length);
 			break;
 		case SPDK_BLOB_WRITE_ZEROES:
-			spdk_bs_batch_write_zeroes_blob(batch, _blob, offset, op_length);
+			spdk_bs_batch_write_zeroes_blob(batch, blob, offset, op_length);
 			break;
 		case SPDK_BLOB_READV:
 		case SPDK_BLOB_WRITEV:
@@ -1527,11 +1526,10 @@ _spdk_blob_request_submit_op_split(struct spdk_io_channel *ch, struct spdk_blob 
 }
 
 static void
-_spdk_blob_request_submit_op_single(struct spdk_io_channel *_ch, struct spdk_blob *_blob,
+_spdk_blob_request_submit_op_single(struct spdk_io_channel *_ch, struct spdk_blob *blob,
 				    void *payload, uint64_t offset, uint64_t length,
 				    spdk_blob_op_complete cb_fn, void *cb_arg, enum spdk_blob_op_type op_type)
 {
-	struct spdk_blob_data *blob = __blob_to_data(_blob);
 	struct spdk_bs_cpl cpl;
 	uint64_t lba;
 	uint32_t lba_count;
@@ -1588,7 +1586,7 @@ _spdk_blob_request_submit_op_single(struct spdk_io_channel *_ch, struct spdk_blo
 			/* Queue this operation and allocate the cluster */
 			spdk_bs_user_op_t *op;
 
-			op = spdk_bs_user_op_alloc(_ch, &cpl, op_type, _blob, payload, 0, offset, length);
+			op = spdk_bs_user_op_alloc(_ch, &cpl, op_type, blob, payload, 0, offset, length);
 			if (!op) {
 				cb_fn(cb_arg, -ENOMEM);
 				return;
@@ -1623,12 +1621,10 @@ _spdk_blob_request_submit_op_single(struct spdk_io_channel *_ch, struct spdk_blo
 }
 
 static void
-_spdk_blob_request_submit_op(struct spdk_blob *_blob, struct spdk_io_channel *_channel,
+_spdk_blob_request_submit_op(struct spdk_blob *blob, struct spdk_io_channel *_channel,
 			     void *payload, uint64_t offset, uint64_t length,
 			     spdk_blob_op_complete cb_fn, void *cb_arg, enum spdk_blob_op_type op_type)
 {
-	struct spdk_blob_data		*blob = __blob_to_data(_blob);
-
 	assert(blob != NULL);
 
 	if (blob->data_ro && op_type != SPDK_BLOB_READ) {
@@ -1642,10 +1638,10 @@ _spdk_blob_request_submit_op(struct spdk_blob *_blob, struct spdk_io_channel *_c
 	}
 
 	if (length <= _spdk_bs_num_pages_to_cluster_boundary(blob, offset)) {
-		_spdk_blob_request_submit_op_single(_channel, _blob, payload, offset, length,
+		_spdk_blob_request_submit_op_single(_channel, blob, payload, offset, length,
 						    cb_fn, cb_arg, op_type);
 	} else {
-		_spdk_blob_request_submit_op_split(_channel, _blob, payload, offset, length,
+		_spdk_blob_request_submit_op_split(_channel, blob, payload, offset, length,
 						   cb_fn, cb_arg, op_type);
 	}
 }
@@ -1675,7 +1671,7 @@ static void
 _spdk_rw_iov_split_next(void *cb_arg, int bserrno)
 {
 	struct rw_iov_ctx *ctx = cb_arg;
-	struct spdk_blob_data *blob = __blob_to_data(ctx->blob);
+	struct spdk_blob *blob = ctx->blob;
 	struct iovec *iov, *orig_iov;
 	int iovcnt;
 	size_t orig_iovoff;
@@ -1742,11 +1738,10 @@ _spdk_rw_iov_split_next(void *cb_arg, int bserrno)
 }
 
 static void
-_spdk_blob_request_submit_rw_iov(struct spdk_blob *_blob, struct spdk_io_channel *_channel,
+_spdk_blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel *_channel,
 				 struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
 				 spdk_blob_op_complete cb_fn, void *cb_arg, bool read)
 {
-	struct spdk_blob_data	*blob = __blob_to_data(_blob);
 	struct spdk_bs_cpl	cpl;
 
 	assert(blob != NULL);
@@ -1820,7 +1815,7 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *_blob, struct spdk_io_channel
 				/* Queue this operation and allocate the cluster */
 				spdk_bs_user_op_t *op;
 
-				op = spdk_bs_user_op_alloc(_channel, &cpl, SPDK_BLOB_WRITEV, _blob, iov, iovcnt, offset, length);
+				op = spdk_bs_user_op_alloc(_channel, &cpl, SPDK_BLOB_WRITEV, blob, iov, iovcnt, offset, length);
 				if (!op) {
 					cb_fn(cb_arg, -ENOMEM);
 					return;
@@ -1838,7 +1833,7 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *_blob, struct spdk_io_channel
 			return;
 		}
 
-		ctx->blob = _blob;
+		ctx->blob = blob;
 		ctx->channel = _channel;
 		ctx->cb_fn = cb_fn;
 		ctx->cb_arg = cb_arg;
@@ -1853,10 +1848,10 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *_blob, struct spdk_io_channel
 	}
 }
 
-static struct spdk_blob_data *
+static struct spdk_blob *
 _spdk_blob_lookup(struct spdk_blob_store *bs, spdk_blob_id blobid)
 {
-	struct spdk_blob_data *blob;
+	struct spdk_blob *blob;
 
 	TAILQ_FOREACH(blob, &bs->blobs, link) {
 		if (blob->id == blobid) {
@@ -1924,7 +1919,7 @@ static void
 _spdk_bs_dev_destroy(void *io_device)
 {
 	struct spdk_blob_store *bs = io_device;
-	struct spdk_blob_data	*blob, *blob_tmp;
+	struct spdk_blob	*blob, *blob_tmp;
 
 	bs->dev->destroy(bs->dev);
 
@@ -3159,28 +3154,22 @@ spdk_bs_unregister_md_thread(struct spdk_blob_store *bs)
 	return 0;
 }
 
-spdk_blob_id spdk_blob_get_id(struct spdk_blob *_blob)
+spdk_blob_id spdk_blob_get_id(struct spdk_blob *blob)
 {
-	struct spdk_blob_data *blob = __blob_to_data(_blob);
-
 	assert(blob != NULL);
 
 	return blob->id;
 }
 
-uint64_t spdk_blob_get_num_pages(struct spdk_blob *_blob)
+uint64_t spdk_blob_get_num_pages(struct spdk_blob *blob)
 {
-	struct spdk_blob_data *blob = __blob_to_data(_blob);
-
 	assert(blob != NULL);
 
 	return _spdk_bs_cluster_to_page(blob->bs, blob->active.num_clusters);
 }
 
-uint64_t spdk_blob_get_num_clusters(struct spdk_blob *_blob)
+uint64_t spdk_blob_get_num_clusters(struct spdk_blob *blob)
 {
-	struct spdk_blob_data *blob = __blob_to_data(_blob);
-
 	assert(blob != NULL);
 
 	return blob->active.num_clusters;
@@ -3191,7 +3180,7 @@ uint64_t spdk_blob_get_num_clusters(struct spdk_blob *_blob)
 static void
 _spdk_bs_create_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
-	struct spdk_blob_data *blob = cb_arg;
+	struct spdk_blob *blob = cb_arg;
 
 	_spdk_blob_free(blob);
 
@@ -3199,7 +3188,7 @@ _spdk_bs_create_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 }
 
 static int
-_spdk_blob_set_xattrs(struct spdk_blob_data *blob, const struct spdk_blob_xattr_opts *xattrs,
+_spdk_blob_set_xattrs(struct spdk_blob *blob, const struct spdk_blob_xattr_opts *xattrs,
 		      bool internal)
 {
 	uint64_t i;
@@ -3223,7 +3212,7 @@ _spdk_blob_set_xattrs(struct spdk_blob_data *blob, const struct spdk_blob_xattr_
 }
 
 static void
-_spdk_blob_set_thin_provision(struct spdk_blob_data *blob)
+_spdk_blob_set_thin_provision(struct spdk_blob *blob)
 {
 	blob->invalid_flags |= SPDK_BLOB_THIN_PROV;
 	blob->state = SPDK_BLOB_STATE_DIRTY;
@@ -3232,7 +3221,7 @@ _spdk_blob_set_thin_provision(struct spdk_blob_data *blob)
 void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_opts *opts,
 			     spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
 {
-	struct spdk_blob_data	*blob;
+	struct spdk_blob	*blob;
 	uint32_t		page_idx;
 	struct spdk_bs_cpl 	cpl;
 	struct spdk_blob_opts	opts_default;
@@ -3273,7 +3262,7 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 		_spdk_blob_set_thin_provision(blob);
 	}
 
-	rc = spdk_blob_resize(__data_to_blob(blob), opts->num_clusters);
+	rc = spdk_blob_resize(blob, opts->num_clusters);
 	if (rc < 0) {
 		_spdk_blob_free(blob);
 		cb_fn(cb_arg, 0, rc);
@@ -3304,9 +3293,8 @@ void spdk_bs_create_blob(struct spdk_blob_store *bs,
 
 /* START spdk_blob_resize */
 int
-spdk_blob_resize(struct spdk_blob *_blob, uint64_t sz)
+spdk_blob_resize(struct spdk_blob *blob, uint64_t sz)
 {
-	struct spdk_blob_data	*blob = __blob_to_data(_blob);
 	int			rc;
 
 	assert(blob != NULL);
@@ -3346,8 +3334,7 @@ _spdk_bs_delete_close_cpl(void *cb_arg, int bserrno)
 static void
 _spdk_bs_delete_persist_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
-	struct spdk_blob *_blob = cb_arg;
-	struct spdk_blob_data *blob = __blob_to_data(_blob);
+	struct spdk_blob *blob = cb_arg;
 
 	if (bserrno != 0) {
 		/*
@@ -3367,14 +3354,13 @@ _spdk_bs_delete_persist_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	 *  points into code that touches the blob->open_ref count
 	 *  and the blobstore's blob list.
 	 */
-	spdk_blob_close(_blob, _spdk_bs_delete_close_cpl, seq);
+	spdk_blob_close(blob, _spdk_bs_delete_close_cpl, seq);
 }
 
 static void
-_spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
+_spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
 {
 	spdk_bs_sequence_t *seq = cb_arg;
-	struct spdk_blob_data *blob = __blob_to_data(_blob);
 	uint32_t page_num;
 
 	if (bserrno != 0) {
@@ -3403,7 +3389,7 @@ _spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
 	blob->active.num_pages = 0;
 	_spdk_resize_blob(blob, 0);
 
-	_spdk_blob_persist(seq, blob, _spdk_bs_delete_persist_cpl, _blob);
+	_spdk_blob_persist(seq, blob, _spdk_bs_delete_persist_cpl, blob);
 }
 
 void
@@ -3435,7 +3421,7 @@ spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 static void
 _spdk_bs_open_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
-	struct spdk_blob_data *blob = cb_arg;
+	struct spdk_blob *blob = cb_arg;
 
 	/* If the blob have crc error, we just return NULL. */
 	if (blob == NULL) {
@@ -3454,7 +3440,7 @@ _spdk_bs_open_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 void spdk_bs_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 		       spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
 {
-	struct spdk_blob_data		*blob;
+	struct spdk_blob		*blob;
 	struct spdk_bs_cpl		cpl;
 	spdk_bs_sequence_t		*seq;
 	uint32_t			page_num;
@@ -3471,7 +3457,7 @@ void spdk_bs_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 	blob = _spdk_blob_lookup(bs, blobid);
 	if (blob) {
 		blob->open_ref++;
-		cb_fn(cb_arg, __data_to_blob(blob), 0);
+		cb_fn(cb_arg, blob, 0);
 		return;
 	}
 
@@ -3484,7 +3470,7 @@ void spdk_bs_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 	cpl.type = SPDK_BS_CPL_TYPE_BLOB_HANDLE;
 	cpl.u.blob_handle.cb_fn = cb_fn;
 	cpl.u.blob_handle.cb_arg = cb_arg;
-	cpl.u.blob_handle.blob = __data_to_blob(blob);
+	cpl.u.blob_handle.blob = blob;
 
 	seq = spdk_bs_sequence_start(bs->md_channel, &cpl);
 	if (!seq) {
@@ -3498,10 +3484,8 @@ void spdk_bs_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 /* END spdk_bs_open_blob */
 
 /* START spdk_blob_set_read_only */
-void spdk_blob_set_read_only(struct spdk_blob *b)
+void spdk_blob_set_read_only(struct spdk_blob *blob)
 {
-	struct spdk_blob_data *blob = __blob_to_data(b);
-
 	assert(spdk_get_thread() == blob->bs->md_thread);
 
 	blob->data_ro_flags |= SPDK_BLOB_READ_ONLY;
@@ -3515,7 +3499,7 @@ void spdk_blob_set_read_only(struct spdk_blob *b)
 static void
 _spdk_blob_sync_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
-	struct spdk_blob_data *blob = __blob_to_data(cb_arg);
+	struct spdk_blob *blob = cb_arg;
 
 	if (bserrno == 0 && (blob->data_ro_flags & SPDK_BLOB_READ_ONLY)) {
 		blob->data_ro = true;
@@ -3526,7 +3510,7 @@ _spdk_blob_sync_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 }
 
 static void
-_spdk_blob_sync_md(struct spdk_blob_data *blob, spdk_blob_op_complete cb_fn, void *cb_arg)
+_spdk_blob_sync_md(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_bs_cpl	cpl;
 	spdk_bs_sequence_t	*seq;
@@ -3545,10 +3529,8 @@ _spdk_blob_sync_md(struct spdk_blob_data *blob, spdk_blob_op_complete cb_fn, voi
 }
 
 void
-spdk_blob_sync_md(struct spdk_blob *_blob, spdk_blob_op_complete cb_fn, void *cb_arg)
+spdk_blob_sync_md(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
-	struct spdk_blob_data	*blob = __blob_to_data(_blob);
-
 	assert(blob != NULL);
 	assert(spdk_get_thread() == blob->bs->md_thread);
 
@@ -3575,7 +3557,7 @@ spdk_blob_sync_md(struct spdk_blob *_blob, spdk_blob_op_complete cb_fn, void *cb
 
 struct spdk_blob_insert_cluster_ctx {
 	struct spdk_thread	*thread;
-	struct spdk_blob_data	*blob;
+	struct spdk_blob	*blob;
 	uint32_t		cluster_num;	/* cluster index in blob */
 	uint32_t		cluster;	/* cluster on disk */
 	int			rc;
@@ -3617,7 +3599,7 @@ _spdk_blob_insert_cluster_msg(void *arg)
 }
 
 void
-_spdk_blob_insert_cluster_on_md_thread(struct spdk_blob_data *blob, uint32_t cluster_num,
+_spdk_blob_insert_cluster_on_md_thread(struct spdk_blob *blob, uint32_t cluster_num,
 				       uint64_t cluster, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_blob_insert_cluster_ctx *ctx;
@@ -3643,7 +3625,7 @@ _spdk_blob_insert_cluster_on_md_thread(struct spdk_blob_data *blob, uint32_t clu
 static void
 _spdk_blob_close_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
-	struct spdk_blob_data *blob = cb_arg;
+	struct spdk_blob *blob = cb_arg;
 
 	if (bserrno == 0) {
 		blob->open_ref--;
@@ -3664,14 +3646,11 @@ _spdk_blob_close_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	spdk_bs_sequence_finish(seq, bserrno);
 }
 
-void spdk_blob_close(struct spdk_blob *b, spdk_blob_op_complete cb_fn, void *cb_arg)
+void spdk_blob_close(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_bs_cpl	cpl;
-	struct spdk_blob_data	*blob;
 	spdk_bs_sequence_t	*seq;
 
-	assert(b != NULL);
-	blob = __blob_to_data(b);
 	assert(blob != NULL);
 	assert(spdk_get_thread() == blob->bs->md_thread);
 
@@ -3823,14 +3802,11 @@ _spdk_bs_iter_close_cpl(void *cb_arg, int bserrno)
 }
 
 void
-spdk_bs_iter_next(struct spdk_blob_store *bs, struct spdk_blob *b,
+spdk_bs_iter_next(struct spdk_blob_store *bs, struct spdk_blob *blob,
 		  spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_bs_iter_ctx *ctx;
-	struct spdk_blob_data	*blob;
 
-	assert(b != NULL);
-	blob = __blob_to_data(b);
 	assert(blob != NULL);
 
 	ctx = calloc(1, sizeof(*ctx));
@@ -3845,11 +3821,11 @@ spdk_bs_iter_next(struct spdk_blob_store *bs, struct spdk_blob *b,
 	ctx->cb_arg = cb_arg;
 
 	/* Close the existing blob */
-	spdk_blob_close(b, _spdk_bs_iter_close_cpl, ctx);
+	spdk_blob_close(blob, _spdk_bs_iter_close_cpl, ctx);
 }
 
 static int
-_spdk_blob_set_xattr(struct spdk_blob_data *blob, const char *name, const void *value,
+_spdk_blob_set_xattr(struct spdk_blob *blob, const char *name, const void *value,
 		     uint16_t value_len, bool internal)
 {
 	struct spdk_xattr_tailq *xattrs;
@@ -3903,11 +3879,11 @@ int
 spdk_blob_set_xattr(struct spdk_blob *blob, const char *name, const void *value,
 		    uint16_t value_len)
 {
-	return _spdk_blob_set_xattr(__blob_to_data(blob), name, value, value_len, false);
+	return _spdk_blob_set_xattr(blob, name, value, value_len, false);
 }
 
 static int
-_spdk_blob_remove_xattr(struct spdk_blob_data *blob, const char *name, bool internal)
+_spdk_blob_remove_xattr(struct spdk_blob *blob, const char *name, bool internal)
 {
 	struct spdk_xattr_tailq *xattrs;
 	struct spdk_xattr	*xattr;
@@ -3944,11 +3920,11 @@ _spdk_blob_remove_xattr(struct spdk_blob_data *blob, const char *name, bool inte
 int
 spdk_blob_remove_xattr(struct spdk_blob *blob, const char *name)
 {
-	return _spdk_blob_remove_xattr(__blob_to_data(blob), name, false);
+	return _spdk_blob_remove_xattr(blob, name, false);
 }
 
 static int
-_spdk_blob_get_xattr_value(struct spdk_blob_data *blob, const char *name,
+_spdk_blob_get_xattr_value(struct spdk_blob *blob, const char *name,
 			   const void **value, size_t *value_len, bool internal)
 {
 	struct spdk_xattr	*xattr;
@@ -3970,7 +3946,7 @@ int
 spdk_blob_get_xattr_value(struct spdk_blob *blob, const char *name,
 			  const void **value, size_t *value_len)
 {
-	return _spdk_blob_get_xattr_value(__blob_to_data(blob), name, value, value_len, false);
+	return _spdk_blob_get_xattr_value(blob, name, value, value_len, false);
 }
 
 struct spdk_xattr_names {
@@ -4001,9 +3977,9 @@ _spdk_blob_get_xattr_names(struct spdk_xattr_tailq *xattrs, struct spdk_xattr_na
 }
 
 int
-spdk_blob_get_xattr_names(struct spdk_blob *_blob, struct spdk_xattr_names **names)
+spdk_blob_get_xattr_names(struct spdk_blob *blob, struct spdk_xattr_names **names)
 {
-	return _spdk_blob_get_xattr_names(&__blob_to_data(_blob)->xattrs, names);
+	return _spdk_blob_get_xattr_names(&blob->xattrs, names);
 }
 
 uint32_t
