@@ -38,10 +38,8 @@
 #include "spdk_internal/event.h"
 #include "spdk/env.h"
 
-static TAILQ_HEAD(spdk_subsystem_list, spdk_subsystem) g_subsystems =
-	TAILQ_HEAD_INITIALIZER(g_subsystems);
-static TAILQ_HEAD(subsystem_depend, spdk_subsystem_depend) g_depends =
-	TAILQ_HEAD_INITIALIZER(g_depends);
+struct spdk_subsystem_list g_subsystems = TAILQ_HEAD_INITIALIZER(g_subsystems);
+struct spdk_subsystem_depend_list g_subsystems_deps = TAILQ_HEAD_INITIALIZER(g_subsystems_deps);
 static struct spdk_subsystem *g_next_subsystem;
 static bool g_subsystems_initialized = false;
 static struct spdk_event *g_app_start_event;
@@ -57,7 +55,7 @@ spdk_add_subsystem(struct spdk_subsystem *subsystem)
 void
 spdk_add_subsystem_depend(struct spdk_subsystem_depend *depend)
 {
-	TAILQ_INSERT_TAIL(&g_depends, depend, tailq);
+	TAILQ_INSERT_TAIL(&g_subsystems_deps, depend, tailq);
 }
 
 static struct spdk_subsystem *
@@ -86,7 +84,7 @@ subsystem_sort(void)
 	while (!TAILQ_EMPTY(&g_subsystems)) {
 		TAILQ_FOREACH_SAFE(subsystem, &g_subsystems, tailq, subsystem_tmp) {
 			depends_on = false;
-			TAILQ_FOREACH(subsystem_dep, &g_depends, tailq) {
+			TAILQ_FOREACH(subsystem_dep, &g_subsystems_deps, tailq) {
 				if (strcmp(subsystem->name, subsystem_dep->name) == 0) {
 					depends_on = true;
 					depends_on_sorted = !!spdk_subsystem_find(&subsystems_list, subsystem_dep->depends_on);
@@ -149,7 +147,7 @@ spdk_subsystem_verify(void *arg1, void *arg2)
 	struct spdk_subsystem_depend *dep;
 
 	/* Verify that all dependency name and depends_on subsystems are registered */
-	TAILQ_FOREACH(dep, &g_depends, tailq) {
+	TAILQ_FOREACH(dep, &g_subsystems_deps, tailq) {
 		if (!spdk_subsystem_find(&g_subsystems, dep->name)) {
 			SPDK_ERRLOG("subsystem %s is missing\n", dep->name);
 			spdk_app_stop(-1);

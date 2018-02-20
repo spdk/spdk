@@ -105,8 +105,8 @@ subsystem_clear(void)
 		TAILQ_REMOVE(&g_subsystems, subsystem, tailq);
 	}
 
-	TAILQ_FOREACH_SAFE(subsystem_dep, &g_depends, tailq, subsystem_dep_tmp) {
-		TAILQ_REMOVE(&g_depends, subsystem_dep, tailq);
+	TAILQ_FOREACH_SAFE(subsystem_dep, &g_subsystems_deps, tailq, subsystem_dep_tmp) {
+		TAILQ_REMOVE(&g_subsystems_deps, subsystem_dep, tailq);
 	}
 }
 
