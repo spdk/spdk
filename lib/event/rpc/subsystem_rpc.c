@@ -31,34 +31,45 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/stdinc.h"
-
-#include "spdk/copy_engine.h"
-
 #include "spdk_internal/event.h"
-#include "spdk/env.h"
+#include "spdk/rpc.h"
 
 static void
-spdk_copy_engine_subsystem_initialize(void)
+spdk_rpc_get_subsystems(struct spdk_jsonrpc_request *request,
+			const struct spdk_json_val *params)
 {
-	int rc;
+	struct spdk_json_write_ctx *w;
+	struct spdk_subsystem *subsystem;
+	struct spdk_subsystem_depend *deps;
 
-	rc = spdk_copy_engine_initialize();
+	if (params) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "'get_subsystems' requires not arguments");
+		return;
+	}
 
-	spdk_subsystem_init_next(rc);
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_array_begin(w);
+	TAILQ_FOREACH(subsystem, &g_subsystems, tailq) {
+		spdk_json_write_object_begin(w);
+
+		spdk_json_write_named_string(w, "subsystem", subsystem->name);
+		spdk_json_write_named_array_begin(w, "depends_on");
+		TAILQ_FOREACH(deps, &g_subsystems_deps, tailq) {
+			if (strcmp(subsystem->name, deps->name) == 0) {
+				spdk_json_write_string(w, deps->depends_on);
+			}
+		}
+		spdk_json_write_array_end(w);
+
+		spdk_json_write_object_end(w);
+	}
+	spdk_json_write_array_end(w);
+	spdk_jsonrpc_end_result(request, w);
 }
 
-static void
-spdk_copy_engine_subsystem_finish_done(void *cb_arg)
-{
-	spdk_subsystem_fini_next();
-}
-
-static void
-spdk_copy_engine_subsystem_finish(void)
-{
-	spdk_copy_engine_finish(spdk_copy_engine_subsystem_finish_done, NULL);
-}
-
-SPDK_SUBSYSTEM_REGISTER(copy, spdk_copy_engine_subsystem_initialize,
-			spdk_copy_engine_subsystem_finish, NULL)
+SPDK_RPC_REGISTER("get_subsystems", spdk_rpc_get_subsystems)

@@ -391,6 +391,10 @@ if __name__ == "__main__":
     p.add_argument('pmem_file', help='Path to pmemblk pool file')
     p.set_defaults(func=rpc.pmem.delete_pmem_pool)
 
+    # subsystem
+    p = subparsers.add_parser('get_subsystems', help='Print subsystems list with dependency.')
+    p.set_defaults(func=rpc.subsystem.get_subsystems)
+
     # vhost
     p = subparsers.add_parser('set_vhost_controller_coalescing', help='Set vhost controller coalescing')
     p.add_argument('ctrlr', help='controller name')

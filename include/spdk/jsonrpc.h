@@ -118,7 +118,7 @@ void spdk_jsonrpc_send_error_response(struct spdk_jsonrpc_request *request,
  * This is shorthand for printf() + spdk_jsonrpc_send_error_response().
  */
 void spdk_jsonrpc_send_error_response_fmt(struct spdk_jsonrpc_request *request,
-				      int error_code, const char *fmt, ...) __attribute__((format(printf, 3, 4)));
+		int error_code, const char *fmt, ...) __attribute__((format(printf, 3, 4)));
 
 
 #ifdef __cplusplus

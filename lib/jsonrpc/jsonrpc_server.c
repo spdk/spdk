@@ -320,7 +320,7 @@ spdk_jsonrpc_send_error_response(struct spdk_jsonrpc_request *request,
 
 void
 spdk_jsonrpc_send_error_response_fmt(struct spdk_jsonrpc_request *request,
-				 int error_code, const char *fmt, ...)
+				     int error_code, const char *fmt, ...)
 {
 	struct spdk_json_write_ctx *w;
 	va_list args;
