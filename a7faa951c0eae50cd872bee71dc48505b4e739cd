@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1ea9d175_21429d05",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-20T20:24:30Z",
+      "side": 1,
+      "message": "there is no return for this function",
+      "revId": "a7faa951c0eae50cd872bee71dc48505b4e739cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c0e6dae1_60b832ba",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-20T20:24:30Z",
+      "side": 1,
+      "message": "this should use spdk_lvs_op_complete - we do not need to pass spdk_lvol_store handle to callback function since the caller of this function already has it",
+      "revId": "a7faa951c0eae50cd872bee71dc48505b4e739cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9206ba6_ebd88291",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-20T20:24:30Z",
+      "side": 1,
+      "message": "this should go in spdk_lvs_req instead",
+      "revId": "a7faa951c0eae50cd872bee71dc48505b4e739cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6cfcdd07_1a13fcfe",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-20T20:24:30Z",
+      "side": 1,
+      "message": "I think we should skip this check - spdk_lvs_rename should already check for a duplicate name.\n\nEven if this check passes, an lvs could get renamed between here and spdk_lvs_rename call so this check does not really add anything.",
+      "revId": "a7faa951c0eae50cd872bee71dc48505b4e739cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "506f9da9_2daf060d",
+        "filename": "lib/bdev/lvol/vbdev_lvol.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-20T20:24:30Z",
+      "side": 1,
+      "message": "same here - this should be spdk_lvs_op_complete",
+      "revId": "a7faa951c0eae50cd872bee71dc48505b4e739cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8034b70a_2f1405c1",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 630,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-20T20:24:30Z",
+      "side": 1,
+      "message": "to avoid race condition, you may need to copy new_name to a new field in lvs when rename function is first called - then the check across all lvol stores should compare against both name (current name) and new_name\n\nthen here, if operation succeeded, copy new_name to name, otherwise revert by copying name to new_name",
+      "revId": "a7faa951c0eae50cd872bee71dc48505b4e739cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "87c8c49f_8a52613c",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 663,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-20T20:24:30Z",
+      "side": 1,
+      "message": "you could just call _spdk_lvs_rename_sync_cb(req, rc) here instead",
+      "revId": "a7faa951c0eae50cd872bee71dc48505b4e739cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e5b5a0f_f88eab62",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 685,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-20T20:24:30Z",
+      "side": 1,
+      "message": "we should check g_lvol_stores list here, and fail rename if new_name matches any existing name (except for this lvs)",
+      "revId": "a7faa951c0eae50cd872bee71dc48505b4e739cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
