@@ -118,6 +118,30 @@
       "revId": "6aa9ac4177b8b8f10eec9489ccd0e17c985688df",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8d4561b_47341362",
+        "filename": "lib/net/sock.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 441,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-20T17:29:29Z",
+      "side": 1,
+      "message": "If it is OK with both of you - I would like to keep this as-is for now - allocate the memory in implementation-specific code, and free it in generic code.\n\nThis will ensure consistency and reduce code duplication for process of freeing sock/sock_group when closed.\n\nIf necessary, we can re-assess after this patch series is committed and make more changes later.\n\n-Jim",
+      "parentUuid": "15ef6f46_768ae309",
+      "range": {
+        "startLine": 434,
+        "startChar": 0,
+        "endLine": 441,
+        "endChar": 21
+      },
+      "revId": "6aa9ac4177b8b8f10eec9489ccd0e17c985688df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
