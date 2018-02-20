@@ -22,6 +22,30 @@
       "revId": "6aa9ac4177b8b8f10eec9489ccd0e17c985688df",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5172e03f_79f410de",
+        "filename": "lib/net/sock.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 441,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-20T14:28:02Z",
+      "side": 1,
+      "message": "I\u0027d tend to agree with Shuhei. It makes sense to initialize and free spdk_sock_group in general socket layer.\n\nMeanwhile posix layer only fills out the sock_group-\u003efd. In that case this function could look very similar to spdk_posix_sock_group_close() - instead of returning fd, return possible error code.\n\nstatic int spdk_posix_sock_group_create(struct spdk_sock_group *group)",
+      "parentUuid": "2555f2cb_19f52b9d",
+      "range": {
+        "startLine": 434,
+        "startChar": 0,
+        "endLine": 441,
+        "endChar": 21
+      },
+      "revId": "6aa9ac4177b8b8f10eec9489ccd0e17c985688df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
