@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c8ca0a53_c6631837",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-20T21:43:54Z",
+      "side": 1,
+      "message": "remove ISA-L/encryption stuff - this should just mention passthru",
+      "revId": "d25a64dae211d7fbf7c2a5f6a8a94df837748653",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b6e0c86c_40891864",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-20T21:43:54Z",
+      "side": 1,
+      "message": "bunch of places here it looks like its using spaces to align instead of tabs (if I\u0027m reading the gerrit diff correctly)",
+      "revId": "d25a64dae211d7fbf7c2a5f6a8a94df837748653",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4fb9c83c_29ef341a",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-20T21:43:54Z",
+      "side": 1,
+      "message": "its",
+      "revId": "d25a64dae211d7fbf7c2a5f6a8a94df837748653",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8625958_c2edbd1d",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-20T21:43:54Z",
+      "side": 1,
+      "message": "IO duplicated here (also at end of previous line)",
+      "revId": "d25a64dae211d7fbf7c2a5f6a8a94df837748653",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56587a7b_83eb6f1e",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-20T21:43:54Z",
+      "side": 1,
+      "message": "appropriate",
+      "revId": "d25a64dae211d7fbf7c2a5f6a8a94df837748653",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6330dbb5_3df32268",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-20T21:43:54Z",
+      "side": 1,
+      "message": "original",
+      "revId": "d25a64dae211d7fbf7c2a5f6a8a94df837748653",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "984420e3_00ad546d",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-20T21:43:54Z",
+      "side": 1,
+      "message": "original\ncreated",
+      "revId": "d25a64dae211d7fbf7c2a5f6a8a94df837748653",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
