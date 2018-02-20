@@ -1,0 +1,101 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "303ec994_db7408cc",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 49
+      },
+      "lineNbr": 3482,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-20T21:51:54Z",
+      "side": 1,
+      "message": "Too many empty lines.",
+      "revId": "a1c9a245f2d820103f41945095a8d8a7233e59c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02548d27_bda579cf",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 49
+      },
+      "lineNbr": 3498,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-20T21:51:54Z",
+      "side": 1,
+      "message": "Please also check that data on snapshot did not change after write.",
+      "revId": "a1c9a245f2d820103f41945095a8d8a7233e59c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "608cbba4_4e5b2954",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 49
+      },
+      "lineNbr": 3604,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-20T21:51:54Z",
+      "side": 1,
+      "message": "We don\u0027t need that as this buffer currently contains only zeroes.",
+      "range": {
+        "startLine": 3604,
+        "startChar": 0,
+        "endLine": 3604,
+        "endChar": 50
+      },
+      "revId": "a1c9a245f2d820103f41945095a8d8a7233e59c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f72e78a_90dcecff",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 49
+      },
+      "lineNbr": 3610,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-20T21:51:54Z",
+      "side": 1,
+      "message": "You already set that in lines 3594 to 3599. You don\u0027t need to set this up again.",
+      "range": {
+        "startLine": 3605,
+        "startChar": 0,
+        "endLine": 3610,
+        "endChar": 32
+      },
+      "revId": "a1c9a245f2d820103f41945095a8d8a7233e59c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e39080a0_66aa6240",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 49
+      },
+      "lineNbr": 3614,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-20T21:51:54Z",
+      "side": 1,
+      "message": "Please also check that data on snapshot did not change after write.",
+      "revId": "a1c9a245f2d820103f41945095a8d8a7233e59c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
