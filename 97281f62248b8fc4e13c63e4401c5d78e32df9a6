@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9580c1a1_7cd46b07",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 439,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-02-20T20:20:04Z",
+      "side": 1,
+      "message": "OK, I\u0027ll take a look",
+      "parentUuid": "0e00df45_5d11bd19",
+      "revId": "97281f62248b8fc4e13c63e4401c5d78e32df9a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3abb3d88_fd43f325",
         "filename": "test/lib/bdev/blockdev.sh",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2018-02-13T22:25:06Z",
       "side": 1,
       "message": "I don\u0027t think we want to be calling blobcli in the blockdev.sh tests; can we just add a passthru vbdev to the bdev.conf.in file in this directory so the bdevio tests will run on it?",
+      "revId": "97281f62248b8fc4e13c63e4401c5d78e32df9a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d1535b5_3602004c",
+        "filename": "test/lib/bdev/blockdev.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-02-20T20:20:04Z",
+      "side": 1,
+      "message": "I\u0027ll catch you on IRC about this one, thanks",
+      "parentUuid": "3abb3d88_fd43f325",
       "revId": "97281f62248b8fc4e13c63e4401c5d78e32df9a6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
