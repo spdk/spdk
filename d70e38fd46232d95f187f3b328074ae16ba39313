@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d704ab8b_c00b88a3",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 21
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-20T21:15:45Z",
+      "side": 1,
+      "message": "some of the changes here don\u0027t seem specific to SCSI hot remove - shouldn\u0027t they be broken out into a separate patch?",
+      "revId": "d70e38fd46232d95f187f3b328074ae16ba39313",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f162ab7_bad12baf",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 21
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-20T21:15:45Z",
+      "side": 1,
+      "message": "why change this from 600 to 300?\n\nI\u0027m ok if 300 is more correct, but this is not the kind of change to make in the middle of a bunch of other changes - should be part of a separate patch and at least explain it in the commit message",
+      "revId": "d70e38fd46232d95f187f3b328074ae16ba39313",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d480b89_27957980",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 21
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-20T21:15:45Z",
+      "side": 1,
+      "message": "are bind/unbind the best names here?  usually when I think of bind/unbind, I think of binding/unbinding devices from drivers",
+      "revId": "d70e38fd46232d95f187f3b328074ae16ba39313",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
