@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "96b214d5_206581db",
+        "filename": "lib/net/sock.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-20T17:29:06Z",
+      "side": 1,
+      "message": "These could probably use SPDK_OFFSETOF() just to be extra clear, but this works for now since base is the first field in spdk_posix_sock.",
+      "revId": "2a4675a4dd81b4a830db7696a7eea5a2963fd5c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
