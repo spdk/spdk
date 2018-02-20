@@ -142,6 +142,30 @@
       "revId": "6aa9ac4177b8b8f10eec9489ccd0e17c985688df",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "20c32a76_03bfdf48",
+        "filename": "lib/net/sock.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 441,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-20T23:31:39Z",
+      "side": 1,
+      "message": "Hi Jim, Tomasz, thank you and now I could understand well and keeping this is fine for me.",
+      "parentUuid": "f8d4561b_47341362",
+      "range": {
+        "startLine": 434,
+        "startChar": 0,
+        "endLine": 441,
+        "endChar": 21
+      },
+      "revId": "6aa9ac4177b8b8f10eec9489ccd0e17c985688df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
