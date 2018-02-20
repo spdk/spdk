@@ -94,6 +94,30 @@
       "revId": "6aa9ac4177b8b8f10eec9489ccd0e17c985688df",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15ef6f46_768ae309",
+        "filename": "lib/net/sock.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 441,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-20T16:31:52Z",
+      "side": 1,
+      "message": "You are right, after looking at patch https://review.gerrithub.io/#/c/400527/1/lib/net/sock.c\nI now understand why you wanted to keep allocation of spdk_posix_sock_group_impl inside the posix implementation.",
+      "parentUuid": "cfabcf43_a24cbe1b",
+      "range": {
+        "startLine": 434,
+        "startChar": 0,
+        "endLine": 441,
+        "endChar": 21
+      },
+      "revId": "6aa9ac4177b8b8f10eec9489ccd0e17c985688df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
