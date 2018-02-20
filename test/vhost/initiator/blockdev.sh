@@ -31,6 +31,7 @@ while getopts 'h-:' optchar; do
 done
 
 source $COMMON_DIR/common.sh
+source $BASE_DIR/autotest.config
 PLUGIN_DIR=$ROOT_DIR/examples/bdev/fio_plugin
 RPC_PY="$ROOT_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 FIO_BIN="/usr/src/fio/fio"
@@ -47,7 +48,7 @@ if [[ $EUID -ne 0 ]]; then
 	exit 1
 fi
 
-trap 'rm -f *.state; error_exit "${FUNCNAME}""${LINENO}"' ERR SIGTERM SIGABRT
+trap 'rm -f *.state $ROOT_DIR/spdk.tar.gz; error_exit "${FUNCNAME}""${LINENO}"' ERR SIGTERM SIGABRT
 function run_spdk_fio() {
 	LD_PRELOAD=$PLUGIN_DIR/fio_plugin $FIO_BIN --ioengine=spdk_bdev\
          "$@" --spdk_mem=1024
@@ -113,11 +114,15 @@ vm_wait_for_boot 600 $vm_no
 timing_exit vm_wait_for_boot
 
 timing_enter vm_scp_spdk
-vm_scp $vm_no -r $ROOT_DIR "127.0.0.1:/root/spdk"
+touch $ROOT_DIR/spdk.tar.gz
+tar --exclude="spdk.tar.gz" --exclude="*.o" --exclude="*.d" --exclude=".git" -C $ROOT_DIR -zcf $ROOT_DIR/spdk.tar.gz .
+vm_scp $vm_no $ROOT_DIR/spdk.tar.gz "127.0.0.1:/root"
+vm_ssh $vm_no "mkdir -p /root/spdk; tar -zxf /root/spdk.tar.gz -C /root/spdk --strip-components=1"
 timing_exit vm_scp_spdk
 
 timing_enter vm_build_spdk
-vm_ssh $vm_no " cd spdk ; make clean ; ./configure --with-fio=/root/fio_src ; make -j2"
+nproc=$(vm_ssh $vm_no "nproc")
+vm_ssh $vm_no " cd spdk ; make clean ; ./configure --with-fio=/root/fio_src ; make -j${nproc}"
 timing_exit vm_build_spdk
 
 vm_ssh $vm_no "/root/spdk/scripts/setup.sh"
@@ -145,7 +150,7 @@ timing_enter vm_shutdown_all
 vm_shutdown_all
 timing_exit vm_shutdown_all
 
-rm -f *.state
+rm -f *.state $ROOT_DIR/spdk.tar.gz
 timing_enter spdk_vhost_kill
 spdk_vhost_kill
 timing_exit spdk_vhost_kill
