@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "49229a0e_fafa3475",
+        "filename": "lib/blob/blob_bs_dev.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-20T21:25:27Z",
+      "side": 1,
+      "message": "I\u0027d really like to go back to the previous implementation.\n\nI know that this is supposed to support the case where we are performing an operation on a blob from a different blobstore.  But we will have no code to test any of these changes, and no API where a user could actually perform such an operation.\n\nSo let\u0027s keep the code simpler.  In general we should not be adding code that we cannot test.\n\nThis also adds extra memory allocations in the I/O path which I don\u0027t think we needed previously.",
+      "revId": "f00a708dd1b816629628854580e8326bd8c24282",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
