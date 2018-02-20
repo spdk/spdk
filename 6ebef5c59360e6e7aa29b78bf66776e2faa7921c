@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "483df358_60106bcd",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 8
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-20T20:35:00Z",
+      "side": 1,
+      "message": "I think this might be copy/paste error from previous commit message.  You are unifying to the second format in this patch, not the first one.",
+      "revId": "6ebef5c59360e6e7aa29b78bf66776e2faa7921c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "882a8f2b_b1246382",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 487,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-20T20:35:00Z",
+      "side": 1,
+      "message": "would just \"rpc_lun\" be OK as struct name here?  meaning that lun is described by a bdev name and a lun ID\n\nbecause then later, rpc_luns is 1 or more rpc_lun instead of 1 or more bdev_name_id_pairs",
+      "revId": "6ebef5c59360e6e7aa29b78bf66776e2faa7921c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
