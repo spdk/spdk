@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "273eed01_2107ab61",
+        "filename": "test/vhost/hotplug/blk_hotremove.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-20T08:18:43Z",
+      "side": 1,
+      "message": "Why is vms_setup only here? Does this mean that if I only run TC3 (without running TC2 first) then it won\u0027t work because VMs are not properly set up?",
+      "range": {
+        "startLine": 37,
+        "startChar": 4,
+        "endLine": 37,
+        "endChar": 13
+      },
+      "revId": "f588edad7026441e640cbd5ebe0c3dcc641088b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "344410a6_228be155",
+        "filename": "test/vhost/hotplug/blk_hotremove.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-20T08:18:43Z",
+      "side": 1,
+      "message": "Looks like it\u0027s not needed",
+      "range": {
+        "startLine": 40,
+        "startChar": 4,
+        "endLine": 40,
+        "endChar": 20
+      },
+      "revId": "f588edad7026441e640cbd5ebe0c3dcc641088b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92f9abe3_5a9f084a",
+        "filename": "test/vhost/hotplug/blk_hotremove.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-20T08:18:43Z",
+      "side": 1,
+      "message": "Could this be done in a loop?",
+      "range": {
+        "startLine": 56,
+        "startChar": 4,
+        "endLine": 59,
+        "endChar": 51
+      },
+      "revId": "f588edad7026441e640cbd5ebe0c3dcc641088b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8c1fe49_7b889bbe",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-20T08:18:43Z",
+      "side": 1,
+      "message": "tabs / spaces\nwrong indentation",
+      "range": {
+        "startLine": 26,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 94
+      },
+      "revId": "f588edad7026441e640cbd5ebe0c3dcc641088b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0407a74e_f6ebb1ac",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-20T08:18:43Z",
+      "side": 1,
+      "message": "tabs / spaces\nwrong indentation",
+      "range": {
+        "startLine": 174,
+        "startChar": 0,
+        "endLine": 182,
+        "endChar": 18
+      },
+      "revId": "f588edad7026441e640cbd5ebe0c3dcc641088b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
