@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "47866280_8cfd92ad",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 8
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-20T23:11:12Z",
+      "side": 1,
+      "message": "Thank you. I\u0027ll fix it.",
+      "parentUuid": "483df358_60106bcd",
+      "revId": "6ebef5c59360e6e7aa29b78bf66776e2faa7921c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "882a8f2b_b1246382",
         "filename": "lib/iscsi/iscsi_rpc.c",
         "patchSetId": 8
@@ -30,6 +48,24 @@
       "writtenOn": "2018-02-20T20:35:00Z",
       "side": 1,
       "message": "would just \"rpc_lun\" be OK as struct name here?  meaning that lun is described by a bdev name and a lun ID\n\nbecause then later, rpc_luns is 1 or more rpc_lun instead of 1 or more bdev_name_id_pairs",
+      "revId": "6ebef5c59360e6e7aa29b78bf66776e2faa7921c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ce1b54d2_53cf4237",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 487,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-20T23:11:12Z",
+      "side": 1,
+      "message": "Thank you, make sense to me. I change it to rpc_lun.\n\nrpc_bdev_name_id_pair was derived from the script of construct_target_node in scripts/rpc.py. bdev_name_id_pair was used there. I keep using bdev_name_id_pairs in scripts/rpc.py for now.",
+      "parentUuid": "882a8f2b_b1246382",
       "revId": "6ebef5c59360e6e7aa29b78bf66776e2faa7921c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
