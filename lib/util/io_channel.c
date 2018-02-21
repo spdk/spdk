@@ -44,6 +44,16 @@
 #include <pthread_np.h>
 #endif
 
+/*
+ * SPDK has tried to limit dependence on thread-local storage for use
+ * cases where SPDK libraries are used in non-POSIX userspace environments.
+ * So use __thread here with a fallback implementation if SPDK_FORBID_TLS
+ * is defined for a non-POSIX userspace environment.
+ */
+#ifndef SPDK_FORBID_TLS
+static __thread struct spdk_thread *g_thread = NULL;
+#endif
+
 static pthread_mutex_t g_devlist_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 struct io_device {
@@ -76,6 +86,9 @@ static TAILQ_HEAD(, spdk_thread) g_threads = TAILQ_HEAD_INITIALIZER(g_threads);
 static struct spdk_thread *
 _get_thread(void)
 {
+#ifndef SPDK_FORBID_TLS
+	return g_thread;
+#else
 	pthread_t thread_id;
 	struct spdk_thread *thread;
 
@@ -89,6 +102,7 @@ _get_thread(void)
 	}
 
 	return NULL;
+#endif
 }
 
 static void
@@ -141,6 +155,10 @@ spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 
 	pthread_mutex_unlock(&g_devlist_mutex);
 
+#ifndef SPDK_FORBID_TLS
+	g_thread = thread;
+#endif
+
 	return thread;
 }
 
@@ -148,6 +166,10 @@ void
 spdk_free_thread(void)
 {
 	struct spdk_thread *thread;
+
+#ifndef SPDK_FORBID_TLS
+	g_thread = NULL;
+#endif
 
 	pthread_mutex_lock(&g_devlist_mutex);
 
