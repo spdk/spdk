@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f313330f_bdab9a91",
+        "filename": "scripts/rpc/iscsi.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-21T20:03:06Z",
+      "side": 1,
+      "message": "Rather than converting int to bool here, it would probably be easier to just make the chap_disbled, etc. flags into Python boolean values in the argparse code.\n\nYou can achieve this using action\u003d\u0027store_true\u0027 in the parser setup code in scripts/rpc.py instead of type\u003dint.\n\nWe should probably also make this change for the header_digest and data_digest fields in the previous review.",
+      "revId": "a931ee76c0d42f6e8149792946fd3acd9c86d679",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
