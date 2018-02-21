@@ -16,6 +16,24 @@
       "revId": "9552f6829552cbb4aa8645c00bb050e6d2d73229",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b64b2afa_31d6eb9a",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-21T19:28:40Z",
+      "side": 1,
+      "message": "No, this will only affect future Connect commands in the current implementation.\n\nWe could add support for removing existing connections if they are no longer allowed, but I think that should be done as a separate patch.",
+      "parentUuid": "6c640043_6a4b34d2",
+      "revId": "9552f6829552cbb4aa8645c00bb050e6d2d73229",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
