@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "82902840_9c9f8d36",
+        "filename": "test/vhost/hotplug/scsi_hotplug.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-21T14:27:34Z",
+      "side": 1,
+      "message": "please use double brackets",
+      "range": {
+        "startLine": 66,
+        "startChar": 2,
+        "endLine": 66,
+        "endChar": 4
+      },
+      "revId": "6952a73265720a8569cffa9435c59b40b0e0cbb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dd4c501f_40fe6951",
+        "filename": "test/vhost/hotplug/scsi_hotplug.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-21T14:27:34Z",
+      "side": 1,
+      "message": "please use double brackets",
+      "range": {
+        "startLine": 77,
+        "startChar": 3,
+        "endLine": 77,
+        "endChar": 4
+      },
+      "revId": "6952a73265720a8569cffa9435c59b40b0e0cbb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
