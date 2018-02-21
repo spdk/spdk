@@ -49,7 +49,7 @@ for i in `seq 1 $TGT_NR`; do
 		PMEM_BDEVS+="$bdevs_name "
 		luns+="$bdevs_name:$((j-1)) "
 	done
-	$rpc_py construct_target_node Target$i Target${i}_alias "$luns" "1:$INITIATOR_TAG " 256 1 0 0 0
+	$rpc_py construct_target_node Target$i Target${i}_alias "$luns" "1:$INITIATOR_TAG " 256 -d
 done
 timing_exit setup
 sleep 1

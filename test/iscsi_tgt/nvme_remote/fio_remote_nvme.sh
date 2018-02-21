@@ -59,7 +59,7 @@ $rpc_py -s "$iscsi_rpc_addr" add_initiator_group 1 ANY $INITIATOR_IP/32
 if [ $1 -eq 0 ]; then
 	$rpc_py -s "$iscsi_rpc_addr" construct_nvme_bdev -b "Nvme0" -t "rdma" -f "ipv4" -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -n nqn.2016-06.io.spdk:cnode1
 fi
-$rpc_py -s "$iscsi_rpc_addr" construct_target_node Target1 Target1_alias 'Nvme0n1:0' '1:1' 64 1 0 0 0
+$rpc_py -s "$iscsi_rpc_addr" construct_target_node Target1 Target1_alias 'Nvme0n1:0' '1:1' 64 -d
 sleep 1
 
 echo "Logging in to iSCSI target."

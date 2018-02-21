@@ -34,12 +34,16 @@ def construct_target_node(args):
         'pg_ig_maps': pg_ig_maps,
         'luns': luns,
         'queue_depth': args.queue_depth,
-        'chap_disabled': args.chap_disabled,
-        'chap_required': args.chap_required,
-        'chap_mutual': args.chap_mutual,
-        'chap_auth_group': args.chap_auth_group,
     }
 
+    if args.chap_group:
+        params['chap_group'] = args.chap_group
+    if args.disable_chap:
+        params['disable_chap'] = args.disable_chap
+    if args.require_chap:
+        params['require_chap'] = args.require_chap
+    if args.mutual_chap:
+        params['mutual_chap'] = args.mutual_chap
     if args.header_digest:
         params['header_digest'] = args.header_digest
     if args.data_digest:
