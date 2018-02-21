@@ -976,6 +976,72 @@ spdk_nvmf_ctrlr_identify_active_ns_list(struct spdk_nvmf_subsystem *subsystem,
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
+static void
+_add_ns_id_desc(void **buf_ptr, size_t *buf_remain,
+		enum spdk_nvme_nidt type,
+		const void *data, size_t data_size)
+{
+	struct spdk_nvme_ns_id_desc *desc;
+	size_t desc_size = sizeof(*desc) + data_size;
+
+	/*
+	 * These should never fail in practice, since all valid NS ID descriptors
+	 * should be defined so that they fit in the available 4096-byte buffer.
+	 */
+	assert(data_size > 0);
+	assert(data_size <= UINT8_MAX);
+	assert(desc_size < *buf_remain);
+	if (data_size == 0 || data_size > UINT8_MAX || desc_size > *buf_remain) {
+		return;
+	}
+
+	desc = *buf_ptr;
+	desc->nidt = type;
+	desc->nidl = data_size;
+	memcpy(desc->nid, data, data_size);
+
+	*buf_ptr += desc_size;
+	*buf_remain -= desc_size;
+}
+
+static int
+spdk_nvmf_ctrlr_identify_ns_id_descriptor_list(
+	struct spdk_nvmf_subsystem *subsystem,
+	struct spdk_nvme_cmd *cmd,
+	struct spdk_nvme_cpl *rsp,
+	void *id_desc_list, size_t id_desc_list_size)
+{
+	struct spdk_nvmf_ns *ns;
+	size_t buf_remain = id_desc_list_size;
+	void *buf_ptr = id_desc_list;
+
+	ns = _spdk_nvmf_subsystem_get_ns(subsystem, cmd->nsid);
+	if (ns == NULL || ns->bdev == NULL) {
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+#define ADD_ID_DESC(type, data) \
+	do { \
+		if (!spdk_mem_all_zero(data, sizeof(data))) { \
+			_add_ns_id_desc(&buf_ptr, &buf_remain, type, data, sizeof(data)); \
+		} \
+	} while (0)
+
+	ADD_ID_DESC(SPDK_NVME_NIDT_EUI64, ns->opts.eui64);
+	ADD_ID_DESC(SPDK_NVME_NIDT_NGUID, ns->opts.nguid);
+
+	/*
+	 * The list is automatically 0-terminated because controller to host buffers in
+	 * admin commands always get zeroed in spdk_nvmf_ctrlr_process_admin_cmd().
+	 */
+
+#undef ADD_ID_DESC
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
 static int
 spdk_nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
 {
@@ -1007,6 +1073,8 @@ spdk_nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
 		return spdk_nvmf_ctrlr_identify_ctrlr(ctrlr, req->data);
 	case SPDK_NVME_IDENTIFY_ACTIVE_NS_LIST:
 		return spdk_nvmf_ctrlr_identify_active_ns_list(subsystem, cmd, rsp, req->data);
+	case SPDK_NVME_IDENTIFY_NS_ID_DESCRIPTOR_LIST:
+		return spdk_nvmf_ctrlr_identify_ns_id_descriptor_list(subsystem, cmd, rsp, req->data, req->length);
 	default:
 		goto invalid_cns;
 	}
