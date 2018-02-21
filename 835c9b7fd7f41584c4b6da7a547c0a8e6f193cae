@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0c12641e_21c5a5ef",
+        "filename": "lib/event/rpc/subsystem_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-21T01:40:13Z",
+      "side": 1,
+      "message": "the top layer should be object?",
+      "range": {
+        "startLine": 78,
+        "startChar": 0,
+        "endLine": 79,
+        "endChar": 32
+      },
+      "revId": "835c9b7fd7f41584c4b6da7a547c0a8e6f193cae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "736e73b6_7f494342",
+        "filename": "lib/event/rpc/subsystem_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-21T01:40:13Z",
+      "side": 1,
+      "message": "Just outputting the following may be enough?\n\n{\n  \"dependency\":\n  [\n    {\n       \"name\": \"iscsi\",\n       \"depends_on\": \"scsi\"\n    },\n    {\n      \"name\": \"nbd\",\n      \"depends_on\": \"bdev\"\n    }\n  ]\n}",
+      "range": {
+        "startLine": 80,
+        "startChar": 0,
+        "endLine": 82,
+        "endChar": 2
+      },
+      "revId": "835c9b7fd7f41584c4b6da7a547c0a8e6f193cae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f0b35a3d_5791b0ec",
+        "filename": "lib/event/subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-21T01:40:13Z",
+      "side": 1,
+      "message": "Do we have to allocate here?\nPython is easier than C to extract items from the list.",
+      "range": {
+        "startLine": 264,
+        "startChar": 0,
+        "endLine": 264,
+        "endChar": 53
+      },
+      "revId": "835c9b7fd7f41584c4b6da7a547c0a8e6f193cae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2687129c_65293351",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-21T01:40:13Z",
+      "side": 1,
+      "message": "It looks that\n-  when --subsystem is skipped, output just list of all subsystems.\n-  when --subsystem is specified, output list of depend_on\u0027s to the subsystem.\n\nTwo separated RPCs will be easier to handle?\n-  get_subsystems.\n-  get_subsystem_dependencies.",
+      "range": {
+        "startLine": 396,
+        "startChar": 0,
+        "endLine": 396,
+        "endChar": 138
+      },
+      "revId": "835c9b7fd7f41584c4b6da7a547c0a8e6f193cae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
