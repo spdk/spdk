@@ -3229,6 +3229,11 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 	spdk_blob_id		id;
 	int rc;
 
+	if (spdk_get_thread() != bs->md_thread) {
+		cb_fn(cb_arg, SPDK_BLOBID_INVALID, -EPERM);
+		return;
+	}
+
 	page_idx = spdk_bit_array_find_first_clear(bs->used_md_pages, 0);
 	if (page_idx >= spdk_bit_array_capacity(bs->used_md_pages)) {
 		cb_fn(cb_arg, 0, -ENOMEM);
@@ -3298,7 +3303,9 @@ spdk_blob_resize(struct spdk_blob *blob, uint64_t sz)
 	int			rc;
 
 	assert(blob != NULL);
-	assert(spdk_get_thread() == blob->bs->md_thread);
+	if (spdk_get_thread() != blob->bs->md_thread) {
+		return -EPERM;
+	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Resizing blob %lu to %lu clusters\n", blob->id, sz);
 
@@ -3400,6 +3407,10 @@ spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 	spdk_bs_sequence_t 	*seq;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Deleting blob %lu\n", blobid);
+	if (spdk_get_thread() != bs->md_thread) {
+		cb_fn(cb_arg, -EPERM);
+		return;
+	}
 
 	cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
 	cpl.u.blob_basic.cb_fn = cb_fn;
@@ -3446,6 +3457,10 @@ void spdk_bs_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 	uint32_t			page_num;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Opening blob %lu\n", blobid);
+	if (spdk_get_thread() != bs->md_thread) {
+		cb_fn(cb_arg, NULL, -EPERM);
+		return;
+	}
 
 	page_num = _spdk_bs_blobid_to_page(blobid);
 	if (spdk_bit_array_get(bs->used_blobids, page_num) == false) {
@@ -3486,7 +3501,10 @@ void spdk_bs_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 /* START spdk_blob_set_read_only */
 int spdk_blob_set_read_only(struct spdk_blob *blob)
 {
-	assert(spdk_get_thread() == blob->bs->md_thread);
+	assert(blob != NULL);
+	if (spdk_get_thread() != blob->bs->md_thread) {
+		return -EPERM;
+	}
 
 	blob->data_ro_flags |= SPDK_BLOB_READ_ONLY;
 
@@ -3533,7 +3551,10 @@ void
 spdk_blob_sync_md(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	assert(blob != NULL);
-	assert(spdk_get_thread() == blob->bs->md_thread);
+	if (spdk_get_thread() != blob->bs->md_thread) {
+		cb_fn(cb_arg, -EPERM);
+		return;
+	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Syncing blob %lu\n", blob->id);
 
@@ -3653,7 +3674,10 @@ void spdk_blob_close(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *
 	spdk_bs_sequence_t	*seq;
 
 	assert(blob != NULL);
-	assert(spdk_get_thread() == blob->bs->md_thread);
+	if (spdk_get_thread() != blob->bs->md_thread) {
+		cb_fn(cb_arg, -EPERM);
+		return;
+	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Closing blob %lu\n", blob->id);
 
@@ -3873,6 +3897,9 @@ _spdk_blob_set_xattr(struct spdk_blob *blob, const char *name, const void *value
 	struct spdk_xattr 	*xattr;
 
 	assert(blob != NULL);
+	if (spdk_get_thread() != blob->bs->md_thread) {
+		return -EPERM;
+	}
 
 	assert(blob->state != SPDK_BLOB_STATE_LOADING &&
 	       blob->state != SPDK_BLOB_STATE_SYNCING);
@@ -3930,6 +3957,9 @@ _spdk_blob_remove_xattr(struct spdk_blob *blob, const char *name, bool internal)
 	struct spdk_xattr	*xattr;
 
 	assert(blob != NULL);
+	if (spdk_get_thread() != blob->bs->md_thread) {
+		return -EPERM;
+	}
 
 	assert(blob->state != SPDK_BLOB_STATE_LOADING &&
 	       blob->state != SPDK_BLOB_STATE_SYNCING);
@@ -3970,6 +4000,10 @@ _spdk_blob_get_xattr_value(struct spdk_blob *blob, const char *name,
 {
 	struct spdk_xattr	*xattr;
 	struct spdk_xattr_tailq *xattrs;
+
+	if (spdk_get_thread() != blob->bs->md_thread) {
+		return -EPERM;
+	}
 
 	xattrs = internal ? &blob->xattrs_internal : &blob->xattrs;
 
@@ -4020,6 +4054,11 @@ _spdk_blob_get_xattr_names(struct spdk_xattr_tailq *xattrs, struct spdk_xattr_na
 int
 spdk_blob_get_xattr_names(struct spdk_blob *blob, struct spdk_xattr_names **names)
 {
+	assert(blob != NULL);
+	if (spdk_get_thread() != blob->bs->md_thread) {
+		return -EPERM;
+	}
+
 	return _spdk_blob_get_xattr_names(&blob->xattrs, names);
 }
 
