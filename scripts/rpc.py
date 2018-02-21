@@ -142,10 +142,10 @@ if __name__ == "__main__":
         'chap_mutual', help='CHAP authentication should be mutual/bidirectional.', type=int)
     p.add_argument('chap_auth_group', help="""Authentication group ID for this target node.
     *** Authentication group must be precreated ***""", type=int)
-    p.add_argument('-H', dest='header_digest',
-                   help='Header Digest should be required for this target node.', type=int, required=False)
-    p.add_argument('-D', dest='data_digest',
-                   help='Data Digest should be required for this target node.', type=int, required=False)
+    p.add_argument('-H', '--header-digest',
+                   help='Header Digest should be required for this target node.', action='store_true')
+    p.add_argument('-D', '--data-digest',
+                   help='Data Digest should be required for this target node.', action='store_true')
     p.set_defaults(func=rpc.iscsi.construct_target_node)
 
     p = subparsers.add_parser('target_node_add_lun', help='Add LUN to the target node')
