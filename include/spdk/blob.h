@@ -47,7 +47,7 @@
  * The metadata thread is the thread which called spdk_bs_init() or
  * spdk_bs_load().
  *
- * Functions starting with the prefix "spdk_bs_io" are passed a channel
+ * Functions starting with the prefix "spdk_blob_io" are passed a channel
  * as an argument, and channels may only be used from the thread they were
  * created on. See \ref spdk_bs_alloc_io_channel.
  *
@@ -280,32 +280,55 @@ struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs);
 void spdk_bs_free_io_channel(struct spdk_io_channel *channel);
 
 /* Write data to a blob. Offset is in pages from the beginning of the blob. */
-void spdk_bs_io_write_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
-			   void *payload, uint64_t offset, uint64_t length,
-			   spdk_blob_op_complete cb_fn, void *cb_arg);
+void spdk_blob_io_write(struct spdk_blob *blob, struct spdk_io_channel *channel,
+			void *payload, uint64_t offset, uint64_t length,
+			spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /* Read data from a blob. Offset is in pages from the beginning of the blob. */
-void spdk_bs_io_read_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
-			  void *payload, uint64_t offset, uint64_t length,
-			  spdk_blob_op_complete cb_fn, void *cb_arg);
+void spdk_blob_io_read(struct spdk_blob *blob, struct spdk_io_channel *channel,
+		       void *payload, uint64_t offset, uint64_t length,
+		       spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /* Write data to a blob. Offset is in pages from the beginning of the blob. */
-void spdk_bs_io_writev_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
-			    struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
-			    spdk_blob_op_complete cb_fn, void *cb_arg);
+void spdk_blob_io_writev(struct spdk_blob *blob, struct spdk_io_channel *channel,
+			 struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
+			 spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /* Read data from a blob. Offset is in pages from the beginning of the blob. */
-void spdk_bs_io_readv_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
-			   struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
-			   spdk_blob_op_complete cb_fn, void *cb_arg);
+void spdk_blob_io_readv(struct spdk_blob *blob, struct spdk_io_channel *channel,
+			struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
+			spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /* Unmap area of a blob. Offset is in pages from the beginning of the blob. */
-void spdk_bs_io_unmap_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
-			   uint64_t offset, uint64_t length, spdk_blob_op_complete cb_fn, void *cb_arg);
+void spdk_blob_io_unmap(struct spdk_blob *blob, struct spdk_io_channel *channel,
+			uint64_t offset, uint64_t length, spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /* Write zeros into area of a blob. Offset is in pages from the beginning of the blob. */
+void spdk_blob_io_write_zeroes(struct spdk_blob *blob, struct spdk_io_channel *channel,
+			       uint64_t offset, uint64_t length, spdk_blob_op_complete cb_fn, void *cb_arg);
+
+/*
+ * The following spdk_bs_io prefixed functions are deprecated in favor of their corresponding spdk_blob_io
+ * function above.
+ */
+void spdk_bs_io_write_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
+			   void *payload, uint64_t offset, uint64_t length,
+			   spdk_blob_op_complete cb_fn, void *cb_arg) __attribute__((deprecated));
+void spdk_bs_io_read_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
+			  void *payload, uint64_t offset, uint64_t length,
+			  spdk_blob_op_complete cb_fn, void *cb_arg) __attribute__((deprecated));
+void spdk_bs_io_writev_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
+			    struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
+			    spdk_blob_op_complete cb_fn, void *cb_arg) __attribute__((deprecated));
+void spdk_bs_io_readv_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
+			   struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
+			   spdk_blob_op_complete cb_fn, void *cb_arg) __attribute__((deprecated));
+void spdk_bs_io_unmap_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
+			   uint64_t offset, uint64_t length,
+			   spdk_blob_op_complete cb_fn, void *cb_arg)  __attribute__((deprecated));
 void spdk_bs_io_write_zeroes_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
-				  uint64_t offset, uint64_t length, spdk_blob_op_complete cb_fn, void *cb_arg);
+				  uint64_t offset, uint64_t length,
+				  spdk_blob_op_complete cb_fn, void *cb_arg)  __attribute__((deprecated));
 
 /* Iterate through all blobs */
 void spdk_bs_iter_first(struct spdk_blob_store *bs,

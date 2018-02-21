@@ -188,9 +188,9 @@ read_blob(struct hello_context_t *hello_context)
 	}
 
 	/* Issue the read and compare the results in the callback. */
-	spdk_bs_io_read_blob(hello_context->blob, hello_context->channel,
-			     hello_context->read_buff, 0, 1, read_complete,
-			     hello_context);
+	spdk_blob_io_read(hello_context->blob, hello_context->channel,
+			  hello_context->read_buff, 0, 1, read_complete,
+			  hello_context);
 }
 
 /*
@@ -242,9 +242,9 @@ blob_write(struct hello_context_t *hello_context)
 	}
 
 	/* Let's perform the write, 1 page at offset 0. */
-	spdk_bs_io_write_blob(hello_context->blob, hello_context->channel,
-			      hello_context->write_buff,
-			      0, 1, write_complete, hello_context);
+	spdk_blob_io_write(hello_context->blob, hello_context->channel,
+			   hello_context->write_buff,
+			   0, 1, write_complete, hello_context);
 }
 
 /*

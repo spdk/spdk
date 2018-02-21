@@ -604,7 +604,7 @@ lvol_unmap(struct spdk_lvol *lvol, struct spdk_io_channel *ch, struct spdk_bdev_
 	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL,
 		     "Vbdev doing unmap at offset %" PRIu64 " using %" PRIu64 " pages on device %s\n", start_page,
 		     num_pages, bdev_io->bdev->name);
-	spdk_bs_io_unmap_blob(blob, ch, start_page, num_pages, lvol_op_comp, task);
+	spdk_blob_io_unmap(blob, ch, start_page, num_pages, lvol_op_comp, task);
 }
 
 static void
@@ -622,7 +622,7 @@ lvol_write_zeroes(struct spdk_lvol *lvol, struct spdk_io_channel *ch, struct spd
 	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL,
 		     "Vbdev doing write zeros at offset %" PRIu64 " using %" PRIu64 " pages on device %s\n", start_page,
 		     num_pages, bdev_io->bdev->name);
-	spdk_bs_io_write_zeroes_blob(blob, ch, start_page, num_pages, lvol_op_comp, task);
+	spdk_blob_io_write_zeroes(blob, ch, start_page, num_pages, lvol_op_comp, task);
 }
 
 static void
@@ -641,9 +641,8 @@ lvol_read(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL,
 		     "Vbdev doing read at offset %" PRIu64 " using %" PRIu64 " pages on device %s\n", start_page,
 		     num_pages, bdev_io->bdev->name);
-	spdk_bs_io_readv_blob(blob, ch, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, start_page,
-			      num_pages,
-			      lvol_op_comp, task);
+	spdk_blob_io_readv(blob, ch, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, start_page,
+			   num_pages, lvol_op_comp, task);
 }
 
 static void
@@ -661,8 +660,8 @@ lvol_write(struct spdk_lvol *lvol, struct spdk_io_channel *ch, struct spdk_bdev_
 	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL,
 		     "Vbdev doing write at offset %" PRIu64 " using %" PRIu64 " pages on device %s\n", start_page,
 		     num_pages, bdev_io->bdev->name);
-	spdk_bs_io_writev_blob(blob, ch, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, start_page,
-			       num_pages, lvol_op_comp, task);
+	spdk_blob_io_writev(blob, ch, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, start_page,
+			    num_pages, lvol_op_comp, task);
 }
 
 static int
