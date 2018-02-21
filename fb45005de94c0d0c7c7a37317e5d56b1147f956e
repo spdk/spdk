@@ -16,6 +16,24 @@
       "revId": "fb45005de94c0d0c7c7a37317e5d56b1147f956e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b05170d_aa6a6c08",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-02-21T13:01:11Z",
+      "side": 1,
+      "message": "Uncompressed file is 3 times larger so we probably will not gain more time. I\u0027ve added ssh pipe and by comparing results:\nno compression:\nhttp://spdk.intel.com/public/spdk/builds/review/e2068bda608297c83feea2aa068946ff8490f2d3.1519216008/fedora-07/timing.svg\nwith compression:\nhttp://spdk.intel.com/public/spdk/builds/review/1d3fc35746e83f4fa733366fb6006d0e7d11d9b8.1519216578/fedora-07/timing.svg\nwe can see that vm_scp_spdk takes less time with compression enabled.\nand for comparison, timing without this patch\nhttp://spdk.intel.com/public/spdk/builds/review/6952a73265720a8569cffa9435c59b40b0e0cbb6.1519213042/fedora-07/timing.svg",
+      "parentUuid": "b78fb42e_acf396ec",
+      "revId": "fb45005de94c0d0c7c7a37317e5d56b1147f956e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
