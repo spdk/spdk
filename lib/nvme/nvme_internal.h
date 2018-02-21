@@ -50,6 +50,7 @@
 #include "spdk/util.h"
 #include "spdk/nvme_intel.h"
 #include "spdk/nvmf_spec.h"
+#include "spdk/string.h"
 
 #include "spdk_internal/assert.h"
 #include "spdk_internal/log.h"

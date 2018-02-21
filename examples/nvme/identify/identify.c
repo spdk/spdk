@@ -40,6 +40,7 @@
 #include "spdk/nvme_intel.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/pci_ids.h"
+#include "spdk/string.h"
 #include "spdk/util.h"
 
 #define MAX_DISCOVERY_LOG_ENTRIES	((uint64_t)1000)
@@ -125,19 +126,6 @@ hex_dump(const void *data, size_t size)
 			break;
 		}
 	}
-}
-
-static bool
-all_zero(const void *data, size_t size)
-{
-	const uint8_t *buf = data;
-
-	while (size--) {
-		if (*buf++ != 0) {
-			return false;
-		}
-	}
-	return true;
 }
 
 static void
@@ -521,12 +509,12 @@ print_namespace(struct spdk_nvme_ns *ns)
 	if (nsdata->noiob) {
 		printf("Optimal I/O Boundary:        %u blocks\n", nsdata->noiob);
 	}
-	if (!all_zero(nsdata->nguid, sizeof(nsdata->nguid))) {
+	if (!spdk_mem_all_zero(nsdata->nguid, sizeof(nsdata->nguid))) {
 		printf("NGUID:                       ");
 		print_hex_be(nsdata->nguid, sizeof(nsdata->nguid));
 		printf("\n");
 	}
-	if (!all_zero(&nsdata->eui64, sizeof(nsdata->eui64))) {
+	if (!spdk_mem_all_zero(&nsdata->eui64, sizeof(nsdata->eui64))) {
 		printf("EUI64:                       ");
 		print_hex_be(&nsdata->eui64, sizeof(nsdata->eui64));
 		printf("\n");
