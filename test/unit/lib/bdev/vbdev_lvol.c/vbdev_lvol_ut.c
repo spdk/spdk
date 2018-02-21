@@ -415,32 +415,22 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 }
 
 void
-spdk_bs_io_read_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
-		     void *payload, uint64_t offset, uint64_t length,
-		     spdk_blob_op_complete cb_fn, void *cb_arg)
+spdk_blob_io_read(struct spdk_blob *blob, struct spdk_io_channel *channel,
+		  void *payload, uint64_t offset, uint64_t length,
+		  spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 }
 
 void
-spdk_bs_io_write_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
-		      void *payload, uint64_t offset, uint64_t length,
-		      spdk_blob_op_complete cb_fn, void *cb_arg)
+spdk_blob_io_write(struct spdk_blob *blob, struct spdk_io_channel *channel,
+		   void *payload, uint64_t offset, uint64_t length,
+		   spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 }
 
 void
-spdk_bs_io_unmap_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
-		      uint64_t offset, uint64_t length, spdk_blob_op_complete cb_fn, void *cb_arg)
-{
-	CU_ASSERT(blob == NULL);
-	CU_ASSERT(channel == g_ch);
-	CU_ASSERT(offset == g_io->u.bdev.offset_blocks);
-	CU_ASSERT(length == g_io->u.bdev.num_blocks);
-}
-
-void
-spdk_bs_io_write_zeroes_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
-			     uint64_t offset, uint64_t length, spdk_blob_op_complete cb_fn, void *cb_arg)
+spdk_blob_io_unmap(struct spdk_blob *blob, struct spdk_io_channel *channel,
+		   uint64_t offset, uint64_t length, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	CU_ASSERT(blob == NULL);
 	CU_ASSERT(channel == g_ch);
@@ -449,9 +439,8 @@ spdk_bs_io_write_zeroes_blob(struct spdk_blob *blob, struct spdk_io_channel *cha
 }
 
 void
-spdk_bs_io_writev_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
-		       struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
-		       spdk_blob_op_complete cb_fn, void *cb_arg)
+spdk_blob_io_write_zeroes(struct spdk_blob *blob, struct spdk_io_channel *channel,
+			  uint64_t offset, uint64_t length, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	CU_ASSERT(blob == NULL);
 	CU_ASSERT(channel == g_ch);
@@ -460,9 +449,20 @@ spdk_bs_io_writev_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
 }
 
 void
-spdk_bs_io_readv_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
-		      struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
-		      spdk_blob_op_complete cb_fn, void *cb_arg)
+spdk_blob_io_writev(struct spdk_blob *blob, struct spdk_io_channel *channel,
+		    struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
+		    spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	CU_ASSERT(blob == NULL);
+	CU_ASSERT(channel == g_ch);
+	CU_ASSERT(offset == g_io->u.bdev.offset_blocks);
+	CU_ASSERT(length == g_io->u.bdev.num_blocks);
+}
+
+void
+spdk_blob_io_readv(struct spdk_blob *blob, struct spdk_io_channel *channel,
+		   struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
+		   spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	CU_ASSERT(blob == NULL);
 	CU_ASSERT(channel == g_ch);
