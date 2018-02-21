@@ -22,6 +22,30 @@
       "revId": "437fd7c04cccfdef7c990b6cc41b68fbec5782ba",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6bbb1816_e65924e0",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2209,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-21T20:40:44Z",
+      "side": 1,
+      "message": "What does lvolstore do today if it gets an error while iterating through all of the blobs?",
+      "parentUuid": "448223c8_a5360c80",
+      "range": {
+        "startLine": 2209,
+        "startChar": 1,
+        "endLine": 2209,
+        "endChar": 9
+      },
+      "revId": "437fd7c04cccfdef7c990b6cc41b68fbec5782ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
