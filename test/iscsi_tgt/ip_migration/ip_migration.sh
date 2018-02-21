@@ -61,7 +61,7 @@ done
 rpc_first_addr="/var/tmp/spdk0.sock"
 rpc_add_ip $rpc_first_addr $MIGRATION_ADDRESS
 $rpc_py -s $rpc_first_addr add_portal_group 1 $MIGRATION_ADDRESS:$PORT
-$rpc_py -s $rpc_first_addr construct_target_node target1 target1_alias 'Malloc0:0' '1:1' 64 1 0 0 0
+$rpc_py -s $rpc_first_addr construct_target_node target1 target1_alias 'Malloc0:0' '1:1' 64 -d
 
 sleep 1
 iscsiadm -m discovery -t sendtargets -p $MIGRATION_ADDRESS:$PORT
@@ -79,7 +79,7 @@ $rpc_py -s $rpc_first_addr kill_instance SIGTERM
 rpc_second_addr="/var/tmp/spdk1.sock"
 rpc_add_ip $rpc_second_addr $MIGRATION_ADDRESS
 $rpc_py -s $rpc_second_addr add_portal_group 1 $MIGRATION_ADDRESS:$PORT
-$rpc_py -s $rpc_second_addr construct_target_node target1 target1_alias 'Malloc0:0' '1:1' 64 1 0 0 0
+$rpc_py -s $rpc_second_addr construct_target_node target1 target1_alias 'Malloc0:0' '1:1' 64 -d
 
 wait $fiopid
 

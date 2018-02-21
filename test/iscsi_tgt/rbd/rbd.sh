@@ -41,7 +41,7 @@ $rpc_py get_bdevs
 # "1:2" ==> map PortalGroup1 to InitiatorGroup2
 # "64" ==> iSCSI queue depth 64
 # "1 0 0 0" ==> disable CHAP authentication
-$rpc_py construct_target_node Target3 Target3_alias 'Ceph0:0' '1:2' 64 1 0 0 0
+$rpc_py construct_target_node Target3 Target3_alias 'Ceph0:0' '1:2' 64 -d
 sleep 1
 
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$PORT
