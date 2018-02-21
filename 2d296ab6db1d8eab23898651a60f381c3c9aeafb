@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "23fe96bc_a2a7b3d6",
+        "filename": "scripts/rpc/iscsi.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-21T20:04:36Z",
+      "side": 1,
+      "message": "Instead of keeping the header_digest and data_digest params as int and converting here, we can make the params Python booleans.  You can change the argparse setup code in scripts/rpc.py to use action\u003d\u0027store_true\u0027 instead of type\u003dint.",
+      "revId": "2d296ab6db1d8eab23898651a60f381c3c9aeafb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "71158d4a_ef1afa3f",
+        "filename": "test/iscsi_tgt/rpc_config/rpc_config.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-21T20:04:36Z",
+      "side": 1,
+      "message": "If we change the argparse types to boolean, this shouldn\u0027t be necessary.",
+      "revId": "2d296ab6db1d8eab23898651a60f381c3c9aeafb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
