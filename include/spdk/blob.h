@@ -263,7 +263,7 @@ int spdk_blob_resize(struct spdk_blob *blob, size_t sz);
  * These changes do not take effect until
  * spdk_blob_sync_md() is called. */
 
-void spdk_blob_set_read_only(struct spdk_blob *blob);
+int spdk_blob_set_read_only(struct spdk_blob *blob);
 
 /* Sync a blob */
 /* Make a blob persistent. This applies to resize, set xattr,
