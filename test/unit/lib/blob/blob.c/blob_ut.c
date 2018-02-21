@@ -534,6 +534,7 @@ blob_read_only(void)
 	struct spdk_blob *blob;
 	struct spdk_bs_opts opts;
 	spdk_blob_id blobid;
+	int rc;
 
 	dev = init_dev();
 	spdk_bs_opts_init(&opts);
@@ -554,7 +555,8 @@ blob_read_only(void)
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob = g_blob;
 
-	spdk_blob_set_read_only(blob);
+	rc = spdk_blob_set_read_only(blob);
+	CU_ASSERT(rc == 0);
 
 	CU_ASSERT(blob->data_ro == false);
 	CU_ASSERT(blob->md_ro == false);
