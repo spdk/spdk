@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b78fb42e_acf396ec",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-21T00:35:44Z",
+      "side": 1,
+      "message": "Is the compression actually helping here, or is it just the fact that we are copying one file and excluding .git, *.o, etc.?  I would expect that compression will just make this slower overall.\n\nCan you do a test with the tar command but no compression and see how the times compare?\n\nIt might also be good to put the tarball in /tmp (or even pipe the output of tar directly into the SSH command) to avoid needing to write it to disk.",
+      "revId": "fb45005de94c0d0c7c7a37317e5d56b1147f956e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
