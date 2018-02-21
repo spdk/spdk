@@ -49,7 +49,7 @@
 
 #define MAX_EVENTS_PER_POLL 32
 
-STAILQ_HEAD(, spdk_net_impl) g_net_impls = STAILQ_HEAD_INITIALIZER(g_net_impls);
+static STAILQ_HEAD(, spdk_net_impl) g_net_impls = STAILQ_HEAD_INITIALIZER(g_net_impls);
 
 struct spdk_sock {
 	struct spdk_net_impl	*net_impl;
