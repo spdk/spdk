@@ -46,6 +46,30 @@
       "revId": "437fd7c04cccfdef7c990b6cc41b68fbec5782ba",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "05d96567_665b2b69",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2209,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-21T20:49:31Z",
+      "side": 1,
+      "message": "It unloads blobstore and lvol store is being removed. User gets error.",
+      "parentUuid": "6bbb1816_e65924e0",
+      "range": {
+        "startLine": 2209,
+        "startChar": 1,
+        "endLine": 2209,
+        "endChar": 9
+      },
+      "revId": "437fd7c04cccfdef7c990b6cc41b68fbec5782ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
