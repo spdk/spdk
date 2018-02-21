@@ -71,6 +71,30 @@
     },
     {
       "key": {
+        "uuid": "1fe83d88_a0a20269",
+        "filename": "lib/event/subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-21T08:27:18Z",
+      "side": 1,
+      "message": "Here, calculating the number of subsystems and then alloc() will be simple?\nOr move this for_each loop into subsystem_rpc.c and write name into the JSON-array one by one?",
+      "parentUuid": "f0b35a3d_5791b0ec",
+      "range": {
+        "startLine": 264,
+        "startChar": 0,
+        "endLine": 264,
+        "endChar": 53
+      },
+      "revId": "835c9b7fd7f41584c4b6da7a547c0a8e6f193cae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2687129c_65293351",
         "filename": "scripts/rpc.py",
         "patchSetId": 2
