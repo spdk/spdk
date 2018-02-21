@@ -34,6 +34,24 @@
       "revId": "fb45005de94c0d0c7c7a37317e5d56b1147f956e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1bf5bba4_408af3b4",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-02-21T15:17:18Z",
+      "side": 1,
+      "message": "Actually there is very little difference with or without piping the file over ssh",
+      "parentUuid": "4b05170d_aa6a6c08",
+      "revId": "fb45005de94c0d0c7c7a37317e5d56b1147f956e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
