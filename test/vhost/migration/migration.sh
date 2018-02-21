@@ -70,6 +70,11 @@ function vm_migrate()
 	local target_vm_dir="$(readlink -e $from_vm_dir/vm_migrate_to)"
 	local target_vm="$(basename $target_vm_dir)"
 	local target_vm_migration_port="$(cat $target_vm_dir/migration_port)"
+	if [[ -n "$2" ]]; then
+		local target_ip=$2
+	else
+		local target_ip="127.0.0.1"
+	fi
 
 	# Sanity check if target VM (QEMU) is configured to accept source VM (QEMU) migration
 	if [[ "$(readlink -e ${target_vm_dir}/vm_incoming)" != "$(readlink -e ${from_vm_dir})" ]]; then
@@ -79,7 +84,7 @@ function vm_migrate()
 	notice "Migrating VM $1 to VM "$(basename $target_vm_dir)
 	echo -e \
 		"migrate_set_speed 1g\n" \
-		"migrate tcp:127.0.0.1:$target_vm_migration_port\n" \
+		"migrate tcp:$target_ip:$target_vm_migration_port\n" \
 		"info migrate\n" \
 		"quit" | vm_monitor_send $1 "$from_vm_dir/migration_result"
 
@@ -89,9 +94,14 @@ function vm_migrate()
 		fail "Migration failed:\n"
 	fi
 
-	if ! vm_os_booted $target_vm; then
-		fail "VM$target_vm is not running"
-		cat $target_vm $target_vm_dir/cont_result
+	# Don't perform the following check if target VM is on remote server
+	# as we won't have access to it.
+	# If you need this check then perform it on your own.
+	if [[ "$target_ip" == "127.0.0.1" ]]; then
+		if ! vm_os_booted $target_vm; then
+			fail "VM$target_vm is not running"
+			cat $target_vm $target_vm_dir/cont_result
+		fi
 	fi
 
 	notice "Migration complete"
@@ -101,7 +111,6 @@ function is_fio_running()
 {
 	local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
 	set +x
-
 	if vm_ssh $1 'kill -0 $(cat /root/fio.pid)'; then
 		local ret=0
 	else
@@ -113,7 +122,7 @@ function is_fio_running()
 }
 
 # FIXME: this shoul'd not be needed
-vm_kill_all
+# vm_kill_all
 
 for test_case in ${test_cases//,/ }; do
 	assert_number "$test_case"
