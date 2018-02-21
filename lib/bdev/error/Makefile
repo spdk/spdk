@@ -34,7 +34,6 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-CFLAGS += -I$(SPDK_ROOT_DIR)/lib/bdev/
 C_SRCS = vbdev_error.c vbdev_error_rpc.c
 LIBNAME = vbdev_error
 

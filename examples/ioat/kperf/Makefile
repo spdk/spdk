@@ -39,7 +39,6 @@ APP = ioat_kperf
 
 C_SRCS := ioat_kperf.c
 
-CFLAGS += -I.
 
 all: $(APP)
 	@:
