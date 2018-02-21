@@ -70,8 +70,8 @@ struct spdk_iscsi_tgt_node {
 	int auth_chap_required;
 	int auth_chap_mutual;
 	int auth_group;
-	int header_digest;
-	int data_digest;
+	bool header_digest;
+	bool data_digest;
 	int queue_depth;
 
 	struct spdk_scsi_dev *dev;
@@ -113,7 +113,7 @@ spdk_iscsi_tgt_node_construct(int target_index,
 			      const char *bdev_name_list[], int *lun_id_list, int num_luns,
 			      int queue_depth,
 			      int no_auth_chap, int auth_chap, int auth_chap_mutual, int auth_group,
-			      int header_digest, int data_digest);
+			      bool header_digest, bool data_digest);
 
 int spdk_iscsi_tgt_node_add_pg_ig_maps(struct spdk_iscsi_tgt_node *target,
 				       int *pg_tag_list, int *ig_tag_list,

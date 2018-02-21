@@ -26,8 +26,8 @@ rpc_param = {
     'chap_mutal': 0,
     'chap_required': 0,
     'chap_auth_group': 0,
-    'header_digest': 0,
-    'data_digest': 0,
+    'header_digest': False,
+    'data_digest': False,
     'trace_flag': 'rpc',
     'cpumask': 0x1
 }
@@ -334,8 +334,7 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
     lun_mapping = "Malloc" + str(rpc_param['lun_total']) + ":0"
     net_mapping = portal_tag + ":" + initiator_tag
     rpc.construct_target_node(rpc_param['target_name'], rpc_param['alias_name'], lun_mapping, net_mapping, rpc_param['queue_depth'],
-                              rpc_param['chap_disable'], rpc_param['chap_mutal'], rpc_param['chap_required'], rpc_param['chap_auth_group'],
-                              "-H", rpc_param['header_digest'], "-D", rpc_param['data_digest'])
+                              rpc_param['chap_disable'], rpc_param['chap_mutal'], rpc_param['chap_required'], rpc_param['chap_auth_group'])
     output = rpc.get_target_nodes()
     jsonvalues = json.loads(output)
     verify(len(jsonvalues) == 1, 1,
