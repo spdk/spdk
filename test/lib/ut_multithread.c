@@ -33,6 +33,7 @@
 
 #include "spdk_cunit.h"
 #include "spdk/io_channel.h"
+#include "spdk_internal/io_channel.h"
 #include "spdk_internal/mock.h"
 
 static uint32_t g_ut_num_threads;
@@ -124,6 +125,8 @@ allocate_threads(int num_threads)
 {
 	struct spdk_thread *thread;
 	uint32_t i;
+
+	spdk_thread_set_unit_test_mode(true);
 
 	g_ut_num_threads = num_threads;
 

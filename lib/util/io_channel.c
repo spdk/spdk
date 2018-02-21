@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/io_channel.h"
+#include "spdk_internal/io_channel.h"
 #include "spdk/log.h"
 
 #ifdef __linux__
@@ -42,6 +43,17 @@
 
 #ifdef __FreeBSD__
 #include <pthread_np.h>
+#endif
+
+/*
+ * SPDK has tried to limit dependence on thread-local storage for use
+ * cases where SPDK libraries are used in non-POSIX userspace environments.
+ * So use __thread here with a fallback implementation if SPDK_FORBID_TLS
+ * is defined for a non-POSIX userspace environment.
+ */
+#ifndef SPDK_FORBID_TLS
+static bool g_unit_test_mode = false;
+static __thread struct spdk_thread *g_thread = NULL;
 #endif
 
 static pthread_mutex_t g_devlist_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -76,6 +88,11 @@ static TAILQ_HEAD(, spdk_thread) g_threads = TAILQ_HEAD_INITIALIZER(g_threads);
 static struct spdk_thread *
 _get_thread(void)
 {
+#ifndef SPDK_FORBID_TLS
+	if (!g_unit_test_mode) {
+		return g_thread;
+	}
+#endif
 	pthread_t thread_id;
 	struct spdk_thread *thread;
 
@@ -141,6 +158,10 @@ spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 
 	pthread_mutex_unlock(&g_devlist_mutex);
 
+#ifndef SPDK_FORBID_TLS
+	g_thread = thread;
+#endif
+
 	return thread;
 }
 
@@ -148,6 +169,10 @@ void
 spdk_free_thread(void)
 {
 	struct spdk_thread *thread;
+
+#ifndef SPDK_FORBID_TLS
+	g_thread = NULL;
+#endif
 
 	pthread_mutex_lock(&g_devlist_mutex);
 
@@ -644,4 +669,12 @@ end:
 	pthread_mutex_unlock(&g_devlist_mutex);
 
 	spdk_thread_send_msg(i->orig_thread, _call_completion, i);
+}
+
+void
+spdk_thread_set_unit_test_mode(bool mode)
+{
+#ifndef SPDK_FORBID_TLS
+	g_unit_test_mode = mode;
+#endif
 }
