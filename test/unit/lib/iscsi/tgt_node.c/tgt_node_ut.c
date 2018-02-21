@@ -796,8 +796,8 @@ allow_iscsi_name_multi_maps_case(void)
 
 /*
  * static bool
- * spdk_iscsi_check_chap_params(bool auth_chap_disabled, bool auth_chap_required,
- *                              bool auth_chap_mutual, int auth_group);
+ * spdk_iscsi_check_chap_params(bool disable_chap, bool require_chap,
+ *                              bool mutual_chap, int chap_group);
  */
 static void
 chap_param_test_cases(void)
