@@ -40,6 +40,9 @@
 
 SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 
+struct spdk_bdev {
+	int ut_mock;
+};
 
 DEFINE_STUB(spdk_nvmf_tgt_find_subsystem,
 	    struct spdk_nvmf_subsystem *,
@@ -526,6 +529,111 @@ test_connect(void)
 	MOCK_SET(spdk_nvmf_poll_group_create, struct spdk_nvmf_poll_group *, NULL);
 }
 
+static void
+test_get_ns_id_desc_list(void)
+{
+	struct spdk_nvmf_subsystem subsystem;
+	struct spdk_nvmf_qpair qpair;
+	struct spdk_nvmf_ctrlr ctrlr;
+	struct spdk_nvmf_request req;
+	struct spdk_nvmf_ns *ns_ptrs[1];
+	struct spdk_nvmf_ns ns;
+	union nvmf_h2c_msg cmd;
+	union nvmf_c2h_msg rsp;
+	struct spdk_bdev bdev;
+	uint8_t buf[4096];
+
+	memset(&subsystem, 0, sizeof(subsystem));
+	ns_ptrs[0] = &ns;
+	subsystem.ns = ns_ptrs;
+	subsystem.max_nsid = 1;
+	subsystem.subtype = SPDK_NVMF_SUBTYPE_NVME;
+
+	memset(&ns, 0, sizeof(ns));
+	ns.opts.nsid = 1;
+	ns.bdev = &bdev;
+
+	memset(&qpair, 0, sizeof(qpair));
+	qpair.ctrlr = &ctrlr;
+
+	memset(&ctrlr, 0, sizeof(ctrlr));
+	ctrlr.subsys = &subsystem;
+	ctrlr.vcprop.cc.bits.en = 1;
+
+	memset(&req, 0, sizeof(req));
+	req.qpair = &qpair;
+	req.cmd = &cmd;
+	req.rsp = &rsp;
+	req.xfer = SPDK_NVME_DATA_CONTROLLER_TO_HOST;
+	req.data = buf;
+	req.length = sizeof(buf);
+
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_IDENTIFY;
+	cmd.nvme_cmd.cdw10 = SPDK_NVME_IDENTIFY_NS_ID_DESCRIPTOR_LIST;
+
+	/* Invalid NSID */
+	cmd.nvme_cmd.nsid = 0;
+	memset(&rsp, 0, sizeof(rsp));
+	CU_ASSERT(spdk_nvmf_ctrlr_process_admin_cmd(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT);
+
+	/* Valid NSID, but ns has no IDs defined */
+	cmd.nvme_cmd.nsid = 1;
+	memset(&rsp, 0, sizeof(rsp));
+	CU_ASSERT(spdk_nvmf_ctrlr_process_admin_cmd(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+	CU_ASSERT(spdk_mem_all_zero(buf, sizeof(buf)));
+
+	/* Valid NSID, only EUI64 defined */
+	ns.opts.eui64[0] = 0x11;
+	ns.opts.eui64[7] = 0xFF;
+	memset(&rsp, 0, sizeof(rsp));
+	CU_ASSERT(spdk_nvmf_ctrlr_process_admin_cmd(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+	CU_ASSERT(buf[0] == SPDK_NVME_NIDT_EUI64);
+	CU_ASSERT(buf[1] == 8);
+	CU_ASSERT(buf[4] == 0x11);
+	CU_ASSERT(buf[11] == 0xFF);
+	CU_ASSERT(buf[13] == 0);
+
+	/* Valid NSID, only NGUID defined */
+	memset(ns.opts.eui64, 0, sizeof(ns.opts.eui64));
+	ns.opts.nguid[0] = 0x22;
+	ns.opts.nguid[15] = 0xEE;
+	memset(&rsp, 0, sizeof(rsp));
+	CU_ASSERT(spdk_nvmf_ctrlr_process_admin_cmd(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+	CU_ASSERT(buf[0] == SPDK_NVME_NIDT_NGUID);
+	CU_ASSERT(buf[1] == 16);
+	CU_ASSERT(buf[4] == 0x22);
+	CU_ASSERT(buf[19] == 0xEE);
+	CU_ASSERT(buf[21] == 0);
+
+	/* Valid NSID, both EUI64 and NGUID defined */
+	ns.opts.eui64[0] = 0x11;
+	ns.opts.eui64[7] = 0xFF;
+	ns.opts.nguid[0] = 0x22;
+	ns.opts.nguid[15] = 0xEE;
+	memset(&rsp, 0, sizeof(rsp));
+	CU_ASSERT(spdk_nvmf_ctrlr_process_admin_cmd(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+	CU_ASSERT(buf[0] == SPDK_NVME_NIDT_EUI64);
+	CU_ASSERT(buf[1] == 8);
+	CU_ASSERT(buf[4] == 0x11);
+	CU_ASSERT(buf[11] == 0xFF);
+	CU_ASSERT(buf[12] == SPDK_NVME_NIDT_NGUID);
+	CU_ASSERT(buf[13] == 16);
+	CU_ASSERT(buf[16] == 0x22);
+	CU_ASSERT(buf[31] == 0xEE);
+	CU_ASSERT(buf[33] == 0);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -544,7 +652,8 @@ int main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "get_log_page", test_get_log_page) == NULL ||
 		CU_add_test(suite, "process_fabrics_cmd", test_process_fabrics_cmd) == NULL ||
-		CU_add_test(suite, "connect", test_connect) == NULL
+		CU_add_test(suite, "connect", test_connect) == NULL ||
+		CU_add_test(suite, "get_ns_id_desc_list", test_get_ns_id_desc_list) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
