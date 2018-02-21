@@ -3484,13 +3484,14 @@ void spdk_bs_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 /* END spdk_bs_open_blob */
 
 /* START spdk_blob_set_read_only */
-void spdk_blob_set_read_only(struct spdk_blob *blob)
+int spdk_blob_set_read_only(struct spdk_blob *blob)
 {
 	assert(spdk_get_thread() == blob->bs->md_thread);
 
 	blob->data_ro_flags |= SPDK_BLOB_READ_ONLY;
 
 	blob->state = SPDK_BLOB_STATE_DIRTY;
+	return 0;
 }
 /* END spdk_blob_set_read_only */
 
