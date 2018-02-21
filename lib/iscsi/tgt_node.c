@@ -844,20 +844,20 @@ spdk_check_iscsi_name(const char *name)
 }
 
 static bool
-spdk_iscsi_check_chap_params(bool disabled, bool required, bool mutual, int group)
+spdk_iscsi_check_chap_params(bool disable, bool require, bool mutual, int group)
 {
 	if (group < 0) {
 		SPDK_ERRLOG("Invalid auth group ID (%d)\n", group);
 		return false;
 	}
-	if ((!disabled && !required && !mutual) ||	/* Auto */
-	    (disabled && !required && !mutual) ||	/* None */
-	    (!disabled && required && !mutual) ||	/* CHAP */
-	    (!disabled && required && mutual)) {	/* CHAP Mutual */
+	if ((!disable && !require && !mutual) ||	/* Auto */
+	    (disable && !require && !mutual) ||	/* None */
+	    (!disable && require && !mutual) ||	/* CHAP */
+	    (!disable && require && mutual)) {	/* CHAP Mutual */
 		return true;
 	}
 	SPDK_ERRLOG("Invalid combination of CHAP params (d=%d,r=%d,m=%d)\n",
-		    disabled, required, mutual);
+		    disable, require, mutual);
 	return false;
 }
 
@@ -867,15 +867,15 @@ spdk_iscsi_tgt_node_construct(int target_index,
 			      int *pg_tag_list, int *ig_tag_list, uint16_t num_maps,
 			      const char *bdev_name_list[], int *lun_id_list, int num_luns,
 			      int queue_depth,
-			      bool auth_chap_disabled, bool auth_chap_required, bool auth_chap_mutual, int auth_group,
+			      bool disable_chap, bool require_chap, bool mutual_chap, int chap_group,
 			      bool header_digest, bool data_digest)
 {
 	char				fullname[MAX_TMPBUF];
 	struct spdk_iscsi_tgt_node	*target;
 	int				rc;
 
-	if (!spdk_iscsi_check_chap_params(auth_chap_disabled, auth_chap_required,
-					  auth_chap_mutual, auth_group)) {
+	if (!spdk_iscsi_check_chap_params(disable_chap, require_chap,
+					  mutual_chap, chap_group)) {
 		return NULL;
 	}
 
@@ -954,10 +954,10 @@ spdk_iscsi_tgt_node_construct(int target_index,
 		return NULL;
 	}
 
-	target->auth_chap_disabled = auth_chap_disabled;
-	target->auth_chap_required = auth_chap_required;
-	target->auth_chap_mutual = auth_chap_mutual;
-	target->auth_group = auth_group;
+	target->disable_chap = disable_chap;
+	target->require_chap = require_chap;
+	target->mutual_chap = mutual_chap;
+	target->chap_group = chap_group;
 	target->header_digest = header_digest;
 	target->data_digest = data_digest;
 
@@ -989,9 +989,9 @@ spdk_cf_add_iscsi_tgt_node(struct spdk_conf_section *sp)
 	const char *alias, *pg_tag, *ig_tag;
 	const char *ag_tag;
 	const char *val, *name;
-	int target_num, auth_group, pg_tag_i, ig_tag_i;
+	int target_num, chap_group, pg_tag_i, ig_tag_i;
 	bool header_digest, data_digest;
-	bool auth_chap_disabled,  auth_chap_required, auth_chap_mutual;
+	bool disable_chap,  require_chap, mutual_chap;
 	int i;
 	int lun_id_list[SPDK_SCSI_DEV_MAX_LUN];
 	const char *bdev_name_list[SPDK_SCSI_DEV_MAX_LUN];
@@ -1056,9 +1056,9 @@ spdk_cf_add_iscsi_tgt_node(struct spdk_conf_section *sp)
 
 	/* Setup AuthMethod */
 	val = spdk_conf_section_get_val(sp, "AuthMethod");
-	auth_chap_disabled = false;
-	auth_chap_required = false;
-	auth_chap_mutual = false;
+	disable_chap = false;
+	require_chap = false;
+	mutual_chap = false;
 	if (val != NULL) {
 		for (i = 0; ; i++) {
 			val = spdk_conf_section_get_nmval(sp, "AuthMethod", 0, i);
@@ -1066,61 +1066,60 @@ spdk_cf_add_iscsi_tgt_node(struct spdk_conf_section *sp)
 				break;
 			}
 			if (strcasecmp(val, "CHAP") == 0) {
-				auth_chap_required = true;
+				require_chap = true;
 			} else if (strcasecmp(val, "Mutual") == 0) {
-				auth_chap_mutual = true;
+				mutual_chap = true;
 			} else if (strcasecmp(val, "Auto") == 0) {
-				auth_chap_disabled = false;
-				auth_chap_required = false;
-				auth_chap_mutual = false;
+				disable_chap = false;
+				require_chap = false;
+				mutual_chap = false;
 			} else if (strcasecmp(val, "None") == 0) {
-				auth_chap_disabled = true;
-				auth_chap_required = false;
-				auth_chap_mutual = false;
+				disable_chap = true;
+				require_chap = false;
+				mutual_chap = false;
 			} else {
 				SPDK_ERRLOG("tgt_node%d: unknown auth\n", target_num);
 				return -1;
 			}
 		}
-		if (auth_chap_mutual && !auth_chap_required) {
+		if (mutual_chap && !require_chap) {
 			SPDK_ERRLOG("tgt_node%d: Mutual but not CHAP\n", target_num);
 			return -1;
 		}
 	}
-	if (auth_chap_disabled) {
+	if (disable_chap) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "AuthMethod None\n");
-	} else if (!auth_chap_required) {
+	} else if (!require_chap) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "AuthMethod Auto\n");
 	} else {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "AuthMethod CHAP %s\n",
-			      auth_chap_mutual ? "Mutual" : "");
+			      mutual_chap ? "Mutual" : "");
 	}
 
 	val = spdk_conf_section_get_val(sp, "AuthGroup");
 	if (val == NULL) {
-		auth_group = 0;
+		chap_group = 0;
 	} else {
 		ag_tag = val;
 		if (strcasecmp(ag_tag, "None") == 0) {
-			auth_group = 0;
+			chap_group = 0;
 		} else {
 			if (strncasecmp(ag_tag, "AuthGroup",
 					strlen("AuthGroup")) != 0
-			    || sscanf(ag_tag, "%*[^0-9]%d", &auth_group) != 1) {
+			    || sscanf(ag_tag, "%*[^0-9]%d", &chap_group) != 1) {
 				SPDK_ERRLOG("tgt_node%d: auth group error\n", target_num);
 				return -1;
 			}
-			if (auth_group == 0) {
+			if (chap_group == 0) {
 				SPDK_ERRLOG("tgt_node%d: invalid auth group 0\n", target_num);
 				return -1;
 			}
 		}
 	}
-	if (auth_group == 0) {
+	if (chap_group == 0) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "AuthGroup None\n");
 	} else {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "AuthGroup AuthGroup%d\n",
-			      auth_group);
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "AuthGroup AuthGroup%d\n", chap_group);
 	}
 
 	val = spdk_conf_section_get_val(sp, "UseDigest");
@@ -1180,8 +1179,7 @@ spdk_cf_add_iscsi_tgt_node(struct spdk_conf_section *sp)
 	target = spdk_iscsi_tgt_node_construct(target_num, name, alias,
 					       pg_tag_list, ig_tag_list, num_target_maps,
 					       bdev_name_list, lun_id_list, num_luns, queue_depth,
-					       auth_chap_disabled, auth_chap_required,
-					       auth_chap_mutual, auth_group,
+					       disable_chap, require_chap, mutual_chap, chap_group,
 					       header_digest, data_digest);
 
 	if (target == NULL) {
