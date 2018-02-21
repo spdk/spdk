@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "fa6b6082_bcc575f8",
+        "filename": "lib/event/rpc/subsystem_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-21T23:24:13Z",
+      "side": 1,
+      "message": "Thank you. I did not notice the ordering is cared. I got it.",
+      "parentUuid": "bd9f1f8a_53db234e",
+      "range": {
+        "startLine": 78,
+        "startChar": 0,
+        "endLine": 79,
+        "endChar": 32
+      },
+      "revId": "835c9b7fd7f41584c4b6da7a547c0a8e6f193cae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "736e73b6_7f494342",
         "filename": "lib/event/rpc/subsystem_rpc.c",
         "patchSetId": 2
@@ -84,6 +108,30 @@
       "side": 1,
       "message": "1. Do we need \u0027\u0027\u0027 { \"dependency\": \u0027\u0027\u0027 part?\n2. \"depends_on\" - this need to be a list because subsystem might have multiple dependencies.",
       "parentUuid": "736e73b6_7f494342",
+      "range": {
+        "startLine": 80,
+        "startChar": 0,
+        "endLine": 82,
+        "endChar": 2
+      },
+      "revId": "835c9b7fd7f41584c4b6da7a547c0a8e6f193cae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "60278746_7ce3f4b5",
+        "filename": "lib/event/rpc/subsystem_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-21T23:24:13Z",
+      "side": 1,
+      "message": "I understood your intention to make the output easy for Python to use. Hence my proposal is not good.",
+      "parentUuid": "38e88e4b_5b210f9e",
       "range": {
         "startLine": 80,
         "startChar": 0,
@@ -226,6 +274,30 @@
       "side": 1,
       "message": "yes, and no :)\nMy goal was: if \u0027--subsystem\u0027 is skipped - print all subsystems but in init order - the sorted by dependency, list of subsystems.\nIf \u0027--subsystem\u0027 is specified - print *sorted* list of dependencies only for specified subsystem. But now I think I failed to do that because dependency list is not sorted like submodule list :D",
       "parentUuid": "2687129c_65293351",
+      "range": {
+        "startLine": 396,
+        "startChar": 0,
+        "endLine": 396,
+        "endChar": 138
+      },
+      "revId": "835c9b7fd7f41584c4b6da7a547c0a8e6f193cae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9eddd405_17746014",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-21T23:24:13Z",
+      "side": 1,
+      "message": "Hi Pawel,\n\nThank you, I want to confirm my understanding.\n\nWhen object A depends on B and B depends on C, if --subsystem parameter to B is specified, both of the following should be output?\n-  B depends C\n-  B is referenced by A",
+      "parentUuid": "a06d27c5_8d87f21e",
       "range": {
         "startLine": 396,
         "startChar": 0,
