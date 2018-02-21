@@ -3229,6 +3229,8 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 	spdk_blob_id		id;
 	int rc;
 
+	assert(spdk_get_thread() == bs->md_thread);
+
 	page_idx = spdk_bit_array_find_first_clear(bs->used_md_pages, 0);
 	if (page_idx >= spdk_bit_array_capacity(bs->used_md_pages)) {
 		cb_fn(cb_arg, 0, -ENOMEM);
@@ -3401,6 +3403,8 @@ spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Deleting blob %lu\n", blobid);
 
+	assert(spdk_get_thread() == bs->md_thread);
+
 	cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
 	cpl.u.blob_basic.cb_fn = cb_fn;
 	cpl.u.blob_basic.cb_arg = cb_arg;
@@ -3446,6 +3450,7 @@ void spdk_bs_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 	uint32_t			page_num;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Opening blob %lu\n", blobid);
+	assert(spdk_get_thread() == blob->bs->md_thread);
 
 	page_num = _spdk_bs_blobid_to_page(blobid);
 	if (spdk_bit_array_get(bs->used_blobids, page_num) == false) {
@@ -3873,6 +3878,7 @@ _spdk_blob_set_xattr(struct spdk_blob *blob, const char *name, const void *value
 	struct spdk_xattr 	*xattr;
 
 	assert(blob != NULL);
+	assert(spdk_get_thread() == blob->bs->md_thread xx);
 
 	assert(blob->state != SPDK_BLOB_STATE_LOADING &&
 	       blob->state != SPDK_BLOB_STATE_SYNCING);
@@ -3930,6 +3936,7 @@ _spdk_blob_remove_xattr(struct spdk_blob *blob, const char *name, bool internal)
 	struct spdk_xattr	*xattr;
 
 	assert(blob != NULL);
+	assert(spdk_get_thread() == blob->bs->md_thread);
 
 	assert(blob->state != SPDK_BLOB_STATE_LOADING &&
 	       blob->state != SPDK_BLOB_STATE_SYNCING);
@@ -3970,6 +3977,8 @@ _spdk_blob_get_xattr_value(struct spdk_blob *blob, const char *name,
 {
 	struct spdk_xattr	*xattr;
 	struct spdk_xattr_tailq *xattrs;
+
+	assert(spdk_get_thread() == blob->bs->md_thread);
 
 	xattrs = internal ? &blob->xattrs_internal : &blob->xattrs;
 
@@ -4020,6 +4029,8 @@ _spdk_blob_get_xattr_names(struct spdk_xattr_tailq *xattrs, struct spdk_xattr_na
 int
 spdk_blob_get_xattr_names(struct spdk_blob *blob, struct spdk_xattr_names **names)
 {
+	assert(spdk_get_thread() == blob->bs->md_thread);
+
 	return _spdk_blob_get_xattr_names(&blob->xattrs, names);
 }
 
