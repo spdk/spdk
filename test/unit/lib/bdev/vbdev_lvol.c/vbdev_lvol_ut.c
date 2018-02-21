@@ -556,6 +556,20 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, size_t sz,
 	return 0;
 }
 
+int
+spdk_lvol_create_snapshot(struct spdk_lvol *lvol, const char *snapshot_name,
+			  spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	return 0;
+}
+
+int
+spdk_lvol_create_clone(struct spdk_lvol *lvol, const char *clone_name,
+		       spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	return 0;
+}
+
 static void
 lvol_store_op_complete(void *cb_arg, int lvserrno)
 {
@@ -673,6 +687,12 @@ ut_lvol_init(void)
 	free(g_lvs);
 	free(g_lvs_bdev);
 	free(g_base_bdev);
+}
+
+static void
+ut_lvol_snapshot(void)
+{
+
 }
 
 static void
@@ -1155,6 +1175,7 @@ int main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "ut_lvs_init", ut_lvs_init) == NULL ||
 		CU_add_test(suite, "ut_lvol_init", ut_lvol_init) == NULL ||
+		CU_add_test(suite, "ut_lvol_snapshot", ut_lvol_snapshot) == NULL ||
 		CU_add_test(suite, "ut_lvs_destroy", ut_lvs_destroy) == NULL ||
 		CU_add_test(suite, "ut_lvs_unload", ut_lvs_unload) == NULL ||
 		CU_add_test(suite, "ut_lvol_resize", ut_lvol_resize) == NULL ||

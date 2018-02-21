@@ -463,6 +463,10 @@ _vbdev_lvol_destroy_cb(void *cb_arg, int lvserrno)
 {
 	struct spdk_bdev *bdev = cb_arg;
 
+	if (lvserrno == -EBUSY) {
+		return;
+	}
+
 	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Lvol destroyed\n");
 
 	spdk_bdev_unregister_done(bdev, lvserrno);
@@ -825,6 +829,104 @@ vbdev_lvol_create(struct spdk_lvol_store *lvs, const char *name, size_t sz,
 
 	return rc;
 }
+
+/* START vbdev_lvol_create_snapshot */
+
+static void
+_vbdev_lvol_create_snapshot_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
+{
+	struct spdk_lvol_with_handle_req *req = cb_arg;
+	struct spdk_bdev *bdev = NULL;
+
+	if (lvolerrno < 0) {
+		assert(lvol == NULL);
+		goto end;
+	}
+
+	bdev = _create_lvol_disk(lvol);
+	if (bdev == NULL) {
+		lvolerrno = -ENODEV;
+		goto end;
+	}
+	lvol->bdev = bdev;
+
+end:
+	req->cb_fn(req->cb_arg, lvol, lvolerrno);
+	free(req);
+}
+
+int vbdev_lvol_create_snapshot(struct spdk_lvol *lvol, const char *snapshot_name,
+			       spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvol_with_handle_req *req;
+	int rc;
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+
+	rc = spdk_lvol_create_snapshot(lvol, snapshot_name, _vbdev_lvol_create_snapshot_cb, req);
+	if (rc != 0) {
+		free(req);
+	}
+
+	return rc;
+}
+
+/* END vbdev_lvol_create_snapshot */
+
+/* START vbdev_lvol_create_clone */
+
+static void
+_vbdev_lvol_create_clone_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
+{
+	struct spdk_lvol_with_handle_req *req = cb_arg;
+	struct spdk_bdev *bdev = NULL;
+
+	if (lvolerrno < 0) {
+		assert(lvol == NULL);
+		goto end;
+	}
+
+	bdev = _create_lvol_disk(lvol);
+	if (bdev == NULL) {
+		lvolerrno = -ENODEV;
+		goto end;
+	}
+	lvol->bdev = bdev;
+
+end:
+	req->cb_fn(req->cb_arg, lvol, lvolerrno);
+	free(req);
+}
+
+int vbdev_lvol_create_clone(struct spdk_lvol *lvol, const char *clone_name,
+			    spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvol_with_handle_req *req;
+	int rc;
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+
+	rc = spdk_lvol_create_clone(lvol, clone_name, _vbdev_lvol_create_clone_cb, req);
+	if (rc != 0) {
+		free(req);
+	}
+
+	return rc;
+}
+
+/* END vbdev_lvol_create_clone */
 
 static void
 _vbdev_lvol_rename_cb(void *cb_arg, int lvolerrno)

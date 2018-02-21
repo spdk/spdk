@@ -59,6 +59,7 @@ const char *uuid = "828d9766-ae50-11e7-bd8d-001e67edf350";
 struct spdk_blob {
 	spdk_blob_id		id;
 	uint32_t		ref;
+	struct spdk_blob_store *bs;
 	int			close_status;
 	int			open_status;
 	int 			load_status;
@@ -396,9 +397,35 @@ spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_opts 
 	if (opts != NULL && opts->thin_provision) {
 		b->thin_provisioned = true;
 	}
+	b->bs = bs;
 
 	TAILQ_INSERT_TAIL(&bs->blobs, b, link);
 	cb_fn(cb_arg, b->id, 0);
+}
+
+void
+spdk_bs_create_snapshot(struct spdk_blob_store *bs, spdk_blob_id blobid,
+			const struct spdk_blob_xattr_opts *snapshot_xattrs,
+			spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
+{
+	spdk_bs_create_blob_ext(bs, NULL, cb_fn, cb_arg);
+}
+
+void spdk_bs_create_clone(struct spdk_blob_store *bs, spdk_blob_id blobid,
+			  const struct spdk_blob_xattr_opts *clone_xattrs,
+			  spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
+{
+	/*
+	struct spdk_blob *b;
+
+	b = calloc(1, sizeof(*b));
+	SPDK_CU_ASSERT_FATAL(b != NULL);
+
+	b->id = g_blobid++;
+
+	TAILQ_INSERT_TAIL(&blob->bs->blobs, b, link);
+	cb_fn(cb_arg, b->id, 0);
+	 */
 }
 
 static void
@@ -1282,6 +1309,61 @@ lvol_open(void)
 	spdk_free_thread();
 }
 
+
+static void
+lvol_snapshot(void)
+{
+	struct lvol_ut_bs_dev dev;
+	struct spdk_lvol *lvol;
+	struct spdk_lvs_opts opts;
+	int rc = 0;
+
+	init_dev(&dev);
+
+	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
+
+	spdk_lvs_opts_init(&opts);
+	strncpy(opts.name, "lvs", sizeof(opts.name));
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+
+	spdk_lvol_create(g_lvol_store, "lvol", 10, true, lvol_op_with_handle_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
+
+	lvol = g_lvol;
+	spdk_lvol_open(lvol, lvol_op_with_handle_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+
+	spdk_lvol_create_snapshot(lvol, "snap", lvol_op_with_handle_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
+	CU_ASSERT_STRING_EQUAL(g_lvol->name, "snap");
+
+	/* Lvol has to be closed (or destroyed) before unloading lvol store. */
+	spdk_lvol_close(g_lvol, close_cb, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	g_lvserrno = -1;
+
+	spdk_lvol_close(lvol, close_cb, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	g_lvserrno = -1;
+
+	rc = spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	g_lvol_store = NULL;
+
+	free_dev(&dev);
+
+	spdk_free_thread();
+}
+
+
 static void
 lvol_names(void)
 {
@@ -1579,6 +1661,7 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "lvol_load", lvs_load) == NULL ||
 		CU_add_test(suite, "lvs_load", lvols_load) == NULL ||
 		CU_add_test(suite, "lvol_open", lvol_open) == NULL ||
+		CU_add_test(suite, "lvol_snapshot", lvol_snapshot) == NULL ||
 		CU_add_test(suite, "lvol_refcnt", lvol_refcnt) == NULL ||
 		CU_add_test(suite, "lvol_names", lvol_names) == NULL ||
 		CU_add_test(suite, "lvol_create_thin_provisioned", lvol_create_thin_provisioned) == NULL ||
