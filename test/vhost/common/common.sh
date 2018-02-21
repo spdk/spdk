@@ -221,7 +221,8 @@ function spdk_vhost_kill()
 			rc=1
 		else
 			#check vhost return code, activate trap on error
-			wait $vhost_pid
+			#wait $vhost_pid
+			echo "THERE SHOULD BE A WAIT HERE BUT WHATEVA"
 		fi
 	elif /bin/kill -0 $vhost_pid; then
 		error "vhost NOT killed - you need to kill it manually"
@@ -283,7 +284,7 @@ function vm_fio_socket()
 
 function vm_create_ssh_config()
 {
-	local ssh_config="$VM_BASE_DIR/ssh_config"
+	local ssh_config="/tmp/ssh_config"
 	if [[ ! -f $ssh_config ]]; then
 		(
 		echo "Host *"
@@ -294,7 +295,7 @@ function vm_create_ssh_config()
 		echo "  UserKnownHostsFile=/dev/null"
 		echo "  StrictHostKeyChecking=no"
 		echo "  User root"
-		echo "  ControlPath=$VM_BASE_DIR/%r@%h:%p.ssh"
+		echo "  ControlPath=/tmp/%r@%h:%p.ssh"
 		echo ""
 		) > $ssh_config
 	fi
@@ -307,7 +308,7 @@ function vm_ssh()
 {
 	vm_num_is_valid $1 || return 1
 	vm_create_ssh_config
-	local ssh_config="$VM_BASE_DIR/ssh_config"
+	local ssh_config="/tmp/ssh_config"
 
 	local ssh_cmd="ssh -i $SPDK_VHOST_SSH_KEY_FILE -F $ssh_config \
 		-p $(vm_ssh_socket $1) 127.0.0.1"
@@ -323,7 +324,7 @@ function vm_scp()
 {
 	vm_num_is_valid $1 || return 1
 	vm_create_ssh_config
-	local ssh_config="$VM_BASE_DIR/ssh_config"
+	local ssh_config="/tmp/ssh_config"
 
 	local scp_cmd="scp -i $SPDK_VHOST_SSH_KEY_FILE -F $ssh_config \
 		-P $(vm_ssh_socket $1) "

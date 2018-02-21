@@ -2,7 +2,10 @@
 
 NVMF_PORT=4420
 NVMF_IP_PREFIX="192.168.100"
-NVMF_IP_LEAST_ADDR=8
+
+if [ -z "$NVMF_IP_LEAST_ADDR" ]; then
+	NVMF_IP_LEAST_ADDR=8
+fi
 
 if [ -z "$NVMF_APP" ]; then
 	NVMF_APP=./app/nvmf_tgt/nvmf_tgt
@@ -86,8 +89,11 @@ function detect_mellanox_nics()
 
 function detect_rdma_nics()
 {
+	do_soft_roce=$1
 	detect_mellanox_nics
-	detect_soft_roce_nics
+	if [[ "$do_soft_roce" != "no_soft_roce" ]]; then
+		detect_soft_roce_nics
+	fi
 }
 
 function allocate_nic_ips()
@@ -135,7 +141,7 @@ function nvmfcleanup()
 function rdma_device_init()
 {
 	load_ib_rdma_modules
-	detect_rdma_nics
+	detect_rdma_nics $1
 	allocate_nic_ips
 }
 
