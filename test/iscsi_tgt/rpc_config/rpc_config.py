@@ -22,10 +22,10 @@ rpc_param = {
     'queue_depth': 64,
     'target_name': 'Target3',
     'alias_name': 'Target3_alias',
-    'chap_disable': 1,
-    'chap_mutal': 0,
-    'chap_required': 0,
-    'chap_auth_group': 0,
+    'disable_chap': True,
+    'mutual_chap': False,
+    'require_chap': False,
+    'chap_group': 0,
     'header_digest': False,
     'data_digest': False,
     'trace_flag': 'rpc',
@@ -94,8 +94,7 @@ def verify_iscsi_connection_rpc_methods(rpc_py):
 
     lun_mapping = "Malloc" + str(rpc_param['lun_total']) + ":0"
     net_mapping = portal_tag + ":" + initiator_tag
-    rpc.construct_target_node(rpc_param['target_name'], rpc_param['alias_name'], lun_mapping, net_mapping, rpc_param['queue_depth'],
-                              rpc_param['chap_disable'], rpc_param['chap_mutal'], rpc_param['chap_required'], rpc_param['chap_auth_group'])
+    rpc.construct_target_node(rpc_param['target_name'], rpc_param['alias_name'], lun_mapping, net_mapping, rpc_param['queue_depth'], '-d')
     check_output('iscsiadm -m discovery -t st -p {}'.format(rpc_param['target_ip']), shell=True)
     check_output('iscsiadm -m node --login', shell=True)
     name = json.loads(rpc.get_target_nodes())[0]['name']
@@ -138,8 +137,7 @@ def verify_scsi_devices_rpc_methods(rpc_py):
 
     lun_mapping = "Malloc" + str(rpc_param['lun_total']) + ":0"
     net_mapping = portal_tag + ":" + initiator_tag
-    rpc.construct_target_node(rpc_param['target_name'], rpc_param['alias_name'], lun_mapping, net_mapping, rpc_param['queue_depth'],
-                              rpc_param['chap_disable'], rpc_param['chap_mutal'], rpc_param['chap_required'], rpc_param['chap_auth_group'])
+    rpc.construct_target_node(rpc_param['target_name'], rpc_param['alias_name'], lun_mapping, net_mapping, rpc_param['queue_depth'], '-d')
     check_output('iscsiadm -m discovery -t st -p {}'.format(rpc_param['target_ip']), shell=True)
     check_output('iscsiadm -m node --login', shell=True)
     name = json.loads(rpc.get_target_nodes())[0]['name']
@@ -333,8 +331,7 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
 
     lun_mapping = "Malloc" + str(rpc_param['lun_total']) + ":0"
     net_mapping = portal_tag + ":" + initiator_tag
-    rpc.construct_target_node(rpc_param['target_name'], rpc_param['alias_name'], lun_mapping, net_mapping, rpc_param['queue_depth'],
-                              rpc_param['chap_disable'], rpc_param['chap_mutal'], rpc_param['chap_required'], rpc_param['chap_auth_group'])
+    rpc.construct_target_node(rpc_param['target_name'], rpc_param['alias_name'], lun_mapping, net_mapping, rpc_param['queue_depth'], '-d')
     output = rpc.get_target_nodes()
     jsonvalues = json.loads(output)
     verify(len(jsonvalues) == 1, 1,
@@ -355,14 +352,14 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
            "queue depth value is {}, expected {}".format(jsonvalues[0]['queue_depth'], rpc_param['queue_depth']))
     verify(jsonvalues[0]['pg_ig_maps'][0]['pg_tag'] == int(portal_tag), 1,
            "portal group tag value is {}, expected {}".format(jsonvalues[0]['pg_ig_maps'][0]['pg_tag'], portal_tag))
-    verify(jsonvalues[0]['chap_disabled'] == rpc_param['chap_disable'], 1,
-           "chap disable value is {}, expected {}".format(jsonvalues[0]['chap_disabled'], rpc_param['chap_disable']))
-    verify(jsonvalues[0]['chap_mutual'] == rpc_param['chap_mutal'], 1,
-           "chap mutual value is {}, expected {}".format(jsonvalues[0]['chap_mutual'], rpc_param['chap_mutal']))
-    verify(jsonvalues[0]['chap_required'] == rpc_param['chap_required'], 1,
-           "chap required value is {}, expected {}".format(jsonvalues[0]['chap_required'], rpc_param['chap_required']))
-    verify(jsonvalues[0]['chap_auth_group'] == rpc_param['chap_auth_group'], 1,
-           "chap auth group value is {}, expected {}".format(jsonvalues[0]['chap_auth_group'], rpc_param['chap_auth_group']))
+    verify(jsonvalues[0]['disable_chap'] == rpc_param['disable_chap'], 1,
+           "disable chap value is {}, expected {}".format(jsonvalues[0]['disable_chap'], rpc_param['disable_chap']))
+    verify(jsonvalues[0]['mutual_chap'] == rpc_param['mutual_chap'], 1,
+           "chap mutual value is {}, expected {}".format(jsonvalues[0]['mutual_chap'], rpc_param['mutual_chap']))
+    verify(jsonvalues[0]['require_chap'] == rpc_param['require_chap'], 1,
+           "chap required value is {}, expected {}".format(jsonvalues[0]['require_chap'], rpc_param['require_chap']))
+    verify(jsonvalues[0]['chap_group'] == rpc_param['chap_group'], 1,
+           "chap auth group value is {}, expected {}".format(jsonvalues[0]['chap_group'], rpc_param['chap_group']))
     verify(jsonvalues[0]['header_digest'] == rpc_param['header_digest'], 1,
            "header digest value is {}, expected {}".format(jsonvalues[0]['header_digest'], rpc_param['header_digest']))
     verify(jsonvalues[0]['data_digest'] == rpc_param['data_digest'], 1,
@@ -382,8 +379,7 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
     verify(not jsonvalues, 1,
            "get_target_nodes returned {}, expected empty".format(jsonvalues))
 
-    rpc.construct_target_node(rpc_param['target_name'], rpc_param['alias_name'], lun_mapping, net_mapping, rpc_param['queue_depth'],
-                              rpc_param['chap_disable'], rpc_param['chap_mutal'], rpc_param['chap_required'], rpc_param['chap_auth_group'])
+    rpc.construct_target_node(rpc_param['target_name'], rpc_param['alias_name'], lun_mapping, net_mapping, rpc_param['queue_depth'], '-d')
 
     rpc.delete_portal_group(portal_tag)
     rpc.delete_initiator_group(initiator_tag)

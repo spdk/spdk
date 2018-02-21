@@ -134,14 +134,14 @@ if __name__ == "__main__":
     Example: '1:1 2:2 2:1'
     *** The Portal/Initiator Groups must be precreated ***""")
     p.add_argument('queue_depth', help='Desired target queue depth', type=int)
-    p.add_argument('chap_disabled', help="""CHAP authentication should be disabled for this target node.
-    *** Mutually exclusive with chap_required ***""", type=int)
-    p.add_argument('chap_required', help="""CHAP authentication should be required for this target node.
-    *** Mutually exclusive with chap_disabled ***""", type=int)
+    p.add_argument('-g', '--chap-group', help="""Authentication group ID for this target node.
+    *** Authentication group must be precreated ***""", type=int, default=0)
+    p.add_argument('-d', '--disable-chap', help="""CHAP authentication should be disabled for this target node.
+    *** Mutually exclusive with --require-chap ***""", action='store_true')
+    p.add_argument('-r', '--require-chap', help="""CHAP authentication should be required for this target node.
+    *** Mutually exclusive with --disable-chap ***""", action='store_true')
     p.add_argument(
-        'chap_mutual', help='CHAP authentication should be mutual/bidirectional.', type=int)
-    p.add_argument('chap_auth_group', help="""Authentication group ID for this target node.
-    *** Authentication group must be precreated ***""", type=int)
+        '-m', '--mutual-chap', help='CHAP authentication should be mutual/bidirectional.', action='store_true')
     p.add_argument('-H', '--header-digest',
                    help='Header Digest should be required for this target node.', action='store_true')
     p.add_argument('-D', '--data-digest',

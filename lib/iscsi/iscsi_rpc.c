@@ -392,20 +392,16 @@ dump_target_node(struct spdk_json_write_ctx *w, struct spdk_iscsi_tgt_node *tgtn
 	spdk_json_write_name(w, "queue_depth");
 	spdk_json_write_int32(w, tgtnode->queue_depth);
 
-	/*
-	 * TODO: convert these to bool
-	 */
-
-	spdk_json_write_name(w, "chap_disabled");
+	spdk_json_write_name(w, "disable_chap");
 	spdk_json_write_int32(w, tgtnode->auth_chap_disabled);
 
-	spdk_json_write_name(w, "chap_required");
-	spdk_json_write_int32(w, tgtnode->auth_chap_required);
+	spdk_json_write_name(w, "require_chap");
+	spdk_json_write_bool(w, tgtnode->auth_chap_required);
 
-	spdk_json_write_name(w, "chap_mutual");
-	spdk_json_write_int32(w, tgtnode->auth_chap_mutual);
+	spdk_json_write_name(w, "mutual_chap");
+	spdk_json_write_bool(w, tgtnode->auth_chap_mutual);
 
-	spdk_json_write_name(w, "chap_auth_group");
+	spdk_json_write_name(w, "chap_group");
 	spdk_json_write_int32(w, tgtnode->auth_group);
 
 	spdk_json_write_name(w, "header_digest");
@@ -536,10 +532,10 @@ struct rpc_target_node {
 	struct rpc_luns luns;
 
 	int32_t queue_depth;
-	int32_t chap_disabled;
-	int32_t chap_required;
-	int32_t chap_mutual;
-	int32_t chap_auth_group;
+	bool disable_chap;
+	bool require_chap;
+	bool mutual_chap;
+	int32_t chap_group;
 
 	bool header_digest;
 	bool data_digest;
@@ -559,10 +555,10 @@ static const struct spdk_json_object_decoder rpc_target_node_decoders[] = {
 	{"pg_ig_maps", offsetof(struct rpc_target_node, pg_ig_maps), decode_rpc_pg_ig_maps},
 	{"luns", offsetof(struct rpc_target_node, luns), decode_rpc_luns},
 	{"queue_depth", offsetof(struct rpc_target_node, queue_depth), spdk_json_decode_int32},
-	{"chap_disabled", offsetof(struct rpc_target_node, chap_disabled), spdk_json_decode_int32},
-	{"chap_required", offsetof(struct rpc_target_node, chap_required), spdk_json_decode_int32},
-	{"chap_mutual", offsetof(struct rpc_target_node, chap_mutual), spdk_json_decode_int32},
-	{"chap_auth_group", offsetof(struct rpc_target_node, chap_auth_group), spdk_json_decode_int32},
+	{"disable_chap", offsetof(struct rpc_target_node, disable_chap), spdk_json_decode_bool, true},
+	{"require_chap", offsetof(struct rpc_target_node, require_chap), spdk_json_decode_bool, true},
+	{"mutual_chap", offsetof(struct rpc_target_node, mutual_chap), spdk_json_decode_bool, true},
+	{"chap_group", offsetof(struct rpc_target_node, chap_group), spdk_json_decode_int32, true},
 	{"header_digest", offsetof(struct rpc_target_node, header_digest), spdk_json_decode_bool, true},
 	{"data_digest", offsetof(struct rpc_target_node, data_digest), spdk_json_decode_bool, true},
 };
@@ -609,10 +605,10 @@ spdk_rpc_construct_target_node(struct spdk_jsonrpc_request *request,
 					       lun_ids,
 					       req.luns.num_luns,
 					       req.queue_depth,
-					       req.chap_disabled,
-					       req.chap_required,
-					       req.chap_mutual,
-					       req.chap_auth_group,
+					       req.disable_chap,
+					       req.require_chap,
+					       req.mutual_chap,
+					       req.chap_group,
 					       req.header_digest,
 					       req.data_digest);
 

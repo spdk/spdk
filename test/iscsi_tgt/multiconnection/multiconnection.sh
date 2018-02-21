@@ -71,7 +71,7 @@ done
 
 for i in `seq 1 $CONNECTION_NUMBER`; do
 	lun="lvs0/lbd_$i:0"
-	$rpc_py construct_target_node Target$i Target${i}_alias "$lun" "1:1" 256 1 0 0 0
+	$rpc_py construct_target_node Target$i Target${i}_alias "$lun" "1:1" 256 -d
 done
 sleep 1
 
