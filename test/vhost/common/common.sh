@@ -220,8 +220,9 @@ function spdk_vhost_kill()
 			rm $vhost_pid_file
 			rc=1
 		else
-			#check vhost return code, activate trap on error
-			wait $vhost_pid
+			while kill -0 $vhost_pid; do
+				echo "."
+			done
 		fi
 	elif /bin/kill -0 $vhost_pid; then
 		error "vhost NOT killed - you need to kill it manually"
@@ -294,9 +295,12 @@ function vm_create_ssh_config()
 		echo "  UserKnownHostsFile=/dev/null"
 		echo "  StrictHostKeyChecking=no"
 		echo "  User root"
-		echo "  ControlPath=$VM_BASE_DIR/%r@%h:%p.ssh"
+		echo "  ControlPath=/tmp/%r@%h:%p.ssh"
 		echo ""
 		) > $ssh_config
+		# Control path created at /tmp because of live migration test case 3.
+		# In case of using sshfs share for the test - control path cannot be
+		# on share because remote server will fail on ssh commands.
 	fi
 }
 
