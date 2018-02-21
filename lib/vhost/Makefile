@@ -34,9 +34,9 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-CFLAGS += -I.
-CFLAGS += -Irte_vhost
-CFLAGS += $(ENV_CFLAGS)
+override CFLAGS += -I.
+override CFLAGS += -Irte_vhost
+override CFLAGS += $(ENV_CFLAGS)
 
 C_SRCS = vhost.c vhost_rpc.c vhost_scsi.c vhost_blk.c
 

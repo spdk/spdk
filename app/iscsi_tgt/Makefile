@@ -40,7 +40,7 @@ APP = iscsi_tgt
 
 # Add iSCSI library directory to include path
 # TODO: remove this once iSCSI has a public API header
-CFLAGS += -I$(SPDK_ROOT_DIR)/lib
+override CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 
 C_SRCS := iscsi_tgt.c
 

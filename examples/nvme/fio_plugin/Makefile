@@ -38,7 +38,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 APP := fio_plugin
 
-CFLAGS += -I$(FIO_SOURCE_DIR)
+override CFLAGS += -I$(FIO_SOURCE_DIR)
 LDFLAGS += -shared -rdynamic
 
 include $(SPDK_ROOT_DIR)/mk/nvme.libtest.mk

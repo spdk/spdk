@@ -39,7 +39,7 @@ APP = ioat_kperf
 
 C_SRCS := ioat_kperf.c
 
-CFLAGS += -I.
+override CFLAGS += -I.
 
 all: $(APP)
 	@:

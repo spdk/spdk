@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-CFLAGS += -I$(SPDK_ROOT_DIR)/test
+override CFLAGS += -I$(SPDK_ROOT_DIR)/test
 C_SRCS = spdk_cunit.c
 LIBNAME = cunit
 

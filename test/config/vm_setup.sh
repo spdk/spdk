@@ -62,7 +62,7 @@ sudo dnf install -y python
 sudo dnf install -y python-pep8
 sudo dnf install -y lcov
 sudo dnf install -y libuuid-devel
-sudo dnf install -y elfutils-libelf-devel
+sudo dnf install -y elfutils-libelf-devel flex bison
 sudo dnf install -y flex
 sudo dnf install -y bison
 

@@ -40,7 +40,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 APP := fio_plugin
 
 C_SRCS = fio_plugin.c
-CFLAGS += -I$(FIO_SOURCE_DIR)
+override CFLAGS += -I$(FIO_SOURCE_DIR)
 LDFLAGS += -shared -rdynamic
 
 SPDK_LIB_LIST +=  util bdev conf copy rpc jsonrpc json log

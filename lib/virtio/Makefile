@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-CFLAGS += $(ENV_CFLAGS)
+override CFLAGS += $(ENV_CFLAGS)
 C_SRCS = virtio.c virtio_user.c virtio_pci.c
 C_SRCS += virtio_user/vhost_user.c
 LIBNAME = virtio

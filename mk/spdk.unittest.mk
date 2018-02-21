@@ -37,8 +37,8 @@ include $(SPDK_ROOT_DIR)/mk/spdk.mock.unittest.mk
 
 C_SRCS = $(TEST_FILE)
 
-CFLAGS += -I$(SPDK_ROOT_DIR)/lib
-CFLAGS += -I$(SPDK_ROOT_DIR)/test
+override CFLAGS += -I$(SPDK_ROOT_DIR)/lib
+override CFLAGS += -I$(SPDK_ROOT_DIR)/test
 
 SPDK_LIB_LIST += util log spdk_mock
 
