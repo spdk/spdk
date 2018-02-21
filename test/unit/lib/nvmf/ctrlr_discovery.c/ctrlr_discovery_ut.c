@@ -174,21 +174,6 @@ spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 	return 0;
 }
 
-static bool
-all_zero(const void *buf, size_t size)
-{
-	const uint8_t *b = buf;
-
-	while (size--) {
-		if (*b != 0) {
-			return false;
-		}
-		b++;
-	}
-
-	return true;
-}
-
 static void
 test_discovery_log(void)
 {
@@ -239,8 +224,8 @@ test_discovery_log(void)
 	CU_ASSERT(disc_log->genctr != 0);
 	CU_ASSERT(disc_log->numrec == 1);
 	CU_ASSERT(disc_log->entries[0].trtype == 42);
-	CU_ASSERT(all_zero(buffer + sizeof(*disc_log) + sizeof(disc_log->entries[0]),
-			   sizeof(buffer) - (sizeof(*disc_log) + sizeof(disc_log->entries[0]))));
+	CU_ASSERT(spdk_mem_all_zero(buffer + sizeof(*disc_log) + sizeof(disc_log->entries[0]),
+				    sizeof(buffer) - (sizeof(*disc_log) + sizeof(disc_log->entries[0]))));
 
 	/* Get just the first entry, no header */
 	memset(buffer, 0xCC, sizeof(buffer));

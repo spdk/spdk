@@ -39,23 +39,10 @@
 #include "spdk/env.h"
 #include "spdk/nvme.h"
 #include "spdk/nvmf.h"
+#include "spdk/string.h"
 #include "spdk/util.h"
 
 #include "nvmf_tgt.h"
-
-static bool
-all_zero(const void *data, size_t size)
-{
-	const uint8_t *buf = data;
-
-	while (size--) {
-		if (*buf++ != 0) {
-			return false;
-		}
-	}
-	return true;
-}
-
 static int
 json_write_hex_str(struct spdk_json_write_ctx *w, const void *data, size_t size)
 {
@@ -267,12 +254,12 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 			spdk_json_write_name(w, "name");
 			spdk_json_write_string(w, spdk_bdev_get_name(spdk_nvmf_ns_get_bdev(ns)));
 
-			if (!all_zero(ns_opts.nguid, sizeof(ns_opts.nguid))) {
+			if (!spdk_mem_all_zero(ns_opts.nguid, sizeof(ns_opts.nguid))) {
 				spdk_json_write_name(w, "nguid");
 				json_write_hex_str(w, ns_opts.nguid, sizeof(ns_opts.nguid));
 			}
 
-			if (!all_zero(ns_opts.eui64, sizeof(ns_opts.eui64))) {
+			if (!spdk_mem_all_zero(ns_opts.eui64, sizeof(ns_opts.eui64))) {
 				spdk_json_write_name(w, "eui64");
 				json_write_hex_str(w, ns_opts.eui64, sizeof(ns_opts.eui64));
 			}

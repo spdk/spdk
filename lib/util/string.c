@@ -390,3 +390,17 @@ spdk_parse_capacity(const char *cap_str, uint64_t *cap, bool *has_prefix)
 
 	return 0;
 }
+
+bool
+spdk_mem_all_zero(const void *data, size_t size)
+{
+	const uint8_t *buf = data;
+
+	while (size--) {
+		if (*buf++ != 0) {
+			return false;
+		}
+	}
+
+	return true;
+}
