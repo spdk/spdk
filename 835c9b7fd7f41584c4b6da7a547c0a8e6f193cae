@@ -167,6 +167,30 @@
     },
     {
       "key": {
+        "uuid": "1244bb65_16fe0e7e",
+        "filename": "lib/event/subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-21T20:32:31Z",
+      "side": 1,
+      "message": "I agree that in general, keeping the implementation details hidden is desirable.\n\nHowever, in this particular case, I think having the RPC code walk the g_subsystems list directly would be cleaner overall (it would avoid the need for all of this allocation and error checking).\n\nWe already have some of the necessary details exposed in spdk_internal/event.h, so I think it\u0027s OK to let the RPC code use this to allow an overall simplification.",
+      "parentUuid": "feff99c0_3d55d2fa",
+      "range": {
+        "startLine": 264,
+        "startChar": 0,
+        "endLine": 264,
+        "endChar": 53
+      },
+      "revId": "835c9b7fd7f41584c4b6da7a547c0a8e6f193cae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2687129c_65293351",
         "filename": "scripts/rpc.py",
         "patchSetId": 2
