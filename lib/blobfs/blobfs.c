@@ -1507,10 +1507,10 @@ __read_done(void *ctx, int bserrno)
 		memcpy(args->op.rw.pin_buf + (args->op.rw.offset & 0xFFF),
 		       args->op.rw.user_buf,
 		       args->op.rw.length);
-		spdk_bs_io_write_blob(args->file->blob, args->op.rw.channel,
-				      args->op.rw.pin_buf,
-				      args->op.rw.start_page, args->op.rw.num_pages,
-				      __rw_done, req);
+		spdk_blob_io_write(args->file->blob, args->op.rw.channel,
+				   args->op.rw.pin_buf,
+				   args->op.rw.start_page, args->op.rw.num_pages,
+				   __rw_done, req);
 	}
 }
 
@@ -1520,10 +1520,10 @@ __do_blob_read(void *ctx, int fserrno)
 	struct spdk_fs_request *req = ctx;
 	struct spdk_fs_cb_args *args = &req->args;
 
-	spdk_bs_io_read_blob(args->file->blob, args->op.rw.channel,
-			     args->op.rw.pin_buf,
-			     args->op.rw.start_page, args->op.rw.num_pages,
-			     __read_done, req);
+	spdk_blob_io_read(args->file->blob, args->op.rw.channel,
+			  args->op.rw.pin_buf,
+			  args->op.rw.start_page, args->op.rw.num_pages,
+			  __read_done, req);
 }
 
 static void
@@ -1925,10 +1925,9 @@ __file_flush(void *_args)
 	BLOBFS_TRACE(file, "offset=%jx length=%jx page start=%jx num=%jx\n",
 		     offset, length, start_page, num_pages);
 	pthread_spin_unlock(&file->lock);
-	spdk_bs_io_write_blob(file->blob, file->fs->sync_target.sync_fs_channel->bs_channel,
-			      next->buf + (start_page * page_size) - next->offset,
-			      start_page, num_pages,
-			      __file_flush_done, args);
+	spdk_blob_io_write(file->blob, file->fs->sync_target.sync_fs_channel->bs_channel,
+			   next->buf + (start_page * page_size) - next->offset,
+			   start_page, num_pages, __file_flush_done, args);
 }
 
 static void
@@ -2131,10 +2130,9 @@ __readahead(void *_args)
 
 	BLOBFS_TRACE(file, "offset=%jx length=%jx page start=%jx num=%jx\n",
 		     offset, length, start_page, num_pages);
-	spdk_bs_io_read_blob(file->blob, file->fs->sync_target.sync_fs_channel->bs_channel,
-			     args->op.readahead.cache_buffer->buf,
-			     start_page, num_pages,
-			     __readahead_done, args);
+	spdk_blob_io_read(file->blob, file->fs->sync_target.sync_fs_channel->bs_channel,
+			  args->op.readahead.cache_buffer->buf,
+			  start_page, num_pages, __readahead_done, args);
 }
 
 static uint64_t

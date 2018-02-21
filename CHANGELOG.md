@@ -15,6 +15,19 @@ needed; previously, the response was limited to 32 kilobytes.
 EXPERIMENTAL: Adds support for WDS and RDS capable CMBs in NVMe controllers. This support is
 experimental pending a functional allocator to free and reallocate CMB buffers.
 
+### Blobstore
+
+A number of functions have been renamed:
+
+- spdk_bs_io_write_blob() => spdk_blob_io_write()
+- spdk_bs_io_read_blob() => spdk_blob_io_read()
+- spdk_bs_io_writev_blob() => spdk_blob_io_writev()
+- spdk_bs_io_readv_blob() => spdk_blob_io_readv()
+- spdk_bs_io_unmap_blob() => spdk_blob_io_unmap()
+- spdk_bs_io_write_zeroes_blob() => spdk_blob_io_write_zeroes()
+
+The old names still exist but are deprecated.  They will be removed in the v18.07 release.
+
 ## v18.01: Blobstore Thin Provisioning
 
 ### Build System
