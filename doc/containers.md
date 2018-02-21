@@ -16,7 +16,7 @@ runtime with lightweight virtual machines that feel and perform like
 containers, but provide stronger workload isolation using hardware
 virtualization technology as a second layer of defense.
 
-From Kata Containers [1.11.0-alpha1](https://github.com/kata-containers/runtime/releases/tag/1.11.0-alpha1),
+From Kata Containers [1.11.0](https://github.com/kata-containers/runtime/releases/tag/1.11.0),
 vhost-user-blk support is enabled in `kata-containers/runtime`. That is to say
 SPDK vhost target can be used to provide volume service to Kata Containers directly.
 In addition, a container manager like Docker, can be configured easily to launch
