@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "038bec89_3f8dafff",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 352,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-21T00:24:29Z",
+      "side": 1,
+      "message": "trid can be NULL here; you\u0027ll have to check before you dereference it.",
+      "revId": "18b56af2bbd2c9863b1701f221bcec8cfc122dcb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
