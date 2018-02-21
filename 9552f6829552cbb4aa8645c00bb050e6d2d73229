@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6c640043_6a4b34d2",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1013095
+      },
+      "writtenOn": "2018-02-21T17:12:42Z",
+      "side": 1,
+      "message": "What happens if the host is already connected to the subsystem? Will it be automatically disconnected?",
+      "revId": "9552f6829552cbb4aa8645c00bb050e6d2d73229",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
