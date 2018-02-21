@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7dfc08e9_e0b701ef",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 20
+      },
+      "lineNbr": 1307,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-21T08:06:58Z",
+      "side": 1,
+      "message": "Snapshot name that is created is not \"snapshot\" but \"lvs_test/snapshot\", just like below it is deleted.",
+      "range": {
+        "startLine": 1307,
+        "startChar": 36,
+        "endLine": 1307,
+        "endChar": 49
+      },
+      "revId": "d1359a2f4e74c3178bba7c0f677c1cc5033b7bd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "20338dd4_53ab73aa",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 20
+      },
+      "lineNbr": 1311,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-21T08:06:58Z",
+      "side": 1,
+      "message": "Same as above.",
+      "range": {
+        "startLine": 1311,
+        "startChar": 52,
+        "endLine": 1311,
+        "endChar": 62
+      },
+      "revId": "d1359a2f4e74c3178bba7c0f677c1cc5033b7bd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
