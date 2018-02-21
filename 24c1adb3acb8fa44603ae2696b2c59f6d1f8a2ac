@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bacd7d05_48cc4864",
+        "filename": "lib/net/sock.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-21T17:40:01Z",
+      "side": 1,
+      "message": "This can probably be static, but we can fix that up in another patch.",
+      "revId": "24c1adb3acb8fa44603ae2696b2c59f6d1f8a2ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
