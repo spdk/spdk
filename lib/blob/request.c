@@ -400,8 +400,8 @@ spdk_bs_batch_read_blob(spdk_bs_batch_t *batch, struct spdk_blob *blob,
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB_RW, "Reading %lu pages from offset %lu\n", length, offset);
 
 	set->u.batch.outstanding_ops++;
-	spdk_bs_io_read_blob(blob, spdk_io_channel_from_ctx(channel), payload, offset,
-			     length, spdk_bs_batch_blob_op_complete, set);
+	spdk_blob_io_read(blob, spdk_io_channel_from_ctx(channel), payload, offset,
+			  length, spdk_bs_batch_blob_op_complete, set);
 }
 
 void
@@ -414,8 +414,8 @@ spdk_bs_batch_write_blob(spdk_bs_batch_t *batch, struct spdk_blob *blob,
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB_RW, "Writing %lu pages from offset %lu\n", length, offset);
 
 	set->u.batch.outstanding_ops++;
-	spdk_bs_io_write_blob(blob, spdk_io_channel_from_ctx(channel), payload, offset,
-			      length, spdk_bs_batch_blob_op_complete, set);
+	spdk_blob_io_write(blob, spdk_io_channel_from_ctx(channel), payload, offset,
+			   length, spdk_bs_batch_blob_op_complete, set);
 }
 
 void
@@ -428,8 +428,8 @@ spdk_bs_batch_unmap_blob(spdk_bs_batch_t *batch, struct spdk_blob *blob,
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB_RW, "Unmapping %lu pages from offset %lu\n", length, offset);
 
 	set->u.batch.outstanding_ops++;
-	spdk_bs_io_unmap_blob(blob, spdk_io_channel_from_ctx(channel), offset, length,
-			      spdk_bs_batch_blob_op_complete, set);
+	spdk_blob_io_unmap(blob, spdk_io_channel_from_ctx(channel), offset, length,
+			   spdk_bs_batch_blob_op_complete, set);
 }
 
 void
@@ -442,8 +442,8 @@ spdk_bs_batch_write_zeroes_blob(spdk_bs_batch_t *batch, struct spdk_blob *blob,
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB_RW, "Zeroing %lu pages from offset %lu\n", length, offset);
 
 	set->u.batch.outstanding_ops++;
-	spdk_bs_io_write_zeroes_blob(blob, spdk_io_channel_from_ctx(channel), offset, length,
-				     spdk_bs_batch_blob_op_complete, set);
+	spdk_blob_io_write_zeroes(blob, spdk_io_channel_from_ctx(channel), offset, length,
+				  spdk_bs_batch_blob_op_complete, set);
 }
 
 void
@@ -550,30 +550,30 @@ spdk_bs_user_op_execute(spdk_bs_user_op_t *op)
 
 	switch (args->type) {
 	case SPDK_BLOB_READ:
-		spdk_bs_io_read_blob(args->blob, ch, args->payload, args->offset, args->length,
-				     set->cpl.u.blob_basic.cb_fn, set->cpl.u.blob_basic.cb_arg);
+		spdk_blob_io_read(args->blob, ch, args->payload, args->offset, args->length,
+				  set->cpl.u.blob_basic.cb_fn, set->cpl.u.blob_basic.cb_arg);
 		break;
 	case SPDK_BLOB_WRITE:
-		spdk_bs_io_write_blob(args->blob, ch, args->payload, args->offset, args->length,
-				      set->cpl.u.blob_basic.cb_fn, set->cpl.u.blob_basic.cb_arg);
+		spdk_blob_io_write(args->blob, ch, args->payload, args->offset, args->length,
+				   set->cpl.u.blob_basic.cb_fn, set->cpl.u.blob_basic.cb_arg);
 		break;
 	case SPDK_BLOB_UNMAP:
-		spdk_bs_io_unmap_blob(args->blob, ch, args->offset, args->length,
-				      set->cpl.u.blob_basic.cb_fn, set->cpl.u.blob_basic.cb_arg);
+		spdk_blob_io_unmap(args->blob, ch, args->offset, args->length,
+				   set->cpl.u.blob_basic.cb_fn, set->cpl.u.blob_basic.cb_arg);
 		break;
 	case SPDK_BLOB_WRITE_ZEROES:
-		spdk_bs_io_write_zeroes_blob(args->blob, ch, args->offset, args->length,
-					     set->cpl.u.blob_basic.cb_fn, set->cpl.u.blob_basic.cb_arg);
+		spdk_blob_io_write_zeroes(args->blob, ch, args->offset, args->length,
+					  set->cpl.u.blob_basic.cb_fn, set->cpl.u.blob_basic.cb_arg);
 		break;
 	case SPDK_BLOB_READV:
-		spdk_bs_io_readv_blob(args->blob, ch, args->payload, args->iovcnt,
-				      args->offset, args->length,
-				      set->cpl.u.blob_basic.cb_fn, set->cpl.u.blob_basic.cb_arg);
+		spdk_blob_io_readv(args->blob, ch, args->payload, args->iovcnt,
+				   args->offset, args->length,
+				   set->cpl.u.blob_basic.cb_fn, set->cpl.u.blob_basic.cb_arg);
 		break;
 	case SPDK_BLOB_WRITEV:
-		spdk_bs_io_writev_blob(args->blob, ch, args->payload, args->iovcnt,
-				       args->offset, args->length,
-				       set->cpl.u.blob_basic.cb_fn, set->cpl.u.blob_basic.cb_arg);
+		spdk_blob_io_writev(args->blob, ch, args->payload, args->iovcnt,
+				    args->offset, args->length,
+				    set->cpl.u.blob_basic.cb_fn, set->cpl.u.blob_basic.cb_arg);
 		break;
 	}
 	TAILQ_INSERT_TAIL(&set->channel->reqs, set, link);

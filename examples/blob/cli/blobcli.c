@@ -595,9 +595,9 @@ read_dump_cb(void *arg1, int bserrno)
 	printf(".");
 	if (++cli_context->page_count < cli_context->blob_pages) {
 		/* perform another read */
-		spdk_bs_io_read_blob(cli_context->blob, cli_context->channel,
-				     cli_context->buff, cli_context->page_count,
-				     NUM_PAGES, read_dump_cb, cli_context);
+		spdk_blob_io_read(cli_context->blob, cli_context->channel,
+				  cli_context->buff, cli_context->page_count,
+				  NUM_PAGES, read_dump_cb, cli_context);
 	} else {
 		/* done reading */
 		printf("\nFile write complete (to %s).\n", cli_context->file);
@@ -643,9 +643,9 @@ write_imp_cb(void *arg1, int bserrno)
 	}
 	if (++cli_context->page_count < cli_context->blob_pages) {
 		printf(".");
-		spdk_bs_io_write_blob(cli_context->blob, cli_context->channel,
-				      cli_context->buff, cli_context->page_count,
-				      NUM_PAGES, write_imp_cb, cli_context);
+		spdk_blob_io_write(cli_context->blob, cli_context->channel,
+				   cli_context->buff, cli_context->page_count,
+				   NUM_PAGES, write_imp_cb, cli_context);
 	} else {
 		/* done writing */
 		printf("\nBlob import complete (from %s).\n", cli_context->file);
@@ -695,9 +695,9 @@ dump_imp_open_cb(void *cb_arg, struct spdk_blob *blob, int bserrno)
 		}
 
 		/* read a page of data from the blob */
-		spdk_bs_io_read_blob(cli_context->blob, cli_context->channel,
-				     cli_context->buff, cli_context->page_count,
-				     NUM_PAGES, read_dump_cb, cli_context);
+		spdk_blob_io_read(cli_context->blob, cli_context->channel,
+				  cli_context->buff, cli_context->page_count,
+				  NUM_PAGES, read_dump_cb, cli_context);
 	} else {
 		cli_context->fp = fopen(cli_context->file, "r");
 		if (cli_context->fp == NULL) {
@@ -723,9 +723,9 @@ dump_imp_open_cb(void *cb_arg, struct spdk_blob *blob, int bserrno)
 			       cli_context->page_size - cli_context->filesize);
 		}
 
-		spdk_bs_io_write_blob(cli_context->blob, cli_context->channel,
-				      cli_context->buff, cli_context->page_count,
-				      NUM_PAGES, write_imp_cb, cli_context);
+		spdk_blob_io_write(cli_context->blob, cli_context->channel,
+				   cli_context->buff, cli_context->page_count,
+				   NUM_PAGES, write_imp_cb, cli_context);
 	}
 }
 
@@ -744,9 +744,9 @@ write_cb(void *arg1, int bserrno)
 	}
 	printf(".");
 	if (++cli_context->page_count < cli_context->blob_pages) {
-		spdk_bs_io_write_blob(cli_context->blob, cli_context->channel,
-				      cli_context->buff, cli_context->page_count,
-				      NUM_PAGES, write_cb, cli_context);
+		spdk_blob_io_write(cli_context->blob, cli_context->channel,
+				   cli_context->buff, cli_context->page_count,
+				   NUM_PAGES, write_cb, cli_context);
 	} else {
 		/* done writing */
 		printf("\nBlob fill complete (with 0x%x).\n", cli_context->fill_value);
@@ -782,9 +782,9 @@ fill_blob_cb(void *arg1, struct spdk_blob *blob, int bserrno)
 	memset(cli_context->buff, cli_context->fill_value,
 	       cli_context->page_size);
 	printf("Working");
-	spdk_bs_io_write_blob(cli_context->blob, cli_context->channel,
-			      cli_context->buff,
-			      STARTING_PAGE, NUM_PAGES, write_cb, cli_context);
+	spdk_blob_io_write(cli_context->blob, cli_context->channel,
+			   cli_context->buff,
+			   STARTING_PAGE, NUM_PAGES, write_cb, cli_context);
 }
 
 /*
