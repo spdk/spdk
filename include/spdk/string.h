@@ -171,6 +171,15 @@ int spdk_parse_ip_addr(char *ip, char **host, char **port);
  */
 int spdk_parse_capacity(const char *cap_str, uint64_t *cap, bool *has_prefix);
 
+/**
+ * Check if a buffer is all zero (0x00) bytes or not.
+ *
+ * \param data Buffer to check.
+ * \param size Size of data in bytes.
+ * \return true if data consists entirely of zeroes, or false if any byte in data is not zero.
+ */
+bool spdk_mem_all_zero(const void *data, size_t size);
+
 #ifdef __cplusplus
 }
 #endif

@@ -36,6 +36,7 @@
 #include "nvme_internal.h"
 
 #include "spdk/env.h"
+#include "spdk/string.h"
 
 #include <uuid/uuid.h>
 
@@ -934,10 +935,8 @@ static int
 nvme_ctrlr_set_host_id(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_completion_poll_status status;
-	bool all_zeroes;
 	uint8_t *host_id;
 	uint32_t host_id_size;
-	uint32_t i;
 	int rc;
 
 	if (ctrlr->trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
@@ -960,15 +959,7 @@ nvme_ctrlr_set_host_id(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	/* If the user specified an all-zeroes host identifier, don't send the command. */
-	all_zeroes = true;
-	for (i = 0; i < host_id_size; i++) {
-		if (host_id[i] != 0) {
-			all_zeroes = false;
-			break;
-		}
-	}
-
-	if (all_zeroes) {
+	if (spdk_mem_all_zero(host_id, host_id_size)) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVME,
 			      "User did not specify host ID - not sending Set Features - Host ID\n");
 		return 0;
