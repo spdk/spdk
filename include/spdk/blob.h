@@ -42,17 +42,15 @@
  *
  * The blobstore is designed to be very high performance, and thus has
  * a few general rules regarding thread safety to avoid taking locks
- * in the I/O path. Functions starting with the prefix "spdk_bs_md" must only
- * be called from the metadata thread, of which there is only one at a time.
- * The metadata thread is the thread which called spdk_bs_init() or
- * spdk_bs_load().
+ * in the I/O path.  This is primarily done by only allowing most
+ * functions to be called on the metadata thread.  The metadata thread is
+ * the thread which called spdk_bs_init() or spdk_bs_load().
  *
  * Functions starting with the prefix "spdk_blob_io" are passed a channel
  * as an argument, and channels may only be used from the thread they were
- * created on. See \ref spdk_bs_alloc_io_channel.
- *
- * Functions not starting with one of those two prefixes are thread safe
- * and may be called from any thread at any time.
+ * created on. See \ref spdk_bs_alloc_io_channel.  These are the only
+ * functions that may be called from a thread other than the metadata
+ * thread.
  *
  * The blob store returns errors using negated POSIX errno values, either
  * returned in the callback or as a return value. An errno value of 0 means
