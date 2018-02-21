@@ -575,6 +575,9 @@ spdk_bs_user_op_execute(spdk_bs_user_op_t *op)
 				    args->offset, args->length,
 				    set->cpl.u.blob_basic.cb_fn, set->cpl.u.blob_basic.cb_arg);
 		break;
+	case SPDK_BLOB_SYNC:
+		spdk_blob_sync_md(args->blob, set->cpl.u.blob_basic.cb_fn, set->cpl.u.blob_basic.cb_arg);
+		break;
 	}
 	TAILQ_INSERT_TAIL(&set->channel->reqs, set, link);
 }
