@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "67cdbba8_af0fad4f",
+        "filename": "lib/blob/blob_bs_dev.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-22T12:38:46Z",
+      "side": 1,
+      "message": "Please remove it as well",
+      "range": {
+        "startLine": 40,
+        "startChar": 0,
+        "endLine": 43,
+        "endChar": 2
+      },
+      "revId": "8997bd741f0cb90aa408ff2731bc0c82d2b2a91d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
