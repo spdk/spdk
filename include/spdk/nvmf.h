@@ -401,6 +401,13 @@ struct spdk_nvmf_ns_opts {
 	 * Fill with 0s if not specified.
 	 */
 	uint8_t eui64[8];
+
+	/**
+	 * Namespace UUID
+	 *
+	 * Fill with 0s if not specified.
+	 */
+	uint8_t uuid[16];
 };
 
 /**
