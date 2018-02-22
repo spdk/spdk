@@ -33,6 +33,20 @@ A number of functions have been renamed:
 
 The old names still exist but are deprecated.  They will be removed in the v18.07 release.
 
+### Lib
+
+A set of changes were made in the SPDK's lib code altering,
+instances of calls to `exit()` and `abort()` to return a failure instead
+wherever reasonably possible.
+
+spdk_app_start() no longer exit()'s on an internal failure, but
+instead returns a non-zero error status.
+
+spdk_app_parse_args() no longer exit()'s on help, '-h', or an invalid
+option, but instead returns SPDK_APP_PARSE_ARGS_HELP and
+SPDK_APP_PARSE_ARGS_FAIL, respectively, and SPDK_APP_PARSE_ARGS_SUCCESS
+on success.
+
 ## v18.01: Blobstore Thin Provisioning
 
 ### Build System

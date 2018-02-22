@@ -127,6 +127,9 @@ spdk_trace_init(const char *shm_name)
 void
 spdk_trace_cleanup(void)
 {
-	munmap(g_trace_histories, sizeof(struct spdk_trace_histories));
+	if (g_trace_histories) {
+		munmap(g_trace_histories, sizeof(struct spdk_trace_histories));
+		g_trace_histories = NULL;
+	}
 	shm_unlink(g_shm_name);
 }

@@ -335,6 +335,9 @@ spdk_nvmf_tgt_start(struct spdk_app_opts *opts)
 
 	/* Blocks until the application is exiting */
 	rc = spdk_app_start(opts, nvmf_tgt_advance_state, NULL, NULL);
+	if (rc) {
+		SPDK_ERRLOG("spdk_app_start() retn non-zero\n");
+	}
 
 	spdk_app_fini();
 
