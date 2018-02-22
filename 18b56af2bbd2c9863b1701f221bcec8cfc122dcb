@@ -16,6 +16,52 @@
       "revId": "18b56af2bbd2c9863b1701f221bcec8cfc122dcb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f6090f9_c719f99d",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1678,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-22T09:18:35Z",
+      "side": 1,
+      "message": "Destruct ctrlr for SSD: %s\n\nAlso corresponding to other new logs.",
+      "range": {
+        "startLine": 1678,
+        "startChar": 51,
+        "endLine": 1678,
+        "endChar": 56
+      },
+      "revId": "18b56af2bbd2c9863b1701f221bcec8cfc122dcb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bf1e95e4_55bead74",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1679,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-22T09:18:35Z",
+      "side": 1,
+      "message": "Maybe add a new line after this new code.",
+      "range": {
+        "startLine": 1678,
+        "startChar": 1,
+        "endLine": 1679,
+        "endChar": 1
+      },
+      "revId": "18b56af2bbd2c9863b1701f221bcec8cfc122dcb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
