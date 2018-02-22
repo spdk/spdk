@@ -100,6 +100,14 @@ struct spdk_bdev_module {
 	 */
 	void (*config_text)(FILE *fp);
 
+	/**
+	 * Function called to return a text string representing the
+	 * module's configuration options for inclusion in a configuration file.
+	 *
+	 * \return 0 on success or Bdev specific negative error code.
+	 */
+	int (*config_json)(struct spdk_json_write_ctx *w);
+
 	/** Name for the modules being defined. */
 	const char *name;
 
@@ -171,6 +179,15 @@ struct spdk_bdev_fn_table {
 	 * (most likely another nested object).
 	 */
 	int (*dump_info_json)(void *ctx, struct spdk_json_write_ctx *w);
+
+	/**
+	 * Output bdev-specific configuration to a JSON stream. Optional - may be NULL.
+	 *
+	 * The JSON write context will be initialized with an open object, so the bdev
+	 * driver should write all data necessary to recreate this bdev by invoking
+	 * constructor method. No other data should be written.
+	 */
+	void (*write_config_json)(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w);
 
 	/** Get spin-time per I/O channel in microseconds.
 	 *  Optional - may be NULL.
