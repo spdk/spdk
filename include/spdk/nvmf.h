@@ -44,6 +44,7 @@
 #include "spdk/nvme.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/queue.h"
+#include "spdk/uuid.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -454,6 +455,13 @@ struct spdk_nvmf_ns_opts {
 	 * Fill with 0s if not specified.
 	 */
 	uint8_t eui64[8];
+
+	/**
+	 * Namespace UUID
+	 *
+	 * Fill with 0s if not specified.
+	 */
+	struct spdk_uuid uuid;
 };
 
 /**

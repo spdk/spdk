@@ -885,6 +885,10 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 		memcpy(&opts, user_opts, spdk_min(sizeof(opts), opts_size));
 	}
 
+	if (spdk_mem_all_zero(&opts.uuid, sizeof(opts.uuid))) {
+		opts.uuid = *spdk_bdev_get_uuid(bdev);
+	}
+
 	if (opts.nsid == SPDK_NVME_GLOBAL_NS_TAG) {
 		SPDK_ERRLOG("Invalid NSID %" PRIu32 "\n", opts.nsid);
 		return 0;
