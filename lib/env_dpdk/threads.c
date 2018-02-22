@@ -64,6 +64,8 @@ spdk_env_get_last_core(void)
 		last_core = i;
 	}
 
+	assert(last_core != UINT32_MAX);
+
 	return last_core;
 }
 
