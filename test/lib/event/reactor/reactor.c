@@ -106,6 +106,7 @@ main(int argc, char **argv)
 {
 	struct spdk_app_opts opts;
 	int op;
+	int rc = 0;
 
 	spdk_app_opts_init(&opts);
 	opts.name = "reactor";
@@ -129,9 +130,9 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
-	spdk_app_start(&opts, test_start, NULL, NULL);
+	rc = spdk_app_start(&opts, test_start, NULL, NULL);
 
 	spdk_app_fini();
 
-	return 0;
+	return rc;
 }

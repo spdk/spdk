@@ -470,7 +470,8 @@ main(int argc, char **argv)
 		/*
 		 * spdk_app_start() will block running hello_start() until
 		 * spdk_app_stop() is called by someone (not simply when
-		 * hello_start() returns)
+		 * hello_start() returns), or if an error occurs during
+		 * spdk_app_start() before hello_start() runs.
 		 */
 		rc = spdk_app_start(&opts, hello_start, hello_context, NULL);
 		if (rc) {

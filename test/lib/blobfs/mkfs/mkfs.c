@@ -121,6 +121,7 @@ mkfs_parse_arg(int ch, char *arg)
 int main(int argc, char **argv)
 {
 	struct spdk_app_opts opts = {};
+	int rc = 0;
 
 	if (argc < 3) {
 		SPDK_ERRLOG("usage: %s <conffile> <bdevname>\n", argv[0]);
@@ -136,10 +137,14 @@ int main(int argc, char **argv)
 
 	spdk_fs_set_cache_size(512);
 	g_bdev_name = argv[2];
-	spdk_app_parse_args(argc, argv, &opts, "C:", mkfs_parse_arg, mkfs_usage);
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "C:",
+				      mkfs_parse_arg, mkfs_usage)) !=
+	    SPDK_APP_PARSE_ARGS_SUCCESS) {
+		exit(rc);
+	}
 
-	spdk_app_start(&opts, spdk_mkfs_run, NULL, NULL);
+	rc = spdk_app_start(&opts, spdk_mkfs_run, NULL, NULL);
 	spdk_app_fini();
 
-	return 0;
+	return rc;
 }

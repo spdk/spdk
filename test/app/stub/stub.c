@@ -140,7 +140,7 @@ main(int argc, char **argv)
 	opts.shutdown_cb = stub_shutdown;
 	opts.max_delay_us = 1000 * 1000;
 
-	spdk_app_start(&opts, stub_start, (void *)(intptr_t)opts.shm_id, NULL);
+	ch = spdk_app_start(&opts, stub_start, (void *)(intptr_t)opts.shm_id, NULL);
 
-	return 0;
+	return ch;
 }

@@ -100,6 +100,7 @@ main(int argc, char **argv)
 {
 	struct spdk_app_opts opts;
 	int op;
+	int rc;
 
 	spdk_app_opts_init(&opts);
 	opts.name = "reactor_perf";
@@ -132,11 +133,11 @@ main(int argc, char **argv)
 
 	opts.shutdown_cb = test_cleanup;
 
-	spdk_app_start(&opts, test_start, NULL, NULL);
+	rc = spdk_app_start(&opts, test_start, NULL, NULL);
 
 	spdk_app_fini();
 
 	printf("Performance: %8ju events per second\n", g_call_count / g_time_in_sec);
 
-	return 0;
+	return rc;
 }

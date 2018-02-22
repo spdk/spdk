@@ -99,7 +99,11 @@ main(int argc, char *argv[])
 
 	vhost_app_opts_init(&opts);
 
-	spdk_app_parse_args(argc, argv, &opts, "f:S:", vhost_parse_arg, vhost_usage);
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "f:S:",
+				      vhost_parse_arg, vhost_usage)) !=
+	    SPDK_APP_PARSE_ARGS_SUCCESS) {
+		exit(rc);
+	}
 
 	if (g_pid_path) {
 		save_pid(g_pid_path);
