@@ -863,10 +863,10 @@ spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_ty
 }
 
 int
-spdk_bdev_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+spdk_bdev_dump_info_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 {
-	if (bdev->fn_table->dump_config_json) {
-		return bdev->fn_table->dump_config_json(bdev->ctxt, w);
+	if (bdev->fn_table->dump_info_json) {
+		return bdev->fn_table->dump_info_json(bdev->ctxt, w);
 	}
 
 	return 0;

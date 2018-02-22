@@ -152,13 +152,13 @@ struct spdk_bdev_fn_table {
 	struct spdk_io_channel *(*get_io_channel)(void *ctx);
 
 	/**
-	 * Output driver-specific configuration to a JSON stream. Optional - may be NULL.
+	 * Output driver-specific information to a JSON stream. Optional - may be NULL.
 	 *
 	 * The JSON write context will be initialized with an open object, so the bdev
 	 * driver should write a name (based on the driver name) followed by a JSON value
 	 * (most likely another nested object).
 	 */
-	int (*dump_config_json)(void *ctx, struct spdk_json_write_ctx *w);
+	int (*dump_info_json)(void *ctx, struct spdk_json_write_ctx *w);
 
 	/** Get spin-time per I/O channel in microseconds.
 	 *  Optional - may be NULL.

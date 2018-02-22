@@ -666,7 +666,7 @@ bdev_virtio_disk_destruct(void *ctx)
 }
 
 static int
-bdev_virtio_dump_json_config(void *ctx, struct spdk_json_write_ctx *w)
+bdev_virtio_dump_info_config(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct virtio_scsi_disk *disk = ctx;
 
@@ -679,7 +679,7 @@ static const struct spdk_bdev_fn_table virtio_fn_table = {
 	.submit_request		= bdev_virtio_submit_request,
 	.io_type_supported	= bdev_virtio_io_type_supported,
 	.get_io_channel		= bdev_virtio_get_io_channel,
-	.dump_config_json	= bdev_virtio_dump_json_config,
+	.dump_info_json		= bdev_virtio_dump_info_config,
 };
 
 static void

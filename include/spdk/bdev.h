@@ -239,7 +239,7 @@ bool spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type 
  * \param w JSON write context. It will store the driver-specific configuration context.
  * \return 0 on success, negated errno on failure.
  */
-int spdk_bdev_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w);
+int spdk_bdev_dump_info_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w);
 
 /**
  * Get block device name.

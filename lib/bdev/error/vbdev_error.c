@@ -192,7 +192,7 @@ vbdev_error_destruct(void *ctx)
 }
 
 static int
-vbdev_error_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
+vbdev_error_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct error_disk *error_disk = ctx;
 
@@ -210,7 +210,7 @@ vbdev_error_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
 static struct spdk_bdev_fn_table vbdev_error_fn_table = {
 	.destruct		= vbdev_error_destruct,
 	.submit_request		= vbdev_error_submit_request,
-	.dump_config_json	= vbdev_error_dump_config_json,
+	.dump_info_json		= vbdev_error_dump_info_json,
 };
 
 static void

@@ -86,7 +86,7 @@ vbdev_split_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bde
 }
 
 static int
-vbdev_split_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
+vbdev_split_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct spdk_bdev_part *part = ctx;
 
@@ -106,7 +106,7 @@ vbdev_split_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
 static struct spdk_bdev_fn_table vbdev_split_fn_table = {
 	.destruct		= vbdev_split_destruct,
 	.submit_request		= vbdev_split_submit_request,
-	.dump_config_json	= vbdev_split_dump_config_json,
+	.dump_info_json		= vbdev_split_dump_info_json,
 };
 
 static int

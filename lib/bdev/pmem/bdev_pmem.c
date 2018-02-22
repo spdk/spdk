@@ -249,7 +249,7 @@ bdev_pmem_get_io_channel(void *ctx)
 }
 
 static int
-bdev_pmem_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
+bdev_pmem_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct pmem_disk *pdisk = ctx;
 
@@ -278,7 +278,7 @@ static const struct spdk_bdev_fn_table pmem_fn_table = {
 	.submit_request		= bdev_pmem_submit_request,
 	.io_type_supported	= bdev_pmem_io_type_supported,
 	.get_io_channel		= bdev_pmem_get_io_channel,
-	.dump_config_json	= bdev_pmem_dump_config_json,
+	.dump_info_json		= bdev_pmem_dump_info_json,
 };
 
 int
