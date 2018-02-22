@@ -96,5 +96,5 @@ nvme_get_quirks(const struct spdk_pci_id *id)
 		}
 		quirk++;
 	}
-	return false;
+	return 0;
 }
