@@ -59,6 +59,14 @@ static int _spdk_blob_get_xattr_value(struct spdk_blob *blob, const char *name,
 				      const void **value, size_t *value_len, bool internal);
 static int _spdk_blob_remove_xattr(struct spdk_blob *blob, const char *name, bool internal);
 
+static void
+_spdk_blob_verify_md_op(struct spdk_blob *blob)
+{
+	assert(blob != NULL);
+	assert(spdk_get_thread() == blob->bs->md_thread);
+	assert(blob->state != SPDK_BLOB_STATE_LOADING);
+}
+
 static inline size_t
 divide_round_up(size_t num, size_t divisor)
 {
@@ -83,7 +91,7 @@ _spdk_blob_insert_cluster(struct spdk_blob *blob, uint32_t cluster_num, uint64_t
 {
 	uint64_t *cluster_lba = &blob->active.clusters[cluster_num];
 
-	assert(spdk_get_thread() == blob->bs->md_thread);
+	_spdk_blob_verify_md_op(blob);
 
 	if (*cluster_lba != 0) {
 		return -EEXIST;
@@ -3212,6 +3220,7 @@ _spdk_blob_set_xattrs(struct spdk_blob *blob, const struct spdk_blob_xattr_opts 
 static void
 _spdk_blob_set_thin_provision(struct spdk_blob *blob)
 {
+	_spdk_blob_verify_md_op(blob);
 	blob->invalid_flags |= SPDK_BLOB_THIN_PROV;
 	blob->state = SPDK_BLOB_STATE_DIRTY;
 }
@@ -3297,8 +3306,7 @@ spdk_blob_resize(struct spdk_blob *blob, uint64_t sz)
 {
 	int			rc;
 
-	assert(blob != NULL);
-	assert(spdk_get_thread() == blob->bs->md_thread);
+	_spdk_blob_verify_md_op(blob);
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Resizing blob %lu to %lu clusters\n", blob->id, sz);
 
@@ -3367,6 +3375,8 @@ _spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
 		spdk_bs_sequence_finish(seq, bserrno);
 		return;
 	}
+
+	_spdk_blob_verify_md_op(blob);
 
 	if (blob->open_ref > 1) {
 		/*
@@ -3489,7 +3499,7 @@ void spdk_bs_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 /* START spdk_blob_set_read_only */
 int spdk_blob_set_read_only(struct spdk_blob *blob)
 {
-	assert(spdk_get_thread() == blob->bs->md_thread);
+	_spdk_blob_verify_md_op(blob);
 
 	blob->data_ro_flags |= SPDK_BLOB_READ_ONLY;
 
@@ -3535,12 +3545,9 @@ _spdk_blob_sync_md(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb
 void
 spdk_blob_sync_md(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
-	assert(blob != NULL);
-	assert(spdk_get_thread() == blob->bs->md_thread);
+	_spdk_blob_verify_md_op(blob);
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Syncing blob %lu\n", blob->id);
-
-	assert(blob->state != SPDK_BLOB_STATE_LOADING);
 
 	if (blob->md_ro) {
 		assert(blob->state == SPDK_BLOB_STATE_CLEAN);
@@ -3654,12 +3661,9 @@ void spdk_blob_close(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *
 	struct spdk_bs_cpl	cpl;
 	spdk_bs_sequence_t	*seq;
 
-	assert(blob != NULL);
-	assert(spdk_get_thread() == blob->bs->md_thread);
+	_spdk_blob_verify_md_op(blob);
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Closing blob %lu\n", blob->id);
-
-	assert(blob->state != SPDK_BLOB_STATE_LOADING);
 
 	if (blob->open_ref == 0) {
 		cb_fn(cb_arg, -EBADF);
@@ -3873,10 +3877,7 @@ _spdk_blob_set_xattr(struct spdk_blob *blob, const char *name, const void *value
 	struct spdk_xattr_tailq *xattrs;
 	struct spdk_xattr 	*xattr;
 
-	assert(blob != NULL);
-	assert(spdk_get_thread() == blob->bs->md_thread);
-
-	assert(blob->state != SPDK_BLOB_STATE_LOADING);
+	_spdk_blob_verify_md_op(blob);
 
 	if (blob->md_ro) {
 		return -EPERM;
@@ -3930,10 +3931,7 @@ _spdk_blob_remove_xattr(struct spdk_blob *blob, const char *name, bool internal)
 	struct spdk_xattr_tailq *xattrs;
 	struct spdk_xattr	*xattr;
 
-	assert(blob != NULL);
-	assert(spdk_get_thread() == blob->bs->md_thread);
-
-	assert(blob->state != SPDK_BLOB_STATE_LOADING);
+	_spdk_blob_verify_md_op(blob);
 
 	if (blob->md_ro) {
 		return -EPERM;
@@ -3972,7 +3970,7 @@ _spdk_blob_get_xattr_value(struct spdk_blob *blob, const char *name,
 	struct spdk_xattr	*xattr;
 	struct spdk_xattr_tailq *xattrs;
 
-	assert(spdk_get_thread() == blob->bs->md_thread);
+	_spdk_blob_verify_md_op(blob);
 
 	xattrs = internal ? &blob->xattrs_internal : &blob->xattrs;
 
@@ -4023,7 +4021,7 @@ _spdk_blob_get_xattr_names(struct spdk_xattr_tailq *xattrs, struct spdk_xattr_na
 int
 spdk_blob_get_xattr_names(struct spdk_blob *blob, struct spdk_xattr_names **names)
 {
-	assert(spdk_get_thread() == blob->bs->md_thread);
+	_spdk_blob_verify_md_op(blob);
 
 	return _spdk_blob_get_xattr_names(&blob->xattrs, names);
 }
