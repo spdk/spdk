@@ -420,6 +420,48 @@ spdk_bdev_config_text(FILE *fp)
 	}
 }
 
+int
+spdk_bdev_config_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_bdev_module *bdev_module;
+	struct spdk_bdev *bdev;
+	int ret = 0;
+
+	spdk_json_write_array_begin(w);
+
+	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, tailq) {
+		if (bdev_module->config_json) {
+			ret = bdev_module->config_json(w);
+			if (ret) {
+				return ret;
+			}
+		}
+	}
+
+	TAILQ_FOREACH(bdev, &g_bdev_mgr.bdevs, link) {
+		ret = spdk_bdev_dump_bdev_config_json(bdev, w);
+		if (ret == 0) {
+			continue;
+		} else if (ret != -ENOSYS) {
+			break;
+		}
+
+		/*
+		 * In case ENOSYSY Write NULL "params" to indicate that there
+		 * is a bdev that is unable to write its configuration.
+		 */
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_string(w, "name", bdev->name);
+		spdk_json_write_named_null(w, "params");
+		spdk_json_write_object_end(w);
+		ret = 0;
+	}
+
+	spdk_json_write_array_end(w);
+
+	return ret;
+}
+
 static int
 spdk_bdev_mgmt_channel_create(void *io_device, void *ctx_buf)
 {
@@ -942,6 +984,20 @@ spdk_bdev_dump_info_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 	}
 
 	return 0;
+}
+
+int
+spdk_bdev_dump_bdev_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+{
+	if (bdev == NULL || w == NULL) {
+		return -EINVAL;
+	}
+
+	if (bdev->fn_table->dump_config_json) {
+		return bdev->fn_table->dump_config_json(bdev, w);
+	}
+
+	return -ENOSYS;
 }
 
 static void

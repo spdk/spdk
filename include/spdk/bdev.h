@@ -43,6 +43,7 @@
 
 #include "spdk/scsi_spec.h"
 #include "spdk/nvme_spec.h"
+#include "spdk/json.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -148,6 +149,15 @@ void spdk_bdev_finish(spdk_bdev_fini_cb cb_fn, void *cb_arg);
 void spdk_bdev_config_text(FILE *fp);
 
 /**
+ * Get the full configuration options for the registered block device modules and created bdevs.
+ *
+ * \param w The pointer to a JSON write context where the configuration will be written.
+ * \return result of \c spdk_bdev_dump_bdev_config_json() or negative error code:
+ * -EINVAL if w == NULL
+ */
+int spdk_bdev_config_json(struct spdk_json_write_ctx *w);
+
+/**
  * Get block device by the block device name.
  *
  * \param bdev_name The name of the block device.
@@ -230,7 +240,7 @@ struct spdk_bdev *spdk_bdev_desc_get_bdev(struct spdk_bdev_desc *desc);
 bool spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type);
 
 /**
- * Output driver-specific configuration to a JSON stream.
+ * Output driver-specific information to a JSON stream.
  *
  * The JSON write context will be initialized with an open object, so the bdev
  * driver should write a name(based on the driver name) followed by a JSON value
@@ -241,6 +251,21 @@ bool spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type 
  * \return 0 on success, negated errno on failure.
  */
 int spdk_bdev_dump_info_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w);
+
+/**
+ * Output bdev-specific configuration to a JSON stream. Optional - may be NULL.
+ *
+ * The JSON write context will be initialized with an open object, so the bdev
+ * driver should write all data necessary to recreate this bdev by invoking
+ * constructor method. No other data will be written.
+ *
+ * \param w JSON write context. It will store the driver-specific configuration context.
+ * \param bdev block device to query configuration.
+ * \return 0 on success, negated errno on failure.
+ *  -EINVAL - bdev == NULL or w == NULL
+ *  -ENOSYS - this block device doesn't support dumping configuration.
+ */
+int spdk_bdev_dump_bdev_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w);
 
 /**
  * Get block device name.
