@@ -38,13 +38,15 @@
 #include "spdk_internal/event.h"
 
 static void
+spdk_iscsi_subsystem_init_complete(void *cb_arg, int rc)
+{
+	spdk_subsystem_init_next(rc);
+}
+
+static void
 spdk_iscsi_subsystem_init(void)
 {
-	int rc;
-
-	rc = spdk_iscsi_init();
-
-	spdk_subsystem_init_next(rc);
+	spdk_iscsi_init(spdk_iscsi_subsystem_init_complete, NULL);
 }
 
 static void
