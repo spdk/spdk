@@ -422,6 +422,43 @@ struct spdk_nvmf_discovery_log_page {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_discovery_log_page) == 1024, "Incorrect size");
 
+/* Commands Supported and Effects Data Structure */
+struct spdk_nvmf_cmds_and_effect_entry {
+	/** Command Supported */
+	uint16_t csupp : 1;
+
+	/** Logic Block Content Change  */
+	uint16_t lbcc  : 1;
+
+	/** Namespace Capability Change */
+	uint16_t ncc   : 1;
+
+	/** Namespace Inventory Change */
+	uint16_t nic   : 1;
+
+	/** Controller Capability Change */
+	uint16_t ccc   : 1;
+
+	uint16_t reserved1 : 11;
+
+	/** Command Submission and Execution recommendation */
+	uint16_t cse : 3;
+
+	uint16_t reserved2 : 13;
+};
+
+/* Commands Supported and Effects Log Page */
+struct spdk_nvmf_cmds_and_effect_log_page {
+	/** Commands Supported and Effects Data Structure for the Admin Commands */
+	struct spdk_nvmf_cmds_and_effect_entry admin_cmds_supported[256];
+
+	/** Commands Supported and Effects Data Structure for the IO Commands */
+	struct spdk_nvmf_cmds_and_effect_entry io_cmds_supported[256];
+
+	uint8_t reserved0[2048];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_cmds_and_effect_log_page) == 4096, "Incorrect size");
+
 /* RDMA Fabric specific definitions below */
 
 #define SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY	0xF

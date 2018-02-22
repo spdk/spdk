@@ -842,6 +842,9 @@ spdk_nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 		case SPDK_NVME_LOG_FIRMWARE_SLOT:
 			/* TODO: actually fill out log page data */
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		case SPDK_NVME_LOG_COMMAND_EFFECTS_LOG:
+			spdk_nvmf_get_cmds_and_effects_log_page(req->data, offset, len);
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		default:
 			goto invalid_log_page;
 		}
