@@ -227,6 +227,8 @@ int spdk_nvmf_request_abort(struct spdk_nvmf_request *req);
 void spdk_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt,
 				      void *buffer, uint64_t offset,
 				      uint32_t length);
+void spdk_nvmf_get_cmds_and_effects_log_page(void *buffer,
+		uint64_t offset, uint32_t length);
 
 struct spdk_nvmf_qpair *spdk_nvmf_ctrlr_get_qpair(struct spdk_nvmf_ctrlr *ctrlr, uint16_t qid);
 void spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr);
