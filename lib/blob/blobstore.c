@@ -1124,8 +1124,7 @@ _spdk_resize_blob(struct spdk_blob *blob, uint64_t sz)
 
 	bs = blob->bs;
 
-	assert(blob->state != SPDK_BLOB_STATE_LOADING &&
-	       blob->state != SPDK_BLOB_STATE_SYNCING);
+	assert(blob->state != SPDK_BLOB_STATE_LOADING);
 
 	if (blob->active.num_clusters == sz) {
 		return 0;
@@ -3541,8 +3540,7 @@ spdk_blob_sync_md(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb_
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Syncing blob %lu\n", blob->id);
 
-	assert(blob->state != SPDK_BLOB_STATE_LOADING &&
-	       blob->state != SPDK_BLOB_STATE_SYNCING);
+	assert(blob->state != SPDK_BLOB_STATE_LOADING);
 
 	if (blob->md_ro) {
 		assert(blob->state == SPDK_BLOB_STATE_CLEAN);
@@ -3661,8 +3659,7 @@ void spdk_blob_close(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Closing blob %lu\n", blob->id);
 
-	assert(blob->state != SPDK_BLOB_STATE_LOADING &&
-	       blob->state != SPDK_BLOB_STATE_SYNCING);
+	assert(blob->state != SPDK_BLOB_STATE_LOADING);
 
 	if (blob->open_ref == 0) {
 		cb_fn(cb_arg, -EBADF);
@@ -3879,8 +3876,7 @@ _spdk_blob_set_xattr(struct spdk_blob *blob, const char *name, const void *value
 	assert(blob != NULL);
 	assert(spdk_get_thread() == blob->bs->md_thread);
 
-	assert(blob->state != SPDK_BLOB_STATE_LOADING &&
-	       blob->state != SPDK_BLOB_STATE_SYNCING);
+	assert(blob->state != SPDK_BLOB_STATE_LOADING);
 
 	if (blob->md_ro) {
 		return -EPERM;
@@ -3937,8 +3933,7 @@ _spdk_blob_remove_xattr(struct spdk_blob *blob, const char *name, bool internal)
 	assert(blob != NULL);
 	assert(spdk_get_thread() == blob->bs->md_thread);
 
-	assert(blob->state != SPDK_BLOB_STATE_LOADING &&
-	       blob->state != SPDK_BLOB_STATE_SYNCING);
+	assert(blob->state != SPDK_BLOB_STATE_LOADING);
 
 	if (blob->md_ro) {
 		return -EPERM;
