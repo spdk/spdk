@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e08f7457_2141f28c",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-22T17:22:09Z",
+      "side": 1,
+      "message": "This looks like it belongs in the previous patch.",
+      "revId": "0ea5d4a1ac5951641bcab0ef65e63bd301f24e62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eb2639bf_bb4c780f",
+        "filename": "lib/event/rpc/subsystem_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-22T17:22:09Z",
+      "side": 1,
+      "message": "not -\u003e no",
+      "range": {
+        "startLine": 47,
+        "startChar": 34,
+        "endLine": 47,
+        "endChar": 37
+      },
+      "revId": "0ea5d4a1ac5951641bcab0ef65e63bd301f24e62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13c54930_fc59ee21",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 323,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-22T17:22:09Z",
+      "side": 1,
+      "message": "Formatting fix should be in the patch that introduced this function.",
+      "revId": "0ea5d4a1ac5951641bcab0ef65e63bd301f24e62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

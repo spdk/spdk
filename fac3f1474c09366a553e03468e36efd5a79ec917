@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "96dc418e_4a2d49e8",
+        "filename": "lib/event/subsystems/copy/copy.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-22T17:22:09Z",
+      "side": 0,
+      "message": "Why is this removed?",
+      "revId": "fac3f1474c09366a553e03468e36efd5a79ec917",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
