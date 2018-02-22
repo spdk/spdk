@@ -34,6 +34,7 @@
 #include "spdk_cunit.h"
 
 #include "lib/test_env.c"
+#include "unit/lib/json_mock.c"
 
 #include "bdev/pmem/bdev_pmem.c"
 
@@ -89,11 +90,6 @@ static int g_opened_pools;
 static struct spdk_bdev *g_bdev;
 static const char *g_check_version_msg;
 static bool g_pmemblk_open_allow_open = true;
-
-DEFINE_STUB(spdk_json_write_object_begin, int, (struct spdk_json_write_ctx *w), 0);
-DEFINE_STUB(spdk_json_write_object_end, int, (struct spdk_json_write_ctx *w), 0);
-DEFINE_STUB(spdk_json_write_string, int, (struct spdk_json_write_ctx *w, const char *val), 0);
-DEFINE_STUB(spdk_json_write_name, int, (struct spdk_json_write_ctx *w, const char *name), 0);
 
 static PMEMblkpool *
 find_pmemblk_pool(const char *path)
