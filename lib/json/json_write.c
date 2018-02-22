@@ -431,14 +431,23 @@ spdk_json_write_string_utf16le(struct spdk_json_write_ctx *w, const uint16_t *va
 int
 spdk_json_write_string_fmt(struct spdk_json_write_ctx *w, const char *fmt, ...)
 {
-	char *s;
 	va_list args;
 	int rc;
 
 	va_start(args, fmt);
-	s = spdk_vsprintf_alloc(fmt, args);
+	rc = spdk_json_write_string_fmt_v(w, fmt, args);
 	va_end(args);
 
+	return rc;
+}
+
+int
+spdk_json_write_string_fmt_v(struct spdk_json_write_ctx *w, const char *fmt, va_list args)
+{
+	char *s;
+	int rc;
+
+	s = spdk_vsprintf_alloc(fmt, args);
 	if (s == NULL) {
 		return -1;
 	}
@@ -631,8 +640,20 @@ int spdk_json_write_named_string(struct spdk_json_write_ctx *w, const char *name
 int spdk_json_write_named_string_fmt(struct spdk_json_write_ctx *w, const char *name,
 				     const char *fmt, ...)
 {
-	char *s;
 	va_list args;
+	int rc;
+
+	va_start(args, fmt);
+	rc = spdk_json_write_named_string_fmt_v(w, name, fmt, args);
+	va_end(args);
+
+	return rc;
+}
+
+int spdk_json_write_named_string_fmt_v(struct spdk_json_write_ctx *w, const char *name,
+				       const char *fmt, va_list args)
+{
+	char *s;
 	int rc;
 
 	rc = spdk_json_write_name(w, name);
@@ -640,9 +661,7 @@ int spdk_json_write_named_string_fmt(struct spdk_json_write_ctx *w, const char *
 		return rc;
 	}
 
-	va_start(args, fmt);
 	s = spdk_vsprintf_alloc(fmt, args);
-	va_end(args);
 
 	if (s == NULL) {
 		return -1;
