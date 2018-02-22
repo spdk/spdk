@@ -45,6 +45,7 @@
 struct spdk_blob_store *g_bs;
 spdk_blob_id g_blobid;
 struct spdk_blob *g_blob;
+int g_blob_op_complete_count;
 int g_bserrno;
 struct spdk_xattr_names *g_names;
 int g_done;
@@ -132,6 +133,7 @@ static void
 blob_op_complete(void *cb_arg, int bserrno)
 {
 	g_bserrno = bserrno;
+	g_blob_op_complete_count++;
 }
 
 static void
@@ -3098,6 +3100,95 @@ blob_thin_prov_rw_iov(void)
 	g_blobid = 0;
 }
 
+static void
+blob_persist(void)
+{
+	struct spdk_bs_dev *dev;
+	struct spdk_blob *blob;
+	struct spdk_blob_opts opts;
+	struct spdk_bs_channel *bs_channel;
+	spdk_blob_id blobid;
+	int rc;
+
+	dev = init_dev();
+
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs_channel = spdk_io_channel_get_ctx(g_bs->md_channel);
+
+	spdk_blob_opts_init(&opts);
+
+	spdk_bs_create_blob_ext(g_bs, &opts, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(g_bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+
+	CU_ASSERT(blob->state == SPDK_BLOB_STATE_CLEAN);
+	rc = spdk_blob_resize(blob, 5);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(blob->state == SPDK_BLOB_STATE_DIRTY);
+	CU_ASSERT(blob->persist_in_progress == false);
+
+	g_scheduler_delay = true;
+
+	g_blob_op_complete_count = 0;
+	spdk_blob_sync_md(blob, blob_op_complete, NULL);
+	/* scheduler is delayed, so blob_op_complete should not have been called yet. */
+	CU_ASSERT(g_blob_op_complete_count == 0);
+	CU_ASSERT(blob->state == SPDK_BLOB_STATE_CLEAN);
+	CU_ASSERT(blob->persist_in_progress == true);
+
+	/* Dirty the blob's metadata again. */
+	rc = spdk_blob_set_xattr(blob, "test", "foo", strlen("foo") + 1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(blob->state == SPDK_BLOB_STATE_DIRTY);
+
+	spdk_blob_sync_md(blob, blob_op_complete, NULL);
+	/* scheduler is delayed, so blob_op_complete should not have been called yet. */
+	CU_ASSERT(g_blob_op_complete_count == 0);
+	/*
+	 * The blob's metadata state should still be dirty.  We have not started persisting
+	 *  the xattr change yet, because the sync operation for the resize operation is
+	 *  still in progress.  Instead we should see a persist operation queued to execute
+	 *  after the first one is done.
+	 */
+	CU_ASSERT(blob->state == SPDK_BLOB_STATE_DIRTY);
+	CU_ASSERT(blob->persist_in_progress == true);
+	CU_ASSERT(!TAILQ_EMPTY(&bs_channel->queued_blob_persists));
+
+	/*
+	 * Start another sync.  This just stresses the spdk_blob_persist_complete logic to
+	 *  make sure it processes all of the persist operations when multiple ones are
+	 *  queued.
+	 */
+	spdk_blob_sync_md(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_blob_op_complete_count == 0);
+	CU_ASSERT(blob->state == SPDK_BLOB_STATE_DIRTY);
+	CU_ASSERT(blob->persist_in_progress == true);
+	CU_ASSERT(!TAILQ_EMPTY(&bs_channel->queued_blob_persists));
+
+	_bs_flush_scheduler();
+	CU_ASSERT(g_blob_op_complete_count == 3);
+	CU_ASSERT(blob->state == SPDK_BLOB_STATE_CLEAN);
+	CU_ASSERT(blob->persist_in_progress == false);
+	CU_ASSERT(TAILQ_EMPTY(&bs_channel->queued_blob_persists));
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+	g_scheduler_delay = false;
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -3150,7 +3241,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "blob_thin_prov_alloc", blob_thin_prov_alloc) == NULL ||
 		CU_add_test(suite, "blob_insert_cluster_msg", blob_insert_cluster_msg) == NULL ||
 		CU_add_test(suite, "blob_thin_prov_rw", blob_thin_prov_rw) == NULL ||
-		CU_add_test(suite, "blob_thin_prov_rw_iov", blob_thin_prov_rw_iov) == NULL
+		CU_add_test(suite, "blob_thin_prov_rw_iov", blob_thin_prov_rw_iov) == NULL ||
+		CU_add_test(suite, "blob_persist", blob_persist) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

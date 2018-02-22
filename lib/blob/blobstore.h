@@ -122,6 +122,7 @@ struct spdk_blob {
 	struct spdk_blob_mut_data	clean;
 	struct spdk_blob_mut_data	active;
 
+	bool		persist_in_progress;
 	bool		invalid;
 	bool		data_ro;
 	bool		md_ro;
@@ -182,7 +183,8 @@ struct spdk_bs_channel {
 	struct spdk_bs_dev		*dev;
 	struct spdk_io_channel		*dev_channel;
 
-	TAILQ_HEAD(, spdk_bs_request_set) need_cluster_alloc;
+	TAILQ_HEAD(, spdk_bs_request_set)	need_cluster_alloc;
+	TAILQ_HEAD(, spdk_blob_persist_ctx)	queued_blob_persists;
 };
 
 /** operation type */
