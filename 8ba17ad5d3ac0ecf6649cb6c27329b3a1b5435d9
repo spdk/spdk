@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5ce7d655_e8b35fc5",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-22T20:56:49Z",
+      "side": 1,
+      "message": "should this be spdk_json_write_bool?",
+      "revId": "8ba17ad5d3ac0ecf6649cb6c27329b3a1b5435d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "124457e0_b75072d3",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 994,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-22T20:56:49Z",
+      "side": 1,
+      "message": "extra space added before auth_chap_required",
+      "revId": "8ba17ad5d3ac0ecf6649cb6c27329b3a1b5435d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
