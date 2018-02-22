@@ -558,7 +558,7 @@ bdev_nvme_get_io_channel(void *ctx)
 }
 
 static int
-bdev_nvme_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
+bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct nvme_bdev *nvme_bdev = ctx;
 	struct nvme_ctrlr *nvme_ctrlr = nvme_bdev->nvme_ctrlr;
@@ -718,7 +718,7 @@ static const struct spdk_bdev_fn_table nvmelib_fn_table = {
 	.submit_request		= bdev_nvme_submit_request,
 	.io_type_supported	= bdev_nvme_io_type_supported,
 	.get_io_channel		= bdev_nvme_get_io_channel,
-	.dump_config_json	= bdev_nvme_dump_config_json,
+	.dump_info_json		= bdev_nvme_dump_info_json,
 	.get_spin_time		= bdev_nvme_get_spin_time,
 };
 

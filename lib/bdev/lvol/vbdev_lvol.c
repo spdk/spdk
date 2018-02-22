@@ -519,7 +519,7 @@ vbdev_lvol_destruct(void *ctx)
 }
 
 static int
-vbdev_lvol_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
+vbdev_lvol_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct spdk_lvol *lvol = ctx;
 	struct lvol_store_bdev *lvs_bdev;
@@ -710,7 +710,7 @@ static struct spdk_bdev_fn_table vbdev_lvol_fn_table = {
 	.io_type_supported	= vbdev_lvol_io_type_supported,
 	.submit_request		= vbdev_lvol_submit_request,
 	.get_io_channel		= vbdev_lvol_get_io_channel,
-	.dump_config_json	= vbdev_lvol_dump_config_json,
+	.dump_info_json		= vbdev_lvol_dump_info_json,
 };
 
 static struct spdk_bdev *

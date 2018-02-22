@@ -91,12 +91,12 @@ spdk_gpt_base_bdev_hotremove_cb(void *_base_bdev)
 
 static int vbdev_gpt_destruct(void *ctx);
 static void vbdev_gpt_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io);
-static int vbdev_gpt_dump_config_json(void *ctx, struct spdk_json_write_ctx *w);
+static int vbdev_gpt_dump_info_json(void *ctx, struct spdk_json_write_ctx *w);
 
 static struct spdk_bdev_fn_table vbdev_gpt_fn_table = {
 	.destruct		= vbdev_gpt_destruct,
 	.submit_request		= vbdev_gpt_submit_request,
-	.dump_config_json	= vbdev_gpt_dump_config_json,
+	.dump_info_json		= vbdev_gpt_dump_info_json,
 };
 
 static struct gpt_base *
@@ -181,7 +181,7 @@ write_string_utf16le(struct spdk_json_write_ctx *w, const uint16_t *str, size_t 
 }
 
 static int
-vbdev_gpt_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
+vbdev_gpt_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct gpt_disk *gpt_disk = ctx;
 	struct gpt_base *gpt_base = (struct gpt_base *)gpt_disk->part.base;
