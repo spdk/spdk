@@ -22,6 +22,30 @@
       "revId": "75f6d33f29322a4b0a8dd57b7cc244e3d7237bee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ea3e3ebe_88a06993",
+        "filename": "include/spdk_internal/io_channel.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-22T15:22:16Z",
+      "side": 1,
+      "message": "ugh - thanks for catching this - i\u0027ll make a note to fix this up in a later patch (so I don\u0027t have to rerun 5 patches to fix this typo)",
+      "parentUuid": "3467bc71_2aa8c752",
+      "range": {
+        "startLine": 50,
+        "startChar": 35,
+        "endLine": 50,
+        "endChar": 43
+      },
+      "revId": "75f6d33f29322a4b0a8dd57b7cc244e3d7237bee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
