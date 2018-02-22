@@ -1131,7 +1131,7 @@ spdk_vhost_startup(void *arg1, void *arg2)
 	return;
 
 out:
-	spdk_app_stop(-1);
+	spdk_app_stop(1);
 }
 
 static void *

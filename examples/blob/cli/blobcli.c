@@ -224,7 +224,7 @@ unload_complete(void *cb_arg, int bserrno)
 	 */
 	if (cli_context->cli_mode == CLI_MODE_CMD ||
 	    cli_context->action == CLI_SHELL_EXIT) {
-		spdk_app_stop(cli_context->rc);
+		spdk_app_stop(abs(cli_context->rc));
 	} else {
 		/* when action is CLI_NONE, we know we need to remain in the shell */
 		cli_context->bs = NULL;
@@ -251,7 +251,7 @@ unload_bs(struct cli_context_t *cli_context, char *msg, int bserrno)
 		}
 		spdk_bs_unload(cli_context->bs, unload_complete, cli_context);
 	} else if (cli_context->cli_mode != CLI_MODE_SCRIPT) {
-		spdk_app_stop(bserrno);
+		spdk_app_stop(abs(bserrno));
 
 	}
 }
@@ -859,14 +859,14 @@ load_bs(struct cli_context_t *cli_context)
 	bdev = spdk_bdev_get_by_name(cli_context->bdev_name);
 	if (bdev == NULL) {
 		printf("Could not find a bdev\n");
-		spdk_app_stop(-1);
+		spdk_app_stop(1);
 		return;
 	}
 
 	bs_dev = spdk_bdev_create_bs_dev(bdev, NULL, NULL);
 	if (bs_dev == NULL) {
 		printf("Could not create blob bdev!!\n");
-		spdk_app_stop(-1);
+		spdk_app_stop(1);
 		return;
 	}
 
@@ -934,7 +934,7 @@ init_bs(struct cli_context_t *cli_context)
 	bdev = spdk_bdev_get_by_name(cli_context->bdev_name);
 	if (bdev == NULL) {
 		printf("Could not find a bdev\n");
-		spdk_app_stop(-1);
+		spdk_app_stop(1);
 		return;
 	}
 	printf("Init blobstore using bdev Product Name: %s\n",
@@ -943,7 +943,7 @@ init_bs(struct cli_context_t *cli_context)
 	cli_context->bs_dev = spdk_bdev_create_bs_dev(bdev, NULL, NULL);
 	if (cli_context->bs_dev == NULL) {
 		printf("Could not create blob bdev!!\n");
-		spdk_app_stop(-1);
+		spdk_app_stop(1);
 		return;
 	}
 
@@ -1169,7 +1169,7 @@ line_parser(struct cli_context_t *cli_context)
 					realloc(cli_context->argv[cli_context->argc], BUFSIZE);
 				if (cli_context->argv[cli_context->argc] == NULL) {
 					printf("ERROR: unable to realloc memory\n");
-					spdk_app_stop(-1);
+					spdk_app_stop(1);
 				}
 				if (g_script.blobid[blob_num] == 0) {
 					printf("ERROR: There is no blob for $B%d\n",
@@ -1471,7 +1471,9 @@ main(int argc, char **argv)
 
 	cli_context->app_started = true;
 	rc = spdk_app_start(&opts, cli_start, cli_context, NULL);
-	if (rc) {
+	if (rc < 0) {
+		fprintf(stderr, "spdk_app_start() unable to start cli_start()\n");
+	} else if (rc) {
 		printf("ERROR!\n");
 	}
 

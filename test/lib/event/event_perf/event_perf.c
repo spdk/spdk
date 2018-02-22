@@ -141,6 +141,7 @@ main(int argc, char **argv)
 {
 	struct spdk_app_opts opts = {};
 	int op;
+	int rc = 0;
 
 	opts.name = "event_perf";
 
@@ -168,11 +169,15 @@ main(int argc, char **argv)
 	printf("Running I/O for %d seconds...", g_time_in_sec);
 	fflush(stdout);
 
-	spdk_app_start(&opts, event_perf_start, NULL, NULL);
+	rc = spdk_app_start(&opts, event_perf_start, NULL, NULL);
+	if (rc < 0) {
+		fprintf(stderr, "%s: spdk_app_start() failed to start event_perf_start()\n",
+			argv[0]);
+	}
 
 	spdk_app_fini();
 	performance_dump(g_time_in_sec);
 
 	printf("done.\n");
-	return 0;
+	return rc;
 }

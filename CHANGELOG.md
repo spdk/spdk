@@ -33,6 +33,28 @@ A number of functions have been renamed:
 
 The old names still exist but are deprecated.  They will be removed in the v18.07 release.
 
+### Lib
+
+A set of changes were made in the SPDK's lib code altering,
+instances of calls to `exit()` and `abort()` to return a failure instead
+wherever reasonably possible.
+
+A change to the event framework function, spdk_app_stop(int rc), imposes
+the restriction that the argument in rc must be greater than or equal
+to zero (0).  This change was made in order to provide the caller of
+the event framework function, spdk_app_start(), a means to distinguish
+between a failed initiation of the start operation vs. the return value
+specified by the application's use of the spdk_app_stop() API.  In
+the event some step of the initalization sequence within spdk_app_start()
+fails prior to launch of the application's supplied function,
+spdk_app_start() will return a negative errno value, where previously
+in many cases spdk_app_start() would have called `exit()`.
+
+spdk_app_parse_args() no longer exit()'s on help, '-h', or an invalid
+option, but instead returns SPDK_APP_PARSE_ARGS_HELP and
+SPDK_APP_PARSE_ARGS_FAIL, respectively, and SPDK_APP_PARSE_ARGS_SUCCESS
+on success.
+
 ## v18.01: Blobstore Thin Provisioning
 
 ### Build System

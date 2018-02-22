@@ -261,7 +261,7 @@ start_fuse_fn(void *arg1, void *arg2)
 	g_fuse_thread = pthread_self();
 	rc = fuse_parse_cmdline(&args, &opts);
 	if (rc != 0) {
-		spdk_app_stop(-1);
+		spdk_app_stop(1);
 		fuse_opt_free_args(&args);
 		return;
 	}
@@ -270,7 +270,7 @@ start_fuse_fn(void *arg1, void *arg2)
 
 	rc = fuse_mount(g_fuse, g_mountpoint);
 	if (rc != 0) {
-		spdk_app_stop(-1);
+		spdk_app_stop(1);
 		return;
 	}
 
@@ -318,6 +318,7 @@ spdk_fuse_shutdown(void)
 int main(int argc, char **argv)
 {
 	struct spdk_app_opts opts = {};
+	int rc = 0;
 
 	if (argc < 4) {
 		fprintf(stderr, "usage: %s <conffile> <bdev name> <mountpoint>\n", argv[0]);
@@ -336,8 +337,11 @@ int main(int argc, char **argv)
 	g_fuse_argc = argc - 2;
 	g_fuse_argv = &argv[2];
 
-	spdk_app_start(&opts, spdk_fuse_run, NULL, NULL);
+	rc = spdk_app_start(&opts, spdk_fuse_run, NULL, NULL);
+	if (rc < 0) {
+		fprintf(stderr, "%s: spdk_app_start() failed to begin spdk_fuse_run\n", argv[0]);
+	}
 	spdk_app_fini();
 
-	return 0;
+	return rc;
 }
