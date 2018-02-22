@@ -58,6 +58,7 @@ static int _spdk_blob_set_xattr(struct spdk_blob *blob, const char *name, const 
 static int _spdk_blob_get_xattr_value(struct spdk_blob *blob, const char *name,
 				      const void **value, size_t *value_len, bool internal);
 static int _spdk_blob_remove_xattr(struct spdk_blob *blob, const char *name, bool internal);
+static struct spdk_blob *_spdk_blob_lookup(struct spdk_blob_store *bs, spdk_blob_id blobid);
 
 static void
 _spdk_blob_verify_md_op(struct spdk_blob *blob)
@@ -886,14 +887,22 @@ struct spdk_blob_persist_ctx {
 	spdk_bs_sequence_t		*seq;
 	spdk_bs_sequence_cpl		cb_fn;
 	void				*cb_arg;
+
+	TAILQ_ENTRY(spdk_blob_persist_ctx)	link;
 };
+
+static void _spdk_blob_persist_start(struct spdk_blob_persist_ctx *ctx);
 
 static void
 _spdk_blob_persist_complete(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
-	struct spdk_blob_persist_ctx 	*ctx = cb_arg;
+	struct spdk_blob_persist_ctx 	*ctx = cb_arg, *tmp;
 	struct spdk_blob 		*blob = ctx->blob;
+	struct spdk_blob_store		*bs = blob->bs;
+	struct spdk_bs_channel		*bs_channel = spdk_io_channel_get_ctx(bs->md_channel);
+	spdk_blob_id			blobid = blob->id;
 
+	assert(blob->persist_in_progress == true);
 	if (bserrno == 0) {
 		_spdk_blob_mark_clean(blob);
 	}
@@ -904,6 +913,37 @@ _spdk_blob_persist_complete(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	/* Free the memory */
 	spdk_dma_free(ctx->pages);
 	free(ctx);
+
+	/*
+	 * Sometimes the callback function we just executed will have freed
+	 *  the blob (create and delete calls for example).
+	 *  So we may not access the blob after the callback function in that
+	 *  case.  Determine if the blob was deleted by looking up the blob
+	 *  by its blobid.  If it cannot be found, we know it was freed and we
+	 *  just return immediately.
+	 */
+	blob = _spdk_blob_lookup(bs, blobid);
+
+	if (blob == NULL) {
+		return;
+	}
+
+	blob->persist_in_progress = false;
+
+	TAILQ_FOREACH_SAFE(ctx, &bs_channel->queued_blob_persists, link, tmp) {
+		if (ctx->blob != blob) {
+			continue;
+		}
+		TAILQ_REMOVE(&bs_channel->queued_blob_persists, ctx, link);
+		if (blob->state == SPDK_BLOB_STATE_CLEAN) {
+			ctx->cb_fn(seq, ctx->cb_arg, 0);
+			spdk_dma_free(ctx->pages);
+			free(ctx);
+		} else {
+			_spdk_blob_persist_start(ctx);
+			break;
+		}
+	}
 }
 
 static void
@@ -1205,6 +1245,9 @@ _spdk_blob_persist_start(struct spdk_blob_persist_ctx *ctx)
 	uint32_t page_num;
 	int rc;
 
+	assert(blob->persist_in_progress == false);
+	blob->persist_in_progress = true;
+
 	if (blob->active.num_pages == 0) {
 		/* This is the signal that the blob should be deleted.
 		 * Immediately jump to the clean up routine. */
@@ -1290,7 +1333,11 @@ _spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
 
-	_spdk_blob_persist_start(ctx);
+	if (spdk_unlikely(blob->persist_in_progress)) {
+		TAILQ_INSERT_TAIL(&seq->channel->queued_blob_persists, ctx, link);
+	} else {
+		_spdk_blob_persist_start(ctx);
+	}
 }
 
 struct spdk_blob_copy_cluster_ctx {
@@ -1904,6 +1951,7 @@ _spdk_bs_channel_create(void *io_device, void *ctx_buf)
 	}
 
 	TAILQ_INIT(&channel->need_cluster_alloc);
+	TAILQ_INIT(&channel->queued_blob_persists);
 
 	return 0;
 }
