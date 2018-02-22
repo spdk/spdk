@@ -2648,7 +2648,7 @@ spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs, int 
 }
 
 void
-spdk_bdev_unregister_done(struct spdk_bdev *bdev, int bdeverrno)
+spdk_bdev_destruct_done(struct spdk_bdev *bdev, int bdeverrno)
 {
 	if (bdev->unregister_cb != NULL) {
 		bdev->unregister_cb(bdev->unregister_ctx, bdeverrno);
