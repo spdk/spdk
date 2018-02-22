@@ -28,6 +28,22 @@ def construct_lvol_bdev(client, args):
         return client.call('construct_lvol_bdev', params)
 
 
+def snapshot_lvol_bdev(client, args):
+    params = {
+        'lvol_name': args.lvol_name,
+        'snapshot_name': args.snapshot_name
+    }
+    return client.call('snapshot_lvol_bdev', params)
+
+
+def clone_lvol_bdev(client, args):
+    params = {
+        'snapshot_name': args.snapshot_name,
+        'clone_name': args.clone_name
+    }
+    return client.call('clone_lvol_bdev', params)
+
+
 def rename_lvol_bdev(client, args):
     params = {
         'old_name': args.old_name,
