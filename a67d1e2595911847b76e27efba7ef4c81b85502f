@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a1728ad6_b4fd00a9",
+        "filename": "autorun_post.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-22T20:31:59Z",
+      "side": 1,
+      "message": "Same note as before - I think these tags should all be lowercase now to match the updated names in the shell scripts.",
+      "range": {
+        "startLine": 89,
+        "startChar": 16,
+        "endLine": 89,
+        "endChar": 20
+      },
+      "revId": "a67d1e2595911847b76e27efba7ef4c81b85502f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
