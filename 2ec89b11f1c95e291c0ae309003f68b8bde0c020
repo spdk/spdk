@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f417b98c_203c14c4",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1294,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-22T20:59:39Z",
+      "side": 1,
+      "message": "shouldn\u0027t this be disable_chap?",
+      "revId": "2ec89b11f1c95e291c0ae309003f68b8bde0c020",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b7b2c649_ed97649f",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 994,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-22T20:59:39Z",
+      "side": 1,
+      "message": "remove extra space before require_chap (this may get fixed as part of fixing previous patch)",
+      "revId": "2ec89b11f1c95e291c0ae309003f68b8bde0c020",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
