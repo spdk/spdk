@@ -107,6 +107,20 @@ void spdk_jsonrpc_end_result(struct spdk_jsonrpc_request *request, struct spdk_j
 void spdk_jsonrpc_send_error_response(struct spdk_jsonrpc_request *request,
 				      int error_code, const char *msg);
 
+/**
+ * Send an error response to a JSON-RPC request.
+ *
+ * \param request JSON-RPC request to respond to.
+ * \param error_code Integer error code to return (may be one of the SPDK_JSONRPC_ERROR_ errors,
+ *                   or a custom error code).
+ * \param fmt Printf-like format string.
+ *
+ * This is shorthand for printf() + spdk_jsonrpc_send_error_response().
+ */
+void spdk_jsonrpc_send_error_response_fmt(struct spdk_jsonrpc_request *request,
+		int error_code, const char *fmt, ...) __attribute__((format(printf, 3, 4)));
+
+
 #ifdef __cplusplus
 }
 #endif
