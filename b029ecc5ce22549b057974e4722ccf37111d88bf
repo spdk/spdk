@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "243219dd_c99aefad",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 23
+      },
+      "lineNbr": 1369,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-02-22T07:26:23Z",
+      "side": 1,
+      "message": "Please reverse the order. At this time due to card https://trello.com/c/qEvmHGvm bad things happen when they are removed in wrong order (bdev is unregistered but lvol is not removed).\n\nEven after card above is addressed, removing those in such order would fail. Snapshot removal does not follow hot-remove logic, if there is clone based on snapshot - EBUSY error will be returned.",
+      "range": {
+        "startLine": 1366,
+        "startChar": 0,
+        "endLine": 1369,
+        "endChar": 61
+      },
+      "revId": "b029ecc5ce22549b057974e4722ccf37111d88bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
