@@ -463,6 +463,10 @@ _vbdev_lvol_destroy_cb(void *cb_arg, int lvserrno)
 {
 	struct spdk_bdev *bdev = cb_arg;
 
+	if (lvserrno == -EBUSY) {
+		/* TODO: Handle reporting error to spdk_bdev_unregister */
+	}
+
 	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Lvol destroyed\n");
 
 	spdk_bdev_unregister_done(bdev, lvserrno);
@@ -559,11 +563,13 @@ static bool
 vbdev_lvol_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
 	switch (io_type) {
-	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
-	case SPDK_BDEV_IO_TYPE_RESET:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+		/* TODO: Report false if snapshot */
+		return true;
+	case SPDK_BDEV_IO_TYPE_RESET:
+	case SPDK_BDEV_IO_TYPE_READ:
 		return true;
 	default:
 		return false;
@@ -824,6 +830,42 @@ vbdev_lvol_create(struct spdk_lvol_store *lvs, const char *name, size_t sz,
 	}
 
 	return rc;
+}
+
+void
+vbdev_lvol_create_snapshot(struct spdk_lvol *lvol, const char *snapshot_name,
+			   spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvol_with_handle_req *req;
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		cb_fn(cb_arg, NULL, -ENOMEM);
+		return;
+	}
+
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+
+	spdk_lvol_create_snapshot(lvol, snapshot_name, _vbdev_lvol_create_cb, req);
+}
+
+void
+vbdev_lvol_create_clone(struct spdk_lvol *lvol, const char *clone_name,
+			spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvol_with_handle_req *req;
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		cb_fn(cb_arg, NULL, -ENOMEM);
+		return;
+	}
+
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+
+	spdk_lvol_create_clone(lvol, clone_name, _vbdev_lvol_create_cb, req);
 }
 
 static void
