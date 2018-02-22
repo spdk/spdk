@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "093597e8_97137efb",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-22T09:10:11Z",
+      "side": 1,
+      "message": "Is it possible to make a new line for this? Looks like too long for the single line.",
+      "range": {
+        "startLine": 41,
+        "startChar": 1,
+        "endLine": 41,
+        "endChar": 47
+      },
+      "revId": "580fc9fcd21274d6e066e91c3d897ac47b70546e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
