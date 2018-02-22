@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ed3d771b_c52077ab",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 395,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-22T17:05:14Z",
+      "side": 1,
+      "message": "This looks like a use-after-free - nvme_ctrlr_destruct() will free the memory from ctrlr.  If you move the ERRLOG up before the nvme_ctrlr_destruct() call, it should be okay.",
+      "revId": "9595122b7d5ce59e04f559dd0ed063493a3e0cf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
