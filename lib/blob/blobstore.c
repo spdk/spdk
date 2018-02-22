@@ -436,12 +436,10 @@ _spdk_blob_parse(const struct spdk_blob_md_page *pages, uint32_t page_count,
 	uint32_t i;
 	int rc;
 
+	_spdk_blob_verify_md_op(blob);
 	assert(page_count > 0);
 	assert(pages[0].sequence_num == 0);
-	assert(blob != NULL);
-	assert(blob->state == SPDK_BLOB_STATE_LOADING);
 	assert(blob->active.clusters == NULL);
-	assert(blob->state == SPDK_BLOB_STATE_LOADING);
 
 	/* The blobid provided doesn't match what's in the MD, this can
 	 * happen for example if a bogus blobid is passed in through open.
@@ -845,9 +843,7 @@ _spdk_blob_load(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 	uint32_t page_num;
 	uint64_t lba;
 
-	assert(blob != NULL);
-	assert(blob->state == SPDK_BLOB_STATE_CLEAN ||
-	       blob->state == SPDK_BLOB_STATE_DIRTY);
+	_spdk_blob_verify_md_op(blob);
 
 	bs = blob->bs;
 
@@ -1135,7 +1131,7 @@ _spdk_resize_blob(struct spdk_blob *blob, uint64_t sz)
 
 	bs = blob->bs;
 
-	assert(blob->state != SPDK_BLOB_STATE_LOADING);
+	_spdk_blob_verify_md_op(blob);
 
 	if (blob->active.num_clusters == sz) {
 		return 0;
@@ -1208,9 +1204,7 @@ _spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 	uint32_t page_num;
 	struct spdk_blob_store *bs;
 
-	assert(blob != NULL);
-	assert(blob->state == SPDK_BLOB_STATE_CLEAN ||
-	       blob->state == SPDK_BLOB_STATE_DIRTY);
+	_spdk_blob_verify_md_op(blob);
 
 	if (blob->state == SPDK_BLOB_STATE_CLEAN) {
 		cb_fn(seq, cb_arg, 0);
