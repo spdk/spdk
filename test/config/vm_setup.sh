@@ -65,6 +65,7 @@ sudo dnf install -y libuuid-devel
 sudo dnf install -y elfutils-libelf-devel
 sudo dnf install -y flex
 sudo dnf install -y bison
+sudo dnf install -y targetcli
 
 cd ~
 
