@@ -596,6 +596,203 @@ spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 	return 0;
 }
 
+/* The structure can be modified if we provide support for other commands in future */
+struct spdk_nvmf_cmds_and_effect_entry admin_cmds_and_effect_entry[SPDK_NVME_OPC_SANITIZE + 1] = {
+	/* CSUPP, LBCC, NCC, NIC, CCC, CSE */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Delete IO SQ */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Create IO SQ */
+	{1, 0, 0, 0, 0, 0, 0, 0}, /* Get Log Page */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Delete IO CQ */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Create IO CQ */
+	{1, 0, 0, 0, 0, 0, 0, 0}, /* Identify     */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{1, 0, 0, 0, 0, 0, 0, 0}, /* Abort */
+	{1, 0, 0, 0, 0, 0, 0, 0}, /* Set Features */
+	{1, 0, 0, 0, 0, 0, 0, 0}, /* Get Features */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{1, 0, 0, 0, 0, 0, 0, 0}, /* Async Event Request */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Namespace Management */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Firmware Commit */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Firmware Image Download */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Device Self Test */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Namespace Attachment */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{1, 0, 0, 0, 0, 0, 0, 0}, /* Keep Alive */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Directive Send */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Directive Receive */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Virtualization Management */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* MI Send */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* MI Receive */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Door Bell Config */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Format NVM */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Security Send */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Security Receive */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Reserved */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* Sanitze */
+};
+
+struct spdk_nvmf_cmds_and_effect_entry
+	io_cmds_and_effect_entry[SPDK_NVME_OPC_RESERVATION_RELEASE + 1] = {
+	{1, 1, 0, 0, 0, 0, 0, 0}, /* FLUSH */
+	{1, 1, 0, 0, 0, 0, 0, 0}, /* WRITE */
+	{1, 0, 0, 0, 0, 0, 0, 0}, /* READ */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* RESERVED*/
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* WRITE UNCORRECTABLE */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* COMPARE */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* RESERVED */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* RESERVED */
+	{1, 1, 0, 0, 0, 0, 0, 0}, /* WRITE ZEROES */
+	{1, 1, 0, 0, 0, 0, 0, 0}, /* DATASET MANAGEMENT */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* RESERVED*/
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* RESERVED */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* RESERVED */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* RESERVATION REGISTER */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* RESERVATION REPORT */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* RESERVED */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* RESERVED */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* RESERVATION ACQUIRE */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* RESERVED */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* RESERVED */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* RESERVED */
+	{0, 0, 0, 0, 0, 0, 0, 0}, /* RESERVATION RELEASE */
+};
+
+void
+spdk_nvmf_get_cmds_and_effects_log_page(void *buffer,
+					uint64_t offset, uint32_t length)
+{
+	struct spdk_nvmf_cmds_and_effect_log_page *cmds_and_effect_log_page;
+	uint32_t page_size = sizeof(struct spdk_nvmf_cmds_and_effect_log_page);
+	size_t copy_len = 0;
+	size_t zero_len = length;
+
+	cmds_and_effect_log_page = calloc(1, page_size);
+	if (!cmds_and_effect_log_page) {
+		SPDK_ERRLOG("Command and Effects log page memory allocation error\n");
+		return;
+	}
+	memcpy(cmds_and_effect_log_page->admin_cmds_supported, admin_cmds_and_effect_entry,
+	       SPDK_NVME_OPC_SANITIZE + 1);
+	memcpy(cmds_and_effect_log_page->io_cmds_supported, io_cmds_and_effect_entry,
+	       SPDK_NVME_OPC_RESERVATION_RELEASE + 1);
+	if (offset < page_size) {
+		copy_len = spdk_min(page_size - offset, length);
+		zero_len -= copy_len;
+		memcpy(buffer, (char *)(cmds_and_effect_log_page), copy_len);
+	}
+
+	if (zero_len) {
+		memset((char *)buffer + copy_len, 0, zero_len);
+	}
+	//TODO if required can be cached in ctrlr structure
+	free(cmds_and_effect_log_page);
+
+	return;
+}
+
 SPDK_TRACE_REGISTER_FN(nvmf_trace)
 {
 	spdk_trace_register_object(OBJECT_NVMF_IO, 'r');
