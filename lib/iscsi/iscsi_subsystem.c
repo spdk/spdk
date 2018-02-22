@@ -45,6 +45,9 @@
 #include "spdk_internal/event.h"
 #include "spdk_internal/log.h"
 
+static spdk_iscsi_init_cb g_init_cb_fn = NULL;
+static void *g_init_cb_arg = NULL;
+
 static spdk_iscsi_fini_cb g_fini_cb_fn;
 static void *g_fini_cb_arg;
 
@@ -815,36 +818,57 @@ spdk_iscsi_app_read_parameters(void)
 	return 0;
 }
 
-int
-spdk_iscsi_init(void)
+
+static void
+spdk_iscsi_init_complete(int rc)
+{
+	spdk_iscsi_init_cb cb_fn = g_init_cb_fn;
+	void *cb_arg = g_init_cb_arg;
+
+	g_init_cb_fn = NULL;
+	g_init_cb_arg = NULL;
+
+	cb_fn(cb_arg, rc);
+}
+
+void
+spdk_iscsi_init(spdk_iscsi_init_cb cb_fn, void *cb_arg)
 {
 	int rc;
+
+	assert(cb_fn != NULL);
+	g_init_cb_fn = cb_fn;
+	g_init_cb_arg = cb_arg;
 
 	rc = spdk_iscsi_app_read_parameters();
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_iscsi_app_read_parameters() failed\n");
-		return -1;
+		spdk_iscsi_init_complete(-1);
+		return;
 	}
 
 	rc = spdk_iscsi_initialize_all_pools();
 	if (rc != 0) {
 		SPDK_ERRLOG("spdk_initialize_all_pools() failed\n");
-		return -1;
+		spdk_iscsi_init_complete(-1);
+		return;
 	}
 
 	rc = spdk_iscsi_init_tgt_nodes();
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_iscsi_init_tgt_nodes() failed\n");
-		return -1;
+		spdk_iscsi_init_complete(-1);
+		return;
 	}
 
 	rc = spdk_initialize_iscsi_conns();
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_initialize_iscsi_conns() failed\n");
-		return -1;
+		spdk_iscsi_init_complete(-1);
+		return;
 	}
 
-	return 0;
+	spdk_iscsi_init_complete(0);
 }
 
 void
