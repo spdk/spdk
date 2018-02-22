@@ -317,7 +317,9 @@ extern struct spdk_iscsi_globals g_spdk_iscsi;
 
 struct spdk_iscsi_task;
 
-int spdk_iscsi_init(void);
+typedef void (*spdk_iscsi_init_cb)(void *cb_arg, int rc);
+
+void spdk_iscsi_init(spdk_iscsi_init_cb cb_fn, void *cb_arg);
 typedef void (*spdk_iscsi_fini_cb)(void *arg);
 void spdk_iscsi_fini(spdk_iscsi_fini_cb cb_fn, void *cb_arg);
 void spdk_iscsi_fini_done(void);
