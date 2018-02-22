@@ -32,6 +32,7 @@
  */
 
 #include "spdk/stdinc.h"
+#include "spdk/likely.h"
 
 #include "spdk_internal/event.h"
 #include "spdk_internal/log.h"
@@ -130,7 +131,7 @@ static struct spdk_reactor *
 spdk_reactor_get(uint32_t lcore)
 {
 	struct spdk_reactor *reactor;
-	reactor = &g_reactors[lcore];
+	reactor = spdk_likely(g_reactors) ? &g_reactors[lcore] : NULL;
 	return reactor;
 }
 
@@ -737,7 +738,7 @@ spdk_reactors_fini(void)
 
 	SPDK_ENV_FOREACH_CORE(i) {
 		reactor = spdk_reactor_get(i);
-		if (reactor->events != NULL) {
+		if (spdk_likely(reactor != NULL) && reactor->events != NULL) {
 			spdk_ring_free(reactor->events);
 		}
 	}
@@ -749,6 +750,7 @@ spdk_reactors_fini(void)
 	}
 
 	free(g_reactors);
+	g_reactors = NULL;
 }
 
 SPDK_LOG_REGISTER_COMPONENT("reactor", SPDK_LOG_REACTOR)

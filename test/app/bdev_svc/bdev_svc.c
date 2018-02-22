@@ -91,6 +91,9 @@ main(int argc, char **argv)
 	}
 
 	rc = spdk_app_start(&opts, bdev_svc_start, (void *)(intptr_t)opts.shm_id, NULL);
+	if (rc < 0) {
+		fprintf(stderr, " spdk_app_start() unable to start bdev_svc_start()\n");
+	}
 
 	spdk_app_fini();
 

@@ -226,7 +226,7 @@ static void
 nvmf_tgt_advance_state(void *arg1, void *arg2)
 {
 	enum nvmf_tgt_state prev_state;
-	int rc = -1;
+	int rc = 0;
 
 	do {
 		prev_state = g_tgt.state;
@@ -242,7 +242,7 @@ nvmf_tgt_advance_state(void *arg1, void *arg2)
 			g_poll_groups = calloc(g_num_poll_groups, sizeof(*g_poll_groups));
 			if (g_poll_groups == NULL) {
 				g_tgt.state = NVMF_TGT_ERROR;
-				rc = -ENOMEM;
+				rc = ENOMEM;
 				break;
 			}
 
@@ -254,7 +254,7 @@ nvmf_tgt_advance_state(void *arg1, void *arg2)
 			if (rc < 0) {
 				SPDK_ERRLOG("spdk_nvmf_parse_conf() failed\n");
 				g_tgt.state = NVMF_TGT_ERROR;
-				rc = -EINVAL;
+				rc = EINVAL;
 				break;
 			}
 			g_tgt.state = NVMF_TGT_INIT_CREATE_POLL_GROUPS;
@@ -335,6 +335,9 @@ spdk_nvmf_tgt_start(struct spdk_app_opts *opts)
 
 	/* Blocks until the application is exiting */
 	rc = spdk_app_start(opts, nvmf_tgt_advance_state, NULL, NULL);
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_app_start() unable to start nvmf_tgt_advance_state()\n");
+	}
 
 	spdk_app_fini();
 

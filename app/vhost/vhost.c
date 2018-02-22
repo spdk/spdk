@@ -99,7 +99,10 @@ main(int argc, char *argv[])
 
 	vhost_app_opts_init(&opts);
 
-	spdk_app_parse_args(argc, argv, &opts, "f:S:", vhost_parse_arg, vhost_usage);
+	if (spdk_app_parse_args(argc, argv, &opts, "f:S:",
+				vhost_parse_arg, vhost_usage)) {
+		exit(EXIT_FAILURE);
+	}
 
 	if (g_pid_path) {
 		save_pid(g_pid_path);
@@ -107,6 +110,9 @@ main(int argc, char *argv[])
 
 	/* Blocks until the application is exiting */
 	rc = spdk_app_start(&opts, spdk_vhost_startup, (void *)g_socket_path, NULL);
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_app_start() unable to start spdk_vhost_startup()\n");
+	}
 
 	spdk_app_fini();
 

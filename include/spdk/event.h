@@ -105,7 +105,9 @@ void spdk_app_opts_init(struct spdk_app_opts *opts);
 
 /**
  * \brief Start the framework. Once started, the framework will call start_fn on the master
- * core with the arguments provided. This call will block until \ref spdk_app_stop is called.
+ * core with the arguments provided. This call will block until \ref spdk_app_stop is called or
+ * if an error condition occurs during the initialization code within spdk_app_start(), itself,
+ * before invoking the caller's supplied function in which case a negative errno is returned.
  */
 int spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		   void *arg1, void *arg2);
@@ -124,7 +126,10 @@ void spdk_app_start_shutdown(void);
 
 /**
  * \brief Stop the framework. This does not wait for all threads to exit. Instead, it kicks off
- * the shutdown process and returns. Once the shutdown process is complete, \ref spdk_app_start will return.
+ * the shutdown process and returns. Once the shutdown process is complete, \ref spdk_app_start will return
+ * with the value supplied by rc.
+ *
+ * \param rc must be >= 0.
  */
 void spdk_app_stop(int rc);
 
@@ -172,6 +177,7 @@ uint32_t spdk_app_get_current_core(void) __attribute__((deprecated));
  * \param parse Function pointer to call if an argument in getopt_str is found.
  * \param usage Function pointer to print usage messages for app-specific command
  *		line parameters.
+ *\return 0 on success, else failure including case for option 'h' or '?' (help)
  */
 int spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			const char *getopt_str, void (*parse)(int ch, char *arg),

@@ -20,6 +20,23 @@ experimental pending a functional allocator to free and reallocate CMB buffers.
 Namespaces may now be assigned unique identifiers via new optional "eui64" and "nguid" parameters
 to the `nvmf_subsystem_add_ns` RPC method.
 
+### Lib
+
+A set of changes were made in the SPDK's lib code altering,
+instances of calls to `exit()` and `abort()` to return a failure instead
+wherever reasonably possible.
+
+A change to the event framework function, spdk_app_stop(int rc), imposes
+the restriction that the argument in rc must be greater than or equal
+to zero (0).  This change was made in order to provide the caller of
+the event framework function, spdk_app_start(), a means to distinguish
+between a failed initiation of the start operation vs. the return value
+specified by the application's use of the spdk_app_stop() API.  In
+the event some step of the initalization sequence within spdk_app_start()
+fails prior to launch of the application's supplied function,
+spdk_app_start() will return a negative errno value, where previously
+in many cases spdk_app_start() would have called `exit()`.
+
 ## v18.01: Blobstore Thin Provisioning
 
 ### Build System

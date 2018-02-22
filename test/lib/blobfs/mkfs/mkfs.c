@@ -78,7 +78,7 @@ spdk_mkfs_run(void *arg1, void *arg2)
 
 	if (bdev == NULL) {
 		SPDK_ERRLOG("bdev %s not found\n", g_bdev_name);
-		spdk_app_stop(-1);
+		spdk_app_stop(1);
 		return;
 	}
 
@@ -121,6 +121,7 @@ mkfs_parse_arg(int ch, char *arg)
 int main(int argc, char **argv)
 {
 	struct spdk_app_opts opts = {};
+	int rc = 0;
 
 	if (argc < 3) {
 		SPDK_ERRLOG("usage: %s <conffile> <bdevname>\n", argv[0]);
@@ -136,10 +137,17 @@ int main(int argc, char **argv)
 
 	spdk_fs_set_cache_size(512);
 	g_bdev_name = argv[2];
-	spdk_app_parse_args(argc, argv, &opts, "C:", mkfs_parse_arg, mkfs_usage);
+	if (spdk_app_parse_args(argc, argv, &opts, "C:",
+				mkfs_parse_arg, mkfs_usage)) {
+		exit(EXIT_FAILURE);
+	}
 
-	spdk_app_start(&opts, spdk_mkfs_run, NULL, NULL);
+	rc = spdk_app_start(&opts, spdk_mkfs_run, NULL, NULL);
+	if (rc < 0) {
+		SPDK_ERRLOG("usage: %s spdk_app_start() failed to start spdk_mkfs_run()\n",
+			    argv[0]);
+	}
 	spdk_app_fini();
 
-	return 0;
+	return rc;
 }

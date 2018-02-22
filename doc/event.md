@@ -70,4 +70,6 @@ scheduled to execute periodically on a timer if low latency is not required.
 
 The framework itself is bundled into a higher level abstraction called an "app". Once
 spdk_app_start() is called, it will block the current thread until the application
-terminates by calling spdk_app_stop().
+terminates by calling spdk_app_stop() or an error condition occurs during the
+initialization code within spdk_app_start(), itself, before invoking the caller's
+supplied function.
