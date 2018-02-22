@@ -35,11 +35,12 @@ $rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 '' '' -a -s SPDK0000
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t RDMA -a $NVMF_FIRST_TARGET_IP -s 4420
 
 for bdev in $bdevs; do
-	# NOTE: This will assign the same NGUID and EUI64 to all bdevs,
+	# NOTE: This will assign the same NGUID, EUI64, and UUID to all bdevs,
 	# but currently we only have one (see above), so this is OK.
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 "$bdev" \
 		--nguid "ABCDEF0123456789ABCDEF0123456789" \
-		--eui64 "ABCDEF0123456789"
+		--eui64 "ABCDEF0123456789" \
+		--uuid "d54279cb-e4fb-4069-9761-753f43aec3cb"
 done
 
 $rpc_py get_nvmf_subsystems

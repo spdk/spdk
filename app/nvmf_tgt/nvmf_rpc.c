@@ -43,6 +43,9 @@
 #include "spdk/util.h"
 
 #include "nvmf_tgt.h"
+
+#include <uuid/uuid.h>
+
 static int
 json_write_hex_str(struct spdk_json_write_ctx *w, const void *data, size_t size)
 {
@@ -167,6 +170,26 @@ decode_ns_eui64(const struct spdk_json_val *val, void *out)
 	return rc;
 }
 
+static int
+decode_ns_uuid(const struct spdk_json_val *val, void *out)
+{
+	char *str = NULL;
+	uuid_t uuid;
+	int rc;
+
+	rc = spdk_json_decode_string(val, &str);
+	if (rc == 0) {
+		rc = uuid_parse(str, uuid);
+		if (rc == 0) {
+			SPDK_STATIC_ASSERT(sizeof(uuid) == 16, "size mismatch");
+			memcpy(out, uuid, sizeof(uuid));
+		}
+	}
+
+	free(str);
+	return rc;
+}
+
 static void
 dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *subsystem)
 {
@@ -262,6 +285,14 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 			if (!spdk_mem_all_zero(ns_opts.eui64, sizeof(ns_opts.eui64))) {
 				spdk_json_write_name(w, "eui64");
 				json_write_hex_str(w, ns_opts.eui64, sizeof(ns_opts.eui64));
+			}
+
+			if (!spdk_mem_all_zero(ns_opts.uuid, sizeof(ns_opts.uuid))) {
+				char uuid_str[37];
+
+				uuid_unparse_lower((const void *)ns_opts.uuid, uuid_str);
+				spdk_json_write_name(w, "uuid");
+				spdk_json_write_string(w, uuid_str);
 			}
 
 			spdk_json_write_object_end(w);
@@ -410,6 +441,7 @@ struct spdk_nvmf_ns_params {
 	uint32_t nsid;
 	char nguid[16];
 	char eui64[8];
+	char uuid[16];
 };
 
 struct rpc_namespaces {
@@ -423,6 +455,7 @@ static const struct spdk_json_object_decoder rpc_ns_params_decoders[] = {
 	{"bdev_name", offsetof(struct spdk_nvmf_ns_params, bdev_name), spdk_json_decode_string},
 	{"nguid", offsetof(struct spdk_nvmf_ns_params, nguid), decode_ns_nguid, true},
 	{"eui64", offsetof(struct spdk_nvmf_ns_params, eui64), decode_ns_eui64, true},
+	{"uuid", offsetof(struct spdk_nvmf_ns_params, uuid), decode_ns_uuid, true},
 };
 
 static void
@@ -628,6 +661,9 @@ spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_request *request,
 
 		SPDK_STATIC_ASSERT(sizeof(ns_opts.eui64) == sizeof(ns_params->eui64), "size mismatch");
 		memcpy(ns_opts.eui64, ns_params->eui64, sizeof(ns_opts.eui64));
+
+		SPDK_STATIC_ASSERT(sizeof(ns_opts.uuid) == sizeof(ns_params->uuid), "size mismatch");
+		memcpy(ns_opts.uuid, ns_params->uuid, sizeof(ns_opts.uuid));
 
 		if (spdk_nvmf_subsystem_add_ns(subsystem, bdev, &ns_opts, sizeof(ns_opts)) == 0) {
 			SPDK_ERRLOG("Unable to add namespace\n");

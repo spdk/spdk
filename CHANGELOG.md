@@ -17,8 +17,8 @@ experimental pending a functional allocator to free and reallocate CMB buffers.
 
 ### NVMe-oF Target
 
-Namespaces may now be assigned unique identifiers via new optional "eui64" and "nguid" parameters
-to the `nvmf_subsystem_add_ns` RPC method.
+Namespaces may now be assigned unique identifiers via new optional "eui64", "nguid", and "uuid"
+parameters to the `nvmf_subsystem_add_ns` RPC method.
 
 ## v18.01: Blobstore Thin Provisioning
 
