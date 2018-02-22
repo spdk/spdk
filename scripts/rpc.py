@@ -510,6 +510,24 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_lvol_bdev)
 
     @call_cmd
+    def snapshot_lvol_bdev(args):
+        rpc.lvol.snapshot_lvol_bdev(args.client, args)
+
+    p = subparsers.add_parser('snapshot_lvol_bdev', help='Create a snapshot of an lvol bdev')
+    p.add_argument('lvol_name', help='lvol bdev name')
+    p.add_argument('snapshot_name', help='lvol snapshot name')
+    p.set_defaults(func=snapshot_lvol_bdev)
+
+    @call_cmd
+    def clone_lvol_bdev(args):
+        rpc.lvol.clone_lvol_bdev(args.client, args)
+
+    p = subparsers.add_parser('clone_lvol_bdev', help='Create a clone of an lvol snapshot')
+    p.add_argument('snapshot_name', help='lvol snapshot name')
+    p.add_argument('clone_name', help='lvol clone name')
+    p.set_defaults(func=clone_lvol_bdev)
+
+    @call_cmd
     def rename_lvol_bdev(args):
         rpc.lvol.rename_lvol_bdev(args.client, args)
 
