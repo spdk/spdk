@@ -426,6 +426,32 @@ spdk_bdev_config_text(FILE *fp)
 	}
 }
 
+int
+spdk_bdev_config_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_bdev_module *bdev_module;
+	struct spdk_bdev *bdev;
+
+	if (!w) {
+		return -EINVAL;
+	}
+
+	spdk_json_write_array_begin(w);
+
+	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, tailq) {
+		if (bdev_module->config_json) {
+			bdev_module->config_json(w);
+		}
+	}
+
+	TAILQ_FOREACH(bdev, &g_bdev_mgr.bdevs, link) {
+		spdk_bdev_write_config_json(bdev, w);
+	}
+
+	spdk_json_write_array_end(w);
+	return 0;
+}
+
 static int
 spdk_bdev_mgmt_channel_create(void *io_device, void *ctx_buf)
 {
@@ -947,6 +973,24 @@ spdk_bdev_dump_info_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 {
 	if (bdev->fn_table->dump_info_json) {
 		return bdev->fn_table->dump_info_json(bdev->ctxt, w);
+	}
+
+	return 0;
+}
+
+int
+spdk_bdev_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+{
+	if (bdev == NULL || w == NULL) {
+		return -EINVAL;
+	}
+
+	if (bdev->fn_table->write_config_json) {
+		bdev->fn_table->write_config_json(bdev, w);
+	} else {
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_string(w, "name", bdev->name);
+		spdk_json_write_object_end(w);
 	}
 
 	return 0;

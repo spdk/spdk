@@ -34,6 +34,7 @@
 #include "spdk_cunit.h"
 
 #include "lib/test_env.c"
+#include "unit/lib/json_mock.c"
 
 #include "bdev/pmem/bdev_pmem.c"
 
@@ -95,11 +96,6 @@ _pmem_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 {
 	fn(ctx);
 }
-
-DEFINE_STUB(spdk_json_write_object_begin, int, (struct spdk_json_write_ctx *w), 0);
-DEFINE_STUB(spdk_json_write_object_end, int, (struct spdk_json_write_ctx *w), 0);
-DEFINE_STUB(spdk_json_write_string, int, (struct spdk_json_write_ctx *w, const char *val), 0);
-DEFINE_STUB(spdk_json_write_name, int, (struct spdk_json_write_ctx *w, const char *name), 0);
 
 static PMEMblkpool *
 find_pmemblk_pool(const char *path)
