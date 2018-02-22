@@ -90,11 +90,36 @@ nvme_get_quirks(const struct spdk_pci_id *id)
 {
 	const struct nvme_quirk *quirk = nvme_quirks;
 
+	SPDK_DEBUGLOG(SPDK_LOG_NVME, "Searching for %04x:%04x [%04x:%04x]...\n",
+		      id->vendor_id, id->device_id,
+		      id->subvendor_id, id->subdevice_id);
+
 	while (quirk->id.vendor_id) {
 		if (pci_id_match(&quirk->id, id)) {
+			SPDK_DEBUGLOG(SPDK_LOG_NVME, "Matched quirk %04x:%04x [%04x:%04x]:\n",
+				      quirk->id.vendor_id, quirk->id.device_id,
+				      quirk->id.subvendor_id, quirk->id.subdevice_id);
+
+#define PRINT_QUIRK(quirk_flag) \
+			do { \
+				if (quirk->flags & (quirk_flag)) { \
+					SPDK_DEBUGLOG(SPDK_LOG_NVME, "Quirk enabled: %s\n", #quirk_flag); \
+				} \
+			} while (0)
+
+			PRINT_QUIRK(NVME_INTEL_QUIRK_READ_LATENCY);
+			PRINT_QUIRK(NVME_INTEL_QUIRK_WRITE_LATENCY);
+			PRINT_QUIRK(NVME_QUIRK_DELAY_BEFORE_CHK_RDY);
+			PRINT_QUIRK(NVME_INTEL_QUIRK_STRIPING);
+			PRINT_QUIRK(NVME_QUIRK_DELAY_AFTER_QUEUE_ALLOC);
+			PRINT_QUIRK(NVME_QUIRK_READ_ZERO_AFTER_DEALLOCATE);
+
 			return quirk->flags;
 		}
 		quirk++;
 	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVME, "No quirks found.\n");
+
 	return 0;
 }
