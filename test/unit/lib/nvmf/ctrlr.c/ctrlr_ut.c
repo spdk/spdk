@@ -632,6 +632,31 @@ test_get_ns_id_desc_list(void)
 	CU_ASSERT(buf[16] == 0x22);
 	CU_ASSERT(buf[31] == 0xEE);
 	CU_ASSERT(buf[33] == 0);
+
+	/* Valid NSID, EUI64, NGUID, and UUID defined */
+	ns.opts.eui64[0] = 0x11;
+	ns.opts.eui64[7] = 0xFF;
+	ns.opts.nguid[0] = 0x22;
+	ns.opts.nguid[15] = 0xEE;
+	ns.opts.uuid[0] = 0x33;
+	ns.opts.uuid[15] = 0xDD;
+	memset(&rsp, 0, sizeof(rsp));
+	CU_ASSERT(spdk_nvmf_ctrlr_process_admin_cmd(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+	CU_ASSERT(buf[0] == SPDK_NVME_NIDT_EUI64);
+	CU_ASSERT(buf[1] == 8);
+	CU_ASSERT(buf[4] == 0x11);
+	CU_ASSERT(buf[11] == 0xFF);
+	CU_ASSERT(buf[12] == SPDK_NVME_NIDT_NGUID);
+	CU_ASSERT(buf[13] == 16);
+	CU_ASSERT(buf[16] == 0x22);
+	CU_ASSERT(buf[31] == 0xEE);
+	CU_ASSERT(buf[32] == SPDK_NVME_NIDT_UUID);
+	CU_ASSERT(buf[33] == 16);
+	CU_ASSERT(buf[36] == 0x33);
+	CU_ASSERT(buf[51] == 0xDD);
+	CU_ASSERT(buf[53] == 0);
 }
 
 int main(int argc, char **argv)

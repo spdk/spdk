@@ -376,6 +376,7 @@ if __name__ == "__main__":
     p.add_argument('-n', '--nsid', help='The requested NSID (optional)', type=int)
     p.add_argument('-g', '--nguid', help='Namespace globally unique identifier (optional)')
     p.add_argument('-e', '--eui64', help='Namespace EUI-64 identifier (optional)')
+    p.add_argument('-u', '--uuid', help='Namespace UUID (optional)')
     p.set_defaults(func=rpc.nvmf.nvmf_subsystem_add_ns)
 
     # pmem
