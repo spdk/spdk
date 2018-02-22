@@ -37,6 +37,7 @@
 
 #include <rte_config.h>
 #include <rte_eal.h>
+#include <rte_errno.h>
 
 #define SPDK_ENV_DPDK_DEFAULT_NAME		"spdk"
 #define SPDK_ENV_DPDK_DEFAULT_SHM_ID		-1
@@ -286,7 +287,7 @@ int spdk_env_init(const struct spdk_env_opts *opts)
 	rc = spdk_build_eal_cmdline(opts);
 	if (rc < 0) {
 		fprintf(stderr, "Invalid arguments to initialize DPDK\n");
-		return -1;
+		return -EINVAL;
 	}
 
 	printf("Starting %s initialization...\n", rte_version());
@@ -303,7 +304,7 @@ int spdk_env_init(const struct spdk_env_opts *opts)
 	dpdk_args = calloc(eal_cmdline_argcount, sizeof(char *));
 	if (dpdk_args == NULL) {
 		fprintf(stderr, "Failed to allocate dpdk_args\n");
-		return -1;
+		return -ENOMEM;
 	}
 	memcpy(dpdk_args, eal_cmdline, sizeof(char *) * eal_cmdline_argcount);
 
@@ -317,7 +318,7 @@ int spdk_env_init(const struct spdk_env_opts *opts)
 
 	if (rc < 0) {
 		fprintf(stderr, "Failed to initialize DPDK\n");
-		return -1;
+		return -rte_errno;
 	}
 
 	if (opts->shm_id < 0) {
@@ -332,11 +333,11 @@ int spdk_env_init(const struct spdk_env_opts *opts)
 
 	if (spdk_mem_map_init() < 0) {
 		fprintf(stderr, "Failed to allocate mem_map\n");
-		return -1;
+		return -ENOMEM;
 	}
 	if (spdk_vtophys_init() < 0) {
 		fprintf(stderr, "Failed to initialize vtophys\n");
-		return -1;
+		return -ENOMEM;
 	}
 
 	return 0;
