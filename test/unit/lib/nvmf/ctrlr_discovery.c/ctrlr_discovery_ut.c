@@ -76,6 +76,12 @@ spdk_bdev_get_name(const struct spdk_bdev *bdev)
 	return "test";
 }
 
+const struct spdk_uuid *
+spdk_bdev_get_uuid(const struct spdk_bdev *bdev)
+{
+	return &bdev->uuid;
+}
+
 int
 spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
 			   const struct spdk_nvme_transport_id *trid)
