@@ -1073,15 +1073,16 @@ spdk_nvmf_ctrlr_identify_ns_id_descriptor_list(
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-#define ADD_ID_DESC(type, data) \
+#define ADD_ID_DESC(type, data, size) \
 	do { \
-		if (!spdk_mem_all_zero(data, sizeof(data))) { \
-			_add_ns_id_desc(&buf_ptr, &buf_remain, type, data, sizeof(data)); \
+		if (!spdk_mem_all_zero(data, size)) { \
+			_add_ns_id_desc(&buf_ptr, &buf_remain, type, data, size); \
 		} \
 	} while (0)
 
-	ADD_ID_DESC(SPDK_NVME_NIDT_EUI64, ns->opts.eui64);
-	ADD_ID_DESC(SPDK_NVME_NIDT_NGUID, ns->opts.nguid);
+	ADD_ID_DESC(SPDK_NVME_NIDT_EUI64, ns->opts.eui64, sizeof(ns->opts.eui64));
+	ADD_ID_DESC(SPDK_NVME_NIDT_NGUID, ns->opts.nguid, sizeof(ns->opts.nguid));
+	ADD_ID_DESC(SPDK_NVME_NIDT_UUID, &ns->opts.uuid, sizeof(ns->opts.uuid));
 
 	/*
 	 * The list is automatically 0-terminated because controller to host buffers in

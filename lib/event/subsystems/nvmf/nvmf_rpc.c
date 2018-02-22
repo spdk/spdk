@@ -263,6 +263,14 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 				json_write_hex_str(w, ns_opts.eui64, sizeof(ns_opts.eui64));
 			}
 
+			if (!spdk_mem_all_zero(&ns_opts.uuid, sizeof(ns_opts.uuid))) {
+				char uuid_str[SPDK_UUID_STRING_LEN];
+
+				spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &ns_opts.uuid);
+				spdk_json_write_name(w, "uuid");
+				spdk_json_write_string(w, uuid_str);
+			}
+
 			spdk_json_write_object_end(w);
 		}
 		spdk_json_write_array_end(w);
