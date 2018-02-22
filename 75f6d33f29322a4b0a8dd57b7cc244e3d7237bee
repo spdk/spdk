@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3467bc71_2aa8c752",
+        "filename": "include/spdk_internal/io_channel.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-02-22T05:22:12Z",
+      "side": 1,
+      "message": "emulate",
+      "range": {
+        "startLine": 50,
+        "startChar": 35,
+        "endLine": 50,
+        "endChar": 43
+      },
+      "revId": "75f6d33f29322a4b0a8dd57b7cc244e3d7237bee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
