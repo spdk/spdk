@@ -541,10 +541,10 @@ spdk_iscsi_log_globals(void)
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Timeout %d\n", g_spdk_iscsi.timeout);
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "NopInInterval %d\n",
 		      g_spdk_iscsi.nopininterval);
-	if (g_spdk_iscsi.no_discovery_auth != 0) {
+	if (g_spdk_iscsi.no_discovery_auth) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 			      "DiscoveryAuthMethod None\n");
-	} else if (g_spdk_iscsi.req_discovery_auth == 0) {
+	} else if (!g_spdk_iscsi.req_discovery_auth) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 			      "DiscoveryAuthMethod Auto\n");
 	} else {
@@ -697,21 +697,21 @@ spdk_iscsi_read_parameters_from_config_file(struct spdk_conf_section *sp)
 	val = spdk_conf_section_get_val(sp, "DiscoveryAuthMethod");
 	if (val != NULL) {
 		if (strcasecmp(val, "CHAP") == 0) {
-			g_spdk_iscsi.no_discovery_auth = 0;
-			g_spdk_iscsi.req_discovery_auth = 1;
-			g_spdk_iscsi.req_discovery_auth_mutual = 0;
+			g_spdk_iscsi.no_discovery_auth = false;
+			g_spdk_iscsi.req_discovery_auth = true;
+			g_spdk_iscsi.req_discovery_auth_mutual = false;
 		} else if (strcasecmp(val, "Mutual") == 0) {
-			g_spdk_iscsi.no_discovery_auth = 0;
-			g_spdk_iscsi.req_discovery_auth = 1;
-			g_spdk_iscsi.req_discovery_auth_mutual = 1;
+			g_spdk_iscsi.no_discovery_auth = false;
+			g_spdk_iscsi.req_discovery_auth = true;
+			g_spdk_iscsi.req_discovery_auth_mutual = true;
 		} else if (strcasecmp(val, "Auto") == 0) {
-			g_spdk_iscsi.no_discovery_auth = 0;
-			g_spdk_iscsi.req_discovery_auth = 0;
-			g_spdk_iscsi.req_discovery_auth_mutual = 0;
+			g_spdk_iscsi.no_discovery_auth = false;
+			g_spdk_iscsi.req_discovery_auth = false;
+			g_spdk_iscsi.req_discovery_auth_mutual = false;
 		} else if (strcasecmp(val, "None") == 0) {
-			g_spdk_iscsi.no_discovery_auth = 1;
-			g_spdk_iscsi.req_discovery_auth = 0;
-			g_spdk_iscsi.req_discovery_auth_mutual = 0;
+			g_spdk_iscsi.no_discovery_auth = true;
+			g_spdk_iscsi.req_discovery_auth = false;
+			g_spdk_iscsi.req_discovery_auth_mutual = false;
 		} else {
 			SPDK_ERRLOG("unknown auth %s, ignoring\n", val);
 		}
@@ -754,9 +754,9 @@ spdk_iscsi_app_read_parameters(void)
 	g_spdk_iscsi.ErrorRecoveryLevel = DEFAULT_ERRORRECOVERYLEVEL;
 	g_spdk_iscsi.timeout = DEFAULT_TIMEOUT;
 	g_spdk_iscsi.nopininterval = DEFAULT_NOPININTERVAL;
-	g_spdk_iscsi.no_discovery_auth = 0;
-	g_spdk_iscsi.req_discovery_auth = 0;
-	g_spdk_iscsi.req_discovery_auth_mutual = 0;
+	g_spdk_iscsi.no_discovery_auth = false;
+	g_spdk_iscsi.req_discovery_auth = false;
+	g_spdk_iscsi.req_discovery_auth_mutual = false;
 	g_spdk_iscsi.discovery_auth_group = 0;
 	g_spdk_iscsi.authfile = strdup(SPDK_ISCSI_DEFAULT_AUTHFILE);
 	if (!g_spdk_iscsi.authfile) {
