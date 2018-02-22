@@ -596,6 +596,58 @@ spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 	return 0;
 }
 
+/* The structure can be modified if we provide support for other commands in future */
+static const struct spdk_nvme_cmds_and_effect_log_page g_cmds_and_effect_log_page = {
+	.admin_cmds_supported = {
+		/* CSUPP, LBCC, NCC, NIC, CCC, CSE */
+		/* Get Log Page */
+		[SPDK_NVME_OPC_GET_LOG_PAGE] 	    = {1, 0, 0, 0, 0, 0, 0, 0},
+		/* Identify */
+		[SPDK_NVME_OPC_IDENTIFY]     	    = {1, 0, 0, 0, 0, 0, 0, 0},
+		/* Abort */
+		[SPDK_NVME_OPC_ABORT]        	    = {1, 0, 0, 0, 0, 0, 0, 0},
+		/* Set Features */
+		[SPDK_NVME_OPC_SET_FEATURES] 	    = {1, 0, 0, 0, 0, 0, 0, 0},
+		/* Get Features */
+		[SPDK_NVME_OPC_GET_FEATURES] 	    = {1, 0, 0, 0, 0, 0, 0, 0},
+		/* Async Event Request */
+		[SPDK_NVME_OPC_ASYNC_EVENT_REQUEST] = {1, 0, 0, 0, 0, 0, 0, 0},
+		/* Keep Alive */
+		[SPDK_NVME_OPC_KEEP_ALIVE] 	    = {1, 0, 0, 0, 0, 0, 0, 0},
+	},
+	.io_cmds_supported = {
+		/* FLUSH */
+		[SPDK_NVME_OPC_FLUSH]		    = {1, 1, 0, 0, 0, 0, 0, 0},
+		/* WRITE */
+		[SPDK_NVME_OPC_WRITE]		    = {1, 1, 0, 0, 0, 0, 0, 0},
+		/* READ */
+		[SPDK_NVME_OPC_READ]		    = {1, 0, 0, 0, 0, 0, 0, 0},
+		/* WRITE ZEROES */
+		[SPDK_NVME_OPC_WRITE_ZEROES]        = {1, 1, 0, 0, 0, 0, 0, 0},
+		/* DATASET MANAGEMENT */
+		[SPDK_NVME_OPC_DATASET_MANAGEMENT]  = {1, 1, 0, 0, 0, 0, 0, 0},
+	},
+};
+
+void
+spdk_nvmf_get_cmds_and_effects_log_page(void *buffer,
+					uint64_t offset, uint32_t length)
+{
+	uint32_t page_size = sizeof(struct spdk_nvme_cmds_and_effect_log_page);
+	size_t copy_len = 0;
+	size_t zero_len = length;
+
+	if (offset < page_size) {
+		copy_len = spdk_min(page_size - offset, length);
+		zero_len -= copy_len;
+		memcpy(buffer, (char *)(&g_cmds_and_effect_log_page), copy_len);
+	}
+
+	if (zero_len) {
+		memset((char *)buffer + copy_len, 0, zero_len);
+	}
+}
+
 SPDK_TRACE_REGISTER_FN(nvmf_trace)
 {
 	spdk_trace_register_object(OBJECT_NVMF_IO, 'r');

@@ -123,6 +123,9 @@ DEFINE_STUB(spdk_nvmf_bdev_ctrlr_identify_ns,
 DEFINE_STUB_V(spdk_nvmf_get_discovery_log_page,
 	      (struct spdk_nvmf_tgt *tgt, void *buffer, uint64_t offset, uint32_t length))
 
+DEFINE_STUB_V(spdk_nvmf_get_cmds_and_effects_log_page,
+	      (void *buffer, uint64_t offset, uint32_t length))
+
 DEFINE_STUB(spdk_nvmf_request_complete,
 	    int,
 	    (struct spdk_nvmf_request *req),
