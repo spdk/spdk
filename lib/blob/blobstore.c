@@ -208,8 +208,6 @@ _spdk_blob_mark_clean(struct spdk_blob *blob)
 	uint32_t *pages = NULL;
 
 	assert(blob != NULL);
-	assert(blob->state == SPDK_BLOB_STATE_LOADING ||
-	       blob->state == SPDK_BLOB_STATE_SYNCING);
 
 	if (blob->active.num_clusters) {
 		assert(blob->active.clusters);
@@ -241,7 +239,12 @@ _spdk_blob_mark_clean(struct spdk_blob *blob)
 	blob->active.clusters = clusters;
 	blob->active.pages = pages;
 
-	blob->state = SPDK_BLOB_STATE_CLEAN;
+	/* If the metadata was dirtied again while the metadata was being written to disk,
+	 *  we do not want to revert the DIRTY state back to CLEAN here.
+	 */
+	if (blob->state == SPDK_BLOB_STATE_LOADING) {
+		blob->state = SPDK_BLOB_STATE_CLEAN;
+	}
 
 	return 0;
 }
@@ -679,7 +682,7 @@ _spdk_blob_serialize(const struct spdk_blob *blob, struct spdk_blob_md_page **pa
 	assert(pages != NULL);
 	assert(page_count != NULL);
 	assert(blob != NULL);
-	assert(blob->state == SPDK_BLOB_STATE_SYNCING);
+	assert(blob->state == SPDK_BLOB_STATE_DIRTY);
 
 	*pages = NULL;
 	*page_count = 0;
@@ -1124,8 +1127,7 @@ _spdk_resize_blob(struct spdk_blob *blob, uint64_t sz)
 
 	bs = blob->bs;
 
-	assert(blob->state != SPDK_BLOB_STATE_LOADING &&
-	       blob->state != SPDK_BLOB_STATE_SYNCING);
+	assert(blob->state != SPDK_BLOB_STATE_LOADING);
 
 	if (blob->active.num_clusters == sz) {
 		return 0;
@@ -1218,13 +1220,12 @@ _spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
 
-	blob->state = SPDK_BLOB_STATE_SYNCING;
-
 	if (blob->active.num_pages == 0) {
 		/* This is the signal that the blob should be deleted.
 		 * Immediately jump to the clean up routine. */
 		assert(blob->clean.num_pages > 0);
 		ctx->idx = blob->clean.num_pages - 1;
+		blob->state = SPDK_BLOB_STATE_CLEAN;
 		_spdk_blob_persist_zero_pages(seq, ctx, 0);
 		return;
 
@@ -1259,7 +1260,6 @@ _spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 		if (page_num >= spdk_bit_array_capacity(bs->used_md_pages)) {
 			spdk_dma_free(ctx->pages);
 			free(ctx);
-			blob->state = SPDK_BLOB_STATE_DIRTY;
 			cb_fn(seq, cb_arg, -ENOMEM);
 			return;
 		}
@@ -1281,6 +1281,7 @@ _spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 	ctx->pages[i - 1].crc = _spdk_blob_md_page_calc_crc(&ctx->pages[i - 1]);
 	/* Start writing the metadata from last page to first */
 	ctx->idx = blob->active.num_pages - 1;
+	blob->state = SPDK_BLOB_STATE_CLEAN;
 	_spdk_blob_persist_write_page_chain(seq, ctx, 0);
 }
 
@@ -3542,8 +3543,7 @@ spdk_blob_sync_md(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb_
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Syncing blob %lu\n", blob->id);
 
-	assert(blob->state != SPDK_BLOB_STATE_LOADING &&
-	       blob->state != SPDK_BLOB_STATE_SYNCING);
+	assert(blob->state != SPDK_BLOB_STATE_LOADING);
 
 	if (blob->md_ro) {
 		assert(blob->state == SPDK_BLOB_STATE_CLEAN);
@@ -3662,8 +3662,7 @@ void spdk_blob_close(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Closing blob %lu\n", blob->id);
 
-	assert(blob->state != SPDK_BLOB_STATE_LOADING &&
-	       blob->state != SPDK_BLOB_STATE_SYNCING);
+	assert(blob->state != SPDK_BLOB_STATE_LOADING);
 
 	if (blob->open_ref == 0) {
 		cb_fn(cb_arg, -EBADF);
@@ -3880,8 +3879,7 @@ _spdk_blob_set_xattr(struct spdk_blob *blob, const char *name, const void *value
 	assert(blob != NULL);
 	assert(spdk_get_thread() == blob->bs->md_thread);
 
-	assert(blob->state != SPDK_BLOB_STATE_LOADING &&
-	       blob->state != SPDK_BLOB_STATE_SYNCING);
+	assert(blob->state != SPDK_BLOB_STATE_LOADING);
 
 	if (blob->md_ro) {
 		return -EPERM;
@@ -3938,8 +3936,7 @@ _spdk_blob_remove_xattr(struct spdk_blob *blob, const char *name, bool internal)
 	assert(blob != NULL);
 	assert(spdk_get_thread() == blob->bs->md_thread);
 
-	assert(blob->state != SPDK_BLOB_STATE_LOADING &&
-	       blob->state != SPDK_BLOB_STATE_SYNCING);
+	assert(blob->state != SPDK_BLOB_STATE_LOADING);
 
 	if (blob->md_ro) {
 		return -EPERM;

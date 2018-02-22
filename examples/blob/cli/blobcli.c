@@ -472,9 +472,6 @@ show_blob(struct cli_context_t *cli_context)
 	case SPDK_BLOB_STATE_LOADING:
 		printf("state: LOADING\n");
 		break;
-	case SPDK_BLOB_STATE_SYNCING:
-		printf("state: SYNCING\n");
-		break;
 	default:
 		printf("state: UNKNOWN\n");
 		break;
