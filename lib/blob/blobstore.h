@@ -101,11 +101,6 @@ enum spdk_blob_state {
 	/* The in-memory state being synchronized with the on-disk
 	 * blob state. */
 	SPDK_BLOB_STATE_LOADING,
-
-	/* The disk state is being synchronized with the current
-	 * blob state.
-	 */
-	SPDK_BLOB_STATE_SYNCING,
 };
 
 TAILQ_HEAD(spdk_xattr_tailq, spdk_xattr);
