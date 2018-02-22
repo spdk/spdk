@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e4c59563_9be7a463",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-02-22T20:19:32Z",
+      "side": 1,
+      "message": "Good call! Yeah, I had that sorta hacked in there to make sure I had the right fiels and never went back and cleaned it up as you suggest.  thanks",
+      "parentUuid": "a2ef463f_7b083f66",
+      "revId": "20b5da2c7384d7a0b329e2d25314243891eb1e3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7fd4c768_ccd4afa2",
         "filename": "lib/bdev/passthru/vbdev_passthru.c",
         "patchSetId": 9
@@ -30,6 +48,30 @@
       "writtenOn": "2018-02-22T15:57:42Z",
       "side": 1,
       "message": "completion",
+      "range": {
+        "startLine": 150,
+        "startChar": 51,
+        "endLine": 150,
+        "endChar": 62
+      },
+      "revId": "20b5da2c7384d7a0b329e2d25314243891eb1e3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4af3550c_9d7e2d32",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-02-22T20:19:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7fd4c768_ccd4afa2",
       "range": {
         "startLine": 150,
         "startChar": 51,
@@ -65,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "1e0319e1_87fa92e4",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 332,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-02-22T20:19:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cddb2c4b_d1ec21cf",
+      "range": {
+        "startLine": 331,
+        "startChar": 3,
+        "endLine": 332,
+        "endChar": 45
+      },
+      "revId": "20b5da2c7384d7a0b329e2d25314243891eb1e3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "67d8de45_2787df11",
         "filename": "lib/bdev/passthru/vbdev_passthru.c",
         "patchSetId": 9
@@ -76,6 +142,24 @@
       "writtenOn": "2018-02-22T19:43:38Z",
       "side": 1,
       "message": "This is going to print out all of the current names in the list each time a PT entry is parsed - maybe you wanted to print this at the end of the function?",
+      "revId": "20b5da2c7384d7a0b329e2d25314243891eb1e3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "74b7e86a_4ded2337",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-02-22T20:19:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "67d8de45_2787df11",
       "revId": "20b5da2c7384d7a0b329e2d25314243891eb1e3c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -129,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "609f9972_3f76441a",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 450,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-02-22T20:19:32Z",
+      "side": 1,
+      "message": "Thanks, yeah I was gonna ask what this \"second name\" was all about...",
+      "parentUuid": "68a85be2_504e3e7b",
+      "range": {
+        "startLine": 450,
+        "startChar": 3,
+        "endLine": 450,
+        "endChar": 32
+      },
+      "revId": "20b5da2c7384d7a0b329e2d25314243891eb1e3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "669dac32_869e7b4c",
         "filename": "lib/bdev/passthru/vbdev_passthru.c",
         "patchSetId": 9
@@ -140,6 +248,30 @@
       "writtenOn": "2018-02-22T19:43:38Z",
       "side": 1,
       "message": "The SPDK_LOG_* component should be all caps (passthru -\u003e PASSTHRU). (Maybe this got clobbered by a find-and-replace?)",
+      "range": {
+        "startLine": 509,
+        "startChar": 60,
+        "endLine": 509,
+        "endChar": 69
+      },
+      "revId": "20b5da2c7384d7a0b329e2d25314243891eb1e3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "908474b1_28d12dc5",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 509,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-02-22T20:19:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "669dac32_869e7b4c",
       "range": {
         "startLine": 509,
         "startChar": 60,
