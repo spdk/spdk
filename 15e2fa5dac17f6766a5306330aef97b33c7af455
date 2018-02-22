@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "273cf00f_3311af9f",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 853,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-22T16:41:06Z",
+      "side": 0,
+      "message": "This change seems unrelated (we still only support one AER currently, and AERL is 0-based, so it should still be 0).",
+      "revId": "15e2fa5dac17f6766a5306330aef97b33c7af455",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

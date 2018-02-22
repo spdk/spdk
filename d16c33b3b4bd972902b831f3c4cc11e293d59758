@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a142a14_21a0ece9",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 737,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-22T16:41:06Z",
+      "side": 1,
+      "message": "I think we should queue any events that happen while no AER commands are available, even if the user didn\u0027t submit an AER command yet.  Can we just remove the aer_enabled flag and always queue?",
+      "revId": "d16c33b3b4bd972902b831f3c4cc11e293d59758",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79e31d12_7238b386",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1228,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-22T16:41:06Z",
+      "side": 1,
+      "message": "We might want to consider what happens if a second NS notice happens while one is already queued; the spec says:\n\n\u003e If the controller needs to report an event and there are no outstanding Asynchronous Event Request commands, the controller should send a single notification of that Asynchronous Event Type when an Asynchronous Event Request command is received.\n\nIn other words, we should not queue a second Notice event if there is already one queued.  It might be simpler to just have one AER queue per event type rather than a single queue for all events - that would let us avoid looking through a linked list to see if an existing event of the same type already exists.",
+      "revId": "d16c33b3b4bd972902b831f3c4cc11e293d59758",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
