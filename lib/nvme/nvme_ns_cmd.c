@@ -105,6 +105,7 @@ nvme_request_free_children(struct nvme_request *req)
 	/* free all child nvme_request */
 	TAILQ_FOREACH_SAFE(child, &req->children, child_tailq, tmp) {
 		nvme_request_remove_child(req, child);
+		nvme_request_free_children(child);
 		nvme_free_request(child);
 	}
 }
