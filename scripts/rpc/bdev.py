@@ -75,6 +75,12 @@ def get_bdevs(args):
         params['name'] = args.name
     print_dict(args.client.call('get_bdevs', params))
 
+def get_bdevs_config(args):
+    params = {}
+    if args.name:
+        params['name'] = args.name
+    print_dict(args.client.call('get_bdevs_config', params))
+
 
 def delete_bdev(args):
     params = {'name': args.bdev_name}

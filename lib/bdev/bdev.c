@@ -872,6 +872,16 @@ spdk_bdev_dump_info_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 	return 0;
 }
 
+int
+spdk_bdev_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+{
+	if (bdev->fn_table->dump_info_json) {
+		return bdev->fn_table->dump_config_json(bdev->ctxt, w);
+	}
+
+	return 0;
+}
+
 static int
 _spdk_bdev_channel_create(struct spdk_bdev_channel *ch, void *io_device)
 {

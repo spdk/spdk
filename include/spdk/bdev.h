@@ -229,7 +229,7 @@ struct spdk_bdev *spdk_bdev_desc_get_bdev(struct spdk_bdev_desc *desc);
 bool spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type);
 
 /**
- * Output driver-specific configuration to a JSON stream.
+ * Output driver-specific information to a JSON stream.
  *
  * The JSON write context will be initialized with an open object, so the bdev
  * driver should write a name(based on the driver name) followed by a JSON value
@@ -240,6 +240,19 @@ bool spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type 
  * \return 0 on success, negated errno on failure.
  */
 int spdk_bdev_dump_info_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w);
+
+/**
+ * Output bdev-specific configuration to a JSON stream. Optional - may be NULL.
+ *
+ * The JSON write context will be initialized with an open object, so the bdev
+ * driver should write all data necessary to recreate this bdev by invoking
+ * constructor method. No other data will be written.
+ *
+ * \param bdev Block device to query.
+ * \param w JSON write context. It will store the driver-specific configuration context.
+ * \return 0 on success, negated errno on failure.
+ */
+int spdk_bdev_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w);
 
 /**
  * Get block device name.

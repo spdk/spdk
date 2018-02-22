@@ -160,6 +160,15 @@ struct spdk_bdev_fn_table {
 	 */
 	int (*dump_info_json)(void *ctx, struct spdk_json_write_ctx *w);
 
+	/**
+	 * Output bdev-specific configuration to a JSON stream. Optional - may be NULL.
+	 *
+	 * The JSON write context will be initialized with an open object, so the bdev
+	 * driver should write all data necessary to recreate this bdev by invoking
+	 * constructor method. No other data should be written.
+	 */
+	int (*dump_config_json)(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w);
+
 	/** Get spin-time per I/O channel in microseconds.
 	 *  Optional - may be NULL.
 	 */

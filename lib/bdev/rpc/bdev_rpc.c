@@ -169,6 +169,84 @@ invalid:
 }
 SPDK_RPC_REGISTER("get_bdevs", spdk_rpc_get_bdevs)
 
+struct rpc_dump_bdevs_config {
+	char *name;
+};
+
+static void
+free_rpc_dump_bdevs_config(struct rpc_dump_bdevs_config *r)
+{
+	free(r->name);
+}
+
+static const struct spdk_json_object_decoder rpc_dump_bdevs_config_decoders[] = {
+	{"name", offsetof(struct rpc_dump_bdevs_config, name), spdk_json_decode_string},
+};
+
+static void
+spdk_rpc_dump_bdev_config(struct spdk_json_write_ctx *w, struct spdk_bdev *bdev)
+{
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string_fmt(w, "method", "construct_%s_bdev", bdev->module->name);
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_bdev_dump_config_json(bdev, w);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
+static void
+spdk_rpc_get_bdevs_config(struct spdk_jsonrpc_request *request,
+		   const struct spdk_json_val *params)
+{
+	struct rpc_dump_bdevs_config req = {};
+	struct spdk_json_write_ctx *w;
+	struct spdk_bdev *bdev = NULL;
+
+	if (params && spdk_json_decode_object(params, rpc_dump_bdevs_config_decoders,
+				    SPDK_COUNTOF(rpc_dump_bdevs_config_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		goto invalid;
+	}
+
+	if (req.name) {
+		bdev = spdk_bdev_get_by_name(req.name);
+		if (bdev == NULL) {
+			SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
+			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Bdev '%s' not exist", req.name);
+			goto invalid;
+		}
+
+		free_rpc_dump_bdevs_config(&req);
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_array_begin(w);
+	if (bdev != NULL) {
+		spdk_rpc_dump_bdev_config(w, bdev);
+	} else {
+		for (bdev = spdk_bdev_first(); bdev != NULL; bdev = spdk_bdev_next(bdev)) {
+			spdk_rpc_dump_bdev_config(w, bdev);
+		}
+	}
+
+	spdk_json_write_array_end(w);
+
+	spdk_jsonrpc_end_result(request, w);
+
+	return;
+
+invalid:
+	free_rpc_dump_bdevs_config(&req);
+}
+SPDK_RPC_REGISTER("get_bdevs_config", spdk_rpc_get_bdevs_config)
 
 struct rpc_delete_bdev {
 	char *name;
