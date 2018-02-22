@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "a2ef463f_7b083f66",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-22T19:43:38Z",
+      "side": 1,
+      "message": "Rather than accessing driver_ctx directly as bytes, it might be good to cast it to a struct like the other bdev modules do.\n\nYou could make this struct called passthru_bdev_io to match other existing code, like struct nvme_bdev_io.\n\nAlso, the size of this struct should be what you return in get_ctx_size - I believe this is currently a bit mixed up with struct vbdev_ctx being used for the ctx_size but not used anywhere else.  (This is one of the areas where the bdev module API could use some cleanup/renaming to make it clearer what \"ctx\" is - in this case, it\u0027s a per-I/O context, akin to SrbExtension in Windows.)",
+      "revId": "20b5da2c7384d7a0b329e2d25314243891eb1e3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7fd4c768_ccd4afa2",
         "filename": "lib/bdev/passthru/vbdev_passthru.c",
         "patchSetId": 9
@@ -48,6 +65,23 @@
     },
     {
       "key": {
+        "uuid": "67d8de45_2787df11",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-22T19:43:38Z",
+      "side": 1,
+      "message": "This is going to print out all of the current names in the list each time a PT entry is parsed - maybe you wanted to print this at the end of the function?",
+      "revId": "20b5da2c7384d7a0b329e2d25314243891eb1e3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3da1b475_212a68d0",
         "filename": "lib/bdev/passthru/vbdev_passthru.c",
         "patchSetId": 9
@@ -64,6 +98,53 @@
         "startChar": 3,
         "endLine": 450,
         "endChar": 32
+      },
+      "revId": "20b5da2c7384d7a0b329e2d25314243891eb1e3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68a85be2_504e3e7b",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 450,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-22T19:43:38Z",
+      "side": 1,
+      "message": "Also, product_name can generally just be a constant string - you could use \"passthru\" here.  It\u0027s not the name of a bdev, it\u0027s really the name of the module.",
+      "parentUuid": "3da1b475_212a68d0",
+      "range": {
+        "startLine": 450,
+        "startChar": 3,
+        "endLine": 450,
+        "endChar": 32
+      },
+      "revId": "20b5da2c7384d7a0b329e2d25314243891eb1e3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "669dac32_869e7b4c",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 509,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-22T19:43:38Z",
+      "side": 1,
+      "message": "The SPDK_LOG_* component should be all caps (passthru -\u003e PASSTHRU). (Maybe this got clobbered by a find-and-replace?)",
+      "range": {
+        "startLine": 509,
+        "startChar": 60,
+        "endLine": 509,
+        "endChar": 69
       },
       "revId": "20b5da2c7384d7a0b329e2d25314243891eb1e3c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
