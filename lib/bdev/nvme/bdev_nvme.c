@@ -575,88 +575,66 @@ bdev_nvme_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
 	csts = spdk_nvme_ctrlr_get_regs_csts(nvme_bdev->nvme_ctrlr->ctrlr);
 	ns = nvme_bdev->ns;
 
-	spdk_json_write_name(w, "nvme");
-	spdk_json_write_object_begin(w);
+	spdk_json_write_named_object_begin(w, "nvme");
 
 	if (nvme_ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
-		spdk_json_write_name(w, "pci_address");
-		spdk_json_write_string(w, nvme_ctrlr->trid.traddr);
+		spdk_json_write_named_string(w, "pci_address", nvme_ctrlr->trid.traddr);
 	}
 
-	spdk_json_write_name(w, "trid");
-	spdk_json_write_object_begin(w);
+	spdk_json_write_named_object_begin(w, "trid");
 
 	trtype_str = spdk_nvme_transport_id_trtype_str(nvme_ctrlr->trid.trtype);
 	if (trtype_str) {
-		spdk_json_write_name(w, "trtype");
-		spdk_json_write_string(w, trtype_str);
+		spdk_json_write_named_string(w, "trtype", trtype_str);
 	}
 
 	adrfam_str = spdk_nvme_transport_id_adrfam_str(nvme_ctrlr->trid.adrfam);
 	if (adrfam_str) {
-		spdk_json_write_name(w, "adrfam");
-		spdk_json_write_string(w, adrfam_str);
+		spdk_json_write_named_string(w, "adrfam", adrfam_str);
 	}
 
 	if (nvme_ctrlr->trid.traddr[0] != '\0') {
-		spdk_json_write_name(w, "traddr");
-		spdk_json_write_string(w, nvme_ctrlr->trid.traddr);
+		spdk_json_write_named_string(w, "traddr", nvme_ctrlr->trid.traddr);
 	}
 
 	if (nvme_ctrlr->trid.trsvcid[0] != '\0') {
-		spdk_json_write_name(w, "trsvcid");
-		spdk_json_write_string(w, nvme_ctrlr->trid.trsvcid);
+		spdk_json_write_named_string(w, "trsvcid", nvme_ctrlr->trid.trsvcid);
 	}
 
 	if (nvme_ctrlr->trid.subnqn[0] != '\0') {
-		spdk_json_write_name(w, "subnqn");
-		spdk_json_write_string(w, nvme_ctrlr->trid.subnqn);
+		spdk_json_write_named_string(w, "subnqn", nvme_ctrlr->trid.subnqn);
 	}
 
 	spdk_json_write_object_end(w);
 
-	spdk_json_write_name(w, "ctrlr_data");
-	spdk_json_write_object_begin(w);
+	spdk_json_write_named_object_begin(w, "ctrlr_data");
 
-	spdk_json_write_name(w, "vendor_id");
-	spdk_json_write_string_fmt(w, "0x%04x", cdata->vid);
+	spdk_json_write_named_string_fmt(w, "vendor_id", "0x%04x", cdata->vid);
 
 	snprintf(buf, sizeof(cdata->mn) + 1, "%s", cdata->mn);
 	spdk_str_trim(buf);
-	spdk_json_write_name(w, "model_number");
-	spdk_json_write_string(w, buf);
+	spdk_json_write_named_string(w, "model_number", buf);
 
 	snprintf(buf, sizeof(cdata->sn) + 1, "%s", cdata->sn);
 	spdk_str_trim(buf);
-	spdk_json_write_name(w, "serial_number");
-	spdk_json_write_string(w, buf);
+	spdk_json_write_named_string(w, "serial_number", buf);
 
 	snprintf(buf, sizeof(cdata->fr) + 1, "%s", cdata->fr);
 	spdk_str_trim(buf);
-	spdk_json_write_name(w, "firmware_revision");
-	spdk_json_write_string(w, buf);
+	spdk_json_write_named_string(w, "firmware_revision", buf);
 
-	spdk_json_write_name(w, "oacs");
-	spdk_json_write_object_begin(w);
+	spdk_json_write_named_object_begin(w, "oacs");
 
-	spdk_json_write_name(w, "security");
-	spdk_json_write_uint32(w, cdata->oacs.security);
-
-	spdk_json_write_name(w, "format");
-	spdk_json_write_uint32(w, cdata->oacs.format);
-
-	spdk_json_write_name(w, "firmware");
-	spdk_json_write_uint32(w, cdata->oacs.firmware);
-
-	spdk_json_write_name(w, "ns_manage");
-	spdk_json_write_uint32(w, cdata->oacs.ns_manage);
+	spdk_json_write_named_uint32(w, "security", cdata->oacs.security);
+	spdk_json_write_named_uint32(w, "format", cdata->oacs.format);
+	spdk_json_write_named_uint32(w, "firmware", cdata->oacs.firmware);
+	spdk_json_write_named_uint32(w, "ns_manage", cdata->oacs.ns_manage);
 
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
 
-	spdk_json_write_name(w, "vs");
-	spdk_json_write_object_begin(w);
+	spdk_json_write_named_object_begin(w, "vs");
 
 	spdk_json_write_name(w, "nvme_version");
 	if (vs.bits.ter) {
@@ -667,22 +645,16 @@ bdev_nvme_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
 
 	spdk_json_write_object_end(w);
 
-	spdk_json_write_name(w, "csts");
-	spdk_json_write_object_begin(w);
+	spdk_json_write_named_object_begin(w, "csts");
 
-	spdk_json_write_name(w, "rdy");
-	spdk_json_write_uint32(w, csts.bits.rdy);
-
-	spdk_json_write_name(w, "cfs");
-	spdk_json_write_uint32(w, csts.bits.cfs);
+	spdk_json_write_named_uint32(w, "rdy", csts.bits.rdy);
+	spdk_json_write_named_uint32(w, "cfs", csts.bits.cfs);
 
 	spdk_json_write_object_end(w);
 
-	spdk_json_write_name(w, "ns_data");
-	spdk_json_write_object_begin(w);
+	spdk_json_write_named_object_begin(w, "ns_data");
 
-	spdk_json_write_name(w, "id");
-	spdk_json_write_uint32(w, spdk_nvme_ns_get_id(ns));
+	spdk_json_write_named_uint32(w, "id", spdk_nvme_ns_get_id(ns));
 
 	spdk_json_write_object_end(w);
 
