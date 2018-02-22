@@ -120,7 +120,7 @@ spdk_subsystem_init_next(int rc)
 {
 	if (rc) {
 		SPDK_ERRLOG("Init subsystem %s failed\n", g_next_subsystem->name);
-		spdk_app_stop(rc);
+		spdk_app_stop(abs(rc));
 		return;
 	}
 
@@ -152,13 +152,13 @@ spdk_subsystem_verify(void *arg1, void *arg2)
 	TAILQ_FOREACH(dep, &g_depends, tailq) {
 		if (!spdk_subsystem_find(&g_subsystems, dep->name)) {
 			SPDK_ERRLOG("subsystem %s is missing\n", dep->name);
-			spdk_app_stop(-1);
+			spdk_app_stop(1);
 			return;
 		}
 		if (!spdk_subsystem_find(&g_subsystems, dep->depends_on)) {
 			SPDK_ERRLOG("subsystem %s dependency %s is missing\n",
 				    dep->name, dep->depends_on);
-			spdk_app_stop(-1);
+			spdk_app_stop(1);
 			return;
 		}
 	}

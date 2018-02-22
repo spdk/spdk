@@ -93,7 +93,8 @@ main(int argc, char **argv)
 	spdk_app_opts_init(&opts);
 	opts.config_file = SPDK_ISCSI_DEFAULT_CONFIG;
 	opts.name = "iscsi";
-	spdk_app_parse_args(argc, argv, &opts, "b", iscsi_parse_arg, iscsi_usage);
+	SPDK_MAIN_APP_PARSE_ARGS(argc, argv, &opts, "b",
+				 iscsi_parse_arg, iscsi_usage);
 
 	if (g_daemon_mode) {
 		if (daemon(1, 0) < 0) {
@@ -107,6 +108,9 @@ main(int argc, char **argv)
 
 	/* Blocks until the application is exiting */
 	rc = spdk_app_start(&opts, spdk_startup, NULL, NULL);
+	if (rc < 0) {
+		SPDK_ERRLOG("Start iscsi target daemon:  spdk_app_start() unable to start spdk_startup()\n");
+	}
 
 	spdk_app_fini();
 

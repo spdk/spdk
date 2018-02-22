@@ -80,7 +80,7 @@ unload_complete(void *cb_arg, int bserrno)
 		hello_context->rc = bserrno;
 	}
 
-	spdk_app_stop(hello_context->rc);
+	spdk_app_stop(abs(hello_context->rc));
 }
 
 /*
@@ -99,7 +99,7 @@ unload_bs(struct hello_context_t *hello_context, char *msg, int bserrno)
 		}
 		spdk_bs_unload(hello_context->bs, unload_complete, hello_context);
 	} else {
-		spdk_app_stop(bserrno);
+		spdk_app_stop(abs(bserrno));
 	}
 }
 
@@ -407,7 +407,7 @@ hello_start(void *arg1, void *arg2)
 	bdev = spdk_bdev_get_by_name("Malloc0");
 	if (bdev == NULL) {
 		SPDK_ERRLOG("Could not find a bdev\n");
-		spdk_app_stop(-1);
+		spdk_app_stop(1);
 		return;
 	}
 
@@ -427,7 +427,7 @@ hello_start(void *arg1, void *arg2)
 	bs_dev = spdk_bdev_create_bs_dev(bdev, NULL, NULL);
 	if (bs_dev == NULL) {
 		SPDK_ERRLOG("Could not create blob bdev!!\n");
-		spdk_app_stop(-1);
+		spdk_app_stop(1);
 		return;
 	}
 
@@ -470,10 +470,13 @@ main(int argc, char **argv)
 		/*
 		 * spdk_app_start() will block running hello_start() until
 		 * spdk_app_stop() is called by someone (not simply when
-		 * hello_start() returns)
+		 * hello_start() returns), or if an error occurs during
+		 * spdk_app_start() before hello_start() runs.
 		 */
 		rc = spdk_app_start(&opts, hello_start, hello_context, NULL);
-		if (rc) {
+		if (rc < 0) {
+			SPDK_ERRLOG("spdk_app_start() unable to start hello_start()\n");
+		} else if (rc) {
 			SPDK_NOTICELOG("ERROR!\n");
 		} else {
 			SPDK_NOTICELOG("SUCCCESS!\n");

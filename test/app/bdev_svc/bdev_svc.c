@@ -85,12 +85,13 @@ main(int argc, char **argv)
 	opts.shutdown_cb = bdev_svc_shutdown;
 	opts.max_delay_us = 1000 * 1000;
 
-	rc = spdk_app_parse_args(argc, argv, &opts, "", bdev_svc_parse_arg, bdev_svc_usage);
-	if (rc) {
-		return rc;
-	}
+	SPDK_MAIN_APP_PARSE_ARGS(argc, argv, &opts, "", bdev_svc_parse_arg,
+				 bdev_svc_usage);
 
 	rc = spdk_app_start(&opts, bdev_svc_start, (void *)(intptr_t)opts.shm_id, NULL);
+	if (rc < 0) {
+		fprintf(stderr, " spdk_app_start() unable to start bdev_svc_start()\n");
+	}
 
 	spdk_app_fini();
 

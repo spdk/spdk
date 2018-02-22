@@ -288,7 +288,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 
 	if (!opts) {
 		SPDK_ERRLOG("opts should not be NULL\n");
-		exit(EXIT_FAILURE);
+		return -EINVAL;
 	}
 
 	if (opts->print_level > SPDK_LOG_WARN &&
@@ -319,12 +319,12 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		if (rc != 0) {
 			SPDK_ERRLOG("Could not read config file %s\n", opts->config_file);
 			spdk_conf_free(config);
-			exit(EXIT_FAILURE);
+			return -EINVAL;
 		}
 		if (spdk_conf_first_section(config) == NULL) {
 			SPDK_ERRLOG("Invalid config file %s\n", opts->config_file);
 			spdk_conf_free(config);
-			exit(EXIT_FAILURE);
+			return -EINVAL;
 		}
 	}
 	spdk_conf_set_as_default(config);
@@ -367,10 +367,11 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	env_opts.mem_size = opts->mem_size;
 	env_opts.no_pci = opts->no_pci;
 
-	if (spdk_env_init(&env_opts) < 0) {
+	if ((rc = spdk_env_init(&env_opts)) < 0) {
 		SPDK_ERRLOG("Unable to initialize SPDK env\n");
+		spdk_log_close();
 		spdk_conf_free(g_spdk_app.config);
-		exit(EXIT_FAILURE);
+		return rc;
 	}
 
 	SPDK_NOTICELOG("Total cores available: %d\n", spdk_env_get_core_count());
@@ -380,15 +381,17 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	 *  reactor_mask will be 0x1 which will enable core 0 to run one
 	 *  reactor.
 	 */
-	if (spdk_reactors_init(opts->max_delay_us)) {
+	if ((rc = spdk_reactors_init(opts->max_delay_us)) != 0) {
 		SPDK_ERRLOG("Invalid reactor mask.\n");
+		spdk_log_close();
 		spdk_conf_free(g_spdk_app.config);
-		exit(EXIT_FAILURE);
+		return -EINVAL;
 	}
 
-	if (spdk_app_setup_signal_handlers(opts)) {
+	if ((rc = spdk_app_setup_signal_handlers(opts)) != 0) {
 		spdk_conf_free(g_spdk_app.config);
-		exit(EXIT_FAILURE);
+		spdk_log_close();
+		return -ENOMEM;
 	}
 
 	if (opts->shm_id >= 0) {
@@ -459,6 +462,12 @@ _spdk_app_stop(void *arg1, void *arg2)
 void
 spdk_app_stop(int rc)
 {
+	/*
+	 * Enforce that rc must be >= 0 so that caller of spdk_app_start() may
+	 * distinguish failures in spdk_app_start(), itself, in which case a
+	 * negative errno value is returned.
+	 */
+	assert(rc >= 0);
 	g_spdk_app.rc = rc;
 	/*
 	 * We want to run spdk_subsystem_fini() from the same lcore where spdk_subsystem_init()
@@ -492,28 +501,30 @@ usage(char *executable_name, struct spdk_app_opts *default_opts, void (*app_usag
 	app_usage();
 }
 
-int
+enum spdk_app_parse_args_rvals
 spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		    const char *app_getopt_str, void (*app_parse)(int ch, char *arg),
-		    void (*app_usage)(void))
-{
+		    void (*app_usage)(void)) {
 	int ch, rc;
 	struct spdk_app_opts default_opts;
 	char *getopt_str;
 
 	memcpy(&default_opts, opts, sizeof(default_opts));
 
-	if (opts->config_file && access(opts->config_file, F_OK) != 0) {
+	if (opts->config_file && access(opts->config_file, F_OK) != 0)
+	{
 		opts->config_file = NULL;
 	}
 
 	getopt_str = spdk_sprintf_alloc("%s%s", app_getopt_str, SPDK_APP_GETOPT_STRING);
-	if (getopt_str == NULL) {
+	if (getopt_str == NULL)
+	{
 		fprintf(stderr, "Could not allocate getopt_str in %s()\n", __func__);
-		exit(EXIT_FAILURE);
+		return SPDK_APP_PARSE_ARGS_FAIL;
 	}
 
-	while ((ch = getopt(argc, argv, getopt_str)) != -1) {
+	while ((ch = getopt(argc, argv, getopt_str)) != -1)
+	{
 		switch (ch) {
 		case 'c':
 			opts->config_file = optarg;
@@ -526,7 +537,8 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			break;
 		case 'h':
 			usage(argv[0], &default_opts, app_usage);
-			exit(EXIT_SUCCESS);
+			free(getopt_str);
+			return SPDK_APP_PARSE_ARGS_HELP;
 		case 'i':
 			opts->shm_id = atoi(optarg);
 			break;
@@ -553,7 +565,8 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			if (rc != 0) {
 				fprintf(stderr, "invalid memory pool size `-s %s`\n", optarg);
 				usage(argv[0], &default_opts, app_usage);
-				exit(EXIT_FAILURE);
+				free(getopt_str);
+				return SPDK_APP_PARSE_ARGS_FAIL;
 			}
 
 			if (mem_size_has_prefix) {
@@ -566,7 +579,8 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			if (mem_size_mb > INT_MAX) {
 				fprintf(stderr, "invalid memory pool size `-s %s`\n", optarg);
 				usage(argv[0], &default_opts, app_usage);
-				exit(EXIT_FAILURE);
+				free(getopt_str);
+				return SPDK_APP_PARSE_ARGS_FAIL;
 			}
 
 			opts->mem_size = (int) mem_size_mb;
@@ -577,19 +591,22 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			if (rc < 0) {
 				fprintf(stderr, "unknown flag\n");
 				usage(argv[0], &default_opts, app_usage);
-				exit(EXIT_FAILURE);
+				free(getopt_str);
+				return SPDK_APP_PARSE_ARGS_FAIL;
 			}
 			opts->print_level = SPDK_LOG_DEBUG;
 #ifndef DEBUG
 			fprintf(stderr, "%s must be built with CONFIG_DEBUG=y for -t flag\n",
 				argv[0]);
 			usage(argv[0], &default_opts, app_usage);
-			exit(EXIT_FAILURE);
+			free(getopt_str);
+			return SPDK_APP_PARSE_ARGS_FAIL;
 #endif
 			break;
 		case '?':
 			usage(argv[0], &default_opts, app_usage);
-			exit(EXIT_FAILURE);
+			free(getopt_str);
+			return SPDK_APP_PARSE_ARGS_HELP;
 		default:
 			app_parse(ch, optarg);
 		}
@@ -597,5 +614,5 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 
 	free(getopt_str);
 
-	return 0;
+	return SPDK_APP_PARSE_ARGS_SUCCESS;
 }

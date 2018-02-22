@@ -761,6 +761,7 @@ main(int argc, char **argv)
 	struct spdk_app_opts opts = {};
 	int time_in_sec;
 	uint64_t show_performance_period_in_usec = 0;
+	int rc;
 
 	/* default value */
 	config_file = NULL;
@@ -927,7 +928,11 @@ main(int argc, char **argv)
 	}
 
 	opts.shutdown_cb = spdk_bdevperf_shutdown_cb;
-	spdk_app_start(&opts, bdevperf_run, NULL, NULL);
+	rc = spdk_app_start(&opts, bdevperf_run, NULL, NULL);
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_app_start() unable to start bdevperf_fun()\n");
+		g_run_failed = true;
+	}
 
 	if (g_shutdown) {
 		g_time_in_usec = g_shutdown_tsc * 1000000 / spdk_get_ticks_hz();

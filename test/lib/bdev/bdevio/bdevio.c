@@ -922,7 +922,7 @@ test_main(void *arg1, void *arg2)
 	pthread_cond_init(&g_test_cond, NULL);
 
 	if (bdevio_construct_targets() < 0) {
-		spdk_app_stop(-1);
+		spdk_app_stop(1);
 		return;
 	}
 
@@ -947,6 +947,9 @@ main(int argc, char **argv)
 	opts.rpc_addr = NULL;
 
 	num_failures = spdk_app_start(&opts, test_main, NULL, NULL);
+	if (num_failures < 0) {
+		SPDK_ERRLOG("spdk_app_start() unable to start test_main()\n");
+	}
 	spdk_app_fini();
 
 	return num_failures;
