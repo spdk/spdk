@@ -111,14 +111,16 @@ void spdk_app_opts_init(struct spdk_app_opts *opts);
  * Before calling this function, the fields of opts must be initialized by
  * spdk_app_opts_init(). Once started, the framework will call start_fn on the
  * master core with the arguments provided. This call will block until spdk_app_stop()
- * is called.
+ * is called, or if an error condition occurs during the intialization
+ * code within spdk_app_start(), itself, before invoking the caller's
+ * supplied function.
  *
  * \param opts Initialization options used for this application.
  * \param start_fn Event function that is called when the framework starts.
  * \param arg1 Argument passed to function start_fn.
  * \param arg2 Argument passed to function start_fn.
  *
- * \return 0 on success or abnormal exit on failure.
+ * \return 0 on success or non-zero on failure.
  */
 int spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		   void *arg1, void *arg2);
@@ -145,7 +147,7 @@ void spdk_app_start_shutdown(void);
  * process and returns. Once the shutdown process is complete, spdk_app_start()
  * will return.
  *
- * \param rc The rc value specified here will be returned to caller of spdk_app_stat.
+ * \param rc The rc value specified here will be returned to caller of spdk_app_start().
  */
 void spdk_app_stop(int rc);
 
@@ -185,6 +187,13 @@ struct spdk_cpuset *spdk_app_get_core_mask(void);
 
 #define SPDK_APP_GETOPT_STRING "c:de:hi:m:n:p:qr:s:t:"
 
+enum spdk_app_parse_args_rvals {
+	SPDK_APP_PARSE_ARGS_HELP = 0,
+	SPDK_APP_PARSE_ARGS_SUCCESS = 1,
+	SPDK_APP_PARSE_ARGS_FAIL = 2
+};
+typedef enum spdk_app_parse_args_rvals spdk_app_parse_args_rvals_t;
+
 /**
  * Helper function for parsing arguments and printing usage messages.
  *
@@ -195,13 +204,13 @@ struct spdk_cpuset *spdk_app_get_core_mask(void);
  * Characters in this string must not conflict with characters in SPDK_APP_GETOPT_STRING.
  * \param parse Function pointer to call if an argument in getopt_str is found.
  * \param usage Function pointer to print usage messages for app-specific command
- * line parameters.
- *
- * \return 0 on success or exit application directly otherwise.
+ *		line parameters.
+ *\return SPDK_APP_PARSE_ARGS_FAIL on failure, SPDK_APP_PARSE_ARGS_SUCCESS on
+ *        success, SPDK_APP_PARSE_ARGS_HELP if '-h' passed as an option.
  */
-int spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
-			const char *getopt_str, void (*parse)(int ch, char *arg),
-			void (*usage)(void));
+spdk_app_parse_args_rvals_t spdk_app_parse_args(int argc, char **argv,
+		struct spdk_app_opts *opts, const char *getopt_str,
+		void (*parse)(int ch, char *arg), void (*usage)(void));
 
 /**
  * Allocate an event to be passed to spdk_event_call().

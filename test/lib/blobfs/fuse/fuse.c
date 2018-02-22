@@ -318,6 +318,7 @@ spdk_fuse_shutdown(void)
 int main(int argc, char **argv)
 {
 	struct spdk_app_opts opts = {};
+	int rc = 0;
 
 	if (argc < 4) {
 		fprintf(stderr, "usage: %s <conffile> <bdev name> <mountpoint>\n", argv[0]);
@@ -336,8 +337,8 @@ int main(int argc, char **argv)
 	g_fuse_argc = argc - 2;
 	g_fuse_argv = &argv[2];
 
-	spdk_app_start(&opts, spdk_fuse_run, NULL, NULL);
+	rc = spdk_app_start(&opts, spdk_fuse_run, NULL, NULL);
 	spdk_app_fini();
 
-	return 0;
+	return rc;
 }
