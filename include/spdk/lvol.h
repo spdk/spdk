@@ -150,6 +150,26 @@ int spdk_lvs_destroy(struct spdk_lvol_store *lvol_store,
  */
 int spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 		     bool thin_provisioned, spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
+/**
+ * \brief Create snapshot of given lvol
+ * \param lvol Handle to lvol
+ * \param snapshot_name Name of created snapshot
+ * \param cb_fn Completion callback
+ * \param cb_arg Completion callback custom arguments
+ */
+void spdk_lvol_create_snapshot(struct spdk_lvol *lvol, const char *snapshot_name,
+			       spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
+
+/**
+ * \brief Create clone of given snapshot
+ * \param lvol Handle to lvol snapshot
+ * \param clone_name Name of created clone
+ * \param cb_fn Completion callback
+ * \param cb_arg Completion callback custom arguments
+ */
+void spdk_lvol_create_clone(struct spdk_lvol *lvol, const char *clone_name,
+			    spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
+
 
 /**
  * \brief Renames lvol with new_name.
