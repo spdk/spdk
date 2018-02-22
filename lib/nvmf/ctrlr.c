@@ -1031,6 +1031,7 @@ spdk_nvmf_ctrlr_identify_ns_id_descriptor_list(
 
 	ADD_ID_DESC(SPDK_NVME_NIDT_EUI64, ns->opts.eui64);
 	ADD_ID_DESC(SPDK_NVME_NIDT_NGUID, ns->opts.nguid);
+	ADD_ID_DESC(SPDK_NVME_NIDT_UUID, ns->opts.uuid);
 
 	/*
 	 * The list is automatically 0-terminated because controller to host buffers in
