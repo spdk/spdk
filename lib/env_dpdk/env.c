@@ -45,11 +45,39 @@
 static uint64_t
 virt_to_phys(void *vaddr)
 {
+	uint64_t ret;
+
 #if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
-	return rte_malloc_virt2iova(vaddr);
+	ret = rte_malloc_virt2iova(vaddr);
+	if (ret != RTE_BAD_IOVA) {
+		return ret;
+	}
 #else
-	return rte_malloc_virt2phy(vaddr);
+	ret = rte_malloc_virt2phy(vaddr);
+	if (ret != RTE_BAD_PHYS_ADDR) {
+		return ret;
+	}
 #endif
+
+	return spdk_vtophys(vaddr);
+}
+
+void *
+spdk_malloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint32_t dma_flg)
+{
+	return spdk_dma_malloc_socket(size, align, phys_addr, socket_id);
+}
+
+void *
+spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint32_t dma_flg)
+{
+	return spdk_dma_zmalloc_socket(size, align, phys_addr, socket_id);
+}
+
+void
+spdk_free(void *buf)
+{
+	spdk_dma_free(buf);
 }
 
 void *
@@ -173,7 +201,7 @@ spdk_mempool_create_ctor(const char *name, size_t count,
 
 	mp = rte_mempool_create(name, count, ele_size, cache_size,
 				0, NULL, NULL, (rte_mempool_obj_cb_t *)obj_init, obj_init_arg,
-				socket_id, 0);
+				socket_id, MEMPOOL_F_NO_PHYS_CONTIG);
 
 	return (struct spdk_mempool *)mp;
 }
