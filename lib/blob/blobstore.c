@@ -1207,13 +1207,6 @@ _spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 
 	_spdk_blob_verify_md_op(blob);
 
-	if (blob->state == SPDK_BLOB_STATE_CLEAN) {
-		cb_fn(seq, cb_arg, 0);
-		return;
-	}
-
-	bs = blob->bs;
-
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
 		cb_fn(seq, cb_arg, -ENOMEM);
@@ -1222,6 +1215,14 @@ _spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 	ctx->blob = blob;
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
+
+	if (blob->state == SPDK_BLOB_STATE_CLEAN) {
+		free(ctx);
+		cb_fn(seq, cb_arg, 0);
+		return;
+	}
+
+	bs = blob->bs;
 
 	if (blob->active.num_pages == 0) {
 		/* This is the signal that the blob should be deleted.
