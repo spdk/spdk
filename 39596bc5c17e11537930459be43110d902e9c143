@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7868dc87_b81e5f35",
+        "filename": "test/lib/bdev/bdev.conf.in",
+        "patchSetId": 10
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-23T09:21:30Z",
+      "side": 1,
+      "message": "This ordering is essential? [passthru] must come first in the config file?\nThe reason why I ask is that it looks that if vbdev_passthru_init does not come first, vbdev_passthru_examine may not work for other bdevs as expected.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 10
+      },
+      "revId": "39596bc5c17e11537930459be43110d902e9c143",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
