@@ -105,11 +105,12 @@ _bs_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 static void
 _bs_flush_scheduler(void)
 {
-	struct scheduled_ops *ops, *tmp;
+	struct scheduled_ops *ops;
 
-	TAILQ_FOREACH_SAFE(ops, &g_scheduled_ops, ops_queue, tmp) {
-		ops->fn(ops->ctx);
+	while (!TAILQ_EMPTY(&g_scheduled_ops)) {
+		ops = TAILQ_FIRST(&g_scheduled_ops);
 		TAILQ_REMOVE(&g_scheduled_ops, ops, ops_queue);
+		ops->fn(ops->ctx);
 		free(ops);
 	}
 }
@@ -1873,10 +1874,10 @@ bs_destroy(void)
 	CU_ASSERT(g_bserrno == 0);
 
 	/* Loading an non-existent blob store should fail. */
-	g_bserrno = -1;
 	g_bs = NULL;
 	dev = init_dev();
 
+	g_bserrno = 0;
 	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno != 0);
 }
