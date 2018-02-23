@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "de8919b9_5c81a1ac",
+        "filename": "lib/event/app.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 479,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-02-23T18:58:06Z",
+      "side": 1,
+      "message": "Nice, thanks!",
+      "parentUuid": "f2ed3d28_c5e53e9d",
+      "range": {
+        "startLine": 479,
+        "startChar": 35,
+        "endLine": 479,
+        "endChar": 39
+      },
+      "revId": "b2a48415527af9793af660e32720f21a7e1509a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5cd39a50_25fc20ba",
         "filename": "lib/event/app.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2018-02-23T18:13:02Z",
       "side": 1,
       "message": "hugepage_single_segments is a bool, so this should probably be true rather than 1.",
+      "range": {
+        "startLine": 530,
+        "startChar": 36,
+        "endLine": 530,
+        "endChar": 37
+      },
+      "revId": "b2a48415527af9793af660e32720f21a7e1509a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "93cfceef_151a1507",
+        "filename": "lib/event/app.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 530,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-02-23T18:58:06Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "5cd39a50_25fc20ba",
       "range": {
         "startLine": 530,
         "startChar": 36,
