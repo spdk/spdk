@@ -2070,6 +2070,7 @@ _spdk_bs_load_ctx_fail(spdk_bs_sequence_t *seq, struct spdk_bs_load_ctx *ctx, in
 	assert(bserrno != 0);
 
 	spdk_dma_free(ctx->super);
+	spdk_bs_sequence_finish(seq, bserrno);
 	/*
 	 * Only free the blobstore when a load fails.  If an unload fails (for some reason)
 	 *  we want to keep the blobstore in case the caller wants to try again.
@@ -2078,7 +2079,6 @@ _spdk_bs_load_ctx_fail(spdk_bs_sequence_t *seq, struct spdk_bs_load_ctx *ctx, in
 		_spdk_bs_free(ctx->bs);
 	}
 	free(ctx);
-	spdk_bs_sequence_finish(seq, bserrno);
 }
 
 static void
