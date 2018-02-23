@@ -51,6 +51,7 @@ struct hello_context_t {
 	struct spdk_io_channel *channel;
 	uint8_t *read_buff;
 	uint8_t *write_buff;
+	uint8_t *write_buff_orig;
 	uint64_t page_size;
 	int rc;
 };
@@ -63,6 +64,7 @@ hello_cleanup(struct hello_context_t *hello_context)
 {
 	spdk_dma_free(hello_context->read_buff);
 	spdk_dma_free(hello_context->write_buff);
+	spdk_dma_free(hello_context->write_buff_orig);
 	free(hello_context);
 }
 
@@ -158,7 +160,7 @@ read_complete(void *arg1, int bserrno)
 	}
 
 	/* Now let's make sure things match. */
-	match_res = memcmp(hello_context->write_buff, hello_context->read_buff,
+	match_res = memcmp(hello_context->write_buff_orig, hello_context->read_buff,
 			   hello_context->page_size);
 	if (match_res) {
 		unload_bs(hello_context, "Error in data compare", -1);
@@ -218,6 +220,8 @@ write_complete(void *arg1, int bserrno)
 static void
 blob_write(struct hello_context_t *hello_context)
 {
+	unsigned int i;
+
 	SPDK_NOTICELOG("entry\n");
 
 	/*
@@ -231,7 +235,20 @@ blob_write(struct hello_context_t *hello_context)
 			  -ENOMEM);
 		return;
 	}
-	memset(hello_context->write_buff, 0x5a, hello_context->page_size);
+	hello_context->write_buff_orig = spdk_dma_malloc(hello_context->page_size,
+				    0x1000, NULL);
+	if (hello_context->write_buff_orig == NULL) {
+		unload_bs(hello_context, "Error in allocating memory",
+			  -ENOMEM);
+		return;
+	}
+
+	for (i = 0; i < (hello_context->page_size / 4); i++) {
+		hello_context->write_buff[i] = rand() % RAND_MAX;
+
+	}
+	//memset(hello_context->write_buff, 0x5a, hello_context->page_size);
+	memcpy(hello_context->write_buff_orig, hello_context->write_buff, hello_context->page_size);
 
 	/* Now we have to allocate a channel. */
 	hello_context->channel = spdk_bs_alloc_io_channel(hello_context->bs);
@@ -404,7 +421,7 @@ hello_start(void *arg1, void *arg2)
 	 * in when we started the SPDK app framework so we can
 	 * get it via its name.
 	 */
-	bdev = spdk_bdev_get_by_name("Malloc0");
+	bdev = spdk_bdev_get_by_name("ptd");
 	if (bdev == NULL) {
 		SPDK_ERRLOG("Could not find a bdev\n");
 		spdk_app_stop(-1);
