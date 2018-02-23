@@ -366,6 +366,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	env_opts.master_core = opts->master_core;
 	env_opts.mem_size = opts->mem_size;
 	env_opts.no_pci = opts->no_pci;
+	env_opts.hugepage_single_segments = opts->hugepage_single_segments;
 
 	if (spdk_env_init(&env_opts) < 0) {
 		SPDK_ERRLOG("Unable to initialize SPDK env\n");
@@ -523,6 +524,9 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			break;
 		case 'e':
 			opts->tpoint_group_mask = optarg;
+			break;
+		case 'g':
+			opts->hugepage_single_segments = 1;
 			break;
 		case 'h':
 			usage(argv[0], &default_opts, app_usage);

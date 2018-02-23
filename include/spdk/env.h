@@ -61,6 +61,7 @@ struct spdk_env_opts {
 	int	 		master_core;
 	int			mem_size;
 	bool			no_pci;
+	bool			hugepage_single_segments;
 
 	/** Opaque context for use of the env implementation. */
 	void			*env_context;
