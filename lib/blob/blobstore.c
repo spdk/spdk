@@ -1237,8 +1237,7 @@ _spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 	/* Generate the new metadata */
 	rc = _spdk_blob_serialize(blob, &ctx->pages, &blob->active.num_pages);
 	if (rc < 0) {
-		free(ctx);
-		cb_fn(seq, cb_arg, rc);
+		_spdk_blob_persist_complete(seq, ctx, rc);
 		return;
 	}
 
@@ -1248,8 +1247,7 @@ _spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 	blob->active.pages = realloc(blob->active.pages,
 				     blob->active.num_pages * sizeof(*blob->active.pages));
 	if (!blob->active.pages) {
-		free(ctx);
-		cb_fn(seq, cb_arg, -ENOMEM);
+		_spdk_blob_persist_complete(seq, ctx, -ENOMEM);
 		return;
 	}
 
@@ -1261,9 +1259,7 @@ _spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 	for (i = 1; i < blob->active.num_pages; i++) {
 		page_num = spdk_bit_array_find_first_clear(bs->used_md_pages, page_num);
 		if (page_num >= spdk_bit_array_capacity(bs->used_md_pages)) {
-			spdk_dma_free(ctx->pages);
-			free(ctx);
-			cb_fn(seq, cb_arg, -ENOMEM);
+			_spdk_blob_persist_complete(seq, ctx, -ENOMEM);
 			return;
 		}
 		page_num++;
