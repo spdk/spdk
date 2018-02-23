@@ -4,6 +4,7 @@ set -e
 BASE_DIR=$(readlink -f $(dirname $0))
 [[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $BASE_DIR/../../../../ && pwd)"
 [[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $BASE_DIR/../common && pwd)"
+. $BASE_DIR/../common/common.sh
 
 rpc_py="$BASE_DIR/../../../scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
