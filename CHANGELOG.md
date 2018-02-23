@@ -15,6 +15,9 @@ needed; previously, the response was limited to 32 kilobytes.
 EXPERIMENTAL: Adds support for WDS and RDS capable CMBs in NVMe controllers. This support is
 experimental pending a functional allocator to free and reallocate CMB buffers.
 
+Added spdk_nvme_ctrlr_get_first_active_ns()/spdk_nvme_ctrlr_get_next_active_ns() to iterate
+active namespaces and spdk_nvme_ctrlr_is_active_ns() to check if a ns id is active.
+
 ### NVMe-oF Target
 
 Namespaces may now be assigned unique identifiers via new optional "eui64" and "nguid" parameters

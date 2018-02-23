@@ -154,6 +154,32 @@ nvme_ctrlr_cmd_identify_namespace(struct spdk_nvme_ctrlr *ctrlr, uint16_t nsid,
 }
 
 int
+nvme_ctrlr_cmd_identify_active_ns_list(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
+				       void *payload, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	struct nvme_request *req;
+	struct spdk_nvme_cmd *cmd;
+
+	req = nvme_allocate_request_user_copy(ctrlr->adminq,
+					      payload, sizeof(struct spdk_nvme_ns_list),
+					      cb_fn, cb_arg, false);
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_NVME_OPC_IDENTIFY;
+
+	/*
+	 * TODO: create an identify command data structure
+	 */
+	cmd->cdw10 = SPDK_NVME_IDENTIFY_ACTIVE_NS_LIST;
+	cmd->nsid = nsid;
+
+	return nvme_ctrlr_submit_admin_request(ctrlr, req);
+}
+
+int
 nvme_ctrlr_cmd_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 			 struct spdk_nvme_ctrlr_list *payload, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
