@@ -48,6 +48,9 @@ extern "C" {
 #define SPDK_ENV_SOCKET_ID_ANY	(-1)
 #define SPDK_ENV_LCORE_ID_ANY	(UINT32_MAX)
 
+#define SPDK_MALLOC_DMA    0x01 /* memory allocation that is dma but not sharable */
+#define SPDK_MALLOC_SHARE  0x02 /* memory allocation that is dma and sharable */
+
 struct spdk_pci_device;
 
 /**
@@ -65,6 +68,22 @@ struct spdk_env_opts {
 	/** Opaque context for use of the env implementation. */
 	void			*env_context;
 };
+
+/**
+ * \Allocate dma/sharable memory based on a given dma_flg.
+ */
+void *spdk_malloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint32_t dma_flg);
+
+/**
+ * \Allocate dma/sharable memory based on a given dma_flg. The buffer will be zeroed.
+ */
+void *spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint32_t dma_flg);
+
+/*
+ Free buffer memory that was previously allocated with spdk_malloc.
+ */
+void spdk_free(void *buf);
+
 
 /**
  * \brief Initialize the default value of opts
