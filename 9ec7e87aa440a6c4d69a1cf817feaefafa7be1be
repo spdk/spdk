@@ -16,6 +16,24 @@
       "revId": "9ec7e87aa440a6c4d69a1cf817feaefafa7be1be",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68adbf0f_08f8e7fe",
+        "filename": "lib/event/app.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 539,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-02-23T23:36:56Z",
+      "side": 1,
+      "message": "I\u0027ve refactored how to handle this and uploaded another patchset.  Awaiting build/test results....",
+      "parentUuid": "2784eccd_f696795a",
+      "revId": "9ec7e87aa440a6c4d69a1cf817feaefafa7be1be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
