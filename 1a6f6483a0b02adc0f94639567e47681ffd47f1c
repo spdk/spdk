@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "97ac1af9_7c3efe17",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-02-23T08:46:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "03fc8a75_6d19edd8",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 8
+      },
+      "revId": "1a6f6483a0b02adc0f94639567e47681ffd47f1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f99e44a3_0c173e33",
         "filename": "test/lib/nvme/spdk_nvme_cli.sh",
         "patchSetId": 32
@@ -36,6 +60,24 @@
       "writtenOn": "2018-02-12T22:12:12Z",
       "side": 1,
       "message": "Does this handle the case where there is more than one NVMe controller attached to the system? All of the calls below look like they\u0027re assuming $bdfs only contains one address.",
+      "revId": "1a6f6483a0b02adc0f94639567e47681ffd47f1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "89ec184a_febc2cba",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-02-23T08:46:21Z",
+      "side": 1,
+      "message": "Seth told me all test pool machine only one SSD per machine. So $bdfs will return only one address. So I don\u0027t check the number of Nvme controller. For more reasonable as you suggestion, I do a deal.",
+      "parentUuid": "f99e44a3_0c173e33",
       "revId": "1a6f6483a0b02adc0f94639567e47681ffd47f1c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -59,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "2834276a_b5581fee",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-02-23T08:46:21Z",
+      "side": 1,
+      "message": "The \"spdk.conf\" file under nvme-cli folder. It\u0027s include in spdk/nvme-cli source code. Set \"spdk\u003d1\" to support spdk, And will changed back when test finshed.",
+      "parentUuid": "50f5eb93_f12a158c",
+      "revId": "1a6f6483a0b02adc0f94639567e47681ffd47f1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1d43e783_aa1685eb",
         "filename": "test/lib/nvme/spdk_nvme_cli.sh",
         "patchSetId": 32
@@ -76,6 +136,24 @@
     },
     {
       "key": {
+        "uuid": "46ba051d_c4553915",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-02-23T08:46:21Z",
+      "side": 1,
+      "message": "Ok.",
+      "parentUuid": "1d43e783_aa1685eb",
+      "revId": "1a6f6483a0b02adc0f94639567e47681ffd47f1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e369f0aa_7e628e64",
         "filename": "test/lib/nvme/spdk_nvme_cli.sh",
         "patchSetId": 32
@@ -87,6 +165,24 @@
       "writtenOn": "2018-02-12T22:12:12Z",
       "side": 1,
       "message": "Is this actually activating a potentially different firmware image? That doesn\u0027t seem safe. (Also, it will presumably fail on the VM-based test systems that use the QEMU emulated NVMe device, which doesn\u0027t have modifiable firmware.)",
+      "revId": "1a6f6483a0b02adc0f94639567e47681ffd47f1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "72388ae0_ed04794e",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-02-23T08:46:21Z",
+      "side": 1,
+      "message": "Hi Daniel,\n\nThanks for you comments,my idea is:\n1.This commands is to activate new firmware slot,I check it can activating firmware action:2 and on slot:1 on P3700, So I test follow command.\nroot@waikikibeach5:/home/wenzhong/nvme-cli# ./nvme fw-activate 0000:84:00.0 -s 1 -a 2\nStarting DPDK 17.11.0 initialization...\n[ DPDK EAL parameters: nvme_cli -c 0x100 -m 512 --file-prefix\u003dspdk1 --base-virtaddr\u003d0x1000000000 --proc-type\u003dauto ]\nEAL: Detected 36 lcore(s)\nEAL: Auto-detected process type: PRIMARY\nEAL: No free hugepages reported in hugepages-1048576kB\nEAL: Probing VFIO support...\nEAL: PCI device 0000:81:00.0 on NUMA socket 1\nEAL:   probe driver: 8086:953 spdk_nvme\nEAL: PCI device 0000:84:00.0 on NUMA socket 1\nEAL:   probe driver: 8086:953 spdk_nvme\nEAL: PCI device 0000:85:00.0 on NUMA socket 1\nEAL:   probe driver: 8086:953 spdk_nvme\nSuccess activating firmware action:2 slot:1\n\n2.For Qemu doesn\u0027t have modifiable firmware: this patch only test on test pool machine fedora03 not test on Qemu virtual machine.\n\nHere delete the command, when we it really safe we can do this in a follow-up patch.\n\nThanks\nWenzhong",
+      "parentUuid": "e369f0aa_7e628e64",
       "revId": "1a6f6483a0b02adc0f94639567e47681ffd47f1c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -116,6 +212,30 @@
     },
     {
       "key": {
+        "uuid": "fc0d8105_e16f0e3f",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-02-23T08:46:21Z",
+      "side": 1,
+      "message": "Delete this command,It can be add in a follow-up patch.",
+      "parentUuid": "491851d7_9e84b817",
+      "range": {
+        "startLine": 38,
+        "startChar": 53,
+        "endLine": 38,
+        "endChar": 56
+      },
+      "revId": "1a6f6483a0b02adc0f94639567e47681ffd47f1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ac27faf4_87edd454",
         "filename": "test/lib/nvme/spdk_nvme_cli.sh",
         "patchSetId": 32
@@ -133,6 +253,24 @@
     },
     {
       "key": {
+        "uuid": "d9c1eccf_927c5e1a",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-02-23T08:46:21Z",
+      "side": 1,
+      "message": "Delete this command,will use identify tool to check it in follow-up patch.",
+      "parentUuid": "ac27faf4_87edd454",
+      "revId": "1a6f6483a0b02adc0f94639567e47681ffd47f1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4fd4382e_f64026c1",
         "filename": "test/lib/nvme/spdk_nvme_cli.sh",
         "patchSetId": 32
@@ -144,6 +282,24 @@
       "writtenOn": "2018-02-12T22:12:12Z",
       "side": 1,
       "message": "I don\u0027t think gen-hostnqn uses the SPDK code at all - what is this trying to test?",
+      "revId": "1a6f6483a0b02adc0f94639567e47681ffd47f1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3dcbe8ee_3893a2a2",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-02-23T08:46:21Z",
+      "side": 1,
+      "message": "Done. You are right this command not uses SPDK code,delete it.",
+      "parentUuid": "4fd4382e_f64026c1",
       "revId": "1a6f6483a0b02adc0f94639567e47681ffd47f1c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -173,6 +329,30 @@
     },
     {
       "key": {
+        "uuid": "b35cef80_5556cc05",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-02-23T08:46:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4566356e_14274d48",
+      "range": {
+        "startLine": 46,
+        "startChar": 0,
+        "endLine": 46,
+        "endChar": 8
+      },
+      "revId": "1a6f6483a0b02adc0f94639567e47681ffd47f1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "36316e4f_a809751b",
         "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
         "patchSetId": 32
@@ -190,6 +370,24 @@
     },
     {
       "key": {
+        "uuid": "e72f2310_f975dffa",
+        "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-02-23T08:46:21Z",
+      "side": 1,
+      "message": "Already use \"sed -i \u0027s/spdk\u003d0/spdk\u003d1/g\u0027 spdk.conf\" in test/lib/nvme/spdk_nvme_cli.sh, here just change back to the default value. And connect to spdk subsystem which use rpc created.",
+      "parentUuid": "36316e4f_a809751b",
+      "revId": "1a6f6483a0b02adc0f94639567e47681ffd47f1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "33e7e054_7b348150",
         "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
         "patchSetId": 32
@@ -201,6 +399,30 @@
       "writtenOn": "2018-02-12T22:12:12Z",
       "side": 1,
       "message": "I think this is meant to be -le rather than just le.",
+      "range": {
+        "startLine": 67,
+        "startChar": 16,
+        "endLine": 67,
+        "endChar": 18
+      },
+      "revId": "1a6f6483a0b02adc0f94639567e47681ffd47f1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4710aca_9fb42a68",
+        "filename": "test/nvmf/nvme_cli/nvme_cli.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2018-02-23T08:46:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "33e7e054_7b348150",
       "range": {
         "startLine": 67,
         "startChar": 16,
