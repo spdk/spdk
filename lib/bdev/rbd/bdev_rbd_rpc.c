@@ -38,6 +38,7 @@
 #include "spdk_internal/log.h"
 
 struct rpc_construct_rbd {
+	char *name;
 	char *pool_name;
 	char *rbd_name;
 	uint32_t block_size;
@@ -46,11 +47,13 @@ struct rpc_construct_rbd {
 static void
 free_rpc_construct_rbd(struct rpc_construct_rbd *req)
 {
+	free(req->name);
 	free(req->pool_name);
 	free(req->rbd_name);
 }
 
 static const struct spdk_json_object_decoder rpc_construct_rbd_decoders[] = {
+	{"name", offsetof(struct rpc_construct_rbd, name), spdk_json_decode_string, true},
 	{"pool_name", offsetof(struct rpc_construct_rbd, pool_name), spdk_json_decode_string},
 	{"rbd_name", offsetof(struct rpc_construct_rbd, rbd_name), spdk_json_decode_string},
 	{"block_size", offsetof(struct rpc_construct_rbd, block_size), spdk_json_decode_uint32},
@@ -71,7 +74,7 @@ spdk_rpc_construct_rbd_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	bdev = spdk_bdev_rbd_create(req.pool_name, req.rbd_name, req.block_size);
+	bdev = spdk_bdev_rbd_create(req.name, req.pool_name, req.rbd_name, req.block_size);
 	if (bdev == NULL) {
 		goto invalid;
 	}
