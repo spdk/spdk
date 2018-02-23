@@ -13,6 +13,12 @@ for additional information on the DPDK vulnerability.
 
 Add wrapper for DPDK rte_mempool_get_bulk() via spdk_mempool_get_bulk().
 
+New memory management functions spdk_malloc(), spdk_zmalloc(), and spdk_free() have been added.
+These new functions have a `flags` parameter that allows the user to specify whether the allocated
+memory needs to be suitable for DMA and whether it should be shared across processes with the same
+shm_id. The new functions are intended to replace spdk_dma_malloc() and related functions, which will
+eventually be deprecated and removed.
+
 ### Bdev
 
 Add new optional bdev module interface function, init_complete, to notify bdev modules
