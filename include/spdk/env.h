@@ -48,6 +48,16 @@ extern "C" {
 #define SPDK_ENV_SOCKET_ID_ANY	(-1)
 #define SPDK_ENV_LCORE_ID_ANY	(UINT32_MAX)
 
+/**
+ * Memory is dma-safe.
+ */
+#define SPDK_MALLOC_DMA    0x01
+
+/**
+ * Memory is sharable across process boundries.
+ */
+#define SPDK_MALLOC_SHARE  0x02
+
 struct spdk_pci_device;
 
 /**
@@ -66,6 +76,52 @@ struct spdk_env_opts {
 	/** Opaque context for use of the env implementation. */
 	void			*env_context;
 };
+
+/**
+ * Allocate dma/sharable memory based on a given dma_flg. It is a physically
+ * contiguous memory buffer with the given size, alignment and socket id.
+ *
+ * \param size Size in bytes.
+ * \param align Alignment value for the allocated memory. If '0', the allocated
+ * buffer is suitably aligned (in the same manner as malloc()). Otherwise, the
+ * allocated buffer is aligned to the multiple of align. In this case, it must
+ * be a power of two.
+ * \param phys_addr A pointer to the variable to hold the physical address of
+ * the allocated buffer is passed. If NULL, the physical address is not returned.
+ * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY
+ * for any socket.
+ * \param flags Combination of SPDK_MALLOC flags (\ref SPDK_MALLOC_DMA, \ref SPDK_MALLOC_SHARE).
+ *
+ * \return a pointer to the allocated memory buffer.
+ */
+void *spdk_malloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint32_t flags);
+
+/**
+ * Allocate dma/sharable memory based on a given dma_flg. It is a physically
+ * contiguous memory buffer with the given size, alignment and socket id.
+ * Also, the buffer will be zeroed.
+ *
+ * \param size Size in bytes.
+ * \param align Alignment value for the allocated memory. If '0', the allocated
+ * buffer is suitably aligned (in the same manner as malloc()). Otherwise, the
+ * allocated buffer is aligned to the multiple of align. In this case, it must
+ * be a power of two.
+ * \param phys_addr A pointer to the variable to hold the physical address of
+ * the allocated buffer is passed. If NULL, the physical address is not returned.
+ * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY
+ * for any socket.
+ * \param flags Combination of SPDK_MALLOC flags (\ref SPDK_MALLOC_DMA, \ref SPDK_MALLOC_SHARE).
+ *
+ * \return a pointer to the allocated memory buffer.
+ */
+void *spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint32_t flags);
+
+/**
+ * Free buffer memory that was previously allocated with spdk_malloc() or spdk_zmalloc().
+ *
+ * \param buf Buffer to free.
+ */
+void spdk_free(void *buf);
 
 /**
  * Initialize the default value of opts.
