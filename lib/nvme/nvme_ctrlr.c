@@ -795,6 +795,31 @@ nvme_ctrlr_identify(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
+
+static int
+nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct nvme_completion_poll_status	status;
+	int					rc;
+
+	status.done = false;
+	rc = nvme_ctrlr_cmd_identify_active_ns_list(ctrlr, 0, &ctrlr->active_ns,
+			nvme_completion_poll_cb, &status);
+	if (rc != 0) {
+		return rc;
+	}
+
+	while (status.done == false) {
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
+	}
+	if (spdk_nvme_cpl_is_error(&status.cpl)) {
+		SPDK_ERRLOG("nvme_identify_controller failed!\n");
+		return -ENXIO;
+	}
+
+	return 0;
+}
+
 static int
 nvme_ctrlr_set_num_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -1048,8 +1073,10 @@ nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 		struct spdk_nvme_ns	*ns = &ctrlr->ns[i];
 		uint32_t 		nsid = i + 1;
 
-		if (nvme_ns_construct(ns, nsid, ctrlr) != 0) {
-			goto fail;
+		if (spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
+			if (nvme_ns_construct(ns, nsid, ctrlr) != 0) {
+				goto fail;
+			}
 		}
 	}
 
@@ -1556,6 +1583,10 @@ nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 		return -1;
 	}
 
+	if (nvme_ctrlr_identify_active_ns(ctrlr)) {
+		return -1;
+	}
+
 	if (nvme_ctrlr_set_num_qpairs(ctrlr) != 0) {
 		return -1;
 	}
@@ -1784,6 +1815,39 @@ uint32_t
 spdk_nvme_ctrlr_get_num_ns(struct spdk_nvme_ctrlr *ctrlr)
 {
 	return ctrlr->num_ns;
+}
+
+bool
+spdk_nvme_ctrlr_is_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t ns_id)
+{
+	size_t i;
+
+	if (ns_id < 1 || ns_id > ctrlr->num_ns) {
+		return false;
+	}
+	for (i = 0; i < SPDK_COUNTOF(ctrlr->active_ns.ns_list); i++) {
+		if (ctrlr->active_ns.ns_list[i] == ns_id) {
+			return true;
+		}
+	}
+	return false;
+}
+
+uint32_t *
+spdk_nvme_ctrlr_get_first_active_ns(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return &ctrlr->active_ns.ns_list[0];
+}
+
+uint32_t *
+spdk_nvme_ctrlr_get_next_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t *prev_nsid)
+{
+	assert(prev_nsid >= &ctrlr->active_ns.ns_list[0]);
+
+	if (prev_nsid < &ctrlr->active_ns.ns_list[SPDK_COUNTOF(ctrlr->active_ns.ns_list) - 1]) {
+		return prev_nsid + 1;
+	}
+	return NULL;
 }
 
 struct spdk_nvme_ns *

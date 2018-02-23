@@ -438,6 +438,11 @@ struct spdk_nvme_ctrlr {
 	struct spdk_nvme_ctrlr_data	cdata;
 
 	/**
+	 * Keep track of active namespaces
+	 */
+	struct spdk_nvme_ns_list active_ns;
+
+	/**
 	 * Array of Identify Namespace data.
 	 *
 	 * Stored separately from ns since nsdata should not normally be accessed during I/O.
@@ -527,6 +532,9 @@ int	nvme_ctrlr_cmd_identify_controller(struct spdk_nvme_ctrlr *ctrlr,
 		void *payload,
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 int	nvme_ctrlr_cmd_identify_namespace(struct spdk_nvme_ctrlr *ctrlr,
+		uint16_t nsid, void *payload,
+		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+int	nvme_ctrlr_cmd_identify_active_ns_list(struct spdk_nvme_ctrlr *ctrlr,
 		uint16_t nsid, void *payload,
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 int	nvme_ctrlr_cmd_set_num_queues(struct spdk_nvme_ctrlr *ctrlr,

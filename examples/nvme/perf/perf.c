@@ -321,10 +321,10 @@ set_latency_tracking_feature(struct spdk_nvme_ctrlr *ctrlr, bool enable)
 static void
 register_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 {
-	int nsid, num_ns;
 	struct spdk_nvme_ns *ns;
 	struct ctrlr_entry *entry = malloc(sizeof(struct ctrlr_entry));
 	const struct spdk_nvme_ctrlr_data *cdata = spdk_nvme_ctrlr_get_data(ctrlr);
+	uint32_t *ns_id;
 
 	if (entry == NULL) {
 		perror("ctrlr_entry malloc");
@@ -349,9 +349,9 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 		set_latency_tracking_feature(ctrlr, true);
 	}
 
-	num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
-	for (nsid = 1; nsid <= num_ns; nsid++) {
-		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+	for (ns_id = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
+	     ns_id != NULL && *ns_id != 0; ns_id = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, ns_id)) {
+		ns = spdk_nvme_ctrlr_get_ns(ctrlr, *ns_id);
 		if (ns == NULL) {
 			continue;
 		}
