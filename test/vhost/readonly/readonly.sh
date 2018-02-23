@@ -4,6 +4,7 @@ set -e
 BASE_DIR=$(readlink -f $(dirname $0))
 [[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $BASE_DIR/../../../../ && pwd)"
 [[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $BASE_DIR/../common && pwd)"
+. $COMMON_DIR/common.sh
 
 rpc_py="$BASE_DIR/../../../scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
@@ -44,7 +45,6 @@ while getopts 'xh-:' optchar; do
 	esac
 done
 
-. $COMMON_DIR/common.sh
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR
 
 if [[ $EUID -ne 0 ]]; then
