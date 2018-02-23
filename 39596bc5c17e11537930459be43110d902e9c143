@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ccfe2c45_32f09f8c",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-02-23T14:17:41Z",
+      "side": 1,
+      "message": "Thanks for reviewing, especially the comments as this is where I\u0027m really testing my understanding with this patch.  \n\nYou\u0027re right, this comment is a little out of place and I think is the result of a few earlier comments (during dev) being merged together and just got left here.\n\nI do believe I could free the individual node here and remove from the list which would probably be clearer than doing nothing here and waiting for the entire module tear down to free all of them.\n\nThanks!!!",
+      "parentUuid": "e7e4baa2_d0201b3e",
+      "range": {
+        "startLine": 106,
+        "startChar": 1,
+        "endLine": 108,
+        "endChar": 4
+      },
+      "revId": "39596bc5c17e11537930459be43110d902e9c143",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7868dc87_b81e5f35",
         "filename": "test/lib/bdev/bdev.conf.in",
         "patchSetId": 10
