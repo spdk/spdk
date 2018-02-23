@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "10c16f19_f994d9bd",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-23T11:59:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1ea9d175_21429d05",
+      "revId": "a7faa951c0eae50cd872bee71dc48505b4e739cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c0e6dae1_60b832ba",
         "filename": "include/spdk/lvol.h",
         "patchSetId": 12
@@ -30,6 +48,24 @@
       "writtenOn": "2018-02-20T20:24:30Z",
       "side": 1,
       "message": "this should use spdk_lvs_op_complete - we do not need to pass spdk_lvol_store handle to callback function since the caller of this function already has it",
+      "revId": "a7faa951c0eae50cd872bee71dc48505b4e739cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48b99aaa_3224bfa7",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-23T11:59:13Z",
+      "side": 1,
+      "message": "in _vbdev_lvs_rename_cb() i\u0027m iterating on lvs-\u003elvols, now. switching from spdk_lvs_op_with_handle_complete to spdk_lvs_op_complete deprives me of access to lvs (changing structures changes also callbacks and its parameters list, removing lvs from that list).\n\nadding pointer to spdk_lvol_store to spdk_lvs_req would fix that problem (in spdk_lvol_req exists pointer to spdk_lvol).\n\nis that right way to do it?",
+      "parentUuid": "c0e6dae1_60b832ba",
       "revId": "a7faa951c0eae50cd872bee71dc48505b4e739cd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -70,6 +106,24 @@
     },
     {
       "key": {
+        "uuid": "a081f8ce_6c3ee0d8",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-23T11:59:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6cfcdd07_1a13fcfe",
+      "revId": "a7faa951c0eae50cd872bee71dc48505b4e739cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "506f9da9_2daf060d",
         "filename": "lib/bdev/lvol/vbdev_lvol.h",
         "patchSetId": 12
@@ -104,6 +158,24 @@
     },
     {
       "key": {
+        "uuid": "a4be2384_9882d116",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 630,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-23T11:59:13Z",
+      "side": 1,
+      "message": "copy of new_name is already done in line 695, instead of creating a new field, maybe it will be enough to use existing one in spdk_lvs_with_handle_req (which You suggested to move to spdk_lvs_req)?",
+      "parentUuid": "8034b70a_2f1405c1",
+      "revId": "a7faa951c0eae50cd872bee71dc48505b4e739cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "87c8c49f_8a52613c",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 12
@@ -121,6 +193,24 @@
     },
     {
       "key": {
+        "uuid": "e1464982_013fb243",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 663,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-23T11:59:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "87c8c49f_8a52613c",
+      "revId": "a7faa951c0eae50cd872bee71dc48505b4e739cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9e5b5a0f_f88eab62",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 12
@@ -132,6 +222,24 @@
       "writtenOn": "2018-02-20T20:24:30Z",
       "side": 1,
       "message": "we should check g_lvol_stores list here, and fail rename if new_name matches any existing name (except for this lvs)",
+      "revId": "a7faa951c0eae50cd872bee71dc48505b4e739cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c5c2c6b_60c53407",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 685,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-23T11:59:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9e5b5a0f_f88eab62",
       "revId": "a7faa951c0eae50cd872bee71dc48505b4e739cd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
