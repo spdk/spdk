@@ -16,6 +16,24 @@
       "revId": "fac3f1474c09366a553e03468e36efd5a79ec917",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "714e9c2e_19e909ba",
+        "filename": "lib/event/subsystems/copy/copy.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-23T15:51:16Z",
+      "side": 0,
+      "message": "This is alreay present in bdev subsystem and is listened twice in dependency list.",
+      "parentUuid": "96dc418e_4a2d49e8",
+      "revId": "fac3f1474c09366a553e03468e36efd5a79ec917",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
