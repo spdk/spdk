@@ -242,6 +242,14 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 		}
 	}
 
+	/* create just one hugetlbfs file */
+	if (opts->hugepage_single_segments) {
+		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--single-file-segments"));
+		if (args == NULL) {
+			return -1;
+		}
+	}
+
 #ifdef __linux__
 	if (opts->shm_id < 0) {
 		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--file-prefix=spdk_pid%d",
@@ -322,12 +330,13 @@ int spdk_env_init(const struct spdk_env_opts *opts)
 		return -1;
 	}
 
-	if (opts->shm_id < 0) {
+	if (opts->shm_id < 0 && !opts->hugepage_single_segments) {
 		/*
 		 * Unlink hugepage and config info files after init.  This will ensure they get
 		 *  deleted on app exit, even if the app crashes and does not exit normally.
 		 *  Only do this when not in multi-process mode, since for multi-process other
-		 *  apps will need to open these files.
+		 *  apps will need to open these files. These files are not created for
+		 *  "single file segments".
 		 */
 		spdk_env_unlink_shared_files();
 	}
