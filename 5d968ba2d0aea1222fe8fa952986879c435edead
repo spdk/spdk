@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ce9bf2d5_d014ea81",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-23T09:22:22Z",
+      "side": 1,
+      "message": "f? or g?",
+      "range": {
+        "startLine": 162,
+        "startChar": 37,
+        "endLine": 162,
+        "endChar": 38
+      },
+      "revId": "5d968ba2d0aea1222fe8fa952986879c435edead",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
