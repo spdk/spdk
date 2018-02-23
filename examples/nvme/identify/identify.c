@@ -602,6 +602,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	struct spdk_pci_addr			pci_addr;
 	struct spdk_pci_device			*pci_dev;
 	struct spdk_pci_id			pci_id;
+	uint32_t				nsid;
 
 	cap = spdk_nvme_ctrlr_get_regs_cap(ctrlr);
 	vs = spdk_nvme_ctrlr_get_regs_vs(ctrlr);
@@ -1173,8 +1174,9 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 		printf("\n");
 	}
 
-	for (i = 1; i <= spdk_nvme_ctrlr_get_num_ns(ctrlr); i++) {
-		print_namespace(spdk_nvme_ctrlr_get_ns(ctrlr, i));
+	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
+	     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid)) {
+		print_namespace(spdk_nvme_ctrlr_get_ns(ctrlr, nsid));
 	}
 
 	if (g_discovery_page) {
