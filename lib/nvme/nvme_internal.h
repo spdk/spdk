@@ -442,6 +442,11 @@ struct spdk_nvme_ctrlr {
 	struct spdk_nvme_ctrlr_data	cdata;
 
 	/**
+	 * Keep track of active namespaces
+	 */
+	uint32_t			*active_ns_list;
+
+	/**
 	 * Array of Identify Namespace data.
 	 *
 	 * Stored separately from ns since nsdata should not normally be accessed during I/O.
@@ -590,6 +595,7 @@ void	nvme_qpair_disable(struct spdk_nvme_qpair *qpair);
 int	nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 				  struct nvme_request *req);
 
+int	nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr);
 int	nvme_ns_construct(struct spdk_nvme_ns *ns, uint32_t id,
 			  struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ns_destruct(struct spdk_nvme_ns *ns);

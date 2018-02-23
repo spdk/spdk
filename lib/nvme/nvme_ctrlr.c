@@ -795,6 +795,83 @@ nvme_ctrlr_identify(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
+
+int
+nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct nvme_completion_poll_status	status;
+	int					rc;
+	uint32_t				i;
+	uint32_t				num_pages;
+	uint32_t				next_nsid = 0;
+	uint32_t				*new_ns_list = NULL;
+
+
+	/*
+	 * The allocated size must be a multiple of sizeof(struct spdk_nvme_ns_list)
+	 */
+	num_pages = (ctrlr->num_ns * sizeof(new_ns_list[0]) - 1) / sizeof(struct spdk_nvme_ns_list) + 1;
+	new_ns_list = spdk_dma_zmalloc(num_pages * sizeof(struct spdk_nvme_ns_list), ctrlr->page_size,
+				       NULL);
+	if (!new_ns_list) {
+		SPDK_ERRLOG("Failed to allocate active_ns_list!\n");
+		return -ENOMEM;
+	}
+	status.done = false;
+	if (SPDK_NVME_VERSION(ctrlr->cdata.ver.bits.mjr, ctrlr->cdata.ver.bits.mnr,
+			      ctrlr->cdata.ver.bits.ter) >= SPDK_NVME_VERSION(1, 1, 0)) {
+		/*
+		 * Iterate through the pages and fetch each chunk of 1024 namespaces until
+		 * there are no more active namespaces
+		 */
+		for (i = 0; i < num_pages; i++) {
+			status.done = false;
+			rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_ACTIVE_NS_LIST, 0, next_nsid,
+						     &new_ns_list[1024 * i], sizeof(struct spdk_nvme_ns_list),
+						     nvme_completion_poll_cb, &status);
+			if (rc != 0) {
+				goto fail;
+			}
+			while (status.done == false) {
+				spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
+			}
+			if (spdk_nvme_cpl_is_error(&status.cpl)) {
+				SPDK_ERRLOG("nvme_ctrlr_cmd_identify_active_ns_list failed!\n");
+				rc = -ENXIO;
+				goto fail;
+			}
+			next_nsid = new_ns_list[1024 * i + 1023];
+			if (next_nsid == 0) {
+				/*
+				 * No more active namespaces found, no need to fetch additional chunks
+				 */
+				break;
+			}
+		}
+
+	} else {
+		/*
+		 * Controller doesn't support active ns list CNS 0x02 so dummy up
+		 * an active ns list
+		 */
+		for (i = 0; i < ctrlr->num_ns; i++) {
+			new_ns_list[i] = i + 1;
+		}
+	}
+
+	/*
+	 * Now that that the list is properly setup, we can swap it in to the ctrlr and
+	 * free up the previous one.
+	 */
+	spdk_dma_free(ctrlr->active_ns_list);
+	ctrlr->active_ns_list = new_ns_list;
+
+	return 0;
+fail:
+	spdk_dma_free(new_ns_list);
+	return rc;
+}
+
 static int
 nvme_ctrlr_set_num_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -1010,6 +1087,9 @@ nvme_ctrlr_destruct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 		spdk_dma_free(ctrlr->nsdata);
 		ctrlr->nsdata = NULL;
 	}
+
+	spdk_dma_free(ctrlr->active_ns_list);
+	ctrlr->active_ns_list = NULL;
 }
 
 static int
@@ -1042,6 +1122,10 @@ nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 		}
 
 		ctrlr->num_ns = nn;
+	}
+
+	if (nvme_ctrlr_identify_active_ns(ctrlr)) {
+		goto fail;
 	}
 
 	for (i = 0; i < nn; i++) {
@@ -1786,14 +1870,67 @@ spdk_nvme_ctrlr_get_num_ns(struct spdk_nvme_ctrlr *ctrlr)
 	return ctrlr->num_ns;
 }
 
-struct spdk_nvme_ns *
-spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t ns_id)
+static int32_t
+spdk_nvme_ctrlr_active_ns_idx(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
-	if (ns_id < 1 || ns_id > ctrlr->num_ns) {
+	int32_t result = -1;
+
+	if (ctrlr->active_ns_list == NULL || nsid == 0 || nsid > ctrlr->num_ns) {
+		return result;
+	}
+
+	int32_t lower = 0;
+	int32_t upper = ctrlr->num_ns - 1;
+	int32_t mid;
+
+	while (lower <= upper) {
+		mid = lower + (upper - lower) / 2;
+		if (ctrlr->active_ns_list[mid] == nsid) {
+			result = mid;
+			break;
+		} else {
+			if (ctrlr->active_ns_list[mid] != 0 && ctrlr->active_ns_list[mid] < nsid) {
+				lower = mid + 1;
+			} else {
+				upper = mid - 1;
+			}
+
+		}
+	}
+
+	return result;
+}
+
+bool
+spdk_nvme_ctrlr_is_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
+{
+	return spdk_nvme_ctrlr_active_ns_idx(ctrlr, nsid) != -1;
+}
+
+uint32_t
+spdk_nvme_ctrlr_get_first_active_ns(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return ctrlr->active_ns_list ? ctrlr->active_ns_list[0] : 0;
+}
+
+uint32_t
+spdk_nvme_ctrlr_get_next_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t prev_nsid)
+{
+	int32_t nsid_idx = spdk_nvme_ctrlr_active_ns_idx(ctrlr, prev_nsid);
+	if (ctrlr->active_ns_list && nsid_idx >= 0 && (uint32_t)nsid_idx < ctrlr->num_ns - 1) {
+		return ctrlr->active_ns_list[nsid_idx + 1];
+	}
+	return 0;
+}
+
+struct spdk_nvme_ns *
+spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
+{
+	if (nsid < 1 || nsid > ctrlr->num_ns) {
 		return NULL;
 	}
 
-	return &ctrlr->ns[ns_id - 1];
+	return &ctrlr->ns[nsid - 1];
 }
 
 struct spdk_pci_device *
