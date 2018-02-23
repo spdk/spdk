@@ -103,10 +103,24 @@ vbdev_split_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	return 0;
 }
 
+static int
+vbdev_split_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+{
+	/*
+	struct spdk_bdev_part *part = bdev->ctxt;
+
+	GRRRRRR.... How to do this ?
+
+	*/
+
+	return -ENOSYS;
+}
+
 static struct spdk_bdev_fn_table vbdev_split_fn_table = {
 	.destruct		= vbdev_split_destruct,
 	.submit_request		= vbdev_split_submit_request,
 	.dump_info_json		= vbdev_split_dump_info_json,
+	.dump_config_json	= vbdev_split_dump_config_json,
 };
 
 static int
