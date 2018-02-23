@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e67a4ed2_86ce5a91",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 454,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-23T10:07:58Z",
+      "side": 1,
+      "message": "1228 -\u003e 128?",
+      "range": {
+        "startLine": 454,
+        "startChar": 33,
+        "endLine": 454,
+        "endChar": 38
+      },
+      "revId": "25966672a68077d7863a3c84e11d38de1ca299a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98b31f79_671ac466",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 575,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-23T10:07:58Z",
+      "side": 1,
+      "message": "ditto.",
+      "range": {
+        "startLine": 575,
+        "startChar": 25,
+        "endLine": 575,
+        "endChar": 28
+      },
+      "revId": "25966672a68077d7863a3c84e11d38de1ca299a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
