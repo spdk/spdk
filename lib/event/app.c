@@ -273,6 +273,16 @@ start_rpc(void *arg1, void *arg2)
 	g_app_start_fn(g_app_start_arg1, g_app_start_arg2);
 }
 
+static void
+spdk_app_start_cb(void *arg1, void *arg2)
+{
+	struct spdk_event *rpc_start_event;
+
+	rpc_start_event = spdk_event_allocate(g_init_lcore, start_rpc, arg1, NULL);
+
+	spdk_subsystem_init(rpc_start_event);
+}
+
 int
 spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	       void *arg1, void *arg2)
@@ -284,7 +294,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	uint64_t		tpoint_group_mask;
 	char			*end;
 	struct spdk_env_opts env_opts = {};
-	struct spdk_event *app_start_event;
+	struct spdk_event *reactor_start_event;
 
 	if (!opts) {
 		SPDK_ERRLOG("opts should not be NULL\n");
@@ -426,9 +436,10 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	g_app_start_fn = start_fn;
 	g_app_start_arg1 = arg1;
 	g_app_start_arg2 = arg2;
-	app_start_event = spdk_event_allocate(g_init_lcore, start_rpc, (void *)opts->rpc_addr, NULL);
 
-	spdk_subsystem_init(app_start_event);
+	reactor_start_event = spdk_event_allocate(g_init_lcore, spdk_app_start_cb, 
+						  (void *)opts->rpc_addr, NULL);
+	spdk_event_call(reactor_start_event);
 
 	/* This blocks until spdk_app_stop is called */
 	spdk_reactors_start();
