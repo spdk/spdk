@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "e7e4baa2_d0201b3e",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-02-23T10:21:36Z",
+      "side": 1,
+      "message": "Is this the new `detach`-like approach we discussed on yesterday\u0027s community meeting?\nIn other bdev modules we free all the bdev resources by now.\n\nEither way, this sentence is quite misleading to me - thinking code-wise, nothing stands against freeing the struct pt_nodes and removing it from the global list here (right?), so the comment should explain why we don\u0027t do it.\n\nOr we could simply just drop the \"we can\u0027t\" part. Yes We Can, but we don\u0027t :)",
+      "range": {
+        "startLine": 106,
+        "startChar": 1,
+        "endLine": 108,
+        "endChar": 4
+      },
+      "revId": "39596bc5c17e11537930459be43110d902e9c143",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7868dc87_b81e5f35",
         "filename": "test/lib/bdev/bdev.conf.in",
         "patchSetId": 10
