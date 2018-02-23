@@ -119,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "996eb1d9_20f1b9b1",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 628,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-23T11:59:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5d2cdb0f_96fe8dad",
+      "range": {
+        "startLine": 624,
+        "startChar": 0,
+        "endLine": 628,
+        "endChar": 54
+      },
+      "revId": "c2b99c4b2205639fedd75c8174e7ddc63f42fdd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bce5ad99_40f0d5d5",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 10
@@ -142,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "99111d11_1278f600",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 633,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-23T11:59:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bce5ad99_40f0d5d5",
+      "range": {
+        "startLine": 633,
+        "startChar": 42,
+        "endLine": 633,
+        "endChar": 51
+      },
+      "revId": "c2b99c4b2205639fedd75c8174e7ddc63f42fdd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8409977a_c4d45b40",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 10
@@ -153,6 +201,29 @@
       "writtenOn": "2018-02-16T08:55:20Z",
       "side": 1,
       "message": "Since lvolerrno is passed directly in _spdk_lvs_rename_cb(), don\u0027t think this assignment is needed here.",
+      "range": {
+        "startLine": 657,
+        "startChar": 2,
+        "endLine": 657,
+        "endChar": 28
+      },
+      "revId": "c2b99c4b2205639fedd75c8174e7ddc63f42fdd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38b0d45b_06db73d3",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 657,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-23T11:59:13Z",
+      "side": 1,
+      "message": "Done",
       "range": {
         "startLine": 657,
         "startChar": 2,
@@ -211,6 +282,30 @@
     },
     {
       "key": {
+        "uuid": "34a99bac_30280b71",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 682,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-23T11:59:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b32b9010_24f3cc9c",
+      "range": {
+        "startLine": 682,
+        "startChar": 5,
+        "endLine": 682,
+        "endChar": 32
+      },
+      "revId": "c2b99c4b2205639fedd75c8174e7ddc63f42fdd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a72bc45e_4160f4da",
         "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
         "patchSetId": 10
@@ -222,6 +317,30 @@
       "writtenOn": "2018-02-16T08:55:20Z",
       "side": 1,
       "message": "Why not use TAILQ_FIRST directly here ?",
+      "range": {
+        "startLine": 1185,
+        "startChar": 24,
+        "endLine": 1185,
+        "endChar": 76
+      },
+      "revId": "c2b99c4b2205639fedd75c8174e7ddc63f42fdd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d79538b3_281dd9fd",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1185,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-02-23T11:59:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a72bc45e_4160f4da",
       "range": {
         "startLine": 1185,
         "startChar": 24,
