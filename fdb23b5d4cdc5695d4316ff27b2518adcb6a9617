@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cec474ec_aebabfd3",
+        "filename": "test/vhost/initiator/bdev.conf",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-02-23T15:23:40Z",
+      "side": 1,
+      "message": "does it work?\nYou\u0027re probably missing:\nType Blk",
+      "revId": "fdb23b5d4cdc5695d4316ff27b2518adcb6a9617",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
