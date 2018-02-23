@@ -459,16 +459,30 @@ bdev_rbd_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	return 0;
 }
 
+static int
+bdev_rbd_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+{
+	struct bdev_rbd *rbd = bdev->ctxt;
+
+	spdk_json_write_named_string(w, "name", bdev->name);
+	spdk_json_write_named_string(w, "pool_name", rbd->pool_name);
+	spdk_json_write_named_string(w, "rbd_name", rbd->rbd_name);
+	spdk_json_write_named_uint32(w, "block_size", bdev->name);
+
+	return 0;
+}
+
 static const struct spdk_bdev_fn_table rbd_fn_table = {
 	.destruct		= bdev_rbd_destruct,
 	.submit_request		= bdev_rbd_submit_request,
 	.io_type_supported	= bdev_rbd_io_type_supported,
 	.get_io_channel		= bdev_rbd_get_io_channel,
 	.dump_info_json		= bdev_rbd_dump_info_json,
+	.dump_config_json	= bdev_rbd_dump_config_json,
 };
 
 struct spdk_bdev *
-spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block_size)
+spdk_bdev_rbd_create(const char *name, const char *pool_name, const char *rbd_name, uint32_t block_size)
 {
 	struct bdev_rbd *rbd;
 	int ret;
@@ -502,7 +516,11 @@ spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block
 		return NULL;
 	}
 
-	rbd->disk.name = spdk_sprintf_alloc("Ceph%d", bdev_rbd_count);
+	if (name) {
+		rbd->disk.name = strdup(name);
+	} else {
+		rbd->disk.name = spdk_sprintf_alloc("Ceph%d", bdev_rbd_count);
+	}
 	if (!rbd->disk.name) {
 		bdev_rbd_free(rbd);
 		return NULL;
@@ -586,7 +604,7 @@ bdev_rbd_library_init(void)
 			}
 		}
 
-		if (spdk_bdev_rbd_create(pool_name, rbd_name, block_size) == NULL) {
+		if (spdk_bdev_rbd_create(NULL, pool_name, rbd_name, block_size) == NULL) {
 			rc = -1;
 			goto end;
 		}

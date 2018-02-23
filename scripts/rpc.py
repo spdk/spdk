@@ -68,6 +68,7 @@ if __name__ == "__main__":
 
     p = subparsers.add_parser('construct_rbd_bdev',
                               help='Add a bdev with ceph rbd backend')
+    p.add_argument('-b', '--name', help="Name of the bdev", required=False)
     p.add_argument('pool_name', help='rbd pool name')
     p.add_argument('rbd_name', help='rbd image name')
     p.add_argument('block_size', help='rbd block size', type=int)

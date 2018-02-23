@@ -52,6 +52,10 @@ def construct_rbd_bdev(args):
         'rbd_name': args.rbd_name,
         'block_size': args.block_size,
     }
+
+    if args.name:
+    	params['name'] = args.name
+
     print_array(args.client.call(
         'construct_rbd_bdev', params))
 
