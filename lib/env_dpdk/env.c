@@ -63,7 +63,7 @@ virt_to_phys(void *vaddr)
 }
 
 void *
-spdk_dma_malloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id)
+spdk_malloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint32_t dma_flg)
 {
 	void *buf = rte_malloc_socket(NULL, size, align, socket_id);
 	if (buf && phys_addr) {
@@ -73,13 +73,33 @@ spdk_dma_malloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socke
 }
 
 void *
-spdk_dma_zmalloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id)
+spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint32_t dma_flg)
 {
-	void *buf = spdk_dma_malloc_socket(size, align, phys_addr, socket_id);
+	void *buf = spdk_malloc(size, align, phys_addr, socket_id, dma_flg);
 	if (buf) {
 		memset(buf, 0, size);
 	}
 	return buf;
+}
+
+void
+spdk_free(void *buf)
+{
+	spdk_dma_free(buf);
+}
+
+void *
+spdk_dma_malloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id)
+{
+	return spdk_malloc(size, align, phys_addr, sozket_id,
+			   (SPDK_MALLOC_DMA | SPDK_MALLOC_SHARE));
+}
+
+void *
+spdk_dma_zmalloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id)
+{
+	return spdk_zmalloc(size, align, phys_addr, socket_id,
+			    (SPDK_MALLOC_DMA | SPDK_MALLOC_SHARE));
 }
 
 void *
