@@ -4,6 +4,7 @@ set -e
 BASE_DIR=$(readlink -f $(dirname $0))
 [[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $BASE_DIR/../../../../ && pwd)"
 [[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $BASE_DIR/../common && pwd)"
+. $BASE_DIR/../common/common.sh
 
 rpc_py="$BASE_DIR/../../../scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
@@ -98,6 +99,7 @@ function blk_ro_tc1()
 	notice "Removing controller and creating new one with readonly flag"
 	$rpc_py remove_vhost_controller $vhost_blk_name
 	$rpc_py construct_vhost_blk_controller -r $vhost_blk_name $disk_name
+    $rpc_py get_vhost_controllers
 
 	vm_run $vm_no
 	vm_wait_for_boot 600 $vm_no
