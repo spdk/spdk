@@ -88,6 +88,7 @@ struct spdk_app_opts {
 	int			master_core;
 	int			mem_size;
 	bool			no_pci;
+	bool			hugepage_single_segments;
 	enum spdk_log_level	print_level;
 
 	/* The maximum latency allowed when passing an event
