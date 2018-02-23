@@ -460,6 +460,33 @@ union spdk_nvme_vs_register spdk_nvme_ctrlr_get_regs_vs(struct spdk_nvme_ctrlr *
 uint32_t spdk_nvme_ctrlr_get_num_ns(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
+ * \brief Return true if nsid is an active ns for the given NVMe controller.
+ *
+ * This function is thread safe and can be called at any point while the controller is attached to
+ *  the SPDK NVMe driver.
+ *
+ */
+bool spdk_nvme_ctrlr_is_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid);
+
+/**
+ * \brief Return the nsid of the first active namespace, 0 if there are no active namespaces.
+ *
+ * This function is thread safe and can be called at any point while the controller is attached to
+ *  the SPDK NVMe driver.
+ *
+ */
+uint32_t spdk_nvme_ctrlr_get_first_active_ns(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
+ * \brief Return a next active namespace given the previous ns id, 0 when there are no more active namespaces.
+ *
+ * This function is thread safe and can be called at any point while the controller is attached to
+ *  the SPDK NVMe driver.
+ *
+ */
+uint32_t spdk_nvme_ctrlr_get_next_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t prev_nsid);
+
+/**
  * \brief Determine if a particular log page is supported by the given NVMe controller.
  *
  * This function is thread safe and can be called at any point while the controller is attached to

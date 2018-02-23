@@ -280,6 +280,28 @@ nvme_ctrlr_cmd_identify_controller(struct spdk_nvme_ctrlr *ctrlr, void *payload,
 }
 
 int
+nvme_ctrlr_cmd_identify_active_ns_list(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
+				       void *payload, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	uint32_t count = 0;
+	uint32_t i = 0;
+	struct spdk_nvme_ns_list *ns_list = (struct spdk_nvme_ns_list *)payload;
+
+	for (i = 1; i <= ctrlr->num_ns; i++) {
+		if (i <= nsid) {
+			continue;
+		}
+
+		ns_list->ns_list[count++] = i;
+		if (count == SPDK_COUNTOF(ns_list->ns_list)) {
+			break;
+		}
+	}
+	fake_cpl_success(cb_fn, cb_arg);
+	return 0;
+}
+
+int
 nvme_ctrlr_cmd_set_num_queues(struct spdk_nvme_ctrlr *ctrlr,
 			      uint32_t num_queues, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
@@ -456,6 +478,7 @@ test_nvme_ctrlr_init_en_1_rdy_0(void)
 
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
 	ctrlr.cdata.nn = 1;
+	ctrlr.page_size = 0x1000;
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_INIT);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1);
@@ -510,6 +533,7 @@ test_nvme_ctrlr_init_en_1_rdy_1(void)
 
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
 	ctrlr.cdata.nn = 1;
+	ctrlr.page_size = 0x1000;
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_INIT);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0);
@@ -562,6 +586,7 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_rr(void)
 
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
 	ctrlr.cdata.nn = 1;
+	ctrlr.page_size = 0x1000;
 	/*
 	 * Case 1: default round robin arbitration mechanism selected
 	 */
@@ -595,6 +620,7 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_rr(void)
 	 */
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
 	ctrlr.cdata.nn = 1;
+	ctrlr.page_size = 0x1000;
 	ctrlr.opts.arb_mechanism = SPDK_NVME_CC_AMS_WRR;
 
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_INIT);
@@ -623,6 +649,7 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_rr(void)
 	 */
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
 	ctrlr.cdata.nn = 1;
+	ctrlr.page_size = 0x1000;
 	ctrlr.opts.arb_mechanism = SPDK_NVME_CC_AMS_VS;
 
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_INIT);
@@ -651,6 +678,7 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_rr(void)
 	 */
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
 	ctrlr.cdata.nn = 1;
+	ctrlr.page_size = 0x1000;
 	ctrlr.opts.arb_mechanism = SPDK_NVME_CC_AMS_VS + 1;
 
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_INIT);
@@ -679,6 +707,7 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_rr(void)
 	 */
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
 	ctrlr.cdata.nn = 1;
+	ctrlr.page_size = 0x1000;
 	ctrlr.opts.arb_mechanism = SPDK_NVME_CC_AMS_RR;
 
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_INIT);
@@ -725,6 +754,7 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr(void)
 
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
 	ctrlr.cdata.nn = 1;
+	ctrlr.page_size = 0x1000;
 	/*
 	 * Case 1: default round robin arbitration mechanism selected
 	 */
@@ -758,6 +788,7 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr(void)
 	 */
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
 	ctrlr.cdata.nn = 1;
+	ctrlr.page_size = 0x1000;
 	ctrlr.opts.arb_mechanism = SPDK_NVME_CC_AMS_WRR;
 
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_INIT);
@@ -788,6 +819,7 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr(void)
 	 */
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
 	ctrlr.cdata.nn = 1;
+	ctrlr.page_size = 0x1000;
 	ctrlr.opts.arb_mechanism = SPDK_NVME_CC_AMS_VS;
 
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_INIT);
@@ -816,6 +848,7 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr(void)
 	 */
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
 	ctrlr.cdata.nn = 1;
+	ctrlr.page_size = 0x1000;
 	ctrlr.opts.arb_mechanism = SPDK_NVME_CC_AMS_VS + 1;
 
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_INIT);
@@ -844,6 +877,7 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr(void)
 	 */
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
 	ctrlr.cdata.nn = 1;
+	ctrlr.page_size = 0x1000;
 	ctrlr.opts.arb_mechanism = SPDK_NVME_CC_AMS_WRR;
 
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_INIT);
@@ -889,6 +923,7 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_vs(void)
 
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
 	ctrlr.cdata.nn = 1;
+	ctrlr.page_size = 0x1000;
 	/*
 	 * Case 1: default round robin arbitration mechanism selected
 	 */
@@ -922,6 +957,7 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_vs(void)
 	 */
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
 	ctrlr.cdata.nn = 1;
+	ctrlr.page_size = 0x1000;
 	ctrlr.opts.arb_mechanism = SPDK_NVME_CC_AMS_WRR;
 
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_INIT);
@@ -950,6 +986,7 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_vs(void)
 	 */
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
 	ctrlr.cdata.nn = 1;
+	ctrlr.page_size = 0x1000;
 	ctrlr.opts.arb_mechanism = SPDK_NVME_CC_AMS_VS;
 
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_INIT);
@@ -980,6 +1017,7 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_vs(void)
 	 */
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
 	ctrlr.cdata.nn = 1;
+	ctrlr.page_size = 0x1000;
 	ctrlr.opts.arb_mechanism = SPDK_NVME_CC_AMS_VS + 1;
 
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_INIT);
@@ -1008,6 +1046,7 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_vs(void)
 	 */
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
 	ctrlr.cdata.nn = 1;
+	ctrlr.page_size = 0x1000;
 	ctrlr.opts.arb_mechanism = SPDK_NVME_CC_AMS_VS;
 
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_INIT);
@@ -1048,6 +1087,7 @@ test_nvme_ctrlr_init_en_0_rdy_0(void)
 
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
 	ctrlr.cdata.nn = 1;
+	ctrlr.page_size = 0x1000;
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_INIT);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0);
@@ -1085,6 +1125,7 @@ test_nvme_ctrlr_init_en_0_rdy_1(void)
 
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
 	ctrlr.cdata.nn = 1;
+	ctrlr.page_size = 0x1000;
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_INIT);
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0);
@@ -1123,6 +1164,7 @@ setup_qpairs(struct spdk_nvme_ctrlr *ctrlr, uint32_t num_io_queues)
 
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(ctrlr) == 0);
 
+	ctrlr->page_size = 0x1000;
 	ctrlr->opts.num_io_queues = num_io_queues;
 	ctrlr->free_io_qids = spdk_bit_array_create(num_io_queues + 1);
 	SPDK_CU_ASSERT_FATAL(ctrlr->free_io_qids != NULL);
@@ -1607,6 +1649,67 @@ test_spdk_nvme_ctrlr_doorbell_buffer_config(void)
 	nvme_ctrlr_free_doorbell_buffer(&ctrlr);
 }
 
+static void
+test_nvme_ctrlr_test_active_ns(void)
+{
+	uint32_t		nsid, minor;
+	size_t			ns_id_count;
+	struct spdk_nvme_ctrlr	ctrlr = {};
+
+	ctrlr.page_size = 0x1000;
+
+	for (minor = 0; minor <= 2; minor++) {
+		ctrlr.cdata.ver.bits.mjr = 1;
+		ctrlr.cdata.ver.bits.mnr = minor;
+		ctrlr.cdata.ver.bits.ter = 0;
+		ctrlr.num_ns = 1531;
+		nvme_ctrlr_identify_active_ns(&ctrlr);
+
+		for (nsid = 1; nsid <= ctrlr.num_ns; nsid++) {
+			CU_ASSERT(spdk_nvme_ctrlr_is_active_ns(&ctrlr, nsid) == true);
+		}
+		ctrlr.num_ns = 1559;
+		for (; nsid <= ctrlr.num_ns; nsid++) {
+			CU_ASSERT(spdk_nvme_ctrlr_is_active_ns(&ctrlr, nsid) == false);
+		}
+		ctrlr.num_ns = 1531;
+		for (nsid = 0; nsid < ctrlr.num_ns; nsid++) {
+			ctrlr.active_ns_list[nsid] = 0;
+		}
+		CU_ASSERT(spdk_nvme_ctrlr_get_first_active_ns(&ctrlr) == 0);
+
+		ctrlr.active_ns_list[0] = 1;
+		CU_ASSERT(spdk_nvme_ctrlr_is_active_ns(&ctrlr, 1) == true);
+		CU_ASSERT(spdk_nvme_ctrlr_is_active_ns(&ctrlr, 2) == false);
+		nsid = spdk_nvme_ctrlr_get_first_active_ns(&ctrlr);
+		CU_ASSERT(nsid == 1);
+
+		ctrlr.active_ns_list[1] = 3;
+		CU_ASSERT(spdk_nvme_ctrlr_is_active_ns(&ctrlr, 1) == true);
+		CU_ASSERT(spdk_nvme_ctrlr_is_active_ns(&ctrlr, 2) == false);
+		CU_ASSERT(spdk_nvme_ctrlr_is_active_ns(&ctrlr, 3) == true);
+		nsid = spdk_nvme_ctrlr_get_next_active_ns(&ctrlr, nsid);
+		CU_ASSERT(nsid == 3);
+		nsid = spdk_nvme_ctrlr_get_next_active_ns(&ctrlr, nsid);
+		CU_ASSERT(nsid == 0);
+
+		memset(ctrlr.active_ns_list, 0, ctrlr.num_ns);
+		for (nsid = 0; nsid < ctrlr.num_ns; nsid++) {
+			ctrlr.active_ns_list[nsid] = nsid + 1;
+		}
+
+		ns_id_count = 0;
+		for (nsid = spdk_nvme_ctrlr_get_first_active_ns(&ctrlr);
+		     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(&ctrlr, nsid)) {
+			CU_ASSERT(spdk_nvme_ctrlr_is_active_ns(&ctrlr, nsid) == true);
+			ns_id_count++;
+		}
+		CU_ASSERT(ns_id_count == ctrlr.num_ns);
+
+		nvme_ctrlr_destruct(&ctrlr);
+	}
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1655,6 +1758,8 @@ int main(int argc, char **argv)
 		|| CU_add_test(suite, "test nvme ctrlr function nvme_ctrlr_alloc_cmb",
 			       test_nvme_ctrlr_alloc_cmb) == NULL
 #endif
+		|| CU_add_test(suite, "test nvme ctrlr function test_nvme_ctrlr_test_active_ns",
+			       test_nvme_ctrlr_test_active_ns) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
