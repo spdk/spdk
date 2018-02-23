@@ -56,6 +56,29 @@
       "revId": "0ea5d4a1ac5951641bcab0ef65e63bd301f24e62",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "150e3ad1_00c4043c",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 395,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-23T00:37:22Z",
+      "side": 1,
+      "message": "Would you add to explain that the list is sorted by initialization order?",
+      "range": {
+        "startLine": 395,
+        "startChar": 54,
+        "endLine": 395,
+        "endChar": 91
+      },
+      "revId": "0ea5d4a1ac5951641bcab0ef65e63bd301f24e62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
