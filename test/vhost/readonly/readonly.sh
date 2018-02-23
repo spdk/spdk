@@ -4,6 +4,7 @@ set -e
 BASE_DIR=$(readlink -f $(dirname $0))
 [[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $BASE_DIR/../../../../ && pwd)"
 [[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $BASE_DIR/../common && pwd)"
+. $BASE_DIR/../common/common.sh
 
 rpc_py="$BASE_DIR/../../../scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
@@ -94,6 +95,7 @@ function blk_ro_tc1()
 	sleep 1
 
 	vm_shutdown_all
+    $rpc_py get_vhost_controllers $vhost_blk_name
 #Create readonly controller and test readonly feature
 	notice "Removing controller and creating new one with readonly flag"
 	$rpc_py remove_vhost_controller $vhost_blk_name
@@ -106,6 +108,7 @@ function blk_ro_tc1()
 	sleep 3
 
 	vm_shutdown_all
+    $rpc_py get_vhost_controllers $vhost_blk_name
 #Delete file from disk and delete partition
 	echo "INFO: Removing controller and creating new one"
 	$rpc_py remove_vhost_controller $vhost_blk_name
@@ -118,6 +121,7 @@ function blk_ro_tc1()
 	sleep 1
 
 	vm_shutdown_all
+    $rpc_py get_vhost_controllers $vhost_blk_name
 }
 
 spdk_vhost_run --conf-path=$BASE_DIR
