@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c26846f4_2f0d8197",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2018-02-23T07:54:20Z",
+      "side": 1,
+      "message": "Can we move this to the upper lines of this file? We\u0027d keep it the BASE_DIR value to be consistent in different location.",
+      "revId": "5206ba9a61539b16a13730ab285257baaba197a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
