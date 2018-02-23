@@ -39,6 +39,41 @@
       "revId": "09582fbcbb6eebb12b8a245211b5f5620b1c3202",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a63b7648_a22c424d",
+        "filename": "lib/net/sock.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-23T19:58:59Z",
+      "side": 1,
+      "message": "Actually, considering that some data may be in the buffer even after the remote side has closed the connection, maybe this order (check for input, then check for errors) is better.  If so, we should modify the kevent() code below to match this order.",
+      "parentUuid": "71bc3f2a_4a9b4117",
+      "revId": "09582fbcbb6eebb12b8a245211b5f5620b1c3202",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "20b296e2_b6b1a124",
+        "filename": "lib/net/sock.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 551,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-23T19:58:59Z",
+      "side": 1,
+      "message": "I\u0027m not sure we should close the socket here; maybe we should add some way to determine if a spdk_sock is closed and let the user close the sock when they are notified in their poll callback.",
+      "revId": "09582fbcbb6eebb12b8a245211b5f5620b1c3202",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
