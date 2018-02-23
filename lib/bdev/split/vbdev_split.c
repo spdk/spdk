@@ -48,7 +48,10 @@
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
+#include "vbdev_split.h"
+
 struct spdk_vbdev_split_config {
+	char *prefix;
 	char *base_bdev;
 	uint32_t split_count;
 	uint64_t split_size_mb;
@@ -124,14 +127,44 @@ vbdev_split_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	return 0;
 }
 
+static void
+vbdev_split_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+{
+	struct spdk_bdev_part *part = bdev->ctxt;
+	struct spdk_bdev_part_base *base = part->base;
+	uint64_t cnt;
+
+	if (part != TAILQ_FIRST(base->tailq)) {
+		return;
+	}
+
+	cnt = 0;
+	TAILQ_FOREACH(part, base->tailq, tailq) {
+		cnt++;
+	}
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "method", "construct_split_bdev");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_uint64(w, "count", cnt);
+	spdk_json_write_named_uint64(w, "size_mb", cnt * base->bdev->blocklen / (1024 * 1024));
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
 static struct spdk_bdev_fn_table vbdev_split_fn_table = {
 	.destruct		= vbdev_split_destruct,
 	.submit_request		= vbdev_split_submit_request,
 	.dump_info_json		= vbdev_split_dump_info_json,
+	.write_config_json	= vbdev_split_write_config_json,
 };
 
-static int
-vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t split_size_mb)
+int
+create_vbdev_split(const char *prefix, struct spdk_bdev *base_bdev, uint64_t split_count,
+		   uint64_t split_size_mb)
 {
 	uint64_t split_size_blocks, offset_blocks;
 	uint64_t max_split_count;
@@ -186,6 +219,10 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 	}
 
 	offset_blocks = 0;
+	if (!prefix) {
+		prefix = spdk_bdev_get_name(base_bdev);
+	}
+
 	for (i = 0; i < split_count; i++) {
 		struct spdk_bdev_part *d;
 
@@ -195,7 +232,7 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 			return -1;
 		}
 
-		name = spdk_sprintf_alloc("%sp%" PRIu64, spdk_bdev_get_name(base_bdev), i);
+		name = spdk_sprintf_alloc("%sp%" PRIu64, prefix, i);
 		if (!name) {
 			SPDK_ERRLOG("could not allocate name\n");
 			free(d);
@@ -267,6 +304,7 @@ vbdev_split_init(void)
 		}
 
 		cfg = calloc(1, sizeof(*cfg));
+		cfg->prefix = NULL; /* Prefix in config file not supported */
 		cfg->base_bdev = strdup(base_bdev_name);
 		cfg->split_count = split_count;
 		cfg->split_size_mb = split_size;
@@ -283,6 +321,7 @@ vbdev_split_fini(void)
 
 	while ((cfg = TAILQ_FIRST(&g_split_config))) {
 		TAILQ_REMOVE(&g_split_config, cfg, tailq);
+		free(cfg->prefix);
 		free(cfg->base_bdev);
 		free(cfg);
 	}
@@ -298,7 +337,7 @@ vbdev_split_examine(struct spdk_bdev *bdev)
 			continue;
 		}
 
-		if (vbdev_split_create(bdev, cfg->split_count, cfg->split_size_mb)) {
+		if (create_vbdev_split(cfg->prefix, bdev, cfg->split_count, cfg->split_size_mb)) {
 			SPDK_ERRLOG("could not split bdev %s\n", bdev->name);
 		}
 
