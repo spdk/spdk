@@ -278,12 +278,29 @@ bdev_pmem_destroy_cb(void *io_device, void *ctx_buf)
 {
 }
 
+static void
+bdev_pmem_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+{
+	struct pmem_disk *disk = bdev->ctxt;
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "method", "construct_pmem_bdev");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_string(w, "pmem_file", disk->pmem_file);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
 static const struct spdk_bdev_fn_table pmem_fn_table = {
 	.destruct		= bdev_pmem_destruct,
 	.submit_request		= bdev_pmem_submit_request,
 	.io_type_supported	= bdev_pmem_io_type_supported,
 	.get_io_channel		= bdev_pmem_get_io_channel,
 	.dump_info_json		= bdev_pmem_dump_info_json,
+	.write_config_json	= bdev_pmem_write_config_json,
 };
 
 int
