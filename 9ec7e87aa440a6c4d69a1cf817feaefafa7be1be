@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2784eccd_f696795a",
+        "filename": "lib/event/app.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 539,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-23T20:02:53Z",
+      "side": 1,
+      "message": "I think this still needs to exit with EXIT_SUCCESS so that running an app with -h will exit after printing the usage but still return with a 0 error code.\n\nThis is the cause of the vhost \"Testing vhost command line arguments\" test failure.",
+      "revId": "9ec7e87aa440a6c4d69a1cf817feaefafa7be1be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
