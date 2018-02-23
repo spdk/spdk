@@ -40,6 +40,7 @@
 #include "spdk/endian.h"
 #include "spdk/env.h"
 #include "spdk/copy_engine.h"
+#include "spdk/json.h"
 #include "spdk/io_channel.h"
 #include "spdk/queue.h"
 #include "spdk/string.h"
@@ -346,11 +347,28 @@ bdev_malloc_get_io_channel(void *ctx)
 	return spdk_copy_engine_get_io_channel();
 }
 
+static void
+bdev_malloc_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "method", "construct_malloc_bdev");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_string(w, "name", bdev->name);
+	spdk_json_write_named_uint64(w, "num_blocks", bdev->blockcnt);
+	spdk_json_write_named_uint32(w, "block_size", bdev->blocklen);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
 static const struct spdk_bdev_fn_table malloc_fn_table = {
 	.destruct		= bdev_malloc_destruct,
 	.submit_request		= bdev_malloc_submit_request,
 	.io_type_supported	= bdev_malloc_io_type_supported,
 	.get_io_channel		= bdev_malloc_get_io_channel,
+	.write_config_json	= bdev_malloc_write_json_config,
 };
 
 struct spdk_bdev *create_malloc_disk(const char *name, const struct spdk_uuid *uuid,
