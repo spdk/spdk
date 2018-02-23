@@ -88,6 +88,7 @@ struct spdk_app_opts {
 	int			master_core;
 	int			mem_size;
 	bool			no_pci;
+	bool			hugepage_single_segments;
 	enum spdk_log_level	print_level;
 
 	/* The maximum latency allowed when passing an event
@@ -185,7 +186,7 @@ int spdk_app_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask);
  */
 struct spdk_cpuset *spdk_app_get_core_mask(void);
 
-#define SPDK_APP_GETOPT_STRING "c:de:hi:m:n:p:qr:s:t:"
+#define SPDK_APP_GETOPT_STRING "c:de:ghi:m:n:p:qr:s:t:"
 
 enum spdk_app_parse_args_rvals {
 	SPDK_APP_PARSE_ARGS_HELP = 0,
