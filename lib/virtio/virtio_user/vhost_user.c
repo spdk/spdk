@@ -40,7 +40,7 @@
 /* The version of the protocol we support */
 #define VHOST_USER_VERSION    0x1
 
-#define VHOST_MEMORY_MAX_NREGIONS 8
+#define VHOST_MEMORY_MAX_NREGIONS 128
 
 /** Fixed-size vhost_memory struct */
 struct vhost_memory_padded {

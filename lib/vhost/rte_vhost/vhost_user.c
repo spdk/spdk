@@ -451,7 +451,7 @@ add_one_guest_page(struct virtio_net *dev, uint64_t guest_phys_addr,
 	struct guest_page *page, *last_page;
 
 	if (dev->nr_guest_pages == dev->max_guest_pages) {
-		dev->max_guest_pages = RTE_MAX(8U, dev->max_guest_pages * 2);
+		dev->max_guest_pages = RTE_MAX(1288U, dev->max_guest_pages * 2);
 		dev->guest_pages = realloc(dev->guest_pages,
 					dev->max_guest_pages * sizeof(*page));
 	}
@@ -572,7 +572,7 @@ vhost_setup_mem_table(struct virtio_net *dev)
 
 	dev->nr_guest_pages = 0;
 	if (!dev->guest_pages) {
-		dev->max_guest_pages = 8;
+		dev->max_guest_pages = 128;
 		dev->guest_pages = malloc(dev->max_guest_pages *
 						sizeof(struct guest_page));
 	}
