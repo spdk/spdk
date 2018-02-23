@@ -76,7 +76,7 @@
 #### virtio initiator tests
 - virtio user mode: connect to vhost-scsi controller sockets directly on host
 - virtio pci mode: connect to virtual pci devices on guest virtual machine
-- 6 concurrent jobs are run simultaneously on 5 devices, each with 8 virtqueues
+- 6 concurrent jobs are run simultaneously on 7 devices, each with 8 virtqueues
 
 ##### kernel virtio-scsi-pci device
 - test support for kernel vhost-scsi device
@@ -95,10 +95,11 @@
     only on unmap supporting devices
 - FIO job configuration: iodepth=128, block size=4k, runtime=10s
 - all test cases run jobs in parallel on multiple bdevs
-- 18 queues
+- 8 queues per device
 
 ##### vhost configuration
-- scsi controller with 6 NVMe splits
+- scsi controller with 4 NVMe splits
+- 2 block controllers, each with 1 NVMe split
 - scsi controller with malloc with 512 block size
 - scsi controller with malloc with 4096 block size
 
