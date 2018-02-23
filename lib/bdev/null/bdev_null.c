@@ -37,6 +37,7 @@
 #include "spdk/conf.h"
 #include "spdk/env.h"
 #include "spdk/io_channel.h"
+#include "spdk/json.h"
 
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
@@ -119,11 +120,21 @@ bdev_null_get_io_channel(void *ctx)
 	return spdk_get_io_channel(&g_null_bdev_head);
 }
 
+static int
+bdev_null_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_named_string(w, "name", bdev->name);
+	spdk_json_write_named_uint64(w, "num_blocks", bdev->blockcnt);
+	spdk_json_write_named_uint32(w, "num_blocks", bdev->blocklen);
+	return 0;
+}
+
 static const struct spdk_bdev_fn_table null_fn_table = {
 	.destruct		= bdev_null_destruct,
 	.submit_request		= bdev_null_submit_request,
 	.io_type_supported	= bdev_null_io_type_supported,
 	.get_io_channel		= bdev_null_get_io_channel,
+	.dump_config_json	= bdev_null_dump_config_json,
 };
 
 struct spdk_bdev *
