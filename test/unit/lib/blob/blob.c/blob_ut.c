@@ -101,6 +101,7 @@ _bs_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 	}
 }
 
+#if 0
 static void
 _bs_flush_scheduler(void)
 {
@@ -112,6 +113,7 @@ _bs_flush_scheduler(void)
 		free(ops);
 	}
 }
+#endif
 
 static void
 bs_op_complete(void *cb_arg, int bserrno)
@@ -1354,8 +1356,6 @@ bs_load(void)
 	size_t value_len;
 	struct spdk_bs_opts opts;
 
-	g_scheduler_delay = true;
-
 	dev = init_dev();
 	spdk_bs_opts_init(&opts);
 	strncpy(opts.bstype.bstype, "TESTTYPE", SPDK_BLOBSTORE_TYPE_LENGTH);
@@ -1452,7 +1452,6 @@ bs_load(void)
 	spdk_bs_unload(g_bs, bs_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	g_bs = NULL;
-	g_scheduler_delay = false;
 }
 
 static void
@@ -1460,8 +1459,6 @@ bs_type(void)
 {
 	struct spdk_bs_dev *dev;
 	struct spdk_bs_opts opts;
-
-	g_scheduler_delay = true;
 
 	dev = init_dev();
 	spdk_bs_opts_init(&opts);
@@ -1521,7 +1518,6 @@ bs_type(void)
 	spdk_bs_unload(g_bs, bs_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	g_bs = NULL;
-	g_scheduler_delay = false;
 }
 
 static void
@@ -1531,8 +1527,6 @@ bs_super_block(void)
 	struct spdk_bs_super_block *super_block;
 	struct spdk_bs_opts opts;
 	struct spdk_bs_super_block_ver1 super_block_v1;
-
-	g_scheduler_delay = true;
 
 	dev = init_dev();
 	spdk_bs_opts_init(&opts);
@@ -1584,7 +1578,6 @@ bs_super_block(void)
 	spdk_bs_unload(g_bs, bs_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	g_bs = NULL;
-	g_scheduler_delay = false;
 }
 
 /*
@@ -1867,11 +1860,6 @@ bs_destroy(void)
 	struct spdk_bs_dev *dev;
 	struct spdk_bs_opts opts;
 
-	g_scheduler_delay = true;
-
-	_bs_flush_scheduler();
-	CU_ASSERT(TAILQ_EMPTY(&g_scheduled_ops));
-
 	/* Initialize a new blob store */
 	dev = init_dev();
 	spdk_bs_opts_init(&opts);
@@ -1882,9 +1870,6 @@ bs_destroy(void)
 	/* Destroy the blob store */
 	g_bserrno = -1;
 	spdk_bs_destroy(g_bs, bs_op_complete, NULL);
-	/* Callback is called after device is destroyed in next scheduler run. */
-	_bs_flush_scheduler();
-	CU_ASSERT(TAILQ_EMPTY(&g_scheduled_ops));
 	CU_ASSERT(g_bserrno == 0);
 
 	/* Loading an non-existent blob store should fail. */
@@ -1894,7 +1879,6 @@ bs_destroy(void)
 
 	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno != 0);
-	g_scheduler_delay = false;
 }
 
 /* Try to hit all of the corner cases associated with serializing
@@ -2071,15 +2055,10 @@ super_block_crc(void)
 	super_block->crc = 0;
 	dev = init_dev();
 
-	g_scheduler_delay = true;
 	/* Load an existing blob store */
+	g_bserrno = 0;
 	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
-
 	CU_ASSERT(g_bserrno == -EILSEQ);
-	_bs_flush_scheduler();
-	CU_ASSERT(TAILQ_EMPTY(&g_scheduled_ops));
-
-	g_scheduler_delay = false;
 }
 
 /* For blob dirty shutdown test case we do the following sub-test cases:
