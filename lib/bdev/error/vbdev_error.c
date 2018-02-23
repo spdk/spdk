@@ -80,12 +80,14 @@ static int vbdev_error_init(void);
 static void vbdev_error_fini(void);
 
 static void vbdev_error_examine(struct spdk_bdev *bdev);
+static int vbdev_error_config_json(struct spdk_json_write_ctx *w);
 
 static struct spdk_bdev_module error_if = {
 	.name = "error",
 	.module_init = vbdev_error_init,
 	.module_fini = vbdev_error_fini,
 	.examine = vbdev_error_examine,
+	.config_json = vbdev_error_config_json,
 
 };
 
@@ -228,10 +230,18 @@ vbdev_error_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	return 0;
 }
 
+static void
+vbdev_error_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+{
+	/* No config per bdev. */
+}
+
+
 static struct spdk_bdev_fn_table vbdev_error_fn_table = {
 	.destruct		= vbdev_error_destruct,
 	.submit_request		= vbdev_error_submit_request,
 	.dump_info_json		= vbdev_error_dump_info_json,
+	.write_config_json	= vbdev_error_write_config_json
 };
 
 static void
@@ -382,4 +392,23 @@ vbdev_error_examine(struct spdk_bdev *bdev)
 	}
 
 	spdk_bdev_module_examine_done(&error_if);
+}
+
+static int
+vbdev_error_config_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_vbdev_error_config *cfg;
+
+	TAILQ_FOREACH(cfg, &g_error_config, tailq) {
+		spdk_json_write_object_begin(w);
+
+		spdk_json_write_named_string(w, "method", "construct_error_bdev");
+		spdk_json_write_named_object_begin(w, "params");
+		spdk_json_write_named_string(w, "base_name", cfg->base_bdev);
+		spdk_json_write_object_end(w);
+
+		spdk_json_write_object_end(w);
+	}
+
+	return 0;
 }
