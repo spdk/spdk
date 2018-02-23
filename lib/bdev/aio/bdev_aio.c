@@ -401,12 +401,28 @@ bdev_aio_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	return 0;
 }
 
+static int
+bdev_aio_dump_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+{
+	struct file_disk *fdisk = bdev->ctxt;
+
+	spdk_json_write_named_string(w, "name", bdev->name);
+	if (fdisk->block_size_override) {
+		spdk_json_write_named_uint32(w, "block_size", bdev->blocklen);
+	}
+
+	spdk_json_write_named_string(w, "filename", fdisk->filename);
+
+	return 0;
+}
+
 static const struct spdk_bdev_fn_table aio_fn_table = {
 	.destruct		= bdev_aio_destruct,
 	.submit_request		= bdev_aio_submit_request,
 	.io_type_supported	= bdev_aio_io_type_supported,
 	.get_io_channel		= bdev_aio_get_io_channel,
 	.dump_info_json		= bdev_aio_dump_info_json,
+	.dump_config_json	= bdev_aio_dump_json_config,
 };
 
 static void aio_free_disk(struct file_disk *fdisk)
