@@ -479,7 +479,7 @@ spdk_posix_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group, struct 
 #if defined(__linux__)
 	struct epoll_event event;
 
-	event.events = EPOLLIN;
+	event.events = EPOLLIN | EPOLLERR | EPOLLHUP;
 	event.data.ptr = sock;
 
 	rc = epoll_ctl(group->fd, EPOLL_CTL_ADD, sock->fd, &event);
@@ -544,9 +544,30 @@ spdk_posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_eve
 
 	for (i = 0; i < num_events; i++) {
 #if defined(__linux__)
-		socks[i] = events[i].data.ptr;
+		if (events[i].events & EPOLLIN) {
+			socks[i] = events[i].data.ptr;
+		} else if (events[i].events & (EPOLLERR | EPOLLHUP)) {
+			close(events[i].data.fd);
+			socks[i] = NULL;
+			SPDK_ERRLOG("close fd %d due to epoll failure %x\n",
+				    events[i].data.fd, events[i].events);
+		} else {
+			socks[i] = NULL;
+		}
 #elif defined(__FreeBSD__)
-		socks[i] = events[i].udata;
+		if (events[i].flags & EV_EOF) {
+			close(events[i].ident);
+			socks[i] = NULL;
+			SPDK_ERRLOG("close fd %d because of EV_EOF\n",
+				    events[i].ident);
+		} else if (events[i].flags & EV_ERROR) {
+			close(events[i].ident);
+			socks[i] = NULL;
+			SPDK_ERRLOG("close fd %d because of EV_ERROR: %s\n",
+				    events[i].ident, spdk_strerror(evlist[i].data));
+		} else {
+			socks[i] = events[i].udata;
+		}
 #endif
 	}
 
@@ -807,13 +828,16 @@ spdk_sock_group_poll_count(struct spdk_sock_group *group, int max_events)
 	}
 
 	num_events = group->net_impl->group_impl_poll(group->group_impl, max_events, socks);
+
 	if (num_events == -1) {
 		return -1;
 	}
 
 	for (i = 0; i < num_events; i++) {
 		struct spdk_sock *sock = socks[i];
-
+		if (sock == NULL) {
+			continue;
+		}
 		assert(sock->cb_fn != NULL);
 		sock->cb_fn(sock->cb_arg, group, sock);
 	}
