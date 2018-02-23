@@ -62,13 +62,14 @@ function create_bdev_config()
 		error "Nvme0n1 bdev not found!"
 	fi
 
-	$RPC_PY construct_vhost_scsi_controller naa.Nvme0n1.0
-	$RPC_PY add_vhost_scsi_lun naa.Nvme0n1.0 0 Nvme0n1p0
-	$RPC_PY add_vhost_scsi_lun naa.Nvme0n1.0 1 Nvme0n1p1
-	$RPC_PY add_vhost_scsi_lun naa.Nvme0n1.0 2 Nvme0n1p2
-	$RPC_PY add_vhost_scsi_lun naa.Nvme0n1.0 3 Nvme0n1p3
-	$RPC_PY add_vhost_scsi_lun naa.Nvme0n1.0 4 Nvme0n1p4
-	$RPC_PY add_vhost_scsi_lun naa.Nvme0n1.0 5 Nvme0n1p5
+	$RPC_PY construct_vhost_scsi_controller naa.Nvme0n1_scsi0.0
+	$RPC_PY add_vhost_scsi_lun naa.Nvme0n1_scsi0.0 0 Nvme0n1p0
+	$RPC_PY add_vhost_scsi_lun naa.Nvme0n1_scsi0.0 1 Nvme0n1p1
+	$RPC_PY add_vhost_scsi_lun naa.Nvme0n1_scsi0.0 2 Nvme0n1p2
+	$RPC_PY add_vhost_scsi_lun naa.Nvme0n1_scsi0.0 3 Nvme0n1p3
+
+	$RPC_PY construct_vhost_blk_controller naa.Nvme0n1_blk0.0 Nvme0n1p4
+	$RPC_PY construct_vhost_blk_controller naa.Nvme0n1_blk1.0 Nvme0n1p5
 
 	$RPC_PY construct_malloc_bdev 128 512 --name Malloc0
 	$RPC_PY construct_vhost_scsi_controller naa.Malloc0.0
@@ -105,7 +106,7 @@ timing_exit run_spdk_fio_unmap
 timing_enter setup_vm
 vm_no="0"
 vm_setup --disk-type=spdk_vhost_scsi --force=$vm_no --os=$os_image \
- --disks="Nvme0n1:Malloc0:Malloc1" \
+ --disks="Nvme0n1_scsi0:Malloc0:Malloc1:Nvme0n1_blk0,spdk_vhost_blk:Nvme0n1_blk1,spdk_vhost_blk" \
  --queue_num=8 --memory=6144
 vm_run $vm_no
 
