@@ -60,6 +60,8 @@ struct bdev_rbd {
 	char *pool_name;
 	rbd_image_info_t info;
 	TAILQ_ENTRY(bdev_rbd) tailq;
+	struct spdk_poller *reset_timer;
+	struct spdk_bdev_io *reset_bdev_io;
 };
 
 struct bdev_rbd_io_channel {
@@ -267,6 +269,34 @@ bdev_rbd_flush(struct bdev_rbd *disk, struct spdk_io_channel *ch,
 	return bdev_rbd_start_aio(rbdio_ch->image, bdev_io, NULL, offset, nbytes);
 }
 
+static void
+bdev_rbd_reset_timer(void *arg)
+{
+	struct bdev_rbd *disk = arg;
+
+	/*
+	 * TODO: This should check if any I/O is still in flight before completing the reset.
+	 * For now, just complete after the timer expires.
+	 */
+	spdk_bdev_io_complete(disk->reset_bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+	spdk_poller_unregister(&disk->reset_timer);
+	disk->reset_bdev_io = NULL;
+}
+
+static int
+bdev_rbd_reset(struct bdev_rbd *disk, struct spdk_bdev_io *bdev_io)
+{
+	/*
+	 * HACK: Since librbd doesn't provide any way to cancel outstanding aio, just kick off a
+	 * timer to wait for in-flight I/O to complete.
+	 */
+	assert(disk->reset_bdev_io == NULL);
+	disk->reset_bdev_io = bdev_io;
+	disk->reset_timer = spdk_poller_register(bdev_rbd_reset_timer, disk, 1 * 1000 * 1000);
+
+	return 0;
+}
+
 static int
 bdev_rbd_destruct(void *ctx)
 {
@@ -316,6 +346,11 @@ static int _bdev_rbd_submit_request(struct spdk_io_channel *ch, struct spdk_bdev
 				      bdev_io,
 				      bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen,
 				      bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
+
+	case SPDK_BDEV_IO_TYPE_RESET:
+		return bdev_rbd_reset((struct bdev_rbd *)bdev_io->bdev->ctxt,
+				      bdev_io);
+
 	default:
 		return -1;
 	}
@@ -336,6 +371,7 @@ bdev_rbd_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
 	case SPDK_BDEV_IO_TYPE_FLUSH:
+	case SPDK_BDEV_IO_TYPE_RESET:
 		return true;
 
 	default:
