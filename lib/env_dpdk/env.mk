@@ -39,15 +39,7 @@
 
 DPDK_DIR ?= $(CONFIG_DPDK_DIR)
 
-ifeq ($(DPDK_DIR), )
-ifeq ($(OS),FreeBSD)
-export DPDK_ABS_DIR = /usr/local/share/dpdk/x86_64-native-freebsdapp-clang
-else
-export DPDK_ABS_DIR = /usr/local/share/dpdk/x86_64-native-linuxapp-gcc
-endif
-else
 export DPDK_ABS_DIR = $(abspath $(DPDK_DIR))
-endif
 
 ifneq (, $(wildcard $(DPDK_ABS_DIR)/include/rte_config.h))
 DPDK_INC_DIR := $(DPDK_ABS_DIR)/include
