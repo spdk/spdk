@@ -66,6 +66,8 @@ function clear_vhost_config() {
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR
 gen_config
+# Hotremove/hotattach/hotdetach test cases prerequisites
+# 1. Run vhost with 2 NVMe disks.
 run_vhost
 rm $BASE_DIR/vhost.conf.in
 if [[ $scsi_hot_remove_test == 0 ]] && [[ $blk_hot_remove_test == 0 ]]; then
