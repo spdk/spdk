@@ -255,7 +255,7 @@ struct spdk_iscsi_sess {
 };
 
 struct spdk_iscsi_globals {
-	char *authfile;
+	char *chapfile;
 	char *nodebase;
 	pthread_mutex_t mutex;
 	TAILQ_HEAD(, spdk_iscsi_portal)		portal_head;
@@ -266,10 +266,10 @@ struct spdk_iscsi_globals {
 
 	int timeout;
 	int nopininterval;
-	bool no_discovery_auth;
-	bool req_discovery_auth;
-	bool req_discovery_auth_mutual;
-	int discovery_auth_group;
+	bool disable_chap_for_discovery;
+	bool require_chap_for_discovery;
+	bool mutual_chap_for_discovery;
+	int chap_group_for_discovery;
 
 	uint32_t MaxSessions;
 	uint32_t MaxConnectionsPerSession;

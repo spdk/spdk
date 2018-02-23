@@ -1194,8 +1194,8 @@ spdk_rpc_get_iscsi_global_params(struct spdk_jsonrpc_request *request,
 
 	spdk_json_write_object_begin(w);
 
-	spdk_json_write_name(w, "auth_file");
-	spdk_json_write_string(w, g_spdk_iscsi.authfile);
+	spdk_json_write_name(w, "chap_file");
+	spdk_json_write_string(w, g_spdk_iscsi.chapfile);
 
 	spdk_json_write_name(w, "node_base");
 	spdk_json_write_string(w, g_spdk_iscsi.nodebase);
@@ -1230,17 +1230,17 @@ spdk_rpc_get_iscsi_global_params(struct spdk_jsonrpc_request *request,
 	spdk_json_write_name(w, "nop_in_interval");
 	spdk_json_write_int32(w, g_spdk_iscsi.nopininterval);
 
-	spdk_json_write_name(w, "no_discovery_auth");
-	spdk_json_write_bool(w, g_spdk_iscsi.no_discovery_auth);
+	spdk_json_write_name(w, "disable_chap_for_discovery");
+	spdk_json_write_bool(w, g_spdk_iscsi.disable_chap_for_discovery);
 
-	spdk_json_write_name(w, "req_discovery_auth");
-	spdk_json_write_bool(w, g_spdk_iscsi.req_discovery_auth);
+	spdk_json_write_name(w, "require_chap_for_discovery");
+	spdk_json_write_bool(w, g_spdk_iscsi.require_chap_for_discovery);
 
-	spdk_json_write_name(w, "req_discovery_auth_mutual");
-	spdk_json_write_bool(w, g_spdk_iscsi.req_discovery_auth_mutual);
+	spdk_json_write_name(w, "mutual_chap_for_discovery");
+	spdk_json_write_bool(w, g_spdk_iscsi.mutual_chap_for_discovery);
 
-	spdk_json_write_name(w, "discovery_auth_group");
-	spdk_json_write_int32(w, g_spdk_iscsi.discovery_auth_group);
+	spdk_json_write_name(w, "chap_group_for_discovery");
+	spdk_json_write_int32(w, g_spdk_iscsi.chap_group_for_discovery);
 
 	spdk_json_write_name(w, "min_connections_per_core");
 	spdk_json_write_int32(w, spdk_iscsi_conn_get_min_per_core());

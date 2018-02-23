@@ -88,20 +88,21 @@ spdk_iscsi_config_dump_section(FILE *fp)
 		return;
 	}
 
-	if (g_spdk_iscsi.req_discovery_auth) {
+	if (g_spdk_iscsi.require_chap_for_discovery) {
 		authmethod = "CHAP";
-	} else if (g_spdk_iscsi.req_discovery_auth_mutual) {
+	} else if (g_spdk_iscsi.mutual_chap_for_discovery) {
 		authmethod = "CHAP Mutual";
-	} else if (!g_spdk_iscsi.no_discovery_auth) {
+	} else if (!g_spdk_iscsi.disable_chap_for_discovery) {
 		authmethod = "Auto";
 	}
 
-	if (g_spdk_iscsi.discovery_auth_group) {
-		snprintf(authgroup, sizeof(authgroup), "AuthGroup%d", g_spdk_iscsi.discovery_auth_group);
+	if (g_spdk_iscsi.chap_group_for_discovery) {
+		snprintf(authgroup, sizeof(authgroup), "AuthGroup%d",
+			 g_spdk_iscsi.chap_group_for_discovery);
 	}
 
 	fprintf(fp, ISCSI_CONFIG_TMPL,
-		g_spdk_iscsi.nodebase, g_spdk_iscsi.authfile,
+		g_spdk_iscsi.nodebase, g_spdk_iscsi.chapfile,
 		g_spdk_iscsi.timeout, authmethod, authgroup,
 		g_spdk_iscsi.MaxSessions, g_spdk_iscsi.MaxConnectionsPerSession,
 		g_spdk_iscsi.MaxConnections,
@@ -522,7 +523,7 @@ struct spdk_iscsi_pdu *spdk_get_pdu(void)
 static void
 spdk_iscsi_log_globals(void)
 {
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "AuthFile %s\n", g_spdk_iscsi.authfile);
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "AuthFile %s\n", g_spdk_iscsi.chapfile);
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "NodeBase %s\n", g_spdk_iscsi.nodebase);
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "MaxSessions %d\n", g_spdk_iscsi.MaxSessions);
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "MaxConnectionsPerSession %d\n",
@@ -541,26 +542,26 @@ spdk_iscsi_log_globals(void)
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Timeout %d\n", g_spdk_iscsi.timeout);
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "NopInInterval %d\n",
 		      g_spdk_iscsi.nopininterval);
-	if (g_spdk_iscsi.no_discovery_auth) {
+	if (g_spdk_iscsi.disable_chap_for_discovery) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 			      "DiscoveryAuthMethod None\n");
-	} else if (!g_spdk_iscsi.req_discovery_auth) {
+	} else if (!g_spdk_iscsi.require_chap_for_discovery) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 			      "DiscoveryAuthMethod Auto\n");
 	} else {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 			      "DiscoveryAuthMethod %s %s\n",
-			      g_spdk_iscsi.req_discovery_auth ? "CHAP" : "",
-			      g_spdk_iscsi.req_discovery_auth_mutual ? "Mutual" : "");
+			      g_spdk_iscsi.require_chap_for_discovery ? "CHAP" : "",
+			      g_spdk_iscsi.mutual_chap_for_discovery ? "Mutual" : "");
 	}
 
-	if (g_spdk_iscsi.discovery_auth_group == 0) {
+	if (g_spdk_iscsi.chap_group_for_discovery == 0) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 			      "DiscoveryAuthGroup None\n");
 	} else {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 			      "DiscoveryAuthGroup AuthGroup%d\n",
-			      g_spdk_iscsi.discovery_auth_group);
+			      g_spdk_iscsi.chap_group_for_discovery);
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "MinConnectionsPerCore%d\n",
@@ -593,11 +594,11 @@ spdk_iscsi_read_parameters_from_config_file(struct spdk_conf_section *sp)
 	if (val != NULL) {
 		authfile = strdup(val);
 		if (authfile) {
-			free(g_spdk_iscsi.authfile);
-			g_spdk_iscsi.authfile = authfile;
+			free(g_spdk_iscsi.chapfile);
+			g_spdk_iscsi.chapfile = authfile;
 		} else {
 			SPDK_ERRLOG("could not strdup for authfile %s,"
-				    "keeping %s instead\n", val, g_spdk_iscsi.authfile);
+				    "keeping %s instead\n", val, g_spdk_iscsi.chapfile);
 		}
 	}
 
@@ -697,21 +698,21 @@ spdk_iscsi_read_parameters_from_config_file(struct spdk_conf_section *sp)
 	val = spdk_conf_section_get_val(sp, "DiscoveryAuthMethod");
 	if (val != NULL) {
 		if (strcasecmp(val, "CHAP") == 0) {
-			g_spdk_iscsi.no_discovery_auth = false;
-			g_spdk_iscsi.req_discovery_auth = true;
-			g_spdk_iscsi.req_discovery_auth_mutual = false;
+			g_spdk_iscsi.disable_chap_for_discovery = false;
+			g_spdk_iscsi.require_chap_for_discovery = true;
+			g_spdk_iscsi.mutual_chap_for_discovery = false;
 		} else if (strcasecmp(val, "Mutual") == 0) {
-			g_spdk_iscsi.no_discovery_auth = false;
-			g_spdk_iscsi.req_discovery_auth = true;
-			g_spdk_iscsi.req_discovery_auth_mutual = true;
+			g_spdk_iscsi.disable_chap_for_discovery = false;
+			g_spdk_iscsi.require_chap_for_discovery = true;
+			g_spdk_iscsi.mutual_chap_for_discovery = true;
 		} else if (strcasecmp(val, "Auto") == 0) {
-			g_spdk_iscsi.no_discovery_auth = false;
-			g_spdk_iscsi.req_discovery_auth = false;
-			g_spdk_iscsi.req_discovery_auth_mutual = false;
+			g_spdk_iscsi.disable_chap_for_discovery = false;
+			g_spdk_iscsi.require_chap_for_discovery = false;
+			g_spdk_iscsi.mutual_chap_for_discovery = false;
 		} else if (strcasecmp(val, "None") == 0) {
-			g_spdk_iscsi.no_discovery_auth = true;
-			g_spdk_iscsi.req_discovery_auth = false;
-			g_spdk_iscsi.req_discovery_auth_mutual = false;
+			g_spdk_iscsi.disable_chap_for_discovery = true;
+			g_spdk_iscsi.require_chap_for_discovery = false;
+			g_spdk_iscsi.mutual_chap_for_discovery = false;
 		} else {
 			SPDK_ERRLOG("unknown auth %s, ignoring\n", val);
 		}
@@ -720,7 +721,7 @@ spdk_iscsi_read_parameters_from_config_file(struct spdk_conf_section *sp)
 	if (val != NULL) {
 		ag_tag = val;
 		if (strcasecmp(ag_tag, "None") == 0) {
-			g_spdk_iscsi.discovery_auth_group = 0;
+			g_spdk_iscsi.chap_group_for_discovery = 0;
 		} else {
 			if (strncasecmp(ag_tag, "AuthGroup",
 					strlen("AuthGroup")) != 0
@@ -728,7 +729,7 @@ spdk_iscsi_read_parameters_from_config_file(struct spdk_conf_section *sp)
 			    || ag_tag_i == 0) {
 				SPDK_ERRLOG("invalid auth group %s, ignoring\n", ag_tag);
 			} else {
-				g_spdk_iscsi.discovery_auth_group = ag_tag_i;
+				g_spdk_iscsi.chap_group_for_discovery = ag_tag_i;
 			}
 		}
 	}
@@ -754,13 +755,13 @@ spdk_iscsi_app_read_parameters(void)
 	g_spdk_iscsi.ErrorRecoveryLevel = DEFAULT_ERRORRECOVERYLEVEL;
 	g_spdk_iscsi.timeout = DEFAULT_TIMEOUT;
 	g_spdk_iscsi.nopininterval = DEFAULT_NOPININTERVAL;
-	g_spdk_iscsi.no_discovery_auth = false;
-	g_spdk_iscsi.req_discovery_auth = false;
-	g_spdk_iscsi.req_discovery_auth_mutual = false;
-	g_spdk_iscsi.discovery_auth_group = 0;
-	g_spdk_iscsi.authfile = strdup(SPDK_ISCSI_DEFAULT_AUTHFILE);
-	if (!g_spdk_iscsi.authfile) {
-		SPDK_ERRLOG("could not strdup() default authfile name\n");
+	g_spdk_iscsi.disable_chap_for_discovery = false;
+	g_spdk_iscsi.require_chap_for_discovery = false;
+	g_spdk_iscsi.mutual_chap_for_discovery = false;
+	g_spdk_iscsi.chap_group_for_discovery = 0;
+	g_spdk_iscsi.chapfile = strdup(SPDK_ISCSI_DEFAULT_AUTHFILE);
+	if (!g_spdk_iscsi.chapfile) {
+		SPDK_ERRLOG("could not strdup() default chapfile name\n");
 		return -ENOMEM;
 	}
 	g_spdk_iscsi.nodebase = strdup(SPDK_ISCSI_DEFAULT_NODEBASE);
@@ -866,7 +867,7 @@ spdk_iscsi_fini_done(void)
 	spdk_iscsi_shutdown_tgt_nodes();
 	spdk_iscsi_init_grp_array_destroy();
 	spdk_iscsi_portal_grp_array_destroy();
-	free(g_spdk_iscsi.authfile);
+	free(g_spdk_iscsi.chapfile);
 	free(g_spdk_iscsi.nodebase);
 
 	pthread_mutex_destroy(&g_spdk_iscsi.mutex);
