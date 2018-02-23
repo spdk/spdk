@@ -17,6 +17,9 @@ experimental pending a functional allocator to free and reallocate CMB buffers.
 
 spdk_nvme_ns_get_uuid() has been added to allow retrieval of per-namespace UUIDs when available.
 
+Added spdk_nvme_ctrlr_get_first_active_ns()/spdk_nvme_ctrlr_get_next_active_ns() to iterate
+active namespaces and spdk_nvme_ctrlr_is_active_ns() to check if a ns id is active.
+
 ### NVMe-oF Target
 
 Namespaces may now be assigned unique identifiers via new optional "eui64" and "nguid" parameters

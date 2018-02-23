@@ -1105,21 +1105,22 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 	struct spdk_nvme_ns	*ns;
 	const struct spdk_nvme_ctrlr_data *cdata;
 	const struct spdk_uuid	*uuid;
-	int			ns_id, num_ns, rc;
+	int			rc;
 	int			bdev_created = 0;
+	uint32_t		nsid;
 
-	num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
-	for (ns_id = 1; ns_id <= num_ns; ns_id++) {
-		ns = spdk_nvme_ctrlr_get_ns(ctrlr, ns_id);
+	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
+	     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid)) {
+		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
 		if (!ns) {
-			SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Skipping invalid NS %d\n", ns_id);
+			SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Skipping invalid NS %d\n", nsid);
 			continue;
 		}
 
 		if (!spdk_nvme_ns_is_active(ns)) {
-			SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Skipping inactive NS %d\n", ns_id);
+			SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Skipping inactive NS %d\n", nsid);
 			continue;
 		}
 
