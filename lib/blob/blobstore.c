@@ -883,6 +883,7 @@ struct spdk_blob_persist_ctx {
 
 	uint64_t			idx;
 
+	spdk_bs_sequence_t		*seq;
 	spdk_bs_sequence_cpl		cb_fn;
 	void				*cb_arg;
 };
@@ -1194,34 +1195,15 @@ _spdk_resize_blob(struct spdk_blob *blob, uint64_t sz)
 	return 0;
 }
 
-/* Write a blob to disk */
 static void
-_spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
-		   spdk_bs_sequence_cpl cb_fn, void *cb_arg)
+_spdk_blob_persist_start(struct spdk_blob_persist_ctx *ctx)
 {
-	struct spdk_blob_persist_ctx *ctx;
-	int rc;
+	spdk_bs_sequence_t *seq = ctx->seq;
+	struct spdk_blob *blob = ctx->blob;
+	struct spdk_blob_store *bs = blob->bs;
 	uint64_t i;
 	uint32_t page_num;
-	struct spdk_blob_store *bs;
-
-	_spdk_blob_verify_md_op(blob);
-
-	if (blob->state == SPDK_BLOB_STATE_CLEAN) {
-		cb_fn(seq, cb_arg, 0);
-		return;
-	}
-
-	bs = blob->bs;
-
-	ctx = calloc(1, sizeof(*ctx));
-	if (!ctx) {
-		cb_fn(seq, cb_arg, -ENOMEM);
-		return;
-	}
-	ctx->blob = blob;
-	ctx->cb_fn = cb_fn;
-	ctx->cb_arg = cb_arg;
+	int rc;
 
 	if (blob->active.num_pages == 0) {
 		/* This is the signal that the blob should be deleted.
@@ -1282,6 +1264,33 @@ _spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 	ctx->idx = blob->active.num_pages - 1;
 	blob->state = SPDK_BLOB_STATE_CLEAN;
 	_spdk_blob_persist_write_page_chain(seq, ctx, 0);
+}
+
+/* Write a blob to disk */
+static void
+_spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
+		   spdk_bs_sequence_cpl cb_fn, void *cb_arg)
+{
+	struct spdk_blob_persist_ctx *ctx;
+
+	_spdk_blob_verify_md_op(blob);
+
+	if (blob->state == SPDK_BLOB_STATE_CLEAN) {
+		cb_fn(seq, cb_arg, 0);
+		return;
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		cb_fn(seq, cb_arg, -ENOMEM);
+		return;
+	}
+	ctx->blob = blob;
+	ctx->seq = seq;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	_spdk_blob_persist_start(ctx);
 }
 
 struct spdk_blob_copy_cluster_ctx {
