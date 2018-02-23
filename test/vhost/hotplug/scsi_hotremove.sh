@@ -1,5 +1,82 @@
 set -xe
 
+# # Vhost scsi hot remove test plan
+#
+# ## Objective
+# The purpose of these tests is to verify that SPDK vhost remains stable during
+# hot-remove operations performed on SCSI controllers devices.
+# Hot-remove is a scenario where a NVMe device is removed when already in use.
+#
+# ## Test cases description
+# 1. FIO I/O traffic is run during hot-remove operations.
+#    By default FIO uses default_integrity*.job config files located in
+#    test/vhost/hotplug/fio_jobs directory.
+# 2. FIO mode of operation is random write (randwrite) with verification enabled
+#    which results in also performing read operations.
+# 3. Test case descriptions below contain manual steps for testing.
+#    Automated tests are located in test/vhost/hotplug.
+#
+# ### Hotremove test cases prerequisites
+# 1. Run vhost with prepare 2 NVMe disks and 2 splits per disk.
+# 2. In test cases fio status is checked after every run if any errors occurred.
+#
+# ### Vhost SCSI hot-remove test cases.
+#
+# ## Test Case 1
+# 1. Run the command to hot remove NVMe disk.
+# 2. Check vhost did not crash.
+#
+# ## Test Case 2
+# 1. Use rpc command to create two scsi controller, each on separate split NVMe bdev.
+# 2. Attach one split NVMe bdev to scsi controller.
+# 3. Run one VM, attach to scsi controller.
+# 4. Run FIO I/O traffic with verification enabled on on both NVMe disks in VMs.
+# 5. Run the command to hot remove NVMe disk.
+# 6. Check that fio job run on hot-remove device stopped on both VMs.
+#    Expect: Fio should return error message and return code != 0.
+# 7. Check if removed devices are gone from lsblk.
+# 8. Reboot both VMs.
+# 9. Check if removed devices are gone from lsblk.
+# 10. Run FIO I/O traffic with verification enabled on on both VMs.
+# 11. Check that fio job run on hot-remove device stopped on both VMs.
+#     Expect: Fio should return error message and return code != 0.
+#
+# ## Test Case 3
+# 1. Use rpc command to create two scsi controller on two NVMe disks.
+# 2. Attach both NVMe bdevs to scsi controller.
+# 3. Run one VM, attach to scsi controller.
+# 4. Run FIO I/O traffic with verification enabled on on both NVMe disks in VMs.
+# 5. Run the command to hot remove NVMe disk.
+# 6. Check that fio job run on hot-remove device stopped on both VMs.
+#    Expect: Fio should return error message and return code != 0.
+# 7. Check if removed devices are gone from lsblk.
+# 8. Reboot both VMs.
+# 9. Check if removed devices are gone from lsblk.
+# 10. Run FIO I/O traffic with verification enabled on on both VMs.
+# 11. Check that fio job run on hot-remove device stopped on both VMs.
+#     Expect: Fio should return error message and return code != 0.
+#
+# ## Test Case 4
+# 1. Attachd one NVMe bdev to scsi controller.
+# 2. Run one VM, attach to scsi controller.
+# 3. Run FIO I/O traffic with verification enabled on on both NVMe disks.
+# 4. Run the command to hot remove of first NVMe disk.
+# 5. Check that fio job run on hot-removed device stopped.
+#    Expect: Fio should return error message and return code != 0.
+# 6. Check if removed devices are gone from lsblk.
+# 7. Check finished status FIO. Write and read in the not-removed.
+#    NVMe disk should be successful.
+# 8. Reboot both VMs.
+# 9. Check if removed disk are gone from lsblk.
+# 10. Run FIO I/O traffic with verification enabled on on not-removed NVMe disk.
+# 11. Check finished status FIO. Write and read in the not-removed.
+#     NVMe disk should be successful.
+#     Expect: Fio should return return code == 0.
+# 12. Run FIO I/O traffic with verification enabled on on removed NVMe disk.
+# 13. Check that fio job run on hot-removed device stopped.
+#     Expect: Fio should return error message and return code != 0.
+# 14. Check if removed devices are gone from lsblk.
+
 function prepare_fio_cmd_tc1() {
     print_test_fio_header
 
