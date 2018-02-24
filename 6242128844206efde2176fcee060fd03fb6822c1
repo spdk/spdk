@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "e779f4a1_6962c62b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1282,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-24T06:59:17Z",
+      "side": 1,
+      "message": "Yes. The async_destroying check here is to make sure to release the resource through spdk_put_io_channel() as the common API although it has some duplicated check here.",
+      "parentUuid": "1396d67d_e3f0238e",
+      "range": {
+        "startLine": 1282,
+        "startChar": 2,
+        "endLine": 1282,
+        "endChar": 34
+      },
+      "revId": "6242128844206efde2176fcee060fd03fb6822c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6ac6358c_d4d10c0d",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 6
@@ -36,6 +60,30 @@
       "writtenOn": "2018-02-15T00:37:03Z",
       "side": 1,
       "message": "I understood that io_thread is io submitter and qos_thread is qos poller. Thanks for your detailed explanation.",
+      "range": {
+        "startLine": 1306,
+        "startChar": 22,
+        "endLine": 1306,
+        "endChar": 31
+      },
+      "revId": "6242128844206efde2176fcee060fd03fb6822c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "50a9de5d_81e917d1",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1306,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-24T06:59:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6ac6358c_d4d10c0d",
       "range": {
         "startLine": 1306,
         "startChar": 22,
@@ -117,6 +165,30 @@
     },
     {
       "key": {
+        "uuid": "114ba67e_7c757ca6",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 481,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-24T06:59:17Z",
+      "side": 1,
+      "message": "Maybe not. We can leave the _spdk_put_io_channel_free_resource() as an internal function for this file.",
+      "parentUuid": "35173379_30226e5e",
+      "range": {
+        "startLine": 476,
+        "startChar": 0,
+        "endLine": 481,
+        "endChar": 3
+      },
+      "revId": "6242128844206efde2176fcee060fd03fb6822c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "23427c52_943137e4",
         "filename": "lib/util/io_channel.c",
         "patchSetId": 6
@@ -128,6 +200,30 @@
       "writtenOn": "2018-02-15T00:37:03Z",
       "side": 1,
       "message": "async_destroying is a little meaningful because you added a comment in other place?",
+      "range": {
+        "startLine": 496,
+        "startChar": 6,
+        "endLine": 496,
+        "endChar": 16
+      },
+      "revId": "6242128844206efde2176fcee060fd03fb6822c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d735a4a_98ac1a78",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 496,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-24T06:59:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "23427c52_943137e4",
       "range": {
         "startLine": 496,
         "startChar": 6,
