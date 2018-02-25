@@ -9,7 +9,7 @@ set -e
 PS4=' \t	\$ '
 ulimit -c unlimited
 
-: ${RUN_NIGHTLY:=0}
+: ${RUN_NIGHTLY:=1}
 export RUN_NIGHTLY
 
 if [[ ! -z $1 ]]; then
@@ -532,3 +532,4 @@ function get_bdev_size()
 
 set -o errtrace
 trap "trap - ERR; print_backtrace >&2" ERR
+DATE='Sun Feb 25 05:00:08 MST 2018'
