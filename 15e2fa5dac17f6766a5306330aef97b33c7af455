@@ -16,6 +16,24 @@
       "revId": "15e2fa5dac17f6766a5306330aef97b33c7af455",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d51b72b7_82af7dbb",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 853,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-02-26T03:09:05Z",
+      "side": 0,
+      "message": "There is a duplicated line cdata-\u003eaerl \u003d 0, removing it should be fine.",
+      "parentUuid": "273cf00f_3311af9f",
+      "revId": "15e2fa5dac17f6766a5306330aef97b33c7af455",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
