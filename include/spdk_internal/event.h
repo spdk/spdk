@@ -37,6 +37,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/event.h"
+#include "spdk/json.h"
 
 struct spdk_event {
 	uint32_t		lcore;
@@ -57,11 +58,14 @@ struct spdk_subsystem {
 	void (*init)(void);
 	void (*fini)(void);
 	void (*config)(FILE *fp);
+	int (*write_config_json)(struct spdk_json_write_ctx *w);
 	TAILQ_ENTRY(spdk_subsystem) tailq;
 };
 
 TAILQ_HEAD(spdk_subsystem_list, spdk_subsystem);
 extern struct spdk_subsystem_list g_subsystems;
+
+struct spdk_subsystem *spdk_subsystem_find(struct spdk_subsystem_list *list, const char *name);
 
 struct spdk_subsystem_depend {
 	const char *name;
@@ -80,6 +84,15 @@ void spdk_subsystem_fini(struct spdk_event *app_finish_event);
 void spdk_subsystem_init_next(int rc);
 void spdk_subsystem_fini_next(void);
 void spdk_subsystem_config(FILE *fp);
+
+/**
+ * Save pointed subsystem configuration to the JSON write contex. In case of
+ * error \c null is written to the JSON context.
+ *
+ * \param w JSON write context
+ * \param subsystem the subsystem to query
+ */
+void spdk_subsystem_config_json(struct spdk_json_write_ctx *w, struct spdk_subsystem *subsystem);
 
 void spdk_rpc_initialize(const char *listen_addr);
 void spdk_rpc_finish(void);
