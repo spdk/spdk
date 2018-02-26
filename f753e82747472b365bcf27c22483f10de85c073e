@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a6e39858_d588bdc3",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 922,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-26T17:34:54Z",
+      "side": 1,
+      "message": "two spaces after a period is OK in English at least (not sure about other languages)",
+      "parentUuid": "ceed588b_982e52bd",
+      "range": {
+        "startLine": 922,
+        "startChar": 19,
+        "endLine": 922,
+        "endChar": 21
+      },
+      "revId": "f753e82747472b365bcf27c22483f10de85c073e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0a8c687e_b5bbec4e",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2018-02-26T17:25:02Z",
       "side": 1,
       "message": "We should remove all queued persists for this blob before returning. Otherwise we will end up with memory leaks.",
+      "range": {
+        "startLine": 928,
+        "startChar": 2,
+        "endLine": 928,
+        "endChar": 9
+      },
+      "revId": "f753e82747472b365bcf27c22483f10de85c073e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c10e1f7d_bf03ec7a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 928,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-26T17:34:54Z",
+      "side": 1,
+      "message": "sure - this should never happen but it would be good to check - not only should we free them but we should also assert",
+      "parentUuid": "0a8c687e_b5bbec4e",
       "range": {
         "startLine": 928,
         "startChar": 2,
