@@ -88,6 +88,11 @@ if __name__ == "__main__":
     p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1", required=False)
     p.set_defaults(func=rpc.bdev.get_bdevs)
 
+    p = subparsers.add_parser(
+        'get_bdev_dependencies', help='Display dependency list of current blockdev list or required blockdev')
+    p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1", required=False)
+    p.set_defaults(func=rpc.bdev.get_bdev_dependencies)
+
     p = subparsers.add_parser('delete_bdev', help='Delete a blockdev')
     p.add_argument(
         'bdev_name', help='Blockdev name to be deleted. Example: Malloc0.')
