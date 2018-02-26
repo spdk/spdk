@@ -62,7 +62,8 @@ int spdk_sock_set_sendbuf(struct spdk_sock *sock, int sz);
 bool spdk_sock_is_ipv6(struct spdk_sock *sock);
 bool spdk_sock_is_ipv4(struct spdk_sock *sock);
 
-typedef void (*spdk_sock_cb)(void *arg, struct spdk_sock_group *group, struct spdk_sock *sock);
+typedef void (*spdk_sock_cb)(void *arg, struct spdk_sock_group *group, struct spdk_sock *sock,
+			     int skerrno);
 
 struct spdk_sock_group *spdk_sock_group_create(void);
 int spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
