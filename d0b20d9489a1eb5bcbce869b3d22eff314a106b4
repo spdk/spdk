@@ -16,6 +16,24 @@
       "revId": "d0b20d9489a1eb5bcbce869b3d22eff314a106b4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17ad4a9c_c5fa0a58",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1012,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-26T16:22:23Z",
+      "side": 1,
+      "message": "I did actually write it that way originally, but I think this is a little clearer (especially in case the spec is ever changed to allow more than 4096 bytes of Identify data).",
+      "parentUuid": "7d3ff461_c211ac62",
+      "revId": "d0b20d9489a1eb5bcbce869b3d22eff314a106b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
