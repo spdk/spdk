@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "0722332b_2277c4ac",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-26T07:09:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "db7d6de8_28bb4d5f",
+      "range": {
+        "startLine": 123,
+        "startChar": 1,
+        "endLine": 123,
+        "endChar": 2
+      },
+      "revId": "0e59d011bbc988a2d9998d0251b217fe1c4a25ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "23a7b154_bc0cd1b1",
         "filename": "include/spdk/bdev.h",
         "patchSetId": 11
@@ -36,6 +60,30 @@
       "writtenOn": "2018-02-06T03:57:21Z",
       "side": 1,
       "message": "Comment required on this new API\n\nMaybe change to: spdk_bdev_get_iostats",
+      "range": {
+        "startLine": 729,
+        "startChar": 0,
+        "endLine": 729,
+        "endChar": 10
+      },
+      "revId": "0e59d011bbc988a2d9998d0251b217fe1c4a25ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e44ae904_1ca3c6fe",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 729,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-26T07:09:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "23a7b154_bc0cd1b1",
       "range": {
         "startLine": 729,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "f152d7e8_cd765048",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1678,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-26T07:09:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6672f012_3d0bda07",
+      "range": {
+        "startLine": 1678,
+        "startChar": 34,
+        "endLine": 1678,
+        "endChar": 36
+      },
+      "revId": "0e59d011bbc988a2d9998d0251b217fe1c4a25ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "177abceb_0da0389a",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 11
@@ -82,6 +154,30 @@
       "writtenOn": "2018-02-06T03:57:21Z",
       "side": 1,
       "message": "Please add the NULL check here for bdev_ctx and stat",
+      "range": {
+        "startLine": 1681,
+        "startChar": 34,
+        "endLine": 1681,
+        "endChar": 40
+      },
+      "revId": "0e59d011bbc988a2d9998d0251b217fe1c4a25ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "663e6de9_e8f283ab",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1681,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-26T07:09:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "177abceb_0da0389a",
       "range": {
         "startLine": 1681,
         "startChar": 34,
@@ -133,6 +229,54 @@
         "startChar": 9,
         "endLine": 92,
         "endChar": 25
+      },
+      "revId": "0e59d011bbc988a2d9998d0251b217fe1c4a25ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66dc3e39_ebb67a44",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-26T07:09:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c18df9ec_3bc59d3d",
+      "range": {
+        "startLine": 92,
+        "startChar": 9,
+        "endLine": 92,
+        "endChar": 25
+      },
+      "revId": "0e59d011bbc988a2d9998d0251b217fe1c4a25ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e4821e7_19cb0583",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-26T07:09:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8e47b608_b789ac8f",
+      "range": {
+        "startLine": 92,
+        "startChar": 34,
+        "endLine": 92,
+        "endChar": 90
       },
       "revId": "0e59d011bbc988a2d9998d0251b217fe1c4a25ee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
