@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9b4ca769_3be1d5bb",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 383,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-26T02:02:13Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "47bba000_7a806a94",
+      "revId": "cdf9a2640044114006e43baf3b49a1630101594e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b3e051f0_5aeae1a5",
         "filename": "include/spdk/blob.h",
         "patchSetId": 10
@@ -30,6 +48,24 @@
       "writtenOn": "2018-01-09T20:07:47Z",
       "side": 1,
       "message": "A better way to word this would be \"Write the data described by `iov` to `length` pages beginning at `offset` pages into the blob.\"",
+      "revId": "cdf9a2640044114006e43baf3b49a1630101594e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "250e68c6_539d0cfa",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 446,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-26T02:02:13Z",
+      "side": 1,
+      "message": "Done. Thank you.",
+      "parentUuid": "b3e051f0_5aeae1a5",
       "revId": "cdf9a2640044114006e43baf3b49a1630101594e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "9b251363_79aff482",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 462,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-26T02:02:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f23af1be_8a527e1d",
+      "revId": "cdf9a2640044114006e43baf3b49a1630101594e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8c3aa692_8ce4ceaa",
         "filename": "include/spdk/blob.h",
         "patchSetId": 10
@@ -64,6 +118,24 @@
       "writtenOn": "2018-01-09T20:07:47Z",
       "side": 1,
       "message": "We should probably clarify what unmap means. The best way to describe it is probably something like this:\n\n\"Mark `length` pages beginning at `offset` pages into the blob as unused. Unused pages may allow the underlying storage media to behave more efficiently.\"",
+      "revId": "cdf9a2640044114006e43baf3b49a1630101594e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "975e6190_80f8e402",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 478,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-26T02:02:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8c3aa692_8ce4ceaa",
       "revId": "cdf9a2640044114006e43baf3b49a1630101594e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
