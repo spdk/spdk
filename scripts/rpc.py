@@ -437,6 +437,10 @@ if __name__ == "__main__":
     entry contain (unsorted) array of subsystems it depends on.""")
     p.set_defaults(func=rpc.subsystem.get_subsystems)
 
+    p = subparsers.add_parser('get_subsystem_config', help=""""Print subsystem configuration""")
+    p.add_argument('name', help='Name of subsystem to query')
+    p.set_defaults(func=rpc.subsystem.get_subsystem_config)
+
     # vhost
     p = subparsers.add_parser('set_vhost_controller_coalescing', help='Set vhost controller coalescing')
     p.add_argument('ctrlr', help='controller name')
