@@ -1,0 +1,107 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dea64623_43d9f9aa",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-26T21:05:22Z",
+      "side": 1,
+      "message": "blobstore",
+      "range": {
+        "startLine": 102,
+        "startChar": 44,
+        "endLine": 102,
+        "endChar": 54
+      },
+      "revId": "0745332327733c5814c2b6903a043e3628e52825",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1412c120_526f4948",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-26T21:05:22Z",
+      "side": 1,
+      "message": "iterator",
+      "range": {
+        "startLine": 242,
+        "startChar": 58,
+        "endLine": 242,
+        "endChar": 67
+      },
+      "revId": "0745332327733c5814c2b6903a043e3628e52825",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "679af9b8_d94410bf",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-26T21:05:22Z",
+      "side": 1,
+      "message": "All of the functions dealing with file length should mention the units (I think they are all in bytes, so this could be as simple as adding \"in bytes\" to each parameter/return value).",
+      "revId": "0745332327733c5814c2b6903a043e3628e52825",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "305bb6d2_3e31b2ed",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-26T21:05:22Z",
+      "side": 1,
+      "message": "This should probably mention the acceptable values so they get linked in the Doxygen output, e.g.:\n\n  \\param priority Priority level (SPDK_FILE_PRIORITY_LOW or SPDK_FILE_PRIORITY_HIGH).",
+      "revId": "0745332327733c5814c2b6903a043e3628e52825",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d601700_bad062dd",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-26T21:05:22Z",
+      "side": 1,
+      "message": "from",
+      "range": {
+        "startLine": 334,
+        "startChar": 24,
+        "endLine": 334,
+        "endChar": 28
+      },
+      "revId": "0745332327733c5814c2b6903a043e3628e52825",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
