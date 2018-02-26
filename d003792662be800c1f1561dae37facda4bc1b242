@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "70b1c98c_2ff5f73e",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-26T12:11:16Z",
+      "side": 1,
+      "message": "I think we should write the purpose of the lock file here, for example,\n\nIf the default socket path is used, the socket can be unlinked safely by using the lock file.",
+      "range": {
+        "startLine": 100,
+        "startChar": 5,
+        "endLine": 100,
+        "endChar": 66
+      },
+      "revId": "d003792662be800c1f1561dae37facda4bc1b242",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "713a941b_162e3714",
         "filename": "lib/rpc/rpc.c",
         "patchSetId": 5
@@ -49,6 +72,53 @@
     },
     {
       "key": {
+        "uuid": "092ab36a_a355d085",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-26T12:11:16Z",
+      "side": 1,
+      "message": "Sorry, your implementation that lock file is applied only for the default path is OK for me. I do not have any requirement to use not default path yet.",
+      "parentUuid": "4c45d9de_7e048733",
+      "range": {
+        "startLine": 101,
+        "startChar": 2,
+        "endLine": 101,
+        "endChar": 76
+      },
+      "revId": "d003792662be800c1f1561dae37facda4bc1b242",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6fdb5062_ca0ebf23",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-26T12:11:16Z",
+      "side": 1,
+      "message": "the default socket path is used by another application.\n\nPlease add the word \"default\"",
+      "range": {
+        "startLine": 110,
+        "startChar": 16,
+        "endLine": 110,
+        "endChar": 72
+      },
+      "revId": "d003792662be800c1f1561dae37facda4bc1b242",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8c9bcad7_b062bb8d",
         "filename": "lib/rpc/rpc.c",
         "patchSetId": 5
@@ -63,6 +133,29 @@
       "range": {
         "startLine": 114,
         "startChar": 3,
+        "endLine": 115,
+        "endChar": 72
+      },
+      "revId": "d003792662be800c1f1561dae37facda4bc1b242",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68633cd2_2daa839c",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-26T12:11:16Z",
+      "side": 1,
+      "message": "the socket was unlinked safely because the previous socket owner exited already.",
+      "range": {
+        "startLine": 115,
+        "startChar": 0,
         "endLine": 115,
         "endChar": 72
       },
