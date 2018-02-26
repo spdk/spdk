@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "89df6629_84ded3a6",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-26T19:51:40Z",
+      "side": 1,
+      "message": "I don\u0027t think we want to hard-code this pattern into the generic bdev RPC; we might want to change the RPC method naming in a way that won\u0027t work with this pattern.",
+      "range": {
+        "startLine": 190,
+        "startChar": 48,
+        "endLine": 190,
+        "endChar": 65
+      },
+      "revId": "e8b321da367156aea7020b5ef80f48000d43e893",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
