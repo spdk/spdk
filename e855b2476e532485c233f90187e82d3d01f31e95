@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b8e532aa_702dccd6",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-26T16:51:05Z",
+      "side": 1,
+      "message": "This script is run by /bin/sh, which may not be bash, so we should not use bash-specific features like [[ ]].\n\nAlso, it would be nice if there were a simpler way to detect this; does Clear Linux provide lsb_release by default, for example?",
+      "revId": "e855b2476e532485c233f90187e82d3d01f31e95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47e4f99a_75e3385f",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-26T16:51:05Z",
+      "side": 1,
+      "message": "Is this the full list of dependencies? Does it include all of the Doxygen, pmem, libibverbs, etc. development libraries?",
+      "revId": "e855b2476e532485c233f90187e82d3d01f31e95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
