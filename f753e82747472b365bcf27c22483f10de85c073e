@@ -164,6 +164,30 @@
       "revId": "f753e82747472b365bcf27c22483f10de85c073e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6331eb3c_0242850a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 945,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-26T18:06:47Z",
+      "side": 1,
+      "message": "Yes.  This can happen if spdk_blob_sync_md() is called a second (or third or fourth) time before the first one has completed and without any metadata changes between the first and second call.",
+      "parentUuid": "109a1a96_4efa98ed",
+      "range": {
+        "startLine": 938,
+        "startChar": 0,
+        "endLine": 945,
+        "endChar": 3
+      },
+      "revId": "f753e82747472b365bcf27c22483f10de85c073e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
