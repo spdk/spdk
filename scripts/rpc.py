@@ -411,7 +411,9 @@ if __name__ == "__main__":
 
     # subsystem
     p = subparsers.add_parser('get_subsystems', help=""""Print subsystems array in initialization order. Each subsystem
-    entry contain (unsorted) array of subsystems it depends on.""")
+    entry might contain (unsorted) array of subsystems it depends on and configuration""")
+    p.add_argument('--no-config', help='Do not include submodule configuration', action='store_true')
+    p.add_argument('--subsystems', help='Coma separated list of subsystems. Only those subsystems will be printed.')
     p.set_defaults(func=rpc.subsystem.get_subsystems)
 
     # vhost
