@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "53953580_0efaf670",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 534,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-26T20:40:12Z",
+      "side": 1,
+      "message": "Function contents should be indented.\n\nAlso, what happens when getdevice.py returns \"All devices are mounted.\"? It seems like we will interpret that as a list of device names, which wouldn\u0027t be correct.",
+      "revId": "22c0f2fcdd2586a916d6a4d554b38e349509541a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2456d773_1aa24c0d",
+        "filename": "scripts/common/getdevice.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-26T20:40:12Z",
+      "side": 1,
+      "message": "This seems to be mixing up two different tasks - the script is called \"getdevice\", so I would assume it should get a list of devices of a particular type.  However, this seems like it\u0027s also configuring the devices; that should be an independent step (maybe another function in autotest_common.sh).",
+      "range": {
+        "startLine": 48,
+        "startChar": 4,
+        "endLine": 48,
+        "endChar": 21
+      },
+      "revId": "22c0f2fcdd2586a916d6a4d554b38e349509541a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
