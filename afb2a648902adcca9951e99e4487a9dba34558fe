@@ -46,6 +46,30 @@
       "revId": "afb2a648902adcca9951e99e4487a9dba34558fe",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0fa8d710_9d7f2bd5",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-26T17:26:20Z",
+      "side": 1,
+      "message": "I didn\u0027t know that - in Polish it is not :)",
+      "parentUuid": "4e04a0f5_54298b2c",
+      "range": {
+        "startLine": 45,
+        "startChar": 19,
+        "endLine": 45,
+        "endChar": 21
+      },
+      "revId": "afb2a648902adcca9951e99e4487a9dba34558fe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
