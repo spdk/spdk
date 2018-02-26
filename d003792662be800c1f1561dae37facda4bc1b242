@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "f84ae0c9_e6349dd4",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-26T18:16:19Z",
+      "side": 1,
+      "message": "Using a single lock file for all socket paths won\u0027t work - we want to be able to run multiple independent SPDK applications at once with different RPC socket paths.\n\nThe lock file path should be generated based on the UNIX domain socket path.  For example, if the socket is called /var/tmp/my_spdk_instance.sock, the lock should be called /var/tmp/my_spdk_instance.sock.lock.",
+      "revId": "d003792662be800c1f1561dae37facda4bc1b242",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "70b1c98c_2ff5f73e",
         "filename": "lib/rpc/rpc.c",
         "patchSetId": 5
