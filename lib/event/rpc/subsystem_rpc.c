@@ -33,43 +33,123 @@
 
 #include "spdk_internal/event.h"
 #include "spdk/rpc.h"
+#include "spdk/util.h"
+
+#define RPC_MAX_SUBSYSTEMS 255
+
+struct rpc_get_subsystems {
+	size_t num_subsystems;
+	char *subsystems[RPC_MAX_SUBSYSTEMS];
+	bool no_config;
+};
+
+static int
+decode_rpc_subsystems(const struct spdk_json_val *val, void *out)
+{
+	struct rpc_get_subsystems *req = out;
+
+	return spdk_json_decode_array(val, spdk_json_decode_string, req->subsystems, RPC_MAX_SUBSYSTEMS,
+				      &req->num_subsystems, sizeof(char *));
+}
+
+static const struct spdk_json_object_decoder rpc_get_subsystems_config[] = {
+	{"subsystems", 0, decode_rpc_subsystems, true},
+	{"no_config", offsetof(struct rpc_get_subsystems, no_config), spdk_json_decode_bool, true},
+};
+
+static void
+spdk_subsystem_write_dependency_json(struct spdk_json_write_ctx *w,
+				     struct spdk_subsystem *subsystem)
+{
+	struct spdk_subsystem_depend *deps;
+
+	spdk_json_write_named_array_begin(w, "depends_on");
+	TAILQ_FOREACH(deps, &g_subsystems_deps, tailq) {
+		if (strcmp(subsystem->name, deps->name) == 0) {
+			spdk_json_write_string(w, deps->depends_on);
+		}
+	}
+	spdk_json_write_array_end(w);
+}
+
+static void
+spdk_subsystem_write_config_json(struct spdk_json_write_ctx *w, struct spdk_subsystem *subsystem)
+{
+
+	if (subsystem->write_config_json) {
+		spdk_json_write_named_object_begin(w, "config");
+		subsystem->write_config_json(w);
+		spdk_json_write_object_end(w);
+	} else {
+		spdk_json_write_named_null(w, "config");
+	}
+}
+
+static void
+spdk_subsystem_write_json(struct spdk_json_write_ctx *w, struct spdk_subsystem *subsystem,
+			  bool config)
+{
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "subsystem", subsystem->name);
+
+	if (config) {
+		spdk_subsystem_write_config_json(w, subsystem);
+	}
+
+	spdk_subsystem_write_dependency_json(w, subsystem);
+	spdk_json_write_object_end(w);
+}
 
 static void
 spdk_rpc_get_subsystems(struct spdk_jsonrpc_request *request,
 			const struct spdk_json_val *params)
 {
+	struct rpc_get_subsystems req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_subsystem *subsystem;
-	struct spdk_subsystem_depend *deps;
+	size_t i;
 
-	if (params) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "'get_subsystems' requires no arguments");
+	if (params &&
+	    spdk_json_decode_object(params, rpc_get_subsystems_config, SPDK_COUNTOF(rpc_get_subsystems_config),
+				    &req)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 		return;
+	}
+
+	for (i = 0; i < req.num_subsystems; i++) {
+		if (!spdk_subsystem_find(&g_subsystems, req.subsystems[i])) {
+			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							     "Subsystem '%s' not found", req.subsystems[i]);
+			goto out;
+		}
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
 	if (w == NULL) {
-		return;
+		goto out;
 	}
 
 	spdk_json_write_array_begin(w);
 	TAILQ_FOREACH(subsystem, &g_subsystems, tailq) {
-		spdk_json_write_object_begin(w);
-
-		spdk_json_write_named_string(w, "subsystem", subsystem->name);
-		spdk_json_write_named_array_begin(w, "depends_on");
-		TAILQ_FOREACH(deps, &g_subsystems_deps, tailq) {
-			if (strcmp(subsystem->name, deps->name) == 0) {
-				spdk_json_write_string(w, deps->depends_on);
+		for (i = 0; i < req.num_subsystems; i++) {
+			if (strcmp(req.subsystems[i], subsystem->name) == 0) {
+				break;
 			}
 		}
-		spdk_json_write_array_end(w);
 
-		spdk_json_write_object_end(w);
+		if (req.num_subsystems && i == req.num_subsystems) {
+			continue;
+		}
+
+		spdk_subsystem_write_json(w, subsystem, !req.no_config);
 	}
 	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(request, w);
+out:
+	for (i = 0; i < req.num_subsystems; i++) {
+		free(req.subsystems[i]);
+	}
 }
 
 SPDK_RPC_REGISTER("get_subsystems", spdk_rpc_get_subsystems)
