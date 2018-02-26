@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5c51568e_50805959",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-26T19:49:57Z",
+      "side": 1,
+      "message": "I think this function ought to dump enough information to recreate a full JSON-RPC method invocation, including the method name.\n\nI would expect the output of the null bdev one to look something like:\n\n  {\n    \"method\": \"construct_null_bdev\",\n    \"params\": {\n      \"name\": \"Null0\",\n      \"num_blocks\": 1234,\n      \"block_size\": 512\n    }\n  }",
+      "revId": "5d41591ece27a1de4a035fe8590eab590081344f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c7d88625_1fd9d4ae",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-26T19:49:57Z",
+      "side": 1,
+      "message": "This should be block_size.",
+      "range": {
+        "startLine": 128,
+        "startChar": 34,
+        "endLine": 128,
+        "endChar": 44
+      },
+      "revId": "5d41591ece27a1de4a035fe8590eab590081344f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
