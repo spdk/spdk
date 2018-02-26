@@ -525,7 +525,7 @@ spdk_posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_eve
 				struct spdk_sock **socks)
 {
 	struct spdk_posix_sock_group_impl *group = __posix_group_impl(_group);
-	int num_events, i;
+	int num_events, i, cur_event_idx = 0;
 
 #if defined(__linux__)
 	struct epoll_event events[MAX_EVENTS_PER_POLL];
@@ -544,13 +544,37 @@ spdk_posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_eve
 
 	for (i = 0; i < num_events; i++) {
 #if defined(__linux__)
-		socks[i] = events[i].data.ptr;
+		if (events[i].events & EPOLLIN) {
+			socks[cur_event_idx++] = events[i].data.ptr;
+		} else if (events[i].events & (EPOLLERR | EPOLLHUP)) {
+			/*
+			 * both EPOLLIN and EPOLLHUP may be set but we'll only come here
+			 * if EPOLLIN is not set. This ensures that all outstanding data
+			 * is consumed before closing the socket.
+			 */
+			SPDK_ERRLOG("Error or hungup event (%x) happened on fd %d\n",
+				    events[i].events, events[i].data.fd);
+		}
 #elif defined(__FreeBSD__)
-		socks[i] = events[i].udata;
+		/* data contains the number of bytes available to read. */
+		if ((int)events[i].data > 0) {
+			socks[cur_event_idx++] = events[i].udata;
+		} else if (events[i].flags & EV_EOF) {
+			/*
+			 * EV_EOF may be set while there is outstanding data..
+			 * We'll only come here if data is 0. This ensures that all
+			 * outstanding data is consumed before closing the socket.
+			 */
+			SPDK_ERRLOG("Read direction of socket (fd:%d) has shutdown\n",
+				    (int)events[i].ident);
+		} else if (events[i].flags & EV_ERROR) {
+			SPDK_ERRLOG("Kevent() failed at socket (fd:%d): %s\n",
+				    (int)events[i].ident, spdk_strerror(events[i].data));
+		}
 #endif
 	}
 
-	return num_events;
+	return cur_event_idx;
 }
 
 static int
