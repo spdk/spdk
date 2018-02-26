@@ -80,7 +80,7 @@ void spdk_iscsi_conn_login_do_work(void *arg);
 void spdk_iscsi_conn_full_feature_do_work(void *arg);
 
 static void spdk_iscsi_conn_full_feature_migrate(void *arg1, void *arg2);
-static void spdk_iscsi_conn_stop_poller(struct spdk_iscsi_conn *conn);
+static void spdk_iscsi_conn_stop(struct spdk_iscsi_conn *conn);
 
 static struct spdk_iscsi_conn *
 allocate_conn(void)
@@ -481,7 +481,7 @@ _spdk_iscsi_conn_check_shutdown(void *arg)
 
 	spdk_poller_unregister(&conn->shutdown_timer);
 
-	spdk_iscsi_conn_stop_poller(conn);
+	spdk_iscsi_conn_stop(conn);
 	_spdk_iscsi_conn_free(conn);
 }
 
@@ -509,7 +509,7 @@ void spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 		/* The connection cannot be freed yet. Check back later. */
 		conn->shutdown_timer = spdk_poller_register(_spdk_iscsi_conn_check_shutdown, conn, 1000);
 	} else {
-		spdk_iscsi_conn_stop_poller(conn);
+		spdk_iscsi_conn_stop(conn);
 		_spdk_iscsi_conn_free(conn);
 	}
 }
@@ -563,10 +563,10 @@ spdk_iscsi_conn_check_shutdown(void *arg)
 }
 
 /**
- *  This function will stop the poller for the specified connection.
+ *  This function will stop executing the specified connection.
  */
 static void
-spdk_iscsi_conn_stop_poller(struct spdk_iscsi_conn *conn)
+spdk_iscsi_conn_stop(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_tgt_node *target;
 
@@ -1210,7 +1210,7 @@ spdk_iscsi_conn_login_do_work(void *arg)
 			pthread_mutex_unlock(&target->mutex);
 		}
 
-		spdk_iscsi_conn_stop_poller(conn);
+		spdk_iscsi_conn_stop(conn);
 
 		__sync_fetch_and_add(&g_num_connections[lcore], 1);
 		event = spdk_event_allocate(lcore, spdk_iscsi_conn_full_feature_migrate,
