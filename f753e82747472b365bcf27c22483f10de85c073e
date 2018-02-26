@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ceed588b_982e52bd",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 922,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-26T17:25:02Z",
+      "side": 1,
+      "message": "Too many spaces.",
+      "range": {
+        "startLine": 922,
+        "startChar": 19,
+        "endLine": 922,
+        "endChar": 21
+      },
+      "revId": "f753e82747472b365bcf27c22483f10de85c073e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a8c687e_b5bbec4e",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 928,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-26T17:25:02Z",
+      "side": 1,
+      "message": "We should remove all queued persists for this blob before returning. Otherwise we will end up with memory leaks.",
+      "range": {
+        "startLine": 928,
+        "startChar": 2,
+        "endLine": 928,
+        "endChar": 9
+      },
+      "revId": "f753e82747472b365bcf27c22483f10de85c073e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c685785_d344300d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 945,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-26T17:25:02Z",
+      "side": 1,
+      "message": "If we successfully persisted metadata we will never get to execute queued operation, because in line 907 we change blob-\u003estate to SPDK_BLOB_STATE_CLEAN. Is this on purpose? I\u0027m not sure if I understand this correctly.",
+      "range": {
+        "startLine": 938,
+        "startChar": 0,
+        "endLine": 945,
+        "endChar": 3
+      },
+      "revId": "f753e82747472b365bcf27c22483f10de85c073e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
