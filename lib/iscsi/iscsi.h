@@ -331,7 +331,7 @@ typedef void (*spdk_iscsi_init_cb)(void *cb_arg, int rc);
 void spdk_iscsi_init(spdk_iscsi_init_cb cb_fn, void *cb_arg);
 typedef void (*spdk_iscsi_fini_cb)(void *arg);
 void spdk_iscsi_fini(spdk_iscsi_fini_cb cb_fn, void *cb_arg);
-void spdk_iscsi_fini_done(void);
+void spdk_shutdown_iscsi_conns_done(void);
 void spdk_iscsi_config_text(FILE *fp);
 
 int spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn);
