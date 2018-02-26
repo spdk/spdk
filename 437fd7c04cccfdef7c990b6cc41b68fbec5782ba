@@ -70,6 +70,30 @@
       "revId": "437fd7c04cccfdef7c990b6cc41b68fbec5782ba",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "20be7760_9941a50b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2209,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-26T16:24:17Z",
+      "side": 1,
+      "message": "So my patch would not really change this behavior.  In both cases, if a blob cannot be opened, end result is lvolstore is not loaded successfully.\n\nI agree we could improve on this in the future, but I think that is better done outside of this patch.",
+      "parentUuid": "05d96567_665b2b69",
+      "range": {
+        "startLine": 2209,
+        "startChar": 1,
+        "endLine": 2209,
+        "endChar": 9
+      },
+      "revId": "437fd7c04cccfdef7c990b6cc41b68fbec5782ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
