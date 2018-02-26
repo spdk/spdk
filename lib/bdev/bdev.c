@@ -280,6 +280,20 @@ spdk_bdev_get_by_name(const char *bdev_name)
 	return NULL;
 }
 
+struct spdk_bdev *
+spdk_vbdev_on_which_depends_first(struct spdk_bdev *bdev)
+{
+	return TAILQ_FIRST(&bdev->vbdevs);
+}
+
+struct spdk_bdev *
+spdk_vbdev_on_which_depends_next(struct spdk_bdev *bdev,
+				 struct spdk_bdev *prev_vbdev)
+{
+	return TAILQ_NEXT(prev_vbdev, vbdev_link);
+}
+
+
 static void
 spdk_bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf)
 {
