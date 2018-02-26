@@ -22,6 +22,30 @@
       "revId": "afb2a648902adcca9951e99e4487a9dba34558fe",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e04a0f5_54298b2c",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-26T17:15:50Z",
+      "side": 1,
+      "message": "It is OK (in English at least) to use either one or two spaces after a period.",
+      "parentUuid": "26e2f48d_9097ea19",
+      "range": {
+        "startLine": 45,
+        "startChar": 19,
+        "endLine": 45,
+        "endChar": 21
+      },
+      "revId": "afb2a648902adcca9951e99e4487a9dba34558fe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
