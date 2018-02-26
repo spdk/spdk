@@ -22,6 +22,53 @@
       "revId": "d003792662be800c1f1561dae37facda4bc1b242",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c45d9de_7e048733",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-26T08:49:24Z",
+      "side": 1,
+      "message": "Make sense to me.\n\nIf we can specify any lock file path when the default sock path is not used, it may be helpful. Hence how about doing 1) in this patch?\n\n1) adding a variable g_rpc_listen_addr_unix_lock_file_path and copy SPDK_DEFAULT_RPC_LOCK_ADDR to it?\n2) In other patch it can be changed to not default.",
+      "parentUuid": "713a941b_162e3714",
+      "range": {
+        "startLine": 101,
+        "startChar": 2,
+        "endLine": 101,
+        "endChar": 76
+      },
+      "revId": "d003792662be800c1f1561dae37facda4bc1b242",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c9bcad7_b062bb8d",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-26T08:49:24Z",
+      "side": 1,
+      "message": "check\u0026unlink and NOTICE_LOG is more reasonable choice than unconditional unlink.",
+      "range": {
+        "startLine": 114,
+        "startChar": 3,
+        "endLine": 115,
+        "endChar": 72
+      },
+      "revId": "d003792662be800c1f1561dae37facda4bc1b242",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
