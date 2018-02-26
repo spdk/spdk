@@ -94,6 +94,30 @@
       "revId": "437fd7c04cccfdef7c990b6cc41b68fbec5782ba",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "46fbf2be_fe8de5ba",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2209,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-26T18:02:25Z",
+      "side": 1,
+      "message": "The only difference will be that we will have loaded blobstore in this case, where in lvol case blobstore will not be loaded. We could actually try to unload blobstore here (I\u0027m worried about some memory leaks, but that should not be a big issue, as this is just one blobstore staying alive as long as application run), but I agree that this can be done as separate patch.",
+      "parentUuid": "20be7760_9941a50b",
+      "range": {
+        "startLine": 2209,
+        "startChar": 1,
+        "endLine": 2209,
+        "endChar": 9
+      },
+      "revId": "437fd7c04cccfdef7c990b6cc41b68fbec5782ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
