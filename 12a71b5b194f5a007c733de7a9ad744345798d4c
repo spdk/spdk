@@ -1,0 +1,112 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "72515327_60d6453d",
+        "filename": "include/spdk/nvmf_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 426,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-26T19:44:47Z",
+      "side": 1,
+      "message": "This log page is not specific to NVMe-oF.\n\nThe definition looks fine, though, so it should just be a matter of renaming it (nvmf -\u003e nvme) and moving it to nvme_spec.h (rather than nvmf_spec.h)",
+      "revId": "12a71b5b194f5a007c733de7a9ad744345798d4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de63a889_394e4ef2",
+        "filename": "include/spdk/nvmf_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-26T19:44:47Z",
+      "side": 1,
+      "message": "We should define an enum that lists the possible values for CSE as well.",
+      "revId": "12a71b5b194f5a007c733de7a9ad744345798d4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8f34f3fc_e11cfc92",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 600,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-26T19:44:47Z",
+      "side": 1,
+      "message": "These globals should be static const.\n\nYou can also omit the size and let the compiler figure it out automatically.",
+      "revId": "12a71b5b194f5a007c733de7a9ad744345798d4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ee3a7dd_664678a2",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 604,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-26T19:44:47Z",
+      "side": 1,
+      "message": "It might be a nice simplification to use designated initializers (then you could omit all of the Reserved lines):\n\n  {\n      [SPDK_NVME_OPC_GET_LOG_PAGE] \u003d {1, 0, 0, 0, 0, 0, 0, 0},\n      [SPDK_NVME_OPC_IDENTIFY]     \u003d {1, 0, 0, 0, 0, 0, 0, 0},\n      // etc.\n  }",
+      "revId": "12a71b5b194f5a007c733de7a9ad744345798d4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "12db6735_8f39761b",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 772,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-26T19:44:47Z",
+      "side": 1,
+      "message": "Since the entire log page does not change at runtime, it might be easier to just define it as a const global variable, including the contents of the arrays you defined above - then we wouldn\u0027t have to allocate a temporary buffer at all.\n\nFor example:\n\n  static const struct spdk_nvmf_cmds_and_effect_log_page g_cmds_and_effect_log_page \u003d {\n      .admin_cmds_supported \u003d {\n          {0, 0, 0, 0, 0},\n          {1, 0, 0, 0, 0},\n          // etc.\n      },\n      .io_cmds_supported \u003d {\n          {0, 0, 0, 0, 0},\n          {1, 0, 0, 0, 0},\n          // etc.\n      },\n    };",
+      "revId": "12a71b5b194f5a007c733de7a9ad744345798d4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42fda3e4_a451a42f",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 793,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-26T19:44:47Z",
+      "side": 1,
+      "message": "This return seems redundant, since it\u0027s at the end of the function and doesn\u0027t return a value.",
+      "range": {
+        "startLine": 793,
+        "startChar": 1,
+        "endLine": 793,
+        "endChar": 7
+      },
+      "revId": "12a71b5b194f5a007c733de7a9ad744345798d4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
