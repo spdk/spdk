@@ -58,7 +58,7 @@ spdk_add_subsystem_depend(struct spdk_subsystem_depend *depend)
 	TAILQ_INSERT_TAIL(&g_subsystems_deps, depend, tailq);
 }
 
-static struct spdk_subsystem *
+struct spdk_subsystem *
 spdk_subsystem_find(struct spdk_subsystem_list *list, const char *name)
 {
 	struct spdk_subsystem *iter;
@@ -240,5 +240,15 @@ spdk_subsystem_config(FILE *fp)
 		if (subsystem->config) {
 			subsystem->config(fp);
 		}
+	}
+}
+
+void
+spdk_subsystem_config_json(struct spdk_json_write_ctx *w, struct spdk_subsystem *subsystem)
+{
+	if (subsystem && subsystem->write_config_json) {
+		subsystem->write_config_json(w);
+	} else {
+		spdk_json_write_null(w);
 	}
 }
