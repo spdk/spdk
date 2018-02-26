@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "60baab2b_ca0b936b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1282,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-26T05:28:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e779f4a1_6962c62b",
+      "range": {
+        "startLine": 1282,
+        "startChar": 2,
+        "endLine": 1282,
+        "endChar": 34
+      },
+      "revId": "6242128844206efde2176fcee060fd03fb6822c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6ac6358c_d4d10c0d",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 6
@@ -177,6 +201,30 @@
       "side": 1,
       "message": "Maybe not. We can leave the _spdk_put_io_channel_free_resource() as an internal function for this file.",
       "parentUuid": "35173379_30226e5e",
+      "range": {
+        "startLine": 476,
+        "startChar": 0,
+        "endLine": 481,
+        "endChar": 3
+      },
+      "revId": "6242128844206efde2176fcee060fd03fb6822c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9130ff65_51793443",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 481,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-26T05:28:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "114ba67e_7c757ca6",
       "range": {
         "startLine": 476,
         "startChar": 0,
