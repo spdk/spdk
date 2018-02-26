@@ -37,6 +37,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/event.h"
+#include "spdk/json.h"
 
 struct spdk_event {
 	uint32_t		lcore;
@@ -57,11 +58,14 @@ struct spdk_subsystem {
 	void (*init)(void);
 	void (*fini)(void);
 	void (*config)(FILE *fp);
+	void (*write_config_json)(struct spdk_json_write_ctx *w);
 	TAILQ_ENTRY(spdk_subsystem) tailq;
 };
 
 TAILQ_HEAD(spdk_subsystem_list, spdk_subsystem);
 extern struct spdk_subsystem_list g_subsystems;
+
+struct spdk_subsystem *spdk_subsystem_find(struct spdk_subsystem_list *list, const char *name);
 
 struct spdk_subsystem_depend {
 	const char *name;
