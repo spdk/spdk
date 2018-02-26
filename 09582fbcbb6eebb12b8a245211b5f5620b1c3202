@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ac7d988d_f37fe209",
+        "filename": "lib/net/sock.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 483,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-26T09:35:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dd35bc05_20bfe877",
+      "range": {
+        "startLine": 483,
+        "startChar": 26,
+        "endLine": 483,
+        "endChar": 45
+      },
+      "revId": "09582fbcbb6eebb12b8a245211b5f5620b1c3202",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "71bc3f2a_4a9b4117",
         "filename": "lib/net/sock.c",
         "patchSetId": 4
