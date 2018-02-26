@@ -68,6 +68,30 @@
       "revId": "f753e82747472b365bcf27c22483f10de85c073e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "226fd0bc_75e64c45",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 945,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-26T17:29:42Z",
+      "side": 1,
+      "message": "Please disregard this comment. I wash looking on unchanged code of mark_clean function.",
+      "parentUuid": "2c685785_d344300d",
+      "range": {
+        "startLine": 938,
+        "startChar": 0,
+        "endLine": 945,
+        "endChar": 3
+      },
+      "revId": "f753e82747472b365bcf27c22483f10de85c073e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
