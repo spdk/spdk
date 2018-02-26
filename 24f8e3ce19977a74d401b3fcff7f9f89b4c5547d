@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "05d84d5b_b4f55cca",
+        "filename": "include/spdk/io_channel.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-26T20:07:45Z",
+      "side": 1,
+      "message": "The \\ref marker is unnecessary when referring to a function name with parentheses like spdk_thread_get_name(); Doxygen will automatically link this type of reference.",
+      "range": {
+        "startLine": 105,
+        "startChar": 73,
+        "endLine": 105,
+        "endChar": 77
+      },
+      "revId": "24f8e3ce19977a74d401b3fcff7f9f89b4c5547d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
