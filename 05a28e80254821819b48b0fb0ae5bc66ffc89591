@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "05bfa98a_597da164",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1149,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-26T21:04:12Z",
+      "side": 1,
+      "message": "should this also call spdk_iscsi_conn_destruct(conn)?  the previous code would do this if spdk_iscsi_conn_handle_incoming_pdus() returned \u003c 0, via the goto",
+      "revId": "05a28e80254821819b48b0fb0ae5bc66ffc89591",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3b6bdab_602824ea",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 841,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-26T21:04:12Z",
+      "side": 1,
+      "message": "it should be ok to call spdk_sock_group_poll() on sock_group with no connections - so I don\u0027t think this check is needed",
+      "revId": "05a28e80254821819b48b0fb0ae5bc66ffc89591",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4cdada2_c2c6dbe8",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 957,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-26T21:04:12Z",
+      "side": 1,
+      "message": "can this be an assert instead?  it would match the assert on line 870\n\n(of course this will be different due to the differences introduce by my patch this morning)",
+      "revId": "05a28e80254821819b48b0fb0ae5bc66ffc89591",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
