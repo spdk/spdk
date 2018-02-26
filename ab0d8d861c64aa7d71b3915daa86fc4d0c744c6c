@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d6e67b1b_dd9df740",
+        "filename": "test/vhost/hotplug/scsi_hotremove.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-26T13:48:36Z",
+      "side": 1,
+      "message": "Let\u0027s not do copy-pasta.\n\nInstead:\n- at top of file have general description of tests: name, objective, purpose, etc.\n\nAt each test case function:\n- general description at top\n- tests steps (including expected results) as in-line comments between code",
+      "range": {
+        "startLine": 3,
+        "startChar": 0,
+        "endLine": 3,
+        "endChar": 35
+      },
+      "revId": "ab0d8d861c64aa7d71b3915daa86fc4d0c744c6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
