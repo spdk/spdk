@@ -50,6 +50,27 @@ virt_to_phys(void *vaddr)
 #else
 	return rte_malloc_virt2phy(vaddr);
 #endif
+
+void *
+spdk_malloc(const char *name, size_t size, size_t align,
+		uint64_t *phys_addr, int socket_id, DMA_FLAG dma_flg)
+{
+	if (dma_flg == SPDK_DMA)
+	{
+		return spdk_dma_malloc_socket(size, align, phys_addr, socket_id);
+	}
+	else if (dma_flg == SPDK_DMA_SHARE)
+	{
+		return spdk_memzone_reserve(name, size, socket_id, 0);
+	}
+
+	return NULL;
+}
+
+void
+spdk_free(void *buf)
+{
+	spdk_dma_free(buf);
 }
 
 void *

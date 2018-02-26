@@ -66,6 +66,24 @@ struct spdk_env_opts {
 	void			*env_context;
 };
 
+typedef enum DMA_FLAG
+{
+        SPDK_DMA       = 0x00, /* memory allocation that is dma but not sharable */
+        SPDK_DMA_SHARE = 0x01  /* memory allocation that is dma and sharable */
+} DMA_FLAG;
+
+/**
+ *  * Allocate dma/sharable memory based on a given dma_flg.
+ *  */
+void *spdk_malloc(const char *name, size_t size, size_t align,
+		uint64_t *phys_addr, int socket_id, DMA_FLAG dma_flg);
+
+/**
+ *  * Free buffer memory that was previously allocated with spdk_malloc.
+ *   */
+void spdk_free(void *buf);
+
+
 /**
  * \brief Initialize the default value of opts
  */
