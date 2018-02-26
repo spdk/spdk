@@ -926,6 +926,37 @@ spdk_iscsi_fini(spdk_iscsi_fini_cb cb_fn, void *cb_arg)
 	spdk_shutdown_iscsi_conns();
 }
 
+static void
+iscsi_destroy_poll_group_done(void *ctx)
+{
+	free(g_spdk_iscsi.poll_group);
+	pthread_mutex_destroy(&g_spdk_iscsi.mutex);
+	g_fini_cb_fn(g_fini_cb_arg);
+}
+
+static void
+iscsi_destroy_poll_group(void *ctx)
+{
+	struct spdk_iscsi_poll_group *pg;
+
+	pg = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
+	assert(pg != NULL);
+
+	spdk_poller_unregister(&pg->poller);
+}
+
+static void
+spdk_iscsi_destroy_poll_group(void)
+{
+	if (g_spdk_iscsi.poll_group) {
+		/* Send a message to each thread and destroy a poll group */
+		spdk_for_each_thread(iscsi_destroy_poll_group, NULL, iscsi_destroy_poll_group_done);
+	} else {
+		pthread_mutex_destroy(&g_spdk_iscsi.mutex);
+		g_fini_cb_fn(g_fini_cb_arg);
+	}
+}
+
 void
 spdk_iscsi_fini_done(void)
 {
@@ -937,10 +968,7 @@ spdk_iscsi_fini_done(void)
 	spdk_iscsi_portal_grp_array_destroy();
 	free(g_spdk_iscsi.authfile);
 	free(g_spdk_iscsi.nodebase);
-	free(g_spdk_iscsi.poll_group);
-
-	pthread_mutex_destroy(&g_spdk_iscsi.mutex);
-	g_fini_cb_fn(g_fini_cb_arg);
+	spdk_iscsi_destroy_poll_group();
 }
 
 void
