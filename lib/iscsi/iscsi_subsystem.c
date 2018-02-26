@@ -861,6 +861,18 @@ iscsi_create_poll_group(void *ctx)
 }
 
 static void
+iscsi_unregister_poll_group(void *ctx)
+{
+	struct spdk_iscsi_poll_group *pg;
+
+	pg = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
+	assert(pg != NULL);
+	assert(pg->poller != NULL);
+
+	spdk_poller_unregister(&pg->poller);
+}
+
+static void
 spdk_initialize_iscsi_poll_group(void)
 {
 	size_t g_num_poll_groups = spdk_env_get_last_core() + 1;
@@ -926,8 +938,8 @@ spdk_iscsi_fini(spdk_iscsi_fini_cb cb_fn, void *cb_arg)
 	spdk_shutdown_iscsi_conns();
 }
 
-void
-spdk_iscsi_fini_done(void)
+static void
+spdk_iscsi_fini_done(void *arg)
 {
 	spdk_iscsi_check_pools();
 	spdk_iscsi_free_pools();
@@ -941,6 +953,12 @@ spdk_iscsi_fini_done(void)
 
 	pthread_mutex_destroy(&g_spdk_iscsi.mutex);
 	g_fini_cb_fn(g_fini_cb_arg);
+}
+
+void
+spdk_shutdown_iscsi_conns_done(void)
+{
+	spdk_for_each_thread(iscsi_unregister_poll_group, NULL, spdk_iscsi_fini_done);
 }
 
 void

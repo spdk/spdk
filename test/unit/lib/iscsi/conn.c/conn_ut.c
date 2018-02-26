@@ -243,7 +243,7 @@ spdk_iscsi_tgt_node_cleanup_luns(struct spdk_iscsi_conn *conn,
 }
 
 void
-spdk_iscsi_fini_done(void)
+spdk_shutdown_iscsi_conns_done(void)
 {
 }
 
