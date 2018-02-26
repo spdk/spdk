@@ -48,6 +48,9 @@ extern "C" {
 #define SPDK_ENV_SOCKET_ID_ANY	(-1)
 #define SPDK_ENV_LCORE_ID_ANY	(UINT32_MAX)
 
+#define SPDK_MALLOC_DMA    0x01 /* memory allocation that is dma but not sharable */
+#define SPDK_MALLOC_SHARE  0x02 /* memory allocation that is dma and sharable */
+
 struct spdk_pci_device;
 
 /**
@@ -66,6 +69,19 @@ struct spdk_env_opts {
 	void			*env_context;
 };
 
+/*
+ Allocate dma/sharable memory based on a given dma_flg.
+*/
+void *spdk_malloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, DMA_FLAG dma_flg);
+
+void *spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, DMA_FLAG dma_flg);
+
+/*
+ Free buffer memory that was previously allocated with spdk_malloc.
+ */
+void spdk_free(void *buf);
+
+
 /**
  * \brief Initialize the default value of opts
  */
@@ -74,8 +90,9 @@ void spdk_env_opts_init(struct spdk_env_opts *opts);
 /**
  * \brief Initialize the environment library. This must be called prior to using
  * any other functions in this library.
+ * \return 0 on success, or a negated errno value on failure.
  */
-void spdk_env_init(const struct spdk_env_opts *opts);
+int spdk_env_init(const struct spdk_env_opts *opts);
 
 /**
  * Allocate a pinned, physically contiguous memory buffer with the
@@ -155,6 +172,33 @@ struct spdk_mempool *spdk_mempool_create(const char *name, size_t count,
 		size_t ele_size, size_t cache_size, int socket_id);
 
 /**
+ * An object callback function for mempool.
+ *
+ * Used by spdk_mempool_create_ctor
+ */
+typedef void (spdk_mempool_obj_cb_t)(struct spdk_mempool *mp,
+				     void *opaque, void *obj, unsigned obj_idx);
+
+/**
+ * Create a thread-safe memory pool with user provided initialization function and argument.
+ *
+ * \param cache_size How many elements may be cached in per-core caches. Use
+ *        SPDK_MEMPOOL_DEFAULT_CACHE_SIZE for a reasonable default, or 0 for no
+ *	  per-core cache.
+ * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY for any socket.
+ * \param obj_init User provided object calllback initialization function.
+ * \param obj_init_arg User provided callback initialization function argument.
+ */
+struct spdk_mempool *spdk_mempool_create_ctor(const char *name, size_t count,
+		size_t ele_size, size_t cache_size, int socket_id,
+		spdk_mempool_obj_cb_t *obj_init, void *obj_init_arg);
+
+/**
+ * Get the name of a mempool
+ */
+char *spdk_mempool_get_name(struct spdk_mempool *mp);
+
+/**
  * Free a memory pool.
  */
 void spdk_mempool_free(struct spdk_mempool *mp);
@@ -199,6 +243,12 @@ uint32_t spdk_env_get_current_core(void);
  *	  this application.
  */
 uint32_t spdk_env_get_first_core(void);
+
+/**
+ * \brief Return the index of the last dedicated CPU core for
+ *	  this application.
+ */
+uint32_t spdk_env_get_last_core(void);
 
 /**
  * \brief Return the index of the next dedicated CPU core for
