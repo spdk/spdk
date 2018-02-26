@@ -192,6 +192,30 @@ struct spdk_bdev *spdk_bdev_first_leaf(void);
 struct spdk_bdev *spdk_bdev_next_leaf(struct spdk_bdev *prev);
 
 /**
+ * Get the first virtual block device on top of the block device.
+ *
+ * This function traverses over virtual block devices on top the block device,
+ * then get the first one.
+ *
+ * \param bdev The block device
+ * \return The first virtual block device on top of the block device.
+ */
+struct spdk_bdev *spdk_vbdev_on_which_depends_first(struct spdk_bdev *bdev);
+
+/**
+ * Get the first virtual block device on top of the block device.
+ *
+ * This function traverses over virtual block devices on top the block device,
+ * then get the first one.
+ *
+ * \param bdev The block device
+ * \param prev The current virtual block device on top of the block device.
+ * \return The first virtual block device on top of the block device.
+ */
+struct spdk_bdev *spdk_vbdev_on_which_depends_next(struct spdk_bdev *bdev,
+		struct spdk_bdev *prev);
+
+/**
  * Open a block device for I/O operations.
  *
  * \param bdev Block device to open.
