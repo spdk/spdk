@@ -1,0 +1,208 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d6d74d4e_2b2ded2f",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-26T18:02:18Z",
+      "side": 1,
+      "message": "\\param opts Data structure where SPDK will initialize the default options.\n\n(This makes it even more clear that the caller is not passing the initialization options - it is only passing the data structure.)",
+      "revId": "e8f5379c538731c012b73b802c1e68a2b6ace366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0302ddc0_8ea1b1f3",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-26T18:02:18Z",
+      "side": 1,
+      "message": "it is not the value of opts that must be initialized - it is the fields in opts\n\nalso fix typo in \"initialized\"",
+      "revId": "e8f5379c538731c012b73b802c1e68a2b6ace366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a3dda7f2_7ce0bb7e",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-26T18:02:18Z",
+      "side": 1,
+      "message": "Should probably say something like \"all fields in opts must be initialized by \\ref spdk_app_opts_init or explicitly by the caller.  The common use case is that caller uses spdk_app_opts_init() first, but then may overwrite some fields with value specified on command line.",
+      "revId": "e8f5379c538731c012b73b802c1e68a2b6ace366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c0de16f6_c73209f0",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-26T18:02:18Z",
+      "side": 1,
+      "message": "opts parameter missing",
+      "revId": "e8f5379c538731c012b73b802c1e68a2b6ace366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b29659f_409772a4",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-26T18:02:18Z",
+      "side": 1,
+      "message": "Argument",
+      "revId": "e8f5379c538731c012b73b802c1e68a2b6ace366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca999f33_49354906",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-26T18:02:18Z",
+      "side": 1,
+      "message": "Argument",
+      "revId": "e8f5379c538731c012b73b802c1e68a2b6ace366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea6225bc_01cf066d",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-26T18:02:18Z",
+      "side": 1,
+      "message": "better to remove g_spdk_app-\u003erc here - this is an implementation detail\n\nthe important point is that the rc value specified here will be returned to caller of spdk_app_start",
+      "revId": "e8f5379c538731c012b73b802c1e68a2b6ace366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e9604619_26805036",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-26T18:02:18Z",
+      "side": 1,
+      "message": "Should say something like \"Prefix for name of temporary configuration file to save the current config.\"  In lib/event/app.c, it shows that this name is just part of the temporary file name - it is appended with random characters.",
+      "revId": "e8f5379c538731c012b73b802c1e68a2b6ace366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca22fa95_f10510e8",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-26T18:02:18Z",
+      "side": 1,
+      "message": "active",
+      "revId": "e8f5379c538731c012b73b802c1e68a2b6ace366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b8d160e_fd0ccc72",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-26T18:02:18Z",
+      "side": 1,
+      "message": "These changes are fine.  But both this function and next function below are deprecated.  Could you post a patch (before or after this patch) that removes these functions?  Ben deprecated them in March 2017 so it is OK to remove them now.",
+      "revId": "e8f5379c538731c012b73b802c1e68a2b6ace366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f60b6989_6df2596b",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-26T18:02:18Z",
+      "side": 1,
+      "message": "Instead of \"start\", I think \"execute\" would be better.",
+      "revId": "e8f5379c538731c012b73b802c1e68a2b6ace366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "767861ca_71fa9cd0",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-26T18:02:18Z",
+      "side": 1,
+      "message": "start \u003d\u003e execute",
+      "revId": "e8f5379c538731c012b73b802c1e68a2b6ace366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
