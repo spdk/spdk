@@ -37,6 +37,7 @@
 #include <sys/epoll.h>
 #elif defined(__FreeBSD__)
 #include <sys/event.h>
+#include "spdk/string.h"
 #endif
 
 #include "spdk/log.h"
@@ -544,9 +545,30 @@ spdk_posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_eve
 
 	for (i = 0; i < num_events; i++) {
 #if defined(__linux__)
-		socks[i] = events[i].data.ptr;
+		if (events[i].events & EPOLLIN) {
+			socks[i] = events[i].data.ptr;
+		} else  if (events[i].events & (EPOLLERR | EPOLLHUP)) {
+			SPDK_ERRLOG("Error or hungup event (%x) happened on fd %d\n",
+				    events[i].events, events[i].data.fd);
+			socks[i] = NULL;
+		} else {
+			socks[i] = NULL;
+		}
 #elif defined(__FreeBSD__)
 		socks[i] = events[i].udata;
+		if (socks[i] != NULL && socks[i]->fd == (int)events[i].ident) {
+			;
+		} else if (events[i].flags & EV_EOF) {
+			sock[i] = NULL;
+			SPDK_ERRLOG("Read direction of socket (fd:%d) has shutdown\n",
+				    (int)events[i].ident);
+		} else if (events[i].flags & EV_ERROR) {
+			socks[i] = NULL;
+			SPDK_ERRLOG("Kevent() failed at socket (fd:%d): %s\n",
+				    (int)events[i].ident, spdk_strerror(events[i].data));
+		} else {
+			socks[i] = NULL;
+		}
 #endif
 	}
 
