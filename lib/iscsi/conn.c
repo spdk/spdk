@@ -546,7 +546,7 @@ static void
 spdk_iscsi_conn_check_shutdown_cb(void *arg1, void *arg2)
 {
 	spdk_iscsi_conns_cleanup();
-	spdk_iscsi_fini_done();
+	spdk_shutdown_iscsi_conns_done();
 }
 
 static void
