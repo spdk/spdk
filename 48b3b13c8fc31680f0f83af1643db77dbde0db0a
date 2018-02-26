@@ -1,0 +1,205 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9c03b032_1a144c07",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-26T10:58:08Z",
+      "side": 1,
+      "message": "while kill -0 $vhost_pid; do\n    true;\ndone\n\nshould work.",
+      "range": {
+        "startLine": 225,
+        "startChar": 3,
+        "endLine": 228,
+        "endChar": 49
+      },
+      "revId": "48b3b13c8fc31680f0f83af1643db77dbde0db0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d8810d03_75836c80",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 293,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-26T10:58:08Z",
+      "side": 1,
+      "message": "Shorter description would be good but over all OK.",
+      "range": {
+        "startLine": 290,
+        "startChar": 0,
+        "endLine": 293,
+        "endChar": 72
+      },
+      "revId": "48b3b13c8fc31680f0f83af1643db77dbde0db0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92d8f950_db2a22cb",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 294,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-26T10:58:08Z",
+      "side": 1,
+      "message": "You can share config file over sshfs",
+      "range": {
+        "startLine": 294,
+        "startChar": 1,
+        "endLine": 294,
+        "endChar": 35
+      },
+      "revId": "48b3b13c8fc31680f0f83af1643db77dbde0db0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb7d1749_5c4b1931",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 338,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-26T10:58:08Z",
+      "side": 1,
+      "message": "You can share config file.",
+      "range": {
+        "startLine": 336,
+        "startChar": 0,
+        "endLine": 338,
+        "endChar": 35
+      },
+      "revId": "48b3b13c8fc31680f0f83af1643db77dbde0db0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "875c022a_6d111094",
+        "filename": "test/vhost/migration/migration-tc3a.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-26T10:58:08Z",
+      "side": 1,
+      "message": "You ca replace this by\n\nlocal nic_name\u003d$(ip -4 -o addr show to $RDMA_TARGET_IP up | cut -d\u0027 \u0027 -f2)\nif [[ -z $nic_name ]]; then\n  error\nfi\nif [[ -z $nic_name ]] || [[ ! -e  /sys/class/infiniband/${nic_type} ]]; then\n  error\nfi",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 5
+      },
+      "revId": "48b3b13c8fc31680f0f83af1643db77dbde0db0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "442a35d0_48c9af9e",
+        "filename": "test/vhost/migration/migration-tc3a.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-26T10:58:08Z",
+      "side": 1,
+      "message": "Pls wait for nvm_tgt before returnig.",
+      "range": {
+        "startLine": 48,
+        "startChar": 1,
+        "endLine": 48,
+        "endChar": 29
+      },
+      "revId": "48b3b13c8fc31680f0f83af1643db77dbde0db0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "729b5ee4_efbb965b",
+        "filename": "test/vhost/migration/migration-tc3b.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-26T10:58:08Z",
+      "side": 1,
+      "message": "This file need indentation cleanup",
+      "revId": "48b3b13c8fc31680f0f83af1643db77dbde0db0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b28d030_321493a4",
+        "filename": "test/vhost/migration/migration-tc3b.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-26T10:58:08Z",
+      "side": 1,
+      "message": "If you scp (not sshfs mount) vhost1 folder to test dir you can use functions from common.sh to start vhost.",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 35,
+        "endChar": 44
+      },
+      "revId": "48b3b13c8fc31680f0f83af1643db77dbde0db0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c21240c1_916eb247",
+        "filename": "test/vhost/migration/migration.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-26T10:58:08Z",
+      "side": 1,
+      "message": "can you use remote_ssh?",
+      "range": {
+        "startLine": 97,
+        "startChar": 0,
+        "endLine": 105,
+        "endChar": 3
+      },
+      "revId": "48b3b13c8fc31680f0f83af1643db77dbde0db0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
