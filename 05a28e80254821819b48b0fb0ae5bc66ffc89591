@@ -19,6 +19,29 @@
     },
     {
       "key": {
+        "uuid": "de0d7812_f03d0ef1",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1166,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-26T23:17:12Z",
+      "side": 1,
+      "message": "I think we should extract this and make this independent timer function before current patch.\n\nThe reason is that after this patch, spdk_iscsi_conn_handle_nop() will never be called if no new request.",
+      "range": {
+        "startLine": 1166,
+        "startChar": 6,
+        "endLine": 1166,
+        "endChar": 32
+      },
+      "revId": "05a28e80254821819b48b0fb0ae5bc66ffc89591",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c3b6bdab_602824ea",
         "filename": "lib/iscsi/iscsi_subsystem.c",
         "patchSetId": 23
