@@ -16,6 +16,24 @@
       "revId": "a02c5f7bb41b9a50cd11e37539803f977b24ea09",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "73d95219_b182fbd3",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 665,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-27T21:51:38Z",
+      "side": 1,
+      "message": "actually it doesn\u0027t - _handle_deleted_files reuses the req if there is a file that was marked for deletion but the blob didn\u0027t get deleted before the previous shutdown\n\nnext patch cleans this up and adds comments to describe it better",
+      "parentUuid": "30d69b42_d6381023",
+      "revId": "a02c5f7bb41b9a50cd11e37539803f977b24ea09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
