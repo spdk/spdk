@@ -72,6 +72,8 @@ else
 DPDK_CFLAGS += -Wno-error
 endif
 
+DPDK_CFLAGS += -DALLOW_EXPERIMENTAL_API
+
 $(SPDK_ROOT_DIR)/dpdk/build:
 	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/dpdk config T=$(DPDK_CONFIG)
 
