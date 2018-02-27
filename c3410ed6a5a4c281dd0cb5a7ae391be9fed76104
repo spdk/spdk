@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "93f9e44c_64d19f8d",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 461,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-27T22:59:59Z",
+      "side": 1,
+      "message": "this test doesn\u0027t seem to do much - it just creates a blob with no internal xattrs but doesn\u0027t check to confirm none were created\n\njust checking that blob-\u003exattrs_internal is empty would be good",
+      "revId": "c3410ed6a5a4c281dd0cb5a7ae391be9fed76104",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
