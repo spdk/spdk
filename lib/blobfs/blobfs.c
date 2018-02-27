@@ -527,7 +527,7 @@ file_alloc(struct spdk_filesystem *fs)
 	return file;
 }
 
-static void iter_delete_cb(void *ctx, int bserrno);
+static void fs_load_done(void *ctx, int bserrno);
 
 static int
 _handle_deleted_files(struct spdk_fs_request *req)
@@ -540,7 +540,7 @@ _handle_deleted_files(struct spdk_fs_request *req)
 
 		deleted_file = TAILQ_FIRST(&args->op.fs_load.deleted_files);
 		TAILQ_REMOVE(&args->op.fs_load.deleted_files, deleted_file, tailq);
-		spdk_bs_delete_blob(fs->bs, deleted_file->id, iter_delete_cb, req);
+		spdk_bs_delete_blob(fs->bs, deleted_file->id, fs_load_done, req);
 		free(deleted_file);
 		return 0;
 	}
@@ -549,13 +549,21 @@ _handle_deleted_files(struct spdk_fs_request *req)
 }
 
 static void
-iter_delete_cb(void *ctx, int bserrno)
+fs_load_done(void *ctx, int bserrno)
 {
 	struct spdk_fs_request *req = ctx;
 	struct spdk_fs_cb_args *args = &req->args;
 	struct spdk_filesystem *fs = args->fs;
 
+	/* The filesystem has been loaded.  Now check if there are any files that
+	 *  were marked for deletion before last unload.  Do not complete the
+	 *  fs_load callback until all of them have been deleted on disk.
+	 */
 	if (_handle_deleted_files(req) == 0) {
+		/* We found a file that's been marked for deleting but not actually
+		 *  deleted yet.  This function will get called again once the delete
+		 *  operation is completed.
+		 */
 		return;
 	}
 
@@ -661,11 +669,7 @@ load_cb(void *ctx, struct spdk_blob_store *bs, int bserrno)
 	}
 
 	common_fs_bs_init(fs, bs);
-	if (_handle_deleted_files(req) == 0) {
-		return;
-	}
-	args->fn.fs_op_with_handle(args->arg, fs, 0);
-	free_fs_request(req);
+	fs_load_done(req, 0);
 }
 
 void
