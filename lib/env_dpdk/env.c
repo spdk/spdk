@@ -50,6 +50,7 @@ virt_to_phys(void *vaddr)
 #else
 	return rte_malloc_virt2phy(vaddr);
 #endif
+}
 
 void *
 spdk_malloc(const char *name, size_t size, size_t align,
