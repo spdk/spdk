@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4a8d0005_c3d57ff0",
+        "filename": "lib/net/sock.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-27T19:47:57Z",
+      "side": 1,
+      "message": "extra space between else and if",
+      "revId": "3c9ed21e07db371a29668210c2482e99baf87729",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49dc1feb_ca8dd70e",
+        "filename": "lib/net/sock.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 553,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-27T19:47:57Z",
+      "side": 1,
+      "message": "instead of adding NULL entries in the middle of the socks array, could we instead add a separate variable (cur_event_idx?) to track the next event slot to be assigned?\n\nthen return cur_event_idx instead of num_events\n\nthis was caller code is more simple - it does not need to check for NULL events in the array",
+      "revId": "3c9ed21e07db371a29668210c2482e99baf87729",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "11bac019_0f08c166",
+        "filename": "lib/net/sock.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 559,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-27T19:47:57Z",
+      "side": 1,
+      "message": "function declaration should go at beginning of block",
+      "revId": "3c9ed21e07db371a29668210c2482e99baf87729",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48e2f107_25549aef",
+        "filename": "lib/net/sock.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-27T19:47:57Z",
+      "side": 1,
+      "message": "just for my own understanding - what is the case where socks[i] could be NULL here?  and if it is not NULL, what is the case where the ident would not match?",
+      "revId": "3c9ed21e07db371a29668210c2482e99baf87729",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
