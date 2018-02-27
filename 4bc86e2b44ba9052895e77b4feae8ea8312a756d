@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1320f37d_0c018464",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 3443,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-27T23:41:43Z",
+      "side": 1,
+      "message": "usually the name of the ctx structure somewhat matches the operation it is used for\n\nor maybe you\u0027re planning to reuse this for cloning?  if so, then maybe spdk_clone_snapshot_ctx would be good enough - makes it clear that its used for clone or snapshot operations",
+      "revId": "4bc86e2b44ba9052895e77b4feae8ea8312a756d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b12b3963_1c77c856",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 3447,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-27T23:41:43Z",
+      "side": 1,
+      "message": "I don\u0027t think you need to use a union here - it\u0027s a bit of an over-optimization - easier for future reuse if it just stores both the id and the blob pointer",
+      "revId": "4bc86e2b44ba9052895e77b4feae8ea8312a756d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "498b5c0f_a5ce1ecc",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 3449,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-27T23:41:43Z",
+      "side": 1,
+      "message": "i\u0027d name this \"blob\" instead of \"ptr\" - that\u0027s more consistent with the rest of the code",
+      "revId": "4bc86e2b44ba9052895e77b4feae8ea8312a756d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41bf3d18_1fc10574",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 3450,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-27T23:41:43Z",
+      "side": 1,
+      "message": "maybe just spell out \"original\" here?  the abbreviation is fine, but should be \"orig\" instead of \"org\"",
+      "revId": "4bc86e2b44ba9052895e77b4feae8ea8312a756d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ed375df_b27ef3be",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 3456,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-27T23:41:43Z",
+      "side": 1,
+      "message": "maybe snapshot_xattrs?  or at least put a comment saying that these are xattrs for the snapshot (not xattrs to add to the original blob or anything like that)",
+      "revId": "4bc86e2b44ba9052895e77b4feae8ea8312a756d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
