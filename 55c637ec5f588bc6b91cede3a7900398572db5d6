@@ -22,6 +22,30 @@
       "revId": "55c637ec5f588bc6b91cede3a7900398572db5d6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d23bb20a_e94ce2e6",
+        "filename": "lib/blob/request.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-27T21:58:07Z",
+      "side": 1,
+      "message": "would you be ok if that was done in a separate patch?\n\ni agree the debug logs are needed for consistency - but adding those is not really related to this patch",
+      "parentUuid": "93627dc1_3d9f3392",
+      "range": {
+        "startLine": 136,
+        "startChar": 1,
+        "endLine": 136,
+        "endChar": 85
+      },
+      "revId": "55c637ec5f588bc6b91cede3a7900398572db5d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
