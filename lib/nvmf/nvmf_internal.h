@@ -181,6 +181,7 @@ struct spdk_nvmf_ctrlr {
 };
 
 struct spdk_nvmf_subsystem {
+	struct spdk_thread		*thread;
 	uint32_t			id;
 	enum spdk_nvmf_subsystem_state	state;
 
