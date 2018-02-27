@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c84a256b_ad7e4de3",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1149,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-02-27T01:22:19Z",
+      "side": 1,
+      "message": "Hi Jim,\nI am afraid that your understanding is not correct. Previously I also add this destruct statement. However  you can see in spdk_iscsi_conn_execute. If it checks the state (ISCSI_CONN_STATE_Exiting), it will destruct the connection. So If added here, there will be a double free. The reason is that some operations are asynchronous, and I faced this issue during my debug.",
+      "parentUuid": "05bfa98a_597da164",
+      "revId": "05a28e80254821819b48b0fb0ae5bc66ffc89591",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "de0d7812_f03d0ef1",
         "filename": "lib/iscsi/conn.c",
         "patchSetId": 23
@@ -30,6 +48,30 @@
       "writtenOn": "2018-02-26T23:17:12Z",
       "side": 1,
       "message": "I think we should extract this and make this independent timer function before current patch.\n\nThe reason is that after this patch, spdk_iscsi_conn_handle_nop() will never be called if no new request.",
+      "range": {
+        "startLine": 1166,
+        "startChar": 6,
+        "endLine": 1166,
+        "endChar": 32
+      },
+      "revId": "05a28e80254821819b48b0fb0ae5bc66ffc89591",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b5341e80_142d551f",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1166,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-02-27T01:22:19Z",
+      "side": 1,
+      "message": "It will still be called. I do not think that this will not be called. If that, our test will be failed.",
+      "parentUuid": "de0d7812_f03d0ef1",
       "range": {
         "startLine": 1166,
         "startChar": 6,
