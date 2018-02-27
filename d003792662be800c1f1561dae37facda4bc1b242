@@ -197,6 +197,30 @@
       "revId": "d003792662be800c1f1561dae37facda4bc1b242",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42fbf9de_a53d5d83",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-27T01:58:45Z",
+      "side": 1,
+      "message": "yes. Access is to check whether the socket path is unlinked.",
+      "parentUuid": "8c9bcad7_b062bb8d",
+      "range": {
+        "startLine": 114,
+        "startChar": 3,
+        "endLine": 115,
+        "endChar": 72
+      },
+      "revId": "d003792662be800c1f1561dae37facda4bc1b242",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
