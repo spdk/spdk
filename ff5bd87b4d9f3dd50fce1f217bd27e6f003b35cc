@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "72030428_29dbea64",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-27T13:59:16Z",
+      "side": 1,
+      "message": "Not part of this patch, but has to be noted: this line does not work on Centos7 and Centos6 where lsblk does not have a column name SUBSYSTEMS. We are then unable to determine which virtio devs have an active mount point and we bind them to uio_pci_generic which causes system to crash or become unusable.",
+      "range": {
+        "startLine": 135,
+        "startChar": 1,
+        "endLine": 135,
+        "endChar": 91
+      },
+      "revId": "ff5bd87b4d9f3dd50fce1f217bd27e6f003b35cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
