@@ -10,7 +10,7 @@ set -xe
 
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
-source $rootdir/scripts/autotest_common.sh
+source $rootdir/test/common/autotest_common.sh
 timing_enter blobstore
 
 set -e
