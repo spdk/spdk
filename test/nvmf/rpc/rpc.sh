@@ -82,6 +82,12 @@ do
 		$rpc_py nvmf_subsystem_allow_any_host nqn.2016-06.io.spdk:cnode$j
 	done
 
+	j=0
+	for bdev in $bdevs; do
+		let j=j+1
+		$rpc_py nvmf_subsystem_remove_ns nqn.2016-06.io.spdk:cnode$j $j
+	done
+
 	n=$j
 	for j in `seq 1 $n`
 	do
