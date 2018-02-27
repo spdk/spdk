@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7f4e95e7_04050e20",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-27T03:42:39Z",
+      "side": 1,
+      "message": "This may be opaque too. It\u0027s OK if this is acceptable in general.",
+      "range": {
+        "startLine": 183,
+        "startChar": 34,
+        "endLine": 183,
+        "endChar": 36
+      },
+      "revId": "6a27e59fb6cee699c6c44d154e8b27adbbd59ee4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91adbf28_ffbe3d44",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 844,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-27T03:42:39Z",
+      "side": 1,
+      "message": "pointer to the failed sock_group is meaningful? I agree that this is better than nothing.",
+      "range": {
+        "startLine": 844,
+        "startChar": 42,
+        "endLine": 844,
+        "endChar": 44
+      },
+      "revId": "6a27e59fb6cee699c6c44d154e8b27adbbd59ee4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
