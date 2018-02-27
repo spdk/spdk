@@ -62,6 +62,23 @@
       "revId": "6a27e59fb6cee699c6c44d154e8b27adbbd59ee4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1e08d8d1_2c48054a",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 870,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-27T17:55:40Z",
+      "side": 1,
+      "message": "We should not be adding any more allocation checks with assert().\n\nIn this case, it is a little more complicated to fix (other refactoring would be necessary), so I suppose we can check it in as-is, but this needs to get cleaned up in the near future.",
+      "revId": "6a27e59fb6cee699c6c44d154e8b27adbbd59ee4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
