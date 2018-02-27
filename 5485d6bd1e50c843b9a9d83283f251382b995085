@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "debd3499_cc3167f6",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-02-27T16:20:54Z",
+      "side": 1,
+      "message": "Dariusz, my initial macro proposal seems to both eliminate explicit exit()\u0027s from within the lib code while satisfying a common design pattern for the callers, though I could understand some concerns about the nature of embedding the exit() calls in the macro.  I, myself, struggle to see the value in the first alternative you pose as the do_exit ptr and function return value are almost redundant, or otherwise more complicated than it needs to be.\n\nRegarding your other suggestion, fundamentally I\u0027m of the opinion of preferring to see any lib function returning a value of zero (0) on success, so defining SPDK_APP_PARSE_ARGS_SUCCESS with a value of INT_MAX goes against that principle.\n\nThank you for the feedback!  I\u0027m eager to see how others feel about this as well.",
+      "parentUuid": "3b8c3101_c6a7f317",
+      "range": {
+        "startLine": 206,
+        "startChar": 16,
+        "endLine": 206,
+        "endChar": 35
+      },
+      "revId": "5485d6bd1e50c843b9a9d83283f251382b995085",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "617a3971_ec7cc93e",
         "filename": "lib/event/app.c",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2018-02-27T09:10:31Z",
       "side": 1,
       "message": "unrelated change",
+      "range": {
+        "startLine": 514,
+        "startChar": 1,
+        "endLine": 515,
+        "endChar": 2
+      },
+      "revId": "5485d6bd1e50c843b9a9d83283f251382b995085",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "df2878b3_a9926cd3",
+        "filename": "lib/event/app.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 515,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-02-27T16:20:54Z",
+      "side": 1,
+      "message": "Dariusz, I think the scripts/check_format.sh performed this change automatically.",
+      "parentUuid": "617a3971_ec7cc93e",
       "range": {
         "startLine": 514,
         "startChar": 1,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "d671a69c_6a6982f9",
+        "filename": "lib/event/app.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 521,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-02-27T16:20:54Z",
+      "side": 1,
+      "message": "Dariusz, I think the scripts/check_format.sh performed this change automatically.",
+      "parentUuid": "1cd67378_1f46b614",
+      "range": {
+        "startLine": 520,
+        "startChar": 1,
+        "endLine": 521,
+        "endChar": 2
+      },
+      "revId": "5485d6bd1e50c843b9a9d83283f251382b995085",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "dd42c0ee_374150d8",
         "filename": "lib/event/app.c",
         "patchSetId": 3
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "8903c434_fbe36485",
+        "filename": "lib/event/app.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 527,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-02-27T16:20:54Z",
+      "side": 1,
+      "message": "Dariusz, I think the scripts/check_format.sh performed this change automatically.",
+      "parentUuid": "dd42c0ee_374150d8",
+      "range": {
+        "startLine": 526,
+        "startChar": 1,
+        "endLine": 527,
+        "endChar": 2
+      },
+      "revId": "5485d6bd1e50c843b9a9d83283f251382b995085",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "573f23e6_b9c6a097",
         "filename": "lib/event/app.c",
         "patchSetId": 3
@@ -105,6 +201,30 @@
       "writtenOn": "2018-02-27T09:10:31Z",
       "side": 1,
       "message": "can we have a goto label for that?",
+      "range": {
+        "startLine": 540,
+        "startChar": 3,
+        "endLine": 540,
+        "endChar": 20
+      },
+      "revId": "5485d6bd1e50c843b9a9d83283f251382b995085",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "05f811a0_a48a3689",
+        "filename": "lib/event/app.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 540,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-02-27T16:20:54Z",
+      "side": 1,
+      "message": "Yes, we could do something like that (i.e. add a goto), and it would also serve as a place for any other clean-up in case additional error handling is subsequently needed in future changes.",
+      "parentUuid": "573f23e6_b9c6a097",
       "range": {
         "startLine": 540,
         "startChar": 3,
