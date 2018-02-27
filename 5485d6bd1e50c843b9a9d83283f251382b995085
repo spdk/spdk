@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3b8c3101_c6a7f317",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-02-27T09:10:31Z",
+      "side": 1,
+      "message": "I don\u0027t think other will approve on using this macro. It seems very hacky.\nWhat if we, instead, told other apps to use spdk_app_parse_args as follows:\n\n```\nbool do_exit;\nint rc \u003d spdk_app_parse_args(int argc, char **argv, ..., bool *do_exit);\nif (do_exit) {\n  exit(rc);\n}\n```\n\nWe could also define SPDK_APP_PARSE_ARGS_SUCCESS as:\n\n```\n[....]\n#define SPDK_APP_PARSE_ARGS_SUCCESS INT_MAX\nSTATIC_ASSERT(SPDK_APP_PARSE_ARGS_SUCCESS !\u003d EXIT_FAILURE)\nSTATIC_ASSERT(SPDK_APP_PARSE_ARGS_SUCCESS !\u003d EXIT_SUCCESS)\n```\n\nand then:\n\n```\nint rc \u003d spdk_app_parse_args(...);\nif (rc !\u003d SPDK_APP_PARSE_ARGS_SUCCESS) {\n  exit(rc);\n}\n```\n\nHowever, I leave the review up to others.",
+      "range": {
+        "startLine": 206,
+        "startChar": 16,
+        "endLine": 206,
+        "endChar": 35
+      },
+      "revId": "5485d6bd1e50c843b9a9d83283f251382b995085",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "617a3971_ec7cc93e",
+        "filename": "lib/event/app.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 515,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-02-27T09:10:31Z",
+      "side": 1,
+      "message": "unrelated change",
+      "range": {
+        "startLine": 514,
+        "startChar": 1,
+        "endLine": 515,
+        "endChar": 2
+      },
+      "revId": "5485d6bd1e50c843b9a9d83283f251382b995085",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1cd67378_1f46b614",
+        "filename": "lib/event/app.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 521,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-02-27T09:10:31Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 520,
+        "startChar": 1,
+        "endLine": 521,
+        "endChar": 2
+      },
+      "revId": "5485d6bd1e50c843b9a9d83283f251382b995085",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dd42c0ee_374150d8",
+        "filename": "lib/event/app.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 527,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-02-27T09:10:31Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 526,
+        "startChar": 1,
+        "endLine": 527,
+        "endChar": 2
+      },
+      "revId": "5485d6bd1e50c843b9a9d83283f251382b995085",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "573f23e6_b9c6a097",
+        "filename": "lib/event/app.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 540,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-02-27T09:10:31Z",
+      "side": 1,
+      "message": "can we have a goto label for that?",
+      "range": {
+        "startLine": 540,
+        "startChar": 3,
+        "endLine": 540,
+        "endChar": 20
+      },
+      "revId": "5485d6bd1e50c843b9a9d83283f251382b995085",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
