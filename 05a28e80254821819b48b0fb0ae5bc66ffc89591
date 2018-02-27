@@ -132,6 +132,30 @@
     },
     {
       "key": {
+        "uuid": "479244a0_bb3fed53",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1166,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-02-27T01:52:38Z",
+      "side": 1,
+      "message": "Also Shuhei, do you check the logic in spdk_iscsi_conn_handle_nop?  Currently with my patch, this function will still be executed as the usual see in loop in spdk_iscsi_poll_group_poll. Currently the approach maybe not quite efficient, but should not have the issue mentioned by you. If we have this issue, it should be the issue already existing.",
+      "parentUuid": "6f3b1394_b838cc61",
+      "range": {
+        "startLine": 1166,
+        "startChar": 6,
+        "endLine": 1166,
+        "endChar": 32
+      },
+      "revId": "05a28e80254821819b48b0fb0ae5bc66ffc89591",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c3b6bdab_602824ea",
         "filename": "lib/iscsi/iscsi_subsystem.c",
         "patchSetId": 23
