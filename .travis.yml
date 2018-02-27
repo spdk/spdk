@@ -24,4 +24,4 @@ script:
   - ./scripts/check_format.sh
   - ./configure --enable-werror
   - make
-  - ./unittest.sh
+  - ./test/unit/unittest.sh
