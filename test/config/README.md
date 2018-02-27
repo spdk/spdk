@@ -25,7 +25,7 @@ Every machine that runs the autotest scripts should include a file titled autoru
 of the user that will run them. This file consists of several lines of the form 'variable_name=0/1'. autorun.sh sources
 this file each time it is run, and determines which tests to attempt based on which variables are defined in the
 configuration file. For a full list of the variable declarations available for autorun-spdk.conf, please see
-`scripts/autotest_common.sh` starting at line 13.
+`test/common/autotest_common.sh` starting at line 13.
 
 ## Steps for Configuring the VM
 1. Download a fresh Fedora 26 image.

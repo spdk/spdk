@@ -126,7 +126,7 @@ vm_ssh $vm_no " cd spdk ; make clean ; ./configure --with-fio=/root/fio_src ; ma
 timing_exit vm_build_spdk
 
 vm_ssh $vm_no "/root/spdk/scripts/setup.sh"
-vbdevs=$(vm_ssh $vm_no ". /root/spdk/scripts/autotest_common.sh && discover_bdevs /root/spdk \
+vbdevs=$(vm_ssh $vm_no ". /root/spdk/test/common/autotest_common.sh && discover_bdevs /root/spdk \
  /root/spdk/test/vhost/initiator/bdev_pci.conf")
 virtio_bdevs=$(jq -r '[.[].name] | join(":")' <<< $vbdevs)
 virtio_with_unmap=$(jq -r '[.[] | select(.supported_io_types.unmap==true).name]

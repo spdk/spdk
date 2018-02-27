@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
-source $rootdir/scripts/autotest_common.sh
+source $rootdir/test/common/autotest_common.sh
 
 if [ ! $(uname -s) = Linux ]; then
 	exit 0
