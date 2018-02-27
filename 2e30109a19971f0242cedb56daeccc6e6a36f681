@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "03f2cfb6_93b4bd26",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 961,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-27T16:26:01Z",
+      "side": 1,
+      "message": "If there is no poll group, we should still call spdk_iscsi_fini_done(); I think this breaks in that case.",
+      "revId": "2e30109a19971f0242cedb56daeccc6e6a36f681",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
