@@ -84,6 +84,30 @@
     },
     {
       "key": {
+        "uuid": "b85de3c7_79dde742",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1166,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-27T01:36:26Z",
+      "side": 1,
+      "message": "Hi Ziye, \n\nYes, if I understand correctly, this will be called in normal condition because nopin and nopout are exchanged periodically.\n\nMy concern is whether we can detect the timeout of NOPOUT from the initiator when the initiator crashes because this will not be called if the target does not receive request.\n\nBesides conn_handle_nop() should run based on the timer but conn_execute() runs based not on the timer but on the epoll_wait. Hence anyway I think conn_handle_nop() should be extracted even if test passes.\n\nIf my understanding is wrong, please revise it.\n\nThanks,\nShuhei",
+      "parentUuid": "b5341e80_142d551f",
+      "range": {
+        "startLine": 1166,
+        "startChar": 6,
+        "endLine": 1166,
+        "endChar": 32
+      },
+      "revId": "05a28e80254821819b48b0fb0ae5bc66ffc89591",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c3b6bdab_602824ea",
         "filename": "lib/iscsi/iscsi_subsystem.c",
         "patchSetId": 23
