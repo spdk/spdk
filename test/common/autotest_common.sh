@@ -312,14 +312,14 @@ function rbd_setup() {
 	if hash ceph; then
 		export RBD_POOL=rbd
 		export RBD_NAME=foo
-		(cd $rootdir/scripts/ceph && ./start.sh)
+		$rootdir/scripts/ceph/start.sh
 		rbd create $RBD_NAME --size 1000
 	fi
 }
 
 function rbd_cleanup() {
 	if hash ceph; then
-		(cd $rootdir/scripts/ceph && ./stop.sh || true)
+		$rootdir/scripts/ceph/stop.sh || true
 	fi
 }
 
