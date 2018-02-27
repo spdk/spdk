@@ -64,6 +64,10 @@ $valgrind $rootdir/lib/blobfs/blobfs_async_ut/blobfs_async_ut
 # blobfs_sync_ut hangs when run under valgrind, so don't use $valgrind
 $rootdir/lib/blobfs/blobfs_sync_ut/blobfs_sync_ut
 
+$valgrind $rootdir/lib/env/memory/memory_ut
+$valgrind $rootdir/lib/env/pci/pci_ut
+$valgrind $rootdir/lib/env/vtophys/vtophys
+
 $valgrind $rootdir/lib/event/subsystem.c/subsystem_ut
 
 $valgrind $rootdir/lib/net/sock.c/sock_ut
