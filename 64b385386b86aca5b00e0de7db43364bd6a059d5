@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9cdc1c09_8fde1f99",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-27T23:26:25Z",
+      "side": 1,
+      "message": "Thank you, I knew the new helpful function through review recently and I will adopt it.",
+      "parentUuid": "5ddc2608_bacb7fb4",
+      "range": {
+        "startLine": 180,
+        "startChar": 0,
+        "endLine": 181,
+        "endChar": 53
+      },
+      "revId": "64b385386b86aca5b00e0de7db43364bd6a059d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8cff29eb_a0c12ebc",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2018-02-27T19:57:55Z",
       "side": 1,
       "message": "Not sure but maybe \"depend_on\" would be better?",
+      "range": {
+        "startLine": 183,
+        "startChar": 26,
+        "endLine": 183,
+        "endChar": 35
+      },
+      "revId": "64b385386b86aca5b00e0de7db43364bd6a059d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ebac988_d55d3440",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-27T23:26:25Z",
+      "side": 1,
+      "message": "Thank you.\n\nThe following array will output vbdevs which uses the bdev.\nIn other words the bdev will be used by the vbdevs.\n\nHence depend_on may not be appropriate.\n\nI found two ideas and I\u0027ll take the former.\n\n\"Objects that depend on\" and \"Objects on which depends\"\nhttps://docs.microsoft.com/en-us/sql/ssms/object/object-dependencies\n\n\"Depends on\" and \"Used by\"\nhttps://www.devart.com/dbforge/sql/studio/object-dependencies.html",
+      "parentUuid": "8cff29eb_a0c12ebc",
       "range": {
         "startLine": 183,
         "startChar": 26,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "879998b4_29c50da2",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-27T23:26:25Z",
+      "side": 1,
+      "message": "I Got it.",
+      "parentUuid": "ec5b2090_c9717ba2",
+      "range": {
+        "startLine": 183,
+        "startChar": 1,
+        "endLine": 185,
+        "endChar": 32
+      },
+      "revId": "64b385386b86aca5b00e0de7db43364bd6a059d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a17c75fa_88c58ed7",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 2
@@ -82,6 +154,24 @@
       "writtenOn": "2018-02-27T19:57:55Z",
       "side": 1,
       "message": "This only my personal preference but can you try to limit amount of nested if\u0027s (something like here https://review.gerrithub.io/#/c/401217/1/lib/bdev/rpc/bdev_rpc.c@207) ?",
+      "revId": "64b385386b86aca5b00e0de7db43364bd6a059d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "85dcfbc8_c0bf9ee8",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-27T23:26:25Z",
+      "side": 1,
+      "message": "Sounds good. I\u0027ll try it. Thank you.",
+      "parentUuid": "a17c75fa_88c58ed7",
       "revId": "64b385386b86aca5b00e0de7db43364bd6a059d5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -122,6 +212,30 @@
       "writtenOn": "2018-02-27T19:57:55Z",
       "side": 1,
       "message": "I recently introduced spdk_jsonrpc_send_error_response_fmt() function to aid reporting error messages. You can check  the idea here https://review.gerrithub.io/#/c/401217/1/lib/bdev/rpc/bdev_rpc.c@219.",
+      "range": {
+        "startLine": 220,
+        "startChar": 4,
+        "endLine": 221,
+        "endChar": 17
+      },
+      "revId": "64b385386b86aca5b00e0de7db43364bd6a059d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "03921a83_3a153c86",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-27T23:26:25Z",
+      "side": 1,
+      "message": "Thank you, I\u0027ll take it.",
+      "parentUuid": "7d728fcd_26cb7d35",
       "range": {
         "startLine": 220,
         "startChar": 4,
