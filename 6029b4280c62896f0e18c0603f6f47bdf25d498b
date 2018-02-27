@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0730a0a2_df2f9524",
+        "filename": "app/nvmf_tgt/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1040,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-27T16:15:03Z",
+      "side": 1,
+      "message": "I don\u0027t think we want to use the same decoder as add_ns; it allows a lot of optional fields that don\u0027t make sense for remove_ns.\n\nThe subsystem NQN + NSID is a unique identifier, so we could just use something that looks like:\n\n  {\n    \"nqn\": \"nqn...\",\n    \"nsid\": 5\n  }",
+      "range": {
+        "startLine": 1040,
+        "startChar": 37,
+        "endLine": 1040,
+        "endChar": 66
+      },
+      "revId": "6029b4280c62896f0e18c0603f6f47bdf25d498b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c8e232c_3a8f451a",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-27T16:15:03Z",
+      "side": 1,
+      "message": "I think it would be better to pass the nsid of the namespace to remove, rather than specifying a whole namespace object.  That would also let us remove the loop over all namespaces when trying to find the one to remove.",
+      "revId": "6029b4280c62896f0e18c0603f6f47bdf25d498b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b71f33c7_abbe2d95",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 461,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-27T16:15:03Z",
+      "side": 1,
+      "message": "We should probably return \u0027true\u0027 from the delete RPC rather than the nsid removed.",
+      "revId": "6029b4280c62896f0e18c0603f6f47bdf25d498b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
