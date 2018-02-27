@@ -6,7 +6,6 @@ set -e
 
 script_dir=$(readlink -f $(dirname $0))
 
-fsid=`uuidgen`
 base_dir=/var/tmp/ceph
 mon_ip=127.0.0.1
 mon_dir=${base_dir}/mon.a/
