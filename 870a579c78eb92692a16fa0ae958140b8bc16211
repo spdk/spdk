@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c151c497_0f62e335",
+        "filename": "test/vhost/hotplug/scsi_hotremove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-27T14:04:39Z",
+      "side": 1,
+      "message": "# ## \nFirst # is a comment?\nSecond ## are markdown \u0027syntax\u0027. I believe we don\u0027t need it because it\u0027s not a .md document.\nJust one # per line is sufficient.",
+      "range": {
+        "startLine": 5,
+        "startChar": 0,
+        "endLine": 5,
+        "endChar": 14
+      },
+      "revId": "870a579c78eb92692a16fa0ae958140b8bc16211",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f6d76cc_438fb545",
+        "filename": "test/vhost/hotplug/scsi_hotremove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-27T14:04:39Z",
+      "side": 1,
+      "message": "Try to have the same indentation as code.",
+      "range": {
+        "startLine": 54,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 48
+      },
+      "revId": "870a579c78eb92692a16fa0ae958140b8bc16211",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47e0d356_76df66bc",
+        "filename": "test/vhost/hotplug/scsi_hotremove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-27T14:04:39Z",
+      "side": 1,
+      "message": "Expected:",
+      "range": {
+        "startLine": 81,
+        "startChar": 5,
+        "endLine": 81,
+        "endChar": 11
+      },
+      "revId": "870a579c78eb92692a16fa0ae958140b8bc16211",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
