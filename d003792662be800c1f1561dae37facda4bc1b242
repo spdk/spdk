@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d7ec81a5_c28250eb",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-27T01:40:51Z",
+      "side": 1,
+      "message": "Yes, agreed. This lock file is only for the default socket path. I\u0027ve added the check below so that other concurrently running SPDK applications will not be affected at the startup if assigning a different socket path.\n\nBut your suggestion looks like can cover a more general usage if user SPDK applications assign specified (not default) and same socket path in their scenarios.",
+      "parentUuid": "f84ae0c9_e6349dd4",
+      "revId": "d003792662be800c1f1561dae37facda4bc1b242",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "70b1c98c_2ff5f73e",
         "filename": "lib/rpc/rpc.c",
         "patchSetId": 5
