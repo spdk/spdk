@@ -31,11 +31,11 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
 SPDK_LIB_LIST = blob
-TEST_FILE = blobfs_sync_ut.c
+TEST_FILE = blobfs_async_ut.c
 
 include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk

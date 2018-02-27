@@ -89,7 +89,7 @@ fi
 
 if [ $SPDK_TEST_UNITTEST -eq 1 ]; then
 	timing_enter unittest
-	run_test ./unittest.sh
+	run_test ./test/unit/unittest.sh
 	report_test_completion "unittest"
 	timing_exit unittest
 fi

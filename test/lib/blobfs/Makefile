@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = blobfs_async_ut blobfs_sync_ut mkfs
+DIRS-y = mkfs
 
 # TODO: do not check a hardcoded path here
 ifneq (,$(wildcard /usr/local/include/fuse3))

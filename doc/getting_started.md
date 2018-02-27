@@ -56,7 +56,7 @@ It's always a good idea to confirm your build worked by running the
 unit tests.
 
 ~~~{.sh}
-./unittest.sh
+./test/unit/unittest.sh
 ~~~
 
 You will see several error messages when running the unit tests, but they are

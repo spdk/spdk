@@ -79,7 +79,7 @@ gmake
 ## Unit Tests
 
 ~~~{.sh}
-./unittest.sh
+./test/unit/unittest.sh
 ~~~
 
 You will see several error messages when running the unit tests, but they are
