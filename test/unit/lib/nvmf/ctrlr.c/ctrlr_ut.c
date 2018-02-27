@@ -314,7 +314,7 @@ test_connect(void)
 	/* Valid admin connect command */
 	memset(&rsp, 0, sizeof(rsp));
 	rc = spdk_nvmf_ctrlr_connect(&req);
-	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
 	CU_ASSERT(nvme_status_success(&rsp.nvme_cpl.status));
 	CU_ASSERT(qpair.ctrlr != NULL);
 	free(qpair.ctrlr);
@@ -441,7 +441,7 @@ test_connect(void)
 	memset(&rsp, 0, sizeof(rsp));
 	MOCK_SET(spdk_nvmf_subsystem_get_ctrlr, struct spdk_nvmf_ctrlr *, NULL);
 	rc = spdk_nvmf_ctrlr_connect(&req);
-	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
 	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC);
 	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVMF_FABRIC_SC_INVALID_PARAM);
 	CU_ASSERT(rsp.connect_rsp.status_code_specific.invalid.iattr == 1);
