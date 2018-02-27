@@ -248,6 +248,8 @@ hello_world(void)
 		spdk_nvme_ctrlr_free_io_qpair(ns_entry->qpair);
 		ns_entry = ns_entry->next;
 	}
+
+	abort();
 }
 
 static bool
