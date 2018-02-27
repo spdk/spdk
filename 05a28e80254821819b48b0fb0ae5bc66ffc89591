@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "03e16ae7_a9a2b262",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1149,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-27T17:45:02Z",
+      "side": 1,
+      "message": "OK - I understand now.  Thanks for your explanation.",
+      "parentUuid": "c84a256b_ad7e4de3",
+      "revId": "05a28e80254821819b48b0fb0ae5bc66ffc89591",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "de0d7812_f03d0ef1",
         "filename": "lib/iscsi/conn.c",
         "patchSetId": 23
