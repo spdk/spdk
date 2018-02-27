@@ -2185,12 +2185,6 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 
 	pthread_mutex_lock(&bdev->mutex);
 
-	if (!TAILQ_EMPTY(&bdev->base_bdevs)) {
-		TAILQ_FOREACH(base_bdev, &bdev->base_bdevs, base_bdev_link) {
-			TAILQ_REMOVE(&base_bdev->vbdevs, bdev, vbdev_link);
-		}
-	}
-
 	bdev->status = SPDK_BDEV_STATUS_REMOVING;
 	bdev->unregister_cb = cb_fn;
 	bdev->unregister_ctx = cb_arg;
@@ -2211,6 +2205,12 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	if (!do_destruct) {
 		pthread_mutex_unlock(&bdev->mutex);
 		return;
+	}
+
+	if (!TAILQ_EMPTY(&bdev->base_bdevs)) {
+		TAILQ_FOREACH(base_bdev, &bdev->base_bdevs, base_bdev_link) {
+			TAILQ_REMOVE(&base_bdev->vbdevs, bdev, vbdev_link);
+		}
 	}
 
 	TAILQ_REMOVE(&g_bdev_mgr.bdevs, bdev, link);
