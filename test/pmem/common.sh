@@ -4,7 +4,7 @@ BASE_DIR=$(readlink -f $(dirname $0))
 [[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $BASE_DIR/../../ && pwd)"
 rpc_py="$TEST_DIR/scripts/rpc.py "
 
-source $TEST_DIR/scripts/autotest_common.sh
+source $TEST_DIR/test/common/autotest_common.sh
 
 # Prints error message and return error code, closes vhost app and remove
 # pmem pool file

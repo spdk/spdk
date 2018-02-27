@@ -77,9 +77,9 @@ source $(readlink -f $(dirname ${BASH_SOURCE[0]}))/autotest.config
 # Trace flag is optional, if it wasn't set earlier - disable it after sourcing
 # autotest_common.sh
 if [[ $- =~ x ]]; then
-	source $SPDK_BUILD_DIR/scripts/autotest_common.sh
+	source $SPDK_BUILD_DIR/test/common/autotest_common.sh
 else
-	source $SPDK_BUILD_DIR/scripts/autotest_common.sh
+	source $SPDK_BUILD_DIR/test/common/autotest_common.sh
 	set +x
 fi
 

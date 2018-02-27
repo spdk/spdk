@@ -3,7 +3,7 @@
 set -xe
 
 rootdir=$(readlink -f $(dirname $0))
-source "$rootdir/scripts/autotest_common.sh"
+source "$rootdir/test/common/autotest_common.sh"
 
 out=$PWD
 

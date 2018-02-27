@@ -2,7 +2,7 @@
 
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
-source $rootdir/scripts/autotest_common.sh
+source $rootdir/test/common/autotest_common.sh
 
 timing_enter event
 $testdir/event_perf/event_perf -m 0xF -t 1

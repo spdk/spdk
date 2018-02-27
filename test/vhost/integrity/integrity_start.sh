@@ -30,7 +30,7 @@ while getopts 'i:m:f:' optchar; do
     esac
 done
 
-source $rootdir/scripts/autotest_common.sh
+source $rootdir/test/common/autotest_common.sh
 
 if [ -z "$VM_IMG" ]; then
     echo "ERROR: VM_IMG: path to qcow2 image not provided - not running"

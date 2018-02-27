@@ -5,7 +5,7 @@ set -e
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/scripts/common.sh
-source $rootdir/scripts/autotest_common.sh
+source $rootdir/test/common/autotest_common.sh
 
 function get_nvme_name_from_bdf {
 	lsblk -d --output NAME
