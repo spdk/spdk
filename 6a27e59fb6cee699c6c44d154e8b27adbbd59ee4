@@ -25,6 +25,23 @@
     },
     {
       "key": {
+        "uuid": "9cd0a08f_089517df",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 841,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-27T17:45:02Z",
+      "side": 1,
+      "message": "I still think we can avoid this check and just call spdk_sock_group_poll() even if there are no connection in the group.  spdk_sock code should just handle that.\n\nBut we can make that change later.",
+      "revId": "6a27e59fb6cee699c6c44d154e8b27adbbd59ee4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "91adbf28_ffbe3d44",
         "filename": "lib/iscsi/iscsi_subsystem.c",
         "patchSetId": 24
