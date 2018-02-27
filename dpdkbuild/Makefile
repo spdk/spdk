@@ -72,6 +72,11 @@ else
 DPDK_CFLAGS += -Wno-error
 endif
 
+# FIXME: Fix compilation With DPDK 18.02 and GCC < 4.5.0
+DPDK_CFLAGS += -DALLOW_EXPERIMENTAL_API
+
+Q=
+
 $(SPDK_ROOT_DIR)/dpdk/build:
 	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/dpdk config T=$(DPDK_CONFIG)
 
