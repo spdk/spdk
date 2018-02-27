@@ -378,6 +378,11 @@ if __name__ == "__main__":
     p.add_argument('-e', '--eui64', help='Namespace EUI-64 identifier (optional)')
     p.set_defaults(func=rpc.nvmf.nvmf_subsystem_add_ns)
 
+    p = subparsers.add_parser('nvmf_subsystem_remove_ns', help='Remove a namespace to an NVMe-oF subsystem')
+    p.add_argument('nqn', help='NVMe-oF subsystem NQN')
+    p.add_argument('nsid', help='The requested NSID', type=int)
+    p.set_defaults(func=rpc.nvmf.nvmf_subsystem_remove_ns)
+
     p = subparsers.add_parser('nvmf_subsystem_add_host', help='Add a host to an NVMe-oF subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
     p.add_argument('host', help='Host NQN to allow')
