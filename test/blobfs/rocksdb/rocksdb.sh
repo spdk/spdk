@@ -19,7 +19,7 @@ run_step() {
 
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
-source $rootdir/scripts/autotest_common.sh
+source $rootdir/test/common/autotest_common.sh
 
 DB_BENCH_DIR=/usr/src/rocksdb
 DB_BENCH=$DB_BENCH_DIR/db_bench

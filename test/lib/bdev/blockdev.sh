@@ -17,7 +17,7 @@ function run_fio()
 	fi
 }
 
-source $rootdir/scripts/autotest_common.sh
+source $rootdir/test/common/autotest_common.sh
 source $testdir/nbd_common.sh
 
 function nbd_function_test() {

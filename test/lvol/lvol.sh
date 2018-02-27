@@ -86,7 +86,7 @@ while getopts 'xh-:' optchar; do
 done
 shift $(( OPTIND - 1 ))
 
-source $TEST_DIR/scripts/autotest_common.sh
+source $TEST_DIR/test/common/autotest_common.sh
 
 ###  Function starts vhost app
 function vhost_start()

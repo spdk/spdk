@@ -2,7 +2,7 @@
 
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
-source $rootdir/scripts/autotest_common.sh
+source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
 NULL_BDEV_SIZE=102400
