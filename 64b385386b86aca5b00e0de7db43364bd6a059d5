@@ -1,0 +1,136 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5ddc2608_bacb7fb4",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-27T19:57:55Z",
+      "side": 1,
+      "message": "You can use \u0027named\u0027 variant now: spdk_json_write_named_string(w, \"name\", spdk_bdev_get_name(bdev));",
+      "range": {
+        "startLine": 180,
+        "startChar": 0,
+        "endLine": 181,
+        "endChar": 53
+      },
+      "revId": "64b385386b86aca5b00e0de7db43364bd6a059d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8cff29eb_a0c12ebc",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-27T19:57:55Z",
+      "side": 1,
+      "message": "Not sure but maybe \"depend_on\" would be better?",
+      "range": {
+        "startLine": 183,
+        "startChar": 26,
+        "endLine": 183,
+        "endChar": 35
+      },
+      "revId": "64b385386b86aca5b00e0de7db43364bd6a059d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec5b2090_c9717ba2",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-27T19:57:55Z",
+      "side": 1,
+      "message": "like above: spdk_json_write_named_array_begin()",
+      "range": {
+        "startLine": 183,
+        "startChar": 1,
+        "endLine": 185,
+        "endChar": 32
+      },
+      "revId": "64b385386b86aca5b00e0de7db43364bd6a059d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a17c75fa_88c58ed7",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-27T19:57:55Z",
+      "side": 1,
+      "message": "This only my personal preference but can you try to limit amount of nested if\u0027s (something like here https://review.gerrithub.io/#/c/401217/1/lib/bdev/rpc/bdev_rpc.c@207) ?",
+      "revId": "64b385386b86aca5b00e0de7db43364bd6a059d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "89438720_27c7db9c",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-27T19:57:55Z",
+      "side": 1,
+      "message": "I think this is legacy construction. Missing mandatory parameters will fail in spdk_json_decode_object().\nThis and other files could use some cleanup...",
+      "range": {
+        "startLine": 213,
+        "startChar": 0,
+        "endLine": 216,
+        "endChar": 4
+      },
+      "revId": "64b385386b86aca5b00e0de7db43364bd6a059d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d728fcd_26cb7d35",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-27T19:57:55Z",
+      "side": 1,
+      "message": "I recently introduced spdk_jsonrpc_send_error_response_fmt() function to aid reporting error messages. You can check  the idea here https://review.gerrithub.io/#/c/401217/1/lib/bdev/rpc/bdev_rpc.c@219.",
+      "range": {
+        "startLine": 220,
+        "startChar": 4,
+        "endLine": 221,
+        "endChar": 17
+      },
+      "revId": "64b385386b86aca5b00e0de7db43364bd6a059d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
