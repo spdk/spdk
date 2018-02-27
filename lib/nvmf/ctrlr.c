@@ -56,6 +56,44 @@
  */
 #define FW_VERSION SPDK_VERSION_MAJOR_STRING SPDK_VERSION_MINOR_STRING SPDK_VERSION_PATCH_STRING
 
+static inline void
+spdk_nvmf_invalid_connect_response(struct spdk_nvmf_fabric_connect_rsp *rsp,
+				   uint8_t iattr, uint16_t ipo)
+{
+	rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+	rsp->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
+	rsp->status_code_specific.invalid.iattr = iattr;
+	rsp->status_code_specific.invalid.ipo = ipo;
+}
+
+#define SPDK_NVMF_INVALID_CONNECT_CMD(rsp, field)	\
+	spdk_nvmf_invalid_connect_response(rsp, 0, offsetof(struct spdk_nvmf_fabric_connect_cmd, field))
+#define SPDK_NVMF_INVALID_CONNECT_DATA(rsp, field)	\
+	spdk_nvmf_invalid_connect_response(rsp, 1, offsetof(struct spdk_nvmf_fabric_connect_data, field))
+
+static void
+ctrlr_add_qpair_and_update_rsp(struct spdk_nvmf_qpair *qpair,
+			       struct spdk_nvmf_ctrlr *ctrlr,
+			       struct spdk_nvmf_fabric_connect_rsp *rsp)
+{
+	qpair->ctrlr = ctrlr;
+	ctrlr->num_qpairs++;
+	TAILQ_INSERT_HEAD(&ctrlr->qpairs, qpair, link);
+
+	rsp->status.sc = SPDK_NVME_SC_SUCCESS;
+	rsp->status_code_specific.success.cntlid = ctrlr->cntlid;
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "connect capsule response: cntlid = 0x%04x\n",
+		      rsp->status_code_specific.success.cntlid);
+}
+
+static void
+_spdk_nvmf_request_complete(void *ctx)
+{
+	struct spdk_nvmf_request *req = ctx;
+
+	spdk_nvmf_request_complete(req);
+}
+
 static struct spdk_nvmf_ctrlr *
 spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		       struct spdk_nvmf_qpair *admin_qpair,
@@ -135,44 +173,6 @@ spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 	}
 
 	ctrlr_destruct(ctrlr);
-}
-
-static inline void
-spdk_nvmf_invalid_connect_response(struct spdk_nvmf_fabric_connect_rsp *rsp,
-				   uint8_t iattr, uint16_t ipo)
-{
-	rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
-	rsp->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
-	rsp->status_code_specific.invalid.iattr = iattr;
-	rsp->status_code_specific.invalid.ipo = ipo;
-}
-
-#define SPDK_NVMF_INVALID_CONNECT_CMD(rsp, field)	\
-	spdk_nvmf_invalid_connect_response(rsp, 0, offsetof(struct spdk_nvmf_fabric_connect_cmd, field))
-#define SPDK_NVMF_INVALID_CONNECT_DATA(rsp, field)	\
-	spdk_nvmf_invalid_connect_response(rsp, 1, offsetof(struct spdk_nvmf_fabric_connect_data, field))
-
-static void
-ctrlr_add_qpair_and_update_rsp(struct spdk_nvmf_qpair *qpair,
-			       struct spdk_nvmf_ctrlr *ctrlr,
-			       struct spdk_nvmf_fabric_connect_rsp *rsp)
-{
-	qpair->ctrlr = ctrlr;
-	ctrlr->num_qpairs++;
-	TAILQ_INSERT_HEAD(&ctrlr->qpairs, qpair, link);
-
-	rsp->status.sc = SPDK_NVME_SC_SUCCESS;
-	rsp->status_code_specific.success.cntlid = ctrlr->cntlid;
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "connect capsule response: cntlid = 0x%04x\n",
-		      rsp->status_code_specific.success.cntlid);
-}
-
-static void
-_spdk_nvmf_request_complete(void *ctx)
-{
-	struct spdk_nvmf_request *req = ctx;
-
-	spdk_nvmf_request_complete(req);
 }
 
 static void
