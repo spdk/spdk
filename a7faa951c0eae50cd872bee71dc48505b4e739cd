@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "dacc224b_2d376444",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-27T19:13:43Z",
+      "side": 1,
+      "message": "Hi Sebastian,\n\nYes - adding an spdk_lvol_store pointer seems like a good solution.\n\n-Jim",
+      "parentUuid": "48b99aaa_3224bfa7",
+      "revId": "a7faa951c0eae50cd872bee71dc48505b4e739cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f9206ba6_ebd88291",
         "filename": "include/spdk_internal/lvolstore.h",
         "patchSetId": 12
@@ -170,6 +188,24 @@
       "side": 1,
       "message": "copy of new_name is already done in line 695, instead of creating a new field, maybe it will be enough to use existing one in spdk_lvs_with_handle_req (which You suggested to move to spdk_lvs_req)?",
       "parentUuid": "8034b70a_2f1405c1",
+      "revId": "a7faa951c0eae50cd872bee71dc48505b4e739cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fff00fff_e9bfab26",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 630,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-27T19:13:43Z",
+      "side": 1,
+      "message": "I\u0027m not sure.  I am concerned about case where user tries to rename two different logical volume stores to the same name at the same time.  If the new_name is in the spdk_lvs_req instead of lvs itself, it will make it much harder to assure this does not happen.\n\nChecking for a duplicate again here is not really a good solution either - because if it\u0027s a duplicate, then we have to change it back to the original name and someone may have already renamed a different lvol store to that name.\n\nI know these are all very crazy corner cases but want to make sure we get it right the first time.  Unit tests for these cases would be good too.",
+      "parentUuid": "a4be2384_9882d116",
       "revId": "a7faa951c0eae50cd872bee71dc48505b4e739cd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
