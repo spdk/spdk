@@ -156,6 +156,30 @@
     },
     {
       "key": {
+        "uuid": "a93cfad2_983c6c95",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1166,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-27T02:07:27Z",
+      "side": 1,
+      "message": "Hi Ziye, I\u0027m sorry that you are right and no issue occur as I said.\nI checked poll_group_poll() is registered as a poller per core and work as same as before.\nI got wrong that you already integrated iscsi_poll_group to sock_group.\n\nThank you so much.",
+      "parentUuid": "479244a0_bb3fed53",
+      "range": {
+        "startLine": 1166,
+        "startChar": 6,
+        "endLine": 1166,
+        "endChar": 32
+      },
+      "revId": "05a28e80254821819b48b0fb0ae5bc66ffc89591",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c3b6bdab_602824ea",
         "filename": "lib/iscsi/iscsi_subsystem.c",
         "patchSetId": 23
