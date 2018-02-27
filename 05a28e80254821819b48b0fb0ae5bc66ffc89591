@@ -108,6 +108,30 @@
     },
     {
       "key": {
+        "uuid": "6f3b1394_b838cc61",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1166,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-02-27T01:41:16Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nI understand your concerns, this will be done in the next patch in my plan(use a timer) but not this patch. My first priority is to make epoll polling work.",
+      "parentUuid": "b85de3c7_79dde742",
+      "range": {
+        "startLine": 1166,
+        "startChar": 6,
+        "endLine": 1166,
+        "endChar": 32
+      },
+      "revId": "05a28e80254821819b48b0fb0ae5bc66ffc89591",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c3b6bdab_602824ea",
         "filename": "lib/iscsi/iscsi_subsystem.c",
         "patchSetId": 23
