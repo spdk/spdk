@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "85924ae2_3fb049c9",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 1779,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-27T23:58:35Z",
+      "side": 1,
+      "message": "I don\u0027t think enums as part of bitfields is well defined in C; this should still use uint16_t as the type, with a \\ref command_submission_execution in the doc comment.",
+      "revId": "e0a619e925ca3d127806bca56caca9ea0aa24eff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
