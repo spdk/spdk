@@ -227,6 +227,15 @@ retry:
 			continue;
 		}
 
+		if (res->ai_family == AF_INET6) {
+			rc = setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &val, sizeof val);
+			if (rc != 0) {
+				close(fd);
+				/* error */
+				continue;
+			}
+		}
+
 		if (type == SPDK_SOCK_CREATE_LISTEN) {
 			rc = bind(fd, res->ai_addr, res->ai_addrlen);
 			if (rc != 0) {
