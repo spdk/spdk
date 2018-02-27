@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "30d69b42_d6381023",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 665,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-02-27T21:36:05Z",
+      "side": 1,
+      "message": "Does this path need to call free_fs_request()?",
+      "revId": "a02c5f7bb41b9a50cd11e37539803f977b24ea09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
