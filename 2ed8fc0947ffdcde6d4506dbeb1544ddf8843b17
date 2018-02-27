@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "287026f8_dfc10fd1",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-27T17:56:18Z",
+      "side": 1,
+      "message": "why change these tests in this patch? this seems unrelated",
+      "revId": "2ed8fc0947ffdcde6d4506dbeb1544ddf8843b17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7338247c_6e90b660",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-27T17:56:18Z",
+      "side": 1,
+      "message": "why do we need to move this here?\n\nmy concern is that this requires full initialization of DPDK and NVMe devices - when it runs with stub in the background, those parts can be skipped",
+      "revId": "2ed8fc0947ffdcde6d4506dbeb1544ddf8843b17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
