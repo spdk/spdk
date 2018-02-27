@@ -94,9 +94,42 @@ _spdk_nvmf_request_complete(void *ctx)
 	spdk_nvmf_request_complete(req);
 }
 
+static void
+_spdk_nvmf_ctrlr_add_admin_qpair(void *ctx)
+{
+	struct spdk_nvmf_request *req = ctx;
+	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
+	struct spdk_nvmf_qpair *qpair = req->qpair;
+	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
+
+	ctrlr->admin_qpair = qpair;
+	ctrlr_add_qpair_and_update_rsp(qpair, ctrlr, rsp);
+	spdk_nvmf_request_complete(req);
+}
+
+static void
+_spdk_nvmf_subsystem_add_ctrlr(void *ctx)
+{
+	struct spdk_nvmf_request *req = ctx;
+	struct spdk_nvmf_qpair *qpair = req->qpair;
+	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
+	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
+
+	if (spdk_nvmf_subsystem_add_ctrlr(ctrlr->subsys, ctrlr)) {
+		SPDK_ERRLOG("Unable to add controller to subsystem\n");
+		free(ctrlr);
+		qpair->ctrlr = NULL;
+		rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+		spdk_thread_send_msg(qpair->group->thread, _spdk_nvmf_request_complete, req);
+		return;
+	}
+
+	spdk_thread_send_msg(qpair->group->thread, _spdk_nvmf_ctrlr_add_admin_qpair, req);
+}
+
 static struct spdk_nvmf_ctrlr *
 spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
-		       struct spdk_nvmf_qpair *admin_qpair,
+		       struct spdk_nvmf_request *req,
 		       struct spdk_nvmf_fabric_connect_cmd *connect_cmd,
 		       struct spdk_nvmf_fabric_connect_data *connect_data)
 {
@@ -111,6 +144,7 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		return NULL;
 	}
 
+	req->qpair->ctrlr = ctrlr;
 	TAILQ_INIT(&ctrlr->qpairs);
 	ctrlr->kato = connect_cmd->kato;
 	ctrlr->async_event_config.raw = 0;
@@ -146,17 +180,15 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "cc 0x%x\n", ctrlr->vcprop.cc.raw);
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "csts 0x%x\n", ctrlr->vcprop.csts.raw);
 
-	if (spdk_nvmf_subsystem_add_ctrlr(subsystem, ctrlr)) {
-		SPDK_ERRLOG("Unable to add controller to subsystem\n");
-		free(ctrlr);
-		return NULL;
-	}
+	spdk_thread_send_msg(subsystem->thread, _spdk_nvmf_subsystem_add_ctrlr, req);
 
 	return ctrlr;
 }
 
-static void ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
+static void ctrlr_destruct(void *ctx)
 {
+	struct spdk_nvmf_ctrlr *ctrlr = ctx;
+
 	spdk_nvmf_subsystem_remove_ctrlr(ctrlr->subsys, ctrlr);
 	free(ctrlr);
 }
@@ -249,8 +281,39 @@ ctrlr_delete_qpair(void *ctx)
 	spdk_nvmf_transport_qpair_fini(qpair);
 
 	if (ctrlr->num_qpairs == 0) {
-		ctrlr_destruct(ctrlr);
+		spdk_thread_send_msg(ctrlr->subsys->thread, ctrlr_destruct, ctrlr);
 	}
+}
+
+static void
+_spdk_nvmf_ctrlr_add_io_qpair(void *ctx)
+{
+	struct spdk_nvmf_request *req = ctx;
+	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
+	struct spdk_nvmf_fabric_connect_data *data = req->data;
+	struct spdk_nvmf_ctrlr *ctrlr;
+	struct spdk_nvmf_qpair *qpair = req->qpair;
+	struct spdk_nvmf_qpair *admin_qpair;
+	struct spdk_nvmf_tgt *tgt = qpair->transport->tgt;
+	struct spdk_nvmf_subsystem *subsystem;
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Connect I/O Queue for controller id 0x%x\n", data->cntlid);
+
+	subsystem = spdk_nvmf_tgt_find_subsystem(tgt, data->subnqn);
+	/* We already checked this in spdk_nvmf_ctrlr_connect */
+	assert(subsystem != NULL);
+
+	ctrlr = spdk_nvmf_subsystem_get_ctrlr(subsystem, data->cntlid);
+	if (ctrlr == NULL) {
+		SPDK_ERRLOG("Unknown controller ID 0x%x\n", data->cntlid);
+		SPDK_NVMF_INVALID_CONNECT_DATA(rsp, cntlid);
+		spdk_thread_send_msg(qpair->group->thread, _spdk_nvmf_request_complete, req);
+		return;
+	}
+
+	admin_qpair = ctrlr->admin_qpair;
+	qpair->ctrlr = ctrlr;
+	spdk_thread_send_msg(admin_qpair->group->thread, spdk_nvmf_ctrlr_add_io_qpair, req);
 }
 
 static int
@@ -262,7 +325,6 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 	struct spdk_nvmf_tgt *tgt = qpair->transport->tgt;
 	struct spdk_nvmf_ctrlr *ctrlr;
-	struct spdk_nvmf_qpair *admin_qpair = NULL;
 	struct spdk_nvmf_subsystem *subsystem;
 	const char *subnqn, *hostnqn;
 	void *end;
@@ -352,29 +414,16 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 		}
 
 		/* Establish a new ctrlr */
-		ctrlr = spdk_nvmf_ctrlr_create(subsystem, qpair, cmd, data);
+		ctrlr = spdk_nvmf_ctrlr_create(subsystem, req, cmd, data);
 		if (!ctrlr) {
 			SPDK_ERRLOG("spdk_nvmf_ctrlr_create() failed\n");
 			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		} else {
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 		}
-
-		ctrlr->admin_qpair = qpair;
-		ctrlr_add_qpair_and_update_rsp(qpair, ctrlr, rsp);
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	} else {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Connect I/O Queue for controller id 0x%x\n", data->cntlid);
-
-		ctrlr = spdk_nvmf_subsystem_get_ctrlr(subsystem, data->cntlid);
-		if (ctrlr == NULL) {
-			SPDK_ERRLOG("Unknown controller ID 0x%x\n", data->cntlid);
-			SPDK_NVMF_INVALID_CONNECT_DATA(rsp, cntlid);
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		}
-
-		admin_qpair = ctrlr->admin_qpair;
-		qpair->ctrlr = ctrlr;
-		spdk_thread_send_msg(admin_qpair->group->thread, spdk_nvmf_ctrlr_add_io_qpair, req);
+		spdk_thread_send_msg(subsystem->thread, _spdk_nvmf_ctrlr_add_io_qpair, req);
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 	}
 }
