@@ -986,7 +986,11 @@ spdk_iscsi_fini_done(void *arg)
 void
 spdk_shutdown_iscsi_conns_done(void)
 {
-	spdk_for_each_thread(iscsi_unregister_poll_group, NULL, spdk_iscsi_fini_done);
+	if (g_spdk_iscsi.poll_group) {
+		spdk_for_each_thread(iscsi_unregister_poll_group, NULL, spdk_iscsi_fini_done);
+	} else {
+		spdk_iscsi_fini_done(NULL);
+	}
 }
 
 void
