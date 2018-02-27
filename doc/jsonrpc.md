@@ -423,6 +423,44 @@ Example response:
 }
 ~~~
 
+## nvmf_subsystem_remove_ns method {#rpc_nvmf_subsystem_remove_ns}
+
+Remove a namespace to a subsystem. The namespace ID is returned as the result.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+nqn                     | Required | string      | Subsystem NQN
+namespace               | Required | object      | Block device which users want to remove
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "nvmf_subsystem_remove_ns",
+  "params": {
+    "nqn": "nqn.2016-06.io.spdk:cnode1",
+    "namespace": {
+      "bdev_name": "Nvme0n1"
+    }
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": 3
+}
+
 ## nvmf_subsystem_add_host method {#rpc_nvmf_subsystem_add_host}
 
 Add a host NQN to the whitelist of allowed hosts.

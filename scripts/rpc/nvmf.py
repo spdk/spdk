@@ -76,6 +76,15 @@ def nvmf_subsystem_add_ns(args):
     args.client.call('nvmf_subsystem_add_ns', params)
 
 
+def nvmf_subsystem_remove_ns(args):
+    ns = {'bdev_name': args.bdev_name}
+
+    params = {'nqn': args.nqn,
+              'namespace': ns}
+
+    args.client.call('nvmf_subsystem_remove_ns', params)
+
+
 def nvmf_subsystem_add_host(args):
     params = {'nqn': args.nqn,
               'host': args.host}
