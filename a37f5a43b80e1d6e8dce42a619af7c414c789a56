@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc3401bd_d4b3d728",
+        "filename": "test/vhost/hotplug/blk_hotremove.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-27T13:40:51Z",
+      "side": 1,
+      "message": "why you are mangling with this here?",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 7
+      },
+      "revId": "a37f5a43b80e1d6e8dce42a619af7c414c789a56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "44824ed9_fe6c36dd",
+        "filename": "test/vhost/hotplug/blk_hotremove.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-27T13:40:51Z",
+      "side": 1,
+      "message": "This need some function to introduce some timeout. Maybe consider merging this functionality with check_fio_retcode?",
+      "range": {
+        "startLine": 54,
+        "startChar": 4,
+        "endLine": 54,
+        "endChar": 41
+      },
+      "revId": "a37f5a43b80e1d6e8dce42a619af7c414c789a56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3be8aa21_da4c54a2",
+        "filename": "test/vhost/hotplug/blk_hotremove.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-27T13:40:51Z",
+      "side": 1,
+      "message": "If you don\u0027 like spam pls inset \"set +xe\" reboot_all_and_prepare. See this trick for temporally turning off \u0027x\u0027 flag https://github.com/spdk/spdk/blob/05db56d7d81a29e98c99c16a065e955cf3e90ef1/test/vhost/common/common.sh#L448\n\nAnother question is why \"+e\" ?",
+      "range": {
+        "startLine": 57,
+        "startChar": 3,
+        "endLine": 59,
+        "endChar": 11
+      },
+      "revId": "a37f5a43b80e1d6e8dce42a619af7c414c789a56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
