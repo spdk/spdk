@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b012cfb6_518bd58b",
+        "filename": "test/iscsi_tgt/digests/digests.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-28T15:14:25Z",
+      "side": 1,
+      "message": "permissions were changed from 100755 to 100644 - this needs to be reverted",
+      "revId": "c6e7c0e5327022298f1a34d35538f63b3e02366d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0f1511d2_8c85d1bf",
+        "filename": "test/iscsi_tgt/digests/digests.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-28T15:14:25Z",
+      "side": 1,
+      "message": "could this just use $1 directly instead of the for loop?  all of the callers only pass one argument to this function",
+      "revId": "c6e7c0e5327022298f1a34d35538f63b3e02366d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
