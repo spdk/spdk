@@ -22,6 +22,30 @@
       "revId": "ff5bd87b4d9f3dd50fce1f217bd27e6f003b35cc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58a07e5d_ac58558e",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-02-28T09:44:22Z",
+      "side": 1,
+      "message": "Thanks, fix here: https://review.gerrithub.io/c/401780/1",
+      "parentUuid": "72030428_29dbea64",
+      "range": {
+        "startLine": 135,
+        "startChar": 1,
+        "endLine": 135,
+        "endChar": 91
+      },
+      "revId": "ff5bd87b4d9f3dd50fce1f217bd27e6f003b35cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
