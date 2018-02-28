@@ -61,6 +61,12 @@ spdk_iscsi_subsystem_fini(void)
 	spdk_iscsi_fini(spdk_iscsi_subsystem_fini_done, NULL);
 }
 
-SPDK_SUBSYSTEM_REGISTER(iscsi, spdk_iscsi_subsystem_init, spdk_iscsi_subsystem_fini,
-			spdk_iscsi_config_text)
+static struct spdk_subsystem g_spdk_subsystem_iscsi = {
+	.name = "iscsi",
+	.init = spdk_iscsi_subsystem_init,
+	.fini = spdk_iscsi_subsystem_fini,
+	.config = spdk_iscsi_config_text,
+};
+
+SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_iscsi);
 SPDK_SUBSYSTEM_DEPEND(iscsi, scsi)
