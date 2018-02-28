@@ -126,7 +126,7 @@ nvme_allocate_request(struct spdk_nvme_qpair *qpair,
 	req->payload = *payload;
 	req->payload_size = payload_size;
 	req->qpair = qpair;
-	req->pid = getpid();
+	req->pid = g_spdk_nvme_driver->pid;
 
 	return req;
 }
@@ -321,6 +321,7 @@ nvme_driver_init(void)
 	nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 
 	g_spdk_nvme_driver->initialized = false;
+	g_spdk_nvme_driver->pid = getpid();
 
 	TAILQ_INIT(&g_spdk_nvme_driver->shared_attached_ctrlrs);
 

@@ -488,6 +488,7 @@ struct nvme_driver {
 
 	bool				initialized;
 	struct spdk_uuid		default_extended_host_id;
+	pid_t pid;
 };
 
 extern struct nvme_driver *g_spdk_nvme_driver;
