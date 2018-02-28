@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "34e11be1_2ba5f083",
+        "filename": "test/vhost/hotplug/scsi_hotremove.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-28T15:17:03Z",
+      "side": 0,
+      "message": "Unrelated change. This commit is only about moving the test plan.",
+      "range": {
+        "startLine": 126,
+        "startChar": 4,
+        "endLine": 126,
+        "endChar": 79
+      },
+      "revId": "576f8ed256c48ffa6adc5942f2d3f5b07cdcc715",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
