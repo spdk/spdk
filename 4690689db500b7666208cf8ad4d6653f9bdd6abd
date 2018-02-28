@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ec245f44_8890969d",
+        "filename": "test/vhost/hotplug/blk_hotremove.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-28T13:40:29Z",
+      "side": 1,
+      "message": "Still unanswered",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 7
+      },
+      "revId": "4690689db500b7666208cf8ad4d6653f9bdd6abd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fcf95f66_a8e87318",
+        "filename": "test/vhost/hotplug/blk_hotremove.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-28T13:40:29Z",
+      "side": 1,
+      "message": "Why you not moved \u0027wait\u0027 part to wait_for_finish so you could just do\nwait_for_finish $last_pid 30 || retcode\u003d$?\n\nAlso \u0027|| true\u0027 is not needed as retcode will be ignored in logical expressions like \"|| retcode\u003d?\"\n\nAnd you can omit last_pid\u003d$! by just\nwait_for_finish $! 30 || retcode\u003d$?\n\nAlso consider dropping \"30\" parameter as you always using the same value. Make it default.",
+      "range": {
+        "startLine": 55,
+        "startChar": 4,
+        "endLine": 55,
+        "endChar": 40
+      },
+      "revId": "4690689db500b7666208cf8ad4d6653f9bdd6abd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b6cec58_2f30d429",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-28T13:40:29Z",
+      "side": 1,
+      "message": "local",
+      "revId": "4690689db500b7666208cf8ad4d6653f9bdd6abd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba94ade3_e386f20c",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-28T13:40:29Z",
+      "side": 1,
+      "message": "This is not notice log. error of fail will handle exiting error case.",
+      "range": {
+        "startLine": 218,
+        "startChar": 8,
+        "endLine": 221,
+        "endChar": 14
+      },
+      "revId": "4690689db500b7666208cf8ad4d6653f9bdd6abd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
