@@ -851,6 +851,17 @@ spdk_iscsi_poll_group_poll(void *ctx)
 }
 
 static void
+spdk_iscsi_poll_group_handle_nop(void *ctx)
+{
+	struct spdk_iscsi_poll_group *group = ctx;
+	struct spdk_iscsi_conn *conn, *tmp;
+
+	STAILQ_FOREACH_SAFE(conn, &group->connections, link, tmp) {
+		spdk_iscsi_conn_handle_nop(conn);
+	}
+}
+
+static void
 iscsi_create_poll_group_done(void *ctx)
 {
 	spdk_iscsi_init_complete(0);
@@ -870,6 +881,8 @@ iscsi_create_poll_group(void *ctx)
 	assert(pg->sock_group != NULL);
 
 	pg->poller = spdk_poller_register(spdk_iscsi_poll_group_poll, pg, 0);
+	/* set the period to 1 sec */
+	pg->nop_poller = spdk_poller_register(spdk_iscsi_poll_group_handle_nop, pg, 1000000);
 }
 
 static void
@@ -884,6 +897,7 @@ iscsi_unregister_poll_group(void *ctx)
 
 	spdk_sock_group_close(&pg->sock_group);
 	spdk_poller_unregister(&pg->poller);
+	spdk_poller_unregister(&pg->nop_poller);
 }
 
 static void
