@@ -17,7 +17,9 @@ dev_backend=/dev/ceph
 image=/var/tmp/ceph_raw.img
 dev=/dev/loop200
 # partition osd
-
+if [ -d $base_dir ]; then
+	rm -rf $base_dir
+fi
 mkdir ${base_dir}
 cp ${script_dir}/ceph.conf $ceph_conf
 
