@@ -37,6 +37,7 @@
 #define SPDK_NVME_DRIVER_NAME "spdk_nvme_driver"
 
 struct nvme_driver	*g_spdk_nvme_driver;
+static pid_t g_pid;
 
 int32_t			spdk_nvme_retry_count;
 
@@ -126,7 +127,7 @@ nvme_allocate_request(struct spdk_nvme_qpair *qpair,
 	req->payload = *payload;
 	req->payload_size = payload_size;
 	req->qpair = qpair;
-	req->pid = getpid();
+	req->pid = g_pid;
 
 	return req;
 }
@@ -255,6 +256,9 @@ nvme_driver_init(void)
 	int ret = 0;
 	/* Any socket ID */
 	int socket_id = -1;
+
+	/* Each process needs its own pid. */
+	g_pid = getpid();
 
 	/*
 	 * Only one thread from one process will do this driver init work.
