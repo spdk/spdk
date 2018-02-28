@@ -68,6 +68,7 @@
 
 struct spdk_poller;
 typedef void (*spdk_iscsi_conn_fn)(void *arg);
+typedef void (*spdk_iscsi_conn_nop_fn)(struct spdk_iscsi_conn *conn);
 
 struct spdk_iscsi_conn {
 	int				id;
@@ -145,6 +146,7 @@ struct spdk_iscsi_conn {
 	int timeout;
 	uint64_t nopininterval;
 	bool nop_outstanding;
+	spdk_iscsi_conn_nop_fn	nop_fn;
 
 	/*
 	 * This is the maximum data segment length that iscsi target can send

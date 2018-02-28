@@ -215,7 +215,7 @@ spdk_iscsi_poll_group_remove_conn(struct spdk_iscsi_conn *conn)
 	STAILQ_REMOVE(&poll_group->connections, conn, spdk_iscsi_conn, link);
 }
 
-static int
+static void
 spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn)
 {
 	uint64_t	tsc;
@@ -226,14 +226,12 @@ spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn)
 		if ((tsc - conn->last_nopin) > (conn->timeout  * spdk_get_ticks_hz())) {
 			SPDK_ERRLOG("Timed out waiting for NOP-Out response from initiator\n");
 			SPDK_ERRLOG("  tsc=0x%lx, last_nopin=0x%lx\n", tsc, conn->last_nopin);
-			return -1;
+			conn->state = ISCSI_CONN_STATE_EXITING;
 		}
 	} else if (tsc - conn->last_nopin > conn->nopininterval) {
 		conn->last_nopin = tsc;
 		spdk_iscsi_send_nopin(conn);
 	}
-
-	return 0;
 }
 
 /**
@@ -348,10 +346,10 @@ error_return:
 	SPDK_NOTICELOG("Launching connection on acceptor thread\n");
 	conn->pending_task_cnt = 0;
 	conn->pending_activate_event = false;
-
 	conn->lcore = spdk_env_get_current_core();
 	__sync_fetch_and_add(&g_num_connections[conn->lcore], 1);
 
+	conn->nop_fn = spdk_iscsi_conn_handle_nop;
 	spdk_iscsi_poll_group_add_conn(conn, spdk_iscsi_conn_login_do_work);
 	return 0;
 }
@@ -556,7 +554,7 @@ void spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 	rc = spdk_iscsi_conn_free_tasks(conn);
 	if (rc < 0) {
 		/* The connection cannot be freed yet. Check back later. */
-		conn->shutdown_timer = spdk_poller_register(_spdk_iscsi_conn_check_shutdown, conn, 1000);
+		conn->shutdown_timer = spdk_poller_register(_spdk_iscsi_conn_check_shutdown, conn, 1000000);
 	} else {
 		spdk_iscsi_conn_stop(conn);
 		_spdk_iscsi_conn_free(conn);
@@ -1153,19 +1151,11 @@ spdk_iscsi_conn_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_so
 static int
 spdk_iscsi_conn_execute(struct spdk_iscsi_conn *conn)
 {
-	int				rc = 0;
-
 	if (conn->state == ISCSI_CONN_STATE_EXITED) {
 		return -1;
 	}
 
 	if (conn->state == ISCSI_CONN_STATE_EXITING) {
-		goto conn_exit;
-	}
-	/* Check for nop interval expiration */
-	rc = spdk_iscsi_conn_handle_nop(conn);
-	if (rc < 0) {
-		conn->state = ISCSI_CONN_STATE_EXITING;
 		goto conn_exit;
 	}
 
