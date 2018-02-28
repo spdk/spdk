@@ -917,21 +917,33 @@ int spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload
 				    struct spdk_nvme_status *completion_status);
 
 /**
- * \brief Allocate an I/O buffer from the controller memory buffer.
+ * \brief Allocate an I/O buffer from the controller memory buffer (Experimental).
  *
  * \param ctrlr Controller from which to allocate memory buffer.
  * \param size Size of buffer to allocate in bytes.
  *
  * \return Pointer to controller memory buffer allocation, or NULL if allocation was not possible.
+ *
+ * This function allocates registered memory which belongs to the
+ * Controller Memory Buffer (CMB) of the specified NVMe
+ * controller. Note that the CMB has to support the WDS and RDS
+ * capabilities for the allocation to be successful. Also, due to
+ * vtophys contraints the CMB must be at least 4MiB in size. Free
+ * memory allocated with this function using
+ * spdk_nvme_ctrlr_free_cmb_io_buffer().
  */
 void *spdk_nvme_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size);
 
 /**
- * \brief Free a controller memory I/O buffer.
+ * \brief Free a controller memory I/O buffer (Experimental).
  *
  * \param ctrlr Controller from which the buffer was allocated.
  * \param buf Buffer previously allocated by spdk_nvme_ctrlr_alloc_cmb_io_buffer().
  * \param size Size of buf in bytes.
+ *
+ * Note this function is currently a NOP which is not a good thing and
+ * is one reason why this and spdk_nvme_ctrlr_alloc_cmb_io_buffer()
+ * are currently marked as experimental.
  */
 void spdk_nvme_ctrlr_free_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, void *buf, size_t size);
 
