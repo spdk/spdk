@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "340f389a_8a412603",
+        "filename": "dpdk",
+        "patchSetId": 8
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-02-28T22:47:09Z",
+      "side": 0,
+      "message": "The change to the dpdk submodule got added back in on this revision.",
+      "revId": "08ad30401103ab91188280f7f85ea1f3f0924a2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
