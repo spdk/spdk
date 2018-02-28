@@ -59,5 +59,12 @@ spdk_vhost_subsystem_fini(void)
 	spdk_vhost_fini(spdk_vhost_subsystem_fini_done);
 }
 
-SPDK_SUBSYSTEM_REGISTER(vhost, spdk_vhost_subsystem_init, spdk_vhost_subsystem_fini, NULL)
+static struct spdk_subsystem g_spdk_subsystem_vhost = {
+	.name = "vhost",
+	.init = spdk_vhost_subsystem_init,
+	.fini = spdk_vhost_subsystem_fini,
+	.config = NULL,
+};
+
+SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_vhost);
 SPDK_SUBSYSTEM_DEPEND(vhost, scsi)
