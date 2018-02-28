@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "21533bff_266da4f3",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-28T02:02:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d6d74d4e_2b2ded2f",
+      "revId": "e8f5379c538731c012b73b802c1e68a2b6ace366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0302ddc0_8ea1b1f3",
         "filename": "include/spdk/event.h",
         "patchSetId": 6
@@ -30,6 +48,24 @@
       "writtenOn": "2018-02-26T18:02:18Z",
       "side": 1,
       "message": "it is not the value of opts that must be initialized - it is the fields in opts\n\nalso fix typo in \"initialized\"",
+      "revId": "e8f5379c538731c012b73b802c1e68a2b6ace366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "533c310f_9e45c212",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-28T02:02:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0302ddc0_8ea1b1f3",
       "revId": "e8f5379c538731c012b73b802c1e68a2b6ace366",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -76,6 +112,30 @@
     },
     {
       "key": {
+        "uuid": "f9705174_af8527bb",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-28T02:02:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "35743aab_5929813d",
+      "range": {
+        "startLine": 112,
+        "startChar": 3,
+        "endLine": 112,
+        "endChar": 21
+      },
+      "revId": "e8f5379c538731c012b73b802c1e68a2b6ace366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c0de16f6_c73209f0",
         "filename": "include/spdk/event.h",
         "patchSetId": 6
@@ -87,6 +147,24 @@
       "writtenOn": "2018-02-26T18:02:18Z",
       "side": 1,
       "message": "opts parameter missing",
+      "revId": "e8f5379c538731c012b73b802c1e68a2b6ace366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3df7cc9e_a5b4f1e2",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-28T02:02:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c0de16f6_c73209f0",
       "revId": "e8f5379c538731c012b73b802c1e68a2b6ace366",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -110,6 +188,24 @@
     },
     {
       "key": {
+        "uuid": "18d8f9fc_efa59196",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-28T02:02:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9b29659f_409772a4",
+      "revId": "e8f5379c538731c012b73b802c1e68a2b6ace366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ca999f33_49354906",
         "filename": "include/spdk/event.h",
         "patchSetId": 6
@@ -121,6 +217,24 @@
       "writtenOn": "2018-02-26T18:02:18Z",
       "side": 1,
       "message": "Argument",
+      "revId": "e8f5379c538731c012b73b802c1e68a2b6ace366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b75d41a_a46436bb",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-28T02:02:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ca999f33_49354906",
       "revId": "e8f5379c538731c012b73b802c1e68a2b6ace366",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -144,6 +258,24 @@
     },
     {
       "key": {
+        "uuid": "d51c10f0_24a7cc39",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-28T02:02:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ea6225bc_01cf066d",
+      "revId": "e8f5379c538731c012b73b802c1e68a2b6ace366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e9604619_26805036",
         "filename": "include/spdk/event.h",
         "patchSetId": 6
@@ -155,6 +287,24 @@
       "writtenOn": "2018-02-26T18:02:18Z",
       "side": 1,
       "message": "Should say something like \"Prefix for name of temporary configuration file to save the current config.\"  In lib/event/app.c, it shows that this name is just part of the temporary file name - it is appended with random characters.",
+      "revId": "e8f5379c538731c012b73b802c1e68a2b6ace366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f3f0cbf_05b2a5b3",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-28T02:02:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e9604619_26805036",
       "revId": "e8f5379c538731c012b73b802c1e68a2b6ace366",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -178,6 +328,24 @@
     },
     {
       "key": {
+        "uuid": "6e1d3b58_90dab137",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-28T02:02:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ca22fa95_f10510e8",
+      "revId": "e8f5379c538731c012b73b802c1e68a2b6ace366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4b8d160e_fd0ccc72",
         "filename": "include/spdk/event.h",
         "patchSetId": 6
@@ -189,6 +357,24 @@
       "writtenOn": "2018-02-26T18:02:18Z",
       "side": 1,
       "message": "These changes are fine.  But both this function and next function below are deprecated.  Could you post a patch (before or after this patch) that removes these functions?  Ben deprecated them in March 2017 so it is OK to remove them now.",
+      "revId": "e8f5379c538731c012b73b802c1e68a2b6ace366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e27a84d_4ba8658c",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-28T02:02:49Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "4b8d160e_fd0ccc72",
       "revId": "e8f5379c538731c012b73b802c1e68a2b6ace366",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -212,6 +398,24 @@
     },
     {
       "key": {
+        "uuid": "0dd7a652_b53431c7",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-28T02:02:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f60b6989_6df2596b",
+      "revId": "e8f5379c538731c012b73b802c1e68a2b6ace366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "767861ca_71fa9cd0",
         "filename": "include/spdk/event.h",
         "patchSetId": 6
@@ -223,6 +427,24 @@
       "writtenOn": "2018-02-26T18:02:18Z",
       "side": 1,
       "message": "start \u003d\u003e execute",
+      "revId": "e8f5379c538731c012b73b802c1e68a2b6ace366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "063582ad_886a52a1",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-28T02:02:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "767861ca_71fa9cd0",
       "revId": "e8f5379c538731c012b73b802c1e68a2b6ace366",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
