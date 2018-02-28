@@ -54,5 +54,12 @@ spdk_nbd_subsystem_fini(void)
 	spdk_subsystem_fini_next();
 }
 
-SPDK_SUBSYSTEM_REGISTER(nbd, spdk_nbd_subsystem_init, spdk_nbd_subsystem_fini, NULL)
+static struct spdk_subsystem g_spdk_subsystem_nbd = {
+	.name = "nbd",
+	.init = spdk_nbd_subsystem_init,
+	.fini = spdk_nbd_subsystem_fini,
+	.config = NULL,
+};
+
+SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_nbd);
 SPDK_SUBSYSTEM_DEPEND(nbd, bdev)
