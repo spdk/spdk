@@ -85,8 +85,11 @@ struct nvme_pcie_ctrlr {
 	/* Controller memory buffer size in Bytes */
 	uint64_t cmb_size;
 
-	/* Current offset of controller memory buffer */
+	/* Current offset of controller memory buffer, relative to start of BAR virt addr */
 	uint64_t cmb_current_offset;
+
+	/* Last valid offset into CMB, this differs if CMB memory registration occurs or not */
+	uint64_t cmb_max_offset;
 
 	void *cmb_mem_register_addr;
 	size_t cmb_mem_register_size;
@@ -490,6 +493,7 @@ nvme_pcie_ctrlr_map_cmb(struct nvme_pcie_ctrlr *pctrlr)
 	pctrlr->cmb_bar_phys_addr = bar_phys_addr;
 	pctrlr->cmb_size = size;
 	pctrlr->cmb_current_offset = offset;
+	pctrlr->cmb_max_offset = offset + size;
 
 	if (!cmbsz.bits.sqs) {
 		pctrlr->ctrlr.opts.use_cmb_sqs = false;
@@ -516,7 +520,8 @@ nvme_pcie_ctrlr_map_cmb(struct nvme_pcie_ctrlr *pctrlr)
 		SPDK_ERRLOG("spdk_mem_register() failed\n");
 		goto exit;
 	}
-	pctrlr->cmb_current_offset = mem_register_start - ((uint64_t)pctrlr->cmb_bar_virt_addr + offset);
+	pctrlr->cmb_current_offset = mem_register_start - ((uint64_t)pctrlr->cmb_bar_virt_addr);
+	pctrlr->cmb_max_offset = mem_register_end - ((uint64_t)pctrlr->cmb_bar_virt_addr);
 	pctrlr->cmb_io_data_supported = true;
 
 	return;
@@ -557,7 +562,9 @@ nvme_pcie_ctrlr_alloc_cmb(struct spdk_nvme_ctrlr *ctrlr, uint64_t length, uint64
 	round_offset = pctrlr->cmb_current_offset;
 	round_offset = (round_offset + (aligned - 1)) & ~(aligned - 1);
 
-	if (round_offset + length > pctrlr->cmb_size) {
+	/* CMB may only consume part of the BAR, calculate accordingly */
+	if (round_offset + length > pctrlr->cmb_max_offset) {
+		SPDK_ERRLOG("Tried to allocate past valid CMB range!\n");
 		return -1;
 	}
 
