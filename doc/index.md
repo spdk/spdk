@@ -35,6 +35,10 @@
 - @ref event
 - @ref blob
 
+# Miscellaneous {#misc}
+
+- @ref peer_2_peer
+
 # Modules {#modules}
 
 - @ref nvme
