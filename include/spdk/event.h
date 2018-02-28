@@ -148,16 +148,6 @@ int spdk_app_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask);
  */
 struct spdk_cpuset *spdk_app_get_core_mask(void);
 
-/**
- * \brief Return the number of CPU cores utilized by this application
- */
-int spdk_app_get_core_count(void) __attribute__((deprecated));
-
-/**
- * \brief Return the lcore of the current thread.
- */
-uint32_t spdk_app_get_current_core(void) __attribute__((deprecated));
-
 #define SPDK_APP_GETOPT_STRING "c:de:hi:m:n:p:qr:s:t:"
 
 /**
