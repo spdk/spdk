@@ -48,6 +48,29 @@
     },
     {
       "key": {
+        "uuid": "64b017e8_6dbb54ee",
+        "filename": "test/vhost/hotplug/blk_hotremove.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-28T18:30:47Z",
+      "side": 1,
+      "message": "Just realized that this whole expression is broken.\nif wait \u003d\u003d true the `retcode` variable won\u0027t be touched at all and have value from other place when it was set previously (in sh/bash all variables are global by default!).\n\nAgain, please make ALL variables local or set them default value at function start.",
+      "range": {
+        "startLine": 55,
+        "startChar": 22,
+        "endLine": 55,
+        "endChar": 32
+      },
+      "revId": "4690689db500b7666208cf8ad4d6653f9bdd6abd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4b6cec58_2f30d429",
         "filename": "test/vhost/hotplug/common.sh",
         "patchSetId": 16
