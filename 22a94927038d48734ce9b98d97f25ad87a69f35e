@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f47e016_e2dbddce",
+        "filename": "unittest.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-28T01:36:36Z",
+      "side": 0,
+      "message": "this is probably ok - but it\u0027s really hard to review since because of the massive changes, git thinks it is two different files\n\nit would have been better to have a stage one patch that just defines $rootdir as test/unit/lib - keeping unittest.sh in the same location\n\nthen this patch only changes the value of $rootdir\n\nsomething to always keep in mind when pushing a patch is \"how hard will this be for a core maintainer to make sure I didn\u0027t make an accidental mistake\"?",
+      "revId": "22a94927038d48734ce9b98d97f25ad87a69f35e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

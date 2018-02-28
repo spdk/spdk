@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c6f28b87_572a5be6",
+        "filename": "autobuild.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-02-28T01:36:36Z",
+      "side": 1,
+      "message": "should this just be removed instead of commented out?\n\nI guess I\u0027d rather uncomment this - it can be removed as part of a separate patch",
+      "revId": "db7aa31b028d40e04b67ab68f987c5f8afa9c55e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
