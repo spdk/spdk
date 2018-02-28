@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "34254785_e468ce25",
+        "filename": "test/vhost/migration/migration.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-02-28T09:08:36Z",
+      "side": 1,
+      "message": "This is done in migration-tc3c.sh script.",
+      "range": {
+        "startLine": 100,
+        "startChar": 1,
+        "endLine": 105,
+        "endChar": 3
+      },
+      "revId": "e23247421d16c94528405823bae5fd3209845e7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
