@@ -178,6 +178,24 @@
     },
     {
       "key": {
+        "uuid": "6934fffe_6e288e31",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-28T06:52:17Z",
+      "side": 1,
+      "message": "Reducing the nesting level sounds good to me but may I use the current style of get_bdevs for now?",
+      "parentUuid": "85dcfbc8_c0bf9ee8",
+      "revId": "64b385386b86aca5b00e0de7db43364bd6a059d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "89438720_27c7db9c",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 2
