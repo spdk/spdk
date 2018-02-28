@@ -145,6 +145,7 @@ struct spdk_iscsi_conn {
 	int timeout;
 	uint64_t nopininterval;
 	bool nop_outstanding;
+	struct spdk_poller *nop_poller;
 
 	/*
 	 * This is the maximum data segment length that iscsi target can send

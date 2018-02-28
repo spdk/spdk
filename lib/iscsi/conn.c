@@ -215,10 +215,11 @@ spdk_iscsi_poll_group_remove_conn(struct spdk_iscsi_conn *conn)
 	STAILQ_REMOVE(&poll_group->connections, conn, spdk_iscsi_conn, link);
 }
 
-static int
-spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn)
+static void
+spdk_iscsi_conn_handle_nop(void *ctx)
 {
 	uint64_t	tsc;
+	struct spdk_iscsi_conn *conn = ctx;
 
 	/* Check for nop interval expiration */
 	tsc = spdk_get_ticks();
@@ -226,14 +227,12 @@ spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn)
 		if ((tsc - conn->last_nopin) > (conn->timeout  * spdk_get_ticks_hz())) {
 			SPDK_ERRLOG("Timed out waiting for NOP-Out response from initiator\n");
 			SPDK_ERRLOG("  tsc=0x%lx, last_nopin=0x%lx\n", tsc, conn->last_nopin);
-			return -1;
+			conn->state = ISCSI_CONN_STATE_EXITING;
 		}
 	} else if (tsc - conn->last_nopin > conn->nopininterval) {
 		conn->last_nopin = tsc;
 		spdk_iscsi_send_nopin(conn);
 	}
-
-	return 0;
 }
 
 /**
@@ -334,6 +333,11 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 		goto error_return;
 	}
 
+	conn->nop_poller = spdk_poller_register(spdk_iscsi_conn_handle_nop, conn, 1000);
+	if (!conn->nop_poller) {
+		goto error_return;
+	}
+
 	/* set default params */
 	rc = spdk_iscsi_conn_params_init(&conn->params);
 	if (rc < 0) {
@@ -348,7 +352,6 @@ error_return:
 	SPDK_NOTICELOG("Launching connection on acceptor thread\n");
 	conn->pending_task_cnt = 0;
 	conn->pending_activate_event = false;
-
 	conn->lcore = spdk_env_get_current_core();
 	__sync_fetch_and_add(&g_num_connections[conn->lcore], 1);
 
@@ -552,6 +555,7 @@ void spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 	spdk_sock_close(&conn->sock);
 	spdk_poller_unregister(&conn->logout_timer);
 	spdk_poller_unregister(&conn->flush_poller);
+	spdk_poller_unregister(&conn->nop_poller);
 
 	rc = spdk_iscsi_conn_free_tasks(conn);
 	if (rc < 0) {
@@ -1153,19 +1157,11 @@ spdk_iscsi_conn_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_so
 static int
 spdk_iscsi_conn_execute(struct spdk_iscsi_conn *conn)
 {
-	int				rc = 0;
-
 	if (conn->state == ISCSI_CONN_STATE_EXITED) {
 		return -1;
 	}
 
 	if (conn->state == ISCSI_CONN_STATE_EXITING) {
-		goto conn_exit;
-	}
-	/* Check for nop interval expiration */
-	rc = spdk_iscsi_conn_handle_nop(conn);
-	if (rc < 0) {
-		conn->state = ISCSI_CONN_STATE_EXITING;
 		goto conn_exit;
 	}
 
