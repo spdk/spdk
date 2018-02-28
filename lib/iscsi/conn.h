@@ -174,6 +174,7 @@ void spdk_shutdown_iscsi_conns(void);
 
 int spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal, struct spdk_sock *sock);
 void spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn);
+void spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn);
 void spdk_iscsi_conn_logout(struct spdk_iscsi_conn *conn);
 int spdk_iscsi_drop_conns(struct spdk_iscsi_conn *conn,
 			  const char *conn_match, int drop_all);
