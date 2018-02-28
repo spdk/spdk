@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1c6c5b17_e70b56b3",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 902,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-28T11:58:37Z",
+      "side": 1,
+      "message": "As you do, in conn_execute() now it is implemented that if (!exited \u0026\u0026 !exiting) then handle_nop() runs. But this should be if (conn-\u003estate !\u003d ISCSI_CONN_STATE_RUNNING) then return ?",
+      "range": {
+        "startLine": 901,
+        "startChar": 1,
+        "endLine": 902,
+        "endChar": 45
+      },
+      "revId": "623d29b2a5a8c3fa5faca09642c40b06ba7dbba2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
