@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "4aeff7d0_ad282142",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-28T13:50:49Z",
+      "side": 1,
+      "message": "hmmmm I missunderstand this. Yes, \"Depends\" or \"Used by\" is ok here as label.\n\nFrom other side. Do we want to have dependency in this order? I just wondering if this can make any issues if \"Used by\" bdevs won\u0027t be ever created for any reason so this bdev will be unused with wirtual \"dependency\". Maybe dependency written in \"Depends on\" style would be better. What do you think?",
+      "parentUuid": "3ebac988_d55d3440",
+      "range": {
+        "startLine": 183,
+        "startChar": 26,
+        "endLine": 183,
+        "endChar": 35
+      },
+      "revId": "64b385386b86aca5b00e0de7db43364bd6a059d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ec5b2090_c9717ba2",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 2
@@ -190,6 +214,24 @@
       "side": 1,
       "message": "Reducing the nesting level sounds good to me but may I use the current style of get_bdevs for now?",
       "parentUuid": "85dcfbc8_c0bf9ee8",
+      "revId": "64b385386b86aca5b00e0de7db43364bd6a059d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c18f2a6_be9ca6aa",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-02-28T13:50:49Z",
+      "side": 1,
+      "message": "Sure :) As I wrote this is only my personal preference.",
+      "parentUuid": "6934fffe_6e288e31",
       "revId": "64b385386b86aca5b00e0de7db43364bd6a059d5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
