@@ -42,6 +42,24 @@
     },
     {
       "key": {
+        "uuid": "7dfd56f5_2df2fb34",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-02-28T01:29:02Z",
+      "side": 1,
+      "message": "Yes, using NSID makes more easier, but this will involve some additional helper code in nvmf_rpc file.",
+      "parentUuid": "6c8e232c_3a8f451a",
+      "revId": "6029b4280c62896f0e18c0603f6f47bdf25d498b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b71f33c7_abbe2d95",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 1
