@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2b4b9b20_428c9576",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-02-28T05:51:54Z",
+      "side": 1,
+      "message": "I/O channel for synchronous operations.",
+      "range": {
+        "startLine": 136,
+        "startChar": 14,
+        "endLine": 136,
+        "endChar": 37
+      },
+      "revId": "46c3d0078b64c2d198a38f265cdb955662277bd8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
