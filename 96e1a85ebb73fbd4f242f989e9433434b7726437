@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6b738381_07e3b3cc",
+        "filename": "configure",
+        "patchSetId": 1
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-28T22:09:54Z",
+      "side": 1,
+      "message": "Example is missing.",
+      "range": {
+        "startLine": 42,
+        "startChar": 42,
+        "endLine": 42,
+        "endChar": 43
+      },
+      "revId": "96e1a85ebb73fbd4f242f989e9433434b7726437",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c7819438_c92dff99",
+        "filename": "configure",
+        "patchSetId": 1
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-02-28T22:09:54Z",
+      "side": 1,
+      "message": "You can also add \u0027--with-vpp-shared\u0027 without \u0027\u003d*\u0027",
+      "revId": "96e1a85ebb73fbd4f242f989e9433434b7726437",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
