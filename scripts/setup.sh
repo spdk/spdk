@@ -131,14 +131,12 @@ function get_nvme_name_from_bdf {
 }
 
 function get_virtio_names_from_bdf {
-	set +e
-	virtio_ctrlrs=`lsblk --nodeps --output "NAME,SUBSYSTEMS" | grep virtio | awk '{print $1}'`
-	set -e
+	blk_devs=`lsblk --nodeps --output NAME`
 	virtio_names=''
 
-	for ctrlr in $virtio_ctrlrs; do
-		if readlink "/sys/block/$ctrlr" | grep -q "$1"; then
-			virtio_names="$virtio_names $ctrlr"
+	for dev in $blk_devs; do
+		if readlink "/sys/block/$dev" | grep -q "$1"; then
+			virtio_names="$virtio_names $dev"
 		fi
 	done
 
