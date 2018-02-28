@@ -54,5 +54,12 @@ spdk_scsi_subsystem_fini(void)
 	spdk_subsystem_fini_next();
 }
 
-SPDK_SUBSYSTEM_REGISTER(scsi, spdk_scsi_subsystem_init, spdk_scsi_subsystem_fini, NULL)
+static struct spdk_subsystem g_spdk_subsystem_scsi = {
+	.name = "scsi",
+	.init = spdk_scsi_subsystem_init,
+	.fini = spdk_scsi_subsystem_fini,
+	.config = NULL,
+};
+
+SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_scsi);
 SPDK_SUBSYSTEM_DEPEND(scsi, bdev)
