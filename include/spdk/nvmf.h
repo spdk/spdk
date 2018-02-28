@@ -66,19 +66,24 @@ struct spdk_nvmf_tgt_opts {
 	uint32_t in_capsule_data_size;
 	uint32_t max_io_size;
 };
-
+/**
+ * Initialize the default value of opts.
+ *
+ * \param opts Data structure where SPDK will initialize the default options.
+ */
 void spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts);
 
 /**
- * Construct an NVMe-oF target
+ * Construct a NVMe-oF target.
  *
- * \param opts Options
- * \return An spdk_nvmf_tgt on success, NULL on failure.
+ * \param opts Options.
+ *
+ * \return a pointer to a NVMe-oF target on success, NULL on failure.
  */
 struct spdk_nvmf_tgt *spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts);
 
 /**
- * Destroy an NVMe-oF target
+ * Destroy a NVMe-oF target.
  *
  * \param tgt The target to destroy. This releases all resources.
  */
@@ -91,8 +96,8 @@ void spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt);
  * the connection based on a subsystem-specific whitelist. See
  * spdk_nvmf_subsystem_add_host() and spdk_nvmf_subsystem_add_listener()
  *
- * \param tgt The target associated with this listen address
- * \param trid The address to listen at
+ * \param tgt The target associated with this listen address.
+ * \param trid The address to listen at.
  *
  * \return 0 on success. Negated errno on failure.
  */
@@ -107,33 +112,52 @@ typedef void (*new_qpair_fn)(struct spdk_nvmf_qpair *qpair);
  * The new_qpair_fn cb_fn will be called for each newly discovered
  * qpair. The user is expected to add that qpair to a poll group
  * to establish the connection.
+ *
+ * \param tgt The target associated with the listen address.
+ * \param cb_fn Called for each newly discovered qpair.
  */
 void spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt, new_qpair_fn cb_fn);
 
 /**
  * Create a poll group.
+ *
+ * \param tgt The target to create a poll group.
+ *
+ * \return a poll group on success, NULL on failure.
  */
 struct spdk_nvmf_poll_group *spdk_nvmf_poll_group_create(struct spdk_nvmf_tgt *tgt);
 
 /**
  * Destroy a poll group.
+ *
+ * \param group The poll group to destroy.
  */
 void spdk_nvmf_poll_group_destroy(struct spdk_nvmf_poll_group *group);
 
 /**
  * Add the given qpair to the poll group.
+ *
+ * \param group The group to add qpair to.
+ * \param qpair The qpair to add.
+ *
+ * \return 0 on success, -1 on failure.
  */
 int spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 			     struct spdk_nvmf_qpair *qpair);
 
 /**
  * Remove the given qpair from the poll group.
+ *
+ * \param group The group to delete qpair from.
+ * \param qpair The qpair to remove.
+ *
+ * \return 0 on success, -1 on failure.
  */
 int spdk_nvmf_poll_group_remove(struct spdk_nvmf_poll_group *group,
 				struct spdk_nvmf_qpair *qpair);
 
 /**
- * Create an NVMe-oF subsystem.
+ * Create a NVMe-oF subsystem.
  *
  * Subsystems are in one of three states: Inactive, Active, Paused. This
  * state affects which operations may be performed on the subsystem. Upon
@@ -146,7 +170,7 @@ int spdk_nvmf_poll_group_remove(struct spdk_nvmf_poll_group *group,
  * \param type Whether this subsystem is an I/O subsystem or a Discovery subsystem.
  * \param num_ns The number of namespaces this subsystem contains.
  *
- * \return An spdk_nvmf_subsystem or NULL on error.
+ * \return a pointer to a NVMe-oF subsystem on success, NULL on failure.
  */
 struct spdk_nvmf_subsystem *spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 		const char *nqn,
@@ -154,7 +178,7 @@ struct spdk_nvmf_subsystem *spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt
 		uint32_t num_ns);
 
 /**
- * Destroy an NVMe-oF subsystem. A subsystem may only be destroyed when in
+ * Destroy a NVMe-oF subsystem. A subsystem may only be destroyed when in
  * the Inactive state. See spdk_nvmf_subsystem_stop().
  *
  * \param subsystem The NVMe-oF subsystem to destroy.
@@ -165,13 +189,13 @@ typedef void (*spdk_nvmf_subsystem_state_change_done)(struct spdk_nvmf_subsystem
 		void *cb_arg, int status);
 
 /**
- * Transition an NVMe-oF subsystem from Inactive to Active state.
+ * Transition a NVMe-oF subsystem from Inactive to Active state.
  *
  * \param subsystem The NVMe-oF subsystem.
  * \param cb_fn A function that will be called once the subsystem has changed state.
  * \param cb_arg Argument passed to cb_fn.
  *
- * \return 0 on success. Negated errno on failure. The callback provided
+ * \return 0 on success, negated errno on failure. The callback provided
  *	     will only be called on success.
  */
 int spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem,
@@ -179,7 +203,7 @@ int spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem,
 			      void *cb_arg);
 
 /**
- * Transition an NVMe-oF subsystem from Active to Inactive state.
+ * Transition a NVMe-oF subsystem from Active to Inactive state.
  *
  * \param subsystem The NVMe-oF subsystem.
  * \param cb_fn A function that will be called once the subsystem has changed state.
@@ -193,7 +217,7 @@ int spdk_nvmf_subsystem_stop(struct spdk_nvmf_subsystem *subsystem,
 			     void *cb_arg);
 
 /**
- * Transition an NVMe-oF subsystem from Active to Paused state.
+ * Transition a NVMe-oF subsystem from Active to Paused state.
  *
  * \param subsystem The NVMe-oF subsystem.
  * \param cb_fn A function that will be called once the subsystem has changed state.
@@ -207,7 +231,7 @@ int spdk_nvmf_subsystem_pause(struct spdk_nvmf_subsystem *subsystem,
 			      void *cb_arg);
 
 /**
- * Transition an NVMe-oF subsystem from Paused to Active state.
+ * Transition a NVMe-oF subsystem from Paused to Active state.
  *
  * \param subsystem The NVMe-oF subsystem.
  * \param cb_fn A function that will be called once the subsystem has changed state.
@@ -221,18 +245,31 @@ int spdk_nvmf_subsystem_resume(struct spdk_nvmf_subsystem *subsystem,
 			       void *cb_arg);
 
 /**
- * Search the target for a subsystem with the given NQN
+ * Search the target for a subsystem with the given NQN.
+ *
+ * \param tgt The NVMe-oF target to search from.
+ * \param subnqn NQN of the subsystem.
+ *
+ * \return a pointer to the NVMe-oF subsystem on success, NULL on failure.
  */
 struct spdk_nvmf_subsystem *spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *tgt,
 		const char *subnqn);
 
 /**
  * Begin iterating over all known subsystems. If no subsystems are present, return NULL.
+ *
+ * \param tgt The NVMe-oF target to iterate.
+ *
+ * \return a pointer to the NVMe-oF subsystem on success, NULL on failure.
  */
 struct spdk_nvmf_subsystem *spdk_nvmf_subsystem_get_first(struct spdk_nvmf_tgt *tgt);
 
 /**
  * Continue iterating over all known subsystems. If no additional subsystems, return NULL.
+ *
+ * \param tgt The NVMe-oF target to iterate.
+ *
+ * \return a pointer to the NVMe-oF subsystem on success, NULL on failure.
  */
 struct spdk_nvmf_subsystem *spdk_nvmf_subsystem_get_next(struct spdk_nvmf_subsystem *subsystem);
 
@@ -243,7 +280,7 @@ struct spdk_nvmf_subsystem *spdk_nvmf_subsystem_get_next(struct spdk_nvmf_subsys
  *
  * \param subsystem Subsystem to add host to
  * \param host_nqn The NQN for the host
- * \return 0 on success. Negated errno value on failure.
+ * \return 0 on success, negated errno value on failure.
  */
 int spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem,
 				 const char *hostnqn);
@@ -492,15 +529,56 @@ struct spdk_bdev *spdk_nvmf_ns_get_bdev(struct spdk_nvmf_ns *ns);
 void spdk_nvmf_ns_get_opts(const struct spdk_nvmf_ns *ns, struct spdk_nvmf_ns_opts *opts,
 			   size_t opts_size);
 
+/**
+ * Get the SN number of the specified subsystem.
+ *
+ * \param subsystem Subsystem to query.
+ *
+ * \return SN number of the specified subsystem.
+ */
 const char *spdk_nvmf_subsystem_get_sn(const struct spdk_nvmf_subsystem *subsystem);
 
+
+/**
+ * Set the SN number for the specified subsystem.
+ *
+ * \param subsystem Subsystem to set for.
+ * \param sn SN number to set.
+ *
+ * \return 0 on success, -1 on failure.
+ */
 int spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn);
 
+/**
+ * Get the NQN of the specified subsystem.
+ *
+ * \param subsystem Subsystem to query.
+ *
+ * \return NQN of the specified subsystem.
+ */
 const char *spdk_nvmf_subsystem_get_nqn(struct spdk_nvmf_subsystem *subsystem);
+
+/**
+ * Get the type of the specified subsystem.
+ *
+ * \param subsystem Subsystem to query.
+ *
+ * \return the type of the specified subsystem.
+ */
 enum spdk_nvmf_subtype spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem);
 
+/**
+ * Handle the NVMe-oF request for connection.
+ *
+ * /param req NVMe-of request to handle.
+ */
 void spdk_nvmf_handle_connect(struct spdk_nvmf_request *req);
 
+/**
+ * Disconnect the NVMe-oF controler.
+ *
+ * \param qpair The NVMe-oF qpair associated with the controler.
+ */
 void spdk_nvmf_ctrlr_disconnect(struct spdk_nvmf_qpair *qpair);
 
 #ifdef __cplusplus
