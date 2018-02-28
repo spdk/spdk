@@ -34,6 +34,7 @@ echo DISTRIB_DESCRIPTION: $DISTRIB_DESCRIPTION
 
 cd $SPDK_DIR
 ./scripts/pkgdep.sh
+$SUDOCMD git submodule update --init
 $SUDOCMD ./configure --enable-debug
 $SUDOCMD make clean
 $SUDOCMD make -j2
