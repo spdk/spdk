@@ -327,7 +327,6 @@ error_return:
 	SPDK_NOTICELOG("Launching connection on acceptor thread\n");
 	conn->pending_task_cnt = 0;
 	conn->pending_activate_event = false;
-
 	conn->lcore = spdk_env_get_current_core();
 	__sync_fetch_and_add(&g_num_connections[conn->lcore], 1);
 
@@ -888,10 +887,15 @@ spdk_iscsi_get_pdu_length(struct spdk_iscsi_pdu *pdu, int header_digest,
 	return total;
 }
 
-static int
+void
 spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn)
 {
 	uint64_t	tsc;
+
+	if ((conn->state == ISCSI_CONN_STATE_EXITED) ||
+	    (conn->state == ISCSI_CONN_STATE_EXITING)) {
+		return;
+	}
 
 	/* Check for nop interval expiration */
 	tsc = spdk_get_ticks();
@@ -899,14 +903,12 @@ spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn)
 		if ((tsc - conn->last_nopin) > (conn->timeout  * spdk_get_ticks_hz())) {
 			SPDK_ERRLOG("Timed out waiting for NOP-Out response from initiator\n");
 			SPDK_ERRLOG("  tsc=0x%lx, last_nopin=0x%lx\n", tsc, conn->last_nopin);
-			return -1;
+			conn->state = ISCSI_CONN_STATE_EXITING;
 		}
 	} else if (tsc - conn->last_nopin > conn->nopininterval) {
 		conn->last_nopin = tsc;
 		spdk_iscsi_send_nopin(conn);
 	}
-
-	return 0;
 }
 
 /**
@@ -1153,19 +1155,11 @@ spdk_iscsi_conn_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_so
 static int
 spdk_iscsi_conn_execute(struct spdk_iscsi_conn *conn)
 {
-	int				rc = 0;
-
 	if (conn->state == ISCSI_CONN_STATE_EXITED) {
 		return -1;
 	}
 
 	if (conn->state == ISCSI_CONN_STATE_EXITING) {
-		goto conn_exit;
-	}
-	/* Check for nop interval expiration */
-	rc = spdk_iscsi_conn_handle_nop(conn);
-	if (rc < 0) {
-		conn->state = ISCSI_CONN_STATE_EXITING;
 		goto conn_exit;
 	}
 
