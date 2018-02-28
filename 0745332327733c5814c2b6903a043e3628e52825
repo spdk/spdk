@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "18467b57_47421b91",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-28T02:33:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d44b3398_f7579e27",
+      "range": {
+        "startLine": 77,
+        "startChar": 14,
+        "endLine": 77,
+        "endChar": 16
+      },
+      "revId": "0745332327733c5814c2b6903a043e3628e52825",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dd256a14_8fbe0ca7",
         "filename": "include/spdk/blobfs.h",
         "patchSetId": 12
@@ -72,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "61ba02b0_1feae15f",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-28T02:33:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "08145111_7801a9c1",
+      "range": {
+        "startLine": 87,
+        "startChar": 19,
+        "endLine": 87,
+        "endChar": 42
+      },
+      "revId": "0745332327733c5814c2b6903a043e3628e52825",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5599e24c_aac23beb",
         "filename": "include/spdk/blobfs.h",
         "patchSetId": 12
@@ -83,6 +131,30 @@
       "writtenOn": "2018-02-27T04:58:00Z",
       "side": 1,
       "message": "missing the \"opt\" parameter",
+      "range": {
+        "startLine": 90,
+        "startChar": 2,
+        "endLine": 92,
+        "endChar": 31
+      },
+      "revId": "0745332327733c5814c2b6903a043e3628e52825",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "64248c75_66297b15",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-28T02:33:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5599e24c_aac23beb",
       "range": {
         "startLine": 90,
         "startChar": 2,
@@ -118,6 +190,30 @@
     },
     {
       "key": {
+        "uuid": "aa3807e5_528f9f80",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-28T02:33:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dea64623_43d9f9aa",
+      "range": {
+        "startLine": 102,
+        "startChar": 44,
+        "endLine": 102,
+        "endChar": 54
+      },
+      "revId": "0745332327733c5814c2b6903a043e3628e52825",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "97774c11_faa36747",
         "filename": "include/spdk/blobfs.h",
         "patchSetId": 12
@@ -129,6 +225,30 @@
       "writtenOn": "2018-02-27T04:58:00Z",
       "side": 1,
       "message": "Maybe:\n\nAllocate an I/O channel for asynchronous operations.\n\nWhich looks like more clear.",
+      "range": {
+        "startLine": 126,
+        "startChar": 3,
+        "endLine": 126,
+        "endChar": 40
+      },
+      "revId": "0745332327733c5814c2b6903a043e3628e52825",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9904d730_c2b6970f",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-28T02:33:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "97774c11_faa36747",
       "range": {
         "startLine": 126,
         "startChar": 3,
@@ -164,6 +284,30 @@
     },
     {
       "key": {
+        "uuid": "c28b4ba4_495ad64a",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-28T02:33:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "756d0a8b_35746470",
+      "range": {
+        "startLine": 237,
+        "startChar": 11,
+        "endLine": 237,
+        "endChar": 12
+      },
+      "revId": "0745332327733c5814c2b6903a043e3628e52825",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1412c120_526f4948",
         "filename": "include/spdk/blobfs.h",
         "patchSetId": 12
@@ -175,6 +319,30 @@
       "writtenOn": "2018-02-26T21:05:22Z",
       "side": 1,
       "message": "iterator",
+      "range": {
+        "startLine": 242,
+        "startChar": 58,
+        "endLine": 242,
+        "endChar": 67
+      },
+      "revId": "0745332327733c5814c2b6903a043e3628e52825",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02e3adce_ee3e80f0",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-28T02:33:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1412c120_526f4948",
       "range": {
         "startLine": 242,
         "startChar": 58,
@@ -210,6 +378,30 @@
     },
     {
       "key": {
+        "uuid": "05cebe5f_a0a809c3",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-28T02:33:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "947a8a2f_6ba61955",
+      "range": {
+        "startLine": 246,
+        "startChar": 11,
+        "endLine": 246,
+        "endChar": 12
+      },
+      "revId": "0745332327733c5814c2b6903a043e3628e52825",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "679af9b8_d94410bf",
         "filename": "include/spdk/blobfs.h",
         "patchSetId": 12
@@ -221,6 +413,24 @@
       "writtenOn": "2018-02-26T21:05:22Z",
       "side": 1,
       "message": "All of the functions dealing with file length should mention the units (I think they are all in bytes, so this could be as simple as adding \"in bytes\" to each parameter/return value).",
+      "revId": "0745332327733c5814c2b6903a043e3628e52825",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4f335f6_e670d1c4",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-28T02:33:15Z",
+      "side": 1,
+      "message": "Done. Thanks.",
+      "parentUuid": "679af9b8_d94410bf",
       "revId": "0745332327733c5814c2b6903a043e3628e52825",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -244,6 +454,24 @@
     },
     {
       "key": {
+        "uuid": "bb4d209e_72a7d8a2",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-28T02:33:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "305bb6d2_3e31b2ed",
+      "revId": "0745332327733c5814c2b6903a043e3628e52825",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6d601700_bad062dd",
         "filename": "include/spdk/blobfs.h",
         "patchSetId": 12
@@ -255,6 +483,30 @@
       "writtenOn": "2018-02-26T21:05:22Z",
       "side": 1,
       "message": "from",
+      "range": {
+        "startLine": 334,
+        "startChar": 24,
+        "endLine": 334,
+        "endChar": 28
+      },
+      "revId": "0745332327733c5814c2b6903a043e3628e52825",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66af79b0_10cb946b",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-02-28T02:33:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6d601700_bad062dd",
       "range": {
         "startLine": 334,
         "startChar": 24,
