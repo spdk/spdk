@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "72a93d2c_b918fde1",
+        "filename": "lib/net/sock.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-28T05:58:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4a8d0005_c3d57ff0",
+      "revId": "3c9ed21e07db371a29668210c2482e99baf87729",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "49dc1feb_ca8dd70e",
         "filename": "lib/net/sock.c",
         "patchSetId": 6
@@ -30,6 +48,24 @@
       "writtenOn": "2018-02-27T19:47:57Z",
       "side": 1,
       "message": "instead of adding NULL entries in the middle of the socks array, could we instead add a separate variable (cur_event_idx?) to track the next event slot to be assigned?\n\nthen return cur_event_idx instead of num_events\n\nthis was caller code is more simple - it does not need to check for NULL events in the array",
+      "revId": "3c9ed21e07db371a29668210c2482e99baf87729",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f21ec5a2_e306b123",
+        "filename": "lib/net/sock.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 553,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-28T05:58:08Z",
+      "side": 1,
+      "message": "Nice idea! Thanks.",
+      "parentUuid": "49dc1feb_ca8dd70e",
       "revId": "3c9ed21e07db371a29668210c2482e99baf87729",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "7e078561_01f1b9b9",
+        "filename": "lib/net/sock.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 559,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-28T05:58:08Z",
+      "side": 1,
+      "message": "This became unnecessary.",
+      "parentUuid": "11bac019_0f08c166",
+      "revId": "3c9ed21e07db371a29668210c2482e99baf87729",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "48e2f107_25549aef",
         "filename": "lib/net/sock.c",
         "patchSetId": 6
@@ -64,6 +118,24 @@
       "writtenOn": "2018-02-27T19:47:57Z",
       "side": 1,
       "message": "just for my own understanding - what is the case where socks[i] could be NULL here?  and if it is not NULL, what is the case where the ident would not match?",
+      "revId": "3c9ed21e07db371a29668210c2482e99baf87729",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a0359a6_66de3f69",
+        "filename": "lib/net/sock.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-02-28T05:58:08Z",
+      "side": 1,
+      "message": "Please look at new code and comments.\nI read a few references of kevent and now I understand that BSD can do as same as Linux about ensuring that all data is consumed before closing the socket when observing EV_EOF.\n\n\nThe following is excerpts from the kqueue paper. https://people.freebsd.org/~jlemon/papers/kqueue.pdf\n\nFor example, the read filter for socket descriptors is triggered as long as there is data in the socket buffer\ngreater than the SO LOWAT mark, or when the socket has shutdown and is unable to receive any more data. The filter will return the number of bytes pending in the socket buffer, as well as set an EOF flag for the shutdown case. This provides more information that the application can use while processing the event. As EOF is explicitly returned when the socket is shutdown, the application no longer needs to make an additional call to read() in order to discover an EOF condition.\n\n\n\nThe following is excerpts from the man of kqueue https://www.freebsd.org/cgi/man.cgi?kqueue\n\nIf the read direction of the socket has shutdown, then the filter also sets EV_EOF in flags, and returns the socket error (if any) in fflags. It is possible for EOF to be returned (indicating the connection is gone) while there is still data pending in the socket buffer.\n\n\nLinux is almost same and Daniel and I already agreed.",
+      "parentUuid": "48e2f107_25549aef",
       "revId": "3c9ed21e07db371a29668210c2482e99baf87729",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
