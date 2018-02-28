@@ -16,7 +16,7 @@ if [ $(uname -s) = Linux ]; then
 	echo "core" > /proc/sys/kernel/core_pattern
 fi
 
-trap "process_core; $rootdir/scripts/setup.sh reset; exit 1" SIGINT SIGTERM EXIT
+trap "process_core; autotest_cleanup; exit 1" SIGINT SIGTERM EXIT
 
 timing_enter autotest
 
@@ -205,13 +205,7 @@ if [ $SPDK_TEST_NVML -eq 1 ]; then
 fi
 
 timing_enter cleanup
-if [ $SPDK_TEST_RBD -eq 1 ]; then
-	rbd_cleanup
-fi
-./scripts/setup.sh reset
-if [ $SPDK_BUILD_IOAT_KMOD -eq 1 ]; then
-	./scripts/build_kmod.sh clean
-fi
+autotest_cleanup
 timing_exit cleanup
 
 timing_exit autotest

@@ -538,5 +538,18 @@ function get_bdev_size()
 	echo "$bdev_size"
 }
 
+function autotest_cleanup()
+{
+	if [ $SPDK_TEST_RBD -eq 1 ]; then
+		rbd_cleanup
+	fi
+
+	$rootdir/scripts/setup.sh reset
+
+	if [ $SPDK_BUILD_IOAT_KMOD -eq 1 ]; then
+		$rootdir/scripts/build_kmod.sh clean
+	fi
+}
+
 set -o errtrace
 trap "trap - ERR; print_backtrace >&2" ERR
