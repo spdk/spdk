@@ -347,6 +347,7 @@ spdk_iscsi_conn_free_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pd
 					conn->data_in_cnt--;
 					spdk_iscsi_task_put(spdk_iscsi_task_get_primary(pdu->task));
 				}
+				spdk_iscsi_conn_handle_queued_datain_tasks(conn);
 			}
 		} else if (pdu->bhs.opcode == ISCSI_OP_SCSI_RSP &&
 			   pdu->task->scsi.status != SPDK_SCSI_STATUS_GOOD) {
@@ -1169,8 +1170,6 @@ spdk_iscsi_conn_execute(struct spdk_iscsi_conn *conn)
 		spdk_iscsi_conn_destruct(conn);
 		return -1;
 	}
-
-	spdk_iscsi_conn_handle_queued_datain_tasks(conn);
 
 	return 0;
 }
