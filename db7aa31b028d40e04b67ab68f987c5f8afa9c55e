@@ -16,6 +16,24 @@
       "revId": "db7aa31b028d40e04b67ab68f987c5f8afa9c55e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fe395be3_1e07ccd5",
+        "filename": "autobuild.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-02-28T15:19:38Z",
+      "side": 1,
+      "message": "Sorry, that was actually just for debugging. I wanted to make sure that autotest would work with my new changes before committing them.",
+      "parentUuid": "c6f28b87_572a5be6",
+      "revId": "db7aa31b028d40e04b67ab68f987c5f8afa9c55e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
