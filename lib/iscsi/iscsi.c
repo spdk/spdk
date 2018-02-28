@@ -2746,10 +2746,12 @@ spdk_iscsi_transfer_in(struct spdk_iscsi_conn *conn,
 			    primary->scsi.status == SPDK_SCSI_STATUS_GOOD) {
 				conn->data_in_cnt--;
 			}
+			spdk_iscsi_conn_handle_queued_datain_tasks(conn);
 		} else {
 			/* handle the case that it is a primary task which has subtasks */
 			if (primary->scsi.transfer_len != task->scsi.length) {
 				conn->data_in_cnt--;
+				spdk_iscsi_conn_handle_queued_datain_tasks(conn);
 			}
 		}
 
