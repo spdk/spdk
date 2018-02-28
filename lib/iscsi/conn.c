@@ -215,6 +215,27 @@ spdk_iscsi_poll_group_remove_conn(struct spdk_iscsi_conn *conn)
 	STAILQ_REMOVE(&poll_group->connections, conn, spdk_iscsi_conn, link);
 }
 
+static int
+spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn)
+{
+	uint64_t	tsc;
+
+	/* Check for nop interval expiration */
+	tsc = spdk_get_ticks();
+	if (conn->nop_outstanding) {
+		if ((tsc - conn->last_nopin) > (conn->timeout  * spdk_get_ticks_hz())) {
+			SPDK_ERRLOG("Timed out waiting for NOP-Out response from initiator\n");
+			SPDK_ERRLOG("  tsc=0x%lx, last_nopin=0x%lx\n", tsc, conn->last_nopin);
+			return -1;
+		}
+	} else if (tsc - conn->last_nopin > conn->nopininterval) {
+		conn->last_nopin = tsc;
+		spdk_iscsi_send_nopin(conn);
+	}
+
+	return 0;
+}
+
 /**
  * \brief Create an iSCSI connection from the given parameters and schedule it
  *        on a reactor.
@@ -886,27 +907,6 @@ spdk_iscsi_get_pdu_length(struct spdk_iscsi_pdu *pdu, int header_digest,
 	}
 
 	return total;
-}
-
-static int
-spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn)
-{
-	uint64_t	tsc;
-
-	/* Check for nop interval expiration */
-	tsc = spdk_get_ticks();
-	if (conn->nop_outstanding) {
-		if ((tsc - conn->last_nopin) > (conn->timeout  * spdk_get_ticks_hz())) {
-			SPDK_ERRLOG("Timed out waiting for NOP-Out response from initiator\n");
-			SPDK_ERRLOG("  tsc=0x%lx, last_nopin=0x%lx\n", tsc, conn->last_nopin);
-			return -1;
-		}
-	} else if (tsc - conn->last_nopin > conn->nopininterval) {
-		conn->last_nopin = tsc;
-		spdk_iscsi_send_nopin(conn);
-	}
-
-	return 0;
 }
 
 /**
