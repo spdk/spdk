@@ -1166,16 +1166,11 @@ spdk_iscsi_conn_execute(struct spdk_iscsi_conn *conn)
 	}
 
 	if (conn->state == ISCSI_CONN_STATE_EXITING) {
-		goto conn_exit;
-	}
-
-	spdk_iscsi_conn_handle_queued_datain_tasks(conn);
-
-conn_exit:
-	if (conn->state == ISCSI_CONN_STATE_EXITING) {
 		spdk_iscsi_conn_destruct(conn);
 		return -1;
 	}
+
+	spdk_iscsi_conn_handle_queued_datain_tasks(conn);
 
 	return 0;
 }
