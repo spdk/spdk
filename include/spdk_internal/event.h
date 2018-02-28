@@ -66,7 +66,6 @@ extern struct spdk_subsystem_list g_subsystems;
 struct spdk_subsystem_depend {
 	const char *name;
 	const char *depends_on;
-	struct spdk_subsystem *depends_on_subsystem;
 	TAILQ_ENTRY(spdk_subsystem_depend) tailq;
 };
 
@@ -88,27 +87,19 @@ void spdk_rpc_finish(void);
 /**
  * \brief Register a new subsystem
  */
-#define SPDK_SUBSYSTEM_REGISTER(_name, _init, _fini, _config)			\
-	struct spdk_subsystem __spdk_subsystem_ ## _name = {			\
-	.name = #_name,								\
-	.init = _init,								\
-	.fini = _fini,								\
-	.config = _config,							\
-	};									\
+#define SPDK_SUBSYSTEM_REGISTER(_name) \
 	__attribute__((constructor)) static void _name ## _register(void)	\
 	{									\
-		spdk_add_subsystem(&__spdk_subsystem_ ## _name);		\
+		spdk_add_subsystem(&_name);					\
 	}
 
 /**
  * \brief Declare that a subsystem depends on another subsystem.
  */
 #define SPDK_SUBSYSTEM_DEPEND(_name, _depends_on)						\
-	extern struct spdk_subsystem __spdk_subsystem_ ## _depends_on;				\
 	static struct spdk_subsystem_depend __subsystem_ ## _name ## _depend_on ## _depends_on = { \
 	.name = #_name,										\
 	.depends_on = #_depends_on,								\
-	.depends_on_subsystem = &__spdk_subsystem_ ## _depends_on,				\
 	};											\
 	__attribute__((constructor)) static void _name ## _depend_on ## _depends_on(void)	\
 	{											\

@@ -202,10 +202,26 @@ subsystem_sort_test_depends_on_multiple(void)
 	TAILQ_REMOVE(&g_subsystems, subsystem, tailq);
 }
 
-SPDK_SUBSYSTEM_REGISTER(subsystem1, NULL, NULL, NULL)
-SPDK_SUBSYSTEM_REGISTER(subsystem2, NULL, NULL, NULL)
-SPDK_SUBSYSTEM_REGISTER(subsystem3, NULL, NULL, NULL)
-SPDK_SUBSYSTEM_REGISTER(subsystem4, NULL, NULL, NULL)
+struct spdk_subsystem subsystem1 = {
+	.name = "subsystem1",
+};
+
+struct spdk_subsystem subsystem2 = {
+	.name = "subsystem2",
+};
+struct spdk_subsystem subsystem3 = {
+	.name = "subsystem3",
+};
+
+struct spdk_subsystem subsystem4 = {
+	.name = "subsystem4",
+};
+
+SPDK_SUBSYSTEM_REGISTER(subsystem1);
+SPDK_SUBSYSTEM_REGISTER(subsystem2);
+SPDK_SUBSYSTEM_REGISTER(subsystem3);
+SPDK_SUBSYSTEM_REGISTER(subsystem4);
+
 SPDK_SUBSYSTEM_DEPEND(subsystem1, subsystem2)
 SPDK_SUBSYSTEM_DEPEND(subsystem2, subsystem3)
 SPDK_SUBSYSTEM_DEPEND(subsystem3, subsystem4)
