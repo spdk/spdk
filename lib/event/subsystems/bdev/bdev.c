@@ -64,6 +64,12 @@ spdk_bdev_subsystem_finish(void)
 	spdk_bdev_finish(spdk_bdev_subsystem_finish_done, NULL);
 }
 
-SPDK_SUBSYSTEM_REGISTER(bdev, spdk_bdev_subsystem_initialize,
-			spdk_bdev_subsystem_finish, spdk_bdev_config_text)
+static struct spdk_subsystem g_spdk_subsystem_bdev = {
+	.name = "bdev",
+	.init = spdk_bdev_subsystem_initialize,
+	.fini = spdk_bdev_subsystem_finish,
+	.config = spdk_bdev_config_text,
+};
+
+SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_bdev);
 SPDK_SUBSYSTEM_DEPEND(bdev, copy)
