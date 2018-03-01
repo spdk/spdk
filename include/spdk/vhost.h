@@ -47,21 +47,35 @@
 extern "C" {
 #endif
 
+/**
+ * Callback funcion for spdk_vhost_fini().
+ */
 typedef void (*spdk_vhost_fini_cb)(void);
 
+/**
+ * Init vhost environment.
+ *
+ * \return 0 on success, -1 on failure.
+ */
 int spdk_vhost_init(void);
+
+/**
+ * Clean up the environment of vhost after finishing the vhost application.
+ *
+ * \param fini_cb Called when the cleanup operation completes.
+ */
 void spdk_vhost_fini(spdk_vhost_fini_cb fini_cb);
 
 /**
- * Init vhost application.  This is called once by SPDK app layer.
- * \param arg1 optional path to directory where sockets will
- * be created
- * \param arg2 unused
+ * Init vhost application. This is called once by SPDK app layer.
+ *
+ * \param arg1 optional path to directory where sockets will be created.
+ * \param arg2 unused.
  */
 void spdk_vhost_startup(void *arg1, void *arg2);
 
 /**
- * Deinit vhost application.  This is called once by SPDK app layer.
+ * Deinit vhost application. This is called once by SPDK app layer.
  */
 void spdk_vhost_shutdown_cb(void);
 
@@ -85,9 +99,10 @@ struct spdk_vhost_dev;
 /**
  * Synchronized vhost event used for user callbacks.
  *
- * \param vdev vhost device
- * \param arg user-provided parameter
- * \return 0 on success, -1 on failure
+ * \param vdev vhost device.
+ * \param arg user-provided parameter.
+ *
+ * \return 0 on success, -1 on failure.
  */
 typedef int (*spdk_vhost_event_fn)(struct spdk_vhost_dev *vdev, void *arg);
 
@@ -96,17 +111,18 @@ typedef int (*spdk_vhost_event_fn)(struct spdk_vhost_dev *vdev, void *arg);
  * of socket file. The name is constant throughout the lifetime of
  * a vdev.
  *
- * \param vdev vhost device
- * \return name of the vdev
+ * \param vdev vhost device.
+ *
+ * \return name of the vdev.
  */
 const char *spdk_vhost_dev_get_name(struct spdk_vhost_dev *vdev);
 
 /**
- * Get cpuset of the vhost device.  The cpuset is constant
- * throughout the lifetime of a vdev. It is be a subset
- * of SPDK app cpuset vhost was started with.
+ * Get cpuset of the vhost device.  The cpuset is constant throughout the lifetime
+ * of a vdev. It is be a subset of SPDK app cpuset vhost was started with.
  *
- * \param dev vhost device
+ * \param dev vhost device.
+ *
  * \return cpuset of the vdev.
  */
 const struct spdk_cpuset *spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *vdev);
@@ -126,9 +142,9 @@ const struct spdk_cpuset *spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *vdev
  *   delay = delay_base * (iops - iops_threshold) / iops_threshold;
  * }
  *
- * \param vdev vhost device
+ * \param vdev vhost device.
  * \param delay_base_us Base delay time in microseconds. If 0, coalescing is disabled.
- * \param iops_threshold IOPS threshold when coalescing is activated
+ * \param iops_threshold IOPS threshold when coalescing is activated.
  */
 int spdk_vhost_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
 			      uint32_t iops_threshold);
@@ -150,6 +166,7 @@ int spdk_vhost_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_u
  * \param mask string containing cpumask in hex. The leading *0x*
  * is allowed but not required. The mask itself can be constructed as:
  * ((1 << cpu0) | (1 << cpu1) | ... | (1 << cpuN)).
+ *
  * \return 0 on success, negative errno on error.
  */
 int spdk_vhost_scsi_dev_construct(const char *name, const char *cpumask);
@@ -164,9 +181,10 @@ int spdk_vhost_scsi_dev_construct(const char *name, const char *cpumask);
  * required that it has negotiated \c VIRTIO_SCSI_F_HOTPLUG feature
  * flag. Otherwise an -ENOTSUP error code is returned.
  *
- * \param vdev vhost SCSI device
- * \param scsi_tgt_num slot to attach to
- * \param bdev_name name of the SPDK bdev to associate with SCSI LUN0
+ * \param vdev vhost SCSI device.
+ * \param scsi_tgt_num slot to attach to.
+ * \param bdev_name name of the SPDK bdev to associate with SCSI LUN0.
+ *
  * \return 0 on success, negative errno on error.
  */
 int spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num,
@@ -174,12 +192,13 @@ int spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_n
 
 /**
  * Get SCSI target from vhost SCSI device on given slot. Max
- * number of available slots is defined by
+ * number of available slots is defined by.
  * \c SPDK_VHOST_SCSI_CTRLR_MAX_DEVS.
  *
- * \param vdev vhost SCSI device
- * \param num slot id
- * \return SCSI device on given slot or NULL
+ * \param vdev vhost SCSI device.
+ * \param num slot id.
+ *
+ * \return SCSI device on given slot or NULL.
  */
 struct spdk_scsi_dev *spdk_vhost_scsi_dev_get_tgt(struct spdk_vhost_dev *vdev, uint8_t num);
 
@@ -202,6 +221,7 @@ struct spdk_scsi_dev *spdk_vhost_scsi_dev_get_tgt(struct spdk_vhost_dev *vdev, u
  * deleted. The first parameter of callback function is the vhost SCSI
  * device, the second is user provided argument *cb_arg*.
  * \param cb_arg parameter to be passed to *cb_fn*.
+ *
  * \return 0 on success, negative errno on error.
  */
 int spdk_vhost_scsi_dev_remove_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num,
@@ -229,6 +249,7 @@ int spdk_vhost_scsi_dev_remove_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tg
  * \param dev_name bdev name to associate with this vhost device
  * \param readonly if set, all writes to the device will fail with
  * \c VIRTIO_BLK_S_IOERR error code.
+ *
  * \return 0 on success, negative errno on error.
  */
 int spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_name,
@@ -238,7 +259,8 @@ int spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *
  * Remove a vhost device. The device must not have any open
  * connections on it's socket.
  *
- * \param vdev vhost blk device
+ * \param vdev vhost blk device.
+ *
  * \return 0 on success, negative errno on error.
  */
 int spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev);
@@ -247,8 +269,9 @@ int spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev);
  * Get underlying SPDK bdev from vhost blk device.  The
  * bdev might be NULL, as it could have been hotremoved.
  *
- * \param ctrl vhost blk device
- * \return SPDK bdev associated with given vdev
+ * \param ctrl vhost blk device.
+ *
+ * \return SPDK bdev associated with given vdev.
  */
 struct spdk_bdev *spdk_vhost_blk_get_dev(struct spdk_vhost_dev *ctrlr);
 
@@ -260,7 +283,7 @@ struct spdk_bdev *spdk_vhost_blk_get_dev(struct spdk_vhost_dev *ctrlr);
  * This function is thread safe.
  *
  * \param vdev_name name of the vhost device to run
- * this event on
+ * this event on.
  * \param fn function to be called. The first parameter
  * of callback function is either actual spdk_vhost_dev
  * pointer or NULL in case vdev with given name doesn't
