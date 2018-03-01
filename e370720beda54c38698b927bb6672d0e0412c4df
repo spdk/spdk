@@ -1,0 +1,130 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9d2d3c31_8d8ce63c",
+        "filename": "test/unit/unittest.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T16:41:02Z",
+      "side": 1,
+      "message": "All of these config.h checks should probably be updated to use $rootdir/config.h so this script works even if it\u0027s not running with $PWD \u003d $rootdir.",
+      "range": {
+        "startLine": 14,
+        "startChar": 38,
+        "endLine": 14,
+        "endChar": 46
+      },
+      "revId": "e370720beda54c38698b927bb6672d0e0412c4df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ff88168_724319ac",
+        "filename": "test/unit/unittest.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T16:41:02Z",
+      "side": 1,
+      "message": "Update path to config.h",
+      "range": {
+        "startLine": 22,
+        "startChar": 57,
+        "endLine": 22,
+        "endChar": 65
+      },
+      "revId": "e370720beda54c38698b927bb6672d0e0412c4df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4515a421_ea5b591e",
+        "filename": "test/unit/unittest.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T16:41:02Z",
+      "side": 1,
+      "message": "This \u0027echo\u0027 looks left over from debugging.",
+      "revId": "e370720beda54c38698b927bb6672d0e0412c4df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c764b3c6_ca54737b",
+        "filename": "test/unit/unittest.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T16:41:02Z",
+      "side": 1,
+      "message": "Update path to config.h",
+      "range": {
+        "startLine": 54,
+        "startChar": 40,
+        "endLine": 54,
+        "endChar": 48
+      },
+      "revId": "e370720beda54c38698b927bb6672d0e0412c4df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c368807e_3a1afe03",
+        "filename": "test/unit/unittest.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T16:41:02Z",
+      "side": 1,
+      "message": "This might also benefit from specifying $rootdir explicitly:\n\n  git -C \"$rootdir\" clean -f \"*.gcda\"",
+      "revId": "e370720beda54c38698b927bb6672d0e0412c4df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f1f662b4_3d3471a4",
+        "filename": "test/unit/unittest.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T16:41:02Z",
+      "side": 1,
+      "message": "Update path to config.h",
+      "range": {
+        "startLine": 150,
+        "startChar": 37,
+        "endLine": 150,
+        "endChar": 45
+      },
+      "revId": "e370720beda54c38698b927bb6672d0e0412c4df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
