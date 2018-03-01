@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "dad21901_62a2face",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-03-01T20:19:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e8c3d583_74d41ebf",
+      "revId": "5485d6bd1e50c843b9a9d83283f251382b995085",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3b8c3101_c6a7f317",
         "filename": "include/spdk/event.h",
         "patchSetId": 3
@@ -125,6 +143,30 @@
       "side": 1,
       "message": "Hi Lance,\n\nDarek is right.  check_format.sh will not make these types of changes.  SPDK style is definitely open brace on same line as if/for/while/do (see other code in this file).  This must be a change that you accidentally made and forgot to revert before pushing your patch.\n\n-Jim",
       "parentUuid": "df2878b3_a9926cd3",
+      "range": {
+        "startLine": 514,
+        "startChar": 1,
+        "endLine": 515,
+        "endChar": 2
+      },
+      "revId": "5485d6bd1e50c843b9a9d83283f251382b995085",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "45caa47b_1a307518",
+        "filename": "lib/event/app.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 515,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-03-01T20:19:49Z",
+      "side": 1,
+      "message": "I think this had something to do with the fact I had altered the return type to an enum.  There was a discussion about this on the IRC.  I subsequently typedef\u0027d it, re-ran check_format.sh, and I think it\u0027s now correctly formatted.   See:  https://ci.spdk.io/irclog/2018-02-27.log  around time stamp 13:16.",
+      "parentUuid": "f3a47aaa_c7321246",
       "range": {
         "startLine": 514,
         "startChar": 1,
@@ -295,6 +337,24 @@
     },
     {
       "key": {
+        "uuid": "8a7e4958_c7363fb8",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-03-01T20:19:49Z",
+      "side": 1,
+      "message": "This is related to how/why (as answered below) when spdk_reactors_fini() invokes spdk_reactor_get().",
+      "parentUuid": "9ad9240f_0799d6ed",
+      "revId": "5485d6bd1e50c843b9a9d83283f251382b995085",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "32e8ccf3_e7abac6d",
         "filename": "lib/event/reactor.c",
         "patchSetId": 3
@@ -306,6 +366,24 @@
       "writtenOn": "2018-03-01T19:19:05Z",
       "side": 1,
       "message": "should this assert() instead?",
+      "revId": "5485d6bd1e50c843b9a9d83283f251382b995085",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "37c17a02_3029e074",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 741,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-03-01T20:19:49Z",
+      "side": 1,
+      "message": "I implemented this for the scenario where a failure occurs inside spdk_app_start() and the app still calls spdk_app_fini().   That in turn results in spdk_reactors_fini(), and so with this change it enables us to continue a safe tear down.",
+      "parentUuid": "32e8ccf3_e7abac6d",
       "revId": "5485d6bd1e50c843b9a9d83283f251382b995085",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
