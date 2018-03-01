@@ -118,6 +118,7 @@ struct spdk_bdev_io_stat {
 	uint64_t read_latency_ticks;
 	uint64_t write_latency_ticks;
 	uint64_t ticks_rate;
+	uint64_t current_ticks;
 };
 
 typedef void (*spdk_bdev_init_cb)(void *cb_arg, int rc);

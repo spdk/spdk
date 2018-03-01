@@ -913,6 +913,8 @@ _spdk_bdev_channel_create(struct spdk_bdev_channel *ch, void *io_device)
 	}
 
 	memset(&ch->stat, 0, sizeof(ch->stat));
+	ch->stat.ticks_rate = spdk_get_ticks_hz();
+
 	TAILQ_INIT(&ch->queued_resets);
 	ch->flags = 0;
 	ch->module_ch = shared_ch;
@@ -1700,9 +1702,8 @@ spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 
-	channel->stat.ticks_rate = spdk_get_ticks_hz();
+	channel->stat.current_ticks = spdk_get_ticks();
 	*stat = channel->stat;
-	memset(&channel->stat, 0, sizeof(channel->stat));
 }
 
 int
