@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "95b06272_4cb03966",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 534,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-03-01T14:42:42Z",
+      "side": 1,
+      "message": "Indented the codes.\nGood question. I have added codes to return -1 if no available devices.",
+      "parentUuid": "53953580_0efaf670",
+      "revId": "22c0f2fcdd2586a916d6a4d554b38e349509541a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2456d773_1aa24c0d",
         "filename": "scripts/common/getdevice.py",
         "patchSetId": 14
@@ -30,6 +48,30 @@
       "writtenOn": "2018-02-26T20:40:12Z",
       "side": 1,
       "message": "This seems to be mixing up two different tasks - the script is called \"getdevice\", so I would assume it should get a list of devices of a particular type.  However, this seems like it\u0027s also configuring the devices; that should be an independent step (maybe another function in autotest_common.sh).",
+      "range": {
+        "startLine": 48,
+        "startChar": 4,
+        "endLine": 48,
+        "endChar": 21
+      },
+      "revId": "22c0f2fcdd2586a916d6a4d554b38e349509541a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d78f77b5_02839819",
+        "filename": "scripts/common/getdevice.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-03-01T14:42:42Z",
+      "side": 1,
+      "message": "I don\u0027t think configuring devices step can be easily realized in autotest_common.sh. So I renamed this file to initdevice.py to contain two steps.",
+      "parentUuid": "2456d773_1aa24c0d",
       "range": {
         "startLine": 48,
         "startChar": 4,
