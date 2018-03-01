@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2d2ffdd1_2ad65d2c",
+        "filename": "doc/peer_2_peer.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T22:23:39Z",
+      "side": 1,
+      "message": "Would \"Peer to Peer\" be clearer? (We could add \"P2P\" as part of the title if that is how it\u0027s normally referred to elsewhere.)",
+      "range": {
+        "startLine": 1,
+        "startChar": 2,
+        "endLine": 1,
+        "endChar": 13
+      },
+      "revId": "a8614ec37a62e276f7e0c37db18d850ec1d33e30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
