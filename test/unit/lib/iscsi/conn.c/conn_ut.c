@@ -239,6 +239,13 @@ int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 }
 
 int
+spdk_iscsi_param_eq_val(struct iscsi_param *params, const char *key,
+			const char *val)
+{
+	return 0;
+}
+
+int
 spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 {
 	return 0;
