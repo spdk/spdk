@@ -45,11 +45,9 @@ spdk_rpc_dump_bdev_info(struct spdk_json_write_ctx *w,
 
 	spdk_json_write_object_begin(w);
 
-	spdk_json_write_name(w, "name");
-	spdk_json_write_string(w, spdk_bdev_get_name(bdev));
+	spdk_json_write_named_string(w, "name", spdk_bdev_get_name(bdev));
 
-	spdk_json_write_name(w, "aliases");
-	spdk_json_write_array_begin(w);
+	spdk_json_write_named_array_begin(w, "aliases");
 
 	TAILQ_FOREACH(tmp, spdk_bdev_get_aliases(bdev), tailq) {
 		spdk_json_write_string(w, tmp->alias);
@@ -57,40 +55,29 @@ spdk_rpc_dump_bdev_info(struct spdk_json_write_ctx *w,
 
 	spdk_json_write_array_end(w);
 
-	spdk_json_write_name(w, "product_name");
-	spdk_json_write_string(w, spdk_bdev_get_product_name(bdev));
+	spdk_json_write_named_string(w, "product_name", spdk_bdev_get_product_name(bdev));
 
-	spdk_json_write_name(w, "block_size");
-	spdk_json_write_uint32(w, spdk_bdev_get_block_size(bdev));
+	spdk_json_write_named_uint32(w, "block_size", spdk_bdev_get_block_size(bdev));
 
-	spdk_json_write_name(w, "num_blocks");
-	spdk_json_write_uint64(w, spdk_bdev_get_num_blocks(bdev));
+	spdk_json_write_named_uint64(w, "num_blocks", spdk_bdev_get_num_blocks(bdev));
 
-	spdk_json_write_name(w, "claimed");
-	spdk_json_write_bool(w, (bdev->claim_module != NULL));
+	spdk_json_write_named_bool(w, "claimed", (bdev->claim_module != NULL));
 
-	spdk_json_write_name(w, "supported_io_types");
-	spdk_json_write_object_begin(w);
-	spdk_json_write_name(w, "read");
-	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_READ));
-	spdk_json_write_name(w, "write");
-	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE));
-	spdk_json_write_name(w, "unmap");
-	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP));
-	spdk_json_write_name(w, "write_zeroes");
-	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES));
-	spdk_json_write_name(w, "flush");
-	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_FLUSH));
-	spdk_json_write_name(w, "reset");
-	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_RESET));
-	spdk_json_write_name(w, "nvme_admin");
-	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_ADMIN));
-	spdk_json_write_name(w, "nvme_io");
-	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_IO));
+	spdk_json_write_named_object_begin(w, "supported_io_types");
+	spdk_json_write_named_bool(w, "read", spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_READ));
+	spdk_json_write_named_bool(w, "write", spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE));
+	spdk_json_write_named_bool(w, "unmap", spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP));
+	spdk_json_write_named_bool(w, "write_zeroes", spdk_bdev_io_type_supported(bdev,
+				   SPDK_BDEV_IO_TYPE_WRITE_ZEROES));
+	spdk_json_write_named_bool(w, "flush", spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_FLUSH));
+	spdk_json_write_named_bool(w, "reset", spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_RESET));
+	spdk_json_write_named_bool(w, "nvme_admin", spdk_bdev_io_type_supported(bdev,
+				   SPDK_BDEV_IO_TYPE_NVME_ADMIN));
+	spdk_json_write_named_bool(w, "nvme_io", spdk_bdev_io_type_supported(bdev,
+				   SPDK_BDEV_IO_TYPE_NVME_IO));
 	spdk_json_write_object_end(w);
 
-	spdk_json_write_name(w, "driver_specific");
-	spdk_json_write_object_begin(w);
+	spdk_json_write_named_object_begin(w, "driver_specific");
 	spdk_bdev_dump_info_json(bdev, w);
 	spdk_json_write_object_end(w);
 
@@ -124,16 +111,16 @@ spdk_rpc_get_bdevs(struct spdk_jsonrpc_request *request,
 					    SPDK_COUNTOF(rpc_get_bdevs_decoders),
 					    &req)) {
 			SPDK_ERRLOG("spdk_json_decode_object failed\n");
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							 "Invalid parameters");
 			goto invalid;
 		} else {
-			if (req.name == NULL) {
-				SPDK_ERRLOG("missing name param\n");
-				goto invalid;
-			}
-
 			bdev = spdk_bdev_get_by_name(req.name);
 			if (bdev == NULL) {
 				SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
+				spdk_jsonrpc_send_error_response_fmt(request,
+								     SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+								     "Bdev '%s' not exist", req.name);
 				goto invalid;
 			}
 
@@ -163,8 +150,6 @@ spdk_rpc_get_bdevs(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-
 	free_rpc_get_bdevs(&req);
 }
 SPDK_RPC_REGISTER("get_bdevs", spdk_rpc_get_bdevs)
@@ -288,17 +273,17 @@ spdk_rpc_delete_bdev(struct spdk_jsonrpc_request *request,
 				    SPDK_COUNTOF(rpc_delete_bdev_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
-		goto invalid;
-	}
-
-	if (req.name == NULL) {
-		SPDK_ERRLOG("missing name param\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
 		goto invalid;
 	}
 
 	bdev = spdk_bdev_get_by_name(req.name);
 	if (bdev == NULL) {
 		SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						     "Bdev '%s' not exist", req.name);
+
 		goto invalid;
 	}
 
@@ -309,7 +294,6 @@ spdk_rpc_delete_bdev(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_delete_bdev(&req);
 }
 SPDK_RPC_REGISTER("delete_bdev", spdk_rpc_delete_bdev)
