@@ -42,13 +42,40 @@
 extern "C" {
 #endif
 
+/**
+ * Listen on the required address.
+ *
+ * \param listen_addr Listening address.
+ *
+ * \return 0 on success, -1 on failure.
+ */
 int spdk_rpc_listen(const char *listen_addr);
+
+/**
+ * Poll the RPC server for accepting the request.
+ */
 void spdk_rpc_accept(void);
+
+/**
+ * Close the RPC server.
+ */
 void spdk_rpc_close(void);
 
+/**
+ * Function to handle the RPC request.
+ *
+ * \param request RPC request to handle.
+ * \param params Parameters associated with the RPC request.
+ */
 typedef void (*spdk_rpc_method_handler)(struct spdk_jsonrpc_request *request,
 					const struct spdk_json_val *params);
 
+/**
+ * Register the RPC method.
+ *
+ * \param method Name for the registered method.
+ * \param func Function registered for this method to handle the RPC request.
+ */
 void spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func);
 
 #define SPDK_RPC_REGISTER(method, func) \
