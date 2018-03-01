@@ -38,6 +38,7 @@
 #include "spdk/env.h"
 #include "spdk/log.h"
 #include "spdk/string.h"
+#include "spdk_internal/event.h"
 
 #define RPC_DEFAULT_PORT	"5260"
 
@@ -52,6 +53,7 @@ struct spdk_rpc_method {
 };
 
 static SLIST_HEAD(, spdk_rpc_method) g_rpc_methods = SLIST_HEAD_INITIALIZER(g_rpc_methods);
+static SLIST_HEAD(, spdk_rpc_method) g_si_rpc_methods = SLIST_HEAD_INITIALIZER(g_si_rpc_methods);
 
 static void
 spdk_jsonrpc_handler(struct spdk_jsonrpc_request *request,
@@ -62,10 +64,19 @@ spdk_jsonrpc_handler(struct spdk_jsonrpc_request *request,
 
 	assert(method != NULL);
 
-	SLIST_FOREACH(m, &g_rpc_methods, slist) {
-		if (spdk_json_strequal(method, m->name)) {
-			m->func(request, params);
-			return;
+	if (g_subsystems_initialized) {
+		SLIST_FOREACH(m, &g_rpc_methods, slist) {
+			if (spdk_json_strequal(method, m->name)) {
+				m->func(request, params);
+				return;
+			}
+		}
+	} else {
+		SLIST_FOREACH(m, &g_rpc_methods, slist) {
+			if (spdk_json_strequal(method, m->name)) {
+				m->func(request, params);
+				return;
+			}
 		}
 	}
 
@@ -155,8 +166,8 @@ spdk_rpc_accept(void)
 	spdk_jsonrpc_server_poll(g_jsonrpc_server);
 }
 
-void
-spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func)
+static struct spdk_rpc_method *
+spdk_rpc_method_create(const char *method, spdk_rpc_method_handler func)
 {
 	struct spdk_rpc_method *m;
 
@@ -168,8 +179,29 @@ spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func)
 
 	m->func = func;
 
+	return m;
+}
+
+void
+spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func)
+{
+	struct spdk_rpc_method *m;
+
+	m = spdk_rpc_method_create(method, func);
+
 	/* TODO: use a hash table or sorted list */
 	SLIST_INSERT_HEAD(&g_rpc_methods, m, slist);
+}
+
+void
+spdk_si_rpc_register_method(const char *method, spdk_rpc_method_handler func)
+{
+	struct spdk_rpc_method *m;
+
+	m = spdk_rpc_method_create(method, func);
+
+	/* TODO: use a hash table or sorted list */
+	SLIST_INSERT_HEAD(&g_si_rpc_methods, m, slist);
 }
 
 void
@@ -213,3 +245,33 @@ spdk_rpc_get_rpc_methods(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("get_rpc_methods", spdk_rpc_get_rpc_methods)
+
+static void
+spdk_rpc_get_si_rpc_methods(struct spdk_jsonrpc_request *request,
+			    const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+	struct spdk_rpc_method *m;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "get_si_rpc_methods requires no parameters");
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_array_begin(w);
+	SLIST_FOREACH(m, &g_si_rpc_methods, slist) {
+		spdk_json_write_string(w, m->name);
+	}
+	spdk_json_write_array_end(w);
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("get_si_rpc_methods", spdk_rpc_get_si_rpc_methods)
+
+
+

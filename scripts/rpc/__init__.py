@@ -14,3 +14,7 @@ import vhost
 
 def get_rpc_methods(args):
     print_dict(args.client.call('get_rpc_methods'))
+
+
+def get_si_rpc_methods(args):
+    print_dict(args.client.call('get_si_rpc_methods'))
