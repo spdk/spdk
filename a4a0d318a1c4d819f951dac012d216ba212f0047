@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8809f128_c71704d8",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T17:08:05Z",
+      "side": 1,
+      "message": "This should be squashed into the previous patch (git commit --amend), not a separate review.",
+      "revId": "a4a0d318a1c4d819f951dac012d216ba212f0047",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
