@@ -828,6 +828,7 @@ spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task)
 
 	if (spdk_iscsi_task_is_read(primary)) {
 		process_read_task_completion(conn, task, primary);
+		spdk_iscsi_conn_handle_queued_datain_tasks(conn);
 	} else {
 		primary->bytes_completed += task->scsi.length;
 		if ((task != primary) &&
@@ -1202,8 +1203,6 @@ spdk_iscsi_conn_login_do_work(void *arg)
 		return;
 	}
 
-	spdk_iscsi_conn_handle_queued_datain_tasks(conn);
-
 	/* Check if this connection transitioned to full feature phase. If it
 	 * did, migrate it to a dedicated reactor for the target node.
 	 */
@@ -1255,8 +1254,6 @@ spdk_iscsi_conn_full_feature_do_work(void *arg)
 	if (rc < 0) {
 		return;
 	}
-
-	spdk_iscsi_conn_handle_queued_datain_tasks(conn);
 }
 
 void
