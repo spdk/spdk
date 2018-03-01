@@ -903,6 +903,13 @@ spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn)
 		return;
 	}
 
+	/* Only send nopin if we have logged in and are in a normal session. */
+	if (conn->sess == NULL ||
+	    !conn->full_feature ||
+	    !spdk_iscsi_param_eq_val(conn->sess->params, "SessionType", "Normal")) {
+		return;
+	}
+
 	/* Check for nop interval expiration */
 	tsc = spdk_get_ticks();
 	if (conn->nop_outstanding) {
