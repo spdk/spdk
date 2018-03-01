@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "10e8fe35_3c459f75",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-03-01T06:56:27Z",
+      "side": 1,
+      "message": "Not really. The code in #327 is a sanity check required for vhost-user, as the number of virtqueues is taken directly from the user input.\nI could move the #327 check to the vhost-user-specific function, but that doesn\u0027t change much. I eventually hope to allow specifying the number of virtio-pci queues as well, so the #327 check will become useful even for virtio-pci.",
+      "parentUuid": "1a9320d9_e4bacb42",
+      "revId": "49fc6727b2f2d767b017ee103ba05f88baf6b37e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "36754398_2d89c645",
         "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
         "patchSetId": 16
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "6138033e_4058d6dc",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 477,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-03-01T06:56:27Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "36754398_2d89c645",
+      "revId": "49fc6727b2f2d767b017ee103ba05f88baf6b37e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "632ea99f_4f6b6b4c",
         "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
         "patchSetId": 16
@@ -47,6 +83,24 @@
       "writtenOn": "2018-02-28T10:22:59Z",
       "side": 1,
       "message": "same here, should be pci_blk_dev_create_cb.",
+      "revId": "49fc6727b2f2d767b017ee103ba05f88baf6b37e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7428a7b7_ea10d38b",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-03-01T06:56:27Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "632ea99f_4f6b6b4c",
       "revId": "49fc6727b2f2d767b017ee103ba05f88baf6b37e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
