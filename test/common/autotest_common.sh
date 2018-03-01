@@ -540,3 +540,4 @@ function get_bdev_size()
 
 set -o errtrace
 trap "trap - ERR; print_backtrace >&2" ERR
+DATE='Thu Mar  1 16:11:42 MST 2018'
