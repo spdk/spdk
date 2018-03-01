@@ -16,6 +16,24 @@
       "revId": "6140f2d1477d63baba5c55c0695029e997557282",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7919d4cd_972e3bc1",
+        "filename": "include/spdk_internal/event.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-01T17:34:18Z",
+      "side": 0,
+      "message": "Subsystems are added to extern g_subsystems by spdk_add_subsystem(). Isn\u0027t it enought?",
+      "parentUuid": "405250ac_4d208aff",
+      "revId": "6140f2d1477d63baba5c55c0695029e997557282",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
