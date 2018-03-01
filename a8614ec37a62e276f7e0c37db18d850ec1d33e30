@@ -46,6 +46,54 @@
       "revId": "a8614ec37a62e276f7e0c37db18d850ec1d33e30",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8dc01934_23c31c9b",
+        "filename": "doc/peer_2_peer.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1013162
+      },
+      "writtenOn": "2018-03-01T23:40:47Z",
+      "side": 1,
+      "message": "Peer-2-Peer has become pretty standard so I think we should leave it as it. I so the abbreviation in the Overview.",
+      "parentUuid": "2d2ffdd1_2ad65d2c",
+      "range": {
+        "startLine": 1,
+        "startChar": 2,
+        "endLine": 1,
+        "endChar": 13
+      },
+      "revId": "a8614ec37a62e276f7e0c37db18d850ec1d33e30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ebd533f_09be6a67",
+        "filename": "doc/peer_2_peer.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1013162
+      },
+      "writtenOn": "2018-03-01T23:40:47Z",
+      "side": 1,
+      "message": "Yes that might make sense. I will spin based on that.",
+      "parentUuid": "d7b3ee52_bf8482f3",
+      "range": {
+        "startLine": 1,
+        "startChar": 2,
+        "endLine": 1,
+        "endChar": 13
+      },
+      "revId": "a8614ec37a62e276f7e0c37db18d850ec1d33e30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
