@@ -813,6 +813,8 @@ process_read_task_completion(struct spdk_iscsi_conn *conn,
 		spdk_iscsi_task_put(task);
 	}
 	process_completed_read_subtask_list(conn, primary);
+
+	spdk_iscsi_conn_handle_queued_datain_tasks(conn);
 }
 
 void
@@ -1169,8 +1171,6 @@ spdk_iscsi_conn_execute(struct spdk_iscsi_conn *conn)
 		spdk_iscsi_conn_destruct(conn);
 		return -1;
 	}
-
-	spdk_iscsi_conn_handle_queued_datain_tasks(conn);
 
 	return 0;
 }
