@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "02919773_5ffc85b8",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1012364
+      },
+      "writtenOn": "2018-03-01T09:26:32Z",
+      "side": 1,
+      "message": "according to the test plan to use differece iosize to run fio.",
+      "parentUuid": "287026f8_dfc10fd1",
+      "revId": "2ed8fc0947ffdcde6d4506dbeb1544ddf8843b17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7338247c_6e90b660",
         "filename": "test/iscsi_tgt/iscsi_tgt.sh",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2018-02-27T17:56:18Z",
       "side": 1,
       "message": "why do we need to move this here?\n\nmy concern is that this requires full initialization of DPDK and NVMe devices - when it runs with stub in the background, those parts can be skipped",
+      "revId": "2ed8fc0947ffdcde6d4506dbeb1544ddf8843b17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fca0a1d8_45b35a0f",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1012364
+      },
+      "writtenOn": "2018-03-01T09:26:32Z",
+      "side": 1,
+      "message": "This stub process has side effect on hotplug case which use nvme\u0026lvol. it maybe result in core dump of iscsi_tgt, so it was moved here.",
+      "parentUuid": "7338247c_6e90b660",
       "revId": "2ed8fc0947ffdcde6d4506dbeb1544ddf8843b17",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
