@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a8133cc8_0f1a0b81",
+        "filename": "test/vhost/hotplug/blk_hotremove.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-01T14:46:17Z",
+      "side": 1,
+      "message": "Please replace this (in whole file?) by \nif wait_for_finish $last_pid_vm1; then\n    error \"....\"\nfi",
+      "range": {
+        "startLine": 118,
+        "startChar": 0,
+        "endLine": 123,
+        "endChar": 78
+      },
+      "revId": "7b1765afdf9c8fc9ef63f85dfded868929c8542d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6383faa0_c04b2511",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-01T14:46:17Z",
+      "side": 1,
+      "message": "while vm_os_booted $vm_num; do sleep 0.5; done",
+      "range": {
+        "startLine": 139,
+        "startChar": 8,
+        "endLine": 143,
+        "endChar": 12
+      },
+      "revId": "7b1765afdf9c8fc9ef63f85dfded868929c8542d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92f5c099_44c36e46",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-01T14:46:17Z",
+      "side": 1,
+      "message": "If you assume in trest that error triggers ERR trap and this invoke cleanup why this is present many times in this file?",
+      "range": {
+        "startLine": 187,
+        "startChar": 0,
+        "endLine": 189,
+        "endChar": 14
+      },
+      "revId": "7b1765afdf9c8fc9ef63f85dfded868929c8542d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
