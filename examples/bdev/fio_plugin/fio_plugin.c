@@ -273,10 +273,18 @@ spdk_fio_init_env(struct thread_data *td)
 	/* Initialize the bdev layer */
 	spdk_bdev_initialize(spdk_fio_bdev_init_done, &done);
 
+	/* First, poll until initialization is done. */
 	do {
-		/* Handle init and all cleanup events */
+		spdk_fio_poll_thread(fio_thread);
+	} while (!done);
+
+	/*
+	 * Continue polling until there are no more events.
+	 * This handles any final events posted by pollers.
+	 */
+	do {
 		count = spdk_fio_poll_thread(fio_thread);
-	} while (!done || count > 0);
+	} while (count > 0);
 
 	return 0;
 }
@@ -678,15 +686,23 @@ spdk_fio_finish_env(void)
 	spdk_bdev_finish(spdk_fio_module_finish_done, &done);
 
 	do {
+		spdk_fio_poll_thread(fio_thread);
+	} while (!done);
+
+	do {
 		count = spdk_fio_poll_thread(fio_thread);
-	} while (!done || count > 0);
+	} while (count > 0);
 
 	done = false;
 	spdk_copy_engine_finish(spdk_fio_module_finish_done, &done);
 
 	do {
+		spdk_fio_poll_thread(fio_thread);
+	} while (!done);
+
+	do {
 		count = spdk_fio_poll_thread(fio_thread);
-	} while (!done || count > 0);
+	} while (count > 0);
 
 	spdk_fio_cleanup_thread(fio_thread);
 }
