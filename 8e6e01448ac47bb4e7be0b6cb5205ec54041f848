@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e929cefe_9c1fc2b1",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-03-01T18:57:21Z",
+      "side": 1,
+      "message": "Ack. I\u0027ll leave this one for a separate patch.",
+      "parentUuid": "33e19108_2f1816bc",
+      "revId": "8e6e01448ac47bb4e7be0b6cb5205ec54041f848",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "68d3d2ce_f5b5954d",
         "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
         "patchSetId": 7
@@ -30,6 +48,30 @@
       "writtenOn": "2018-03-01T16:26:17Z",
       "side": 1,
       "message": "Is this cast necessary? void *io[32] should already decay to void **.",
+      "range": {
+        "startLine": 256,
+        "startChar": 32,
+        "endLine": 256,
+        "endChar": 41
+      },
+      "revId": "8e6e01448ac47bb4e7be0b6cb5205ec54041f848",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7216c34_70173233",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-03-01T18:57:21Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "68d3d2ce_f5b5954d",
       "range": {
         "startLine": 256,
         "startChar": 32,
@@ -59,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "d7fcbd58_503e6817",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-03-01T18:57:21Z",
+      "side": 1,
+      "message": "And a memory leak, Ack",
+      "parentUuid": "42b01a6b_e785079a",
+      "revId": "8e6e01448ac47bb4e7be0b6cb5205ec54041f848",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "23111e84_f0aacfbf",
         "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
         "patchSetId": 7
@@ -70,6 +130,24 @@
       "writtenOn": "2018-03-01T16:26:17Z",
       "side": 1,
       "message": "Maybe VirtioBlk or virtio-blk? \"BLK\" isn\u0027t an acronym, just a short form of \"block\" (unlike SCSI).",
+      "revId": "8e6e01448ac47bb4e7be0b6cb5205ec54041f848",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a13b284_2d4a5e5a",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-03-01T18:57:21Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "23111e84_f0aacfbf",
       "revId": "8e6e01448ac47bb4e7be0b6cb5205ec54041f848",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -93,6 +171,24 @@
     },
     {
       "key": {
+        "uuid": "03855fc5_45023565",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 389,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-03-01T18:57:21Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "4eb618a8_74980537",
+      "revId": "8e6e01448ac47bb4e7be0b6cb5205ec54041f848",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b7f723d4_455b674b",
         "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
         "patchSetId": 7
@@ -110,6 +206,24 @@
     },
     {
       "key": {
+        "uuid": "e003143a_8334070c",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 392,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-03-01T18:57:21Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b7f723d4_455b674b",
+      "revId": "8e6e01448ac47bb4e7be0b6cb5205ec54041f848",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e209f1ee_5c049fe3",
         "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
         "patchSetId": 7
@@ -121,6 +235,24 @@
       "writtenOn": "2018-03-01T16:26:17Z",
       "side": 1,
       "message": "Validate max_queues \u003e 0, probably?",
+      "revId": "8e6e01448ac47bb4e7be0b6cb5205ec54041f848",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9a3abc5_390b0aa2",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 409,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-03-01T18:57:21Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "e209f1ee_5c049fe3",
       "revId": "8e6e01448ac47bb4e7be0b6cb5205ec54041f848",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
