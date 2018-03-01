@@ -1,0 +1,198 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "36a88249_43bd18e0",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T17:29:45Z",
+      "side": 1,
+      "message": "Please add () to the function names so they get auto-linked by Doxygen.",
+      "range": {
+        "startLine": 18,
+        "startChar": 6,
+        "endLine": 18,
+        "endChar": 41
+      },
+      "revId": "0e8cb9558f37f1b8a656c4fead3d91a03584df8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "05a1778a_d55b11d6",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 807,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T17:29:45Z",
+      "side": 1,
+      "message": "This is going to result in an error being printed for all controllers that don\u0027t support Identify NS List, which is unfortunate, but unavoidable...",
+      "revId": "0e8cb9558f37f1b8a656c4fead3d91a03584df8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "316e1368_ac402385",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 816,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T17:29:45Z",
+      "side": 1,
+      "message": "Log message needs to be updated.  Also, this should probably be a INFOLOG or DEBUGLOG since it can happen in valid cases (see below about NVMe 1.0 compatibility).",
+      "range": {
+        "startLine": 816,
+        "startChar": 15,
+        "endLine": 816,
+        "endChar": 39
+      },
+      "revId": "0e8cb9558f37f1b8a656c4fead3d91a03584df8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b420419_c483619e",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1076,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T17:29:45Z",
+      "side": 1,
+      "message": "I think we want to construct NS objects for all of the valid NSIDs, even if they aren\u0027t currently active, so that Namespace Management can work.",
+      "revId": "0e8cb9558f37f1b8a656c4fead3d91a03584df8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e6a24d5_ecce4fa5",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1587,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T17:29:45Z",
+      "side": 1,
+      "message": "This will fail on any controller that doesn\u0027t support Identify Active NS List (most importantly, any NVMe 1.0 controller).  We\u0027ll need a fallback path that just does what we did before - issue Identify Namespace for each NSID in [1,NN] and check if it\u0027s active like spdk_nvme_ns_is_active().",
+      "revId": "0e8cb9558f37f1b8a656c4fead3d91a03584df8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3c92453e_db9071fd",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1821,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T17:29:45Z",
+      "side": 1,
+      "message": "ns_id -\u003e nsid for consistency with the rest of the API.",
+      "range": {
+        "startLine": 1821,
+        "startChar": 69,
+        "endLine": 1821,
+        "endChar": 74
+      },
+      "revId": "0e8cb9558f37f1b8a656c4fead3d91a03584df8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d8776561_15aed37e",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1828,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T17:29:45Z",
+      "side": 1,
+      "message": "This could use a binary search, since the NSIDs are in sorted order.",
+      "revId": "0e8cb9558f37f1b8a656c4fead3d91a03584df8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4c89c6c_e5909b9a",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1839,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T17:29:45Z",
+      "side": 1,
+      "message": "Rather than returning a pointer, I\u0027d prefer to just return the NSID itself as a uint32_t, and then make get_next_active_ns() do a binary search to find it and pick up where it left off.  This shouldn\u0027t be too much overhead in practice, and it will make it a nicer API to use IMO.",
+      "revId": "0e8cb9558f37f1b8a656c4fead3d91a03584df8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "70d65743_8a6d4c41",
+        "filename": "lib/nvme/nvme_ctrlr_cmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T17:29:45Z",
+      "side": 1,
+      "message": "NSID is 32 bits.",
+      "range": {
+        "startLine": 157,
+        "startChar": 70,
+        "endLine": 157,
+        "endChar": 78
+      },
+      "revId": "0e8cb9558f37f1b8a656c4fead3d91a03584df8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "520921da_97524d1a",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 443,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T17:29:45Z",
+      "side": 1,
+      "message": "A single ns_list is insufficient for controllers with large numbers of namespaces; it can only hold 1024.  We should probably have a dynamically-allocated array of uint32_t based on ctrlr-\u003enum_ns.\n\nYou\u0027ll also need to update the code that retrieves the list to iterate over all of the pages (this is controlled by the value of NSID passed in the Identify command).\n\nNitpick: tab instead of space between the type and the name to match the other fields in this struct.",
+      "revId": "0e8cb9558f37f1b8a656c4fead3d91a03584df8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
