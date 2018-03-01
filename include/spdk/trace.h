@@ -129,33 +129,112 @@ struct spdk_trace_histories {
 	struct spdk_trace_history	per_lcore_history[SPDK_TRACE_MAX_LCORE];
 };
 
+/**
+ * Record the current trace state for tracing tpoints. Debug tool can read the
+ * information from shared memory to post-process the tpoint entries and display
+ * in a human-readable format.
+ *
+ * \param tpoint_id Tracepoint id to record.
+ * \param poller_id Poller id to record.
+ * \param size Size to record.
+ * \param object_id Object id to record.
+ * \param arg1 Argument to record.
+ */
 void spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
 		       uint64_t object_id, uint64_t arg1);
 
-/** Returns the current tpoint mask. */
+/**
+ * Get the current tpoint mask of the given tpoint group.
+ *
+ * \param group_id Tpoint group id associated with the tpoint mask.
+ *
+ * \return current tpoint mask.
+ */
 uint64_t spdk_trace_get_tpoint_mask(uint32_t group_id);
 
-/** Adds the specified tpoints to the current tpoint mask for the given tpoint group. */
+/**
+ * Add the specified tpoints to the current tpoint mask for the given tpoint group.
+ *
+ * \param group_id Tpoint group id associated with the tpoint mask.
+ * \param tpoint_mask Tpoint mask which indicates which tpoints to add to the
+ * current tpoint mask.
+ */
 void spdk_trace_set_tpoints(uint32_t group_id, uint64_t tpoint_mask);
 
-/** Clears the specified tpoints from the current tpoint mask for the given tpoint group. */
+/**
+ * Clear the specified tpoints from the current tpoint mask for the given tpoint group.
+ *
+ * \param group_id Tpoint group id associated with the tpoint mask.
+ * \param tpoint_mask Tpoint mask which indicates which tpoints to clear from
+ * the current tpoint mask.
+ */
 void spdk_trace_clear_tpoints(uint32_t group_id, uint64_t tpoint_mask);
 
-/** Returns a mask of all tracepoint groups which have at least one tracepoint enabled. */
+/**
+ * Get a mask of all tracepoint groups which have at least one tracepoint enabled.
+ *
+ * \return a mask of all tracepoint groups.
+ */
 uint64_t spdk_trace_get_tpoint_group_mask(void);
 
-/** For each tpoint group specified in the group mask, enable all of its tpoints. */
+/**
+ * For each tpoint group specified in the group mask, enable all of its tpoints.
+ *
+ * \param tpoint_group_mask Tpoint group mask that indicates which tpoints to enable.
+ */
 void spdk_trace_set_tpoint_group_mask(uint64_t tpoint_group_mask);
 
+/**
+ * Initialize the trace environment. Debug tool can read the information from
+ * the given shared memory to post-process the tpoint entries and display in a
+ * human-readable format.
+ *
+ * \param shm_name Name of shared memory.
+ */
 void spdk_trace_init(const char *shm_name);
+
+/**
+ * Unmap global trace memory structs.
+ */
 void spdk_trace_cleanup(void);
+
+/**
+ * Initialize trace flags.
+ */
 void spdk_trace_flags_init(void);
 
 #define OWNER_NONE 0
 #define OBJECT_NONE 0
 
+/**
+ * Register the trace owner.
+ *
+ * \param type Type of the trace owner.
+ * \param id_prefix Prefix of id for the trace owner.
+ */
 void spdk_trace_register_owner(uint8_t type, char id_prefix);
+
+/**
+ * Register the trace object.
+ *
+ * \param type Type of the trace object.
+ * \param id_prefix Prefix of id for the trace object.
+ */
 void spdk_trace_register_object(uint8_t type, char id_prefix);
+
+/**
+ * Register the description for the tpoint.
+ *
+ * \param name Name for the tpoint.
+ * \param short_name Short name for the tpoint.
+ * \param tpoint_id Id for the tpoint.
+ * \param owner_type Owner type for the tpoint.
+ * \param object_type Object type for the tpoint.
+ * \param new_object New object for the tpoint.
+ * \param arg1_is_ptr This argument indicates whether argument1 is a pointer.
+ * \param arg1_is_alias This argument indicates whether argument1 is an alias.
+ * \param agr1_name Name of argument.
+ */
 void spdk_trace_register_description(const char *name, const char *short_name,
 				     uint16_t tpoint_id, uint8_t owner_type,
 				     uint8_t object_type, uint8_t new_object,
@@ -167,6 +246,11 @@ struct spdk_trace_register_fn {
 	struct spdk_trace_register_fn *next;
 };
 
+/**
+ * Add new trace register function.
+ *
+ * \param reg_fn Trace register function to add.
+ */
 void spdk_trace_add_register_fn(struct spdk_trace_register_fn *reg_fn);
 
 #define SPDK_TRACE_REGISTER_FN(fn)				\
