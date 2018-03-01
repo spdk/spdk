@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e2064859_6a827168",
+        "filename": "include/spdk/io_channel.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-01T04:51:32Z",
+      "side": 1,
+      "message": "msg_fn",
+      "range": {
+        "startLine": 99,
+        "startChar": 10,
+        "endLine": 99,
+        "endChar": 12
+      },
+      "revId": "8a100eb26f8fd992b37954b0e925c165014a1c86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
