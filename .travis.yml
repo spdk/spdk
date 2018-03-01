@@ -19,14 +19,6 @@ addons:
 before_script:
   - git submodule update --init
   - export MAKEFLAGS="-j$(nproc)"
-  - if [ "$CC" = gcc ]; then
-      wget https://downloads.sourceforge.net/project/astyle/astyle/astyle%203.0/astyle_3.0_linux.tar.gz;
-      tar xf astyle_3.0_linux.tar.gz;
-      pushd astyle/build/gcc;
-      make;
-      export PATH=$PWD/bin:$PATH;
-      popd;
-    fi
 
 script:
   - ./scripts/check_format.sh
