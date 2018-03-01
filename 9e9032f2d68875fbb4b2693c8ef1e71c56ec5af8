@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a335b3f4_ec790168",
+        "filename": "mk/spdk.modules.mk",
+        "patchSetId": 2
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T18:55:09Z",
+      "side": 1,
+      "message": "I\u0027m a bit confused by the necessity of this option.\n\nDoes it work if you just do:\n\n  NET_MODULE_DEPS \u003d -lvppinfra -lsvm -lvapiclient",
+      "revId": "9e9032f2d68875fbb4b2693c8ef1e71c56ec5af8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
