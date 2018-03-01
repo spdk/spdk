@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "65d02683_1112980d",
+        "filename": "include/spdk/rpc.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-01T04:42:46Z",
+      "side": 1,
+      "message": "Maybe below description is more clear:\n\nStart the listen operation for the RPC server on the required address.",
+      "range": {
+        "startLine": 46,
+        "startChar": 3,
+        "endLine": 46,
+        "endChar": 52
+      },
+      "revId": "8c1df5a445cc8451f4fc33ca5eb354eafd716de2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a94e591c_9820cc95",
+        "filename": "include/spdk/rpc.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-01T04:42:46Z",
+      "side": 1,
+      "message": "request",
+      "range": {
+        "startLine": 55,
+        "startChar": 41,
+        "endLine": 55,
+        "endChar": 53
+      },
+      "revId": "8c1df5a445cc8451f4fc33ca5eb354eafd716de2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "99f09953_6da9c10c",
+        "filename": "include/spdk/rpc.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-01T04:42:46Z",
+      "side": 1,
+      "message": "associated",
+      "range": {
+        "startLine": 68,
+        "startChar": 28,
+        "endLine": 68,
+        "endChar": 37
+      },
+      "revId": "8c1df5a445cc8451f4fc33ca5eb354eafd716de2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
