@@ -389,7 +389,7 @@ static int virtio_scsi_dev_scan(struct virtio_scsi_dev *svdev,
 				bdev_virtio_create_cb cb_fn, void *cb_arg);
 static int send_scan_io(struct virtio_scsi_scan_base *base);
 static void _virtio_scsi_dev_scan_tgt(struct virtio_scsi_scan_base *base, uint8_t target);
-static int _virtio_scsi_dev_scan_next(struct virtio_scsi_scan_base *base);
+static int _virtio_scsi_dev_scan_next(struct virtio_scsi_scan_base *base, int rc);
 static void _virtio_scsi_dev_scan_finish(struct virtio_scsi_scan_base *base, int errnum);
 static int virtio_scsi_dev_scan_tgt(struct virtio_scsi_dev *svdev, uint8_t target);
 
@@ -1332,7 +1332,7 @@ process_read_cap_10(struct virtio_scsi_scan_base *base)
 		return rc;
 	}
 
-	return _virtio_scsi_dev_scan_next(base);
+	return _virtio_scsi_dev_scan_next(base, 0);
 }
 
 static int
@@ -1355,7 +1355,7 @@ process_read_cap_16(struct virtio_scsi_scan_base *base)
 		return rc;
 	}
 
-	return _virtio_scsi_dev_scan_next(base);
+	return _virtio_scsi_dev_scan_next(base, 0);
 }
 
 static void
@@ -1369,7 +1369,7 @@ process_scan_resp(struct virtio_scsi_scan_base *base)
 	if (base->io_ctx.iov_req.iov_len < sizeof(struct virtio_scsi_cmd_req) ||
 	    base->io_ctx.iov_resp.iov_len < sizeof(struct virtio_scsi_cmd_resp)) {
 		SPDK_ERRLOG("Received target scan message with invalid length.\n");
-		_virtio_scsi_dev_scan_next(base);
+		_virtio_scsi_dev_scan_next(base, -EIO);
 		return;
 	}
 
@@ -1378,7 +1378,7 @@ process_scan_resp(struct virtio_scsi_scan_base *base)
 
 	if (resp->response == VIRTIO_SCSI_S_BAD_TARGET ||
 	    resp->response == VIRTIO_SCSI_S_INCORRECT_LUN) {
-		_virtio_scsi_dev_scan_next(base);
+		_virtio_scsi_dev_scan_next(base, -ENODEV);
 		return;
 	}
 
@@ -1391,7 +1391,7 @@ process_scan_resp(struct virtio_scsi_scan_base *base)
 			SPDK_NOTICELOG("Target %"PRIu8" is present, but unavailable.\n", target_id);
 			SPDK_TRACEDUMP(SPDK_LOG_VIRTIO, "CDB", req->cdb, sizeof(req->cdb));
 			SPDK_TRACEDUMP(SPDK_LOG_VIRTIO, "SENSE DATA", resp->sense, sizeof(resp->sense));
-			_virtio_scsi_dev_scan_next(base);
+			_virtio_scsi_dev_scan_next(base, -EBUSY);
 			return;
 		}
 
@@ -1432,17 +1432,26 @@ process_scan_resp(struct virtio_scsi_scan_base *base)
 			return; /* Let response poller do the resend */
 		}
 
-		_virtio_scsi_dev_scan_next(base);
+		_virtio_scsi_dev_scan_next(base, rc);
 	}
 }
 
 static int
-_virtio_scsi_dev_scan_next(struct virtio_scsi_scan_base *base)
+_virtio_scsi_dev_scan_next(struct virtio_scsi_scan_base *base, int rc)
 {
 	struct virtio_scsi_scan_info *next;
+	struct virtio_scsi_disk *disk;
 	uint8_t target_id;
 
 	if (base->full_scan) {
+		if (rc != 0) {
+			disk = virtio_scsi_dev_get_disk_by_id(base->svdev,
+							      base->info.target);
+			if (disk != NULL) {
+				spdk_bdev_unregister(&disk->bdev, NULL, NULL);
+			}
+		}
+
 		target_id = base->info.target + 1;
 		if (target_id < BDEV_VIRTIO_MAX_TARGET) {
 			_virtio_scsi_dev_scan_tgt(base, target_id);
