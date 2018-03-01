@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6c30fa2d_88607229",
+        "filename": "include/spdk/trace.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-03-01T14:21:58Z",
+      "side": 1,
+      "message": "could --\u003e can",
+      "revId": "b09f34f1d194427b506e51fc3787b144d56a3ebc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7e347da0_0d6691d8",
+        "filename": "include/spdk/trace.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-03-01T14:21:58Z",
+      "side": 1,
+      "message": "could -\u003e can",
+      "revId": "b09f34f1d194427b506e51fc3787b144d56a3ebc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "072d45a2_a92862e9",
+        "filename": "include/spdk/trace.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-03-01T14:21:58Z",
+      "side": 1,
+      "message": "How about \"Unmap/unlink global trace memory structs.\"?",
+      "revId": "b09f34f1d194427b506e51fc3787b144d56a3ebc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d90117c_3a379683",
+        "filename": "include/spdk/trace.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-03-01T14:21:58Z",
+      "side": 1,
+      "message": "\"is a pointer\" and \"is an alias\"",
+      "revId": "b09f34f1d194427b506e51fc3787b144d56a3ebc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
