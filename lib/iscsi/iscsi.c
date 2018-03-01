@@ -4275,13 +4275,6 @@ int spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn)
 	struct spdk_iscsi_pdu *rsp_pdu;
 	struct iscsi_bhs_nop_in	*rsp;
 
-	/* Only send nopin if we have logged in and are in a normal session. */
-	if (conn->sess == NULL ||
-	    !conn->full_feature ||
-	    !spdk_iscsi_param_eq_val(conn->sess->params, "SessionType", "Normal")) {
-		return SPDK_SUCCESS;
-	}
-
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 		      "send NOPIN isid=%"PRIx64", tsih=%u, cid=%u\n",
 		      conn->sess->isid, conn->sess->tsih, conn->cid);
