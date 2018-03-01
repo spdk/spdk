@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cfbe9e7f_5c4084c5",
+        "filename": "test/iscsi_tgt/digests/digests.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1012364
+      },
+      "writtenOn": "2018-03-01T03:28:49Z",
+      "side": 1,
+      "message": "Here for loop is necessary, in the patch sets #1, the node_login_fio_logout used wrong parameters.",
+      "revId": "6109e62671f749e37dc4802ca12c5e644f5e7b7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
