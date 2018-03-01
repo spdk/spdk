@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6a61e977_f2819908",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T16:26:17Z",
+      "side": 1,
+      "message": "This vq_size should probably be vq_count.",
+      "range": {
+        "startLine": 287,
+        "startChar": 60,
+        "endLine": 287,
+        "endChar": 67
+      },
+      "revId": "236c5a135d09e89069d352d0b8f2affd27e06235",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
