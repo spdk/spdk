@@ -47,15 +47,29 @@
 extern "C" {
 #endif
 
+/**
+ * Callback funcion for sodj_vhost_fini().
+ */
 typedef void (*spdk_vhost_fini_cb)(void);
 
+/**
+ * Init vhost environment.
+ *
+ * \return 0 on succrss, -1 on failure.
+ */
 int spdk_vhost_init(void);
+
+/**
+ * Clean up the environment of vhost after finishing the vhost application.
+ *
+ * \param fini_cb Called when completed the cleanup operation.
+ */
 void spdk_vhost_fini(spdk_vhost_fini_cb fini_cb);
 
 /**
  * Init vhost application.  This is called once by SPDK app layer.
- * \param arg1 optional path to directory where sockets will
- * be created
+ *
+ * \param arg1 optional path to directory where sockets will be created
  * \param arg2 unused
  */
 void spdk_vhost_startup(void *arg1, void *arg2);
