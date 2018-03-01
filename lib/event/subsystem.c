@@ -41,7 +41,7 @@
 struct spdk_subsystem_list g_subsystems = TAILQ_HEAD_INITIALIZER(g_subsystems);
 struct spdk_subsystem_depend_list g_subsystems_deps = TAILQ_HEAD_INITIALIZER(g_subsystems_deps);
 static struct spdk_subsystem *g_next_subsystem;
-static bool g_subsystems_initialized = false;
+bool g_subsystems_initialized = false;
 static struct spdk_event *g_app_start_event;
 static struct spdk_event *g_app_stop_event;
 static uint32_t g_fini_core;

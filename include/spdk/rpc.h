@@ -57,6 +57,14 @@ static void __attribute__((constructor)) rpc_register_##func(void) \
 	spdk_rpc_register_method(method, func); \
 }
 
+void spdk_si_rpc_register_method(const char *method, spdk_rpc_method_handler func);
+
+#define SPDK_SI_RPC_REGISTER(method, func) \
+static void __attribute__((constructor)) rpc_register_##func(void) \
+{ \
+	spdk_si_rpc_register_method(method, func); \
+}
+
 #ifdef __cplusplus
 }
 #endif
