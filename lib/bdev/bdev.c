@@ -1046,6 +1046,8 @@ _spdk_bdev_channel_create(struct spdk_bdev_channel *ch, void *io_device)
 
 	memset(&ch->stat, 0, sizeof(ch->stat));
 	ch->io_outstanding = 0;
+	ch->stat.ticks_rate = spdk_get_ticks_hz();
+
 	TAILQ_INIT(&ch->queued_resets);
 	TAILQ_INIT(&ch->qos_io);
 	ch->qos_max_ios_per_timeslice = 0;
@@ -1959,10 +1961,18 @@ spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 #endif
 
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	uint64_t current_ticks = spdk_get_ticks();
 
-	channel->stat.ticks_rate = spdk_get_ticks_hz();
+	channel->stat.passed_ticks = current_ticks - channel->stat.current_ticks;
+	channel->stat.current_ticks = current_ticks;
+
 	*stat = channel->stat;
-	memset(&channel->stat, 0, sizeof(channel->stat));
+
+	/*
+	 * Those performance metrics are zeroed except the non changed ticks_rate
+	 * and the current ticks.
+	 */
+	memset(&channel->stat, 0, offsetof(struct spdk_bdev_io_stat, ticks_rate));
 }
 
 int

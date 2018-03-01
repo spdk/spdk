@@ -119,7 +119,13 @@ struct spdk_bdev_io_stat {
 	uint64_t num_write_ops;
 	uint64_t read_latency_ticks;
 	uint64_t write_latency_ticks;
+	uint64_t passed_ticks;
+	/*
+	 * Starting here, below members are not zeroed at each calling from
+	 * spdk_bdev_get_io_stat(). Add the members to zero at above.
+	 */
 	uint64_t ticks_rate;
+	uint64_t current_ticks;
 };
 
 typedef void (*spdk_bdev_init_cb)(void *cb_arg, int rc);
