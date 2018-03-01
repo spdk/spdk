@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "405250ac_4d208aff",
+        "filename": "include/spdk_internal/event.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T17:05:45Z",
+      "side": 0,
+      "message": "The goal of these explicit references to the dependencies was so that the linker would pull them in and prevent them from being eliminated as unused.\n\nHowever, I guess we need --whole-archive for RPCs and other similar constructs that just have constructor functions and no other public API, so this seems to be a lost cause... I suppose we can drop this for now.",
+      "revId": "6140f2d1477d63baba5c55c0695029e997557282",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
