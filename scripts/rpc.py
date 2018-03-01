@@ -18,6 +18,9 @@ if __name__ == "__main__":
     p = subparsers.add_parser('get_rpc_methods', help='Get list of supported RPC methods')
     p.set_defaults(func=rpc.get_rpc_methods)
 
+    p = subparsers.add_parser('get_si_rpc_methods', help='Get list of RPC methods for subsystem initialization')
+    p.set_defaults(func=rpc.get_si_rpc_methods)
+
     # app
     p = subparsers.add_parser('kill_instance', help='Send signal to instance')
     p.add_argument('sig_name', help='signal will be sent to server.')
