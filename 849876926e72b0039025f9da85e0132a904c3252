@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2c1a9545_ed1dab3a",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T21:42:26Z",
+      "side": 1,
+      "message": "I think we can make these bit-flags that can be combined with bitwise or (|), e.g.:\n\n  #define SPDK_MALLOC_DMA    0x01\n  #define SPDK_MALLOC_SHARE  0x02",
+      "revId": "849876926e72b0039025f9da85e0132a904c3252",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "516775c3_8cff2b8a",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T21:42:26Z",
+      "side": 1,
+      "message": "I don\u0027t think we want malloc regions to have names (memzone should still be a separate env layer call).",
+      "range": {
+        "startLine": 52,
+        "startChar": 12,
+        "endLine": 52,
+        "endChar": 28
+      },
+      "revId": "849876926e72b0039025f9da85e0132a904c3252",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "154dff5d_3fbd21a0",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T21:42:26Z",
+      "side": 1,
+      "message": "For the DPDK implementation, I think this can just ignore the flags and always call spdk_dma_malloc_socket().",
+      "revId": "849876926e72b0039025f9da85e0132a904c3252",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c0a3c06_736791a3",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T21:42:26Z",
+      "side": 1,
+      "message": "It would be ideal from my point of view if the flags didn\u0027t need to be specified for free() (it should be able to be looked up from the allocated buf pointer).",
+      "range": {
+        "startLine": 69,
+        "startChar": 39,
+        "endLine": 69,
+        "endChar": 55
+      },
+      "revId": "849876926e72b0039025f9da85e0132a904c3252",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
