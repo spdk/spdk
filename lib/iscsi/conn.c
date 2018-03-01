@@ -1159,7 +1159,7 @@ spdk_iscsi_conn_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_so
 }
 
 static int
-spdk_iscsi_conn_execute(struct spdk_iscsi_conn *conn)
+spdk_iscsi_conn_check_state(struct spdk_iscsi_conn *conn)
 {
 	if (conn->state == ISCSI_CONN_STATE_EXITED) {
 		return -1;
@@ -1169,8 +1169,6 @@ spdk_iscsi_conn_execute(struct spdk_iscsi_conn *conn)
 		spdk_iscsi_conn_destruct(conn);
 		return -1;
 	}
-
-	spdk_iscsi_conn_handle_queued_datain_tasks(conn);
 
 	return 0;
 }
@@ -1198,11 +1196,13 @@ spdk_iscsi_conn_login_do_work(void *arg)
 	int				rc;
 	struct spdk_event		*event;
 
-	/* General connection processing */
-	rc = spdk_iscsi_conn_execute(conn);
+	/* iSCSI connection state check */
+	rc = spdk_iscsi_conn_check_state(conn);
 	if (rc < 0) {
 		return;
 	}
+
+	spdk_iscsi_conn_handle_queued_datain_tasks(conn);
 
 	/* Check if this connection transitioned to full feature phase. If it
 	 * did, migrate it to a dedicated reactor for the target node.
@@ -1248,8 +1248,15 @@ void
 spdk_iscsi_conn_full_feature_do_work(void *arg)
 {
 	struct spdk_iscsi_conn	*conn = arg;
+	int rc;
 
-	spdk_iscsi_conn_execute(conn);
+	/* iSCSI connection state check */
+	rc = spdk_iscsi_conn_check_state(conn);
+	if (rc < 0) {
+		return;
+	}
+
+	spdk_iscsi_conn_handle_queued_datain_tasks(conn);
 }
 
 void
