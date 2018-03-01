@@ -1101,7 +1101,7 @@ process_scan_start_stop_unit(struct virtio_scsi_scan_base *base)
 {
 	struct virtio_scsi_cmd_resp *resp = &base->io_ctx.resp;
 
-	if (resp->response == VIRTIO_SCSI_S_OK && resp->status == SPDK_SCSI_STATUS_GOOD) {
+	if (resp->status == SPDK_SCSI_STATUS_GOOD) {
 		return send_inquiry_vpd(base, SPDK_SPC_VPD_SUPPORTED_VPD_PAGES);
 	}
 
@@ -1117,7 +1117,7 @@ process_scan_test_unit_ready(struct virtio_scsi_scan_base *base)
 	get_scsi_status(resp, &sk, &asc, &ascq);
 
 	/* check response, get VPD if spun up otherwise send SSU */
-	if (resp->response == VIRTIO_SCSI_S_OK && resp->status == SPDK_SCSI_STATUS_GOOD) {
+	if (resp->status == SPDK_SCSI_STATUS_GOOD) {
 		return send_inquiry_vpd(base, SPDK_SPC_VPD_SUPPORTED_VPD_PAGES);
 	} else if (resp->response == VIRTIO_SCSI_S_OK &&
 		   resp->status == SPDK_SCSI_STATUS_CHECK_CONDITION &&
@@ -1136,7 +1136,7 @@ process_scan_inquiry_standard(struct virtio_scsi_scan_base *base)
 	struct spdk_scsi_cdb_inquiry_data *inquiry_data =
 		(struct spdk_scsi_cdb_inquiry_data *)base->payload;
 
-	if (resp->response != VIRTIO_SCSI_S_OK || resp->status != SPDK_SCSI_STATUS_GOOD) {
+	if (resp->status != SPDK_SCSI_STATUS_GOOD) {
 		return -1;
 	}
 
@@ -1158,7 +1158,7 @@ process_scan_inquiry_vpd_supported_vpd_pages(struct virtio_scsi_scan_base *base)
 	struct virtio_scsi_cmd_resp *resp = &base->io_ctx.resp;
 	bool block_provisioning_page_supported = false;
 
-	if (resp->response == VIRTIO_SCSI_S_OK && resp->status == SPDK_SCSI_STATUS_GOOD) {
+	if (resp->status == SPDK_SCSI_STATUS_GOOD) {
 		const uint8_t *vpd_data = base->payload;
 		const uint8_t *supported_vpd_pages = vpd_data + 4;
 		uint16_t page_length;
@@ -1190,7 +1190,7 @@ process_scan_inquiry_vpd_block_thin_provision(struct virtio_scsi_scan_base *base
 
 	base->info.unmap_supported = false;
 
-	if (resp->response == VIRTIO_SCSI_S_OK && resp->status == SPDK_SCSI_STATUS_GOOD) {
+	if (resp->status == SPDK_SCSI_STATUS_GOOD) {
 		uint8_t *vpd_data = base->payload;
 
 		base->info.unmap_supported = !!(vpd_data[5] & SPDK_SCSI_UNMAP_LBPU);
@@ -1363,9 +1363,15 @@ process_scan_resp(struct virtio_scsi_scan_base *base)
 	get_scsi_status(resp, &sk, &asc, &ascq);
 	target_id = req->lun[1];
 
-	if (resp->response == VIRTIO_SCSI_S_OK &&
-	    resp->status == SPDK_SCSI_STATUS_CHECK_CONDITION &&
-	    sk != SPDK_SCSI_SENSE_ILLEGAL_REQUEST) {
+	if (resp->response == VIRTIO_SCSI_S_BAD_TARGET ||
+	    resp->response == VIRTIO_SCSI_S_INCORRECT_LUN) {
+		_virtio_scsi_dev_scan_next(base);
+		return;
+	}
+
+	if (resp->response != VIRTIO_SCSI_S_OK ||
+	    (resp->status == SPDK_SCSI_STATUS_CHECK_CONDITION &&
+	     sk != SPDK_SCSI_SENSE_ILLEGAL_REQUEST)) {
 		assert(base->retries > 0);
 		base->retries--;
 		if (base->retries == 0) {
