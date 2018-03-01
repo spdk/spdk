@@ -154,7 +154,7 @@ exit:
 }
 
 
-static void spdk_process_new_interface_msg(struct nlmsghdr *h)
+static int spdk_process_new_interface_msg(struct nlmsghdr *h)
 {
 	int len;
 	struct spdk_interface *ifc;
@@ -166,7 +166,7 @@ static void spdk_process_new_interface_msg(struct nlmsghdr *h)
 	ifc = (struct spdk_interface *) malloc(sizeof(*ifc));
 	if (ifc == NULL) {
 		SPDK_ERRLOG("%s: Malloc failed\n", __func__);
-		exit(1);
+		return 1;
 	}
 
 	memset(ifc, 0, sizeof(*ifc));
@@ -182,7 +182,8 @@ static void spdk_process_new_interface_msg(struct nlmsghdr *h)
 		case IFLA_IFNAME:
 			if (if_indextoname(iface->ifi_index, ifc->name) == NULL) {
 				SPDK_ERRLOG("Indextoname failed!\n");
-				exit(1);
+				free(ifc);
+				return 2;
 			}
 			break;
 		default:
@@ -190,6 +191,7 @@ static void spdk_process_new_interface_msg(struct nlmsghdr *h)
 		}
 	}
 	TAILQ_INSERT_TAIL(&g_interface_head, ifc, tailq);
+	return 0;
 }
 
 static uint32_t spdk_prepare_ifc_list(void)
@@ -284,7 +286,10 @@ static uint32_t spdk_prepare_ifc_list(void)
 					end++;
 					break;
 				case RTM_NEWLINK:	/* This is a RTM_NEWLINK message, which contains lots of information about a link */
-					spdk_process_new_interface_msg(msg_ptr);
+					ret = (uint32_t) spdk_process_new_interface_msg(msg_ptr);
+					if (ret != 0) {
+						goto exit;
+					}
 					break;
 				default:
 					break;
@@ -417,11 +422,15 @@ static void spdk_interface_ip_update(void)
 int
 spdk_interface_init(void)
 {
-	TAILQ_INIT(&g_interface_head);
-	spdk_prepare_ifc_list();
-	spdk_get_ifc_ipv4();
+	int rc = 0;
 
-	return 0;
+	TAILQ_INIT(&g_interface_head);
+	rc = (int) spdk_prepare_ifc_list();
+	if (!rc) {
+		rc = (int) spdk_get_ifc_ipv4();
+	}
+
+	return rc;
 }
 
 void
