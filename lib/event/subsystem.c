@@ -177,6 +177,12 @@ spdk_subsystem_init(struct spdk_event *app_start_event)
 	spdk_event_call(verify_event);
 }
 
+bool
+spdk_subsystems_are_ready(void)
+{
+	return g_subsystems_initialized;
+}
+
 static void
 _spdk_subsystem_fini_next(void *arg1, void *arg2)
 {

@@ -81,6 +81,7 @@ void spdk_subsystem_fini(struct spdk_event *app_finish_event);
 void spdk_subsystem_init_next(int rc);
 void spdk_subsystem_fini_next(void);
 void spdk_subsystem_config(FILE *fp);
+bool spdk_subsystems_are_ready(void);
 
 void spdk_rpc_initialize(const char *listen_addr);
 void spdk_rpc_finish(void);
