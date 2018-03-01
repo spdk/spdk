@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2f6f8475_8f45ec3a",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-01T16:25:13Z",
+      "side": 1,
+      "message": "Can you elaborate this a little bit more what this RPC call do? Maybe some example would be good here.",
+      "range": {
+        "startLine": 92,
+        "startChar": 39,
+        "endLine": 92,
+        "endChar": 108
+      },
+      "revId": "7dcccf9640808ffc0709d3caae43bcca0db387b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
