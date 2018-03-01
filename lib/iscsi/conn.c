@@ -1150,6 +1150,11 @@ spdk_iscsi_conn_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_so
 
 	assert(conn != NULL);
 
+	if ((conn->state == ISCSI_CONN_STATE_EXITED) ||
+	    (conn->state == ISCSI_CONN_STATE_EXITING)) {
+		return;
+	}
+
 	/* Handle incoming PDUs */
 	rc = spdk_iscsi_conn_handle_incoming_pdus(conn);
 	if (rc < 0) {
