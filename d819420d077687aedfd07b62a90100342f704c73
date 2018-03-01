@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f04e1956_11f2fd4d",
+        "filename": "test/unit/unittest.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T19:41:03Z",
+      "side": 1,
+      "message": "Looks like git -C is too new (git from older distributions doesn\u0027t have it yet), so we can do something like this instead:\n\n  (cd $testdir \u0026\u0026 git clean -f \"*.gcda\")",
+      "revId": "d819420d077687aedfd07b62a90100342f704c73",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
