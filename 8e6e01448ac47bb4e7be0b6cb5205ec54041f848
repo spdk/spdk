@@ -2,6 +2,131 @@
   "comments": [
     {
       "key": {
+        "uuid": "33e19108_2f1816bc",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T16:26:17Z",
+      "side": 1,
+      "message": "Nitpick/future optimization: we could calculate the conversion factor via spdk_u32log2() once and stash it in struct virtio_blk_dev, then apply it via a single left shift here.",
+      "revId": "8e6e01448ac47bb4e7be0b6cb5205ec54041f848",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68d3d2ce_f5b5954d",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T16:26:17Z",
+      "side": 1,
+      "message": "Is this cast necessary? void *io[32] should already decay to void **.",
+      "range": {
+        "startLine": 256,
+        "startChar": 32,
+        "endLine": 256,
+        "endChar": 41
+      },
+      "revId": "8e6e01448ac47bb4e7be0b6cb5205ec54041f848",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42b01a6b_e785079a",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T16:26:17Z",
+      "side": 1,
+      "message": "This is just strdup().",
+      "revId": "8e6e01448ac47bb4e7be0b6cb5205ec54041f848",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "23111e84_f0aacfbf",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T16:26:17Z",
+      "side": 1,
+      "message": "Maybe VirtioBlk or virtio-blk? \"BLK\" isn\u0027t an acronym, just a short form of \"block\" (unlike SCSI).",
+      "revId": "8e6e01448ac47bb4e7be0b6cb5205ec54041f848",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4eb618a8_74980537",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 389,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T16:26:17Z",
+      "side": 1,
+      "message": "We should probably sanity check that block_size % 512 \u003d\u003d 0 and block_size \u003e 0 and reject the device otherwise.",
+      "revId": "8e6e01448ac47bb4e7be0b6cb5205ec54041f848",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b7f723d4_455b674b",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 392,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T16:26:17Z",
+      "side": 1,
+      "message": "Same here, capacity shouldn\u0027t be allowed to be 0, and capacity * 512 must be a multiple of block_size.",
+      "revId": "8e6e01448ac47bb4e7be0b6cb5205ec54041f848",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e209f1ee_5c049fe3",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 409,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-01T16:26:17Z",
+      "side": 1,
+      "message": "Validate max_queues \u003e 0, probably?",
+      "revId": "8e6e01448ac47bb4e7be0b6cb5205ec54041f848",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "11e3055b_9bc7412b",
         "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
         "patchSetId": 7
