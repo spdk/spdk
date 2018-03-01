@@ -18,7 +18,7 @@ image=/var/tmp/ceph_raw.img
 dev=/dev/loop200
 # partition osd
 
-mkdir ${base_dir}
+rm -rf ${base_dir} && mkdir ${base_dir}
 cp ${script_dir}/ceph.conf $ceph_conf
 
 if [ ! -e $image ]; then
