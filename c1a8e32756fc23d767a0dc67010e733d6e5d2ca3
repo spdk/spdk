@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "de140abd_d85adb43",
+        "filename": "scripts/vagrant/build.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-02T20:26:41Z",
+      "side": 1,
+      "message": "This will require the VM to have network access.  Note that for the SPDK code, we rsync it to the VM - we do not do a git clone in the VM itself.  So for consistency, we should expect the git submodule to be updated on the host system as well.\n\nMaybe add a check to the Vagrantfile instead - have it either do the git submodule update in the Vagrantfile, or have it abort if the DPDK submodule hasn\u0027t been initialized.",
+      "revId": "c1a8e32756fc23d767a0dc67010e733d6e5d2ca3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
