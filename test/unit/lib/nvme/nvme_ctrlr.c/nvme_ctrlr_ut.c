@@ -1418,11 +1418,9 @@ static void
 test_ctrlr_get_default_ctrlr_opts(void)
 {
 	struct spdk_nvme_ctrlr_opts opts = {};
-	uuid_t uuid;
 
-	CU_ASSERT(uuid_parse("e53e9258-c93b-48b5-be1a-f025af6d232a", uuid) == 0);
-	SPDK_CU_ASSERT_FATAL(sizeof(uuid) == sizeof(g_spdk_nvme_driver->default_extended_host_id));
-	memcpy(g_spdk_nvme_driver->default_extended_host_id, uuid, sizeof(uuid));
+	CU_ASSERT(spdk_uuid_parse(&g_spdk_nvme_driver->default_extended_host_id,
+				  "e53e9258-c93b-48b5-be1a-f025af6d232a") == 0);
 
 	memset(&opts, 0, sizeof(opts));
 
@@ -1459,7 +1457,7 @@ test_ctrlr_get_default_ctrlr_opts(void)
 	}
 	CU_ASSERT_STRING_EQUAL(opts.hostnqn,
 			       "2014-08.org.nvmexpress:uuid:e53e9258-c93b-48b5-be1a-f025af6d232a");
-	CU_ASSERT(memcmp(opts.extended_host_id, g_spdk_nvme_driver->default_extended_host_id,
+	CU_ASSERT(memcmp(opts.extended_host_id, &g_spdk_nvme_driver->default_extended_host_id,
 			 sizeof(opts.extended_host_id)) == 0);
 	CU_ASSERT(strlen(opts.src_addr) == 0);
 	CU_ASSERT(strlen(opts.src_svcid) == 0);

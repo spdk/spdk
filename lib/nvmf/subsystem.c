@@ -41,12 +41,11 @@
 #include "spdk/string.h"
 #include "spdk/trace.h"
 #include "spdk/nvmf_spec.h"
+#include "spdk/uuid.h"
 
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 #include "spdk_internal/utf.h"
-
-#include <uuid/uuid.h>
 
 /*
  * States for parsing valid domains in NQNs according to RFC 1034
@@ -66,7 +65,7 @@ static bool
 spdk_nvmf_valid_nqn(const char *nqn)
 {
 	size_t len;
-	uuid_t uuid_value;
+	struct spdk_uuid uuid_value;
 	uint i;
 	int bytes_consumed;
 	uint domain_label_length;
@@ -99,7 +98,7 @@ spdk_nvmf_valid_nqn(const char *nqn)
 			return false;
 		}
 
-		if (uuid_parse(&nqn[SPDK_NVMF_NQN_UUID_PRE_LEN], uuid_value) == -1) {
+		if (spdk_uuid_parse(&uuid_value, &nqn[SPDK_NVMF_NQN_UUID_PRE_LEN])) {
 			SPDK_ERRLOG("Invalid NQN \"%s\": uuid is not formatted correctly\n", nqn);
 			return false;
 		}

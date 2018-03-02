@@ -36,15 +36,11 @@
 
 #include "spdk/blob.h"
 #include "spdk/lvol.h"
+#include "spdk/uuid.h"
 #include "spdk_internal/bdev.h"
-
-#include <uuid/uuid.h>
 
 /* Default size of blobstore cluster */
 #define SPDK_LVS_OPTS_CLUSTER_SZ (4 * 1024 * 1024)
-
-/* Length of string returned from uuid_unparse() */
-#define UUID_STRING_LEN 37
 
 struct spdk_lvs_req {
 	spdk_lvs_op_complete    cb_fn;
@@ -84,7 +80,7 @@ struct spdk_lvol_store {
 	struct spdk_blob_store		*blobstore;
 	struct spdk_blob		*super_blob;
 	spdk_blob_id			super_blob_id;
-	uuid_t				uuid;
+	struct spdk_uuid		uuid;
 	struct spdk_lvs_req		*destruct_req;
 	int				lvol_count;
 	int				lvols_opened;

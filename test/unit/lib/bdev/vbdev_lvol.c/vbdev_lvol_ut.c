@@ -614,7 +614,7 @@ ut_lvs_destroy(void)
 	lvs = g_lvol_store;
 	g_lvol_store = NULL;
 
-	uuid_generate(lvs->uuid);
+	spdk_uuid_generate(&lvs->uuid);
 
 	/* Suuccessfully create lvol, which should be unloaded with lvs later */
 	g_lvolerrno = -1;
@@ -653,7 +653,7 @@ ut_lvol_init(void)
 	g_lvs_bdev->lvs = g_lvs;
 	g_lvs_bdev->bdev = g_base_bdev;
 
-	uuid_generate(g_lvs->uuid);
+	spdk_uuid_generate(&g_lvs->uuid);
 
 	TAILQ_INSERT_TAIL(&g_spdk_lvol_pairs, g_lvs_bdev, lvol_stores);
 
@@ -821,7 +821,7 @@ ut_lvol_rename(void)
 	g_lvs_bdev->lvs = g_lvs;
 	g_lvs_bdev->bdev = g_base_bdev;
 
-	uuid_generate(g_lvs->uuid);
+	spdk_uuid_generate(&g_lvs->uuid);
 
 	TAILQ_INSERT_TAIL(&g_spdk_lvol_pairs, g_lvs_bdev, lvol_stores);
 
@@ -896,7 +896,7 @@ ut_lvol_resize(void)
 	g_lvs_bdev->lvs = g_lvs;
 	g_lvs_bdev->bdev = g_base_bdev;
 
-	uuid_generate(g_lvs->uuid);
+	spdk_uuid_generate(&g_lvs->uuid);
 	g_base_bdev->blocklen = 4096;
 	TAILQ_INSERT_TAIL(&g_spdk_lvol_pairs, g_lvs_bdev, lvol_stores);
 
@@ -964,7 +964,7 @@ ut_lvs_unload(void)
 	lvs = g_lvol_store;
 	g_lvol_store = NULL;
 
-	uuid_generate(lvs->uuid);
+	spdk_uuid_generate(&lvs->uuid);
 
 	/* Suuccessfully create lvol, which should be destroyed with lvs later */
 	g_lvolerrno = -1;

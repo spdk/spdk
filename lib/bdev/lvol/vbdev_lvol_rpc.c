@@ -93,14 +93,14 @@ static void
 _spdk_rpc_lvol_store_construct_cb(void *cb_arg, struct spdk_lvol_store *lvol_store, int lvserrno)
 {
 	struct spdk_json_write_ctx *w;
-	char lvol_store_uuid[UUID_STRING_LEN];
+	char lvol_store_uuid[SPDK_UUID_STRING_LEN];
 	struct spdk_jsonrpc_request *request = cb_arg;
 
 	if (lvserrno != 0) {
 		goto invalid;
 	}
 
-	uuid_unparse(lvol_store->uuid, lvol_store_uuid);
+	spdk_uuid_fmt_lower(lvol_store_uuid, sizeof(lvol_store_uuid), &lvol_store->uuid);
 
 	w = spdk_jsonrpc_begin_result(request);
 	if (w == NULL) {
@@ -530,7 +530,7 @@ spdk_rpc_dump_lvol_store_info(struct spdk_json_write_ctx *w, struct lvol_store_b
 {
 	struct spdk_blob_store *bs;
 	uint64_t cluster_size, block_size;
-	char uuid[UUID_STRING_LEN];
+	char uuid[SPDK_UUID_STRING_LEN];
 
 	bs = lvs_bdev->lvs->blobstore;
 	cluster_size = spdk_bs_get_cluster_size(bs);
@@ -539,7 +539,7 @@ spdk_rpc_dump_lvol_store_info(struct spdk_json_write_ctx *w, struct lvol_store_b
 
 	spdk_json_write_object_begin(w);
 
-	uuid_unparse(lvs_bdev->lvs->uuid, uuid);
+	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &lvs_bdev->lvs->uuid);
 	spdk_json_write_name(w, "uuid");
 	spdk_json_write_string(w, uuid);
 

@@ -37,9 +37,6 @@
 #include "spdk/io_channel.h"
 #include "spdk/blob_bdev.h"
 
-/* Length of string returned from uuid_unparse() */
-#define UUID_STRING_LEN 37
-
 /* Default blob channel opts for lvol */
 #define SPDK_LVOL_BLOB_OPTS_CHANNEL_OPS 512
 
@@ -160,7 +157,7 @@ _spdk_load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	struct spdk_blob_store *bs = lvs->blobstore;
 	struct spdk_lvol *lvol, *tmp;
 	spdk_blob_id blob_id;
-	char uuid[UUID_STRING_LEN];
+	char uuid[SPDK_UUID_STRING_LEN];
 	const char *attr;
 	size_t value_len;
 	int rc;
@@ -196,7 +193,7 @@ _spdk_load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	lvol->lvol_store = lvs;
 	lvol->num_clusters = spdk_blob_get_num_clusters(blob);
 	lvol->close_only = false;
-	uuid_unparse(lvol->lvol_store->uuid, uuid);
+	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &lvol->lvol_store->uuid);
 	lvol->unique_id = spdk_sprintf_alloc("%s_%"PRIu64, uuid, (uint64_t)blob_id);
 	if (!lvol->unique_id) {
 		SPDK_ERRLOG("Cannot assign lvol name\n");
@@ -287,14 +284,14 @@ _spdk_lvs_read_uuid(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	}
 
 	rc = spdk_blob_get_xattr_value(blob, "uuid", (const void **)&attr, &value_len);
-	if (rc != 0 || value_len != UUID_STRING_LEN || attr[UUID_STRING_LEN - 1] != '\0') {
+	if (rc != 0 || value_len != SPDK_UUID_STRING_LEN || attr[SPDK_UUID_STRING_LEN - 1] != '\0') {
 		SPDK_INFOLOG(SPDK_LOG_LVOL, "missing or incorrect UUID\n");
 		req->lvserrno = -EINVAL;
 		spdk_blob_close(blob, _spdk_close_super_blob_with_error_cb, req);
 		return;
 	}
 
-	if (uuid_parse(attr, lvs->uuid)) {
+	if (spdk_uuid_parse(&lvs->uuid, attr)) {
 		SPDK_INFOLOG(SPDK_LOG_LVOL, "incorrect UUID '%s'\n", attr);
 		req->lvserrno = -EINVAL;
 		spdk_blob_close(blob, _spdk_close_super_blob_with_error_cb, req);
@@ -450,7 +447,7 @@ _spdk_super_blob_init_cb(void *cb_arg, int lvolerrno)
 	struct spdk_lvs_with_handle_req *req = cb_arg;
 	struct spdk_lvol_store *lvs = req->lvol_store;
 	struct spdk_blob *blob = lvs->super_blob;
-	char uuid[UUID_STRING_LEN];
+	char uuid[SPDK_UUID_STRING_LEN];
 
 	if (lvolerrno < 0) {
 		req->cb_fn(req->cb_arg, NULL, lvolerrno);
@@ -460,9 +457,9 @@ _spdk_super_blob_init_cb(void *cb_arg, int lvolerrno)
 		return;
 	}
 
-	uuid_unparse(lvs->uuid, uuid);
+	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &lvs->uuid);
 
-	spdk_blob_set_xattr(blob, "uuid", uuid, UUID_STRING_LEN);
+	spdk_blob_set_xattr(blob, "uuid", uuid, sizeof(uuid));
 	spdk_blob_set_xattr(blob, "name", lvs->name, strnlen(lvs->name, SPDK_LVS_NAME_MAX) + 1);
 	spdk_blob_sync_md(blob, _spdk_super_blob_set_cb, req);
 }
@@ -584,7 +581,7 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 		return -ENOMEM;
 	}
 
-	uuid_generate(lvs->uuid);
+	spdk_uuid_generate(&lvs->uuid);
 	strncpy(lvs->name, o->name, SPDK_LVS_NAME_MAX);
 
 	rc = _spdk_add_lvs_to_list(lvs);
@@ -850,7 +847,7 @@ _spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	struct spdk_lvol_with_handle_req *req = cb_arg;
 	spdk_blob_id blob_id = spdk_blob_get_id(blob);
 	struct spdk_lvol *lvol = req->lvol;
-	char uuid[UUID_STRING_LEN];
+	char uuid[SPDK_UUID_STRING_LEN];
 
 	if (lvolerrno < 0) {
 		free(lvol);
@@ -864,7 +861,7 @@ _spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 
 	TAILQ_INSERT_TAIL(&lvol->lvol_store->lvols, lvol, link);
 
-	uuid_unparse(lvol->lvol_store->uuid, uuid);
+	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &lvol->lvol_store->uuid);
 	lvol->unique_id = spdk_sprintf_alloc("%s_%"PRIu64, uuid, (uint64_t)blob_id);
 	if (!lvol->unique_id) {
 		SPDK_ERRLOG("Cannot alloc memory for lvol name\n");
