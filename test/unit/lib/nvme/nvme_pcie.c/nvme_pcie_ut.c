@@ -370,7 +370,7 @@ static void
 ut_insert_cq_entry(struct spdk_nvme_qpair *qpair, uint32_t slot)
 {
 	struct nvme_request	*req;
-	struct nvme_tracker 	*tr;
+	struct nvme_tracker	*tr;
 	struct spdk_nvme_cpl	*cpl;
 
 	req = calloc(1, sizeof(*req));
@@ -437,8 +437,8 @@ test_sgl_req(void)
 	struct nvme_request	*req;
 	struct spdk_nvme_ctrlr	ctrlr = {};
 	struct nvme_payload	payload = {};
-	struct nvme_tracker 	*sgl_tr = NULL;
-	uint64_t 		i;
+	struct nvme_tracker	*sgl_tr = NULL;
+	uint64_t		i;
 	struct io_request	io_req = {};
 
 	payload.type = NVME_PAYLOAD_TYPE_SGL;
@@ -515,8 +515,8 @@ test_hw_sgl_req(void)
 	struct nvme_request	*req;
 	struct spdk_nvme_ctrlr	ctrlr = {};
 	struct nvme_payload	payload = {};
-	struct nvme_tracker 	*sgl_tr = NULL;
-	uint64_t 		i;
+	struct nvme_tracker	*sgl_tr = NULL;
+	uint64_t		i;
 	struct io_request	io_req = {};
 
 	payload.type = NVME_PAYLOAD_TYPE_SGL;

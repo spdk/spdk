@@ -61,7 +61,7 @@ struct spdk_blob {
 	uint32_t		ref;
 	int			close_status;
 	int			open_status;
-	int 			load_status;
+	int			load_status;
 	TAILQ_ENTRY(spdk_blob)	link;
 	char			uuid[UUID_STRING_LEN];
 	char			name[SPDK_LVS_NAME_MAX];

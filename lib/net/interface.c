@@ -203,17 +203,17 @@ static int spdk_prepare_ifc_list(void)
 		struct ifinfomsg ifi;
 	};
 	int netlink_fd;
-	struct sockaddr_nl local;  /* Our local (user space) side of the communication */
-	struct sockaddr_nl kernel; /* The remote (kernel space) side of the communication */
+	struct sockaddr_nl local;	/* Our local (user space) side of the communication */
+	struct sockaddr_nl kernel;	/* The remote (kernel space) side of the communication */
 
-	struct msghdr rtnl_msg;    /* Generic msghdr struct for use with sendmsg */
-	struct iovec io;	   /* IO vector for sendmsg */
+	struct msghdr rtnl_msg;		/* Generic msghdr struct for use with sendmsg */
+	struct iovec io;		/* IO vector for sendmsg */
 
-	struct nl_req_s req;       /* Structure that describes the rtnetlink packet itself */
-	char reply[16384]; 	   /* a large buffer to receive lots of link information */
+	struct nl_req_s req;		/* Structure that describes the rtnetlink packet itself */
+	char reply[16384];		/* a large buffer to receive lots of link information */
 
-	pid_t pid = getpid();	   /* Our process ID to build the correct netlink address */
-	int end = 0;		   /* some flag to end loop parsing */
+	pid_t pid = getpid();		/* Our process ID to build the correct netlink address */
+	int end = 0;			/* some flag to end loop parsing */
 
 	/*
 	 * Prepare netlink socket for kernel/user space communication

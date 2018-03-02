@@ -62,7 +62,7 @@ struct spdk_nvmf_tgt {
 
 	/* Array of subsystem pointers of size max_sid indexed by sid */
 	struct spdk_nvmf_subsystem		**subsystems;
-	uint32_t 				max_sid;
+	uint32_t				max_sid;
 
 	struct spdk_nvmf_discovery_log_page	*discovery_log_page;
 	size_t					discovery_log_page_size;
@@ -150,7 +150,7 @@ struct spdk_nvmf_qpair {
 	uint16_t				sq_head;
 	uint16_t				sq_head_max;
 
-	TAILQ_ENTRY(spdk_nvmf_qpair) 		link;
+	TAILQ_ENTRY(spdk_nvmf_qpair)		link;
 };
 
 /*
@@ -159,7 +159,7 @@ struct spdk_nvmf_qpair {
  */
 struct spdk_nvmf_ctrlr {
 	uint16_t			cntlid;
-	struct spdk_nvmf_subsystem 	*subsys;
+	struct spdk_nvmf_subsystem	*subsys;
 
 	struct {
 		union spdk_nvme_cap_register	cap;
@@ -177,7 +177,7 @@ struct spdk_nvmf_ctrlr {
 	struct spdk_nvmf_request *aer_req;
 	uint8_t hostid[16];
 
-	TAILQ_ENTRY(spdk_nvmf_ctrlr) 		link;
+	TAILQ_ENTRY(spdk_nvmf_ctrlr)		link;
 };
 
 struct spdk_nvmf_subsystem {
@@ -196,7 +196,7 @@ struct spdk_nvmf_subsystem {
 
 	/* Array of pointers to namespaces of size max_nsid indexed by nsid - 1 */
 	struct spdk_nvmf_ns			**ns;
-	uint32_t 				max_nsid;
+	uint32_t				max_nsid;
 	uint32_t				num_allocated_nsid;
 
 	TAILQ_HEAD(, spdk_nvmf_ctrlr)		ctrlrs;
@@ -271,7 +271,7 @@ spdk_nvmf_qpair_is_admin_queue(struct spdk_nvmf_qpair *qpair)
 #define TRACE_NVMF_IO_START			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x0)
 #define TRACE_RDMA_READ_START			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x1)
 #define TRACE_RDMA_WRITE_START			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x2)
-#define TRACE_RDMA_READ_COMPLETE      		SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x3)
+#define TRACE_RDMA_READ_COMPLETE		SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x3)
 #define TRACE_RDMA_WRITE_COMPLETE		SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x4)
 #define TRACE_NVMF_LIB_READ_START		SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x5)
 #define TRACE_NVMF_LIB_WRITE_START		SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x6)

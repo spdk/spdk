@@ -72,7 +72,7 @@ extern struct rte_pci_bus rte_pci_bus;
 struct spdk_pci_enum_ctx {
 	struct rte_pci_driver	driver;
 	spdk_pci_enum_cb	cb_fn;
-	void 			*cb_arg;
+	void			*cb_arg;
 	pthread_mutex_t		mtx;
 	bool			is_registered;
 };

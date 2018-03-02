@@ -601,31 +601,31 @@ static const struct spdk_nvme_cmds_and_effect_log_page g_cmds_and_effect_log_pag
 	.admin_cmds_supported = {
 		/* CSUPP, LBCC, NCC, NIC, CCC, CSE */
 		/* Get Log Page */
-		[SPDK_NVME_OPC_GET_LOG_PAGE] 	    = {1, 0, 0, 0, 0, 0, 0, 0},
+		[SPDK_NVME_OPC_GET_LOG_PAGE]		= {1, 0, 0, 0, 0, 0, 0, 0},
 		/* Identify */
-		[SPDK_NVME_OPC_IDENTIFY]     	    = {1, 0, 0, 0, 0, 0, 0, 0},
+		[SPDK_NVME_OPC_IDENTIFY]		= {1, 0, 0, 0, 0, 0, 0, 0},
 		/* Abort */
-		[SPDK_NVME_OPC_ABORT]        	    = {1, 0, 0, 0, 0, 0, 0, 0},
+		[SPDK_NVME_OPC_ABORT]			= {1, 0, 0, 0, 0, 0, 0, 0},
 		/* Set Features */
-		[SPDK_NVME_OPC_SET_FEATURES] 	    = {1, 0, 0, 0, 0, 0, 0, 0},
+		[SPDK_NVME_OPC_SET_FEATURES]		= {1, 0, 0, 0, 0, 0, 0, 0},
 		/* Get Features */
-		[SPDK_NVME_OPC_GET_FEATURES] 	    = {1, 0, 0, 0, 0, 0, 0, 0},
+		[SPDK_NVME_OPC_GET_FEATURES]		= {1, 0, 0, 0, 0, 0, 0, 0},
 		/* Async Event Request */
-		[SPDK_NVME_OPC_ASYNC_EVENT_REQUEST] = {1, 0, 0, 0, 0, 0, 0, 0},
+		[SPDK_NVME_OPC_ASYNC_EVENT_REQUEST]	= {1, 0, 0, 0, 0, 0, 0, 0},
 		/* Keep Alive */
-		[SPDK_NVME_OPC_KEEP_ALIVE] 	    = {1, 0, 0, 0, 0, 0, 0, 0},
+		[SPDK_NVME_OPC_KEEP_ALIVE]		= {1, 0, 0, 0, 0, 0, 0, 0},
 	},
 	.io_cmds_supported = {
 		/* FLUSH */
-		[SPDK_NVME_OPC_FLUSH]		    = {1, 1, 0, 0, 0, 0, 0, 0},
+		[SPDK_NVME_OPC_FLUSH]			= {1, 1, 0, 0, 0, 0, 0, 0},
 		/* WRITE */
-		[SPDK_NVME_OPC_WRITE]		    = {1, 1, 0, 0, 0, 0, 0, 0},
+		[SPDK_NVME_OPC_WRITE]			= {1, 1, 0, 0, 0, 0, 0, 0},
 		/* READ */
-		[SPDK_NVME_OPC_READ]		    = {1, 0, 0, 0, 0, 0, 0, 0},
+		[SPDK_NVME_OPC_READ]			= {1, 0, 0, 0, 0, 0, 0, 0},
 		/* WRITE ZEROES */
-		[SPDK_NVME_OPC_WRITE_ZEROES]        = {1, 1, 0, 0, 0, 0, 0, 0},
+		[SPDK_NVME_OPC_WRITE_ZEROES]		= {1, 1, 0, 0, 0, 0, 0, 0},
 		/* DATASET MANAGEMENT */
-		[SPDK_NVME_OPC_DATASET_MANAGEMENT]  = {1, 1, 0, 0, 0, 0, 0, 0},
+		[SPDK_NVME_OPC_DATASET_MANAGEMENT]	= {1, 1, 0, 0, 0, 0, 0, 0},
 	},
 };
 

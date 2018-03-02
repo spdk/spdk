@@ -275,7 +275,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct io_target	*target;
 	struct bdevperf_task	*task = cb_arg;
-	struct spdk_event 	*complete;
+	struct spdk_event	*complete;
 	struct iovec		*iovs;
 	int			iovcnt;
 

@@ -1105,7 +1105,7 @@ typedef int (*spdk_nvme_req_next_sge_cb)(void *cb_arg, void **address, uint32_t 
  * \param cb_fn callback function to invoke when the I/O is completed
  * \param cb_arg argument to pass to the callback function
  * \param io_flags set flags, defined by the SPDK_NVME_IO_FLAGS_* entries
- * 			in spdk/nvme_spec.h, for this I/O.
+ *			in spdk/nvme_spec.h, for this I/O.
  *
  * \return 0 if successfully submitted, ENOMEM if an nvme_request
  *	     structure cannot be allocated for the I/O request
@@ -1156,7 +1156,7 @@ int spdk_nvme_ns_cmd_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpa
  * \param cb_fn callback function to invoke when the I/O is completed
  * \param cb_arg argument to pass to the callback function
  * \param io_flags set flags, defined by the SPDK_NVME_IO_FLAGS_* entries
- * 			in spdk/nvme_spec.h, for this I/O.
+ *			in spdk/nvme_spec.h, for this I/O.
  * \param apptag_mask application tag mask.
  * \param apptag application tag to use end-to-end protection information.
  *
@@ -1182,7 +1182,7 @@ int spdk_nvme_ns_cmd_write_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpa
  * \param cb_fn callback function to invoke when the I/O is completed
  * \param cb_arg argument to pass to the callback function
  * \param io_flags set flags, defined by the SPDK_NVME_IO_FLAGS_* entries
- * 			in spdk/nvme_spec.h, for this I/O.
+ *			in spdk/nvme_spec.h, for this I/O.
  *
  * \return 0 if successfully submitted, ENOMEM if an nvme_request
  *	     structure cannot be allocated for the I/O request
@@ -1281,7 +1281,7 @@ int spdk_nvme_ns_cmd_read_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpai
  * \param type A bit field constructed from \ref enum spdk_nvme_dsm_attribute.
  * \param qpair I/O queue pair to submit the request
  * \param ranges An array of \ref spdk_nvme_dsm_range elements describing
- 		 the LBAs to operate on.
+ *		 the LBAs to operate on.
  * \param num_ranges The number of elements in the ranges array.
  * \param cb_fn callback function to invoke when the I/O is completed
  * \param cb_arg argument to pass to the callback function

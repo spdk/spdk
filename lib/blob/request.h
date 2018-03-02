@@ -113,7 +113,7 @@ struct spdk_bs_request_set {
 
 	struct spdk_bs_channel		*channel;
 
-	struct spdk_bs_dev_cb_args 	cb_args;
+	struct spdk_bs_dev_cb_args	cb_args;
 
 	union {
 		struct {
@@ -122,8 +122,8 @@ struct spdk_bs_request_set {
 		} sequence;
 
 		struct {
-			uint32_t        	outstanding_ops;
-			uint32_t        	batch_closed;
+			uint32_t		outstanding_ops;
+			uint32_t		batch_closed;
 			spdk_bs_sequence_cpl	cb_fn;
 			void			*cb_arg;
 		} batch;

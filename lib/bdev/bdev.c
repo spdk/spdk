@@ -1641,7 +1641,7 @@ _spdk_bdev_reset_dev(struct spdk_io_channel_iter *i, int status)
 static void
 _spdk_bdev_reset_freeze_channel(struct spdk_io_channel_iter *i)
 {
-	struct spdk_io_channel 		*ch;
+	struct spdk_io_channel		*ch;
 	struct spdk_bdev_channel	*channel;
 	struct spdk_bdev_mgmt_channel	*mgmt_channel;
 	struct spdk_bdev_module_channel	*shared_ch;

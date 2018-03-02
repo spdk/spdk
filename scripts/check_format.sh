@@ -51,6 +51,17 @@ else
 fi
 rm -f comment.log
 
+echo -n "Checking for spaces before tabs..."
+git grep --line-number $' \t' -- > whitespace.log || true
+if [ -s whitespace.log ]; then
+	echo " Spaces before tabs detected"
+	cat whitespace.log
+	rc=1
+else
+	echo " OK"
+fi
+rm -f whitespace.log
+
 echo -n "Checking trailing whitespace in output strings..."
 
 git grep --line-number -e ' \\n"' -- '*.[ch]' > whitespace.log || true

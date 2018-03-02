@@ -467,7 +467,7 @@ ioat_channel_start(struct spdk_ioat_chan *ioat)
 static struct spdk_ioat_chan *
 ioat_attach(void *device)
 {
-	struct spdk_ioat_chan 	*ioat;
+	struct spdk_ioat_chan *ioat;
 	uint32_t cmd_reg;
 
 	ioat = calloc(1, sizeof(struct spdk_ioat_chan));

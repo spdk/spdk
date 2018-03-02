@@ -37,7 +37,7 @@ static void nvme_qpair_fail(struct spdk_nvme_qpair *qpair);
 
 struct nvme_string {
 	uint16_t	value;
-	const char 	*str;
+	const char	*str;
 };
 
 static const struct nvme_string admin_opcode[] = {

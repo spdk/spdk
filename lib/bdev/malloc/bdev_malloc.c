@@ -49,7 +49,7 @@
 
 struct malloc_disk {
 	struct spdk_bdev		disk;
-	void 				*malloc_buf;
+	void				*malloc_buf;
 	TAILQ_ENTRY(malloc_disk)	link;
 };
 

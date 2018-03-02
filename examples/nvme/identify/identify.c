@@ -550,7 +550,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	uint8_t					str[512];
 	uint32_t				i;
 	struct spdk_nvme_error_information_entry *error_entry;
-	struct spdk_pci_addr 			pci_addr;
+	struct spdk_pci_addr			pci_addr;
 	struct spdk_pci_device			*pci_dev;
 	struct spdk_pci_id			pci_id;
 

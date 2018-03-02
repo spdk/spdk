@@ -41,7 +41,7 @@
 
 struct dev {
 	struct spdk_pci_addr			pci_addr;
-	struct spdk_nvme_ctrlr 			*ctrlr;
+	struct spdk_nvme_ctrlr			*ctrlr;
 	const struct spdk_nvme_ctrlr_data	*cdata;
 	struct spdk_nvme_ns_data		*common_ns_data;
 	int					outstanding_admin_cmds;
@@ -540,9 +540,9 @@ add_ns(void)
 	uint64_t	ns_size		= 0;
 	uint64_t	ns_capacity	= 0;
 	int		ns_lbasize;
-	int 		ns_dps_type  	= 0;
-	int 		ns_dps_location = 0;
-	int	 	ns_nmic 	= 0;
+	int		ns_dps_type	= 0;
+	int		ns_dps_location	= 0;
+	int		ns_nmic		= 0;
 	struct dev	*ctrlr		= NULL;
 
 	ctrlr = get_controller();
@@ -611,7 +611,7 @@ add_ns(void)
 static void
 delete_ns(void)
 {
-	int 					ns_id;
+	int					ns_id;
 	struct dev				*ctrlr;
 
 	ctrlr = get_controller();
@@ -638,7 +638,7 @@ delete_ns(void)
 static void
 format_nvm(void)
 {
-	int 					ns_id;
+	int					ns_id;
 	int					ses;
 	int					pil;
 	int					pi;

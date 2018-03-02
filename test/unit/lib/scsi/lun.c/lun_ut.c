@@ -599,7 +599,7 @@ int
 main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
-	unsigned int 	num_failures;
+	unsigned int	num_failures;
 	int		rc;
 
 	if (CU_initialize_registry() != CUE_SUCCESS) {

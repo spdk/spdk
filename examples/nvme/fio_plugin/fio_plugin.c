@@ -74,8 +74,8 @@ struct spdk_fio_qpair {
 	struct fio_file		*f;
 	struct spdk_nvme_qpair	*qpair;
 	struct spdk_nvme_ns	*ns;
-	struct spdk_fio_qpair 	*next;
-	struct spdk_fio_ctrlr   *fio_ctrlr;
+	struct spdk_fio_qpair	*next;
+	struct spdk_fio_ctrlr	*fio_ctrlr;
 };
 
 struct spdk_fio_thread {
@@ -117,7 +117,7 @@ static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	struct thread_data 	*td = cb_ctx;
+	struct thread_data	*td = cb_ctx;
 	struct spdk_fio_thread	*fio_thread = td->io_ops_data;
 	struct spdk_fio_ctrlr	*fio_ctrlr;
 	struct spdk_fio_qpair	*fio_qpair;

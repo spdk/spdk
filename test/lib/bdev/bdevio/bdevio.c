@@ -43,7 +43,7 @@
 #include "CUnit/Basic.h"
 
 #define BUFFER_IOVS		1024
-#define BUFFER_SIZE 		260 * 1024
+#define BUFFER_SIZE		260 * 1024
 #define BDEV_TASK_ARRAY_SIZE	2048
 
 #define LCORE_ID_INIT		0

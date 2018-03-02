@@ -47,7 +47,7 @@
 #define SPDK_CU_ASSERT_FATAL(cond)		\
 	do {					\
 		int result_ = !!(cond);		\
-		CU_ASSERT_FATAL(result_); 	\
+		CU_ASSERT_FATAL(result_);	\
 		if (!result_) {			\
 			abort();		\
 		}				\

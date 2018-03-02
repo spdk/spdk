@@ -571,10 +571,10 @@ bdev_aio_initialize(void)
 static void
 bdev_aio_get_spdk_running_config(FILE *fp)
 {
-	char 	*file;
-	char 	*name;
-	uint32_t block_size;
-	struct 	 file_disk *fdisk;
+	char			*file;
+	char			*name;
+	uint32_t		block_size;
+	struct file_disk	*fdisk;
 
 	fprintf(fp,
 		"\n"

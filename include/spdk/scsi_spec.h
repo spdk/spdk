@@ -497,7 +497,7 @@ struct spdk_scsi_unmap_bdesc {
 	uint32_t reserved;
 };
 
-#define SPDK_SCSI_UNMAP_LBPU  			1 << 7
+#define SPDK_SCSI_UNMAP_LBPU			1 << 7
 #define SPDK_SCSI_UNMAP_LBPWS			1 << 6
 #define SPDK_SCSI_UNMAP_LBPWS10			1 << 5
 

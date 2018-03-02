@@ -1549,7 +1549,7 @@ spdk_bdev_scsi_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 {
 	uint8_t				*data;
 	struct spdk_bdev_scsi_unmap_ctx	*ctx;
-	int 				desc_count, i;
+	int				desc_count, i;
 	int				data_len;
 	int				rc;
 

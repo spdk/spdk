@@ -112,7 +112,7 @@ struct spdk_nvme_rdma_req {
 
 	struct ibv_send_wr			send_wr;
 
-	struct nvme_request 			*req;
+	struct nvme_request			*req;
 
 	struct ibv_sge				send_sgl;
 
@@ -495,13 +495,13 @@ static int
 nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 {
 	struct rdma_conn_param				param = {};
-	struct spdk_nvmf_rdma_request_private_data 	request_data = {};
+	struct spdk_nvmf_rdma_request_private_data	request_data = {};
 	struct spdk_nvmf_rdma_accept_private_data	*accept_data;
-	struct ibv_device_attr 				attr;
-	int 						ret;
-	struct rdma_cm_event 				*event;
-	struct spdk_nvme_ctrlr 				*ctrlr;
-	struct nvme_rdma_ctrlr 				*rctrlr;
+	struct ibv_device_attr				attr;
+	int						ret;
+	struct rdma_cm_event				*event;
+	struct spdk_nvme_ctrlr				*ctrlr;
+	struct nvme_rdma_ctrlr				*rctrlr;
 
 	ret = ibv_query_device(rqpair->cm_id->verbs, &attr);
 	if (ret != 0) {
@@ -1485,10 +1485,10 @@ int
 nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 				    uint32_t max_completions)
 {
-	struct nvme_rdma_qpair 	*rqpair = nvme_rdma_qpair(qpair);
-	struct ibv_wc 		wc[MAX_COMPLETIONS_PER_POLL];
+	struct nvme_rdma_qpair	*rqpair = nvme_rdma_qpair(qpair);
+	struct ibv_wc		wc[MAX_COMPLETIONS_PER_POLL];
 	int			i, rc, batch_size;
-	uint32_t 		reaped;
+	uint32_t		reaped;
 	struct ibv_cq		*cq;
 
 	if (max_completions == 0) {
