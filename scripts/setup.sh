@@ -49,6 +49,23 @@ function usage()
 	exit 0
 }
 
+# In monolithic kernels the lsmod won't work. So
+# back that with a /sys/modules check. Return a different code for
+# built-in vs module just in case we want that down the road.
+function check_for_driver {
+	$(lsmod | grep $1 > /dev/null)
+	if [ $? -eq 0 ]; then
+		return 1
+	else
+		if [[ -d /sys/module/$1 ]]; then
+			return 2
+		else
+			return 0
+		fi
+	fi
+	return 0
+}
+
 function pci_can_bind() {
 	if [[ ${#PCI_WHITELIST[@]} == 0 ]]; then
 		#no whitelist specified, bind all devices
@@ -275,7 +292,7 @@ function configure_linux {
 function reset_linux_pci {
 	# NVMe
 	set +e
-	lsmod | grep nvme > /dev/null
+	check_for_driver nvme
 	driver_loaded=$?
 	set -e
 	for bdf in $(iter_pci_class_code 01 08 02); do
@@ -283,7 +300,7 @@ function reset_linux_pci {
 			echo "Skipping un-whitelisted NVMe controller $blkname ($bdf)"
 			continue
 		fi
-		if [ $driver_loaded -eq 0 ]; then
+		if [ $driver_loaded -ne 0 ]; then
 			linux_bind_driver "$bdf" nvme
 		else
 			linux_unbind_driver "$bdf"
@@ -297,7 +314,7 @@ function reset_linux_pci {
 	| awk -F"x" '{print $2}' > $TMP
 
 	set +e
-	lsmod | grep ioatdma > /dev/null
+	check_for_driver ioatdma
 	driver_loaded=$?
 	set -e
 	for dev_id in `cat $TMP`; do
@@ -306,7 +323,7 @@ function reset_linux_pci {
 				echo "Skipping un-whitelisted I/OAT device at $bdf"
 				continue
 			fi
-			if [ $driver_loaded -eq 0 ]; then
+			if [ $driver_loaded -ne 0 ]; then
 				linux_bind_driver "$bdf" ioatdma
 			else
 				linux_unbind_driver "$bdf"
