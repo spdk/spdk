@@ -16,6 +16,24 @@
       "revId": "c1a8e32756fc23d767a0dc67010e733d6e5d2ca3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "130a4510_34895c4b",
+        "filename": "scripts/vagrant/build.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-02T20:40:18Z",
+      "side": 1,
+      "message": "Agreed - we shouldn\u0027t require network access inside the VM.",
+      "parentUuid": "de140abd_d85adb43",
+      "revId": "c1a8e32756fc23d767a0dc67010e733d6e5d2ca3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
