@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0a3535e8_fe585089",
+        "filename": "lib/util/uuid.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-02T21:55:55Z",
+      "side": 1,
+      "message": "should we have an assert(false) here?\n\nmost if not all of the callers do not check the return code so I think the assert would be helpful to find bad callers - there\u0027s no reason anyone should ever pass a uuid_str_size \u003c SPDK_UUID_STRING_LEN",
+      "revId": "c0f4e75afdaa5d21e32612be69501ffce18d117b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5249fa34_b9af7563",
+        "filename": "lib/util/uuid.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-02T21:55:55Z",
+      "side": 1,
+      "message": "lvol store used uuid_generate_time, not uuid_generate - was this change intentional?\n\nmaybe we should have spdk_uuid_generate_time?",
+      "revId": "c0f4e75afdaa5d21e32612be69501ffce18d117b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
