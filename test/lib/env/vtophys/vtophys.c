@@ -149,7 +149,7 @@ mem_map_test(void)
 int
 main(int argc, char **argv)
 {
-	int 			rc;
+	int			rc;
 	struct spdk_env_opts	opts;
 
 	spdk_env_opts_init(&opts);

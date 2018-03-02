@@ -165,12 +165,12 @@ struct spdk_blob_store {
 	uint32_t			pages_per_cluster;
 
 	spdk_blob_id			super_blob;
-	struct spdk_bs_type 		bstype;
+	struct spdk_bs_type		bstype;
 
 	struct spdk_bs_cpl		unload_cpl;
 	int				unload_err;
 
-	TAILQ_HEAD(, spdk_blob) 	blobs;
+	TAILQ_HEAD(, spdk_blob)		blobs;
 };
 
 struct spdk_bs_channel {
@@ -316,7 +316,7 @@ struct spdk_bs_super_block {
 	uint32_t	md_start; /* Offset from beginning of disk, in pages */
 	uint32_t	md_len; /* Count, in pages */
 
-	struct spdk_bs_type 	bstype; /* blobstore type */
+	struct spdk_bs_type	bstype; /* blobstore type */
 
 	uint32_t	used_blobid_mask_start; /* Offset from beginning of disk, in pages */
 	uint32_t	used_blobid_mask_len; /* Count, in pages */

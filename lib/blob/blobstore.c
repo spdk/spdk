@@ -183,7 +183,7 @@ _spdk_blob_alloc(struct spdk_blob_store *bs, spdk_blob_id id)
 static void
 _spdk_xattrs_free(struct spdk_xattr_tailq *xattrs)
 {
-	struct spdk_xattr 	*xattr, *xattr_tmp;
+	struct spdk_xattr	*xattr, *xattr_tmp;
 
 	TAILQ_FOREACH_SAFE(xattr, xattrs, link, xattr_tmp) {
 		TAILQ_REMOVE(xattrs, xattr, link);
@@ -681,7 +681,7 @@ _spdk_blob_serialize(const struct spdk_blob *blob, struct spdk_blob_md_page **pa
 		     uint32_t *page_count)
 {
 	struct spdk_blob_md_page		*cur_page;
-	int 					rc;
+	int					rc;
 	uint8_t					*buf;
 	size_t					remaining_sz;
 	uint64_t				last_cluster;
@@ -745,7 +745,7 @@ _spdk_blob_serialize(const struct spdk_blob *blob, struct spdk_blob_md_page **pa
 }
 
 struct spdk_blob_load_ctx {
-	struct spdk_blob 		*blob;
+	struct spdk_blob		*blob;
 
 	struct spdk_blob_md_page	*pages;
 	uint32_t			num_pages;
@@ -770,8 +770,8 @@ _spdk_blob_md_page_calc_crc(void *page)
 static void
 _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
-	struct spdk_blob_load_ctx 	*ctx = cb_arg;
-	struct spdk_blob 		*blob = ctx->blob;
+	struct spdk_blob_load_ctx	*ctx = cb_arg;
+	struct spdk_blob		*blob = ctx->blob;
 	struct spdk_blob_md_page	*page;
 	int				rc;
 	uint32_t			crc;
@@ -877,7 +877,7 @@ _spdk_blob_load(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 }
 
 struct spdk_blob_persist_ctx {
-	struct spdk_blob 		*blob;
+	struct spdk_blob		*blob;
 
 	struct spdk_blob_md_page	*pages;
 
@@ -891,8 +891,8 @@ struct spdk_blob_persist_ctx {
 static void
 _spdk_blob_persist_complete(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
-	struct spdk_blob_persist_ctx 	*ctx = cb_arg;
-	struct spdk_blob 		*blob = ctx->blob;
+	struct spdk_blob_persist_ctx	*ctx = cb_arg;
+	struct spdk_blob		*blob = ctx->blob;
 
 	if (bserrno == 0) {
 		_spdk_blob_mark_clean(blob);
@@ -909,8 +909,8 @@ _spdk_blob_persist_complete(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 static void
 _spdk_blob_persist_unmap_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
-	struct spdk_blob_persist_ctx 	*ctx = cb_arg;
-	struct spdk_blob 		*blob = ctx->blob;
+	struct spdk_blob_persist_ctx	*ctx = cb_arg;
+	struct spdk_blob		*blob = ctx->blob;
 	struct spdk_blob_store		*bs = blob->bs;
 	void				*tmp;
 	size_t				i;
@@ -942,8 +942,8 @@ _spdk_blob_persist_unmap_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int
 static void
 _spdk_blob_persist_unmap_clusters(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
-	struct spdk_blob_persist_ctx 	*ctx = cb_arg;
-	struct spdk_blob 		*blob = ctx->blob;
+	struct spdk_blob_persist_ctx	*ctx = cb_arg;
+	struct spdk_blob		*blob = ctx->blob;
 	struct spdk_blob_store		*bs = blob->bs;
 	spdk_bs_batch_t			*batch;
 	size_t				i;
@@ -999,7 +999,7 @@ static void
 _spdk_blob_persist_zero_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_persist_ctx	*ctx = cb_arg;
-	struct spdk_blob 		*blob = ctx->blob;
+	struct spdk_blob		*blob = ctx->blob;
 	struct spdk_blob_store		*bs = blob->bs;
 	size_t				i;
 
@@ -1025,8 +1025,8 @@ _spdk_blob_persist_zero_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bse
 static void
 _spdk_blob_persist_zero_pages(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
-	struct spdk_blob_persist_ctx 	*ctx = cb_arg;
-	struct spdk_blob 		*blob = ctx->blob;
+	struct spdk_blob_persist_ctx	*ctx = cb_arg;
+	struct spdk_blob		*blob = ctx->blob;
 	struct spdk_blob_store		*bs = blob->bs;
 	uint64_t			lba;
 	uint32_t			lba_count;
@@ -1090,10 +1090,10 @@ _spdk_blob_persist_write_page_root(spdk_bs_sequence_t *seq, void *cb_arg, int bs
 static void
 _spdk_blob_persist_write_page_chain(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
-	struct spdk_blob_persist_ctx 	*ctx = cb_arg;
-	struct spdk_blob 		*blob = ctx->blob;
+	struct spdk_blob_persist_ctx	*ctx = cb_arg;
+	struct spdk_blob		*blob = ctx->blob;
 	struct spdk_blob_store		*bs = blob->bs;
-	uint64_t 			lba;
+	uint64_t			lba;
 	uint32_t			lba_count;
 	struct spdk_blob_md_page	*page;
 	spdk_bs_batch_t			*batch;
@@ -2589,7 +2589,7 @@ static void
 _spdk_bs_recover(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_load_ctx *ctx = cb_arg;
-	int 		rc;
+	int		rc;
 
 	if (bserrno != 0) {
 		_spdk_bs_load_ctx_fail(seq, ctx, -EIO);
@@ -3277,7 +3277,7 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 {
 	struct spdk_blob	*blob;
 	uint32_t		page_idx;
-	struct spdk_bs_cpl 	cpl;
+	struct spdk_bs_cpl	cpl;
 	struct spdk_blob_opts	opts_default;
 	spdk_bs_sequence_t	*seq;
 	spdk_blob_id		id;
@@ -3454,7 +3454,7 @@ spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 		    spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_bs_cpl	cpl;
-	spdk_bs_sequence_t 	*seq;
+	spdk_bs_sequence_t	*seq;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Deleting blob %lu\n", blobid);
 
@@ -3912,7 +3912,7 @@ _spdk_blob_set_xattr(struct spdk_blob *blob, const char *name, const void *value
 		     uint16_t value_len, bool internal)
 {
 	struct spdk_xattr_tailq *xattrs;
-	struct spdk_xattr 	*xattr;
+	struct spdk_xattr	*xattr;
 
 	_spdk_blob_verify_md_op(blob);
 

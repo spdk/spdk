@@ -45,7 +45,7 @@ struct spdk_iscsi_portal_grp;
 struct spdk_iscsi_portal;
 
 #define MAX_TARGET_MAP			256
-#define SPDK_TN_TAG_MAX 		0x0000ffff
+#define SPDK_TN_TAG_MAX			0x0000ffff
 
 struct spdk_iscsi_ig_map {
 	struct spdk_iscsi_init_grp *ig;

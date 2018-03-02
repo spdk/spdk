@@ -179,7 +179,7 @@ void spdk_scsi_dev_free_io_channels(struct spdk_scsi_dev *dev);
  *		      lun_id_list[x] is the LUN ID for lun_list[x].
  * \param num_luns Number of entries in lun_list and lun_id_list.
  * \param hotremove_cb Callback to lun hotremoval. Will be called
- * 		       once hotremove is first triggered.
+ *		       once hotremove is first triggered.
  * \param hotremove_ctx Additional argument to hotremove_cb
  * \return The constructed spdk_scsi_dev object.
  */

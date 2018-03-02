@@ -255,11 +255,11 @@ struct spdk_nvmf_rdma_transport {
 
 	struct spdk_mempool		*data_buf_pool;
 
-	pthread_mutex_t 		lock;
+	pthread_mutex_t			lock;
 
-	uint16_t 			max_queue_depth;
-	uint32_t 			max_io_size;
-	uint32_t 			in_capsule_data_size;
+	uint16_t			max_queue_depth;
+	uint32_t			max_io_size;
+	uint32_t			in_capsule_data_size;
 
 	TAILQ_HEAD(, spdk_nvmf_rdma_device)	devices;
 	TAILQ_HEAD(, spdk_nvmf_rdma_port)	ports;
@@ -463,8 +463,8 @@ request_transfer_in(struct spdk_nvmf_request *req)
 {
 	int				rc;
 	struct spdk_nvmf_rdma_request	*rdma_req;
-	struct spdk_nvmf_qpair 		*qpair;
-	struct spdk_nvmf_rdma_qpair 	*rqpair;
+	struct spdk_nvmf_qpair		*qpair;
+	struct spdk_nvmf_rdma_qpair	*rqpair;
 	struct ibv_send_wr		*bad_wr = NULL;
 
 	qpair = req->qpair;
@@ -497,10 +497,10 @@ request_transfer_in(struct spdk_nvmf_request *req)
 static int
 request_transfer_out(struct spdk_nvmf_request *req)
 {
-	int 				rc;
+	int				rc;
 	struct spdk_nvmf_rdma_request	*rdma_req;
 	struct spdk_nvmf_qpair		*qpair;
-	struct spdk_nvmf_rdma_qpair 	*rqpair;
+	struct spdk_nvmf_rdma_qpair	*rqpair;
 	struct spdk_nvme_cpl		*rsp;
 	struct ibv_recv_wr		*bad_recv_wr = NULL;
 	struct ibv_send_wr		*send_wr, *bad_send_wr = NULL;
@@ -610,7 +610,7 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 {
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct spdk_nvmf_rdma_qpair	*rqpair = NULL;
-	struct spdk_nvmf_rdma_port 	*port;
+	struct spdk_nvmf_rdma_port	*port;
 	struct rdma_conn_param		*rdma_param = NULL;
 	const struct spdk_nvmf_rdma_request_private_data *private_data = NULL;
 	uint16_t			max_queue_depth;
@@ -708,9 +708,9 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 static void
 nvmf_rdma_handle_disconnect(void *ctx)
 {
-	struct spdk_nvmf_qpair 		*qpair = ctx;
+	struct spdk_nvmf_qpair		*qpair = ctx;
 	struct spdk_nvmf_ctrlr		*ctrlr;
-	struct spdk_nvmf_rdma_qpair 	*rqpair;
+	struct spdk_nvmf_rdma_qpair	*rqpair;
 
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
@@ -730,7 +730,7 @@ static int
 nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 {
 	struct spdk_nvmf_qpair	*qpair;
-	struct spdk_io_channel 	*ch;
+	struct spdk_io_channel	*ch;
 
 	if (evt->id == NULL) {
 		SPDK_ERRLOG("disconnect request: missing cm_id\n");
@@ -1258,7 +1258,7 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 {
 	struct spdk_nvmf_rdma_transport	*rtransport;
 	struct spdk_nvmf_rdma_device	*device;
-	struct spdk_nvmf_rdma_port 	*port_tmp, *port;
+	struct spdk_nvmf_rdma_port	*port_tmp, *port;
 	struct addrinfo			*res;
 	struct addrinfo			hints;
 	int				family;
@@ -1578,8 +1578,8 @@ spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 {
 	struct spdk_nvmf_rdma_transport		*rtransport;
 	struct spdk_nvmf_rdma_poll_group	*rgroup;
-	struct spdk_nvmf_rdma_qpair 		*rqpair;
-	struct spdk_nvmf_rdma_device 		*device;
+	struct spdk_nvmf_rdma_qpair		*rqpair;
+	struct spdk_nvmf_rdma_device		*device;
 	struct spdk_nvmf_rdma_poller		*poller;
 	int					rc;
 
@@ -1640,8 +1640,8 @@ spdk_nvmf_rdma_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
 				 struct spdk_nvmf_qpair *qpair)
 {
 	struct spdk_nvmf_rdma_poll_group	*rgroup;
-	struct spdk_nvmf_rdma_qpair 		*rqpair;
-	struct spdk_nvmf_rdma_device 		*device;
+	struct spdk_nvmf_rdma_qpair		*rqpair;
+	struct spdk_nvmf_rdma_device		*device;
 	struct spdk_nvmf_rdma_poller		*poller;
 	struct spdk_nvmf_rdma_qpair		*rq, *trq;
 

@@ -85,7 +85,7 @@ struct spdk_app_opts {
 
 	bool			enable_coredump;
 	int			mem_channel;
-	int	 		master_core;
+	int			master_core;
 	int			mem_size;
 	bool			no_pci;
 	enum spdk_log_level	print_level;

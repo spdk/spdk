@@ -90,7 +90,7 @@ struct spdk_reactor {
 	struct spdk_poller				*rusage_poller;
 
 	/* The last known rusage values */
-	struct rusage 					rusage;
+	struct rusage					rusage;
 
 	/*
 	 * Contains pollers actively running on this reactor.  Pollers
@@ -412,7 +412,7 @@ _spdk_reactor_run(void *arg)
 	uint64_t		idle_started, now;
 	uint64_t		spin_cycles, sleep_cycles;
 	uint32_t		sleep_us;
-	uint32_t 		timer_poll_count;
+	uint32_t		timer_poll_count;
 	char			thread_name[32];
 
 	snprintf(thread_name, sizeof(thread_name), "reactor_%u", reactor->lcore);

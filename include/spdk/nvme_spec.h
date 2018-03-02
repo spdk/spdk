@@ -401,7 +401,7 @@ struct __attribute__((packed)) spdk_nvme_sgl_descriptor {
 		} unkeyed;
 
 		struct {
-			uint64_t length 	: 24;
+			uint64_t length		: 24;
 			uint64_t key		: 32;
 			uint64_t subtype	: 4;
 			uint64_t type		: 4;

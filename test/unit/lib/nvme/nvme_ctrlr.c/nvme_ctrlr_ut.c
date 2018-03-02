@@ -1345,7 +1345,7 @@ test_nvme_ctrlr_construct_intel_support_log_page_list(void)
 	bool	res;
 	struct spdk_nvme_ctrlr				ctrlr = {};
 	struct spdk_nvme_intel_log_page_directory	payload = {};
-	struct spdk_pci_id 				pci_id = {};
+	struct spdk_pci_id				pci_id = {};
 
 	/* Get quirks for a device with all 0 vendor/device id */
 	ctrlr.quirks = nvme_get_quirks(&pci_id);

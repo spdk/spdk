@@ -2905,7 +2905,7 @@ blob_thin_prov_rw(void)
 	struct spdk_bs_dev *dev;
 	struct spdk_blob *blob;
 	struct spdk_io_channel *channel;
-	struct spdk_blob_opts 	opts;
+	struct spdk_blob_opts opts;
 	spdk_blob_id blobid;
 	uint64_t free_clusters;
 	uint8_t payload_read[10 * 4096];
@@ -2991,7 +2991,7 @@ blob_thin_prov_rw_iov(void)
 	struct spdk_bs_dev *dev;
 	struct spdk_blob *blob;
 	struct spdk_io_channel *channel;
-	struct spdk_blob_opts 	opts;
+	struct spdk_blob_opts opts;
 	spdk_blob_id blobid;
 	uint64_t free_clusters;
 	uint8_t payload_read[10 * 4096];

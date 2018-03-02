@@ -956,7 +956,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 	uint64_t		phys_addr = 0;
 	uint64_t		offset;
 	uint16_t		num_trackers;
-	size_t 			page_size = sysconf(_SC_PAGESIZE);
+	size_t			page_size = sysconf(_SC_PAGESIZE);
 
 	/*
 	 * Limit the maximum number of completions to return per call to prevent wraparound,

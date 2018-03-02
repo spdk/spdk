@@ -178,9 +178,9 @@ struct firmware_update_info {
 	void				*fw_image;
 	void				*p;
 	unsigned int			size;
-	unsigned int            	size_remaining;
-	unsigned int            	offset;
-	unsigned int            	transfer;
+	unsigned int			size_remaining;
+	unsigned int			offset;
+	unsigned int			transfer;
 
 	void				*desc;
 	struct spdk_io_channel		*ch;

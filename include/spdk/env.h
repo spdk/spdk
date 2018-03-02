@@ -54,11 +54,11 @@ struct spdk_pci_device;
  * \brief Environment initialization options
  */
 struct spdk_env_opts {
-	const char 		*name;
-	const char 		*core_mask;
-	int 			shm_id;
-	int	 		mem_channel;
-	int	 		master_core;
+	const char		*name;
+	const char		*core_mask;
+	int			shm_id;
+	int			mem_channel;
+	int			master_core;
 	int			mem_size;
 	bool			no_pci;
 
@@ -209,7 +209,7 @@ size_t spdk_mempool_count(const struct spdk_mempool *pool);
 
 /**
  * \brief Return the number of dedicated CPU cores utilized by
- * 	  this env abstraction
+ *	  this env abstraction
  */
 uint32_t spdk_env_get_core_count(void);
 

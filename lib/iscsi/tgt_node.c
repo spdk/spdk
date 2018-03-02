@@ -693,9 +693,9 @@ spdk_iscsi_tgt_node_add_pg_ig_map(struct spdk_iscsi_tgt_node *target,
 				  int pg_tag, int ig_tag)
 {
 	struct spdk_iscsi_portal_grp	*pg;
-	struct spdk_iscsi_pg_map 	*pg_map;
+	struct spdk_iscsi_pg_map	*pg_map;
 	struct spdk_iscsi_init_grp	*ig;
-	struct spdk_iscsi_ig_map 	*ig_map;
+	struct spdk_iscsi_ig_map	*ig_map;
 	bool				new_pg_map = false;
 
 	pg = spdk_iscsi_portal_grp_find_by_tag(pg_tag);

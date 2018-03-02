@@ -169,7 +169,7 @@ struct spdk_trace_register_fn {
 
 void spdk_trace_add_register_fn(struct spdk_trace_register_fn *reg_fn);
 
-#define SPDK_TRACE_REGISTER_FN(fn) 				\
+#define SPDK_TRACE_REGISTER_FN(fn)				\
 	static void fn(void);					\
 	struct spdk_trace_register_fn reg_ ## fn = {		\
 		.reg_fn = fn,					\

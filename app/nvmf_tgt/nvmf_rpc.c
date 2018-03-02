@@ -171,7 +171,7 @@ static void
 dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *subsystem)
 {
 	struct spdk_nvmf_host		*host;
-	struct spdk_nvmf_listener 	*listener;
+	struct spdk_nvmf_listener	*listener;
 
 	spdk_json_write_object_begin(w);
 

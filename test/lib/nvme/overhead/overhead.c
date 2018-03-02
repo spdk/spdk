@@ -624,7 +624,7 @@ register_controllers(void)
 
 int main(int argc, char **argv)
 {
-	int 			rc;
+	int			rc;
 	struct spdk_env_opts	opts;
 
 	rc = parse_args(argc, argv);

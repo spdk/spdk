@@ -145,7 +145,7 @@ struct perf_task {
 };
 
 struct worker_thread {
-	struct ns_worker_ctx 	*ns_ctx;
+	struct ns_worker_ctx	*ns_ctx;
 	struct worker_thread	*next;
 	unsigned		lcore;
 };

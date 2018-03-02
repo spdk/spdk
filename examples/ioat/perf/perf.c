@@ -70,7 +70,7 @@ struct ioat_chan_entry {
 };
 
 struct worker_thread {
-	struct ioat_chan_entry 	*ctx;
+	struct ioat_chan_entry	*ctx;
 	struct worker_thread	*next;
 	unsigned		core;
 };

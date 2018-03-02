@@ -71,7 +71,7 @@ struct reset_task {
 };
 
 struct worker_thread {
-	struct ns_worker_ctx 	*ns_ctx;
+	struct ns_worker_ctx	*ns_ctx;
 	unsigned		lcore;
 };
 
@@ -621,8 +621,8 @@ spdk_reset_free_tasks(void)
 
 int main(int argc, char **argv)
 {
-	int 			rc;
-	int 			i;
+	int			rc;
+	int			i;
 	struct spdk_env_opts	opts;
 
 

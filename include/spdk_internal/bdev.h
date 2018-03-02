@@ -566,15 +566,15 @@ void spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spd
 #define SPDK_BDEV_MODULE_REGISTER(_name, init_fn, fini_fn, config_fn, ctx_size_fn, examine_fn)	\
 	static struct spdk_bdev_module_if _name ## _if = {					\
 	.name		= #_name,								\
-	.module_init 	= init_fn,								\
+	.module_init	= init_fn,								\
 	.module_fini	= fini_fn,								\
 	.config_text	= config_fn,								\
-	.get_ctx_size	= ctx_size_fn,                                				\
+	.get_ctx_size	= ctx_size_fn,								\
 	.examine	= examine_fn,								\
-	};  											\
-	__attribute__((constructor)) static void _name ## _init(void) 				\
-	{                                                           				\
-	    spdk_bdev_module_list_add(&_name ## _if);                  				\
+	};											\
+	__attribute__((constructor)) static void _name ## _init(void)				\
+	{											\
+		spdk_bdev_module_list_add(&_name ## _if);					\
 	}
 
 #define SPDK_GET_BDEV_MODULE(name) (&name ## _if)

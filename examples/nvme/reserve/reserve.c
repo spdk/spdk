@@ -42,8 +42,8 @@
 
 struct dev {
 	struct spdk_pci_addr			pci_addr;
-	struct spdk_nvme_ctrlr 			*ctrlr;
-	char 					name[100];
+	struct spdk_nvme_ctrlr			*ctrlr;
+	char					name[100];
 };
 
 static struct dev devs[MAX_DEVS];

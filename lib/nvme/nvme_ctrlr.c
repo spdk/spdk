@@ -1046,7 +1046,7 @@ nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 
 	for (i = 0; i < nn; i++) {
 		struct spdk_nvme_ns	*ns = &ctrlr->ns[i];
-		uint32_t 		nsid = i + 1;
+		uint32_t		nsid = i + 1;
 
 		if (nvme_ns_construct(ns, nsid, ctrlr) != 0) {
 			goto fail;

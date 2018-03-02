@@ -90,8 +90,8 @@ static void
 nvmf_bdev_ctrlr_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
 			     void *cb_arg)
 {
-	struct spdk_nvmf_request 	*req = cb_arg;
-	struct spdk_nvme_cpl 		*response = &req->rsp->nvme_cpl;
+	struct spdk_nvmf_request	*req = cb_arg;
+	struct spdk_nvme_cpl		*response = &req->rsp->nvme_cpl;
 	int				sc, sct;
 
 	spdk_bdev_io_get_nvme_status(bdev_io, &sc, &sct);
@@ -282,8 +282,8 @@ nvmf_virtual_ctrlr_dsm_cpl(struct spdk_bdev_io *bdev_io, bool success,
 			   void *cb_arg)
 {
 	struct nvmf_virtual_ctrlr_unmap *unmap_ctx = cb_arg;
-	struct spdk_nvmf_request 	*req = unmap_ctx->req;
-	struct spdk_nvme_cpl 		*response = &req->rsp->nvme_cpl;
+	struct spdk_nvmf_request	*req = unmap_ctx->req;
+	struct spdk_nvme_cpl		*response = &req->rsp->nvme_cpl;
 	int				sc, sct;
 
 	unmap_ctx->count--;
