@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "66f6da34_6bb8e6ee",
+        "filename": "doc/blob.md",
+        "patchSetId": 18
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-02T17:05:10Z",
+      "side": 1,
+      "message": "This should ideally stay as #blob so existing links don\u0027t break.\n\nYou\u0027ve used @ref blob in index.md to link to it, and it\u0027s also referred to (@ref blob) in a couple of other files - doc/lvol.md and doc/userspace.md.",
+      "range": {
+        "startLine": 1,
+        "startChar": 33,
+        "endLine": 1,
+        "endChar": 40
+      },
+      "revId": "ab63216ff98341156e5c937172e80e2665d276f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
