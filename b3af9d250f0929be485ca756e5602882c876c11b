@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "78105a03_c566afa9",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-02T00:01:09Z",
+      "side": 1,
+      "message": "This should use iter_pci_class_code from scripts/common.sh rather than re-implementing it.",
+      "revId": "b3af9d250f0929be485ca756e5602882c876c11b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0addf1bd_e886fd37",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-02T00:01:09Z",
+      "side": 1,
+      "message": "What is in test_linux?\n\nAlso, we should really try to avoid adding any more hard-coded paths to the test scripts if we can avoid it.",
+      "range": {
+        "startLine": 25,
+        "startChar": 26,
+        "endLine": 25,
+        "endChar": 36
+      },
+      "revId": "b3af9d250f0929be485ca756e5602882c876c11b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
