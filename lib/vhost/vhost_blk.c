@@ -227,6 +227,7 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 		    struct spdk_vhost_virtqueue *vq)
 {
 	const struct virtio_blk_outhdr *req;
+	struct virtio_blk_discard_write_zeroes *desc;
 	struct iovec *iov;
 	uint32_t type;
 	uint32_t payload_len;
@@ -294,6 +295,55 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 			rc = -1;
 		}
 
+		if (rc) {
+			if (rc == -ENOMEM) {
+				SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "No memory, start to queue io.\n");
+				blk_request_queue_io(task);
+			} else {
+				invalid_blk_request(task, VIRTIO_BLK_S_IOERR);
+				return -1;
+			}
+		}
+		break;
+	case VIRTIO_BLK_T_DISCARD:
+		desc = task->iovs[1].iov_base;
+		if (payload_len != sizeof(*desc)) {
+			SPDK_ERRLOG("Invalid %u discard payload size\n", payload_len);
+			invalid_blk_request(task, VIRTIO_BLK_S_IOERR);
+			return -1;
+		}
+
+		rc = spdk_bdev_unmap(bvdev->bdev_desc, bvdev->bdev_io_channel,
+				     desc->sector * 512, desc->num_sectors * 512,
+				     blk_request_complete_cb, task);
+		if (rc) {
+			if (rc == -ENOMEM) {
+				SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "No memory, start to queue io.\n");
+				blk_request_queue_io(task);
+			} else {
+				invalid_blk_request(task, VIRTIO_BLK_S_IOERR);
+				return -1;
+			}
+		}
+		break;
+	case VIRTIO_BLK_T_WRITE_ZEROES:
+		desc = task->iovs[1].iov_base;
+		if (payload_len != sizeof(*desc)) {
+			SPDK_ERRLOG("Invalid %u write zeroes payload size\n", payload_len);
+			invalid_blk_request(task, VIRTIO_BLK_S_IOERR);
+			return -1;
+		}
+
+		/* Write Zeroes and Discard the range, SPDK can't support it for now */
+		if (desc->flags & VIRTIO_BLK_WRITE_ZEROES_FLAG_UNMAP) {
+			SPDK_NOTICELOG("Can't support Write Zeroes with Unmap flag\n");
+			invalid_blk_request(task, VIRTIO_BLK_S_IOERR);
+			return -1;
+		}
+
+		rc = spdk_bdev_write_zeroes(bvdev->bdev_desc, bvdev->bdev_io_channel,
+					    desc->sector * 512, desc->num_sectors * 512,
+					    blk_request_complete_cb, task);
 		if (rc) {
 			if (rc == -ENOMEM) {
 				SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "No memory, start to queue io.\n");
@@ -709,7 +759,7 @@ static int
 spdk_vhost_blk_get_config(struct spdk_vhost_dev *vdev, uint8_t *config,
 			  uint32_t len)
 {
-	struct virtio_blk_config *blkcfg = (struct virtio_blk_config *)config;
+	struct virtio_blk_config blkcfg;
 	struct spdk_vhost_blk_dev *bvdev;
 	struct spdk_bdev *bdev;
 	uint32_t blk_size;
@@ -718,10 +768,6 @@ spdk_vhost_blk_get_config(struct spdk_vhost_dev *vdev, uint8_t *config,
 	bvdev = to_blk_dev(vdev);
 	if (bvdev == NULL) {
 		SPDK_ERRLOG("Trying to get virito_blk configuration failed\n");
-		return -1;
-	}
-
-	if (len < sizeof(*blkcfg)) {
 		return -1;
 	}
 
@@ -745,17 +791,30 @@ spdk_vhost_blk_get_config(struct spdk_vhost_dev *vdev, uint8_t *config,
 		blkcnt = spdk_bdev_get_num_blocks(bdev);
 	}
 
-	memset(blkcfg, 0, sizeof(*blkcfg));
-	blkcfg->blk_size = blk_size;
+	memset(&blkcfg, 0, sizeof(blkcfg));
+	blkcfg.blk_size = blk_size;
 	/* minimum I/O size in blocks */
-	blkcfg->min_io_size = 1;
+	blkcfg.min_io_size = 1;
 	/* expressed in 512 Bytes sectors */
-	blkcfg->capacity = (blkcnt * blk_size) / 512;
-	blkcfg->size_max = 131072;
+	blkcfg.capacity = (blkcnt * blk_size) / 512;
+	blkcfg.size_max = 131072;
 	/*  -2 for REQ and RESP and -1 for region boundary splitting */
-	blkcfg->seg_max = SPDK_VHOST_IOVS_MAX - 2 - 1;
+	blkcfg.seg_max = SPDK_VHOST_IOVS_MAX - 2 - 1;
 	/* QEMU can overwrite this value when started */
-	blkcfg->num_queues = SPDK_VHOST_MAX_VQUEUES;
+	blkcfg.num_queues = SPDK_VHOST_MAX_VQUEUES;
+
+	if (bdev && spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
+		/* 16MiB, expressed in 512 Bytes */
+		blkcfg.max_discard_sectors = 32768;
+		blkcfg.max_discard_seg = 1;
+		blkcfg.discard_sector_alignment = blk_size / 512;
+	}
+	if (bdev && spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES)) {
+		blkcfg.max_write_zeroes_sectors = 32768;
+		blkcfg.max_write_zeroes_seg = 1;
+	}
+
+	memcpy(config, &blkcfg, spdk_min(len, sizeof(blkcfg)));
 
 	return 0;
 }
@@ -767,10 +826,12 @@ static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 	(1ULL << VIRTIO_BLK_F_BLK_SIZE) | (1ULL << VIRTIO_BLK_F_TOPOLOGY) |
 	(1ULL << VIRTIO_BLK_F_BARRIER)  | (1ULL << VIRTIO_BLK_F_SCSI) |
 	(1ULL << VIRTIO_BLK_F_FLUSH)    | (1ULL << VIRTIO_BLK_F_CONFIG_WCE) |
-	(1ULL << VIRTIO_BLK_F_MQ),
+	(1ULL << VIRTIO_BLK_F_MQ)       | (1ULL << VIRTIO_BLK_F_DISCARD) |
+	(1ULL << VIRTIO_BLK_F_WRITE_ZEROES),
 	.disabled_features = SPDK_VHOST_DISABLED_FEATURES | (1ULL << VIRTIO_BLK_F_GEOMETRY) |
 	(1ULL << VIRTIO_BLK_F_RO) | (1ULL << VIRTIO_BLK_F_FLUSH) | (1ULL << VIRTIO_BLK_F_CONFIG_WCE) |
-	(1ULL << VIRTIO_BLK_F_BARRIER) | (1ULL << VIRTIO_BLK_F_SCSI),
+	(1ULL << VIRTIO_BLK_F_BARRIER) | (1ULL << VIRTIO_BLK_F_SCSI) | (1ULL << VIRTIO_BLK_F_DISCARD) |
+	(1ULL << VIRTIO_BLK_F_WRITE_ZEROES),
 	.start_device =  spdk_vhost_blk_start,
 	.stop_device = spdk_vhost_blk_stop,
 	.vhost_get_config = spdk_vhost_blk_get_config,
@@ -827,6 +888,7 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 {
 	struct spdk_vhost_blk_dev *bvdev = NULL;
 	struct spdk_bdev *bdev;
+	uint64_t features = 0;
 	int ret = 0;
 
 	spdk_vhost_lock();
@@ -859,14 +921,24 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 		goto out;
 	}
 
-	if (readonly && rte_vhost_driver_enable_features(bvdev->vdev.path, (1ULL << VIRTIO_BLK_F_RO))) {
-		SPDK_ERRLOG("Controller %s: failed to set as a readonly\n", name);
-		spdk_bdev_close(bvdev->bdev_desc);
+	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
+		features |= (1ULL << VIRTIO_BLK_F_DISCARD);
+	}
+	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES)) {
+		features |= (1ULL << VIRTIO_BLK_F_WRITE_ZEROES);
+	}
+	if (readonly) {
+		features |= (1ULL << VIRTIO_BLK_F_RO);
+	}
+
+	if (features && rte_vhost_driver_enable_features(bvdev->vdev.path, features)) {
+		SPDK_ERRLOG("Controller %s: failed to enable features 0x%"PRIx64"\n", name, features);
 
 		if (spdk_vhost_dev_unregister(&bvdev->vdev) != 0) {
 			SPDK_ERRLOG("Controller %s: failed to remove controller\n", name);
 		}
 
+		spdk_bdev_close(bvdev->bdev_desc);
 		ret = -1;
 		goto out;
 	}
