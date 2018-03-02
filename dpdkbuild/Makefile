@@ -78,9 +78,11 @@ DPDK_CFLAGS += -DALLOW_EXPERIMENTAL_API
 Q=
 
 $(SPDK_ROOT_DIR)/dpdk/build:
+	sed -i 's/#CONFIG_RTE_LIBRTE_NET=y/CONFIG_RTE_LIBRTE_NET=n/' $(SPDK_ROOT_DIR)/dpdk/config/common_spdk
 	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/dpdk config T=$(DPDK_CONFIG)
 
 all: $(SPDK_ROOT_DIR)/dpdk/build
+	sed -i 's/#CONFIG_RTE_LIBRTE_NET=y/CONFIG_RTE_LIBRTE_NET=n/' $(SPDK_ROOT_DIR)/dpdk/config/common_spdk
 	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/dpdk/build EXTRA_CFLAGS="$(DPDK_CFLAGS)" MAKEFLAGS="T=$(DPDK_CONFIG) -j$(NPROC)"
 
 clean:
