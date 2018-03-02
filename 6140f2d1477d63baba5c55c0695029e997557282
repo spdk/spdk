@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "04d87ce7_72bb3a5c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1705,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-02T17:51:24Z",
+      "side": 0,
+      "message": "This changes the behavior of the API significantly and needs to be documented in bdev.h as well as a CHANGELOG.md entry.",
+      "revId": "6140f2d1477d63baba5c55c0695029e997557282",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
