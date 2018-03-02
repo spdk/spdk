@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5216ecf7_baa36bc7",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-02T16:35:18Z",
+      "side": 1,
+      "message": "Spacing is a bit unusual here - this could be moved over to the left column.",
+      "revId": "1dabd05d73a585a8623d0211d8d5e6cf4b30e6b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "089ee423_8a7494e6",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-02T16:35:18Z",
+      "side": 1,
+      "message": "Shell script nitpick: stray semicolon here and on the line below",
+      "range": {
+        "startLine": 64,
+        "startChar": 4,
+        "endLine": 64,
+        "endChar": 5
+      },
+      "revId": "1dabd05d73a585a8623d0211d8d5e6cf4b30e6b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
