@@ -35,6 +35,8 @@
 
 #include "env_internal.h"
 
+#include "spdk/version.h"
+
 #include <rte_config.h>
 #include <rte_eal.h>
 
@@ -289,7 +291,7 @@ int spdk_env_init(const struct spdk_env_opts *opts)
 		return -1;
 	}
 
-	printf("Starting %s initialization...\n", rte_version());
+	printf("Starting %s / %s initialization...\n", SPDK_VERSION_STRING, rte_version());
 	printf("[ DPDK EAL parameters: ");
 	for (i = 0; i < eal_cmdline_argcount; i++) {
 		printf("%s ", eal_cmdline[i]);
