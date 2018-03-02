@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c978e67a_928ebd64",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-02T17:21:18Z",
+      "side": 1,
+      "message": "This will need to be updated when Lance\u0027s patch is merged: https://review.gerrithub.io/#/c/401243/\n\n(Should get resolved by that patch if this one is merged first.)",
+      "revId": "769ce4b1dfe9e9415829e60aa6ff13f4a634a461",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
