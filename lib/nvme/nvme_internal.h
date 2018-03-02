@@ -50,6 +50,7 @@
 #include "spdk/util.h"
 #include "spdk/nvme_intel.h"
 #include "spdk/nvmf_spec.h"
+#include "spdk/uuid.h"
 
 #include "spdk_internal/assert.h"
 #include "spdk_internal/log.h"
@@ -475,7 +476,7 @@ struct nvme_driver {
 	TAILQ_HEAD(, spdk_nvme_ctrlr)	shared_attached_ctrlrs;
 
 	bool				initialized;
-	uint8_t				default_extended_host_id[16];
+	struct spdk_uuid		default_extended_host_id;
 };
 
 extern struct nvme_driver *g_spdk_nvme_driver;

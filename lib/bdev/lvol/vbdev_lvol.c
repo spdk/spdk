@@ -36,6 +36,7 @@
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 #include "spdk/string.h"
+#include "spdk/uuid.h"
 
 #include "vbdev_lvol.h"
 
@@ -374,14 +375,14 @@ vbdev_lvol_store_next(struct lvol_store_bdev *prev)
 }
 
 static struct spdk_lvol_store *
-_vbdev_get_lvol_store_by_uuid(uuid_t uuid)
+_vbdev_get_lvol_store_by_uuid(const struct spdk_uuid *uuid)
 {
 	struct spdk_lvol_store *lvs = NULL;
 	struct lvol_store_bdev *lvs_bdev = vbdev_lvol_store_first();
 
 	while (lvs_bdev != NULL) {
 		lvs = lvs_bdev->lvs;
-		if (uuid_compare(lvs->uuid, uuid) == 0) {
+		if (spdk_uuid_compare(&lvs->uuid, uuid) == 0) {
 			return lvs;
 		}
 		lvs_bdev = vbdev_lvol_store_next(lvs_bdev);
@@ -392,13 +393,13 @@ _vbdev_get_lvol_store_by_uuid(uuid_t uuid)
 struct spdk_lvol_store *
 vbdev_get_lvol_store_by_uuid(const char *uuid_str)
 {
-	uuid_t uuid;
+	struct spdk_uuid uuid;
 
-	if (uuid_parse(uuid_str, uuid)) {
+	if (spdk_uuid_parse(&uuid, uuid_str)) {
 		return NULL;
 	}
 
-	return _vbdev_get_lvol_store_by_uuid(uuid);
+	return _vbdev_get_lvol_store_by_uuid(&uuid);
 }
 
 struct spdk_lvol_store *
@@ -524,7 +525,7 @@ vbdev_lvol_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	struct spdk_lvol *lvol = ctx;
 	struct lvol_store_bdev *lvs_bdev;
 	struct spdk_bdev *bdev;
-	char lvol_store_uuid[UUID_STRING_LEN];
+	char lvol_store_uuid[SPDK_UUID_STRING_LEN];
 
 	spdk_json_write_name(w, "lvol");
 	spdk_json_write_object_begin(w);
@@ -532,7 +533,7 @@ vbdev_lvol_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	lvs_bdev = vbdev_get_lvs_bdev_by_lvs(lvol->lvol_store);
 	bdev = lvs_bdev->bdev;
 
-	uuid_unparse(lvol->lvol_store->uuid, lvol_store_uuid);
+	spdk_uuid_fmt_lower(lvol_store_uuid, sizeof(lvol_store_uuid), &lvol->lvol_store->uuid);
 	spdk_json_write_name(w, "lvol_store_uuid");
 	spdk_json_write_string(w, lvol_store_uuid);
 
