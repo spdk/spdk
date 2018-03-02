@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "55cd340d_4e1ab1c5",
+        "filename": "lib/util/uuid.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-02T22:42:40Z",
+      "side": 1,
+      "message": "I can add an assert, although that would make it problematic to unit test if we want to do that later.",
+      "parentUuid": "0a3535e8_fe585089",
+      "revId": "c0f4e75afdaa5d21e32612be69501ffce18d117b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5249fa34_b9af7563",
         "filename": "lib/util/uuid.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2018-03-02T21:55:55Z",
       "side": 1,
       "message": "lvol store used uuid_generate_time, not uuid_generate - was this change intentional?\n\nmaybe we should have spdk_uuid_generate_time?",
+      "revId": "c0f4e75afdaa5d21e32612be69501ffce18d117b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "93c20e5b_89280709",
+        "filename": "lib/util/uuid.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-02T22:42:40Z",
+      "side": 1,
+      "message": "Based on my reading of the man page, uuid_generate() is strictly better than uuid_generate_time() - it will automatically pick a good variant based on whether a high-quality random number generator is available.\n\nI don\u0027t know why the _time variant was used before.  I don\u0027t think we need to have both unless there\u0027s a particular reason we were using _time.",
+      "parentUuid": "5249fa34_b9af7563",
       "revId": "c0f4e75afdaa5d21e32612be69501ffce18d117b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
