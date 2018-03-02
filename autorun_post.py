@@ -104,6 +104,11 @@ def aggregateCompletedTests(output_dir, repo_dir):
                 except KeyError:
                     continue
 
+    print("\n\n-----Tests Executed in Build------")
+    for item in sorted(test_list):
+        if test_list[item][0]:
+            print(item)
+
     print("\n\n-----Tests Missing From Build------")
     if not test_unit_with_valgrind:
         print("UNITTEST_WITH_VALGRIND\n")
