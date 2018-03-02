@@ -41,4 +41,5 @@ if [ `uname` = Linux ]; then
 	kill_stub
 fi
 
+report_test_completion spdk_nvme_cli
 timing_exit nvme_cli
