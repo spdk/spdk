@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "90566d17_6ab455a9",
+        "filename": "lib/net/interface.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-02T17:14:42Z",
+      "side": 1,
+      "message": "I think we could avoid a lot of the casting by just changing the return value of this function and spdk_get_ifc_ipv4() to int instead of uint32_t.\n\nPreviously, nothing was even looking at the return value of this function at all, so it should not be a problem to change it.",
+      "range": {
+        "startLine": 197,
+        "startChar": 7,
+        "endLine": 197,
+        "endChar": 15
+      },
+      "revId": "abc7e7f6818f06c52ee95c5fddb8b6fa3f4b4dda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
