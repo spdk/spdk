@@ -1192,6 +1192,12 @@ spdk_bdev_has_write_cache(const struct spdk_bdev *bdev)
 	return bdev->write_cache;
 }
 
+const struct spdk_uuid *
+spdk_bdev_get_uuid(const struct spdk_bdev *bdev)
+{
+	return &bdev->uuid;
+}
+
 int
 spdk_bdev_notify_blockcnt_change(struct spdk_bdev *bdev, uint64_t size)
 {

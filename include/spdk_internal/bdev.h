@@ -45,6 +45,7 @@
 #include "spdk/queue.h"
 #include "spdk/scsi_spec.h"
 #include "spdk/io_channel.h"
+#include "spdk/uuid.h"
 
 /** \page block_backend_modules Block Device Backend Modules
  *
@@ -219,6 +220,13 @@ struct spdk_bdev {
 	 * Optimal I/O boundary in blocks, or 0 for no value reported.
 	 */
 	uint32_t optimal_io_boundary;
+
+	/**
+	 * UUID for this bdev.
+	 *
+	 * Fill with zeroes if no uuid is available.
+	 */
+	struct spdk_uuid uuid;
 
 	/**
 	 * Pointer to the bdev module that registered this bdev.
