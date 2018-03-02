@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "18c5d667_e2fd1e75",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 469,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-02T18:55:53Z",
+      "side": 1,
+      "message": "it would be better to just call this function io_done\n\nit is a bit confusing to use io_during_reset_qos_done function in unit tests that are not testing reset - see how io_during_reset test case uses io_during_reset_done\n\nio_done makes the name more generic and can be used in more unit tests",
+      "revId": "cbe961f6469b1482d95b6f29151a8e2a467fe7d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
