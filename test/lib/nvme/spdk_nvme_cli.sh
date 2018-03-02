@@ -16,6 +16,10 @@ if [ `uname` = Linux ]; then
 fi
 
 if [ -d $spdk_nvme_cli ]; then
+	# Build against the version of SPDK under test
+	rm -f "$spdk_nvme_cli/spdk"
+	ln -sf "$rootdir" "$spdk_nvme_cli/spdk"
+
 	bdfs=$(iter_pci_class_code 01 08 02)
 	bdf=$(echo $bdfs|awk '{ print $1 }')
 	cd $spdk_nvme_cli
