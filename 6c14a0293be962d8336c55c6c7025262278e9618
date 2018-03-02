@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b6f4b6a3_1c9c3c96",
+        "filename": "include/spdk/rpc.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-03-02T05:04:44Z",
+      "side": 1,
+      "message": "Just say \"Listen on the required address\" maybe better.",
+      "revId": "6c14a0293be962d8336c55c6c7025262278e9618",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
