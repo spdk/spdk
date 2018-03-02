@@ -87,8 +87,8 @@ blob_bs_dev_read(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, void 
 {
 	struct spdk_blob_bs_dev *b = (struct spdk_blob_bs_dev *)dev;
 
-	spdk_bs_io_read_blob(b->blob, channel, payload, lba, lba_count,
-			     blob_bs_dev_read_cpl, cb_args);
+	spdk_blob_io_read(b->blob, channel, payload, lba, lba_count,
+			  blob_bs_dev_read_cpl, cb_args);
 }
 
 static inline void
@@ -98,8 +98,8 @@ blob_bs_dev_readv(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 {
 	struct spdk_blob_bs_dev *b = (struct spdk_blob_bs_dev *)dev;
 
-	spdk_bs_io_readv_blob(b->blob, channel, iov, iovcnt, lba, lba_count,
-			      blob_bs_dev_read_cpl, cb_args);
+	spdk_blob_io_readv(b->blob, channel, iov, iovcnt, lba, lba_count,
+			   blob_bs_dev_read_cpl, cb_args);
 }
 
 static void
@@ -132,8 +132,7 @@ spdk_bs_create_blob_bs_dev(struct spdk_blob *blob)
 		return NULL;
 	}
 	/* snapshot blob */
-	b->bs_dev.blockcnt = __blob_to_data(blob)->active.num_clusters *
-			     __blob_to_data(blob)->bs->pages_per_cluster;
+	b->bs_dev.blockcnt = blob->active.num_clusters * blob->bs->pages_per_cluster;
 	b->bs_dev.blocklen = SPDK_BS_PAGE_SIZE;
 	b->bs_dev.create_channel = NULL;
 	b->bs_dev.destroy_channel = NULL;

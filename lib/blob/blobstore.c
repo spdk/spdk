@@ -776,7 +776,7 @@ static void
 _spdk_blob_load_final(void *cb_arg, int bserrno)
 {
 	struct spdk_blob_load_ctx 	*ctx = cb_arg;
-	struct spdk_blob_data 		*blob = ctx->blob;
+	struct spdk_blob		*blob = ctx->blob;
 
 	_spdk_blob_mark_clean(blob);
 
@@ -791,7 +791,7 @@ static void
 _spdk_blob_load_snapshot_cpl(void *cb_arg, struct spdk_blob *snapshot, int bserrno)
 {
 	struct spdk_blob_load_ctx 	*ctx = cb_arg;
-	struct spdk_blob_data 		*blob = ctx->blob;
+	struct spdk_blob		*blob = ctx->blob;
 
 	if (bserrno != 0) {
 		goto error;
