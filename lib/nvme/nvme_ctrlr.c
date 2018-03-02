@@ -38,8 +38,6 @@
 #include "spdk/env.h"
 #include "spdk/string.h"
 
-#include <uuid/uuid.h>
-
 static int nvme_ctrlr_construct_and_submit_aer(struct spdk_nvme_ctrlr *ctrlr,
 		struct nvme_async_event_request *aer);
 
@@ -81,7 +79,7 @@ nvme_ctrlr_set_cc(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cc_regist
 void
 spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t opts_size)
 {
-	char host_id_str[37];
+	char host_id_str[SPDK_UUID_STRING_LEN];
 
 	assert(opts);
 
@@ -119,12 +117,13 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 	}
 
 	if (FIELD_OK(extended_host_id)) {
-		memcpy(opts->extended_host_id, g_spdk_nvme_driver->default_extended_host_id,
+		memcpy(opts->extended_host_id, &g_spdk_nvme_driver->default_extended_host_id,
 		       sizeof(opts->extended_host_id));
 	}
 
 	if (FIELD_OK(hostnqn)) {
-		uuid_unparse(g_spdk_nvme_driver->default_extended_host_id, host_id_str);
+		spdk_uuid_fmt_lower(host_id_str, sizeof(host_id_str),
+				    &g_spdk_nvme_driver->default_extended_host_id);
 		snprintf(opts->hostnqn, sizeof(opts->hostnqn), "2014-08.org.nvmexpress:uuid:%s", host_id_str);
 	}
 

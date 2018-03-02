@@ -34,8 +34,6 @@
 #include "spdk/nvmf_spec.h"
 #include "nvme_internal.h"
 
-#include <uuid/uuid.h>
-
 #define SPDK_NVME_DRIVER_NAME "spdk_nvme_driver"
 
 struct nvme_driver	*g_spdk_nvme_driver;
@@ -254,7 +252,6 @@ nvme_robust_mutex_init_shared(pthread_mutex_t *mtx)
 static int
 nvme_driver_init(void)
 {
-	uuid_t host_id;
 	int ret = 0;
 	/* Any socket ID */
 	int socket_id = -1;
@@ -327,10 +324,7 @@ nvme_driver_init(void)
 
 	TAILQ_INIT(&g_spdk_nvme_driver->shared_attached_ctrlrs);
 
-	SPDK_STATIC_ASSERT(sizeof(host_id) == sizeof(g_spdk_nvme_driver->default_extended_host_id),
-			   "host ID size mismatch");
-	uuid_generate(host_id);
-	memcpy(g_spdk_nvme_driver->default_extended_host_id, host_id, sizeof(host_id));
+	spdk_uuid_generate(&g_spdk_nvme_driver->default_extended_host_id);
 
 	nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
 
