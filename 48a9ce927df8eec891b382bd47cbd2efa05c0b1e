@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "07401021_c66e9082",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-02T17:18:01Z",
+      "side": 1,
+      "message": "succrss -\u003e success",
+      "range": {
+        "startLine": 58,
+        "startChar": 16,
+        "endLine": 58,
+        "endChar": 23
+      },
+      "revId": "48a9ce927df8eec891b382bd47cbd2efa05c0b1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aaa7a8ac_63e1529c",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-02T17:18:01Z",
+      "side": 1,
+      "message": "\"Called when the cleanup operation completes.\" would be slightly clearer.",
+      "range": {
+        "startLine": 65,
+        "startChar": 18,
+        "endLine": 65,
+        "endChar": 62
+      },
+      "revId": "48a9ce927df8eec891b382bd47cbd2efa05c0b1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
