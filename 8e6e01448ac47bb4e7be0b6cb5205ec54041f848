@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "238d2443_57298e72",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-03-02T13:31:18Z",
+      "side": 1,
+      "message": "... however, virtio-blk block size is not guaranteed to be a power of 2",
+      "parentUuid": "e929cefe_9c1fc2b1",
+      "revId": "8e6e01448ac47bb4e7be0b6cb5205ec54041f848",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "68d3d2ce_f5b5954d",
         "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
         "patchSetId": 7
