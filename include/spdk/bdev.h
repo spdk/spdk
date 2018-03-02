@@ -63,6 +63,7 @@ struct spdk_bdev_io;
 struct spdk_bdev_fn_table;
 struct spdk_io_channel;
 struct spdk_json_write_ctx;
+struct spdk_uuid;
 
 /** bdev status */
 enum spdk_bdev_status {
@@ -302,6 +303,17 @@ uint32_t spdk_bdev_get_optimal_io_boundary(const struct spdk_bdev *bdev);
  * is issued.
  */
 bool spdk_bdev_has_write_cache(const struct spdk_bdev *bdev);
+
+/**
+ * Get a bdev's UUID.
+ *
+ * \param bdev Block device to query.
+ * \return Pointer to UUID.
+ *
+ * Not all bdevs will have a UUID; in this case, the returned UUID will be
+ * the nil UUID (all bytes zero).
+ */
+const struct spdk_uuid *spdk_bdev_get_uuid(const struct spdk_bdev *bdev);
 
 /**
  * Obtain an I/O channel for the block device opened by the specified

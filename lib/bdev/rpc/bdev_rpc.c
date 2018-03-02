@@ -33,6 +33,7 @@
 
 #include "spdk/log.h"
 #include "spdk/rpc.h"
+#include "spdk/string.h"
 #include "spdk/util.h"
 
 #include "spdk_internal/bdev.h"
@@ -65,6 +66,13 @@ spdk_rpc_dump_bdev_info(struct spdk_json_write_ctx *w,
 
 	spdk_json_write_name(w, "num_blocks");
 	spdk_json_write_uint64(w, spdk_bdev_get_num_blocks(bdev));
+
+	if (!spdk_mem_all_zero(&bdev->uuid, sizeof(bdev->uuid))) {
+		char uuid_str[SPDK_UUID_STRING_LEN];
+
+		spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &bdev->uuid);
+		spdk_json_write_named_string(w, "uuid", uuid_str);
+	}
 
 	spdk_json_write_name(w, "claimed");
 	spdk_json_write_bool(w, (bdev->claim_module != NULL));

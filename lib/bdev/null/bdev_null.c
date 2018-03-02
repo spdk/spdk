@@ -158,6 +158,7 @@ create_null_bdev(const char *name, uint64_t num_blocks, uint32_t block_size)
 	bdev->bdev.write_cache = 0;
 	bdev->bdev.blocklen = block_size;
 	bdev->bdev.blockcnt = num_blocks;
+	spdk_uuid_generate(&bdev->bdev.uuid);
 
 	bdev->bdev.ctxt = bdev;
 	bdev->bdev.fn_table = &null_fn_table;
