@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c3fbe621_48631fc9",
+        "filename": "lib/net/sock.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-02T23:30:48Z",
+      "side": 1,
+      "message": "I think it might still make sense to add the relevant socket to the notification list if it has an error - otherwise, we probably will never call the associated callback again, and the user will not know they should be looking at sock to notice that has an error and should be closed.\n\nIf we just unconditionally add the sock to the list whenever it gets an event (error or otherwise), then the user should end up calling recv() on it, which will return 0 or -1 to indicate end of stream or error, respectively.\n\nIn that case, I don\u0027t think any changes to the sock code are necessary at all.",
+      "revId": "028b3efaa755d9cc6723efbae3e4548a786aa2c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
