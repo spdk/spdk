@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d26736c3_423c0f90",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 518,
+      "author": {
+        "id": 1013162
+      },
+      "writtenOn": "2018-03-02T01:47:43Z",
+      "side": 1,
+      "message": "We need to move this initalization of cmb_current_offset to above the return on line 499 so that cmb_current_offset is initialized in the classic SQS only case.",
+      "revId": "645aa4712abade71d6dfe1f6e886ca0ed562489d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88a95a42_ada53279",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 554,
+      "author": {
+        "id": 1013162
+      },
+      "writtenOn": "2018-03-02T01:47:43Z",
+      "side": 1,
+      "message": "Why did you rename this? Seems a bit confusing.",
+      "revId": "645aa4712abade71d6dfe1f6e886ca0ed562489d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c263df72_11b373fc",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 555,
+      "author": {
+        "id": 1013162
+      },
+      "writtenOn": "2018-03-02T01:47:43Z",
+      "side": 1,
+      "message": "Can this not be declared on the same line as round_start?",
+      "revId": "645aa4712abade71d6dfe1f6e886ca0ed562489d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c1817cc_f88b7e51",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1013162
+      },
+      "writtenOn": "2018-03-02T01:47:43Z",
+      "side": 1,
+      "message": "I don\u0027t think this equation holds for the legacy case where the CMB only supports SQS and the memory registration did not occur?",
+      "revId": "645aa4712abade71d6dfe1f6e886ca0ed562489d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
