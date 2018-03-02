@@ -349,6 +349,35 @@ function reset_linux {
 }
 
 function status_linux {
+	echo "Hugepages"
+	printf "%-6s %10s %8s / %6s\n" "node" "hugesize"  "free" "total"
+
+	numa_nodes=0
+	shopt -s nullglob
+	for path in /sys/devices/system/node/node?/hugepages/hugepages-*/; do
+		numa_nodes=$((numa_nodes + 1))
+		free_pages=`cat $path/free_hugepages`
+		all_pages=`cat $path/nr_hugepages`
+
+		[[ $path =~ (node[0-9]+)/hugepages/hugepages-([0-9]+kB) ]]
+
+		node=${BASH_REMATCH[1]}
+		huge_size=${BASH_REMATCH[2]}
+
+		printf "%-6s %10s %8s / %6s\n" $node $huge_size $free_pages $all_pages
+	done
+	shopt -u nullglob
+
+	# fall back to system-wide hugepages
+	if [ "$numa_nodes" = "0" ]; then
+		free_pages=`grep HugePages_Free /proc/meminfo | awk '{ print $2 }'`
+		all_pages=`grep HugePages_Total /proc/meminfo | awk '{ print $2 }'`
+		node="-"
+		huge_size="$HUGEPGSZ"
+
+		printf "%-6s %10s %8s / %6s\n" $node $huge_size $free_pages $all_pages
+	fi
+
 	echo "NVMe devices"
 
 	echo -e "BDF\t\tNuma Node\tDriver name\t\tDevice name"
