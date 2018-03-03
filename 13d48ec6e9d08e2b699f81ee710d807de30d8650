@@ -16,6 +16,24 @@
       "revId": "13d48ec6e9d08e2b699f81ee710d807de30d8650",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3176570_531d0f2a",
+        "filename": "lib/env_dpdk/init.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 294,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-03T00:55:23Z",
+      "side": 1,
+      "message": "The output looks like this:\n\n  Starting SPDK v18.04-pre / DPDK 17.11.0 initialization...\n\nSo I think it\u0027s pretty clear already.\n\nI\u0027m open to suggestions for better formatting, though.",
+      "parentUuid": "403f39a1_f2ad0f27",
+      "revId": "13d48ec6e9d08e2b699f81ee710d807de30d8650",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
