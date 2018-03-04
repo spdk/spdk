@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e4c69f5a_10d8069c",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-04T07:47:55Z",
+      "side": 1,
+      "message": "spdk_bs_load()",
+      "range": {
+        "startLine": 223,
+        "startChar": 46,
+        "endLine": 223,
+        "endChar": 58
+      },
+      "revId": "c88d0e2e4a7804becdf9a3c6709b56e2757309f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56ee0c84_ef6884b8",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-04T07:47:55Z",
+      "side": 1,
+      "message": "Unmapped",
+      "range": {
+        "startLine": 497,
+        "startChar": 76,
+        "endLine": 497,
+        "endChar": 82
+      },
+      "revId": "c88d0e2e4a7804becdf9a3c6709b56e2757309f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "612202ab_cb02178f",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-04T07:47:55Z",
+      "side": 1,
+      "message": "Unmap \u0027length\u0027 pages beginning at \u0027offset\u0027 pages on the blob.",
+      "range": {
+        "startLine": 497,
+        "startChar": 3,
+        "endLine": 497,
+        "endChar": 74
+      },
+      "revId": "c88d0e2e4a7804becdf9a3c6709b56e2757309f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
