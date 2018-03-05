@@ -794,6 +794,12 @@ spdk_iscsi_app_read_parameters(void)
 	 */
 	g_spdk_iscsi.MaxConnections = g_spdk_iscsi.MaxSessions;
 
+	rc = pthread_mutex_init(&g_spdk_iscsi.mutex, NULL);
+	if (rc != 0) {
+		SPDK_ERRLOG("mutex_init() failed\n");
+		return -1;
+	}
+
 	spdk_iscsi_log_globals();
 
 	/* portal groups */
@@ -807,12 +813,6 @@ spdk_iscsi_app_read_parameters(void)
 	rc = spdk_iscsi_init_grp_array_create();
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_iscsi_init_grp_array_create() failed\n");
-		return -1;
-	}
-
-	rc = pthread_mutex_init(&g_spdk_iscsi.mutex, NULL);
-	if (rc != 0) {
-		SPDK_ERRLOG("mutex_init() failed\n");
 		return -1;
 	}
 
