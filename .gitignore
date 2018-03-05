@@ -27,3 +27,4 @@ CONFIG.local
 .settings
 mk/cc.mk
 PYTHON_COMMAND
+dpdkbuild/0001-TEST-dpdk-Revert-mbuf-remove-void-pointer-cast.patch

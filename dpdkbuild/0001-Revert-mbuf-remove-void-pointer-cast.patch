@@ -1,0 +1,29 @@
+From cca5b4fac4a781464bb25dae11bde3390a9920b1 Mon Sep 17 00:00:00 2001
+From: Pawel Wodkowski <pawelx.wodkowski@intel.com>
+Date: Mon, 5 Mar 2018 13:51:17 +0100
+Subject: [PATCH] Revert "mbuf: remove void pointer cast"
+
+This reverts commit 9d46f3bbc8d84a3f4aea7e25de8d72c9548d9ad4.
+---
+ lib/librte_mbuf/rte_mbuf.h | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/lib/librte_mbuf/rte_mbuf.h b/lib/librte_mbuf/rte_mbuf.h
+index 62740254d987..58345a5129d0 100644
+--- a/lib/librte_mbuf/rte_mbuf.h
++++ b/lib/librte_mbuf/rte_mbuf.h
+@@ -875,9 +875,11 @@ rte_mbuf_sanity_check(const struct rte_mbuf *m, int is_header);
+ static inline struct rte_mbuf *rte_mbuf_raw_alloc(struct rte_mempool *mp)
+ {
+ 	struct rte_mbuf *m;
++	void *mb = NULL;
+
+-	if (rte_mempool_get(mp, (void **)&m) < 0)
++	if (rte_mempool_get(mp, &mb) < 0)
+ 		return NULL;
++	m = (struct rte_mbuf *)mb;
+ 	MBUF_RAW_ALLOC_CHECK(m);
+ 	return m;
+ }
+--
+2.7.4
