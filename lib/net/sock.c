@@ -37,6 +37,7 @@
 #include <sys/epoll.h>
 #elif defined(__FreeBSD__)
 #include <sys/event.h>
+#include "spdk/string.h"
 #endif
 
 #include "spdk/log.h"
@@ -531,7 +532,7 @@ spdk_posix_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group, stru
 
 static int
 spdk_posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
-				struct spdk_sock **socks)
+				struct spdk_sock **socks, int *skerrnos)
 {
 	struct spdk_posix_sock_group_impl *group = __posix_group_impl(_group);
 	int num_events, i;
@@ -554,8 +555,37 @@ spdk_posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_eve
 	for (i = 0; i < num_events; i++) {
 #if defined(__linux__)
 		socks[i] = events[i].data.ptr;
+		if (events[i].events & EPOLLIN) {
+			skerrnos[i] = 0;
+		} else if (events[i].events & (EPOLLERR | EPOLLHUP)) {
+			/*
+			 * both EPOLLIN and EPOLLHUP may be set but we'll only come here
+			 * if EPOLLIN is not set. This ensures that all outstanding data
+			 * is consumed before closing the socket.
+			 */
+			skerrnos[i] = -1;
+			SPDK_ERRLOG("Error or hungup event (%x) happened on fd %d\n",
+				    events[i].events, events[i].data.fd);
+		}
 #elif defined(__FreeBSD__)
+		/* data contains the number of bytes available to read. */
 		socks[i] = events[i].udata;
+		if ((int)events[i].data > 0) {
+			skerrnos[i] = 0;
+		} else if (events[i].flags & EV_EOF) {
+			/*
+			 * EV_EOF may be set while there is outstanding data..
+			 * We'll only come here if data is 0. This ensures that all
+			 * outstanding data is consumed before closing the socket.
+			 */
+			skerrnos[i] = -1;
+			SPDK_ERRLOG("Read direction of socket (fd:%d) has shutdown\n",
+				    (int)events[i].ident);
+		} else if (events[i].flags & EV_ERROR) {
+			skerrnos[i] = -1;
+			SPDK_ERRLOG("Kevent() failed at socket (fd:%d): %s\n",
+				    (int)events[i].ident, spdk_strerror(events[i].data));
+		}
 #endif
 	}
 
@@ -830,13 +860,15 @@ spdk_sock_group_impl_poll_count(struct spdk_sock_group_impl *group_impl,
 				int max_events)
 {
 	struct spdk_sock *socks[MAX_EVENTS_PER_POLL];
+	int skerrnos[MAX_EVENTS_PER_POLL];
 	int num_events, i;
 
 	if (TAILQ_EMPTY(&group_impl->socks)) {
 		return 0;
 	}
 
-	num_events = group_impl->net_impl->group_impl_poll(group_impl, max_events, socks);
+	num_events = group_impl->net_impl->group_impl_poll(group_impl, max_events, socks,
+			skerrnos);
 	if (num_events == -1) {
 		return -1;
 	}
@@ -845,7 +877,7 @@ spdk_sock_group_impl_poll_count(struct spdk_sock_group_impl *group_impl,
 		struct spdk_sock *sock = socks[i];
 
 		assert(sock->cb_fn != NULL);
-		sock->cb_fn(sock->cb_arg, group, sock);
+		sock->cb_fn(sock->cb_arg, group, sock, skerrnos[i]);
 	}
 	return 0;
 }
