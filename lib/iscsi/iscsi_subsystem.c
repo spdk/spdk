@@ -854,12 +854,6 @@ spdk_iscsi_poll_group_handle_nop(void *ctx)
 }
 
 static void
-iscsi_create_poll_group_done(void *ctx)
-{
-	spdk_iscsi_init_complete(0);
-}
-
-static void
 iscsi_create_poll_group(void *ctx)
 {
 	struct spdk_iscsi_poll_group *pg;
@@ -893,6 +887,9 @@ iscsi_unregister_poll_group(void *ctx)
 }
 
 static void
+spdk_iscsi_config(void *ctx);
+
+static void
 spdk_initialize_iscsi_poll_group(void)
 {
 	size_t g_num_poll_groups = spdk_env_get_last_core() + 1;
@@ -905,7 +902,38 @@ spdk_initialize_iscsi_poll_group(void)
 	}
 
 	/* Send a message to each thread and create a poll group */
-	spdk_for_each_thread(iscsi_create_poll_group, NULL, iscsi_create_poll_group_done);
+	spdk_for_each_thread(iscsi_create_poll_group, NULL, spdk_iscsi_config);
+}
+
+static void
+spdk_iscsi_config(void *ctx)
+{
+	int rc;
+
+	/* portal groups */
+	rc = spdk_iscsi_portal_grp_array_create();
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_iscsi_portal_grp_array_create() failed\n");
+		spdk_iscsi_init_complete(-1);
+		return;
+	}
+
+	/* initiator groups */
+	rc = spdk_iscsi_init_grp_array_create();
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_iscsi_init_grp_array_create() failed\n");
+		spdk_iscsi_init_complete(-1);
+		return;
+	}
+
+	rc = spdk_iscsi_init_tgt_nodes();
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_iscsi_init_tgt_nodes() failed\n");
+		spdk_iscsi_init_complete(-1);
+		return;
+	}
+
+	spdk_iscsi_init_complete(0);
 }
 
 void
@@ -934,29 +962,6 @@ spdk_iscsi_init(spdk_iscsi_init_cb cb_fn, void *cb_arg)
 	rc = spdk_initialize_iscsi_conns();
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_initialize_iscsi_conns() failed\n");
-		spdk_iscsi_init_complete(-1);
-		return;
-	}
-
-	/* portal groups */
-	rc = spdk_iscsi_portal_grp_array_create();
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_iscsi_portal_grp_array_create() failed\n");
-		spdk_iscsi_init_complete(-1);
-		return;
-	}
-
-	/* initiator groups */
-	rc = spdk_iscsi_init_grp_array_create();
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_iscsi_init_grp_array_create() failed\n");
-		spdk_iscsi_init_complete(-1);
-		return;
-	}
-
-	rc = spdk_iscsi_init_tgt_nodes();
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_iscsi_init_tgt_nodes() failed\n");
 		spdk_iscsi_init_complete(-1);
 		return;
 	}
