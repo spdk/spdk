@@ -22,6 +22,30 @@
       "revId": "8b9e29549b81fc4ee400ee7fef66e2a8e7c77415",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "017e8bfa_4de0089f",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 576,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-05T13:08:22Z",
+      "side": 1,
+      "message": "This shows the number of samples of IOPS to calculate exponential moving average.\n\nHow about adding the following explanation?\n\n-  If this is set to n, the weighted mean of the previous n IOPSs are shown in real time. In the weighted mean, more weight is given to recent ones. n is used in the following equation:\nMultiplier \u003d 2/(n + 1), EMA[i+1] \u003d IOPS * Multiplier + (1 - Multiplier) * EMA[i].",
+      "parentUuid": "495ff2e1_74bbdc09",
+      "range": {
+        "startLine": 576,
+        "startChar": 12,
+        "endLine": 576,
+        "endChar": 46
+      },
+      "revId": "8b9e29549b81fc4ee400ee7fef66e2a8e7c77415",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
