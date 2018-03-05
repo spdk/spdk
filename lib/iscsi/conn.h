@@ -67,7 +67,6 @@
 #define TRACE_ISCSI_CONN_IDLE		SPDK_TPOINT_ID(TRACE_GROUP_ISCSI, 0x7)
 
 struct spdk_poller;
-typedef void (*spdk_iscsi_conn_fn)(void *arg);
 
 struct spdk_iscsi_conn {
 	int				id;
@@ -160,7 +159,6 @@ struct spdk_iscsi_conn {
 	char *partial_text_parameter;
 
 	STAILQ_ENTRY(spdk_iscsi_conn) link;
-	spdk_iscsi_conn_fn	fn;
 	struct spdk_poller	*flush_poller;
 	TAILQ_HEAD(queued_r2t_tasks, spdk_iscsi_task)	queued_r2t_tasks;
 	TAILQ_HEAD(active_r2t_tasks, spdk_iscsi_task)	active_r2t_tasks;

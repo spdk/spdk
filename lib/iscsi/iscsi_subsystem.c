@@ -835,7 +835,6 @@ static void
 spdk_iscsi_poll_group_poll(void *ctx)
 {
 	struct spdk_iscsi_poll_group *group = ctx;
-	struct spdk_iscsi_conn *conn, *tmp;
 	int rc;
 
 	if (!STAILQ_EMPTY(&group->connections)) {
@@ -843,10 +842,6 @@ spdk_iscsi_poll_group_poll(void *ctx)
 		if (rc < 0) {
 			SPDK_ERRLOG("Failed to poll sock_group=%p\n", group->sock_group);
 		}
-	}
-
-	STAILQ_FOREACH_SAFE(conn, &group->connections, link, tmp) {
-		conn->fn(conn);
 	}
 }
 
