@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b62eb316_d6a7b7f8",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 734,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-05T09:43:53Z",
+      "side": 1,
+      "message": "required",
+      "range": {
+        "startLine": 734,
+        "startChar": 47,
+        "endLine": 734,
+        "endChar": 56
+      },
+      "revId": "f78d3d879b21683d841e9eb14daa1d01bc47e7c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b296cce_a3c1eb42",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 734,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-05T09:43:53Z",
+      "side": 1,
+      "message": "Return",
+      "range": {
+        "startLine": 734,
+        "startChar": 3,
+        "endLine": 734,
+        "endChar": 9
+      },
+      "revId": "f78d3d879b21683d841e9eb14daa1d01bc47e7c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d106d91_8298414c",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 739,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-05T09:43:53Z",
+      "side": 1,
+      "message": "function",
+      "range": {
+        "startLine": 739,
+        "startChar": 44,
+        "endLine": 739,
+        "endChar": 53
+      },
+      "revId": "f78d3d879b21683d841e9eb14daa1d01bc47e7c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c96d6d87_be70da96",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-05T09:43:53Z",
+      "side": 1,
+      "message": "This lock is to serialize the executing of the iostat_cb()? What if we are handling this cb() on the same core from spdk_bdev_get_device_stat_done() so that this mutex is not needed.\nI am considering whether we will add more delay to display the \"real time\" I/O statistics since we already rely on the Async operation to retrieve the performance data back. Adding a mutex operation here more adds more \"delay\".",
+      "range": {
+        "startLine": 44,
+        "startChar": 1,
+        "endLine": 44,
+        "endChar": 23
+      },
+      "revId": "f78d3d879b21683d841e9eb14daa1d01bc47e7c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "75e4606c_fc1cb2bc",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-05T09:43:53Z",
+      "side": 1,
+      "message": "Maybe just set bdev_num \u003d 1; which looks like more readable.",
+      "range": {
+        "startLine": 141,
+        "startChar": 2,
+        "endLine": 141,
+        "endChar": 13
+      },
+      "revId": "f78d3d879b21683d841e9eb14daa1d01bc47e7c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
