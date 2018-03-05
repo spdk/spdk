@@ -252,12 +252,13 @@ spdk_ut_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group, struct 
 
 static int
 spdk_ut_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
-			     struct spdk_sock **socks)
+			     struct spdk_sock **socks, int *skerrnos)
 {
 	struct spdk_ut_sock_group_impl *group = __ut_group(_group);
 
 	if (group->sock != NULL && group->sock->bytes_avail > 0) {
 		socks[0] = &group->sock->base;
+		skerrnos[0] = 0;
 		return 1;
 	}
 
@@ -371,7 +372,7 @@ ut_sock(void)
 }
 
 static void
-read_data(void *cb_arg, struct spdk_sock_group *group, struct spdk_sock *sock)
+read_data(void *cb_arg, struct spdk_sock_group *group, struct spdk_sock *sock, int skerrno)
 {
 	struct spdk_sock *server_sock = cb_arg;
 
@@ -491,7 +492,8 @@ ut_sock_group(void)
 }
 
 static void
-read_data_fairness(void *cb_arg, struct spdk_sock_group *group, struct spdk_sock *sock)
+read_data_fairness(void *cb_arg, struct spdk_sock_group *group,
+		   struct spdk_sock *sock, int skerrno)
 {
 	struct spdk_sock *server_sock = cb_arg;
 	ssize_t bytes_read;

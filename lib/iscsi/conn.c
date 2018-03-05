@@ -82,7 +82,7 @@ void spdk_iscsi_conn_full_feature_do_work(void *arg);
 static void spdk_iscsi_conn_full_feature_migrate(void *arg1, void *arg2);
 static void spdk_iscsi_conn_stop(struct spdk_iscsi_conn *conn);
 static void spdk_iscsi_conn_sock_cb(void *arg, struct spdk_sock_group *group,
-				    struct spdk_sock *sock);
+				    struct spdk_sock *sock, int skerrno);
 
 static struct spdk_iscsi_conn *
 allocate_conn(void)
@@ -1145,13 +1145,20 @@ spdk_iscsi_conn_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 }
 
 static void
-spdk_iscsi_conn_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock *sock)
+spdk_iscsi_conn_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock *sock,
+			int skerrno)
 {
 	struct spdk_iscsi_conn *conn = arg;
 	int rc;
 
 	assert(conn != NULL);
 
+	if (skerrno != 0) {
+		conn->state = SPDK_ISCSI_CONNECTION_FATAL;
+		spdk_iscsi_conn_flush_pdus(conn);
+		return;
+	}
+	
 	if ((conn->state == ISCSI_CONN_STATE_EXITED) ||
 	    (conn->state == ISCSI_CONN_STATE_EXITING)) {
 		return;
