@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9f63c283_1aa75ad3",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-03-05T13:05:12Z",
+      "side": 1,
+      "message": "No, i forgot to remove it.",
+      "parentUuid": "cabeec8d_316cf414",
+      "revId": "1d28867718578d582345b32d6b5d820abb3fd52e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2c598399_bb4d6917",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 14
@@ -30,6 +48,24 @@
       "writtenOn": "2018-03-02T23:04:06Z",
       "side": 1,
       "message": "now that you are storing the new_name in the lvol_store itself, I don\u0027t think you need this TAILQ_FOREACH - you just need to check both name *and* new_name when the rename operation first starts",
+      "revId": "1d28867718578d582345b32d6b5d820abb3fd52e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f11a6e8f_276456a2",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 632,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-03-05T13:05:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2c598399_bb4d6917",
       "revId": "1d28867718578d582345b32d6b5d820abb3fd52e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "f2d8b14e_5cf0c88d",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 706,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-03-05T13:05:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "48b50765_fcbdefac",
+      "revId": "1d28867718578d582345b32d6b5d820abb3fd52e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4f159eac_d6ffaf96",
         "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
         "patchSetId": 14
@@ -64,6 +118,24 @@
       "writtenOn": "2018-03-02T23:04:06Z",
       "side": 1,
       "message": "I\u0027m not following this test case.  Shouldn\u0027t this one work?  I don\u0027t see an lvs that already is named \"another_new_lvs_name\".\n\nOh - I see.  These are bdev tests - not lvol tests.  I still think this is a bit confusing though.  Maybe add a comment explaining that these are bdev_lvol tests so the g_lvs_with_name_already_exists flag simulates a duplicate and the actual name passed here is not really compared.",
+      "revId": "1d28867718578d582345b32d6b5d820abb3fd52e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3476a03f_ee22f071",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1198,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2018-03-05T13:05:12Z",
+      "side": 1,
+      "message": "Sorry, should have written more exhausting comment on this one.",
+      "parentUuid": "4f159eac_d6ffaf96",
       "revId": "1d28867718578d582345b32d6b5d820abb3fd52e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
