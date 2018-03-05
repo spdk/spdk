@@ -802,15 +802,9 @@ spdk_iscsi_app_read_parameters(void)
 
 	TAILQ_INIT(&g_spdk_iscsi.portal_head);
 	TAILQ_INIT(&g_spdk_iscsi.pg_head);
+	TAILQ_INIT(&g_spdk_iscsi.ig_head);
 
 	spdk_iscsi_log_globals();
-
-	/* initiator groups */
-	rc = spdk_iscsi_init_grp_array_create();
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_iscsi_init_grp_array_create() failed\n");
-		return -1;
-	}
 
 	return 0;
 }
@@ -939,6 +933,14 @@ spdk_iscsi_init(spdk_iscsi_init_cb cb_fn, void *cb_arg)
 	rc = spdk_iscsi_portal_grp_array_create();
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_iscsi_portal_grp_array_create() failed\n");
+		spdk_iscsi_init_complete(-1);
+		return;
+	}
+
+	/* initiator groups */
+	rc = spdk_iscsi_init_grp_array_create();
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_iscsi_init_grp_array_create() failed\n");
 		spdk_iscsi_init_complete(-1);
 		return;
 	}
