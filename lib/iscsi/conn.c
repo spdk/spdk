@@ -1197,57 +1197,52 @@ spdk_iscsi_conn_full_feature_migrate(void *arg1, void *arg2)
 }
 
 void
+spdk_iscsi_conn_migration(struct spdk_iscsi_conn *conn)
+{
+	int				lcore;
+	struct spdk_event		*event;
+	struct spdk_iscsi_tgt_node *target;
+
+	lcore = spdk_iscsi_conn_allocate_reactor(conn->portal->cpumask);
+	if (conn->sess->session_type == SESSION_TYPE_NORMAL) {
+		target = conn->sess->target;
+		pthread_mutex_lock(&target->mutex);
+		target->num_active_conns++;
+		if (target->num_active_conns == 1) {
+			/**
+			 * This is the only active connection for this target node.
+			 *  Save the lcore in the target node so it can be used for
+			 *  any other connections to this target node.
+			 */
+			target->lcore = lcore;
+		} else {
+			/**
+			 * There are other active connections for this target node.
+			 *  Ignore the lcore specified by the allocator and use the
+			 *  the target node's lcore to ensure this connection runs on
+			 *  the same lcore as other connections for this target node.
+			 */
+			lcore = target->lcore;
+		}
+		pthread_mutex_unlock(&target->mutex);
+	}
+
+	spdk_iscsi_poll_group_remove_conn_sock(conn);
+	spdk_iscsi_conn_stop(conn);
+
+	__sync_fetch_and_add(&g_num_connections[lcore], 1);
+	event = spdk_event_allocate(lcore, spdk_iscsi_conn_full_feature_migrate,
+				    conn, NULL);
+	spdk_event_call(event);
+}
+
+void
 spdk_iscsi_conn_login_do_work(void *arg)
 {
 	struct spdk_iscsi_conn	*conn = arg;
-	int				lcore;
-	int				rc;
-	struct spdk_event		*event;
 
 	/* iSCSI connection state check */
-	rc = spdk_iscsi_conn_check_state(conn);
-	if (rc < 0) {
-		return;
-	}
-
-	/* Check if this connection transitioned to full feature phase. If it
-	 * did, migrate it to a dedicated reactor for the target node.
-	 */
-	if (conn->login_phase == ISCSI_FULL_FEATURE_PHASE) {
-		struct spdk_iscsi_tgt_node *target;
-
-		lcore = spdk_iscsi_conn_allocate_reactor(conn->portal->cpumask);
-		if (conn->sess->session_type == SESSION_TYPE_NORMAL) {
-			target = conn->sess->target;
-			pthread_mutex_lock(&target->mutex);
-			target->num_active_conns++;
-			if (target->num_active_conns == 1) {
-				/**
-				 * This is the only active connection for this target node.
-				 *  Save the lcore in the target node so it can be used for
-				 *  any other connections to this target node.
-				 */
-				target->lcore = lcore;
-			} else {
-				/**
-				 * There are other active connections for this target node.
-				 *  Ignore the lcore specified by the allocator and use the
-				 *  the target node's lcore to ensure this connection runs on
-				 *  the same lcore as other connections for this target node.
-				 */
-				lcore = target->lcore;
-			}
-			pthread_mutex_unlock(&target->mutex);
-		}
-
-		spdk_iscsi_poll_group_remove_conn_sock(conn);
-		spdk_iscsi_conn_stop(conn);
-
-		__sync_fetch_and_add(&g_num_connections[lcore], 1);
-		event = spdk_event_allocate(lcore, spdk_iscsi_conn_full_feature_migrate,
-					    conn, NULL);
-		spdk_event_call(event);
-	}
+	spdk_iscsi_conn_check_state(conn);
 }
 
 void
