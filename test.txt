@@ -1,0 +1,1 @@
+Confirming that fedora-06 is broken against latest master.
