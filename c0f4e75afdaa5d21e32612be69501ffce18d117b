@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "e9e2f9e1_163e723c",
+        "filename": "lib/util/uuid.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-05T16:17:27Z",
+      "side": 1,
+      "message": "I guess it\u0027s fine to leave out the assert.  I guess I find this parameter a bit awkward - it should always (or at least almost always?) equal SPDK_UUI_STRING_LEN, and passing something less than that is a total programming error.\n\nJust leave the assert out - I\u0027m ok with it.",
+      "parentUuid": "55cd340d_4e1ab1c5",
+      "revId": "c0f4e75afdaa5d21e32612be69501ffce18d117b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5249fa34_b9af7563",
         "filename": "lib/util/uuid.c",
         "patchSetId": 1
@@ -66,6 +84,24 @@
       "side": 1,
       "message": "Based on my reading of the man page, uuid_generate() is strictly better than uuid_generate_time() - it will automatically pick a good variant based on whether a high-quality random number generator is available.\n\nI don\u0027t know why the _time variant was used before.  I don\u0027t think we need to have both unless there\u0027s a particular reason we were using _time.",
       "parentUuid": "5249fa34_b9af7563",
+      "revId": "c0f4e75afdaa5d21e32612be69501ffce18d117b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5cd810b4_02de3636",
+        "filename": "lib/util/uuid.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-05T16:17:27Z",
+      "side": 1,
+      "message": "I\u0027d try to get input from Piotr or Maciek before committing this change.  I\u0027m ok with it, but it is sort of polluting the uuid library changes with this change in behavior.",
+      "parentUuid": "93c20e5b_89280709",
       "revId": "c0f4e75afdaa5d21e32612be69501ffce18d117b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
