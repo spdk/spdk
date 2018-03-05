@@ -87,6 +87,11 @@ spdk_iscsi_portal_grp_close_all(void)
 }
 
 void
+spdk_iscsi_conn_migration(struct spdk_iscsi_conn *conn)
+{
+}
+
+void
 spdk_iscsi_conn_free_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 }
