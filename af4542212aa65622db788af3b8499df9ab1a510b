@@ -22,6 +22,30 @@
       "revId": "af4542212aa65622db788af3b8499df9ab1a510b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ee020d43_647e5eff",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-03-05T07:06:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1891672d_087fd476",
+      "range": {
+        "startLine": 122,
+        "startChar": 20,
+        "endLine": 122,
+        "endChar": 22
+      },
+      "revId": "af4542212aa65622db788af3b8499df9ab1a510b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
