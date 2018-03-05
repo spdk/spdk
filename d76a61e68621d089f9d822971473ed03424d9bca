@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7212714b_1cfe9c93",
+        "filename": "test/vhost/migration/migration-tc3a.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-05T12:56:25Z",
+      "side": 1,
+      "message": "do we need this? migration.sh have shebang so it should invoke bash anyway.",
+      "range": {
+        "startLine": 146,
+        "startChar": 38,
+        "endLine": 146,
+        "endChar": 47
+      },
+      "revId": "d76a61e68621d089f9d822971473ed03424d9bca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a667ac18_ab745a53",
+        "filename": "test/vhost/migration/migration-tc3a.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-05T12:56:25Z",
+      "side": 1,
+      "message": "See my comment in tc3b.sh",
+      "range": {
+        "startLine": 184,
+        "startChar": 1,
+        "endLine": 184,
+        "endChar": 119
+      },
+      "revId": "d76a61e68621d089f9d822971473ed03424d9bca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d93e6c8_1cecf482",
+        "filename": "test/vhost/migration/migration-tc3b.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-05T12:56:25Z",
+      "side": 1,
+      "message": "You can merge 3b and 3c. Just use \n\n...\nhost_2_start_vhost\n\necho $$ \u003e $$TEST_DIR/tc3b.pid\nsuspend -f # This wait for\n\n\u003c\u003c DO THE TC3C STUFF \u003e\u003e\n...\n\nTo resume just do ssh_remot ... \u0027pkill -CONT -F $TEST_DIR/tc3b.pid\u0027",
+      "range": {
+        "startLine": 49,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 18
+      },
+      "revId": "d76a61e68621d089f9d822971473ed03424d9bca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58750f82_ad082ed7",
+        "filename": "test/vhost/migration/migration-tc3c.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-05T12:56:25Z",
+      "side": 1,
+      "message": "need indentation cleanup",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 1
+      },
+      "revId": "d76a61e68621d089f9d822971473ed03424d9bca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
