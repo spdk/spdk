@@ -1,0 +1,1 @@
+Making sure that the pool recognizes that centOS 6 is deleted from the pool
