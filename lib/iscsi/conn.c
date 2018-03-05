@@ -912,6 +912,7 @@ spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn)
 			SPDK_ERRLOG("Timed out waiting for NOP-Out response from initiator\n");
 			SPDK_ERRLOG("  tsc=0x%lx, last_nopin=0x%lx\n", tsc, conn->last_nopin);
 			conn->state = ISCSI_CONN_STATE_EXITING;
+			spdk_iscsi_conn_destruct(conn);
 		}
 	} else if (tsc - conn->last_nopin > conn->nopininterval) {
 		conn->last_nopin = tsc;
@@ -1152,32 +1153,13 @@ spdk_iscsi_conn_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_so
 
 	assert(conn != NULL);
 
-	if ((conn->state == ISCSI_CONN_STATE_EXITED) ||
-	    (conn->state == ISCSI_CONN_STATE_EXITING)) {
-		return;
-	}
-
 	/* Handle incoming PDUs */
 	rc = spdk_iscsi_conn_handle_incoming_pdus(conn);
 	if (rc < 0) {
 		conn->state = ISCSI_CONN_STATE_EXITING;
 		spdk_iscsi_conn_flush_pdus(conn);
-	}
-}
-
-static int
-spdk_iscsi_conn_check_state(struct spdk_iscsi_conn *conn)
-{
-	if (conn->state == ISCSI_CONN_STATE_EXITED) {
-		return -1;
-	}
-
-	if (conn->state == ISCSI_CONN_STATE_EXITING) {
 		spdk_iscsi_conn_destruct(conn);
-		return -1;
 	}
-
-	return 0;
 }
 
 static void
@@ -1238,19 +1220,11 @@ spdk_iscsi_conn_migration(struct spdk_iscsi_conn *conn)
 void
 spdk_iscsi_conn_login_do_work(void *arg)
 {
-	struct spdk_iscsi_conn	*conn = arg;
-
-	/* iSCSI connection state check */
-	spdk_iscsi_conn_check_state(conn);
 }
 
 void
 spdk_iscsi_conn_full_feature_do_work(void *arg)
 {
-	struct spdk_iscsi_conn	*conn = arg;
-
-	/* iSCSI connection state check */
-	spdk_iscsi_conn_check_state(conn);
 }
 
 void
