@@ -39,6 +39,7 @@ function migration_tc1_configure_vhost()
 function migration_tc1_error_handler()
 {
 	trap - SIGINT ERR EXIT
+	print_backtrace
 	set -x
 
 	vm_kill_all
