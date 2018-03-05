@@ -77,9 +77,8 @@ function scsi_hotremove_tc2() {
 
     # 5. Check that fio job run on hot-remove device stopped on VM.
     #    Expected: Fio should return error message and return code != 0.
-    set +xe
-    wait $last_pid
-    check_fio_retcode "Scsi hotremove test case 2: Iteration 1." 1 $?
+    wait_for_finish $last_pid || retcode=$?
+    check_fio_retcode "Scsi hotremove test case 2: Iteration 1." 1 $retcode
 
     # 6. Check if removed devices are gone from VM.
     vm_check_scsi_location "0"
@@ -88,11 +87,12 @@ function scsi_hotremove_tc2() {
     # 7. Reboot both VMs.
     reboot_all_and_prepare "0 1"
     # 8. Run FIO I/O traffic with verification enabled on on both VMs.
-    $run_fio
+    local retcode=0
+    $run_fio &
+    wait_for_finish $! || retcode=$?
     # 9. Check that fio job run on hot-remove device stopped on both VMs.
     #     Expected: Fio should return error message and return code != 0.
-    check_fio_retcode "Scsi hotremove test case 2: Iteration 2." 1 $?
-    set -xe
+    check_fio_retcode "Scsi hotremove test case 2: Iteration 2." 1 $retcode
     vm_shutdown_all
     add_nvme "HotInNvme1" "$traddr"
     sleep 1
@@ -119,9 +119,8 @@ function scsi_hotremove_tc3() {
     delete_nvme "HotInNvme1n1"
     # 5. Check that fio job run on hot-remove device stopped on first VM.
     #    Expected: Fio should return error message and return code != 0.
-    set +xe
-    wait $last_pid
-    check_fio_retcode "Scsi hotremove test case 3: Iteration 1." 1 $?
+    wait_for_finish $last_pid || retcode=$?
+    check_fio_retcode "Scsi hotremove test case 3: Iteration 1." 1 $retcode
     # 6. Check if removed devices are gone from lsblk.
     vm_check_scsi_location "0"
     local new_disks="$SCSI_DISK"
@@ -129,11 +128,12 @@ function scsi_hotremove_tc3() {
     # 7. Reboot both VMs.
     reboot_all_and_prepare "0 1"
     # 8. Run FIO I/O traffic with verification enabled on on both VMs.
-    $run_fio
+    local retcode=0
+    $run_fio &
+    wait_for_finish $! || retcode=$?
     # 9. Check that fio job run on hot-remove device stopped on both VMs.
     #    Expected: Fio should return error message and return code != 0.
-    check_fio_retcode "Scsi hotremove test case 3: Iteration 2." 1 $?
-    set -xe
+    check_fio_retcode "Scsi hotremove test case 3: Iteration 2." 1 $retcode
     vm_shutdown_all
     add_nvme "HotInNvme2" "$traddr"
     sleep 1
@@ -170,18 +170,17 @@ function scsi_hotremove_tc4() {
     delete_nvme "HotInNvme2n1"
     # 6. Check that fio job run on hot-removed devices stopped.
     #    Expected: Fio should return error message and return code != 0.
-    set +xe
-    wait $last_pid_vm0
-    local retcode_vm0=$?
-    wait $last_pid_vm1
-    local retcode_vm1=$?
+    local retcode_vm0=0
+    wait_for_finish $last_pid_vm0 || retcode_vm0=$?
+    local retcode_vm1=0
+    wait_for_finish $last_pid_vm1 || retcode_vm1=$?
     check_fio_retcode "Scsi hotremove test case 4: Iteration 1." 1 $retcode_vm0
+    check_fio_retcode "Scsi hotremove test case 4: Iteration 2." 1 $retcode_vm1
 
     # 7. Check if removed devices are gone from lsblk.
     vm_check_scsi_location "0"
     local new_disks_vm0="$SCSI_DISK"
     check_disks "$disks_vm0" "$new_disks_vm0"
-    check_fio_retcode "Scsi hotremove test case 4: Iteration 2." 1 $retcode_vm1
     vm_check_scsi_location "1"
     local new_disks_vm1="$SCSI_DISK"
     check_disks "$disks_vm1" "$new_disks_vm1"
@@ -189,18 +188,21 @@ function scsi_hotremove_tc4() {
     # 8. Reboot both VMs.
     reboot_all_and_prepare "0 1"
     # 9. Run FIO I/O traffic with verification enabled on on not-removed NVMe disk.
-    $run_fio
+    local retcode=0
+    $run_fio &
+    wait_for_finish $! || retcode=$?
     # 10. Check that fio job run on hot-removed device stopped.
     #    Expect: Fio should return error message and return code != 0.
-    check_fio_retcode "Scsi hotremove test case 4: Iteration 3." 1 $?
+    check_fio_retcode "Scsi hotremove test case 4: Iteration 3." 1 $retcode
     prepare_fio_cmd_tc1 "0 1"
     # 11. Run FIO I/O traffic with verification enabled on on not-removed NVMe disk.
-    $run_fio
+    local retcode=0
+    $run_fio &
+    wait_for_finish $! || retcode=$?
     # 12. Check finished status FIO. Write and read in the not-removed.
     #     NVMe disk should be successful.
     #     Expected: Fio should return return code == 0.
-    check_fio_retcode "Scsi hotremove test case 4: Iteration 4." 0 $?
-    set -xe
+    check_fio_retcode "Scsi hotremove test case 4: Iteration 4." 0 $retcode
     vm_shutdown_all
     add_nvme "HotInNvme3" "$traddr"
     sleep 1
@@ -222,11 +224,9 @@ function post_scsi_hotremove_test_case() {
     $rpc_py remove_vhost_controller naa.Nvme0n1p3.1
 }
 
-trap "" ERR
 pre_scsi_hotremove_test_case
 scsi_hotremove_tc1
 scsi_hotremove_tc2
 scsi_hotremove_tc3
 scsi_hotremove_tc4
 post_scsi_hotremove_test_case
-trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR
