@@ -79,6 +79,12 @@ $(SPDK_ROOT_DIR)/dpdk/build:
 	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/dpdk config T=$(DPDK_CONFIG)
 
 all: $(SPDK_ROOT_DIR)/dpdk/build
+	cd $(SPDK_ROOT_DIR)/dpdk; \
+	if ! git log -10 --oneline | grep 'Revert "mbuf: remove void pointer cast"'; then \
+		echo "PATCHING DPDK"; \
+		git apply $(SPDK_ROOT_DIR)/dpdkbuild/0001-Revert-mbuf-remove-void-pointer-cast.patch || exit 1; \
+		git log --oneline -10; \
+	fi;
 	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/dpdk/build EXTRA_CFLAGS="$(DPDK_CFLAGS)" MAKEFLAGS="T=$(DPDK_CONFIG) -j$(NPROC)"
 
 clean:
