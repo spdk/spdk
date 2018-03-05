@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1d01eb3e_ae5a3cfd",
+        "filename": "lib/blob/request.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-05T13:10:23Z",
+      "side": 1,
+      "message": "PRIu64?",
+      "range": {
+        "startLine": 152,
+        "startChar": 62,
+        "endLine": 152,
+        "endChar": 64
+      },
+      "revId": "dd9dae9cc5c993dacb1144703057dbd5968acedf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "700d72d5_ce61dcd3",
+        "filename": "lib/blob/request.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-05T13:10:23Z",
+      "side": 1,
+      "message": "PRIu32",
+      "range": {
+        "startLine": 152,
+        "startChar": 43,
+        "endLine": 152,
+        "endChar": 44
+      },
+      "revId": "dd9dae9cc5c993dacb1144703057dbd5968acedf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
