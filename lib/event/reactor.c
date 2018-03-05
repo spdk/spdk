@@ -549,18 +549,6 @@ spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore, uint64_t ma
 }
 
 int
-spdk_app_get_core_count(void)
-{
-	return spdk_env_get_core_count();
-}
-
-uint32_t
-spdk_app_get_current_core(void)
-{
-	return spdk_env_get_current_core();
-}
-
-int
 spdk_app_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 {
 	int ret;
