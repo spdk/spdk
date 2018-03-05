@@ -94,6 +94,30 @@
     },
     {
       "key": {
+        "uuid": "f7d91064_011fb9c5",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-03-05T10:30:49Z",
+      "side": 1,
+      "message": "Hi Gang,\n\nBecause all the threads will call the callback function spdk_rpc_get_bdevs_iostat_cb() that is used to print the json information. Hence need using one variable to record whether this is the last one to call this callback. If ture close the rpc request. So I add one local static var(iter) to achieve this target. Because the static variable is not safe for multi-process, so I add this lock on it.",
+      "parentUuid": "c96d6d87_be70da96",
+      "range": {
+        "startLine": 44,
+        "startChar": 1,
+        "endLine": 44,
+        "endChar": 23
+      },
+      "revId": "f78d3d879b21683d841e9eb14daa1d01bc47e7c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "75e4606c_fc1cb2bc",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 18
