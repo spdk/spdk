@@ -449,7 +449,8 @@ function vm_kill_all()
 function vm_shutdown_all()
 {
 	local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
-	set +x
+	# XXX: temporally disable to debug shutdown issue
+	# set +x
 
 	local vms=$(vm_list_all)
 	local vm
@@ -459,9 +460,9 @@ function vm_shutdown_all()
 	done
 
 	notice "Waiting for VMs to shutdown..."
-	timeo=15
+	local timeo=15
 	while [[ $timeo -gt 0 ]]; do
-		all_vms_down=1
+		local all_vms_down=1
 		for vm in $vms; do
 			if [[ -r $VM_BASE_DIR/$vm/qemu.pid ]] && pkill -0 -F "$VM_BASE_DIR/$vm/qemu.pid"; then
 				all_vms_down=0
