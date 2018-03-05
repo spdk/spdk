@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2b3f67a0_97ad35aa",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 54
+      },
+      "lineNbr": 3463,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-05T14:01:49Z",
+      "side": 1,
+      "message": "no need to cast \u0027void *\u0027",
+      "range": {
+        "startLine": 3463,
+        "startChar": 39,
+        "endLine": 3463,
+        "endChar": 73
+      },
+      "revId": "ddf5337d931f413cf94a6ce3a44f24dde0b849c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e7a9442_7289d714",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 54
+      },
+      "lineNbr": 3480,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-05T14:01:49Z",
+      "side": 1,
+      "message": "SPDK_UNREACHABLE() ?",
+      "range": {
+        "startLine": 3479,
+        "startChar": 2,
+        "endLine": 3480,
+        "endChar": 8
+      },
+      "revId": "ddf5337d931f413cf94a6ce3a44f24dde0b849c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "65b38026_790b8574",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 54
+      },
+      "lineNbr": 3647,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-05T14:01:49Z",
+      "side": 1,
+      "message": "Why you need this variable for? Can you use _blob?",
+      "range": {
+        "startLine": 3647,
+        "startChar": 19,
+        "endLine": 3647,
+        "endChar": 27
+      },
+      "revId": "ddf5337d931f413cf94a6ce3a44f24dde0b849c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ca90505_79b54964",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 54
+      },
+      "lineNbr": 3650,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-05T14:01:49Z",
+      "side": 1,
+      "message": "For sanity, I think this should be\nchar xattrs_name[]",
+      "range": {
+        "startLine": 3650,
+        "startChar": 1,
+        "endLine": 3650,
+        "endChar": 18
+      },
+      "revId": "ddf5337d931f413cf94a6ce3a44f24dde0b849c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea8bae8d_a3509d5a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 54
+      },
+      "lineNbr": 3680,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-05T14:01:49Z",
+      "side": 1,
+      "message": "how about passing _blob as ctx and then in \n\n_spdk_bs_xattr_snapshot() use \nstruct spdk_blob *blob \u003d ctx;\n*value \u003d blob-\u003eid;\n\n?",
+      "range": {
+        "startLine": 3680,
+        "startChar": 1,
+        "endLine": 3680,
+        "endChar": 37
+      },
+      "revId": "ddf5337d931f413cf94a6ce3a44f24dde0b849c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
