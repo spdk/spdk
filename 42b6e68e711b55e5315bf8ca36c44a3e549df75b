@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "42bdab74_fc66705a",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1157,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-05T13:23:00Z",
+      "side": 1,
+      "message": "Sorry, this is my fault and must be conn-\u003estate \u003d SPDK_ISCSI_CONN_STATE_EXITING. I hope you can review even if you ignore this.",
+      "range": {
+        "startLine": 1157,
+        "startChar": 2,
+        "endLine": 1157,
+        "endChar": 44
+      },
+      "revId": "42b6e68e711b55e5315bf8ca36c44a3e549df75b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
