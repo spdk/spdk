@@ -197,12 +197,10 @@ spdk_iscsi_poll_group_remove_conn_sock(struct spdk_iscsi_conn *conn)
 }
 
 static void
-spdk_iscsi_poll_group_add_conn(struct spdk_iscsi_conn *conn,
-			       spdk_iscsi_conn_fn fn)
+spdk_iscsi_poll_group_add_conn(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
 
-	conn->fn = fn;
 	STAILQ_INSERT_TAIL(&poll_group->connections, conn, link);
 	spdk_iscsi_poll_group_add_conn_sock(conn);
 }
@@ -331,7 +329,7 @@ error_return:
 	conn->lcore = spdk_env_get_current_core();
 	__sync_fetch_and_add(&g_num_connections[conn->lcore], 1);
 
-	spdk_iscsi_poll_group_add_conn(conn, spdk_iscsi_conn_login_do_work);
+	spdk_iscsi_poll_group_add_conn(conn);
 	return 0;
 }
 
@@ -1178,7 +1176,7 @@ spdk_iscsi_conn_full_feature_migrate(void *arg1, void *arg2)
 
 	/* The poller has been unregistered, so now we can re-register it on the new core. */
 	conn->lcore = spdk_env_get_current_core();
-	spdk_iscsi_poll_group_add_conn(conn, spdk_iscsi_conn_full_feature_do_work);
+	spdk_iscsi_poll_group_add_conn(conn);
 }
 
 void
@@ -1219,16 +1217,6 @@ spdk_iscsi_conn_migration(struct spdk_iscsi_conn *conn)
 	event = spdk_event_allocate(lcore, spdk_iscsi_conn_full_feature_migrate,
 				    conn, NULL);
 	spdk_event_call(event);
-}
-
-void
-spdk_iscsi_conn_login_do_work(void *arg)
-{
-}
-
-void
-spdk_iscsi_conn_full_feature_do_work(void *arg)
-{
 }
 
 void
