@@ -627,7 +627,6 @@ spdk_iscsi_init_grp_array_create(void)
 	struct spdk_conf_section *sp;
 	int rc;
 
-	TAILQ_INIT(&g_spdk_iscsi.ig_head);
 	sp = spdk_conf_first_section(NULL);
 	while (sp != NULL) {
 		if (spdk_conf_section_match_prefix(sp, "InitiatorGroup")) {
