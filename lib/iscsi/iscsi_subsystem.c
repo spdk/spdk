@@ -829,54 +829,6 @@ spdk_iscsi_setup_parameters(struct spdk_iscsi_opts *opts)
 	return 0;
 }
 
-static int
-spdk_iscsi_app_read_parameters(void)
-{
-	struct spdk_conf_section *sp;
-	struct spdk_iscsi_opts opts;
-	int rc;
-
-	rc = spdk_iscsi_opts_init(&opts);
-	if (rc != 0) {
-		SPDK_ERRLOG("spdk_iscsi_opts_init() failed\n");
-		return -1;
-	}
-
-	/* Process parameters */
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_app_read_parameters\n");
-	sp = spdk_conf_find_section(NULL, "iSCSI");
-	if (sp != NULL) {
-		spdk_iscsi_read_parameters_from_config_file(sp, &opts);
-	}
-
-	rc = spdk_iscsi_setup_parameters(&opts);
-	spdk_iscsi_opts_free(&opts);
-	if (rc != 0) {
-		SPDK_ERRLOG("spdk_iscsi_global_params_setup() failed\n");
-		return -1;
-	}
-
-	g_spdk_iscsi.session = spdk_dma_zmalloc(sizeof(void *) * g_spdk_iscsi.MaxSessions, 0, NULL);
-	if (!g_spdk_iscsi.session) {
-		SPDK_ERRLOG("spdk_dma_zmalloc() failed for session array\n");
-		return -1;
-	}
-
-	rc = pthread_mutex_init(&g_spdk_iscsi.mutex, NULL);
-	if (rc != 0) {
-		SPDK_ERRLOG("mutex_init() failed\n");
-		return -1;
-	}
-
-	TAILQ_INIT(&g_spdk_iscsi.portal_head);
-	TAILQ_INIT(&g_spdk_iscsi.pg_head);
-	TAILQ_INIT(&g_spdk_iscsi.ig_head);
-	g_spdk_iscsi.ntargets = 0;
-	TAILQ_INIT(&g_spdk_iscsi.target_head);
-
-	return 0;
-}
-
 static void
 spdk_iscsi_init_complete(int rc)
 {
@@ -953,7 +905,7 @@ iscsi_unregister_poll_group(void *ctx)
 }
 
 static void
-spdk_iscsi_config(void *ctx);
+spdk_iscsi_subsystem_config(void *ctx);
 
 static void
 spdk_initialize_iscsi_poll_group(void)
@@ -968,11 +920,55 @@ spdk_initialize_iscsi_poll_group(void)
 	}
 
 	/* Send a message to each thread and create a poll group */
-	spdk_for_each_thread(iscsi_create_poll_group, NULL, spdk_iscsi_config);
+	spdk_for_each_thread(iscsi_create_poll_group, NULL, spdk_iscsi_subsystem_config);
+}
+
+static int
+spdk_iscsi_subsystem_initialize(struct spdk_iscsi_opts *opts)
+{
+	int rc;
+
+	rc = spdk_iscsi_setup_parameters(opts);
+	if (rc != 0) {
+		SPDK_ERRLOG("spdk_iscsi_global_params_setup() failed\n");
+		return -1;
+	}
+
+	g_spdk_iscsi.session = spdk_dma_zmalloc(sizeof(void *) * g_spdk_iscsi.MaxSessions, 0, NULL);
+	if (!g_spdk_iscsi.session) {
+		SPDK_ERRLOG("spdk_dma_zmalloc() failed for session array\n");
+		return -1;
+	}
+
+	rc = pthread_mutex_init(&g_spdk_iscsi.mutex, NULL);
+	if (rc != 0) {
+		SPDK_ERRLOG("mutex_init() failed\n");
+		return -1;
+	}
+
+	TAILQ_INIT(&g_spdk_iscsi.portal_head);
+	TAILQ_INIT(&g_spdk_iscsi.pg_head);
+	TAILQ_INIT(&g_spdk_iscsi.ig_head);
+	g_spdk_iscsi.ntargets = 0;
+	TAILQ_INIT(&g_spdk_iscsi.target_head);
+
+	rc = spdk_iscsi_initialize_all_pools();
+	if (rc != 0) {
+		SPDK_ERRLOG("spdk_initialize_all_pools() failed\n");
+		return rc;
+	}
+
+	rc = spdk_initialize_iscsi_conns();
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_initialize_iscsi_conns() failed\n");
+		return rc;
+	}
+
+	return 0;
 }
 
 static void
-spdk_iscsi_config(void *ctx)
+spdk_iscsi_subsystem_config(void *ctx)
 {
 	int rc;
 
@@ -1005,29 +1001,33 @@ spdk_iscsi_config(void *ctx)
 void
 spdk_iscsi_init(spdk_iscsi_init_cb cb_fn, void *cb_arg)
 {
+	struct spdk_conf_section *sp;
+	struct spdk_iscsi_opts opts;
 	int rc;
 
 	assert(cb_fn != NULL);
 	g_init_cb_fn = cb_fn;
 	g_init_cb_arg = cb_arg;
 
-	rc = spdk_iscsi_app_read_parameters();
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_iscsi_app_read_parameters() failed\n");
-		spdk_iscsi_init_complete(-1);
-		return;
-	}
-
-	rc = spdk_iscsi_initialize_all_pools();
+	rc = spdk_iscsi_opts_init(&opts);
 	if (rc != 0) {
-		SPDK_ERRLOG("spdk_initialize_all_pools() failed\n");
+		SPDK_ERRLOG("spdk_iscsi_opts_init() failed\n");
 		spdk_iscsi_init_complete(-1);
 		return;
 	}
 
-	rc = spdk_initialize_iscsi_conns();
+	/* Process parameters */
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_read_parameters_from_config_file\n");
+	sp = spdk_conf_find_section(NULL, "iSCSI");
+	if (sp != NULL) {
+		spdk_iscsi_read_parameters_from_config_file(sp, &opts);
+	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_subsystem_initialize\n");
+	rc = spdk_iscsi_subsystem_initialize(&opts);
+	spdk_iscsi_opts_free(&opts);
 	if (rc < 0) {
-		SPDK_ERRLOG("spdk_initialize_iscsi_conns() failed\n");
+		SPDK_ERRLOG("spdk_iscsi_subsystem_initialize() failed\n");
 		spdk_iscsi_init_complete(-1);
 		return;
 	}
