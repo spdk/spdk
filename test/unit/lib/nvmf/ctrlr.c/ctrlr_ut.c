@@ -118,6 +118,11 @@ DEFINE_STUB(spdk_nvmf_ctrlr_write_zeroes_supported,
 	    (struct spdk_nvmf_ctrlr *ctrlr),
 	    false)
 
+DEFINE_STUB(spdk_nvmf_ctrlr_flush_supported,
+	    bool,
+	    (struct spdk_nvmf_ctrlr *ctrlr),
+	    false)
+
 DEFINE_STUB(spdk_nvmf_bdev_ctrlr_identify_ns,
 	    int,
 	    (struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *nsdata),

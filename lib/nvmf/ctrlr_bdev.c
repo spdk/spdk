@@ -86,6 +86,12 @@ spdk_nvmf_ctrlr_write_zeroes_supported(struct spdk_nvmf_ctrlr *ctrlr)
 	return spdk_nvmf_subsystem_bdev_io_type_supported(ctrlr->subsys, SPDK_BDEV_IO_TYPE_WRITE_ZEROES);
 }
 
+bool
+spdk_nvmf_ctrlr_flush_supported(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	return spdk_nvmf_subsystem_bdev_io_type_supported(ctrlr->subsys, SPDK_BDEV_IO_TYPE_FLUSH);
+}
+
 static void
 nvmf_bdev_ctrlr_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
 			     void *cb_arg)
