@@ -158,9 +158,15 @@ bdev_nvme_get_ctx_size(void)
 	return sizeof(struct nvme_bdev_io);
 }
 
-SPDK_BDEV_MODULE_REGISTER(nvme, bdev_nvme_library_init, bdev_nvme_library_fini,
-			  bdev_nvme_get_spdk_running_config,
-			  bdev_nvme_get_ctx_size, NULL)
+static struct spdk_bdev_module_if nvme_if = {
+	.name = "nvme",
+	.module_init = bdev_nvme_library_init,
+	.module_fini = bdev_nvme_library_fini,
+	.config_text = bdev_nvme_get_spdk_running_config,
+	.get_ctx_size = bdev_nvme_get_ctx_size,
+
+};
+SPDK_BDEV_MODULE_REGISTER(&nvme_if)
 
 static int
 bdev_nvme_readv(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
@@ -1138,7 +1144,7 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 		bdev->disk.optimal_io_boundary = spdk_nvme_ns_get_optimal_io_boundary(ns);
 		bdev->disk.ctxt = bdev;
 		bdev->disk.fn_table = &nvmelib_fn_table;
-		bdev->disk.module = SPDK_GET_BDEV_MODULE(nvme);
+		bdev->disk.module = &nvme_if;
 		rc = spdk_bdev_register(&bdev->disk);
 		if (rc) {
 			free(bdev->disk.name);
@@ -1445,7 +1451,7 @@ bdev_nvme_get_spdk_running_config(FILE *fp)
 struct spdk_nvme_ctrlr *
 spdk_bdev_nvme_get_ctrlr(struct spdk_bdev *bdev)
 {
-	if (!bdev || bdev->module != SPDK_GET_BDEV_MODULE(nvme)) {
+	if (!bdev || bdev->module != &nvme_if) {
 		return NULL;
 	}
 
