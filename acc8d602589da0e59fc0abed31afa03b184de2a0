@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "80cc8246_c19c23d1",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 972,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-06T21:09:15Z",
+      "side": 1,
+      "message": "This doesn\u0027t quite do what we want; we need to set VWC\u003d1 on the controller if *any* of the namespaces support it, not if *all* of them support it, which is what this checks.\n\nAdditionally, we can\u0027t know if a new namespace will be added in the future which support flush, so we have to be conservative here and report that VWC is present even if we don\u0027t currently have a namespace that requires it.",
+      "revId": "acc8d602589da0e59fc0abed31afa03b184de2a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
