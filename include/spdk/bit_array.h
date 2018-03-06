@@ -50,24 +50,35 @@ extern "C" {
 struct spdk_bit_array;
 
 /**
- * Return the number of bits a bit array is currently sized to hold.
+ * Return the number of bits that a bit array is currently sized to hold.
+ *
+ * \param ba Bit array to query.
+ *
+ * \return the number of bits.
  */
 uint32_t spdk_bit_array_capacity(const struct spdk_bit_array *ba);
 
 /**
  * Create a bit array.
+ *
+ * \param num_bits Number of bits that the bit array is sized to hold.
+ *
+ * \return a pointer to the new bit array.
  */
 struct spdk_bit_array *spdk_bit_array_create(uint32_t num_bits);
 
 /**
  * Free a bit array and set the pointer to NULL.
+ *
+ * \param bap Bit array to free.
  */
 void spdk_bit_array_free(struct spdk_bit_array **bap);
 
 /**
  * Create or resize a bit array.
  *
- * To create a new bit array, pass a pointer to a spdk_bit_array pointer that is NULL for bap.
+ * To create a new bit array, pass a pointer to a spdk_bit_array pointer that is
+ * NULL for bap.
  *
  * The bit array will be sized to hold at least num_bits.
  *
@@ -76,14 +87,24 @@ void spdk_bit_array_free(struct spdk_bit_array **bap);
  *
  * If num_bits is larger than the previous size of the bit array,
  * any data beyond the old num_bits size will be cleared.
+ *
+ * \param bap Bit array to create/resize.
+ * \param num_bits Number of bits that the bit array is sized to hold.
+ *
+ * \return 0 on success, negative errno on failure.
  */
 int spdk_bit_array_resize(struct spdk_bit_array **bap, uint32_t num_bits);
 
 /**
  * Get the value of a bit from the bit array.
  *
- * If bit_index is beyond the end of the current size of the bit array,
- * this function will return false (i.e. bits beyond the end of the array are implicitly 0).
+ * If bit_index is beyond the end of the current size of the bit array, this
+ * function will return false (i.e. bits beyond the end of the array are implicitly 0).
+ *
+ * \param ba Bit array to query.
+ * \param bit_index The index of a bit to query.
+ *
+ * \return the value of a bit from the bit array on success, or false on failure.
  */
 bool spdk_bit_array_get(const struct spdk_bit_array *ba, uint32_t bit_index);
 
@@ -91,15 +112,22 @@ bool spdk_bit_array_get(const struct spdk_bit_array *ba, uint32_t bit_index);
  * Set (to 1) a bit in the bit array.
  *
  * If bit_index is beyond the end of the bit array, this function will return -EINVAL.
- * On success, returns 0.
+ *
+ * \param ba Bit array to set a bit.
+ * \param bit_index The index of a bit to set.
+ *
+ * \return 0 on success, negative errno on failure.
  */
 int spdk_bit_array_set(struct spdk_bit_array *ba, uint32_t bit_index);
 
 /**
  * Clear (to 0) a bit in the bit array.
  *
- * If bit_index is beyond the end of the bit array, no action is taken. Bits beyond the end of the
- * bit array are implicitly 0.
+ * If bit_index is beyond the end of the bit array, no action is taken. Bits
+ * beyond the end of the bit array are implicitly 0.
+ *
+ * \param ba Bit array to clear a bit.
+ * \param bit_index The index of a bit to clear.
  */
 void spdk_bit_array_clear(struct spdk_bit_array *ba, uint32_t bit_index);
 
@@ -107,10 +135,10 @@ void spdk_bit_array_clear(struct spdk_bit_array *ba, uint32_t bit_index);
  * Find the index of the first set bit in the array.
  *
  * \param ba The bit array to search.
- * \param start_bit_index The bit index from which to start searching (0 to start from the beginning
- * of the array).
+ * \param start_bit_index The bit index from which to start searching (0 to start
+ * from the beginning of the array).
  *
- * \return The index of the first set bit. If no bits are set, returns UINT32_MAX.
+ * \return the index of the first set bit. If no bits are set, returns UINT32_MAX.
  */
 uint32_t spdk_bit_array_find_first_set(const struct spdk_bit_array *ba, uint32_t start_bit_index);
 
@@ -118,12 +146,12 @@ uint32_t spdk_bit_array_find_first_set(const struct spdk_bit_array *ba, uint32_t
  * Find the index of the first cleared bit in the array.
  *
  * \param ba The bit array to search.
- * \param start_bit_index The bit index from which to start searching (0 to start from the beginning
- * of the array)..
+ * \param start_bit_index The bit index from which to start searching (0 to start
+ * from the beginning of the array).
  *
- * \return The index of the first cleared bit. Bits beyond the current size of the array are
- * implicitly cleared, so if all bits within the current size are set, this function will return
- * the current number of bits + 1.
+ * \return the index of the first cleared bit. Bits beyond the current size of
+ * the array are implicitly cleared, so if all bits within the current size are
+ * set, this function will return the current number of bits + 1.
  */
 uint32_t spdk_bit_array_find_first_clear(const struct spdk_bit_array *ba, uint32_t start_bit_index);
 
