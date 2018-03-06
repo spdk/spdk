@@ -214,8 +214,13 @@ bdev_rbd_get_ctx_size(void)
 	return sizeof(struct bdev_rbd_io);
 }
 
-SPDK_BDEV_MODULE_REGISTER(rbd, bdev_rbd_library_init, NULL, NULL,
-			  bdev_rbd_get_ctx_size, NULL)
+static struct spdk_bdev_module_if rbd_if = {
+	.name = "rbd",
+	.module_init = bdev_rbd_library_init,
+	.get_ctx_size = bdev_rbd_get_ctx_size,
+
+};
+SPDK_BDEV_MODULE_REGISTER(&rbd_if)
 
 static int64_t
 bdev_rbd_rw(struct bdev_rbd *disk, struct spdk_io_channel *ch,
@@ -604,7 +609,7 @@ spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block
 	rbd->disk.blockcnt = rbd->info.size / rbd->disk.blocklen;
 	rbd->disk.ctxt = rbd;
 	rbd->disk.fn_table = &rbd_fn_table;
-	rbd->disk.module = SPDK_GET_BDEV_MODULE(rbd);
+	rbd->disk.module = &rbd_if;
 
 	SPDK_NOTICELOG("Add %s rbd disk to lun\n", rbd->disk.name);
 
