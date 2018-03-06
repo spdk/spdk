@@ -51,15 +51,74 @@ struct spdk_io_channel;
 
 struct spdk_copy_task;
 
+/**
+ * Initialize the copy engine.
+ *
+ * \return 0 on success.
+ */
 int spdk_copy_engine_initialize(void);
+
+/**
+ * Close the copy engine.
+ *
+ * \param cb_fn Called when the close operation completes.
+ * \param cb_arg Argument passed to the callback function.
+ */
 void spdk_copy_engine_finish(spdk_copy_fini_cb cb_fn, void *cb_arg);
+
+/**
+ * Close the copy engine module and perform any necessary cleanup.
+ */
 void spdk_copy_engine_module_finish(void);
 
+/**
+ * Get the I/O channel registered on the copy engine.
+ *
+ * This I/O channel is used to submit copy request.
+ *
+ * \return a pointer to the I/O channel on success, or NULL on failure.
+ */
 struct spdk_io_channel *spdk_copy_engine_get_io_channel(void);
+
+/**
+ * Submit a copy request.
+ *
+ * \param copy_req Copy request task.
+ * \param ch I/O channel to submit request to the copy engine. This channel can
+ * be obtained by the function spdk_copy_engine_get_io_channel().
+ * \param dst Destination to copy to.
+ * \param src Source to copy from.
+ * \param nbytes Length in bytes to copy.
+ * \param cb Called when this copy operation completes.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
 int spdk_copy_submit(struct spdk_copy_task *copy_req, struct spdk_io_channel *ch, void *dst,
 		     void *src, uint64_t nbytes, spdk_copy_completion_cb cb);
+
+/**
+ * Submit a fill request.
+ *
+ * This operation will fill the destination buffer with the specified value.
+ *
+ * \param copy_req Copy request task.
+ * \param ch I/O channel to submit request to the copy engine. This channel can
+ * be obtained by the function spdk_copy_engine_get_io_channel().
+ * \param dst Destination to fill.
+ * \param fill Constant byte to fill to the destination.
+ * \param nbytes Length in bytes to fill.
+ * \param cb Called when this copy operation completes.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
 int spdk_copy_submit_fill(struct spdk_copy_task *copy_req, struct spdk_io_channel *ch,
 			  void *dst, uint8_t fill, uint64_t nbytes, spdk_copy_completion_cb cb);
+
+/**
+ * Get the size of copy task.
+ *
+ * \return the size of copy task.
+ */
 size_t spdk_copy_task_size(void);
 
 #ifdef __cplusplus
