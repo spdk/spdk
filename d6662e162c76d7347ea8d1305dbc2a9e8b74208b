@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "cde0a526_dc7349ab",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 472,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-06T21:45:45Z",
+      "side": 1,
+      "message": "This no longer returns a pointer.",
+      "revId": "d6662e162c76d7347ea8d1305dbc2a9e8b74208b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "09a3b769_e4c526d6",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 481,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-06T21:45:45Z",
+      "side": 1,
+      "message": "This comment needs to be updated now - it\u0027s no longer returning a pointer, and it returns 0 at the end of the list.",
+      "revId": "d6662e162c76d7347ea8d1305dbc2a9e8b74208b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "acaac3c2_1499d067",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 3
