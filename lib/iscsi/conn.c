@@ -1165,19 +1165,16 @@ spdk_iscsi_conn_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_so
 	}
 }
 
-static int
+void
 spdk_iscsi_conn_check_state(struct spdk_iscsi_conn *conn)
 {
 	if (conn->state == ISCSI_CONN_STATE_EXITED) {
-		return -1;
+		return;
 	}
 
 	if (conn->state == ISCSI_CONN_STATE_EXITING) {
 		spdk_iscsi_conn_destruct(conn);
-		return -1;
 	}
-
-	return 0;
 }
 
 static void
@@ -1238,19 +1235,11 @@ spdk_iscsi_conn_migration(struct spdk_iscsi_conn *conn)
 void
 spdk_iscsi_conn_login_do_work(void *arg)
 {
-	struct spdk_iscsi_conn	*conn = arg;
-
-	/* iSCSI connection state check */
-	spdk_iscsi_conn_check_state(conn);
 }
 
 void
 spdk_iscsi_conn_full_feature_do_work(void *arg)
 {
-	struct spdk_iscsi_conn	*conn = arg;
-
-	/* iSCSI connection state check */
-	spdk_iscsi_conn_check_state(conn);
 }
 
 void

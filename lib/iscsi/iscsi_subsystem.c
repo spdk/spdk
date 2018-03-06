@@ -846,7 +846,8 @@ spdk_iscsi_poll_group_poll(void *ctx)
 	}
 
 	STAILQ_FOREACH_SAFE(conn, &group->connections, link, tmp) {
-		conn->fn(conn);
+		/* iSCSI connection state check */
+		spdk_iscsi_conn_check_state(conn);
 	}
 }
 
