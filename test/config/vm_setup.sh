@@ -71,10 +71,6 @@ cd ~
 
 mkdir -p spdk_repo
 
-# the configurations of username and email are needed later for applying patches to iscsiadm.
-git config --global user.name none
-git config --global user.email none
-
 # The librxe-dev repository provides a command line tool called rxe_cfg which makes it
 # very easy to use Soft-RoCE. The build pool utilizes this command line tool in the absence
 # of any real RDMA NICs to simulate one for the NVMe-oF tests.
@@ -109,6 +105,11 @@ if [ "$CURRENT_VERSION" == "$OPEN_ISCSI_VER" ]; then
     git clone https://github.com/open-iscsi/open-iscsi
 
     cd open-iscsi
+
+    # the configurations of username and email are needed for applying patches to iscsiadm.
+    git config user.name none
+    git config user.email none
+
     git checkout 86e8892
     for patch in `ls ../patches`; do
         git am ../patches/$patch
