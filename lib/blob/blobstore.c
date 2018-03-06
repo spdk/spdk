@@ -3782,46 +3782,6 @@ void spdk_blob_io_readv(struct spdk_blob *blob, struct spdk_io_channel *channel,
 	_spdk_blob_request_submit_rw_iov(blob, channel, iov, iovcnt, offset, length, cb_fn, cb_arg, true);
 }
 
-void spdk_bs_io_unmap_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
-			   uint64_t offset, uint64_t length, spdk_blob_op_complete cb_fn, void *cb_arg)
-{
-	spdk_blob_io_unmap(blob, channel, offset, length, cb_fn, cb_arg);
-}
-
-void spdk_bs_io_write_zeroes_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
-				  uint64_t offset, uint64_t length, spdk_blob_op_complete cb_fn, void *cb_arg)
-{
-	spdk_blob_io_write_zeroes(blob, channel, offset, length, cb_fn, cb_arg);
-}
-
-void spdk_bs_io_write_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
-			   void *payload, uint64_t offset, uint64_t length,
-			   spdk_blob_op_complete cb_fn, void *cb_arg)
-{
-	spdk_blob_io_write(blob, channel, payload, offset, length, cb_fn, cb_arg);
-}
-
-void spdk_bs_io_read_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
-			  void *payload, uint64_t offset, uint64_t length,
-			  spdk_blob_op_complete cb_fn, void *cb_arg)
-{
-	spdk_blob_io_read(blob, channel, payload, offset, length, cb_fn, cb_arg);
-}
-
-void spdk_bs_io_writev_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
-			    struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
-			    spdk_blob_op_complete cb_fn, void *cb_arg)
-{
-	spdk_blob_io_writev(blob, channel, iov, iovcnt, offset, length, cb_fn, cb_arg);
-}
-
-void spdk_bs_io_readv_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
-			   struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
-			   spdk_blob_op_complete cb_fn, void *cb_arg)
-{
-	spdk_blob_io_readv(blob, channel, iov, iovcnt, offset, length, cb_fn, cb_arg);
-}
-
 struct spdk_bs_iter_ctx {
 	int64_t page_num;
 	struct spdk_blob_store *bs;
