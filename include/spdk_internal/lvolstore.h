@@ -60,6 +60,7 @@ struct spdk_lvs_with_handle_req {
 	struct spdk_lvol_store		*lvol_store;
 	struct spdk_bs_dev		*bs_dev;
 	struct spdk_bdev		*base_bdev;
+	struct spdk_blob		*blob;
 	int				lvserrno;
 };
 
@@ -98,6 +99,8 @@ struct spdk_lvol {
 	spdk_blob_id			blob_id;
 	char				*unique_id;
 	char				name[SPDK_LVOL_NAME_MAX];
+	struct spdk_uuid		uuid;
+	char				uuid_str[SPDK_UUID_STRING_LEN];
 	bool				close_only;
 	bool				thin_provision;
 	struct spdk_bdev		*bdev;

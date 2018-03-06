@@ -525,7 +525,7 @@ vbdev_lvol_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	struct spdk_lvol *lvol = ctx;
 	struct lvol_store_bdev *lvs_bdev;
 	struct spdk_bdev *bdev;
-	char lvol_store_uuid[SPDK_UUID_STRING_LEN];
+	char uuid_str[SPDK_UUID_STRING_LEN];
 
 	spdk_json_write_name(w, "lvol");
 	spdk_json_write_object_begin(w);
@@ -533,9 +533,13 @@ vbdev_lvol_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	lvs_bdev = vbdev_get_lvs_bdev_by_lvs(lvol->lvol_store);
 	bdev = lvs_bdev->bdev;
 
-	spdk_uuid_fmt_lower(lvol_store_uuid, sizeof(lvol_store_uuid), &lvol->lvol_store->uuid);
+	spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &lvol->lvol_store->uuid);
 	spdk_json_write_name(w, "lvol_store_uuid");
-	spdk_json_write_string(w, lvol_store_uuid);
+	spdk_json_write_string(w, uuid_str);
+
+	spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &lvol->uuid);
+	spdk_json_write_name(w, "uuid");
+	spdk_json_write_string(w, uuid_str);
 
 	spdk_json_write_name(w, "base_bdev");
 	spdk_json_write_string(w, spdk_bdev_get_name(bdev));
@@ -749,6 +753,7 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 	total_size = lvol->num_clusters * spdk_bs_get_cluster_size(lvol->lvol_store->blobstore);
 	assert((total_size % bdev->blocklen) == 0);
 	bdev->blockcnt = total_size / bdev->blocklen;
+	bdev->uuid = lvol->uuid;
 
 	bdev->ctxt = lvol;
 	bdev->fn_table = &vbdev_lvol_fn_table;
