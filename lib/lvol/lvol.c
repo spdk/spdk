@@ -36,6 +36,7 @@
 #include "spdk/string.h"
 #include "spdk/io_channel.h"
 #include "spdk/blob_bdev.h"
+#include "spdk/util.h"
 
 /* Default blob channel opts for lvol */
 #define SPDK_LVOL_BLOB_OPTS_CHANNEL_OPS 512
@@ -213,11 +214,19 @@ _spdk_load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 
 	strncpy(lvol->name, attr, SPDK_LVOL_NAME_MAX);
 
+	rc = spdk_blob_get_xattr_value(blob, "uuid", (const void **)&attr, &value_len);
+	if (rc != 0 || value_len != SPDK_UUID_STRING_LEN || attr[SPDK_UUID_STRING_LEN - 1] != '\0' ||
+	    spdk_uuid_parse(&lvol->uuid, attr) != 0) {
+		SPDK_INFOLOG(SPDK_LOG_LVOL, "Missing or corrupt lvol uuid\n");
+		memset(&lvol->uuid, 0, sizeof(lvol->uuid));
+	}
+	spdk_uuid_fmt_lower(lvol->uuid_str, sizeof(lvol->uuid_str), &lvol->uuid);
+
 	TAILQ_INSERT_TAIL(&lvs->lvols, lvol, link);
 
 	lvs->lvol_count++;
 
-	SPDK_INFOLOG(SPDK_LOG_LVOL, "added lvol %s\n", lvol->unique_id);
+	SPDK_INFOLOG(SPDK_LOG_LVOL, "added lvol %s (%s)\n", lvol->unique_id, lvol->uuid_str);
 
 	spdk_bs_iter_next(bs, blob, _spdk_load_next_lvol, req);
 
@@ -904,6 +913,9 @@ spdk_lvol_get_xattr_value(void *xattr_ctx, const char *name,
 	if (!strcmp(LVOL_NAME, name)) {
 		*value = lvol->name;
 		*value_len = SPDK_LVOL_NAME_MAX;
+	} else if (!strcmp("uuid", name)) {
+		*value = lvol->uuid_str;
+		*value_len = sizeof(lvol->uuid_str);
 	}
 }
 
@@ -916,7 +928,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	struct spdk_lvol *lvol, *tmp;
 	struct spdk_blob_opts opts;
 	uint64_t num_clusters;
-	char *xattr_name = LVOL_NAME;
+	char *xattr_names[] = {LVOL_NAME, "uuid"};
 
 	if (lvs == NULL) {
 		SPDK_ERRLOG("lvol store does not exist\n");
@@ -963,13 +975,15 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	lvol->close_only = false;
 	lvol->thin_provision = thin_provision;
 	strncpy(lvol->name, name, SPDK_LVS_NAME_MAX);
+	spdk_uuid_generate(&lvol->uuid);
+	spdk_uuid_fmt_lower(lvol->uuid_str, sizeof(lvol->uuid_str), &lvol->uuid);
 	req->lvol = lvol;
 
 	spdk_blob_opts_init(&opts);
 	opts.thin_provision = thin_provision;
 	opts.num_clusters = num_clusters;
-	opts.xattrs.count = 1;
-	opts.xattrs.names = &xattr_name;
+	opts.xattrs.count = SPDK_COUNTOF(xattr_names);
+	opts.xattrs.names = xattr_names;
 	opts.xattrs.ctx = lvol;
 	opts.xattrs.get_value = spdk_lvol_get_xattr_value;
 

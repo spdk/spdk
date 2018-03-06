@@ -749,6 +749,7 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 	total_size = lvol->num_clusters * spdk_bs_get_cluster_size(lvol->lvol_store->blobstore);
 	assert((total_size % bdev->blocklen) == 0);
 	bdev->blockcnt = total_size / bdev->blocklen;
+	bdev->uuid = lvol->uuid;
 
 	bdev->ctxt = lvol;
 	bdev->fn_table = &vbdev_lvol_fn_table;
