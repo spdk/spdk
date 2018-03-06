@@ -40,8 +40,6 @@
 
 #include "bdev/bdev.c"
 
-SPDK_DECLARE_BDEV_MODULE(vbdev_ut);
-
 void
 spdk_scsi_nvme_translate(const struct spdk_bdev_io *bdev_io,
 			 int *sc, int *sk, int *asc, int *ascq)
@@ -70,14 +68,25 @@ static struct spdk_bdev_fn_table fn_table = {
 	.destruct = stub_destruct,
 };
 
+struct spdk_bdev_module_if bdev_ut_if = {
+	.name = "bdev_ut",
+};
+
+static void vbdev_ut_examine(struct spdk_bdev *bdev);
+
+struct spdk_bdev_module_if vbdev_ut_if = {
+	.name = "vbdev_ut",
+	.examine = vbdev_ut_examine,
+};
+
+SPDK_BDEV_MODULE_REGISTER(&bdev_ut_if)
+SPDK_BDEV_MODULE_REGISTER(&vbdev_ut_if)
+
 static void
 vbdev_ut_examine(struct spdk_bdev *bdev)
 {
-	spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(vbdev_ut));
+	spdk_bdev_module_examine_done(&vbdev_ut_if);
 }
-
-SPDK_BDEV_MODULE_REGISTER(bdev_ut, NULL, NULL, NULL, NULL, NULL)
-SPDK_BDEV_MODULE_REGISTER(vbdev_ut, NULL, NULL, NULL, NULL, vbdev_ut_examine)
 
 static struct spdk_bdev *
 allocate_bdev(char *name)
@@ -90,7 +99,7 @@ allocate_bdev(char *name)
 
 	bdev->name = name;
 	bdev->fn_table = &fn_table;
-	bdev->module = SPDK_GET_BDEV_MODULE(bdev_ut);
+	bdev->module = &bdev_ut_if;
 
 	rc = spdk_bdev_register(bdev);
 	CU_ASSERT(rc == 0);
@@ -112,7 +121,7 @@ allocate_vbdev(char *name, struct spdk_bdev *base1, struct spdk_bdev *base2)
 
 	bdev->name = name;
 	bdev->fn_table = &fn_table;
-	bdev->module = SPDK_GET_BDEV_MODULE(vbdev_ut);
+	bdev->module = &vbdev_ut_if;
 
 	/* vbdev must have at least one base bdev */
 	CU_ASSERT(base1 != NULL);
@@ -177,23 +186,23 @@ open_write_test(void)
 	 */
 
 	bdev[0] = allocate_bdev("bdev0");
-	rc = spdk_bdev_module_claim_bdev(bdev[0], NULL, SPDK_GET_BDEV_MODULE(bdev_ut));
+	rc = spdk_bdev_module_claim_bdev(bdev[0], NULL, &bdev_ut_if);
 	CU_ASSERT(rc == 0);
 
 	bdev[1] = allocate_bdev("bdev1");
-	rc = spdk_bdev_module_claim_bdev(bdev[1], NULL, SPDK_GET_BDEV_MODULE(bdev_ut));
+	rc = spdk_bdev_module_claim_bdev(bdev[1], NULL, &bdev_ut_if);
 	CU_ASSERT(rc == 0);
 
 	bdev[2] = allocate_bdev("bdev2");
-	rc = spdk_bdev_module_claim_bdev(bdev[2], NULL, SPDK_GET_BDEV_MODULE(bdev_ut));
+	rc = spdk_bdev_module_claim_bdev(bdev[2], NULL, &bdev_ut_if);
 	CU_ASSERT(rc == 0);
 
 	bdev[3] = allocate_vbdev("bdev3", bdev[0], bdev[1]);
-	rc = spdk_bdev_module_claim_bdev(bdev[3], NULL, SPDK_GET_BDEV_MODULE(bdev_ut));
+	rc = spdk_bdev_module_claim_bdev(bdev[3], NULL, &bdev_ut_if);
 	CU_ASSERT(rc == 0);
 
 	bdev[4] = allocate_vbdev("bdev4", bdev[2], NULL);
-	rc = spdk_bdev_module_claim_bdev(bdev[4], NULL, SPDK_GET_BDEV_MODULE(bdev_ut));
+	rc = spdk_bdev_module_claim_bdev(bdev[4], NULL, &bdev_ut_if);
 	CU_ASSERT(rc == 0);
 
 	bdev[5] = allocate_vbdev("bdev5", bdev[2], NULL);
@@ -295,7 +304,7 @@ num_blocks_test(void)
 	memset(&bdev, 0, sizeof(bdev));
 	bdev.name = "num_blocks";
 	bdev.fn_table = &fn_table;
-	bdev.module = SPDK_GET_BDEV_MODULE(bdev_ut);
+	bdev.module = &bdev_ut_if;
 	spdk_bdev_register(&bdev);
 	spdk_bdev_notify_blockcnt_change(&bdev, 50);
 

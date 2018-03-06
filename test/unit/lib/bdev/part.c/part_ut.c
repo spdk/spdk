@@ -47,16 +47,25 @@ spdk_scsi_nvme_translate(const struct spdk_bdev_io *bdev_io,
 {
 }
 
-SPDK_DECLARE_BDEV_MODULE(vbdev_ut);
+struct spdk_bdev_module_if bdev_ut_if = {
+	.name = "bdev_ut",
+};
+
+static void vbdev_ut_examine(struct spdk_bdev *bdev);
+
+struct spdk_bdev_module_if vbdev_ut_if = {
+	.name = "vbdev_ut",
+	.examine = vbdev_ut_examine,
+};
+
+SPDK_BDEV_MODULE_REGISTER(&bdev_ut_if)
+SPDK_BDEV_MODULE_REGISTER(&vbdev_ut_if)
 
 static void
 vbdev_ut_examine(struct spdk_bdev *bdev)
 {
-	spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(vbdev_ut));
+	spdk_bdev_module_examine_done(&vbdev_ut_if);
 }
-
-SPDK_BDEV_MODULE_REGISTER(bdev_ut, NULL, NULL, NULL, NULL, NULL)
-SPDK_BDEV_MODULE_REGISTER(vbdev_ut, NULL, NULL, NULL, NULL, vbdev_ut_examine)
 
 static int
 __destruct(void *ctx)
@@ -91,10 +100,10 @@ part_test(void)
 
 	bdev_base.name = "base";
 	bdev_base.fn_table = &base_fn_table;
-	bdev_base.module = SPDK_GET_BDEV_MODULE(bdev_ut);
+	bdev_base.module = &bdev_ut_if;
 	rc = spdk_bdev_register(&bdev_base);
 	CU_ASSERT(rc == 0);
-	spdk_bdev_part_base_construct(base, &bdev_base, NULL, SPDK_GET_BDEV_MODULE(vbdev_ut),
+	spdk_bdev_part_base_construct(base, &bdev_base, NULL, &vbdev_ut_if,
 				      &part_fn_table, &tailq, __base_free, 0, NULL, NULL);
 
 	spdk_bdev_part_construct(&part1, base, "test1", 0, 100, "test");
