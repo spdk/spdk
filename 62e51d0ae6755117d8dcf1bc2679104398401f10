@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9bc909a9_d8b3da7a",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 458,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-06T20:04:23Z",
+      "side": 1,
+      "message": "The passthru bdev should copy the properties of the base bdev for things like write_cache, need_aligned_buffer, and optimal_io_boundary.",
+      "revId": "62e51d0ae6755117d8dcf1bc2679104398401f10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
