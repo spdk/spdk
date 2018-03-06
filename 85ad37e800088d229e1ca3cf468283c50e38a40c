@@ -22,6 +22,52 @@
       "revId": "85ad37e800088d229e1ca3cf468283c50e38a40c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c44debe_b7b7a5d5",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1402,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-06T14:56:50Z",
+      "side": 1,
+      "message": "As you\u0027ve noted above, this probably can be fixed by actually stubbing spdk_bs_create_clone().",
+      "range": {
+        "startLine": 1402,
+        "startChar": 1,
+        "endLine": 1402,
+        "endChar": 68
+      },
+      "revId": "85ad37e800088d229e1ca3cf468283c50e38a40c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69c96942_43b07470",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1410,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-06T14:56:50Z",
+      "side": 1,
+      "message": "It should fail here, when spdk_lvol_close() is issued in this order (with EBUSY).\nSince it is not supported to remove snapshot if clone is present.\nThere are three lvols here:\n- \"lvol\", began as usual lvol, then converted to clone as result of spdk_lvol_create_snapshot()\n- \"snap\", is a snapshot base for \"lvol\"\n- \"clone\", result of spdk_lvol_create_clone(), same as \"lvol\" this is basing on snapshot \"snap\"\n\nTo delete all of those first \"lvol\" and \"clone\" has to be closed (in either order), then \"snap\".",
+      "range": {
+        "startLine": 1410,
+        "startChar": 1,
+        "endLine": 1410,
+        "endChar": 27
+      },
+      "revId": "85ad37e800088d229e1ca3cf468283c50e38a40c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
