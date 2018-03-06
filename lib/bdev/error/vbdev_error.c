@@ -48,8 +48,6 @@
 
 #include "vbdev_error.h"
 
-SPDK_DECLARE_BDEV_MODULE(error);
-
 struct vbdev_error_info {
 	bool				enabled;
 	uint32_t			error_type;
@@ -69,6 +67,20 @@ struct error_channel {
 
 static pthread_mutex_t g_vbdev_error_mutex = PTHREAD_MUTEX_INITIALIZER;
 static SPDK_BDEV_PART_TAILQ g_error_disks = TAILQ_HEAD_INITIALIZER(g_error_disks);
+
+static int vbdev_error_init(void);
+
+static void vbdev_error_examine(struct spdk_bdev *bdev);
+
+static struct spdk_bdev_module_if error_if = {
+	.name = "error",
+	.module_init = vbdev_error_init,
+	.module_fini = NULL,
+	.examine = vbdev_error_examine,
+
+};
+
+SPDK_BDEV_MODULE_REGISTER(&error_if)
 
 static void
 spdk_error_free_base(struct spdk_bdev_part_base *base)
@@ -235,7 +247,7 @@ spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 
 	rc = spdk_bdev_part_base_construct(base, base_bdev,
 					   spdk_vbdev_error_base_bdev_hotremove_cb,
-					   SPDK_GET_BDEV_MODULE(error), &vbdev_error_fn_table,
+					   &error_if, &vbdev_error_fn_table,
 					   &g_error_disks, spdk_error_free_base,
 					   sizeof(struct error_channel), NULL, NULL);
 	if (rc) {
@@ -288,7 +300,7 @@ vbdev_error_examine(struct spdk_bdev *bdev)
 
 	sp = spdk_conf_find_section(NULL, "BdevError");
 	if (sp == NULL) {
-		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(error));
+		spdk_bdev_module_examine_done(&error_if);
 		return;
 	}
 
@@ -313,8 +325,5 @@ vbdev_error_examine(struct spdk_bdev *bdev)
 		}
 	}
 
-	spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(error));
+	spdk_bdev_module_examine_done(&error_if);
 }
-
-SPDK_BDEV_MODULE_REGISTER(error, vbdev_error_init, NULL, NULL, NULL,
-			  vbdev_error_examine)
