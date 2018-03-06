@@ -55,7 +55,7 @@ struct spdk_cpuset;
 /**
  * Allocate CPU set object.
  *
- * \return Allocated zeroed cpuset or NULL if fails.
+ * \return a pointer to the allocated zeroed cpuset on success, or NULL on failure.
  */
 struct spdk_cpuset *spdk_cpuset_alloc(void);
 
@@ -69,7 +69,10 @@ void spdk_cpuset_free(struct spdk_cpuset *set);
 /**
  * Compare two CPU sets.
  *
- * \return True if both CPU sets are equal.
+ * \param set1 CPU set1.
+ * \param set2 CPU set2.
+ *
+ * \return true if both CPU sets are equal.
  */
 bool spdk_cpuset_equal(const struct spdk_cpuset *set1, const struct spdk_cpuset *set2);
 
@@ -118,7 +121,8 @@ void spdk_cpuset_set_cpu(struct spdk_cpuset *set, uint32_t cpu, bool state);
  *
  * \param set CPU set object.
  * \param cpu CPU index.
- * \return State of selected CPU.
+ *
+ * \return the state of selected CPU.
  */
 bool spdk_cpuset_get_cpu(const struct spdk_cpuset *set, uint32_t cpu);
 
@@ -126,7 +130,8 @@ bool spdk_cpuset_get_cpu(const struct spdk_cpuset *set, uint32_t cpu);
  * Get the number of CPUs that are set in CPU set.
  *
  * \param set CPU set object.
- * \return Number of CPUs.
+ *
+ * \return the number of CPUs.
  */
 uint32_t spdk_cpuset_count(const struct spdk_cpuset *set);
 
@@ -134,7 +139,8 @@ uint32_t spdk_cpuset_count(const struct spdk_cpuset *set);
  * Convert a CPU set to hex string.
  *
  * \param CPU set.
- * \return Pointer to hexadecimal representation of CPU set. Buffer to store a
+ *
+ * \return a pointer to hexadecimal representation of CPU set. Buffer to store a
  * string is dynamically allocated internally and freed with CPU set object.
  * Memory returned by this function might be changed after subsequent calls to
  * this function so string should be copied by user.
@@ -144,10 +150,11 @@ const char *spdk_cpuset_fmt(struct spdk_cpuset *set);
 /**
  * Convert a string containing a CPU core mask into a CPU set.
  *
- * \param set
+ * \param set CPU set.
  * \param mask String defining CPU set. By default hexadecimal value is used or
- * as CPU list enclosed in square brackets defined as: 'c1[-c2][,c3[-c4],...]'
- * \return Zero if success, non zero if fails.
+ * as CPU list enclosed in square brackets defined as: 'c1[-c2][,c3[-c4],...]'.
+ *
+ * \return zero if success, non zero if fails.
  */
 int spdk_cpuset_parse(struct spdk_cpuset *set, const char *mask);
 
