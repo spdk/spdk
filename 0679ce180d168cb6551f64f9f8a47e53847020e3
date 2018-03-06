@@ -45,6 +45,29 @@
       "revId": "0679ce180d168cb6551f64f9f8a47e53847020e3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4154537_c3337f1b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 877,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-06T12:31:28Z",
+      "side": 1,
+      "message": "This function now checks if state of blob is SPDK_BLOB_STATE_LOADING when getting attribute.\n\nI think separate patch moving _spdk_blob_verify_md_op() from _spdk_blob_get_xattr_value() to spdk_blob_get_xattr_value() should be created.\nSince we only use _spdk_blob_get_xattr_value() internally and already have known status of attributes being checked in _spdk_blob_verify_md_op().\nThis refers to recent changes in patch https://github.com/spdk/spdk/commit/4f6096fa1086d91b68cd44b03561c428ea8d8a16",
+      "range": {
+        "startLine": 877,
+        "startChar": 7,
+        "endLine": 877,
+        "endChar": 33
+      },
+      "revId": "0679ce180d168cb6551f64f9f8a47e53847020e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
