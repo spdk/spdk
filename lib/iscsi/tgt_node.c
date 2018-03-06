@@ -391,7 +391,6 @@ spdk_iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
 static void
 spdk_iscsi_tgt_node_list_init(void)
 {
-	g_spdk_iscsi.ntargets = 0;
 	TAILQ_INIT(&g_spdk_iscsi.target_head);
 }
 
@@ -423,7 +422,6 @@ spdk_iscsi_tgt_node_register(struct spdk_iscsi_tgt_node *target)
 	}
 
 	TAILQ_INSERT_TAIL(&g_spdk_iscsi.target_head, target, tailq);
-	g_spdk_iscsi.ntargets++;
 
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 	return 0;
@@ -437,7 +435,6 @@ spdk_iscsi_tgt_node_unregister(struct spdk_iscsi_tgt_node *target)
 	TAILQ_FOREACH(t, &g_spdk_iscsi.target_head, tailq) {
 		if (t == target) {
 			TAILQ_REMOVE(&g_spdk_iscsi.target_head, t, tailq);
-			g_spdk_iscsi.ntargets--;
 			return 0;
 		}
 	}
@@ -1238,7 +1235,6 @@ spdk_iscsi_shutdown_tgt_nodes(void)
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	TAILQ_FOREACH_SAFE(target, &g_spdk_iscsi.target_head, tailq, tmp) {
 		TAILQ_REMOVE(&g_spdk_iscsi.target_head, target, tailq);
-		g_spdk_iscsi.ntargets--;
 		spdk_iscsi_tgt_node_destruct(target);
 	}
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
