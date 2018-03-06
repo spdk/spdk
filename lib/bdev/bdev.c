@@ -2183,6 +2183,7 @@ spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs, int 
 
 	for (i = 0; i < base_bdev_count; i++) {
 		assert(base_bdevs[i] != NULL);
+		assert(base_bdevs[i]->claim_module != NULL);
 		TAILQ_INSERT_TAIL(&vbdev->base_bdevs, base_bdevs[i], base_bdev_link);
 		TAILQ_INSERT_TAIL(&base_bdevs[i]->vbdevs, vbdev, vbdev_link);
 	}
