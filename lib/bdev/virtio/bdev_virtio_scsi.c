@@ -399,11 +399,16 @@ bdev_virtio_get_ctx_size(void)
 	return sizeof(struct virtio_scsi_io_ctx);
 }
 
-SPDK_BDEV_MODULE_REGISTER(virtio_scsi, bdev_virtio_initialize, bdev_virtio_finish,
-			  NULL, bdev_virtio_get_ctx_size, NULL)
+static struct spdk_bdev_module_if virtio_scsi_if = {
+	.name = "virtio_scsi",
+	.module_init = bdev_virtio_initialize,
+	.module_fini = bdev_virtio_finish,
+	.get_ctx_size = bdev_virtio_get_ctx_size,
+	.async_init = true,
+	.async_fini = true,
+};
 
-SPDK_BDEV_MODULE_ASYNC_INIT(virtio_scsi)
-SPDK_BDEV_MODULE_ASYNC_FINI(virtio_scsi);
+SPDK_BDEV_MODULE_REGISTER(&virtio_scsi_if)
 
 static struct virtio_scsi_dev *
 virtio_dev_to_scsi(struct virtio_dev *vdev)
@@ -1271,7 +1276,7 @@ virtio_scsi_dev_add_tgt(struct virtio_scsi_dev *svdev, struct virtio_scsi_scan_i
 
 	bdev->ctxt = disk;
 	bdev->fn_table = &virtio_fn_table;
-	bdev->module = SPDK_GET_BDEV_MODULE(virtio_scsi);
+	bdev->module = &virtio_scsi_if;
 
 	rc = spdk_bdev_register(&disk->bdev);
 	if (rc) {
@@ -1667,7 +1672,7 @@ bdev_virtio_initial_scan_complete(void *ctx __attribute__((unused)),
 		}
 	}
 
-	spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(virtio_scsi));
+	spdk_bdev_module_init_done(&virtio_scsi_if);
 }
 
 static int
@@ -1683,7 +1688,7 @@ bdev_virtio_initialize(void)
 	}
 
 	if (TAILQ_EMPTY(&g_virtio_driver.scsi_devs)) {
-		spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(virtio_scsi));
+		spdk_bdev_module_init_done(&virtio_scsi_if);
 		return 0;
 	}
 
@@ -1706,7 +1711,7 @@ out:
 		virtio_scsi_dev_remove(svdev, NULL, NULL);
 	}
 
-	spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(virtio_scsi));
+	spdk_bdev_module_init_done(&virtio_scsi_if);
 	return rc;
 }
 

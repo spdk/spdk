@@ -59,8 +59,16 @@ bdev_aio_get_ctx_size(void)
 	return sizeof(struct bdev_aio_task);
 }
 
-SPDK_BDEV_MODULE_REGISTER(aio, bdev_aio_initialize, NULL, bdev_aio_get_spdk_running_config,
-			  bdev_aio_get_ctx_size, NULL)
+static struct spdk_bdev_module_if aio_if = {
+	.name		= "aio",
+	.module_init	= bdev_aio_initialize,
+	.module_fini	= NULL,
+	.config_text	= bdev_aio_get_spdk_running_config,
+	.get_ctx_size	= bdev_aio_get_ctx_size,
+	.examine	= NULL,
+};
+
+SPDK_BDEV_MODULE_REGISTER(&aio_if)
 
 static int
 bdev_aio_open(struct file_disk *disk)
@@ -450,7 +458,7 @@ create_aio_disk(const char *name, const char *filename, uint32_t block_size)
 		goto error_return;
 	}
 	fdisk->disk.product_name = "AIO disk";
-	fdisk->disk.module = SPDK_GET_BDEV_MODULE(aio);
+	fdisk->disk.module = &aio_if;
 
 	fdisk->disk.need_aligned_buffer = 1;
 	fdisk->disk.write_cache = 1;

@@ -49,7 +49,16 @@
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
-SPDK_DECLARE_BDEV_MODULE(gpt);
+static int vbdev_gpt_init(void);
+static void vbdev_gpt_examine(struct spdk_bdev *bdev);
+
+static struct spdk_bdev_module_if gpt_if = {
+	.name = "gpt",
+	.module_init = vbdev_gpt_init,
+	.examine = vbdev_gpt_examine,
+
+};
+SPDK_BDEV_MODULE_REGISTER(&gpt_if)
 
 /* Base block device gpt context */
 struct gpt_base {
@@ -114,7 +123,7 @@ spdk_gpt_base_bdev_init(struct spdk_bdev *bdev)
 
 	rc = spdk_bdev_part_base_construct(&gpt_base->part_base, bdev,
 					   spdk_gpt_base_bdev_hotremove_cb,
-					   SPDK_GET_BDEV_MODULE(gpt), &vbdev_gpt_fn_table,
+					   &gpt_if, &vbdev_gpt_fn_table,
 					   &g_gpt_disks, spdk_gpt_base_free,
 					   sizeof(struct gpt_channel), NULL, NULL);
 	if (rc) {
@@ -306,7 +315,7 @@ end:
 	 * Notify the generic bdev layer that the actions related to the original examine
 	 *  callback are now completed.
 	 */
-	spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(gpt));
+	spdk_bdev_module_examine_done(&gpt_if);
 
 	if (gpt_base->part_base.ref == 0) {
 		/* If no gpt_disk instances were created, free the base context */
@@ -364,17 +373,15 @@ vbdev_gpt_examine(struct spdk_bdev *bdev)
 	int rc;
 
 	if (g_gpt_disabled) {
-		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(gpt));
+		spdk_bdev_module_examine_done(&gpt_if);
 		return;
 	}
 
 	rc = vbdev_gpt_read_gpt(bdev);
 	if (rc) {
-		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(gpt));
+		spdk_bdev_module_examine_done(&gpt_if);
 		SPDK_ERRLOG("Failed to read info from bdev %s\n", spdk_bdev_get_name(bdev));
 	}
 }
 
-SPDK_BDEV_MODULE_REGISTER(gpt, vbdev_gpt_init, NULL, NULL,
-			  NULL, vbdev_gpt_examine)
 SPDK_LOG_REGISTER_COMPONENT("vbdev_gpt", SPDK_LOG_VBDEV_GPT)

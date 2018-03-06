@@ -54,10 +54,15 @@ static TAILQ_HEAD(, pmem_disk) g_pmem_disks = TAILQ_HEAD_INITIALIZER(g_pmem_disk
 static int bdev_pmem_initialize(void);
 static void bdev_pmem_finish(void);
 
-SPDK_BDEV_MODULE_REGISTER(pmem, bdev_pmem_initialize, bdev_pmem_finish,
-			  NULL, NULL, NULL)
-SPDK_BDEV_MODULE_ASYNC_FINI(pmem);
+static struct spdk_bdev_module_if pmem_if = {
+	.name = "pmem",
+	.module_init = bdev_pmem_initialize,
+	.module_fini = bdev_pmem_finish,
+	.async_fini = true,
 
+};
+
+SPDK_BDEV_MODULE_REGISTER(&pmem_if)
 
 typedef int(*spdk_bdev_pmem_io_request)(PMEMblkpool *pbp, void *buf, long long blockno);
 
@@ -345,7 +350,7 @@ spdk_create_pmem_disk(const char *pmem_file, const char *name, struct spdk_bdev 
 
 	pdisk->disk.ctxt = pdisk;
 	pdisk->disk.fn_table = &pmem_fn_table;
-	pdisk->disk.module = SPDK_GET_BDEV_MODULE(pmem);
+	pdisk->disk.module = &pmem_if;
 
 	rc = spdk_bdev_register(&pdisk->disk);
 	if (rc) {
