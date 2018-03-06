@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ad9e179b_e5e9d800",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 816,
+      "author": {
+        "id": 1011300
+      },
+      "writtenOn": "2018-03-06T13:23:00Z",
+      "side": 1,
+      "message": "I wasn\u0027t sure if this needed to be a dma buffer or if a regular allocation will suffice.",
+      "revId": "41d960389bf5b9f4ee7bc69ea58c81a1450895bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
