@@ -164,9 +164,7 @@ if [ $SPDK_TEST_VHOST -eq 1 ]; then
 		timing_enter vhost_migration
 		run_test ./test/vhost/spdk_vhost.sh --migration
 		timing_exit vhost_migration
-	fi
 
-	if [ $RUN_NIGHTLY_FAILING -eq 1 ]; then
 		timing_enter readonly
 		run_test ./test/vhost/spdk_vhost.sh --readonly
 		timing_exit readonly

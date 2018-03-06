@@ -18,6 +18,7 @@ function usage()
 	echo "                              kernel_vhost - use kernel driver vhost-scsi"
 	echo "                              spdk_vhost_scsi - use spdk vhost scsi"
 	echo "                              spdk_vhost_blk - use spdk vhost block"
+	echo "    --read-only=true|false    Enable/Disable read only for vhost_blk tests"
 	echo "    --raw-cache=CACHE         Use CACHE for virtio test: "
 	echo "                              writethrough, writeback, none, unsafe or directsyns"
 	echo "    --disk=PATH[,disk_type]   Disk to use in test. test specific meaning:"
@@ -55,6 +56,7 @@ for param in "$@"; do
 		--force=*) ;;
 		--incoming=*) ;;
 		--migrate-to=*) ;;
+		--read-only=*) ;;
 		-x)
 			set -x
 			continue
