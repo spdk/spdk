@@ -246,7 +246,7 @@ static struct spdk_bdev *
 _bdev_next_leaf(struct spdk_bdev *bdev)
 {
 	while (bdev != NULL) {
-		if (TAILQ_EMPTY(&bdev->vbdevs)) {
+		if (bdev->claim_module == NULL) {
 			return bdev;
 		} else {
 			bdev = TAILQ_NEXT(bdev, link);
