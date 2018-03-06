@@ -664,7 +664,7 @@ spdk_iscsi_read_parameters_from_config_file(struct spdk_conf_section *sp)
 		if (DefaultTime2Retain > 3600) {
 			SPDK_ERRLOG("DefaultTime2Retain == %d invalid, ignoring\n", DefaultTime2Retain);
 		} else {
-			g_spdk_iscsi.DefaultTime2Retain = DEFAULT_DEFAULTTIME2RETAIN;
+			g_spdk_iscsi.DefaultTime2Retain = DefaultTime2Retain;
 		}
 	}
 	g_spdk_iscsi.ImmediateData = spdk_conf_section_get_boolval(sp, "ImmediateData",
