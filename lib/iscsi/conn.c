@@ -512,7 +512,8 @@ _spdk_iscsi_conn_check_shutdown(void *arg)
 	_spdk_iscsi_conn_free(conn);
 }
 
-void spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
+static void
+spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_tgt_node	*target;
 	int				rc;
