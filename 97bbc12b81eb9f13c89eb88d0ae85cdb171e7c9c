@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7787d11b_4bf5c7ce",
+        "filename": "include/spdk/copy_engine.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-06T11:40:32Z",
+      "side": 1,
+      "message": "return",
+      "range": {
+        "startLine": 57,
+        "startChar": 4,
+        "endLine": 57,
+        "endChar": 11
+      },
+      "revId": "97bbc12b81eb9f13c89eb88d0ae85cdb171e7c9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d628a7a4_21331eaf",
+        "filename": "include/spdk/copy_engine.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-06T11:40:32Z",
+      "side": 1,
+      "message": "Constant byte?",
+      "range": {
+        "startLine": 108,
+        "startChar": 15,
+        "endLine": 108,
+        "endChar": 21
+      },
+      "revId": "97bbc12b81eb9f13c89eb88d0ae85cdb171e7c9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
