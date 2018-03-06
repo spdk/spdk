@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4aff8f14_19a4f4c0",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1171,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-06T20:50:42Z",
+      "side": 1,
+      "message": "this if check can be removed",
+      "revId": "740a78b433080702c5d1dc3e2c3e346b548194cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b76b998_1a9045f5",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 849,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-06T20:50:42Z",
+      "side": 1,
+      "message": "this comment is OK - but not really needed, it does not provide any additional information that cannot be inferred from the name of the function that is being called\n\nmaybe just inline spdk_iscsi_conn_check_state() here?  meaning check if state \u003d\u003d EXITING and if it is, call spdk_iscsi_conn_destruct()\n\nI think that makes the code more clear",
+      "revId": "740a78b433080702c5d1dc3e2c3e346b548194cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
