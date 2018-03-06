@@ -21,6 +21,7 @@ function usage()
 	echo " --enable-ubsan            Enable undefined behavior sanitizer"
 	echo " --enable-coverage         Enable code coverage tracking"
 	echo " --enable-lto              Enable link-time optimization"
+	echo " --disable-tests           Disable building of tests"
 	echo " --with-env=path           Use an alternate environment implementation"
 	echo ""
 	echo "Specifying Dependencies:"
@@ -100,6 +101,12 @@ for i in "$@"; do
 			;;
 		--disable-lto)
 			CONFIG_LTO=n
+			;;
+		--enable-tests)
+			CONFIG_TESTS=y
+			;;
+		--disable-tests)
+			CONFIG_TESTS=n
 			;;
 		--enable-werror)
 			CONFIG_WERROR=y
@@ -232,6 +239,9 @@ if [ -n "$CONFIG_COVERAGE" ]; then
 fi
 if [ -n "$CONFIG_LTO" ]; then
 	echo "CONFIG_LTO?=$CONFIG_LTO" >> CONFIG.local
+fi
+if [ -n "$CONFIG_TESTS" ]; then
+	echo "CONFIG_TESTS?=$CONFIG_TESTS" >> CONFIG.local
 fi
 if [ -n "$CONFIG_ASAN" ]; then
 	echo "CONFIG_ASAN?=$CONFIG_ASAN" >> CONFIG.local
