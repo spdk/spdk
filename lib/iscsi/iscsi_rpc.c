@@ -1250,3 +1250,111 @@ spdk_rpc_get_iscsi_global_params(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("get_iscsi_global_params", spdk_rpc_get_iscsi_global_params)
+
+static void
+spdk_iscsi_read_parameters_from_config_file(struct spdk_conf_section *sp,
+                struct spdk_iscsi_opts *opts)
+{
+	struct spdk_iscsi_opts req = {}, opts = {};
+
+        char *authfile, *nodebase;
+        int rc;
+
+	if (req.authfile != NULL) {
+		authfile = strdup(req.authfile);
+		if (authfile) {
+			free(opts.authfile);
+			opts.authfile = authfile;
+                } else {
+			SPDK_ERRLOG("could not strdup authfile path %s. %s is used instead.\n",
+				    req.authfile, opts.authfile);
+                }
+        }
+
+	if (req.nodebase != NULL) {
+		nodebase = strdup(val);
+		if (nodebase) {
+			free(opts->nodebase);
+			opts.nodebase = nodebase;
+		} else {
+			SPDK_ERRLOG("could not strdup nodebase path %s.  %s is used instead.\n",
+				    req.nodebase, opts.nodebase);
+		}
+	}
+
+	if (req.MaxSessions == 0 || req.MaxSessions > 65535) {
+		SPDK_ERRLOG("%d is invalid and %d is used instead. MaxSessions must be >0 and <=65535.\n",
+			    req.MaxSessions, opts.MaxSessions);
+	} else {
+		opts.MaxSessions = req.MaxSessions;
+	}
+
+	if (req.MaxConnectionsPerSession == 0 || req.MaxConnectionsPerSession > 65535) {
+		SPDK_ERRLOG("%d is invalid and %d is used instead. MaxConnectionsPerSession must be >0 and <=65535.\n",
+			    req.MaxConnectionsPerSession, opts.MaxConnectionsPerSession);
+	} else {
+		opts.MaxConnectionsPerSession = req.MaxConnectionsPerSession;
+	}
+
+	if (req.MaxQueueDepth == 0 || req.MaxQueueDepth > 256) {
+		SPDK_ERRLOG("%d is invalid and %d is used instead. MaxQueueDepth must be >0 and <=256.\n",
+			    req.MaxQueueDepth, opts.MaxQueueDepth);
+	} else {
+		opts.MaxQueueDepth = req.MaxQueueDepth;
+	}
+
+	if (req.DefaultTime2Wait > 3600) {
+		SPDK_ERRLOG("%d is invalid and %d is used instead. DefaultTime2Wait must be <= 3600\n",
+			    req.DefaultTime2Wait, opts.DefaultTime2Wait);
+	} else {
+		opts.DefaultTime2Wait = req.DefaultTime2Wait;
+	}
+
+	if (req.DefaultTime2Retain > 3600) {
+		SPDK_ERRLOG("%d is invalid and %d is used instead. DefaultTime2Retain must be <=3600.\n",
+			    req.DefaultTime2Retain, opts.DefaultTime2Retain);
+	} else {
+		opts.DefaultTime2Retain = req.DefaultTime2Retain;
+	}
+
+	opts.ImmediateData = req.ImmediateData;
+
+	opts.AllowDuplicateIsid = req.AllowDuplicateIsid;
+
+	if (req.ErrorRecoveryLevel > 2) {
+		SPDK_ERRLOG("%d is not supported as ErrorRecoveryLevel and %d is used instead.\n",
+			    ErrorRecoveryLevel, opts.ErrorRecoveryLevel);
+	} else {
+		opts.ErrorRecoveryLevel = ErrorRecoveryLevel;
+	}
+
+	if (req.timeout >= 0) {
+		opts.timeout = req.timeout;
+        }
+
+	if (req.nopininterval >= 0) {
+		if (req.nopininterval > MAX_NOPININTERVAL) {
+			SPDK_ERRLOG("%d is invalid and %d is used instead. NopInInterval must be <=%d.\n",
+				    req.nopininterval, opts.nopininterval, MAX_NOPININTERVAL);
+		} else {
+			opts.nopininterval = nopininterval;
+		}
+	}
+
+	opts.no_discovery_auth = req.no_discovery_auth;
+	opts.req_discovery_auth = req.req_discovery_auth;
+	opts.req_discovery_auth = req.req_discovery_auth_mutual;
+
+	opts.discovery_auth_group = req.discovery_auth_group;
+
+	if (req.min_conn_per_core >= 0) {
+		spdk_iscsi_conn_set_min_per_core(req.min_conn_per_core);
+	}
+
+	rc = spdk_iscsi_subsystem_initialize(&opts);
+	spdk_iscsi_opts_free(&opts);
+	if (rc != 0) {
+		goto invalid;
+	}
+}
+SPDK_RPC_REGISTER("iscsi_subsystem_initialize", spdk_rpc_iscsi_subsystem_initialize)
