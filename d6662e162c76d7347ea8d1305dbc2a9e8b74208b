@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "acaac3c2_1499d067",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 809,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-06T21:42:35Z",
+      "side": 1,
+      "message": "status.done needs to be reset before each call to nvme_ctrlr_cmd_identify_active_ns_list() in the loop below.",
+      "revId": "d6662e162c76d7347ea8d1305dbc2a9e8b74208b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1758f076_c340b67d",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 816,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-06T21:42:35Z",
+      "side": 1,
+      "message": "The alignment should probably be ctrlr-\u003epage_size rather than a hard-coded 4096.",
+      "range": {
+        "startLine": 816,
+        "startChar": 78,
+        "endLine": 816,
+        "endChar": 82
+      },
+      "revId": "d6662e162c76d7347ea8d1305dbc2a9e8b74208b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d6c071c_c592a46c",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 818,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-06T21:42:35Z",
+      "side": 1,
+      "message": "The function name is already included in the SPDK_ERRLOG() message, so this can be trimmed down.",
+      "range": {
+        "startLine": 818,
+        "startChar": 15,
+        "endLine": 818,
+        "endChar": 44
+      },
+      "revId": "d6662e162c76d7347ea8d1305dbc2a9e8b74208b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eba17c02_d5b42c31",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 822,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-06T21:42:35Z",
+      "side": 1,
+      "message": "I think it would be more readable to use SPDK_NVME_VERSION for this constant.",
+      "range": {
+        "startLine": 822,
+        "startChar": 39,
+        "endLine": 822,
+        "endChar": 49
+      },
+      "revId": "d6662e162c76d7347ea8d1305dbc2a9e8b74208b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
