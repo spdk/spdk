@@ -176,7 +176,13 @@ module_fini(void)
 {
 }
 
-SPDK_BDEV_MODULE_REGISTER(bdev_ut, module_init, module_fini, NULL, NULL, NULL)
+struct spdk_bdev_module_if bdev_ut_if = {
+	.name = "bdev_ut",
+	.module_init = module_init,
+	.module_fini = module_fini,
+};
+
+SPDK_BDEV_MODULE_REGISTER(&bdev_ut_if)
 
 static void
 register_bdev(struct ut_bdev *ut_bdev, char *name, void *io_target)
@@ -187,7 +193,7 @@ register_bdev(struct ut_bdev *ut_bdev, char *name, void *io_target)
 	ut_bdev->bdev.ctxt = ut_bdev;
 	ut_bdev->bdev.name = name;
 	ut_bdev->bdev.fn_table = &fn_table;
-	ut_bdev->bdev.module = SPDK_GET_BDEV_MODULE(bdev_ut);
+	ut_bdev->bdev.module = &bdev_ut_if;
 	ut_bdev->bdev.blocklen = 4096;
 	ut_bdev->bdev.blockcnt = 1024;
 

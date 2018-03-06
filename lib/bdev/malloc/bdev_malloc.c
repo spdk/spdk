@@ -101,8 +101,15 @@ bdev_malloc_get_ctx_size(void)
 	return sizeof(struct malloc_task) + spdk_copy_task_size();
 }
 
-SPDK_BDEV_MODULE_REGISTER(malloc, bdev_malloc_initialize, NULL,
-			  bdev_malloc_get_spdk_running_config, bdev_malloc_get_ctx_size, NULL)
+static struct spdk_bdev_module_if malloc_if = {
+	.name = "malloc",
+	.module_init = bdev_malloc_initialize,
+	.config_text = bdev_malloc_get_spdk_running_config,
+	.get_ctx_size = bdev_malloc_get_ctx_size,
+
+};
+
+SPDK_BDEV_MODULE_REGISTER(&malloc_if)
 
 static void
 malloc_disk_free(struct malloc_disk *malloc_disk)
@@ -405,7 +412,7 @@ struct spdk_bdev *create_malloc_disk(const char *name, const struct spdk_uuid *u
 
 	mdisk->disk.ctxt = mdisk;
 	mdisk->disk.fn_table = &malloc_fn_table;
-	mdisk->disk.module = SPDK_GET_BDEV_MODULE(malloc);
+	mdisk->disk.module = &malloc_if;
 
 	rc = spdk_bdev_register(&mdisk->disk);
 	if (rc) {

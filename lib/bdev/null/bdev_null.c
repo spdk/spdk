@@ -43,8 +43,6 @@
 
 #include "bdev_null.h"
 
-SPDK_DECLARE_BDEV_MODULE(null);
-
 struct null_bdev {
 	struct spdk_bdev	bdev;
 	TAILQ_ENTRY(null_bdev)	tailq;
@@ -57,6 +55,19 @@ struct null_io_channel {
 
 static TAILQ_HEAD(, null_bdev) g_null_bdev_head;
 static void *g_null_read_buf;
+
+static int bdev_null_initialize(void);
+static void bdev_null_finish(void);
+static void bdev_null_get_spdk_running_config(FILE *fp);
+
+static struct spdk_bdev_module_if null_if = {
+	.name = "null",
+	.module_init = bdev_null_initialize,
+	.module_fini = bdev_null_finish,
+	.config_text = bdev_null_get_spdk_running_config,
+};
+
+SPDK_BDEV_MODULE_REGISTER(&null_if)
 
 static int
 bdev_null_destruct(void *ctx)
@@ -167,7 +178,7 @@ create_null_bdev(const char *name, const struct spdk_uuid *uuid,
 
 	bdev->bdev.ctxt = bdev;
 	bdev->bdev.fn_table = &null_fn_table;
-	bdev->bdev.module = SPDK_GET_BDEV_MODULE(null);
+	bdev->bdev.module = &null_if;
 
 	rc = spdk_bdev_register(&bdev->bdev);
 	if (rc) {
@@ -325,8 +336,5 @@ bdev_null_get_spdk_running_config(FILE *fp)
 			bdev->bdev.name, null_bdev_size, bdev->bdev.blocklen);
 	}
 }
-
-SPDK_BDEV_MODULE_REGISTER(null, bdev_null_initialize, bdev_null_finish,
-			  bdev_null_get_spdk_running_config, NULL, NULL)
 
 SPDK_LOG_REGISTER_COMPONENT("bdev_null", SPDK_LOG_BDEV_NULL)

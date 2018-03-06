@@ -119,11 +119,22 @@ struct spdk_bdev_module_if {
 	/**
 	 * Count of bdev inits/examinations in progress. Used by generic bdev
 	 * layer and must not be modified by bdev modules.
+	 *
+	 * \note Used internally by bdev subsystem, don't change this value in bdev module.
 	 */
 	uint32_t action_in_progress;
 
 	/**
+	 * Denotes if the module_init function may complete asynchronously. If set to true,
+	 * the module initialization has to be explicitly completed by calling
+	 * spdk_bdev_module_init_done().
+	 */
+	bool async_init;
+
+	/**
 	 * Denotes if the module_fini function may complete asynchronously.
+	 * If set to true finishing has to be explicitly completed by calling
+	 * spdk_bdev_module_fini_done().
 	 */
 	bool async_fini;
 
@@ -515,6 +526,14 @@ void spdk_scsi_nvme_translate(const struct spdk_bdev_io *bdev_io,
 
 void spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module);
 
+/**
+ * Find registered module with name pointed by \c name.
+ *
+ * \param name name of module to be searched for.
+ * \return pointer to module or NULL if no module with \c name exist
+ */
+struct spdk_bdev_module_if *spdk_bdev_module_list_find(const char *name);
+
 static inline struct spdk_bdev_io *
 spdk_bdev_io_from_ctx(void *ctx)
 {
@@ -571,47 +590,26 @@ int spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_
 			     char *product_name);
 void spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bdev_io *bdev_io);
 
-#define SPDK_BDEV_MODULE_REGISTER(_name, init_fn, fini_fn, config_fn, ctx_size_fn, examine_fn)	\
-	static struct spdk_bdev_module_if _name ## _if = {					\
-	.name		= #_name,								\
-	.module_init	= init_fn,								\
-	.module_fini	= fini_fn,								\
-	.config_text	= config_fn,								\
-	.get_ctx_size	= ctx_size_fn,								\
-	.examine	= examine_fn,								\
-	};											\
-	__attribute__((constructor)) static void _name ## _init(void)				\
-	{											\
-		spdk_bdev_module_list_add(&_name ## _if);					\
-	}
-
-#define SPDK_GET_BDEV_MODULE(name) (&name ## _if)
 
 /*
- * Set module initialization to be asynchronous. After using this macro, the module
- * initialization has to be explicitly completed by calling spdk_bdev_module_init_done().
+ * Macro used to register module for later initialization.
  */
-#define SPDK_BDEV_MODULE_ASYNC_INIT(name)							\
-	__attribute__((constructor)) static void name ## _async_init(void)			\
+#define SPDK_BDEV_MODULE_REGISTER(_module)							\
+	__attribute__((constructor)) static void						\
+	SPDK_BDEV_MODULE_REGISTER_FN_NAME(__LINE__)  (void)					\
 	{											\
-		SPDK_GET_BDEV_MODULE(name)->action_in_progress = 1;				\
+	    spdk_bdev_module_list_add(_module);							\
 	}
 
 /*
- * Set module finish to be asynchronous. After using this macro, the module
- * finishing has to be explicitly completed by calling spdk_bdev_module_fini_done().
+ * This is helper macro for automatic function generation.
+ *
  */
-#define SPDK_BDEV_MODULE_ASYNC_FINI(name)							\
-	__attribute__((constructor)) static void name ## _async_fini(void)			\
-	{											\
-		SPDK_GET_BDEV_MODULE(name)->async_fini = true;					\
-	}
+#define SPDK_BDEV_MODULE_REGISTER_FN_NAME(line) SPDK_BDEV_MODULE_REGISTER_FN_NAME_(line)
 
 /*
- * Modules are not required to use this macro.  It allows modules to reference the module with
- * SPDK_GET_BDEV_MODULE() before it is defined by SPDK_BDEV_MODULE_REGISTER.
+ *  Second helper macro for "stringize" trick to work.
  */
-#define SPDK_DECLARE_BDEV_MODULE(name)								\
-	static struct spdk_bdev_module_if name ## _if;
+#define SPDK_BDEV_MODULE_REGISTER_FN_NAME_(line) spdk_bdev_module_if_register_ ## line
 
 #endif /* SPDK_INTERNAL_BDEV_H */

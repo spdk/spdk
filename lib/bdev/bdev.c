@@ -2391,6 +2391,16 @@ spdk_bdev_io_get_iovec(struct spdk_bdev_io *bdev_io, struct iovec **iovp, int *i
 void
 spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module)
 {
+
+	if (spdk_bdev_module_list_find(bdev_module->name)) {
+		fprintf(stderr, "ERROR: module '%s' already registered.\n", bdev_module->name);
+		assert(false);
+	}
+
+	if (bdev_module->async_init) {
+		bdev_module->action_in_progress = 1;
+	}
+
 	/*
 	 * Modules with examine callbacks must be initialized first, so they are
 	 *  ready to handle examine callbacks from later modules that will
@@ -2401,6 +2411,20 @@ spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module)
 	} else {
 		TAILQ_INSERT_TAIL(&g_bdev_mgr.bdev_modules, bdev_module, tailq);
 	}
+}
+
+struct spdk_bdev_module_if *
+spdk_bdev_module_list_find(const char *name)
+{
+	struct spdk_bdev_module_if *bdev_module;
+
+	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, tailq) {
+		if (strcmp(name, bdev_module->name) == 0) {
+			break;
+		}
+	}
+
+	return bdev_module;
 }
 
 static void
