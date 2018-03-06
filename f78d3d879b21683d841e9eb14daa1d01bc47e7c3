@@ -48,6 +48,54 @@
     },
     {
       "key": {
+        "uuid": "b29ea421_2f47708b",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 734,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-03-06T02:55:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0b296cce_a3c1eb42",
+      "range": {
+        "startLine": 734,
+        "startChar": 3,
+        "endLine": 734,
+        "endChar": 9
+      },
+      "revId": "f78d3d879b21683d841e9eb14daa1d01bc47e7c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91668356_112562a5",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 734,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-03-06T02:55:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b62eb316_d6a7b7f8",
+      "range": {
+        "startLine": 734,
+        "startChar": 47,
+        "endLine": 734,
+        "endChar": 56
+      },
+      "revId": "f78d3d879b21683d841e9eb14daa1d01bc47e7c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5d106d91_8298414c",
         "filename": "include/spdk/bdev.h",
         "patchSetId": 18
@@ -59,6 +107,30 @@
       "writtenOn": "2018-03-05T09:43:53Z",
       "side": 1,
       "message": "function",
+      "range": {
+        "startLine": 739,
+        "startChar": 44,
+        "endLine": 739,
+        "endChar": 53
+      },
+      "revId": "f78d3d879b21683d841e9eb14daa1d01bc47e7c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0992aa0_1fb2b068",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 739,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-03-06T02:55:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5d106d91_8298414c",
       "range": {
         "startLine": 739,
         "startChar": 44,
@@ -129,6 +201,30 @@
       "writtenOn": "2018-03-05T09:43:53Z",
       "side": 1,
       "message": "Maybe just set bdev_num \u003d 1; which looks like more readable.",
+      "range": {
+        "startLine": 141,
+        "startChar": 2,
+        "endLine": 141,
+        "endChar": 13
+      },
+      "revId": "f78d3d879b21683d841e9eb14daa1d01bc47e7c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b284d58_18ba7aa5",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-03-06T02:55:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "75e4606c_fc1cb2bc",
       "range": {
         "startLine": 141,
         "startChar": 2,
