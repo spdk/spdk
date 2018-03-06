@@ -584,7 +584,7 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 		return -ENOMEM;
 	}
 
-	uuid_generate_time(lvs->uuid);
+	uuid_generate(lvs->uuid);
 	strncpy(lvs->name, o->name, SPDK_LVS_NAME_MAX);
 
 	rc = _spdk_add_lvs_to_list(lvs);
