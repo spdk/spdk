@@ -119,6 +119,23 @@
       "revId": "d6662e162c76d7347ea8d1305dbc2a9e8b74208b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1559ab11_c3fdf227",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 831,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-06T21:55:42Z",
+      "side": 1,
+      "message": "I think this path leaks new_ns_list (should probably goto fail instead).",
+      "revId": "d6662e162c76d7347ea8d1305dbc2a9e8b74208b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
