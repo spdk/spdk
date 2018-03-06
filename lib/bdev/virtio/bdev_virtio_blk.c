@@ -79,7 +79,16 @@ struct bdev_virtio_blk_io_channel {
 	 1ULL << VIRTIO_BLK_F_TOPOLOGY		|	\
 	 1ULL << VIRTIO_BLK_F_MQ)
 
-SPDK_DECLARE_BDEV_MODULE(virtio_blk);
+static int bdev_virtio_initialize(void);
+static int bdev_virtio_blk_get_ctx_size(void);
+
+static struct spdk_bdev_module_if virtio_blk_if = {
+	.name = "virtio_blk",
+	.module_init = bdev_virtio_initialize,
+	.get_ctx_size = bdev_virtio_blk_get_ctx_size,
+};
+
+SPDK_BDEV_MODULE_REGISTER(&virtio_blk_if)
 
 static int bdev_virtio_blk_ch_create_cb(void *io_device, void *ctx_buf);
 static void bdev_virtio_blk_ch_destroy_cb(void *io_device, void *ctx_buf);
@@ -374,7 +383,7 @@ virtio_blk_dev_init(struct virtio_blk_dev *bvdev, uint16_t max_queues)
 
 	bdev->ctxt = bvdev;
 	bdev->fn_table = &virtio_fn_table;
-	bdev->module = SPDK_GET_BDEV_MODULE(virtio_blk);
+	bdev->module = &virtio_blk_if;
 
 	spdk_io_device_register(bvdev, bdev_virtio_blk_ch_create_cb,
 				bdev_virtio_blk_ch_destroy_cb,
@@ -618,8 +627,5 @@ bdev_virtio_blk_get_ctx_size(void)
 {
 	return sizeof(struct virtio_blk_io_ctx);
 }
-
-SPDK_BDEV_MODULE_REGISTER(virtio_blk, bdev_virtio_initialize, NULL,
-			  NULL, bdev_virtio_blk_get_ctx_size, NULL)
 
 SPDK_LOG_REGISTER_COMPONENT("virtio_blk", SPDK_LOG_VIRTIO_BLK)
