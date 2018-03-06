@@ -48,13 +48,22 @@
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
-SPDK_DECLARE_BDEV_MODULE(split);
-
 static SPDK_BDEV_PART_TAILQ g_split_disks = TAILQ_HEAD_INITIALIZER(g_split_disks);
 
 struct vbdev_split_channel {
 	struct spdk_bdev_part_channel	part_ch;
 };
+
+static int vbdev_split_init(void);
+static void vbdev_split_examine(struct spdk_bdev *bdev);
+
+static struct spdk_bdev_module_if split_if = {
+	.name = "split",
+	.module_init = vbdev_split_init,
+	.examine = vbdev_split_examine,
+};
+
+SPDK_BDEV_MODULE_REGISTER(&split_if)
 
 static void
 vbdev_split_base_free(struct spdk_bdev_part_base *base)
@@ -156,7 +165,7 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 
 	rc = spdk_bdev_part_base_construct(split_base, base_bdev,
 					   vbdev_split_base_bdev_hotremove_cb,
-					   SPDK_GET_BDEV_MODULE(split), &vbdev_split_fn_table,
+					   &split_if, &vbdev_split_fn_table,
 					   &g_split_disks, vbdev_split_base_free,
 					   sizeof(struct vbdev_split_channel), NULL, NULL);
 	if (rc) {
@@ -213,7 +222,7 @@ vbdev_split_examine(struct spdk_bdev *bdev)
 
 	sp = spdk_conf_find_section(NULL, "Split");
 	if (sp == NULL) {
-		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(split));
+		spdk_bdev_module_examine_done(&split_if);
 		return;
 	}
 
@@ -261,10 +270,7 @@ vbdev_split_examine(struct spdk_bdev *bdev)
 		}
 	}
 
-	spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(split));
+	spdk_bdev_module_examine_done(&split_if);
 }
 
-
-SPDK_BDEV_MODULE_REGISTER(split, vbdev_split_init, NULL, NULL,
-			  NULL, vbdev_split_examine)
 SPDK_LOG_REGISTER_COMPONENT("vbdev_split", SPDK_LOG_VBDEV_SPLIT)
