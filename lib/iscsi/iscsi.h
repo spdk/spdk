@@ -271,7 +271,6 @@ struct spdk_iscsi_globals {
 	TAILQ_HEAD(, spdk_iscsi_portal)		portal_head;
 	TAILQ_HEAD(, spdk_iscsi_portal_grp)	pg_head;
 	TAILQ_HEAD(, spdk_iscsi_init_grp)	ig_head;
-	int ntargets;
 	TAILQ_HEAD(, spdk_iscsi_tgt_node)	target_head;
 
 	int timeout;
