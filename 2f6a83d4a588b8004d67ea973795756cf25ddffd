@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ecfa700e_5ca7e62c",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 629,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-06T02:35:39Z",
+      "side": 1,
+      "message": "What code will catch this state transition and destruct the connection?",
+      "range": {
+        "startLine": 629,
+        "startChar": 2,
+        "endLine": 629,
+        "endChar": 41
+      },
+      "revId": "2f6a83d4a588b8004d67ea973795756cf25ddffd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3bc5f918_3ec29d50",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 688,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-06T02:35:39Z",
+      "side": 1,
+      "message": "What code will catch this state transition and destruct the connection?",
+      "range": {
+        "startLine": 688,
+        "startChar": 18,
+        "endLine": 688,
+        "endChar": 42
+      },
+      "revId": "2f6a83d4a588b8004d67ea973795756cf25ddffd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fdfaca27_8755d848",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1101,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-06T02:35:39Z",
+      "side": 1,
+      "message": "What code will catch this state transition and destruct the connection?",
+      "range": {
+        "startLine": 1101,
+        "startChar": 16,
+        "endLine": 1101,
+        "endChar": 40
+      },
+      "revId": "2f6a83d4a588b8004d67ea973795756cf25ddffd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e72c572_d2bb15fd",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1109,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-06T02:35:39Z",
+      "side": 1,
+      "message": "State may become EXITING after this function.",
+      "range": {
+        "startLine": 1109,
+        "startChar": 1,
+        "endLine": 1109,
+        "endChar": 27
+      },
+      "revId": "2f6a83d4a588b8004d67ea973795756cf25ddffd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
