@@ -508,6 +508,7 @@ function vm_setup()
 	local os_mode=""
 	local qemu_args=""
 	local disk_type_g=NOT_DEFINED
+	local read_only="false"
 	local disks=""
 	local raw_cache=""
 	local vm_incoming=""
@@ -524,6 +525,7 @@ function vm_setup()
 				os-mode=*) local os_mode="${OPTARG#*=}" ;;
 				qemu-args=*) local qemu_args="${qemu_args} ${OPTARG#*=}" ;;
 				disk-type=*) local disk_type_g="${OPTARG#*=}" ;;
+				read-only=*) local read_only="${OPTARG#*=}" ;;
 				disks=*) local disks="${OPTARG#*=}" ;;
 				raw-cache=*) local raw_cache=",cache${OPTARG#*=}" ;;
 				force=*) local force_vm=${OPTARG#*=} ;;
@@ -713,7 +715,7 @@ function vm_setup()
 			spdk_vhost_blk)
 				notice "using socket $vhost_dir/naa.$disk.$vm_num"
 				cmd+="-chardev socket,id=char_$disk,path=$vhost_dir/naa.$disk.$vm_num ${eol}"
-				cmd+="-device vhost-user-blk-pci,num-queues=$queue_number,chardev=char_$disk ${eol}"
+				cmd+="-device vhost-user-blk-pci,num-queues=$queue_number,chardev=char_$disk,config-ro=$read_only ${eol}"
 				;;
 			kernel_vhost)
 				if [[ -z $disk ]]; then
