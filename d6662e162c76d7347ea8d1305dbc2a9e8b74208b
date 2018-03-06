@@ -53,6 +53,23 @@
     },
     {
       "key": {
+        "uuid": "724870b5_909fc308",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 815,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-06T22:01:15Z",
+      "side": 1,
+      "message": "This looks like it rounds wrong for cases where num_ns is a multiple of 1024.\n\nIt might be simpler as:\n\n  num_pages \u003d ((ctrlr-\u003enum_ns + 1) * sizeof(new_ns_list[0]) - 1) / sizeof(struct spdk_nvme_ns_list);\n\nWe also need to account for the case where num_ns \u003d\u003d 0 - in this case, we should probably bail out early and not try to get a NS list.  This can happen in practice with the NVMe-oF discovery controller, which never has any namespaces.",
+      "revId": "d6662e162c76d7347ea8d1305dbc2a9e8b74208b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1758f076_c340b67d",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 3
@@ -133,6 +150,23 @@
       "writtenOn": "2018-03-06T21:55:42Z",
       "side": 1,
       "message": "I think this path leaks new_ns_list (should probably goto fail instead).",
+      "revId": "d6662e162c76d7347ea8d1305dbc2a9e8b74208b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "afe63227_d8aa9c45",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1915,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-06T22:01:15Z",
+      "side": 1,
+      "message": "Looks like this is crashing for the discovery controller case - it is probably a good idea to first check if ctrlr-\u003eactive_ns_list !\u003d NULL, or at least check if ctrlr-\u003enum_ns !\u003d 0.",
       "revId": "d6662e162c76d7347ea8d1305dbc2a9e8b74208b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
