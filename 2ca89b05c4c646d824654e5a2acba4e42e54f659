@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "620b74ea_65c23c36",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 477,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-03-07T06:22:05Z",
+      "side": 1,
+      "message": "I think adding this line should be fine, but it may not relate with the fio hotplug autotest coredump.",
+      "revId": "2ca89b05c4c646d824654e5a2acba4e42e54f659",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
