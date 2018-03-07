@@ -56,6 +56,10 @@ endif
 
 DPDK_LIB_LIST = rte_eal rte_mempool rte_ring
 
+ifeq ($(CONFIG_CRYPTO),y)
+DPDK_LIB_LIST += rte_kvargs rte_cryptodev rte_reorder rte_bus_vdev rte_pmd_aesni_mb rte_mbuf
+endif
+
 # librte_mempool_ring was new added from DPDK 17.05. Link this library used for
 #   ring based mempool management API.
 ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_mempool_ring.*))
@@ -79,6 +83,9 @@ DPDK_LIB_LIST += rte_bus_pci
 endif
 
 DPDK_LIB = $(DPDK_LIB_LIST:%=$(DPDK_ABS_DIR)/lib/lib%$(DPDK_LIB_EXT))
+ifeq ($(CONFIG_CRYPTO),y)
+DPDK_LIB += $(SPDK_ROOT_DIR)/intel-ipsec-mb/libIPSec_MB.a
+endif
 
 # SPDK memory registration requires experimental (deprecated) rte_memory API for DPDK 18.05
 ENV_CFLAGS = $(DPDK_INC) -Wno-deprecated-declarations
