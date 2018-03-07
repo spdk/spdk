@@ -428,7 +428,7 @@ function vm_kill()
 #
 function vm_list_all()
 {
-	local vms="$(shopt -s nullglob; echo $VM_BASE_DIR/[0-9])"
+	local vms="$(shopt -s nullglob; echo $VM_BASE_DIR/[0-9]*)"
 	if [[ ! -z "$vms" ]]; then
 		basename --multiple $vms
 	fi
