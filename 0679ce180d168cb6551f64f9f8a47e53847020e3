@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "400aee98_de4d05b1",
+        "filename": "lib/blob/blob_bs_dev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-07T15:57:14Z",
+      "side": 1,
+      "message": "Can you describe how do you see it being used here ? I don\u0027t see it any different than case below regarding casting void *.",
+      "parentUuid": "6189d41d_5b6226ec",
+      "range": {
+        "startLine": 79,
+        "startChar": 39,
+        "endLine": 79,
+        "endChar": 75
+      },
+      "revId": "0679ce180d168cb6551f64f9f8a47e53847020e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9247064f_2d737642",
         "filename": "lib/blob/blob_bs_dev.c",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2018-03-05T13:19:17Z",
       "side": 1,
       "message": "no need to cast \u0027void *\u0027",
+      "range": {
+        "startLine": 108,
+        "startChar": 30,
+        "endLine": 108,
+        "endChar": 57
+      },
+      "revId": "0679ce180d168cb6551f64f9f8a47e53847020e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "635dbfd9_4cbd963f",
+        "filename": "lib/blob/blob_bs_dev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-07T15:57:14Z",
+      "side": 1,
+      "message": "I see your point here. @Tomek K Can you please address this comment by Pawel ?",
+      "parentUuid": "9247064f_2d737642",
       "range": {
         "startLine": 108,
         "startChar": 30,
