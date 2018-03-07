@@ -16,6 +16,24 @@
       "revId": "2ca89b05c4c646d824654e5a2acba4e42e54f659",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2af384d8_2b85f555",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 477,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-07T06:29:04Z",
+      "side": 1,
+      "message": "This shouldn\u0027t make any difference in practice, since the realloc() below is going to resize the array to eliminate these entries.\n\nIt is probably a good idea to set them to NULL just in case the realloc() fails, though.",
+      "parentUuid": "620b74ea_65c23c36",
+      "revId": "2ca89b05c4c646d824654e5a2acba4e42e54f659",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
