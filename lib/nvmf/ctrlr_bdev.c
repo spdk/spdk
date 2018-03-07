@@ -264,6 +264,16 @@ nvmf_bdev_ctrlr_flush_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 {
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 
+	/* As for NVMeoF controller, SPDK always set volatile write
+	 * cache bit to 1, return success for those block devices
+	 * which can't support FLUSH command.
+	 */
+	if (!spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_FLUSH)) {
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_SUCCESS;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
 	if (spdk_bdev_flush_blocks(desc, ch, 0, spdk_bdev_get_num_blocks(bdev),
 				   nvmf_bdev_ctrlr_complete_cmd, req)) {
 		response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
