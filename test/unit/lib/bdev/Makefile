@@ -36,6 +36,10 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 DIRS-y = bdev.c part.c scsi_nvme.c gpt vbdev_lvol.c mt bdev_raid.c
 
+ifeq ($(CONFIG_CRYPTO),y)
+DIRS-y += crypto.c
+endif
+
 DIRS-$(CONFIG_PMDK) += pmem
 
 .PHONY: all clean $(DIRS-y)

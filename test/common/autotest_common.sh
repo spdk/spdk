@@ -84,6 +84,9 @@ fi
 #  sure it gets built and run against a limited set of use cases for now.
 config_params+=' --with-raid'
 
+# Testing crypto in CI, then need to determine how to selectively set this per machine
+config_params+=' --with-crypto'
+
 export UBSAN_OPTIONS='halt_on_error=1:print_stacktrace=1:abort_on_error=1'
 
 # On Linux systems, override the default HUGEMEM in scripts/setup.sh to
