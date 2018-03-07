@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ee47a522_0176a6e3",
+        "filename": "test/vhost/hotplug/scsi_hotremove.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-07T09:35:43Z",
+      "side": 0,
+      "message": "Changes not related to test plan.",
+      "range": {
+        "startLine": 45,
+        "startChar": 4,
+        "endLine": 45,
+        "endChar": 29
+      },
+      "revId": "981607175be8fa4658ff77eb478facfaaa64fa1a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "86e29a07_369b0294",
+        "filename": "test/vhost/hotplug/scsi_hotremove.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-07T09:35:43Z",
+      "side": 0,
+      "message": "Changes not related to test plan.",
+      "range": {
+        "startLine": 54,
+        "startChar": 4,
+        "endLine": 55,
+        "endChar": 37
+      },
+      "revId": "981607175be8fa4658ff77eb478facfaaa64fa1a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
