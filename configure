@@ -339,7 +339,16 @@ EOF
 	fi
 fi
 
-
+if [[ "$CONFIG_CRYPTO" = "y" ]]; then
+	set +e
+	ipsec="$(find /usr -name intel-ipsec-mb.h 2>/dev/null)"
+	set -e
+	if [[ "$ipsec" == "" ]]; then
+		echo "To enable crypto you must first go to the intel-ipsec-mb directory and "
+		echo "run 'make' then 'sudo make install' then re-run this script."
+		exit 1
+	fi
+fi
 
 echo -n "Creating CONFIG.local..."
 
