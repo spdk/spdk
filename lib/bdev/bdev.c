@@ -3447,6 +3447,8 @@ _spdk_bdev_write_zero_buffer_done(struct spdk_bdev_io *bdev_io, bool success, vo
 {
 	struct spdk_bdev_io *parent_io = cb_arg;
 
+	spdk_bdev_free_io(bdev_io);
+
 	if (!success) {
 		parent_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
 		parent_io->internal.cb(parent_io, SPDK_BDEV_IO_STATUS_FAILED, parent_io->internal.caller_ctx);
