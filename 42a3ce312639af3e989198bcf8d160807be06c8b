@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "758b9a59_7604916d",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 421,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-07T22:16:51Z",
+      "side": 1,
+      "message": "Comma",
+      "revId": "42a3ce312639af3e989198bcf8d160807be06c8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
