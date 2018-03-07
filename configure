@@ -339,6 +339,7 @@ than or equal to 4.14 will see significantly reduced performance.
 fi
 
 if [[ "$CONFIG_CRYPTO" = "y" ]]; then
+	echo NOTE: Crypto is currently marked as experimental.  Do not use in production.
 	set +e
 	nasm_ver=$(nasm -v | sed 's/[^0-9]*//g' | awk '{print substr ($0, 0, 5)}')
 	ipsec="$(find /usr -name intel-ipsec-mb.h 2>/dev/null)"
