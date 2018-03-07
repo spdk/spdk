@@ -502,8 +502,6 @@ spdk_iscsi_portal_grp_array_create(void)
 	int rc = 0;
 	struct spdk_conf_section *sp;
 
-	TAILQ_INIT(&g_spdk_iscsi.portal_head);
-	TAILQ_INIT(&g_spdk_iscsi.pg_head);
 	sp = spdk_conf_first_section(NULL);
 	while (sp != NULL) {
 		if (spdk_conf_section_match_prefix(sp, "PortalGroup")) {
