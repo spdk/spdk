@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "09c21412_e2f250f4",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1012925
+      },
+      "writtenOn": "2018-03-07T02:43:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "78105a03_c566afa9",
+      "revId": "b3af9d250f0929be485ca756e5602882c876c11b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0addf1bd_e886fd37",
         "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
         "patchSetId": 7
@@ -30,6 +48,30 @@
       "writtenOn": "2018-03-02T00:01:09Z",
       "side": 1,
       "message": "What is in test_linux?\n\nAlso, we should really try to avoid adding any more hard-coded paths to the test scripts if we can avoid it.",
+      "range": {
+        "startLine": 25,
+        "startChar": 26,
+        "endLine": 25,
+        "endChar": 36
+      },
+      "revId": "b3af9d250f0929be485ca756e5602882c876c11b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ba52b63_1b8f862c",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1012925
+      },
+      "writtenOn": "2018-03-07T02:43:34Z",
+      "side": 1,
+      "message": "As you said,I run fio in command line instead of compiling kernel to avoid adding any more hard-coded paths in test script.",
+      "parentUuid": "0addf1bd_e886fd37",
       "range": {
         "startLine": 25,
         "startChar": 26,
