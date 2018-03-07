@@ -57,8 +57,10 @@ fio_pid=$!
 sleep 3
 set +e
 
+j=0
 for bdev in $bdevs; do
-	$rpc_py delete_bdev "$bdev"
+	let j=j+1
+	$rpc_py nvmf_subsystem_remove_ns nqn.2016-06.io.spdk:cnode1 $j
 done
 
 wait $fio_pid
