@@ -235,6 +235,11 @@ Enforcement of IOPS limits for quality of service (QoS) has been added to the bd
 [set_bdev_qos_limit_iops](http://www.spdk.io/doc/jsonrpc.html#rpc_set_bdev_qos_limit_iops) documentation
 for more details.
 
+A new virtual bdev module has been added to perform at rest data encryption using the DPDK CryptoDev
+Framework.  The module initially uses a software AESNI CBC cipher with experimental support for the
+Intel QAT hardware accelerator also currently implemented with support for CBC cipher. Future work
+may include additional ciphers as well as consideration for authentication.
+
 ### RPC
 
 The `[Rpc]` configuration file section, which was deprecated in v18.01, has been removed.

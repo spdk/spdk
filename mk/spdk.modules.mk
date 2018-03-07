@@ -38,6 +38,10 @@ LVOL_MODULES_LIST += blob blob_bdev lvol
 BLOCKDEV_MODULES_LIST = $(LVOL_MODULES_LIST)
 BLOCKDEV_MODULES_LIST += bdev_malloc bdev_null bdev_nvme nvme vbdev_passthru vbdev_error vbdev_gpt vbdev_split
 
+ifeq ($(CONFIG_CRYPTO),y)
+BLOCKDEV_MODULES_LIST += vbdev_crypto
+endif
+
 ifeq ($(CONFIG_RDMA),y)
 BLOCKDEV_MODULES_DEPS += -libverbs -lrdmacm
 endif
