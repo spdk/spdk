@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ffded4cf_162828ab",
+        "filename": "include/spdk/copy_engine.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-07T04:37:26Z",
+      "side": 1,
+      "message": "maybe \"value\"",
+      "range": {
+        "startLine": 102,
+        "startChar": 70,
+        "endLine": 102,
+        "endChar": 76
+      },
+      "revId": "8267869a81ed1cd82844812d22c976ef2fb0252b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed76bbe6_727423e8",
+        "filename": "include/spdk/copy_engine.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-07T04:37:26Z",
+      "side": 1,
+      "message": "this can be removed. The maximum is an internal implementation.",
+      "range": {
+        "startLine": 118,
+        "startChar": 11,
+        "endLine": 118,
+        "endChar": 18
+      },
+      "revId": "8267869a81ed1cd82844812d22c976ef2fb0252b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "05b39820_2abeca41",
+        "filename": "include/spdk/copy_engine.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-07T04:37:26Z",
+      "side": 1,
+      "message": "same for this.",
+      "range": {
+        "startLine": 120,
+        "startChar": 15,
+        "endLine": 120,
+        "endChar": 22
+      },
+      "revId": "8267869a81ed1cd82844812d22c976ef2fb0252b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
