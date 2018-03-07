@@ -22,6 +22,12 @@ does not at this time confer any SPDK ABI compatibility claims.
 
 spdk_bdev_alias_del_all() was added to delete all alias from block device.
 
+A new virtual bdev module has been added to perform at rest data encryption using the DPDK CryptoDev
+Framework.  The module initially uses a software AESNI CBC cipher with experimental support for the
+Intel QAT hardware accelerator also currently implemented with support for CBC cipher. Future work
+may include additional ciphers as well as consideration for authentication. NOTE: this module is
+currently marked as experimental.  Do not use in production.
+
 ### Environment Abstraction Layer and Event Framework
 
 The size parameter of spdk_mem_map_translate is now a pointer. This allows the

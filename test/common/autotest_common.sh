@@ -58,6 +58,7 @@ fi
 : ${SPDK_RUN_ASAN=1}; export SPDK_RUN_ASAN
 : ${SPDK_RUN_UBSAN=1}; export SPDK_RUN_UBSAN
 : ${SPDK_RUN_INSTALLED_DPDK=1}; export SPDK_RUN_INSTALLED_DPDK
+: ${SPDK_TEST_CRYPTO=1}; export SPDK_TEST_CRYPTO
 
 if [ -z "$DEPENDENCY_DIR" ]; then
 	export DEPENDENCY_DIR=/home/sys_sgsw
@@ -85,6 +86,10 @@ fi
 #  support iov (meaning vhost will not work).  But enable it in the build here, to make
 #  sure it gets built and run against a limited set of use cases for now.
 config_params+=' --with-raid'
+
+if [ $SPDK_TEST_CRYPTO -eq 1 ]; then
+	config_params+=' --with-crypto'
+fi
 
 export UBSAN_OPTIONS='halt_on_error=1:print_stacktrace=1:abort_on_error=1'
 
