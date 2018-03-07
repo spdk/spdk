@@ -223,15 +223,18 @@ spdk_mempool_get(struct spdk_mempool *_mp)
 	}
 }
 
+int ut_spdk_mempool_put = MOCK_PASS_THRU;
 void
 spdk_mempool_put(struct spdk_mempool *_mp, void *ele)
 {
 	struct test_mempool *mp = (struct test_mempool *)_mp;
 
-	if (mp) {
-		mp->count++;
+	if (ut_spdk_mempool_put == (int)MOCK_PASS_THRU) {
+		if (mp) {
+			mp->count++;
+		}
+		free(ele);
 	}
-	free(ele);
 }
 
 void
