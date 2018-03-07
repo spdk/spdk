@@ -474,6 +474,7 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 		for (i = new_num_channels; i < old_num_channels; i++) {
 			if (sgroup->channels[i]) {
 				spdk_put_io_channel(sgroup->channels[i]);
+				sgroup->channels[i] = NULL;
 			}
 		}
 
