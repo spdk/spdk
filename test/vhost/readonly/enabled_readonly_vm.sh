@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+set -x
 BASE_DIR=$(readlink -f $(dirname $0))
 
 disk_name="vda"
