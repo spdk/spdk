@@ -48,6 +48,7 @@
 - @ref nvme
 - @ref ioat
 - @ref virtio
+- @ref crypto
 
 # Tools {#tools}
 
