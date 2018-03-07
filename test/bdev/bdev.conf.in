@@ -2,6 +2,12 @@
   # PT <bdev name> <vbdev name>
   PT Malloc3 TestPT
 
+[crypto]
+ # CRY <bdev name> <vbdev name> <key> <PMD>
+ # default key size is 16 characters
+ # supported PMD list:  AESCBC, QAT
+ CRY Malloc4 ptd 0123456789123456 AESCBC
+
 [Malloc]
   NumberOfLuns 4
   LunSizeInMB 64
