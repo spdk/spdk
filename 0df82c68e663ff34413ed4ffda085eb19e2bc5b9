@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c0f41d9a_ce086ae1",
+        "filename": "test/lib/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-07T15:16:23Z",
+      "side": 1,
+      "message": "why did you remove ./nvme reset $bdf?",
+      "revId": "0df82c68e663ff34413ed4ffda085eb19e2bc5b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
