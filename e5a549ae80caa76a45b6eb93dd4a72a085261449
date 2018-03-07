@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b9e8e9d6_6ba7130f",
+        "filename": "doc/bdev_module.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-07T22:07:03Z",
+      "side": 1,
+      "message": "register \u003d\u003e registers",
+      "revId": "e5a549ae80caa76a45b6eb93dd4a72a085261449",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "24a4982c_0bf37d78",
+        "filename": "doc/bdev_module.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-07T22:07:03Z",
+      "side": 1,
+      "message": "describe \u003d\u003e describes",
+      "revId": "e5a549ae80caa76a45b6eb93dd4a72a085261449",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8b0c3f1_e31cfae8",
+        "filename": "doc/bdev_module.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-07T22:07:03Z",
+      "side": 1,
+      "message": "return \u003d\u003e returns",
+      "revId": "e5a549ae80caa76a45b6eb93dd4a72a085261449",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d9cd80a_a098871a",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-07T22:07:03Z",
+      "side": 1,
+      "message": "i don\u0027t see this being used anywhere - and should be part of a separate patch regardless I think",
+      "revId": "e5a549ae80caa76a45b6eb93dd4a72a085261449",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f94c818e_96c5fd20",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2390,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-07T22:07:03Z",
+      "side": 1,
+      "message": "we are trying to remove explicit calls to exit() in the library code\nmaybe just assert(false) here and return instead?",
+      "revId": "e5a549ae80caa76a45b6eb93dd4a72a085261449",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
