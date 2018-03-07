@@ -2,6 +2,10 @@
   # PT <bdev name> <vbdev name>
   PT Malloc3 TestPT
 
+[crypto]
+ # CRY <bdev name> <vbdev name>
+ CRY Malloc3 ptd
+
 [Malloc]
   NumberOfLuns 4
   LunSizeInMB 64
