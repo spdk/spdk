@@ -22,6 +22,52 @@
       "revId": "4c5b163f31f92780e10ad67fa8155cfd7d7b2408",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5da3101a_1407772f",
+        "filename": "include/spdk/bit_array.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-07T04:46:22Z",
+      "side": 1,
+      "message": "should be removed, or what it means?",
+      "range": {
+        "startLine": 116,
+        "startChar": 35,
+        "endLine": 116,
+        "endChar": 38
+      },
+      "revId": "4c5b163f31f92780e10ad67fa8155cfd7d7b2408",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22dfd3fd_31e3d0e7",
+        "filename": "include/spdk/bit_array.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-07T04:46:22Z",
+      "side": 1,
+      "message": "same as above.",
+      "range": {
+        "startLine": 129,
+        "startChar": 37,
+        "endLine": 129,
+        "endChar": 40
+      },
+      "revId": "4c5b163f31f92780e10ad67fa8155cfd7d7b2408",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
