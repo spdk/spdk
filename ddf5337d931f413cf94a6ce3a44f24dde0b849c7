@@ -114,6 +114,30 @@
       "revId": "ddf5337d931f413cf94a6ce3a44f24dde0b849c7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10555ce8_7b168a1e",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 54
+      },
+      "lineNbr": 3680,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-07T16:26:52Z",
+      "side": 1,
+      "message": "I think this might be a good addition, especially if in future the internal_xattrs are expanded.",
+      "parentUuid": "ea8bae8d_a3509d5a",
+      "range": {
+        "startLine": 3680,
+        "startChar": 1,
+        "endLine": 3680,
+        "endChar": 37
+      },
+      "revId": "ddf5337d931f413cf94a6ce3a44f24dde0b849c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
