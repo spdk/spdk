@@ -203,11 +203,16 @@ spdk_mempool_free(struct spdk_mempool *_mp)
 	free(mp);
 }
 
+bool ut_spdk_mempool_get = false;
 void *
 spdk_mempool_get(struct spdk_mempool *_mp)
 {
 	struct test_mempool *mp = (struct test_mempool *)_mp;
 	void *buf;
+
+	if (ut_spdk_mempool_get) {
+		return NULL;
+	}
 
 	if (mp && mp->count == 0) {
 		return NULL;
@@ -221,6 +226,18 @@ spdk_mempool_get(struct spdk_mempool *_mp)
 		}
 		return buf;
 	}
+}
+
+int
+spdk_mempool_get_bulk(struct spdk_mempool *mp, void **ele_arr, size_t count)
+{
+	for (size_t i = 0; i < count; i++) {
+		ele_arr[i] = spdk_mempool_get(mp);
+		if (ele_arr[i] == NULL) {
+			return -1;
+		}
+	}
+	return 0;
 }
 
 void
