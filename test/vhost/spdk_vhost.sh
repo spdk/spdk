@@ -194,7 +194,7 @@ case $1 in
 	;;
 	-ro|--readonly)
 		echo 'Running readonly tests suite...'
-		$WORKDIR/readonly/readonly.sh --vm_image=$VM_IMAGE --disk=Nvme0n1
+		$WORKDIR/readonly/readonly.sh --vm_image=$VM_IMAGE --disk=Nvme0n1 -x
 		report_test_completion "vhost_readonly"
 		;;
 	*)

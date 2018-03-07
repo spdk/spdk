@@ -202,7 +202,7 @@ if [ $SPDK_TEST_VHOST_INIT -eq 1 ]; then
 fi
 
 if [ $SPDK_TEST_NVML -eq 1 ]; then
-	run_test ./test/pmem/pmem.sh
+	run_test ./test/pmem/pmem.sh -x
 fi
 
 timing_enter cleanup
