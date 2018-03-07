@@ -212,7 +212,7 @@ function waitforlisten() {
 		# if the process is no longer running, then exit the script
 		#  since it means the application crashed
 		if ! kill -s 0 $1; then
-			exit
+			exit 1
 		fi
 		if netstat -an -x | grep -iw LISTENING | grep -q $rpc_addr; then
 			ret=0
