@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7018d29e_7ebbaa98",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-07T05:23:34Z",
+      "side": 1,
+      "message": "or the default blobstore filesystem option values ?\n\nI just wanted to say I did not see any other place to use blobfs.",
+      "parentUuid": "2e8805fc_8c05e40e",
+      "range": {
+        "startLine": 77,
+        "startChar": 58,
+        "endLine": 77,
+        "endChar": 78
+      },
+      "revId": "f144ce671525ea250e0c79c8c319c810d51bf4e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3927a7e1_bae0ebdf",
         "filename": "include/spdk/blobfs.h",
         "patchSetId": 17
