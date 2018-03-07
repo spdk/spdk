@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0f807844_5e7bc4b5",
+        "filename": "test/unit/lib/bdev/pmem/bdev_pmem_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-07T21:57:00Z",
+      "side": 1,
+      "message": "please rename this to json_mock.c",
+      "revId": "2a80b94eb8570c82345e15dcd573936d47b6fecb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a79886c_bd753b8a",
+        "filename": "test/unit/lib/json_moc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-07T21:57:00Z",
+      "side": 1,
+      "message": "Needs copyright/license header.",
+      "revId": "2a80b94eb8570c82345e15dcd573936d47b6fecb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
