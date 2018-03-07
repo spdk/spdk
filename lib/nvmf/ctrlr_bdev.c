@@ -307,9 +307,9 @@ nvmf_virtual_ctrlr_dsm_cpl(struct spdk_bdev_io *bdev_io, bool success,
 
 	if (unmap_ctx->count == 0) {
 		spdk_nvmf_request_complete(req);
-		spdk_bdev_free_io(bdev_io);
 		free(unmap_ctx);
 	}
+	spdk_bdev_free_io(bdev_io);
 }
 
 static int
