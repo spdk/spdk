@@ -261,6 +261,21 @@ void spdk_bs_create_clone(struct spdk_blob_store *bs, spdk_blob_id blobid,
 			  const struct spdk_blob_xattr_opts *clone_xattrs,
 			  spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
 
+/* TODO Note: This calls should be synchronous */
+
+/* Provide table with blob id's of clones are dependent on specified snaphot */
+/* Return -EINVAL if specified blob is not a snapshot */
+int spdk_blob_get_clones(struct spdk_blob *snapshot, spdk_blob_id **ids, size_t *count);
+
+/* Returns blob id of snaphot or SPDK_BLOBID_INVALID is blob is not a clone */
+spdk_blob_id spdk_blob_get_snapshot(struct spdk_blob *blob);
+
+/* TODO Note: This should probably go to separate patch
+ * Maybe spdk_blob_get_options instead? */
+bool spdk_blob_is_read_only(struct spdk_blob *blob);
+bool spdk_blob_is_snapshot(struct spdk_blob *blob);
+bool spdk_blob_is_clone(struct spdk_blob *blob);
+bool spdk_blob_is_thin_provisioned(struct spdk_blob *blob);
 
 /* Delete an existing blob. */
 void spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,

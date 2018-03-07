@@ -184,6 +184,8 @@ _spdk_blob_alloc(struct spdk_blob_store *bs, spdk_blob_id id)
 	TAILQ_INIT(&blob->xattrs);
 	TAILQ_INIT(&blob->xattrs_internal);
 
+	TAILQ_INIT(&blob->clones);
+
 	return blob;
 }
 
@@ -809,6 +811,25 @@ _spdk_blob_load_snapshot_cpl(void *cb_arg, struct spdk_blob *snapshot, int bserr
 	if (blob->back_bs_dev == NULL) {
 		bserrno = -ENOMEM;
 		goto error;
+	}
+
+	blob->snapshot = snapshot;
+
+	/**
+	 * FIXIT: pushing two the same clones on the list of clones causes
+	 *        infinite loops. This is ugly workaround.
+	 */
+	struct spdk_blob *clone;
+	TAILQ_FOREACH(clone, &snapshot->clones, next_clone) {
+		if (clone->id == blob->id) {
+			//FIXIT: following assert fails sometimes.
+			//       It's very naughty.
+			//assert(clone != blob);
+			break;
+		}
+	}
+	if (clone == NULL) {
+		TAILQ_INSERT_TAIL(&snapshot->clones, blob, next_clone);
 	}
 
 	_spdk_blob_load_final(ctx, bserrno);
@@ -3622,6 +3643,8 @@ _spdk_bs_snapshot_origblob_sync_cpl(void *cb_arg, int bserrno)
 		return;
 	}
 
+	TAILQ_INSERT_TAIL(&newblob->clones, ctx->original.blob, next_clone);
+
 	spdk_blob_set_read_only(newblob);
 
 	/* sync snapshot metadata */
@@ -3656,6 +3679,8 @@ _spdk_bs_snapshot_newblob_sync_cpl(void *cb_arg, int bserrno)
 
 	/* set clone blob as thin provisioned */
 	_spdk_blob_set_thin_provision(origblob);
+
+	origblob->snapshot = newblob;
 
 	/* Zero out origblob cluster map */
 	memset(origblob->active.clusters, 0,
@@ -3800,13 +3825,48 @@ _spdk_bs_xattr_clone(void *arg, const char *name,
 	}
 }
 
+#if 1
+//FIXIT: update clone->snapshot relations
+
+static void
+_spdk_bs_clone_newblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
+{
+	struct spdk_clone_snapshot_ctx *ctx = (struct spdk_clone_snapshot_ctx *)cb_arg;
+	struct spdk_blob *snapshot = ctx->original.blob;
+	struct spdk_blob *clone = _blob;
+
+	ctx->new.blob = clone;
+
+	clone->snapshot = snapshot;
+	TAILQ_INSERT_TAIL(&snapshot->clones, clone, next_clone);
+
+	printf(" ---> Setting up relations: #%" PRIu64 " snap: %s\n",
+	       clone->id,
+	       clone->snapshot == NULL ? "NO" : "YES");
+
+	spdk_blob_close(clone, _spdk_bs_cleanup_origblob, ctx);
+	//_spdk_bs_cleanup_origblob(ctx, bserrno);
+}
+
+#endif
+
 static void
 _spdk_bs_clone_newblob_create_cpl(void *cb_arg, spdk_blob_id blobid, int bserrno)
 {
 	struct spdk_clone_snapshot_ctx *ctx = (struct spdk_clone_snapshot_ctx *)cb_arg;
 
+	if (bserrno != 0) {
+		_spdk_bs_cleanup_origblob(ctx, bserrno);
+		return;
+	}
+
+	ctx->new.id = blobid;
 	ctx->cpl.u.blobid.blobid = blobid;
-	_spdk_bs_cleanup_origblob(ctx, bserrno);
+#if 1
+	//FIXIT: update clone->snapshot relations
+	printf(">>>> Open new clone #%" PRIu64 "\n", blobid);
+	spdk_bs_open_blob(ctx->original.blob->bs, blobid, _spdk_bs_clone_newblob_open_cpl, ctx);
+#endif
 }
 
 static void
@@ -3961,6 +4021,17 @@ _spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
 		return;
 	}
 
+
+	if (spdk_blob_is_clone(blob)) {
+
+		// these asserts are for development use:
+		assert(blob != NULL);
+		assert(blob->snapshot != NULL);
+		//assert(blob->snapshot->clones != NULL);
+
+		TAILQ_REMOVE(&blob->snapshot->clones, blob, next_clone);
+	}
+
 	/*
 	 * Remove the blob from the blob_store list now, to ensure it does not
 	 *  get returned after this point by _spdk_blob_lookup().
@@ -4018,6 +4089,10 @@ _spdk_bs_open_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	blob->open_ref++;
 
 	TAILQ_INSERT_HEAD(&blob->bs->blobs, blob, link);
+
+#if 1
+
+#endif
 
 	spdk_bs_sequence_finish(seq, bserrno);
 }
@@ -4623,6 +4698,77 @@ void
 spdk_bs_set_bstype(struct spdk_blob_store *bs, struct spdk_bs_type bstype)
 {
 	memcpy(&bs->bstype, &bstype, sizeof(bstype));
+}
+
+bool
+spdk_blob_is_read_only(struct spdk_blob *blob)
+{
+	return (blob->data_ro || blob->md_ro);
+}
+
+bool
+spdk_blob_is_snapshot(struct spdk_blob *blob)
+{
+	/* FIXIT: Introduce a new flag for invalid_flags to distinguish read
+	 *        only blobs and snapshots (similar to SPDK_BLOB_THIN_PROV).
+	 */
+	return spdk_blob_is_read_only(blob);
+}
+
+bool
+spdk_blob_is_clone(struct spdk_blob *blob)
+{
+	assert(spdk_blob_is_thin_provisioned(blob));
+	return blob->snapshot != NULL;
+}
+
+bool
+spdk_blob_is_thin_provisioned(struct spdk_blob *blob)
+{
+	return blob->invalid_flags & SPDK_BLOB_THIN_PROV;
+}
+
+spdk_blob_id
+spdk_blob_get_snapshot(struct spdk_blob *blob)
+{
+	if (blob == NULL || blob->snapshot == NULL) {
+		return SPDK_BLOBID_INVALID;
+	}
+	return blob->snapshot->id;
+}
+
+int
+spdk_blob_get_clones(struct spdk_blob *blob, spdk_blob_id **ids, size_t *count)
+{
+	struct spdk_blob *clone;
+	size_t n;
+
+	if (spdk_blob_is_snapshot(blob) == false) {
+		return -EINVAL;
+	}
+
+	if (ids == NULL || count == NULL) {
+		return -EINVAL;
+	}
+
+	n = 0;
+	TAILQ_FOREACH(clone, &blob->clones, next_clone) {
+		n++;
+	}
+
+	*ids = calloc(n, sizeof(spdk_blob_id));
+	if (*ids == NULL) {
+		return -ENOMEM;
+	}
+
+	n = 0;
+	TAILQ_FOREACH(clone, &blob->clones, next_clone) {
+		(*ids)[n++] = clone->id;
+	}
+
+	*count = n;
+
+	return 0;
 }
 
 SPDK_LOG_REGISTER_COMPONENT("blob", SPDK_LOG_BLOB)
