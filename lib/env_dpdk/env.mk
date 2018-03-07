@@ -54,7 +54,7 @@ else
 DPDK_LIB_EXT = .so
 endif
 
-DPDK_LIB_LIST = rte_eal rte_mempool rte_ring
+DPDK_LIB_LIST = rte_pmd_qat crypto rte_eal rte_mempool rte_ring rte_kvargs rte_cryptodev rte_reorder IPSec_MB rte_bus_vdev rte_pmd_aesni_mb rte_mbuf
 
 # librte_mempool_ring was new added from DPDK 17.05. Link this library used for
 #   ring based mempool management API.
