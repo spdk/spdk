@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ffaf3e41_e1449a8c",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 57
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-07T16:26:52Z",
+      "side": 1,
+      "message": "Maybe additional comment to be extra clear that specified blob will be converted to clone (thin-provisioned blob with new read-only snapshot set as backing blob) ?",
+      "range": {
+        "startLine": 251,
+        "startChar": 0,
+        "endLine": 252,
+        "endChar": 50
+      },
+      "revId": "3cb65b3ea7621b11cf016f76973e7669e4e01130",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92caa2cf_ce5dacf8",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 3458,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-07T16:26:52Z",
+      "side": 1,
+      "message": "\u003e maybe snapshot_xattrs?  or at least put a comment saying that these are xattrs for the snapshot (not xattrs to add to the original blob or anything like that)",
+      "range": {
+        "startLine": 3458,
+        "startChar": 0,
+        "endLine": 3458,
+        "endChar": 43
+      },
+      "revId": "3cb65b3ea7621b11cf016f76973e7669e4e01130",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "40fd207d_8ba2af99",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 3650,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-07T16:26:52Z",
+      "side": 1,
+      "message": "\u003e For sanity, I think this should be\nchar xattrs_name[]",
+      "range": {
+        "startLine": 3650,
+        "startChar": 1,
+        "endLine": 3650,
+        "endChar": 42
+      },
+      "revId": "3cb65b3ea7621b11cf016f76973e7669e4e01130",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
