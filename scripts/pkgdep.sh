@@ -3,6 +3,19 @@
 
 SYSTEM=`uname -s`
 
+scriptsdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $scriptsdir/..)
+
+# Only crypto needs this lib but because it requires root to
+# install we do it here.
+ipsec="$(find /usr -name intel-ipsec-mb.h 2>/dev/null)"
+if [[ "$ipsec" == "" ]]; then
+	cd $rootdir/intel-ipsec-mb
+	make
+	make install
+	cd -
+fi
+
 if [ -s /etc/redhat-release ]; then
 	# Includes Fedora, CentOS
 	if [ -f /etc/centos-release ]; then
