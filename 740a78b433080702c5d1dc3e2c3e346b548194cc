@@ -33,6 +33,24 @@
       "revId": "740a78b433080702c5d1dc3e2c3e346b548194cc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d09ce0b_17000397",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 849,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-03-07T00:09:24Z",
+      "side": 1,
+      "message": "I adopted your comments, and re-export spdk_iscsi_conn_destruct",
+      "parentUuid": "1b76b998_1a9045f5",
+      "revId": "740a78b433080702c5d1dc3e2c3e346b548194cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
