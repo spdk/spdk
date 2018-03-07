@@ -1,5 +1,8 @@
+[crypto]
+ CRY Malloc3 ptd
+
 [Malloc]
-  NumberOfLuns 3
+  NumberOfLuns 4
   LunSizeInMB 64
 
 [Split]
