@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "62dbcb17_aea5ae61",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 695,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-07T13:01:00Z",
+      "side": 1,
+      "message": "I think there is no need for \"TEST CASE 650\" part of the header anymore, as the def name already has the number.\n\nI would move the \"Name: xxx\" comment into the function itself as a docstring and provide some short description what is the test case about. Example:\n\"\"\"\nName: xxx\nPositive/negative test case.\nThis tests checks that blah blah blah if blah blah blah, etc.\n\"\"\"",
+      "range": {
+        "startLine": 695,
+        "startChar": 4,
+        "endLine": 695,
+        "endChar": 57
+      },
+      "revId": "1a9a823c539253228755688254b9b07d166f9fca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
