@@ -1,0 +1,124 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3d1134e9_9cd13037",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1193,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-07T10:00:04Z",
+      "side": 1,
+      "message": "Sorry for going back and forth here, I don\u0027t think \"simulating operation in progress\" is done (or expected) here.\nSince those are vbdev_lvol UT, they check whether appropriate lvol.c functions were called or bdev related operations were performed.\nThis case in particular should check expected results when spdk_lvs_rename() returns error.\n\n\nPlease update the comment accordingly. Jim posted a good outline:\n\n\u003e Maybe add a comment explaining that these are bdev_lvol tests so the g_lvs_with_name_already_exists flag simulates a duplicate and the actual name passed here is not really compared.",
+      "revId": "484347368a217689abd153dae2d1119186b3f13e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dfd41d50_5223e474",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1195,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-07T10:00:04Z",
+      "side": 1,
+      "message": "In context of above comment \"g_lvs_with_name_already_exists\" seems more appropriate.",
+      "range": {
+        "startLine": 1195,
+        "startChar": 1,
+        "endLine": 1195,
+        "endChar": 27
+      },
+      "revId": "484347368a217689abd153dae2d1119186b3f13e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e72b62e7_864b0a62",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1478,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-07T10:00:04Z",
+      "side": 1,
+      "message": "A simpler case where two lvs-\u003ename are the same could be added as well.",
+      "range": {
+        "startLine": 1478,
+        "startChar": 1,
+        "endLine": 1478,
+        "endChar": 54
+      },
+      "revId": "484347368a217689abd153dae2d1119186b3f13e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "75c7d28c_c3a7e7a3",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1480,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-07T10:00:04Z",
+      "side": 1,
+      "message": "Editing it directly here makes it seem like lvs2 started, but never finished renaming. Its fine if this is last of the UT before destroying lvs2, but won\u0027t be if new case is added after.",
+      "range": {
+        "startLine": 1480,
+        "startChar": 1,
+        "endLine": 1480,
+        "endChar": 68
+      },
+      "revId": "484347368a217689abd153dae2d1119186b3f13e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aac5df4b_4a0c5c79",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1485,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-07T10:00:04Z",
+      "side": 1,
+      "message": "As per comment above. Just to safe, please revert the lvs2-\u003enew_name to value from lvs2-\u003ename after this case.",
+      "revId": "484347368a217689abd153dae2d1119186b3f13e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "582a2563_a916f71f",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1486,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-07T10:00:04Z",
+      "side": 1,
+      "message": "Please add case checking _spdk_lvs_rename_cb() error path.\nLets say spdk_bs_open_blob() fails, then check if lvs name and new_name are back to original ones.",
+      "revId": "484347368a217689abd153dae2d1119186b3f13e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
