@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ed22ba08_f9eeb7cf",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-07T05:13:25Z",
+      "side": 1,
+      "message": "can this memory from other malloc function like spdk_dma_malloc(), spdk_dma_realloc() and the socket versions?\n\nMaybe: Free a memory buffer previously allocated, for example from spdk_dma_zmalloc().",
+      "range": {
+        "startLine": 170,
+        "startChar": 50,
+        "endLine": 170,
+        "endChar": 66
+      },
+      "revId": "b808afc4570566392143d25bbd830d7284eb1e00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eda70701_62a32faf",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-07T05:13:25Z",
+      "side": 1,
+      "message": "Maybe we need the information of units like Length in bytes. Same for related size in this file.",
+      "range": {
+        "startLine": 182,
+        "startChar": 14,
+        "endLine": 182,
+        "endChar": 20
+      },
+      "revId": "b808afc4570566392143d25bbd830d7284eb1e00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2868122f_e213072f",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-07T05:13:25Z",
+      "side": 1,
+      "message": "pointer",
+      "range": {
+        "startLine": 196,
+        "startChar": 13,
+        "endLine": 196,
+        "endChar": 21
+      },
+      "revId": "b808afc4570566392143d25bbd830d7284eb1e00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed00f809_da843941",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-07T05:13:25Z",
+      "side": 1,
+      "message": "created",
+      "range": {
+        "startLine": 229,
+        "startChar": 28,
+        "endLine": 229,
+        "endChar": 35
+      },
+      "revId": "b808afc4570566392143d25bbd830d7284eb1e00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac635442_c3ea8f9b",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 542,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-07T05:13:25Z",
+      "side": 1,
+      "message": "Comments for these two APIs",
+      "range": {
+        "startLine": 540,
+        "startChar": 1,
+        "endLine": 542,
+        "endChar": 31
+      },
+      "revId": "b808afc4570566392143d25bbd830d7284eb1e00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9817deb5_cb8e53fb",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 549,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-07T05:13:25Z",
+      "side": 1,
+      "message": "remove this",
+      "range": {
+        "startLine": 549,
+        "startChar": 54,
+        "endLine": 549,
+        "endChar": 55
+      },
+      "revId": "b808afc4570566392143d25bbd830d7284eb1e00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d5c2bfe_cd087253",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 558,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-07T05:13:25Z",
+      "side": 1,
+      "message": "same",
+      "range": {
+        "startLine": 558,
+        "startChar": 51,
+        "endLine": 558,
+        "endChar": 52
+      },
+      "revId": "b808afc4570566392143d25bbd830d7284eb1e00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "73df992c_4c28c3db",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 576,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-07T05:13:25Z",
+      "side": 1,
+      "message": "same",
+      "range": {
+        "startLine": 576,
+        "startChar": 56,
+        "endLine": 576,
+        "endChar": 57
+      },
+      "revId": "b808afc4570566392143d25bbd830d7284eb1e00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e2f7447_f8177af4",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 686,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-07T05:13:25Z",
+      "side": 1,
+      "message": "comment for these APIs ?",
+      "range": {
+        "startLine": 668,
+        "startChar": 0,
+        "endLine": 686,
+        "endChar": 94
+      },
+      "revId": "b808afc4570566392143d25bbd830d7284eb1e00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
