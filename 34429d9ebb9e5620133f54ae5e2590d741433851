@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f918125f_b884ab63",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-07T01:48:46Z",
+      "side": 1,
+      "message": "value ?",
+      "range": {
+        "startLine": 89,
+        "startChar": 26,
+        "endLine": 89,
+        "endChar": 30
+      },
+      "revId": "34429d9ebb9e5620133f54ae5e2590d741433851",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f635a3f7_19ac77c1",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-07T01:48:46Z",
+      "side": 1,
+      "message": "How about like the following?\n\nIf \u00270\u0027, the allocated buffer is suitably aligned (in the same manner as malloc()). Otherwise, the allocated buffer is aligned to the multiple of align. In this case, it must be a power of two.",
+      "range": {
+        "startLine": 89,
+        "startChar": 57,
+        "endLine": 90,
+        "endChar": 12
+      },
+      "revId": "34429d9ebb9e5620133f54ae5e2590d741433851",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b71ce139_9bf25261",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-07T01:48:46Z",
+      "side": 1,
+      "message": "I think this parameter does not specify the physical address of the buffer and pass-by-reference is done here.\n\nCorrectly a pointer to the variable to hold the physical address of the allocated buffer is passed.",
+      "range": {
+        "startLine": 91,
+        "startChar": 20,
+        "endLine": 91,
+        "endChar": 29
+      },
+      "revId": "34429d9ebb9e5620133f54ae5e2590d741433851",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eb1bf61f_afb3cca4",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-07T01:48:46Z",
+      "side": 1,
+      "message": "If NULL, the physical address is not returned.",
+      "range": {
+        "startLine": 91,
+        "startChar": 64,
+        "endLine": 92,
+        "endChar": 20
+      },
+      "revId": "34429d9ebb9e5620133f54ae5e2590d741433851",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d9367e1_d061b60e",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 444,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-07T01:48:46Z",
+      "side": 1,
+      "message": "A pointer to the ring ?",
+      "range": {
+        "startLine": 444,
+        "startChar": 15,
+        "endLine": 444,
+        "endChar": 19
+      },
+      "revId": "34429d9ebb9e5620133f54ae5e2590d741433851",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4fee1e4e_c32588ab",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-07T01:48:46Z",
+      "side": 1,
+      "message": "dequeued or to be dequeued?",
+      "range": {
+        "startLine": 445,
+        "startChar": 44,
+        "endLine": 445,
+        "endChar": 52
+      },
+      "revId": "34429d9ebb9e5620133f54ae5e2590d741433851",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d333f06_6e04f96e",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-07T01:48:46Z",
+      "side": 1,
+      "message": "What is \"on the ring\"?",
+      "range": {
+        "startLine": 445,
+        "startChar": 32,
+        "endLine": 445,
+        "endChar": 43
+      },
+      "revId": "34429d9ebb9e5620133f54ae5e2590d741433851",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6867b56b_88d4dc33",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-07T01:48:46Z",
+      "side": 1,
+      "message": "A pointer to the array?",
+      "range": {
+        "startLine": 445,
+        "startChar": 15,
+        "endLine": 445,
+        "endChar": 20
+      },
+      "revId": "34429d9ebb9e5620133f54ae5e2590d741433851",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b9131dc4_57a6d56d",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 456,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-07T01:48:46Z",
+      "side": 1,
+      "message": "dequeued or to be dequeued.",
+      "range": {
+        "startLine": 456,
+        "startChar": 44,
+        "endLine": 456,
+        "endChar": 54
+      },
+      "revId": "34429d9ebb9e5620133f54ae5e2590d741433851",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
