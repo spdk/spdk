@@ -63,6 +63,7 @@ DEFINE_STUB(spdk_vhost_vq_used_signal, int, (struct spdk_vhost_dev *vdev,
 		struct spdk_vhost_virtqueue *virtqueue), 0);
 DEFINE_STUB_V(spdk_vhost_dev_used_signal, (struct spdk_vhost_dev *vdev));
 DEFINE_STUB_V(spdk_vhost_dev_mem_register, (struct spdk_vhost_dev *vdev));
+DEFINE_STUB_V(use_it, (char *template));
 DEFINE_STUB_P(spdk_vhost_dev_find, struct spdk_vhost_dev, (const char *ctrlr_name), {0});
 DEFINE_STUB_V(spdk_ring_free, (struct spdk_ring *ring));
 DEFINE_STUB_P(spdk_conf_first_section, struct spdk_conf_section, (struct spdk_conf *cp), {0});

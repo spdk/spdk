@@ -154,7 +154,8 @@ spdk_rpc_add_vhost_scsi_lun_cb(struct spdk_vhost_dev *vdev, void *arg)
 invalid:
 	free_rpc_add_vhost_scsi_ctrlr_lun(rpc);
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-					 spdk_strerror(-rc));
+//					 spdk_strerror(-rc));
+			(const char*)xxxx);
 	return rc;
 }
 
@@ -196,6 +197,7 @@ invalid:
 	}
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 					 spdk_strerror(-rc));
+//			xxxx);
 }
 SPDK_RPC_REGISTER("add_vhost_scsi_lun", spdk_rpc_add_vhost_scsi_lun)
 

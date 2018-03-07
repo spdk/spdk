@@ -82,6 +82,8 @@
  */
 #define SPDK_VHOST_COALESCING_DELAY_BASE_US 0
 
+extern char xxxx[64];
+void use_it(char *template);
 
 #define SPDK_VHOST_FEATURES ((1ULL << VHOST_F_LOG_ALL) | \
 	(1ULL << VHOST_USER_F_PROTOCOL_FEATURES) | \

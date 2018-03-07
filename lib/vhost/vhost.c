@@ -90,6 +90,13 @@ void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr)
 	return (void *)rte_vhost_gpa_to_vva(vdev->mem, addr);
 }
 
+char xxxx[64] = "";
+void use_it(char *template)
+{
+	snprintf(xxxx, sizeof(xxxx), "%s", template);
+//	template[0]='1';
+}
+
 static void
 spdk_vhost_log_req_desc(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *virtqueue,
 			uint16_t req_id)

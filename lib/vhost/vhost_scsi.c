@@ -825,6 +825,7 @@ spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num,
 	snprintf(target_name, sizeof(target_name), "Target %u", scsi_tgt_num);
 	lun_id_list[0] = 0;
 	bdev_names_list[0] = (char *)bdev_name;
+	char tmp[64];
 
 	svdev->scsi_dev_state[scsi_tgt_num].removed = false;
 	svdev->scsi_dev[scsi_tgt_num] = spdk_scsi_dev_construct(target_name, bdev_names_list, lun_id_list,
@@ -832,6 +833,10 @@ spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num,
 					SPDK_SPC_PROTOCOL_IDENTIFIER_SAS, spdk_vhost_scsi_lun_hotremove, svdev);
 
 	if (svdev->scsi_dev[scsi_tgt_num] == NULL) {
+//		;
+		snprintf(tmp, sizeof(tmp), "Couldn't create spdk SCSI target '%s' using bdev '%s' in controller: %s\n",
+			    target_name, bdev_name, vdev->name);
+		use_it((tmp));
 		SPDK_ERRLOG("Couldn't create spdk SCSI target '%s' using bdev '%s' in controller: %s\n",
 			    target_name, bdev_name, vdev->name);
 		return -EINVAL;
