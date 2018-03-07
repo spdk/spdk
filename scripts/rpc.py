@@ -132,6 +132,30 @@ if __name__ == "__main__":
     p.set_defaults(func=set_bdev_options)
 
     @call_cmd
+    def construct_crypto_bdev(args):
+        print(rpc.bdev.construct_crypto_bdev(args.client,
+                                             base_bdev_name=args.base_bdev_name,
+                                             crypto_bdev_name=args.crypto_bdev_name,
+                                             crypto_pmd=args.crypto_pmd,
+                                             key=args.key))
+    p = subparsers.add_parser('construct_crypto_bdev',
+                              help='Add a crypto vbdev')
+    p.add_argument('-b', '--base_bdev_name', help="Name of the base bdev")
+    p.add_argument('-c', '--crypto_bdev_name', help="Name of the crypto vbdev")
+    p.add_argument('-d', '--crypto_pmd', help="Name of the crypto device driver")
+    p.add_argument('-k', '--key', help="Key")
+    p.set_defaults(func=construct_crypto_bdev)
+
+    @call_cmd
+    def delete_crypto_bdev(args):
+        rpc.bdev.delete_crypto_bdev(args.client,
+                                    name=args.name)
+
+    p = subparsers.add_parser('delete_crypto_bdev', help='Delete a crypto disk')
+    p.add_argument('name', help='crypto bdev name')
+    p.set_defaults(func=delete_crypto_bdev)
+
+    @call_cmd
     def construct_malloc_bdev(args):
         num_blocks = (args.total_size * 1024 * 1024) // args.block_size
         print(rpc.bdev.construct_malloc_bdev(args.client,
@@ -139,7 +163,6 @@ if __name__ == "__main__":
                                              block_size=args.block_size,
                                              name=args.name,
                                              uuid=args.uuid))
-
     p = subparsers.add_parser('construct_malloc_bdev',
                               help='Add a bdev with malloc backend')
     p.add_argument('-b', '--name', help="Name of the bdev")
