@@ -1,0 +1,2 @@
+/bin/ls
+/bin/top
