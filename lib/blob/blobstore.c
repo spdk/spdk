@@ -4085,8 +4085,6 @@ _spdk_blob_get_xattr_value(struct spdk_blob *blob, const char *name,
 	struct spdk_xattr	*xattr;
 	struct spdk_xattr_tailq *xattrs;
 
-	_spdk_blob_verify_md_op(blob);
-
 	xattrs = internal ? &blob->xattrs_internal : &blob->xattrs;
 
 	TAILQ_FOREACH(xattr, xattrs, link) {
@@ -4103,6 +4101,8 @@ int
 spdk_blob_get_xattr_value(struct spdk_blob *blob, const char *name,
 			  const void **value, size_t *value_len)
 {
+	_spdk_blob_verify_md_op(blob);
+
 	return _spdk_blob_get_xattr_value(blob, name, value, value_len, false);
 }
 
