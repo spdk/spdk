@@ -807,6 +807,7 @@ INPUT                  = ../include/spdk \
                          bdev_pg.md \
                          blob.md \
                          blobfs.md \
+                         crypto.md \
                          event.md \
                          ioat.md \
                          iscsi.md \
