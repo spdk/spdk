@@ -821,7 +821,7 @@ static const struct spdk_bdev_fn_table vbdev_crypto_fn_table = {
 	.submit_request		= vbdev_crypto_submit_request,
 	.io_type_supported	= vbdev_crypto_io_type_supported,
 	.get_io_channel		= vbdev_crypto_get_io_channel,
-	.dump_config_json	= vbdev_crypto_dump_config_json,
+	.dump_info_json		= vbdev_crypto_dump_config_json,
 };
 
 /* Called when the underlying base bdev goes away. */
