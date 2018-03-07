@@ -78,11 +78,18 @@ ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_bus_pci.*))
 DPDK_LIB_LIST += rte_bus_pci
 endif
 
+ifeq ($(CONFIG_CRYPTO),y)
+DPDK_LIB_LIST += rte_cryptodev rte_reorder rte_bus_vdev rte_pmd_aesni_mb rte_mbuf
+endif
+
 ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_kvargs.*))
 DPDK_LIB_LIST += rte_kvargs
 endif
 
 DPDK_LIB = $(DPDK_LIB_LIST:%=$(DPDK_ABS_DIR)/lib/lib%$(DPDK_LIB_EXT))
+ifeq ($(CONFIG_CRYPTO),y)
+DPDK_LIB += $(SPDK_ROOT_DIR)/intel-ipsec-mb/libIPSec_MB.a
+endif
 
 # SPDK memory registration requires experimental (deprecated) rte_memory API for DPDK 18.05
 ENV_CFLAGS = $(DPDK_INC) -Wno-deprecated-declarations
