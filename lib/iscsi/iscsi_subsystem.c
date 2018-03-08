@@ -759,8 +759,10 @@ spdk_iscsi_read_parameters_from_config_file(struct spdk_conf_section *sp,
 }
 
 static int
-spdk_iscsi_initialize_iscsi_global_params(struct spdk_iscsi_opts *opts)
+spdk_iscsi_initialize_iscsi_globals(struct spdk_iscsi_opts *opts)
 {
+	int rc;
+
 	if (!opts->authfile) {
 		SPDK_ERRLOG("opts->authfile is NULL\n");
 		return -EINVAL;
@@ -797,32 +799,6 @@ spdk_iscsi_initialize_iscsi_global_params(struct spdk_iscsi_opts *opts)
 	g_spdk_iscsi.req_discovery_auth = opts->req_discovery_auth;
 	g_spdk_iscsi.req_discovery_auth_mutual = opts->req_discovery_auth;
 	g_spdk_iscsi.discovery_auth_group = opts->discovery_auth_group;
-
-	return 0;
-}
-
-static int
-spdk_iscsi_app_read_parameters(void)
-{
-	struct spdk_conf_section *sp;
-	struct spdk_iscsi_opts opts;
-	int rc;
-
-	spdk_iscsi_opts_init(&opts);
-
-	/* Process parameters */
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_app_read_parameters\n");
-	sp = spdk_conf_find_section(NULL, "iSCSI");
-	if (sp != NULL) {
-		spdk_iscsi_read_parameters_from_config_file(sp, &opts);
-	}
-
-	rc = spdk_iscsi_initialize_iscsi_global_params(&opts);
-	spdk_iscsi_opts_free(&opts);
-	if (rc != 0) {
-		SPDK_ERRLOG("spdk_iscsi_initialize_iscsi_global_params() failed\n");
-		return rc;
-	}
 
 	g_spdk_iscsi.session = spdk_dma_zmalloc(sizeof(void *) * g_spdk_iscsi.MaxSessions, 0, NULL);
 	if (!g_spdk_iscsi.session) {
@@ -982,11 +958,23 @@ end:
 static int
 spdk_iscsi_parse_iscsi_globals(void)
 {
+	struct spdk_conf_section *sp;
+	struct spdk_iscsi_opts opts;
 	int rc;
 
-	rc = spdk_iscsi_app_read_parameters();
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_iscsi_app_read_parameters() failed\n");
+	spdk_iscsi_opts_init(&opts);
+
+	/* Process parameters */
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_app_read_parameters\n");
+	sp = spdk_conf_find_section(NULL, "iSCSI");
+	if (sp != NULL) {
+		spdk_iscsi_read_parameters_from_config_file(sp, &opts);
+	}
+
+	rc = spdk_iscsi_initialize_iscsi_globals(&opts);
+	spdk_iscsi_opts_free(&opts);
+	if (rc != 0) {
+		SPDK_ERRLOG("spdk_iscsi_initialize_iscsi_globals() failed\n");
 		return rc;
 	}
 
