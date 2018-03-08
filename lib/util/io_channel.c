@@ -328,12 +328,21 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 }
 
 static void
-_spdk_io_device_attempt_free(struct io_device *dev)
+_spdk_io_device_free(struct io_device *dev)
+{
+	if (dev->unregister_cb) {
+		dev->unregister_cb(dev->io_device);
+	}
+	free(dev);
+}
+
+/* Need to be called with g_device_mutex */
+static bool
+_spdk_io_device_free_required(struct io_device *dev)
 {
 	struct spdk_thread *thread;
 	struct spdk_io_channel *ch;
 
-	pthread_mutex_lock(&g_devlist_mutex);
 	TAILQ_FOREACH(thread, &g_threads, tailq) {
 		TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
 			if (ch->dev == dev) {
@@ -341,18 +350,12 @@ _spdk_io_device_attempt_free(struct io_device *dev)
 				 * device still exists. Defer deletion
 				 * until it is removed.
 				 */
-				pthread_mutex_unlock(&g_devlist_mutex);
-				return;
+				return false;
 			}
 		}
 	}
-	pthread_mutex_unlock(&g_devlist_mutex);
 
-	if (dev->unregister_cb) {
-		dev->unregister_cb(dev->io_device);
-	}
-
-	free(dev);
+	return true;
 }
 
 void
@@ -382,8 +385,12 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 	dev->unregister_cb = unregister_cb;
 	dev->unregistered = true;
 	TAILQ_REMOVE(&g_io_devices, dev, tailq);
+	if (_spdk_io_device_free_required(dev)) {
+		pthread_mutex_unlock(&g_devlist_mutex);
+		_spdk_io_device_free(dev);
+		return;
+	}
 	pthread_mutex_unlock(&g_devlist_mutex);
-	_spdk_io_device_attempt_free(dev);
 }
 
 struct spdk_io_channel *
@@ -457,26 +464,36 @@ _spdk_put_io_channel(void *arg)
 {
 	struct spdk_io_channel *ch = arg;
 
+	pthread_mutex_lock(&g_devlist_mutex);
+
 	if (ch->ref == 0) {
 		SPDK_ERRLOG("ref already zero\n");
+		pthread_mutex_unlock(&g_devlist_mutex);
 		return;
 	}
 
 	ch->ref--;
 
 	if (ch->ref > 0) {
+		pthread_mutex_unlock(&g_devlist_mutex);
 		return;
 	}
+	pthread_mutex_unlock(&g_devlist_mutex);
 
 	ch->destroy_cb(ch->dev->io_device, spdk_io_channel_get_ctx(ch));
 
 	pthread_mutex_lock(&g_devlist_mutex);
 	TAILQ_REMOVE(&ch->thread->io_channels, ch, tailq);
-	pthread_mutex_unlock(&g_devlist_mutex);
 
 	if (ch->dev->unregistered) {
-		_spdk_io_device_attempt_free(ch->dev);
+		if (_spdk_io_device_free_required(ch->dev)) {
+			pthread_mutex_unlock(&g_devlist_mutex);
+			_spdk_io_device_free(ch->dev);
+			goto out;
+		}
 	}
+	pthread_mutex_unlock(&g_devlist_mutex);
+out:
 	free(ch);
 }
 
