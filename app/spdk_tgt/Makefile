@@ -31,21 +31,35 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-DIRS-y += trace
-DIRS-y += nvmf_tgt
-DIRS-y += iscsi_top
-DIRS-y += iscsi_tgt
-DIRS-y += spdk_tgt
+APP = spdk_tgt
+
+C_SRCS := spdk_tgt.c
+
+SPDK_LIB_LIST = event_bdev event_copy event_iscsi event_net event_scsi event_nvmf
+SPDK_LIB_LIST += nvmf event log trace conf util bdev iscsi scsi net copy rpc jsonrpc json
+SPDK_LIB_LIST += app_rpc log_rpc bdev_rpc
+
 ifeq ($(OS),Linux)
-DIRS-$(CONFIG_VHOST) += vhost
+SPDK_LIB_LIST += event_nbd nbd
 endif
 
-.PHONY: all clean $(DIRS-y)
+LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
+	$(COPY_MODULES_LINKER_ARGS) \
+	$(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
+LIBS += -lcrypto
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+all: $(APP)
+	@:
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+$(APP): $(OBJS) $(SPDK_LIB_FILES) $(SPDK_WHOLE_LIBS) $(BLOCKDEV_MODULES_FILES) $(LINKER_MODULES) $(ENV_LIBS)
+	$(LINK_C)
+
+clean:
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
