@@ -1,3 +1,13 @@
+try:
+    from shlex import quote
+except ImportError:
+    from pipes import quote
+
+
+def print_array(a):
+    print " ".join((quote(v) for v in a))
+
+
 def construct_lvol_store(args):
     params = {'bdev_name': args.bdev_name, 'lvs_name': args.lvs_name}
     if args.cluster_sz:
