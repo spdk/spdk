@@ -264,6 +264,26 @@ struct spdk_iscsi_poll_group {
 	struct spdk_sock_group				*sock_group;
 };
 
+struct spdk_iscsi_opts {
+	char *authfile;
+	char *nodebase;
+	int timeout;
+	int nopininterval;
+	int no_discovery_auth;
+	int req_discovery_auth;
+	int req_discovery_auth_mutual;
+	int discovery_auth_group;
+	uint32_t MaxSessions;
+	uint32_t MaxConnectionsPerSession;
+	uint32_t MaxConnections;
+	uint32_t MaxQueueDepth;
+	uint32_t DefaultTime2Wait;
+	uint32_t DefaultTime2Retain;
+	uint32_t ImmediateData;
+	uint32_t ErrorRecoveryLevel;
+	uint32_t AllowDuplicateIsid;
+};
+
 struct spdk_iscsi_globals {
 	char *authfile;
 	char *nodebase;
