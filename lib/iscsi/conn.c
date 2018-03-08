@@ -1074,6 +1074,7 @@ spdk_iscsi_conn_flush_pdus(void *_conn)
 	if (conn->state == ISCSI_CONN_STATE_RUNNING) {
 		rc = spdk_iscsi_conn_flush_pdus_internal(conn);
 		if (rc == 0 && conn->flush_poller != NULL) {
+			conn->last_nopin = spdk_get_ticks();
 			spdk_poller_unregister(&conn->flush_poller);
 		} else if (rc == 1 && conn->flush_poller == NULL) {
 			conn->flush_poller = spdk_poller_register(spdk_iscsi_conn_flush_pdus, conn, 50);
