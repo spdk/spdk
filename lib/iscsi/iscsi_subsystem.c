@@ -861,12 +861,6 @@ spdk_iscsi_poll_group_handle_nop(void *ctx)
 }
 
 static void
-iscsi_create_poll_group_done(void *ctx)
-{
-	spdk_iscsi_init_complete(0);
-}
-
-static void
 iscsi_create_poll_group(void *ctx)
 {
 	struct spdk_iscsi_poll_group *pg;
@@ -915,6 +909,32 @@ spdk_initialize_iscsi_poll_group(spdk_thread_fn cpl)
 	spdk_for_each_thread(iscsi_create_poll_group, NULL, cpl);
 }
 
+static void
+spdk_iscsi_parse_iscsi_configuration(void *ctx)
+{
+	int rc;
+
+	rc = spdk_iscsi_portal_grp_array_create();
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_iscsi_portal_grp_array_create() failed\n");
+		goto end;
+	}
+
+	rc = spdk_iscsi_init_grp_array_create();
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_iscsi_init_grp_array_create() failed\n");
+		goto end;
+	}
+
+	rc = spdk_iscsi_init_tgt_nodes();
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_iscsi_init_tgt_nodes() failed\n");
+	}
+
+end:
+	spdk_iscsi_init_complete(rc);
+}
+
 void
 spdk_iscsi_init(spdk_iscsi_init_cb cb_fn, void *cb_arg)
 {
@@ -938,28 +958,7 @@ spdk_iscsi_init(spdk_iscsi_init_cb cb_fn, void *cb_arg)
 		return;
 	}
 
-	rc = spdk_iscsi_portal_grp_array_create();
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_iscsi_portal_grp_array_create() failed\n");
-		spdk_iscsi_init_complete(-1);
-		return;
-	}
-
-	rc = spdk_iscsi_init_grp_array_create();
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_iscsi_init_grp_array_create() failed\n");
-		spdk_iscsi_init_complete(-1);
-		return;
-	}
-
-	rc = spdk_iscsi_init_tgt_nodes();
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_iscsi_init_tgt_nodes() failed\n");
-		spdk_iscsi_init_complete(-1);
-		return;
-	}
-
-	spdk_initialize_iscsi_poll_group(iscsi_create_poll_group_done);
+	spdk_initialize_iscsi_poll_group(spdk_iscsi_parse_iscsi_configuration);
 }
 
 void
