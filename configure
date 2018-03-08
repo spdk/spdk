@@ -47,6 +47,15 @@ function usage()
 	echo ""
 }
 
+function check_dir() {
+	arg="$1"
+	dir="${arg#*=}"
+	if [ ! -d "$dir" ]; then
+		echo "$arg: directory not found"
+		exit 1
+	fi
+}
+
 for i in "$@"; do
 	case "$i" in
 		-h|--help)
@@ -114,6 +123,7 @@ for i in "$@"; do
 			CONFIG_RDMA=n
 			;;
 		--with-dpdk=*)
+			check_dir "$i"
 			CONFIG_DPDK_DIR=$(readlink -f ${i#*=})
 			;;
 		--without-dpdk)
@@ -130,12 +140,14 @@ for i in "$@"; do
 			;;
 		--with-nvml=*)
 			CONFIG_NVML=y
+			check_dir "$i"
 			CONFIG_NVML_DIR=$(readlink -f ${i#*=})
 			;;
 		--without-nvml)
 			CONFIG_NVML=n
 			;;
 		--with-fio=*)
+			check_dir "$i"
 			FIO_SOURCE_DIR="${i#*=}"
 			CONFIG_FIO_PLUGIN=y
 			;;
@@ -144,6 +156,7 @@ for i in "$@"; do
 			CONFIG_FIO_PLUGIN=n
 			;;
 		--with-vtune=*)
+			check_dir "$i"
 			VTUNE_SOURCE_DIR="${i#*=}"
 			CONFIG_VTUNE=y
 			;;
