@@ -44,6 +44,10 @@ SPDK_LIB_LIST = event_bdev event_copy event_iscsi event_net event_scsi event_nvm
 SPDK_LIB_LIST += nvmf event log trace conf util bdev iscsi scsi net copy rpc jsonrpc json
 SPDK_LIB_LIST += app_rpc log_rpc bdev_rpc
 
+ifeq ($(CONFIG_VHOST),y)
+SPDK_LIB_LIST += vhost rte_vhost event_vhost
+endif
+
 ifeq ($(OS),Linux)
 SPDK_LIB_LIST += event_nbd nbd
 endif

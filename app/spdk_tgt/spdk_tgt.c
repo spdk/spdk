@@ -37,14 +37,28 @@
 #include "spdk/event.h"
 #include "spdk/log.h"
 
+#ifdef SPDK_CONFIG_VHOST
+#include "spdk/vhost.h"
+#endif
+
 static void
 spdk_tgt_usage(void)
 {
+#ifdef SPDK_CONFIG_VHOST
+	printf(" -S dir     directory where to create vhost sockets (default: pwd)\n");
+#endif
 }
 
 static void
 spdk_tgt_parse_arg(int ch, char *arg)
 {
+	switch (ch) {
+#ifdef SPDK_CONFIG_VHOST
+	case 'S':
+		spdk_vhost_set_socket_path(arg);
+		break;
+#endif
+	}
 }
 
 static void
