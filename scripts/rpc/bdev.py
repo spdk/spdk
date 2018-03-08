@@ -16,6 +16,8 @@ def construct_null_bdev(args):
     num_blocks = (args.total_size * 1024 * 1024) / args.block_size
     params = {'name': args.name, 'num_blocks': num_blocks,
               'block_size': args.block_size}
+    if args.uuid:
+        params['uuid'] = args.uuid
     print_array(args.client.call(
         'construct_null_bdev', params))
 
