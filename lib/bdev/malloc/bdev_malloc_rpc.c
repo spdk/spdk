@@ -34,11 +34,13 @@
 #include "bdev_malloc.h"
 #include "spdk/rpc.h"
 #include "spdk/util.h"
+#include "spdk/uuid.h"
 
 #include "spdk_internal/log.h"
 
 struct rpc_construct_malloc {
 	char *name;
+	char *uuid;
 	uint32_t num_blocks;
 	uint32_t block_size;
 };
@@ -47,10 +49,12 @@ static void
 free_rpc_construct_malloc(struct rpc_construct_malloc *r)
 {
 	free(r->name);
+	free(r->uuid);
 }
 
 static const struct spdk_json_object_decoder rpc_construct_malloc_decoders[] = {
 	{"name", offsetof(struct rpc_construct_malloc, name), spdk_json_decode_string, true},
+	{"uuid", offsetof(struct rpc_construct_malloc, uuid), spdk_json_decode_string, true},
 	{"num_blocks", offsetof(struct rpc_construct_malloc, num_blocks), spdk_json_decode_uint32},
 	{"block_size", offsetof(struct rpc_construct_malloc, block_size), spdk_json_decode_uint32},
 };
@@ -61,6 +65,8 @@ spdk_rpc_construct_malloc_bdev(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_construct_malloc req = {NULL};
 	struct spdk_json_write_ctx *w;
+	struct spdk_uuid *uuid = NULL;
+	struct spdk_uuid decoded_uuid;
 	struct spdk_bdev *bdev;
 
 	if (spdk_json_decode_object(params, rpc_construct_malloc_decoders,
@@ -70,7 +76,14 @@ spdk_rpc_construct_malloc_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	bdev = create_malloc_disk(req.name, req.num_blocks, req.block_size);
+	if (req.uuid) {
+		if (spdk_uuid_parse(&decoded_uuid, req.uuid)) {
+			goto invalid;
+		}
+		uuid = &decoded_uuid;
+	}
+
+	bdev = create_malloc_disk(req.name, uuid, req.num_blocks, req.block_size);
 	if (bdev == NULL) {
 		goto invalid;
 	}
