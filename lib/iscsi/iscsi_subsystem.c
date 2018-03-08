@@ -931,6 +931,13 @@ spdk_iscsi_init(spdk_iscsi_init_cb cb_fn, void *cb_arg)
 		return;
 	}
 
+	rc = spdk_initialize_iscsi_conns();
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_initialize_iscsi_conns() failed\n");
+		spdk_iscsi_init_complete(-1);
+		return;
+	}
+
 	rc = spdk_iscsi_portal_grp_array_create();
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_iscsi_portal_grp_array_create() failed\n");
@@ -948,13 +955,6 @@ spdk_iscsi_init(spdk_iscsi_init_cb cb_fn, void *cb_arg)
 	rc = spdk_iscsi_init_tgt_nodes();
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_iscsi_init_tgt_nodes() failed\n");
-		spdk_iscsi_init_complete(-1);
-		return;
-	}
-
-	rc = spdk_initialize_iscsi_conns();
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_initialize_iscsi_conns() failed\n");
 		spdk_iscsi_init_complete(-1);
 		return;
 	}
