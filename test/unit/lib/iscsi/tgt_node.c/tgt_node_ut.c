@@ -179,7 +179,7 @@ config_file_fail_cases(void)
 		if (sp == NULL) {
 			break;
 		}
-		rc = spdk_cf_add_iscsi_tgt_node(sp);
+		rc = spdk_iscsi_parse_tgt_node(sp);
 		CU_ASSERT(rc < 0);
 		section_index++;
 	}

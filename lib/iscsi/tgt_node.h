@@ -87,7 +87,7 @@ struct spdk_iscsi_tgt_node {
 	TAILQ_ENTRY(spdk_iscsi_tgt_node) tailq;
 };
 
-int spdk_iscsi_init_tgt_nodes(void);
+int spdk_iscsi_parse_tgt_nodes(void);
 
 void spdk_iscsi_shutdown_tgt_nodes(void);
 int spdk_iscsi_shutdown_tgt_node_by_name(const char *target_name);

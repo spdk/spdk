@@ -971,7 +971,7 @@ spdk_iscsi_tgt_node_construct(int target_index,
 }
 
 static int
-spdk_cf_add_iscsi_tgt_node(struct spdk_conf_section *sp)
+spdk_iscsi_parse_tgt_node(struct spdk_conf_section *sp)
 {
 	char buf[MAX_TMPBUF];
 	struct spdk_iscsi_tgt_node *target;
@@ -1192,12 +1192,12 @@ spdk_cf_add_iscsi_tgt_node(struct spdk_conf_section *sp)
 	return 0;
 }
 
-int spdk_iscsi_init_tgt_nodes(void)
+int spdk_iscsi_parse_tgt_nodes(void)
 {
 	struct spdk_conf_section *sp;
 	int rc;
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_init_tgt_nodes\n");
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_parse_tgt_nodes\n");
 
 	sp = spdk_conf_first_section(NULL);
 	while (sp != NULL) {
@@ -1208,9 +1208,9 @@ int spdk_iscsi_init_tgt_nodes(void)
 				SPDK_ERRLOG("tag %d is invalid\n", tag);
 				return -1;
 			}
-			rc = spdk_cf_add_iscsi_tgt_node(sp);
+			rc = spdk_iscsi_parse_tgt_node(sp);
 			if (rc < 0) {
-				SPDK_ERRLOG("spdk_cf_add_iscsi_tgt_node() failed\n");
+				SPDK_ERRLOG("spdk_iscsi_parse_tgt_node() failed\n");
 				return -1;
 			}
 		}

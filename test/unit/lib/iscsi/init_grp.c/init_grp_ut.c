@@ -73,10 +73,10 @@ create_from_config_file_cases(void)
 			break;
 		}
 
-		rc = spdk_iscsi_init_grp_create_from_configfile(sp);
+		rc = spdk_iscsi_parse_init_grp(sp);
 		CU_ASSERT(rc == 0);
 
-		spdk_iscsi_init_grp_array_destroy();
+		spdk_iscsi_init_grps_destroy();
 
 		section_index++;
 	}
@@ -90,10 +90,10 @@ create_from_config_file_cases(void)
 			break;
 		}
 
-		rc = spdk_iscsi_init_grp_create_from_configfile(sp);
+		rc = spdk_iscsi_parse_init_grp(sp);
 		CU_ASSERT(rc != 0);
 
-		spdk_iscsi_init_grp_array_destroy();
+		spdk_iscsi_init_grps_destroy();
 
 		section_index++;
 	}

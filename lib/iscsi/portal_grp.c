@@ -217,9 +217,8 @@ spdk_iscsi_portal_close(struct spdk_iscsi_portal *p)
 }
 
 static int
-spdk_iscsi_portal_create_from_configline(const char *portalstring,
-		struct spdk_iscsi_portal **ip,
-		int dry_run)
+spdk_iscsi_parse_portal(const char *portalstring, struct spdk_iscsi_portal **ip,
+			int dry_run)
 {
 	char *host = NULL, *port = NULL, *cpumask = NULL;
 	int len, rc = -1;
@@ -394,7 +393,7 @@ spdk_iscsi_portal_grp_add_portal(struct spdk_iscsi_portal_grp *pg,
 }
 
 static int
-spdk_iscsi_portal_grp_create_from_configfile(struct spdk_conf_section *sp)
+spdk_iscsi_parse_portal_grp(struct spdk_conf_section *sp)
 {
 	struct spdk_iscsi_portal_grp *pg;
 	struct spdk_iscsi_portal *p;
@@ -422,7 +421,7 @@ spdk_iscsi_portal_grp_create_from_configfile(struct spdk_conf_section *sp)
 		if (label == NULL || portal == NULL) {
 			break;
 		}
-		rc = spdk_iscsi_portal_create_from_configline(portal, &p, 1);
+		rc = spdk_iscsi_parse_portal(portal, &p, 1);
 		if (rc < 0) {
 			SPDK_ERRLOG("parse portal error (%s)\n", portal);
 			return -1;
@@ -449,7 +448,7 @@ spdk_iscsi_portal_grp_create_from_configfile(struct spdk_conf_section *sp)
 			goto error;
 		}
 
-		rc = spdk_iscsi_portal_create_from_configline(portal, &p, 0);
+		rc = spdk_iscsi_parse_portal(portal, &p, 0);
 		if (rc < 0) {
 			SPDK_ERRLOG("parse portal error (%s)\n", portal);
 			goto error;
@@ -497,7 +496,7 @@ spdk_iscsi_portal_grp_find_by_tag(int tag)
 }
 
 int
-spdk_iscsi_portal_grp_array_create(void)
+spdk_iscsi_parse_portal_grps(void)
 {
 	int rc = 0;
 	struct spdk_conf_section *sp;
@@ -511,7 +510,7 @@ spdk_iscsi_portal_grp_array_create(void)
 			}
 
 			/* Build portal group from cfg section PortalGroup */
-			rc = spdk_iscsi_portal_grp_create_from_configfile(sp);
+			rc = spdk_iscsi_parse_portal_grp(sp);
 			if (rc < 0) {
 				SPDK_ERRLOG("parse_portal_group() failed\n");
 				return -1;
@@ -523,11 +522,11 @@ spdk_iscsi_portal_grp_array_create(void)
 }
 
 void
-spdk_iscsi_portal_grp_array_destroy(void)
+spdk_iscsi_portal_grps_destroy(void)
 {
 	struct spdk_iscsi_portal_grp *pg;
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_portal_grp_array_destroy\n");
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_portal_grps_destroy\n");
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	while (!TAILQ_EMPTY(&g_spdk_iscsi.pg_head)) {
 		pg = TAILQ_FIRST(&g_spdk_iscsi.pg_head);
