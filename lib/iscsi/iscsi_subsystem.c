@@ -935,6 +935,27 @@ end:
 	spdk_iscsi_init_complete(rc);
 }
 
+static int
+spdk_iscsi_parse_iscsi_globals(void)
+{
+	int rc;
+
+	rc = spdk_iscsi_app_read_parameters();
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_iscsi_app_read_parameters() failed\n");
+		return rc;
+	}
+
+	rc = spdk_initialize_iscsi_conns();
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_initialize_iscsi_conns() failed\n");
+		return rc;
+	}
+
+	spdk_initialize_iscsi_poll_group(spdk_iscsi_parse_iscsi_configuration);
+	return 0;
+}
+
 void
 spdk_iscsi_init(spdk_iscsi_init_cb cb_fn, void *cb_arg)
 {
@@ -944,21 +965,17 @@ spdk_iscsi_init(spdk_iscsi_init_cb cb_fn, void *cb_arg)
 	g_init_cb_fn = cb_fn;
 	g_init_cb_arg = cb_arg;
 
-	rc = spdk_iscsi_app_read_parameters();
+	rc = spdk_iscsi_parse_iscsi_globals();
 	if (rc < 0) {
-		SPDK_ERRLOG("spdk_iscsi_app_read_parameters() failed\n");
+		SPDK_ERRLOG("spdk_iscsi_parse_globals() failed\n");
 		spdk_iscsi_init_complete(-1);
-		return;
 	}
 
-	rc = spdk_initialize_iscsi_conns();
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_initialize_iscsi_conns() failed\n");
-		spdk_iscsi_init_complete(-1);
-		return;
-	}
-
-	spdk_initialize_iscsi_poll_group(spdk_iscsi_parse_iscsi_configuration);
+	/*
+	 * spdk_iscsi_parse_configuration() will be called as the callback to
+	 * spdk_initialize_iscsi_poll_group() and will complete iSCSI
+	 * subsystem initialization.
+	 */
 }
 
 void
