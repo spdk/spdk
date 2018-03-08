@@ -218,9 +218,8 @@ spdk_iscsi_task_mgmt_response(struct spdk_iscsi_conn *conn,
 {
 }
 
-int spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn)
+void spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn)
 {
-	return 0;
 }
 
 int

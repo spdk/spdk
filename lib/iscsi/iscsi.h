@@ -335,7 +335,7 @@ void spdk_iscsi_fini(spdk_iscsi_fini_cb cb_fn, void *cb_arg);
 void spdk_shutdown_iscsi_conns_done(void);
 void spdk_iscsi_config_text(FILE *fp);
 
-int spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn);
+void spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn);
 void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
 			      struct spdk_iscsi_task *task);
 int spdk_iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu);
