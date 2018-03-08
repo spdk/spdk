@@ -900,7 +900,7 @@ iscsi_unregister_poll_group(void *ctx)
 }
 
 static void
-spdk_initialize_iscsi_poll_group(void)
+spdk_initialize_iscsi_poll_group(spdk_thread_fn cpl)
 {
 	size_t g_num_poll_groups = spdk_env_get_last_core() + 1;
 
@@ -912,7 +912,7 @@ spdk_initialize_iscsi_poll_group(void)
 	}
 
 	/* Send a message to each thread and create a poll group */
-	spdk_for_each_thread(iscsi_create_poll_group, NULL, iscsi_create_poll_group_done);
+	spdk_for_each_thread(iscsi_create_poll_group, NULL, cpl);
 }
 
 void
@@ -959,7 +959,7 @@ spdk_iscsi_init(spdk_iscsi_init_cb cb_fn, void *cb_arg)
 		return;
 	}
 
-	spdk_initialize_iscsi_poll_group();
+	spdk_initialize_iscsi_poll_group(iscsi_create_poll_group_done);
 }
 
 void
