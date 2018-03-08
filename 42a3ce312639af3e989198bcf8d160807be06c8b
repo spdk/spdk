@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "0f8cf164_9375ec88",
+        "filename": "include/spdk_internal/event.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-08T13:13:46Z",
+      "side": 1,
+      "message": "the above config(fp) is to dump config to fp by .INI format and hence adding write_config_json() make sense to me.\n\nHowever, as we discussed in the Trello board, dump of global parameters/options are necessary only for NVMf-tgt and iSCSI-tgt now. NVMf-tgt is not subsystem but application.\n\nOther config information is possible to dump/load by existing JSON-RPC.",
+      "range": {
+        "startLine": 61,
+        "startChar": 8,
+        "endLine": 61,
+        "endChar": 25
+      },
+      "revId": "42a3ce312639af3e989198bcf8d160807be06c8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "758b9a59_7604916d",
         "filename": "scripts/rpc.py",
         "patchSetId": 8
