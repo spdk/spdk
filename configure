@@ -47,6 +47,9 @@ function usage()
 	echo ""
 }
 
+# Remove the existing configuration file
+rm -f CONFIG.local
+
 for i in "$@"; do
 	case "$i" in
 		-h|--help)
@@ -114,7 +117,7 @@ for i in "$@"; do
 			CONFIG_RDMA=n
 			;;
 		--with-dpdk=*)
-			CONFIG_DPDK_DIR=$(readlink -f ${i#*=})
+			CONFIG_DPDK_DIR=$(readlink -m ${i#*=})
 			;;
 		--without-dpdk)
 			CONFIG_DPDK_DIR=
@@ -204,7 +207,6 @@ fi
 echo -n "Creating CONFIG.local..."
 
 # Write the configuration file
-rm -f CONFIG.local
 if [ -n "$CONFIG_PREFIX" ]; then
 	echo "CONFIG_PREFIX?=$CONFIG_PREFIX" >> CONFIG.local
 fi
