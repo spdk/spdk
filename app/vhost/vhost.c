@@ -44,7 +44,6 @@
 #define SPDK_VHOST_DEFAULT_ENABLE_COREDUMP true
 #define SPDK_VHOST_DEFAULT_MEM_SIZE 1024
 
-static const char *g_socket_path = NULL;
 static const char *g_pid_path = NULL;
 
 static void
@@ -86,7 +85,7 @@ vhost_parse_arg(int ch, char *arg)
 		g_pid_path = arg;
 		break;
 	case 'S':
-		g_socket_path = arg;
+		spdk_vhost_set_socket_path(arg);
 		break;
 	}
 }
@@ -110,7 +109,7 @@ main(int argc, char *argv[])
 	}
 
 	/* Blocks until the application is exiting */
-	rc = spdk_app_start(&opts, spdk_vhost_startup, (void *)g_socket_path, NULL);
+	rc = spdk_app_start(&opts, spdk_vhost_startup, NULL, NULL);
 
 	spdk_app_fini();
 
