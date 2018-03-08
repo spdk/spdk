@@ -41,7 +41,6 @@
 
 
 #define SPDK_VHOST_DEFAULT_CONFIG "/usr/local/etc/spdk/vhost.conf"
-#define SPDK_VHOST_DEFAULT_ENABLE_COREDUMP true
 #define SPDK_VHOST_DEFAULT_MEM_SIZE 1024
 
 static const char *g_pid_path = NULL;
