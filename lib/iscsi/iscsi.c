@@ -4275,11 +4275,17 @@ void spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_pdu *rsp_pdu;
 	struct iscsi_bhs_nop_in	*rsp;
+	uint64_t tsc;
 
 	/* Only send nopin if we have logged in and are in a normal session. */
 	if (conn->sess == NULL ||
 	    !conn->full_feature ||
 	    !spdk_iscsi_param_eq_val(conn->sess->params, "SessionType", "Normal")) {
+		return;
+	}
+
+	tsc = spdk_get_ticks();
+	if ((tsc - conn->last_nopin) <= conn->nopininterval) {
 		return;
 	}
 
@@ -4313,6 +4319,7 @@ void spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn)
 
 	spdk_iscsi_conn_write_pdu(conn, rsp_pdu);
 	conn->nop_outstanding = true;
+	conn->last_nopin = tsc;
 }
 
 static void

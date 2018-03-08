@@ -905,15 +905,14 @@ spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn)
 	}
 
 	/* Check for nop interval expiration */
-	tsc = spdk_get_ticks();
 	if (conn->nop_outstanding) {
+		tsc = spdk_get_ticks();
 		if ((tsc - conn->last_nopin) > (conn->timeout  * spdk_get_ticks_hz())) {
 			SPDK_ERRLOG("Timed out waiting for NOP-Out response from initiator\n");
 			SPDK_ERRLOG("  tsc=0x%lx, last_nopin=0x%lx\n", tsc, conn->last_nopin);
 			conn->state = ISCSI_CONN_STATE_EXITING;
 		}
-	} else if (tsc - conn->last_nopin > conn->nopininterval) {
-		conn->last_nopin = tsc;
+	} else {
 		spdk_iscsi_send_nopin(conn);
 	}
 }
