@@ -38,7 +38,8 @@
 
 #include "spdk/nvmf.h"
 #include "spdk/queue.h"
-#include "spdk/event.h"
+
+#include "spdk_internal/event.h"
 
 struct rpc_listen_address {
 	char *transport;

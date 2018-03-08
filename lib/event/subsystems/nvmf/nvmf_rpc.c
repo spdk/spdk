@@ -31,7 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/stdinc.h"
+#include "event_nvmf.h"
 
 #include "spdk/bdev.h"
 #include "spdk/log.h"
@@ -42,7 +42,6 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 
-#include "nvmf_tgt.h"
 static int
 json_write_hex_str(struct spdk_json_write_ctx *w, const void *data, size_t size)
 {
