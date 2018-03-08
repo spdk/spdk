@@ -46,6 +46,11 @@ SPDK_LIB_LIST += app_rpc log_rpc bdev_rpc
 
 ifeq ($(OS),Linux)
 SPDK_LIB_LIST += event_nbd nbd
+
+ifeq ($(CONFIG_VHOST),y)
+SPDK_LIB_LIST += vhost rte_vhost event_vhost
+endif
+
 endif
 
 LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
