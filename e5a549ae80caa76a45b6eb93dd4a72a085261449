@@ -70,6 +70,24 @@
     },
     {
       "key": {
+        "uuid": "412dbaf5_15c6f381",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-08T11:18:40Z",
+      "side": 1,
+      "message": "This is to remove  SPDK_BDEV_MODULE_ASYNC_INIT macro and avoid direct access to action_in_progreass field. Used here eg https://review.gerrithub.io/#/c/402883/6/lib/bdev/virtio/bdev_virtio_scsi.c@407 and https://review.gerrithub.io/#/c/402883/6/lib/bdev/bdev.c@2393",
+      "parentUuid": "1d9cd80a_a098871a",
+      "revId": "e5a549ae80caa76a45b6eb93dd4a72a085261449",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f94c818e_96c5fd20",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 6
@@ -81,6 +99,24 @@
       "writtenOn": "2018-03-07T22:07:03Z",
       "side": 1,
       "message": "we are trying to remove explicit calls to exit() in the library code\nmaybe just assert(false) here and return instead?",
+      "revId": "e5a549ae80caa76a45b6eb93dd4a72a085261449",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a7921008_a4107a8d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2390,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-08T11:18:40Z",
+      "side": 1,
+      "message": "OK, but I feel this should throw some kind of runtime error since module registration is done before main().",
+      "parentUuid": "f94c818e_96c5fd20",
       "revId": "e5a549ae80caa76a45b6eb93dd4a72a085261449",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
