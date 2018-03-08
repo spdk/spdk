@@ -34,7 +34,6 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/env.h"
-#include "nvmf_tgt.h"
 #include "spdk/event.h"
 #include "spdk/log.h"
 
@@ -49,6 +48,15 @@ nvmf_usage(void)
 static void
 nvmf_parse_arg(int ch, char *arg)
 {
+}
+
+static void
+nvmf_tgt_started(void *arg1, void *arg2)
+{
+	if (getenv("MEMZONE_DUMP") != NULL) {
+		spdk_memzone_dump(stdout);
+		fflush(stdout);
+	}
 }
 
 int
@@ -68,7 +76,8 @@ main(int argc, char **argv)
 		exit(rc);
 	}
 
-	rc = spdk_nvmf_tgt_start(&opts);
+	/* Blocks until the application is exiting */
+	rc = spdk_app_start(&opts, nvmf_tgt_started, NULL, NULL);
 
 	return rc;
 }

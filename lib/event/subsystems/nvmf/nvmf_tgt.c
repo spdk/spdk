@@ -31,9 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/stdinc.h"
-
-#include "nvmf_tgt.h"
+#include "event_nvmf.h"
 
 #include "spdk/bdev.h"
 #include "spdk/event.h"
@@ -54,7 +52,7 @@ static size_t g_active_poll_groups = 0;
 
 static struct spdk_poller *g_acceptor_poller = NULL;
 
-static void nvmf_tgt_advance_state(void *arg1, void *arg2);
+static void nvmf_tgt_advance_state(void);
 
 static void
 _spdk_nvmf_shutdown_cb(void *arg1, void *arg2)
@@ -70,16 +68,12 @@ _spdk_nvmf_shutdown_cb(void *arg1, void *arg2)
 	}
 
 	g_tgt.state = NVMF_TGT_FINI_STOP_ACCEPTOR;
-	nvmf_tgt_advance_state(NULL, NULL);
+	nvmf_tgt_advance_state();
 }
 
 static void
-spdk_nvmf_shutdown_cb(void)
+spdk_nvmf_subsystem_fini(void)
 {
-	printf("\n=========================\n");
-	printf("   NVMF shutdown signal\n");
-	printf("=========================\n");
-
 	/* Always let the first core to handle the case */
 	if (spdk_env_get_current_core() != spdk_env_get_first_core()) {
 		spdk_event_call(spdk_event_allocate(spdk_env_get_first_core(),
@@ -151,7 +145,7 @@ static void
 nvmf_tgt_destroy_poll_group_done(void *ctx)
 {
 	g_tgt.state = NVMF_TGT_FINI_FREE_RESOURCES;
-	nvmf_tgt_advance_state(NULL, NULL);
+	nvmf_tgt_advance_state();
 }
 
 static void
@@ -173,7 +167,7 @@ static void
 nvmf_tgt_create_poll_group_done(void *ctx)
 {
 	g_tgt.state = NVMF_TGT_INIT_START_SUBSYSTEMS;
-	nvmf_tgt_advance_state(NULL, NULL);
+	nvmf_tgt_advance_state();
 }
 
 static void
@@ -204,7 +198,7 @@ nvmf_tgt_subsystem_started(struct spdk_nvmf_subsystem *subsystem,
 	}
 
 	g_tgt.state = NVMF_TGT_INIT_START_ACCEPTOR;
-	nvmf_tgt_advance_state(NULL, NULL);
+	nvmf_tgt_advance_state();
 }
 
 static void
@@ -219,11 +213,11 @@ nvmf_tgt_subsystem_stopped(struct spdk_nvmf_subsystem *subsystem,
 	}
 
 	g_tgt.state = NVMF_TGT_FINI_DESTROY_POLL_GROUPS;
-	nvmf_tgt_advance_state(NULL, NULL);
+	nvmf_tgt_advance_state();
 }
 
 static void
-nvmf_tgt_advance_state(void *arg1, void *arg2)
+nvmf_tgt_advance_state(void)
 {
 	enum nvmf_tgt_state prev_state;
 	int rc = -1;
@@ -284,10 +278,7 @@ nvmf_tgt_advance_state(void *arg1, void *arg2)
 			g_tgt.state = NVMF_TGT_RUNNING;
 			break;
 		case NVMF_TGT_RUNNING:
-			if (getenv("MEMZONE_DUMP") != NULL) {
-				spdk_memzone_dump(stdout);
-				fflush(stdout);
-			}
+			spdk_subsystem_init_next(0);
 			break;
 		case NVMF_TGT_FINI_STOP_ACCEPTOR:
 			spdk_poller_unregister(&g_acceptor_poller);
@@ -316,30 +307,23 @@ nvmf_tgt_advance_state(void *arg1, void *arg2)
 			g_tgt.state = NVMF_TGT_STOPPED;
 			break;
 		case NVMF_TGT_STOPPED:
-			spdk_app_stop(0);
+			spdk_subsystem_fini_next();
 			return;
 		case NVMF_TGT_ERROR:
-			spdk_app_stop(rc);
+			spdk_subsystem_init_next(rc);
 			return;
 		}
 
 	} while (g_tgt.state != prev_state);
 }
 
-int
-spdk_nvmf_tgt_start(struct spdk_app_opts *opts)
+static void
+spdk_nvmf_subsystem_init(void)
 {
-	int rc;
-
-	opts->shutdown_cb = spdk_nvmf_shutdown_cb;
-
-	/* Blocks until the application is exiting */
-	rc = spdk_app_start(opts, nvmf_tgt_advance_state, NULL, NULL);
-	if (rc) {
-		SPDK_ERRLOG("spdk_app_start() retn non-zero\n");
-	}
-
-	spdk_app_fini();
-
-	return rc;
+	g_tgt.state = NVMF_TGT_INIT_NONE;
+	nvmf_tgt_advance_state();
 }
+
+SPDK_SUBSYSTEM_REGISTER(nvmf, spdk_nvmf_subsystem_init, spdk_nvmf_subsystem_fini,
+			NULL)
+SPDK_SUBSYSTEM_DEPEND(nvmf, bdev)

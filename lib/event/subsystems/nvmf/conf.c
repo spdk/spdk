@@ -31,9 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/stdinc.h"
-
-#include "nvmf_tgt.h"
+#include "event_nvmf.h"
 
 #include "spdk/conf.h"
 #include "spdk/log.h"
