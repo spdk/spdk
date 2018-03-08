@@ -163,7 +163,7 @@ portal_create_twice_case(void)
 }
 
 static void
-portal_create_from_configline_ipv4_normal_case(void)
+parse_portal_ipv4_normal_case(void)
 {
 	const char *string = "192.168.2.0:3260@1";
 	const char *host_str = "192.168.2.0";
@@ -177,7 +177,7 @@ portal_create_from_configline_ipv4_normal_case(void)
 
 	spdk_cpuset_set_cpu(cpumask_val, 0, true);
 
-	rc = spdk_iscsi_portal_create_from_configline(string, &p, 0);
+	rc = spdk_iscsi_parse_portal(string, &p, 0);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
@@ -190,7 +190,7 @@ portal_create_from_configline_ipv4_normal_case(void)
 }
 
 static void
-portal_create_from_configline_ipv6_normal_case(void)
+parse_portal_ipv6_normal_case(void)
 {
 	const char *string = "[2001:ad6:1234::]:3260@1";
 	const char *host_str = "[2001:ad6:1234::]";
@@ -204,7 +204,7 @@ portal_create_from_configline_ipv6_normal_case(void)
 
 	spdk_cpuset_set_cpu(cpumask_val, 0, true);
 
-	rc = spdk_iscsi_portal_create_from_configline(string, &p, 0);
+	rc = spdk_iscsi_parse_portal(string, &p, 0);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
@@ -217,7 +217,7 @@ portal_create_from_configline_ipv6_normal_case(void)
 }
 
 static void
-portal_create_from_configline_ipv4_skip_cpumask_case(void)
+parse_portal_ipv4_skip_cpumask_case(void)
 {
 	const char *string = "192.168.2.0:3260";
 	const char *host_str = "192.168.2.0";
@@ -228,7 +228,7 @@ portal_create_from_configline_ipv4_skip_cpumask_case(void)
 
 	cpumask_val = spdk_app_get_core_mask();
 
-	rc = spdk_iscsi_portal_create_from_configline(string, &p, 0);
+	rc = spdk_iscsi_parse_portal(string, &p, 0);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
@@ -239,7 +239,7 @@ portal_create_from_configline_ipv4_skip_cpumask_case(void)
 }
 
 static void
-portal_create_from_configline_ipv6_skip_cpumask_case(void)
+parse_portal_ipv6_skip_cpumask_case(void)
 {
 	const char *string = "[2001:ad6:1234::]:3260";
 	const char *host_str = "[2001:ad6:1234::]";
@@ -250,7 +250,7 @@ portal_create_from_configline_ipv6_skip_cpumask_case(void)
 
 	cpumask_val = spdk_app_get_core_mask();
 
-	rc = spdk_iscsi_portal_create_from_configline(string, &p, 0);
+	rc = spdk_iscsi_parse_portal(string, &p, 0);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
@@ -261,7 +261,7 @@ portal_create_from_configline_ipv6_skip_cpumask_case(void)
 }
 
 static void
-portal_create_from_configline_ipv4_skip_port_and_cpumask_case(void)
+parse_portal_ipv4_skip_port_and_cpumask_case(void)
 {
 	const char *string = "192.168.2.0";
 	const char *host_str = "192.168.2.0";
@@ -272,7 +272,7 @@ portal_create_from_configline_ipv4_skip_port_and_cpumask_case(void)
 
 	cpumask_val = spdk_app_get_core_mask();
 
-	rc = spdk_iscsi_portal_create_from_configline(string, &p, 0);
+	rc = spdk_iscsi_parse_portal(string, &p, 0);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
@@ -283,7 +283,7 @@ portal_create_from_configline_ipv4_skip_port_and_cpumask_case(void)
 }
 
 static void
-portal_create_from_configline_ipv6_skip_port_and_cpumask_case(void)
+parse_portal_ipv6_skip_port_and_cpumask_case(void)
 {
 	const char *string = "[2001:ad6:1234::]";
 	const char *host_str = "[2001:ad6:1234::]";
@@ -294,7 +294,7 @@ portal_create_from_configline_ipv6_skip_port_and_cpumask_case(void)
 
 	cpumask_val = spdk_app_get_core_mask();
 
-	rc = spdk_iscsi_portal_create_from_configline(string, &p, 0);
+	rc = spdk_iscsi_parse_portal(string, &p, 0);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
@@ -439,18 +439,18 @@ main(int argc, char **argv)
 			       portal_create_cpumask_no_bit_on_case) == NULL
 		|| CU_add_test(suite, "portal create twice case",
 			       portal_create_twice_case) == NULL
-		|| CU_add_test(suite, "portal create from configline ipv4 normal case",
-			       portal_create_from_configline_ipv4_normal_case) == NULL
-		|| CU_add_test(suite, "portal create from configline ipv6 normal case",
-			       portal_create_from_configline_ipv6_normal_case) == NULL
-		|| CU_add_test(suite, "portal create from configline ipv4 skip cpumask case",
-			       portal_create_from_configline_ipv4_skip_cpumask_case) == NULL
-		|| CU_add_test(suite, "portal create from configline ipv6 skip cpumask case",
-			       portal_create_from_configline_ipv6_skip_cpumask_case) == NULL
-		|| CU_add_test(suite, "portal create from configline ipv4 skip port and cpumask case",
-			       portal_create_from_configline_ipv4_skip_port_and_cpumask_case) == NULL
-		|| CU_add_test(suite, "portal create from configline ipv6 skip port and cpumask case",
-			       portal_create_from_configline_ipv6_skip_port_and_cpumask_case) == NULL
+		|| CU_add_test(suite, "parse portal ipv4 normal case",
+			       parse_portal_ipv4_normal_case) == NULL
+		|| CU_add_test(suite, "parse portal ipv6 normal case",
+			       parse_portal_ipv6_normal_case) == NULL
+		|| CU_add_test(suite, "parse portal ipv4 skip cpumask case",
+			       parse_portal_ipv4_skip_cpumask_case) == NULL
+		|| CU_add_test(suite, "parse portal ipv6 skip cpumask case",
+			       parse_portal_ipv6_skip_cpumask_case) == NULL
+		|| CU_add_test(suite, "parse portal ipv4 skip port and cpumask case",
+			       parse_portal_ipv4_skip_port_and_cpumask_case) == NULL
+		|| CU_add_test(suite, "parse portal ipv6 skip port and cpumask case",
+			       parse_portal_ipv6_skip_port_and_cpumask_case) == NULL
 		|| CU_add_test(suite, "portal group register/unregister case",
 			       portal_grp_register_unregister_case) == NULL
 		|| CU_add_test(suite, "portal group register twice case",

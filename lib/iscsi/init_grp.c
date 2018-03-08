@@ -327,7 +327,7 @@ cleanup:
 
 /* Read spdk iscsi target's config file and create initiator group */
 static int
-spdk_iscsi_init_grp_create_from_configfile(struct spdk_conf_section *sp)
+spdk_iscsi_parse_init_grp(struct spdk_conf_section *sp)
 {
 	int i, rc = 0;
 	const char *val = NULL;
@@ -622,7 +622,7 @@ spdk_iscsi_init_grp_find_by_tag(int tag)
 }
 
 int
-spdk_iscsi_init_grp_array_create(void)
+spdk_iscsi_parse_init_grps(void)
 {
 	struct spdk_conf_section *sp;
 	int rc;
@@ -634,9 +634,9 @@ spdk_iscsi_init_grp_array_create(void)
 				SPDK_ERRLOG("Group 0 is invalid\n");
 				return -1;
 			}
-			rc = spdk_iscsi_init_grp_create_from_configfile(sp);
+			rc = spdk_iscsi_parse_init_grp(sp);
 			if (rc < 0) {
-				SPDK_ERRLOG("add_initiator_group() failed\n");
+				SPDK_ERRLOG("parse_init_group() failed\n");
 				return -1;
 			}
 		}
@@ -646,7 +646,7 @@ spdk_iscsi_init_grp_array_create(void)
 }
 
 void
-spdk_iscsi_init_grp_array_destroy(void)
+spdk_iscsi_init_grps_destroy(void)
 {
 	struct spdk_iscsi_init_grp *ig, *tmp;
 

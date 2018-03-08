@@ -71,7 +71,7 @@ int spdk_iscsi_init_grp_register(struct spdk_iscsi_init_grp *ig);
 struct spdk_iscsi_init_grp *spdk_iscsi_init_grp_unregister(int tag);
 struct spdk_iscsi_init_grp *spdk_iscsi_init_grp_find_by_tag(int tag);
 void spdk_iscsi_init_grp_destroy(struct spdk_iscsi_init_grp *ig);
-int spdk_iscsi_init_grp_array_create(void);
-void spdk_iscsi_init_grp_array_destroy(void);
+int spdk_iscsi_parse_init_grps(void);
+void spdk_iscsi_init_grps_destroy(void);
 
 #endif // SPDK_INIT_GRP_H
