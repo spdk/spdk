@@ -1118,29 +1118,6 @@ spdk_vhost_set_socket_path(const char *basename)
 	return 0;
 }
 
-void
-spdk_vhost_startup(void *arg1, void *arg2)
-{
-	int ret;
-
-	ret = spdk_vhost_scsi_controller_construct();
-	if (ret != 0) {
-		SPDK_ERRLOG("Cannot construct vhost controllers\n");
-		goto out;
-	}
-
-	ret = spdk_vhost_blk_controller_construct();
-	if (ret != 0) {
-		SPDK_ERRLOG("Cannot construct vhost block controllers\n");
-		goto out;
-	}
-
-	return;
-
-out:
-	spdk_app_stop(-1);
-}
-
 static void *
 session_shutdown(void *arg)
 {
@@ -1291,6 +1268,7 @@ int
 spdk_vhost_init(void)
 {
 	uint32_t last_core;
+	int ret;
 
 	last_core = spdk_env_get_last_core();
 	g_num_ctrlrs = calloc(last_core + 1, sizeof(uint32_t));
@@ -1299,6 +1277,19 @@ spdk_vhost_init(void)
 			    last_core + 1);
 		return -1;
 	}
+
+	ret = spdk_vhost_scsi_controller_construct();
+	if (ret != 0) {
+		SPDK_ERRLOG("Cannot construct vhost controllers\n");
+		return -1;
+	}
+
+	ret = spdk_vhost_blk_controller_construct();
+	if (ret != 0) {
+		SPDK_ERRLOG("Cannot construct vhost block controllers\n");
+		return -1;
+	}
+
 	return 0;
 }
 
