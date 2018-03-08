@@ -90,6 +90,11 @@ vhost_parse_arg(int ch, char *arg)
 	}
 }
 
+static void
+vhost_started(void *arg1, void *arg2)
+{
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -109,7 +114,7 @@ main(int argc, char *argv[])
 	}
 
 	/* Blocks until the application is exiting */
-	rc = spdk_app_start(&opts, spdk_vhost_startup, NULL, NULL);
+	rc = spdk_app_start(&opts, vhost_started, NULL, NULL);
 
 	spdk_app_fini();
 
