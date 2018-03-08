@@ -1097,17 +1097,16 @@ out:
 	return rc;
 }
 
-void
-spdk_vhost_startup(void *arg1, void *arg2)
+int
+spdk_vhost_set_socket_path(const char *basename)
 {
 	int ret;
-	const char *basename = arg1;
 
 	if (basename && strlen(basename) > 0) {
 		ret = snprintf(dev_dirname, sizeof(dev_dirname) - 2, "%s", basename);
 		if ((size_t)ret >= sizeof(dev_dirname) - 2) {
 			SPDK_ERRLOG("Char dev dir path length %d is too long\n", ret);
-			goto out;
+			return -EINVAL;
 		}
 
 		if (dev_dirname[ret - 1] != '/') {
@@ -1115,6 +1114,14 @@ spdk_vhost_startup(void *arg1, void *arg2)
 			dev_dirname[ret + 1]  = '\0';
 		}
 	}
+
+	return 0;
+}
+
+void
+spdk_vhost_startup(void *arg1, void *arg2)
+{
+	int ret;
 
 	ret = spdk_vhost_scsi_controller_construct();
 	if (ret != 0) {

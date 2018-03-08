@@ -53,6 +53,17 @@ extern "C" {
 typedef void (*spdk_vhost_fini_cb)(void);
 
 /**
+ * Set the path to the directory where vhost sockets will be created.
+ *
+ * This function must be called before spdk_vhost_init().
+ *
+ * \param basename Path to vhost socket directory
+ *
+ * \return 0 on success, negative errno on error.
+ */
+int spdk_vhost_set_socket_path(const char *basename);
+
+/**
  * Init vhost environment.
  *
  * \return 0 on success, -1 on failure.
@@ -69,7 +80,7 @@ void spdk_vhost_fini(spdk_vhost_fini_cb fini_cb);
 /**
  * Init vhost application. This is called once by SPDK app layer.
  *
- * \param arg1 optional path to directory where sockets will be created.
+ * \param arg1 unused.
  * \param arg2 unused.
  */
 void spdk_vhost_startup(void *arg1, void *arg2);
