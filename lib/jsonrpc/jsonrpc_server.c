@@ -291,6 +291,32 @@ spdk_jsonrpc_end_result(struct spdk_jsonrpc_request *request, struct spdk_json_w
 }
 
 void
+spdk_jsonrpc_write_error_response_fmt(struct spdk_json_write_ctx *w, int error_code,
+				      const char *fmt, ...)
+{
+	va_list args;
+
+	va_start(args, fmt);
+	spdk_jsonrpc_write_error_response_fmt_v(w, error_code, fmt, args);
+	va_end(args);
+}
+
+void
+spdk_jsonrpc_write_error_response_fmt_v(struct spdk_json_write_ctx *w, int error_code,
+					const char *fmt, va_list args)
+{
+	assert(w);
+
+	spdk_json_write_name(w, "error");
+	spdk_json_write_object_begin(w);
+	spdk_json_write_name(w, "code");
+	spdk_json_write_int32(w, error_code);
+	spdk_json_write_name(w, "message");
+	spdk_json_write_string_fmt_v(w, fmt, args);
+	spdk_json_write_object_end(w);
+}
+
+void
 spdk_jsonrpc_send_error_response(struct spdk_jsonrpc_request *request,
 				 int error_code, const char *msg)
 {
@@ -307,14 +333,7 @@ spdk_jsonrpc_send_error_response(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	spdk_json_write_name(w, "error");
-	spdk_json_write_object_begin(w);
-	spdk_json_write_name(w, "code");
-	spdk_json_write_int32(w, error_code);
-	spdk_json_write_name(w, "message");
-	spdk_json_write_string(w, msg);
-	spdk_json_write_object_end(w);
-
+	spdk_jsonrpc_write_error_response_fmt(w, error_code, "%s", msg);
 	end_response(request, w);
 }
 
@@ -336,15 +355,9 @@ spdk_jsonrpc_send_error_response_fmt(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	spdk_json_write_name(w, "error");
-	spdk_json_write_object_begin(w);
-	spdk_json_write_name(w, "code");
-	spdk_json_write_int32(w, error_code);
-	spdk_json_write_name(w, "message");
 	va_start(args, fmt);
-	spdk_json_write_string_fmt_v(w, fmt, args);
+	spdk_jsonrpc_write_error_response_fmt_v(w, error_code, fmt, args);
 	va_end(args);
-	spdk_json_write_object_end(w);
 
 	end_response(request, w);
 }
