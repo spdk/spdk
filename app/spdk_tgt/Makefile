@@ -62,4 +62,7 @@ $(APP): $(OBJS) $(SPDK_LIB_FILES) $(SPDK_WHOLE_LIBS) $(BLOCKDEV_MODULES_FILES) $
 clean:
 	$(CLEAN_C) $(APP)
 
+install: $(APP)
+	$(INSTALL_APP)
+
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
