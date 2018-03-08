@@ -269,9 +269,9 @@ struct spdk_iscsi_opts {
 	char *nodebase;
 	int timeout;
 	int nopininterval;
-	int no_discovery_auth;
-	int req_discovery_auth;
-	int req_discovery_auth_mutual;
+	bool no_discovery_auth;
+	bool req_discovery_auth;
+	bool req_discovery_auth_mutual;
 	int discovery_auth_group;
 	uint32_t MaxSessions;
 	uint32_t MaxConnectionsPerSession;
@@ -295,9 +295,9 @@ struct spdk_iscsi_globals {
 
 	int timeout;
 	int nopininterval;
-	int no_discovery_auth;
-	int req_discovery_auth;
-	int req_discovery_auth_mutual;
+	bool no_discovery_auth;
+	bool req_discovery_auth;
+	bool req_discovery_auth_mutual;
 	int discovery_auth_group;
 
 	uint32_t MaxSessions;

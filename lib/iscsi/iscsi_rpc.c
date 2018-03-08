@@ -1231,11 +1231,11 @@ spdk_rpc_get_iscsi_global_params(struct spdk_jsonrpc_request *request,
 	spdk_json_write_int32(w, g_spdk_iscsi.nopininterval);
 
 	spdk_json_write_name(w, "discovery_auth_method");
-	if (g_spdk_iscsi.no_discovery_auth != 0) {
+	if (g_spdk_iscsi.no_discovery_auth) {
 		spdk_json_write_string(w, "none");
-	} else if (g_spdk_iscsi.req_discovery_auth == 0) {
+	} else if (!g_spdk_iscsi.req_discovery_auth) {
 		spdk_json_write_string(w, "auto");
-	} else if (g_spdk_iscsi.req_discovery_auth_mutual != 0) {
+	} else if (g_spdk_iscsi.req_discovery_auth_mutual) {
 		spdk_json_write_string(w, "chap mutual");
 	} else {
 		spdk_json_write_string(w, "chap");

@@ -545,10 +545,10 @@ spdk_iscsi_log_globals(void)
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Timeout %d\n", g_spdk_iscsi.timeout);
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "NopInInterval %d\n",
 		      g_spdk_iscsi.nopininterval);
-	if (g_spdk_iscsi.no_discovery_auth != 0) {
+	if (g_spdk_iscsi.no_discovery_auth) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 			      "DiscoveryAuthMethod None\n");
-	} else if (g_spdk_iscsi.req_discovery_auth == 0) {
+	} else if (!g_spdk_iscsi.req_discovery_auth) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 			      "DiscoveryAuthMethod Auto\n");
 	} else {
@@ -584,9 +584,9 @@ spdk_iscsi_opts_init(struct spdk_iscsi_opts *opts)
 	opts->ErrorRecoveryLevel = DEFAULT_ERRORRECOVERYLEVEL;
 	opts->timeout = DEFAULT_TIMEOUT;
 	opts->nopininterval = DEFAULT_NOPININTERVAL;
-	opts->no_discovery_auth = 0;
-	opts->req_discovery_auth = 0;
-	opts->req_discovery_auth_mutual = 0;
+	opts->no_discovery_auth = false;
+	opts->req_discovery_auth = false;
+	opts->req_discovery_auth_mutual = false;
 	opts->discovery_auth_group = 0;
 	opts->authfile = strdup(SPDK_ISCSI_DEFAULT_AUTHFILE);
 	opts->nodebase = strdup(SPDK_ISCSI_DEFAULT_NODEBASE);
@@ -717,21 +717,21 @@ spdk_iscsi_read_config_file_params(struct spdk_conf_section *sp,
 	val = spdk_conf_section_get_val(sp, "DiscoveryAuthMethod");
 	if (val != NULL) {
 		if (strcasecmp(val, "CHAP") == 0) {
-			opts->no_discovery_auth = 0;
-			opts->req_discovery_auth = 1;
-			opts->req_discovery_auth_mutual = 0;
+			opts->no_discovery_auth = false;
+			opts->req_discovery_auth = true;
+			opts->req_discovery_auth_mutual = false;
 		} else if (strcasecmp(val, "Mutual") == 0) {
-			opts->no_discovery_auth = 0;
-			opts->req_discovery_auth = 1;
-			opts->req_discovery_auth_mutual = 1;
+			opts->no_discovery_auth = false;
+			opts->req_discovery_auth = true;
+			opts->req_discovery_auth_mutual = true;
 		} else if (strcasecmp(val, "Auto") == 0) {
-			opts->no_discovery_auth = 0;
-			opts->req_discovery_auth = 0;
-			opts->req_discovery_auth_mutual = 0;
+			opts->no_discovery_auth = false;
+			opts->req_discovery_auth = false;
+			opts->req_discovery_auth_mutual = false;
 		} else if (strcasecmp(val, "None") == 0) {
-			opts->no_discovery_auth = 1;
-			opts->req_discovery_auth = 0;
-			opts->req_discovery_auth_mutual = 0;
+			opts->no_discovery_auth = true;
+			opts->req_discovery_auth = false;
+			opts->req_discovery_auth_mutual = false;
 		} else {
 			SPDK_ERRLOG("unknown auth %s, ignoring\n", val);
 		}
