@@ -226,6 +226,8 @@ register_aio_file(const char *path)
 	entry->u.aio.fd = fd;
 	entry->size_in_ios = size / g_io_size_bytes;
 	entry->io_size_blocks = g_io_size_bytes / blklen;
+	entry->submit_histogram = spdk_histogram_data_alloc();
+	entry->complete_histogram = spdk_histogram_data_alloc();
 
 	snprintf(entry->name, sizeof(entry->name), "%s", path);
 
