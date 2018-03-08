@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "c7a58d9c_866d3bb2",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 57
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-03-08T15:59:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ffaf3e41_e1449a8c",
+      "range": {
+        "startLine": 251,
+        "startChar": 0,
+        "endLine": 252,
+        "endChar": 50
+      },
+      "revId": "3cb65b3ea7621b11cf016f76973e7669e4e01130",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "92caa2cf_ce5dacf8",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 57
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "5ec1ae5c_5dcdd163",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 3458,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-03-08T15:59:00Z",
+      "side": 1,
+      "message": "Changed to snapshot_xattrs.",
+      "parentUuid": "92caa2cf_ce5dacf8",
+      "range": {
+        "startLine": 3458,
+        "startChar": 0,
+        "endLine": 3458,
+        "endChar": 43
+      },
+      "revId": "3cb65b3ea7621b11cf016f76973e7669e4e01130",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "40fd207d_8ba2af99",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 57
@@ -59,6 +107,30 @@
       "writtenOn": "2018-03-07T16:26:52Z",
       "side": 1,
       "message": "\u003e For sanity, I think this should be\nchar xattrs_name[]",
+      "range": {
+        "startLine": 3650,
+        "startChar": 1,
+        "endLine": 3650,
+        "endChar": 42
+      },
+      "revId": "3cb65b3ea7621b11cf016f76973e7669e4e01130",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c06469f3_845f8774",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 3650,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-03-08T15:59:00Z",
+      "side": 1,
+      "message": "Do you mean \"char *xattrs_names[]\"?",
+      "parentUuid": "40fd207d_8ba2af99",
       "range": {
         "startLine": 3650,
         "startChar": 1,
