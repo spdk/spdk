@@ -263,7 +263,7 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 		lvs = calloc(1, sizeof(*lvs));
 		SPDK_CU_ASSERT_FATAL(lvs != NULL);
 		TAILQ_INIT(&lvs->lvols);
-		uuid_generate_time(lvs->uuid);
+		spdk_uuid_generate(&lvs->uuid);
 		strncpy(lvs->name, o->name, SPDK_LVS_NAME_MAX);
 		lvs->bs_dev = bs_dev;
 		error = 0;
