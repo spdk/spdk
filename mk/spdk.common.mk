@@ -48,6 +48,7 @@ ifneq ($(prefix),)
 CONFIG_PREFIX=$(prefix)
 endif
 
+bindir?=$(CONFIG_PREFIX)/bin
 libdir?=$(CONFIG_PREFIX)/lib
 includedir?=$(CONFIG_PREFIX)/include
 
@@ -205,6 +206,12 @@ INSTALL_LIB=\
 	$(Q)echo "  INSTALL $(DESTDIR)$(libdir)/$(notdir $(LIB))"; \
 	install -d -m 755 "$(DESTDIR)$(libdir)"; \
 	install -m 644 "$(LIB)" "$(DESTDIR)$(libdir)/"
+
+# Install an app binary
+INSTALL_APP=\
+	$(Q)echo "  INSTALL $(DESTDIR)$(bindir)/$(APP)"; \
+	install -d -m 755 "$(DESTDIR)$(bindir)"; \
+	install -m 755 "$(APP)" "$(DESTDIR)$(bindir)/"
 
 # Install a header
 INSTALL_HEADER=\
