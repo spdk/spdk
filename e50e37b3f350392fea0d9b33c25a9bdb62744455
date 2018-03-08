@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f33257ae_a946c023",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 875,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-03-08T01:49:14Z",
+      "side": 1,
+      "message": "rebase from updated PT vbdev, get a few more things from base_bdev",
+      "revId": "e50e37b3f350392fea0d9b33c25a9bdb62744455",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
