@@ -37,7 +37,9 @@
 #include "spdk/stdinc.h"
 
 struct spdk_bdev;
+struct spdk_uuid;
 
-struct spdk_bdev *create_null_bdev(const char *name, uint64_t num_blocks, uint32_t block_size);
+struct spdk_bdev *create_null_bdev(const char *name, const struct spdk_uuid *uuid,
+				   uint64_t num_blocks, uint32_t block_size);
 
 #endif /* SPDK_BDEV_NULL_H */

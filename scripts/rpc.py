@@ -41,6 +41,7 @@ if __name__ == "__main__":
     p = subparsers.add_parser('construct_null_bdev',
                               help='Add a bdev with null backend')
     p.add_argument('name', help='Block device name')
+    p.add_argument('-u', '--uuid', help='UUID of the bdev')
     p.add_argument(
         'total_size', help='Size of null bdev in MB (int > 0)', type=int)
     p.add_argument('block_size', help='Block size for this bdev', type=int)

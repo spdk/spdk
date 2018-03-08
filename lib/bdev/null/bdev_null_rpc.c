@@ -41,12 +41,14 @@
 
 struct rpc_construct_null {
 	char *name;
+	char *uuid;
 	uint32_t num_blocks;
 	uint32_t block_size;
 };
 
 static const struct spdk_json_object_decoder rpc_construct_null_decoders[] = {
 	{"name", offsetof(struct rpc_construct_null, name), spdk_json_decode_string},
+	{"uuid", offsetof(struct rpc_construct_null, uuid), spdk_json_decode_string, true},
 	{"num_blocks", offsetof(struct rpc_construct_null, num_blocks), spdk_json_decode_uint32},
 	{"block_size", offsetof(struct rpc_construct_null, block_size), spdk_json_decode_uint32},
 };
@@ -57,6 +59,8 @@ spdk_rpc_construct_null_bdev(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_construct_null req = {};
 	struct spdk_json_write_ctx *w;
+	struct spdk_uuid *uuid = NULL;
+	struct spdk_uuid decoded_uuid;
 	struct spdk_bdev *bdev;
 
 	if (spdk_json_decode_object(params, rpc_construct_null_decoders,
@@ -66,7 +70,14 @@ spdk_rpc_construct_null_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	bdev = create_null_bdev(req.name, req.num_blocks, req.block_size);
+	if (req.uuid) {
+		if (spdk_uuid_parse(&decoded_uuid, req.uuid)) {
+			goto invalid;
+		}
+		uuid = &decoded_uuid;
+	}
+
+	bdev = create_null_bdev(req.name, uuid, req.num_blocks, req.block_size);
 	if (bdev == NULL) {
 		goto invalid;
 	}

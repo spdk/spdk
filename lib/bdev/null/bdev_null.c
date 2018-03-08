@@ -127,7 +127,8 @@ static const struct spdk_bdev_fn_table null_fn_table = {
 };
 
 struct spdk_bdev *
-create_null_bdev(const char *name, uint64_t num_blocks, uint32_t block_size)
+create_null_bdev(const char *name, const struct spdk_uuid *uuid,
+		 uint64_t num_blocks, uint32_t block_size)
 {
 	struct null_bdev *bdev;
 	int rc;
@@ -158,7 +159,11 @@ create_null_bdev(const char *name, uint64_t num_blocks, uint32_t block_size)
 	bdev->bdev.write_cache = 0;
 	bdev->bdev.blocklen = block_size;
 	bdev->bdev.blockcnt = num_blocks;
-	spdk_uuid_generate(&bdev->bdev.uuid);
+	if (uuid) {
+		bdev->bdev.uuid = *uuid;
+	} else {
+		spdk_uuid_generate(&bdev->bdev.uuid);
+	}
 
 	bdev->bdev.ctxt = bdev;
 	bdev->bdev.fn_table = &null_fn_table;
@@ -281,7 +286,7 @@ bdev_null_initialize(void)
 
 		num_blocks = size_in_mb * (1024 * 1024) / block_size;
 
-		bdev = create_null_bdev(name, num_blocks, block_size);
+		bdev = create_null_bdev(name, NULL, num_blocks, block_size);
 		if (bdev == NULL) {
 			SPDK_ERRLOG("Could not create null bdev\n");
 			rc = EINVAL;
