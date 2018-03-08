@@ -115,6 +115,12 @@ spdk_nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 }
 
 static void
+_spdk_nvmf_free(void *ctx)
+{
+	free(ctx);
+}
+
+static void
 spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 {
 	struct spdk_nvmf_poll_group *group = ctx_buf;
@@ -139,10 +145,10 @@ spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 			}
 		}
 
-		free(sgroup->channels);
+		spdk_thread_send_msg(group->thread, _spdk_nvmf_free, sgroup->channels);
 	}
 
-	free(group->sgroups);
+	spdk_thread_send_msg(group->thread, _spdk_nvmf_free, group->sgroups);
 }
 
 struct spdk_nvmf_tgt *
