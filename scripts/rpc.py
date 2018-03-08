@@ -32,6 +32,7 @@ if __name__ == "__main__":
     p = subparsers.add_parser('construct_malloc_bdev',
                               help='Add a bdev with malloc backend')
     p.add_argument('-b', '--name', help="Name of the bdev")
+    p.add_argument('-u', '--uuid', help="UUID of the bdev")
     p.add_argument(
         'total_size', help='Size of malloc bdev in MB (int > 0)', type=int)
     p.add_argument('block_size', help='Block size for this bdev', type=int)

@@ -6,6 +6,8 @@ def construct_malloc_bdev(args):
     params = {'num_blocks': num_blocks, 'block_size': args.block_size}
     if args.name:
         params['name'] = args.name
+    if args.uuid:
+        params['uuid'] = args.uuid
     print_array(args.client.call(
         'construct_malloc_bdev', params))
 
