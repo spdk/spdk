@@ -483,7 +483,11 @@ _spdk_put_io_channel(void *arg)
 void
 spdk_put_io_channel(struct spdk_io_channel *ch)
 {
-	spdk_thread_send_msg(ch->thread, _spdk_put_io_channel, ch);
+	if (ch->thread == spdk_get_thread()) {
+		_spdk_put_io_channel(ch);
+	} else {
+		spdk_thread_send_msg(ch->thread, _spdk_put_io_channel, ch);
+	}
 }
 
 struct spdk_io_channel *
