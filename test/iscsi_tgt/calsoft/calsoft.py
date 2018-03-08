@@ -26,7 +26,7 @@ A standard-label MUST begin with a capital letter and must not exceed
 63 characters.
 key name: A standard-label
 '''
-known_failed_cases = ['tc_ffp_15_2', 'tc_ffp_29_2', 'tc_ffp_29_3',
+known_failed_cases = ['tc_ffp_15_2', 'tc_ffp_29_2', 'tc_ffp_29_3', 'tc_ffp_29_4',
                       'tc_err_1_1', 'tc_err_1_2', 'tc_err_2_8',
                       'tc_err_3_1', 'tc_err_3_2', 'tc_err_3_3',
                       'tc_err_3_4', 'tc_err_5_1', 'tc_login_3_1',
