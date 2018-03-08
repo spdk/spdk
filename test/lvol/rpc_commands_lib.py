@@ -200,3 +200,13 @@ class Commands_Rpc(object):
         print("INFO: Renaming lvol bdev from {old} to {new}".format(old=old_name, new=new_name))
         output, rc = self.rpc.rename_lvol_bdev(old_name, new_name)
         return rc
+
+    def snapshot_lvol_bdev(self, bdev_name, snapshot_name):
+        print("INFO: RPC COMMAND snapshot_lvol_bdev")
+        output, rc = self.rpc.snapshot_lvol_bdev(bdev_name, snapshot_name)
+        return rc
+
+    def clone_lvol_bdev(self, snapshot_name, clone_name):
+        print("INFO: RPC COMMAND clone_lvol_bdev")
+        output, rc = self.rpc.clone_lvol_bdev(snapshot_name, clone_name)
+        return rc
