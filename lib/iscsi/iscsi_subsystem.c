@@ -600,8 +600,8 @@ spdk_iscsi_opts_free(struct spdk_iscsi_opts *opts)
 }
 
 static void
-spdk_iscsi_read_parameters_from_config_file(struct spdk_conf_section *sp,
-		struct spdk_iscsi_opts *opts)
+spdk_iscsi_read_config_file_params(struct spdk_conf_section *sp,
+				   struct spdk_iscsi_opts *opts)
 {
 	const char *val;
 	int MaxSessions;
@@ -934,21 +934,21 @@ spdk_iscsi_parse_iscsi_configuration(void *ctx)
 {
 	int rc;
 
-	rc = spdk_iscsi_portal_grp_array_create();
+	rc = spdk_iscsi_parse_portal_grps();
 	if (rc < 0) {
-		SPDK_ERRLOG("spdk_iscsi_portal_grp_array_create() failed\n");
+		SPDK_ERRLOG("spdk_iscsi_parse_portal_grps() failed\n");
 		goto end;
 	}
 
-	rc = spdk_iscsi_init_grp_array_create();
+	rc = spdk_iscsi_parse_init_grps();
 	if (rc < 0) {
-		SPDK_ERRLOG("spdk_iscsi_init_grp_array_create() failed\n");
+		SPDK_ERRLOG("spdk_iscsi_parse_init_grps() failed\n");
 		goto end;
 	}
 
-	rc = spdk_iscsi_init_tgt_nodes();
+	rc = spdk_iscsi_parse_tgt_nodes();
 	if (rc < 0) {
-		SPDK_ERRLOG("spdk_iscsi_init_tgt_nodes() failed\n");
+		SPDK_ERRLOG("spdk_iscsi_parse_tgt_nodes() failed\n");
 	}
 
 end:
@@ -965,10 +965,10 @@ spdk_iscsi_parse_iscsi_globals(void)
 	spdk_iscsi_opts_init(&opts);
 
 	/* Process parameters */
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_app_read_parameters\n");
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_read_config_file_parmas\n");
 	sp = spdk_conf_find_section(NULL, "iSCSI");
 	if (sp != NULL) {
-		spdk_iscsi_read_parameters_from_config_file(sp, &opts);
+		spdk_iscsi_read_config_file_params(sp, &opts);
 	}
 
 	rc = spdk_iscsi_initialize_iscsi_globals(&opts);
@@ -1027,8 +1027,8 @@ spdk_iscsi_fini_done(void *arg)
 	spdk_iscsi_free_pools();
 
 	spdk_iscsi_shutdown_tgt_nodes();
-	spdk_iscsi_init_grp_array_destroy();
-	spdk_iscsi_portal_grp_array_destroy();
+	spdk_iscsi_init_grps_destroy();
+	spdk_iscsi_portal_grps_destroy();
 	free(g_spdk_iscsi.authfile);
 	free(g_spdk_iscsi.nodebase);
 	free(g_spdk_iscsi.poll_group);
