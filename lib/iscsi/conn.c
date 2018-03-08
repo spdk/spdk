@@ -245,6 +245,7 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	conn->nopininterval = g_spdk_iscsi.nopininterval;
 	conn->nopininterval *= spdk_get_ticks_hz(); /* seconds to TSC */
 	conn->nop_outstanding = false;
+	conn->last_nopin = spdk_get_ticks();
 	conn->data_out_cnt = 0;
 	conn->data_in_cnt = 0;
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
