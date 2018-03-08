@@ -1177,6 +1177,7 @@ spdk_iscsi_conn_full_feature_migrate(void *arg1, void *arg2)
 	/* The poller has been unregistered, so now we can re-register it on the new core. */
 	conn->lcore = spdk_env_get_current_core();
 	spdk_iscsi_poll_group_add_conn(conn);
+	conn->last_nopin = spdk_get_ticks();
 }
 
 void
