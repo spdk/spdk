@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b912d294_98a16aaa",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 467,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-08T17:08:12Z",
+      "side": 1,
+      "message": "accessing only the channel should not need to acquire the mutex - each channel *should* only be accessed by one thread\n\nmaybe instead you can add:\n\nassert(ch-\u003ethread \u003d\u003d spdk_get_thread());\n\nso lines 467, 471, 478 and 481 in new patch should not be needed",
+      "revId": "d0194f2b632c0c6884cd628da49f03c642b34c81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9592ce31_b7a9389f",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 486,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-08T17:08:12Z",
+      "side": 1,
+      "message": "I think the cleaner way to do this it still do the unlock right here after the TAILQ_REMOVE.  Then do *not* check ch-\u003edev-\u003eunregistered here.  Do it in _spdk_io_device_attempt_free() instead.\n\nIn _spdk_io_device_attempt_free(), acquire the lock first - then if dev-\u003eunregistered \u003d\u003d false, release the lock and return immediately.\n\nWith this approach, you should not need to modify spdk_io_device_unregister() at all.",
+      "revId": "d0194f2b632c0c6884cd628da49f03c642b34c81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
