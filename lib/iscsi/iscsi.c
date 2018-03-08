@@ -4271,7 +4271,7 @@ spdk_iscsi_send_r2t(struct spdk_iscsi_conn *conn,
 	return SPDK_SUCCESS;
 }
 
-int spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn)
+void spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_pdu *rsp_pdu;
 	struct iscsi_bhs_nop_in	*rsp;
@@ -4280,7 +4280,7 @@ int spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn)
 	if (conn->sess == NULL ||
 	    !conn->full_feature ||
 	    !spdk_iscsi_param_eq_val(conn->sess->params, "SessionType", "Normal")) {
-		return SPDK_SUCCESS;
+		return;
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
@@ -4313,8 +4313,6 @@ int spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn)
 
 	spdk_iscsi_conn_write_pdu(conn, rsp_pdu);
 	conn->nop_outstanding = true;
-
-	return SPDK_SUCCESS;
 }
 
 static void
