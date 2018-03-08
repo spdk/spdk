@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8b8b1c93_1a7850e3",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 628,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-08T17:37:20Z",
+      "side": 1,
+      "message": "maybe we should set this default in spdk_iscsi_opts_init instead?  then if user specifies it in config file, free previous one and strdup it.",
+      "revId": "709e87c761c436591c259bd886b28eceb0133bcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d48cbfc_6bf3ea0e",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 635,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-08T17:37:20Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "709e87c761c436591c259bd886b28eceb0133bcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51ebabb4_f271065a",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 768,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-08T17:37:20Z",
+      "side": 1,
+      "message": "i think -EINVAL would be better\n\nprobably assert(false) would be good too, if you adopt my earlier comment (that opts_init function initializes authfile to default value)",
+      "revId": "709e87c761c436591c259bd886b28eceb0133bcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22d3240e_f2f29f97",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 773,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-08T17:37:20Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "709e87c761c436591c259bd886b28eceb0133bcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
