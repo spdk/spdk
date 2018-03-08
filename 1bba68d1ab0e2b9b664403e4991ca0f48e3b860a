@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "03b96cfc_565d9ef4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 3766,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-03-08T15:59:20Z",
+      "side": 1,
+      "message": "Context changed to point a blob (same way as for snapshots)",
+      "revId": "1bba68d1ab0e2b9b664403e4991ca0f48e3b860a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
