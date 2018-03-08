@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "3e8a63d3_8575bc54",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 54
+      },
+      "lineNbr": 3463,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-03-08T15:59:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2b3f67a0_97ad35aa",
+      "range": {
+        "startLine": 3463,
+        "startChar": 39,
+        "endLine": 3463,
+        "endChar": 73
+      },
+      "revId": "ddf5337d931f413cf94a6ce3a44f24dde0b849c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0e7a9442_7289d714",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 54
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "579f9b7c_a572fcf4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 54
+      },
+      "lineNbr": 3480,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-03-08T15:59:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0e7a9442_7289d714",
+      "range": {
+        "startLine": 3479,
+        "startChar": 2,
+        "endLine": 3480,
+        "endChar": 8
+      },
+      "revId": "ddf5337d931f413cf94a6ce3a44f24dde0b849c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "65b38026_790b8574",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 54
@@ -59,6 +107,30 @@
       "writtenOn": "2018-03-05T14:01:49Z",
       "side": 1,
       "message": "Why you need this variable for? Can you use _blob?",
+      "range": {
+        "startLine": 3647,
+        "startChar": 19,
+        "endLine": 3647,
+        "endChar": 27
+      },
+      "revId": "ddf5337d931f413cf94a6ce3a44f24dde0b849c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e5b71ea9_c14387fa",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 54
+      },
+      "lineNbr": 3647,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-03-08T15:59:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "65b38026_790b8574",
       "range": {
         "startLine": 3647,
         "startChar": 19,
@@ -129,6 +201,30 @@
       "side": 1,
       "message": "I think this might be a good addition, especially if in future the internal_xattrs are expanded.",
       "parentUuid": "ea8bae8d_a3509d5a",
+      "range": {
+        "startLine": 3680,
+        "startChar": 1,
+        "endLine": 3680,
+        "endChar": 37
+      },
+      "revId": "ddf5337d931f413cf94a6ce3a44f24dde0b849c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "23d547f1_5e8d6d72",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 54
+      },
+      "lineNbr": 3680,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-03-08T15:59:00Z",
+      "side": 1,
+      "message": "I did the same for a clones.",
+      "parentUuid": "10555ce8_7b168a1e",
       "range": {
         "startLine": 3680,
         "startChar": 1,
