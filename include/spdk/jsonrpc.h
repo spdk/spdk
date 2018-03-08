@@ -86,6 +86,27 @@ void spdk_jsonrpc_server_shutdown(struct spdk_jsonrpc_server *server);
 struct spdk_json_write_ctx *spdk_jsonrpc_begin_result(struct spdk_jsonrpc_request *request);
 
 /**
+ * Write an JSON RPC  error object with printf-like formated message.
+ * \param w JSON write context
+ * \param error_code error code
+ * \param fmt message format string
+ */
+void spdk_jsonrpc_write_error_response_fmt(struct spdk_json_write_ctx *w, int error_code,
+		const char *fmt, ...) __attribute__((format(printf, 3, 4)));
+
+/**
+ * Write an JSON RPC  error object with printf-like formated message. This is
+ * \c va_arg version of \c spdk_jsonrpc_write_error_response_fmt().
+ * \param w JSON write context
+ * \param error_code error code
+ * \param fmt message format string
+ */
+void spdk_jsonrpc_write_error_response_fmt_v(struct spdk_json_write_ctx *w, int error_code,
+		const char *fmt, va_list args);
+
+
+
+/**
  * Complete and send a JSON-RPC response.
  *
  * \param request Request to complete the response for.
@@ -101,8 +122,8 @@ void spdk_jsonrpc_end_result(struct spdk_jsonrpc_request *request, struct spdk_j
  *                   or a custom error code).
  * \param msg String error message to return.
  *
- * This is shorthand for spdk_jsonrpc_begin_result() + spdk_jsonrpc_end_result() with an error
- * object.
+ * This is shorthand for spdk_jsonrpc_begin_result() + spdk_jsonrpc_write_error_response_fmt() +
+ * spdk_jsonrpc_end_result()
  */
 void spdk_jsonrpc_send_error_response(struct spdk_jsonrpc_request *request,
 				      int error_code, const char *msg);
