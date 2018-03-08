@@ -807,20 +807,6 @@ spdk_iscsi_app_read_parameters(void)
 
 	spdk_iscsi_log_globals();
 
-	/* portal groups */
-	rc = spdk_iscsi_portal_grp_array_create();
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_iscsi_portal_grp_array_create() failed\n");
-		return -1;
-	}
-
-	/* initiator groups */
-	rc = spdk_iscsi_init_grp_array_create();
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_iscsi_init_grp_array_create() failed\n");
-		return -1;
-	}
-
 	return 0;
 }
 
@@ -942,6 +928,20 @@ spdk_iscsi_init(spdk_iscsi_init_cb cb_fn, void *cb_arg)
 	rc = spdk_iscsi_initialize_all_pools();
 	if (rc != 0) {
 		SPDK_ERRLOG("spdk_initialize_all_pools() failed\n");
+		spdk_iscsi_init_complete(-1);
+		return;
+	}
+
+	rc = spdk_iscsi_portal_grp_array_create();
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_iscsi_portal_grp_array_create() failed\n");
+		spdk_iscsi_init_complete(-1);
+		return;
+	}
+
+	rc = spdk_iscsi_init_grp_array_create();
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_iscsi_init_grp_array_create() failed\n");
 		spdk_iscsi_init_complete(-1);
 		return;
 	}
