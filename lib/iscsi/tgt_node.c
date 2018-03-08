@@ -388,12 +388,6 @@ spdk_iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
 	return total;
 }
 
-static void
-spdk_iscsi_tgt_node_list_init(void)
-{
-	TAILQ_INIT(&g_spdk_iscsi.target_head);
-}
-
 struct spdk_iscsi_tgt_node *
 spdk_iscsi_find_tgt_node(const char *target_name)
 {
@@ -1204,8 +1198,6 @@ int spdk_iscsi_init_tgt_nodes(void)
 	int rc;
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_init_tgt_nodes\n");
-
-	spdk_iscsi_tgt_node_list_init();
 
 	sp = spdk_conf_first_section(NULL);
 	while (sp != NULL) {
