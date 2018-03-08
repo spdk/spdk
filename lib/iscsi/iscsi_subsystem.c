@@ -800,6 +800,11 @@ spdk_iscsi_app_read_parameters(void)
 		return -1;
 	}
 
+	TAILQ_INIT(&g_spdk_iscsi.portal_head);
+	TAILQ_INIT(&g_spdk_iscsi.pg_head);
+	TAILQ_INIT(&g_spdk_iscsi.ig_head);
+	TAILQ_INIT(&g_spdk_iscsi.target_head);
+
 	spdk_iscsi_log_globals();
 
 	/* portal groups */
