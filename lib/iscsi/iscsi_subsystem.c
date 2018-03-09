@@ -773,6 +773,13 @@ spdk_iscsi_initialize_iscsi_globals(struct spdk_iscsi_opts *opts)
 		return -EINVAL;
 	}
 
+	if (!spdk_iscsi_check_chap_params(opts->no_discovery_auth, opts->req_discovery_auth,
+					  opts->req_discovery_auth_mutual,
+					  opts->discovery_auth_group)) {
+		SPDK_ERRLOG("CHAP params in opts are illegal combination\n");
+		return -EINVAL;
+	}
+
 	g_spdk_iscsi.authfile = strdup(opts->authfile);
 	if (!g_spdk_iscsi.authfile) {
 		SPDK_ERRLOG("failed to strdup for auth file %s\n", opts->authfile);
