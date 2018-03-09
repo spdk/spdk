@@ -230,9 +230,6 @@ struct spdk_bdev {
 	/** QoS thread for this bdev */
 	struct spdk_thread *qos_thread;
 
-	/** Indicate an async destroying event is on going */
-	bool qos_channel_destroying;
-
 	/** write cache enabled, not used at the moment */
 	int write_cache;
 

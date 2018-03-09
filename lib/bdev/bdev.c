@@ -1052,9 +1052,13 @@ _spdk_bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
 	}
 }
 
+/* Caller must hold bdev->mutex. */
 static int
-_spdk_bdev_qos_channel_create(struct spdk_bdev *bdev)
+spdk_bdev_qos_channel_create(struct spdk_bdev *bdev)
 {
+	assert(bdev->qos_channel == NULL);
+	assert(bdev->qos_thread == NULL);
+
 	bdev->qos_channel = calloc(1, sizeof(struct spdk_bdev_channel));
 	if (!bdev->qos_channel) {
 		return -1;
@@ -1062,10 +1066,15 @@ _spdk_bdev_qos_channel_create(struct spdk_bdev *bdev)
 
 	bdev->qos_thread = spdk_get_thread();
 	if (!bdev->qos_thread) {
+		free(bdev->qos_channel);
+		bdev->qos_channel = NULL;
 		return -1;
 	}
 
 	if (_spdk_bdev_channel_create(bdev->qos_channel, __bdev_to_io_dev(bdev)) != 0) {
+		free(bdev->qos_channel);
+		bdev->qos_channel = NULL;
+		bdev->qos_thread = NULL;
 		return -1;
 	}
 
@@ -1079,67 +1088,6 @@ _spdk_bdev_qos_channel_create(struct spdk_bdev *bdev)
 	return 0;
 }
 
-static void
-_spdk_bdev_qos_channel_destroy(void *ctx)
-{
-	struct spdk_bdev_channel	*qos_channel = ctx;
-	struct spdk_bdev		*bdev = NULL;
-
-	if (!qos_channel) {
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV, "QoS channel already NULL\n");
-		return;
-	}
-
-	spdk_poller_unregister(&qos_channel->qos_poller);
-
-	bdev = qos_channel->bdev;
-	assert(bdev->qos_thread == spdk_get_thread());
-	assert(bdev->qos_channel == qos_channel);
-
-	free(bdev->qos_channel);
-	bdev->qos_channel = NULL;
-	bdev->qos_thread = NULL;
-}
-
-static void
-spdk_bdev_qos_channel_create_async(void *ctx)
-{
-	struct spdk_bdev	*bdev = ctx;
-
-	if (!bdev->qos_channel) {
-		if (_spdk_bdev_qos_channel_create(bdev) != 0) {
-			SPDK_ERRLOG("QoS channel failed to create\n");
-			_spdk_bdev_channel_destroy_resource(bdev->qos_channel);
-			_spdk_bdev_qos_channel_destroy(bdev->qos_channel);
-		}
-	}
-}
-
-static int
-spdk_bdev_qos_channel_create(void *ctx)
-{
-	struct spdk_bdev	*bdev = ctx;
-	struct spdk_thread	*qos_thread = bdev->qos_thread;
-
-	/*
-	 * There is an async destroying on going.
-	 * Send a message to that thread to defer the creation.
-	 */
-	if (bdev->qos_channel_destroying == true) {
-		if (qos_thread) {
-			spdk_thread_send_msg(qos_thread,
-					     spdk_bdev_qos_channel_create_async, bdev);
-			return 0;
-		}
-	}
-
-	if (!bdev->qos_channel) {
-		return _spdk_bdev_qos_channel_create(bdev);
-	} else {
-		return 0;
-	}
-}
-
 static int
 spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 {
@@ -1151,20 +1099,6 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 		return -1;
 	}
 
-	/* Rate limiting on this bdev enabled */
-	if (bdev->ios_per_sec > 0) {
-		if (spdk_bdev_qos_channel_create(bdev) != 0) {
-			_spdk_bdev_channel_destroy_resource(ch);
-			_spdk_bdev_channel_destroy_resource(bdev->qos_channel);
-			_spdk_bdev_qos_channel_destroy(bdev->qos_channel);
-			return -1;
-		}
-	}
-
-	pthread_mutex_lock(&bdev->mutex);
-	bdev->channel_count++;
-	pthread_mutex_unlock(&bdev->mutex);
-
 #ifdef SPDK_CONFIG_VTUNE
 	{
 		char *name;
@@ -1172,8 +1106,6 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 		name = spdk_sprintf_alloc("spdk_bdev_%s_%p", ch->bdev->name, ch);
 		if (!name) {
 			_spdk_bdev_channel_destroy_resource(ch);
-			_spdk_bdev_channel_destroy_resource(bdev->qos_channel);
-			_spdk_bdev_qos_channel_destroy(bdev->qos_channel);
 			return -1;
 		}
 		ch->handle = __itt_string_handle_create(name);
@@ -1182,6 +1114,21 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 		ch->interval_tsc = spdk_get_ticks_hz() / 100;
 	}
 #endif
+
+	pthread_mutex_lock(&bdev->mutex);
+
+	/* Rate limiting on this bdev enabled */
+	if (bdev->ios_per_sec > 0 && bdev->qos_channel == NULL) {
+		if (spdk_bdev_qos_channel_create(bdev) != 0) {
+			_spdk_bdev_channel_destroy_resource(ch);
+			pthread_mutex_unlock(&bdev->mutex);
+			return -1;
+		}
+	}
+
+	bdev->channel_count++;
+
+	pthread_mutex_unlock(&bdev->mutex);
 
 	return 0;
 }
@@ -1257,12 +1204,12 @@ _spdk_bdev_channel_destroy(struct spdk_bdev_channel *ch)
 static void
 spdk_bdev_qos_channel_destroy(void *ctx)
 {
-	struct spdk_bdev	*bdev = ctx;
+	struct spdk_bdev_channel *qos_channel = ctx;
 
-	bdev->qos_channel_destroying = false;
+	_spdk_bdev_channel_destroy(qos_channel);
 
-	_spdk_bdev_channel_destroy(bdev->qos_channel);
-	_spdk_bdev_qos_channel_destroy(bdev->qos_channel);
+	spdk_poller_unregister(&qos_channel->qos_poller);
+	free(qos_channel);
 }
 
 static void
@@ -1270,25 +1217,26 @@ spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 {
 	struct spdk_bdev_channel	*ch = ctx_buf;
 	struct spdk_bdev		*bdev = ch->bdev;
-	uint32_t			channel_count = 0;
 
 	_spdk_bdev_channel_destroy(ch);
 
 	pthread_mutex_lock(&bdev->mutex);
 	bdev->channel_count--;
-	channel_count = bdev->channel_count;
-	pthread_mutex_unlock(&bdev->mutex);
+	if (bdev->channel_count == 0 && bdev->qos_channel != NULL) {
+		/* All I/O channels for this bdev have been destroyed - destroy the QoS channel. */
+		spdk_thread_send_msg(bdev->qos_thread, spdk_bdev_qos_channel_destroy,
+				     bdev->qos_channel);
 
-	/* Destroy QoS channel as no active bdev channels there */
-	if (channel_count == 0 && bdev->ios_per_sec > 0 && bdev->qos_thread) {
-		if (bdev->qos_thread == spdk_get_thread()) {
-			spdk_bdev_qos_channel_destroy(bdev);
-		} else {
-			bdev->qos_channel_destroying = true;
-			spdk_thread_send_msg(bdev->qos_thread,
-					     spdk_bdev_qos_channel_destroy, bdev);
-		}
+		/*
+		 * Set qos_channel to NULL within the critical section so that
+		 * if another channel is created, it will see qos_channel == NULL and
+		 * re-create the QoS channel even if the asynchronous qos_channel_destroy
+		 * isn't finished yet.
+		 */
+		bdev->qos_channel = NULL;
+		bdev->qos_thread = NULL;
 	}
+	pthread_mutex_unlock(&bdev->mutex);
 }
 
 int

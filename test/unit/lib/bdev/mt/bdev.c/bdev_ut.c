@@ -697,7 +697,7 @@ basic_qos(void)
 	CU_ASSERT(qos_bdev_ch != NULL);
 	module_ch = qos_bdev_ch->module_ch;
 	CU_ASSERT(module_ch->io_outstanding == 0);
-	CU_ASSERT(g_ut_threads[1].thread == bdev->qos_thread);
+	CU_ASSERT(g_ut_threads[2].thread == bdev->qos_thread);
 
 	/*
 	 * Destroy the last I/O channel so that the QoS bdev channel
