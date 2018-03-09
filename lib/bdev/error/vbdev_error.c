@@ -72,7 +72,7 @@ static int vbdev_error_init(void);
 
 static void vbdev_error_examine(struct spdk_bdev *bdev);
 
-static struct spdk_bdev_module_if error_if = {
+static struct spdk_bdev_module error_if = {
 	.name = "error",
 	.module_init = vbdev_error_init,
 	.module_fini = NULL,

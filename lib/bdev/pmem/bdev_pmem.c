@@ -54,7 +54,7 @@ static TAILQ_HEAD(, pmem_disk) g_pmem_disks = TAILQ_HEAD_INITIALIZER(g_pmem_disk
 static int bdev_pmem_initialize(void);
 static void bdev_pmem_finish(void);
 
-static struct spdk_bdev_module_if pmem_if = {
+static struct spdk_bdev_module pmem_if = {
 	.name = "pmem",
 	.module_init = bdev_pmem_initialize,
 	.module_fini = bdev_pmem_finish,

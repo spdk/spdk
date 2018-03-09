@@ -158,7 +158,7 @@ bdev_nvme_get_ctx_size(void)
 	return sizeof(struct nvme_bdev_io);
 }
 
-static struct spdk_bdev_module_if nvme_if = {
+static struct spdk_bdev_module nvme_if = {
 	.name = "nvme",
 	.module_init = bdev_nvme_library_init,
 	.module_fini = bdev_nvme_library_fini,

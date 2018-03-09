@@ -77,7 +77,7 @@
  */
 
 /** Block device module */
-struct spdk_bdev_module_if {
+struct spdk_bdev_module {
 	/**
 	 * Initialization function for the module.  Called by the spdk
 	 * application during startup.
@@ -138,7 +138,7 @@ struct spdk_bdev_module_if {
 	 */
 	bool async_fini;
 
-	TAILQ_ENTRY(spdk_bdev_module_if) tailq;
+	TAILQ_ENTRY(spdk_bdev_module) tailq;
 };
 
 typedef void (*spdk_bdev_unregister_cb)(void *cb_arg, int rc);
@@ -257,7 +257,7 @@ struct spdk_bdev {
 	/**
 	 * Pointer to the bdev module that registered this bdev.
 	 */
-	struct spdk_bdev_module_if *module;
+	struct spdk_bdev_module *module;
 
 	/** function table for all LUN ops */
 	const struct spdk_bdev_fn_table *fn_table;
@@ -282,7 +282,7 @@ struct spdk_bdev {
 	 * Pointer to the module that has claimed this bdev for purposes of creating virtual
 	 *  bdevs on top of it.  Set to NULL if the bdev has not been claimed.
 	 */
-	struct spdk_bdev_module_if *claim_module;
+	struct spdk_bdev_module *claim_module;
 
 	/** Callback function that will be called after bdev destruct is completed. */
 	spdk_bdev_unregister_cb	unregister_cb;
@@ -439,11 +439,11 @@ void spdk_bdev_unregister_done(struct spdk_bdev *bdev, int bdeverrno);
 int spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs,
 			int base_bdev_count);
 
-void spdk_bdev_module_examine_done(struct spdk_bdev_module_if *module);
-void spdk_bdev_module_init_done(struct spdk_bdev_module_if *module);
+void spdk_bdev_module_examine_done(struct spdk_bdev_module *module);
+void spdk_bdev_module_init_done(struct spdk_bdev_module *module);
 void spdk_bdev_module_finish_done(void);
 int spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
-				struct spdk_bdev_module_if *module);
+				struct spdk_bdev_module *module);
 void spdk_bdev_module_release_bdev(struct spdk_bdev *bdev);
 
 /**
@@ -542,7 +542,7 @@ int spdk_bdev_notify_blockcnt_change(struct spdk_bdev *bdev, uint64_t size);
 void spdk_scsi_nvme_translate(const struct spdk_bdev_io *bdev_io,
 			      int *sc, int *sk, int *asc, int *ascq);
 
-void spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module);
+void spdk_bdev_module_list_add(struct spdk_bdev_module *bdev_module);
 
 /**
  * Find registered module with name pointed by \c name.
@@ -550,7 +550,7 @@ void spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module);
  * \param name name of module to be searched for.
  * \return pointer to module or NULL if no module with \c name exist
  */
-struct spdk_bdev_module_if *spdk_bdev_module_list_find(const char *name);
+struct spdk_bdev_module *spdk_bdev_module_list_find(const char *name);
 
 static inline struct spdk_bdev_io *
 spdk_bdev_io_from_ctx(void *ctx)
@@ -570,7 +570,7 @@ struct spdk_bdev_part_base {
 	uint32_t			channel_size;
 	spdk_bdev_part_base_free_fn	base_free_fn;
 	bool				claimed;
-	struct spdk_bdev_module_if	*module;
+	struct spdk_bdev_module		*module;
 	struct spdk_bdev_fn_table	*fn_table;
 	struct bdev_part_tailq		*tailq;
 	spdk_io_channel_create_cb	ch_create_cb;
@@ -596,7 +596,7 @@ void spdk_bdev_part_free(struct spdk_bdev_part *part);
 void spdk_bdev_part_base_hotremove(struct spdk_bdev *base_bdev, struct bdev_part_tailq *tailq);
 int spdk_bdev_part_base_construct(struct spdk_bdev_part_base *base, struct spdk_bdev *bdev,
 				  spdk_bdev_remove_cb_t remove_cb,
-				  struct spdk_bdev_module_if *module,
+				  struct spdk_bdev_module *module,
 				  struct spdk_bdev_fn_table *fn_table,
 				  struct bdev_part_tailq *tailq,
 				  spdk_bdev_part_base_free_fn free_fn,
@@ -628,6 +628,6 @@ void spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spd
 /*
  *  Second helper macro for "stringize" trick to work.
  */
-#define SPDK_BDEV_MODULE_REGISTER_FN_NAME_(line) spdk_bdev_module_if_register_ ## line
+#define SPDK_BDEV_MODULE_REGISTER_FN_NAME_(line) spdk_bdev_module_register_ ## line
 
 #endif /* SPDK_INTERNAL_BDEV_H */

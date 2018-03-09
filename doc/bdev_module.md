@@ -27,14 +27,14 @@ starting point is to copy the existing 'null' bdev module.
 The primary interface that bdev modules will interact with is in
 include/spdk_internal/bdev.h. In that header a macro is defined that registers
 a new bdev module - SPDK_BDEV_MODULE_REGISTER. This macro take as argument a
-pointer spdk_bdev_module_if structure that is used to register new bdev module.
+pointer spdk_bdev_module structure that is used to register new bdev module.
 
-The spdk_bdev_module_if structure describes the module properties like
+The spdk_bdev_module structure describes the module properties like
 initialization (`module_init`) and teardown (`module_fini`) functions,
 the function that returns context size (`get_ctx_size`) - scratch space that
 will be allocated in each I/O request for use by this module, and a callback
 that will be called each time a new bdev is registered by another module
-(`examine`). Please check the documentation of struct spdk_bdev_module_if for
+(`examine`). Please check the documentation of struct spdk_bdev_module for
 more details.
 
 ## Creating Bdevs
