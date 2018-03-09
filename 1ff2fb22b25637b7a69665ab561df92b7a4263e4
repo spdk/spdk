@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "25d0d173_9341082b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2390,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-09T14:27:55Z",
+      "side": 1,
+      "message": "ack your previous comment\n\nso I think this is fine for now - probably we should then set a global variable that this error happened, and fail bdev subsystem initialization later (with a good error message explaining why)\n\ncould you do this as a separate patch?",
+      "revId": "1ff2fb22b25637b7a69665ab561df92b7a4263e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
