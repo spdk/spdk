@@ -913,7 +913,6 @@ spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn)
 			conn->state = ISCSI_CONN_STATE_EXITING;
 		}
 	} else if (tsc - conn->last_nopin > conn->nopininterval) {
-		conn->last_nopin = tsc;
 		spdk_iscsi_send_nopin(conn);
 	}
 }

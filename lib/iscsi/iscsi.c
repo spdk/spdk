@@ -4312,6 +4312,7 @@ void spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn)
 	to_be32(&rsp->max_cmd_sn, conn->sess->MaxCmdSN);
 
 	spdk_iscsi_conn_write_pdu(conn, rsp_pdu);
+	conn->last_nopin = spdk_get_ticks();
 	conn->nop_outstanding = true;
 }
 
