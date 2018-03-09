@@ -60,7 +60,7 @@ static int bdev_null_initialize(void);
 static void bdev_null_finish(void);
 static void bdev_null_get_spdk_running_config(FILE *fp);
 
-static struct spdk_bdev_module_if null_if = {
+static struct spdk_bdev_module null_if = {
 	.name = "null",
 	.module_init = bdev_null_initialize,
 	.module_fini = bdev_null_finish,

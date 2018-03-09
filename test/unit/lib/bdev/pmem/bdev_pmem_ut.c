@@ -37,7 +37,7 @@
 
 #include "bdev/pmem/bdev_pmem.c"
 
-static struct spdk_bdev_module_if *g_bdev_pmem_module;
+static struct spdk_bdev_module *g_bdev_pmem_module;
 static int g_bdev_module_cnt;
 
 struct pmemblk {
@@ -296,7 +296,7 @@ ut_bdev_pmem_destruct(struct spdk_bdev *bdev)
 }
 
 void
-spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module)
+spdk_bdev_module_list_add(struct spdk_bdev_module *bdev_module)
 {
 	g_bdev_pmem_module = bdev_module;
 	g_bdev_module_cnt++;

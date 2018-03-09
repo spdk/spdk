@@ -399,7 +399,7 @@ bdev_virtio_get_ctx_size(void)
 	return sizeof(struct virtio_scsi_io_ctx);
 }
 
-static struct spdk_bdev_module_if virtio_scsi_if = {
+static struct spdk_bdev_module virtio_scsi_if = {
 	.name = "virtio_scsi",
 	.module_init = bdev_virtio_initialize,
 	.module_fini = bdev_virtio_finish,

@@ -101,7 +101,7 @@ bdev_malloc_get_ctx_size(void)
 	return sizeof(struct malloc_task) + spdk_copy_task_size();
 }
 
-static struct spdk_bdev_module_if malloc_if = {
+static struct spdk_bdev_module malloc_if = {
 	.name = "malloc",
 	.module_init = bdev_malloc_initialize,
 	.config_text = bdev_malloc_get_spdk_running_config,

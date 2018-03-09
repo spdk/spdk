@@ -52,7 +52,7 @@
 static int vbdev_gpt_init(void);
 static void vbdev_gpt_examine(struct spdk_bdev *bdev);
 
-static struct spdk_bdev_module_if gpt_if = {
+static struct spdk_bdev_module gpt_if = {
 	.name = "gpt",
 	.module_init = vbdev_gpt_init,
 	.examine = vbdev_gpt_examine,

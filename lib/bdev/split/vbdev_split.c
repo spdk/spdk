@@ -57,7 +57,7 @@ struct vbdev_split_channel {
 static int vbdev_split_init(void);
 static void vbdev_split_examine(struct spdk_bdev *bdev);
 
-static struct spdk_bdev_module_if split_if = {
+static struct spdk_bdev_module split_if = {
 	.name = "split",
 	.module_init = vbdev_split_init,
 	.examine = vbdev_split_examine,

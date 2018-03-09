@@ -214,7 +214,7 @@ bdev_rbd_get_ctx_size(void)
 	return sizeof(struct bdev_rbd_io);
 }
 
-static struct spdk_bdev_module_if rbd_if = {
+static struct spdk_bdev_module rbd_if = {
 	.name = "rbd",
 	.module_init = bdev_rbd_library_init,
 	.get_ctx_size = bdev_rbd_get_ctx_size,

@@ -47,13 +47,13 @@ spdk_scsi_nvme_translate(const struct spdk_bdev_io *bdev_io,
 {
 }
 
-struct spdk_bdev_module_if bdev_ut_if = {
+struct spdk_bdev_module bdev_ut_if = {
 	.name = "bdev_ut",
 };
 
 static void vbdev_ut_examine(struct spdk_bdev *bdev);
 
-struct spdk_bdev_module_if vbdev_ut_if = {
+struct spdk_bdev_module vbdev_ut_if = {
 	.name = "vbdev_ut",
 	.examine = vbdev_ut_examine,
 };

@@ -176,7 +176,7 @@ module_fini(void)
 {
 }
 
-struct spdk_bdev_module_if bdev_ut_if = {
+struct spdk_bdev_module bdev_ut_if = {
 	.name = "bdev_ut",
 	.module_init = module_init,
 	.module_fini = module_fini,

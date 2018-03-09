@@ -160,7 +160,7 @@ bdev_blob_unmap(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, uint64
 }
 
 int
-spdk_bs_bdev_claim(struct spdk_bs_dev *bs_dev, struct spdk_bdev_module_if *module)
+spdk_bs_bdev_claim(struct spdk_bs_dev *bs_dev, struct spdk_bdev_module *module)
 {
 	struct blob_bdev *blob_bdev = (struct blob_bdev *)bs_dev;
 	int rc;

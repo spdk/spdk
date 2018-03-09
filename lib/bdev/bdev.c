@@ -76,7 +76,7 @@ struct spdk_bdev_mgr {
 
 	void *zero_buffer;
 
-	TAILQ_HEAD(, spdk_bdev_module_if) bdev_modules;
+	TAILQ_HEAD(, spdk_bdev_module) bdev_modules;
 
 	TAILQ_HEAD(, spdk_bdev) bdevs;
 
@@ -396,7 +396,7 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 static int
 spdk_bdev_module_get_max_ctx_size(void)
 {
-	struct spdk_bdev_module_if *bdev_module;
+	struct spdk_bdev_module *bdev_module;
 	int max_bdev_module_size = 0;
 
 	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, tailq) {
@@ -411,7 +411,7 @@ spdk_bdev_module_get_max_ctx_size(void)
 void
 spdk_bdev_config_text(FILE *fp)
 {
-	struct spdk_bdev_module_if *bdev_module;
+	struct spdk_bdev_module *bdev_module;
 
 	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, tailq) {
 		if (bdev_module->config_text) {
@@ -479,7 +479,7 @@ spdk_bdev_init_complete(int rc)
 static void
 spdk_bdev_module_action_complete(void)
 {
-	struct spdk_bdev_module_if *m;
+	struct spdk_bdev_module *m;
 
 	/*
 	 * Don't finish bdev subsystem initialization if
@@ -510,7 +510,7 @@ spdk_bdev_module_action_complete(void)
 }
 
 static void
-spdk_bdev_module_action_done(struct spdk_bdev_module_if *module)
+spdk_bdev_module_action_done(struct spdk_bdev_module *module)
 {
 	assert(module->action_in_progress > 0);
 	module->action_in_progress--;
@@ -518,13 +518,13 @@ spdk_bdev_module_action_done(struct spdk_bdev_module_if *module)
 }
 
 void
-spdk_bdev_module_init_done(struct spdk_bdev_module_if *module)
+spdk_bdev_module_init_done(struct spdk_bdev_module *module)
 {
 	spdk_bdev_module_action_done(module);
 }
 
 void
-spdk_bdev_module_examine_done(struct spdk_bdev_module_if *module)
+spdk_bdev_module_examine_done(struct spdk_bdev_module *module)
 {
 	spdk_bdev_module_action_done(module);
 }
@@ -532,7 +532,7 @@ spdk_bdev_module_examine_done(struct spdk_bdev_module_if *module)
 static int
 spdk_bdev_modules_init(void)
 {
-	struct spdk_bdev_module_if *module;
+	struct spdk_bdev_module *module;
 	int rc = 0;
 
 	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, tailq) {
@@ -687,8 +687,8 @@ spdk_bdev_module_finish_iter(void *arg)
 {
 	/* Notice that this variable is static. It is saved between calls to
 	 * this function. */
-	static struct spdk_bdev_module_if *resume_bdev_module = NULL;
-	struct spdk_bdev_module_if *bdev_module;
+	static struct spdk_bdev_module *resume_bdev_module = NULL;
+	struct spdk_bdev_module *bdev_module;
 
 	/* Start iterating from the last touched module */
 	if (!resume_bdev_module) {
@@ -2374,7 +2374,7 @@ spdk_bdev_io_get_thread(struct spdk_bdev_io *bdev_io)
 static int
 _spdk_bdev_register(struct spdk_bdev *bdev)
 {
-	struct spdk_bdev_module_if *module;
+	struct spdk_bdev_module *module;
 
 	assert(bdev->module != NULL);
 
@@ -2572,7 +2572,7 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 
 int
 spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
-			    struct spdk_bdev_module_if *module)
+			    struct spdk_bdev_module *module)
 {
 	if (bdev->claim_module != NULL) {
 		SPDK_ERRLOG("bdev %s already claimed by module %s\n", bdev->name,
@@ -2635,7 +2635,7 @@ spdk_bdev_io_get_iovec(struct spdk_bdev_io *bdev_io, struct iovec **iovp, int *i
 }
 
 void
-spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module)
+spdk_bdev_module_list_add(struct spdk_bdev_module *bdev_module)
 {
 
 	if (spdk_bdev_module_list_find(bdev_module->name)) {
@@ -2659,10 +2659,10 @@ spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module)
 	}
 }
 
-struct spdk_bdev_module_if *
+struct spdk_bdev_module *
 spdk_bdev_module_list_find(const char *name)
 {
-	struct spdk_bdev_module_if *bdev_module;
+	struct spdk_bdev_module *bdev_module;
 
 	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, tailq) {
 		if (strcmp(name, bdev_module->name) == 0) {

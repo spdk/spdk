@@ -59,7 +59,7 @@ bdev_aio_get_ctx_size(void)
 	return sizeof(struct bdev_aio_task);
 }
 
-static struct spdk_bdev_module_if aio_if = {
+static struct spdk_bdev_module aio_if = {
 	.name		= "aio",
 	.module_init	= bdev_aio_initialize,
 	.module_fini	= NULL,

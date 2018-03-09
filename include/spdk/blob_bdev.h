@@ -47,7 +47,7 @@ extern "C" {
 
 struct spdk_bs_dev;
 struct spdk_bdev;
-struct spdk_bdev_module_if;
+struct spdk_bdev_module;
 
 /**
  * Create a blobstore block device from a bdev.
@@ -69,7 +69,7 @@ struct spdk_bs_dev *spdk_bdev_create_bs_dev(struct spdk_bdev *bdev, spdk_bdev_re
  *
  * \return 0 on success, negative errno on failure.
  */
-int spdk_bs_bdev_claim(struct spdk_bs_dev *bs_dev, struct spdk_bdev_module_if *module);
+int spdk_bs_bdev_claim(struct spdk_bs_dev *bs_dev, struct spdk_bdev_module *module);
 
 #ifdef __cplusplus
 }

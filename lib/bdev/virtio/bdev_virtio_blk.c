@@ -82,7 +82,7 @@ struct bdev_virtio_blk_io_channel {
 static int bdev_virtio_initialize(void);
 static int bdev_virtio_blk_get_ctx_size(void);
 
-static struct spdk_bdev_module_if virtio_blk_if = {
+static struct spdk_bdev_module virtio_blk_if = {
 	.name = "virtio_blk",
 	.module_init = bdev_virtio_initialize,
 	.get_ctx_size = bdev_virtio_blk_get_ctx_size,

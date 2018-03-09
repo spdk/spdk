@@ -180,7 +180,7 @@ spdk_lvs_load(struct spdk_bs_dev *dev,
 }
 
 int
-spdk_bs_bdev_claim(struct spdk_bs_dev *bs_dev, struct spdk_bdev_module_if *module)
+spdk_bs_bdev_claim(struct spdk_bs_dev *bs_dev, struct spdk_bdev_module *module)
 {
 	if (lvol_already_opened == true) {
 		return -1;
@@ -488,7 +488,7 @@ spdk_blob_io_readv(struct spdk_blob *blob, struct spdk_io_channel *channel,
 }
 
 void
-spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module)
+spdk_bdev_module_list_add(struct spdk_bdev_module *bdev_module)
 {
 }
 
@@ -538,7 +538,7 @@ spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs, int 
 }
 
 void
-spdk_bdev_module_examine_done(struct spdk_bdev_module_if *module)
+spdk_bdev_module_examine_done(struct spdk_bdev_module *module)
 {
 	g_examine_done = true;
 }
