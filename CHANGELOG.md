@@ -47,6 +47,9 @@ option, but instead returns SPDK_APP_PARSE_ARGS_HELP and
 SPDK_APP_PARSE_ARGS_FAIL, respectively, and SPDK_APP_PARSE_ARGS_SUCCESS
 on success.
 
+spdk_trace_init() no longer exit()'s on an internal failure, but
+instead returns a non-zero error status.  Changed from type `void` to `int`.
+
 ## v18.01: Blobstore Thin Provisioning
 
 ### Build System

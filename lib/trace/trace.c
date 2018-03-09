@@ -37,6 +37,7 @@
 #include "spdk/string.h"
 #include "spdk/trace.h"
 
+static int g_trace_fd = -1;
 static char g_shm_name[64];
 
 static struct spdk_trace_histories *g_trace_histories;
@@ -84,31 +85,33 @@ spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
 	}
 }
 
-void
+int
 spdk_trace_init(const char *shm_name)
 {
-	int trace_fd;
 	int i = 0;
+	int rc = 0;
 
 	snprintf(g_shm_name, sizeof(g_shm_name), "%s", shm_name);
 
-	trace_fd = shm_open(shm_name, O_RDWR | O_CREAT, 0600);
-	if (trace_fd == -1) {
+	g_trace_fd = shm_open(shm_name, O_RDWR | O_CREAT, 0600);
+	if (g_trace_fd == -1) {
 		fprintf(stderr, "could not shm_open spdk_trace\n");
 		fprintf(stderr, "errno=%d %s\n", errno, spdk_strerror(errno));
-		exit(EXIT_FAILURE);
+		return 1;
 	}
 
-	if (ftruncate(trace_fd, sizeof(*g_trace_histories)) != 0) {
+	if (ftruncate(g_trace_fd, sizeof(*g_trace_histories)) != 0) {
 		fprintf(stderr, "could not truncate shm\n");
-		exit(EXIT_FAILURE);
+		rc = 1;
+		goto trace_init_err;
 	}
 
 	g_trace_histories = mmap(NULL, sizeof(*g_trace_histories), PROT_READ | PROT_WRITE,
-				 MAP_SHARED, trace_fd, 0);
+				 MAP_SHARED, g_trace_fd, 0);
 	if (g_trace_histories == NULL) {
 		fprintf(stderr, "could not mmap shm\n");
-		exit(EXIT_FAILURE);
+		rc = 1;
+		goto trace_init_err;
 	}
 
 	memset(g_trace_histories, 0, sizeof(*g_trace_histories));
@@ -122,14 +125,25 @@ spdk_trace_init(const char *shm_name)
 	}
 
 	spdk_trace_flags_init();
+
+	return 0;
+
+trace_init_err:
+	(void) close(g_trace_fd);
+	g_trace_fd = -1;
+	(void) shm_unlink(shm_name);
+
+	return rc;
+
 }
 
 void
 spdk_trace_cleanup(void)
 {
 	if (g_trace_histories) {
-		munmap(g_trace_histories, sizeof(struct spdk_trace_histories));
+		(void) munmap(g_trace_histories, sizeof(struct spdk_trace_histories));
 		g_trace_histories = NULL;
+		(void) close(g_trace_fd);
 	}
-	shm_unlink(g_shm_name);
+	(void) shm_unlink(g_shm_name);
 }
