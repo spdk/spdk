@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2cd53ed1_efdda5eb",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2018-03-09T06:22:34Z",
+      "side": 1,
+      "message": "[root@waikikibeach19 spdk]# ./configure --with-dpdk\u003d/dpdk-18.02/x86_64-native-linuxapp-gcc\nCreating CONFIG.local...done.\nType \u0027make\u0027 to build.\nIf use the dpdk directory that doesn\u0027t exist, it does print out any errors. Didn\u0027t fix the issue we see earlier",
+      "revId": "a4d1d69ecae37dee582dc622499b1755d5ce2305",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
