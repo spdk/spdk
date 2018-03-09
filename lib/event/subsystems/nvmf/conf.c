@@ -41,7 +41,6 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 
-#define MAX_LISTEN_ADDRESSES 255
 #define MAX_HOSTS 255
 #define MAX_NAMESPACES 255
 
@@ -147,9 +146,6 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	size_t i;
 	int ret;
 	int lcore;
-	int num_listen_addrs;
-	struct rpc_listen_address listen_addrs[MAX_LISTEN_ADDRESSES] = {};
-	char *listen_addrs_str[MAX_LISTEN_ADDRESSES] = {};
 	int num_hosts;
 	char *hosts[MAX_HOSTS];
 	bool allow_any_host;
@@ -184,40 +180,6 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		SPDK_NOTICELOG("Please remove Core from your configuration file. Ignoring it and continuing.\n");
 	}
 
-	/* Parse Listen sections */
-	num_listen_addrs = 0;
-	for (i = 0; i < MAX_LISTEN_ADDRESSES; i++) {
-		listen_addrs[num_listen_addrs].transport =
-			spdk_conf_section_get_nmval(sp, "Listen", i, 0);
-		if (!listen_addrs[num_listen_addrs].transport) {
-			break;
-		}
-
-		listen_addrs_str[i] = spdk_conf_section_get_nmval(sp, "Listen", i, 1);
-		if (!listen_addrs_str[i]) {
-			break;
-		}
-
-		listen_addrs_str[i] = strdup(listen_addrs_str[i]);
-
-		ret = spdk_parse_ip_addr(listen_addrs_str[i], &listen_addrs[num_listen_addrs].traddr,
-					 &listen_addrs[num_listen_addrs].trsvcid);
-		if (ret < 0) {
-			SPDK_ERRLOG("Unable to parse listen address '%s'\n", listen_addrs_str[i]);
-			free(listen_addrs_str[i]);
-			listen_addrs_str[i] = NULL;
-			continue;
-		}
-
-		if (strchr(listen_addrs[num_listen_addrs].traddr, ':')) {
-			listen_addrs[num_listen_addrs].adrfam = "IPv6";
-		} else {
-			listen_addrs[num_listen_addrs].adrfam = "IPv4";
-		}
-
-		num_listen_addrs++;
-	}
-
 	/* Parse Host sections */
 	for (i = 0; i < MAX_HOSTS; i++) {
 		hosts[i] = spdk_conf_section_get_nval(sp, "Host", i);
@@ -232,7 +194,6 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	sn = spdk_conf_section_get_val(sp, "SN");
 
 	subsystem = spdk_nvmf_construct_subsystem(nqn,
-			num_listen_addrs, listen_addrs,
 			num_hosts, hosts, allow_any_host,
 			sn);
 
@@ -287,11 +248,63 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 			       spdk_bdev_get_name(bdev), spdk_nvmf_subsystem_get_nqn(subsystem));
 	}
 
-done:
-	for (i = 0; i < MAX_LISTEN_ADDRESSES; i++) {
-		free(listen_addrs_str[i]);
+	/* Parse Listen sections */
+	for (i = 0; ; i++) {
+		struct spdk_nvme_transport_id trid = {0};
+		const char *transport;
+		const char *address;
+		char *address_dup;
+		char *host;
+		char *port;
+
+		transport = spdk_conf_section_get_nmval(sp, "Listen", i, 0);
+		if (!transport) {
+			break;
+		}
+
+		if (spdk_nvme_transport_id_parse_trtype(&trid.trtype, transport)) {
+			SPDK_ERRLOG("Invalid listen address transport type '%s'\n", transport);
+			continue;
+		}
+
+		address = spdk_conf_section_get_nmval(sp, "Listen", i, 1);
+		if (!address) {
+			break;
+		}
+
+		address_dup = strdup(address);
+		if (!address_dup) {
+			break;
+		}
+
+		ret = spdk_parse_ip_addr(address_dup, &host, &port);
+		if (ret < 0) {
+			SPDK_ERRLOG("Unable to parse listen address '%s'\n", address);
+			free(address_dup);
+			continue;
+		}
+
+		if (strchr(host, ':')) {
+			trid.adrfam = SPDK_NVMF_ADRFAM_IPV6;
+		} else {
+			trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
+		}
+
+		snprintf(trid.traddr, sizeof(trid.traddr), "%s", host);
+		snprintf(trid.trsvcid, sizeof(trid.trsvcid), "%s", port);
+		free(address_dup);
+
+		ret = spdk_nvmf_tgt_listen(g_tgt.tgt, &trid);
+		if (ret) {
+			SPDK_ERRLOG("Failed to listen on transport %s address %s\n",
+				    transport, address);
+			continue;
+		}
+
+		spdk_nvmf_subsystem_add_listener(subsystem, &trid);
 	}
 
+done:
 	return (subsystem != NULL);
 }
 
@@ -336,20 +349,14 @@ spdk_nvmf_parse_conf(void)
 
 struct spdk_nvmf_subsystem *
 	spdk_nvmf_construct_subsystem(const char *name,
-			      int num_listen_addresses, struct rpc_listen_address *addresses,
 			      int num_hosts, char *hosts[], bool allow_any_host,
 			      const char *sn)
 {
 	struct spdk_nvmf_subsystem *subsystem;
-	int i, rc;
+	int i;
 
 	if (name == NULL) {
 		SPDK_ERRLOG("No NQN specified for subsystem\n");
-		return NULL;
-	}
-
-	if (num_listen_addresses > MAX_LISTEN_ADDRESSES) {
-		SPDK_ERRLOG("invalid listen adresses number\n");
 		return NULL;
 	}
 
@@ -362,34 +369,6 @@ struct spdk_nvmf_subsystem *
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("Subsystem creation failed\n");
 		return NULL;
-	}
-
-	/* Parse Listen sections */
-	for (i = 0; i < num_listen_addresses; i++) {
-		struct spdk_nvme_transport_id trid = {};
-
-		if (spdk_nvme_transport_id_parse_trtype(&trid.trtype, addresses[i].transport)) {
-			SPDK_ERRLOG("Missing listen address transport type\n");
-			goto error;
-		}
-
-		if (spdk_nvme_transport_id_parse_adrfam(&trid.adrfam, addresses[i].adrfam)) {
-			trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
-		}
-
-		snprintf(trid.traddr, sizeof(trid.traddr), "%s", addresses[i].traddr);
-		snprintf(trid.trsvcid, sizeof(trid.trsvcid), "%s", addresses[i].trsvcid);
-
-		rc = spdk_nvmf_tgt_listen(g_tgt.tgt, &trid);
-		if (rc) {
-			SPDK_ERRLOG("Failed to listen on transport %s, adrfam %s, traddr %s, trsvcid %s\n",
-				    addresses[i].transport,
-				    addresses[i].adrfam,
-				    addresses[i].traddr,
-				    addresses[i].trsvcid);
-			goto error;
-		}
-		spdk_nvmf_subsystem_add_listener(subsystem, &trid);
 	}
 
 	/* Parse Host sections */
