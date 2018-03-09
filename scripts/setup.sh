@@ -139,8 +139,8 @@ function get_nvme_name_from_bdf {
 		if [ -z "$link_name" ]; then
 			link_name=$(readlink /sys/block/$dev/device)
 		fi
-		bdf=$(basename "$link_name")
-		if [ "$bdf" = "$1" ]; then
+		link_bdf=$(basename "$link_name")
+		if [ "$link_bdf" = "$1" ]; then
 			eval "$2=$dev"
 			return
 		fi
