@@ -89,6 +89,4 @@ struct spdk_nvmf_subsystem *spdk_nvmf_construct_subsystem(const char *name,
 		int num_hosts, char *hosts[], bool allow_any_host,
 		const char *sn);
 
-int spdk_nvmf_tgt_start(struct spdk_app_opts *opts);
-
 #endif
