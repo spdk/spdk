@@ -16,6 +16,23 @@
       "revId": "a4d1d69ecae37dee582dc622499b1755d5ce2305",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9831ea09_2b88e07d",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2018-03-09T06:23:23Z",
+      "side": 1,
+      "message": "Do we need to change the -f to -m here",
+      "revId": "a4d1d69ecae37dee582dc622499b1755d5ce2305",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
