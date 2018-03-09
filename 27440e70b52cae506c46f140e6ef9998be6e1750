@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "150795f5_efe7bcce",
+        "filename": "autotest.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-09T14:29:22Z",
+      "side": 1,
+      "message": "Nope. It\u0027s done to run it as per-patch instead of nightly. Will remove before merging",
+      "parentUuid": "a92edab7_3396328b",
+      "range": {
+        "startLine": 169,
+        "startChar": 0,
+        "endLine": 175,
+        "endChar": 29
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "183a51ac_94386d44",
         "filename": "autotest.sh",
         "patchSetId": 10
@@ -36,6 +60,30 @@
       "writtenOn": "2018-02-13T14:17:42Z",
       "side": 1,
       "message": "Commited by mistake?",
+      "range": {
+        "startLine": 177,
+        "startChar": 0,
+        "endLine": 183,
+        "endChar": 31
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d5ea165_1239788d",
+        "filename": "autotest.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-09T14:29:22Z",
+      "side": 1,
+      "message": "Commented out so we dont\u0027fail on timeout",
+      "parentUuid": "183a51ac_94386d44",
       "range": {
         "startLine": 177,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "5b126d70_d425639b",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-09T14:29:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0d7b81f1_08a2fdb0",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 5,
+        "endChar": 35
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f7ac01ff_ef3deab7",
         "filename": "test/vhost/integrity/integrity_start.sh",
         "patchSetId": 10
@@ -82,6 +154,30 @@
       "writtenOn": "2018-02-13T14:17:42Z",
       "side": 1,
       "message": "can you support \u0027--work-dir\u003dWORK_DIR\u0027 parameter like in other scripts?",
+      "range": {
+        "startLine": 9,
+        "startChar": 8,
+        "endLine": 9,
+        "endChar": 16
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3501de68_1dc51c06",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-09T14:29:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f7ac01ff_ef3deab7",
       "range": {
         "startLine": 9,
         "startChar": 8,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "55e35662_2ebef990",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-09T14:29:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "087b4a90_23503227",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 13,
+        "endChar": 47
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d6c58243_85fae01a",
         "filename": "test/vhost/integrity/integrity_start.sh",
         "patchSetId": 10
@@ -128,6 +248,30 @@
       "writtenOn": "2018-02-13T14:17:42Z",
       "side": 1,
       "message": "This should not be needed anymore.",
+      "range": {
+        "startLine": 86,
+        "startChar": 1,
+        "endLine": 86,
+        "endChar": 57
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a422d4f_82846926",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-09T14:29:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d6c58243_85fae01a",
       "range": {
         "startLine": 86,
         "startChar": 1,
@@ -163,6 +307,30 @@
     },
     {
       "key": {
+        "uuid": "cfdd2444_c54d3375",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-09T14:29:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6855c450_8782350a",
+      "range": {
+        "startLine": 91,
+        "startChar": 7,
+        "endLine": 91,
+        "endChar": 10
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "df1821f7_6fa5dc62",
         "filename": "test/vhost/integrity/integrity_start.sh",
         "patchSetId": 10
@@ -174,6 +342,30 @@
       "writtenOn": "2018-02-13T14:17:42Z",
       "side": 1,
       "message": "ditto",
+      "range": {
+        "startLine": 92,
+        "startChar": 20,
+        "endLine": 92,
+        "endChar": 24
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1017d494_df4e8d5b",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-09T14:29:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "df1821f7_6fa5dc62",
       "range": {
         "startLine": 92,
         "startChar": 20,
@@ -209,6 +401,30 @@
     },
     {
       "key": {
+        "uuid": "dd26c700_61cc989a",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-09T14:29:22Z",
+      "side": 1,
+      "message": "TBD",
+      "parentUuid": "f11d7a33_8d5557cc",
+      "range": {
+        "startLine": 96,
+        "startChar": 0,
+        "endLine": 96,
+        "endChar": 85
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1923e17e_356a2dc7",
         "filename": "test/vhost/integrity/integrity_start.sh",
         "patchSetId": 10
@@ -220,6 +436,30 @@
       "writtenOn": "2018-02-13T14:17:42Z",
       "side": 1,
       "message": "Why mv and cd ? U can use archive file directly",
+      "range": {
+        "startLine": 97,
+        "startChar": 0,
+        "endLine": 98,
+        "endChar": 12
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2cc8910f_32d1603c",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-09T14:29:22Z",
+      "side": 1,
+      "message": "TBD",
+      "parentUuid": "1923e17e_356a2dc7",
       "range": {
         "startLine": 97,
         "startChar": 0,
@@ -255,6 +495,30 @@
     },
     {
       "key": {
+        "uuid": "2270965f_f7c420e2",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-09T14:29:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cdc5922d_9c094cb3",
+      "range": {
+        "startLine": 102,
+        "startChar": 7,
+        "endLine": 102,
+        "endChar": 10
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f91c9f5d_ba51c510",
         "filename": "test/vhost/integrity/integrity_start.sh",
         "patchSetId": 10
@@ -266,6 +530,30 @@
       "writtenOn": "2018-02-13T14:17:42Z",
       "side": 1,
       "message": "ditto",
+      "range": {
+        "startLine": 103,
+        "startChar": 7,
+        "endLine": 103,
+        "endChar": 10
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a76ca1e_c7c24127",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-09T14:29:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f91c9f5d_ba51c510",
       "range": {
         "startLine": 103,
         "startChar": 7,
@@ -324,6 +612,54 @@
     },
     {
       "key": {
+        "uuid": "1bc83649_6ae4cdbc",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-09T14:29:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "34a86427_591a3f26",
+      "range": {
+        "startLine": 104,
+        "startChar": 12,
+        "endLine": 104,
+        "endChar": 54
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "516dbff3_933dde5b",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-09T14:29:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e5ed36f2_944042ba",
+      "range": {
+        "startLine": 104,
+        "startChar": 7,
+        "endLine": 104,
+        "endChar": 10
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ae8fe09e_bff5da0b",
         "filename": "test/vhost/integrity/integrity_start.sh",
         "patchSetId": 10
@@ -335,6 +671,30 @@
       "writtenOn": "2018-02-13T14:17:42Z",
       "side": 1,
       "message": "Why sleep? vm_shutdown_all wait for all VMs.",
+      "range": {
+        "startLine": 108,
+        "startChar": 0,
+        "endLine": 108,
+        "endChar": 7
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a6e52166_e993834b",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-09T14:29:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ae8fe09e_bff5da0b",
       "range": {
         "startLine": 108,
         "startChar": 0,
@@ -370,6 +730,30 @@
     },
     {
       "key": {
+        "uuid": "7afd4700_c2e56a93",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-09T14:29:22Z",
+      "side": 1,
+      "message": "TBD",
+      "parentUuid": "30cf10e2_1f7b02ce",
+      "range": {
+        "startLine": 9,
+        "startChar": 14,
+        "endLine": 9,
+        "endChar": 28
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "23eda714_cd0a771b",
         "filename": "test/vhost/integrity/integrity_vm.sh",
         "patchSetId": 10
@@ -381,6 +765,30 @@
       "writtenOn": "2018-02-13T14:17:42Z",
       "side": 1,
       "message": "I think you need space here \ndevs+\u003d\"$(basename $entry) \"",
+      "range": {
+        "startLine": 11,
+        "startChar": 3,
+        "endLine": 11,
+        "endChar": 29
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6787af92_cd36c795",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-09T14:29:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "23eda714_cd0a771b",
       "range": {
         "startLine": 11,
         "startChar": 3,
@@ -416,6 +824,30 @@
     },
     {
       "key": {
+        "uuid": "1e6cb3f4_eb4d5e3f",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-09T14:29:22Z",
+      "side": 1,
+      "message": "There\u0027s not string concat, just output from \"echo\", so why need space?",
+      "parentUuid": "284a91c7_ff2bce0e",
+      "range": {
+        "startLine": 15,
+        "startChar": 6,
+        "endLine": 15,
+        "endChar": 32
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "29931b34_1223c161",
         "filename": "test/vhost/integrity/integrity_vm.sh",
         "patchSetId": 10
@@ -427,6 +859,30 @@
       "writtenOn": "2018-02-13T14:17:42Z",
       "side": 1,
       "message": "Pls don\u0027t \"use force Luke\". Why you need it?",
+      "range": {
+        "startLine": 23,
+        "startChar": 4,
+        "endLine": 25,
+        "endChar": 6
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d2fca47d_6797e110",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-09T14:29:22Z",
+      "side": 1,
+      "message": "It\u0027s not \"force\", it\u0027s \"fast\" in ntfs. For faster test execution, otherwise it takes long time.\n\n\n -f, --fast, -Q, --quick\n              Perform quick (fast) format. This will skip both zeroing of the volume and bad sector checking.",
+      "parentUuid": "29931b34_1223c161",
       "range": {
         "startLine": 23,
         "startChar": 4,
@@ -462,6 +918,30 @@
     },
     {
       "key": {
+        "uuid": "5366bace_527aa048",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-09T14:29:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c97831f2_1d9fdfad",
+      "range": {
+        "startLine": 32,
+        "startChar": 4,
+        "endLine": 32,
+        "endChar": 11
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "59d13728_1fb4c386",
         "filename": "test/vhost/integrity/integrity_vm.sh",
         "patchSetId": 10
@@ -473,6 +953,30 @@
       "writtenOn": "2018-02-13T14:17:42Z",
       "side": 1,
       "message": "ditto",
+      "range": {
+        "startLine": 43,
+        "startChar": 4,
+        "endLine": 43,
+        "endChar": 11
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "027430e6_7a91e722",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-09T14:29:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "59d13728_1fb4c386",
       "range": {
         "startLine": 43,
         "startChar": 4,
@@ -508,6 +1012,30 @@
     },
     {
       "key": {
+        "uuid": "69e89174_79084837",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-09T14:29:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "40d64b8f_70eb21f4",
+      "range": {
+        "startLine": 20,
+        "startChar": 0,
+        "endLine": 71,
+        "endChar": 4
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "de5fbdc7_970a4f5c",
         "filename": "test/vhost/spdk_vhost.sh",
         "patchSetId": 10
@@ -519,6 +1047,30 @@
       "writtenOn": "2018-02-13T14:17:42Z",
       "side": 1,
       "message": "\u0027\u003d\u0027 missing",
+      "range": {
+        "startLine": 99,
+        "startChar": 72,
+        "endLine": 99,
+        "endChar": 73
+      },
+      "revId": "27440e70b52cae506c46f140e6ef9998be6e1750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "efe3aaa4_98f004fd",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-09T14:29:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "de5fbdc7_970a4f5c",
       "range": {
         "startLine": 99,
         "startChar": 72,
