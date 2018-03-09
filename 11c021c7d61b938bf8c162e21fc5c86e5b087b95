@@ -1,0 +1,147 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba3d67da_6e60c088",
+        "filename": "test/vhost/perf/perf.fio",
+        "patchSetId": 8
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-09T08:15:39Z",
+      "side": 1,
+      "message": "no need for that",
+      "range": {
+        "startLine": 5,
+        "startChar": 0,
+        "endLine": 5,
+        "endChar": 8
+      },
+      "revId": "11c021c7d61b938bf8c162e21fc5c86e5b087b95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8f0411eb_56180e2c",
+        "filename": "test/vhost/perf/perf.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-09T08:15:39Z",
+      "side": 1,
+      "message": "Only need to source common.sh I think, like this:\n. $(readlink -e \"$(dirname $0)/../common/common.sh\") || exit 1",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 6,
+        "endChar": 42
+      },
+      "revId": "11c021c7d61b938bf8c162e21fc5c86e5b087b95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b042810_f5100559",
+        "filename": "test/vhost/perf/perf.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-09T08:15:39Z",
+      "side": 1,
+      "message": "nvme",
+      "range": {
+        "startLine": 67,
+        "startChar": 18,
+        "endLine": 67,
+        "endChar": 22
+      },
+      "revId": "11c021c7d61b938bf8c162e21fc5c86e5b087b95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "517b7c10_afde38ae",
+        "filename": "test/vhost/perf/perf_nvne_pmd.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-09T08:15:39Z",
+      "side": 1,
+      "message": "Filename: should be perf_nvme_pmd.sh",
+      "revId": "11c021c7d61b938bf8c162e21fc5c86e5b087b95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6420e820_6f91eb6c",
+        "filename": "test/vhost/perf/perf_nvne_pmd.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-09T08:15:39Z",
+      "side": 1,
+      "message": "Not sure if this file is what we\u0027d want it to be.\nWhat if I wanted to use this script (perf_nvme_pmd.sh) to test just the PMD? At the moment it\u0027s not standalone and I\u0027d have to use perf.sh",
+      "revId": "11c021c7d61b938bf8c162e21fc5c86e5b087b95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "552dbfcf_5175f5ba",
+        "filename": "test/vhost/perf/perf_nvne_pmd.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-09T08:15:39Z",
+      "side": 1,
+      "message": "What in case if we\u0027d like more than 1 disk?",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 49
+      },
+      "revId": "11c021c7d61b938bf8c162e21fc5c86e5b087b95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "18bbbfac_43413737",
+        "filename": "test/vhost/perf/perf_virtio_initiator.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-09T08:15:39Z",
+      "side": 1,
+      "message": "Same as in perf_nvme_pmd.sh\nNot sure if this script is what we\u0027d want it to be.\nAt the moment it\u0027s not standalone and I\u0027d have to use perf.sh if I wanted to test just vhost initiator.",
+      "revId": "11c021c7d61b938bf8c162e21fc5c86e5b087b95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
