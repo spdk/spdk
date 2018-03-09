@@ -334,6 +334,12 @@ _spdk_io_device_attempt_free(struct io_device *dev)
 	struct spdk_io_channel *ch;
 
 	pthread_mutex_lock(&g_devlist_mutex);
+
+	if (!dev->unregistered) {
+		pthread_mutex_unlock(&g_devlist_mutex);
+		return;
+	}
+
 	TAILQ_FOREACH(thread, &g_threads, tailq) {
 		TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
 			if (ch->dev == dev) {
@@ -457,6 +463,8 @@ _spdk_put_io_channel(void *arg)
 {
 	struct spdk_io_channel *ch = arg;
 
+	assert(ch->thread == spdk_get_thread());
+
 	if (ch->ref == 0) {
 		SPDK_ERRLOG("ref already zero\n");
 		return;
@@ -474,9 +482,7 @@ _spdk_put_io_channel(void *arg)
 	TAILQ_REMOVE(&ch->thread->io_channels, ch, tailq);
 	pthread_mutex_unlock(&g_devlist_mutex);
 
-	if (ch->dev->unregistered) {
-		_spdk_io_device_attempt_free(ch->dev);
-	}
+	_spdk_io_device_attempt_free(ch->dev);
 	free(ch);
 }
 
