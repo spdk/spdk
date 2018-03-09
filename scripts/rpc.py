@@ -21,6 +21,14 @@ if __name__ == "__main__":
     p = subparsers.add_parser('get_rpc_methods', help='Get list of supported RPC methods')
     p.set_defaults(func=rpc.get_rpc_methods)
 
+    p = subparsers.add_parser('save_config', help='Get current (live) configuration of SPDK target')
+    p.add_argument('filename', help="""File where to save JSON configuration to.""")
+    p.set_defaults(func=rpc.save_config)
+
+    p = subparsers.add_parser('load_config', help='Configure SPDK application using provided file')
+    p.add_argument('filename', help="""JSON Configuration file.""")
+    p.set_defaults(func=rpc.load_config)
+
     # app
     p = subparsers.add_parser('kill_instance', help='Send signal to instance')
     p.add_argument('sig_name', help='signal will be sent to server.')
