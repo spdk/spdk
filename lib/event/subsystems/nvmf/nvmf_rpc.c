@@ -606,11 +606,16 @@ spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_request *request,
 	}
 
 	subsystem = spdk_nvmf_construct_subsystem(req.nqn,
-			req.hosts.num_hosts, req.hosts.hosts, req.allow_any_host,
 			req.serial_number);
 	if (!subsystem) {
 		goto invalid;
 	}
+
+	for (i = 0; i < req.hosts.num_hosts; i++) {
+		spdk_nvmf_subsystem_add_host(subsystem, req.hosts.hosts[i]);
+	}
+
+	spdk_nvmf_subsystem_set_allow_any_host(subsystem, req.allow_any_host);
 
 	for (i = 0; i < req.listen_addresses.num_listen_address; i++) {
 		struct rpc_listen_address *addr = &req.listen_addresses.addresses[i];
