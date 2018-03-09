@@ -70,10 +70,10 @@
 #define DEFAULT_DEFAULTTIME2WAIT 2
 #define DEFAULT_DEFAULTTIME2RETAIN 20
 #define DEFAULT_FIRSTBURSTLENGTH 8192
-#define DEFAULT_INITIALR2T 1
-#define DEFAULT_IMMEDIATEDATA 1
-#define DEFAULT_DATAPDUINORDER 1
-#define DEFAULT_DATASEQUENCEINORDER 1
+#define DEFAULT_INITIALR2T true
+#define DEFAULT_IMMEDIATEDATA true
+#define DEFAULT_DATAPDUINORDER true
+#define DEFAULT_DATASEQUENCEINORDER true
 #define DEFAULT_ERRORRECOVERYLEVEL 0
 #define DEFAULT_TIMEOUT 60
 #define MAX_NOPININTERVAL 60
@@ -244,10 +244,10 @@ struct spdk_iscsi_sess {
 	uint32_t DefaultTime2Retain;
 	uint32_t FirstBurstLength;
 	uint32_t MaxBurstLength;
-	uint32_t InitialR2T;
-	uint32_t ImmediateData;
-	uint32_t DataPDUInOrder;
-	uint32_t DataSequenceInOrder;
+	bool InitialR2T;
+	bool ImmediateData;
+	bool DataPDUInOrder;
+	bool DataSequenceInOrder;
 	uint32_t ErrorRecoveryLevel;
 
 	uint32_t ExpCmdSN;
@@ -279,9 +279,9 @@ struct spdk_iscsi_opts {
 	uint32_t MaxQueueDepth;
 	uint32_t DefaultTime2Wait;
 	uint32_t DefaultTime2Retain;
-	uint32_t ImmediateData;
+	bool ImmediateData;
 	uint32_t ErrorRecoveryLevel;
-	uint32_t AllowDuplicateIsid;
+	bool AllowDuplicateIsid;
 };
 
 struct spdk_iscsi_globals {
@@ -306,9 +306,9 @@ struct spdk_iscsi_globals {
 	uint32_t MaxQueueDepth;
 	uint32_t DefaultTime2Wait;
 	uint32_t DefaultTime2Retain;
-	uint32_t ImmediateData;
+	bool ImmediateData;
 	uint32_t ErrorRecoveryLevel;
-	uint32_t AllowDuplicateIsid;
+	bool AllowDuplicateIsid;
 
 	struct spdk_mempool *pdu_pool;
 	struct spdk_mempool *pdu_immediate_data_pool;

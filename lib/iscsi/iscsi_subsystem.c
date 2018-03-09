@@ -111,7 +111,7 @@ spdk_iscsi_config_dump_section(FILE *fp)
 		g_spdk_iscsi.MaxConnections,
 		g_spdk_iscsi.MaxQueueDepth,
 		g_spdk_iscsi.DefaultTime2Wait, g_spdk_iscsi.DefaultTime2Retain,
-		(g_spdk_iscsi.ImmediateData == 1) ? "Yes" : "No",
+		(g_spdk_iscsi.ImmediateData) ? "Yes" : "No",
 		g_spdk_iscsi.ErrorRecoveryLevel);
 }
 
@@ -580,7 +580,7 @@ spdk_iscsi_opts_init(struct spdk_iscsi_opts *opts)
 	opts->DefaultTime2Wait = DEFAULT_DEFAULTTIME2WAIT;
 	opts->DefaultTime2Retain = DEFAULT_DEFAULTTIME2RETAIN;
 	opts->ImmediateData = DEFAULT_IMMEDIATEDATA;
-	opts->AllowDuplicateIsid = 0;
+	opts->AllowDuplicateIsid = false;
 	opts->ErrorRecoveryLevel = DEFAULT_ERRORRECOVERYLEVEL;
 	opts->timeout = DEFAULT_TIMEOUT;
 	opts->nopininterval = DEFAULT_NOPININTERVAL;

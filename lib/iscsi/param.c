@@ -1163,10 +1163,10 @@ spdk_iscsi_copy_param2var(struct spdk_iscsi_conn *conn)
 	}
 	if (strcasecmp(val, "Yes") == 0) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "set InitialR2T=1\n");
-		conn->sess->InitialR2T = 1;
+		conn->sess->InitialR2T = true;
 	} else {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "set InitialR2T=0\n");
-		conn->sess->InitialR2T = 0;
+		conn->sess->InitialR2T = false;
 	}
 	val = spdk_iscsi_param_get_val(conn->sess->params, "ImmediateData");
 	if (val == NULL) {
@@ -1175,10 +1175,10 @@ spdk_iscsi_copy_param2var(struct spdk_iscsi_conn *conn)
 	}
 	if (strcasecmp(val, "Yes") == 0) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "set ImmediateData=1\n");
-		conn->sess->ImmediateData = 1;
+		conn->sess->ImmediateData = true;
 	} else {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "set ImmediateData=0\n");
-		conn->sess->ImmediateData = 0;
+		conn->sess->ImmediateData = false;
 	}
 	return 0;
 }
