@@ -299,6 +299,13 @@ spdk_rpc_get_nvmf_subsystems(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("get_nvmf_subsystems", spdk_rpc_get_nvmf_subsystems)
 
+struct rpc_listen_address {
+	char *transport;
+	char *adrfam;
+	char *traddr;
+	char *trsvcid;
+};
+
 #define RPC_MAX_LISTEN_ADDRESSES 255
 #define RPC_MAX_HOSTS 255
 #define RPC_MAX_NAMESPACES 255
@@ -599,12 +606,25 @@ spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_request *request,
 	}
 
 	subsystem = spdk_nvmf_construct_subsystem(req.nqn,
-			req.listen_addresses.num_listen_address,
-			req.listen_addresses.addresses,
 			req.hosts.num_hosts, req.hosts.hosts, req.allow_any_host,
 			req.serial_number);
 	if (!subsystem) {
 		goto invalid;
+	}
+
+	for (i = 0; i < req.listen_addresses.num_listen_address; i++) {
+		struct rpc_listen_address *addr = &req.listen_addresses.addresses[i];
+		struct spdk_nvme_transport_id trid = {0};
+
+		if (rpc_listen_address_to_trid(addr, &trid)) {
+			goto invalid;
+		}
+
+		if (spdk_nvmf_tgt_listen(g_tgt.tgt, &trid)) {
+			goto invalid;
+		}
+
+		spdk_nvmf_subsystem_add_listener(subsystem, &trid);
 	}
 
 	for (i = 0; i < req.namespaces.num_ns; i++) {

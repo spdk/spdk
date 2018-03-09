@@ -41,13 +41,6 @@
 
 #include "spdk_internal/event.h"
 
-struct rpc_listen_address {
-	char *transport;
-	char *adrfam;
-	char *traddr;
-	char *trsvcid;
-};
-
 struct spdk_nvmf_tgt_conf {
 	uint32_t acceptor_poll_rate;
 };
@@ -85,7 +78,6 @@ struct spdk_nvmf_subsystem *nvmf_tgt_create_subsystem(const char *name,
 		enum spdk_nvmf_subtype subtype, uint32_t num_ns);
 
 struct spdk_nvmf_subsystem *spdk_nvmf_construct_subsystem(const char *name,
-		int num_listen_addresses, struct rpc_listen_address *addresses,
 		int num_hosts, char *hosts[], bool allow_any_host,
 		const char *sn);
 
