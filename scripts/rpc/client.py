@@ -1,5 +1,6 @@
 import json
 import socket
+import time
 
 try:
     from shlex import quote
@@ -20,8 +21,9 @@ def int_arg(arg):
 
 
 class JSONRPCClient(object):
-    def __init__(self, addr, port=None, verbose=False):
+    def __init__(self, addr, port=None, verbose=False, timeout=60.0):
         self.verbose = verbose
+        self.timeout = timeout
         if addr.startswith('/'):
             self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             self.sock.connect(addr)
@@ -56,7 +58,9 @@ class JSONRPCClient(object):
         buf = ''
         closed = False
         response = {}
-        while not closed:
+        timeout = time.clock() + self.timeout
+
+        while not closed and time.clock() < timeout:
             newdata = self.sock.recv(4096)
             if (newdata == b''):
                 closed = True
@@ -70,7 +74,10 @@ class JSONRPCClient(object):
         if not response:
             if method == "kill_instance":
                 exit(0)
-            print "Connection closed with partial response:"
+            if closed:
+                print "Connection closed with partial response:"
+            else:
+                print "Timeout while waiting for response:"
             print buf
             exit(1)
 
