@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "976aa08b_1aab8bd5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 1912,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-09T19:25:07Z",
+      "side": 1,
+      "message": "why reset this to 0?",
+      "revId": "b1d6685954c4767905a89d2f0d71af00d6752bf2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
