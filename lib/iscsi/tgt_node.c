@@ -834,7 +834,7 @@ spdk_check_iscsi_name(const char *name)
 	return 0;
 }
 
-static bool
+bool
 spdk_iscsi_check_chap_params(bool disable, bool require, bool mutual, int group)
 {
 	if (group < 0) {
