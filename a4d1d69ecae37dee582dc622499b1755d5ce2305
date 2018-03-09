@@ -19,6 +19,40 @@
     },
     {
       "key": {
+        "uuid": "f408fd0a_af652326",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-09T06:45:49Z",
+      "side": 1,
+      "message": "This will delete CONFIG.local even if you are just running configure --help - why is this moved up here?",
+      "revId": "a4d1d69ecae37dee582dc622499b1755d5ce2305",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dd42a331_3c340511",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-09T06:45:49Z",
+      "side": 1,
+      "message": "The readlink -m option is a GNU extension; this won\u0027t work on FreeBSD, for example: https://www.freebsd.org/cgi/man.cgi?query\u003dreadlink\n\nWhy do we need to configure a DPDK directory that doesn\u0027t exist?",
+      "revId": "a4d1d69ecae37dee582dc622499b1755d5ce2305",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9831ea09_2b88e07d",
         "filename": "configure",
         "patchSetId": 2
