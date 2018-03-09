@@ -225,16 +225,13 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 
 	max_xfer_size = spdk_nvme_ns_get_max_io_xfer_size(ns);
 	spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, &opts, sizeof(opts));
-	/* NVMe driver may add additional entries based on
-	 * stripe size and maximum transfer size, we assume
-	 * 1 more entry be used for stripe.
-	 */
-	entries = (g_io_size_bytes - 1) / max_xfer_size + 2;
+
+	entries = (g_io_size_bytes - 1) / max_xfer_size + 1;
 	if ((g_queue_depth * entries) > opts.io_queue_size) {
 		printf("controller IO queue size %u less than required\n",
 		       opts.io_queue_size);
-		printf("configure an IO queue depth and IO size such that "
-		       "the product is less than or equal to %u\n", opts.io_queue_size);
+		printf("Consider using lower queue depth or small IO size because "
+		       "NVMe driver will split IO request based on maximum tranfer size\n");
 		g_warn = true;
 		return;
 	}
