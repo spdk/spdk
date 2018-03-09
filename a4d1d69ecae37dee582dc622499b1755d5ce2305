@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "ce7645a6_c96727f1",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2018-03-09T07:13:04Z",
+      "side": 1,
+      "message": "The issue because when we configure with-dpdk 18.02, but the existed dpdk is 17.11, then it didn\u0027t pop out error but continue build, when running hello_world(or other examples), the EAL init will print 17.11 which is different as 18.02.\n./configure --with-dpdk\u003d/dpdk-18.02/x86_64-native-linuxapp-gcc\nmake clean\nmake\n[root@waikikibeach19 spdk]# ./examples/nvme/hello_world/hello_world \nStarting SPDK v18.04-pre / DPDK 17.11.0 initialization...\n[ DPDK EAL parameters: hello_world -c 0x1 --file-prefix\u003dspdk0 --base-virtaddr\u003d0x1000000000 --proc-type\u003dauto ]\nEAL: Detected 88 lcore(s)",
+      "parentUuid": "f408fd0a_af652326",
+      "revId": "a4d1d69ecae37dee582dc622499b1755d5ce2305",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dd42a331_3c340511",
         "filename": "configure",
         "patchSetId": 2
