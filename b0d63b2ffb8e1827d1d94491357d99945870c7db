@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "82dd59e3_a8a3b012",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-03-09T22:15:09Z",
+      "side": 1,
+      "message": "Gotcha.",
+      "parentUuid": "e1e39325_842d3e03",
+      "revId": "b0d63b2ffb8e1827d1d94491357d99945870c7db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dc695f2c_7a9e72dc",
         "filename": "lib/event/app.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2018-03-09T20:37:10Z",
       "side": 1,
       "message": "a lot of the changes here are not really related to removing exit() calls from spdk_trace_init() - except for the part of moving the trace_init before signal_handler setup",
+      "revId": "b0d63b2ffb8e1827d1d94491357d99945870c7db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f10b8637_52a58e4c",
+        "filename": "lib/event/app.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-03-09T22:15:09Z",
+      "side": 1,
+      "message": "As I began instrumenting the fail path for the spdk_trace_init(), I noted the recurring cases of similar/identical cleanup, and recalling Dariusz request for such common error handling in another patch to be handled via a goto, I went ahead and cleaned that up for consistency sake.  If you\u0027d rather me revert them, let me know.",
+      "parentUuid": "dc695f2c_7a9e72dc",
       "revId": "b0d63b2ffb8e1827d1d94491357d99945870c7db",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "72c635dd_ca14475d",
+        "filename": "lib/event/app.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-03-09T22:15:09Z",
+      "side": 1,
+      "message": "I intentionally chose that thinking into the future if/when a decision is made to return more specific error codes, then one could simply adjust that here, but if you\u0027d prefer a simple \"return 1\" at the bottom that\u0027s fine by me.",
+      "parentUuid": "d9d5ddfd_a3b656e7",
+      "revId": "b0d63b2ffb8e1827d1d94491357d99945870c7db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a94c3e67_1ee9d6b5",
         "filename": "lib/trace/trace.c",
         "patchSetId": 1
@@ -64,6 +118,24 @@
       "writtenOn": "2018-03-09T20:37:10Z",
       "side": 1,
       "message": "I know there are some people who advocate for casting the return value to (void) - but we really don\u0027t do that anywhere else in SPDK so I\u0027d rather not do that here - just to keep it consistent.\n\nWe can argue the merits of casting the return value to void as part of a separate patch or e-mail/IRC discussion.  :)",
+      "revId": "b0d63b2ffb8e1827d1d94491357d99945870c7db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8849a53_9f9dabe5",
+        "filename": "lib/trace/trace.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-03-09T22:15:09Z",
+      "side": 1,
+      "message": "Fine by me.  Owing to my awareness that the test pool employs a tool like scan-build, I was motivated to more, um, precise programming ;-).   But, I get consistency;  totally.",
+      "parentUuid": "a94c3e67_1ee9d6b5",
       "revId": "b0d63b2ffb8e1827d1d94491357d99945870c7db",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
