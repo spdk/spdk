@@ -2,6 +2,46 @@
   "comments": [
     {
       "key": {
+        "uuid": "62e8d441_fdc9c860",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-09T16:59:48Z",
+      "side": 1,
+      "message": "We should consistently omit the NULL entries, I think.",
+      "revId": "1ff2fb22b25637b7a69665ab561df92b7a4263e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cdb1b234_7e9112f8",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-09T16:59:48Z",
+      "side": 1,
+      "message": "I would prefer to call this something like g_bdev_module_aio, although this is probably OK for now.",
+      "range": {
+        "startLine": 71,
+        "startChar": 27,
+        "endLine": 71,
+        "endChar": 33
+      },
+      "revId": "1ff2fb22b25637b7a69665ab561df92b7a4263e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "25d0d173_9341082b",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 7
@@ -13,6 +53,23 @@
       "writtenOn": "2018-03-09T14:27:55Z",
       "side": 1,
       "message": "ack your previous comment\n\nso I think this is fine for now - probably we should then set a global variable that this error happened, and fail bdev subsystem initialization later (with a good error message explaining why)\n\ncould you do this as a separate patch?",
+      "revId": "1ff2fb22b25637b7a69665ab561df92b7a4263e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77988754_c478986d",
+        "filename": "lib/bdev/error/vbdev_error.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-09T16:59:48Z",
+      "side": 1,
+      "message": "Trim extra whitespace here (and in the same place in other files).",
       "revId": "1ff2fb22b25637b7a69665ab561df92b7a4263e4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
