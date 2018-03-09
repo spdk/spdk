@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "168dbd75_e855805f",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-09T00:15:08Z",
+      "side": 1,
+      "message": "critical variables",
+      "revId": "d0194f2b632c0c6884cd628da49f03c642b34c81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b912d294_98a16aaa",
         "filename": "lib/util/io_channel.c",
         "patchSetId": 1
