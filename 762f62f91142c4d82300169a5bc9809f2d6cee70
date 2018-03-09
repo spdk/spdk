@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4220640b_617743ff",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 7
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-09T00:51:10Z",
+      "side": 1,
+      "message": "i don\u0027t think there\u0027s actually any way to configure the uuid - it will always be set to whatever the bdev uuid is (i.e. you took out the RPC parameter)\n\nso i think this commit message needs to be updated",
+      "revId": "762f62f91142c4d82300169a5bc9809f2d6cee70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
