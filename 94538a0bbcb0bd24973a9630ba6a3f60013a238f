@@ -1,0 +1,136 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b5f780fc_184aef7d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 60
+      },
+      "lineNbr": 3814,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-09T14:33:53Z",
+      "side": 1,
+      "message": "Argument passed here (_blob) can be used throughout here. Previously this assignment was done because of translation between spdk_blob and spdk_blob_data.",
+      "range": {
+        "startLine": 3814,
+        "startChar": 1,
+        "endLine": 3814,
+        "endChar": 37
+      },
+      "revId": "94538a0bbcb0bd24973a9630ba6a3f60013a238f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "70887b6a_c9a410ee",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 60
+      },
+      "lineNbr": 3817,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-09T14:33:53Z",
+      "side": 1,
+      "message": "Can this change similar way as in snapshot patch ?\nchar *xattrs_names[] \u003d { BLOB_SNAPSHOT };",
+      "range": {
+        "startLine": 3817,
+        "startChar": 1,
+        "endLine": 3817,
+        "endChar": 35
+      },
+      "revId": "94538a0bbcb0bd24973a9630ba6a3f60013a238f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "40eedd02_cb488f5b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 60
+      },
+      "lineNbr": 3818,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-09T14:33:53Z",
+      "side": 1,
+      "message": "one line spacing too much",
+      "revId": "94538a0bbcb0bd24973a9630ba6a3f60013a238f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eaad7631_c8ed18f4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 60
+      },
+      "lineNbr": 3827,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-09T14:33:53Z",
+      "side": 1,
+      "message": "At this time the only designation that blob is a snapshot are the read only flags. Meaning that blob can be created and then marked read only, to be possible to create a clone from it. Without issuing spdk_bs_create_snapshot() first.\n\nEven tough this works at this time and there is not much difference from functional point of view. It does not seem intuitive. I think further down the line when doing snapshot/clone relation patches, this could be added as additional way to verify that blob is a snapshot.",
+      "range": {
+        "startLine": 3827,
+        "startChar": 1,
+        "endLine": 3827,
+        "endChar": 46
+      },
+      "revId": "94538a0bbcb0bd24973a9630ba6a3f60013a238f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42ef9811_6710d2fd",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 60
+      },
+      "lineNbr": 3868,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-09T14:33:53Z",
+      "side": 1,
+      "message": "Assigning clone_xattrs to snapshot_xattrs looks awkward. I think field in ctx could be renamed (again, sorry!). Please see comment on patch before this one.",
+      "range": {
+        "startLine": 3868,
+        "startChar": 1,
+        "endLine": 3868,
+        "endChar": 37
+      },
+      "revId": "94538a0bbcb0bd24973a9630ba6a3f60013a238f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ec26e0c_deced749",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 60
+      },
+      "lineNbr": 3874,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-09T14:33:53Z",
+      "side": 1,
+      "message": "spdk_bs_create_clone",
+      "range": {
+        "startLine": 3874,
+        "startChar": 7,
+        "endLine": 3874,
+        "endChar": 32
+      },
+      "revId": "94538a0bbcb0bd24973a9630ba6a3f60013a238f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
