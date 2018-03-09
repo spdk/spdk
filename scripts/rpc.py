@@ -21,6 +21,18 @@ if __name__ == "__main__":
     p = subparsers.add_parser('get_rpc_methods', help='Get list of supported RPC methods')
     p.set_defaults(func=rpc.get_rpc_methods)
 
+    p = subparsers.add_parser('save_config', help="""Write current (live) configuration of SPDK subsystems and targets.
+    If no filename is given write configuration to stdout.""")
+    p.add_argument('-f', '--filename', help="""File where to save JSON configuration to.""")
+    p.add_argument('-i', '--indent', help="""Indent level. Value less than 0 mean compact mode. If filename is not given default
+    indent level is 2. If writing to file of filename is '-' then default is compact mode.""", type=int, default=2)
+    p.set_defaults(func=rpc.save_config)
+
+    p = subparsers.add_parser('load_config', help="""Configure SPDK subsystems and tagets using JSON RPC. If no file is
+    provided or file is '-' read configuration from stdin.""")
+    p.add_argument('--filename', help="""JSON Configuration file.""")
+    p.set_defaults(func=rpc.load_config)
+
     # app
     p = subparsers.add_parser('kill_instance', help='Send signal to instance')
     p.add_argument('sig_name', help='signal will be sent to server.')
