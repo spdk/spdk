@@ -41,7 +41,6 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 
-#define MAX_HOSTS 255
 #define MAX_NAMESPACES 255
 
 #define ACCEPT_TIMEOUT_US		10000 /* 10ms */
@@ -146,8 +145,6 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	size_t i;
 	int ret;
 	int lcore;
-	int num_hosts;
-	char *hosts[MAX_HOSTS];
 	bool allow_any_host;
 	const char *sn;
 	struct spdk_nvmf_subsystem *subsystem;
@@ -180,21 +177,9 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		SPDK_NOTICELOG("Please remove Core from your configuration file. Ignoring it and continuing.\n");
 	}
 
-	/* Parse Host sections */
-	for (i = 0; i < MAX_HOSTS; i++) {
-		hosts[i] = spdk_conf_section_get_nval(sp, "Host", i);
-		if (!hosts[i]) {
-			break;
-		}
-	}
-	num_hosts = i;
-
-	allow_any_host = spdk_conf_section_get_boolval(sp, "AllowAnyHost", false);
-
 	sn = spdk_conf_section_get_val(sp, "SN");
 
 	subsystem = spdk_nvmf_construct_subsystem(nqn,
-			num_hosts, hosts, allow_any_host,
 			sn);
 
 	if (subsystem == NULL) {
@@ -304,6 +289,20 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		spdk_nvmf_subsystem_add_listener(subsystem, &trid);
 	}
 
+	/* Parse Host sections */
+	for (i = 0; ; i++) {
+		const char *host = spdk_conf_section_get_nval(sp, "Host", i);
+
+		if (!host) {
+			break;
+		}
+
+		spdk_nvmf_subsystem_add_host(subsystem, host);
+	}
+
+	allow_any_host = spdk_conf_section_get_boolval(sp, "AllowAnyHost", false);
+	spdk_nvmf_subsystem_set_allow_any_host(subsystem, allow_any_host);
+
 done:
 	return (subsystem != NULL);
 }
@@ -349,19 +348,12 @@ spdk_nvmf_parse_conf(void)
 
 struct spdk_nvmf_subsystem *
 	spdk_nvmf_construct_subsystem(const char *name,
-			      int num_hosts, char *hosts[], bool allow_any_host,
 			      const char *sn)
 {
 	struct spdk_nvmf_subsystem *subsystem;
-	int i;
 
 	if (name == NULL) {
 		SPDK_ERRLOG("No NQN specified for subsystem\n");
-		return NULL;
-	}
-
-	if (num_hosts > MAX_HOSTS) {
-		SPDK_ERRLOG("invalid hosts number\n");
 		return NULL;
 	}
 
@@ -370,12 +362,6 @@ struct spdk_nvmf_subsystem *
 		SPDK_ERRLOG("Subsystem creation failed\n");
 		return NULL;
 	}
-
-	/* Parse Host sections */
-	for (i = 0; i < num_hosts; i++) {
-		spdk_nvmf_subsystem_add_host(subsystem, hosts[i]);
-	}
-	spdk_nvmf_subsystem_set_allow_any_host(subsystem, allow_any_host);
 
 	if (sn == NULL) {
 		SPDK_ERRLOG("Subsystem %s: missing serial number\n", name);

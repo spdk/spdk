@@ -78,7 +78,6 @@ struct spdk_nvmf_subsystem *nvmf_tgt_create_subsystem(const char *name,
 		enum spdk_nvmf_subtype subtype, uint32_t num_ns);
 
 struct spdk_nvmf_subsystem *spdk_nvmf_construct_subsystem(const char *name,
-		int num_hosts, char *hosts[], bool allow_any_host,
 		const char *sn);
 
 #endif
