@@ -970,23 +970,6 @@ spdk_bdev_channel_poll_qos(void *arg)
 	return -1;
 }
 
-static void
-spdk_bdev_qos_register_poller(void *ctx)
-{
-	struct spdk_bdev_channel	*ch = ctx;
-
-	ch->qos_poller = spdk_poller_register(spdk_bdev_channel_poll_qos, ch,
-					      SPDK_BDEV_QOS_TIMESLICE_IN_USEC);
-}
-
-static void
-spdk_bdev_qos_unregister_poller(void *ctx)
-{
-	struct spdk_poller	*poller = ctx;
-
-	spdk_poller_unregister(&poller);
-}
-
 static int
 _spdk_bdev_channel_create(struct spdk_bdev_channel *ch, void *io_device)
 {
@@ -1088,7 +1071,10 @@ _spdk_bdev_qos_channel_create(struct spdk_bdev *bdev)
 
 	bdev->qos_channel->flags |= BDEV_CH_QOS_ENABLED;
 	spdk_bdev_qos_get_max_ios_per_timeslice(bdev);
-	spdk_bdev_qos_register_poller(bdev->qos_channel);
+	bdev->qos_channel->qos_poller = spdk_poller_register(
+						spdk_bdev_channel_poll_qos,
+						bdev->qos_channel,
+						SPDK_BDEV_QOS_TIMESLICE_IN_USEC);
 
 	return 0;
 }
@@ -1098,28 +1084,21 @@ _spdk_bdev_qos_channel_destroy(void *ctx)
 {
 	struct spdk_bdev_channel	*qos_channel = ctx;
 	struct spdk_bdev		*bdev = NULL;
-	struct spdk_poller		*poller = NULL;
 
 	if (!qos_channel) {
 		SPDK_DEBUGLOG(SPDK_LOG_BDEV, "QoS channel already NULL\n");
 		return;
 	}
 
-	bdev = qos_channel->bdev;
-	poller = qos_channel->qos_poller;
+	spdk_poller_unregister(&qos_channel->qos_poller);
 
+	bdev = qos_channel->bdev;
 	assert(bdev->qos_thread == spdk_get_thread());
 	assert(bdev->qos_channel == qos_channel);
 
 	free(bdev->qos_channel);
 	bdev->qos_channel = NULL;
 	bdev->qos_thread = NULL;
-
-	if (!poller) {
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV, "QoS poller already NULL\n");
-	} else {
-		spdk_bdev_qos_unregister_poller(poller);
-	}
 }
 
 static void
