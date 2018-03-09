@@ -16,6 +16,24 @@
       "revId": "78b6e0e2eab05a6acc5eba95a902ef979dcafc8f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1a24cf6_1cf8ebe0",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 305,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-09T19:26:54Z",
+      "side": 1,
+      "message": "There are conditions where we can\u0027t easly tell if we can produce response or there will we some kind of error in the middle (see here https://review.gerrithub.io/#/c/402323/10/lib/event/rpc/subsystem_rpc.c@115). I know, that this is not complete solution but simplify code a lot.\n\nI wan\u0027t to introduce API to\n1. Dont send any result up to the spdk_jsonrpc_end_result()\n2. If there is some kind of error in the middle of producing responce, throw out result data and replace it by error data.",
+      "parentUuid": "714abee7_2e048548",
+      "revId": "78b6e0e2eab05a6acc5eba95a902ef979dcafc8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
