@@ -53,6 +53,24 @@
     },
     {
       "key": {
+        "uuid": "591385aa_c7d90baf",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-09T06:58:22Z",
+      "side": 1,
+      "message": "Instead of changing the readlink, it would be better to check for the existence of the directory and print a useful error message, e.g.:\n\n  function check_dir() {\n    arg\u003d\"$1\"\n    dir\u003d\"${arg#*\u003d}\"\n    if [ ! -d \"$dir\" ]; then\n      echo \"$arg: directory not found\"\n      exit 1\n    fi\n  }\n  \n  ...\n  \n  --with-dpdk\u003d*)\n    check_dir \"$i\"\n    CONFIG_DPDK_DIR\u003d$(readlink -f ${i#*\u003d})\n    ;;\n\nThis should be applied to all of the options that take paths.",
+      "parentUuid": "dd42a331_3c340511",
+      "revId": "a4d1d69ecae37dee582dc622499b1755d5ce2305",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9831ea09_2b88e07d",
         "filename": "configure",
         "patchSetId": 2
