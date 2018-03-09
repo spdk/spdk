@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "1ac4639e_c9c1bd59",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-09T08:25:08Z",
+      "side": 1,
+      "message": "Good catch. Let me move it back to the original place. For \"help\", it will do nothing.",
+      "parentUuid": "f408fd0a_af652326",
+      "revId": "a4d1d69ecae37dee582dc622499b1755d5ce2305",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dd42a331_3c340511",
         "filename": "configure",
         "patchSetId": 2
@@ -82,6 +100,42 @@
       "writtenOn": "2018-03-09T06:58:22Z",
       "side": 1,
       "message": "Instead of changing the readlink, it would be better to check for the existence of the directory and print a useful error message, e.g.:\n\n  function check_dir() {\n    arg\u003d\"$1\"\n    dir\u003d\"${arg#*\u003d}\"\n    if [ ! -d \"$dir\" ]; then\n      echo \"$arg: directory not found\"\n      exit 1\n    fi\n  }\n  \n  ...\n  \n  --with-dpdk\u003d*)\n    check_dir \"$i\"\n    CONFIG_DPDK_DIR\u003d$(readlink -f ${i#*\u003d})\n    ;;\n\nThis should be applied to all of the options that take paths.",
+      "parentUuid": "dd42a331_3c340511",
+      "revId": "a4d1d69ecae37dee582dc622499b1755d5ce2305",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d698e329_8318775e",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-09T08:25:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "591385aa_c7d90baf",
+      "revId": "a4d1d69ecae37dee582dc622499b1755d5ce2305",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f61c2645_190b5362",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-09T08:25:08Z",
+      "side": 1,
+      "message": "This is to handle the case that user specified a non existed DPDK dir although in most cases, the DPDK dir shall be there.",
       "parentUuid": "dd42a331_3c340511",
       "revId": "a4d1d69ecae37dee582dc622499b1755d5ce2305",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
