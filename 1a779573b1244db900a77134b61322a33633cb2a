@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a227fdb6_93885a9d",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-09T15:14:54Z",
+      "side": 1,
+      "message": "I think with this change, we will just end up with same problem when user tries to do large I/O which requires splitting.\n\nI think the better fix is to use the original formula (using +2) as the io_queue_requests to use for this namespace.  Then pass an spdk_nvme_io_queue_opts with this value when allocating the IO queue pair.  That will ensure that we at least have enough nvme_requests for everything, even if the underlying IO queue pair in hardware cannot support it.\n\nThen here, never fail by returning early and skipping this namespace, but still print a warning message.",
+      "revId": "1a779573b1244db900a77134b61322a33633cb2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
