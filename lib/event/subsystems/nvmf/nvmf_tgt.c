@@ -324,6 +324,11 @@ spdk_nvmf_subsystem_init(void)
 	nvmf_tgt_advance_state();
 }
 
-SPDK_SUBSYSTEM_REGISTER(nvmf, spdk_nvmf_subsystem_init, spdk_nvmf_subsystem_fini,
-			NULL)
+static struct spdk_subsystem g_spdk_subsystem_nvmf = {
+	.name = "nvmf",
+	.init = spdk_nvmf_subsystem_init,
+	.fini = spdk_nvmf_subsystem_fini,
+};
+
+SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_nvmf)
 SPDK_SUBSYSTEM_DEPEND(nvmf, bdev)
