@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7bf2ba3a_e0b02b2c",
+        "filename": "configure",
+        "patchSetId": 1
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-09T05:31:32Z",
+      "side": 1,
+      "message": "Change from \"-f\" to \"-m\".\n\nAccordingly to https://linux.die.net/man/1/readlink\n\n\"-f\" requires the \"last directory\" must exist otherwise looks like error thrown and the \"configure\" exits unexpectedly with the no changed CONFIG.local (which makes the previous configuration still takes effort)\n\nWith \"-m\", it does not require the directory existed and we can always update the CONFIG.local.\n\nMeanwhile, move the \"rm\" operation before the parameters parsing.",
+      "range": {
+        "startLine": 120,
+        "startChar": 30,
+        "endLine": 120,
+        "endChar": 32
+      },
+      "revId": "bf252d7ca0d860476c27c85de7c8e44ef2b0eca1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
