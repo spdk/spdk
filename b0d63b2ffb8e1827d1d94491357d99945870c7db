@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e1e39325_842d3e03",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-09T20:37:10Z",
+      "side": 1,
+      "message": "I don\u0027t think this warrants a CHANGELOG entry.\n\nCHANGELOG shouldn\u0027t be a full log of all of the changes - we have \u0027git log\u0027 for that.  CHANGELOG should only call out changes that will be noticeable to an end user.  I don\u0027t think this falls into that category.",
+      "revId": "b0d63b2ffb8e1827d1d94491357d99945870c7db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc695f2c_7a9e72dc",
+        "filename": "lib/event/app.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-09T20:37:10Z",
+      "side": 1,
+      "message": "a lot of the changes here are not really related to removing exit() calls from spdk_trace_init() - except for the part of moving the trace_init before signal_handler setup",
+      "revId": "b0d63b2ffb8e1827d1d94491357d99945870c7db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9d5ddfd_a3b656e7",
+        "filename": "lib/event/app.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-09T20:37:10Z",
+      "side": 1,
+      "message": "instead of all of these \"rc \u003d 1\", you could just \"return 1\" at the end of this function",
+      "revId": "b0d63b2ffb8e1827d1d94491357d99945870c7db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a94c3e67_1ee9d6b5",
+        "filename": "lib/trace/trace.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-09T20:37:10Z",
+      "side": 1,
+      "message": "I know there are some people who advocate for casting the return value to (void) - but we really don\u0027t do that anywhere else in SPDK so I\u0027d rather not do that here - just to keep it consistent.\n\nWe can argue the merits of casting the return value to void as part of a separate patch or e-mail/IRC discussion.  :)",
+      "revId": "b0d63b2ffb8e1827d1d94491357d99945870c7db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
