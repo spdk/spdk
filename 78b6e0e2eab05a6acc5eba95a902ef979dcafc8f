@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "714abee7_2e048548",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 305,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-09T18:51:12Z",
+      "side": 1,
+      "message": "Factoring out the common code looks good, but I think this should be static rather than a public API function.  The user cannot correctly call this function, since it needs to be called immediately after begin_response(), which is not part of the public API (intentionally - user must either call spdk_jsonrpc_begin_result() for a non-error result or one of the spdk_jsonrpc_send_error_response() variants for an error).",
+      "revId": "78b6e0e2eab05a6acc5eba95a902ef979dcafc8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
