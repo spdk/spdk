@@ -11,6 +11,9 @@ if __name__ == "__main__":
     parser.add_argument('-p', dest='port',
                         help='RPC port number (if server_addr is IP address)',
                         default=5260, type=int)
+    parser.add_argument('-t', dest='timeout',
+                        help='Timout as a floating point number expressed in seconds waiting for reponse. Default: 60.0',
+                        default=60.0, type=float)
     parser.add_argument('-v', dest='verbose',
                         help='Verbose mode', action='store_true')
     subparsers = parser.add_subparsers(help='RPC methods')
@@ -503,5 +506,5 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.verbose)
+    args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.verbose, args.timeout)
     args.func(args)
