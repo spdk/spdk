@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "22b6b3e8_bd4576fc",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 61
+      },
+      "lineNbr": 3536,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-09T14:20:08Z",
+      "side": 1,
+      "message": "After looking on the next patch in series, this field is used for xattrs to be set on the newly created blob. In snapshot case that is snapshot blob, but in clone its clone blob.\n\nIn that context naming it snapshot_xattrs does not make much sense. I know this is going against previous comment on this very field, but did not realize its used for both.",
+      "range": {
+        "startLine": 3536,
+        "startChar": 36,
+        "endLine": 3536,
+        "endChar": 51
+      },
+      "revId": "a342c4c0ca968ee6652c51845aff2436ca99b65b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
