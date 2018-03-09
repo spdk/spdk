@@ -190,8 +190,9 @@ void spdk_trace_set_tpoint_group_mask(uint64_t tpoint_group_mask);
  * human-readable format.
  *
  * \param shm_name Name of shared memory.
+ * \return 0 on success, else non-zero indicates a failure.
  */
-void spdk_trace_init(const char *shm_name);
+int spdk_trace_init(const char *shm_name);
 
 /**
  * Unmap global trace memory structs.

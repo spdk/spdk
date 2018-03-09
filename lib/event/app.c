@@ -277,7 +277,7 @@ int
 spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	       void *arg1, void *arg2)
 {
-	struct spdk_conf		*config;
+	struct spdk_conf		*config = NULL;
 	struct spdk_conf_section	*sp;
 	char			shm_name[64];
 	int			rc;
@@ -318,13 +318,11 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		rc = spdk_conf_read(config, opts->config_file);
 		if (rc != 0) {
 			SPDK_ERRLOG("Could not read config file %s\n", opts->config_file);
-			spdk_conf_free(config);
-			return 1;
+			goto app_start_conf_free_err;
 		}
 		if (spdk_conf_first_section(config) == NULL) {
 			SPDK_ERRLOG("Invalid config file %s\n", opts->config_file);
-			spdk_conf_free(config);
-			return 1;
+			goto app_start_conf_free_err;
 		}
 	}
 	spdk_conf_set_as_default(config);
@@ -369,9 +367,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 
 	if (spdk_env_init(&env_opts) < 0) {
 		SPDK_ERRLOG("Unable to initialize SPDK env\n");
-		spdk_log_close();
-		spdk_conf_free(g_spdk_app.config);
-		return 1;
+		goto app_start_log_close_err;
 	}
 
 	SPDK_NOTICELOG("Total cores available: %d\n", spdk_env_get_core_count());
@@ -383,24 +379,25 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	 */
 	if ((rc = spdk_reactors_init(opts->max_delay_us)) != 0) {
 		SPDK_ERRLOG("Invalid reactor mask.\n");
-		spdk_log_close();
-		spdk_conf_free(g_spdk_app.config);
-		return 1;
+		goto app_start_log_close_err;
 	}
 
-	if ((rc = spdk_app_setup_signal_handlers(opts)) != 0) {
-		spdk_conf_free(g_spdk_app.config);
-		spdk_log_close();
-		return 1;
-	}
-
+	/*
+	 * Note the call to spdk_trace_init() is located here
+	 * ahead of spdk_app_setup_signal_handlers().
+	 * That's because there is not an easy/direct clean
+	 * way of unwinding alloc'd resources that can occur
+	 * in spdk_app_setup_signal_handlers().
+	 */
 	if (opts->shm_id >= 0) {
 		snprintf(shm_name, sizeof(shm_name), "/%s_trace.%d", opts->name, opts->shm_id);
 	} else {
 		snprintf(shm_name, sizeof(shm_name), "/%s_trace.pid%d", opts->name, (int)getpid());
 	}
 
-	spdk_trace_init(shm_name);
+	if (spdk_trace_init(shm_name) != 0) {
+		goto app_start_log_close_err;
+	}
 
 	if (opts->tpoint_group_mask == NULL) {
 		sp = spdk_conf_find_section(g_spdk_app.config, "Global");
@@ -424,6 +421,10 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		}
 	}
 
+	if ((rc = spdk_app_setup_signal_handlers(opts)) != 0) {
+		goto app_start_trace_cleanup_err;
+	}
+
 	g_spdk_app.rc = 0;
 	g_init_lcore = spdk_env_get_current_core();
 	g_app_start_fn = start_fn;
@@ -437,6 +438,17 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	spdk_reactors_start();
 
 	return g_spdk_app.rc;
+
+app_start_trace_cleanup_err:
+	spdk_trace_cleanup();
+
+app_start_log_close_err:
+	spdk_log_close();
+
+app_start_conf_free_err:
+	spdk_conf_free(config);
+
+	return 1;
 }
 
 void
