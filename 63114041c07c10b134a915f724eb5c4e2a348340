@@ -22,6 +22,52 @@
       "revId": "63114041c07c10b134a915f724eb5c4e2a348340",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f91e9bba_867c1d70",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-10T11:28:51Z",
+      "side": 1,
+      "message": "For example, concatenate \"initialize_\", elem[\u0027subsystem\u0027], and \"_subsystem\" into a string ?",
+      "range": {
+        "startLine": 27,
+        "startChar": 20,
+        "endLine": 27,
+        "endChar": 37
+      },
+      "revId": "63114041c07c10b134a915f724eb5c4e2a348340",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b59fd3e_6b07e6c0",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-10T11:28:51Z",
+      "side": 1,
+      "message": "Is this \"method\"?",
+      "range": {
+        "startLine": 27,
+        "startChar": 12,
+        "endLine": 27,
+        "endChar": 18
+      },
+      "revId": "63114041c07c10b134a915f724eb5c4e2a348340",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
