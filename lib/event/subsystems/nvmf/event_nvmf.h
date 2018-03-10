@@ -77,6 +77,4 @@ int spdk_nvmf_parse_conf(void);
 struct spdk_nvmf_subsystem *nvmf_tgt_create_subsystem(const char *name,
 		enum spdk_nvmf_subtype subtype, uint32_t num_ns);
 
-struct spdk_nvmf_subsystem *spdk_nvmf_construct_subsystem(const char *name);
-
 #endif
