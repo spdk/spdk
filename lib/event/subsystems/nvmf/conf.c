@@ -183,7 +183,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		return -1;
 	}
 
-	subsystem = spdk_nvmf_construct_subsystem(nqn);
+	subsystem = nvmf_tgt_create_subsystem(nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	if (subsystem == NULL) {
 		goto done;
 	}
@@ -353,23 +353,4 @@ spdk_nvmf_parse_conf(void)
 	}
 
 	return 0;
-}
-
-struct spdk_nvmf_subsystem *
-	spdk_nvmf_construct_subsystem(const char *name)
-{
-	struct spdk_nvmf_subsystem *subsystem;
-
-	if (name == NULL) {
-		SPDK_ERRLOG("No NQN specified for subsystem\n");
-		return NULL;
-	}
-
-	subsystem = nvmf_tgt_create_subsystem(name, SPDK_NVMF_SUBTYPE_NVME, 0);
-	if (subsystem == NULL) {
-		SPDK_ERRLOG("Subsystem creation failed\n");
-		return NULL;
-	}
-
-	return subsystem;
 }
