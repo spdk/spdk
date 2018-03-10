@@ -68,6 +68,30 @@
       "revId": "63114041c07c10b134a915f724eb5c4e2a348340",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d1dce81_82f7521d",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-10T17:19:12Z",
+      "side": 1,
+      "message": "No, this is subsystem name for \u0027get_subsystem_config\u0027 in line 31. Tge python JSON RPC lack of needed API so I need to craft RPC commands by hand. Such API should be added in separate patch.",
+      "parentUuid": "3b59fd3e_6b07e6c0",
+      "range": {
+        "startLine": 27,
+        "startChar": 12,
+        "endLine": 27,
+        "endChar": 18
+      },
+      "revId": "63114041c07c10b134a915f724eb5c4e2a348340",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
