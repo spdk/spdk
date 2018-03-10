@@ -41,8 +41,6 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 
-#define MAX_NAMESPACES 255
-
 #define ACCEPT_TIMEOUT_US		10000 /* 10ms */
 
 struct spdk_nvmf_probe_ctx {
@@ -51,8 +49,6 @@ struct spdk_nvmf_probe_ctx {
 	bool				found;
 	struct spdk_nvme_transport_id	trid;
 };
-
-#define MAX_STRING_LEN 255
 
 struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf;
 
