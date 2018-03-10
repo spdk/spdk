@@ -289,7 +289,7 @@ spdk_rpc_get_nvmf_subsystems(struct spdk_jsonrpc_request *request,
 	}
 
 	spdk_json_write_array_begin(w);
-	subsystem = spdk_nvmf_subsystem_get_first(g_tgt.tgt);
+	subsystem = spdk_nvmf_subsystem_get_first(g_spdk_nvmf_tgt);
 	while (subsystem) {
 		dump_nvmf_subsystem(w, subsystem);
 		subsystem = spdk_nvmf_subsystem_get_next(subsystem);
@@ -605,7 +605,7 @@ spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_request *request,
 		SPDK_NOTICELOG("Ignoring it and continuing.\n");
 	}
 
-	subsystem = spdk_nvmf_subsystem_create(g_tgt.tgt, req.nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = spdk_nvmf_subsystem_create(g_spdk_nvmf_tgt, req.nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	if (!subsystem) {
 		goto invalid;
 	}
@@ -629,7 +629,7 @@ spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_request *request,
 			goto invalid;
 		}
 
-		if (spdk_nvmf_tgt_listen(g_tgt.tgt, &trid)) {
+		if (spdk_nvmf_tgt_listen(g_spdk_nvmf_tgt, &trid)) {
 			goto invalid;
 		}
 
@@ -729,7 +729,7 @@ spdk_rpc_delete_nvmf_subsystem(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	subsystem = spdk_nvmf_tgt_find_subsystem(g_tgt.tgt, req.nqn);
+	subsystem = spdk_nvmf_tgt_find_subsystem(g_spdk_nvmf_tgt, req.nqn);
 	if (!subsystem) {
 		goto invalid;
 	}
@@ -809,7 +809,7 @@ nvmf_rpc_listen_paused(struct spdk_nvmf_subsystem *subsystem,
 	struct nvmf_rpc_listener_ctx *ctx = cb_arg;
 
 	if (ctx->op == NVMF_RPC_LISTEN_ADD) {
-		if (spdk_nvmf_tgt_listen(g_tgt.tgt, &ctx->trid)) {
+		if (spdk_nvmf_tgt_listen(g_spdk_nvmf_tgt, &ctx->trid)) {
 			SPDK_ERRLOG("Unable to add listener.\n");
 			goto invalid;
 		}
@@ -867,7 +867,7 @@ nvmf_rpc_subsystem_add_listener(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	subsystem = spdk_nvmf_tgt_find_subsystem(g_tgt.tgt, ctx->nqn);
+	subsystem = spdk_nvmf_tgt_find_subsystem(g_spdk_nvmf_tgt, ctx->nqn);
 	if (!subsystem) {
 		SPDK_ERRLOG("Unable to find subsystem with NQN %s\n", ctx->nqn);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
@@ -916,7 +916,7 @@ nvmf_rpc_subsystem_remove_listener(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	subsystem = spdk_nvmf_tgt_find_subsystem(g_tgt.tgt, ctx->nqn);
+	subsystem = spdk_nvmf_tgt_find_subsystem(g_spdk_nvmf_tgt, ctx->nqn);
 	if (!subsystem) {
 		SPDK_ERRLOG("Unable to find subsystem with NQN %s\n", ctx->nqn);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
@@ -1057,7 +1057,7 @@ nvmf_rpc_subsystem_add_ns(struct spdk_jsonrpc_request *request,
 	ctx->request = request;
 	ctx->response_sent = false;
 
-	subsystem = spdk_nvmf_tgt_find_subsystem(g_tgt.tgt, ctx->nqn);
+	subsystem = spdk_nvmf_tgt_find_subsystem(g_spdk_nvmf_tgt, ctx->nqn);
 	if (!subsystem) {
 		SPDK_ERRLOG("Unable to find subsystem with NQN %s\n", ctx->nqn);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
@@ -1164,7 +1164,7 @@ nvmf_rpc_subsystem_remove_ns(struct spdk_jsonrpc_request *request,
 	ctx->request = request;
 	ctx->response_sent = false;
 
-	subsystem = spdk_nvmf_tgt_find_subsystem(g_tgt.tgt, ctx->nqn);
+	subsystem = spdk_nvmf_tgt_find_subsystem(g_spdk_nvmf_tgt, ctx->nqn);
 	if (!subsystem) {
 		SPDK_ERRLOG("Unable to find subsystem with NQN %s\n", ctx->nqn);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
@@ -1296,7 +1296,7 @@ nvmf_rpc_subsystem_add_host(struct spdk_jsonrpc_request *request,
 	ctx->op = NVMF_RPC_HOST_ADD;
 	ctx->response_sent = false;
 
-	subsystem = spdk_nvmf_tgt_find_subsystem(g_tgt.tgt, ctx->nqn);
+	subsystem = spdk_nvmf_tgt_find_subsystem(g_spdk_nvmf_tgt, ctx->nqn);
 	if (!subsystem) {
 		SPDK_ERRLOG("Unable to find subsystem with NQN %s\n", ctx->nqn);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
@@ -1338,7 +1338,7 @@ nvmf_rpc_subsystem_remove_host(struct spdk_jsonrpc_request *request,
 	ctx->op = NVMF_RPC_HOST_REMOVE;
 	ctx->response_sent = false;
 
-	subsystem = spdk_nvmf_tgt_find_subsystem(g_tgt.tgt, ctx->nqn);
+	subsystem = spdk_nvmf_tgt_find_subsystem(g_spdk_nvmf_tgt, ctx->nqn);
 	if (!subsystem) {
 		SPDK_ERRLOG("Unable to find subsystem with NQN %s\n", ctx->nqn);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
@@ -1386,7 +1386,7 @@ nvmf_rpc_subsystem_allow_any_host(struct spdk_jsonrpc_request *request,
 	ctx->op = NVMF_RPC_HOST_ALLOW_ANY;
 	ctx->response_sent = false;
 
-	subsystem = spdk_nvmf_tgt_find_subsystem(g_tgt.tgt, ctx->nqn);
+	subsystem = spdk_nvmf_tgt_find_subsystem(g_spdk_nvmf_tgt, ctx->nqn);
 	if (!subsystem) {
 		SPDK_ERRLOG("Unable to find subsystem with NQN %s\n", ctx->nqn);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
