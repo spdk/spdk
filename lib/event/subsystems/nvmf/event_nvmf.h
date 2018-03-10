@@ -45,27 +45,8 @@ struct spdk_nvmf_tgt_conf {
 	uint32_t acceptor_poll_rate;
 };
 
-enum nvmf_tgt_state {
-	NVMF_TGT_INIT_NONE = 0,
-	NVMF_TGT_INIT_PARSE_CONFIG,
-	NVMF_TGT_INIT_CREATE_POLL_GROUPS,
-	NVMF_TGT_INIT_START_SUBSYSTEMS,
-	NVMF_TGT_INIT_START_ACCEPTOR,
-	NVMF_TGT_RUNNING,
-	NVMF_TGT_FINI_STOP_ACCEPTOR,
-	NVMF_TGT_FINI_DESTROY_POLL_GROUPS,
-	NVMF_TGT_FINI_STOP_SUBSYSTEMS,
-	NVMF_TGT_FINI_FREE_RESOURCES,
-	NVMF_TGT_STOPPED,
-	NVMF_TGT_ERROR,
-};
-
 struct nvmf_tgt {
-	enum nvmf_tgt_state state;
-
 	struct spdk_nvmf_tgt *tgt;
-
-	uint32_t core; /* Round-robin tracking of cores for qpair assignment */
 };
 
 extern struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf;
