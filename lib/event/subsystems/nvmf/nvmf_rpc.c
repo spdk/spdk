@@ -605,9 +605,13 @@ spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_request *request,
 		SPDK_NOTICELOG("Ignoring it and continuing.\n");
 	}
 
-	subsystem = spdk_nvmf_construct_subsystem(req.nqn,
-			req.serial_number);
+	subsystem = spdk_nvmf_construct_subsystem(req.nqn);
 	if (!subsystem) {
+		goto invalid;
+	}
+
+	if (spdk_nvmf_subsystem_set_sn(subsystem, req.serial_number)) {
+		SPDK_ERRLOG("Subsystem %s: invalid serial number '%s'\n", req.nqn, req.serial_number);
 		goto invalid;
 	}
 
