@@ -83,22 +83,6 @@ spdk_nvmf_subsystem_fini(void)
 	}
 }
 
-struct spdk_nvmf_subsystem *
-nvmf_tgt_create_subsystem(const char *name, enum spdk_nvmf_subtype subtype, uint32_t num_ns)
-{
-	struct spdk_nvmf_subsystem *subsystem;
-
-	subsystem = spdk_nvmf_subsystem_create(g_tgt.tgt, name, subtype, num_ns);
-	if (subsystem == NULL) {
-		SPDK_ERRLOG("Subsystem creation failed\n");
-		return NULL;
-	}
-
-	SPDK_NOTICELOG("allocated subsystem %s\n", name);
-
-	return subsystem;
-}
-
 static void
 nvmf_tgt_poll_group_add(void *arg1, void *arg2)
 {
