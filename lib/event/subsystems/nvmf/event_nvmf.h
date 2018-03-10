@@ -45,13 +45,9 @@ struct spdk_nvmf_tgt_conf {
 	uint32_t acceptor_poll_rate;
 };
 
-struct nvmf_tgt {
-	struct spdk_nvmf_tgt *tgt;
-};
-
 extern struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf;
 
-extern struct nvmf_tgt g_tgt;
+extern struct spdk_nvmf_tgt *g_spdk_nvmf_tgt;
 
 int spdk_nvmf_parse_conf(void);
 
