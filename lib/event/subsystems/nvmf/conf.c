@@ -61,7 +61,8 @@ spdk_add_nvmf_discovery_subsystem(void)
 {
 	struct spdk_nvmf_subsystem *subsystem;
 
-	subsystem = nvmf_tgt_create_subsystem(SPDK_NVMF_DISCOVERY_NQN, SPDK_NVMF_SUBTYPE_DISCOVERY, 0);
+	subsystem = spdk_nvmf_subsystem_create(g_tgt.tgt, SPDK_NVMF_DISCOVERY_NQN,
+					       SPDK_NVMF_SUBTYPE_DISCOVERY, 0);
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("Failed creating discovery nvmf library subsystem\n");
 		return -1;
@@ -183,7 +184,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		return -1;
 	}
 
-	subsystem = nvmf_tgt_create_subsystem(nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = spdk_nvmf_subsystem_create(g_tgt.tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	if (subsystem == NULL) {
 		goto done;
 	}
