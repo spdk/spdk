@@ -74,7 +74,4 @@ extern struct nvmf_tgt g_tgt;
 
 int spdk_nvmf_parse_conf(void);
 
-struct spdk_nvmf_subsystem *nvmf_tgt_create_subsystem(const char *name,
-		enum spdk_nvmf_subtype subtype, uint32_t num_ns);
-
 #endif
