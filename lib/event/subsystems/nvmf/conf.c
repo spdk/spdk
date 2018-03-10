@@ -178,11 +178,20 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	}
 
 	sn = spdk_conf_section_get_val(sp, "SN");
+	if (sn == NULL) {
+		SPDK_ERRLOG("Subsystem %s: missing serial number\n", nqn);
+		return -1;
+	}
 
-	subsystem = spdk_nvmf_construct_subsystem(nqn,
-			sn);
-
+	subsystem = spdk_nvmf_construct_subsystem(nqn);
 	if (subsystem == NULL) {
+		goto done;
+	}
+
+	if (spdk_nvmf_subsystem_set_sn(subsystem, sn)) {
+		SPDK_ERRLOG("Subsystem %s: invalid serial number '%s'\n", nqn, sn);
+		spdk_nvmf_subsystem_destroy(subsystem);
+		subsystem = NULL;
 		goto done;
 	}
 
@@ -347,8 +356,7 @@ spdk_nvmf_parse_conf(void)
 }
 
 struct spdk_nvmf_subsystem *
-	spdk_nvmf_construct_subsystem(const char *name,
-			      const char *sn)
+	spdk_nvmf_construct_subsystem(const char *name)
 {
 	struct spdk_nvmf_subsystem *subsystem;
 
@@ -363,19 +371,5 @@ struct spdk_nvmf_subsystem *
 		return NULL;
 	}
 
-	if (sn == NULL) {
-		SPDK_ERRLOG("Subsystem %s: missing serial number\n", name);
-		goto error;
-	}
-
-	if (spdk_nvmf_subsystem_set_sn(subsystem, sn)) {
-		SPDK_ERRLOG("Subsystem %s: invalid serial number '%s'\n", name, sn);
-		goto error;
-	}
-
 	return subsystem;
-
-error:
-	spdk_nvmf_subsystem_destroy(subsystem);
-	return NULL;
 }
