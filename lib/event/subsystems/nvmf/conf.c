@@ -57,7 +57,7 @@ spdk_add_nvmf_discovery_subsystem(void)
 {
 	struct spdk_nvmf_subsystem *subsystem;
 
-	subsystem = spdk_nvmf_subsystem_create(g_tgt.tgt, SPDK_NVMF_DISCOVERY_NQN,
+	subsystem = spdk_nvmf_subsystem_create(g_spdk_nvmf_tgt, SPDK_NVMF_DISCOVERY_NQN,
 					       SPDK_NVMF_SUBTYPE_DISCOVERY, 0);
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("Failed creating discovery nvmf library subsystem\n");
@@ -120,8 +120,8 @@ spdk_nvmf_parse_nvmf_tgt(void)
 		spdk_nvmf_read_config_file_params(sp, &opts);
 	}
 
-	g_tgt.tgt = spdk_nvmf_tgt_create(&opts);
-	if (!g_tgt.tgt) {
+	g_spdk_nvmf_tgt = spdk_nvmf_tgt_create(&opts);
+	if (!g_spdk_nvmf_tgt) {
 		SPDK_ERRLOG("spdk_nvmf_tgt_create() failed\n");
 		return -1;
 	}
@@ -180,7 +180,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		return -1;
 	}
 
-	subsystem = spdk_nvmf_subsystem_create(g_tgt.tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = spdk_nvmf_subsystem_create(g_spdk_nvmf_tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	if (subsystem == NULL) {
 		goto done;
 	}
@@ -285,7 +285,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		snprintf(trid.trsvcid, sizeof(trid.trsvcid), "%s", port);
 		free(address_dup);
 
-		ret = spdk_nvmf_tgt_listen(g_tgt.tgt, &trid);
+		ret = spdk_nvmf_tgt_listen(g_spdk_nvmf_tgt, &trid);
 		if (ret) {
 			SPDK_ERRLOG("Failed to listen on transport %s address %s\n",
 				    transport, address);
