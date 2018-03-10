@@ -52,8 +52,6 @@ struct spdk_nvmf_probe_ctx {
 	struct spdk_nvme_transport_id	trid;
 };
 
-#define MAX_STRING_LEN 255
-
 struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf;
 
 static int
