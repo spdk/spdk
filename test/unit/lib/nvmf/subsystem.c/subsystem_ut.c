@@ -92,6 +92,12 @@ spdk_nvmf_transport_create(struct spdk_nvmf_tgt *tgt,
 	return NULL;
 }
 
+struct spdk_nvmf_subsystem *
+spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *tgt, const char *subnqn)
+{
+	return NULL;
+}
+
 struct spdk_nvmf_transport *
 spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt, enum spdk_nvme_transport_type trtype)
 {

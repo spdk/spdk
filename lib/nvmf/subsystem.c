@@ -222,6 +222,11 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 	struct spdk_nvmf_subsystem	*subsystem;
 	uint32_t			sid;
 
+	if (spdk_nvmf_tgt_find_subsystem(tgt, nqn)) {
+		SPDK_ERRLOG("Subsystem NQN '%s' already exists\n", nqn);
+		return NULL;
+	}
+
 	if (!spdk_nvmf_valid_nqn(nqn)) {
 		return NULL;
 	}

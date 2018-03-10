@@ -88,11 +88,6 @@ nvmf_tgt_create_subsystem(const char *name, enum spdk_nvmf_subtype subtype, uint
 {
 	struct spdk_nvmf_subsystem *subsystem;
 
-	if (spdk_nvmf_tgt_find_subsystem(g_tgt.tgt, name)) {
-		SPDK_ERRLOG("Subsystem already exist\n");
-		return NULL;
-	}
-
 	subsystem = spdk_nvmf_subsystem_create(g_tgt.tgt, name, subtype, num_ns);
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("Subsystem creation failed\n");
