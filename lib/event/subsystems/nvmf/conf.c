@@ -43,13 +43,6 @@
 
 #define ACCEPT_TIMEOUT_US		10000 /* 10ms */
 
-struct spdk_nvmf_probe_ctx {
-	struct spdk_nvmf_subsystem	*subsystem;
-	bool				any;
-	bool				found;
-	struct spdk_nvme_transport_id	trid;
-};
-
 struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf;
 
 static int
