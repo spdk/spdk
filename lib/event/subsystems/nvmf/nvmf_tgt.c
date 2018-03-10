@@ -40,11 +40,30 @@
 #include "spdk/nvme.h"
 #include "spdk/util.h"
 
+enum nvmf_tgt_state {
+	NVMF_TGT_INIT_NONE = 0,
+	NVMF_TGT_INIT_PARSE_CONFIG,
+	NVMF_TGT_INIT_CREATE_POLL_GROUPS,
+	NVMF_TGT_INIT_START_SUBSYSTEMS,
+	NVMF_TGT_INIT_START_ACCEPTOR,
+	NVMF_TGT_RUNNING,
+	NVMF_TGT_FINI_STOP_ACCEPTOR,
+	NVMF_TGT_FINI_DESTROY_POLL_GROUPS,
+	NVMF_TGT_FINI_STOP_SUBSYSTEMS,
+	NVMF_TGT_FINI_FREE_RESOURCES,
+	NVMF_TGT_STOPPED,
+	NVMF_TGT_ERROR,
+};
+
 struct nvmf_tgt_poll_group {
 	struct spdk_nvmf_poll_group *group;
 };
 
 struct nvmf_tgt g_tgt = {};
+
+static enum nvmf_tgt_state g_tgt_state;
+
+static uint32_t g_tgt_core; /* Round-robin tracking of cores for qpair assignment */
 
 static struct nvmf_tgt_poll_group *g_poll_groups = NULL;
 static size_t g_num_poll_groups = 0;
@@ -58,16 +77,16 @@ static void
 _spdk_nvmf_shutdown_cb(void *arg1, void *arg2)
 {
 	/* Still in initialization state, defer shutdown operation */
-	if (g_tgt.state < NVMF_TGT_RUNNING) {
+	if (g_tgt_state < NVMF_TGT_RUNNING) {
 		spdk_event_call(spdk_event_allocate(spdk_env_get_current_core(),
 						    _spdk_nvmf_shutdown_cb, NULL, NULL));
 		return;
-	} else if (g_tgt.state > NVMF_TGT_RUNNING) {
+	} else if (g_tgt_state > NVMF_TGT_RUNNING) {
 		/* Already in Shutdown status, ignore the signal */
 		return;
 	}
 
-	g_tgt.state = NVMF_TGT_FINI_STOP_ACCEPTOR;
+	g_tgt_state = NVMF_TGT_FINI_STOP_ACCEPTOR;
 	nvmf_tgt_advance_state();
 }
 
@@ -99,10 +118,10 @@ new_qpair(struct spdk_nvmf_qpair *qpair)
 	struct nvmf_tgt_poll_group *pg;
 	uint32_t core;
 
-	core = g_tgt.core;
-	g_tgt.core = spdk_env_get_next_core(core);
-	if (g_tgt.core == UINT32_MAX) {
-		g_tgt.core = spdk_env_get_first_core();
+	core = g_tgt_core;
+	g_tgt_core = spdk_env_get_next_core(core);
+	if (g_tgt_core == UINT32_MAX) {
+		g_tgt_core = spdk_env_get_first_core();
 	}
 
 	pg = &g_poll_groups[core];
@@ -125,7 +144,7 @@ acceptor_poll(void *arg)
 static void
 nvmf_tgt_destroy_poll_group_done(void *ctx)
 {
-	g_tgt.state = NVMF_TGT_FINI_FREE_RESOURCES;
+	g_tgt_state = NVMF_TGT_FINI_FREE_RESOURCES;
 	nvmf_tgt_advance_state();
 }
 
@@ -147,7 +166,7 @@ nvmf_tgt_destroy_poll_group(void *ctx)
 static void
 nvmf_tgt_create_poll_group_done(void *ctx)
 {
-	g_tgt.state = NVMF_TGT_INIT_START_SUBSYSTEMS;
+	g_tgt_state = NVMF_TGT_INIT_START_SUBSYSTEMS;
 	nvmf_tgt_advance_state();
 }
 
@@ -178,7 +197,7 @@ nvmf_tgt_subsystem_started(struct spdk_nvmf_subsystem *subsystem,
 		return;
 	}
 
-	g_tgt.state = NVMF_TGT_INIT_START_ACCEPTOR;
+	g_tgt_state = NVMF_TGT_INIT_START_ACCEPTOR;
 	nvmf_tgt_advance_state();
 }
 
@@ -193,7 +212,7 @@ nvmf_tgt_subsystem_stopped(struct spdk_nvmf_subsystem *subsystem,
 		return;
 	}
 
-	g_tgt.state = NVMF_TGT_FINI_DESTROY_POLL_GROUPS;
+	g_tgt_state = NVMF_TGT_FINI_DESTROY_POLL_GROUPS;
 	nvmf_tgt_advance_state();
 }
 
@@ -204,11 +223,11 @@ nvmf_tgt_advance_state(void)
 	int rc = -1;
 
 	do {
-		prev_state = g_tgt.state;
+		prev_state = g_tgt_state;
 
-		switch (g_tgt.state) {
+		switch (g_tgt_state) {
 		case NVMF_TGT_INIT_NONE: {
-			g_tgt.state = NVMF_TGT_INIT_PARSE_CONFIG;
+			g_tgt_state = NVMF_TGT_INIT_PARSE_CONFIG;
 
 			/* Find the maximum core number */
 			g_num_poll_groups = spdk_env_get_last_core() + 1;
@@ -216,23 +235,23 @@ nvmf_tgt_advance_state(void)
 
 			g_poll_groups = calloc(g_num_poll_groups, sizeof(*g_poll_groups));
 			if (g_poll_groups == NULL) {
-				g_tgt.state = NVMF_TGT_ERROR;
+				g_tgt_state = NVMF_TGT_ERROR;
 				rc = -ENOMEM;
 				break;
 			}
 
-			g_tgt.core = spdk_env_get_first_core();
+			g_tgt_core = spdk_env_get_first_core();
 			break;
 		}
 		case NVMF_TGT_INIT_PARSE_CONFIG:
 			rc = spdk_nvmf_parse_conf();
 			if (rc < 0) {
 				SPDK_ERRLOG("spdk_nvmf_parse_conf() failed\n");
-				g_tgt.state = NVMF_TGT_ERROR;
+				g_tgt_state = NVMF_TGT_ERROR;
 				rc = -EINVAL;
 				break;
 			}
-			g_tgt.state = NVMF_TGT_INIT_CREATE_POLL_GROUPS;
+			g_tgt_state = NVMF_TGT_INIT_CREATE_POLL_GROUPS;
 			break;
 		case NVMF_TGT_INIT_CREATE_POLL_GROUPS:
 			/* Send a message to each thread and create a poll group */
@@ -248,7 +267,7 @@ nvmf_tgt_advance_state(void)
 			if (subsystem) {
 				spdk_nvmf_subsystem_start(subsystem, nvmf_tgt_subsystem_started, NULL);
 			} else {
-				g_tgt.state = NVMF_TGT_INIT_START_ACCEPTOR;
+				g_tgt_state = NVMF_TGT_INIT_START_ACCEPTOR;
 			}
 			break;
 		}
@@ -256,14 +275,14 @@ nvmf_tgt_advance_state(void)
 			g_acceptor_poller = spdk_poller_register(acceptor_poll, g_tgt.tgt,
 					    g_spdk_nvmf_tgt_conf.acceptor_poll_rate);
 			SPDK_NOTICELOG("Acceptor running\n");
-			g_tgt.state = NVMF_TGT_RUNNING;
+			g_tgt_state = NVMF_TGT_RUNNING;
 			break;
 		case NVMF_TGT_RUNNING:
 			spdk_subsystem_init_next(0);
 			break;
 		case NVMF_TGT_FINI_STOP_ACCEPTOR:
 			spdk_poller_unregister(&g_acceptor_poller);
-			g_tgt.state = NVMF_TGT_FINI_STOP_SUBSYSTEMS;
+			g_tgt_state = NVMF_TGT_FINI_STOP_SUBSYSTEMS;
 			break;
 		case NVMF_TGT_FINI_STOP_SUBSYSTEMS: {
 			struct spdk_nvmf_subsystem *subsystem;
@@ -273,7 +292,7 @@ nvmf_tgt_advance_state(void)
 			if (subsystem) {
 				spdk_nvmf_subsystem_stop(subsystem, nvmf_tgt_subsystem_stopped, NULL);
 			} else {
-				g_tgt.state = NVMF_TGT_FINI_DESTROY_POLL_GROUPS;
+				g_tgt_state = NVMF_TGT_FINI_DESTROY_POLL_GROUPS;
 			}
 			break;
 		}
@@ -285,7 +304,7 @@ nvmf_tgt_advance_state(void)
 			break;
 		case NVMF_TGT_FINI_FREE_RESOURCES:
 			spdk_nvmf_tgt_destroy(g_tgt.tgt);
-			g_tgt.state = NVMF_TGT_STOPPED;
+			g_tgt_state = NVMF_TGT_STOPPED;
 			break;
 		case NVMF_TGT_STOPPED:
 			spdk_subsystem_fini_next();
@@ -295,13 +314,13 @@ nvmf_tgt_advance_state(void)
 			return;
 		}
 
-	} while (g_tgt.state != prev_state);
+	} while (g_tgt_state != prev_state);
 }
 
 static void
 spdk_nvmf_subsystem_init(void)
 {
-	g_tgt.state = NVMF_TGT_INIT_NONE;
+	g_tgt_state = NVMF_TGT_INIT_NONE;
 	nvmf_tgt_advance_state();
 }
 
