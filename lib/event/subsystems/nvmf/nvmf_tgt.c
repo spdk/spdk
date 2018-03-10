@@ -59,7 +59,7 @@ struct nvmf_tgt_poll_group {
 	struct spdk_nvmf_poll_group *group;
 };
 
-struct nvmf_tgt g_tgt = {};
+struct spdk_nvmf_tgt *g_spdk_nvmf_tgt = NULL;
 
 static enum nvmf_tgt_state g_tgt_state;
 
@@ -178,7 +178,7 @@ nvmf_tgt_create_poll_group(void *ctx)
 	pg = &g_poll_groups[spdk_env_get_current_core()];
 	assert(pg != NULL);
 
-	pg->group = spdk_nvmf_poll_group_create(g_tgt.tgt);
+	pg->group = spdk_nvmf_poll_group_create(g_spdk_nvmf_tgt);
 	if (pg->group == NULL) {
 		SPDK_ERRLOG("Failed to create poll group for core %u\n", spdk_env_get_current_core());
 	}
@@ -262,7 +262,7 @@ nvmf_tgt_advance_state(void)
 		case NVMF_TGT_INIT_START_SUBSYSTEMS: {
 			struct spdk_nvmf_subsystem *subsystem;
 
-			subsystem = spdk_nvmf_subsystem_get_first(g_tgt.tgt);
+			subsystem = spdk_nvmf_subsystem_get_first(g_spdk_nvmf_tgt);
 
 			if (subsystem) {
 				spdk_nvmf_subsystem_start(subsystem, nvmf_tgt_subsystem_started, NULL);
@@ -272,7 +272,7 @@ nvmf_tgt_advance_state(void)
 			break;
 		}
 		case NVMF_TGT_INIT_START_ACCEPTOR:
-			g_acceptor_poller = spdk_poller_register(acceptor_poll, g_tgt.tgt,
+			g_acceptor_poller = spdk_poller_register(acceptor_poll, g_spdk_nvmf_tgt,
 					    g_spdk_nvmf_tgt_conf.acceptor_poll_rate);
 			SPDK_NOTICELOG("Acceptor running\n");
 			g_tgt_state = NVMF_TGT_RUNNING;
@@ -287,7 +287,7 @@ nvmf_tgt_advance_state(void)
 		case NVMF_TGT_FINI_STOP_SUBSYSTEMS: {
 			struct spdk_nvmf_subsystem *subsystem;
 
-			subsystem = spdk_nvmf_subsystem_get_first(g_tgt.tgt);
+			subsystem = spdk_nvmf_subsystem_get_first(g_spdk_nvmf_tgt);
 
 			if (subsystem) {
 				spdk_nvmf_subsystem_stop(subsystem, nvmf_tgt_subsystem_stopped, NULL);
@@ -303,7 +303,7 @@ nvmf_tgt_advance_state(void)
 					     nvmf_tgt_destroy_poll_group_done);
 			break;
 		case NVMF_TGT_FINI_FREE_RESOURCES:
-			spdk_nvmf_tgt_destroy(g_tgt.tgt);
+			spdk_nvmf_tgt_destroy(g_spdk_nvmf_tgt);
 			g_tgt_state = NVMF_TGT_STOPPED;
 			break;
 		case NVMF_TGT_STOPPED:
