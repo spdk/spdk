@@ -605,7 +605,7 @@ spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_request *request,
 		SPDK_NOTICELOG("Ignoring it and continuing.\n");
 	}
 
-	subsystem = spdk_nvmf_construct_subsystem(req.nqn);
+	subsystem = nvmf_tgt_create_subsystem(req.nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	if (!subsystem) {
 		goto invalid;
 	}
