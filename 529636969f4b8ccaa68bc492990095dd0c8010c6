@@ -22,6 +22,30 @@
       "revId": "529636969f4b8ccaa68bc492990095dd0c8010c6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f6c48c1_6722b24d",
+        "filename": "lib/event/subsystem.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-11T10:47:17Z",
+      "side": 1,
+      "message": "Yes",
+      "parentUuid": "ffa3628f_caeca022",
+      "range": {
+        "startLine": 255,
+        "startChar": 19,
+        "endLine": 255,
+        "endChar": 36
+      },
+      "revId": "529636969f4b8ccaa68bc492990095dd0c8010c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
