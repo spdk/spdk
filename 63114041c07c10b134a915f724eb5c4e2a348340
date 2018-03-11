@@ -119,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "f1d55fd5_99b174c7",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-11T10:45:53Z",
+      "side": 1,
+      "message": "\u003e \"config\": {\"method\": method, \"params\": { }}\n\u003e ...\n\u003e And creating the following will be the role of the handler of get_subsystems() RPC?\n\nYes, with the diff that \u0027config\u0027 is an list not an object (you can see that load_config function iterate over \u0027config\u0027).",
+      "parentUuid": "9731b115_3aaff856",
+      "range": {
+        "startLine": 27,
+        "startChar": 12,
+        "endLine": 27,
+        "endChar": 18
+      },
+      "revId": "63114041c07c10b134a915f724eb5c4e2a348340",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f6f646f2_76033662",
         "filename": "scripts/rpc/__init__.py",
         "patchSetId": 3
@@ -130,6 +154,30 @@
       "writtenOn": "2018-03-11T03:45:55Z",
       "side": 1,
       "message": "We should be able to use the pretty print function. How about adding the following?\n\n    if args.indent:\n        ind \u003d int(args.indent)\n    else:\n        ind \u003d None\n    if args.key_sep and args.item_sep:\n        ksep \u003d args.key_sep\n        isep \u003d args.item_sep\n        seps \u003d (ksep, isep)\n    else:\n        seps \u003d None\n    with open(filename, \u0027w\u0027) as json_file:\n        json.dump(conf, json_file, indent\u003dind, separators\u003dseps)",
+      "range": {
+        "startLine": 36,
+        "startChar": 8,
+        "endLine": 36,
+        "endChar": 41
+      },
+      "revId": "63114041c07c10b134a915f724eb5c4e2a348340",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28be4a66_4ae600a9",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-11T10:45:53Z",
+      "side": 1,
+      "message": "Sure, this is a good idea.",
+      "parentUuid": "f6f646f2_76033662",
       "range": {
         "startLine": 36,
         "startChar": 8,
