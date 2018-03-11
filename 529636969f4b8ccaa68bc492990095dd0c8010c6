@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ffa3628f_caeca022",
+        "filename": "lib/event/subsystem.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-11T03:49:54Z",
+      "side": 1,
+      "message": "If creating the following format\n\n{\n  \"method\": name,\n  \"params\": { }\n}\n\nis the task of write_config_json(),\nit will be nice.\n\nMy understanding is correct?",
+      "range": {
+        "startLine": 255,
+        "startChar": 19,
+        "endLine": 255,
+        "endChar": 36
+      },
+      "revId": "529636969f4b8ccaa68bc492990095dd0c8010c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
