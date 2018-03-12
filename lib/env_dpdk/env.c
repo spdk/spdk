@@ -173,7 +173,7 @@ spdk_mempool_create_ctor(const char *name, size_t count,
 
 	mp = rte_mempool_create(name, count, ele_size, cache_size,
 				0, NULL, NULL, (rte_mempool_obj_cb_t *)obj_init, obj_init_arg,
-				socket_id, 0);
+				socket_id, MEMPOOL_F_NO_PHYS_CONTIG);
 
 	return (struct spdk_mempool *)mp;
 }
