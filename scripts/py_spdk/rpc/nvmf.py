@@ -1,4 +1,5 @@
 def get_nvmf_subsystems(args):
+    print_dict(args.client.call('get_nvmf_subsystems'))
     return args.client.call('get_nvmf_subsystems')
 
 

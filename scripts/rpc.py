@@ -3,7 +3,7 @@
 from rpc.client import print_dict
 
 import argparse
-import rpc
+from py_spdk import rpc
 
 try:
     from shlex import quote
