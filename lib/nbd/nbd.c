@@ -229,8 +229,7 @@ spdk_get_nbd_io(struct spdk_nbd_disk *nbd)
 
 	io = calloc(1, sizeof(*io));
 	if (!io) {
-		SPDK_ERRLOG("Unable to get nbd_io\n");
-		abort();
+		return NULL;
 	}
 
 	io->nbd = nbd;
@@ -509,6 +508,9 @@ spdk_nbd_io_recv_internal(struct spdk_nbd_disk *nbd)
 
 	if (nbd->io_in_recv == NULL) {
 		nbd->io_in_recv = spdk_get_nbd_io(nbd);
+		if (!nbd->io_in_recv) {
+			return -ENOMEM;
+		}
 	}
 
 	io = nbd->io_in_recv;
