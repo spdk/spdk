@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "1a868a4b_b5d0bc9e",
+        "filename": "lib/bdev/virtio/bdev_virtio_scsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1104,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-03-12T23:41:34Z",
+      "side": 1,
+      "message": "\u003e Hi Darek, I checked the code and didn\u0027t find the code which process response code other than VIRTIO_SCSI_S_OK, can you point me to that? Thanks.\n\nSure, that\u0027s #1366:\n\n```\n\tif (resp-\u003eresponse \u003d\u003d VIRTIO_SCSI_S_BAD_TARGET ||\n\t    resp-\u003eresponse \u003d\u003d VIRTIO_SCSI_S_INCORRECT_LUN) {\n\t\t_virtio_scsi_dev_scan_next(base);\n\t\treturn;\n\t}\n\n\tif (resp-\u003eresponse !\u003d VIRTIO_SCSI_S_OK || status \u003d\u003d ...) {\n\t\t...\n\t\treturn;\n\t}\n\n\t...\n\tprocess_scan_start_stop_unit(...);\n```\n\nThe second `if` tries to resend the scan I/O if it failed intermittently - either on Virtio or SCSI protocol; the handling is the same for both cases.\n\n\u003e so response \u003d\u003d VIRTIO_SCSI_S_BAD_TARGET and status \u003d\u003d SPDK_SCSI_STATUS_GOOD shoule be treated as error.\n\nVirtio 1.0 says the status byte is only set on response \u003d\u003d VIRTIO_SCSI_S_OK. (5.6.6.1)",
+      "parentUuid": "58551704_e1b40b38",
+      "revId": "52f4bbf5b36659a9a2d01a9b0e7460725e4b8fdd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9d3e7b65_55043a45",
         "filename": "lib/bdev/virtio/bdev_virtio_scsi.c",
         "patchSetId": 1
