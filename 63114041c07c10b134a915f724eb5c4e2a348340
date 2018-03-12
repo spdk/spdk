@@ -238,6 +238,30 @@
     },
     {
       "key": {
+        "uuid": "42962165_de1a1ba4",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-12T16:09:25Z",
+      "side": 1,
+      "message": "indent\u003d2 + default separators are fine for me.\nI will be positive even if you don\u0027t provide any options to pretty print\n\nI think if indent is optional, it may be useful for someone.\nBut if indent is None, we may expect (\u0027,\u0027, \u0027:\u0027) but actually (\u0027,\u0027, \u0027: \u0027) will be set.\nHence if we want to get the most compact representation, we have to specify both indent and separators.\n\nThat is why I proposed adding options.\nI hope these make sense to you.",
+      "parentUuid": "7dc212f6_f650ad5c",
+      "range": {
+        "startLine": 36,
+        "startChar": 8,
+        "endLine": 36,
+        "endChar": 41
+      },
+      "revId": "63114041c07c10b134a915f724eb5c4e2a348340",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "30f1ea0b_cf727ec5",
         "filename": "scripts/rpc/__init__.py",
         "patchSetId": 3
