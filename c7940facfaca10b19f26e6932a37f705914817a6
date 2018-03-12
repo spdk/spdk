@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff9a33fc_477e762a",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-12T12:32:55Z",
+      "side": 1,
+      "message": "Register",
+      "range": {
+        "startLine": 75,
+        "startChar": 3,
+        "endLine": 75,
+        "endChar": 11
+      },
+      "revId": "c7940facfaca10b19f26e6932a37f705914817a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b61b1e06_4a19c0bd",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-12T12:32:55Z",
+      "side": 1,
+      "message": "registered",
+      "range": {
+        "startLine": 83,
+        "startChar": 28,
+        "endLine": 83,
+        "endChar": 38
+      },
+      "revId": "c7940facfaca10b19f26e6932a37f705914817a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
