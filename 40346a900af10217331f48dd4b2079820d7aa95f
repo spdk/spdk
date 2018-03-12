@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c951a09d_3259da9c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1074,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-12T09:44:30Z",
+      "side": 1,
+      "message": "shall we also set bdev-\u003eqos_thread \u003d NULL; here?",
+      "range": {
+        "startLine": 1074,
+        "startChar": 2,
+        "endLine": 1074,
+        "endChar": 27
+      },
+      "revId": "40346a900af10217331f48dd4b2079820d7aa95f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
