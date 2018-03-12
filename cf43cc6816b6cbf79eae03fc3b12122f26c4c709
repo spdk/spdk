@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "835f234d_cead0715",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-03-12T03:17:32Z",
+      "side": 1,
+      "message": "Do we need this line and line 27? one comment is enough, I think.",
+      "range": {
+        "startLine": 23,
+        "startChar": 0,
+        "endLine": 23,
+        "endChar": 43
+      },
+      "revId": "cf43cc6816b6cbf79eae03fc3b12122f26c4c709",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c5b8931a_8e0f170c",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-03-12T03:17:32Z",
+      "side": 1,
+      "message": "This line can be deleted since you already set the size to 2048 in line 52.",
+      "range": {
+        "startLine": 50,
+        "startChar": 0,
+        "endLine": 50,
+        "endChar": 37
+      },
+      "revId": "cf43cc6816b6cbf79eae03fc3b12122f26c4c709",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41bf7850_61ef4777",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-03-12T03:17:32Z",
+      "side": 1,
+      "message": "You used lvs_0/lbd_0 in line 57. So this comment should be same.",
+      "range": {
+        "startLine": 53,
+        "startChar": 3,
+        "endLine": 53,
+        "endChar": 10
+      },
+      "revId": "cf43cc6816b6cbf79eae03fc3b12122f26c4c709",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
