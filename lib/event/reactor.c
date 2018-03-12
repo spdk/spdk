@@ -249,7 +249,7 @@ _spdk_poller_insert_timer(struct spdk_reactor *reactor, struct spdk_poller *poll
 
 static struct spdk_poller *
 _spdk_reactor_start_poller(void *thread_ctx,
-			   spdk_thread_fn fn,
+			   spdk_poller_fn fn,
 			   void *arg,
 			   uint64_t period_microseconds)
 {
