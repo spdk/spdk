@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9809eb8f_40849c1b",
+        "filename": "lib/bdev/virtio/bdev_virtio_scsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1104,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-03-12T09:38:47Z",
+      "side": 1,
+      "message": "This is called from process_scan_resp() which does the check.\nThat\u0027s the idea behind this patch - there\u0027s no need to process scan I/O data (jumping to I/O-specific handlers) if the request failed on the Virtio transport layer.\n\nMost Virtio errors are intermittent ones:\n\n#define VIRTIO_SCSI_S_OK                       0\n#define VIRTIO_SCSI_S_OVERRUN                  1\n#define VIRTIO_SCSI_S_ABORTED                  2\n#define VIRTIO_SCSI_S_BAD_TARGET               3\n#define VIRTIO_SCSI_S_RESET                    4\n#define VIRTIO_SCSI_S_BUSY                     5\n#define VIRTIO_SCSI_S_TRANSPORT_FAILURE        6\n#define VIRTIO_SCSI_S_TARGET_FAILURE           7\n#define VIRTIO_SCSI_S_NEXUS_FAILURE            8\n#define VIRTIO_SCSI_S_FAILURE                  9\n#define VIRTIO_SCSI_S_FUNCTION_SUCCEEDED       10\n#define VIRTIO_SCSI_S_FUNCTION_REJECTED        11\n#define VIRTIO_SCSI_S_INCORRECT_LUN            12\n\nOnly VIRTIO_SCSI_S_OK, VIRTIO_SCSI_S_BAD_TARGET and VIRTIO_SCSI_S_INCORRECT_LUN need to be handled - and now they are inside process_scan_resp()",
+      "parentUuid": "2b2df503_8177a8c7",
+      "revId": "52f4bbf5b36659a9a2d01a9b0e7460725e4b8fdd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9d3e7b65_55043a45",
         "filename": "lib/bdev/virtio/bdev_virtio_scsi.c",
         "patchSetId": 1
@@ -47,6 +65,24 @@
       "writtenOn": "2018-03-06T04:50:45Z",
       "side": 1,
       "message": "I believe here should also keep original logic, keep response \u003d\u003d VIRTIO_SCSI_S_OK",
+      "revId": "52f4bbf5b36659a9a2d01a9b0e7460725e4b8fdd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9f00a78_0ac0b284",
+        "filename": "lib/bdev/virtio/bdev_virtio_scsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1372,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-03-12T09:38:47Z",
+      "side": 1,
+      "message": "...why?\n\n#define VIRTIO_SCSI_S_OK                       0\n#define VIRTIO_SCSI_S_OVERRUN                  1\n#define VIRTIO_SCSI_S_ABORTED                  2\n#define VIRTIO_SCSI_S_BAD_TARGET               3\n#define VIRTIO_SCSI_S_RESET                    4\n#define VIRTIO_SCSI_S_BUSY                     5\n#define VIRTIO_SCSI_S_TRANSPORT_FAILURE        6\n#define VIRTIO_SCSI_S_TARGET_FAILURE           7\n#define VIRTIO_SCSI_S_NEXUS_FAILURE            8\n#define VIRTIO_SCSI_S_FAILURE                  9\n#define VIRTIO_SCSI_S_FUNCTION_SUCCEEDED       10\n#define VIRTIO_SCSI_S_FUNCTION_REJECTED        11\n#define VIRTIO_SCSI_S_INCORRECT_LUN            12\n\nif !(VIRTIO_SCSI_S_OK | VIRTIO_SCSI_S_BAD_TARGET | VIRTIO_SCSI_S_INCORRECT_LUN) -\u003e intermittent failure.",
+      "parentUuid": "1b127411_1472e636",
       "revId": "52f4bbf5b36659a9a2d01a9b0e7460725e4b8fdd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
