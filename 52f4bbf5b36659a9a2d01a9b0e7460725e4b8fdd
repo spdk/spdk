@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "58551704_e1b40b38",
+        "filename": "lib/bdev/virtio/bdev_virtio_scsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1104,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-03-12T10:26:57Z",
+      "side": 1,
+      "message": "Hi Darek, I checked the code and didn\u0027t find the code which process response code other than VIRTIO_SCSI_S_OK, can you point me to that? Thanks.\n\nFrom the specification, response code means transport layer, so response \u003d\u003d VIRTIO_SCSI_S_BAD_TARGET and status \u003d\u003d SPDK_SCSI_STATUS_GOOD shoule be treated as error.",
+      "parentUuid": "9809eb8f_40849c1b",
+      "revId": "52f4bbf5b36659a9a2d01a9b0e7460725e4b8fdd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9d3e7b65_55043a45",
         "filename": "lib/bdev/virtio/bdev_virtio_scsi.c",
         "patchSetId": 1
