@@ -194,6 +194,7 @@ spdk_scsi_lun_hotplug(void *arg)
 
 		spdk_scsi_dev_delete_lun(lun->dev, lun);
 		free(lun);
+		lun = NULL;
 	}
 }
 
@@ -201,15 +202,15 @@ static void
 _spdk_scsi_lun_hot_remove(void *arg1)
 {
 	struct spdk_scsi_lun *lun = arg1;
+	struct spdk_poller *poller = NULL;
 
 	if (lun->hotremove_cb) {
 		lun->hotremove_cb(lun, lun->hotremove_ctx);
 	}
 
-	if (spdk_scsi_lun_has_pending_tasks(lun)) {
-		lun->hotplug_poller = spdk_poller_register(spdk_scsi_lun_hotplug, lun, 10);
-	} else {
-		spdk_scsi_lun_hotplug(lun);
+	poller = spdk_poller_register(spdk_scsi_lun_hotplug, lun, 10);
+	if (poller) {
+		lun->hotplug_poller = poller;
 	}
 }
 
@@ -278,6 +279,7 @@ spdk_scsi_lun_construct(struct spdk_bdev *bdev,
 	lun->io_channel = NULL;
 	lun->hotremove_cb = hotremove_cb;
 	lun->hotremove_ctx = hotremove_ctx;
+	lun->hotplug_poller = NULL;
 
 	return lun;
 }
