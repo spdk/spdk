@@ -78,6 +78,7 @@ main(int argc, char **argv)
 	struct spdk_app_opts opts = {};
 	int rc;
 
+printf("this is for format issue...\n");
 	spdk_app_opts_init(&opts);
 	opts.name = "spdk_tgt";
 	if ((rc = spdk_app_parse_args(argc, argv, &opts, "",
