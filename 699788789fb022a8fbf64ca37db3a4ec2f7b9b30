@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6a5513e3_79b91622",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 696,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-12T22:10:08Z",
+      "side": 1,
+      "message": "Just to explain what\u0027s going on here - I believe the old behavior was wrong, and the new behavior is the expected one.\n\nThread 0 and 1 both put their channels, and since thread 1 was the last open channel, that put call should trigger an asynchronous destruction of the QoS channel on thread 0.  Then thread 2 creates a channel, which should result in a new QoS thread being created on thread 2 (not thread 1, as the previous test code expected).",
+      "revId": "699788789fb022a8fbf64ca37db3a4ec2f7b9b30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
