@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "60b7eccb_810a9357",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1012925
+      },
+      "writtenOn": "2018-03-12T06:18:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "835f234d_cead0715",
+      "range": {
+        "startLine": 23,
+        "startChar": 0,
+        "endLine": 23,
+        "endChar": 43
+      },
+      "revId": "cf43cc6816b6cbf79eae03fc3b12122f26c4c709",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c5b8931a_8e0f170c",
         "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
         "patchSetId": 3
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "1ff8d60f_b380a927",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1012925
+      },
+      "writtenOn": "2018-03-12T06:18:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c5b8931a_8e0f170c",
+      "range": {
+        "startLine": 50,
+        "startChar": 0,
+        "endLine": 50,
+        "endChar": 37
+      },
+      "revId": "cf43cc6816b6cbf79eae03fc3b12122f26c4c709",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "41bf7850_61ef4777",
         "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
         "patchSetId": 3
@@ -59,6 +107,30 @@
       "writtenOn": "2018-03-12T03:17:32Z",
       "side": 1,
       "message": "You used lvs_0/lbd_0 in line 57. So this comment should be same.",
+      "range": {
+        "startLine": 53,
+        "startChar": 3,
+        "endLine": 53,
+        "endChar": 10
+      },
+      "revId": "cf43cc6816b6cbf79eae03fc3b12122f26c4c709",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4943c815_d844c2c1",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1012925
+      },
+      "writtenOn": "2018-03-12T06:18:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "41bf7850_61ef4777",
       "range": {
         "startLine": 53,
         "startChar": 3,
