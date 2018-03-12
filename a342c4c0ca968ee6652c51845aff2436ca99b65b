@@ -22,6 +22,30 @@
       "revId": "a342c4c0ca968ee6652c51845aff2436ca99b65b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "26043cb4_6d1ae3bb",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 61
+      },
+      "lineNbr": 3536,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-03-12T15:45:26Z",
+      "side": 1,
+      "message": "I have reverted it to the \"xattrs\", and added adequate comment.",
+      "parentUuid": "22b6b3e8_bd4576fc",
+      "range": {
+        "startLine": 3536,
+        "startChar": 36,
+        "endLine": 3536,
+        "endChar": 51
+      },
+      "revId": "a342c4c0ca968ee6652c51845aff2436ca99b65b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
