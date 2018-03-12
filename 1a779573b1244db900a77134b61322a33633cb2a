@@ -16,6 +16,24 @@
       "revId": "1a779573b1244db900a77134b61322a33633cb2a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a0b2ccf0_30e0803e",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-03-12T06:30:41Z",
+      "side": 1,
+      "message": "For now the perf utility already request the maximum IO queue depth when getting start, but still failed for this case, because 127 MQES returned by NVMoF target, users can only use 64 queue depth for the tests.",
+      "parentUuid": "a227fdb6_93885a9d",
+      "revId": "1a779573b1244db900a77134b61322a33633cb2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
