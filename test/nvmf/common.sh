@@ -9,7 +9,7 @@ if [ -z "$NVMF_APP" ]; then
 fi
 
 if [ -z "$NVMF_TEST_CORE_MASK" ]; then
-	NVMF_TEST_CORE_MASK=0xFFFF
+	NVMF_TEST_CORE_MASK=0xFF
 fi
 
 function load_ib_rdma_modules()
