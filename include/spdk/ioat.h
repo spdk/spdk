@@ -54,7 +54,8 @@ struct spdk_ioat_chan;
 /**
  * Signature for callback function invoked when a request is completed.
  *
- * \param arg User-specified opaque value corresponding to cb_arg from the request submission.
+ * \param arg User-specified opaque value corresponding to cb_arg from the
+ * request submission.
  */
 typedef void (*spdk_ioat_req_cb)(void *arg);
 
@@ -69,7 +70,8 @@ typedef void (*spdk_ioat_req_cb)(void *arg);
 typedef bool (*spdk_ioat_probe_cb)(void *cb_ctx, struct spdk_pci_device *pci_dev);
 
 /**
- * Callback for spdk_ioat_probe() to report a device that has been attached to the userspace I/OAT driver.
+ * Callback for spdk_ioat_probe() to report a device that has been attached to
+ * the userspace I/OAT driver.
  *
  * \param cb_ctx User-specified opaque value corresponding to cb_ctx from spdk_ioat_probe().
  * \param pci_dev PCI device that was attached to the driver.
@@ -79,26 +81,31 @@ typedef void (*spdk_ioat_attach_cb)(void *cb_ctx, struct spdk_pci_device *pci_de
 				    struct spdk_ioat_chan *ioat);
 
 /**
- * \brief Enumerate the I/OAT devices attached to the system and attach the userspace I/OAT driver
- * to them if desired.
+ * Enumerate the I/OAT devices attached to the system and attach the userspace
+ * I/OAT driver to them if desired.
  *
- * \param cb_ctx Opaque value which will be passed back in cb_ctx parameter of the callbacks.
+ * If called more than once, only devices that are not already attached to the
+ * SPDK I/OAT driver will be reported.
+ *
+ * To stop using the the controller and release its associated resources, call
+ * spdk_ioat_detach() with the ioat_channel instance returned by this function.
+ *
+ * \param cb_ctx Opaque value which will be passed back in cb_ctx parameter of
+ * the callbacks.
  * \param probe_cb will be called once per I/OAT device found in the system.
- * \param attach_cb will be called for devices for which probe_cb returned true once the I/OAT
- * controller has been attached to the userspace driver.
+ * \param attach_cb will be called for devices for which probe_cb returned true
+ * once the I/OAT controller has been attached to the userspace driver.
  *
- * If called more than once, only devices that are not already attached to the SPDK I/OAT driver
- * will be reported.
- *
- * To stop using the the controller and release its associated resources,
- * call \ref spdk_ioat_detach with the ioat_channel instance returned by this function.
+ * \return 0 on success, -1 on failure.
  */
 int spdk_ioat_probe(void *cb_ctx, spdk_ioat_probe_cb probe_cb, spdk_ioat_attach_cb attach_cb);
 
 /**
- * Detaches specified device returned by \ref spdk_ioat_probe() from the I/OAT driver.
+ * Detache specified device returned by spdk_ioat_probe() from the I/OAT driver.
  *
  * \param ioat I/OAT channel to detach from the driver.
+ *
+ * \return 0 on success.
  */
 int spdk_ioat_detach(struct spdk_ioat_chan *ioat);
 
@@ -106,11 +113,14 @@ int spdk_ioat_detach(struct spdk_ioat_chan *ioat);
  * Submit a DMA engine memory copy request.
  *
  * \param chan I/OAT channel to submit request.
- * \param cb_arg Opaque value which will be passed back as the arg parameter in the completion callback.
+ * \param cb_arg Opaque value which will be passed back as the arg parameter in
+ * the completion callback.
  * \param cb_fn Callback function which will be called when the request is complete.
  * \param dst Destination virtual address.
  * \param src Source virtual address.
  * \param nbytes Number of bytes to copy.
+ *
+ * \return 0 on success, negative errno on failure.
  */
 int spdk_ioat_submit_copy(struct spdk_ioat_chan *chan,
 			  void *cb_arg, spdk_ioat_req_cb cb_fn,
@@ -120,11 +130,14 @@ int spdk_ioat_submit_copy(struct spdk_ioat_chan *chan,
  * Submit a DMA engine memory fill request.
  *
  * \param chan I/OAT channel to submit request.
- * \param cb_arg Opaque value which will be passed back as the cb_arg parameter in the completion callback.
+ * \param cb_arg Opaque value which will be passed back as the cb_arg parameter
+ * in the completion callback.
  * \param cb_fn Callback function which will be called when the request is complete.
  * \param dst Destination virtual address.
  * \param fill_pattern Repeating eight-byte pattern to use for memory fill.
  * \param nbytes Number of bytes to fill.
+ *
+ * \return 0 on success, negative errno on failure.
  */
 int spdk_ioat_submit_fill(struct spdk_ioat_chan *chan,
 			  void *cb_arg, spdk_ioat_req_cb cb_fn,
@@ -135,7 +148,7 @@ int spdk_ioat_submit_fill(struct spdk_ioat_chan *chan,
  *
  * \param chan I/OAT channel to check for completions.
  *
- * \returns 0 on success or negative if something went wrong.
+ * \return 0 on success, negative errno on failure.
  */
 int spdk_ioat_process_events(struct spdk_ioat_chan *chan);
 
@@ -152,7 +165,7 @@ enum spdk_ioat_dma_capability_flags {
  *
  * \param chan I/OAT channel to query.
  *
- * \return A combination of flags from \ref spdk_ioat_dma_capability_flags.
+ * \return a combination of flags from spdk_ioat_dma_capability_flags().
  */
 uint32_t spdk_ioat_get_dma_capabilities(struct spdk_ioat_chan *chan);
 
