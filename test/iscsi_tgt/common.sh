@@ -18,5 +18,5 @@ if [ -z "$ISCSI_APP" ]; then
 fi
 
 if [ -z "$ISCSI_TEST_CORE_MASK" ]; then
-	ISCSI_TEST_CORE_MASK=0xFFFF
+	ISCSI_TEST_CORE_MASK=0xFF
 fi
