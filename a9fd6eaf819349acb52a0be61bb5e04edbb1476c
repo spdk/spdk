@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9ca87b31_f62cb08b",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-12T22:26:39Z",
+      "side": 1,
+      "message": "Since sock is set as blocking, we\u0027ll never return from recv() until the OS times out the whole connection (which may be much longer than the user-configured self.timeout).  It looks like the accepted way to do this is to select() with a timeout.",
+      "revId": "a9fd6eaf819349acb52a0be61bb5e04edbb1476c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
