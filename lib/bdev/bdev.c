@@ -804,7 +804,7 @@ spdk_bdev_get_io(struct spdk_io_channel *_ch)
 		bdev_io = spdk_mempool_get(g_bdev_mgr.bdev_io_pool);
 		if (!bdev_io) {
 			SPDK_ERRLOG("Unable to get spdk_bdev_io\n");
-			abort();
+			return NULL;
 		}
 	}
 
