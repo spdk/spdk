@@ -16,6 +16,24 @@
       "revId": "b1d6685954c4767905a89d2f0d71af00d6752bf2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c7f6fc7a_f3f2bba3",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 1912,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-12T09:13:48Z",
+      "side": 1,
+      "message": "I select to also \"reset\" this counter. In this case, not reset it will also be ok. Let me remove this line. Thanks, Gang",
+      "parentUuid": "976aa08b_1aab8bd5",
+      "revId": "b1d6685954c4767905a89d2f0d71af00d6752bf2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
