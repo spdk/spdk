@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "93870291_7158de2b",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-03-12T05:32:44Z",
+      "side": 1,
+      "message": "This should be \"an\"",
+      "range": {
+        "startLine": 48,
+        "startChar": 27,
+        "endLine": 48,
+        "endChar": 28
+      },
+      "revId": "53b31716e3e689e1476906968ad7cabc33331a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d195b362_f0be3068",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-03-12T05:32:44Z",
+      "side": 1,
+      "message": "It\u0027s best to do some judgement whether the lvol store\u0027s available size \u003e 2048 or not. if less than 2048M you should use the actual size.",
+      "range": {
+        "startLine": 49,
+        "startChar": 46,
+        "endLine": 49,
+        "endChar": 50
+      },
+      "revId": "53b31716e3e689e1476906968ad7cabc33331a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
