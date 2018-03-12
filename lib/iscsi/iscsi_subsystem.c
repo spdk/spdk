@@ -571,8 +571,8 @@ spdk_iscsi_log_globals(void)
 		      spdk_iscsi_conn_get_min_per_core());
 }
 
-static void
-spdk_iscsi_opts_init(struct spdk_iscsi_opts *opts)
+void
+spdk_iscsi_opts_val_init(struct spdk_iscsi_opts *opts)
 {
 	opts->MaxSessions = DEFAULT_MAX_SESSIONS;
 	opts->MaxConnectionsPerSession = DEFAULT_MAX_CONNECTIONS_PER_SESSION;
@@ -588,12 +588,21 @@ spdk_iscsi_opts_init(struct spdk_iscsi_opts *opts)
 	opts->req_discovery_auth = false;
 	opts->req_discovery_auth_mutual = false;
 	opts->discovery_auth_group = 0;
-	opts->authfile = strdup(SPDK_ISCSI_DEFAULT_AUTHFILE);
-	opts->nodebase = strdup(SPDK_ISCSI_DEFAULT_NODEBASE);
+	opts->authfile = NULL;
+	opts->nodebase = NULL;
 	opts->min_connections_per_core = DEFAULT_CONNECTIONS_PER_LCORE;
 }
 
-static void
+void
+spdk_iscsi_opts_init(struct spdk_iscsi_opts *opts)
+{
+	spdk_iscsi_opts_val_init(opts);
+
+	opts->authfile = strdup(SPDK_ISCSI_DEFAULT_AUTHFILE);
+	opts->nodebase = strdup(SPDK_ISCSI_DEFAULT_NODEBASE);
+}
+
+void
 spdk_iscsi_opts_free(struct spdk_iscsi_opts *opts)
 {
 	free(opts->authfile);
@@ -759,7 +768,7 @@ spdk_iscsi_read_config_file_params(struct spdk_conf_section *sp,
 	}
 }
 
-static int
+int
 spdk_iscsi_initialize_iscsi_globals(struct spdk_iscsi_opts *opts)
 {
 	int rc;
@@ -923,8 +932,8 @@ iscsi_unregister_poll_group(void *ctx)
 	spdk_poller_unregister(&pg->nop_poller);
 }
 
-static void
-spdk_initialize_iscsi_poll_group(spdk_thread_fn cpl)
+void
+spdk_initialize_iscsi_poll_group(spdk_thread_fn cpl, void *ctx)
 {
 	size_t g_num_poll_groups = spdk_env_get_last_core() + 1;
 
@@ -936,7 +945,7 @@ spdk_initialize_iscsi_poll_group(spdk_thread_fn cpl)
 	}
 
 	/* Send a message to each thread and create a poll group */
-	spdk_for_each_thread(iscsi_create_poll_group, NULL, cpl);
+	spdk_for_each_thread(iscsi_create_poll_group, ctx, cpl);
 }
 
 static void
@@ -994,7 +1003,7 @@ spdk_iscsi_parse_iscsi_globals(void)
 		return rc;
 	}
 
-	spdk_initialize_iscsi_poll_group(spdk_iscsi_parse_iscsi_configuration);
+	spdk_initialize_iscsi_poll_group(spdk_iscsi_parse_iscsi_configuration, NULL);
 	return 0;
 }
 

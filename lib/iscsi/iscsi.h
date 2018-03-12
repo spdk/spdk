@@ -357,6 +357,13 @@ void spdk_iscsi_fini(spdk_iscsi_fini_cb cb_fn, void *cb_arg);
 void spdk_shutdown_iscsi_conns_done(void);
 void spdk_iscsi_config_text(FILE *fp);
 
+int spdk_iscsi_initialize_iscsi_globals(struct spdk_iscsi_opts *opts);
+void spdk_iscsi_opts_val_init(struct spdk_iscsi_opts *opts);
+void spdk_iscsi_opts_init(struct spdk_iscsi_opts *opts);
+void spdk_iscsi_opts_free(struct spdk_iscsi_opts *opts);
+
+void spdk_initialize_iscsi_poll_group(spdk_thread_fn cpl, void *ctx);
+
 void spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn);
 void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
 			      struct spdk_iscsi_task *task);
