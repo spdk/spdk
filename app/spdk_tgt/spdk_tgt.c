@@ -34,9 +34,6 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/env.h"
-#include "spdk/event.h"
-#include "spdk/log.h"
-#include "spdk/vhost.h"
 
 /* TODO: this should be handled by configure */
 #if defined(SPDK_CONFIG_VHOST) && !defined(__linux__)
