@@ -83,7 +83,7 @@ __send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 }
 
 static struct spdk_poller *
-__start_poller(void *thread_ctx, spdk_thread_fn fn, void *arg, uint64_t period_microseconds)
+__start_poller(void *thread_ctx, spdk_poller_fn fn, void *arg, uint64_t period_microseconds)
 {
 	struct ut_thread *thread = thread_ctx;
 	struct ut_poller *poller = calloc(1, sizeof(struct ut_poller));

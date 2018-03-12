@@ -181,7 +181,7 @@ void spdk_for_each_thread(spdk_thread_fn fn, void *ctx, spdk_thread_fn cpl);
  * \return a pointer to the poller registered on the current thread on success
  * or NULL on failure.
  */
-struct spdk_poller *spdk_poller_register(spdk_thread_fn fn,
+struct spdk_poller *spdk_poller_register(spdk_poller_fn fn,
 		void *arg,
 		uint64_t period_microseconds);
 
