@@ -58,6 +58,8 @@ spdk_poller_register(spdk_poller_fn fn,
 		     void *arg,
 		     uint64_t period_microseconds)
 {
+	fn(arg);
+
 	return NULL;
 }
 

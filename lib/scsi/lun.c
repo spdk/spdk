@@ -201,15 +201,15 @@ static void
 _spdk_scsi_lun_hot_remove(void *arg1)
 {
 	struct spdk_scsi_lun *lun = arg1;
+	struct spdk_poller *poller = NULL;
 
 	if (lun->hotremove_cb) {
 		lun->hotremove_cb(lun, lun->hotremove_ctx);
 	}
 
-	if (spdk_scsi_lun_has_pending_tasks(lun)) {
-		lun->hotplug_poller = spdk_poller_register(spdk_scsi_lun_hotplug, lun, 10);
-	} else {
-		spdk_scsi_lun_hotplug(lun);
+	poller = spdk_poller_register(spdk_scsi_lun_hotplug, lun, 10);
+	if (poller) {
+		lun->hotplug_poller = poller;
 	}
 }
 
