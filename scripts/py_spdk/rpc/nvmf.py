@@ -3,6 +3,7 @@ from client import print_dict, print_array, int_arg
 
 def get_nvmf_subsystems(args):
     print_dict(args.client.call('get_nvmf_subsystems'))
+    return args.client.call('get_nvmf_subsystems')
 
 
 def construct_nvmf_subsystem(args):
