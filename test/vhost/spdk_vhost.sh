@@ -18,6 +18,7 @@ case $1 in
 		echo "  -fb|--fs-integrity-blk               for running an integrity test with filesystem"
 		echo "  -p |--performance                    for running a performance test with vhost scsi"
 		echo "  -ib|--integrity-blk                  for running an integrity test with vhost blk"
+		echo "  -in|--integrity-nvmf                 for running an integrity test with vhost with nvmf"
 		echo "  -pb|--performance-blk                for running a performance test with vhost blk"
 		echo "  -ils|--integrity-lvol-scsi           for running an integrity test with vhost scsi and lvol backends"
 		echo "  -ilb|--integrity-lvol-blk            for running an integrity test with vhost blk and lvol backends"
@@ -102,6 +103,13 @@ case $1 in
 		--test-type=spdk_vhost_blk \
 		--fio-job=$WORKDIR/common/fio_jobs/default_integrity.job
 		report_test_completion "nightly_vhost_integrity_blk"
+		;;
+	-in|--integrity-nvmf)
+		echo 'Running nvmf integrity suite...'
+		$WORKDIR/nvmf/nvmf.sh --fio-bin=$FIO_BIN \
+		--vm-image=$VM_IMAGE \
+		--fio-job=$WORKDIR/nvmf/nvmf.job
+		report_test_completion "vhost_integrity_nvmf"
 		;;
 	-fs|--fs-integrity-scsi)
 		echo 'Running filesystem integrity suite with SCSI...'

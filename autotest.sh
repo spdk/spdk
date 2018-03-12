@@ -138,6 +138,10 @@ if [ $SPDK_TEST_VHOST -eq 1 ]; then
 	run_test ./test/vhost/spdk_vhost.sh --negative
 	timing_exit negative
 
+	timing_enter integrity-nvmf
+	run_test ./test/vhost/spdk_vhost.sh --integrity-nvmf
+	timing_exit integrity-nvmf
+
 	if [ $RUN_NIGHTLY -eq 1 ]; then
 		timing_enter integrity_blk
 		run_test ./test/vhost/spdk_vhost.sh --integrity-blk
