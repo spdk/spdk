@@ -590,6 +590,7 @@ spdk_iscsi_opts_init(struct spdk_iscsi_opts *opts)
 	opts->discovery_auth_group = 0;
 	opts->authfile = strdup(SPDK_ISCSI_DEFAULT_AUTHFILE);
 	opts->nodebase = strdup(SPDK_ISCSI_DEFAULT_NODEBASE);
+	opts->min_connections_per_core = DEFAULT_CONNECTIONS_PER_LCORE;
 }
 
 static void
@@ -754,7 +755,7 @@ spdk_iscsi_read_config_file_params(struct spdk_conf_section *sp,
 	}
 	min_conn_per_core = spdk_conf_section_get_intval(sp, "MinConnectionsPerCore");
 	if (min_conn_per_core >= 0) {
-		spdk_iscsi_conn_set_min_per_core(min_conn_per_core);
+		opts->min_connections_per_core = min_conn_per_core;
 	}
 }
 
@@ -806,6 +807,8 @@ spdk_iscsi_initialize_iscsi_globals(struct spdk_iscsi_opts *opts)
 	g_spdk_iscsi.req_discovery_auth = opts->req_discovery_auth;
 	g_spdk_iscsi.req_discovery_auth_mutual = opts->req_discovery_auth;
 	g_spdk_iscsi.discovery_auth_group = opts->discovery_auth_group;
+
+	spdk_iscsi_conn_set_min_per_core(opts->min_connections_per_core);
 
 	g_spdk_iscsi.session = spdk_dma_zmalloc(sizeof(void *) * g_spdk_iscsi.MaxSessions, 0, NULL);
 	if (!g_spdk_iscsi.session) {
