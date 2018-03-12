@@ -89,7 +89,7 @@ burst_length_param_negotation(int FirstBurstLength, int MaxBurstLength,
 	sess.session_type = SESSION_TYPE_NORMAL;
 	sess.params = NULL;
 	sess.MaxBurstLength = 65536;
-	sess.InitialR2T = 1;
+	sess.InitialR2T = true;
 	sess.FirstBurstLength = SPDK_ISCSI_FIRST_BURST_LENGTH;
 	sess.MaxOutstandingR2T = 1;
 
