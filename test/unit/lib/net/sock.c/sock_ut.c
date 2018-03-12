@@ -37,6 +37,7 @@
 #include "spdk_cunit.h"
 
 #include "net/sock.c"
+#include "net/posix.c"
 
 #define UT_IP	"test_ip"
 #define UT_PORT	1234
@@ -359,7 +360,7 @@ _sock(const char *ip, int port)
 }
 
 static void
-sock(void)
+posix_sock(void)
 {
 	_sock("127.0.0.1", 3260);
 }
@@ -479,7 +480,7 @@ _sock_group(const char *ip, int port)
 }
 
 static void
-sock_group(void)
+posix_sock_group(void)
 {
 	_sock_group("127.0.0.1", 3260);
 }
@@ -506,7 +507,7 @@ read_data_fairness(void *cb_arg, struct spdk_sock_group *group, struct spdk_sock
 }
 
 static void
-sock_group_fairness(void)
+posix_sock_group_fairness(void)
 {
 	struct spdk_sock_group *group;
 	struct spdk_sock *listen_sock;
@@ -620,11 +621,11 @@ main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "sock", sock) == NULL ||
+		CU_add_test(suite, "posix_sock", posix_sock) == NULL ||
 		CU_add_test(suite, "ut_sock", ut_sock) == NULL ||
-		CU_add_test(suite, "sock_group", sock_group) == NULL ||
+		CU_add_test(suite, "posix_sock_group", posix_sock_group) == NULL ||
 		CU_add_test(suite, "ut_sock_group", ut_sock_group) == NULL ||
-		CU_add_test(suite, "sock_group_fairness", sock_group_fairness) == NULL) {
+		CU_add_test(suite, "posix_sock_group_fairness", posix_sock_group_fairness) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}

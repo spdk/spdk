@@ -46,7 +46,24 @@
 extern "C" {
 #endif
 
-struct spdk_sock_group_impl;
+#define MAX_EVENTS_PER_POLL 32
+
+struct spdk_sock {
+	struct spdk_net_impl	*net_impl;
+	spdk_sock_cb		cb_fn;
+	void			*cb_arg;
+	TAILQ_ENTRY(spdk_sock)	link;
+};
+
+struct spdk_sock_group {
+	STAILQ_HEAD(, spdk_sock_group_impl)	group_impls;
+};
+
+struct spdk_sock_group_impl {
+	struct spdk_net_impl			*net_impl;
+	TAILQ_HEAD(, spdk_sock)			socks;
+	STAILQ_ENTRY(spdk_sock_group_impl)	link;
+};
 
 struct spdk_net_impl {
 	const char *name;
