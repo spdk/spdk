@@ -214,6 +214,30 @@
     },
     {
       "key": {
+        "uuid": "7dc212f6_f650ad5c",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-12T14:11:22Z",
+      "side": 1,
+      "message": "Do we realy need custom separators here?",
+      "parentUuid": "28be4a66_4ae600a9",
+      "range": {
+        "startLine": 36,
+        "startChar": 8,
+        "endLine": 36,
+        "endChar": 41
+      },
+      "revId": "63114041c07c10b134a915f724eb5c4e2a348340",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "30f1ea0b_cf727ec5",
         "filename": "scripts/rpc/__init__.py",
         "patchSetId": 3
