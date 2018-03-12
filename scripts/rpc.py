@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
-import rpc
+from py_spdk import rpc
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
