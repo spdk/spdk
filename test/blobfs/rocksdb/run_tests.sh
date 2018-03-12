@@ -140,9 +140,9 @@ run_step() {
 	echo -n Start $1 test phase...
 	if [ "$USE_PERF" = "1" ]
 	then
-		sudo /usr/bin/time taskset 0xFFF perf record $DB_BENCH --flagfile="$1"_flags.txt &> "$1"_db_bench.txt
+		sudo /usr/bin/time taskset 0xFF perf record $DB_BENCH --flagfile="$1"_flags.txt &> "$1"_db_bench.txt
 	else
-		sudo /usr/bin/time taskset 0xFFF $DB_BENCH --flagfile="$1"_flags.txt &> "$1"_db_bench.txt
+		sudo /usr/bin/time taskset 0xFF $DB_BENCH --flagfile="$1"_flags.txt &> "$1"_db_bench.txt
 	fi
 	echo done.
 
