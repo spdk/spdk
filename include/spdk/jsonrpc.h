@@ -60,28 +60,57 @@ struct spdk_jsonrpc_request;
  * User callback to handle a single JSON-RPC request.
  *
  * The user should respond by calling one of spdk_jsonrpc_begin_result() or
- *  spdk_jsonrpc_send_error_response().
+ * spdk_jsonrpc_send_error_response().
+ *
+ * \param request JSON-RPC request to handle.
+ * \param method Function to handle the request.
+ * \param param Parameters passed to the function 'method'.
  */
 typedef void (*spdk_jsonrpc_handle_request_fn)(
 	struct spdk_jsonrpc_request *request,
 	const struct spdk_json_val *method,
 	const struct spdk_json_val *params);
 
+/**
+ * Resgiter a JSON-RPC server listening on the required address.
+ *
+ * \param domain Socket family.
+ * \param protocol Protocol.
+ * \param listen_addr Listening address.
+ * \param addrlen Length of address.
+ * \param handle_request User callback to handle a JSON-RPC request.
+ *
+ * \return a pointer to the resgitered server.
+ */
 struct spdk_jsonrpc_server *spdk_jsonrpc_server_listen(int domain, int protocol,
 		struct sockaddr *listen_addr, socklen_t addrlen, spdk_jsonrpc_handle_request_fn handle_request);
 
+/**
+ * Poll the JSON-RPC server for accepting requests.
+ *
+ * \param server JSON-RPC server.
+ *
+ * \return 0 on success.
+ */
 int spdk_jsonrpc_server_poll(struct spdk_jsonrpc_server *server);
 
+/**
+ * Shutdown the JSON-RPC server.
+ *
+ * \param server JSON-RPC server.
+ */
 void spdk_jsonrpc_server_shutdown(struct spdk_jsonrpc_server *server);
 
 /**
  * Begin building a response to a JSON-RPC request.
  *
- * \param request JSON-RPC request to respond to.
- * \return JSON write context to write the response object to, or NULL if no response is necessary.
+ * If this function returns non-NULL, the user must call spdk_jsonrpc_end_result()
+ * on the request after writing the desired response object to the spdk_json_write_ctx.
  *
- * If this function returns non-NULL, the user must call spdk_jsonrpc_end_result() on the request
- * after writing the desired response object to the spdk_json_write_ctx.
+ * \param request JSON-RPC request to respond to.
+
+ * \return JSON write context to write the response object to, or NULL if no
+ * response is necessary.
  */
 struct spdk_json_write_ctx *spdk_jsonrpc_begin_result(struct spdk_jsonrpc_request *request);
 
@@ -96,13 +125,13 @@ void spdk_jsonrpc_end_result(struct spdk_jsonrpc_request *request, struct spdk_j
 /**
  * Send an error response to a JSON-RPC request.
  *
- * \param request JSON-RPC request to respond to.
- * \param error_code Integer error code to return (may be one of the SPDK_JSONRPC_ERROR_ errors,
- *                   or a custom error code).
- * \param msg String error message to return.
+ * This is shorthand for spdk_jsonrpc_begin_result() + spdk_jsonrpc_end_result()
+ * with an error object.
  *
- * This is shorthand for spdk_jsonrpc_begin_result() + spdk_jsonrpc_end_result() with an error
- * object.
+ * \param request JSON-RPC request to respond to.
+ * \param error_code Integer error code to return (may be one of the
+ * SPDK_JSONRPC_ERROR_ errors, or a custom error code).
+ * \param msg String error message to return.
  */
 void spdk_jsonrpc_send_error_response(struct spdk_jsonrpc_request *request,
 				      int error_code, const char *msg);
@@ -110,12 +139,12 @@ void spdk_jsonrpc_send_error_response(struct spdk_jsonrpc_request *request,
 /**
  * Send an error response to a JSON-RPC request.
  *
- * \param request JSON-RPC request to respond to.
- * \param error_code Integer error code to return (may be one of the SPDK_JSONRPC_ERROR_ errors,
- *                   or a custom error code).
- * \param fmt Printf-like format string.
- *
  * This is shorthand for printf() + spdk_jsonrpc_send_error_response().
+ *
+ * \param request JSON-RPC request to respond to.
+ * \param error_code Integer error code to return (may be one of the
+ * SPDK_JSONRPC_ERROR_ errors, or a custom error code).
+ * \param fmt Printf-like format string.
  */
 void spdk_jsonrpc_send_error_response_fmt(struct spdk_jsonrpc_request *request,
 		int error_code, const char *fmt, ...) __attribute__((format(printf, 3, 4)));
