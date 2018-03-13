@@ -31,13 +31,40 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "spdk/log.h"
 #include "spdk/net.h"
+#include "spdk/queue.h"
+
+static STAILQ_HEAD(, spdk_net_framework) g_net_frameworks = STAILQ_HEAD_INITIALIZER(
+			g_net_frameworks);
 
 int spdk_net_framework_start(void)
 {
+	struct spdk_net_framework *net_framework = NULL;
+	int rc;
+
+	STAILQ_FOREACH_FROM(net_framework, &g_net_frameworks, link) {
+		rc = net_framework->init();
+		if (rc != 0) {
+			SPDK_ERRLOG("Net framework %s failed to initalize\n", net_framework->name);
+			return rc;
+		}
+	}
+
 	return 0;
 }
 
 void spdk_net_framework_fini(void)
 {
+	struct spdk_net_framework *net_framework = NULL;
+
+	STAILQ_FOREACH_FROM(net_framework, &g_net_frameworks, link) {
+		net_framework->fini();
+	}
+}
+
+void
+spdk_net_framework_register(struct spdk_net_framework *frame)
+{
+	STAILQ_INSERT_TAIL(&g_net_frameworks, frame, link);
 }
