@@ -132,6 +132,7 @@ def aggregateCompletedTests(output_dir, repo_dir):
 def main(output_dir, repo_dir):
     generateCoverageReport(output_dir, repo_dir)
     collectOne(output_dir, 'doc')
+    collectOne(output_dir, 'ut_coverage')
     aggregateCompletedTests(output_dir, repo_dir)
 
 
