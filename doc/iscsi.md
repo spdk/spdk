@@ -241,6 +241,16 @@ Packages can be found in `vpp/build-root/` directory.
 For more in depth instructions please see Building section in
 [VPP documentation](https://wiki.fd.io/view/VPP/Pulling,_Building,_Running,_Hacking_and_Pushing_VPP_Code#Building)
 
+*Please note: VPP 18.01.1 does not support OpenSSL 1.1. It is suggested to install a compatibility package
+for compilation time.*
+~~~
+sudo dnf install -y --allowerasing compat-openssl10-devel
+~~~
+*Then reinstall latest OpenSSL devel package:*
+~~~
+sudo dnf install -y --allowerasing openssl-devel
+~~~
+
 ## 2. Installing VPP {#vpp_install}
 
 Packages can be installed from distribution repository or built in previous step.
