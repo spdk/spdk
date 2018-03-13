@@ -316,14 +316,14 @@ _spdk_reactor_stop_poller(struct spdk_poller *poller, void *thread_ctx)
 	}
 }
 
-static void
+static int
 get_rusage(void *arg)
 {
 	struct spdk_reactor	*reactor = arg;
 	struct rusage		rusage;
 
 	if (getrusage(RUSAGE_THREAD, &rusage) != 0) {
-		return;
+		return -1;
 	}
 
 	if (rusage.ru_nvcsw != reactor->rusage.ru_nvcsw || rusage.ru_nivcsw != reactor->rusage.ru_nivcsw) {
@@ -333,6 +333,8 @@ get_rusage(void *arg)
 			     rusage.ru_nivcsw - reactor->rusage.ru_nivcsw);
 	}
 	reactor->rusage = rusage;
+
+	return -1;
 }
 
 static void

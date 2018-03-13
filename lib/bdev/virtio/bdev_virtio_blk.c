@@ -254,7 +254,7 @@ bdev_virtio_io_cpl(struct spdk_bdev_io *bdev_io)
 			      SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED);
 }
 
-static void
+static int
 bdev_virtio_poll(void *arg)
 {
 	struct bdev_virtio_blk_io_channel *ch = arg;
@@ -266,6 +266,8 @@ bdev_virtio_poll(void *arg)
 	for (i = 0; i < cnt; ++i) {
 		bdev_virtio_io_cpl(io[i]);
 	}
+
+	return cnt;
 }
 
 static int

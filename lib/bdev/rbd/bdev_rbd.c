@@ -274,7 +274,7 @@ bdev_rbd_flush(struct bdev_rbd *disk, struct spdk_io_channel *ch,
 	return bdev_rbd_start_aio(rbdio_ch->image, bdev_io, NULL, offset, nbytes);
 }
 
-static void
+static int
 bdev_rbd_reset_timer(void *arg)
 {
 	struct bdev_rbd *disk = arg;
@@ -286,6 +286,8 @@ bdev_rbd_reset_timer(void *arg)
 	spdk_bdev_io_complete(disk->reset_bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 	spdk_poller_unregister(&disk->reset_timer);
 	disk->reset_bdev_io = NULL;
+
+	return -1;
 }
 
 static int
@@ -384,7 +386,7 @@ bdev_rbd_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	}
 }
 
-static void
+static int
 bdev_rbd_io_poll(void *arg)
 {
 	struct bdev_rbd_io_channel *ch = arg;
@@ -397,7 +399,7 @@ bdev_rbd_io_poll(void *arg)
 
 	/* check the return value of poll since we have only one fd for each channel */
 	if (rc != 1) {
-		return;
+		return 0;
 	}
 
 	rc = rbd_poll_io_events(ch->image, comps, SPDK_RBD_QUEUE_DEPTH);
@@ -432,6 +434,8 @@ bdev_rbd_io_poll(void *arg)
 					      rbd_io->failed ? SPDK_BDEV_IO_STATUS_FAILED : SPDK_BDEV_IO_STATUS_SUCCESS);
 		}
 	}
+
+	return rc;
 }
 
 static void

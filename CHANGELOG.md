@@ -47,6 +47,12 @@ option, but instead returns SPDK_APP_PARSE_ARGS_HELP and
 SPDK_APP_PARSE_ARGS_FAIL, respectively, and SPDK_APP_PARSE_ARGS_SUCCESS
 on success.
 
+### I/O Channels
+
+The prototype for spdk_poller_fn() has been modified; it now returns a value indicating
+whether or not the poller did any work.  Existing pollers will need to be updated to
+return a value.
+
 ## v18.01: Blobstore Thin Provisioning
 
 ### Build System

@@ -209,7 +209,7 @@ bdev_aio_initialize_io_channel(struct bdev_aio_io_channel *ch)
 	return 0;
 }
 
-static void
+static int
 bdev_aio_poll(void *arg)
 {
 	struct bdev_aio_io_channel *ch = arg;
@@ -227,7 +227,7 @@ bdev_aio_poll(void *arg)
 
 	if (nr < 0) {
 		SPDK_ERRLOG("%s: io_getevents returned %d\n", __func__, nr);
-		return;
+		return -1;
 	}
 
 	for (i = 0; i < nr; i++) {
@@ -241,6 +241,8 @@ bdev_aio_poll(void *arg)
 		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), status);
 		ch->io_inflight--;
 	}
+
+	return nr;
 }
 
 static void
@@ -257,8 +259,7 @@ _bdev_aio_get_io_inflight(struct spdk_io_channel_iter *i)
 	spdk_for_each_channel_continue(i, 0);
 }
 
-static void
-bdev_aio_reset_retry_timer(void *arg);
+static int bdev_aio_reset_retry_timer(void *arg);
 
 static void
 _bdev_aio_get_io_inflight_done(struct spdk_io_channel_iter *i, int status)
@@ -273,7 +274,7 @@ _bdev_aio_get_io_inflight_done(struct spdk_io_channel_iter *i, int status)
 	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(fdisk->reset_task), SPDK_BDEV_IO_STATUS_SUCCESS);
 }
 
-static void
+static int
 bdev_aio_reset_retry_timer(void *arg)
 {
 	struct file_disk *fdisk = arg;
@@ -286,6 +287,8 @@ bdev_aio_reset_retry_timer(void *arg)
 			      _bdev_aio_get_io_inflight,
 			      fdisk,
 			      _bdev_aio_get_io_inflight_done);
+
+	return -1;
 }
 
 static void

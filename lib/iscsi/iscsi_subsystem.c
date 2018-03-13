@@ -855,7 +855,7 @@ spdk_iscsi_init_complete(int rc)
 	cb_fn(cb_arg, rc);
 }
 
-static void
+static int
 spdk_iscsi_poll_group_poll(void *ctx)
 {
 	struct spdk_iscsi_poll_group *group = ctx;
@@ -874,9 +874,11 @@ spdk_iscsi_poll_group_poll(void *ctx)
 			spdk_iscsi_conn_destruct(conn);
 		}
 	}
+
+	return -1;
 }
 
-static void
+static int
 spdk_iscsi_poll_group_handle_nop(void *ctx)
 {
 	struct spdk_iscsi_poll_group *group = ctx;
@@ -885,6 +887,8 @@ spdk_iscsi_poll_group_handle_nop(void *ctx)
 	STAILQ_FOREACH_SAFE(conn, &group->connections, link, tmp) {
 		spdk_iscsi_conn_handle_nop(conn);
 	}
+
+	return -1;
 }
 
 static void

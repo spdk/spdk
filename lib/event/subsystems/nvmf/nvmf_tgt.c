@@ -133,12 +133,14 @@ new_qpair(struct spdk_nvmf_qpair *qpair)
 	spdk_event_call(event);
 }
 
-static void
+static int
 acceptor_poll(void *arg)
 {
 	struct spdk_nvmf_tgt *tgt = arg;
 
 	spdk_nvmf_tgt_accept(tgt, new_qpair);
+
+	return -1;
 }
 
 static void

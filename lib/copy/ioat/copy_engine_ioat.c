@@ -174,12 +174,14 @@ ioat_copy_submit_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8
 	return spdk_ioat_submit_fill(ioat_ch->ioat_ch, ioat_task, ioat_done, dst, fill64, nbytes);
 }
 
-static void
+static int
 ioat_poll(void *arg)
 {
 	struct spdk_ioat_chan *chan = arg;
 
 	spdk_ioat_process_events(chan);
+
+	return -1;
 }
 
 static struct spdk_io_channel *ioat_get_io_channel(void);

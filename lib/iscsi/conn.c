@@ -493,7 +493,7 @@ _spdk_iscsi_conn_free(struct spdk_iscsi_conn *conn)
 	pthread_mutex_unlock(&g_conns_mutex);
 }
 
-static void
+static int
 _spdk_iscsi_conn_check_shutdown(void *arg)
 {
 	struct spdk_iscsi_conn *conn = arg;
@@ -501,13 +501,15 @@ _spdk_iscsi_conn_check_shutdown(void *arg)
 
 	rc = spdk_iscsi_conn_free_tasks(conn);
 	if (rc < 0) {
-		return;
+		return -1;
 	}
 
 	spdk_poller_unregister(&conn->shutdown_timer);
 
 	spdk_iscsi_conn_stop(conn);
 	_spdk_iscsi_conn_free(conn);
+
+	return -1;
 }
 
 void
@@ -576,7 +578,7 @@ spdk_iscsi_conn_check_shutdown_cb(void *arg1, void *arg2)
 	spdk_shutdown_iscsi_conns_done();
 }
 
-static void
+static int
 spdk_iscsi_conn_check_shutdown(void *arg)
 {
 	struct spdk_event *event;
@@ -587,6 +589,8 @@ spdk_iscsi_conn_check_shutdown(void *arg)
 					    NULL);
 		spdk_event_call(event);
 	}
+
+	return -1;
 }
 
 /**
@@ -1064,7 +1068,7 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
  * Returns -1 for an exceptional error indicating the TCP connection
  * should be closed.
  */
-static void
+static int
 spdk_iscsi_conn_flush_pdus(void *_conn)
 {
 	struct spdk_iscsi_conn *conn = _conn;
@@ -1097,6 +1101,8 @@ spdk_iscsi_conn_flush_pdus(void *_conn)
 		 */
 		conn->state = ISCSI_CONN_STATE_EXITING;
 	}
+
+	return -1;
 }
 
 void
@@ -1265,12 +1271,14 @@ spdk_iscsi_conn_allocate_reactor(const struct spdk_cpuset *cpumask)
 	return selected_core;
 }
 
-static void
+static int
 logout_timeout(void *arg)
 {
 	struct spdk_iscsi_conn *conn = arg;
 
 	spdk_iscsi_conn_destruct(conn);
+
+	return -1;
 }
 
 void
