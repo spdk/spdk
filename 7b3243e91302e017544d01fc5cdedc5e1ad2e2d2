@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "33a0c1fe_989dac41",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 914,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-13T14:33:18Z",
+      "side": 1,
+      "message": "One customer reported a case to enter this code path and there is no useful debugging information here besides these ticks. Added the name here to identify where connection is timeout.",
+      "range": {
+        "startLine": 913,
+        "startChar": 3,
+        "endLine": 914,
+        "endChar": 33
+      },
+      "revId": "7b3243e91302e017544d01fc5cdedc5e1ad2e2d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
