@@ -424,14 +424,16 @@ function kill_stub() {
 
 function run_test() {
 	set +x
+	local test_type="$(echo $1 | tr 'a-z' 'A-Z')"
+	shift
 	echo "************************************"
-	echo "START TEST $1"
+	echo "START TEST $test_type $@"
 	echo "************************************"
 	set -x
 	time "$@"
 	set +x
 	echo "************************************"
-	echo "END TEST $1"
+	echo "END TEST $test_type $@"
 	echo "************************************"
 	set -x
 }
