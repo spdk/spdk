@@ -16,6 +16,24 @@
       "revId": "a9fd6eaf819349acb52a0be61bb5e04edbb1476c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f846b93c_df6895d3",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-13T14:47:21Z",
+      "side": 1,
+      "message": "Make sense, but will use socket.settimeout() since only one connection is used.",
+      "parentUuid": "9ca87b31_f62cb08b",
+      "revId": "a9fd6eaf819349acb52a0be61bb5e04edbb1476c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
