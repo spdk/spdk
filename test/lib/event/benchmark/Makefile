@@ -31,14 +31,26 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = event_perf reactor reactor_perf benchmark
+CFLAGS += $(ENV_CFLAGS)
 
-.PHONY: all clean $(DIRS-y)
+APP = benchmark
+C_SRCS := benchmark.c benchmark_api.c
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+SPDK_LIB_LIST = event trace conf util log rpc jsonrpc json
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
+
+all : $(APP)
+	@:
+
+$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
+	$(LINK_C)
+
+clean :
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
