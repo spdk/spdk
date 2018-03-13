@@ -155,6 +155,26 @@ make -j${jobs}
 sudo make install
 cd ~
 
+# Vector packet processing (VPP) is installed for use with iscsi tests.
+git clone https://gerrit.fd.io/r/vpp
+cd vpp
+git checkout v18.01.1
+# Installing required depenencies for building VPP
+yes | make install-dep
+make pkg-rpm -j${jobs}
+cd build-root
+sudo dnf install -y \
+		./vpp-18.01.1-release.x86_64.rpm \
+		./vpp-lib-18.01.1-release.x86_64.rpm \
+		./vpp-devel-18.01.1-release.x86_64.rpm
+# Since hugepage configuration is done via spdk/scripts/setup.sh,
+# this default config is not needed.
+#
+# NOTE: Parameters kernel.shmmax and vm.max_map_count are set to
+# very low count and cause issues with hugepage total sizes above 1GB.
+sudo rm -f /etc/sysctl.d/80-vpp.conf
+cd ~
+
 # We currently don't make any changes to the libiscsi repository for our tests, but it is possible that we will need
 # to later. Cloning from git is just future proofing the machines.
 git clone https://github.com/sahlberg/libiscsi
