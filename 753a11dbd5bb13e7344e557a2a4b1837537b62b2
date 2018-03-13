@@ -1,0 +1,136 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fb8a76c3_a2c04dc3",
+        "filename": "test/vhost/nvmf/nvmf.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-13T10:45:44Z",
+      "side": 1,
+      "message": "those are already set in vhost/common/common.sh\n\nhttps://review.gerrithub.io/#/c/398753/32/test/vhost/migration/migration.sh@47",
+      "range": {
+        "startLine": 3,
+        "startChar": 0,
+        "endLine": 5,
+        "endChar": 70
+      },
+      "revId": "753a11dbd5bb13e7344e557a2a4b1837537b62b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69f52bb0_8a410d8a",
+        "filename": "test/vhost/nvmf/nvmf.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-13T10:45:44Z",
+      "side": 1,
+      "message": "Pls, don\u0027t default it. Just force user to provide those or set in ENV.",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 53
+      },
+      "revId": "753a11dbd5bb13e7344e557a2a4b1837537b62b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69db588e_ec9eb3ea",
+        "filename": "test/vhost/nvmf/nvmf.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-13T10:45:44Z",
+      "side": 1,
+      "message": "What is this for?",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 11,
+        "endChar": 4
+      },
+      "revId": "753a11dbd5bb13e7344e557a2a4b1837537b62b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9affd76_ae971a3c",
+        "filename": "test/vhost/nvmf/nvmf.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-13T10:45:44Z",
+      "side": 1,
+      "message": "I would be good to extract all nvmf stuff to common function and place in common.sh along with cleanup functions.",
+      "range": {
+        "startLine": 85,
+        "startChar": 0,
+        "endLine": 93,
+        "endChar": 50
+      },
+      "revId": "753a11dbd5bb13e7344e557a2a4b1837537b62b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "26e51e72_f01aad07",
+        "filename": "test/vhost/nvmf/nvmf.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-13T10:45:44Z",
+      "side": 1,
+      "message": "Pls use remove \u0027disk\u0027 variable or use it.",
+      "range": {
+        "startLine": 100,
+        "startChar": 82,
+        "endLine": 100,
+        "endChar": 89
+      },
+      "revId": "753a11dbd5bb13e7344e557a2a4b1837537b62b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5b68c4f5_6ca9c58d",
+        "filename": "test/vhost/nvmf/vhost.conf.in",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-13T10:45:44Z",
+      "side": 1,
+      "message": "Can you try running vhost without config.",
+      "revId": "753a11dbd5bb13e7344e557a2a4b1837537b62b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
