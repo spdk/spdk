@@ -740,10 +740,11 @@ spdk_sock_group_create(void)
 
 	STAILQ_FOREACH_FROM(impl, &g_net_impls, link) {
 		group_impl = impl->group_impl_create();
-		assert(group_impl != NULL);
-		STAILQ_INSERT_TAIL(&group->group_impls, group_impl, link);
-		TAILQ_INIT(&group_impl->socks);
-		group_impl->net_impl = impl;
+		if (group_impl != NULL) {
+			STAILQ_INSERT_TAIL(&group->group_impls, group_impl, link);
+			TAILQ_INIT(&group_impl->socks);
+			group_impl->net_impl = impl;
+		}
 	}
 
 	return group;
