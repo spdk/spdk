@@ -353,6 +353,37 @@ function run_test() {
 	set -x
 }
 
+function run_test_case() {
+    set +x
+    echo "------------------------------------"
+    num=$#
+    str=""
+    for (( i=1; i<num; i++ )); do
+            str=${str}" ""${!i}"
+    done
+    echo "START TEST CASE $str"
+    echo "------------------------------------"
+    set -x
+	time "$@"
+}
+
+function end_test_case(){
+    set +x
+    echo "------------------------------------"
+    num=$#
+    str=""
+    for (( i=1; i<num; i++ )); do
+            str=${str}" ""${!i}"
+    done
+    if [ ${!num} -eq 0 ]; then
+        echo "END TEST CASE $str AND RESULT IS PASSED"
+    else
+        echo "END TEST CASE $str AND RESULT IS FAILED"
+    fi
+    echo "------------------------------------"
+    set -x
+}
+
 function print_backtrace() {
 	local shell_options="$-"
 	set +x
