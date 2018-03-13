@@ -48,6 +48,8 @@ def generateCoverageReport(output_dir, repo_dir):
         except subprocess.CalledProcessError as e:
             print("genhtml failed", file=log_file)
             print(e, file=log_file)
+        for f in covfiles:
+            os.remove(f)
 
 
 def collectOne(output_dir, dir_name):
