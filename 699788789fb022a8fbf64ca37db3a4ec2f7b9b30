@@ -16,6 +16,24 @@
       "revId": "699788789fb022a8fbf64ca37db3a4ec2f7b9b30",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16128647_0815a52b",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 696,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-13T01:46:50Z",
+      "side": 1,
+      "message": "The previous behavior is that the new creation of QoS channel will be on the thread which is handling the async and ongoing destruction of QoS channel to serialize these two QoS operations. So that it is on the thread 1. The updated version is to protect the whole QoS channel create and destroy. In this case, thread 2 will be the one as it received the first I/O channel get request to create the QoS channel. Along with Daniel\u0027s explanation, hope it will make it clear for the change from thread \"1\" to \"2\" where this UT code covers.",
+      "parentUuid": "6a5513e3_79b91622",
+      "revId": "699788789fb022a8fbf64ca37db3a4ec2f7b9b30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
