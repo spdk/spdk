@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "10fd9cf1_f84d776b",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-03-13T09:30:00Z",
+      "side": 1,
+      "message": "This is not need change",
+      "range": {
+        "startLine": 197,
+        "startChar": 2,
+        "endLine": 197,
+        "endChar": 13
+      },
+      "revId": "9dea76161ecf27c8f35f94802b0b170ab7e38277",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7776249e_a3792b10",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-03-13T09:30:00Z",
+      "side": 1,
+      "message": "lun is allocated with calloc, this is not needed",
+      "range": {
+        "startLine": 282,
+        "startChar": 0,
+        "endLine": 282,
+        "endChar": 28
+      },
+      "revId": "9dea76161ecf27c8f35f94802b0b170ab7e38277",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
