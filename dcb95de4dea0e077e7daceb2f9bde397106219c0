@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e974628d_ce1e6aa8",
+        "filename": "app/iscsi_tgt/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-13T16:26:22Z",
+      "side": 1,
+      "message": "Please also add $(NET_MODULES_FILES) to the $(APP) dependency list so that the target gets rebuilt when the net modules change.",
+      "revId": "dcb95de4dea0e077e7daceb2f9bde397106219c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
