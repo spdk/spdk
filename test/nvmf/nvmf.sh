@@ -23,18 +23,18 @@ trap "kill_stub; exit 1" SIGINT SIGTERM EXIT
 
 export NVMF_APP="./app/nvmf_tgt/nvmf_tgt -i 0"
 
-run_test test/nvmf/filesystem/filesystem.sh
-run_test test/nvmf/discovery/discovery.sh
-run_test test/nvmf/nvme_cli/nvme_cli.sh
-run_test test/nvmf/lvol/nvmf_lvol.sh
-run_test test/nvmf/shutdown/shutdown.sh
+run_test suite test/nvmf/filesystem/filesystem.sh
+run_test suite test/nvmf/discovery/discovery.sh
+run_test suite test/nvmf/nvme_cli/nvme_cli.sh
+run_test suite test/nvmf/lvol/nvmf_lvol.sh
+run_test suite test/nvmf/shutdown/shutdown.sh
 
 if [ $SPDK_TEST_NVML -eq 1 ]; then
 	if [ $RUN_NIGHTLY -eq 1 ]; then
-		run_test test/nvmf/pmem/nvmf_pmem.sh 30
+		run_test suite test/nvmf/pmem/nvmf_pmem.sh 30
 		report_test_completion "nightly_nvmf_pmem"
 	else
-		run_test test/nvmf/pmem/nvmf_pmem.sh 10
+		run_test suite test/nvmf/pmem/nvmf_pmem.sh 10
 		report_test_completion "nvmf_pmem"
 	fi
 fi
@@ -47,14 +47,14 @@ timing_enter host
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	# TODO: temporarily disabled - temperature AER doesn't fire on emulated controllers
-	#run_test test/nvmf/host/aer.sh
+	#run_test suite test/nvmf/host/aer.sh
 	true
 fi
-run_test test/nvmf/host/bdevperf.sh
-run_test test/nvmf/host/identify.sh
-run_test test/nvmf/host/perf.sh
-run_test test/nvmf/host/identify_kernel_nvmf.sh
-run_test test/nvmf/host/fio.sh
+run_test suite test/nvmf/host/bdevperf.sh
+run_test suite test/nvmf/host/identify.sh
+run_test suite test/nvmf/host/perf.sh
+run_test suite test/nvmf/host/identify_kernel_nvmf.sh
+run_test suite test/nvmf/host/fio.sh
 
 timing_exit host
 trap - SIGINT SIGTERM EXIT
@@ -62,8 +62,8 @@ kill_stub
 
 # TODO: enable nvme device detachment for multi-process so that
 #  we can use the stub for this test
-run_test test/nvmf/rpc/rpc.sh
-run_test test/nvmf/fio/fio.sh
+run_test suite test/nvmf/rpc/rpc.sh
+run_test suite test/nvmf/fio/fio.sh
 revert_soft_roce
 
 report_test_completion "nvmf"
