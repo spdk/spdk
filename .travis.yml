@@ -25,3 +25,12 @@ script:
   - ./configure --enable-werror
   - make
   - ./unittest.sh
+
+notifications:
+  irc:
+    channels:
+      - "chat.freenode.net#spdk"
+    template:
+      - "%{repository_name}/%{branch}: %{commit_subject} (%{author})"
+    on_success: always
+    on_failure: always
