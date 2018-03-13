@@ -1,0 +1,203 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3bd0eead_1da740b6",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-13T17:11:25Z",
+      "side": 1,
+      "message": "Please use true/false for bool values.",
+      "revId": "c74648fe70d51f89167573a6aaf7489f91553295",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a07709f7_2d462d25",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-13T17:11:25Z",
+      "side": 1,
+      "message": "Why the cast to const in the middle? (The uint8_t * cast drops const anyway.)\n\nAlso, this doesn\u0027t seem like it will work for IPv6, but the code below tries to handle it anyway.  sin_addr in struct sockaddr_in is at offset 4, but sin6_addr in struct sockaddr_in6 is at offset 8.  Either this should handle IPv6 correctly, or we should just drop the IPv6 path below.",
+      "range": {
+        "startLine": 100,
+        "startChar": 25,
+        "endLine": 100,
+        "endChar": 51
+      },
+      "revId": "c74648fe70d51f89167573a6aaf7489f91553295",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b96d802_25197121",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-13T17:11:25Z",
+      "side": 1,
+      "message": "What is vrf? What happens if it\u0027s not default? We will still be returning 0 in this case despite not filling out addr and len, which seems wrong.",
+      "revId": "c74648fe70d51f89167573a6aaf7489f91553295",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5b55ed42_e8928892",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-13T17:11:25Z",
+      "side": 1,
+      "message": "This looks unreachable based on the assignment above.  Maybe it would be simpler to just write a single \u0027if\u0027 statement, e.g.:\n\n  if (ep.is_ip4 \u003d\u003d VPPCOM_IS_IP4) {\n    addr-\u003esa_family \u003d AF_INET;\n    ((struct sockaddr_in *)addr)-\u003esin_port \u003d ep.port;\n    *len \u003d sizeof(struct sockaddr_in);\n  } else {\n     addr-\u003esa_family \u003d AF_INET6;\n     ...\n  }",
+      "revId": "c74648fe70d51f89167573a6aaf7489f91553295",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a81e97d4_02f40d78",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-13T17:11:25Z",
+      "side": 1,
+      "message": "These checks would probably be clearer as \u0027if (!g_vpp_initialized)\u0027",
+      "revId": "c74648fe70d51f89167573a6aaf7489f91553295",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56c16fe6_3f9b46c3",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 290,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-13T17:11:25Z",
+      "side": 1,
+      "message": "It might be simpler to just return NULL here directly - that seems to be the only path possible for all of these \u0027goto end\u0027 cases.",
+      "revId": "c74648fe70d51f89167573a6aaf7489f91553295",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b136324_3d7668aa",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 374,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-13T17:11:25Z",
+      "side": 1,
+      "message": "This should probably be vppcom_session_close().",
+      "revId": "c74648fe70d51f89167573a6aaf7489f91553295",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "19fdb198_cdb37742",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 422,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-13T17:11:25Z",
+      "side": 1,
+      "message": "I don\u0027t think this initial value of rc is ever used.",
+      "revId": "c74648fe70d51f89167573a6aaf7489f91553295",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "905221ae_a7f3f9c0",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-13T17:11:25Z",
+      "side": 1,
+      "message": "__iov is a pointer, so this should either compare against NULL or just use !__iov.\n\nI also think the __iovcnt check should be __iovcnt \u003c 0.  The man page defines EINVAL to mean \"iovcnt is less than zero or greater than the permitted maximum\", so 0 should be allowed.",
+      "range": {
+        "startLine": 430,
+        "startChar": 5,
+        "endLine": 430,
+        "endChar": 15
+      },
+      "revId": "c74648fe70d51f89167573a6aaf7489f91553295",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33ab679e_1ee08575",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 605,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-13T17:11:25Z",
+      "side": 1,
+      "message": "Does this comment apply to VPP as well?",
+      "revId": "c74648fe70d51f89167573a6aaf7489f91553295",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d215ee3e_ed430717",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 690,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-13T17:11:25Z",
+      "side": 1,
+      "message": "Is it OK to call vppcom_app_destroy() if vppcom_app_create() failed?",
+      "revId": "c74648fe70d51f89167573a6aaf7489f91553295",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
