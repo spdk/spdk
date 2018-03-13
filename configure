@@ -39,6 +39,8 @@ function usage()
 	echo "                           No path required."
 	echo " nvml                      Required to build persistent memory bdev."
 	echo "                           example: /usr/share/nvml"
+	echo " vpp                       Required to build VPP net module."
+	echo "                           example: /vpp_repo/build-root/install-vpp-native/vpp"
 	echo " rbd                       [disabled]"
 	echo "                           No path required."
 	echo " rdma                      [disabled]"
@@ -153,6 +155,16 @@ for i in "$@"; do
 		--without-nvml)
 			CONFIG_NVML=n
 			;;
+		--with-vpp)
+			CONFIG_VPP=y
+			;;
+		--with-vpp=*)
+			CONFIG_VPP=y
+			CONFIG_VPP_DIR=$(readlink -f ${i#*=})
+			;;
+		--without-vpp)
+			CONFIG_VPP=n
+			;;
 		--with-fio=*)
 			check_dir "$i"
 			FIO_SOURCE_DIR="${i#*=}"
@@ -266,6 +278,12 @@ if [ -n "$CONFIG_NVML" ]; then
 fi
 if [ -n "$CONFIG_NVML_DIR" ]; then
 	echo "CONFIG_NVML_DIR?=$CONFIG_NVML_DIR" >> CONFIG.local
+fi
+if [ -n "$CONFIG_VPP" ]; then
+	echo "CONFIG_VPP?=$CONFIG_VPP" >> CONFIG.local
+fi
+if [ -n "$CONFIG_VPP_DIR" ]; then
+	echo "CONFIG_VPP_DIR?=$CONFIG_VPP_DIR" >> CONFIG.local
 fi
 if [ -n "$CONFIG_FIO_PLUGIN" ]; then
 	echo "CONFIG_FIO_PLUGIN?=$CONFIG_FIO_PLUGIN" >> CONFIG.local
