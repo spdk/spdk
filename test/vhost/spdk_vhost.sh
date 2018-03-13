@@ -63,7 +63,7 @@ WORKDIR=$(readlink -f $(dirname $0))
 case $1 in
 	-n|--negative)
 		echo 'Negative tests suite...'
-		$WORKDIR/other/negative.sh
+		run_test_case $WORKDIR/other/negative.sh
 		report_test_completion "vhost_negative"
 		;;
 	-p|--performance)
@@ -84,7 +84,7 @@ case $1 in
 		;;
 	-m|--migration)
 		echo 'Running migration suite...'
-		$WORKDIR/migration/migration.sh -x \
+		run_test_case $WORKDIR/migration/migration.sh -x \
 		--fio-bin=$FIO_BIN --os=$VM_IMAGE --test-cases=1
 		;;
 	-i|--integrity)
@@ -115,13 +115,13 @@ case $1 in
 		;;
 	-ils|--integrity-lvol-scsi)
 		echo 'Running lvol integrity suite...'
-		$WORKDIR/lvol/lvol_test.sh -x --fio-bin=$FIO_BIN \
+		run_test_case $WORKDIR/lvol/lvol_test.sh -x --fio-bin=$FIO_BIN \
 		--ctrl-type=spdk_vhost_scsi --thin-provisioning
 		report_test_completion "vhost_integrity_lvol_scsi"
 		;;
 	-ilb|--integrity-lvol-blk)
 		echo 'Running lvol integrity suite...'
-		$WORKDIR/lvol/lvol_test.sh -x --fio-bin=$FIO_BIN \
+		run_test_case $WORKDIR/lvol/lvol_test.sh -x --fio-bin=$FIO_BIN \
 		--ctrl-type=spdk_vhost_blk
 		report_test_completion "vhost_integrity_lvol_blk"
 		;;
