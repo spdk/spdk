@@ -48,6 +48,23 @@ extern "C" {
 
 struct spdk_sock;
 
+struct spdk_net_framework {
+	const char *name;
+
+	int (*init)(void);
+	void (*fini)(void);
+
+	STAILQ_ENTRY(spdk_net_framework) link;
+};
+
+void spdk_net_framework_register(struct spdk_net_framework *frame);
+
+#define SPDK_NET_FRAMEWORK_REGISTER(name, frame) \
+static void __attribute__((constructor)) net_framework_register_##name(void) \
+{ \
+	spdk_net_framework_register(frame); \
+}
+
 int spdk_interface_init(void);
 void spdk_interface_destroy(void);
 
