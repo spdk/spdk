@@ -71,13 +71,12 @@ def case_message(func):
             10000: 'SIGTERM',
         }
         num = int(func.__name__.strip('test_case')[:])
-        print("========================================================")
-        print("Test Case {num}: Start".format(num=num))
-        print("Test Name: {name}".format(name=test_name[num]))
-        print("========================================================")
+        print("************************************")
+        print("START TEST CASE {name}".format(name=test_name[num]))
+        print("************************************")
         fail_count = func(*args, **kwargs)
-        print("Test Case {num}: END\n".format(num=num))
-        print("========================================================")
+        print("END TEST CASE {name}\n".format(name=test_name[num]))
+        print("************************************")
         return fail_count
     return inner
 
