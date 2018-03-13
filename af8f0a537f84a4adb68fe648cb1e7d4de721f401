@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "35c8612a_0efe21c1",
+        "filename": "lib/net/net_framework.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-13T16:30:13Z",
+      "side": 1,
+      "message": "Nitpick: I would prefer to start a new line early to prevent the INITIALIZER() macro and its argument from being split across two lines.",
+      "range": {
+        "startLine": 38,
+        "startChar": 60,
+        "endLine": 38,
+        "endChar": 84
+      },
+      "revId": "af8f0a537f84a4adb68fe648cb1e7d4de721f401",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
