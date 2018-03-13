@@ -11,7 +11,7 @@ import re
 def generateCoverageReport(output_dir, repo_dir):
     with open(os.path.join(output_dir, 'coverage.log'), 'w+') as log_file:
         coveragePath = os.path.join(output_dir, '**', 'cov_total.info')
-        covfiles = glob.glob(coveragePath, recursive=True)
+        covfiles = [os.path.abspath(p) for p in glob.glob(coveragePath, recursive=True)]
         for f in covfiles:
             print(f, file=log_file)
         if len(covfiles) == 0:
@@ -24,7 +24,7 @@ def generateCoverageReport(output_dir, repo_dir):
             '--rc genhtml_legend=1',
             '--rc geninfo_all_blocks=1',
         ]
-        cov_total = os.path.join(output_dir, 'cov_total.info')
+        cov_total = os.path.abspath(os.path.join(output_dir, 'cov_total.info'))
         coverage = os.path.join(output_dir, 'coverage')
         lcov = 'lcov' + ' ' + ' '.join(lcov_opts) + ' -q -a ' + ' -a '.join(covfiles) + ' -o ' + cov_total
         genhtml = 'genhtml' + ' ' + ' '.join(lcov_opts) + ' -q ' + cov_total + ' --legend' + ' -t "Combined" --show-details -o ' + coverage
