@@ -25,6 +25,236 @@
     },
     {
       "key": {
+        "uuid": "51416fd6_8c8f5e4a",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-13T00:02:03Z",
+      "side": 1,
+      "message": "example ?",
+      "range": {
+        "startLine": 170,
+        "startChar": 50,
+        "endLine": 170,
+        "endChar": 57
+      },
+      "revId": "0137270a1230c4066d7c6514ddd9c15644c9c8db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e533f0f6_707d1dfb",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-13T00:02:03Z",
+      "side": 1,
+      "message": "A FILE pointer or A pointer to FILE ?",
+      "range": {
+        "startLine": 210,
+        "startChar": 12,
+        "endLine": 210,
+        "endChar": 16
+      },
+      "revId": "0137270a1230c4066d7c6514ddd9c15644c9c8db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0ab0bac_3db0c972",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 504,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-13T00:02:03Z",
+      "side": 1,
+      "message": "enumerate operation ?",
+      "range": {
+        "startLine": 504,
+        "startChar": 34,
+        "endLine": 504,
+        "endChar": 44
+      },
+      "revId": "0137270a1230c4066d7c6514ddd9c15644c9c8db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7880cd14_02e33955",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 514,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-13T00:02:03Z",
+      "side": 1,
+      "message": "same as above",
+      "range": {
+        "startLine": 514,
+        "startChar": 34,
+        "endLine": 514,
+        "endChar": 44
+      },
+      "revId": "0137270a1230c4066d7c6514ddd9c15644c9c8db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a21e5236_aee1f9ab",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 524,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-13T00:02:03Z",
+      "side": 1,
+      "message": "same as above",
+      "range": {
+        "startLine": 524,
+        "startChar": 34,
+        "endLine": 524,
+        "endChar": 44
+      },
+      "revId": "0137270a1230c4066d7c6514ddd9c15644c9c8db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4b2e2c1_a3b243e3",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 542,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-13T00:02:03Z",
+      "side": 1,
+      "message": "It doesn\u0027t look create but get the created mapping.\n\nHence\n\"Get a mapping of the virtual address to the BAR of the PCI device\" or\n\"Get a mapping of the virtual address to the PCI device\u0027s resource\" ?",
+      "range": {
+        "startLine": 541,
+        "startChar": 3,
+        "endLine": 542,
+        "endChar": 14
+      },
+      "revId": "0137270a1230c4066d7c6514ddd9c15644c9c8db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e332848_aef1ed66",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 545,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-13T00:02:03Z",
+      "side": 1,
+      "message": "BAR (Base Address Register) is well known. Hence just \"Index to the BAR\" or \"Index to the PCI resource\" may be better.",
+      "range": {
+        "startLine": 545,
+        "startChar": 14,
+        "endLine": 545,
+        "endChar": 50
+      },
+      "revId": "0137270a1230c4066d7c6514ddd9c15644c9c8db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f727d95_c8117cc1",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 546,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-13T00:02:03Z",
+      "side": 1,
+      "message": "\"A pointer to the pointer to hold the virtual address of the mapping\" or\n\"A pointer to the pointer to hold the mapped virtual address\"",
+      "range": {
+        "startLine": 546,
+        "startChar": 22,
+        "endLine": 546,
+        "endChar": 47
+      },
+      "revId": "0137270a1230c4066d7c6514ddd9c15644c9c8db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d78c54e_4b3f8ef4",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 547,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-13T00:02:03Z",
+      "side": 1,
+      "message": "\"A pointer to the variable to hold the physical address of the mapping\" or\n\"A pointer to the variable to hold the physical address of the BAR\"?",
+      "range": {
+        "startLine": 547,
+        "startChar": 20,
+        "endLine": 547,
+        "endChar": 49
+      },
+      "revId": "0137270a1230c4066d7c6514ddd9c15644c9c8db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c60cdfc_3b89b5f6",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 737,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-13T00:02:03Z",
+      "side": 1,
+      "message": "PCI configuration space ?",
+      "range": {
+        "startLine": 737,
+        "startChar": 8,
+        "endLine": 737,
+        "endChar": 40
+      },
+      "revId": "0137270a1230c4066d7c6514ddd9c15644c9c8db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "31d737c1_a6e0a4b6",
         "filename": "include/spdk/env.h",
         "patchSetId": 1
@@ -48,6 +278,29 @@
     },
     {
       "key": {
+        "uuid": "e5b466f7_77132f93",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 765,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-13T00:02:03Z",
+      "side": 1,
+      "message": "A value to writ ?",
+      "range": {
+        "startLine": 765,
+        "startChar": 16,
+        "endLine": 765,
+        "endChar": 73
+      },
+      "revId": "0137270a1230c4066d7c6514ddd9c15644c9c8db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "249cf34a_2520f171",
         "filename": "include/spdk/env.h",
         "patchSetId": 1
@@ -64,6 +317,121 @@
         "startChar": 48,
         "endLine": 773,
         "endChar": 53
+      },
+      "revId": "0137270a1230c4066d7c6514ddd9c15644c9c8db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "248d957e_4def5d6c",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 773,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-13T00:02:03Z",
+      "side": 1,
+      "message": "Write 1 byte to PCI configuration space ?",
+      "range": {
+        "startLine": 773,
+        "startChar": 3,
+        "endLine": 773,
+        "endChar": 42
+      },
+      "revId": "0137270a1230c4066d7c6514ddd9c15644c9c8db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2087ed58_4f48205d",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 776,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-13T00:02:03Z",
+      "side": 1,
+      "message": "A value to write ?",
+      "range": {
+        "startLine": 776,
+        "startChar": 16,
+        "endLine": 776,
+        "endChar": 72
+      },
+      "revId": "0137270a1230c4066d7c6514ddd9c15644c9c8db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "373f9f19_4b60c029",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 896,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-13T00:02:03Z",
+      "side": 1,
+      "message": "I\u0027m not sure but \"to notify\" may look more natural than \"for notifying\"",
+      "range": {
+        "startLine": 896,
+        "startChar": 38,
+        "endLine": 896,
+        "endChar": 51
+      },
+      "revId": "0137270a1230c4066d7c6514ddd9c15644c9c8db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bfc265b0_752c2e55",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 916,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-13T00:02:03Z",
+      "side": 1,
+      "message": "multiple of 2MB ?",
+      "range": {
+        "startLine": 916,
+        "startChar": 53,
+        "endLine": 916,
+        "endChar": 57
+      },
+      "revId": "0137270a1230c4066d7c6514ddd9c15644c9c8db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fadf8ac8_3a2822d6",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 931,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-13T00:02:03Z",
+      "side": 1,
+      "message": "multiple of 2MB ?",
+      "range": {
+        "startLine": 931,
+        "startChar": 53,
+        "endLine": 931,
+        "endChar": 58
       },
       "revId": "0137270a1230c4066d7c6514ddd9c15644c9c8db",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
