@@ -50,17 +50,19 @@ def generateCoverageReport(output_dir, repo_dir):
             print(e, file=log_file)
 
 
-def prepDocumentation(output_dir, repo_dir):
-    # Find one instance of 'doc' output directory and move it to the top level
-    docDirs = glob.glob(os.path.join(output_dir, '*', 'doc'))
-    docDirs.sort()
-    if len(docDirs) == 0:
+def collectOne(output_dir, dir_name):
+    dirs = glob.glob(os.path.join(output_dir, '*', dir_name))
+    dirs.sort()
+    if len(dirs) == 0:
         return
 
-    print("docDirs: ", docDirs)
-    docDir = docDirs[0]
-    print("docDir: ", docDir)
-    shutil.move(docDir, os.path.join(output_dir, 'doc'))
+    # Collect first instance of dir_name and move it to the top level
+    collect_dir = dirs.pop(0)
+    shutil.move(collect_dir, os.path.join(output_dir, dir_name))
+
+    # Delete all other instances
+    for d in dirs:
+        shutil.rmtree(d)
 
 
 def aggregateCompletedTests(output_dir, repo_dir):
@@ -129,7 +131,7 @@ def aggregateCompletedTests(output_dir, repo_dir):
 
 def main(output_dir, repo_dir):
     generateCoverageReport(output_dir, repo_dir)
-    prepDocumentation(output_dir, repo_dir)
+    collectOne(output_dir, 'doc')
     aggregateCompletedTests(output_dir, repo_dir)
 
 
