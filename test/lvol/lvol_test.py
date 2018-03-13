@@ -3,13 +3,6 @@ import sys
 from test_cases import *
 
 
-def check_fail_count(fail_count, num_test):
-    if not fail_count:
-        print("Test: {num_test} - PASS".format(num_test=num_test))
-    else:
-        print("Test: {num_test} - FAIL".format(num_test=num_test))
-
-
 if __name__ == "__main__":
     rpc_py = None
     total_size = None
@@ -37,7 +30,6 @@ if __name__ == "__main__":
             fail_count = 0
             exec("fail_count += tc.test_case{num_test}"
                  "()".format(num_test=num_test))
-            check_fail_count(fail_count, num_test)
             if fail_count:
                 tc_failed.append(num_test)
 
