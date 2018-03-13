@@ -73,6 +73,24 @@
     },
     {
       "key": {
+        "uuid": "6aa55a50_f1360a34",
+        "filename": "lib/bdev/virtio/bdev_virtio_scsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1104,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-03-13T01:07:29Z",
+      "side": 1,
+      "message": "Got you, I didn\u0027t see you processed the response error code before.",
+      "parentUuid": "1a868a4b_b5d0bc9e",
+      "revId": "52f4bbf5b36659a9a2d01a9b0e7460725e4b8fdd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9d3e7b65_55043a45",
         "filename": "lib/bdev/virtio/bdev_virtio_scsi.c",
         "patchSetId": 1
