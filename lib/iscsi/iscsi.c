@@ -362,6 +362,9 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 
 	if (conn->pdu_in_progress == NULL) {
 		conn->pdu_in_progress = spdk_get_pdu();
+		if (conn->pdu_in_progress == NULL) {
+			return SPDK_ISCSI_CONNECTION_FATAL;
+		}
 	}
 
 	pdu = conn->pdu_in_progress;
