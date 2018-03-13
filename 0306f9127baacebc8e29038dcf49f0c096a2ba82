@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "539d151b_ab8f26a6",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 700,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-13T10:41:30Z",
+      "side": 1,
+      "message": "Again... docstring?:P I think there\u0027s no reason to have comment before test function and description as separate dosctring, we can put it all in one place.",
+      "range": {
+        "startLine": 700,
+        "startChar": 4,
+        "endLine": 700,
+        "endChar": 35
+      },
+      "revId": "0306f9127baacebc8e29038dcf49f0c096a2ba82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
