@@ -910,6 +910,8 @@ spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn)
 		if ((tsc - conn->last_nopin) > (conn->timeout  * spdk_get_ticks_hz())) {
 			SPDK_ERRLOG("Timed out waiting for NOP-Out response from initiator\n");
 			SPDK_ERRLOG("  tsc=0x%lx, last_nopin=0x%lx\n", tsc, conn->last_nopin);
+			SPDK_ERRLOG("  initiator=%s, target=%s\n", conn->initiator_name,
+				    conn->target_short_name);
 			conn->state = ISCSI_CONN_STATE_EXITING;
 		}
 	} else if (tsc - conn->last_nopin > conn->nopininterval) {
