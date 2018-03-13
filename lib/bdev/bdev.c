@@ -955,7 +955,7 @@ spdk_bdev_qos_get_max_ios_per_timeslice(struct spdk_bdev *bdev)
 			SPDK_BDEV_QOS_MIN_IO_PER_TIMESLICE);
 }
 
-static void
+static int
 spdk_bdev_channel_poll_qos(void *arg)
 {
 	struct spdk_bdev_channel	*ch = arg;
@@ -966,6 +966,8 @@ spdk_bdev_channel_poll_qos(void *arg)
 	spdk_bdev_qos_get_max_ios_per_timeslice(bdev);
 
 	_spdk_bdev_qos_io_submit(ch);
+
+	return -1;
 }
 
 static void

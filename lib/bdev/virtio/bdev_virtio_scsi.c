@@ -193,7 +193,7 @@ static void virtio_scsi_dev_remove(struct virtio_scsi_dev *svdev,
 static int bdev_virtio_scsi_ch_create_cb(void *io_device, void *ctx_buf);
 static void bdev_virtio_scsi_ch_destroy_cb(void *io_device, void *ctx_buf);
 static void process_scan_resp(struct virtio_scsi_scan_base *base);
-static void bdev_virtio_mgmt_poll(void *arg);
+static int bdev_virtio_mgmt_poll(void *arg);
 
 static int
 virtio_scsi_dev_send_eventq_io(struct virtqueue *vq, struct virtio_scsi_eventq_io *io)
@@ -724,7 +724,7 @@ bdev_virtio_io_cpl(struct spdk_bdev_io *bdev_io)
 	spdk_bdev_io_complete_scsi_status(bdev_io, io_ctx->resp.status, sk, asc, ascq);
 }
 
-static void
+static int
 bdev_virtio_poll(void *arg)
 {
 	struct bdev_virtio_io_channel *ch = arg;
@@ -740,7 +740,7 @@ bdev_virtio_poll(void *arg)
 		if (spdk_unlikely(scan_ctx && io[i] == &scan_ctx->io_ctx)) {
 			if (svdev->removed) {
 				_virtio_scsi_dev_scan_finish(scan_ctx, -EINTR);
-				return;
+				return -1;
 			}
 
 			if (scan_ctx->restart) {
@@ -760,9 +760,9 @@ bdev_virtio_poll(void *arg)
 	if (spdk_unlikely(scan_ctx && scan_ctx->needs_resend)) {
 		if (svdev->removed) {
 			_virtio_scsi_dev_scan_finish(scan_ctx, -EINTR);
-			return;
+			return -1;
 		} else if (cnt == 0) {
-			return;
+			return 0;
 		}
 
 		rc = send_scan_io(scan_ctx);
@@ -775,6 +775,8 @@ bdev_virtio_poll(void *arg)
 			}
 		}
 	}
+
+	return cnt;
 }
 
 static void
@@ -886,7 +888,7 @@ bdev_virtio_send_tmf_io(struct virtqueue *ctrlq, struct spdk_bdev_io *bdev_io)
 	return 0;
 }
 
-static void
+static int
 bdev_virtio_mgmt_poll(void *arg)
 {
 	struct virtio_scsi_dev *svdev = arg;
@@ -898,8 +900,10 @@ bdev_virtio_mgmt_poll(void *arg)
 	uint32_t io_len[16];
 	uint16_t i, cnt;
 	int rc;
+	int total = 0;
 
 	cnt = spdk_ring_dequeue(send_ring, io, SPDK_COUNTOF(io));
+	total += cnt;
 	for (i = 0; i < cnt; ++i) {
 		rc = bdev_virtio_send_tmf_io(ctrlq, io[i]);
 		if (rc != 0) {
@@ -908,14 +912,18 @@ bdev_virtio_mgmt_poll(void *arg)
 	}
 
 	cnt = virtio_recv_pkts(ctrlq, io, io_len, SPDK_COUNTOF(io));
+	total += cnt;
 	for (i = 0; i < cnt; ++i) {
 		bdev_virtio_tmf_cpl(io[i]);
 	}
 
 	cnt = virtio_recv_pkts(eventq, io, io_len, SPDK_COUNTOF(io));
+	total += cnt;
 	for (i = 0; i < cnt; ++i) {
 		bdev_virtio_eventq_io_cpl(svdev, io[i]);
 	}
+
+	return total;
 }
 
 static int

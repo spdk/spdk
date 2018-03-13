@@ -45,10 +45,11 @@
 
 static struct spdk_poller *g_rpc_poller = NULL;
 
-static void
+static int
 spdk_rpc_subsystem_poll(void *arg)
 {
 	spdk_rpc_accept();
+	return -1;
 }
 
 void

@@ -45,15 +45,16 @@
 
 #define ACCEPT_TIMEOUT_US 1000 /* 1ms */
 
-static void
+static int
 spdk_iscsi_portal_accept(void *arg)
 {
 	struct spdk_iscsi_portal	*portal = arg;
 	struct spdk_sock		*sock;
 	int				rc;
+	int				count = 0;
 
 	if (portal->sock == NULL) {
-		return;
+		return -1;
 	}
 
 	while (1) {
@@ -65,6 +66,7 @@ spdk_iscsi_portal_accept(void *arg)
 				SPDK_ERRLOG("spdk_iscsi_connection_construct() failed\n");
 				break;
 			}
+			count++;
 		} else {
 			if (errno != EAGAIN && errno != EWOULDBLOCK) {
 				SPDK_ERRLOG("accept error(%d): %s\n", errno, spdk_strerror(errno));
@@ -72,6 +74,8 @@ spdk_iscsi_portal_accept(void *arg)
 			break;
 		}
 	}
+
+	return count;
 }
 
 void

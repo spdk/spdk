@@ -288,20 +288,24 @@ basic(void)
 	teardown_test();
 }
 
-static void
+static int
 poller_run_done(void *ctx)
 {
 	bool	*poller_run = ctx;
 
 	*poller_run = true;
+
+	return -1;
 }
 
-static void
+static int
 poller_run_times_done(void *ctx)
 {
 	int	*poller_run_times = ctx;
 
 	(*poller_run_times)++;
+
+	return -1;
 }
 
 static void

@@ -54,7 +54,15 @@ typedef void (*spdk_thread_fn)(void *ctx);
 typedef void (*spdk_thread_pass_msg)(spdk_thread_fn fn, void *ctx,
 				     void *thread_ctx);
 
-typedef void (*spdk_poller_fn)(void *ctx);
+/**
+ * Callback function for a poller.
+ *
+ * \param ctx Context passed as arg to spdk_poller_register()
+ * \return 0 to indicate that polling took place but no events were found;
+ *         positive to indicate that polling took place and some events were processed;
+ *         negative if the poller does not provide spin-wait information.
+ */
+typedef int (*spdk_poller_fn)(void *ctx);
 typedef struct spdk_poller *(*spdk_start_poller)(void *thread_ctx,
 		spdk_poller_fn fn,
 		void *arg,

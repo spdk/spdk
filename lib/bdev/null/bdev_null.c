@@ -192,7 +192,7 @@ create_null_bdev(const char *name, const struct spdk_uuid *uuid,
 	return &bdev->bdev;
 }
 
-static void
+static int
 null_io_poll(void *arg)
 {
 	struct null_io_channel		*ch = arg;
@@ -202,11 +202,17 @@ null_io_poll(void *arg)
 	TAILQ_INIT(&io);
 	TAILQ_SWAP(&ch->io, &io, spdk_bdev_io, module_link);
 
+	if (TAILQ_EMPTY(&io)) {
+		return 0;
+	}
+
 	while (!TAILQ_EMPTY(&io)) {
 		bdev_io = TAILQ_FIRST(&io);
 		TAILQ_REMOVE(&io, bdev_io, module_link);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 	}
+
+	return 1;
 }
 
 static int

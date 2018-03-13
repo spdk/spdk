@@ -726,7 +726,7 @@ _spdk_nbd_poll(struct spdk_nbd_disk *nbd)
 	return rc;
 }
 
-static void
+static int
 spdk_nbd_poll(void *arg)
 {
 	struct spdk_nbd_disk *nbd = arg;
@@ -738,6 +738,8 @@ spdk_nbd_poll(void *arg)
 			     spdk_strerror(-rc), rc);
 		spdk_nbd_stop(nbd);
 	}
+
+	return -1;
 }
 
 static void *

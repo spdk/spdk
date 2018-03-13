@@ -196,14 +196,14 @@ bdev_nvme_writev(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 				   iov, iovcnt, lba_count, lba);
 }
 
-static void
+static int
 bdev_nvme_poll(void *arg)
 {
 	struct nvme_io_channel *ch = arg;
 	int32_t num_completions;
 
 	if (ch->qpair == NULL) {
-		return;
+		return -1;
 	}
 
 	if (ch->collect_spin_stat && ch->start_ticks == 0) {
@@ -223,14 +223,16 @@ bdev_nvme_poll(void *arg)
 			ch->end_ticks = spdk_get_ticks();
 		}
 	}
+
+	return num_completions;
 }
 
-static void
+static int
 bdev_nvme_poll_adminq(void *arg)
 {
 	struct spdk_nvme_ctrlr *ctrlr = arg;
 
-	spdk_nvme_ctrlr_process_admin_completions(ctrlr);
+	return spdk_nvme_ctrlr_process_admin_completions(ctrlr);
 }
 
 static void
@@ -880,12 +882,14 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 }
 
-static void
+static int
 bdev_nvme_hotplug(void *arg)
 {
 	if (spdk_nvme_probe(NULL, NULL, hotplug_probe_cb, attach_cb, remove_cb) != 0) {
 		SPDK_ERRLOG("spdk_nvme_probe() failed\n");
 	}
+
+	return -1;
 }
 
 int

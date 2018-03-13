@@ -62,19 +62,23 @@ spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts)
 	opts->max_io_size = SPDK_NVMF_DEFAULT_MAX_IO_SIZE;
 }
 
-static void
+static int
 spdk_nvmf_poll_group_poll(void *ctx)
 {
 	struct spdk_nvmf_poll_group *group = ctx;
 	int rc;
+	int count = 0;
 	struct spdk_nvmf_transport_poll_group *tgroup;
 
 	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
 		rc = spdk_nvmf_transport_poll_group_poll(tgroup);
 		if (rc < 0) {
-			return;
+			return -1;
 		}
+		count += rc;
 	}
+
+	return count;
 }
 
 static int
