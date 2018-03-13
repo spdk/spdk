@@ -353,6 +353,26 @@ function run_test() {
 	set -x
 }
 
+function run_test_case() {
+	set +x
+	echo "************************************"
+	echo "START TEST CASE $@"
+	echo "************************************"
+	set -x
+	"$@"
+    rc=$?
+	set +x
+	echo "************************************"
+	if [ $rc -eq 0 ]; then
+		echo "END TEST CASE $@ AND RESULT IS PASSED"
+	else
+		echo "END TEST CASE $@ AND RESULT IS FAILED"
+	fi
+	echo "************************************"
+	set -x
+	
+}
+
 function print_backtrace() {
 	local shell_options="$-"
 	set +x
