@@ -89,7 +89,7 @@ fi
 
 if [ $SPDK_TEST_UNITTEST -eq 1 ]; then
 	timing_enter unittest
-	run_test ./test/unit/unittest.sh
+	run_test suite ./test/unit/unittest.sh
 	report_test_completion "unittest"
 	timing_exit unittest
 fi
@@ -97,91 +97,91 @@ fi
 timing_enter lib
 
 if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
-	run_test test/lib/bdev/blockdev.sh
+	run_test suite test/lib/bdev/blockdev.sh
 fi
 
 if [ $SPDK_TEST_EVENT -eq 1 ]; then
-	run_test test/lib/event/event.sh
+	run_test suite test/lib/event/event.sh
 fi
 
 if [ $SPDK_TEST_NVME -eq 1 ]; then
-	run_test test/lib/nvme/nvme.sh
-	run_test test/lib/nvme/spdk_nvme_cli.sh
+	run_test suite test/lib/nvme/nvme.sh
+	run_test suite test/lib/nvme/spdk_nvme_cli.sh
 	# Only test hotplug without ASAN enabled. Since if it is
 	# enabled, it catches SEGV earlier than our handler which
 	# breaks the hotplug logic
 	if [ $SPDK_RUN_ASAN -eq 0 ]; then
-		run_test test/lib/nvme/hotplug.sh intel
+		run_test suite test/lib/nvme/hotplug.sh intel
 	fi
 fi
 
-run_test test/lib/env/env.sh
+run_test suite test/lib/env/env.sh
 
 if [ $SPDK_TEST_IOAT -eq 1 ]; then
-	run_test test/lib/ioat/ioat.sh
+	run_test suite test/lib/ioat/ioat.sh
 fi
 
 timing_exit lib
 
 if [ $SPDK_TEST_ISCSI -eq 1 ]; then
-	run_test ./test/iscsi_tgt/iscsi_tgt.sh
+	run_test suite ./test/iscsi_tgt/iscsi_tgt.sh
 fi
 
 if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
-	run_test ./test/blobfs/rocksdb/rocksdb.sh
-	run_test ./test/blobstore/blobstore.sh
+	run_test suite ./test/blobfs/rocksdb/rocksdb.sh
+	run_test suite ./test/blobstore/blobstore.sh
 fi
 
 if [ $SPDK_TEST_NVMF -eq 1 ]; then
-	run_test ./test/nvmf/nvmf.sh
+	run_test suite ./test/nvmf/nvmf.sh
 fi
 
 if [ $SPDK_TEST_VHOST -eq 1 ]; then
 	timing_enter vhost
 	timing_enter negative
-	run_test ./test/vhost/spdk_vhost.sh --negative
+	run_test suite ./test/vhost/spdk_vhost.sh --negative
 	timing_exit negative
 
 	if [ $RUN_NIGHTLY -eq 1 ]; then
 		timing_enter integrity_blk
-		run_test ./test/vhost/spdk_vhost.sh --integrity-blk
+		run_test suite ./test/vhost/spdk_vhost.sh --integrity-blk
 		timing_exit integrity_blk
 
 		timing_enter integrity
-		run_test ./test/vhost/spdk_vhost.sh --integrity
+		run_test suite ./test/vhost/spdk_vhost.sh --integrity
 		timing_exit integrity
 
 		timing_enter readonly
-		run_test ./test/vhost/spdk_vhost.sh --readonly
+		run_test suite ./test/vhost/spdk_vhost.sh --readonly
 		timing_exit readonly
 
 		# timing_enter fs_integrity_scsi
-		# run_test ./test/vhost/spdk_vhost.sh --fs-integrity-scsi
+		# run_test suite ./test/vhost/spdk_vhost.sh --fs-integrity-scsi
 		# timing_exit fs_integrity_scsi
 
 		# timing_enter fs_integrity_blk
-		# run_test ./test/vhost/spdk_vhost.sh --fs-integrity-blk
+		# run_test suite ./test/vhost/spdk_vhost.sh --fs-integrity-blk
 		# timing_exit fs_integrity_blk
 
 		timing_enter integrity_lvol_scsi_nightly
-		run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-scsi-nightly
+		run_test suite ./test/vhost/spdk_vhost.sh --integrity-lvol-scsi-nightly
 		timing_exit integrity_lvol_scsi_nightly
 
 		timing_enter integrity_lvol_blk_nightly
-		run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-blk-nightly
+		run_test suite ./test/vhost/spdk_vhost.sh --integrity-lvol-blk-nightly
 		timing_exit integrity_lvol_blk_nightly
 	fi
 
 	timing_enter integrity_lvol_scsi
-	run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-scsi
+	run_test suite ./test/vhost/spdk_vhost.sh --integrity-lvol-scsi
 	timing_exit integrity_lvol_scsi
 
 	timing_enter integrity_lvol_blk
-	run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-blk
+	run_test suite ./test/vhost/spdk_vhost.sh --integrity-lvol-blk
 	timing_exit integrity_lvol_blk
 
 	timing_enter vhost_migration
-	run_test ./test/vhost/spdk_vhost.sh --migration
+	run_test suite ./test/vhost/spdk_vhost.sh --migration
 	timing_exit vhost_migration
 
 	timing_exit vhost
@@ -192,17 +192,17 @@ if [ $SPDK_TEST_LVOL -eq 1 ]; then
 	test_cases="1,50,51,52,53,100,101,102,250,251,252,253,255,"
 	test_cases+="300,301,450,451,452,550,600,601,650,651,652,654,655,"
 	test_cases+="700,701,800,801,802,803,804,10000"
-	run_test ./test/lvol/lvol.sh --test-cases=$test_cases
+	run_test suite ./test/lvol/lvol.sh --test-cases=$test_cases
 	report_test_completion "lvol"
 	timing_exit lvol
 fi
 
 if [ $SPDK_TEST_VHOST_INIT -eq 1 ]; then
-	run_test ./test/vhost/initiator/blockdev.sh
+	run_test suite ./test/vhost/initiator/blockdev.sh
 fi
 
 if [ $SPDK_TEST_NVML -eq 1 ]; then
-	run_test ./test/pmem/pmem.sh -x
+	run_test suite ./test/pmem/pmem.sh -x
 fi
 
 timing_enter cleanup
