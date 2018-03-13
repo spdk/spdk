@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f294edc6_155cc427",
+        "filename": "test/vhost/nvmf/nvmf.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-13T10:51:17Z",
+      "side": 1,
+      "message": "Take a look into test/vhost/migration/migration.sh as an example, to see how it can be done with sourcing just common.sh (which already has these variables)",
+      "range": {
+        "startLine": 3,
+        "startChar": 0,
+        "endLine": 5,
+        "endChar": 70
+      },
+      "revId": "f5a75f3b7282461baa57d76ee9f0031f9387c6d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e897af5_e0be3cbf",
+        "filename": "test/vhost/nvmf/nvmf.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-13T10:51:17Z",
+      "side": 1,
+      "message": "whitespace",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 52,
+        "endChar": 1
+      },
+      "revId": "f5a75f3b7282461baa57d76ee9f0031f9387c6d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
