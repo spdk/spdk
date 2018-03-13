@@ -25,6 +25,29 @@
     },
     {
       "key": {
+        "uuid": "41d2d2c9_cf51d0c6",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-13T00:40:45Z",
+      "side": 1,
+      "message": "Create ?",
+      "range": {
+        "startLine": 75,
+        "startChar": 3,
+        "endLine": 75,
+        "endChar": 11
+      },
+      "revId": "c7940facfaca10b19f26e6932a37f705914817a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b61b1e06_4a19c0bd",
         "filename": "include/spdk/jsonrpc.h",
         "patchSetId": 1
@@ -41,6 +64,29 @@
         "startChar": 28,
         "endLine": 83,
         "endChar": 38
+      },
+      "revId": "c7940facfaca10b19f26e6932a37f705914817a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "74ffc25d_54b4ce32",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-13T00:40:45Z",
+      "side": 1,
+      "message": "Poll the requests to the JSON-RPC server ?\n\nThis function does accept, receive, handle the requests and reply to them.",
+      "range": {
+        "startLine": 89,
+        "startChar": 3,
+        "endLine": 89,
+        "endChar": 51
       },
       "revId": "c7940facfaca10b19f26e6932a37f705914817a6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
