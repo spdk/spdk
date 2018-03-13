@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6c408724_775876dc",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-13T23:24:49Z",
+      "side": 1,
+      "message": "Please add \u0027-f\u0027.\nHow about adding stdout as the default value?",
+      "range": {
+        "startLine": 26,
+        "startChar": 19,
+        "endLine": 26,
+        "endChar": 31
+      },
+      "revId": "251e97f6d4816785e08d9fbfcedf03b37ac7d81c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "694d9d10_ed28579b",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-13T23:24:49Z",
+      "side": 1,
+      "message": "adding the abbreviation \u0027-i\u0027 will be helpful for any user.",
+      "range": {
+        "startLine": 27,
+        "startChar": 19,
+        "endLine": 27,
+        "endChar": 29
+      },
+      "revId": "251e97f6d4816785e08d9fbfcedf03b37ac7d81c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e124498_18b3da4a",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-13T23:24:49Z",
+      "side": 1,
+      "message": "Adding 4 (or 2) as the default value looks better.",
+      "range": {
+        "startLine": 27,
+        "startChar": 6,
+        "endLine": 27,
+        "endChar": 18
+      },
+      "revId": "251e97f6d4816785e08d9fbfcedf03b37ac7d81c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "84d85012_bd10aef4",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-13T23:24:49Z",
+      "side": 1,
+      "message": "Why the default of index is 4?\nprint_dict() in script/rpc/client.py uses 2 by default. I think we are used to 2.",
+      "range": {
+        "startLine": 27,
+        "startChar": 36,
+        "endLine": 28,
+        "endChar": 104
+      },
+      "revId": "251e97f6d4816785e08d9fbfcedf03b37ac7d81c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e543d24_8ed35cf2",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-13T23:24:49Z",
+      "side": 1,
+      "message": "If we can do the following, is it more natural?\n\nif args.indent:\n    indent \u003d args.indent\nelse:\n    indent \u003d None",
+      "range": {
+        "startLine": 35,
+        "startChar": 1,
+        "endLine": 38,
+        "endChar": 25
+      },
+      "revId": "251e97f6d4816785e08d9fbfcedf03b37ac7d81c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
