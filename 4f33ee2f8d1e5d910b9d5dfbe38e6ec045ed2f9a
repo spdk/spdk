@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "05660d74_2807b3db",
+        "filename": "include/spdk_internal/event.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-14T00:03:34Z",
+      "side": 1,
+      "message": "context",
+      "range": {
+        "startLine": 89,
+        "startChar": 58,
+        "endLine": 89,
+        "endChar": 64
+      },
+      "revId": "4f33ee2f8d1e5d910b9d5dfbe38e6ec045ed2f9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c56ece84_418794fa",
+        "filename": "include/spdk_internal/event.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-14T00:03:34Z",
+      "side": 1,
+      "message": "returning any explicit error is better?",
+      "range": {
+        "startLine": 90,
+        "startChar": 12,
+        "endLine": 90,
+        "endChar": 47
+      },
+      "revId": "4f33ee2f8d1e5d910b9d5dfbe38e6ec045ed2f9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "26e25c11_daaeda64",
+        "filename": "lib/event/subsystem.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-14T00:03:34Z",
+      "side": 1,
+      "message": "I want this to be prohibited because all subsystems should be written in the config file. (Please see my previous feedback)",
+      "range": {
+        "startLine": 251,
+        "startChar": 1,
+        "endLine": 253,
+        "endChar": 2
+      },
+      "revId": "4f33ee2f8d1e5d910b9d5dfbe38e6ec045ed2f9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
