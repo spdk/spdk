@@ -146,11 +146,17 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 
 	req->qpair->ctrlr = ctrlr;
 	TAILQ_INIT(&ctrlr->qpairs);
-	ctrlr->kato = connect_cmd->kato;
-	ctrlr->async_event_config.raw = 0;
 	ctrlr->num_qpairs = 0;
 	ctrlr->subsys = subsystem;
 	ctrlr->max_qpairs_allowed = tgt->opts.max_qpairs_per_ctrlr;
+
+	ctrlr->feat.keep_alive_timer.bits.kato = connect_cmd->kato;
+
+	ctrlr->feat.volatile_write_cache.bits.wce = 1;
+
+	/* Subtract 1 for admin queue, 1 for 0's based */
+	ctrlr->feat.number_of_queues.bits.ncqr = ctrlr->max_qpairs_allowed - 1 - 1;
+	ctrlr->feat.number_of_queues.bits.nsqr = ctrlr->max_qpairs_allowed - 1 - 1;
 
 	memcpy(ctrlr->hostid, connect_data->hostid, sizeof(ctrlr->hostid));
 
@@ -687,9 +693,12 @@ spdk_nvmf_ctrlr_get_features_host_identifier(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+	union spdk_nvme_feat_host_identifier opts;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Get Features - Host Identifier\n");
-	if (!(cmd->cdw11 & 1)) {
+
+	opts.raw = cmd->cdw11;
+	if (!opts.bits.exhid) {
 		/* NVMe over Fabrics requires EXHID=1 (128-bit/16-byte host ID) */
 		SPDK_ERRLOG("Get Features - Host Identifier with EXHID=0 not allowed\n");
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
@@ -718,12 +727,13 @@ spdk_nvmf_ctrlr_set_features_keep_alive_timer(struct spdk_nvmf_request *req)
 	if (cmd->cdw11 == 0) {
 		rsp->status.sc = SPDK_NVME_SC_KEEP_ALIVE_INVALID;
 	} else if (cmd->cdw11 < MIN_KEEP_ALIVE_TIMEOUT) {
-		ctrlr->kato = MIN_KEEP_ALIVE_TIMEOUT;
+		ctrlr->feat.keep_alive_timer.bits.kato = MIN_KEEP_ALIVE_TIMEOUT;
 	} else {
-		ctrlr->kato = cmd->cdw11;
+		ctrlr->feat.keep_alive_timer.bits.kato = cmd->cdw11;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Keep Alive Timer set to %u ms\n", ctrlr->kato);
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Keep Alive Timer set to %u ms\n",
+		      ctrlr->feat.keep_alive_timer.bits.kato);
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
@@ -735,7 +745,7 @@ spdk_nvmf_ctrlr_get_features_keep_alive_timer(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Get Features - Keep Alive Timer\n");
-	rsp->cdw0 = ctrlr->kato;
+	rsp->cdw0 = ctrlr->feat.keep_alive_timer.bits.kato;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
@@ -744,22 +754,20 @@ spdk_nvmf_ctrlr_set_features_number_of_queues(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
-	uint32_t nr_io_queues;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Number of Queues, cdw11 0x%x\n",
 		      req->cmd->nvme_cmd.cdw11);
-
-	/* Extra 1 connection for Admin queue */
-	nr_io_queues = ctrlr->max_qpairs_allowed - 1;
 
 	/* verify that the contoller is ready to process commands */
 	if (ctrlr->num_qpairs > 1) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Queue pairs already active!\n");
 		rsp->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
 	} else {
-		/* Number of IO queues has a zero based value */
-		rsp->cdw0 = ((nr_io_queues - 1) << 16) |
-			    (nr_io_queues - 1);
+		/*
+		 * Ignore the value requested by the host -
+		 * always return the pre-configured value based on max_qpairs_allowed.
+		 */
+		rsp->cdw0 = ctrlr->feat.number_of_queues.raw;
 	}
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -770,26 +778,20 @@ spdk_nvmf_ctrlr_get_features_number_of_queues(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
-	uint32_t nr_io_queues;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Get Features - Number of Queues\n");
-
-	nr_io_queues = ctrlr->max_qpairs_allowed - 1;
-
-	/* Number of IO queues has a zero based value */
-	rsp->cdw0 = ((nr_io_queues - 1) << 16) |
-		    (nr_io_queues - 1);
-
+	rsp->cdw0 = ctrlr->feat.number_of_queues.raw;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
 static int
 spdk_nvmf_ctrlr_get_features_write_cache(struct spdk_nvmf_request *req)
 {
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Get Features - Write Cache\n");
-	rsp->cdw0 = 1;
+	rsp->cdw0 = ctrlr->feat.volatile_write_cache.raw;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
@@ -801,7 +803,7 @@ spdk_nvmf_ctrlr_set_features_async_event_configuration(struct spdk_nvmf_request 
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Async Event Configuration, cdw11 0x%08x\n",
 		      cmd->cdw11);
-	ctrlr->async_event_config.raw = cmd->cdw11;
+	ctrlr->feat.async_event_configuration.raw = cmd->cdw11;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
@@ -812,7 +814,7 @@ spdk_nvmf_ctrlr_get_features_async_event_configuration(struct spdk_nvmf_request 
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Get Features - Async Event Configuration\n");
-	rsp->cdw0 = ctrlr->async_event_config.raw;
+	rsp->cdw0 = ctrlr->feat.async_event_configuration.raw;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
