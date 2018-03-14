@@ -294,6 +294,35 @@ spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 	return 0;
 }
 
+int
+spdk_vbdev_error_add_config(char *base_bdev_name)
+{
+	struct spdk_vbdev_error_config *cfg;
+
+	TAILQ_FOREACH(cfg, &g_error_config, tailq) {
+		if (strcmp(cfg->base_bdev, base_bdev_name) == 0) {
+			SPDK_ERRLOG("bdev %s already exists\n", base_bdev_name);
+			return -1;
+		}
+	}
+
+	cfg = calloc(1, sizeof(*cfg));
+	if (!cfg) {
+		SPDK_ERRLOG("calloc() failed for vbdev_error_config\n");
+		return -1;
+	}
+
+	cfg->base_bdev = strdup(base_bdev_name);
+	if (!cfg->base_bdev) {
+		free(cfg);
+		SPDK_ERRLOG("strdup() failed for bdev_name\n");
+		return -1;
+	}
+
+	TAILQ_INSERT_TAIL(&g_error_config, cfg, tailq);
+	return 0;
+}
+
 static int
 vbdev_error_init(void)
 {
