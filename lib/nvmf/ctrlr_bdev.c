@@ -430,6 +430,15 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 
 	bdev = ns->bdev;
 	desc = ns->desc;
+
+	if (!group->sgroups[ctrlr->subsys->id].channels ||
+	    !group->sgroups[ctrlr->subsys->id].channels[nsid - 1]) {
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+		response->status.dnr = 1;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
 	ch = group->sgroups[ctrlr->subsys->id].channels[nsid - 1];
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_READ:
