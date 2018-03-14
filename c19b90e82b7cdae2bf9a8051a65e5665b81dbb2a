@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a6b0bc2b_3f855a82",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 558,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-14T05:47:28Z",
+      "side": 1,
+      "message": "to the BAR of the PCI device.",
+      "range": {
+        "startLine": 558,
+        "startChar": 45,
+        "endLine": 558,
+        "endChar": 63
+      },
+      "revId": "c19b90e82b7cdae2bf9a8051a65e5665b81dbb2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4eab976a_c260bac6",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-14T05:47:28Z",
+      "side": 1,
+      "message": "Sorry, I missed checking this because this is not implemented yet.",
+      "range": {
+        "startLine": 560,
+        "startChar": 1,
+        "endLine": 560,
+        "endChar": 2
+      },
+      "revId": "c19b90e82b7cdae2bf9a8051a65e5665b81dbb2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63567160_a24d2875",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-14T05:47:28Z",
+      "side": 1,
+      "message": "the BAR",
+      "range": {
+        "startLine": 563,
+        "startChar": 23,
+        "endLine": 563,
+        "endChar": 49
+      },
+      "revId": "c19b90e82b7cdae2bf9a8051a65e5665b81dbb2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e3a37185_9989e1b1",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 705,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-14T05:47:28Z",
+      "side": 1,
+      "message": "attach ?",
+      "range": {
+        "startLine": 705,
+        "startChar": 34,
+        "endLine": 705,
+        "endChar": 44
+      },
+      "revId": "c19b90e82b7cdae2bf9a8051a65e5665b81dbb2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1dc10497_0141036b",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 717,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-14T05:47:28Z",
+      "side": 1,
+      "message": "attach ?",
+      "range": {
+        "startLine": 717,
+        "startChar": 34,
+        "endLine": 717,
+        "endChar": 44
+      },
+      "revId": "c19b90e82b7cdae2bf9a8051a65e5665b81dbb2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d74cda1b_f6cf0260",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 729,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-14T05:47:28Z",
+      "side": 1,
+      "message": "attach ?",
+      "range": {
+        "startLine": 729,
+        "startChar": 34,
+        "endLine": 729,
+        "endChar": 44
+      },
+      "revId": "c19b90e82b7cdae2bf9a8051a65e5665b81dbb2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8408e953_33718420",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 778,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-14T05:47:28Z",
+      "side": 1,
+      "message": "A value to write",
+      "range": {
+        "startLine": 778,
+        "startChar": 15,
+        "endLine": 778,
+        "endChar": 48
+      },
+      "revId": "c19b90e82b7cdae2bf9a8051a65e5665b81dbb2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "60590e02_e27e8e1b",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 800,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-14T05:47:28Z",
+      "side": 1,
+      "message": "A value to write",
+      "range": {
+        "startLine": 800,
+        "startChar": 16,
+        "endLine": 800,
+        "endChar": 47
+      },
+      "revId": "c19b90e82b7cdae2bf9a8051a65e5665b81dbb2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4feccf40_2c070775",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 822,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-14T05:47:28Z",
+      "side": 1,
+      "message": "A value to write",
+      "range": {
+        "startLine": 822,
+        "startChar": 16,
+        "endLine": 822,
+        "endChar": 47
+      },
+      "revId": "c19b90e82b7cdae2bf9a8051a65e5665b81dbb2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
