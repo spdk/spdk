@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "d0541ed8_d9c2aef9",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-14T13:01:54Z",
+      "side": 1,
+      "message": "Hi Pawel, thank you so much, I understood. You are right.",
+      "parentUuid": "01b72bb4_0a5af286",
+      "range": {
+        "startLine": 429,
+        "startChar": 1,
+        "endLine": 429,
+        "endChar": 10
+      },
+      "revId": "e33ce230fbaf0620f664fadbfddbc617b58057ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2666ea98_612d54d7",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 5
@@ -131,6 +155,30 @@
       "side": 1,
       "message": "This is not duplication. First loop (in lines 435 to 439) is to write configuration of bdev_module itself (like \"RetryCount\" or \"Timeout\" for nvme bdev module). Second part is to dump per bdev configuration.",
       "parentUuid": "2666ea98_612d54d7",
+      "range": {
+        "startLine": 441,
+        "startChar": 0,
+        "endLine": 443,
+        "endChar": 2
+      },
+      "revId": "e33ce230fbaf0620f664fadbfddbc617b58057ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b8eca81_09554252",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 443,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-14T13:01:54Z",
+      "side": 1,
+      "message": "As I wrote in the comment this was my misunderstanding. I could confirm my understanding thanks to your careful explanation.",
+      "parentUuid": "59b0bbc6_f30180b8",
       "range": {
         "startLine": 441,
         "startChar": 0,
