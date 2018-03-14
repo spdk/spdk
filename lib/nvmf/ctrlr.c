@@ -164,10 +164,10 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	ctrlr->vcprop.cap.bits.mpsmin = 0; /* 2 ^ (12 + mpsmin) == 4k */
 	ctrlr->vcprop.cap.bits.mpsmax = 0; /* 2 ^ (12 + mpsmax) == 4k */
 
-	/* Version Supported: 1.2.1 */
+	/* Version Supported: 1.3 */
 	ctrlr->vcprop.vs.bits.mjr = 1;
-	ctrlr->vcprop.vs.bits.mnr = 2;
-	ctrlr->vcprop.vs.bits.ter = 1;
+	ctrlr->vcprop.vs.bits.mnr = 3;
+	ctrlr->vcprop.vs.bits.ter = 0;
 
 	ctrlr->vcprop.cc.raw = 0;
 	ctrlr->vcprop.cc.bits.en = 0; /* Init controller disabled */
