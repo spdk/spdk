@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "4e403cc4_fa16f1e4",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-03-14T01:46:26Z",
+      "side": 1,
+      "message": "Done. Replace \u0027register\u0027 with \u0027create\u0027.",
+      "parentUuid": "41d2d2c9_cf51d0c6",
+      "range": {
+        "startLine": 75,
+        "startChar": 3,
+        "endLine": 75,
+        "endChar": 11
+      },
+      "revId": "c7940facfaca10b19f26e6932a37f705914817a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b61b1e06_4a19c0bd",
         "filename": "include/spdk/jsonrpc.h",
         "patchSetId": 1
@@ -71,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "7bfca213_5f08a1d4",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-03-14T01:46:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b61b1e06_4a19c0bd",
+      "range": {
+        "startLine": 83,
+        "startChar": 28,
+        "endLine": 83,
+        "endChar": 38
+      },
+      "revId": "c7940facfaca10b19f26e6932a37f705914817a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "74ffc25d_54b4ce32",
         "filename": "include/spdk/jsonrpc.h",
         "patchSetId": 1
@@ -82,6 +130,30 @@
       "writtenOn": "2018-03-13T00:40:45Z",
       "side": 1,
       "message": "Poll the requests to the JSON-RPC server ?\n\nThis function does accept, receive, handle the requests and reply to them.",
+      "range": {
+        "startLine": 89,
+        "startChar": 3,
+        "endLine": 89,
+        "endChar": 51
+      },
+      "revId": "c7940facfaca10b19f26e6932a37f705914817a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "53bb20fc_ea5ce15a",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-03-14T01:46:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "74ffc25d_54b4ce32",
       "range": {
         "startLine": 89,
         "startChar": 3,
