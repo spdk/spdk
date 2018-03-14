@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "e4e18e72_30ac2b42",
+        "filename": "include/spdk_internal/event.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-14T10:21:56Z",
+      "side": 1,
+      "message": "There is a problem with returning an error here. To obtain JSON write context we need to start the response. If response is started there is no way to roll it back and send error response. So the question is: what the RPC handler will send in case this (any) function return an error?",
+      "parentUuid": "c56ece84_418794fa",
+      "range": {
+        "startLine": 90,
+        "startChar": 12,
+        "endLine": 90,
+        "endChar": 47
+      },
+      "revId": "4f33ee2f8d1e5d910b9d5dfbe38e6ec045ed2f9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "26e25c11_daaeda64",
         "filename": "lib/event/subsystem.c",
         "patchSetId": 12
@@ -59,6 +83,30 @@
       "writtenOn": "2018-03-14T00:03:34Z",
       "side": 1,
       "message": "I want this to be prohibited because all subsystems should be written in the config file. (Please see my previous feedback)",
+      "range": {
+        "startLine": 251,
+        "startChar": 1,
+        "endLine": 253,
+        "endChar": 2
+      },
+      "revId": "4f33ee2f8d1e5d910b9d5dfbe38e6ec045ed2f9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "45edb1fd_b99e7e44",
+        "filename": "lib/event/subsystem.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-14T10:21:56Z",
+      "side": 1,
+      "message": "I can remove this later when all subsystems will have write_config_json handler. For now, we need to write something just to enable testing.\n\nAlso, second thing: if I remove  if-else then this will make write_config_json mandatory (even for modules written by user). Do we want this handler be mandatory?",
+      "parentUuid": "26e25c11_daaeda64",
       "range": {
         "startLine": 251,
         "startChar": 1,
