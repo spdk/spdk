@@ -95,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "86d34b24_2a0e9f73",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-14T10:45:06Z",
+      "side": 1,
+      "message": "default value here will prevent us from detecting default indent level (2 for stdout and compact mode for file) from explicitly given value.",
+      "parentUuid": "6e124498_18b3da4a",
+      "range": {
+        "startLine": 27,
+        "startChar": 6,
+        "endLine": 27,
+        "endChar": 18
+      },
+      "revId": "251e97f6d4816785e08d9fbfcedf03b37ac7d81c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "84d85012_bd10aef4",
         "filename": "scripts/rpc.py",
         "patchSetId": 5
