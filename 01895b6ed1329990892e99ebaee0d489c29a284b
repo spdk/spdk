@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f6a06e21_1eecdedf",
+        "filename": "configure",
+        "patchSetId": 3
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-14T14:15:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b22012a8_e1d54ba0",
+      "revId": "01895b6ed1329990892e99ebaee0d489c29a284b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6652a1f3_70912a0d",
         "filename": "mk/spdk.common.mk",
         "patchSetId": 3
@@ -30,6 +48,47 @@
       "writtenOn": "2018-03-13T16:36:53Z",
       "side": 1,
       "message": "Hmm, it seems unfortunate that we have to hard-code this - is lib64 always the right directory? (e.g. on 32-bit platforms - we don\u0027t currently build there anyway, but we should avoid adding new problems if we can avoid it)\n\nI guess this will be okay for now, but we should check if there\u0027s a better way to find the correct lib directory in the future.",
+      "revId": "01895b6ed1329990892e99ebaee0d489c29a284b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a5ea52e_e2a16ef4",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 3
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-14T14:15:39Z",
+      "side": 1,
+      "message": "I agree this doesn\u0027t seem right, but I\u0027m open to suggestions. Let me describe how the VPP compilation looks like.\n\n\nAfter issuing make build (this is debug build) following results are generated in build-root directory (example of vppcom header and lib):\n/vpp_repo_root_dir/build-root/install-vpp_debug-native/vpp/lib64/libvppcom.a\n/vpp_repo_root_dir/build-root/install-vpp_debug-native/vpp/include/vcl/vppcom.h\n/vpp_repo_root_dir/build-root/build-vpp_debug-native/vpp/.libs/libvppcom.a\n\n\nThis patch was was created with assumption that user would pass \"/vpp_repo_root_dir/build-root/install-vpp_debug-native/vpp\" as CONFIG_VPP_DIR. This is because everything else depends on the way it was built. For example \"install-vpp_debug-native\" changes to \"install-vpp-native\", when issuing make build-release.\n\nOf course none of this matters when compiling using system installed VPP (without passing  \"--with-vpp\u003d/path/to/repo\").",
+      "parentUuid": "6652a1f3_70912a0d",
+      "revId": "01895b6ed1329990892e99ebaee0d489c29a284b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab889096_87b483a5",
+        "filename": "mk/spdk.modules.mk",
+        "patchSetId": 3
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-14T14:15:39Z",
+      "side": 1,
+      "message": "Neither am I too keen on this part of specifying libraries. When dynamically linking (like below), it would suffice to just pass the name. In the end the SPDK binary would expect the .so files in LD_LIBRARY_PATH. Which user would have to edit manually.\n@Daniel, do you think current approach is fine or should the user be expected to expand LD_LIBRARY_PATH ? Maybe there is some other way ?",
+      "range": {
+        "startLine": 63,
+        "startChar": 0,
+        "endLine": 64,
+        "endChar": 59
+      },
       "revId": "01895b6ed1329990892e99ebaee0d489c29a284b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
