@@ -22,6 +22,30 @@
       "revId": "9d5655b34094bf2d9009a69f76cdafddb19b8af0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ae81800d_fb588d86",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-14T14:37:18Z",
+      "side": 1,
+      "message": "yes",
+      "parentUuid": "8e3928e4_0034af75",
+      "range": {
+        "startLine": 292,
+        "startChar": 0,
+        "endLine": 292,
+        "endChar": 31
+      },
+      "revId": "9d5655b34094bf2d9009a69f76cdafddb19b8af0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
