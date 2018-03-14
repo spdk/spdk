@@ -527,15 +527,21 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 		if (data_len > max_segment_len) {
 			SPDK_ERRLOG("Data(%d) > MaxSegment(%d)\n",
 				    data_len, max_segment_len);
-			spdk_iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
+			rc = spdk_iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
 			spdk_put_pdu(pdu);
+
 			/*
-			 * This PDU was rejected and will not be returned to
-			 *  the caller for execution.  We do not want to
-			 *  drop the connection, so return SUCCESS here so that
-			 *  the caller will continue to attempt reading PDUs.
+			 * If PDU was rejected successfully and thus not will
+			 * not be returned to the caller for execution,
+			 * we will not drop the connection and hence return
+			 * SUCCESS here so that the caller will continue
+			 * to attempt to read PDUs.  If, however, the
+			 * reject failed, then return a failure to the
+			 * caller.
 			 */
-			return SPDK_SUCCESS;
+			rc = (rc < 0) ? SPDK_ISCSI_CONNECTION_FATAL :
+			     SPDK_SUCCESS;
+			return rc;
 		}
 
 		pdu->data = pdu->data_buf;
@@ -1082,6 +1088,11 @@ spdk_iscsi_reject(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
 	}
 
 	rsp_pdu = spdk_get_pdu();
+	if (rsp_pdu == NULL) {
+		free(data);
+		return -ENOMEM;
+	}
+
 	rsph = (struct iscsi_bhs_reject *)&rsp_pdu->bhs;
 	rsp_pdu->data = data;
 	rsph->opcode = ISCSI_OP_REJECT;
@@ -3799,6 +3810,7 @@ spdk_iscsi_handle_status_snack(struct spdk_iscsi_conn *conn,
 	uint32_t last_statsn;
 	bool found_pdu;
 	struct spdk_iscsi_pdu *old_pdu;
+	int rc;
 
 	reqh = (struct iscsi_bhs_snack_req *)&pdu->bhs;
 	beg_run = from_be32(&reqh->beg_run);
@@ -3815,8 +3827,8 @@ spdk_iscsi_handle_status_snack(struct spdk_iscsi_conn *conn,
 			    "but already got ExpStatSN: 0x%08x on CID:%hu.\n",
 			    beg_run, run_length, conn->StatSN, conn->cid);
 
-		spdk_iscsi_reject(conn, pdu, ISCSI_REASON_INVALID_PDU_FIELD);
-		return 0;
+		rc = spdk_iscsi_reject(conn, pdu, ISCSI_REASON_INVALID_PDU_FIELD);
+		return rc;
 	}
 
 	last_statsn = (!run_length) ? conn->StatSN : (beg_run + run_length);
