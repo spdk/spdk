@@ -3529,6 +3529,10 @@ spdk_iscsi_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	/* response PDU */
 	rsp_pdu = spdk_get_pdu();
+	if (rsp_pdu == NULL) {
+		free(data);
+		return SPDK_ISCSI_CONNECTION_FATAL;
+	}
 	rsph = (struct iscsi_bhs_nop_in *)&rsp_pdu->bhs;
 	rsp_pdu->data = data;
 	rsph->opcode = ISCSI_OP_NOPIN;
