@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8652dcc5_a1c40fef",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-14T15:56:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3bd0eead_1da740b6",
+      "revId": "c74648fe70d51f89167573a6aaf7489f91553295",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a07709f7_2d462d25",
         "filename": "lib/net/vpp/vpp.c",
         "patchSetId": 26
@@ -93,6 +111,24 @@
     },
     {
       "key": {
+        "uuid": "337bd661_9df9f46e",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-14T15:56:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a81e97d4_02f40d78",
+      "revId": "c74648fe70d51f89167573a6aaf7489f91553295",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "56c16fe6_3f9b46c3",
         "filename": "lib/net/vpp/vpp.c",
         "patchSetId": 26
@@ -127,6 +163,24 @@
     },
     {
       "key": {
+        "uuid": "83e670ee_384f6930",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 374,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-14T15:56:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0b136324_3d7668aa",
+      "revId": "c74648fe70d51f89167573a6aaf7489f91553295",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "19fdb198_cdb37742",
         "filename": "lib/net/vpp/vpp.c",
         "patchSetId": 26
@@ -138,6 +192,24 @@
       "writtenOn": "2018-03-13T17:11:25Z",
       "side": 1,
       "message": "I don\u0027t think this initial value of rc is ever used.",
+      "revId": "c74648fe70d51f89167573a6aaf7489f91553295",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4c6cfce_b82d09b8",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 422,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-14T15:56:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "19fdb198_cdb37742",
       "revId": "c74648fe70d51f89167573a6aaf7489f91553295",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -167,6 +239,30 @@
     },
     {
       "key": {
+        "uuid": "34dc6b8b_951a826f",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-14T15:56:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "905221ae_a7f3f9c0",
+      "range": {
+        "startLine": 430,
+        "startChar": 5,
+        "endLine": 430,
+        "endChar": 15
+      },
+      "revId": "c74648fe70d51f89167573a6aaf7489f91553295",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "33ab679e_1ee08575",
         "filename": "lib/net/vpp/vpp.c",
         "patchSetId": 26
@@ -184,6 +280,24 @@
     },
     {
       "key": {
+        "uuid": "6260d662_611b1dc7",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 605,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-14T15:56:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "33ab679e_1ee08575",
+      "revId": "c74648fe70d51f89167573a6aaf7489f91553295",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d215ee3e_ed430717",
         "filename": "lib/net/vpp/vpp.c",
         "patchSetId": 26
@@ -195,6 +309,24 @@
       "writtenOn": "2018-03-13T17:11:25Z",
       "side": 1,
       "message": "Is it OK to call vppcom_app_destroy() if vppcom_app_create() failed?",
+      "revId": "c74648fe70d51f89167573a6aaf7489f91553295",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d49fa8b_793aefaa",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 690,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-14T15:56:35Z",
+      "side": 1,
+      "message": "You are right, there shouldn\u0027t be any need to call destroy if create failed.",
+      "parentUuid": "d215ee3e_ed430717",
       "revId": "c74648fe70d51f89167573a6aaf7489f91553295",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
