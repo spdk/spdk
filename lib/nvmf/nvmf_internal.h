@@ -153,6 +153,13 @@ struct spdk_nvmf_qpair {
 	TAILQ_ENTRY(spdk_nvmf_qpair)		link;
 };
 
+struct spdk_nvmf_ctrlr_feat {
+	union spdk_nvme_feat_volatile_write_cache volatile_write_cache;
+	union spdk_nvme_feat_number_of_queues number_of_queues;
+	union spdk_nvme_feat_async_event_configuration async_event_configuration;
+	union spdk_nvme_feat_keep_alive_timer keep_alive_timer;
+};
+
 /*
  * This structure represents an NVMe-oF controller,
  * which is like a "session" in networking terms.
@@ -168,12 +175,12 @@ struct spdk_nvmf_ctrlr {
 		union spdk_nvme_csts_register	csts;
 	} vcprop; /* virtual controller properties */
 
+	struct spdk_nvmf_ctrlr_feat feat;
+
 	struct spdk_nvmf_qpair *admin_qpair;
 	TAILQ_HEAD(, spdk_nvmf_qpair) qpairs;
 	int num_qpairs;
 	int max_qpairs_allowed;
-	uint32_t kato;
-	union spdk_nvme_async_event_config async_event_config;
 	struct spdk_nvmf_request *aer_req;
 	uint8_t hostid[16];
 
