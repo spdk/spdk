@@ -34,12 +34,6 @@
 
 #include "spdk/stdinc.h"
 
-#if defined(__FreeBSD__)
-#include <sys/event.h>
-#else
-#include <sys/epoll.h>
-#endif
-
 #include "spdk/endian.h"
 #include "spdk/env.h"
 #include "spdk/event.h"
