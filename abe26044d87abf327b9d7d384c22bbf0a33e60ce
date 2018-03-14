@@ -1,0 +1,478 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "803c5a05_04eee6e7",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T22:04:15Z",
+      "side": 1,
+      "message": "Maybe \"free_tasks\" would be clearer, if I understand how this is used correctly.",
+      "range": {
+        "startLine": 140,
+        "startChar": 37,
+        "endLine": 140,
+        "endChar": 48
+      },
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7da30334_9b2ebd95",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T22:04:15Z",
+      "side": 1,
+      "message": "I think it would be better if the length in bytes was passed as a parameter to this function; these values are already extracted in the caller, and it would make this function usable for other opcodes (for example, Dataset Management also needs some of this same logic).  Then you wouldn\u0027t need to pass in block_size either, since it would be already baked in as part of the length-in-bytes calculation in the caller.",
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6fc4e856_2164d1a1",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T22:04:15Z",
+      "side": 1,
+      "message": "This sq-\u003eoutstanding counter doesn\u0027t seem to be used for anything (it\u0027s just incremented and decremented, never checked) - can we remove it?",
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "abc49da4_979fca82",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T22:04:15Z",
+      "side": 1,
+      "message": "This can probably use spdk_bdev_io_get_nvme_status().",
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bbcea7c4_a267998b",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 298,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T22:04:15Z",
+      "side": 1,
+      "message": "I think DNR should only be set if there was a failure (spec says if SCT and SC are 0 then this field should be 0).",
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "75bb9b7b_6db2afe7",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T22:04:15Z",
+      "side": 1,
+      "message": "dbbuf_dbs is already declared as volatile uint32_t *, so I don\u0027t think this cast is necessary.",
+      "range": {
+        "startLine": 303,
+        "startChar": 12,
+        "endLine": 303,
+        "endChar": 33
+      },
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22279864_fa768694",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T22:04:15Z",
+      "side": 1,
+      "message": "Same here - dbbuf_eis is already volatile uint32_t *.",
+      "range": {
+        "startLine": 308,
+        "startChar": 31,
+        "endLine": 308,
+        "endChar": 40
+      },
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "97e56e78_44dc54c9",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T22:04:15Z",
+      "side": 1,
+      "message": "I\u0027m not sure what this comment is about, but we shouldn\u0027t be doing anything specific to the Linux kernel driver here.",
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7503247_e29c8749",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T22:04:15Z",
+      "side": 1,
+      "message": "These asserts should probably be turned into a runtime check that returns NULL for out of bounds NSID instead - see my comment below about invalid NSID.",
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ef8b25d_1a535b96",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 370,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T22:04:15Z",
+      "side": 1,
+      "message": "This should probably just fail the command with SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT if it specifies an invalid NSID - it shouldn\u0027t cause an assertion.",
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4679c21_324c9d39",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 399,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T22:04:15Z",
+      "side": 1,
+      "message": "It doesn\u0027t look like either of the counters above are used for anything - can they be dropped?",
+      "range": {
+        "startLine": 399,
+        "startChar": 8,
+        "endLine": 399,
+        "endChar": 20
+      },
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "216332c3_e7deeadd",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 400,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T22:04:15Z",
+      "side": 1,
+      "message": "It would be better to use the new _blocks variants of these functions.",
+      "range": {
+        "startLine": 400,
+        "startChar": 8,
+        "endLine": 400,
+        "endChar": 23
+      },
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ecdc2cc0_5c6e9dd0",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T22:04:15Z",
+      "side": 1,
+      "message": "What happens if this address is unaligned and the buffer continues into the next page?  I think this should be using the same logic as spdk_nvme_map_prps().",
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f41808e_62308dd0",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 491,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T22:04:15Z",
+      "side": 1,
+      "message": "Drop unnecessary cast.",
+      "range": {
+        "startLine": 491,
+        "startChar": 14,
+        "endLine": 491,
+        "endChar": 35
+      },
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab699c54_d38602e5",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 508,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T22:04:15Z",
+      "side": 1,
+      "message": "I don\u0027t think the void * cast should be necessary.\n\nAlso, this can probably be written as:\n\n  *cmd \u003d sq-\u003esq_cmd[sq-\u003esq_head];",
+      "range": {
+        "startLine": 508,
+        "startChar": 15,
+        "endLine": 508,
+        "endChar": 23
+      },
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bc1eb12e_129844cb",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 566,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T22:04:15Z",
+      "side": 1,
+      "message": "These assert()s should probably all just fail the command instead.",
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c804dd1_f7b1c0c1",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 719,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T22:04:15Z",
+      "side": 1,
+      "message": "This should probably be a SPDK_DEBUGLOG().",
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "221d3835_ffb8647e",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T22:04:15Z",
+      "side": 1,
+      "message": "All of these \"nvme  \u003d\" assignments have an extra space in between that should be trimmed.",
+      "range": {
+        "startLine": 785,
+        "startChar": 5,
+        "endLine": 785,
+        "endChar": 7
+      },
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a40051d_6d843da0",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 939,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T22:04:15Z",
+      "side": 1,
+      "message": "I don\u0027t think this needs to be allocated as DMA-able memory.  malloc() or calloc() should be fine.",
+      "range": {
+        "startLine": 939,
+        "startChar": 1,
+        "endLine": 939,
+        "endChar": 31
+      },
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "40eadeec_c6859b5b",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 1041,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T22:04:15Z",
+      "side": 1,
+      "message": "MQES is 0\u0027s based, so this should probably be MAX_QUEUE_ENTRIES_SUPPORTED - 1.",
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "84d3f34c_bff4ba96",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 1050,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T22:04:15Z",
+      "side": 1,
+      "message": "If this is meant to be the SPDK version, please see how the NVMe-oF target generates FW_VERSION in lib/nvmf/ctrlr.c.",
+      "range": {
+        "startLine": 1050,
+        "startChar": 29,
+        "endLine": 1050,
+        "endChar": 33
+      },
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58daf2ed_beb08968",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 1051,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T22:04:15Z",
+      "side": 1,
+      "message": "I don\u0027t think we should pretend to be an Intel controller unless we provide the Intel vendor-specific commands, log pages, etc.",
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ce7101be_9da86191",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 1068,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T22:04:15Z",
+      "side": 1,
+      "message": "Emulated",
+      "range": {
+        "startLine": 1068,
+        "startChar": 4,
+        "endLine": 1068,
+        "endChar": 12
+      },
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88128845_89eaa6cc",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 1096,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T22:04:15Z",
+      "side": 1,
+      "message": "If we free dev here, the dev-\u003enum_io_queues access below will definitely be a NULL pointer dereference.",
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
