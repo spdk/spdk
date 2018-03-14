@@ -164,6 +164,30 @@
       "revId": "4f33ee2f8d1e5d910b9d5dfbe38e6ec045ed2f9a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ff54144_91a26613",
+        "filename": "lib/event/subsystem.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-14T14:44:06Z",
+      "side": 1,
+      "message": "Methods names are only known by subsystem so obviously I\u0027m unable to write them here.\n\n\u003e if there exists any subsystem not described in the JSON config file, how the subsystem\u0027s initialization can be started?\n\nI think I don\u0027t understand this. If subsystem is not configured it just stay unconfigured. I don\u0027t se any problem here. Can you give some example?",
+      "parentUuid": "b2e84d00_2c1869ae",
+      "range": {
+        "startLine": 251,
+        "startChar": 1,
+        "endLine": 253,
+        "endChar": 2
+      },
+      "revId": "4f33ee2f8d1e5d910b9d5dfbe38e6ec045ed2f9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
