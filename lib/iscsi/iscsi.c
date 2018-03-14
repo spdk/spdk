@@ -4404,6 +4404,9 @@ spdk_iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	 * */
 	if (!conn->full_feature && conn->state == ISCSI_CONN_STATE_RUNNING) {
 		rsp_pdu = spdk_get_pdu();
+		if (rsp_pdu == NULL) {
+			return SPDK_ISCSI_CONNECTION_FATAL;
+		}
 		spdk_init_login_reject_response(pdu, rsp_pdu);
 		spdk_iscsi_conn_write_pdu(conn, rsp_pdu);
 		SPDK_ERRLOG("Received opcode %d in login phase\n", opcode);
