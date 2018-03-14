@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "49a5c98c_ea13ec97",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-14T12:00:13Z",
+      "side": 1,
+      "message": "Thank you, I got it.",
+      "parentUuid": "9b9d9d21_80f934fb",
+      "range": {
+        "startLine": 26,
+        "startChar": 19,
+        "endLine": 26,
+        "endChar": 31
+      },
+      "revId": "251e97f6d4816785e08d9fbfcedf03b37ac7d81c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "694d9d10_ed28579b",
         "filename": "scripts/rpc.py",
         "patchSetId": 5
@@ -177,6 +201,30 @@
       "side": 1,
       "message": "I think I don\u0027t understand :). Is equal to \u0027indent \u003d args.indent\u0027 ?\n\nThe goal is to map args.indent values:\nif args.indent is None -\u003e No indent given: use default indent level\nif args.indent \u003c 0 -\u003e Use None - the compact mode\nelse args.indent -\u003e use the value provided by user",
       "parentUuid": "3e543d24_8ed35cf2",
+      "range": {
+        "startLine": 35,
+        "startChar": 1,
+        "endLine": 38,
+        "endChar": 25
+      },
+      "revId": "251e97f6d4816785e08d9fbfcedf03b37ac7d81c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "08d3bb58_1d87aebd",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-14T12:00:13Z",
+      "side": 1,
+      "message": "Thank you, your logic looks clear.\n\nPython\u0027s json.dump behaves as follows:\n\nif args.indent \u003c\u003d 0:\n    only insert newlines\neise if args.indent \u003d None:\n    selects the most compact representation\nelse:\n    use args.indent as spaces per level\n\nI\u0027m wondering If we should adjust SPDK to this.\nHow do you think?",
+      "parentUuid": "72dfb1c6_015bf060",
       "range": {
         "startLine": 35,
         "startChar": 1,
