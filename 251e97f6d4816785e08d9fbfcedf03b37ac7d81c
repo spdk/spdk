@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9b9d9d21_80f934fb",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-14T10:41:05Z",
+      "side": 1,
+      "message": "If no \u0027--filename\u0027 is given this mean stdout. I can\u0027t make this default to \u0027/dev/stdout\u0027 because on some distros \u0027/dev/stdout\u0027 can\u0027t be opened by user.",
+      "parentUuid": "6c408724_775876dc",
+      "range": {
+        "startLine": 26,
+        "startChar": 19,
+        "endLine": 26,
+        "endChar": 31
+      },
+      "revId": "251e97f6d4816785e08d9fbfcedf03b37ac7d81c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "694d9d10_ed28579b",
         "filename": "scripts/rpc.py",
         "patchSetId": 5
@@ -105,6 +129,30 @@
       "writtenOn": "2018-03-13T23:24:49Z",
       "side": 1,
       "message": "If we can do the following, is it more natural?\n\nif args.indent:\n    indent \u003d args.indent\nelse:\n    indent \u003d None",
+      "range": {
+        "startLine": 35,
+        "startChar": 1,
+        "endLine": 38,
+        "endChar": 25
+      },
+      "revId": "251e97f6d4816785e08d9fbfcedf03b37ac7d81c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "72dfb1c6_015bf060",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-14T10:41:05Z",
+      "side": 1,
+      "message": "I think I don\u0027t understand :). Is equal to \u0027indent \u003d args.indent\u0027 ?\n\nThe goal is to map args.indent values:\nif args.indent is None -\u003e No indent given: use default indent level\nif args.indent \u003c 0 -\u003e Use None - the compact mode\nelse args.indent -\u003e use the value provided by user",
+      "parentUuid": "3e543d24_8ed35cf2",
       "range": {
         "startLine": 35,
         "startChar": 1,
