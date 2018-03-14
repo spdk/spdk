@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6853ce05_b994dfdd",
+        "filename": "lib/bdev/error/vbdev_error.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T20:03:13Z",
+      "side": 1,
+      "message": "We should probably also add a \"name\" parameter, but that should be done as a separate patch - this looks good for the current construct_error_bdev params.",
+      "revId": "728bd5ffde48c6cf456c8261a6ed7c7ea4ebe28b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
