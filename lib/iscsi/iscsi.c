@@ -2527,6 +2527,9 @@ spdk_iscsi_op_logout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	/* response PDU */
 	rsp_pdu = spdk_get_pdu();
+	if (rsp_pdu == NULL) {
+		return SPDK_ISCSI_CONNECTION_FATAL;
+	}
 	rsph = (struct iscsi_bhs_logout_resp *)&rsp_pdu->bhs;
 	rsp_pdu->data = NULL;
 	rsph->opcode = ISCSI_OP_LOGOUT_RSP;
