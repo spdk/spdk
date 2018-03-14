@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "e01b7c6f_025750c8",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 423,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-14T12:39:37Z",
+      "side": 1,
+      "message": "see comment in line 429",
+      "parentUuid": "15cf9efb_e6c0dd08",
+      "range": {
+        "startLine": 423,
+        "startChar": 0,
+        "endLine": 423,
+        "endChar": 3
+      },
+      "revId": "e33ce230fbaf0620f664fadbfddbc617b58057ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9043123b_1d61dc58",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 5
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "01b72bb4_0a5af286",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-14T12:39:37Z",
+      "side": 1,
+      "message": "This public API, souldn\u0027t we check for invalid arguments?",
+      "parentUuid": "9043123b_1d61dc58",
+      "range": {
+        "startLine": 429,
+        "startChar": 1,
+        "endLine": 429,
+        "endChar": 10
+      },
+      "revId": "e33ce230fbaf0620f664fadbfddbc617b58057ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2666ea98_612d54d7",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 5
@@ -59,6 +107,30 @@
       "writtenOn": "2018-03-14T07:20:28Z",
       "side": 1,
       "message": "I think this duplication of outputs should be avoided.",
+      "range": {
+        "startLine": 441,
+        "startChar": 0,
+        "endLine": 443,
+        "endChar": 2
+      },
+      "revId": "e33ce230fbaf0620f664fadbfddbc617b58057ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59b0bbc6_f30180b8",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 443,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-14T12:39:37Z",
+      "side": 1,
+      "message": "This is not duplication. First loop (in lines 435 to 439) is to write configuration of bdev_module itself (like \"RetryCount\" or \"Timeout\" for nvme bdev module). Second part is to dump per bdev configuration.",
+      "parentUuid": "2666ea98_612d54d7",
       "range": {
         "startLine": 441,
         "startChar": 0,
@@ -117,6 +189,30 @@
     },
     {
       "key": {
+        "uuid": "6ade29b3_d0b6a7fe",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 976,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-14T12:39:37Z",
+      "side": 1,
+      "message": "spdk_bdev_write_config_json() is in public API. spdk_vhost_scsi_config_json() is not public.",
+      "parentUuid": "15370315_d76b9646",
+      "range": {
+        "startLine": 976,
+        "startChar": 1,
+        "endLine": 976,
+        "endChar": 33
+      },
+      "revId": "e33ce230fbaf0620f664fadbfddbc617b58057ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "132f6621_daa05429",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 5
@@ -140,6 +236,30 @@
     },
     {
       "key": {
+        "uuid": "0f7803ce_610df682",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 207,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-14T12:39:37Z",
+      "side": 1,
+      "message": "True.",
+      "parentUuid": "132f6621_daa05429",
+      "range": {
+        "startLine": 207,
+        "startChar": 2,
+        "endLine": 207,
+        "endChar": 15
+      },
+      "revId": "e33ce230fbaf0620f664fadbfddbc617b58057ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6c45f568_159e41bc",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 5
@@ -151,6 +271,30 @@
       "writtenOn": "2018-03-14T07:20:28Z",
       "side": 1,
       "message": "free_rpc_dump_bdev_config(\u0026req) and then return ?",
+      "range": {
+        "startLine": 216,
+        "startChar": 3,
+        "endLine": 216,
+        "endChar": 16
+      },
+      "revId": "e33ce230fbaf0620f664fadbfddbc617b58057ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8358caa0_37d352c2",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-14T12:39:37Z",
+      "side": 1,
+      "message": "Yes, make sense :P",
+      "parentUuid": "6c45f568_159e41bc",
       "range": {
         "startLine": 216,
         "startChar": 3,
