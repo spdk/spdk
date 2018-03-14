@@ -92,6 +92,30 @@
       "revId": "01895b6ed1329990892e99ebaee0d489c29a284b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "928b46ae_7db1367f",
+        "filename": "mk/spdk.modules.mk",
+        "patchSetId": 3
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T16:52:31Z",
+      "side": 1,
+      "message": "I think this is OK for now - I don\u0027t want to block the VPP integration on this.  We can revisit later (maybe this can be discussed with the VPP folks upstream to find out how they intend it to be used).",
+      "parentUuid": "ab889096_87b483a5",
+      "range": {
+        "startLine": 63,
+        "startChar": 0,
+        "endLine": 64,
+        "endChar": 59
+      },
+      "revId": "01895b6ed1329990892e99ebaee0d489c29a284b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
