@@ -129,7 +129,7 @@ reservation_ns_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 
 static int
 reservation_ns_register(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
-			uint16_t ns_id)
+			uint32_t ns_id)
 {
 	int ret;
 	struct spdk_nvme_reservation_register_data rr_data;
@@ -165,7 +165,7 @@ reservation_ns_register(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *q
 }
 
 static int
-reservation_ns_report(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair, uint16_t ns_id)
+reservation_ns_report(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair, uint32_t ns_id)
 {
 	int ret, i;
 	uint8_t *payload;
@@ -222,7 +222,7 @@ reservation_ns_report(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpa
 }
 
 static int
-reservation_ns_acquire(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair, uint16_t ns_id)
+reservation_ns_acquire(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair, uint32_t ns_id)
 {
 	int ret;
 	struct spdk_nvme_reservation_acquire_data cdata;
@@ -258,7 +258,7 @@ reservation_ns_acquire(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qp
 }
 
 static int
-reservation_ns_release(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair, uint16_t ns_id)
+reservation_ns_release(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair, uint32_t ns_id)
 {
 	int ret;
 	struct spdk_nvme_reservation_key_data cdata;

@@ -222,7 +222,7 @@ spdk_nvme_ns_get_optimal_io_boundary(struct spdk_nvme_ns *ns)
 	return ns->sectors_per_stripe;
 }
 
-int nvme_ns_construct(struct spdk_nvme_ns *ns, uint16_t id,
+int nvme_ns_construct(struct spdk_nvme_ns *ns, uint32_t id,
 		      struct spdk_nvme_ctrlr *ctrlr)
 {
 	assert(id > 0);

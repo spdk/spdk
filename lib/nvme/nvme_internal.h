@@ -300,7 +300,7 @@ struct spdk_nvme_ns {
 	uint32_t			pi_type;
 	uint32_t			sectors_per_max_io;
 	uint32_t			sectors_per_stripe;
-	uint16_t			id;
+	uint32_t			id;
 	uint16_t			flags;
 };
 
@@ -528,7 +528,7 @@ int	nvme_ctrlr_cmd_identify_controller(struct spdk_nvme_ctrlr *ctrlr,
 		void *payload,
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 int	nvme_ctrlr_cmd_identify_namespace(struct spdk_nvme_ctrlr *ctrlr,
-		uint16_t nsid, void *payload,
+		uint32_t nsid, void *payload,
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 int	nvme_ctrlr_cmd_set_num_queues(struct spdk_nvme_ctrlr *ctrlr,
 				      uint32_t num_queues, spdk_nvme_cmd_cb cb_fn,
@@ -589,7 +589,7 @@ void	nvme_qpair_disable(struct spdk_nvme_qpair *qpair);
 int	nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 				  struct nvme_request *req);
 
-int	nvme_ns_construct(struct spdk_nvme_ns *ns, uint16_t id,
+int	nvme_ns_construct(struct spdk_nvme_ns *ns, uint32_t id,
 			  struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ns_destruct(struct spdk_nvme_ns *ns);
 
