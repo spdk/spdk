@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fbf7ef81_500d22e2",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-14T05:28:42Z",
+      "side": 1,
+      "message": "How about adding a few comment, for example the following?\n\ninitiator-to-target PDU (or incoming PDU) is allocated only in spdk_iscsi_read_pdu() and fixed in this patch.\n\ntarget-to-initiator PDU (or outgoing PDU) is allocated in several places and they will be done in subsequent patches.",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 0
+      },
+      "revId": "d4a4e27dfdb391b7f60582730f36f3e61c192ebb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
