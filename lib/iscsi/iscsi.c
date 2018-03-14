@@ -2216,6 +2216,9 @@ spdk_iscsi_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 
 	rsp_pdu = spdk_get_pdu();
+	if (rsp_pdu == NULL) {
+		return SPDK_ISCSI_CONNECTION_FATAL;
+	}
 	rc = spdk_iscsi_op_login_rsp_init(conn, pdu, rsp_pdu, params_p,
 					  &alloc_len, &cid);
 	if (rc == SPDK_ISCSI_LOGIN_ERROR_RESPONSE || rc == SPDK_ISCSI_LOGIN_ERROR_PARAMETER) {
