@@ -41,7 +41,7 @@ APP = spdk_tgt
 C_SRCS := spdk_tgt.c
 
 SPDK_LIB_LIST = event_bdev event_copy event_iscsi event_net event_scsi event_nvmf
-SPDK_LIB_LIST += nvmf event log trace conf util bdev iscsi scsi net copy rpc jsonrpc json
+SPDK_LIB_LIST += nvmf event log trace conf util bdev iscsi scsi copy rpc jsonrpc json
 SPDK_LIB_LIST += app_rpc log_rpc bdev_rpc
 
 ifeq ($(OS),Linux)
@@ -55,13 +55,14 @@ endif
 
 LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
 	$(COPY_MODULES_LINKER_ARGS) \
+	$(NET_MODULES_LINKER_ARGS) \
 	$(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
 LIBS += -lcrypto
 
 all: $(APP)
 	@:
 
-$(APP): $(OBJS) $(SPDK_LIB_FILES) $(SPDK_WHOLE_LIBS) $(BLOCKDEV_MODULES_FILES) $(LINKER_MODULES) $(ENV_LIBS)
+$(APP): $(OBJS) $(SPDK_LIB_FILES) $(SPDK_WHOLE_LIBS) $(BLOCKDEV_MODULES_FILES) $(NET_MODULES_FILES) $(LINKER_MODULES) $(ENV_LIBS)
 	$(LINK_C)
 
 clean:
