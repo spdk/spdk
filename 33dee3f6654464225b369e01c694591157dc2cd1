@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "0b103a46_b009a1a4",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T20:29:10Z",
+      "side": 1,
+      "message": "Rather than adding a new function that almost duplicates run_test, can we just improve run_test?",
+      "revId": "33dee3f6654464225b369e01c694591157dc2cd1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6a61ea81_498d89c6",
         "filename": "test/common/autotest_common.sh",
         "patchSetId": 4
@@ -13,6 +30,24 @@
       "writtenOn": "2018-03-14T10:07:17Z",
       "side": 1,
       "message": "I think there is no need to check the retval of $@. If something wrong happend, the whole autotest.sh would exit exceptionally.",
+      "revId": "33dee3f6654464225b369e01c694591157dc2cd1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9266cab_09294951",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 363,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T20:29:10Z",
+      "side": 1,
+      "message": "Agreed, all test scripts should be running with \u0027set -e\u0027 so that the script will exit on error.",
+      "parentUuid": "6a61ea81_498d89c6",
       "revId": "33dee3f6654464225b369e01c694591157dc2cd1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
