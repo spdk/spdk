@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8d297d7d_6f867c9f",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-14T19:25:34Z",
+      "side": 1,
+      "message": "This macro is removed. You need to rebase.",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 52,
+        "endChar": 35
+      },
+      "revId": "efeb5d3dcca22188dd89ec036eb0e5ed2dc5305a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77f7a917_040e5b8d",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-14T19:25:34Z",
+      "side": 1,
+      "message": "We have now spdk_json_write_named_* API.",
+      "range": {
+        "startLine": 251,
+        "startChar": 1,
+        "endLine": 252,
+        "endChar": 41
+      },
+      "revId": "efeb5d3dcca22188dd89ec036eb0e5ed2dc5305a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6845ed57_c24158dc",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 332,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-14T19:25:34Z",
+      "side": 1,
+      "message": "There is inconcistency in SPDK bdev library. Some functions return -1 on failure (like bdev_nvme_library_init) other return positive errno code. Now I see you return 1 here.\n\nAs this is an example can we invent some common convention here?",
+      "range": {
+        "startLine": 332,
+        "startChar": 4,
+        "endLine": 332,
+        "endChar": 13
+      },
+      "revId": "efeb5d3dcca22188dd89ec036eb0e5ed2dc5305a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d6b23d8d_c40a20b0",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-14T19:25:34Z",
+      "side": 1,
+      "message": "-\u003e vbdev_passthru_info_config_json ?",
+      "range": {
+        "startLine": 407,
+        "startChar": 20,
+        "endLine": 407,
+        "endChar": 51
+      },
+      "revId": "efeb5d3dcca22188dd89ec036eb0e5ed2dc5305a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8f91825_fd18794b",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 517,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-14T19:25:34Z",
+      "side": 1,
+      "message": "This macro is removed. You need to rebase.",
+      "range": {
+        "startLine": 515,
+        "startChar": 0,
+        "endLine": 517,
+        "endChar": 57
+      },
+      "revId": "efeb5d3dcca22188dd89ec036eb0e5ed2dc5305a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
