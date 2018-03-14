@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a9c270b_d0e0e1f0",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 4643,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-14T09:35:18Z",
+      "side": 1,
+      "message": "I suppose you were trying out different approaches here ?\nSince we already have and use flags in spdk_blob for data_ro and md_ro, those should be fine to report back to user.",
+      "range": {
+        "startLine": 4643,
+        "startChar": 1,
+        "endLine": 4643,
+        "endChar": 39
+      },
+      "revId": "c6e7da784772318e324cd169fe471bee4c4dc9ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83b1841c_b4eb321b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 4653,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-14T09:35:18Z",
+      "side": 1,
+      "message": "As you\u0027ve noticed at this time there is no difference between read_only and snapshot blob.\n\nI\u0027m still wondering if there should be. If yes, then probably a new invalid_flags is needed for this (similar to SPDK_BLOB_THIN_PROV).",
+      "range": {
+        "startLine": 4653,
+        "startChar": 8,
+        "endLine": 4653,
+        "endChar": 37
+      },
+      "revId": "c6e7da784772318e324cd169fe471bee4c4dc9ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d05f194d_ff4033c4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 4659,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-14T09:35:18Z",
+      "side": 1,
+      "message": "This check should be enough, as there is no way a blob is not thin provisioned and is a clone. Checking for thin_provisioned, could be only done as sanity check (assert?) or not at all.",
+      "range": {
+        "startLine": 4659,
+        "startChar": 47,
+        "endLine": 4659,
+        "endChar": 72
+      },
+      "revId": "c6e7da784772318e324cd169fe471bee4c4dc9ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bfe4713a_860386e2",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-14T09:35:18Z",
+      "side": 1,
+      "message": "relationships",
+      "range": {
+        "startLine": 141,
+        "startChar": 24,
+        "endLine": 141,
+        "endChar": 38
+      },
+      "revId": "c6e7da784772318e324cd169fe471bee4c4dc9ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
