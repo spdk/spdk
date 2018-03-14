@@ -292,24 +292,37 @@ spdk_nvmf_rdma_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 static void
 spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 {
+	int rc;
+
 	if (rqpair->poller) {
 		TAILQ_REMOVE(&rqpair->poller->qpairs, rqpair, link);
 	}
 
 	if (rqpair->cmds_mr) {
-		ibv_dereg_mr(rqpair->cmds_mr);
+		rc = ibv_dereg_mr(rqpair->cmds_mr);
+		if (rc) {
+			SPDK_ERRLOG("cmds ibv_dereg_mr: errno %d: %s\n", errno, spdk_strerror(errno));
+		}
 	}
 
 	if (rqpair->cpls_mr) {
 		ibv_dereg_mr(rqpair->cpls_mr);
+		if (rc) {
+			SPDK_ERRLOG("cpls ibv_dereg_mr: errno %d: %s\n", errno, spdk_strerror(errno));
+		}
 	}
 
 	if (rqpair->bufs_mr) {
 		ibv_dereg_mr(rqpair->bufs_mr);
+		if (rc) {
+			SPDK_ERRLOG("bufs ibv_dereg_mr: errno %d: %s\n", errno, spdk_strerror(errno));
+		}
 	}
 
 	if (rqpair->cm_id) {
-		rdma_destroy_qp(rqpair->cm_id);
+		if (rqpair->cm_id->qp) {
+			rdma_destroy_qp(rqpair->cm_id);
+		}
 		rdma_destroy_id(rqpair->cm_id);
 	}
 
