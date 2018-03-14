@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "800976ff_cde8857c",
+        "filename": "lib/bdev/split/vbdev_split.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T20:10:08Z",
+      "side": 1,
+      "message": "calloc() needs a check for allocation failure.",
+      "revId": "7e320042ae3f250f865fc0c7500ee2eaa37cfc94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ae2251fe_fabd417f",
+        "filename": "lib/bdev/split/vbdev_split.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 270,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T20:10:08Z",
+      "side": 1,
+      "message": "strdup() needs a check for allocation failure.",
+      "revId": "7e320042ae3f250f865fc0c7500ee2eaa37cfc94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
