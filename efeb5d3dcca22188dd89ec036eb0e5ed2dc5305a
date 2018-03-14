@@ -25,6 +25,29 @@
     },
     {
       "key": {
+        "uuid": "202d51e7_60a1dc28",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T20:55:36Z",
+      "side": 1,
+      "message": "I would prefer to call this \u0027struct vbdev_passthru\u0027 or something along those lines - it represents a single instance of a passthru bdev, and it\u0027s essentially subclassing struct spdk_bdev with passthru-specific data.\n\nAt the very least, it should be \"node\" rather than \"nodes\", but I think that name is just confusing.",
+      "range": {
+        "startLine": 65,
+        "startChar": 7,
+        "endLine": 65,
+        "endChar": 15
+      },
+      "revId": "efeb5d3dcca22188dd89ec036eb0e5ed2dc5305a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "77f7a917_040e5b8d",
         "filename": "lib/bdev/passthru/vbdev_passthru.c",
         "patchSetId": 13
@@ -41,6 +64,29 @@
         "startChar": 1,
         "endLine": 252,
         "endChar": 41
+      },
+      "revId": "efeb5d3dcca22188dd89ec036eb0e5ed2dc5305a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d3f81e7e_a81b8d96",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T20:55:36Z",
+      "side": 1,
+      "message": "Field names should normally not have spaces in them for consistency with the rest of the JSON-RPC API.",
+      "range": {
+        "startLine": 254,
+        "startChar": 34,
+        "endLine": 254,
+        "endChar": 46
       },
       "revId": "efeb5d3dcca22188dd89ec036eb0e5ed2dc5305a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
@@ -88,6 +134,40 @@
         "endLine": 407,
         "endChar": 51
       },
+      "revId": "efeb5d3dcca22188dd89ec036eb0e5ed2dc5305a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4fba69f_3faef2d2",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T20:55:36Z",
+      "side": 1,
+      "message": "I think we should remove these \"Entry\" logs, or at least drop them to SPDK_INFOLOG() so they don\u0027t print out by default.",
+      "revId": "efeb5d3dcca22188dd89ec036eb0e5ed2dc5305a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a4d581d3_c43a3e5b",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 446,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T20:55:36Z",
+      "side": 1,
+      "message": "calloc() needs a check for allocation failure.",
       "revId": "efeb5d3dcca22188dd89ec036eb0e5ed2dc5305a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
