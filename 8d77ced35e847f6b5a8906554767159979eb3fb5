@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f4a52bd8_30267340",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 40
+      },
+      "lineNbr": 1219,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-14T09:18:16Z",
+      "side": 1,
+      "message": "Here fill_size is passed as size parameter to fio, as well as in definition of FioThread \"--time_based --runtime\u003d5\". From my understanding fio runs until one of those is satisfied. Meaning that with low fill_size, fio will end before snapshot begins (especially that there is sleep(2) here).\n\nCan only time_based run be used here to assure that it fio is running during snapshot ?",
+      "range": {
+        "startLine": 1219,
+        "startChar": 17,
+        "endLine": 1219,
+        "endChar": 70
+      },
+      "revId": "8d77ced35e847f6b5a8906554767159979eb3fb5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
