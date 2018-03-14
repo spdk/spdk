@@ -85,6 +85,11 @@ if __name__ == "__main__":
     p.add_argument('base_name', help='base bdev name')
     p.set_defaults(func=rpc.bdev.add_error_bdev_config)
 
+    p = subparsers.add_parser('delete_error_bdev_config',
+                              help='Delete config of error bdev parsed at examine()')
+    p.add_argument('base_name', help='base bdev name')
+    p.set_defaults(func=rpc.bdev.delete_error_bdev_config)
+
     p = subparsers.add_parser('construct_pmem_bdev', help='Add a bdev with pmem backend')
     p.add_argument('pmem_file', help='Path to pmemblk pool file')
     p.add_argument('-n', '--name', help='Block device name', required=True)

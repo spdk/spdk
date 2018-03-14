@@ -179,6 +179,54 @@ invalid:
 }
 SPDK_RPC_REGISTER("add_error_bdev_config", spdk_rpc_add_error_bdev_config)
 
+static void
+spdk_rpc_delete_error_bdev_config(struct spdk_jsonrpc_request *request,
+				  const struct spdk_json_val *params)
+{
+	struct rpc_construct_error_bdev req = {};
+	struct spdk_json_write_ctx *w;
+	struct spdk_bdev *base_bdev;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_construct_error_bdev_decoders,
+				    SPDK_COUNTOF(rpc_construct_error_bdev_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		goto invalid;
+	}
+
+	base_bdev = spdk_bdev_get_by_name(req.base_name);
+	if (base_bdev) {
+		SPDK_ERRLOG("bdev %s exists. Please delete the bdev first..\n",
+			    req.base_name);
+		goto invalid;
+	}
+
+	rc = spdk_vbdev_error_delete_config(req.base_name);
+	if (rc != 0) {
+		SPDK_ERRLOG("Could not delete ErrorInjection config for bdev %s\n", req.base_name);
+		goto invalid;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		free_rpc_construct_error_bdev(&req);
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+
+	free_rpc_construct_error_bdev(&req);
+
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	free_rpc_construct_error_bdev(&req);
+}
+SPDK_RPC_REGISTER("delete_error_bdev_config", spdk_rpc_delete_error_bdev_config)
+
 struct rpc_error_information {
 	char *name;
 	char *io_type;

@@ -323,6 +323,23 @@ spdk_vbdev_error_add_config(char *base_bdev_name)
 	return 0;
 }
 
+int
+spdk_vbdev_error_delete_config(char *base_bdev_name)
+{
+	struct spdk_vbdev_error_config *cfg;
+
+	TAILQ_FOREACH(cfg, &g_error_config, tailq) {
+		if (strcmp(cfg->base_bdev, base_bdev_name) == 0) {
+			TAILQ_REMOVE(&g_error_config, cfg, tailq);
+			free(cfg->base_bdev);
+			free(cfg);
+			return 0;
+		}
+	}
+
+	return -1;
+}
+
 static int
 vbdev_error_init(void)
 {

@@ -46,4 +46,5 @@ int spdk_vbdev_error_create(struct spdk_bdev *base_bdev);
 int spdk_vbdev_inject_error(char *name, uint32_t io_type, uint32_t error_type,
 			    uint32_t error_num);
 int spdk_vbdev_error_add_config(char *name);
+int spdk_vbdev_error_delete_config(char *name);
 #endif // SPDK_VBDEV_ERROR_H

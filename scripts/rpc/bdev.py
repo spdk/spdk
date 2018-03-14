@@ -70,6 +70,11 @@ def add_error_bdev_config(args):
     args.client.call('add_error_bdev_config', params)
 
 
+def delete_error_bdev_config(args):
+    params = {'base_name': args.base_name}
+    args.client.call('delete_error_bdev_config', params)
+
+
 def construct_pmem_bdev(args):
     params = {
         'pmem_file': args.pmem_file,
