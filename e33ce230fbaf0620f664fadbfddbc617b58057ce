@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "15cf9efb_e6c0dd08",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 423,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-14T07:20:28Z",
+      "side": 1,
+      "message": "I\u0027m not sure we should return any value here.",
+      "range": {
+        "startLine": 423,
+        "startChar": 0,
+        "endLine": 423,
+        "endChar": 3
+      },
+      "revId": "e33ce230fbaf0620f664fadbfddbc617b58057ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9043123b_1d61dc58",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-14T07:20:28Z",
+      "side": 1,
+      "message": "just assert() is enough?",
+      "range": {
+        "startLine": 429,
+        "startChar": 1,
+        "endLine": 429,
+        "endChar": 10
+      },
+      "revId": "e33ce230fbaf0620f664fadbfddbc617b58057ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2666ea98_612d54d7",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 443,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-14T07:20:28Z",
+      "side": 1,
+      "message": "I think this duplication of outputs should be avoided.",
+      "range": {
+        "startLine": 441,
+        "startChar": 0,
+        "endLine": 443,
+        "endChar": 2
+      },
+      "revId": "e33ce230fbaf0620f664fadbfddbc617b58057ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0156d06f_1d340376",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 973,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-14T07:20:28Z",
+      "side": 1,
+      "message": "Should return any value?",
+      "range": {
+        "startLine": 973,
+        "startChar": 0,
+        "endLine": 973,
+        "endChar": 3
+      },
+      "revId": "e33ce230fbaf0620f664fadbfddbc617b58057ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15370315_d76b9646",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 976,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-14T07:20:28Z",
+      "side": 1,
+      "message": "spdk_vhost_scsi_config_json asserts for this case. assert is enough?",
+      "range": {
+        "startLine": 976,
+        "startChar": 1,
+        "endLine": 976,
+        "endChar": 33
+      },
+      "revId": "e33ce230fbaf0620f664fadbfddbc617b58057ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "132f6621_daa05429",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 207,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-14T07:20:28Z",
+      "side": 1,
+      "message": "just return ?",
+      "range": {
+        "startLine": 207,
+        "startChar": 2,
+        "endLine": 207,
+        "endChar": 15
+      },
+      "revId": "e33ce230fbaf0620f664fadbfddbc617b58057ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c45f568_159e41bc",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-14T07:20:28Z",
+      "side": 1,
+      "message": "free_rpc_dump_bdev_config(\u0026req) and then return ?",
+      "range": {
+        "startLine": 216,
+        "startChar": 3,
+        "endLine": 216,
+        "endChar": 16
+      },
+      "revId": "e33ce230fbaf0620f664fadbfddbc617b58057ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "67a09f1e_7dc0f797",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-14T07:20:28Z",
+      "side": 1,
+      "message": "Removable ?",
+      "range": {
+        "startLine": 242,
+        "startChar": 0,
+        "endLine": 243,
+        "endChar": 34
+      },
+      "revId": "e33ce230fbaf0620f664fadbfddbc617b58057ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
