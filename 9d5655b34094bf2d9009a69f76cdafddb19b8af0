@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8e3928e4_0034af75",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-14T07:50:22Z",
+      "side": 1,
+      "message": "spdk_json_write_named_string(w, \"name\", pdisk-\u003edisk.name);\nmust be added?",
+      "range": {
+        "startLine": 292,
+        "startChar": 0,
+        "endLine": 292,
+        "endChar": 31
+      },
+      "revId": "9d5655b34094bf2d9009a69f76cdafddb19b8af0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
