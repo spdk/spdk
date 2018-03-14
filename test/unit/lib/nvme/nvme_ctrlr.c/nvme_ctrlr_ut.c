@@ -387,7 +387,7 @@ nvme_ns_destruct(struct spdk_nvme_ns *ns)
 }
 
 int
-nvme_ns_construct(struct spdk_nvme_ns *ns, uint16_t id,
+nvme_ns_construct(struct spdk_nvme_ns *ns, uint32_t id,
 		  struct spdk_nvme_ctrlr *ctrlr)
 {
 	return 0;

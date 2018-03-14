@@ -42,7 +42,7 @@
 SPDK_LOG_REGISTER_COMPONENT("nvme", SPDK_LOG_NVME)
 
 int
-nvme_ctrlr_cmd_identify_namespace(struct spdk_nvme_ctrlr *ctrlr, uint16_t nsid, void *payload,
+nvme_ctrlr_cmd_identify_namespace(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, void *payload,
 				  spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	return -1;
@@ -63,7 +63,7 @@ static void
 test_nvme_ns_construct(void)
 {
 	struct spdk_nvme_ns ns = {};
-	uint16_t id = 1;
+	uint32_t id = 1;
 	struct spdk_nvme_ctrlr ctrlr = {};
 
 	nvme_ns_construct(&ns, id, &ctrlr);
