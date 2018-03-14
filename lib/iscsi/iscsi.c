@@ -4269,6 +4269,9 @@ spdk_iscsi_send_r2t(struct spdk_iscsi_conn *conn,
 
 	/* R2T PDU */
 	rsp_pdu = spdk_get_pdu();
+	if (rsp_pdu == NULL) {
+		return SPDK_ISCSI_CONNECTION_FATAL;
+	}
 	rsph = (struct iscsi_bhs_r2t *)&rsp_pdu->bhs;
 	rsp_pdu->data = NULL;
 	rsph->opcode = ISCSI_OP_R2T;
