@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff2b63d6_37967130",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 1148,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-14T08:58:36Z",
+      "side": 1,
+      "message": "Should be SPDK_LVOL_NAME_MAX",
+      "range": {
+        "startLine": 1148,
+        "startChar": 39,
+        "endLine": 1148,
+        "endChar": 56
+      },
+      "revId": "d527559b788407b5913810512c1535b8e1b7d8cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eee788e9_5361f683",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 1203,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-14T08:58:36Z",
+      "side": 1,
+      "message": "SPDK_LVOL_NAME_MAX",
+      "range": {
+        "startLine": 1203,
+        "startChar": 36,
+        "endLine": 1203,
+        "endChar": 53
+      },
+      "revId": "d527559b788407b5913810512c1535b8e1b7d8cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a6d9915c_4286056f",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 583,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-14T08:58:36Z",
+      "side": 1,
+      "message": "This seems like a mistype here as well as in spdk_lvol_create() and spdk_lvol_create_clone(). Should be SPDK_LVOL_NAME_MAX.",
+      "range": {
+        "startLine": 583,
+        "startChar": 36,
+        "endLine": 583,
+        "endChar": 53
+      },
+      "revId": "d527559b788407b5913810512c1535b8e1b7d8cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bae3c863_997a747e",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 1396,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-14T08:58:36Z",
+      "side": 1,
+      "message": "Please remove",
+      "range": {
+        "startLine": 1396,
+        "startChar": 49,
+        "endLine": 1396,
+        "endChar": 68
+      },
+      "revId": "d527559b788407b5913810512c1535b8e1b7d8cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "81b27f0f_dc901906",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 1404,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-14T08:58:36Z",
+      "side": 1,
+      "message": "Please remove",
+      "range": {
+        "startLine": 1404,
+        "startChar": 32,
+        "endLine": 1404,
+        "endChar": 51
+      },
+      "revId": "d527559b788407b5913810512c1535b8e1b7d8cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
