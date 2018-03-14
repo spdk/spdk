@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "16b54b98_bc149981",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-14T01:04:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ab11dcf4_323be844",
+      "range": {
+        "startLine": 210,
+        "startChar": 59,
+        "endLine": 210,
+        "endChar": 61
+      },
+      "revId": "82e9765b8b8d1447368848f2cf49a8184104bba0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1e3f9327_0b7fe6aa",
         "filename": "lib/scsi/lun.c",
         "patchSetId": 5
@@ -36,6 +60,24 @@
       "writtenOn": "2018-03-13T18:05:48Z",
       "side": 1,
       "message": "Why not just assign the return value of spdk_poller_register() directly to lun-\u003ehotplug_poller? This seems like an unnecessary, unrelated change.",
+      "revId": "82e9765b8b8d1447368848f2cf49a8184104bba0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba3fb945_82bd2322",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-14T01:04:06Z",
+      "side": 1,
+      "message": "This is to make the UT work. In the UT version of spdk_poller_register(), it will directly call the callback and release the memory for the \"lun\". So that it will meet some error in UT. So that here make a change.",
+      "parentUuid": "1e3f9327_0b7fe6aa",
       "revId": "82e9765b8b8d1447368848f2cf49a8184104bba0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
