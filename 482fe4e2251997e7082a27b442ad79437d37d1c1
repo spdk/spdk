@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1719804a_ead5b1af",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T16:13:18Z",
+      "side": 1,
+      "message": "We need to make sure the spdk_put_io_channel() caller is synchronized with the I/O path.  It shouldn\u0027t be possible to get here while simultaneously destroying a poll group on a different thread.  If that is still possible, this fix will just reduce the potential window for a race, not remove it.\n\nIt seems like the poll group destroy path should probably send a message to each thread to destroy its own io_channel and wait for them to complete before freeing the poll group.",
+      "revId": "482fe4e2251997e7082a27b442ad79437d37d1c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea194b51_3be4857f",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-14T16:13:18Z",
+      "side": 1,
+      "message": "These changes look unrelated to the io_channel change.",
+      "revId": "482fe4e2251997e7082a27b442ad79437d37d1c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
