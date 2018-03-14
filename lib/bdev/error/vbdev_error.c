@@ -48,6 +48,14 @@
 
 #include "vbdev_error.h"
 
+struct spdk_vbdev_error_config {
+	char *base_bdev;
+	TAILQ_ENTRY(spdk_vbdev_error_config) tailq;
+};
+
+static TAILQ_HEAD(, spdk_vbdev_error_config) g_error_config
+	= TAILQ_HEAD_INITIALIZER(g_error_config);
+
 struct vbdev_error_info {
 	bool				enabled;
 	uint32_t			error_type;
@@ -69,13 +77,14 @@ static pthread_mutex_t g_vbdev_error_mutex = PTHREAD_MUTEX_INITIALIZER;
 static SPDK_BDEV_PART_TAILQ g_error_disks = TAILQ_HEAD_INITIALIZER(g_error_disks);
 
 static int vbdev_error_init(void);
+static void vbdev_error_fini(void);
 
 static void vbdev_error_examine(struct spdk_bdev *bdev);
 
 static struct spdk_bdev_module error_if = {
 	.name = "error",
 	.module_init = vbdev_error_init,
-	.module_fini = NULL,
+	.module_fini = vbdev_error_fini,
 	.examine = vbdev_error_examine,
 
 };
@@ -288,20 +297,14 @@ spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 static int
 vbdev_error_init(void)
 {
-	return 0;
-}
-
-static void
-vbdev_error_examine(struct spdk_bdev *bdev)
-{
 	struct spdk_conf_section *sp;
+	struct spdk_vbdev_error_config *cfg;
 	const char *base_bdev_name;
 	int i;
 
 	sp = spdk_conf_find_section(NULL, "BdevError");
 	if (sp == NULL) {
-		spdk_bdev_module_examine_done(&error_if);
-		return;
+		return 0;
 	}
 
 	for (i = 0; ; i++) {
@@ -312,17 +315,57 @@ vbdev_error_examine(struct spdk_bdev *bdev)
 		base_bdev_name = spdk_conf_section_get_nmval(sp, "BdevError", i, 0);
 		if (!base_bdev_name) {
 			SPDK_ERRLOG("ErrorInjection configuration missing bdev name\n");
-			break;
+			return -EINVAL;
 		}
 
-		if (strcmp(base_bdev_name, bdev->name) != 0) {
+		cfg = calloc(1, sizeof(*cfg));
+		if (!cfg) {
+			SPDK_ERRLOG("calloc() failed for vbdev_error_config\n");
+			return -ENOMEM;
+		}
+
+		cfg->base_bdev = strdup(base_bdev_name);
+		if (!cfg->base_bdev) {
+			free(cfg);
+			SPDK_ERRLOG("strdup() failed for bdev name\n");
+			return -ENOMEM;
+		}
+
+		TAILQ_INSERT_TAIL(&g_error_config, cfg, tailq);
+	}
+
+	return 0;
+}
+
+static void
+vbdev_error_fini(void)
+{
+	struct spdk_vbdev_error_config *cfg;
+
+	while ((cfg = TAILQ_FIRST(&g_error_config))) {
+		TAILQ_REMOVE(&g_error_config, cfg, tailq);
+		free(cfg->base_bdev);
+		free(cfg);
+	}
+}
+
+static void
+vbdev_error_examine(struct spdk_bdev *bdev)
+{
+	struct spdk_vbdev_error_config *cfg;
+	int rc;
+
+	TAILQ_FOREACH(cfg, &g_error_config, tailq) {
+		if (strcmp(cfg->base_bdev, bdev->name) != 0) {
 			continue;
 		}
 
-		if (spdk_vbdev_error_create(bdev)) {
+		rc = spdk_vbdev_error_create(bdev);
+		if (rc != 0) {
 			SPDK_ERRLOG("could not create error vbdev for bdev %s\n", bdev->name);
-			break;
 		}
+
+		break;
 	}
 
 	spdk_bdev_module_examine_done(&error_if);
