@@ -3989,6 +3989,7 @@ spdk_iscsi_send_r2t_recovery(struct spdk_iscsi_conn *conn,
 	struct iscsi_bhs_r2t *rsph;
 	uint32_t transfer_len;
 	uint32_t len;
+	int rc;
 
 	/* remove the r2t pdu from the snack_list */
 	pdu = spdk_iscsi_remove_r2t_pdu_from_snack_list(conn, task, r2t_sn);
@@ -4020,8 +4021,11 @@ spdk_iscsi_send_r2t_recovery(struct spdk_iscsi_conn *conn,
 		spdk_put_pdu(pdu);
 
 		/* re-send a new r2t pdu */
-		spdk_iscsi_send_r2t(conn, task, task->next_expected_r2t_offset,
-				    len, task->ttt, &task->R2TSN);
+		rc = spdk_iscsi_send_r2t(conn, task, task->next_expected_r2t_offset,
+					 len, task->ttt, &task->R2TSN);
+		if (rc < 0) {
+			return SPDK_ISCSI_CONNECTION_FATAL;
+		}
 	}
 
 	return 0;
@@ -4271,6 +4275,9 @@ spdk_iscsi_send_r2t(struct spdk_iscsi_conn *conn,
 
 	/* R2T PDU */
 	rsp_pdu = spdk_get_pdu();
+	if (rsp_pdu == NULL) {
+		return SPDK_ISCSI_CONNECTION_FATAL;
+	}
 	rsph = (struct iscsi_bhs_r2t *)&rsp_pdu->bhs;
 	rsp_pdu->data = NULL;
 	rsph->opcode = ISCSI_OP_R2T;
