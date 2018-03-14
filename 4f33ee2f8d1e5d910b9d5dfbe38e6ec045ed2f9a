@@ -72,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "ad2e4b8a_59a799fc",
+        "filename": "include/spdk_internal/event.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-14T12:42:16Z",
+      "side": 1,
+      "message": "Thank you, I understood. This feedback was due to my misunderstanding, sorry for confusing you also here.",
+      "parentUuid": "e4e18e72_30ac2b42",
+      "range": {
+        "startLine": 90,
+        "startChar": 12,
+        "endLine": 90,
+        "endChar": 47
+      },
+      "revId": "4f33ee2f8d1e5d910b9d5dfbe38e6ec045ed2f9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "26e25c11_daaeda64",
         "filename": "lib/event/subsystem.c",
         "patchSetId": 12
@@ -107,6 +131,30 @@
       "side": 1,
       "message": "I can remove this later when all subsystems will have write_config_json handler. For now, we need to write something just to enable testing.\n\nAlso, second thing: if I remove  if-else then this will make write_config_json mandatory (even for modules written by user). Do we want this handler be mandatory?",
       "parentUuid": "26e25c11_daaeda64",
+      "range": {
+        "startLine": 251,
+        "startChar": 1,
+        "endLine": 253,
+        "endChar": 2
+      },
+      "revId": "4f33ee2f8d1e5d910b9d5dfbe38e6ec045ed2f9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b2e84d00_2c1869ae",
+        "filename": "lib/event/subsystem.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-14T12:42:16Z",
+      "side": 1,
+      "message": "Thank you. the first thing is very reasonable.\n\nFor the second thing, I would like to propose an idea.\n\ninstead of spdk_json_write_null(w), how about writing method\u0027s name and empty params? (Similar idea was already proposed by you...).\n\nThe reason why I want this to be prohibited is the following.\n\nif there exists any subsystem not described in the JSON config file, how the subsystem\u0027s initialization can be started?\n\nIn the current idea, all subsystems\u0027 initialization are started by receiving each JSON RPC request, and the JSON RPC request will be the contents of spdk_subsystem_config_json().\n\nI understand mandatory is better to be avoided.",
+      "parentUuid": "45edb1fd_b99e7e44",
       "range": {
         "startLine": 251,
         "startChar": 1,
