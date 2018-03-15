@@ -188,6 +188,30 @@
       "revId": "4f33ee2f8d1e5d910b9d5dfbe38e6ec045ed2f9a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10a78159_b50add70",
+        "filename": "lib/event/subsystem.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-15T00:12:31Z",
+      "side": 1,
+      "message": "Sorry, my intention was not clear.\n\nIf all of subsystems currently configured by default have write_config_json(), that is fine for me.\nIn other words, for all of subsystems currently configured by default, writing write_config_json() must be mandatory.\nI think, if yes, current implementation looks fine to me.\n\nHence I think for modules written by user writing write_config_json() may be almost mandatory because if not written there may be no way to configure them. My reply was a workaround for any subsystem whose write_config_json() is not written.",
+      "parentUuid": "7ff54144_91a26613",
+      "range": {
+        "startLine": 251,
+        "startChar": 1,
+        "endLine": 253,
+        "endChar": 2
+      },
+      "revId": "4f33ee2f8d1e5d910b9d5dfbe38e6ec045ed2f9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
