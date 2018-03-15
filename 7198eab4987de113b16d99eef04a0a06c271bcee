@@ -1,0 +1,228 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cd745d96_1048d0bb",
+        "filename": "test/vhost/perf/perf_nvme_pmd.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-15T07:53:46Z",
+      "side": 1,
+      "message": "All 3 scripts in this commit share this part. Maybe make it re-usable?",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 4
+      },
+      "revId": "7198eab4987de113b16d99eef04a0a06c271bcee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2527c377_c577239e",
+        "filename": "test/vhost/perf/perf_nvme_pmd.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-15T07:53:46Z",
+      "side": 1,
+      "message": "Why not with LD_PRELOAD? At least that\u0027s what says in examples/nvme/fio_plugin/README, but please explain as I might be missing something here.",
+      "range": {
+        "startLine": 66,
+        "startChar": 0,
+        "endLine": 69,
+        "endChar": 1
+      },
+      "revId": "7198eab4987de113b16d99eef04a0a06c271bcee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "244b82f5_f0dfefce",
+        "filename": "test/vhost/perf/perf_nvme_pmd.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-15T07:53:46Z",
+      "side": 1,
+      "message": "name... name of what?:P this variable name is kind of misleading to me as I see that you\u0027re getting a list of disks?",
+      "range": {
+        "startLine": 71,
+        "startChar": 0,
+        "endLine": 71,
+        "endChar": 4
+      },
+      "revId": "7198eab4987de113b16d99eef04a0a06c271bcee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "157a55b6_6c63caf4",
+        "filename": "test/vhost/perf/perf_nvme_pmd.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-15T07:53:46Z",
+      "side": 1,
+      "message": "Why not use iter_pci_class_code from scripts/common.sh ?",
+      "range": {
+        "startLine": 71,
+        "startChar": 6,
+        "endLine": 71,
+        "endChar": 47
+      },
+      "revId": "7198eab4987de113b16d99eef04a0a06c271bcee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e2315e5e_f3dfda22",
+        "filename": "test/vhost/perf/perf_virtio_initiator.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-15T07:53:46Z",
+      "side": 1,
+      "message": "I\u0027d say make \"ALL\" the default",
+      "range": {
+        "startLine": 26,
+        "startChar": 94,
+        "endLine": 26,
+        "endChar": 106
+      },
+      "revId": "7198eab4987de113b16d99eef04a0a06c271bcee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5fe5d8bb_ebb416e5",
+        "filename": "test/vhost/perf/perf_virtio_initiator.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-15T07:53:46Z",
+      "side": 1,
+      "message": "You don\u0027t use this variable until line 110 where it\u0027s assigned again",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 67,
+        "endChar": 15
+      },
+      "revId": "7198eab4987de113b16d99eef04a0a06c271bcee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff8149ba_6ac35f2d",
+        "filename": "test/vhost/perf/perf_virtio_initiator.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-15T07:53:46Z",
+      "side": 1,
+      "message": "Maybe change to:\nif $diskno -gt ${#name[@]}:\n   error\n\nif diskno \u003d\u003d \"ALL\":\n   diskno\u003d$(wc -l \u003c\u003c\u003c \"$name\")\n\nThat way you get rid of this weird regexp and possibly you won\u0027t need if/else in next conditional",
+      "range": {
+        "startLine": 80,
+        "startChar": 0,
+        "endLine": 84,
+        "endChar": 2
+      },
+      "revId": "7198eab4987de113b16d99eef04a0a06c271bcee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "563ea9a3_f54511e3",
+        "filename": "test/vhost/perf/perf_virtio_initiator.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-15T07:53:46Z",
+      "side": 1,
+      "message": "You will not need this \"if\" if you make the change from comment as line 80",
+      "range": {
+        "startLine": 87,
+        "startChar": 0,
+        "endLine": 87,
+        "endChar": 57
+      },
+      "revId": "7198eab4987de113b16d99eef04a0a06c271bcee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92d6cdba_f331ad24",
+        "filename": "test/vhost/perf/run_all.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-15T07:53:46Z",
+      "side": 1,
+      "message": "Can we name this script differently than \"run_all\"?\nWell, currently it is \"run all\", but if we add any other perf scripts (and we will) then the name will not be appropriate.\n\n\"nvme_vs_virtio.sh\", or something like that?",
+      "revId": "7198eab4987de113b16d99eef04a0a06c271bcee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8ec881f_a0d29002",
+        "filename": "test/vhost/perf/run_all.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-15T07:53:46Z",
+      "side": 1,
+      "message": "This will probably need cleaning up, will comment on that later.",
+      "range": {
+        "startLine": 78,
+        "startChar": 0,
+        "endLine": 87,
+        "endChar": 91
+      },
+      "revId": "7198eab4987de113b16d99eef04a0a06c271bcee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
