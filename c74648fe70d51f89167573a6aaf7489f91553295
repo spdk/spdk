@@ -60,6 +60,30 @@
     },
     {
       "key": {
+        "uuid": "d37837ce_b3e19d7a",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-15T09:36:13Z",
+      "side": 1,
+      "message": "Yup, taken it into account. \n\nBesides I\u0027ve moved code below as part of vcom_socket_copy_ep_to_sockaddr.",
+      "parentUuid": "a07709f7_2d462d25",
+      "range": {
+        "startLine": 100,
+        "startChar": 25,
+        "endLine": 100,
+        "endChar": 51
+      },
+      "revId": "c74648fe70d51f89167573a6aaf7489f91553295",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8b96d802_25197121",
         "filename": "lib/net/vpp/vpp.c",
         "patchSetId": 26
@@ -77,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "349469e5_2f498446",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-15T09:36:13Z",
+      "side": 1,
+      "message": "vrf - Virtual routing and forwarding. This allows to have multiple forwarding tables (FIB), thus creating \"virtual router\". This probably is not something that we would want to utilize.\n\nThus should be changed to a sanity check only (it is always set as VPPCOM_VRF_DEFAULT in session create).",
+      "parentUuid": "8b96d802_25197121",
+      "revId": "c74648fe70d51f89167573a6aaf7489f91553295",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5b55ed42_e8928892",
         "filename": "lib/net/vpp/vpp.c",
         "patchSetId": 26
@@ -88,6 +130,24 @@
       "writtenOn": "2018-03-13T17:11:25Z",
       "side": 1,
       "message": "This looks unreachable based on the assignment above.  Maybe it would be simpler to just write a single \u0027if\u0027 statement, e.g.:\n\n  if (ep.is_ip4 \u003d\u003d VPPCOM_IS_IP4) {\n    addr-\u003esa_family \u003d AF_INET;\n    ((struct sockaddr_in *)addr)-\u003esin_port \u003d ep.port;\n    *len \u003d sizeof(struct sockaddr_in);\n  } else {\n     addr-\u003esa_family \u003d AF_INET6;\n     ...\n  }",
+      "revId": "c74648fe70d51f89167573a6aaf7489f91553295",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "96a788a8_ade5f3c5",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-15T09:36:13Z",
+      "side": 1,
+      "message": "Agree, simple is better. Thanks.",
+      "parentUuid": "5b55ed42_e8928892",
       "revId": "c74648fe70d51f89167573a6aaf7489f91553295",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -140,6 +200,24 @@
       "writtenOn": "2018-03-13T17:11:25Z",
       "side": 1,
       "message": "It might be simpler to just return NULL here directly - that seems to be the only path possible for all of these \u0027goto end\u0027 cases.",
+      "revId": "c74648fe70d51f89167573a6aaf7489f91553295",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "64eb0c1b_213210a5",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 290,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-15T09:36:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "56c16fe6_3f9b46c3",
       "revId": "c74648fe70d51f89167573a6aaf7489f91553295",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
