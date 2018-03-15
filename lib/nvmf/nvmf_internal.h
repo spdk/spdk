@@ -154,8 +154,12 @@ struct spdk_nvmf_qpair {
 };
 
 struct spdk_nvmf_ctrlr_feat {
+	union spdk_nvme_feat_arbitration arbitration;
+	union spdk_nvme_feat_power_management power_management;
+	union spdk_nvme_feat_error_recovery error_recovery;
 	union spdk_nvme_feat_volatile_write_cache volatile_write_cache;
 	union spdk_nvme_feat_number_of_queues number_of_queues;
+	union spdk_nvme_feat_write_atomicity write_atomicity;
 	union spdk_nvme_feat_async_event_configuration async_event_configuration;
 	union spdk_nvme_feat_keep_alive_timer keep_alive_timer;
 };
