@@ -16,6 +16,23 @@
       "revId": "4ddfc4e1fb564b3ccf45e2055c19034170cbaf11",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea822283_e2acf9b6",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2018-03-15T23:07:44Z",
+      "side": 1,
+      "message": "I saw for vhost log on fedora 08, there is already test case info, we may need to distinguish from the one existed.\nTest Case 52: Start\nTest Name: construct_lvol_bdev_using_name_positive\n\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\nINFO: RPC COMMAND construct_malloc_bdev\nINFO: RPC COMMAND construct_lvol_store\nINFO: RPC COMMAND get_lvol_stores\nINFO: RPC COMMAND get_lvol_stores\nINFO: base_name:Malloc3 is found in RPC Command: get_lvol_stores response\nINFO: UUID:efb08fa8-7be1-49f5-92b5-ebc12663365d is found in RPC Command: get_lvol_stores response\nInfo: Cluster size :1048576 is found in RPC Command: get_lvol_stores response\nINFO: RPC COMMAND construct_lvol_bdev\nINFO: Check RPC COMMAND get_bdevs\nInfo: UUID:efb08fa8-7be1-49f5-92b5-ebc12663365d_4294967297 is found in RPC Command: gets_bdevs response\nInfo: Response get_bdevs command is correct. Params: uuid_bdevs: efb08fa8-7be1-49f5-92b5-ebc12663365d_4294967297, bdev_size 63\nINFO: RPC COMMAND delete_bdev\nINFO: RPC COMMAND destroy_lvol_store\nINFO: RPC COMMAND delete_bdev\nTest Case 52: END",
+      "revId": "4ddfc4e1fb564b3ccf45e2055c19034170cbaf11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
