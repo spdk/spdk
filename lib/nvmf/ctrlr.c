@@ -771,6 +771,7 @@ spdk_nvmf_ctrlr_set_features_async_event_configuration(struct spdk_nvmf_request 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Async Event Configuration, cdw11 0x%08x\n",
 		      cmd->cdw11);
 	ctrlr->feat.async_event_configuration.raw = cmd->cdw11;
+	ctrlr->feat.async_event_configuration.bits.reserved = 0;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
