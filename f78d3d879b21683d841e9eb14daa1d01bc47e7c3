@@ -214,6 +214,30 @@
     },
     {
       "key": {
+        "uuid": "a705daf6_cf39db65",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-03-15T06:56:27Z",
+      "side": 1,
+      "message": "Thanks Gang. You\u0027re right. And in this solution, actually, just only one thread call this callback function. So I think the static variable here is safe. I will remove the mutex that could reduce the overhead caused by the lock.",
+      "parentUuid": "301d09c7_47b1abd0",
+      "range": {
+        "startLine": 44,
+        "startChar": 1,
+        "endLine": 44,
+        "endChar": 23
+      },
+      "revId": "f78d3d879b21683d841e9eb14daa1d01bc47e7c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "75e4606c_fc1cb2bc",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 18
