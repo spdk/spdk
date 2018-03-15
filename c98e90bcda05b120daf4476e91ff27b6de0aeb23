@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c93ae544_9753ebbe",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2397,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-03-15T03:33:01Z",
+      "side": 1,
+      "message": "I\u0027ll just go ahead and fix it in this patch.",
+      "parentUuid": "d33e0f8b_dfaad993",
+      "revId": "c98e90bcda05b120daf4476e91ff27b6de0aeb23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f1ecae5f_3f43edfc",
         "filename": "lib/iscsi/iscsi.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2018-03-15T02:47:00Z",
       "side": 1,
       "message": "spdk_iscsi_param_free(*params_p) should be inserted here.",
+      "revId": "c98e90bcda05b120daf4476e91ff27b6de0aeb23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c8a1985_664bdef5",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2407,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-03-15T03:33:01Z",
+      "side": 1,
+      "message": "Yes, thanks.",
+      "parentUuid": "f1ecae5f_3f43edfc",
       "revId": "c98e90bcda05b120daf4476e91ff27b6de0aeb23",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
