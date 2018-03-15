@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "38c108a4_634e3345",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-03-15T01:35:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8d297d7d_6f867c9f",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 52,
+        "endChar": 35
+      },
+      "revId": "efeb5d3dcca22188dd89ec036eb0e5ed2dc5305a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "202d51e7_60a1dc28",
         "filename": "lib/bdev/passthru/vbdev_passthru.c",
         "patchSetId": 13
@@ -36,6 +60,30 @@
       "writtenOn": "2018-03-14T20:55:36Z",
       "side": 1,
       "message": "I would prefer to call this \u0027struct vbdev_passthru\u0027 or something along those lines - it represents a single instance of a passthru bdev, and it\u0027s essentially subclassing struct spdk_bdev with passthru-specific data.\n\nAt the very least, it should be \"node\" rather than \"nodes\", but I think that name is just confusing.",
+      "range": {
+        "startLine": 65,
+        "startChar": 7,
+        "endLine": 65,
+        "endChar": 15
+      },
+      "revId": "efeb5d3dcca22188dd89ec036eb0e5ed2dc5305a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3a0447f_b06c8408",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-03-15T01:35:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "202d51e7_60a1dc28",
       "range": {
         "startLine": 65,
         "startChar": 7,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "d8f92d5a_4b6b55fd",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-03-15T01:35:33Z",
+      "side": 1,
+      "message": "So a few more words with the comment would be helpful :) What does that mean?",
+      "parentUuid": "77f7a917_040e5b8d",
+      "range": {
+        "startLine": 251,
+        "startChar": 1,
+        "endLine": 252,
+        "endChar": 41
+      },
+      "revId": "efeb5d3dcca22188dd89ec036eb0e5ed2dc5305a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d3f81e7e_a81b8d96",
         "filename": "lib/bdev/passthru/vbdev_passthru.c",
         "patchSetId": 13
@@ -82,6 +154,30 @@
       "writtenOn": "2018-03-14T20:55:36Z",
       "side": 1,
       "message": "Field names should normally not have spaces in them for consistency with the rest of the JSON-RPC API.",
+      "range": {
+        "startLine": 254,
+        "startChar": 34,
+        "endLine": 254,
+        "endChar": 46
+      },
+      "revId": "efeb5d3dcca22188dd89ec036eb0e5ed2dc5305a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8306a69c_4e38cf02",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-03-15T01:35:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d3f81e7e_a81b8d96",
       "range": {
         "startLine": 254,
         "startChar": 34,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "1355f25f_80b60353",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 332,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-03-15T01:35:33Z",
+      "side": 1,
+      "message": "I can\u0027t remember which init() function I looked at to come up with return 1 but I assumed they were all doing that.  -1 sounds better to me, I\u0027ll go ahead and make these -1 and change back  if Daniel prefers 1",
+      "parentUuid": "6845ed57_c24158dc",
+      "range": {
+        "startLine": 332,
+        "startChar": 4,
+        "endLine": 332,
+        "endChar": 13
+      },
+      "revId": "efeb5d3dcca22188dd89ec036eb0e5ed2dc5305a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d6b23d8d_c40a20b0",
         "filename": "lib/bdev/passthru/vbdev_passthru.c",
         "patchSetId": 13
@@ -128,6 +248,30 @@
       "writtenOn": "2018-03-14T19:25:34Z",
       "side": 1,
       "message": "-\u003e vbdev_passthru_info_config_json ?",
+      "range": {
+        "startLine": 407,
+        "startChar": 20,
+        "endLine": 407,
+        "endChar": 51
+      },
+      "revId": "efeb5d3dcca22188dd89ec036eb0e5ed2dc5305a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8440289_6491b9ff",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-03-15T01:35:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d6b23d8d_c40a20b0",
       "range": {
         "startLine": 407,
         "startChar": 20,
@@ -157,6 +301,24 @@
     },
     {
       "key": {
+        "uuid": "9a7db113_96003f4c",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-03-15T01:35:33Z",
+      "side": 1,
+      "message": "yeah, I\u0027ll just remove them.  They were helpful, of course, to me without ever having seen any of this stuff before to know when things are happening so I figured they\u0027d be helpful for other new people as well but they\u0027re easy enough to add for anyone who cares",
+      "parentUuid": "b4fba69f_3faef2d2",
+      "revId": "efeb5d3dcca22188dd89ec036eb0e5ed2dc5305a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a4d581d3_c43a3e5b",
         "filename": "lib/bdev/passthru/vbdev_passthru.c",
         "patchSetId": 13
@@ -168,6 +330,24 @@
       "writtenOn": "2018-03-14T20:55:36Z",
       "side": 1,
       "message": "calloc() needs a check for allocation failure.",
+      "revId": "efeb5d3dcca22188dd89ec036eb0e5ed2dc5305a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38e714e4_05bcf825",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 446,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-03-15T01:35:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a4d581d3_c43a3e5b",
       "revId": "efeb5d3dcca22188dd89ec036eb0e5ed2dc5305a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
