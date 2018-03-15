@@ -37,8 +37,8 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	if [ $SPDK_TEST_NVML -eq 1 ]; then
 		run_test ./test/iscsi_tgt/pmem/iscsi_pmem.sh 4096 10
 	fi
-	run_test ./test/iscsi_tgt/ip_migration/ip_migration.sh
 	run_test ./test/iscsi_tgt/ext4test/ext4test.sh
+	run_test ./test/iscsi_tgt/ip_migration/ip_migration.sh
 	run_test ./test/iscsi_tgt/digests/digests.sh
 fi
 if [ $SPDK_TEST_RBD -eq 1 ]; then
