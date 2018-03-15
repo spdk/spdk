@@ -739,17 +739,6 @@ spdk_nvmf_ctrlr_set_features_keep_alive_timer(struct spdk_nvmf_request *req)
 }
 
 static int
-spdk_nvmf_ctrlr_get_features_keep_alive_timer(struct spdk_nvmf_request *req)
-{
-	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
-	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
-
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Get Features - Keep Alive Timer\n");
-	rsp->cdw0 = ctrlr->feat.keep_alive_timer.bits.kato;
-	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-}
-
-static int
 spdk_nvmf_ctrlr_set_features_number_of_queues(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
@@ -774,28 +763,6 @@ spdk_nvmf_ctrlr_set_features_number_of_queues(struct spdk_nvmf_request *req)
 }
 
 static int
-spdk_nvmf_ctrlr_get_features_number_of_queues(struct spdk_nvmf_request *req)
-{
-	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
-	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
-
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Get Features - Number of Queues\n");
-	rsp->cdw0 = ctrlr->feat.number_of_queues.raw;
-	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-}
-
-static int
-spdk_nvmf_ctrlr_get_features_write_cache(struct spdk_nvmf_request *req)
-{
-	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
-	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
-
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Get Features - Write Cache\n");
-	rsp->cdw0 = ctrlr->feat.volatile_write_cache.raw;
-	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-}
-
-static int
 spdk_nvmf_ctrlr_set_features_async_event_configuration(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
@@ -804,17 +771,6 @@ spdk_nvmf_ctrlr_set_features_async_event_configuration(struct spdk_nvmf_request 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Async Event Configuration, cdw11 0x%08x\n",
 		      cmd->cdw11);
 	ctrlr->feat.async_event_configuration.raw = cmd->cdw11;
-	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-}
-
-static int
-spdk_nvmf_ctrlr_get_features_async_event_configuration(struct spdk_nvmf_request *req)
-{
-	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
-	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
-
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Get Features - Async Event Configuration\n");
-	rsp->cdw0 = ctrlr->feat.async_event_configuration.raw;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
@@ -1187,22 +1143,32 @@ spdk_nvmf_ctrlr_abort(struct spdk_nvmf_request *req)
 }
 
 static int
+get_features_generic(struct spdk_nvmf_request *req, uint32_t cdw0)
+{
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+
+	rsp->cdw0 = cdw0;
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static int
 spdk_nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 {
 	uint8_t feature;
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 
 	feature = cmd->cdw10 & 0xff; /* mask out the FID value */
 	switch (feature) {
 	case SPDK_NVME_FEAT_NUMBER_OF_QUEUES:
-		return spdk_nvmf_ctrlr_get_features_number_of_queues(req);
+		return get_features_generic(req, ctrlr->feat.number_of_queues.raw);
 	case SPDK_NVME_FEAT_VOLATILE_WRITE_CACHE:
-		return spdk_nvmf_ctrlr_get_features_write_cache(req);
+		return get_features_generic(req, ctrlr->feat.volatile_write_cache.raw);
 	case SPDK_NVME_FEAT_KEEP_ALIVE_TIMER:
-		return spdk_nvmf_ctrlr_get_features_keep_alive_timer(req);
+		return get_features_generic(req, ctrlr->feat.keep_alive_timer.raw);
 	case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:
-		return spdk_nvmf_ctrlr_get_features_async_event_configuration(req);
+		return get_features_generic(req, ctrlr->feat.async_event_configuration.raw);
 	case SPDK_NVME_FEAT_HOST_IDENTIFIER:
 		return spdk_nvmf_ctrlr_get_features_host_identifier(req);
 	default:
