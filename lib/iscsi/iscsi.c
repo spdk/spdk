@@ -531,13 +531,10 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 			spdk_put_pdu(pdu);
 
 			/*
-			 * If PDU was rejected successfully and thus not will
-			 * not be returned to the caller for execution,
-			 * we will not drop the connection and hence return
-			 * SUCCESS here so that the caller will continue
-			 * to attempt to read PDUs.  If, however, the
-			 * reject failed, then return a failure to the
-			 * caller.
+			 * If spdk_iscsi_reject() was not able to reject the PDU,
+			 * treat it as a fatal connection error.  Otherwise,
+			 * return SUCCESS here so that the caller will continue
+			 * to attempt to read PDUs.
 			 */
 			rc = (rc < 0) ? SPDK_ISCSI_CONNECTION_FATAL :
 			     SPDK_SUCCESS;
@@ -3826,7 +3823,6 @@ spdk_iscsi_handle_status_snack(struct spdk_iscsi_conn *conn,
 	uint32_t last_statsn;
 	bool found_pdu;
 	struct spdk_iscsi_pdu *old_pdu;
-	int rc;
 
 	reqh = (struct iscsi_bhs_snack_req *)&pdu->bhs;
 	beg_run = from_be32(&reqh->beg_run);
@@ -3843,8 +3839,7 @@ spdk_iscsi_handle_status_snack(struct spdk_iscsi_conn *conn,
 			    "but already got ExpStatSN: 0x%08x on CID:%hu.\n",
 			    beg_run, run_length, conn->StatSN, conn->cid);
 
-		rc = spdk_iscsi_reject(conn, pdu, ISCSI_REASON_INVALID_PDU_FIELD);
-		return rc;
+		return spdk_iscsi_reject(conn, pdu, ISCSI_REASON_INVALID_PDU_FIELD);
 	}
 
 	last_statsn = (!run_length) ? conn->StatSN : (beg_run + run_length);
