@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a2fc816f_df33353f",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-03-15T06:37:02Z",
+      "side": 1,
+      "message": "Yes，i think improve run_test is better.",
+      "parentUuid": "0b103a46_b009a1a4",
+      "revId": "33dee3f6654464225b369e01c694591157dc2cd1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6a61ea81_498d89c6",
         "filename": "test/common/autotest_common.sh",
         "patchSetId": 4
@@ -48,6 +66,24 @@
       "side": 1,
       "message": "Agreed, all test scripts should be running with \u0027set -e\u0027 so that the script will exit on error.",
       "parentUuid": "6a61ea81_498d89c6",
+      "revId": "33dee3f6654464225b369e01c694591157dc2cd1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "57d29e8a_b8302df3",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 363,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-03-15T06:37:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f9266cab_09294951",
       "revId": "33dee3f6654464225b369e01c694591157dc2cd1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
