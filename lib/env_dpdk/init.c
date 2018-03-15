@@ -131,6 +131,7 @@ spdk_env_opts_init(struct spdk_env_opts *opts)
 	opts->mem_size = SPDK_ENV_DPDK_DEFAULT_MEM_SIZE;
 	opts->master_core = SPDK_ENV_DPDK_DEFAULT_MASTER_CORE;
 	opts->mem_channel = SPDK_ENV_DPDK_DEFAULT_MEM_CHANNEL;
+	opts->hugepage_single_segments = true;
 }
 
 static void
