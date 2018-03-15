@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bad6a048_8c4a01fc",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 207,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-15T07:54:32Z",
+      "side": 1,
+      "message": "this blank line can be removed.",
+      "range": {
+        "startLine": 207,
+        "startChar": 0,
+        "endLine": 207,
+        "endChar": 0
+      },
+      "revId": "59126fdad4860b71b7b53feaa5c85db42a17b896",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da0a31c6_1a11f471",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-15T07:54:32Z",
+      "side": 1,
+      "message": "pthread_mutex_destroy(\u0026dev-\u003emutex) should be called at scsi_dev_destruct().",
+      "range": {
+        "startLine": 267,
+        "startChar": 1,
+        "endLine": 267,
+        "endChar": 39
+      },
+      "revId": "59126fdad4860b71b7b53feaa5c85db42a17b896",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
