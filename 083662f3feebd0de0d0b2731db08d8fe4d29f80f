@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8466a12f_aaaec523",
+        "filename": "test/vhost/nvmf/migration-tc2.job",
+        "patchSetId": 6
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-15T13:15:44Z",
+      "side": 1,
+      "message": "Please use 128",
+      "range": {
+        "startLine": 3,
+        "startChar": 8,
+        "endLine": 3,
+        "endChar": 10
+      },
+      "revId": "083662f3feebd0de0d0b2731db08d8fe4d29f80f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
