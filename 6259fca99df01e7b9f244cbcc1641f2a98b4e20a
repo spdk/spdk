@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "996002da_f8f21c80",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 534,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-15T07:33:23Z",
+      "side": 1,
+      "message": "this \"not\" means the successfully rejected PDU ?",
+      "range": {
+        "startLine": 534,
+        "startChar": 48,
+        "endLine": 534,
+        "endChar": 51
+      },
+      "revId": "6259fca99df01e7b9f244cbcc1641f2a98b4e20a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
