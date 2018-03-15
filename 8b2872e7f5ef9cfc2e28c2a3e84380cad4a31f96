@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "979e0d03_ae1eb569",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1558,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-15T23:52:14Z",
+      "side": 1,
+      "message": "If I don\u0027t look wrong, consolidating two variables, pages_done and payload into a variable curr_payload may be possible.\n\nstruct op_split_ctx {\n  uint64_t page_offset;\n  uint64_t pages_remaining;\n  void *curr_payload;\n};\n\n_submit_op_split_next(cb_arg, bserrno)\n{\n  buf \u003d ctx-\u003ecurr_payload;\n  op_length \u003d spdk_min(length, _bs_num_pages_to_cluster_boundary(blob, offset));\n\n  ctx-\u003epages_remaining -\u003d op_length;\n  ctx-\u003epages_offset +\u003d op_length;\n  if (op_type \u003d\u003d WRITE || op_type \u003d\u003d READ)\n    ctx-\u003ecurr_payload +\u003d op_length;\n\n  switch (op_type) {\n  case READ:\n    blob_io_read(blob, ch, buf, offset, op_length, _submit_op_split_next, ctx);\n  }\n}\n\nsubmit_op_split(ch, blob, payload, offset, length, cb_fn, cb_arg, op_type)\n{  \n  ctx-\u003ecurr_payload \u003d payload;\n  ctx-\u003epage_offset \u003d offset;\n  ctx-\u003epages_remaining \u003d length;\n\n  _submit_op_split_next(ctx, 0);\n}",
+      "range": {
+        "startLine": 1557,
+        "startChar": 0,
+        "endLine": 1558,
+        "endChar": 15
+      },
+      "revId": "8b2872e7f5ef9cfc2e28c2a3e84380cad4a31f96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
