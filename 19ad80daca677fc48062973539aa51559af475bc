@@ -34,6 +34,24 @@
       "revId": "19ad80daca677fc48062973539aa51559af475bc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5be11f2b_239459f9",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2018-03-15T06:08:51Z",
+      "side": 1,
+      "message": "fixed above issue, histograms  for ack and total rdma are added",
+      "parentUuid": "3a7d9325_18a51600",
+      "revId": "19ad80daca677fc48062973539aa51559af475bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
