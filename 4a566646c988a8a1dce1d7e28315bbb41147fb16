@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "23de5c20_d52e4dc1",
+        "filename": "CONFIG",
+        "patchSetId": 21
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-15T04:31:30Z",
+      "side": 1,
+      "message": "This should be in the patch that introduces the RDMA histogram trace points.",
+      "revId": "4a566646c988a8a1dce1d7e28315bbb41147fb16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b21dca84_516f5113",
+        "filename": "configure",
+        "patchSetId": 21
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-15T04:31:30Z",
+      "side": 1,
+      "message": "Same here - this should be in the next patch where the RDMA histogram points are added.",
+      "revId": "4a566646c988a8a1dce1d7e28315bbb41147fb16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e13b38d0_ef326455",
+        "filename": "configure",
+        "patchSetId": 21
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-15T04:31:30Z",
+      "side": 1,
+      "message": "This should be indented with tabs to match the rest of the file (in addition to moving to the right patch)",
+      "revId": "4a566646c988a8a1dce1d7e28315bbb41147fb16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c36420f7_e034de88",
+        "filename": "configure",
+        "patchSetId": 21
+      },
+      "lineNbr": 293,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-15T04:31:30Z",
+      "side": 1,
+      "message": "Same here - spaces should be tabs.",
+      "revId": "4a566646c988a8a1dce1d7e28315bbb41147fb16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
