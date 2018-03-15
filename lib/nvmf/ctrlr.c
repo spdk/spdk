@@ -678,6 +678,171 @@ spdk_nvmf_property_set(struct spdk_nvmf_request *req)
 }
 
 static int
+spdk_nvmf_ctrlr_set_features_arbitration(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Arbitration (cdw11 = 0x%0x)\n", cmd->cdw11);
+
+	ctrlr->feat.arbitration.raw = cmd->cdw11;
+	ctrlr->feat.arbitration.bits.reserved = 0;
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static int
+spdk_nvmf_ctrlr_set_features_power_management(struct spdk_nvmf_request *req)
+{
+	union spdk_nvme_feat_power_management opts;
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Power Management (cdw11 = 0x%0x)\n", cmd->cdw11);
+	opts.raw = cmd->cdw11;
+
+	/* Only PS = 0 is allowed, since we report NPSS = 0 */
+	if (opts.bits.ps != 0) {
+		SPDK_ERRLOG("Invalid power state %u\n", opts.bits.ps);
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	ctrlr->feat.power_management.raw = cmd->cdw11;
+	ctrlr->feat.power_management.bits.reserved = 0;
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static bool
+temp_threshold_opts_valid(const union spdk_nvme_feat_temperature_threshold *opts)
+{
+	/*
+	 * Valid TMPSEL values:
+	 *  0000b - 1000b: temperature sensors
+	 *  1111b: set all implemented temperature sensors
+	 */
+	if (opts->bits.tmpsel > 9 && opts->bits.tmpsel != 15) {
+		/* 1001b - 1110b: reserved */
+		SPDK_ERRLOG("Invalid TMPSEL %u\n", opts->bits.tmpsel);
+		return false;
+	}
+
+	/*
+	 * Valid THSEL values:
+	 *  00b: over temperature threshold
+	 *  01b: under temperature threshold
+	 */
+	if (opts->bits.thsel > 1) {
+		/* 10b - 11b: reserved */
+		SPDK_ERRLOG("Invalid THSEL %u\n", opts->bits.thsel);
+		return false;
+	}
+
+	return true;
+}
+
+static int
+spdk_nvmf_ctrlr_set_features_temperature_threshold(struct spdk_nvmf_request *req)
+{
+	union spdk_nvme_feat_temperature_threshold opts;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Temperature Threshold (cdw11 = 0x%0x)\n", cmd->cdw11);
+	opts.raw = cmd->cdw11;
+
+	if (!temp_threshold_opts_valid(&opts)) {
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	/* TODO: no sensors implemented - ignore new values */
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static int
+spdk_nvmf_ctrlr_get_features_temperature_threshold(struct spdk_nvmf_request *req)
+{
+	union spdk_nvme_feat_temperature_threshold opts;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Get Features - Temperature Threshold (cdw11 = 0x%0x)\n", cmd->cdw11);
+	opts.raw = cmd->cdw11;
+
+	if (!temp_threshold_opts_valid(&opts)) {
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	/* TODO: no sensors implemented - return 0 for all thresholds */
+	rsp->cdw0 = 0;
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static int
+spdk_nvmf_ctrlr_set_features_error_recovery(struct spdk_nvmf_request *req)
+{
+	union spdk_nvme_feat_error_recovery opts;
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Error Recovery (cdw11 = 0x%0x)\n", cmd->cdw11);
+	opts.raw = cmd->cdw11;
+
+	if (opts.bits.dulbe) {
+		/*
+		 * Host is not allowed to set this bit, since we don't advertise it in
+		 * Identify Namespace.
+		 */
+		SPDK_ERRLOG("Host set unsupported DULBE bit\n");
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	ctrlr->feat.error_recovery.raw = cmd->cdw11;
+	ctrlr->feat.error_recovery.bits.reserved = 0;
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static int
+spdk_nvmf_ctrlr_set_features_volatile_write_cache(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Volatile Write Cache (cdw11 = 0x%0x)\n", cmd->cdw11);
+
+	ctrlr->feat.volatile_write_cache.raw = cmd->cdw11;
+	ctrlr->feat.volatile_write_cache.bits.reserved = 0;
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static int
+spdk_nvmf_ctrlr_set_features_write_atomicity(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Write Atomicity (cdw11 = 0x%0x)\n", cmd->cdw11);
+
+	ctrlr->feat.write_atomicity.raw = cmd->cdw11;
+	ctrlr->feat.write_atomicity.bits.reserved = 0;
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static int
 spdk_nvmf_ctrlr_set_features_host_identifier(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
@@ -1163,14 +1328,24 @@ spdk_nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 
 	feature = cmd->cdw10 & 0xff; /* mask out the FID value */
 	switch (feature) {
-	case SPDK_NVME_FEAT_NUMBER_OF_QUEUES:
-		return get_features_generic(req, ctrlr->feat.number_of_queues.raw);
+	case SPDK_NVME_FEAT_ARBITRATION:
+		return get_features_generic(req, ctrlr->feat.arbitration.raw);
+	case SPDK_NVME_FEAT_POWER_MANAGEMENT:
+		return get_features_generic(req, ctrlr->feat.power_management.raw);
+	case SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD:
+		return spdk_nvmf_ctrlr_get_features_temperature_threshold(req);
+	case SPDK_NVME_FEAT_ERROR_RECOVERY:
+		return get_features_generic(req, ctrlr->feat.error_recovery.raw);
 	case SPDK_NVME_FEAT_VOLATILE_WRITE_CACHE:
 		return get_features_generic(req, ctrlr->feat.volatile_write_cache.raw);
-	case SPDK_NVME_FEAT_KEEP_ALIVE_TIMER:
-		return get_features_generic(req, ctrlr->feat.keep_alive_timer.raw);
+	case SPDK_NVME_FEAT_NUMBER_OF_QUEUES:
+		return get_features_generic(req, ctrlr->feat.number_of_queues.raw);
+	case SPDK_NVME_FEAT_WRITE_ATOMICITY:
+		return get_features_generic(req, ctrlr->feat.write_atomicity.raw);
 	case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:
 		return get_features_generic(req, ctrlr->feat.async_event_configuration.raw);
+	case SPDK_NVME_FEAT_KEEP_ALIVE_TIMER:
+		return get_features_generic(req, ctrlr->feat.keep_alive_timer.raw);
 	case SPDK_NVME_FEAT_HOST_IDENTIFIER:
 		return spdk_nvmf_ctrlr_get_features_host_identifier(req);
 	default:
@@ -1189,12 +1364,24 @@ spdk_nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
 
 	feature = cmd->cdw10 & 0xff; /* mask out the FID value */
 	switch (feature) {
+	case SPDK_NVME_FEAT_ARBITRATION:
+		return spdk_nvmf_ctrlr_set_features_arbitration(req);
+	case SPDK_NVME_FEAT_POWER_MANAGEMENT:
+		return spdk_nvmf_ctrlr_set_features_power_management(req);
+	case SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD:
+		return spdk_nvmf_ctrlr_set_features_temperature_threshold(req);
+	case SPDK_NVME_FEAT_ERROR_RECOVERY:
+		return spdk_nvmf_ctrlr_set_features_error_recovery(req);
+	case SPDK_NVME_FEAT_VOLATILE_WRITE_CACHE:
+		return spdk_nvmf_ctrlr_set_features_volatile_write_cache(req);
 	case SPDK_NVME_FEAT_NUMBER_OF_QUEUES:
 		return spdk_nvmf_ctrlr_set_features_number_of_queues(req);
-	case SPDK_NVME_FEAT_KEEP_ALIVE_TIMER:
-		return spdk_nvmf_ctrlr_set_features_keep_alive_timer(req);
+	case SPDK_NVME_FEAT_WRITE_ATOMICITY:
+		return spdk_nvmf_ctrlr_set_features_write_atomicity(req);
 	case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:
 		return spdk_nvmf_ctrlr_set_features_async_event_configuration(req);
+	case SPDK_NVME_FEAT_KEEP_ALIVE_TIMER:
+		return spdk_nvmf_ctrlr_set_features_keep_alive_timer(req);
 	case SPDK_NVME_FEAT_HOST_IDENTIFIER:
 		return spdk_nvmf_ctrlr_set_features_host_identifier(req);
 	default:
