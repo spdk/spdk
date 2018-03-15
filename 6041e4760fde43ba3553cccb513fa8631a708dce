@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "43b97cde_fca59120",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 3984,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-15T19:47:04Z",
+      "side": 1,
+      "message": "I think the callers to this function need to be examined too.  But arguably that could/should be done in a separate patch.\n\nThe first caller (spdk_iscsi_handle_r2t_snack) doesn\u0027t even do anything except print an error message if this function returns !\u003d 0.\n\nThe second caller (spdk_iscsi_op_data) tries to reject the PDU is this function returns !\u003d 0.  Presumably the reject will fail too and will treat it as a fatal connection error so it *probably* does the right thing.\n\nBut I think this patch is fine for now - it certainly is no worse than before!  But we certainly need to look through some of these error paths in some more detail.\n\n-Jim",
+      "revId": "6041e4760fde43ba3553cccb513fa8631a708dce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
