@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "775195ba_21c01a0d",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-15T09:34:38Z",
+      "side": 1,
+      "message": "We run iscsi_tgt/fio/fio.sh test without any following arguments, so $1 is \"\".\nI see no need for this change.",
+      "range": {
+        "startLine": 20,
+        "startChar": 1,
+        "endLine": 20,
+        "endChar": 16
+      },
+      "revId": "72276af830ac79e4e96ad164a9094fa9eccc5ebe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bee327c2_3187cccb",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-15T09:34:38Z",
+      "side": 1,
+      "message": "Unnecessary change?",
+      "range": {
+        "startLine": 50,
+        "startChar": 0,
+        "endLine": 50,
+        "endChar": 36
+      },
+      "revId": "72276af830ac79e4e96ad164a9094fa9eccc5ebe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
