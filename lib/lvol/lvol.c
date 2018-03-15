@@ -202,8 +202,12 @@ _spdk_load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	}
 	spdk_uuid_fmt_lower(lvol->uuid_str, sizeof(lvol->uuid_str), &lvol->uuid);
 
-	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &lvol->lvol_store->uuid);
-	lvol->unique_id = spdk_sprintf_alloc("%s_%"PRIu64, uuid, (uint64_t)blob_id);
+	if (!spdk_mem_all_zero(&lvol->uuid, sizeof(lvol->uuid))) {
+		lvol->unique_id = strdup(lvol->uuid_str);
+	} else {
+		spdk_uuid_fmt_lower(uuid, sizeof(uuid), &lvol->lvol_store->uuid);
+		lvol->unique_id = spdk_sprintf_alloc("%s_%"PRIu64, uuid, (uint64_t)blob_id);
+	}
 	if (!lvol->unique_id) {
 		SPDK_ERRLOG("Cannot assign lvol name\n");
 		free(lvol);
@@ -952,7 +956,6 @@ _spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	struct spdk_lvol_with_handle_req *req = cb_arg;
 	spdk_blob_id blob_id = spdk_blob_get_id(blob);
 	struct spdk_lvol *lvol = req->lvol;
-	char uuid[SPDK_UUID_STRING_LEN];
 
 	if (lvolerrno < 0) {
 		free(lvol);
@@ -966,8 +969,7 @@ _spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 
 	TAILQ_INSERT_TAIL(&lvol->lvol_store->lvols, lvol, link);
 
-	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &lvol->lvol_store->uuid);
-	lvol->unique_id = spdk_sprintf_alloc("%s_%"PRIu64, uuid, (uint64_t)blob_id);
+	lvol->unique_id = strdup(lvol->uuid_str);
 	if (!lvol->unique_id) {
 		SPDK_ERRLOG("Cannot alloc memory for lvol name\n");
 		spdk_blob_close(blob, _spdk_lvol_destroy_cb, req);
