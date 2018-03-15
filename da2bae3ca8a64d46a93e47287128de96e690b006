@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "c0af8dbd_5446887f",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 535,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-03-15T02:33:49Z",
+      "side": 1,
+      "message": "According to the original code and comment, in the case of (data_len \u003e max_segment_len), the code should \"normally\" issue the spdk_iscsi_reject() and so it will not be returned the caller for execution and we return SPDK_SUCCESS.   However, there was no check in the original code for the result of spdk_iscsi_reject().   I am proposing here, that we as long as the spdk_iscsi_reject() is successful, then we continue the same logic whereby we return SPDK_SUCCESS and per the original comment that also meant the \"PDU will not be returned to the caller\".    If, however, the spdk_iscsi_reject() *fails* -- i.e. is not successful -- then we will return SPDK_ISCSI_CONNECTION_FATAL.",
+      "parentUuid": "2c3c23e2_2465db58",
+      "range": {
+        "startLine": 534,
+        "startChar": 48,
+        "endLine": 535,
+        "endChar": 13
+      },
+      "revId": "da2bae3ca8a64d46a93e47287128de96e690b006",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eb478518_9c8fdbfb",
         "filename": "lib/iscsi/iscsi.c",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2018-03-15T01:48:27Z",
       "side": 1,
       "message": "removable ?",
+      "range": {
+        "startLine": 539,
+        "startChar": 12,
+        "endLine": 539,
+        "endChar": 13
+      },
+      "revId": "da2bae3ca8a64d46a93e47287128de96e690b006",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "37285c44_b1616106",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 539,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-03-15T02:33:49Z",
+      "side": 1,
+      "message": "You mean the comma \u0027,\u0027 ?   If so, then yes, certainly I can and should remove that punctuation.",
+      "parentUuid": "eb478518_9c8fdbfb",
       "range": {
         "startLine": 539,
         "startChar": 12,
