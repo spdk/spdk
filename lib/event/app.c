@@ -205,6 +205,7 @@ spdk_app_opts_init(struct spdk_app_opts *opts)
 	opts->max_delay_us = 0;
 	opts->print_level = SPDK_LOG_NOTICE;
 	opts->rpc_addr = SPDK_DEFAULT_RPC_ADDR;
+	opts->hugepage_single_segments = true;
 }
 
 static int
