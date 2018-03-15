@@ -70,6 +70,7 @@ NET_MODULES_DEPS += -l:libvppcom.a -l:libvlibmemoryclient.a
 else
 NET_MODULES_DEPS = -lvppcom
 endif
+NET_MODULES_LIST += net_vpp
 endif
 
 COPY_MODULES_LIST = copy_ioat ioat
