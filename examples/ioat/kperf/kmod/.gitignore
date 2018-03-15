@@ -1,3 +1,4 @@
+.cache.mk
 .tmp_versions
 dmaperf.mod.c
 modules.order
