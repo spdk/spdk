@@ -193,6 +193,15 @@ _spdk_load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	lvol->blob_id = blob_id;
 	lvol->lvol_store = lvs;
 	lvol->close_only = false;
+
+	rc = spdk_blob_get_xattr_value(blob, "uuid", (const void **)&attr, &value_len);
+	if (rc != 0 || value_len != SPDK_UUID_STRING_LEN || attr[SPDK_UUID_STRING_LEN - 1] != '\0' ||
+	    spdk_uuid_parse(&lvol->uuid, attr) != 0) {
+		SPDK_INFOLOG(SPDK_LOG_LVOL, "Missing or corrupt lvol uuid\n");
+		memset(&lvol->uuid, 0, sizeof(lvol->uuid));
+	}
+	spdk_uuid_fmt_lower(lvol->uuid_str, sizeof(lvol->uuid_str), &lvol->uuid);
+
 	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &lvol->lvol_store->uuid);
 	lvol->unique_id = spdk_sprintf_alloc("%s_%"PRIu64, uuid, (uint64_t)blob_id);
 	if (!lvol->unique_id) {
@@ -212,14 +221,6 @@ _spdk_load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	}
 
 	strncpy(lvol->name, attr, SPDK_LVOL_NAME_MAX);
-
-	rc = spdk_blob_get_xattr_value(blob, "uuid", (const void **)&attr, &value_len);
-	if (rc != 0 || value_len != SPDK_UUID_STRING_LEN || attr[SPDK_UUID_STRING_LEN - 1] != '\0' ||
-	    spdk_uuid_parse(&lvol->uuid, attr) != 0) {
-		SPDK_INFOLOG(SPDK_LOG_LVOL, "Missing or corrupt lvol uuid\n");
-		memset(&lvol->uuid, 0, sizeof(lvol->uuid));
-	}
-	spdk_uuid_fmt_lower(lvol->uuid_str, sizeof(lvol->uuid_str), &lvol->uuid);
 
 	TAILQ_INSERT_TAIL(&lvs->lvols, lvol, link);
 
