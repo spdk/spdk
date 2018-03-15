@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2c3c23e2_2465db58",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 535,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-15T01:48:27Z",
+      "side": 1,
+      "message": "will not be ?",
+      "range": {
+        "startLine": 534,
+        "startChar": 48,
+        "endLine": 535,
+        "endChar": 13
+      },
+      "revId": "da2bae3ca8a64d46a93e47287128de96e690b006",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eb478518_9c8fdbfb",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 539,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-15T01:48:27Z",
+      "side": 1,
+      "message": "removable ?",
+      "range": {
+        "startLine": 539,
+        "startChar": 12,
+        "endLine": 539,
+        "endChar": 13
+      },
+      "revId": "da2bae3ca8a64d46a93e47287128de96e690b006",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
