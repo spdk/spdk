@@ -12,6 +12,9 @@ ulimit -c unlimited
 : ${RUN_NIGHTLY:=0}
 export RUN_NIGHTLY
 
+: ${RUN_NIGHTLY_FAILING:=0}
+export RUN_NIGHTLY_FAILING
+
 if [[ ! -z $1 ]]; then
 	if [ -f $1 ]; then
 		source $1
