@@ -203,8 +203,12 @@ _spdk_load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	}
 	spdk_uuid_fmt_lower(lvol->uuid_str, sizeof(lvol->uuid_str), &lvol->uuid);
 
-	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &lvol->lvol_store->uuid);
-	lvol->unique_id = spdk_sprintf_alloc("%s_%"PRIu64, uuid, (uint64_t)blob_id);
+	if (!spdk_mem_all_zero(&lvol->uuid, sizeof(lvol->uuid))) {
+		lvol->unique_id = strdup(lvol->uuid_str);
+	} else {
+		spdk_uuid_fmt_lower(uuid, sizeof(uuid), &lvol->lvol_store->uuid);
+		lvol->unique_id = spdk_sprintf_alloc("%s_%"PRIu64, uuid, (uint64_t)blob_id);
+	}
 	if (!lvol->unique_id) {
 		SPDK_ERRLOG("Cannot assign lvol name\n");
 		free(lvol);
