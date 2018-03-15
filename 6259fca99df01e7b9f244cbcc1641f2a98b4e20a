@@ -22,6 +22,47 @@
       "revId": "6259fca99df01e7b9f244cbcc1641f2a98b4e20a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1819d127_f8e5c17f",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 534,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-15T19:32:52Z",
+      "side": 1,
+      "message": "I agree - this comment does not read correctly.\n\nI think this comment could be simplified to just say \"If spdk_iscsi_reject() was not able to reject the PDU, treat it as a fatal connection error.\"",
+      "parentUuid": "996002da_f8f21c80",
+      "range": {
+        "startLine": 534,
+        "startChar": 48,
+        "endLine": 534,
+        "endChar": 51
+      },
+      "revId": "6259fca99df01e7b9f244cbcc1641f2a98b4e20a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c0a3a1a_35f7cf33",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 3830,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-15T19:32:52Z",
+      "side": 1,
+      "message": "just return spdk_iscsi_reject and save two lines of code :)",
+      "revId": "6259fca99df01e7b9f244cbcc1641f2a98b4e20a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
