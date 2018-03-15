@@ -377,6 +377,15 @@ if __name__ == "__main__":
     p.add_argument('-s', '--trsvcid', help='NVMe-oF transport service id: e.g., a port number')
     p.set_defaults(func=rpc.nvmf.nvmf_subsystem_add_listener)
 
+    p = subparsers.add_parser('nvmf_subsystem_remove_listener', help='Remove a listener from an NVMe-oF subsystem')
+    p.add_argument('nqn', help='NVMe-oF subsystem NQN')
+    p.add_argument('-t', '--trtype', help='NVMe-oF transport type: e.g., rdma', required=True)
+    p.add_argument('-a', '--traddr', help='NVMe-oF transport address: e.g., an ip address', required=True)
+    p.add_argument('-f', '--adrfam', help='NVMe-oF transport adrfam: e.g., ipv4, ipv6, ib, fc, intra_host')
+    p.add_argument('-s', '--trsvcid', help='NVMe-oF transport service id: e.g., a port number')
+    p.set_defaults(func=rpc.nvmf.nvmf_subsystem_remove_listener)
+
+
     p = subparsers.add_parser('nvmf_subsystem_add_ns', help='Add a namespace to an NVMe-oF subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
     p.add_argument('bdev_name', help='The name of the bdev that will back this namespace')

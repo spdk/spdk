@@ -57,6 +57,18 @@ def nvmf_subsystem_add_listener(args):
 
     args.client.call('nvmf_subsystem_add_listener', params)
 
+def nvmf_subsystem_remove_listener(args):
+    listen_address = {'trtype': args.trtype,
+                      'traddr': args.traddr,
+                      'trsvcid': args.trsvcid}
+
+    if args.adrfam:
+        listen_address['adrfam'] = args.adrfam
+
+    params = {'nqn': args.nqn,
+              'listen_address': listen_address}
+
+    args.client.call('nvmf_subsystem_remove_listener', params)
 
 def nvmf_subsystem_add_ns(args):
     ns = {'bdev_name': args.bdev_name}
