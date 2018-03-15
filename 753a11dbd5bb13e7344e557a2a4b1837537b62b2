@@ -186,6 +186,30 @@
     },
     {
       "key": {
+        "uuid": "f3fb7b76_eb805d93",
+        "filename": "test/vhost/nvmf/nvmf.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-03-15T08:49:48Z",
+      "side": 1,
+      "message": "I will export this in another commit",
+      "parentUuid": "c9affd76_ae971a3c",
+      "range": {
+        "startLine": 85,
+        "startChar": 0,
+        "endLine": 93,
+        "endChar": 50
+      },
+      "revId": "753a11dbd5bb13e7344e557a2a4b1837537b62b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "26e51e72_f01aad07",
         "filename": "test/vhost/nvmf/nvmf.sh",
         "patchSetId": 2
@@ -243,6 +267,24 @@
       "writtenOn": "2018-03-13T10:45:44Z",
       "side": 1,
       "message": "Can you try running vhost without config.",
+      "revId": "753a11dbd5bb13e7344e557a2a4b1837537b62b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "54567000_85e8fa9a",
+        "filename": "test/vhost/nvmf/vhost.conf.in",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-03-15T08:49:48Z",
+      "side": 1,
+      "message": "Although vhost can be run without a conf file but spdk_vhost_run() still requires the vhost.conf.in file present. It could be changed but in a separate patch.",
+      "parentUuid": "5b68c4f5_6ca9c58d",
       "revId": "753a11dbd5bb13e7344e557a2a4b1837537b62b2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
