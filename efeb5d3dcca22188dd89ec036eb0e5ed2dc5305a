@@ -237,6 +237,30 @@
     },
     {
       "key": {
+        "uuid": "0993cf40_f1b7942e",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 332,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-15T13:26:34Z",
+      "side": 1,
+      "message": "I would rather vote for negative errno value so this will return -ENOMEM.",
+      "parentUuid": "1355f25f_80b60353",
+      "range": {
+        "startLine": 332,
+        "startChar": 4,
+        "endLine": 332,
+        "endChar": 13
+      },
+      "revId": "efeb5d3dcca22188dd89ec036eb0e5ed2dc5305a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d6b23d8d_c40a20b0",
         "filename": "lib/bdev/passthru/vbdev_passthru.c",
         "patchSetId": 13
