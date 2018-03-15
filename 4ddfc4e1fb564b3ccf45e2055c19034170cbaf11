@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "464507e4_6fc322c6",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 344,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2018-03-15T08:41:32Z",
+      "side": 1,
+      "message": "In the test log, it shows that the TEST CASE is added for the casds in the test suite, I agree with Daniel to improved the run_test instead of adding run_test_case. @Daniel, would you have a look and we would like to porting this to vhost first to add more scripts in the future to analyze the build.log with test case info other than test suite info\n************************************\nSTART TEST CASE /home/sys_sgsw/build_pool/agent/repo/test/vhost/other/negative.sh\n************************************\n 06:33:14\t# /home/sys_sgsw/build_pool/agent/repo/test/vhost/other/negative.sh",
+      "revId": "4ddfc4e1fb564b3ccf45e2055c19034170cbaf11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
