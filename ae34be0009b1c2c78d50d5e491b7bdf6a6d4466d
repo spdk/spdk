@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a9062a3a_ced2d8f8",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 63
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-16T21:04:24Z",
+      "side": 1,
+      "message": "The comment should say something about snapshot_xattrs structure and anything it references (specifically the names array) must be valid until the completion is called.  Meaning user cannot put an spdk_blob_xattr_opts on the stack (i.e. local variable) and then pass \u0026opts to spdk_bs_create_snapshot().",
+      "revId": "ae34be0009b1c2c78d50d5e491b7bdf6a6d4466d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef073f52_d79cd064",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 3542,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-16T21:04:24Z",
+      "side": 1,
+      "message": "I think \"snapshot\" should be added somewhere in these cleanup function names.  Just _spdk_bs_cleanup_* is too generic.",
+      "revId": "ae34be0009b1c2c78d50d5e491b7bdf6a6d4466d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf0420bb_b2c1bfeb",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 3717,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-16T21:04:24Z",
+      "side": 1,
+      "message": "you could just make this an assert() instead (if this was ever called with some other xattr name, that would make no sense and we should abort immediately in a debug build)",
+      "revId": "ae34be0009b1c2c78d50d5e491b7bdf6a6d4466d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b784efae_bcfbc30c",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 607,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-16T21:04:24Z",
+      "side": 1,
+      "message": "you could use the new spdk_mem_all_zero() function here instead (#include \"spdk/string.h\")",
+      "revId": "ae34be0009b1c2c78d50d5e491b7bdf6a6d4466d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "74c94e72_d1dc77bc",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 626,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-16T21:04:24Z",
+      "side": 1,
+      "message": "maybe add some tests here to confirm that blob is backed by snapshot2 and snapshot2 is backed by snapshot?",
+      "revId": "ae34be0009b1c2c78d50d5e491b7bdf6a6d4466d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
