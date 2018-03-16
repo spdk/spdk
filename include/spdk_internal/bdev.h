@@ -311,29 +311,20 @@ struct spdk_bdev_io {
 	/** The mgmt channel that this I/O was allocated from. */
 	struct spdk_bdev_mgmt_channel *mgmt_ch;
 
-	/** bdev allocated memory associated with this request */
-	void *buf;
+	/** User function that will be called when this completes */
+	spdk_bdev_io_completion_cb cb;
 
-	/** requested size of the buffer associated with this I/O */
-	uint64_t buf_len;
+	/** Context that will be passed to the completion callback */
+	void *caller_ctx;
 
-	/** Callback for when buf is allocated */
-	spdk_bdev_io_get_buf_cb get_buf_cb;
-
-	/** Entry to the list need_buf of struct spdk_bdev. */
-	STAILQ_ENTRY(spdk_bdev_io) buf_link;
+	/** Current tsc at submit time. Used to calculate latency at completion. */
+	uint64_t submit_tsc;
 
 	/** Enumerated value representing the I/O type. */
-	int16_t type;
+	uint8_t type;
 
 	/** Status for the IO */
-	int16_t status;
-
-	/** number of blocks remaining in a split i/o */
-	uint64_t split_remaining_num_blocks;
-
-	/** current offset of the split I/O in the bdev */
-	uint64_t split_current_offset_blocks;
+	int8_t status;
 
 	/**
 	 * Set to true while the bdev module submit_request function is in progress.
@@ -359,6 +350,15 @@ struct spdk_bdev_io {
 
 			/** Starting offset (in blocks) of the bdev for this I/O. */
 			uint64_t offset_blocks;
+
+			/** stored user callback in case we split the I/O and use a temporary callback */
+			spdk_bdev_io_completion_cb stored_user_cb;
+
+			/** number of blocks remaining in a split i/o */
+			uint64_t split_remaining_num_blocks;
+
+			/** current offset of the split I/O in the bdev */
+			uint64_t split_current_offset_blocks;
 		} bdev;
 		struct {
 			/** Channel reference held while messages for this reset are in progress. */
@@ -404,23 +404,23 @@ struct spdk_bdev_io {
 		} scsi;
 	} error;
 
-	/** User function that will be called when this completes */
-	spdk_bdev_io_completion_cb cb;
+	/** bdev allocated memory associated with this request */
+	void *buf;
 
-	/** stored user callback in case we split the I/O and use a temporary callback */
-	spdk_bdev_io_completion_cb stored_user_cb;
+	/** requested size of the buffer associated with this I/O */
+	uint64_t buf_len;
 
-	/** Context that will be passed to the completion callback */
-	void *caller_ctx;
+	/** Callback for when buf is allocated */
+	spdk_bdev_io_get_buf_cb get_buf_cb;
+
+	/** Entry to the list need_buf of struct spdk_bdev. */
+	STAILQ_ENTRY(spdk_bdev_io) buf_link;
 
 	/** Member used for linking child I/Os together. */
 	TAILQ_ENTRY(spdk_bdev_io) link;
 
 	/** It may be used by modules to put the bdev_io into its own list. */
 	TAILQ_ENTRY(spdk_bdev_io) module_link;
-
-	/** Current tsc at submit time. Used to calculate latency at completion. */
-	uint64_t submit_tsc;
 
 	/**
 	 * Per I/O context for use by the bdev module.
