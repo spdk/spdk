@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d47b62dd_7b7ce027",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-03-16T06:56:48Z",
+      "side": 1,
+      "message": "I think you should call destroy_lvol_store before deleing the block device.",
+      "revId": "1fbad2d7d22b20abff1da67ac0fe3ba7ea19ca1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
