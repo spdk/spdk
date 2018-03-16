@@ -546,6 +546,26 @@ if __name__ == "__main__":
     p.add_argument('-l', '--lvs_name', help='lvol store name', required=False)
     p.set_defaults(func=get_lvol_stores)
 
+    # split
+    def construct_split_vbdev(args):
+        print_dict(rpc.bdev.construct_split_vbdev(args.client, args))
+
+    p = subparsers.add_parser('construct_split_vbdev', help="""Add given disk name to split config. If bdev with base_name
+    name exist the split bdevs will be created right away, if not split bdevs will be created when base bdev became
+    available (during examination process).""")
+    p.add_argument('base_bdev', help='base bdev name')
+    p.add_argument('-s', '--split_size_mb', help='size in MiB for each bdev', type=int, default=0)
+    p.add_argument('split_count', help="""Optional - number of split bdevs to create. Total size * split_count must not
+    exceed the base bdev size.""", type=int)
+    p.set_defaults(func=construct_split_vbdev)
+
+    def destruct_split_vbdev(args):
+        rpc.destruct_split_vbdev(args.client, args)
+
+    p = subparsers.add_parser('destruct_split_vbdev', help="""Delete split config with all created splits.""")
+    p.add_argument('base_bdev', help='base bdev name')
+    p.set_defaults(func=destruct_split_vbdev)
+
     # nbd
     @call_cmd
     def start_nbd_disk(args):
