@@ -38,6 +38,9 @@
 	__GNUC__ > 4 || \
 	(__GNUC__ == 4 && __GNUC_MINOR__ >= 6)
 #pragma GCC diagnostic ignored "-Wsign-compare"
+#if __GNUC__ >= 7
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#endif
 #endif
 
 #include "ittnotify_static.c"
