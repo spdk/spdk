@@ -16,6 +16,24 @@
       "revId": "1fbad2d7d22b20abff1da67ac0fe3ba7ea19ca1c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "defbe429_f8e2fa46",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1012925
+      },
+      "writtenOn": "2018-03-16T08:04:12Z",
+      "side": 1,
+      "message": "I have tried call destroy_lvol_store before deleing the block device, but it is produced a error that  bdev \u0027lvs_0/lbd_0\u0027 does not exist.",
+      "parentUuid": "d47b62dd_7b7ce027",
+      "revId": "1fbad2d7d22b20abff1da67ac0fe3ba7ea19ca1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
