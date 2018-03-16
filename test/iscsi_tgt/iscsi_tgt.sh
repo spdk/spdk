@@ -61,4 +61,6 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_test ./test/iscsi_tgt/multiconnection/multiconnection.sh
 fi
 
+run_test ./test/iscsi_tgt/initiator/initiator.sh
+
 timing_exit iscsi_tgt
