@@ -2144,11 +2144,8 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	} else {
 		assert(shared_ch->io_outstanding > 0);
 		shared_ch->io_outstanding--;
-		if (spdk_likely(status != SPDK_BDEV_IO_STATUS_NOMEM)) {
-			if (spdk_unlikely(!TAILQ_EMPTY(&shared_ch->nomem_io))) {
-				_spdk_bdev_ch_retry_io(bdev_ch);
-			}
-		} else {
+
+		if (spdk_unlikely(status == SPDK_BDEV_IO_STATUS_NOMEM)) {
 			TAILQ_INSERT_HEAD(&shared_ch->nomem_io, bdev_io, link);
 			/*
 			 * Wait for some of the outstanding I/O to complete before we
@@ -2159,6 +2156,10 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 			shared_ch->nomem_threshold = spdk_max((int64_t)shared_ch->io_outstanding / 2,
 							      (int64_t)shared_ch->io_outstanding - NOMEM_THRESHOLD_COUNT);
 			return;
+		}
+
+		if (spdk_unlikely(!TAILQ_EMPTY(&shared_ch->nomem_io))) {
+			_spdk_bdev_ch_retry_io(bdev_ch);
 		}
 	}
 
