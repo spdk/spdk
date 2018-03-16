@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3964ae83_af70ebf5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 1906,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-16T06:37:14Z",
+      "side": 1,
+      "message": "This function should write stats of the bdev to the json context and then call spdk_for_each_bdev_continue(). (if the spdk_for_each_bdev() mechanism is used.)",
+      "range": {
+        "startLine": 1906,
+        "startChar": 0,
+        "endLine": 1906,
+        "endChar": 74
+      },
+      "revId": "f20449ab098b5435acb4746e7ad44ff158fd4f2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8fcb5af_d4dfe2d1",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 1913,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-16T06:37:14Z",
+      "side": 1,
+      "message": "This free should be done before continue(). (if continue() is used.)",
+      "range": {
+        "startLine": 1912,
+        "startChar": 0,
+        "endLine": 1913,
+        "endChar": 16
+      },
+      "revId": "f20449ab098b5435acb4746e7ad44ff158fd4f2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "735a41a8_4a6e361b",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-16T06:37:14Z",
+      "side": 1,
+      "message": "I think This should be extrated into the complete function of for_each_channel, spdk_bdev_get_device_stat_done().",
+      "range": {
+        "startLine": 56,
+        "startChar": 0,
+        "endLine": 73,
+        "endChar": 31
+      },
+      "revId": "f20449ab098b5435acb4746e7ad44ff158fd4f2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "455d5881_89f60085",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-16T06:37:14Z",
+      "side": 1,
+      "message": "I think extracting this code into the function spdk_rpc_get_bdevs_iostat_cb() will be better.",
+      "range": {
+        "startLine": 75,
+        "startChar": 0,
+        "endLine": 79,
+        "endChar": 9
+      },
+      "revId": "f20449ab098b5435acb4746e7ad44ff158fd4f2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82a91b8c_a05da0c7",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-16T06:37:14Z",
+      "side": 1,
+      "message": "This is not necessary anymore because decode_object fails in this case.",
+      "range": {
+        "startLine": 114,
+        "startChar": 0,
+        "endLine": 117,
+        "endChar": 4
+      },
+      "revId": "f20449ab098b5435acb4746e7ad44ff158fd4f2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c023f1e4_917d66f0",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-16T06:37:14Z",
+      "side": 1,
+      "message": "If we use for_each_bdev_mechanism, counting the number of bdevs is not necessary.",
+      "range": {
+        "startLine": 136,
+        "startChar": 0,
+        "endLine": 142,
+        "endChar": 2
+      },
+      "revId": "f20449ab098b5435acb4746e7ad44ff158fd4f2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
