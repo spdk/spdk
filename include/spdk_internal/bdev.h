@@ -311,29 +311,14 @@ struct spdk_bdev_io {
 	/** The mgmt channel that this I/O was allocated from. */
 	struct spdk_bdev_mgmt_channel *mgmt_ch;
 
-	/** bdev allocated memory associated with this request */
-	void *buf;
+	/** User function that will be called when this completes */
+	spdk_bdev_io_completion_cb cb;
 
-	/** requested size of the buffer associated with this I/O */
-	uint64_t buf_len;
+	/** Context that will be passed to the completion callback */
+	void *caller_ctx;
 
-	/** Callback for when buf is allocated */
-	spdk_bdev_io_get_buf_cb get_buf_cb;
-
-	/** Entry to the list need_buf of struct spdk_bdev. */
-	STAILQ_ENTRY(spdk_bdev_io) buf_link;
-
-	/** Enumerated value representing the I/O type. */
-	int16_t type;
-
-	/** Status for the IO */
-	int16_t status;
-
-	/** number of blocks remaining in a split i/o */
-	uint64_t split_remaining_num_blocks;
-
-	/** current offset of the split I/O in the bdev */
-	uint64_t split_current_offset_blocks;
+	/** Current tsc at submit time. Used to calculate latency at completion. */
+	uint64_t submit_tsc;
 
 	/**
 	 * Set to true while the bdev module submit_request function is in progress.
@@ -342,6 +327,34 @@ struct spdk_bdev_io {
 	 * or if completion must be deferred via an event.
 	 */
 	bool in_submit_request;
+
+	/** Status for the IO */
+	int8_t status;
+
+	/** Error information from a device */
+	union {
+		/** Only valid when status is SPDK_BDEV_IO_STATUS_NVME_ERROR */
+		struct {
+			/** NVMe status code type */
+			uint8_t sct;
+			/** NVMe status code */
+			uint8_t sc;
+		} nvme;
+		/** Only valid when status is SPDK_BDEV_IO_STATUS_SCSI_ERROR */
+		struct {
+			/** SCSI status code */
+			uint8_t sc;
+			/** SCSI sense key */
+			uint8_t sk;
+			/** SCSI additional sense code */
+			uint8_t asc;
+			/** SCSI additional sense code qualifier */
+			uint8_t ascq;
+		} scsi;
+	} error;
+
+	/** Enumerated value representing the I/O type. */
+	uint8_t type;
 
 	union {
 		struct {
@@ -359,6 +372,15 @@ struct spdk_bdev_io {
 
 			/** Starting offset (in blocks) of the bdev for this I/O. */
 			uint64_t offset_blocks;
+
+			/** stored user callback in case we split the I/O and use a temporary callback */
+			spdk_bdev_io_completion_cb stored_user_cb;
+
+			/** number of blocks remaining in a split i/o */
+			uint64_t split_remaining_num_blocks;
+
+			/** current offset of the split I/O in the bdev */
+			uint64_t split_current_offset_blocks;
 		} bdev;
 		struct {
 			/** Channel reference held while messages for this reset are in progress. */
@@ -382,45 +404,23 @@ struct spdk_bdev_io {
 		} nvme_passthru;
 	} u;
 
-	/** Error information from a device */
-	union {
-		/** Only valid when status is SPDK_BDEV_IO_STATUS_NVME_ERROR */
-		struct {
-			/** NVMe status code type */
-			int sct;
-			/** NVMe status code */
-			int sc;
-		} nvme;
-		/** Only valid when status is SPDK_BDEV_IO_STATUS_SCSI_ERROR */
-		struct {
-			/** SCSI status code */
-			enum spdk_scsi_status sc;
-			/** SCSI sense key */
-			enum spdk_scsi_sense sk;
-			/** SCSI additional sense code */
-			uint8_t asc;
-			/** SCSI additional sense code qualifier */
-			uint8_t ascq;
-		} scsi;
-	} error;
+	/** bdev allocated memory associated with this request */
+	void *buf;
 
-	/** User function that will be called when this completes */
-	spdk_bdev_io_completion_cb cb;
+	/** requested size of the buffer associated with this I/O */
+	uint64_t buf_len;
 
-	/** stored user callback in case we split the I/O and use a temporary callback */
-	spdk_bdev_io_completion_cb stored_user_cb;
+	/** Callback for when buf is allocated */
+	spdk_bdev_io_get_buf_cb get_buf_cb;
 
-	/** Context that will be passed to the completion callback */
-	void *caller_ctx;
+	/** Entry to the list need_buf of struct spdk_bdev. */
+	STAILQ_ENTRY(spdk_bdev_io) buf_link;
 
 	/** Member used for linking child I/Os together. */
 	TAILQ_ENTRY(spdk_bdev_io) link;
 
 	/** It may be used by modules to put the bdev_io into its own list. */
 	TAILQ_ENTRY(spdk_bdev_io) module_link;
-
-	/** Current tsc at submit time. Used to calculate latency at completion. */
-	uint64_t submit_tsc;
 
 	/**
 	 * Per I/O context for use by the bdev module.
