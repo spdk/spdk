@@ -22,6 +22,30 @@
       "revId": "8b2872e7f5ef9cfc2e28c2a3e84380cad4a31f96",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c8d9ee6e_247ecbbe",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1558,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-16T08:55:17Z",
+      "side": 1,
+      "message": "You are right, at the beginning I wanted to keep the original pointer to payload as is. Turns out it was not needed later.\n\nThanks for the suggestion.",
+      "parentUuid": "979e0d03_ae1eb569",
+      "range": {
+        "startLine": 1557,
+        "startChar": 0,
+        "endLine": 1558,
+        "endChar": 15
+      },
+      "revId": "8b2872e7f5ef9cfc2e28c2a3e84380cad4a31f96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
