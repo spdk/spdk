@@ -45,11 +45,21 @@
 static uint64_t
 virt_to_phys(void *vaddr)
 {
+	uint64_t ret;
+
 #if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
-	return rte_malloc_virt2iova(vaddr);
+	ret = rte_malloc_virt2iova(vaddr);
+	if (ret != RTE_BAD_IOVA) {
+		return ret;
+	}
 #else
-	return rte_malloc_virt2phy(vaddr);
+	ret = rte_malloc_virt2phy(vaddr);
+	if (ret != RTE_BAD_PHYS_ADDR) {
+		return ret;
+	}
 #endif
+
+	return spdk_vtophys(vaddr);
 }
 
 void *
