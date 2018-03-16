@@ -605,6 +605,33 @@ int spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_
 			     char *product_name);
 void spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bdev_io *bdev_io);
 
+struct spdk_bdev_iter;
+
+typedef void (*spdk_bdev_for_each_fn)(struct spdk_bdev_iter *);
+typedef void (*spdk_bdev_for_each_cpl)(struct spdk_bdev_iter *, int status);
+
+/**
+ * Call 'fn' on each bdev.
+ *
+ * This happens asynchronously, so fn may be called after spdk_for_each_bdev
+ * returns. 'fn' will be called for each bdev serially, such that two calls
+ * to 'fn' will not overlap in time. After 'fn' has been called, call
+ * spdk_for_each_bdev_continue() to continue iterating.
+ *
+ * \param fn Called for each bdev.
+ * \param ctx Context buffer registered to spdk_bdev_iter.
+ * \param cpl Called when 'fn' has been called on each bdev.
+ */
+void spdk_for_each_bdev(spdk_bdev_for_each_fn fn, void *ctx, spdk_bdev_for_each_cpl cpl);
+
+/**
+ * Helper function to iterate all bdevs for spdk_for_each_bdev().
+ *
+ * \param i Bdev iterator.
+ * \param status Status for the bdev iterator.
+ */
+void spdk_for_each_bdev_continue(struct spdk_bdev_iter *i, int status);
+
 
 /*
  * Macro used to register module for later initialization.
