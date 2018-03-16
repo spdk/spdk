@@ -70,6 +70,25 @@ def construct_pmem_bdev(client, args):
     return client.call('construct_pmem_bdev', params)
 
 
+def construct_split_vbdev(client, args):
+    params = {
+        'base_bdev': args.base_bdev,
+        'split_count': args.split_count,
+    }
+    if args.split_size_mb:
+        params['split_size_mb'] = args.split_size_mb
+
+    return client.call('construct_split_vbdev', params)
+
+
+def destruct_split_vbdev(client, args):
+    params = {
+        'base_bdev': args.base_bdev,
+    }
+
+    return client.call('destruct_split_vbdev', params)
+
+
 def get_bdevs(client, args):
     params = {}
     if args.name:
