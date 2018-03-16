@@ -28,6 +28,9 @@ for fs in $fs; do
 
 		parted_cmd="parted -s /dev/${dev}"
 
+		while true; do date +"%H:%M:%S"; sleep 1; done &
+		timer_pid=$!
+
 		echo "INFO: Creating partition table on disk using: $parted_cmd mklabel gpt"
 		$parted_cmd mklabel gpt
 		$parted_cmd mkpart primary 2048s 100%
@@ -52,6 +55,7 @@ for fs in $fs; do
 		# Print out space consumed on target device
 		df -h /dev/$dev
 		rm -rf /mnt/${dev}dir/spdk-src
+		kill $timer_pid
 	done
 
 	for dev in $devs; do
