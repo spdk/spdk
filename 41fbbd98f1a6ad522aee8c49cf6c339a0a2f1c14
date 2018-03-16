@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "91ff9046_6bb95fd2",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 871,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-16T09:06:08Z",
+      "side": 1,
+      "message": "-1 means not error but default. If the poll_group is empty, no work was done. Hence I think -1 is appropriate.",
+      "range": {
+        "startLine": 870,
+        "startChar": 1,
+        "endLine": 871,
+        "endChar": 11
+      },
+      "revId": "41fbbd98f1a6ad522aee8c49cf6c339a0a2f1c14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9e445d9_e7100696",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 880,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-16T09:06:08Z",
+      "side": 1,
+      "message": "0 means that work was done. Hence this looks OK to me. But the following may be simpler if the above feedback is correct.\n\nif (spdk_unlikely(group is empty))\n  return -1;\nrc \u003d spdk_sock_group_poll(group-\u003esock_group);\nSTAILQ_FOREACH_SAFE(conn, ...) {\n  ...\n}\nreturn rc;",
+      "range": {
+        "startLine": 880,
+        "startChar": 1,
+        "endLine": 880,
+        "endChar": 11
+      },
+      "revId": "41fbbd98f1a6ad522aee8c49cf6c339a0a2f1c14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
