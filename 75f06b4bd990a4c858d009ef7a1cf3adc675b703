@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "de1f2284_44a55636",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 867,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-16T21:26:39Z",
+      "side": 1,
+      "message": "Agreed.  This should return 0.",
+      "parentUuid": "d72bfd81_62afd440",
+      "revId": "75f06b4bd990a4c858d009ef7a1cf3adc675b703",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "51353272_1e3a1ced",
         "filename": "lib/iscsi/iscsi_subsystem.c",
         "patchSetId": 2
