@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "bd20a43d_3b73dcaa",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 867,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-16T23:29:36Z",
+      "side": 1,
+      "message": "If I read carefully, the following is the expected behavior?\n\nShould this return 0 only once when detecting the number of connections 1 to 0? After that, should this continue returning -1 until the next new change from 1 to 0?",
+      "parentUuid": "de1f2284_44a55636",
+      "revId": "75f06b4bd990a4c858d009ef7a1cf3adc675b703",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "51353272_1e3a1ced",
         "filename": "lib/iscsi/iscsi_subsystem.c",
         "patchSetId": 2
