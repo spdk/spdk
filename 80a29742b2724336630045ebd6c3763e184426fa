@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a3532e14_911b8577",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-16T22:37:52Z",
+      "side": 1,
+      "message": "Agreed.  I hardcoded this when I first was hacking this up - before I even added config parameters for the target node/LUN.  Should be super simple to make this a config parameter (using this one as the default though if the config doesn\u0027t specify one)",
+      "parentUuid": "149b1963_2c672b15",
+      "revId": "80a29742b2724336630045ebd6c3763e184426fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1c1c99db_f9ecac39",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 24
@@ -30,6 +48,24 @@
       "writtenOn": "2018-03-16T22:25:57Z",
       "side": 1,
       "message": "It would be nice to use spdk_bdev_io_complete_scsi_status() if we have the SCSI sense code information available.",
+      "revId": "80a29742b2724336630045ebd6c3763e184426fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4846ac29_da3158a6",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-16T22:37:52Z",
+      "side": 1,
+      "message": "Agreed.",
+      "parentUuid": "1c1c99db_f9ecac39",
       "revId": "80a29742b2724336630045ebd6c3763e184426fa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "4458d2c0_9684dbdf",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-16T22:37:52Z",
+      "side": 1,
+      "message": "Not intentional.  Not sure what I was thinking here - probably done in haste during initial development.",
+      "parentUuid": "4354ba66_cbd64007",
+      "revId": "80a29742b2724336630045ebd6c3763e184426fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6013fb06_6e21f541",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 24
@@ -64,6 +118,30 @@
       "writtenOn": "2018-03-16T22:25:57Z",
       "side": 1,
       "message": "Is this 512 the block size of the disk? If so, it should definitely not be hard-coded (you should be able to get this from bdev-\u003eblocklen).",
+      "range": {
+        "startLine": 146,
+        "startChar": 56,
+        "endLine": 146,
+        "endChar": 60
+      },
+      "revId": "80a29742b2724336630045ebd6c3763e184426fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4e78fc0_c399394f",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-16T22:37:52Z",
+      "side": 1,
+      "message": "Agreed - this needs to be changed.",
+      "parentUuid": "6013fb06_6e21f541",
       "range": {
         "startLine": 146,
         "startChar": 56,
@@ -116,6 +194,30 @@
     },
     {
       "key": {
+        "uuid": "afa63d98_17006be3",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-16T22:37:52Z",
+      "side": 1,
+      "message": "Yes.  The header file says \"struct scsi_iovec follows the POSIX struct over definition and *MUST* never change\".",
+      "parentUuid": "9d2f9c5a_df7c401b",
+      "range": {
+        "startLine": 157,
+        "startChar": 28,
+        "endLine": 157,
+        "endChar": 49
+      },
+      "revId": "80a29742b2724336630045ebd6c3763e184426fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4d2d57e6_7135bb8c",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 24
@@ -133,6 +235,24 @@
     },
     {
       "key": {
+        "uuid": "fa6e8d32_7591a9cf",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-16T22:37:52Z",
+      "side": 1,
+      "message": "Yes",
+      "parentUuid": "4d2d57e6_7135bb8c",
+      "revId": "80a29742b2724336630045ebd6c3763e184426fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a1f7dbe7_91e622db",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 24
@@ -144,6 +264,24 @@
       "writtenOn": "2018-03-16T22:25:57Z",
       "side": 1,
       "message": "This looks bogus - if we\u0027re not actually sending a flush command, then just don\u0027t implement SPDK_BDEV_IO_TYPE_FLUSH at all.",
+      "revId": "80a29742b2724336630045ebd6c3763e184426fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33a2d5f5_f42b5acd",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-16T22:37:52Z",
+      "side": 1,
+      "message": "Agreed",
+      "parentUuid": "a1f7dbe7_91e622db",
       "revId": "80a29742b2724336630045ebd6c3763e184426fa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -190,6 +328,30 @@
     },
     {
       "key": {
+        "uuid": "e1de6e7d_b71a82a4",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 339,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-16T22:37:52Z",
+      "side": 1,
+      "message": "Let\u0027s change it to 0.\n\nI was playing around with this early on, thinking it might be expensive to do the libiscsi polling operation.  But I\u0027d say make it 0 for now - we can change it later if necessary.",
+      "parentUuid": "4284d44a_6607b76e",
+      "range": {
+        "startLine": 339,
+        "startChar": 55,
+        "endLine": 339,
+        "endChar": 59
+      },
+      "revId": "80a29742b2724336630045ebd6c3763e184426fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "327ed8d0_44b9c342",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 24
@@ -201,6 +363,24 @@
       "writtenOn": "2018-03-16T22:25:57Z",
       "side": 1,
       "message": "This should at least dump the address and IQN.",
+      "revId": "80a29742b2724336630045ebd6c3763e184426fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f9c192d_0e349667",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 379,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-16T22:37:52Z",
+      "side": 1,
+      "message": "Agreed.",
+      "parentUuid": "327ed8d0_44b9c342",
       "revId": "80a29742b2724336630045ebd6c3763e184426fa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
