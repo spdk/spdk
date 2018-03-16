@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "51353272_1e3a1ced",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 881,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-16T14:32:31Z",
+      "side": 1,
+      "message": "I am not quite sure for the historical reason why \"-1\" is returned here. There seems like some conflict. See line 872, rc \u003c 0 and trace an error. So that my initial change is to make it return 0. Would like to also hear other suggestions. The current change almost same as before based on Shuhei\u0027s comment and the major difference is to return immediately when there is no connection.",
+      "range": {
+        "startLine": 881,
+        "startChar": 8,
+        "endLine": 881,
+        "endChar": 10
+      },
+      "revId": "75f06b4bd990a4c858d009ef7a1cf3adc675b703",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
