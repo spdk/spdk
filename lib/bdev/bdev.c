@@ -2061,30 +2061,35 @@ _spdk_bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch)
 	}
 }
 
-static void
-_spdk_bdev_qos_io_complete(void *ctx)
-{
-	struct spdk_bdev_io *bdev_io = ctx;
-
-	bdev_io->cb(bdev_io, bdev_io->status == SPDK_BDEV_IO_STATUS_SUCCESS, bdev_io->caller_ctx);
-}
-
-static void
+static inline void
 _spdk_bdev_io_complete(void *ctx)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
 
-	assert(bdev_io->cb != NULL);
+	if (spdk_unlikely(bdev_io->in_submit_request || bdev_io->io_submit_ch)) {
+		/*
+		 * Send the completion to the thread that originally submitted the I/O,
+		 * which may not be the current thread in the case of QoS.
+		 */
+		if (bdev_io->io_submit_ch) {
+			bdev_io->ch = bdev_io->io_submit_ch;
+			bdev_io->io_submit_ch = NULL;
+		}
 
-	if (bdev_io->io_submit_ch) {
-		bdev_io->ch = bdev_io->io_submit_ch;
-		bdev_io->io_submit_ch = NULL;
+		/*
+		 * Defer completion to avoid potential infinite recursion if the
+		 * user's completion callback issues a new I/O.
+		 */
 		spdk_thread_send_msg(spdk_io_channel_get_thread(bdev_io->ch->channel),
-				     _spdk_bdev_qos_io_complete, bdev_io);
-	} else {
-		bdev_io->cb(bdev_io, bdev_io->status == SPDK_BDEV_IO_STATUS_SUCCESS,
-			    bdev_io->caller_ctx);
+				     _spdk_bdev_io_complete, bdev_io);
+		return;
 	}
+
+	assert(bdev_io->cb != NULL);
+	assert(spdk_get_thread() == spdk_io_channel_get_thread(bdev_io->ch->channel));
+
+	bdev_io->cb(bdev_io, bdev_io->status == SPDK_BDEV_IO_STATUS_SUCCESS,
+		    bdev_io->caller_ctx);
 }
 
 static void
@@ -2200,16 +2205,7 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	}
 #endif
 
-	if (bdev_io->in_submit_request) {
-		/*
-		 * Defer completion to avoid potential infinite recursion if the
-		 * user's completion callback issues a new I/O.
-		 */
-		spdk_thread_send_msg(spdk_io_channel_get_thread(bdev_ch->channel),
-				     _spdk_bdev_io_complete, bdev_io);
-	} else {
-		_spdk_bdev_io_complete(bdev_io);
-	}
+	_spdk_bdev_io_complete(bdev_io);
 }
 
 void
