@@ -904,7 +904,8 @@ iscsi_create_poll_group(void *ctx)
 	pg->sock_group = spdk_sock_group_create();
 	assert(pg->sock_group != NULL);
 
-	pg->poller = spdk_poller_register(spdk_iscsi_poll_group_poll, pg, 0);
+	/* set the period to 10 usec */
+	pg->poller = spdk_poller_register(spdk_iscsi_poll_group_poll, pg, 10);
 	/* set the period to 1 sec */
 	pg->nop_poller = spdk_poller_register(spdk_iscsi_poll_group_handle_nop, pg, 1000000);
 }
