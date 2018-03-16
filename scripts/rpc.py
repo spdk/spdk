@@ -332,6 +332,16 @@ if __name__ == "__main__":
     p.add_argument('-l', '--lvs_name', help='lvol store name', required=False)
     p.set_defaults(func=rpc.lvol.get_lvol_stores)
 
+    p = subparsers.add_parser('construct_split_vbdev', help="""Add given disk name to split config. If bdev with base_name
+    name exist the split bdevs will be created right away, if not split bdevs will be created when base bdev became be
+    available (during examination process). """)
+    p.add_argument('-b', '--prefix', help="""Use this name as prefix instead of base bdev name""")
+    p.add_argument('base_bdev', help='base bdev name')
+    p.add_argument('-s', '--split_size_mb', help='size in MiB for each bdev', type=int, default=0)
+    p.add_argument('split_count', help="""Optional - number of split bdevs to create. Total size * count must not exceed
+    the base bdev size.""", type=int)
+    p.set_defaults(func=rpc.bdev.construct_split_vbdev)
+
     # nbd
     p = subparsers.add_parser('start_nbd_disk', help='Export a bdev as a nbd disk')
     p.add_argument('bdev_name', help='Blockdev name to be exported. Example: Malloc0.')
