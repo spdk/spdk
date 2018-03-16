@@ -36,6 +36,7 @@
 #include "spdk/env.h"
 #include "spdk/string.h"
 #include "spdk/sock.h"
+#include "spdk/likely.h"
 
 #include "iscsi/iscsi.h"
 #include "iscsi/init_grp.h"
@@ -865,11 +866,13 @@ spdk_iscsi_poll_group_poll(void *ctx)
 	struct spdk_iscsi_conn *conn, *tmp;
 	int rc;
 
-	if (!STAILQ_EMPTY(&group->connections)) {
-		rc = spdk_sock_group_poll(group->sock_group);
-		if (rc < 0) {
-			SPDK_ERRLOG("Failed to poll sock_group=%p\n", group->sock_group);
-		}
+	if (spdk_unlikely(STAILQ_EMPTY(&group->connections))) {
+		return 0;
+	}
+
+	rc = spdk_sock_group_poll(group->sock_group);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to poll sock_group=%p\n", group->sock_group);
 	}
 
 	STAILQ_FOREACH_SAFE(conn, &group->connections, link, tmp) {
