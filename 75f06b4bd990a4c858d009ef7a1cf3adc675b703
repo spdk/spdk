@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "d72bfd81_62afd440",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 867,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-16T16:49:45Z",
+      "side": 1,
+      "message": "rc can only be -1 here - I think it would be clearer to \u0027return -1\u0027 explicitly.\n\nHowever, since this poller is being updated anyway, we can use the opportunity to update it to \u0027return 0\u0027 in this case, meaning no work was done.",
+      "revId": "75f06b4bd990a4c858d009ef7a1cf3adc675b703",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "51353272_1e3a1ced",
         "filename": "lib/iscsi/iscsi_subsystem.c",
         "patchSetId": 2
