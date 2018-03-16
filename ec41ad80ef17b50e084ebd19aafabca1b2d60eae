@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "59b93386_5b3d2874",
+        "filename": "test/config/vm_setup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-16T23:58:42Z",
+      "side": 1,
+      "message": "Might be simpler to swap these two lines around - then you wouldn\u0027t need the -C git argument.",
+      "revId": "ec41ad80ef17b50e084ebd19aafabca1b2d60eae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35cea815_c5d9ad61",
+        "filename": "test/config/vm_setup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-16T23:58:42Z",
+      "side": 1,
+      "message": "This probably needs to run as root (sudo), or does \u0027make install-dep\u0027 do that internally?",
+      "revId": "ec41ad80ef17b50e084ebd19aafabca1b2d60eae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
