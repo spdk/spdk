@@ -77,6 +77,29 @@ def construct_pmem_bdev(args):
     print_array(args.client.call('construct_pmem_bdev', params))
 
 
+def construct_split_vbdev(args):
+    params = {
+        'base_bdev': args.base_bdev,
+        'split_count': args.split_count,
+    }
+
+    if args.prefix:
+        params['prefix'] = args.prefix
+
+    if args.split_size_mb:
+        params['split_size_mb'] = args.split_size_mb
+
+    print_array(args.client.call('construct_split_vbdev', params))
+
+
+def destruct_split_vbdev(args):
+    params = {
+        'base_bdev': args.base_bdev,
+    }
+
+    args.client.call('destruct_split_vbdev', params)
+
+
 def get_bdevs(args):
     params = {}
     if args.name:
