@@ -121,6 +121,17 @@ struct spdk_bdev_io_stat {
 	uint64_t ticks_rate;
 };
 
+struct spdk_bdev_stat {
+	/* I/Os currently in progress */
+	uint64_t in_flight;
+	/* Time spent doing I/Os */
+	uint64_t io_ticks;
+	/* Weighted time spent doing I/Os */
+	uint64_t time_in_queue;
+	/* Latest time of proccessing I/O */
+	uint64_t stamp;
+};
+
 typedef void (*spdk_bdev_init_cb)(void *cb_arg, int rc);
 typedef void (*spdk_bdev_fini_cb)(void *cb_arg);
 

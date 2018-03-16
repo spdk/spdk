@@ -850,6 +850,21 @@ _spdk_bdev_qos_io_submit(void *ctx)
 		}
 	}
 }
+static void
+_spdk_bdev_update_stat(struct spdk_bdev *bdev)
+{
+	uint64_t now = spdk_get_ticks();
+	uint64_t in_flight = bdev->bdev_stat.in_flight;
+
+	if (now == bdev->bdev_stat.stamp) {
+		return;
+	}
+	if (in_flight) {
+		bdev->bdev_stat.time_in_queue += in_flight * (now - bdev->bdev_stat.stamp);
+		bdev->bdev_stat.io_ticks += now - bdev->bdev_stat.stamp;
+	}
+	bdev->bdev_stat.stamp = now;
+}
 
 static void
 _spdk_bdev_io_submit(void *ctx)
@@ -863,6 +878,8 @@ _spdk_bdev_io_submit(void *ctx)
 	bdev_io->submit_tsc = spdk_get_ticks();
 	shared_ch->io_outstanding++;
 	bdev_io->in_submit_request = true;
+	_spdk_bdev_update_stat(bdev);
+	bdev->bdev_stat.in_flight++;
 	if (spdk_likely(bdev_ch->flags == 0)) {
 		if (spdk_likely(TAILQ_EMPTY(&shared_ch->nomem_io))) {
 			bdev->fn_table->submit_request(ch, bdev_io);
@@ -2073,8 +2090,12 @@ static void
 _spdk_bdev_io_complete(void *ctx)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
+	struct spdk_bdev *bdev = bdev_io->bdev;
 
 	assert(bdev_io->cb != NULL);
+
+	_spdk_bdev_update_stat(bdev);
+	bdev->bdev_stat.in_flight--;
 
 	if (bdev_io->io_submit_ch) {
 		bdev_io->ch = bdev_io->io_submit_ch;
