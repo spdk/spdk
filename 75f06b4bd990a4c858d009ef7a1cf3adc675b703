@@ -63,6 +63,30 @@
       "revId": "75f06b4bd990a4c858d009ef7a1cf3adc675b703",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e610f006_48d9bb8a",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 881,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-16T21:24:28Z",
+      "side": 1,
+      "message": "Agreed.  This should still return -1 for now.",
+      "parentUuid": "9bdf1d31_953eb569",
+      "range": {
+        "startLine": 881,
+        "startChar": 8,
+        "endLine": 881,
+        "endChar": 10
+      },
+      "revId": "75f06b4bd990a4c858d009ef7a1cf3adc675b703",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
