@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ef92bd62_268baf8e",
+        "filename": "lib/bdev/error/vbdev_error.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-16T16:02:08Z",
+      "side": 1,
+      "message": "-ENOENT",
+      "range": {
+        "startLine": 340,
+        "startChar": 8,
+        "endLine": 340,
+        "endChar": 10
+      },
+      "revId": "0caed0ee6f2a833eb017f2011517bafd2ffa39fe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff23b993_7353bdff",
+        "filename": "lib/bdev/error/vbdev_error.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-16T16:02:08Z",
+      "side": 1,
+      "message": "const char *",
+      "range": {
+        "startLine": 49,
+        "startChar": 35,
+        "endLine": 49,
+        "endChar": 45
+      },
+      "revId": "0caed0ee6f2a833eb017f2011517bafd2ffa39fe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29b826d1_9b654abf",
+        "filename": "lib/bdev/error/vbdev_error_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-16T16:02:08Z",
+      "side": 1,
+      "message": "Removing base bdev shouldn\u0027t be needed. This function should:\n1. Remove cofnig entry\n2. Remove error vbdev if it exist.",
+      "range": {
+        "startLine": 198,
+        "startChar": 1,
+        "endLine": 203,
+        "endChar": 2
+      },
+      "revId": "0caed0ee6f2a833eb017f2011517bafd2ffa39fe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
