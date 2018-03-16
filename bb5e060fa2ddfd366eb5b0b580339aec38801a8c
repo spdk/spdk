@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6c7db417_0717a219",
+        "filename": "test/iscsi_tgt/initiator/initiator.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-16T21:48:40Z",
+      "side": 1,
+      "message": "Maybe we should add some function to autotest_common.sh (is_libiscsi_valid?) that can be used both here, and when we decide whether to enable CONFIG_LIBISCSI.",
+      "revId": "bb5e060fa2ddfd366eb5b0b580339aec38801a8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
