@@ -36,6 +36,8 @@
  * bdev and slices it into multiple smaller bdevs.
  */
 
+#include "vbdev_split.h"
+
 #include "spdk/rpc.h"
 #include "spdk/conf.h"
 #include "spdk/endian.h"
@@ -47,9 +49,11 @@
 #include "spdk_internal/log.h"
 
 struct spdk_vbdev_split_config {
+	char *prefix;
 	char *base_bdev;
 	unsigned split_count;
 	uint64_t split_size_mb;
+	struct spdk_bdev_part_base split_base;
 
 	TAILQ_ENTRY(spdk_vbdev_split_config) tailq;
 };
@@ -74,12 +78,6 @@ static struct spdk_bdev_module split_if = {
 };
 
 SPDK_BDEV_MODULE_REGISTER(&split_if)
-
-static void
-vbdev_split_base_free(struct spdk_bdev_part_base *base)
-{
-	free(base);
-}
 
 static int
 vbdev_split_destruct(void *ctx)
@@ -129,35 +127,40 @@ static struct spdk_bdev_fn_table vbdev_split_fn_table = {
 };
 
 static int
-vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count,
-		   uint64_t split_size_mb)
+vbdev_split_create(struct spdk_vbdev_split_config *cfg)
 {
 	uint64_t split_size_blocks, offset_blocks;
-	uint64_t max_split_count;
+	uint64_t split_count, max_split_count;
 	uint64_t mb = 1024 * 1024;
 	uint64_t i;
 	int rc;
 	char *name;
-	struct spdk_bdev_part_base *split_base;
+	struct spdk_bdev *base_bdev;
 
-	assert(split_count > 0);
+	assert(cfg->split_count > 0);
 
-	if (split_size_mb) {
-		if (((split_size_mb * mb) % base_bdev->blocklen) != 0) {
+	base_bdev = spdk_bdev_get_by_name(cfg->base_bdev);
+	if (!base_bdev) {
+		return -ENODEV;
+	}
+
+	if (cfg->split_size_mb) {
+		if (((cfg->split_size_mb * mb) % base_bdev->blocklen) != 0) {
 			SPDK_ERRLOG("Split size %" PRIu64 " MB is not possible with block size "
 				    "%" PRIu32 "\n",
-				    split_size_mb, base_bdev->blocklen);
-			return -1;
+				    cfg->split_size_mb, base_bdev->blocklen);
+			return -EINVAL;
 		}
-		split_size_blocks = (split_size_mb * mb) / base_bdev->blocklen;
+		split_size_blocks = (cfg->split_size_mb * mb) / base_bdev->blocklen;
 		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_SPLIT, "Split size %" PRIu64 " MB specified by user\n",
-			      split_size_mb);
+			      cfg->split_size_mb);
 	} else {
-		split_size_blocks = base_bdev->blockcnt / split_count;
+		split_size_blocks = base_bdev->blockcnt / cfg->split_count;
 		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_SPLIT, "Split size not specified by user\n");
 	}
 
 	max_split_count = base_bdev->blockcnt / split_size_blocks;
+	split_count = cfg->split_count;
 	if (split_count > max_split_count) {
 		SPDK_WARNLOG("Split count %" PRIu64 " is greater than maximum possible split count "
 			     "%" PRIu64 " - clamping\n", split_count, max_split_count);
@@ -168,20 +171,14 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count,
 		      " split_size_blocks: %" PRIu64 "\n",
 		      spdk_bdev_get_name(base_bdev), split_count, split_size_blocks);
 
-	split_base = calloc(1, sizeof(*split_base));
-	if (!split_base) {
-		SPDK_ERRLOG("Cannot allocate bdev part base\n");
-		return -1;
-	}
-
-	rc = spdk_bdev_part_base_construct(split_base, base_bdev,
+	rc = spdk_bdev_part_base_construct(&cfg->split_base, base_bdev,
 					   vbdev_split_base_bdev_hotremove_cb,
 					   &split_if, &vbdev_split_fn_table,
-					   &g_split_disks, vbdev_split_base_free,
+					   &g_split_disks, NULL,
 					   sizeof(struct vbdev_split_channel), NULL, NULL);
 	if (rc) {
 		SPDK_ERRLOG("Cannot construct bdev part base\n");
-		return -1;
+		return rc;
 	}
 
 	offset_blocks = 0;
@@ -191,29 +188,44 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count,
 		d = calloc(1, sizeof(*d));
 		if (d == NULL) {
 			SPDK_ERRLOG("could not allocate bdev part\n");
-			return -ENOMEM;
+			rc = -ENOMEM;
+			goto err;
 		}
 
-		name = spdk_sprintf_alloc("%sp%" PRIu64, spdk_bdev_get_name(base_bdev), i);
+		name = spdk_sprintf_alloc("%sp%" PRIu64, cfg->prefix, i);
 		if (!name) {
 			SPDK_ERRLOG("could not allocate name\n");
 			free(d);
-			return -ENOMEM;
+			rc = -ENOMEM;
+			goto err;
 		}
 
-		rc = spdk_bdev_part_construct(d, split_base, name, offset_blocks, split_size_blocks,
+		rc = spdk_bdev_part_construct(d, &cfg->split_base, name, offset_blocks, split_size_blocks,
 					      "Split Disk");
 		if (rc) {
 			SPDK_ERRLOG("could not construct bdev part\n");
 			/* spdk_bdev_part_construct will free name if it fails */
 			free(d);
-			return rc;
+			rc = -ENOMEM;
+			goto err;
 		}
 
 		offset_blocks += split_size_blocks;
 	}
 
 	return 0;
+err:
+	spdk_bdev_part_base_hotremove(cfg->split_base.bdev, cfg->split_base.tailq);
+	return rc;
+}
+
+static void
+vbdev_split_del_config(struct spdk_vbdev_split_config *cfg)
+{
+	TAILQ_REMOVE(&g_split_config, cfg, tailq);
+	free(cfg->prefix);
+	free(cfg->base_bdev);
+	free(cfg);
 }
 
 static void
@@ -222,9 +234,7 @@ vbdev_split_clear_config(void)
 	struct spdk_vbdev_split_config *cfg;
 
 	while ((cfg = TAILQ_FIRST(&g_split_config))) {
-		TAILQ_REMOVE(&g_split_config, cfg, tailq);
-		free(cfg->base_bdev);
-		free(cfg);
+		vbdev_split_del_config(cfg);
 	}
 }
 
@@ -243,16 +253,33 @@ vbdev_split_config_find_by_base_name(const char *base_bdev_name)
 }
 
 static int
-vbdev_split_add_config(const char *base_bdev_name, unsigned split_count, uint64_t split_size)
+vbdev_split_add_config(const char *prefix, const char *base_bdev_name, unsigned split_count,
+		       uint64_t split_size, struct spdk_vbdev_split_config **config)
 {
 	struct spdk_vbdev_split_config *cfg;
-
 	assert(base_bdev_name);
 
-	cfg = vbdev_split_config_find_by_base_name(base_bdev_name);
-	if (cfg) {
-		SPDK_ERRLOG("split config for '%s' already exist.", base_bdev_name);
-		return -EEXIST;
+	if (base_bdev_name == NULL) {
+		SPDK_ERRLOG("Split bdev config: no base bdev provided.");
+		return -EINVAL;
+	}
+
+	if (split_count == 0) {
+		SPDK_ERRLOG("Split bdev config: split_count can't be 0.");
+		return -EINVAL;
+	}
+
+	/* Check if we already have 'prefix' or 'base_bdev_name' registered in cofnig */
+	TAILQ_FOREACH(cfg, &g_split_config, tailq) {
+		if (prefix && strcmp(cfg->prefix, prefix) == 0) {
+			SPDK_ERRLOG("Split bdev config: prefix '%s' already used.", prefix);
+			return -EEXIST;
+		}
+
+		if (strcmp(cfg->base_bdev, base_bdev_name) != 0) {
+			SPDK_ERRLOG("Split bdev config for base bdev '%s' already exist.", base_bdev_name);
+			return -EEXIST;
+		}
 	}
 
 	cfg = calloc(1, sizeof(*cfg));
@@ -261,10 +288,17 @@ vbdev_split_add_config(const char *base_bdev_name, unsigned split_count, uint64_
 		return -ENOMEM;
 	}
 
-	cfg->base_bdev = strdup(base_bdev_name);
-	if (!cfg) {
+	cfg->prefix = strdup(prefix ? prefix : base_bdev_name);
+	if (!cfg->prefix) {
 		SPDK_ERRLOG("strdup(): Out of memory");
-		free(cfg->base_bdev);
+		free(cfg);
+		return -ENOMEM;
+	}
+
+	cfg->base_bdev = strdup(base_bdev_name);
+	if (!cfg->base_bdev) {
+		SPDK_ERRLOG("strdup(): Out of memory");
+		free(cfg->prefix);
 		free(cfg);
 		return -ENOMEM;
 	}
@@ -272,6 +306,10 @@ vbdev_split_add_config(const char *base_bdev_name, unsigned split_count, uint64_
 	cfg->split_count = split_count;
 	cfg->split_size_mb = split_size;
 	TAILQ_INSERT_TAIL(&g_split_config, cfg, tailq);
+	if (config) {
+		*config = cfg;
+	}
+
 	return 0;
 }
 
@@ -328,7 +366,8 @@ vbdev_split_init(void)
 			}
 		}
 
-		rc = vbdev_split_add_config(base_bdev_name, split_count, split_size);
+		/* Config file does not support prefix */
+		rc = vbdev_split_add_config(NULL, base_bdev_name, split_count, split_size, NULL);
 		if (rc != 0) {
 			goto err;
 		}
@@ -351,11 +390,56 @@ vbdev_split_examine(struct spdk_bdev *bdev)
 {
 	struct spdk_vbdev_split_config *cfg = vbdev_split_config_find_by_base_name(bdev->name);
 
-	if (cfg && vbdev_split_create(bdev, cfg->split_count, cfg->split_size_mb)) {
-		SPDK_ERRLOG("could not split bdev %s\n", bdev->name);
+	if (cfg != NULL) {
+		assert(cfg->split_base.ref == 0);
+
+		if (vbdev_split_create(cfg)) {
+			SPDK_ERRLOG("could not split bdev %s\n", bdev->name);
+		}
 	}
 
 	spdk_bdev_module_examine_done(&split_if);
+}
+
+int
+create_vbdev_split(const char *prefix, const char *base_bdev_name, unsigned split_count,
+		   uint64_t split_size_mb)
+{
+	int rc;
+	struct spdk_vbdev_split_config *cfg;
+
+	rc = vbdev_split_add_config(prefix, base_bdev_name, split_count, split_size_mb, &cfg);
+	if (rc) {
+		return rc;
+	}
+
+	rc = vbdev_split_create(cfg);
+	if (rc == -ENODEV) {
+		/* It is ok if base bdev does not exist yet. */
+		rc = 0;
+	} else if (rc < 0) {
+		vbdev_split_del_config(cfg);
+	}
+
+	return rc;
+}
+
+int
+spdk_vbdev_split_destruct(const char *base_bdev_name)
+{
+	struct spdk_vbdev_split_config *cfg = vbdev_split_config_find_by_base_name(base_bdev_name);
+
+	if (!cfg) {
+		SPDK_ERRLOG("Split configuration for '%s' not found\n", base_bdev_name);
+		return -ENOENT;
+	}
+
+	if (cfg->split_base.ref) {
+		spdk_bdev_part_base_hotremove(cfg->split_base.bdev, cfg->split_base.tailq);
+	}
+
+	vbdev_split_del_config(cfg);
+	return 0;
 }
 
 SPDK_LOG_REGISTER_COMPONENT("vbdev_split", SPDK_LOG_VBDEV_SPLIT)
