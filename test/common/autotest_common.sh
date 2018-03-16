@@ -26,6 +26,7 @@ fi
 : ${SPDK_RUN_VALGRIND=1}; export SPDK_RUN_VALGRIND
 : ${SPDK_TEST_UNITTEST=1}; export SPDK_TEST_UNITTEST
 : ${SPDK_TEST_ISCSI=1}; export SPDK_TEST_ISCSI
+: ${SPDK_TEST_ISCSI_INITIATOR=1}; export SPDK_TEST_ISCSI_INITIATOR
 : ${SPDK_TEST_NVME=1}; export SPDK_TEST_NVME
 : ${SPDK_TEST_NVMF=1}; export SPDK_TEST_NVMF
 : ${SPDK_TEST_RBD=1}; export SPDK_TEST_RBD
@@ -117,8 +118,13 @@ if [ -d /usr/include/iscsi ]; then
 	libiscsi_version=`grep LIBISCSI_API_VERSION /usr/include/iscsi/iscsi.h | head -1 | awk '{print $3}' | awk -F '(' '{print $2}' | awk -F ')' '{print $1}'`
 	if [ $libiscsi_version -ge 20150621 ]; then
 		config_params+=' --with-iscsi-initiator'
+	else
+		export SPDK_TEST_ISCSI_INITIATOR=0
 	fi
+else
+	export SPDK_TEST_ISCSI_INITIATOR=0
 fi
+
 export config_params
 
 if [ -z "$output_dir" ]; then
