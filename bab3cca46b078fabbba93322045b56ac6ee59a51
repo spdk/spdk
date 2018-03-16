@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "406fa3ee_0b8afd73",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-16T09:30:26Z",
+      "side": 1,
+      "message": "these extra params will be used every time, whether they\u0027re needed or not",
+      "range": {
+        "startLine": 57,
+        "startChar": 8,
+        "endLine": 58,
+        "endChar": 75
+      },
+      "revId": "bab3cca46b078fabbba93322045b56ac6ee59a51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d2cc7b21_5e0c08a9",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 53
+      },
+      "lineNbr": 1227,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-16T09:30:26Z",
+      "side": 1,
+      "message": "You should check that FIO is running before and after you call snapshot command.\nps ax | grep can be simplified - save FIO pid to a file, or to a variable and then you can use os.kill(pid, 0) - it just checks if process with given PID exists",
+      "range": {
+        "startLine": 1223,
+        "startChar": 7,
+        "endLine": 1227,
+        "endChar": 30
+      },
+      "revId": "bab3cca46b078fabbba93322045b56ac6ee59a51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
