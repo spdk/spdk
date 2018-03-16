@@ -69,12 +69,14 @@ struct vbdev_split_channel {
 static int vbdev_split_init(void);
 static void vbdev_split_fini(void);
 static void vbdev_split_examine(struct spdk_bdev *bdev);
+static int vbdev_split_config_json(struct spdk_json_write_ctx *w);
 
 static struct spdk_bdev_module split_if = {
 	.name = "split",
 	.module_init = vbdev_split_init,
 	.module_fini = vbdev_split_fini,
 	.examine = vbdev_split_examine,
+	.config_json = vbdev_split_config_json,
 };
 
 SPDK_BDEV_MODULE_REGISTER(&split_if)
@@ -120,10 +122,17 @@ vbdev_split_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	return 0;
 }
 
+static void
+vbdev_split_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+{
+	/* No config per bdev needed */
+}
+
 static struct spdk_bdev_fn_table vbdev_split_fn_table = {
 	.destruct		= vbdev_split_destruct,
 	.submit_request		= vbdev_split_submit_request,
 	.dump_info_json		= vbdev_split_dump_info_json,
+	.write_config_json	= vbdev_split_write_config_json
 };
 
 static int
@@ -397,6 +406,29 @@ vbdev_split_examine(struct spdk_bdev *bdev)
 	}
 
 	spdk_bdev_module_examine_done(&split_if);
+}
+
+static int
+vbdev_split_config_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_vbdev_split_config *cfg;
+
+	TAILQ_FOREACH(cfg, &g_split_config, tailq) {
+		spdk_json_write_object_begin(w);
+
+		spdk_json_write_named_string(w, "method", "construct_split_vbdev");
+
+		spdk_json_write_named_object_begin(w, "params");
+		spdk_json_write_named_string(w, "prefix", cfg->prefix);
+		spdk_json_write_named_string(w, "base_bdev", cfg->prefix);
+		spdk_json_write_named_uint32(w, "split_count", cfg->split_count);
+		spdk_json_write_named_uint64(w, "split_size_mb", cfg->split_size_mb);
+		spdk_json_write_object_end(w);
+
+		spdk_json_write_object_end(w);
+	}
+
+	return 0;
 }
 
 int
