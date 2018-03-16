@@ -1672,12 +1672,12 @@ spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channe
 		bdev_io->u.bdev.iovs = &bdev_io->u.bdev.iov;
 		bdev_io->u.bdev.iovcnt = 1;
 		bdev_io->u.bdev.num_blocks = len / spdk_bdev_get_block_size(bdev);
-		bdev_io->split_remaining_num_blocks = num_blocks - bdev_io->u.bdev.num_blocks;
-		bdev_io->split_current_offset_blocks = offset_blocks + bdev_io->u.bdev.num_blocks;
+		bdev_io->u.bdev.split_remaining_num_blocks = num_blocks - bdev_io->u.bdev.num_blocks;
+		bdev_io->u.bdev.split_current_offset_blocks = offset_blocks + bdev_io->u.bdev.num_blocks;
 	}
 
 	if (split_request) {
-		bdev_io->stored_user_cb = cb;
+		bdev_io->u.bdev.stored_user_cb = cb;
 		spdk_bdev_io_init(bdev_io, bdev, cb_arg, spdk_bdev_write_zeroes_split);
 	} else {
 		spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
@@ -2608,24 +2608,24 @@ spdk_bdev_write_zeroes_split(struct spdk_bdev_io *bdev_io, bool success, void *c
 	uint64_t len;
 
 	if (!success) {
-		bdev_io->cb = bdev_io->stored_user_cb;
+		bdev_io->cb = bdev_io->u.bdev.stored_user_cb;
 		_spdk_bdev_io_complete(bdev_io);
 		return;
 	}
 
 	/* no need to perform the error checking from write_zeroes_blocks because this request already passed those checks. */
-	len = spdk_min(spdk_bdev_get_block_size(bdev_io->bdev) * bdev_io->split_remaining_num_blocks,
+	len = spdk_min(spdk_bdev_get_block_size(bdev_io->bdev) * bdev_io->u.bdev.split_remaining_num_blocks,
 		       ZERO_BUFFER_SIZE);
 
-	bdev_io->u.bdev.offset_blocks = bdev_io->split_current_offset_blocks;
+	bdev_io->u.bdev.offset_blocks = bdev_io->u.bdev.split_current_offset_blocks;
 	bdev_io->u.bdev.iov.iov_len = len;
 	bdev_io->u.bdev.num_blocks = len / spdk_bdev_get_block_size(bdev_io->bdev);
-	bdev_io->split_remaining_num_blocks -= bdev_io->u.bdev.num_blocks;
-	bdev_io->split_current_offset_blocks += bdev_io->u.bdev.num_blocks;
+	bdev_io->u.bdev.split_remaining_num_blocks -= bdev_io->u.bdev.num_blocks;
+	bdev_io->u.bdev.split_current_offset_blocks += bdev_io->u.bdev.num_blocks;
 
 	/* if this round completes the i/o, change the callback to be the original user callback */
-	if (bdev_io->split_remaining_num_blocks == 0) {
-		spdk_bdev_io_init(bdev_io, bdev_io->bdev, cb_arg, bdev_io->stored_user_cb);
+	if (bdev_io->u.bdev.split_remaining_num_blocks == 0) {
+		spdk_bdev_io_init(bdev_io, bdev_io->bdev, cb_arg, bdev_io->u.bdev.stored_user_cb);
 	} else {
 		spdk_bdev_io_init(bdev_io, bdev_io->bdev, cb_arg, spdk_bdev_write_zeroes_split);
 	}
