@@ -863,6 +863,16 @@ _spdk_bdev_io_submit(void *ctx)
 	bdev_io->submit_tsc = spdk_get_ticks();
 	shared_ch->io_outstanding++;
 	bdev_io->in_submit_request = true;
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+		bdev_ch->stat.read_in_flight++;
+		break;
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		bdev_ch->stat.write_in_flight++;
+		break;
+	default:
+		break;
+	}
 	if (spdk_likely(bdev_ch->flags == 0)) {
 		if (spdk_likely(TAILQ_EMPTY(&shared_ch->nomem_io))) {
 			bdev->fn_table->submit_request(ch, bdev_io);
@@ -2168,11 +2178,13 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 			bdev_ch->stat.bytes_read += bdev_io->u.bdev.num_blocks * bdev->blocklen;
 			bdev_ch->stat.num_read_ops++;
 			bdev_ch->stat.read_latency_ticks += (spdk_get_ticks() - bdev_io->submit_tsc);
+			bdev_ch->stat.read_in_flight--;
 			break;
 		case SPDK_BDEV_IO_TYPE_WRITE:
 			bdev_ch->stat.bytes_written += bdev_io->u.bdev.num_blocks * bdev->blocklen;
 			bdev_ch->stat.num_write_ops++;
 			bdev_ch->stat.write_latency_ticks += (spdk_get_ticks() - bdev_io->submit_tsc);
+			bdev_ch->stat.write_in_flight--;
 			break;
 		default:
 			break;

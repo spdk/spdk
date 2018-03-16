@@ -116,6 +116,10 @@ struct spdk_bdev_io_stat {
 	uint64_t num_read_ops;
 	uint64_t bytes_written;
 	uint64_t num_write_ops;
+	/* Read I/Os currently in progress */
+	uint64_t read_in_flight;
+	/* Write I/Os currently in progess */
+	uint64_t write_in_flight;
 	uint64_t read_latency_ticks;
 	uint64_t write_latency_ticks;
 	uint64_t ticks_rate;
