@@ -33,7 +33,7 @@ if __name__ == "__main__":
         tc = TestCases(rpc_py, total_size, block_size, cluster_size, base_dir_path, app_path)
 
         if "all" in tc_list:
-            for num_test in range(1, test_counter() + 1):
+            for num_test in [i.split("test_case")[1] for i in dir(TestCases) if "test_case" in i]:
                 fail_count = 0
                 exec("fail_count += tc.test_case{num_test}"
                      "()".format(num_test=num_test))
