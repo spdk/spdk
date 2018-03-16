@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "1282f401_6f60b2f1",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-03-16T03:02:22Z",
+      "side": 1,
+      "message": "Yes, it\u0027s used for free tasks.",
+      "parentUuid": "803c5a05_04eee6e7",
+      "range": {
+        "startLine": 140,
+        "startChar": 37,
+        "endLine": 140,
+        "endChar": 48
+      },
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7da30334_9b2ebd95",
         "filename": "lib/vhost/vhost_nvme.c",
         "patchSetId": 21
@@ -36,6 +60,24 @@
       "writtenOn": "2018-03-14T22:04:15Z",
       "side": 1,
       "message": "I think it would be better if the length in bytes was passed as a parameter to this function; these values are already extracted in the caller, and it would make this function usable for other opcodes (for example, Dataset Management also needs some of this same logic).  Then you wouldn\u0027t need to pass in block_size either, since it would be already baked in as part of the length-in-bytes calculation in the caller.",
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9bd2bb73_eea938c0",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-03-16T03:02:22Z",
+      "side": 1,
+      "message": "ok.",
+      "parentUuid": "7da30334_9b2ebd95",
       "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -59,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "08f7dc0c_5b2a4489",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-03-16T03:02:22Z",
+      "side": 1,
+      "message": "This is used for interrupt coalescing previously, I\u0027ll remove it.",
+      "parentUuid": "6fc4e856_2164d1a1",
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "abc49da4_979fca82",
         "filename": "lib/vhost/vhost_nvme.c",
         "patchSetId": 21
@@ -70,6 +130,24 @@
       "writtenOn": "2018-03-14T22:04:15Z",
       "side": 1,
       "message": "This can probably use spdk_bdev_io_get_nvme_status().",
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2aceff84_63a9cb73",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-03-16T03:02:22Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "abc49da4_979fca82",
       "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -93,6 +171,24 @@
     },
     {
       "key": {
+        "uuid": "6b71d739_4bac9110",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 298,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-03-16T03:02:22Z",
+      "side": 1,
+      "message": "I\u0027ll remove it.",
+      "parentUuid": "bbcea7c4_a267998b",
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "75bb9b7b_6db2afe7",
         "filename": "lib/vhost/vhost_nvme.c",
         "patchSetId": 21
@@ -104,6 +200,30 @@
       "writtenOn": "2018-03-14T22:04:15Z",
       "side": 1,
       "message": "dbbuf_dbs is already declared as volatile uint32_t *, so I don\u0027t think this cast is necessary.",
+      "range": {
+        "startLine": 303,
+        "startChar": 12,
+        "endLine": 303,
+        "endChar": 33
+      },
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa3b5b90_bf30279a",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-03-16T03:02:22Z",
+      "side": 1,
+      "message": "ok.",
+      "parentUuid": "75bb9b7b_6db2afe7",
       "range": {
         "startLine": 303,
         "startChar": 12,
@@ -156,6 +276,24 @@
     },
     {
       "key": {
+        "uuid": "172f5a3b_e679bb08",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-03-16T03:02:22Z",
+      "side": 1,
+      "message": "This can be removed, as this defined by NVMe specification.",
+      "parentUuid": "97e56e78_44dc54c9",
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f7503247_e29c8749",
         "filename": "lib/vhost/vhost_nvme.c",
         "patchSetId": 21
@@ -167,6 +305,24 @@
       "writtenOn": "2018-03-14T22:04:15Z",
       "side": 1,
       "message": "These asserts should probably be turned into a runtime check that returns NULL for out of bounds NSID instead - see my comment below about invalid NSID.",
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cc957192_1b2f6154",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-03-16T03:02:22Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "f7503247_e29c8749",
       "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -213,6 +369,30 @@
     },
     {
       "key": {
+        "uuid": "d3339abe_4cebe094",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 399,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-03-16T03:02:22Z",
+      "side": 1,
+      "message": "Yes, I used for tracking event fd writes before.",
+      "parentUuid": "b4679c21_324c9d39",
+      "range": {
+        "startLine": 399,
+        "startChar": 8,
+        "endLine": 399,
+        "endChar": 20
+      },
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "216332c3_e7deeadd",
         "filename": "lib/vhost/vhost_nvme.c",
         "patchSetId": 21
@@ -236,6 +416,30 @@
     },
     {
       "key": {
+        "uuid": "44be6ac7_91abfdf6",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 400,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-03-16T03:02:22Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "216332c3_e7deeadd",
+      "range": {
+        "startLine": 400,
+        "startChar": 8,
+        "endLine": 400,
+        "endChar": 23
+      },
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ecdc2cc0_5c6e9dd0",
         "filename": "lib/vhost/vhost_nvme.c",
         "patchSetId": 21
@@ -247,6 +451,24 @@
       "writtenOn": "2018-03-14T22:04:15Z",
       "side": 1,
       "message": "What happens if this address is unaligned and the buffer continues into the next page?  I think this should be using the same logic as spdk_nvme_map_prps().",
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "43584f27_856d73f6",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-03-16T03:02:22Z",
+      "side": 1,
+      "message": "ok, will change it.",
+      "parentUuid": "ecdc2cc0_5c6e9dd0",
       "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -316,6 +538,24 @@
     },
     {
       "key": {
+        "uuid": "4cf480c4_9f2b9748",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 566,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-03-16T03:02:22Z",
+      "side": 1,
+      "message": "ok.",
+      "parentUuid": "bc1eb12e_129844cb",
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6c804dd1_f7b1c0c1",
         "filename": "lib/vhost/vhost_nvme.c",
         "patchSetId": 21
@@ -379,6 +619,30 @@
     },
     {
       "key": {
+        "uuid": "3dd0e225_08823ba1",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 939,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-03-16T03:02:22Z",
+      "side": 1,
+      "message": "yes, will change to malloc.",
+      "parentUuid": "7a40051d_6d843da0",
+      "range": {
+        "startLine": 939,
+        "startChar": 1,
+        "endLine": 939,
+        "endChar": 31
+      },
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "40eadeec_c6859b5b",
         "filename": "lib/vhost/vhost_nvme.c",
         "patchSetId": 21
@@ -390,6 +654,24 @@
       "writtenOn": "2018-03-14T22:04:15Z",
       "side": 1,
       "message": "MQES is 0\u0027s based, so this should probably be MAX_QUEUE_ENTRIES_SUPPORTED - 1.",
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d8da6555_1dacdeb7",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 1041,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-03-16T03:02:22Z",
+      "side": 1,
+      "message": "Yes.",
+      "parentUuid": "40eadeec_c6859b5b",
       "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -430,6 +712,24 @@
       "writtenOn": "2018-03-14T22:04:15Z",
       "side": 1,
       "message": "I don\u0027t think we should pretend to be an Intel controller unless we provide the Intel vendor-specific commands, log pages, etc.",
+      "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91ae9cbe_a69b238c",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 1051,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-03-16T03:02:22Z",
+      "side": 1,
+      "message": "I think it through, maybe we should use same ID as QEMU nvme driver.",
+      "parentUuid": "58daf2ed_beb08968",
       "revId": "abe26044d87abf327b9d7d384c22bbf0a33e60ce",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
