@@ -294,6 +294,9 @@ struct spdk_bdev {
 
 	/** points to a reset bdev_io if one is in progress. */
 	struct spdk_bdev_io *reset_in_progress;
+
+	/** State for recording the current I/Os of the bdev. */
+	struct spdk_bdev_stat bdev_stat;
 };
 
 typedef void (*spdk_bdev_io_get_buf_cb)(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
