@@ -220,6 +220,41 @@ return with check condition status. Then the LUN starts one poller which will
 wait for all the commands which have already been submitted to block device to
 return back; after all the commands return back, the LUN will be deleted.
 
+# Vector Packet Processing {#vpp}
+VPP (part of [Fast Data - Input/Output](https://fd.io/) project) is an extensible userspace framework providing networking functionality. It is build on idea of packet processing graph (see [What is VPP?](https://wiki.fd.io/view/VPP/What_is_VPP?)).
+SPDK supports VPP version 18.01.1.
+
+##  1. Building VPP (optional)
+*Please skip this step if using already built packages.*
+
+Below are simple steps to compile VPP:
+
+~~~
+    git clone https://gerrit.fd.io/r/vpp && cd vpp
+    git checkout v18.01.1
+    make install-dep		# Installs build dependencies
+    make pkg-rpm		# Builds and creates RPM packages
+    # Or on debian based systems
+    make pkg-deb		# Builds and creates DEB packages
+~~~
+
+Packages can be found in `vpp/build-root/` directory.
+
+For more in depth instructions please see Building section in [VPP documentation](https://wiki.fd.io/view/VPP/Pulling,_Building,_Running,_Hacking_and_Pushing_VPP_Code#Building)
+
+## 2. Installing VPP
+Packages can be installed from distribution repository or built in previous step. Minimal set of packages consists of `vpp`, `vpp-lib` and `vpp-devel`.
+
+*Note: Please remove or modify /etc/sysctl.d/80-vpp.conf file with appropriate values dependent on number of hugepages that will be used on system.*
+
+## 3. Building SPDK with VPP
+Support for VPP can be built into SPDK by using configuration option `configure --with-vpp`.
+Alternatively, VPP repository can be pointed at and will be used for compilation instead of installed packages `configure --with-vpp=/path/to/vpp/repo`.
+
+## 4. Running VPP
+
+## 5. Running SPDK
+
 ## Known bugs and limitations {#iscsi_hotplug_bugs}
 
 For write command, if you want to test hotplug with write command which will
