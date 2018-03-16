@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "106f95e1_b85dc318",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 908,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-16T11:41:51Z",
+      "side": 1,
+      "message": "Maybe we can have it as a user configurable value.",
+      "range": {
+        "startLine": 908,
+        "startChar": 67,
+        "endLine": 908,
+        "endChar": 69
+      },
+      "revId": "95770c770a427301c228d251b6fbbe363609b7c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
