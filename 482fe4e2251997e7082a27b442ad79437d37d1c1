@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8b003867_b4cd2d87",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-03-16T02:25:58Z",
+      "side": 1,
+      "message": "Agreed, this issue need more investigation.",
+      "parentUuid": "1719804a_ead5b1af",
+      "revId": "482fe4e2251997e7082a27b442ad79437d37d1c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ea194b51_3be4857f",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 3
