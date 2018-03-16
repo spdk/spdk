@@ -61,4 +61,8 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_test ./test/iscsi_tgt/multiconnection/multiconnection.sh
 fi
 
+if [ $SPDK_TEST_ISCSI_INITIATOR -eq 1 ]; then
+	run_test ./test/iscsi_tgt/initiator/initiator.sh
+fi
+
 timing_exit iscsi_tgt
