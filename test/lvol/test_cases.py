@@ -95,10 +95,10 @@ class TestCases(object):
         self.lbd_name = "lbd_test"
         self.vhost_config_path = path.join(path.dirname(sys.argv[0]), 'vhost.conf')
 
-    def _gen_lvs_uudi(self):
+    def _gen_lvs_uuid(self):
         return str(uuid4())
 
-    def _gen_lvb_uudi(self):
+    def _gen_lvb_uuid(self):
         return "_".join([str(uuid4()), str(random.randrange(9999999999))])
 
     def run_fio_test(self, nbd_disk, offset, size, rw, pattern, expected_ret_value=0):
@@ -321,7 +321,7 @@ class TestCases(object):
     @case_message
     def test_case100(self):
         fail_count = 0
-        if self.c.construct_lvol_bdev(self._gen_lvs_uudi(),
+        if self.c.construct_lvol_bdev(self._gen_lvs_uuid(),
                                       self.lbd_name,
                                       32) == 0:
             fail_count += 1
@@ -411,7 +411,7 @@ class TestCases(object):
     @case_message
     def test_case200(self):
         fail_count = 0
-        if self.c.resize_lvol_bdev(self._gen_lvb_uudi(), 16) == 0:
+        if self.c.resize_lvol_bdev(self._gen_lvb_uuid(), 16) == 0:
             fail_count += 1
         return fail_count
 
@@ -570,7 +570,7 @@ class TestCases(object):
     @case_message
     def test_case300(self):
         fail_count = 0
-        if self.c.destroy_lvol_store(self._gen_lvs_uudi()) == 0:
+        if self.c.destroy_lvol_store(self._gen_lvs_uuid()) == 0:
             fail_count += 1
         return fail_count
 
