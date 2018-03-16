@@ -32,6 +32,7 @@ run_test ./test/iscsi_tgt/reset/reset.sh
 run_test ./test/iscsi_tgt/rpc_config/rpc_config.sh
 run_test ./test/iscsi_tgt/lvol/iscsi_lvol.sh
 run_test ./test/iscsi_tgt/fio/fio.sh
+run_test ./test/iscsi_tgt/initiator/initiator.sh
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	if [ $SPDK_TEST_NVML -eq 1 ]; then
