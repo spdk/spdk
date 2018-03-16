@@ -208,6 +208,13 @@ vtophys_get_paddr_memseg(uint64_t vaddr)
 		if (vaddr >= (uintptr_t)seg->addr &&
 		    vaddr < ((uintptr_t)seg->addr + seg->len)) {
 			paddr = seg->phys_addr;
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
+			if (paddr == RTE_BAD_IOVA) {
+#else
+			if (paddr == RTE_BAD_PHYS_ADDR) {
+#endif
+				return SPDK_VTOPHYS_ERROR;
+			}
 			paddr += (vaddr - (uintptr_t)seg->addr);
 			return paddr;
 		}
