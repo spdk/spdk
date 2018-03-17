@@ -384,6 +384,29 @@
       "revId": "80a29742b2724336630045ebd6c3763e184426fa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a487d2d5_7f49bad0",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-17T00:04:34Z",
+      "side": 1,
+      "message": "I didn\u0027t find iscsi_destroy_context()?",
+      "range": {
+        "startLine": 480,
+        "startChar": 12,
+        "endLine": 480,
+        "endChar": 32
+      },
+      "revId": "80a29742b2724336630045ebd6c3763e184426fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
