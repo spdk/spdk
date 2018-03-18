@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "214c8d07_18756f19",
+        "filename": "lib/bdev/split/vbdev_split.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-18T07:02:01Z",
+      "side": 1,
+      "message": "Should we return count ? Line 356 expects 0 is returned when completes normally.",
+      "range": {
+        "startLine": 217,
+        "startChar": 8,
+        "endLine": 217,
+        "endChar": 19
+      },
+      "revId": "582a7f5f8870999940d429ea9a4a912400703938",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d3bda57_d0a0b499",
+        "filename": "lib/bdev/split/vbdev_split.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-18T07:02:01Z",
+      "side": 1,
+      "message": "this must be \u003d\u003d 0",
+      "range": {
+        "startLine": 238,
+        "startChar": 45,
+        "endLine": 238,
+        "endChar": 47
+      },
+      "revId": "582a7f5f8870999940d429ea9a4a912400703938",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9c2d2a4_aac957ab",
+        "filename": "lib/bdev/split/vbdev_split.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-18T07:02:01Z",
+      "side": 1,
+      "message": "This part should be removed after fixing the above function.",
+      "range": {
+        "startLine": 254,
+        "startChar": 1,
+        "endLine": 259,
+        "endChar": 2
+      },
+      "revId": "582a7f5f8870999940d429ea9a4a912400703938",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "316ad93d_ca179f1a",
+        "filename": "lib/bdev/split/vbdev_split.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 304,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-18T07:02:01Z",
+      "side": 1,
+      "message": "I don\u0027t think this addition is necessary.\n\nIf vbdev_split_fails(), then bdev_modules_init() fails and then initialization of bdev subsystem fails and then vbdev_split_fini() will be called in the end.",
+      "range": {
+        "startLine": 304,
+        "startChar": 3,
+        "endLine": 304,
+        "endChar": 27
+      },
+      "revId": "582a7f5f8870999940d429ea9a4a912400703938",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3addf978_040a1038",
+        "filename": "lib/bdev/split/vbdev_split.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 364,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-18T07:02:01Z",
+      "side": 1,
+      "message": "Two blank lines can be removed.",
+      "range": {
+        "startLine": 363,
+        "startChar": 0,
+        "endLine": 364,
+        "endChar": 0
+      },
+      "revId": "582a7f5f8870999940d429ea9a4a912400703938",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
