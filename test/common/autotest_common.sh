@@ -440,7 +440,7 @@ function discover_bdevs()
 	# Start the bdev service to query for the list of available
 	# bdevs.
 	$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 -s 1024 -g \
-		-c $config_file &>/dev/null &
+		-c $config_file &
 	stubpid=$!
 	while ! [ -e /var/run/spdk_bdev0 ]; do
 		sleep 1
