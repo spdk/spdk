@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0b629fdc_803326f5",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 996,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-19T09:15:24Z",
+      "side": 1,
+      "message": "Without this handling, it will hit segment fault on uninitialized head(device):\n\n[New Thread 0x7ffff65de700 (LWP 49352)]\napp.c: 373:spdk_app_start: *NOTICE*: Total cores available: 1\nreactor.c: 645:spdk_reactors_init: *NOTICE*: Occupied cpu socket mask is 0x1\nreactor.c: 429:_spdk_reactor_run: *NOTICE*: Reactor started on core 0 on socket 0\nbdev_malloc.c: 386:create_malloc_disk: *ERROR*: malloc_buf spdk_dma_zmalloc() failed\nbdev_malloc.c: 452:bdev_malloc_initialize: *ERROR*: Could not create malloc disk\nbdev.c: 626:spdk_bdev_initialize: *ERROR*: bdev modules init failed\nsubsystem.c: 120:spdk_subsystem_init_next: *ERROR*: Init subsystem bdev failed\napp.c: 478:spdk_app_stop: *WARNING*: spdk_app_stop\u0027d on non-zero\n\nProgram received signal SIGSEGV, Segmentation fault.\n0x0000000000405bf5 in performance_dump (io_time_in_usec\u003d30000000, ema_period\u003dema_period@entry\u003d0) at bdevperf.c:627\n627                     target \u003d head[index];\n(gdb) bt\n#0  0x0000000000405bf5 in performance_dump (io_time_in_usec\u003d30000000, ema_period\u003dema_period@entry\u003d0)\n    at bdevperf.c:627\n#1  0x0000000000404e24 in main (argc\u003d11, argv\u003d0x7fffffffe4b8) at bdevperf.c:995",
+      "range": {
+        "startLine": 996,
+        "startChar": 3,
+        "endLine": 996,
+        "endChar": 19
+      },
+      "revId": "fdf7817440e88b82f507df75b2e326ffa64fb6e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
