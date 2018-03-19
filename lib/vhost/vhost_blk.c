@@ -595,7 +595,7 @@ err:
 }
 
 static void
-spdk_vhost_blk_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
+spdk_vhost_blk_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
 {
 	struct spdk_bdev *bdev = spdk_vhost_blk_get_dev(vdev);
 	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
@@ -613,6 +613,28 @@ spdk_vhost_blk_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_wr
 	} else {
 		spdk_json_write_null(w);
 	}
+
+	spdk_json_write_object_end(w);
+}
+
+static void
+spdk_vhost_blk_write_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
+{
+	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
+
+	if (!bvdev->bdev) {
+		return;
+	}
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "method", "construct_vhost_blk_controller");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_string(w, "ctrlr", vdev->name);
+	spdk_json_write_named_string(w, "dev_name", spdk_bdev_get_name(bvdev->bdev));
+	spdk_json_write_named_string(w, "cpumask", spdk_cpuset_fmt(vdev->cpumask));
+	spdk_json_write_named_bool(w, "readonly", bvdev->readonly);
+	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
 }
@@ -672,7 +694,8 @@ static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 	.start_device =  spdk_vhost_blk_start,
 	.stop_device = spdk_vhost_blk_stop,
 	.vhost_get_config = spdk_vhost_blk_get_config,
-	.dump_config_json = spdk_vhost_blk_dump_config_json,
+	.dump_info_json = spdk_vhost_blk_dump_info_json,
+	.write_config_json = spdk_vhost_blk_write_config_json,
 	.remove_device = spdk_vhost_blk_destroy,
 };
 

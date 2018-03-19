@@ -476,7 +476,7 @@ spdk_rpc_get_vhost_controllers_cb(struct spdk_vhost_dev *vdev, void *arg)
 	spdk_json_write_name(ctx->w, "backend_specific");
 
 	spdk_json_write_object_begin(ctx->w);
-	spdk_vhost_dump_config_json(vdev, ctx->w);
+	spdk_vhost_dump_info_json(vdev, ctx->w);
 	spdk_json_write_object_end(ctx->w);
 
 	spdk_json_write_object_end(ctx->w); // ctrl

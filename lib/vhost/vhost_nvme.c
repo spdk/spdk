@@ -1005,7 +1005,7 @@ err:
 }
 
 static void
-spdk_vhost_nvme_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
+spdk_vhost_nvme_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
 {
 	struct spdk_vhost_nvme_dev *nvme = to_nvme_dev(vdev);
 	struct spdk_vhost_nvme_ns *ns_dev;
@@ -1043,7 +1043,7 @@ spdk_vhost_nvme_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_w
 static const struct spdk_vhost_dev_backend spdk_vhost_nvme_device_backend = {
 	.start_device = spdk_vhost_nvme_start_device,
 	.stop_device = spdk_vhost_nvme_stop_device,
-	.dump_config_json = spdk_vhost_nvme_dump_config_json,
+	.dump_info_json = spdk_vhost_nvme_dump_info_json,
 	.remove_device = spdk_vhost_nvme_dev_remove,
 };
 

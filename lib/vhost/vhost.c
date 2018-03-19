@@ -1158,11 +1158,10 @@ session_shutdown(void *arg)
 }
 
 void
-spdk_vhost_dump_config_json(struct spdk_vhost_dev *vdev,
-			    struct spdk_json_write_ctx *w)
+spdk_vhost_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
 {
-	assert(vdev->backend->dump_config_json != NULL);
-	vdev->backend->dump_config_json(vdev, w);
+	assert(vdev->backend->dump_info_json != NULL);
+	vdev->backend->dump_info_json(vdev, w);
 }
 
 int
@@ -1366,6 +1365,40 @@ spdk_vhost_fini(spdk_vhost_fini_cb fini_cb)
 		abort();
 	}
 	pthread_detach(tid);
+}
+
+struct spdk_vhost_write_config_json_ctx {
+	struct spdk_json_write_ctx *w;
+	struct spdk_event *done_ev;
+};
+
+static int
+spdk_vhost_config_json_cb(struct spdk_vhost_dev *vdev, void *arg)
+{
+	struct spdk_vhost_write_config_json_ctx *ctx = arg;
+
+	if (vdev == NULL) {
+		spdk_json_write_array_end(ctx->w);
+		spdk_event_call(ctx->done_ev);
+		free(ctx);
+		return 0;
+	}
+
+	vdev->backend->write_config_json(vdev, ctx->w);
+	return 0;
+}
+
+void
+spdk_vhost_config_json(struct spdk_json_write_ctx *w, struct spdk_event *done_ev)
+{
+	struct spdk_vhost_write_config_json_ctx *ctx = calloc(1, sizeof(*ctx));
+
+	ctx->w = w;
+	ctx->done_ev = done_ev;
+
+	spdk_json_write_array_begin(w);
+
+	spdk_vhost_call_external_event_foreach(spdk_vhost_config_json_cb, ctx);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("vhost", SPDK_LOG_VHOST)
