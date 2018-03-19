@@ -1,16 +1,13 @@
-from client import print_dict, print_array, int_arg
-
-
 def get_portal_groups(args):
-    print_dict(args.client.call('get_portal_groups'))
+    return args.client.call('get_portal_groups')
 
 
 def get_initiator_groups(args):
-    print_dict(args.client.call('get_initiator_groups'))
+    return args.client.call('get_initiator_groups')
 
 
 def get_target_nodes(args):
-    print_dict(args.client.call('get_target_nodes'))
+    return args.client.call('get_target_nodes')
 
 
 def construct_target_node(args):
@@ -44,7 +41,7 @@ def construct_target_node(args):
         params['header_digest'] = args.header_digest
     if args.data_digest:
         params['data_digest'] = args.data_digest
-    args.client.call('construct_target_node', params)
+    return args.client.call('construct_target_node', params)
 
 
 def target_node_add_lun(args):
@@ -54,7 +51,7 @@ def target_node_add_lun(args):
     }
     if args.lun_id:
         params['lun_id'] = args.lun_id
-    args.client.call('target_node_add_lun', params)
+    return args.client.call('target_node_add_lun', params)
 
 
 def delete_pg_ig_maps(args):
@@ -66,7 +63,7 @@ def delete_pg_ig_maps(args):
         'name': args.name,
         'pg_ig_maps': pg_ig_maps,
     }
-    args.client.call('delete_pg_ig_maps', params)
+    return args.client.call('delete_pg_ig_maps', params)
 
 
 def add_pg_ig_maps(args):
@@ -78,7 +75,7 @@ def add_pg_ig_maps(args):
         'name': args.name,
         'pg_ig_maps': pg_ig_maps,
     }
-    args.client.call('add_pg_ig_maps', params)
+    return args.client.call('add_pg_ig_maps', params)
 
 
 def add_portal_group(args):
@@ -96,7 +93,7 @@ def add_portal_group(args):
             portals.append({'host': ip, 'port': port, 'cpumask': cpumask})
 
     params = {'tag': args.tag, 'portals': portals}
-    args.client.call('add_portal_group', params)
+    return args.client.call('add_portal_group', params)
 
 
 def add_initiator_group(args):
@@ -108,7 +105,7 @@ def add_initiator_group(args):
         netmasks.append(n)
 
     params = {'tag': args.tag, 'initiators': initiators, 'netmasks': netmasks}
-    args.client.call('add_initiator_group', params)
+    return args.client.call('add_initiator_group', params)
 
 
 def add_initiators_to_initiator_group(args):
@@ -122,7 +119,7 @@ def add_initiators_to_initiator_group(args):
             netmasks.append(n)
 
     params = {'tag': args.tag, 'initiators': initiators, 'netmasks': netmasks}
-    args.client.call('add_initiators_to_initiator_group', params)
+    return args.client.call('add_initiators_to_initiator_group', params)
 
 
 def delete_initiators_from_initiator_group(args):
@@ -136,31 +133,31 @@ def delete_initiators_from_initiator_group(args):
             netmasks.append(n)
 
     params = {'tag': args.tag, 'initiators': initiators, 'netmasks': netmasks}
-    args.client.call('delete_initiators_from_initiator_group', params)
+    return args.client.call('delete_initiators_from_initiator_group', params)
 
 
 def delete_target_node(args):
     params = {'name': args.target_node_name}
-    args.client.call('delete_target_node', params)
+    return args.client.call('delete_target_node', params)
 
 
 def delete_portal_group(args):
     params = {'tag': args.tag}
-    args.client.call('delete_portal_group', params)
+    return args.client.call('delete_portal_group', params)
 
 
 def delete_initiator_group(args):
     params = {'tag': args.tag}
-    args.client.call('delete_initiator_group', params)
+    return args.client.call('delete_initiator_group', params)
 
 
 def get_iscsi_connections(args):
-    print_dict(args.client.call('get_iscsi_connections'))
+    return args.client.call('get_iscsi_connections')
 
 
 def get_iscsi_global_params(args):
-    print_dict(args.client.call('get_iscsi_global_params'))
+    return args.client.call('get_iscsi_global_params')
 
 
 def get_scsi_devices(args):
-    print_dict(args.client.call('get_scsi_devices'))
+    return args.client.call('get_scsi_devices')
