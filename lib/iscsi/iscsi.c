@@ -2745,7 +2745,6 @@ spdk_iscsi_transfer_in(struct spdk_iscsi_conn *conn,
 {
 	uint32_t DataSN;
 	int transfer_len;
-	int data_len;
 	int segment_len;
 	int offset;
 	int residual_len = 0;
@@ -2759,7 +2758,6 @@ spdk_iscsi_transfer_in(struct spdk_iscsi_conn *conn,
 
 	primary = spdk_iscsi_task_get_primary(task);
 	segment_len = conn->MaxRecvDataSegmentLength;
-	data_len = task->scsi.data_transferred;
 	transfer_len = task->scsi.length;
 
 	if (task->scsi.status != SPDK_SCSI_STATUS_GOOD) {
@@ -2780,24 +2778,7 @@ spdk_iscsi_transfer_in(struct spdk_iscsi_conn *conn,
 		return 0;
 	}
 
-	if (data_len < transfer_len) {
-		/* underflow */
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Underflow %u/%u\n",
-			      data_len, transfer_len);
-		residual_len = transfer_len - data_len;
-		transfer_len = data_len;
-		datain_flag |= ISCSI_DATAIN_UNDERFLOW;
-	} else if (data_len > transfer_len) {
-		/* overflow */
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Overflow %u/%u\n",
-			      data_len, transfer_len);
-		residual_len = data_len - transfer_len;
-		datain_flag |= ISCSI_DATAIN_OVERFLOW;
-	} else {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Transfer %u\n",
-			      transfer_len);
-		residual_len = 0;
-	}
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Transfer %u\n", transfer_len);
 
 	DataSN = primary->datain_datasn;
 	sent_status = 0;
