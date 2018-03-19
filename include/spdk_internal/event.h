@@ -58,7 +58,13 @@ struct spdk_subsystem {
 	void (*init)(void);
 	void (*fini)(void);
 	void (*config)(FILE *fp);
-	int (*write_config_json)(struct spdk_json_write_ctx *w);
+	/**
+	 * Write JSON configuration handler.
+	 *
+	 * \param w JSON write context
+	 * \param done_ev Done event to be called when writing is done.
+	 */
+	void (*write_config_json)(struct spdk_json_write_ctx *w, struct spdk_event *done_ev);
 	TAILQ_ENTRY(spdk_subsystem) tailq;
 };
 
@@ -91,8 +97,10 @@ void spdk_subsystem_config(FILE *fp);
  *
  * \param w JSON write context
  * \param subsystem the subsystem to query
+ * \param done_ev Event to be called when writing is done
  */
-void spdk_subsystem_config_json(struct spdk_json_write_ctx *w, struct spdk_subsystem *subsystem);
+void spdk_subsystem_config_json(struct spdk_json_write_ctx *w, struct spdk_subsystem *subsystem,
+				struct spdk_event *done_ev);
 
 void spdk_rpc_initialize(const char *listen_addr);
 void spdk_rpc_finish(void);
