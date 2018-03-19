@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "fbdb89c1_3692b391",
+        "filename": "lib/bdev/error/vbdev_error.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-19T08:53:56Z",
+      "side": 1,
+      "message": "OK, I\u0027ll do it.",
+      "parentUuid": "e7b49e3c_b3d81f40",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 1
+      },
+      "revId": "bc3b668c5cc58fe8452243fbafa7c0c9795542b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "82011876_30bdfc53",
         "filename": "lib/bdev/error/vbdev_error_rpc.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2018-03-19T08:27:18Z",
       "side": 1,
       "message": "Adding twice the same config should be considered as error. I think you want to change lines 111 to 120 to not send an error in case base_bdev doesn\u0027t exist. I think this should be changed into something like:\n\nif (base_bdev \u0026\u0026 spdk_vbdev_error_create(base_bdev)) {\n    SPDK_ERRLOG(\"Could not create ErrorInjection bdev %s\\n\", req.base_name);\n\t\tgoto invalid;\n}\n\nAlso, I in my mind, if we send error response config should be remove do not leave library in unknown state.",
+      "range": {
+        "startLine": 107,
+        "startChar": 2,
+        "endLine": 108,
+        "endChar": 25
+      },
+      "revId": "bc3b668c5cc58fe8452243fbafa7c0c9795542b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aa77499f_3429a558",
+        "filename": "lib/bdev/error/vbdev_error_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-19T08:53:56Z",
+      "side": 1,
+      "message": "Hi Pawel, thank you, and I think all of your feedback are good.\n\nI hope the following satisfy your thought.\n\nlogic:\n-  if both bdev and config don\u0027t exist -\u003e add config\n-  if bdev exists and config doesn\u0027t exist -\u003e add config and create vbdev_error\n-  if bdev doesn\u0027t exist and config exists -\u003e error\n-  if both bdev and config exist -\u003e error\n\nimplementation:\n  if (config exists)\n    goto invalid;\n\n  add_config\n  if (add_config failed):\n    goto invalid;\n\n  if (bdev exists) {\n    create_vbdev_error;\n    if (create_vbdev_error failed) {\n      remove added config;\n      goto invalid;\n    }\n  }\n\n  return;\n\ninvalid:\n  return;",
+      "parentUuid": "82011876_30bdfc53",
       "range": {
         "startLine": 107,
         "startChar": 2,
