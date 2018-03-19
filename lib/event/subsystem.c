@@ -244,11 +244,13 @@ spdk_subsystem_config(FILE *fp)
 }
 
 void
-spdk_subsystem_config_json(struct spdk_json_write_ctx *w, struct spdk_subsystem *subsystem)
+spdk_subsystem_config_json(struct spdk_json_write_ctx *w, struct spdk_subsystem *subsystem,
+			   struct spdk_event *done_ev)
 {
 	if (subsystem && subsystem->write_config_json) {
-		subsystem->write_config_json(w);
+		subsystem->write_config_json(w, done_ev);
 	} else {
 		spdk_json_write_null(w);
+		spdk_event_call(done_ev);
 	}
 }
