@@ -3482,7 +3482,7 @@ _spdk_bs_create_blob(struct spdk_blob_store *bs,
 		_spdk_blob_set_thin_provision(blob);
 	}
 
-	rc = spdk_blob_resize(blob, opts->num_clusters);
+	rc = _spdk_blob_resize(blob, opts->num_clusters);
 	if (rc < 0) {
 		_spdk_blob_free(blob);
 		cb_fn(cb_arg, 0, rc);
