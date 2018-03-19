@@ -93,6 +93,30 @@
       "revId": "bc3b668c5cc58fe8452243fbafa7c0c9795542b6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "180130a8_0863f892",
+        "filename": "lib/bdev/error/vbdev_error_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-19T10:32:04Z",
+      "side": 1,
+      "message": "yes, this what it should behave with below change :)\n\n\u003e - if (bdev exists) {\n\u003e + if (bdev not exists) {",
+      "parentUuid": "aa77499f_3429a558",
+      "range": {
+        "startLine": 107,
+        "startChar": 2,
+        "endLine": 108,
+        "endChar": 25
+      },
+      "revId": "bc3b668c5cc58fe8452243fbafa7c0c9795542b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
