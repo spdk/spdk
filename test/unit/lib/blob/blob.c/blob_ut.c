@@ -590,7 +590,6 @@ blob_resize(void)
 	struct spdk_blob *blob;
 	spdk_blob_id blobid;
 	uint64_t free_clusters;
-	int rc;
 
 	dev = init_dev();
 
@@ -613,20 +612,20 @@ blob_resize(void)
 
 	/* Confirm that resize fails if blob is marked read-only. */
 	blob->md_ro = true;
-	rc = spdk_blob_resize(blob, 5);
-	CU_ASSERT(rc == -EPERM);
+	spdk_blob_resize(blob, 5, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == -EPERM);
 	blob->md_ro = false;
 
 	/* The blob started at 0 clusters. Resize it to be 5. */
-	rc = spdk_blob_resize(blob, 5);
-	CU_ASSERT(rc == 0);
+	spdk_blob_resize(blob, 5, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT((free_clusters - 5) == spdk_bs_free_cluster_count(bs));
 
 	/* Shrink the blob to 3 clusters. This will not actually release
 	 * the old clusters until the blob is synced.
 	 */
-	rc = spdk_blob_resize(blob, 3);
-	CU_ASSERT(rc == 0);
+	spdk_blob_resize(blob, 3, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
 	/* Verify there are still 5 clusters in use */
 	CU_ASSERT((free_clusters - 5) == spdk_bs_free_cluster_count(bs));
 
@@ -636,13 +635,13 @@ blob_resize(void)
 	CU_ASSERT((free_clusters - 3) == spdk_bs_free_cluster_count(bs));
 
 	/* Resize the blob to be 10 clusters. Growth takes effect immediately. */
-	rc = spdk_blob_resize(blob, 10);
-	CU_ASSERT(rc == 0);
+	spdk_blob_resize(blob, 10, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT((free_clusters - 10) == spdk_bs_free_cluster_count(bs));
 
 	/* Try to resize the blob to size larger than blobstore. */
-	rc = spdk_blob_resize(blob, bs->total_clusters + 1);
-	CU_ASSERT(rc == -ENOSPC);
+	spdk_blob_resize(blob, bs->total_clusters + 1, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == -ENOSPC);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -775,7 +774,6 @@ blob_write(void)
 	spdk_blob_id blobid;
 	uint64_t pages_per_cluster;
 	uint8_t payload[10 * 4096];
-	int rc;
 
 	dev = init_dev();
 
@@ -804,8 +802,8 @@ blob_write(void)
 	CU_ASSERT(g_bserrno == -EINVAL);
 
 	/* Resize the blob */
-	rc = spdk_blob_resize(blob, 5);
-	CU_ASSERT(rc == 0);
+	spdk_blob_resize(blob, 5, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
 
 	/* Confirm that write fails if blob is marked read-only. */
 	blob->data_ro = true;
@@ -847,7 +845,6 @@ blob_read(void)
 	spdk_blob_id blobid;
 	uint64_t pages_per_cluster;
 	uint8_t payload[10 * 4096];
-	int rc;
 
 	dev = init_dev();
 
@@ -876,8 +873,8 @@ blob_read(void)
 	CU_ASSERT(g_bserrno == -EINVAL);
 
 	/* Resize the blob */
-	rc = spdk_blob_resize(blob, 5);
-	CU_ASSERT(rc == 0);
+	spdk_blob_resize(blob, 5, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
 
 	/* Confirm that read passes if blob is marked read-only. */
 	blob->data_ro = true;
@@ -919,7 +916,6 @@ blob_rw_verify(void)
 	spdk_blob_id blobid;
 	uint8_t payload_read[10 * 4096];
 	uint8_t payload_write[10 * 4096];
-	int rc;
 
 	dev = init_dev();
 
@@ -941,8 +937,8 @@ blob_rw_verify(void)
 	CU_ASSERT(g_blob != NULL);
 	blob = g_blob;
 
-	rc = spdk_blob_resize(blob, 32);
-	CU_ASSERT(rc == 0);
+	spdk_blob_resize(blob, 32, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
 
 	memset(payload_write, 0xE5, sizeof(payload_write));
 	spdk_blob_io_write(blob, channel, payload_write, 4, 10, blob_op_complete, NULL);
@@ -976,7 +972,6 @@ blob_rw_verify_iov(void)
 	struct iovec iov_read[3];
 	struct iovec iov_write[3];
 	void *buf;
-	int rc;
 
 	dev = init_dev();
 	memset(g_dev_buffer, 0, DEV_BUFFER_SIZE);
@@ -999,8 +994,8 @@ blob_rw_verify_iov(void)
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob = g_blob;
 
-	rc = spdk_blob_resize(blob, 2);
-	CU_ASSERT(rc == 0);
+	spdk_blob_resize(blob, 2, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
 
 	/*
 	 * Manually adjust the offset of the blob's second cluster.  This allows
@@ -1078,7 +1073,6 @@ blob_rw_verify_iov_nomem(void)
 	uint8_t payload_write[10 * 4096];
 	struct iovec iov_write[3];
 	uint32_t req_count;
-	int rc;
 
 	dev = init_dev();
 	memset(g_dev_buffer, 0, DEV_BUFFER_SIZE);
@@ -1101,8 +1095,8 @@ blob_rw_verify_iov_nomem(void)
 	CU_ASSERT(g_blob != NULL);
 	blob = g_blob;
 
-	rc = spdk_blob_resize(blob, 2);
-	CU_ASSERT(rc == 0);
+	spdk_blob_resize(blob, 2, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
 
 	/*
 	 * Choose a page offset just before the cluster boundary.  The first 6 pages of payload
@@ -1143,7 +1137,6 @@ blob_rw_iov_read_only(void)
 	uint8_t payload_write[4096];
 	struct iovec iov_read;
 	struct iovec iov_write;
-	int rc;
 
 	dev = init_dev();
 	memset(g_dev_buffer, 0, DEV_BUFFER_SIZE);
@@ -1166,8 +1159,8 @@ blob_rw_iov_read_only(void)
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob = g_blob;
 
-	rc = spdk_blob_resize(blob, 2);
-	CU_ASSERT(rc == 0);
+	spdk_blob_resize(blob, 2, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
 
 	/* Verify that writev failed if read_only flag is set. */
 	blob->data_ro = true;
@@ -1202,7 +1195,6 @@ blob_unmap(void)
 	spdk_blob_id blobid;
 	struct spdk_blob_opts opts;
 	uint8_t payload[4096];
-	int rc;
 	int i;
 
 	dev = init_dev();
@@ -1228,8 +1220,8 @@ blob_unmap(void)
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob = g_blob;
 
-	rc = spdk_blob_resize(blob, 10);
-	CU_ASSERT(rc == 0);
+	spdk_blob_resize(blob, 10, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
 
 	memset(payload, 0, sizeof(payload));
 	payload[0] = 0xFF;
@@ -1259,8 +1251,8 @@ blob_unmap(void)
 	blob->active.clusters[8] = 0;
 
 	/* Unmap clusters by resizing to 0 */
-	rc = spdk_blob_resize(blob, 0);
-	CU_ASSERT(rc == 0);
+	spdk_blob_resize(blob, 0, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
 
 	spdk_blob_sync_md(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -1522,8 +1514,8 @@ bs_load(void)
 	CU_ASSERT(rc == 0);
 
 	/* Resize the blob */
-	rc = spdk_blob_resize(blob, 10);
-	CU_ASSERT(rc == 0);
+	spdk_blob_resize(blob, 10, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -1865,7 +1857,7 @@ bs_usable_clusters(void)
 	struct spdk_bs_dev *dev;
 	struct spdk_bs_opts opts;
 	uint32_t clusters;
-	int i, rc;
+	int i;
 
 	/* Init blobstore */
 	dev = init_dev();
@@ -1904,8 +1896,8 @@ bs_usable_clusters(void)
 		CU_ASSERT(g_bserrno == 0);
 		CU_ASSERT(g_blob !=  NULL);
 
-		rc = spdk_blob_resize(g_blob, 10);
-		CU_ASSERT(rc == 0);
+		spdk_blob_resize(g_blob, 10, blob_op_complete, NULL);
+		CU_ASSERT(g_bserrno == 0);
 
 		g_bserrno = -1;
 		spdk_blob_close(g_blob, blob_op_complete, NULL);
@@ -2082,8 +2074,8 @@ blob_serialize(void)
 	 * over of the extents.
 	 */
 	for (i = 0; i < 6; i++) {
-		rc = spdk_blob_resize(blob[i % 2], (i / 2) + 1);
-		CU_ASSERT(rc == 0);
+		spdk_blob_resize(blob[i % 2], (i / 2) + 1, blob_op_complete, NULL);
+		CU_ASSERT(g_bserrno == 0);
 	}
 
 	for (i = 0; i < 2; i++) {
@@ -2265,8 +2257,8 @@ blob_dirty_shutdown(void)
 	CU_ASSERT(rc == 0);
 
 	/* Resize the blob */
-	rc = spdk_blob_resize(blob, 10);
-	CU_ASSERT(rc == 0);
+	spdk_blob_resize(blob, 10, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
 
 	/* Set the blob as the super blob */
 	spdk_bs_set_super(g_bs, blobid1, blob_op_complete, NULL);
@@ -2310,8 +2302,8 @@ blob_dirty_shutdown(void)
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10);
 
 	/* Resize the blob */
-	rc = spdk_blob_resize(blob, 20);
-	CU_ASSERT(rc == 0);
+	spdk_blob_resize(blob, 20, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
 
 	free_clusters = spdk_bs_free_cluster_count(g_bs);
 
@@ -2364,8 +2356,8 @@ blob_dirty_shutdown(void)
 	CU_ASSERT(rc == 0);
 
 	/* Resize the blob */
-	rc = spdk_blob_resize(blob, 10);
-	CU_ASSERT(rc == 0);
+	spdk_blob_resize(blob, 10, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
 
 	free_clusters = spdk_bs_free_cluster_count(g_bs);
 
@@ -2571,8 +2563,8 @@ blob_flags(void)
 
 	/* Change the size of blob_data_ro to check if flags are serialized
 	 * when blob has non zero number of extents */
-	rc = spdk_blob_resize(blob_data_ro, 10);
-	CU_ASSERT(rc == 0);
+	spdk_blob_resize(blob_data_ro, 10, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
 
 	/* Set the xattr to check if flags are serialized
 	 * when blob has non zero number of xattrs */
@@ -2855,7 +2847,6 @@ blob_thin_prov_alloc(void)
 	struct spdk_blob_opts opts;
 	spdk_blob_id blobid;
 	uint64_t free_clusters;
-	int rc;
 
 	dev = init_dev();
 
@@ -2884,15 +2875,15 @@ blob_thin_prov_alloc(void)
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 0);
 
 	/* The blob started at 0 clusters. Resize it to be 5, but still unallocated. */
-	rc = spdk_blob_resize(blob, 5);
-	CU_ASSERT(rc == 0);
+	spdk_blob_resize(blob, 5, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
 	CU_ASSERT(blob->active.num_clusters == 5);
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 5);
 
 	/* Shrink the blob to 3 clusters - still unallocated */
-	rc = spdk_blob_resize(blob, 3);
-	CU_ASSERT(rc == 0);
+	spdk_blob_resize(blob, 3, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
 	CU_ASSERT(blob->active.num_clusters == 3);
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 3);
@@ -3034,7 +3025,6 @@ blob_thin_prov_rw(void)
 	uint64_t free_clusters;
 	uint8_t payload_read[10 * 4096];
 	uint8_t payload_write[10 * 4096];
-	int rc;
 
 	dev = init_dev();
 
@@ -3064,8 +3054,8 @@ blob_thin_prov_rw(void)
 	CU_ASSERT(blob->active.num_clusters == 0);
 
 	/* The blob started at 0 clusters. Resize it to be 5, but still unallocated. */
-	rc = spdk_blob_resize(blob, 5);
-	CU_ASSERT(rc == 0);
+	spdk_blob_resize(blob, 5, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
 	CU_ASSERT(blob->active.num_clusters == 5);
 
@@ -3123,8 +3113,6 @@ blob_thin_prov_rw_iov(void)
 	struct iovec iov_read[3];
 	struct iovec iov_write[3];
 
-	int rc;
-
 	dev = init_dev();
 
 	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
@@ -3153,8 +3141,8 @@ blob_thin_prov_rw_iov(void)
 	CU_ASSERT(blob->active.num_clusters == 0);
 
 	/* The blob started at 0 clusters. Resize it to be 5, but still unallocated. */
-	rc = spdk_blob_resize(blob, 5);
-	CU_ASSERT(rc == 0);
+	spdk_blob_resize(blob, 5, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
 	CU_ASSERT(blob->active.num_clusters == 5);
 
@@ -3265,8 +3253,8 @@ bs_load_iter(void)
 		CU_ASSERT(rc == 0);
 
 		/* Resize the blob */
-		rc = spdk_blob_resize(blob, i);
-		CU_ASSERT(rc == 0);
+		spdk_blob_resize(blob, i, blob_op_complete, NULL);
+		CU_ASSERT(g_bserrno == 0);
 
 		spdk_blob_close(blob, blob_op_complete, NULL);
 		CU_ASSERT(g_bserrno == 0);

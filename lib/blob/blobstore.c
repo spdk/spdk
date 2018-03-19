@@ -3574,8 +3574,8 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 /* END spdk_bs_create_blob */
 
 /* START spdk_blob_resize */
-int
-spdk_blob_resize(struct spdk_blob *blob, uint64_t sz)
+void
+spdk_blob_resize(struct spdk_blob *blob, uint64_t sz, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	int			rc;
 
@@ -3584,19 +3584,17 @@ spdk_blob_resize(struct spdk_blob *blob, uint64_t sz)
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Resizing blob %lu to %lu clusters\n", blob->id, sz);
 
 	if (blob->md_ro) {
-		return -EPERM;
+		cb_fn(cb_arg, -EPERM);
+		return;
 	}
 
 	if (sz == blob->active.num_clusters) {
-		return 0;
+		cb_fn(cb_arg, 0);
+		return;
 	}
 
 	rc = _spdk_blob_resize(blob, sz);
-	if (rc < 0) {
-		return rc;
-	}
-
-	return 0;
+	cb_fn(cb_arg, rc);
 }
 
 /* END spdk_blob_resize */

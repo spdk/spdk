@@ -321,15 +321,15 @@ void spdk_blob_close(struct spdk_blob *b, spdk_blob_op_complete cb_fn, void *cb_
 	cb_fn(cb_arg, b->close_status);
 }
 
-int
-spdk_blob_resize(struct spdk_blob *blob, uint64_t sz)
+void
+spdk_blob_resize(struct spdk_blob *blob, uint64_t sz, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	if (g_resize_rc != 0) {
-		return g_resize_rc;
+		return cb_fn(cb_arg, g_resize_rc);
 	} else if (sz > DEV_BUFFER_SIZE / BS_CLUSTER_SIZE) {
-		return -1;
+		return cb_fn(cb_arg, -ENOMEM);
 	}
-	return 0;
+	cb_fn(cb_arg, 0);
 }
 
 void
@@ -927,34 +927,30 @@ lvol_resize(void)
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 
 	/* Resize to same size */
-	rc = spdk_lvol_resize(g_lvol, 10, lvol_store_op_complete, NULL);
-	CU_ASSERT(rc == 0);
+	spdk_lvol_resize(g_lvol, 10, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvserrno == 0);
 
 	/* Resize to smaller size */
-	rc = spdk_lvol_resize(g_lvol, 5, lvol_store_op_complete, NULL);
-	CU_ASSERT(rc == 0);
+	spdk_lvol_resize(g_lvol, 5, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvserrno == 0);
 
 	/* Resize to bigger size */
-	rc = spdk_lvol_resize(g_lvol, 15, lvol_store_op_complete, NULL);
-	CU_ASSERT(rc == 0);
+	spdk_lvol_resize(g_lvol, 15, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvserrno == 0);
 
 	/* Resize to size = 0 */
-	rc = spdk_lvol_resize(g_lvol, 0, lvol_store_op_complete, NULL);
-	CU_ASSERT(rc == 0);
+	spdk_lvol_resize(g_lvol, 0, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvserrno == 0);
 
 	/* Resize to bigger size than available */
-	rc = spdk_lvol_resize(g_lvol, 0xFFFFFFFF, lvol_store_op_complete, NULL);
-	CU_ASSERT(rc != 0);
+	g_lvserrno = 0;
+	spdk_lvol_resize(g_lvol, 0xFFFFFFFF, lvol_store_op_complete, NULL);
+	CU_ASSERT(g_lvserrno != 0);
 
 	/* Fail resize */
 	g_resize_rc = -1;
 	g_lvserrno = 0;
-	rc = spdk_lvol_resize(g_lvol, 10, lvol_store_op_complete, NULL);
-	CU_ASSERT(rc != 0);
+	spdk_lvol_resize(g_lvol, 10, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvserrno != 0);
 	g_resize_rc = 0;
 

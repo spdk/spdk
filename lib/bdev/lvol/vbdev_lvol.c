@@ -929,6 +929,16 @@ static void
 _vbdev_lvol_resize_cb(void *cb_arg, int lvolerrno)
 {
 	struct spdk_lvol_req *req = cb_arg;
+	uint64_t cluster_size;
+	int rc;
+
+	if (lvolerrno == 0) {
+		cluster_size = spdk_bs_get_cluster_size(req->lvol->lvol_store->blobstore);
+		rc = spdk_bdev_notify_blockcnt_change(req->bdev, req->sz * cluster_size / req->bdev->blocklen);
+		if (rc != 0) {
+			SPDK_ERRLOG("Could not change num blocks for bdev_lvol.\n");
+		}
+	}
 
 	req->cb_fn(req->cb_arg,  lvolerrno);
 	free(req);
@@ -941,9 +951,6 @@ vbdev_lvol_resize(char *name, size_t sz,
 	struct spdk_lvol_req *req;
 	struct spdk_bdev *bdev;
 	struct spdk_lvol *lvol;
-	struct spdk_lvol_store *lvs;
-	uint64_t cluster_size;
-	int rc;
 
 	lvol = vbdev_get_lvol_by_unique_id(name);
 	if (lvol == NULL) {
@@ -957,9 +964,6 @@ vbdev_lvol_resize(char *name, size_t sz,
 		return -ENODEV;
 	}
 
-	lvs = lvol->lvol_store;
-	cluster_size = spdk_bs_get_cluster_size(lvs->blobstore);
-
 	req = calloc(1, sizeof(*req));
 	if (req == NULL) {
 		cb_fn(cb_arg, -1);
@@ -967,17 +971,12 @@ vbdev_lvol_resize(char *name, size_t sz,
 	}
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
+	req->sz = sz;
+	req->bdev = bdev;
+	req->lvol = lvol;
 
-	rc = spdk_lvol_resize(lvol, sz, _vbdev_lvol_resize_cb, req);
-
-	if (rc == 0) {
-		rc = spdk_bdev_notify_blockcnt_change(bdev, sz * cluster_size / bdev->blocklen);
-		if (rc != 0) {
-			SPDK_ERRLOG("Could not change num blocks for bdev_lvol.\n");
-		}
-	}
-
-	return rc;
+	spdk_lvol_resize(lvol, sz, _vbdev_lvol_resize_cb, req);
+	return 0;
 }
 
 static int
