@@ -90,6 +90,12 @@ static struct spdk_bdev *g_bdev;
 static const char *g_check_version_msg;
 static bool g_pmemblk_open_allow_open = true;
 
+static void
+_pmem_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
+{
+	fn(ctx);
+}
+
 DEFINE_STUB(spdk_json_write_object_begin, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB(spdk_json_write_object_end, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB(spdk_json_write_string, int, (struct spdk_json_write_ctx *w, const char *val), 0);
@@ -359,6 +365,9 @@ ut_pmem_blk_clean(void)
 
 	/* Unload module to free IO channel */
 	g_bdev_pmem_module->module_fini();
+
+	spdk_free_thread();
+
 	return 0;
 }
 
@@ -366,6 +375,8 @@ static int
 ut_pmem_blk_init(void)
 {
 	errno = 0;
+
+	spdk_allocate_thread(_pmem_send_msg, NULL, NULL, NULL, NULL);
 
 	g_pool_ok.buffer = calloc(g_pool_ok.nblock, g_pool_ok.bsize);
 	if (g_pool_ok.buffer == NULL) {

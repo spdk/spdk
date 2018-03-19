@@ -51,6 +51,7 @@ struct io_device {
 	spdk_io_channel_create_cb create_cb;
 	spdk_io_channel_destroy_cb destroy_cb;
 	spdk_io_device_unregister_cb unregister_cb;
+	struct spdk_thread	*unregister_thread;
 	uint32_t		ctx_size;
 	uint32_t		for_each_count;
 	TAILQ_ENTRY(io_device)	tailq;
@@ -328,6 +329,15 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 }
 
 static void
+_finish_unregister(void *arg)
+{
+	struct io_device *dev = arg;
+
+	dev->unregister_cb(dev->io_device);
+	free(dev);
+}
+
+static void
 _spdk_io_device_attempt_free(struct io_device *dev, struct spdk_io_channel *ch)
 {
 	struct spdk_thread *thread;
@@ -358,11 +368,12 @@ _spdk_io_device_attempt_free(struct io_device *dev, struct spdk_io_channel *ch)
 	}
 	pthread_mutex_unlock(&g_devlist_mutex);
 
-	if (dev->unregister_cb) {
-		dev->unregister_cb(dev->io_device);
+	if (dev->unregister_cb == NULL) {
+		free(dev);
+	} else {
+		assert(dev->unregister_thread != NULL);
+		spdk_thread_send_msg(dev->unregister_thread, _finish_unregister, dev);
 	}
-
-	free(dev);
 }
 
 void
@@ -393,6 +404,7 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 	dev->unregistered = true;
 	TAILQ_REMOVE(&g_io_devices, dev, tailq);
 	pthread_mutex_unlock(&g_devlist_mutex);
+	dev->unregister_thread = spdk_get_thread();
 	_spdk_io_device_attempt_free(dev, NULL);
 }
 
