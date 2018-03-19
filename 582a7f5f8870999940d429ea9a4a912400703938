@@ -118,6 +118,30 @@
     },
     {
       "key": {
+        "uuid": "35b99221_b699af28",
+        "filename": "lib/bdev/split/vbdev_split.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 304,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-19T09:13:29Z",
+      "side": 1,
+      "message": "Thank you, I didn\u0027t know that. So this is bug fix. Is it possible to move all clear_config call to the end by goto? It may be cleaner.\n\nBy the way, I think vbdev_error have the same bug.",
+      "parentUuid": "d53b9a74_82e16422",
+      "range": {
+        "startLine": 304,
+        "startChar": 3,
+        "endLine": 304,
+        "endChar": 27
+      },
+      "revId": "582a7f5f8870999940d429ea9a4a912400703938",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3addf978_040a1038",
         "filename": "lib/bdev/split/vbdev_split.c",
         "patchSetId": 2
