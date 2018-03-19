@@ -86,7 +86,6 @@ static struct spdk_bdev_module error_if = {
 	.module_init = vbdev_error_init,
 	.module_fini = vbdev_error_fini,
 	.examine = vbdev_error_examine,
-
 };
 
 SPDK_BDEV_MODULE_REGISTER(&error_if)
@@ -284,6 +283,7 @@ spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 	if (rc) {
 		SPDK_ERRLOG("could not construct part for bdev %s\n", spdk_bdev_get_name(base_bdev));
 		/* spdk_bdev_part_construct will free name on failure */
+		free(name);
 		spdk_error_free_base(base);
 		free(disk);
 		return -1;
