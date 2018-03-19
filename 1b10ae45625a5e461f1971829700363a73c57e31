@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a3f6abd6_04ee1f4e",
+        "filename": "lib/bdev/error/vbdev_error.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 304,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-19T04:43:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e81124d0_453ca4f8",
+      "range": {
+        "startLine": 304,
+        "startChar": 16,
+        "endLine": 304,
+        "endChar": 31
+      },
+      "revId": "1b10ae45625a5e461f1971829700363a73c57e31",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "61b2f4d3_42e42ec6",
         "filename": "lib/bdev/error/vbdev_error.c",
         "patchSetId": 1
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "ea7ac2bc_83cc1ef1",
+        "filename": "lib/bdev/error/vbdev_error.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 305,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-19T04:43:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "61b2f4d3_42e42ec6",
+      "range": {
+        "startLine": 305,
+        "startChar": 10,
+        "endLine": 305,
+        "endChar": 12
+      },
+      "revId": "1b10ae45625a5e461f1971829700363a73c57e31",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3e14ccc9_bd161450",
         "filename": "lib/bdev/error/vbdev_error.c",
         "patchSetId": 1
@@ -59,6 +107,30 @@
       "writtenOn": "2018-03-16T16:02:31Z",
       "side": 1,
       "message": "-ENOMEM",
+      "range": {
+        "startLine": 319,
+        "startChar": 9,
+        "endLine": 319,
+        "endChar": 11
+      },
+      "revId": "1b10ae45625a5e461f1971829700363a73c57e31",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "67b9e8ea_d0b42dc5",
+        "filename": "lib/bdev/error/vbdev_error.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-19T04:43:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3e14ccc9_bd161450",
       "range": {
         "startLine": 319,
         "startChar": 9,
