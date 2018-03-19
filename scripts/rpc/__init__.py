@@ -1,6 +1,5 @@
 import app
 import bdev
-from client import print_dict
 import iscsi
 import log
 import lvol
@@ -15,7 +14,7 @@ import sys
 
 
 def get_rpc_methods(args):
-    print_dict(args.client.call('get_rpc_methods'))
+    return args.client.call('get_rpc_methods')
 
 
 def save_config(args):
