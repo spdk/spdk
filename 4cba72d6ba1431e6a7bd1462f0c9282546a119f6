@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "998b74d2_0c295a6b",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-19T13:29:20Z",
+      "side": 1,
+      "message": "the line 35-38 can be applied to the line 42-43?\nIf so, two separated parts, the line 35-38 and line 42-43 are unified and moved to just after \"indent \u003d args.indent\" ?",
+      "range": {
+        "startLine": 35,
+        "startChar": 8,
+        "endLine": 38,
+        "endChar": 25
+      },
+      "revId": "4cba72d6ba1431e6a7bd1462f0c9282546a119f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10a9ec9c_10522024",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-19T13:29:20Z",
+      "side": 1,
+      "message": "why this is needed?",
+      "range": {
+        "startLine": 40,
+        "startChar": 8,
+        "endLine": 40,
+        "endChar": 30
+      },
+      "revId": "4cba72d6ba1431e6a7bd1462f0c9282546a119f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ba42b40_83ea8988",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-19T13:29:20Z",
+      "side": 1,
+      "message": "why this is needed?",
+      "range": {
+        "startLine": 46,
+        "startChar": 12,
+        "endLine": 46,
+        "endChar": 28
+      },
+      "revId": "4cba72d6ba1431e6a7bd1462f0c9282546a119f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
