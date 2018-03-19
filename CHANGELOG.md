@@ -33,6 +33,10 @@ A number of functions have been renamed:
 
 The old names still exist but are deprecated.  They will be removed in the v18.07 release.
 
+spdk_blob_resize() is now an asynchronous operation to enable resizing a blob while I/O
+are in progress to that blob on other threads.  An explicit spdk_blob_sync_md() is still
+required to sync the updated metadata to disk.
+
 ### Lib
 
 A set of changes were made in the SPDK's lib code altering,

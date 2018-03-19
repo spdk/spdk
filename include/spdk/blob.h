@@ -260,7 +260,7 @@ void spdk_bs_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
  *
  * These changes are not persisted to disk until
  * spdk_blob_sync_md() is called. */
-int spdk_blob_resize(struct spdk_blob *blob, size_t sz);
+void spdk_blob_resize(struct spdk_blob *blob, size_t sz, spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /* Set blob as read only.
  *
