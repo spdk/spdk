@@ -60,6 +60,30 @@
     },
     {
       "key": {
+        "uuid": "f1fb1bc3_4aa7b4c4",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-03-19T06:34:09Z",
+      "side": 1,
+      "message": "For this, can we refactor when this patch is merged since we have lots of ongoing work. The purpose of the first patch is to make the function work and also enable the automation test.",
+      "parentUuid": "3e146494_b3596f93",
+      "range": {
+        "startLine": 94,
+        "startChar": 2,
+        "endLine": 94,
+        "endChar": 18
+      },
+      "revId": "80a29742b2724336630045ebd6c3763e184426fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1c1c99db_f9ecac39",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 24
@@ -88,6 +112,24 @@
       "writtenOn": "2018-03-16T22:37:52Z",
       "side": 1,
       "message": "Agreed.",
+      "parentUuid": "1c1c99db_f9ecac39",
+      "revId": "80a29742b2724336630045ebd6c3763e184426fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d775166a_ce468f3f",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-03-19T06:34:09Z",
+      "side": 1,
+      "message": "For this, can we do it in the later patch?",
       "parentUuid": "1c1c99db_f9ecac39",
       "revId": "80a29742b2724336630045ebd6c3763e184426fa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
@@ -211,6 +253,30 @@
       "writtenOn": "2018-03-17T13:37:43Z",
       "side": 1,
       "message": "iscsi_read16_iov_task() may be able to be used instead of read16_task() and set_iov_in(). but I think you did not use it intentionally (version limitation or any reason).",
+      "range": {
+        "startLine": 146,
+        "startChar": 8,
+        "endLine": 146,
+        "endChar": 25
+      },
+      "revId": "80a29742b2724336630045ebd6c3763e184426fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c4a4aa8_b6aaca44",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-03-19T06:34:09Z",
+      "side": 1,
+      "message": "iscsi_read_iov_task may be in the new version.",
+      "parentUuid": "489db7ac_9c05f7d8",
       "range": {
         "startLine": 146,
         "startChar": 8,
@@ -357,6 +423,24 @@
     },
     {
       "key": {
+        "uuid": "beab4f81_e088ea9a",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-03-19T06:34:09Z",
+      "side": 1,
+      "message": "Done, I firstly remove the flush support, will add it later.",
+      "parentUuid": "33a2d5f5_f42b5acd",
+      "revId": "80a29742b2724336630045ebd6c3763e184426fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "833cc1a0_671c37d5",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 24
@@ -368,6 +452,24 @@
       "writtenOn": "2018-03-16T22:25:57Z",
       "side": 1,
       "message": "This is not a sufficient implementation of reset; it needs to at least do the same hack as RBD.",
+      "revId": "80a29742b2724336630045ebd6c3763e184426fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5798ac8a_3680e53c",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-03-19T06:34:09Z",
+      "side": 1,
+      "message": "Will add it later",
+      "parentUuid": "833cc1a0_671c37d5",
       "revId": "80a29742b2724336630045ebd6c3763e184426fa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -408,6 +510,30 @@
       "writtenOn": "2018-03-16T22:37:52Z",
       "side": 1,
       "message": "Let\u0027s change it to 0.\n\nI was playing around with this early on, thinking it might be expensive to do the libiscsi polling operation.  But I\u0027d say make it 0 for now - we can change it later if necessary.",
+      "parentUuid": "4284d44a_6607b76e",
+      "range": {
+        "startLine": 339,
+        "startChar": 55,
+        "endLine": 339,
+        "endChar": 59
+      },
+      "revId": "80a29742b2724336630045ebd6c3763e184426fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9fc3491e_0232f254",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 339,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-03-19T06:34:09Z",
+      "side": 1,
+      "message": "set it to 0",
       "parentUuid": "4284d44a_6607b76e",
       "range": {
         "startLine": 339,
