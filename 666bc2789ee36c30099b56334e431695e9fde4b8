@@ -1,0 +1,215 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5b1453fc_2b819be0",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-19T20:43:45Z",
+      "side": 1,
+      "message": "This doesn\u0027t describe what the parameter is for at all.\n\nI think something like \"File to write debug information to\" would be better.",
+      "revId": "666bc2789ee36c30099b56334e431695e9fde4b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0cd82737_1aac4d59",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 427,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-19T20:43:45Z",
+      "side": 1,
+      "message": "Please add a space between the end of the sentence and the parentheses.",
+      "revId": "666bc2789ee36c30099b56334e431695e9fde4b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "672df4f6_ce562d65",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 428,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-19T20:43:45Z",
+      "side": 1,
+      "message": "Maybe \"Size of the ring in elements\" or something like that.",
+      "range": {
+        "startLine": 428,
+        "startChar": 16,
+        "endLine": 428,
+        "endChar": 34
+      },
+      "revId": "666bc2789ee36c30099b56334e431695e9fde4b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed2ee725_5fc69ea5",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 468,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-19T20:43:45Z",
+      "side": 1,
+      "message": "This sounds unclear to me; I think \u0027count\u0027 is actually the maximum number of elements to be dequeued, and the return value could be less than this amount (which should be clarified in the \\return section).",
+      "range": {
+        "startLine": 468,
+        "startChar": 16,
+        "endLine": 468,
+        "endChar": 53
+      },
+      "revId": "666bc2789ee36c30099b56334e431695e9fde4b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "64da50ca_c35034ee",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 482,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-19T20:43:45Z",
+      "side": 1,
+      "message": "spdk_vtophys() returns SPDK_VTOPHYS_ERROR on failure, not negative errno.",
+      "range": {
+        "startLine": 481,
+        "startChar": 59,
+        "endLine": 482,
+        "endChar": 14
+      },
+      "revId": "666bc2789ee36c30099b56334e431695e9fde4b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c87bb496_9a5d43e4",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 503,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-19T20:43:45Z",
+      "side": 1,
+      "message": "device -\u003e devices",
+      "range": {
+        "startLine": 503,
+        "startChar": 18,
+        "endLine": 503,
+        "endChar": 24
+      },
+      "revId": "666bc2789ee36c30099b56334e431695e9fde4b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "40e934f5_dcaa7a19",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 537,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-19T20:43:45Z",
+      "side": 1,
+      "message": "I think this can also return NULL if no device is found at the given address.",
+      "revId": "666bc2789ee36c30099b56334e431695e9fde4b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "645d4b9b_c9444ecd",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-19T20:43:45Z",
+      "side": 1,
+      "message": "\u0027size\u0027 is also an output parameter, I believe - it should be more clearly documented like the parameters above.",
+      "revId": "666bc2789ee36c30099b56334e431695e9fde4b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7cc71dce_9dcc3b16",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-19T20:43:45Z",
+      "side": 1,
+      "message": "This comment should be removed.  The DPDK implementation of the env layer doesn\u0027t need to do anything for unmap, but other implementations may need to do some cleanup.",
+      "revId": "666bc2789ee36c30099b56334e431695e9fde4b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "108a75d4_1034aef0",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 564,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-19T20:43:45Z",
+      "side": 1,
+      "message": "This should clarify that it must be the mapped_addr returned by a previous call to spdk_pci_device_map_bar().",
+      "revId": "666bc2789ee36c30099b56334e431695e9fde4b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15ef45cc_4222638a",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 620,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-19T20:43:45Z",
+      "side": 1,
+      "message": "This function can\u0027t return a negative errno; it returns an unsigned value.  Please double check this and the other functions below.",
+      "revId": "666bc2789ee36c30099b56334e431695e9fde4b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
