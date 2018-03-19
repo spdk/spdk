@@ -64,12 +64,19 @@ spdk_bdev_subsystem_finish(void)
 	spdk_bdev_finish(spdk_bdev_subsystem_finish_done, NULL);
 }
 
+static void
+_spdk_bdev_subsystem_config_json(struct spdk_json_write_ctx *w, struct spdk_event *done_ev)
+{
+	spdk_bdev_subsystem_config_json(w);
+	spdk_event_call(done_ev);
+}
+
 static struct spdk_subsystem g_spdk_subsystem_bdev = {
 	.name = "bdev",
 	.init = spdk_bdev_subsystem_initialize,
 	.fini = spdk_bdev_subsystem_finish,
 	.config = spdk_bdev_config_text,
-	.write_config_json = spdk_bdev_subsystem_config_json,
+	.write_config_json = _spdk_bdev_subsystem_config_json,
 };
 
 SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_bdev);
