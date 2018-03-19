@@ -128,7 +128,8 @@ struct spdk_vhost_dev_backend {
 	int (*vhost_set_config)(struct spdk_vhost_dev *vdev, uint8_t *config,
 				uint32_t offset, uint32_t size, uint32_t flags);
 
-	void (*dump_config_json)(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
+	void (*dump_info_json)(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
+	void (*write_config_json)(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
 	int (*remove_device)(struct spdk_vhost_dev *vdev);
 };
 
@@ -248,7 +249,7 @@ int spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev);
 
 int spdk_vhost_scsi_controller_construct(void);
 int spdk_vhost_blk_controller_construct(void);
-void spdk_vhost_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
+void spdk_vhost_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
 void spdk_vhost_dev_backend_event_done(void *event_ctx, int response);
 void spdk_vhost_lock(void);
 void spdk_vhost_unlock(void);

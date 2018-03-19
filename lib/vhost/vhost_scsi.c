@@ -107,7 +107,10 @@ struct spdk_vhost_scsi_task {
 
 static int spdk_vhost_scsi_start(struct spdk_vhost_dev *, void *);
 static int spdk_vhost_scsi_stop(struct spdk_vhost_dev *, void *);
-static void spdk_vhost_scsi_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
+static void spdk_vhost_scsi_dump_info_json(struct spdk_vhost_dev *vdev,
+		struct spdk_json_write_ctx *w);
+static void spdk_vhost_scsi_write_config_json(struct spdk_vhost_dev *vdev,
+		struct spdk_json_write_ctx *w);
 static int spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev);
 
 const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
@@ -115,7 +118,8 @@ const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
 	.disabled_features = SPDK_VHOST_SCSI_DISABLED_FEATURES,
 	.start_device =  spdk_vhost_scsi_start,
 	.stop_device = spdk_vhost_scsi_stop,
-	.dump_config_json = spdk_vhost_scsi_config_json,
+	.dump_info_json = spdk_vhost_scsi_dump_info_json,
+	.write_config_json = spdk_vhost_scsi_write_config_json,
 	.remove_device = spdk_vhost_scsi_dev_remove,
 };
 
@@ -1167,7 +1171,7 @@ err:
 }
 
 static void
-spdk_vhost_scsi_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
+spdk_vhost_scsi_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
 {
 	struct spdk_scsi_dev *sdev;
 	struct spdk_scsi_lun *lun;
@@ -1219,6 +1223,44 @@ spdk_vhost_scsi_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_
 	}
 
 	spdk_json_write_array_end(w);
+}
+
+static void
+spdk_vhost_scsi_write_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
+{
+	struct spdk_vhost_scsi_dev *svdev = to_scsi_dev(vdev);
+	struct spdk_scsi_lun *lun;
+	uint32_t i;
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "method", "construct_vhost_scsi_controller");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_string(w, "ctrlr", vdev->name);
+	spdk_json_write_named_string(w, "cpumask", spdk_cpuset_fmt(vdev->cpumask));
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+
+	for (i = 0; i < SPDK_COUNTOF(svdev->scsi_dev); i++) {
+		if (svdev->scsi_dev[i] == NULL || svdev->scsi_dev_state[i].removed) {
+			continue;
+		}
+
+		lun = spdk_scsi_dev_get_lun(svdev->scsi_dev[i], 0);
+
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_string(w, "method", "add_vhost_scsi_lun");
+
+		spdk_json_write_named_object_begin(w, "params");
+		spdk_json_write_named_string(w, "ctrlr", vdev->name);
+		spdk_json_write_named_uint32(w, "scsi_target_num", i);
+
+		spdk_json_write_named_string(w, "bdev_name", spdk_scsi_lun_get_bdev_name(lun));
+		spdk_json_write_object_end(w);
+
+		spdk_json_write_object_end(w);
+	}
 }
 
 SPDK_LOG_REGISTER_COMPONENT("vhost_scsi", SPDK_LOG_VHOST_SCSI)
