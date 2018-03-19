@@ -16,10 +16,6 @@ def print_array(a):
     print " ".join((quote(v) for v in a))
 
 
-def int_arg(arg):
-    return int(arg, 0)
-
-
 class JSONRPCClient(object):
     def __init__(self, addr, port=None, verbose=False, timeout=60.0):
         self.verbose = verbose

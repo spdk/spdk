@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from rpc.client import print_dict, print_array, int_arg
+from rpc.client import print_dict, print_array
 
 import argparse
 import rpc
