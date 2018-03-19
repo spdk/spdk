@@ -42,6 +42,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/event.h"
+#include "spdk/json.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -76,6 +77,15 @@ int spdk_vhost_init(void);
  * \param fini_cb Called when the cleanup operation completes.
  */
 void spdk_vhost_fini(spdk_vhost_fini_cb fini_cb);
+
+
+/**
+ * Write vhost subsystem configuration into provided JSON context.
+ *
+ * \param w JSON write context
+ * \param done_ev call this event when done.
+ */
+void spdk_vhost_config_json(struct spdk_json_write_ctx *w, struct spdk_event *done_ev);
 
 /**
  * Deinit vhost application. This is called once by SPDK app layer.
