@@ -404,6 +404,9 @@ bool spdk_blob_is_snapshot(struct spdk_blob *blob);
 bool spdk_blob_is_clone(struct spdk_blob *blob);
 bool spdk_blob_is_thin_provisioned(struct spdk_blob *blob);
 
+/* Get blobs name from blob store by blob id */
+char *spdk_bs_blob_get_name(struct spdk_blob_store *bs, spdk_blob_id blobid);
+
 /**
  * Delete an existing blob from the given blobstore.
  *
