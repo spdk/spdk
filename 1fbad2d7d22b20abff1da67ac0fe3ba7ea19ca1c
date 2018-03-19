@@ -34,6 +34,23 @@
       "revId": "1fbad2d7d22b20abff1da67ac0fe3ba7ea19ca1c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9660c845_2ce087f4",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2018-03-19T01:32:51Z",
+      "side": 1,
+      "message": "The sequence of deleting the lvol should be destroy_lvol_bdev-\u003edestroy_lvol_store, because when we create lvol, the sequence is create_lvol_store-\u003ecrate_lvol_bdev",
+      "revId": "1fbad2d7d22b20abff1da67ac0fe3ba7ea19ca1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
