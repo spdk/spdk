@@ -14,6 +14,13 @@ cd $rootdir
 date -u
 git describe --tags
 
+# Print some test system info out for he log
+echo "** START ** Info for Hostname: $HOSTNAME"
+uname -a
+$MAKE cc_version
+$MAKE cxx_version
+echo "** END ** Info for Hostname: $HOSTNAME"
+
 timing_enter autobuild
 
 ./configure $config_params
@@ -29,10 +36,6 @@ if [ $SPDK_BUILD_IOAT_KMOD -eq 1 ]; then
 	./scripts/build_kmod.sh build
 fi
 timing_exit build_kmod
-
-# Print compiler versions to log
-$MAKE cc_version
-$MAKE cxx_version
 
 scanbuild=''
 make_timing_label='make'
