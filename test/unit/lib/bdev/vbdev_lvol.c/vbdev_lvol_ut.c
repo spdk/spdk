@@ -537,6 +537,18 @@ spdk_json_write_name(struct spdk_json_write_ctx *w, const char *name)
 }
 
 int
+spdk_json_write_array_begin(struct spdk_json_write_ctx *w)
+{
+	return 0;
+}
+
+int
+spdk_json_write_array_end(struct spdk_json_write_ctx *w)
+{
+	return 0;
+}
+
+int
 spdk_json_write_string(struct spdk_json_write_ctx *w, const char *val)
 {
 	return 0;
@@ -1258,7 +1270,6 @@ ut_vbdev_lvol_get_io_channel(void)
 	CU_ASSERT(ch == g_ch);
 
 	free(g_lvol);
-
 }
 
 static void
