@@ -1541,6 +1541,11 @@ bs_load(void)
 	super_block = (struct spdk_bs_super_block *)g_dev_buffer;
 	CU_ASSERT(super_block->clean == 1);
 
+	/* Load should fail for device with an unsupported blocklen */
+	dev = init_dev();
+	dev->blocklen = SPDK_BS_PAGE_SIZE * 2;
+	spdk_bs_load(dev, NULL, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == -EINVAL);
 
 	/* Load an existing blob store */
 	dev = init_dev();
