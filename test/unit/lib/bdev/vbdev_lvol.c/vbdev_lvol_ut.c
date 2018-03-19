@@ -163,6 +163,51 @@ spdk_blob_get_num_clusters(struct spdk_blob *b)
 	return 0;
 }
 
+int
+spdk_blob_get_clones(struct spdk_blob *snapshot, spdk_blob_id **ids, size_t *count)
+{
+	*count = 0;
+	return 0;
+}
+
+spdk_blob_id
+spdk_blob_get_snapshot(struct spdk_blob *blob)
+{
+	return 0;
+}
+
+bool g_blob_is_read_only = false;
+
+bool
+spdk_blob_is_read_only(struct spdk_blob *blob)
+{
+	return g_blob_is_read_only;
+}
+
+bool
+spdk_blob_is_snapshot(struct spdk_blob *blob)
+{
+	return false;
+}
+
+bool
+spdk_blob_is_clone(struct spdk_blob *blob)
+{
+	return false;
+}
+
+bool
+spdk_blob_is_thin_provisioned(struct spdk_blob *blob)
+{
+	return false;
+}
+
+char *
+spdk_bs_blob_get_name(struct spdk_blob_store *bs, spdk_blob_id blobid)
+{
+	return NULL;
+}
+
 static struct spdk_lvol *_lvol_create(struct spdk_lvol_store *lvs);
 
 void
@@ -498,6 +543,18 @@ spdk_bdev_module_list_add(struct spdk_bdev_module *bdev_module)
 
 int
 spdk_json_write_name(struct spdk_json_write_ctx *w, const char *name)
+{
+	return 0;
+}
+
+int
+spdk_json_write_array_begin(struct spdk_json_write_ctx *w)
+{
+	return 0;
+}
+
+int
+spdk_json_write_array_end(struct spdk_json_write_ctx *w)
 {
 	return 0;
 }
@@ -1230,14 +1287,19 @@ ut_vbdev_lvol_get_io_channel(void)
 	CU_ASSERT(ch == g_ch);
 
 	free(g_lvol);
-
 }
 
 static void
 ut_vbdev_lvol_io_type_supported(void)
 {
-	struct spdk_lvol *lvol = g_lvol;
+	struct spdk_lvol *lvol;
 	bool ret;
+
+	lvol = calloc(1, sizeof(struct spdk_lvol));
+	SPDK_CU_ASSERT_FATAL(lvol != NULL);
+
+	g_blob_is_read_only = false;
+
 	/* Supported types */
 	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_READ);
 	CU_ASSERT(ret == true);
@@ -1257,6 +1319,30 @@ ut_vbdev_lvol_io_type_supported(void)
 	CU_ASSERT(ret == false);
 	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_NVME_IO);
 	CU_ASSERT(ret == false);
+
+	g_blob_is_read_only = true;
+
+	/* Supported types */
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_READ);
+	CU_ASSERT(ret == true);
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_RESET);
+	CU_ASSERT(ret == true);
+
+	/* Unsupported types */
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_WRITE);
+	CU_ASSERT(ret == false);
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_UNMAP);
+	CU_ASSERT(ret == false);
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_WRITE_ZEROES);
+	CU_ASSERT(ret == false);
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_FLUSH);
+	CU_ASSERT(ret == false);
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_NVME_ADMIN);
+	CU_ASSERT(ret == false);
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_NVME_IO);
+	CU_ASSERT(ret == false);
+
+	free(lvol);
 }
 
 static void
