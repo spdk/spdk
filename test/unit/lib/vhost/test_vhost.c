@@ -38,6 +38,8 @@
 #include "spdk_internal/mock.h"
 #include "spdk/io_channel.h"
 
+#include "unit/lib/json_mock.c"
+
 struct spdk_conf_section {
 	struct spdk_conf_section *next;
 	char *name;
@@ -87,16 +89,6 @@ DEFINE_STUB_V(spdk_vhost_call_external_event, (const char *ctrlr_name, spdk_vhos
 DEFINE_STUB(spdk_vhost_vring_desc_has_next, bool, (struct vring_desc *cur_desc), false);
 DEFINE_STUB_VP(spdk_vhost_gpa_to_vva, (struct spdk_vhost_dev *vdev, uint64_t addr), {0});
 DEFINE_STUB(spdk_scsi_dev_get_id, int, (const struct spdk_scsi_dev *dev), {0});
-DEFINE_STUB(spdk_json_write_null, int, (struct spdk_json_write_ctx *w), 0);
-DEFINE_STUB(spdk_json_write_bool, int, (struct spdk_json_write_ctx *w, bool val), 0);
-DEFINE_STUB(spdk_json_write_name, int, (struct spdk_json_write_ctx *w, const char *name), 0);
-DEFINE_STUB(spdk_json_write_object_begin, int, (struct spdk_json_write_ctx *w), 0);
-DEFINE_STUB(spdk_json_write_uint32, int, (struct spdk_json_write_ctx *w, uint32_t val), 0);
-DEFINE_STUB(spdk_json_write_int32, int, (struct spdk_json_write_ctx *w, int32_t val), 0);
-DEFINE_STUB(spdk_json_write_string, int, (struct spdk_json_write_ctx *w, const char *val), 0);
-DEFINE_STUB(spdk_json_write_array_begin, int, (struct spdk_json_write_ctx *w), 0);
-DEFINE_STUB(spdk_json_write_object_end, int, (struct spdk_json_write_ctx *w), 0);
-DEFINE_STUB(spdk_json_write_array_end, int, (struct spdk_json_write_ctx *w), 0);
 
 /* This sets spdk_vhost_dev_unregister to either to fail or success */
 DEFINE_STUB(spdk_vhost_dev_unregister_fail, bool, (void), false);

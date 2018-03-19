@@ -69,6 +69,7 @@ struct spdk_vhost_blk_dev {
 	struct spdk_io_channel *bdev_io_channel;
 	struct spdk_poller *requestq_poller;
 	bool readonly;
+	char *bdev_name;
 };
 
 /* forward declaration */
@@ -597,7 +598,7 @@ err:
 }
 
 static void
-spdk_vhost_blk_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
+spdk_vhost_blk_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
 {
 	struct spdk_bdev *bdev = spdk_vhost_blk_get_dev(vdev);
 	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
@@ -615,6 +616,24 @@ spdk_vhost_blk_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_wr
 	} else {
 		spdk_json_write_null(w);
 	}
+
+	spdk_json_write_object_end(w);
+}
+
+static void
+spdk_vhost_blk_write_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
+{
+	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "mehod", "construct_vhost_blk_controller");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_string(w, "ctrlr", vdev->name);
+	spdk_json_write_named_string(w, "dev_name", bvdev->bdev_name);
+	spdk_json_write_named_string(w, "cpumask", spdk_cpuset_fmt(vdev->cpumask));
+	spdk_json_write_named_bool(w, "readonly", bvdev->readonly);
+	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
 }
@@ -674,7 +693,8 @@ static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 	.start_device =  spdk_vhost_blk_start,
 	.stop_device = spdk_vhost_blk_stop,
 	.vhost_get_config = spdk_vhost_blk_get_config,
-	.dump_config_json = spdk_vhost_blk_dump_config_json,
+	.dump_info_json = spdk_vhost_blk_dump_info_json,
+	.write_config_json = spdk_vhost_blk_write_config_json,
 	.remove_device = spdk_vhost_blk_destroy,
 };
 
@@ -753,16 +773,20 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 
 	bvdev->bdev = bdev;
 	bvdev->readonly = readonly;
+	bvdev->bdev_name = strdup(dev_name);
+	if (bvdev->bdev_name == NULL) {
+		ret = -1;
+		goto out;
+	}
+
 	ret = spdk_vhost_dev_register(&bvdev->vdev, name, cpumask, &vhost_blk_device_backend);
 	if (ret != 0) {
-		spdk_bdev_close(bvdev->bdev_desc);
 		ret = -1;
 		goto out;
 	}
 
 	if (readonly && rte_vhost_driver_enable_features(bvdev->vdev.path, (1ULL << VIRTIO_BLK_F_RO))) {
 		SPDK_ERRLOG("Controller %s: failed to set as a readonly\n", name);
-		spdk_bdev_close(bvdev->bdev_desc);
 
 		if (spdk_vhost_dev_unregister(&bvdev->vdev) != 0) {
 			SPDK_ERRLOG("Controller %s: failed to remove controller\n", name);
@@ -774,9 +798,16 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 
 	SPDK_NOTICELOG("Controller %s: using bdev '%s'\n", name, dev_name);
 out:
-	if (ret != 0 && bvdev) {
+	if (ret != 0 &&  bdev) {
+		free(bvdev->bdev_name);
+
+		if (bvdev->bdev_desc) {
+			spdk_bdev_close(bvdev->bdev_desc);
+		}
+
 		spdk_dma_free(bvdev);
 	}
+
 	spdk_vhost_unlock();
 	return ret;
 }
@@ -801,6 +832,7 @@ spdk_vhost_blk_destroy(struct spdk_vhost_dev *vdev)
 		bvdev->bdev_desc = NULL;
 	}
 	bvdev->bdev = NULL;
+	free(bvdev->bdev_name);
 
 	spdk_dma_free(bvdev);
 	return 0;
