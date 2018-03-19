@@ -152,6 +152,7 @@ void spdk_bdev_config_text(FILE *fp);
  * Get the full configuration options for the registered block device modules and created bdevs.
  *
  * \param w The pointer to a JSON write context where the configuration will be written.
+ * \param done_ev Call this event when done.
  * \return result of \c spdk_bdev_dump_bdev_config_json() or negative error code:
  * -EINVAL if w == NULL
  */
