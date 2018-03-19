@@ -12,10 +12,6 @@ def print_dict(d):
     print json.dumps(d, indent=2)
 
 
-def print_array(a):
-    print " ".join((quote(v) for v in a))
-
-
 class JSONRPCClient(object):
     def __init__(self, addr, port=None, verbose=False, timeout=60.0):
         self.verbose = verbose
