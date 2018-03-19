@@ -93,12 +93,19 @@ spdk_rpc_construct_error_bdev(struct spdk_jsonrpc_request *request,
 	struct rpc_construct_error_bdev req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_bdev *base_bdev;
+	int rc;
 
 	if (spdk_json_decode_object(params, rpc_construct_error_bdev_decoders,
 				    SPDK_COUNTOF(rpc_construct_error_bdev_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;
+	}
+
+	rc = vbdev_error_config_add(req.base_name);
+	if (rc != 0) {
+		SPDK_NOTICELOG("Config for ErrorInjection bdev %s already exists\n",
+			       req.base_name);
 	}
 
 	base_bdev = spdk_bdev_get_by_name(req.base_name);

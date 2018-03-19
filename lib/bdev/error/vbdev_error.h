@@ -45,5 +45,6 @@ enum vbdev_error_type {
 int spdk_vbdev_error_create(struct spdk_bdev *base_bdev);
 int spdk_vbdev_inject_error(char *name, uint32_t io_type, uint32_t error_type,
 			    uint32_t error_num);
+int vbdev_error_config_add(const char *base_bdev_name);
 
 #endif // SPDK_VBDEV_ERROR_H

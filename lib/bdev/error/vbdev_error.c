@@ -317,6 +317,35 @@ vbdev_error_config_find_by_base_name(const char *base_bdev_name)
 	return NULL;
 }
 
+int
+vbdev_error_config_add(const char *base_bdev_name)
+{
+	struct spdk_vbdev_error_config *cfg;
+
+	cfg = vbdev_error_config_find_by_base_name(base_bdev_name);
+	if (cfg) {
+		SPDK_ERRLOG("vbdev_error_config for bdev %s already exists\n",
+			    base_bdev_name);
+		return -EEXIST;
+	}
+
+	cfg = calloc(1, sizeof(*cfg));
+	if (!cfg) {
+		SPDK_ERRLOG("calloc() failed for vbdev_error_config\n");
+		return -ENOMEM;
+	}
+
+	cfg->base_bdev = strdup(base_bdev_name);
+	if (!cfg->base_bdev) {
+		free(cfg);
+		SPDK_ERRLOG("strdup() failed for base_bdev_name\n");
+		return -ENOMEM;
+	}
+
+	TAILQ_INSERT_TAIL(&g_error_config, cfg, tailq);
+	return 0;
+}
+
 static int
 vbdev_error_config_remove(const char *base_bdev_name)
 {
