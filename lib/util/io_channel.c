@@ -328,12 +328,13 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 }
 
 static void
-_spdk_io_device_attempt_free(struct io_device *dev)
+_spdk_io_device_attempt_free(struct io_device *dev, struct spdk_io_channel *ch)
 {
 	struct spdk_thread *thread;
-	struct spdk_io_channel *ch;
 
 	pthread_mutex_lock(&g_devlist_mutex);
+
+	TAILQ_REMOVE(&ch->thread->io_channels, ch, tailq);
 
 	if (!dev->unregistered) {
 		pthread_mutex_unlock(&g_devlist_mutex);
@@ -341,6 +342,7 @@ _spdk_io_device_attempt_free(struct io_device *dev)
 	}
 
 	TAILQ_FOREACH(thread, &g_threads, tailq) {
+		/* ch parameter is no longer needed, so use that variable here for iterating. */
 		TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
 			if (ch->dev == dev) {
 				/* A channel that references this I/O
@@ -389,7 +391,7 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 	dev->unregistered = true;
 	TAILQ_REMOVE(&g_io_devices, dev, tailq);
 	pthread_mutex_unlock(&g_devlist_mutex);
-	_spdk_io_device_attempt_free(dev);
+	_spdk_io_device_attempt_free(dev, NULL);
 }
 
 struct spdk_io_channel *
@@ -478,11 +480,11 @@ _spdk_put_io_channel(void *arg)
 
 	ch->destroy_cb(ch->dev->io_device, spdk_io_channel_get_ctx(ch));
 
-	pthread_mutex_lock(&g_devlist_mutex);
-	TAILQ_REMOVE(&ch->thread->io_channels, ch, tailq);
-	pthread_mutex_unlock(&g_devlist_mutex);
-
-	_spdk_io_device_attempt_free(ch->dev);
+	/*
+	 * _spdk_io_device_attempt_free() will remove the ch from the thread after it
+	 *  acquires the g_devlist_mutex lock.
+	 */
+	_spdk_io_device_attempt_free(ch->dev, ch);
 	free(ch);
 }
 
