@@ -4999,4 +4999,52 @@ spdk_blob_get_clones(struct spdk_blob *blob, spdk_blob_id **ids, size_t *count)
 	return 0;
 }
 
+static void
+_spdk_bs_getname_close_cpl(void *cb_arg, int bserrno)
+{
+	char **name = (char **)cb_arg;
+
+	if (bserrno != 0) {
+		free(*name);
+		*name = NULL;
+	}
+}
+
+static void
+_spdk_bs_getname_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
+{
+	char **name = (char **)cb_arg;
+	const void *value;
+	size_t value_len;
+	int rc;
+
+	if (bserrno != 0) {
+		*name = NULL;
+		return;
+	}
+
+	rc = spdk_blob_get_xattr_value(_blob, "name", &value, &value_len);
+	if (rc != 0) {
+		*name = NULL;
+		return;
+	}
+
+	*name = strdup(value);
+
+	spdk_blob_close(_blob, _spdk_bs_getname_close_cpl, &name);
+}
+
+char *
+spdk_bs_blob_get_name(struct spdk_blob_store *bs, spdk_blob_id blobid)
+{
+	char *name;
+
+	if (bs == NULL) {
+		return NULL;
+	}
+	spdk_bs_open_blob(bs, blobid, _spdk_bs_getname_open_cpl, &name);
+
+	return name;
+}
+
 SPDK_LOG_REGISTER_COMPONENT("blob", SPDK_LOG_BLOB)
