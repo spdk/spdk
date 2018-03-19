@@ -7,7 +7,7 @@
 set -xe
 
 testdir=$(readlink -f $(dirname $0))
-rootdir=$testdir/../..
+rootdir=$(readlink -f $(dirname $0)/../..)
 
 # if ASAN is enabled, use it.  If not use valgrind if installed but allow
 # the env variable to override the default shown below.
@@ -125,11 +125,11 @@ if [ "$cov_avail" = "yes" ]; then
 	$LCOV -q -d . -c -t "$(hostname)" -o $UT_COVERAGE/ut_cov_test.info
 	$LCOV -q -a $UT_COVERAGE/ut_cov_base.info -a $UT_COVERAGE/ut_cov_test.info -o $UT_COVERAGE/ut_cov_total.info
 	$LCOV -q -a $UT_COVERAGE/ut_cov_total.info -o $UT_COVERAGE/ut_cov_unit.info
-	$LCOV -q -r $UT_COVERAGE/ut_cov_unit.info 'app/*' -o $UT_COVERAGE/ut_cov_unit.info
-	$LCOV -q -r $UT_COVERAGE/ut_cov_unit.info 'examples/*' -o $UT_COVERAGE/ut_cov_unit.info
-	$LCOV -q -r $UT_COVERAGE/ut_cov_unit.info 'include/*' -o $UT_COVERAGE/ut_cov_unit.info
-	$LCOV -q -r $UT_COVERAGE/ut_cov_unit.info 'lib/vhost/rte_vhost/*' -o $UT_COVERAGE/ut_cov_unit.info
-	$LCOV -q -r $UT_COVERAGE/ut_cov_unit.info 'test/*' -o $UT_COVERAGE/ut_cov_unit.info
+	$LCOV -q -r $UT_COVERAGE/ut_cov_unit.info "$rootdir/app/*" -o $UT_COVERAGE/ut_cov_unit.info
+	$LCOV -q -r $UT_COVERAGE/ut_cov_unit.info "$rootdir/examples/*" -o $UT_COVERAGE/ut_cov_unit.info
+	$LCOV -q -r $UT_COVERAGE/ut_cov_unit.info "$rootdir/include/*" -o $UT_COVERAGE/ut_cov_unit.info
+	$LCOV -q -r $UT_COVERAGE/ut_cov_unit.info "$rootdir/lib/vhost/rte_vhost/*" -o $UT_COVERAGE/ut_cov_unit.info
+	$LCOV -q -r $UT_COVERAGE/ut_cov_unit.info "$rootdir/test/*" -o $UT_COVERAGE/ut_cov_unit.info
 	rm -f $UT_COVERAGE/ut_cov_base.info $UT_COVERAGE/ut_cov_test.info
 	genhtml $UT_COVERAGE/ut_cov_unit.info --output-directory $UT_COVERAGE
 	# git -C option not used for compatibility reasons
