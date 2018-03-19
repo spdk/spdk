@@ -991,13 +991,16 @@ main(int argc, char **argv)
 		       (double)g_time_in_usec / 1000000);
 	}
 
-	if (g_time_in_usec) {
-		performance_dump(g_time_in_usec, 0);
-	} else {
-		printf("Test time less than one microsecond, no performance data will be shown\n");
+	if (g_run_failed == false) {
+		if (g_time_in_usec) {
+			performance_dump(g_time_in_usec, 0);
+		} else {
+			printf("Test time less than one microsecond, no performance data will be shown\n");
+		}
+
+		blockdev_heads_destroy();
 	}
 
-	blockdev_heads_destroy();
 	spdk_app_fini();
 	printf("done.\n");
 	return g_run_failed;
