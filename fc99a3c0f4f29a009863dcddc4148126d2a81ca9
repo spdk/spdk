@@ -1,0 +1,135 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8ae71444_ad3f71f0",
+        "filename": "configure",
+        "patchSetId": 29
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-19T18:43:17Z",
+      "side": 1,
+      "message": "This isn\u0027t lined up.",
+      "revId": "fc99a3c0f4f29a009863dcddc4148126d2a81ca9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3fa7fcda_b3904077",
+        "filename": "lib/bdev/iscsi/README",
+        "patchSetId": 29
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-19T18:43:17Z",
+      "side": 1,
+      "message": "This should use the same indentation style as the config file.",
+      "revId": "fc99a3c0f4f29a009863dcddc4148126d2a81ca9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "250b2801_99cddb73",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-19T18:43:17Z",
+      "side": 1,
+      "message": "This isn\u0027t a valid IQN; it should have a reverse domain name in it, and the date is when the name was established.\n\nWe should use something with the base of \"iqn.2016-06.io.spdk\" like we do elsewhere in the tests.",
+      "revId": "fc99a3c0f4f29a009863dcddc4148126d2a81ca9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5cd68fb7_114c91ec",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-19T18:43:17Z",
+      "side": 1,
+      "message": "This should be marked static.",
+      "revId": "fc99a3c0f4f29a009863dcddc4148126d2a81ca9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4510476_035e2880",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-19T18:43:17Z",
+      "side": 1,
+      "message": "We should capture the other parts of the task-\u003esense structure (at least sense.key is needed) in the iscsi_io so we can use it in bdev_iscsi_io_complete() - currently, you are just passing 0 for two of the parameters, which should correspond to parts of struct scsi_sense.\n\nIt also looks like the libiscsi definition of ASCQ includes two bytes (ASC + ASCQ), so you will need to extract the correct bits into the asc and ascq parameters when passing this to spdk_bdev_io_complete_scsi_status().",
+      "revId": "fc99a3c0f4f29a009863dcddc4148126d2a81ca9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d11cf56_165fbe72",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 353,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-19T18:43:17Z",
+      "side": 1,
+      "message": "These should be lowercase_with_underscores to match the style of every other JSON info dump function.",
+      "range": {
+        "startLine": 353,
+        "startChar": 26,
+        "endLine": 353,
+        "endChar": 39
+      },
+      "revId": "fc99a3c0f4f29a009863dcddc4148126d2a81ca9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28c727d6_f0ef1507",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 442,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-19T18:43:17Z",
+      "side": 1,
+      "message": "Why is this all caps? That doesn\u0027t match the style of any other conf section.",
+      "range": {
+        "startLine": 442,
+        "startChar": 38,
+        "endLine": 442,
+        "endChar": 47
+      },
+      "revId": "fc99a3c0f4f29a009863dcddc4148126d2a81ca9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
