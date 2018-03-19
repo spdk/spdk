@@ -1,9 +1,19 @@
 #!/usr/bin/env python
 
-from rpc.client import print_dict, print_array
+from rpc.client import print_dict
 
 import argparse
 import rpc
+
+try:
+    from shlex import quote
+except ImportError:
+    from pipes import quote
+
+
+def print_array(a):
+    print " ".join((quote(v) for v in a))
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
