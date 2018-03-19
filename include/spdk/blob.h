@@ -383,10 +383,11 @@ void spdk_bs_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
  *
  * \param blob Blob to resize.
  * \param sz The new number of clusters.
+ * \param cb_fn Called when the operation is complete.
+ * \param cb_arg Argument passed to function cb_fn.
  *
- * \return 0 on success, negative errno on failure.
  */
-int spdk_blob_resize(struct spdk_blob *blob, size_t sz);
+void spdk_blob_resize(struct spdk_blob *blob, size_t sz, spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /**
  * Set blob as read only.

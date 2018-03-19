@@ -266,6 +266,33 @@ sync_complete(void *arg1, int bserrno)
 	blob_write(hello_context);
 }
 
+static void
+resize_complete(void *cb_arg, int bserrno)
+{
+	struct hello_context_t *hello_context = cb_arg;
+	uint64_t total = 0;
+
+	if (bserrno) {
+		unload_bs(hello_context, "Error in blob resize", bserrno);
+		return;
+	}
+
+	total = spdk_blob_get_num_clusters(hello_context->blob);
+	SPDK_NOTICELOG("resized blob now has USED clusters of %" PRIu64 "\n",
+		       total);
+
+	/*
+	 * Metadata is stored in volatile memory for performance
+	 * reasons and therefore needs to be synchronized with
+	 * non-volatile storage to make it persistent. This can be
+	 * done manually, as shown here, or if not it will be done
+	 * automatically when the blob is closed. It is always a
+	 * good idea to sync after making metadata changes unless
+	 * it has an unacceptable impact on application performance.
+	 */
+	spdk_blob_sync_md(hello_context->blob, sync_complete, hello_context);
+}
+
 /*
  * Callback function for opening a blob.
  */
@@ -274,8 +301,6 @@ open_complete(void *cb_arg, struct spdk_blob *blob, int bserrno)
 {
 	struct hello_context_t *hello_context = cb_arg;
 	uint64_t free = 0;
-	uint64_t total = 0;
-	int rc = 0;
 
 	SPDK_NOTICELOG("entry\n");
 	if (bserrno) {
@@ -297,27 +322,7 @@ open_complete(void *cb_arg, struct spdk_blob *blob, int bserrno)
 	 * there'd usually be many blobs of various sizes. The resize
 	 * unit is a cluster.
 	 */
-	rc = spdk_blob_resize(hello_context->blob, free);
-	if (rc) {
-		unload_bs(hello_context, "Error in blob resize",
-			  bserrno);
-		return;
-	}
-
-	total = spdk_blob_get_num_clusters(hello_context->blob);
-	SPDK_NOTICELOG("resized blob now has USED clusters of %" PRIu64 "\n",
-		       total);
-
-	/*
-	 * Metadata is stored in volatile memory for performance
-	 * reasons and therefore needs to be synchronized with
-	 * non-volatile storage to make it persistent. This can be
-	 * done manually, as shown here, or if not it will be done
-	 * automatically when the blob is closed. It is always a
-	 * good idea to sync after making metadata changes unless
-	 * it has an unacceptable impact on application performance.
-	 */
-	spdk_blob_sync_md(hello_context->blob, sync_complete, hello_context);
+	spdk_blob_resize(hello_context->blob, free, resize_complete, hello_context);
 }
 
 /*

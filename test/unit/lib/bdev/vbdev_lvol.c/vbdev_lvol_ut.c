@@ -334,12 +334,10 @@ spdk_lvs_destroy(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 	return 0;
 }
 
-int
+void
 spdk_lvol_resize(struct spdk_lvol *lvol, size_t sz,  spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
 	cb_fn(cb_arg, 0);
-
-	return 0;
 }
 
 int

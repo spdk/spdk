@@ -289,25 +289,13 @@ sync_cb(void *arg1, int bserrno)
 	spdk_blob_close(cli_context->blob, close_cb, cli_context);
 }
 
-/*
- * Callback function for opening a blob after creating.
- */
 static void
-open_now_resize_cb(void *cb_arg, struct spdk_blob *blob, int bserrno)
+resize_cb(void *cb_arg, int bserrno)
 {
 	struct cli_context_t *cli_context = cb_arg;
-	int rc = 0;
 	uint64_t total = 0;
 
 	if (bserrno) {
-		unload_bs(cli_context, "Error in open completion",
-			  bserrno);
-		return;
-	}
-	cli_context->blob = blob;
-
-	rc = spdk_blob_resize(cli_context->blob, cli_context->num_clusters);
-	if (rc) {
 		unload_bs(cli_context, "Error in blob resize",
 			  bserrno);
 		return;
@@ -322,6 +310,25 @@ open_now_resize_cb(void *cb_arg, struct spdk_blob *blob, int bserrno)
 	 * may be lost if things aren't closed cleanly.
 	 */
 	spdk_blob_sync_md(cli_context->blob, sync_cb, cli_context);
+}
+
+/*
+ * Callback function for opening a blob after creating.
+ */
+static void
+open_now_resize_cb(void *cb_arg, struct spdk_blob *blob, int bserrno)
+{
+	struct cli_context_t *cli_context = cb_arg;
+
+	if (bserrno) {
+		unload_bs(cli_context, "Error in open completion",
+			  bserrno);
+		return;
+	}
+	cli_context->blob = blob;
+
+	spdk_blob_resize(cli_context->blob, cli_context->num_clusters,
+			 resize_cb, cli_context);
 }
 
 /*

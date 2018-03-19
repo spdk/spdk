@@ -53,6 +53,8 @@ struct spdk_lvol_req {
 	spdk_lvol_op_complete   cb_fn;
 	void                    *cb_arg;
 	struct spdk_lvol	*lvol;
+	size_t			sz;
+	struct spdk_bdev	*bdev;
 	char			name[SPDK_LVOL_NAME_MAX];
 };
 
@@ -117,7 +119,7 @@ struct lvol_task {
 struct lvol_store_bdev *vbdev_lvol_store_first(void);
 struct lvol_store_bdev *vbdev_lvol_store_next(struct lvol_store_bdev *prev);
 
-int spdk_lvol_resize(struct spdk_lvol *lvol, uint64_t sz, spdk_lvol_op_complete cb_fn,
-		     void *cb_arg);
+void spdk_lvol_resize(struct spdk_lvol *lvol, uint64_t sz, spdk_lvol_op_complete cb_fn,
+		      void *cb_arg);
 
 #endif /* SPDK_INTERNAL_LVOLSTORE_H */
