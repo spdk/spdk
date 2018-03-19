@@ -250,10 +250,23 @@ spdk_bdev_module_finish_done(void)
 	return;
 }
 
+void
+spdk_bs_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
+		  spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
+{
+}
+
 uint64_t
 spdk_bs_get_page_size(struct spdk_blob_store *bs)
 {
 	return SPDK_BS_PAGE_SIZE;
+}
+
+int
+spdk_blob_get_xattr_value(struct spdk_blob *blob, const char *name,
+			  const void **value, size_t *value_len)
+{
+	return 0;
 }
 
 static void
@@ -538,6 +551,18 @@ spdk_bdev_module_list_add(struct spdk_bdev_module *bdev_module)
 
 int
 spdk_json_write_name(struct spdk_json_write_ctx *w, const char *name)
+{
+	return 0;
+}
+
+int
+spdk_json_write_array_begin(struct spdk_json_write_ctx *w)
+{
+	return 0;
+}
+
+int
+spdk_json_write_array_end(struct spdk_json_write_ctx *w)
 {
 	return 0;
 }
@@ -1264,14 +1289,19 @@ ut_vbdev_lvol_get_io_channel(void)
 	CU_ASSERT(ch == g_ch);
 
 	free(g_lvol);
-
 }
 
 static void
 ut_vbdev_lvol_io_type_supported(void)
 {
-	struct spdk_lvol *lvol = g_lvol;
+	struct spdk_lvol *lvol;
 	bool ret;
+
+	lvol = calloc(1, sizeof(struct spdk_lvol));
+	SPDK_CU_ASSERT_FATAL(lvol != NULL);
+
+	g_blob_is_read_only = false;
+
 	/* Supported types */
 	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_READ);
 	CU_ASSERT(ret == true);
@@ -1291,6 +1321,30 @@ ut_vbdev_lvol_io_type_supported(void)
 	CU_ASSERT(ret == false);
 	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_NVME_IO);
 	CU_ASSERT(ret == false);
+
+	g_blob_is_read_only = true;
+
+	/* Supported types */
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_READ);
+	CU_ASSERT(ret == true);
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_RESET);
+	CU_ASSERT(ret == true);
+
+	/* Unsupported types */
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_WRITE);
+	CU_ASSERT(ret == false);
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_UNMAP);
+	CU_ASSERT(ret == false);
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_WRITE_ZEROES);
+	CU_ASSERT(ret == false);
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_FLUSH);
+	CU_ASSERT(ret == false);
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_NVME_ADMIN);
+	CU_ASSERT(ret == false);
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_NVME_IO);
+	CU_ASSERT(ret == false);
+
+	free(lvol);
 }
 
 static void
