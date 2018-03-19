@@ -188,7 +188,8 @@ struct spdk_fs_cb_args {
 			TAILQ_ENTRY(spdk_fs_request)	tailq;
 		} open;
 		struct {
-			const char	*name;
+			const char		*name;
+			struct spdk_blob	*blob;
 		} create;
 		struct {
 			const char	*name;
@@ -858,18 +859,28 @@ fs_create_blob_close_cb(void *ctx, int bserrno)
 }
 
 static void
-fs_create_blob_open_cb(void *ctx, struct spdk_blob *blob, int bserrno)
+fs_create_blob_resize_cb(void *ctx, int bserrno)
 {
 	struct spdk_fs_request *req = ctx;
 	struct spdk_fs_cb_args *args = &req->args;
 	struct spdk_file *f = args->file;
+	struct spdk_blob *blob = args->op.create.blob;
 	uint64_t length = 0;
 
-	spdk_blob_resize(blob, 1);
 	spdk_blob_set_xattr(blob, "name", f->name, strlen(f->name) + 1);
 	spdk_blob_set_xattr(blob, "length", &length, sizeof(length));
 
 	spdk_blob_close(blob, fs_create_blob_close_cb, args);
+}
+
+static void
+fs_create_blob_open_cb(void *ctx, struct spdk_blob *blob, int bserrno)
+{
+	struct spdk_fs_request *req = ctx;
+	struct spdk_fs_cb_args *args = &req->args;
+
+	args->op.create.blob = blob;
+	spdk_blob_resize(blob, 1, fs_create_blob_resize_cb, req);
 }
 
 static void
@@ -1404,6 +1415,24 @@ fs_truncate_complete_cb(void *ctx, int bserrno)
 	free_fs_request(req);
 }
 
+static void
+fs_truncate_resize_cb(void *ctx, int bserrno)
+{
+	struct spdk_fs_request *req = ctx;
+	struct spdk_fs_cb_args *args = &req->args;
+	struct spdk_file *file = args->file;
+	uint64_t *length = &args->op.truncate.length;
+
+	spdk_blob_set_xattr(file->blob, "length", length, sizeof(*length));
+
+	file->length = *length;
+	if (file->append_pos > file->length) {
+		file->append_pos = file->length;
+	}
+
+	spdk_blob_sync_md(file->blob, fs_truncate_complete_cb, args);
+}
+
 static uint64_t
 __bytes_to_clusters(uint64_t length, uint64_t cluster_sz)
 {
@@ -1435,19 +1464,12 @@ spdk_file_truncate_async(struct spdk_file *file, uint64_t length,
 	args->fn.file_op = cb_fn;
 	args->arg = cb_arg;
 	args->file = file;
+	args->op.truncate.length = length;
 	fs = file->fs;
 
 	num_clusters = __bytes_to_clusters(length, fs->bs_opts.cluster_sz);
 
-	spdk_blob_resize(file->blob, num_clusters);
-	spdk_blob_set_xattr(file->blob, "length", &length, sizeof(length));
-
-	file->length = length;
-	if (file->append_pos > file->length) {
-		file->append_pos = file->length;
-	}
-
-	spdk_blob_sync_md(file->blob, fs_truncate_complete_cb, args);
+	spdk_blob_resize(file->blob, num_clusters, fs_truncate_resize_cb, req);
 }
 
 static void
@@ -1941,14 +1963,21 @@ __file_extend_done(void *arg, int bserrno)
 }
 
 static void
+__file_extend_resize_cb(void *_args, int bserrno)
+{
+	struct spdk_fs_cb_args *args = _args;
+	struct spdk_file *file = args->file;
+
+	spdk_blob_sync_md(file->blob, __file_extend_done, args);
+}
+
+static void
 __file_extend_blob(void *_args)
 {
 	struct spdk_fs_cb_args *args = _args;
 	struct spdk_file *file = args->file;
 
-	spdk_blob_resize(file->blob, args->op.resize.num_clusters);
-
-	spdk_blob_sync_md(file->blob, __file_extend_done, args);
+	spdk_blob_resize(file->blob, args->op.resize.num_clusters, __file_extend_resize_cb, args);
 }
 
 static void
