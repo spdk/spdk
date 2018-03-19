@@ -9,6 +9,8 @@ set -xe
 testdir=$(readlink -f $(dirname $0))
 rootdir=$testdir/../..
 
+cd "$rootdir"
+
 # if ASAN is enabled, use it.  If not use valgrind if installed but allow
 # the env variable to override the default shown below.
 if [ -z ${valgrind+x} ]; then
