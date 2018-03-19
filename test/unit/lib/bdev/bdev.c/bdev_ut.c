@@ -418,6 +418,119 @@ alias_add_del_test(void)
 	free(bdev[1]);
 }
 
+struct ut_bdev_for_each_ctx {
+	uint32_t cur_count;
+};
+
+static void
+ut_for_each_bdev_cpl(struct spdk_bdev_iter *i, int status)
+{
+	struct ut_bdev_for_each_ctx *ctx = spdk_bdev_iter_get_ctx(i);
+
+	if (status == 0) {
+		ctx->cur_count++;
+	} else {
+		ctx->cur_count = UINT32_MAX;
+	}
+}
+
+static void
+ut_for_each_bdev_success_fn(struct spdk_bdev_iter *i)
+{
+	struct ut_bdev_for_each_ctx *ctx = spdk_bdev_iter_get_ctx(i);
+	struct spdk_bdev *bdev = spdk_bdev_iter_get_cur_bdev(i);
+
+	bdev->channel_count = ctx->cur_count++;
+	bdev->status = SPDK_BDEV_STATUS_READY;
+
+	spdk_for_each_bdev_continue(i, 0);
+}
+
+static void
+ut_for_each_bdev_fail_fn(struct spdk_bdev_iter *i)
+{
+	struct spdk_bdev *bdev = spdk_bdev_iter_get_cur_bdev(i);
+
+	bdev->status = SPDK_BDEV_STATUS_REMOVING;
+
+	spdk_for_each_bdev_continue(i, -1);
+}
+
+static void
+for_each_bdev_success(void)
+{
+	uint32_t i;
+	struct spdk_bdev test_bdev[64];
+	struct ut_bdev_for_each_ctx ctx = {.cur_count = 0};
+	char *test_bdev_name = "TEST";
+
+	memset(&test_bdev[0], 0, sizeof(struct spdk_bdev) * 64);
+
+	for (i = 0; i < 64; i++) {
+		test_bdev[i].status = SPDK_BDEV_STATUS_INVALID;
+		test_bdev[i].name = test_bdev_name;
+		TAILQ_INSERT_TAIL(&g_bdev_mgr.bdevs, &test_bdev[i], link);
+	}
+
+	spdk_for_each_bdev(ut_for_each_bdev_success_fn, &ctx, ut_for_each_bdev_cpl);
+
+	CU_ASSERT(ctx.cur_count == 65);
+
+	for (i = 0; i < 64; i++) {
+		TAILQ_REMOVE(&g_bdev_mgr.bdevs, &test_bdev[i], link);
+
+		CU_ASSERT(test_bdev[i].status == SPDK_BDEV_STATUS_READY);
+		CU_ASSERT(test_bdev[i].channel_count == i);
+	}
+}
+
+static void
+for_each_bdev_fail(void)
+{
+	struct spdk_bdev test_bdev;
+	struct ut_bdev_for_each_ctx ctx = {.cur_count = 0};
+
+	memset(&test_bdev, 0, sizeof(struct spdk_bdev));
+
+	test_bdev.status = SPDK_BDEV_STATUS_INVALID;
+	TAILQ_INSERT_TAIL(&g_bdev_mgr.bdevs, &test_bdev, link);
+
+	spdk_for_each_bdev(ut_for_each_bdev_fail_fn, &ctx, ut_for_each_bdev_cpl);
+
+	CU_ASSERT(ctx.cur_count == UINT32_MAX);
+
+	TAILQ_REMOVE(&g_bdev_mgr.bdevs, &test_bdev, link);
+
+	CU_ASSERT(test_bdev.status == SPDK_BDEV_STATUS_REMOVING);
+	CU_ASSERT(test_bdev.channel_count == 0);
+}
+
+static void
+for_each_bdev_no_cpl(void)
+{
+	uint32_t i;
+	struct spdk_bdev test_bdev[64];
+	struct ut_bdev_for_each_ctx ctx = {.cur_count = 0};
+
+	memset(&test_bdev[0], 0, sizeof(struct spdk_bdev));
+
+	for (i = 0; i < 64; i++) {
+		test_bdev[i].status = SPDK_BDEV_STATUS_INVALID;
+		TAILQ_INSERT_TAIL(&g_bdev_mgr.bdevs, &test_bdev[i], link);
+	}
+
+	spdk_for_each_bdev(ut_for_each_bdev_success_fn, &ctx, NULL);
+
+	CU_ASSERT(ctx.cur_count == 64);
+
+	for (i = 0; i < 64; i++) {
+		TAILQ_REMOVE(&g_bdev_mgr.bdevs, &test_bdev[i], link);
+
+		CU_ASSERT(test_bdev[i].status == SPDK_BDEV_STATUS_READY);
+		CU_ASSERT(test_bdev[i].channel_count == i);
+	}
+}
+
 int
 main(int argc, char **argv)
 {
@@ -439,7 +552,10 @@ main(int argc, char **argv)
 		CU_add_test(suite, "num_blocks_test", num_blocks_test) == NULL ||
 		CU_add_test(suite, "io_valid", io_valid_test) == NULL ||
 		CU_add_test(suite, "open_write", open_write_test) == NULL ||
-		CU_add_test(suite, "alias_add_del", alias_add_del_test) == NULL
+		CU_add_test(suite, "alias_add_del", alias_add_del_test) == NULL ||
+		CU_add_test(suite, "for_each_bdev_success", for_each_bdev_success) == NULL ||
+		CU_add_test(suite, "for_each_bdev_fail", for_each_bdev_fail) == NULL ||
+		CU_add_test(suite, "for_each_bdev_no_cpl", for_each_bdev_no_cpl) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
