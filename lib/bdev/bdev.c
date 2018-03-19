@@ -217,6 +217,14 @@ struct spdk_bdev_module_channel {
 	TAILQ_ENTRY(spdk_bdev_module_channel) link;
 };
 
+struct spdk_bdev_iter {
+	struct spdk_bdev	*cur_bdev;
+	spdk_bdev_for_each_fn	fn;
+	spdk_bdev_for_each_cpl	cpl;
+	void			*ctx;
+	int			status;
+};
+
 static void spdk_bdev_write_zeroes_split(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
 
 struct spdk_bdev *
@@ -308,6 +316,61 @@ spdk_bdev_get_by_name(const char *bdev_name)
 	}
 
 	return NULL;
+}
+
+void
+spdk_for_each_bdev(spdk_bdev_for_each_fn fn, void *ctx, spdk_bdev_for_each_cpl cpl)
+{
+	struct spdk_bdev_iter *i;
+	struct spdk_bdev *bdev;
+
+	i = calloc(1, sizeof(*i));
+	if (!i) {
+		SPDK_ERRLOG("unable to allocate iterator\n");
+		return;
+	}
+
+	bdev = spdk_bdev_first();
+	if (!bdev) {
+		goto end;
+	}
+
+	i->cur_bdev = bdev;
+	i->fn = fn;
+	i->ctx = ctx;
+	i->cpl = cpl;
+
+	fn(i);
+	return;
+
+end:
+	if (cpl != NULL) {
+		cpl(i, 0);
+	}
+	free(i);
+}
+
+void
+spdk_for_each_bdev_continue(struct spdk_bdev_iter *i, int status)
+{
+	i->status = status;
+	if (status) {
+		goto end;
+	}
+
+	i->cur_bdev = spdk_bdev_next(i->cur_bdev);
+	if (!i->cur_bdev) {
+		goto end;
+	}
+
+	i->fn(i);
+	return;
+
+end:
+	if (i->cpl != NULL) {
+		i->cpl(i->ctx, i->status);
+	}
+	free(i);
 }
 
 static void
