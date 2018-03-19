@@ -334,15 +334,10 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		}
 	}
 
-	memset(&g_spdk_app, 0, sizeof(g_spdk_app));
-	g_spdk_app.config = config;
-	g_spdk_app.shm_id = opts->shm_id;
-	g_spdk_app.shutdown_cb = opts->shutdown_cb;
-
 	spdk_log_set_level(SPDK_APP_DEFAULT_LOG_PRIORITY);
 	spdk_log_open();
 
-	sp = spdk_conf_find_section(g_spdk_app.config, "Global");
+	sp = spdk_conf_find_section(config, "Global");
 	if (opts->reactor_mask == NULL) {
 		if (sp && spdk_conf_section_get_val(sp, "ReactorMask")) {
 			opts->reactor_mask = spdk_conf_section_get_val(sp, "ReactorMask");
@@ -400,7 +395,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	}
 
 	if (opts->tpoint_group_mask == NULL) {
-		sp = spdk_conf_find_section(g_spdk_app.config, "Global");
+		sp = spdk_conf_find_section(config, "Global");
 		if (sp != NULL) {
 			opts->tpoint_group_mask = spdk_conf_section_get_val(sp, "TpointGroupMask");
 		}
@@ -425,6 +420,10 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		goto app_start_trace_cleanup_err;
 	}
 
+	memset(&g_spdk_app, 0, sizeof(g_spdk_app));
+	g_spdk_app.config = config;
+	g_spdk_app.shm_id = opts->shm_id;
+	g_spdk_app.shutdown_cb = opts->shutdown_cb;
 	g_spdk_app.rc = 0;
 	g_init_lcore = spdk_env_get_current_core();
 	g_app_start_fn = start_fn;
