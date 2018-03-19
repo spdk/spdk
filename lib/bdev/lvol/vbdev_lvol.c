@@ -562,13 +562,39 @@ vbdev_lvol_destruct(void *ctx)
 	return 1;
 }
 
+static char *
+vbdev_lvol_find_name(struct spdk_lvol *lvol, spdk_blob_id blob_id)
+{
+	struct spdk_lvol_store *lvs;
+	struct spdk_lvol *_lvol;
+
+	assert(lvol != NULL);
+
+	lvs = lvol->lvol_store;
+
+	assert(lvs);
+
+	TAILQ_FOREACH(_lvol, &lvs->lvols, link) {
+		if (_lvol->blob_id == blob_id) {
+			return _lvol->name;
+		}
+	}
+
+	return NULL;
+}
+
 static int
 vbdev_lvol_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct spdk_lvol *lvol = ctx;
 	struct lvol_store_bdev *lvs_bdev;
 	struct spdk_bdev *bdev;
+	struct spdk_blob *blob;
 	char lvol_store_uuid[SPDK_UUID_STRING_LEN];
+	spdk_blob_id *ids = NULL;
+	size_t count, i;
+	char *name;
+	int rc = 0;
 
 	spdk_json_write_name(w, "lvol");
 	spdk_json_write_object_begin(w);
@@ -583,12 +609,65 @@ vbdev_lvol_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	spdk_json_write_name(w, "base_bdev");
 	spdk_json_write_string(w, spdk_bdev_get_name(bdev));
 
-	spdk_json_write_name(w, "thin_provision");
-	spdk_json_write_bool(w, lvol->thin_provision);
+	blob = lvol->blob;
 
+	spdk_json_write_name(w, "thin_provision");
+	spdk_json_write_bool(w, spdk_blob_is_thin_provisioned(blob));
+
+	spdk_json_write_name(w, "snapshot");
+	spdk_json_write_bool(w, spdk_blob_is_snapshot(blob));
+
+	spdk_json_write_name(w, "clone");
+	spdk_json_write_bool(w, spdk_blob_is_clone(blob));
+
+	if (spdk_blob_is_clone(blob)) {
+		spdk_blob_id snapshotid = spdk_blob_get_parent_snapshot(lvol->lvol_store->blobstore, lvol->blob_id);
+		if (snapshotid != SPDK_BLOBID_INVALID) {
+			name = vbdev_lvol_find_name(lvol, snapshotid);
+			if (name != NULL) {
+				spdk_json_write_name(w, "base_snapshot");
+				spdk_json_write_string(w, name);
+			} else {
+				SPDK_ERRLOG("Cannot obtain snapshots name\n");
+			}
+		}
+	}
+
+	if (spdk_blob_is_snapshot(blob)) {
+		/* Take a number of clones */
+		rc = spdk_blob_get_clones(lvol->lvol_store->blobstore, lvol->blob_id, NULL, &count);
+		if (rc == -ENOMEM && count > 0) {
+			ids = malloc(sizeof(spdk_blob_id) * count);
+			if (ids == NULL) {
+				SPDK_ERRLOG("Cannot allocate memory\n");
+				rc = -ENOMEM;
+				goto end;
+			}
+
+			rc = spdk_blob_get_clones(lvol->lvol_store->blobstore, lvol->blob_id, ids, &count);
+			if (rc == 0) {
+				spdk_json_write_name(w, "clones");
+				spdk_json_write_array_begin(w);
+				for (i = 0; i < count; i++) {
+					name = vbdev_lvol_find_name(lvol, ids[i]);
+					if (name != NULL) {
+						spdk_json_write_string(w, name);
+					} else {
+						SPDK_ERRLOG("Cannot obtain clone name\n");
+					}
+
+				}
+				spdk_json_write_array_end(w);
+			}
+			free(ids);
+		}
+
+	}
+
+end:
 	spdk_json_write_object_end(w);
 
-	return 0;
+	return rc;
 }
 
 static void
