@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c8f50ca1_86ad3f97",
+        "filename": "test/vhost/perf/common.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-19T12:21:32Z",
+      "side": 1,
+      "message": "You could add .json or .log suffix to these files so it\u0027s more informative what they are.",
+      "range": {
+        "startLine": 49,
+        "startChar": 0,
+        "endLine": 50,
+        "endChar": 37
+      },
+      "revId": "1748212f5cca98f2c7e0b3ad0c384a8f6baed1c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca06b749_b3844104",
+        "filename": "test/vhost/perf/nvme_vs_virtio.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-19T12:21:32Z",
+      "side": 1,
+      "message": "shouldn\u0027t this use disk_no parameter?",
+      "range": {
+        "startLine": 11,
+        "startChar": 54,
+        "endLine": 11,
+        "endChar": 64
+      },
+      "revId": "1748212f5cca98f2c7e0b3ad0c384a8f6baed1c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "89d1b85e_6609cf20",
+        "filename": "test/vhost/perf/nvme_vs_virtio.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-19T12:21:32Z",
+      "side": 1,
+      "message": "shouldn\u0027t this use disk_no parameter?",
+      "range": {
+        "startLine": 14,
+        "startChar": 53,
+        "endLine": 14,
+        "endChar": 64
+      },
+      "revId": "1748212f5cca98f2c7e0b3ad0c384a8f6baed1c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a35c1cc1_1027a94f",
+        "filename": "test/vhost/perf/nvme_vs_virtio.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-19T12:21:32Z",
+      "side": 1,
+      "message": "change to AVG_LAT or something like that. \"MEAN\" doest not provide information if it is mean for iops, bw or latency",
+      "range": {
+        "startLine": 28,
+        "startChar": 14,
+        "endLine": 28,
+        "endChar": 18
+      },
+      "revId": "1748212f5cca98f2c7e0b3ad0c384a8f6baed1c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7dda0df9_beb8672e",
+        "filename": "test/vhost/perf/nvme_vs_virtio.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-19T12:21:32Z",
+      "side": 1,
+      "message": "Not really sure if we\u0027d like to remove these files, we could use them later for plot generation, etc. in other scripts.\n\nMaybe these should be created in some \"perf_output\" directory?",
+      "range": {
+        "startLine": 35,
+        "startChar": 0,
+        "endLine": 35,
+        "endChar": 43
+      },
+      "revId": "1748212f5cca98f2c7e0b3ad0c384a8f6baed1c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a665bbd9_fcf0fedd",
+        "filename": "test/vhost/perf/perf_nvme_pmd.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-19T12:21:32Z",
+      "side": 1,
+      "message": "This could be used as a parameter as well.",
+      "range": {
+        "startLine": 14,
+        "startChar": 46,
+        "endLine": 14,
+        "endChar": 57
+      },
+      "revId": "1748212f5cca98f2c7e0b3ad0c384a8f6baed1c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b835ebef_40ae3b27",
+        "filename": "test/vhost/perf/perf_nvme_pmd.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-19T12:21:32Z",
+      "side": 1,
+      "message": "Why abort the test is we want to use less disks than is available on the system?;)",
+      "range": {
+        "startLine": 21,
+        "startChar": 36,
+        "endLine": 21,
+        "endChar": 69
+      },
+      "revId": "1748212f5cca98f2c7e0b3ad0c384a8f6baed1c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
