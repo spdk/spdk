@@ -51,7 +51,7 @@ fi
 trap 'rm -f *.state $ROOT_DIR/spdk.tar.gz; error_exit "${FUNCNAME}""${LINENO}"' ERR SIGTERM SIGABRT
 function run_spdk_fio() {
 	LD_PRELOAD=$PLUGIN_DIR/fio_plugin $FIO_BIN --ioengine=spdk_bdev\
-         "$@" --spdk_mem=1024
+         "$@" --spdk_mem=1024  --spdk_single_seg=1
 }
 
 function create_bdev_config()
@@ -139,13 +139,13 @@ timing_enter run_spdk_fio_pci
 vm_ssh $vm_no "LD_PRELOAD=/root/spdk/examples/bdev/fio_plugin/fio_plugin /root/fio_src/fio --ioengine=spdk_bdev \
  /root/spdk/test/vhost/initiator/bdev.fio --filename=$virtio_bdevs --section=job_randwrite \
  --section=job_randrw --section=job_write --section=job_rw \
- --spdk_conf=/root/spdk/test/vhost/initiator/bdev_pci.conf --spdk_mem=1024"
+ --spdk_conf=/root/spdk/test/vhost/initiator/bdev_pci.conf --spdk_mem=1024 --spdk_single_seg=1"
 timing_exit run_spdk_fio_pci
 
 timing_enter run_spdk_fio_pci_unmap
 vm_ssh $vm_no "LD_PRELOAD=/root/spdk/examples/bdev/fio_plugin/fio_plugin /root/fio_src/fio --ioengine=spdk_bdev \
  /root/spdk/test/vhost/initiator/bdev.fio --filename=$virtio_with_unmap \
- --spdk_conf=/root/spdk/test/vhost/initiator/bdev_pci.conf --spdk_mem=1024"
+ --spdk_conf=/root/spdk/test/vhost/initiator/bdev_pci.conf --spdk_mem=1024 --spdk_single_seg=1"
 timing_exit run_spdk_fio_pci_unmap
 
 timing_enter vm_shutdown_all
