@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e7b49e3c_b3d81f40",
+        "filename": "lib/bdev/error/vbdev_error.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-19T08:27:18Z",
+      "side": 1,
+      "message": "Can you some doc, what this function do and what the return value mean?",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 1
+      },
+      "revId": "bc3b668c5cc58fe8452243fbafa7c0c9795542b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82011876_30bdfc53",
+        "filename": "lib/bdev/error/vbdev_error_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-19T08:27:18Z",
+      "side": 1,
+      "message": "Adding twice the same config should be considered as error. I think you want to change lines 111 to 120 to not send an error in case base_bdev doesn\u0027t exist. I think this should be changed into something like:\n\nif (base_bdev \u0026\u0026 spdk_vbdev_error_create(base_bdev)) {\n    SPDK_ERRLOG(\"Could not create ErrorInjection bdev %s\\n\", req.base_name);\n\t\tgoto invalid;\n}\n\nAlso, I in my mind, if we send error response config should be remove do not leave library in unknown state.",
+      "range": {
+        "startLine": 107,
+        "startChar": 2,
+        "endLine": 108,
+        "endChar": 25
+      },
+      "revId": "bc3b668c5cc58fe8452243fbafa7c0c9795542b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
