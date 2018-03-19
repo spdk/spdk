@@ -38,6 +38,7 @@
 #include "spdk/io_channel.h"
 #include "spdk_internal/mock.h"
 #include "lib/test_env.c"
+#include "unit/lib/json_mock.c"
 
 #include "vhost/vhost.c"
 
