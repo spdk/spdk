@@ -582,12 +582,67 @@ vbdev_lvol_destruct(void *ctx)
 	return 1;
 }
 
+
+#if 0
+
+static void
+_spdk_bs_getname_close_cpl(void *cb_arg, int bserrno)
+{
+	char **name = (char **)cb_arg;
+
+	if (bserrno != 0) {
+		free(*name);
+		*name = NULL;
+	}
+}
+
+static void
+_spdk_bs_getname_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
+{
+	char **name = (char **)cb_arg;
+	const void *value;
+	size_t value_len;
+	int rc;
+
+	if (bserrno != 0) {
+		*name = NULL;
+		return;
+	}
+
+	rc = spdk_blob_get_xattr_value(_blob, "name" /* LVOL_NAME */, &value, &value_len);
+	if (rc == 0) {
+		*name = strdup(*(char **)value);
+	}
+
+	spdk_blob_close(_blob, _spdk_bs_getname_close_cpl, &name);
+}
+
+/*
+ * TODO:
+ * Some API should be provided to obtain name of blob by id from a blob store
+ */
+static char *
+_spdk_bs_blob_get_name(struct spdk_blob_store *bs, spdk_blob_id blobid)
+{
+	char *name;
+
+	spdk_bs_open_blob(bs, blobid, _spdk_bs_getname_open_cpl, &name);
+
+	return name;
+}
+
+#endif /* 1 */
+
+
+
+
 static int
 vbdev_lvol_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct spdk_lvol *lvol = ctx;
 	struct lvol_store_bdev *lvs_bdev;
 	struct spdk_bdev *bdev;
+	struct spdk_blob *blob;
 	char lvol_store_uuid[SPDK_UUID_STRING_LEN];
 
 	spdk_json_write_name(w, "lvol");
@@ -603,8 +658,53 @@ vbdev_lvol_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	spdk_json_write_name(w, "base_bdev");
 	spdk_json_write_string(w, spdk_bdev_get_name(bdev));
 
+	blob = lvol->blob;
+
 	spdk_json_write_name(w, "thin_provision");
-	spdk_json_write_bool(w, lvol->thin_provision);
+	spdk_json_write_bool(w, spdk_blob_is_thin_provisioned(blob));
+
+
+#if 0
+	/* TODO: display type: lvol, snapshot, clone
+	 *
+	 *       What if this is read only clone used as snapshot with clones?
+	 *
+	 */
+
+
+	if (spdk_blob_is_clone(blob)) {
+		spdk_blob_id snapshotid = spdk_blob_get_snapshot(blob);
+		// Snapshot ID to name conversion
+		if (snapshotid != SPDK_BLOBID_INVALID) {
+			char *name = _spdk_bs_blob_get_name(lvol->lvol_store->blobstore, snapshotid);
+			if (name != NULL) {
+
+			} else {
+				/* Cannot obtain snapshots name */
+			}
+		}
+	}
+
+	if (spdk_blob_is_snapshot(blob)) {
+		//TODO: display name of clones that are based on top of it
+		spdk_blob_id *ids = NULL;
+		size_t count, i;
+		int rc;
+
+		rc = spdk_blob_get_clones(blob, &ids, &count);
+		if (rc == 0) {
+			for (i = 0; i < count; i++) {
+				char *name = _spdk_bs_blob_get_name(lvol->lvol_store->blobstore, ids[i]);
+				if (name != NULL) {
+
+				} else {
+					/* Cannot obtain snapshots name */
+				}
+			}
+		}
+		free(ids);
+	}
+#endif
 
 	spdk_json_write_object_end(w);
 
@@ -622,12 +722,13 @@ vbdev_lvol_get_io_channel(void *ctx)
 static bool
 vbdev_lvol_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
+	struct spdk_lvol *lvol = ctx;
+
 	switch (io_type) {
 	case SPDK_BDEV_IO_TYPE_WRITE:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
-		/* TODO: Report false if snapshot */
-		return true;
+		return !spdk_blob_is_read_only(lvol->blob);
 	case SPDK_BDEV_IO_TYPE_RESET:
 	case SPDK_BDEV_IO_TYPE_READ:
 		return true;
