@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d3760e1f_57f0dd0e",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-03-19T21:41:47Z",
+      "side": 1,
+      "message": "I\u0027ve not looked at our stats before so... what\u0027s the reason for grouping these new ones in this new struct vs the spdk_bdev_io_stat above?  A comment explaining the scope/limitations of each would be great",
+      "revId": "f0b1944b66aa9758a0195da2849fe5601e95d94f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
