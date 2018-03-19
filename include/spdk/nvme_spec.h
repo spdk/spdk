@@ -1890,7 +1890,7 @@ SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_async_event_completion) == 4, "Incorre
  */
 union spdk_nvme_feat_arbitration {
 	uint32_t raw;
-	union {
+	struct {
 		/** Arbitration Burst */
 		uint32_t ab : 3;
 
@@ -1913,7 +1913,7 @@ SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_arbitration) == 4, "Incorrect siz
  */
 union spdk_nvme_feat_power_management {
 	uint32_t raw;
-	union {
+	struct {
 		/** Power State */
 		uint32_t ps : 5;
 
@@ -1930,7 +1930,7 @@ SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_power_management) == 4, "Incorrec
  */
 union spdk_nvme_feat_lba_range_type {
 	uint32_t raw;
-	union {
+	struct {
 		/** Number of LBA Ranges */
 		uint32_t num : 6;
 
@@ -1944,7 +1944,7 @@ SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_lba_range_type) == 4, "Incorrect 
  */
 union spdk_nvme_feat_temperature_threshold {
 	uint32_t raw;
-	union {
+	struct {
 		/** Temperature Threshold */
 		uint32_t tmpth : 16;
 
@@ -1964,7 +1964,7 @@ SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_temperature_threshold) == 4, "Inc
  */
 union spdk_nvme_feat_error_recovery {
 	uint32_t raw;
-	union {
+	struct {
 		/** Time Limited Error Recovery */
 		uint32_t tler : 16;
 
@@ -1981,7 +1981,7 @@ SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_error_recovery) == 4, "Incorrect 
  */
 union spdk_nvme_feat_volatile_write_cache {
 	uint32_t raw;
-	union {
+	struct {
 		/** Volatile Write Cache Enable */
 		uint32_t wce : 1;
 
@@ -1995,7 +1995,7 @@ SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_volatile_write_cache) == 4, "Inco
  */
 union spdk_nvme_feat_number_of_queues {
 	uint32_t raw;
-	union {
+	struct {
 		/** Number of I/O Submission Queues Requested */
 		uint32_t nsqr : 16;
 
@@ -2010,7 +2010,7 @@ SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_number_of_queues) == 4, "Incorrec
  */
 union spdk_nvme_feat_interrupt_vector_configuration {
 	uint32_t raw;
-	union {
+	struct {
 		/** Interrupt Vector */
 		uint32_t iv : 16;
 
