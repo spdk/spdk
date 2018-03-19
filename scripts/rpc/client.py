@@ -2,18 +2,9 @@ import json
 import socket
 import time
 
-try:
-    from shlex import quote
-except ImportError:
-    from pipes import quote
-
 
 def print_dict(d):
     print json.dumps(d, indent=2)
-
-
-def print_array(a):
-    print " ".join((quote(v) for v in a))
 
 
 class JSONRPCClient(object):
