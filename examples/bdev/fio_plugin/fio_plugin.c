@@ -50,6 +50,7 @@ struct spdk_fio_options {
 	void *pad;
 	char *conf;
 	unsigned mem_mb;
+	bool mem_single_seg;
 };
 
 /* Used to pass messages between fio threads */
@@ -250,6 +251,7 @@ spdk_fio_init_env(struct thread_data *td)
 	if (eo->mem_mb) {
 		opts.mem_size = eo->mem_mb;
 	}
+	opts.hugepage_single_segments = eo->mem_single_seg;
 
 	if (spdk_env_init(&opts) < 0) {
 		SPDK_ERRLOG("Unable to initialize SPDK env\n");
@@ -625,6 +627,15 @@ static struct fio_option options[] = {
 		.type		= FIO_OPT_INT,
 		.off1		= offsetof(struct spdk_fio_options, mem_mb),
 		.help		= "Amount of memory in MB to allocate for SPDK",
+		.category	= FIO_OPT_C_ENGINE,
+		.group		= FIO_OPT_G_INVALID,
+	},
+	{
+		.name		= "spdk_single_seg",
+		.lname		= "SPDK switch to create just a single hugetlbfs file",
+		.type		= FIO_OPT_BOOL,
+		.off1		= offsetof(struct spdk_fio_options, mem_single_seg),
+		.help		= "If set to 1, SPDK will use just a single hugetlbfs file",
 		.category	= FIO_OPT_C_ENGINE,
 		.group		= FIO_OPT_G_INVALID,
 	},
