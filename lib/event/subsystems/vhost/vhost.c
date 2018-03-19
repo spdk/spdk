@@ -64,6 +64,7 @@ static struct spdk_subsystem g_spdk_subsystem_vhost = {
 	.init = spdk_vhost_subsystem_init,
 	.fini = spdk_vhost_subsystem_fini,
 	.config = NULL,
+	.write_config_json = spdk_vhost_config_json,
 };
 
 SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_vhost);
