@@ -1,5 +1,6 @@
 import json
 import sys
+import hist
 
 from . import app
 from . import bdev
