@@ -41,7 +41,7 @@ class JSONRPCClient(object):
             print("request:")
             print(json.dumps(req, indent=2))
 
-        self.sock.sendall(reqstr)
+        self.sock.sendall(reqstr.encode("utf-8"))
         buf = ''
         closed = False
         response = {}
@@ -58,7 +58,7 @@ class JSONRPCClient(object):
                 if (newdata == b''):
                     closed = True
 
-                buf += newdata
+                buf += newdata.decode("utf-8")
                 response = json.loads(buf)
             except socket.timeout:
                 break
