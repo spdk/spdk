@@ -37,6 +37,7 @@ fi
 : ${SPDK_TEST_VHOST_INIT=1}; export SPDK_TEST_VHOST_INIT
 : ${SPDK_TEST_NVML=1}; export SPDK_TEST_NVML
 : ${SPDK_TEST_LVOL=1}; export SPDK_TEST_LVOL
+: ${SPDK_TEST_VPP=1}; export SPDK_TEST_VPP
 : ${SPDK_RUN_ASAN=1}; export SPDK_RUN_ASAN
 : ${SPDK_RUN_UBSAN=1}; export SPDK_RUN_UBSAN
 
@@ -81,6 +82,15 @@ case `uname` in
 				config_params+=' --enable-asan'
 			else
 				SPDK_RUN_ASAN=0
+			fi
+		fi
+		if [ $SPDK_TEST_VPP -eq 1 ]; then
+			SPDK_VPP_DIR=/home/smrozowx/works/vpp/build-root/install-vpp-native/vpp
+			if [ -d $SPDK_VPP_DIR ]; then
+				export SPDK_VPP_DIR
+				config_params+=' --with-vpp='$SPDK_VPP_DIR
+			else
+				config_params+=' --with-vpp'
 			fi
 		fi
 		;;
