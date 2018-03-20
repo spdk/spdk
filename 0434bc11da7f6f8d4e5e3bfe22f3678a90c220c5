@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a5446d5b_2d523944",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1911,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-20T06:57:55Z",
+      "side": 1,
+      "message": "should add success return value?",
+      "range": {
+        "startLine": 1911,
+        "startChar": 77,
+        "endLine": 1911,
+        "endChar": 79
+      },
+      "revId": "0434bc11da7f6f8d4e5e3bfe22f3678a90c220c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "affbd94f_55998246",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1943,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-20T06:57:55Z",
+      "side": 1,
+      "message": "should call cb(arg) with stat_errno ?",
+      "range": {
+        "startLine": 1943,
+        "startChar": 2,
+        "endLine": 1943,
+        "endChar": 8
+      },
+      "revId": "0434bc11da7f6f8d4e5e3bfe22f3678a90c220c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8c705ae_8de518e0",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1950,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-20T06:57:55Z",
+      "side": 1,
+      "message": "should call cb(arg) with stat_errno?",
+      "range": {
+        "startLine": 1950,
+        "startChar": 2,
+        "endLine": 1950,
+        "endChar": 8
+      },
+      "revId": "0434bc11da7f6f8d4e5e3bfe22f3678a90c220c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1527de28_a67698da",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-20T06:57:55Z",
+      "side": 1,
+      "message": "this function should have stat_errno ?\n\nif error is returned, json buffer should not be written but iter must be updated.",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 28
+      },
+      "revId": "0434bc11da7f6f8d4e5e3bfe22f3678a90c220c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2150f072_00809e13",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-20T06:57:55Z",
+      "side": 1,
+      "message": "array should not be created in the error case?",
+      "range": {
+        "startLine": 153,
+        "startChar": 2,
+        "endLine": 153,
+        "endChar": 31
+      },
+      "revId": "0434bc11da7f6f8d4e5e3bfe22f3678a90c220c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "89603c5b_00393661",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-20T06:57:55Z",
+      "side": 1,
+      "message": "bdev_count may be better?",
+      "range": {
+        "startLine": 158,
+        "startChar": 6,
+        "endLine": 158,
+        "endChar": 14
+      },
+      "revId": "0434bc11da7f6f8d4e5e3bfe22f3678a90c220c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
