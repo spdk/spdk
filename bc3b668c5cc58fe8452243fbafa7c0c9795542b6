@@ -117,6 +117,30 @@
       "revId": "bc3b668c5cc58fe8452243fbafa7c0c9795542b6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6fdf8699_01810e20",
+        "filename": "lib/bdev/error/vbdev_error_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-20T05:53:08Z",
+      "side": 1,
+      "message": "Hi Pawel,\n\nThank you for your review. I think \"if (bdev exists)\" if we are pointing to the same line. Would you review the code again?",
+      "parentUuid": "180130a8_0863f892",
+      "range": {
+        "startLine": 107,
+        "startChar": 2,
+        "endLine": 108,
+        "endChar": 25
+      },
+      "revId": "bc3b668c5cc58fe8452243fbafa7c0c9795542b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
