@@ -548,6 +548,7 @@ spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
 	uint32_t nsid;
 
 	sgroup = &group->sgroups[subsystem->id];
+	sgroup->state = SPDK_NVMF_SUBSYSTEM_INACTIVE;
 
 	for (nsid = 0; nsid < sgroup->num_channels; nsid++) {
 		if (sgroup->channels[nsid]) {
