@@ -192,7 +192,6 @@ _spdk_load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	lvol->blob = blob;
 	lvol->blob_id = blob_id;
 	lvol->lvol_store = lvs;
-	lvol->num_clusters = spdk_blob_get_num_clusters(blob);
 	lvol->close_only = false;
 	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &lvol->lvol_store->uuid);
 	lvol->unique_id = spdk_sprintf_alloc("%s_%"PRIu64, uuid, (uint64_t)blob_id);
@@ -1067,7 +1066,6 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 
 	lvol->lvol_store = lvs;
 	num_clusters = divide_round_up(sz, spdk_bs_get_cluster_size(bs));
-	lvol->num_clusters = num_clusters;
 	lvol->close_only = false;
 	lvol->thin_provision = thin_provision;
 	strncpy(lvol->name, name, SPDK_LVS_NAME_MAX);
@@ -1106,7 +1104,7 @@ spdk_lvol_resize(struct spdk_lvol *lvol, uint64_t sz,
 	struct spdk_lvol_store *lvs = lvol->lvol_store;
 	struct spdk_lvol_req *req;
 	uint64_t free_clusters = spdk_bs_free_cluster_count(lvs->blobstore);
-	uint64_t used_clusters = lvol->num_clusters;
+	uint64_t used_clusters = spdk_blob_get_num_clusters(blob);
 	uint64_t new_clusters = divide_round_up(sz, spdk_bs_get_cluster_size(lvs->blobstore));
 
 	/* Check if size of lvol increasing */
@@ -1130,8 +1128,6 @@ spdk_lvol_resize(struct spdk_lvol *lvol, uint64_t sz,
 	if (rc < 0) {
 		goto invalid;
 	}
-
-	lvol->num_clusters = new_clusters;
 
 	spdk_blob_sync_md(blob, _spdk_lvol_resize_cb, req);
 
