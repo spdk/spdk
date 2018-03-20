@@ -36,7 +36,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 DIRS-y += bdev blob blobfs conf copy cunit event json jsonrpc \
           log lvol env_dpdk net rpc trace util nvme nvmf scsi ioat \
-	  ut_mock iscsi
+	  ut_mock iscsi histogram
 ifeq ($(OS),Linux)
 DIRS-y += nbd
 DIRS-$(CONFIG_VHOST) += vhost
