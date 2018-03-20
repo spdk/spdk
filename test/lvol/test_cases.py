@@ -1112,12 +1112,19 @@ class TestCases(object):
 
     @case_message
     def test_case750(self):
+        """
+        snapshot readonly
+
+        Create snaphot of lvol bdev and check it is readonly.
+        """
         fail_count = 0
         nbd_name0 = "/dev/nbd0"
         nbd_name1 = "/dev/nbd1"
         snapshot_name = "snapshot0"
+        # Construct malloc bdev
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
+        # Construct lvol store on malloc bdev
         uuid_store = self.c.construct_lvol_store(base_name,
                                                  self.lvs_name,
                                                  self.cluster_size)
@@ -1127,6 +1134,7 @@ class TestCases(object):
         lvs = self.c.get_lvol_stores()[0]
         free_clusters_start = int(lvs['free_clusters'])
         bdev_size = int(lvs['cluster_size']) * int(lvs['free_clusters']) / MEGABYTE / 3
+        # Create lvol bdev with 33% of lvol store space
         bdev_name = self.c.construct_lvol_bdev(uuid_store, self.lbd_name,
                                                bdev_size)
         lvol_bdev = self.c.get_lvol_bdev_with_name(bdev_name)
@@ -1134,30 +1142,49 @@ class TestCases(object):
         size = bdev_size * MEGABYTE
         # Fill whole lvol bdev
         fail_count += self.run_fio_test(nbd_name0, 0, size, "write", "0xcc", 0)
+        # Create snapshot of lvol bdev
         fail_count += self.c.snapshot_lvol_bdev(lvol_bdev['name'], snapshot_name)
         snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
 
         fail_count += self.c.start_nbd_disk(snapshot_bdev['name'], nbd_name1)
         size = bdev_size * MEGABYTE
+        # Try to perform write operation on created snapshot
         # Check if filling snapshot of lvol bdev fails
         fail_count += self.run_fio_test(nbd_name1, 0, size, "write", "0xcc", 1)
 
         fail_count += self.c.stop_nbd_disk(nbd_name0)
         fail_count += self.c.stop_nbd_disk(nbd_name1)
+        # Destroy lvol bdev
         fail_count += self.c.delete_bdev(lvol_bdev['name'])
+        # Destroy snapshot
         fail_count += self.c.delete_bdev(snapshot_bdev['name'])
+        # Destroy lvol store
         fail_count += self.c.destroy_lvol_store(uuid_store)
+        # Delete malloc bdev
         fail_count += self.c.delete_bdev(base_name)
+
+        # Expected result:
+        # - calls successful, return code = 0
+        # - no other operation fails
         return fail_count
 
     @case_message
     def test_case751(self):
+        """
+        snapshot_compare_with_lvol_bdev
+
+        Check if lvol bdevs and snapshots contain the same data.
+        Check if lvol bdev and snapshot differ when writing to lvol bdev
+        after creating snapshot.
+        """
         fail_count = 0
         nbd_name = ["/dev/nbd0", "/dev/nbd1", "/dev/nbd2", "/dev/nbd3"]
         snapshot_name0 = "snapshot0"
         snapshot_name1 = "snapshot1"
+        # Construct mallov bdev
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
+        # Construct lvol store
         uuid_store = self.c.construct_lvol_store(base_name,
                                                  self.lvs_name,
                                                  self.cluster_size)
@@ -1167,20 +1194,21 @@ class TestCases(object):
         size = int(int(lvs[0][u'free_clusters'] * lvs[0]['cluster_size']) / 6 / MEGABYTE)
         lbd_name0 = self.lbd_name + str(0)
         lbd_name1 = self.lbd_name + str(1)
-        # Create thin provisioned lvol bdev and simple lvol bdev
+        # Create thin provisioned lvol bdev with size less than 25% of lvs
         uuid_bdev0 = self.c.construct_lvol_bdev(uuid_store,
                                                 lbd_name0, size, thin=True)
+        # Create thick provisioned lvol bdev with size less than 25% of lvs
         uuid_bdev1 = self.c.construct_lvol_bdev(uuid_store,
                                                 lbd_name1, size, thin=False)
         lvol_bdev0 = self.c.get_lvol_bdev_with_name(uuid_bdev0)
         fail_count += self.c.start_nbd_disk(lvol_bdev0['name'], nbd_name[0])
         fill_size = int(size * MEGABYTE / 2)
-        # Fill thin provisoned lvol bdev
+        # Fill thin provisoned lvol bdev with 50% of its space
         fail_count += self.run_fio_test(nbd_name[0], 0, fill_size, "write", "0xcc", 0)
         lvol_bdev1 = self.c.get_lvol_bdev_with_name(uuid_bdev1)
         fail_count += self.c.start_nbd_disk(lvol_bdev1['name'], nbd_name[1])
         fill_size = int(size * MEGABYTE)
-        # Fill simple lvol bdev
+        # Fill whole thic provisioned lvol bdev
         fail_count += self.run_fio_test(nbd_name[1], 0, fill_size, "write", "0xcc", 0)
 
         # Create snapshots of lvol bdevs
@@ -1189,6 +1217,7 @@ class TestCases(object):
         fail_count += self.c.start_nbd_disk(self.lvs_name + "/" + snapshot_name0, nbd_name[2])
         fail_count += self.c.start_nbd_disk(self.lvs_name + "/" + snapshot_name1, nbd_name[3])
         # Compare every lvol bdev with corresponding snapshot
+        # and check that data are the same
         fail_count += self.compare_two_disks(nbd_name[0], nbd_name[2], 0)
         fail_count += self.compare_two_disks(nbd_name[1], nbd_name[3], 0)
 
@@ -1200,29 +1229,46 @@ class TestCases(object):
         fail_count += self.compare_two_disks(nbd_name[0], nbd_name[2], 1)
         for nbd in nbd_name:
             fail_count += self.c.stop_nbd_disk(nbd)
+        # Delete lvol bdevs
         fail_count += self.c.delete_bdev(lvol_bdev0['name'])
         fail_count += self.c.delete_bdev(lvol_bdev1['name'])
+        # Delete snapshots
         fail_count += self.c.delete_bdev(self.lvs_name + "/" + snapshot_name0)
         fail_count += self.c.delete_bdev(self.lvs_name + "/" + snapshot_name1)
+        # Destroy snapshot
         fail_count += self.c.destroy_lvol_store(uuid_store)
+        # Delete malloc bdev
         fail_count += self.c.delete_bdev(base_name)
+
+        # Expected result:
+        # - calls successful, return code = 0
+        # - removing snapshot should always end with success
+        # - no other operation fails
         return fail_count
 
     @case_message
     def test_case752(self):
+        """
+        snapshot_during_io_traffic
+
+        Check that when writing to lvol bdev
+        creating snapshot ends with success
+        """
         global current_fio_pid
         fail_count = 0
         nbd_name = "/dev/nbd0"
         snapshot_name = "snapshot"
+        # Create malloc bdev
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
+        # Construct lvol store
         uuid_store = self.c.construct_lvol_store(base_name,
                                                  self.lvs_name,
                                                  self.cluster_size)
         fail_count += self.c.check_get_lvol_stores(base_name, uuid_store,
                                                    self.cluster_size)
         lvs = self.c.get_lvol_stores()
-        # Create thin provisioned lvol bdev
+        # Create thin provisioned lvol bdev with size equal to 50% of lvs space
         size = int(int(lvs[0][u'free_clusters'] * lvs[0]['cluster_size']) / 2 / MEGABYTE)
         uuid_bdev = self.c.construct_lvol_bdev(uuid_store, self.lbd_name,
                                                size, thin=True)
@@ -1233,28 +1279,46 @@ class TestCases(object):
         # Create thread that will run fio in background
         thread = FioThread(nbd_name, 0, fill_size, "write", "0xcc", 0,
                            extra_params="--time_based --runtime=8")
+        # Perform write operation with verification to created lvol bdev
         thread.start()
         time.sleep(4)
-        # During fio create snapshot
         fail_count += is_process_alive(current_fio_pid)
+        # During write operation create snapshot of created lvol bdev
+        # and check that snapshot has been created successfully
         fail_count += self.c.snapshot_lvol_bdev(lvol_bdev['name'], snapshot_name)
         fail_count += is_process_alive(current_fio_pid)
         thread.join()
+        # Check that write operation ended with success
         fail_count += thread.rv
         fail_count += self.c.stop_nbd_disk(nbd_name)
+        # Destroy lvol bdev
         fail_count += self.c.delete_bdev(lvol_bdev['name'])
+        # Delete snapshot
         fail_count += self.c.delete_bdev(self.lvs_name + "/" + snapshot_name)
+        # Destroy lvol store
         fail_count += self.c.destroy_lvol_store(uuid_store)
+        # Delete malloc bdevs
         fail_count += self.c.delete_bdev(base_name)
+
+        # Expected result:
+        # - calls successful, return code = 0
+        # - no other operation fails
         return fail_count
 
     @case_message
     def test_case753(self):
+        """
+        snapshot_of_snapshot
+
+        Check that creating snapshot of snapshot will fail
+        """
         fail_count = 0
         snapshot_name0 = "snapshot0"
         snapshot_name1 = "snapshot1"
+        # Create malloc bdev
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
+        # Construct lvol store
         uuid_store = self.c.construct_lvol_store(base_name,
                                                  self.lvs_name,
                                                  self.cluster_size)
@@ -1267,31 +1331,50 @@ class TestCases(object):
                                                size, thin=False)
 
         lvol_bdev = self.c.get_lvol_bdev_with_name(uuid_bdev)
+        # Create snapshot of created lvol bdev
         fail_count += self.c.snapshot_lvol_bdev(lvol_bdev['name'], snapshot_name0)
-        # Create snapshot of snapshot and check if it fails
+        # Create snapshot of previously created snapshot
+        # and check if operation will fail
         if self.c.snapshot_lvol_bdev(snapshot_name0, snapshot_name1) == 0:
             print("ERROR: Creating snapshot of snapshot should fail")
             fail_count += 1
+        # Delete lvol bdev
         fail_count += self.c.delete_bdev(lvol_bdev['name'])
+        # Destroy snapshot
         fail_count += self.c.delete_bdev(self.lvs_name + "/" + snapshot_name0)
+        # Destroy lvol store
         fail_count += self.c.destroy_lvol_store(uuid_store)
+        # Delete malloc bdev
         fail_count += self.c.delete_bdev(base_name)
+
+        # Expected result:
+        # - calls successful, return code = 0
+        # - creating snapshot of snapshot should fail
+        # - no other operation fails
         return fail_count
 
     @case_message
     def test_case754(self):
+        """
+        clone_bdev_only
+
+        Check that only clone of snapshot can be created.
+        Creating clone of lvol bdev should fail.
+        """
         fail_count = 0
         clone_name = "clone"
         snapshot_name = "snapshot"
+        # Create malloc bdev
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
+        # Construct lvol store
         uuid_store = self.c.construct_lvol_store(base_name,
                                                  self.lvs_name,
                                                  self.cluster_size)
         fail_count += self.c.check_get_lvol_stores(base_name, uuid_store,
                                                    self.cluster_size)
         lvs = self.c.get_lvol_stores()
-        # Create thick provisioned lvol bdev
+        # Create thick provisioned lvol bdev with size equal to 50% of lvs space
         size = int(int(lvs[0][u'free_clusters'] * lvs[0]['cluster_size']) / 2 / MEGABYTE)
         uuid_bdev = self.c.construct_lvol_bdev(uuid_store, self.lbd_name,
                                                size, thin=False)
@@ -1302,6 +1385,7 @@ class TestCases(object):
         if rv == 0:
             print("ERROR: Creating clone of lvol bdev ended with unexpected success")
             fail_count += 1
+        # Create snapshot of lvol bdev
         fail_count += self.c.snapshot_lvol_bdev(lvol_bdev['name'], snapshot_name)
         # Create again clone of lvol bdev and check if it fails
         rv = self.c.clone_lvol_bdev(lvol_bdev['name'], clone_name)
@@ -1315,22 +1399,39 @@ class TestCases(object):
             fail_count += 1
         clone_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + clone_name)
 
+        # Delete lvol bdev
         fail_count += self.c.delete_bdev(lvol_bdev['name'])
+        # Destroy clone
         fail_count += self.c.delete_bdev(clone_bdev['name'])
+        # Delete snapshot
         fail_count += self.c.delete_bdev(self.lvs_name + "/" + snapshot_name)
+        # Delete lvol store
         fail_count += self.c.destroy_lvol_store(uuid_store)
+        # Destroy malloc bdev
         fail_count += self.c.delete_bdev(base_name)
+
+        # Expected result:
+        # - calls successful, return code = 0
+        # - cloning thick provisioned lvol bdev should fail
+        # - no other operation fails
         return fail_count
 
     @case_message
     def test_case755(self):
+        """
+        clone_writing_to_clone
+
+
+        """
         fail_count = 0
         nbd_name = ["/dev/nbd0", "/dev/nbd1", "/dev/nbd2", "/dev/nbd3"]
         snapshot_name = "snapshot"
         clone_name0 = "clone0"
         clone_name1 = "clone1"
+        # Create malloc bdev
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
+        # Create lvol store
         uuid_store = self.c.construct_lvol_store(base_name,
                                                  self.lvs_name,
                                                  self.cluster_size)
@@ -1339,41 +1440,53 @@ class TestCases(object):
         lvs = self.c.get_lvol_stores()
         size = int(int(lvs[0][u'free_clusters'] * lvs[0]['cluster_size']) / 6 / MEGABYTE)
         lbd_name0 = self.lbd_name + str(0)
+        # Construct thick provisioned lvol bdev
         uuid_bdev0 = self.c.construct_lvol_bdev(uuid_store,
                                                 lbd_name0, size, thin=False)
         lvol_bdev = self.c.get_lvol_bdev_with_name(uuid_bdev0)
         # Install lvol bdev on /dev/nbd0
         fail_count += self.c.start_nbd_disk(lvol_bdev['name'], nbd_name[0])
         fill_size = size * MEGABYTE
-        # Fill lvol bdev with data
+        # Fill lvol bdev with 100% of its space
         fail_count += self.run_fio_test(nbd_name[0], 0, fill_size, "write", "0xcc", 0)
 
+        # Create snapshot of thick provisioned lvol bdev
         fail_count += self.c.snapshot_lvol_bdev(lvol_bdev['name'], snapshot_name)
         snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
-        # Create two clones
+        # Create two clones of created snapshot
         fail_count += self.c.clone_lvol_bdev(snapshot_bdev['name'], clone_name0)
         fail_count += self.c.clone_lvol_bdev(snapshot_bdev['name'], clone_name1)
 
         lvol_clone0 = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + clone_name0)
         fail_count += self.c.start_nbd_disk(lvol_clone0['name'], nbd_name[1])
         fill_size = int(size * MEGABYTE / 2)
-        # Change first half of clone0
+        # Perform write operation to first clone
+        # Change first half of its space
         fail_count += self.run_fio_test(nbd_name[1], 0, fill_size, "write", "0xaa", 0)
         fail_count += self.c.start_nbd_disk(self.lvs_name + "/" + snapshot_name, nbd_name[2])
         lvol_clone1 = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + clone_name1)
         fail_count += self.c.start_nbd_disk(lvol_clone1['name'], nbd_name[3])
-        # Compare snapshot with clone1. Data should be the same
+        # Compare snapshot with second clone. Data on both bdevs should be the same
         time.sleep(1)
         fail_count += self.compare_two_disks(nbd_name[2], nbd_name[3], 0)
 
         for nbd in nbd_name:
             fail_count += self.c.stop_nbd_disk(nbd)
+        # Destroy lvol bdev
         fail_count += self.c.delete_bdev(lvol_bdev['name'])
+        # Destroy two clones
         fail_count += self.c.delete_bdev(lvol_clone0['name'])
         fail_count += self.c.delete_bdev(lvol_clone1['name'])
+        # Delete snapshot
         fail_count += self.c.delete_bdev(snapshot_bdev['name'])
+        # Destroy lvol store
         fail_count += self.c.destroy_lvol_store(uuid_store)
+        # Delete malloc
         fail_count += self.c.delete_bdev(base_name)
+
+        # Expected result:
+        # - calls successful, return code = 0
+        # - no other operation fails
         return fail_count
 
     @case_message
