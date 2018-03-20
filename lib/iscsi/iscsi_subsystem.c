@@ -369,7 +369,7 @@ static int spdk_iscsi_initialize_pdu_pool(void)
 
 	iscsi->pdu_data_out_pool = spdk_mempool_create_ctor("PDU_data_out_Pool",
 				   DATA_OUT_POOL_SIZE(iscsi),
-				   dout_mobj_size, 0,
+				   dout_mobj_size, 256,
 				   spdk_env_get_socket_id(spdk_env_get_current_core()),
 				   spdk_mobj_ctor, NULL);
 	if (!iscsi->pdu_data_out_pool) {
