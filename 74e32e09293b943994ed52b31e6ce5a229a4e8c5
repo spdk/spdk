@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "38b0ca99_442017c0",
+        "filename": "autotest.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-20T13:12:20Z",
+      "side": 1,
+      "message": "I understand this is added here (outside of RUN_NIGHTLY) to verify tests are working ?\nIf so, probably the test time has to be reduced to fit under Test Pool timeout timer. By restricting lvol size, maybe?",
+      "range": {
+        "startLine": 175,
+        "startChar": 0,
+        "endLine": 181,
+        "endChar": 29
+      },
+      "revId": "74e32e09293b943994ed52b31e6ce5a229a4e8c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f5ce175_de33ccc3",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-20T13:12:20Z",
+      "side": 1,
+      "message": "Does this ignore any error during deletion of bdev or destruction of lvol store ?",
+      "range": {
+        "startLine": 28,
+        "startChar": 41,
+        "endLine": 28,
+        "endChar": 49
+      },
+      "revId": "74e32e09293b943994ed52b31e6ce5a229a4e8c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8f64914_63362735",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-20T13:12:20Z",
+      "side": 1,
+      "message": "Please consider restricting size to certain value, instead of whole device. mkfs in some cases unmaps whole device, making it take quite long to process.",
+      "range": {
+        "startLine": 65,
+        "startChar": 38,
+        "endLine": 65,
+        "endChar": 66
+      },
+      "revId": "74e32e09293b943994ed52b31e6ce5a229a4e8c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2897a125_463c0465",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-20T13:12:20Z",
+      "side": 1,
+      "message": "Can this be moved below ? So constructing \u0027mkfs_cmd\u0027 is all done within lines next to each other.",
+      "range": {
+        "startLine": 24,
+        "startChar": 0,
+        "endLine": 27,
+        "endChar": 4
+      },
+      "revId": "74e32e09293b943994ed52b31e6ce5a229a4e8c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ad4557eb_3fd13827",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-20T13:12:20Z",
+      "side": 1,
+      "message": "Shouldn\u0027t those be enabled here ?",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 50,
+        "endChar": 8
+      },
+      "revId": "74e32e09293b943994ed52b31e6ce5a229a4e8c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
