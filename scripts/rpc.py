@@ -528,7 +528,7 @@ if __name__ == "__main__":
     p.add_argument('--vq-size', help='Size of each queue', type=int)
     p.set_defaults(func=rpc.vhost.construct_virtio_user_blk_bdev)
 
-    p = subparsers.add_parser('construct_virtio_pci_scsi_bdev', help='Create a Virtio Blk device from a virtio-pci device.')
+    p = subparsers.add_parser('construct_virtio_pci_blk_bdev', help='Create a Virtio Blk device from a virtio-pci device.')
     p.add_argument('pci_address', help="""PCI address in domain:bus:device.function format or
     domain.bus.device.function format""")
     p.add_argument('name', help='Name for the bdev')
