@@ -114,6 +114,10 @@ $valgrind $testdir/lib/util/crc32c.c/crc32c_ut
 $valgrind $testdir/lib/util/io_channel.c/io_channel_ut
 $valgrind $testdir/lib/util/string.c/string_ut
 
+$valgrind $testdir/../lib/env/pci/pci_ut
+$valgrind $testdir/../lib/env/memory/memory_ut
+$valgrind $testdir/../lib/env/vtophys/vtophys
+
 if [ $(uname -s) = Linux ]; then
 $valgrind $testdir/lib/vhost/vhost.c/vhost_ut
 $valgrind $testdir/lib/vhost/vhost_scsi.c/vhost_scsi_ut
