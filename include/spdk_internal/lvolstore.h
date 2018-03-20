@@ -97,7 +97,6 @@ struct spdk_lvol_store {
 struct spdk_lvol {
 	struct spdk_lvol_store		*lvol_store;
 	struct spdk_blob		*blob;
-	uint64_t			num_clusters;
 	spdk_blob_id			blob_id;
 	char				*unique_id;
 	char				name[SPDK_LVOL_NAME_MAX];

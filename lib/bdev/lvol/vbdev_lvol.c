@@ -805,7 +805,8 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 	}
 	bdev->product_name = "Logical Volume";
 	bdev->blocklen = spdk_bs_get_page_size(lvol->lvol_store->blobstore);
-	total_size = lvol->num_clusters * spdk_bs_get_cluster_size(lvol->lvol_store->blobstore);
+	total_size = spdk_blob_get_num_clusters(lvol->blob) *
+		     spdk_bs_get_cluster_size(lvol->lvol_store->blobstore);
 	assert((total_size % bdev->blocklen) == 0);
 	bdev->blockcnt = total_size / bdev->blocklen;
 	bdev->uuid = lvol->uuid;

@@ -157,6 +157,12 @@ spdk_blob_close(struct spdk_blob *b, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 }
 
+uint64_t
+spdk_blob_get_num_clusters(struct spdk_blob *b)
+{
+	return 0;
+}
+
 static struct spdk_lvol *_lvol_create(struct spdk_lvol_store *lvs);
 
 void
