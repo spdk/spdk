@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6674583c_d4d66592",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-20T05:19:56Z",
+      "side": 1,
+      "message": "This needs to be moved to rpc.py as well.",
+      "revId": "2dd77e176eac9adfe409fcb91573f4656703f613",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
