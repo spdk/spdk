@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "709c59ea_da34333c",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 358,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-20T14:20:36Z",
+      "side": 1,
+      "message": "Maybe we can add the logic here to allocate from SOCKET_ID_ANY if failing to do so from associated socket before directly returning -1.",
+      "range": {
+        "startLine": 358,
+        "startChar": 2,
+        "endLine": 358,
+        "endChar": 12
+      },
+      "revId": "a5385ebac8d7ca4f61f446d90346b1a75fc49390",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
