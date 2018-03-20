@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c7d66f69_45d717af",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 375,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-03-20T17:33:01Z",
+      "side": 1,
+      "message": "Both operations, enqueue and dequeue are asynchronious.\n\nPropably you should to pass crypto_ops array to the poller and if you want\nto process all of them it should to look something like that:\n\nvoid poller() {\n\n\t[...]\n\n\tnb_enq \u003d 0;\n\tnb_deq \u003d 0;\n\n\tdo {\n\n\t\tif (nb_enq \u003c cryop_cnt) {\n\t\t\tret \u003d rte_cryptodev_enqueue_burst(crypto_ch-\u003ecdev_id, 0,\n\t\t\t\t\t\u0026crypto_ops[nb_enq], cryop_cnt - nb_enq);\n\n\t\t\t/* number of enqueued operations may be lower than cryop_cnt, so\n\t\t\t * we will try to enqueue rest of ops next time */\n\n\t\t\tnb_enq +\u003d ret;\n\t\t}\n\n\t\t/* meantime we need to consume processed operations to prevent stuck\n\t\t * of device (e.g. when queue overflows) */\n\t\tret \u003d rte_cryptodev_dequeue_burst(crypto_ch-\u003ecdev_id, 0,\n\t\t\t\t\u0026crypto_ops[nb_deq], cryop_cnt - nb_deq);\n\n\t\t/* number of dequeued operations may be lower than cryop_cnt nor number\n\t\t * of enqueued operations, so we will try to dequeue rest of ops next time */\n\t\tnb_deq +\u003d ret;\n\n\t\t/* here you may process partially dequeued operations, or wait while\n\t\t * all be finished */\n\n} while (nb_deq \u003c cryop_cnt);\n\n// here all operations should be processed",
+      "range": {
+        "startLine": 369,
+        "startChar": 0,
+        "endLine": 375,
+        "endChar": 32
+      },
+      "revId": "a637e3f841230693fcebd1696a757b0e9fc66b17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21873931_3beba393",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 523,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-03-20T17:33:01Z",
+      "side": 1,
+      "message": "The return value of rte_cryptodev_dequeue_burst may be lower than total of enqueued operations, e.g. when not all are processed yet on hw.\n\nI think you should enqueue-\u003edequeue operations here like I mentioned in previous comment.",
+      "range": {
+        "startLine": 522,
+        "startChar": 0,
+        "endLine": 523,
+        "endChar": 31
+      },
+      "revId": "a637e3f841230693fcebd1696a757b0e9fc66b17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
