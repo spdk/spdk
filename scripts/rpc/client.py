@@ -4,7 +4,7 @@ import time
 
 
 def print_dict(d):
-    print json.dumps(d, indent=2)
+    print(json.dumps(d, indent=2))
 
 
 class JSONRPCClient(object):
@@ -70,17 +70,17 @@ class JSONRPCClient(object):
             if method == "kill_instance":
                 exit(0)
             if closed:
-                print "Connection closed with partial response:"
+                print("Connection closed with partial response:")
             else:
-                print "Timeout while waiting for response:"
-            print buf
+                print("Timeout while waiting for response:")
+            print(buf)
             exit(1)
 
         if 'error' in response:
-            print "Got JSON-RPC error response"
-            print "request:"
+            print("Got JSON-RPC error response")
+            print("request:")
             print_dict(json.loads(reqstr))
-            print "response:"
+            print("response:")
             print_dict(response['error'])
             exit(1)
 
