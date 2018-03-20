@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "32c3e283_b3dde273",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-20T21:29:39Z",
+      "side": 1,
+      "message": "This mostly looks OK, but can we change this to use the standard VTune installation path instead?  I think it installs to /opt/intel/vtune_amplifier_xe by default.  Otherwise, we are introducing yet another hard-coded sys_sgsw path into the test scripts, which we are trying to get rid of.",
+      "revId": "093d125141b8a960fe1e9b5ed4efeaf5f173a959",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
