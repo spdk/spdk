@@ -351,7 +351,8 @@ static int spdk_iscsi_initialize_pdu_pool(void)
 	iscsi->pdu_pool = spdk_mempool_create("PDU_Pool",
 					      PDU_POOL_SIZE(iscsi),
 					      sizeof(struct spdk_iscsi_pdu),
-					      256, SPDK_ENV_SOCKET_ID_ANY);
+					      256,
+					      SPDK_ENV_SOCKET_ID_ANY);
 	if (!iscsi->pdu_pool) {
 		SPDK_ERRLOG("create PDU pool failed\n");
 		return -1;
@@ -359,7 +360,8 @@ static int spdk_iscsi_initialize_pdu_pool(void)
 
 	iscsi->pdu_immediate_data_pool = spdk_mempool_create_ctor("PDU_immediate_data_Pool",
 					 IMMEDIATE_DATA_POOL_SIZE(iscsi),
-					 imm_mobj_size, 0,
+					 imm_mobj_size,
+					 0,
 					 spdk_env_get_socket_id(spdk_env_get_current_core()),
 					 spdk_mobj_ctor, NULL);
 	if (!iscsi->pdu_immediate_data_pool) {
@@ -369,7 +371,8 @@ static int spdk_iscsi_initialize_pdu_pool(void)
 
 	iscsi->pdu_data_out_pool = spdk_mempool_create_ctor("PDU_data_out_Pool",
 				   DATA_OUT_POOL_SIZE(iscsi),
-				   dout_mobj_size, 0,
+				   dout_mobj_size,
+				   256,
 				   spdk_env_get_socket_id(spdk_env_get_current_core()),
 				   spdk_mobj_ctor, NULL);
 	if (!iscsi->pdu_data_out_pool) {
@@ -403,7 +406,8 @@ spdk_iscsi_initialize_task_pool(void)
 	iscsi->task_pool = spdk_mempool_create("SCSI_TASK_Pool",
 					       DEFAULT_TASK_POOL_SIZE,
 					       sizeof(struct spdk_iscsi_task),
-					       128, SPDK_ENV_SOCKET_ID_ANY);
+					       128,
+					       SPDK_ENV_SOCKET_ID_ANY);
 	if (!iscsi->task_pool) {
 		SPDK_ERRLOG("create task pool failed\n");
 		return -1;
@@ -419,7 +423,8 @@ static int spdk_iscsi_initialize_session_pool(void)
 
 	iscsi->session_pool = spdk_mempool_create_ctor("Session_Pool",
 			      SESSION_POOL_SIZE(iscsi),
-			      sizeof(struct spdk_iscsi_sess), 0,
+			      sizeof(struct spdk_iscsi_sess),
+			      0,
 			      SPDK_ENV_SOCKET_ID_ANY,
 			      spdk_iscsi_sess_ctor, iscsi);
 	if (!iscsi->session_pool) {
