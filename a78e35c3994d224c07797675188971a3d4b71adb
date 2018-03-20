@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1291d3b5_e06c18ab",
+        "filename": "test/nvmf/host/aer.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-20T22:59:04Z",
+      "side": 1,
+      "message": "This whole test is currently disabled, so none of the tests you have added below are actually running on the test pool.\n\nWe need to either re-enable the call to aer.sh and comment out just the parts that don\u0027t work currently (the execution of test/lib/nvme/aer/aer below) or make this into a separate test script.",
+      "revId": "a78e35c3994d224c07797675188971a3d4b71adb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c7f8de5_808f028c",
+        "filename": "test/nvmf/host/aer.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-20T22:59:04Z",
+      "side": 1,
+      "message": "delete_bdev only takes a single argument, so I don\u0027t think this will work.\n\nAlso, it would be good to test that namespace removal results in removal of the kernel block device as well.",
+      "revId": "a78e35c3994d224c07797675188971a3d4b71adb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
