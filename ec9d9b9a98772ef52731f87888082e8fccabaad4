@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "707f2bb7_e21da28e",
+        "filename": "lib/event/app.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 398,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-20T16:30:18Z",
+      "side": 1,
+      "message": "Maybe a nice cleanup for another patch - we already have the Global section from the earlier lookup, so we could reuse sp here (maybe with a better name).",
+      "revId": "ec9d9b9a98772ef52731f87888082e8fccabaad4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
