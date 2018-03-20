@@ -7,7 +7,7 @@ import rpc
 
 
 def print_array(a):
-    print " ".join((quote(v) for v in a))
+    print(" ".join((quote(v) for v in a)))
 
 
 if __name__ == "__main__":
