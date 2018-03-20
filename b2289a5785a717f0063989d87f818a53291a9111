@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ebce31c2_3c689d13",
+        "filename": "lib/bdev/split/vbdev_split.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-20T03:53:30Z",
+      "side": 1,
+      "message": "this is not necessary.",
+      "range": {
+        "startLine": 267,
+        "startChar": 2,
+        "endLine": 267,
+        "endChar": 23
+      },
+      "revId": "b2289a5785a717f0063989d87f818a53291a9111",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
