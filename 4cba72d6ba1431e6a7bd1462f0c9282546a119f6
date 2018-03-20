@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "c256f1c1_dd00ccdb",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-20T06:24:41Z",
+      "side": 1,
+      "message": "Thank you, now I caught up. the default value is 2 for stdout and none for file.",
+      "parentUuid": "a3dc6715_61d93d88",
+      "range": {
+        "startLine": 35,
+        "startChar": 8,
+        "endLine": 38,
+        "endChar": 25
+      },
+      "revId": "4cba72d6ba1431e6a7bd1462f0c9282546a119f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "10a9ec9c_10522024",
         "filename": "scripts/rpc/__init__.py",
         "patchSetId": 7
@@ -84,6 +108,30 @@
       "side": 1,
       "message": "Linux cmd line tools don\u0027t like text file with no new line at the end of file.",
       "parentUuid": "10a9ec9c_10522024",
+      "range": {
+        "startLine": 40,
+        "startChar": 8,
+        "endLine": 40,
+        "endChar": 30
+      },
+      "revId": "4cba72d6ba1431e6a7bd1462f0c9282546a119f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c7d192f_3ded9e9a",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-20T06:24:41Z",
+      "side": 1,
+      "message": "Thank you. I got it.",
+      "parentUuid": "06e7968c_41f9615f",
       "range": {
         "startLine": 40,
         "startChar": 8,
