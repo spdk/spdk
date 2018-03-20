@@ -1193,7 +1193,7 @@ _spdk_blob_persist_write_page_chain(spdk_bs_sequence_t *seq, void *cb_arg, int b
 }
 
 static int
-_spdk_resize_blob(struct spdk_blob *blob, uint64_t sz)
+_spdk_blob_resize(struct spdk_blob *blob, uint64_t sz)
 {
 	uint64_t	i;
 	uint64_t	*tmp;
@@ -3582,7 +3582,7 @@ spdk_blob_resize(struct spdk_blob *blob, uint64_t sz)
 		return 0;
 	}
 
-	rc = _spdk_resize_blob(blob, sz);
+	rc = _spdk_blob_resize(blob, sz);
 	if (rc < 0) {
 		return rc;
 	}
@@ -3661,7 +3661,7 @@ _spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
 	spdk_bit_array_clear(blob->bs->used_blobids, page_num);
 	blob->state = SPDK_BLOB_STATE_DIRTY;
 	blob->active.num_pages = 0;
-	_spdk_resize_blob(blob, 0);
+	_spdk_blob_resize(blob, 0);
 
 	_spdk_blob_persist(seq, blob, _spdk_bs_delete_persist_cpl, blob);
 }
