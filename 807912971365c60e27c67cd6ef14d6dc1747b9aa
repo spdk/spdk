@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b8f43618_40f8e750",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 433,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-20T07:07:06Z",
+      "side": 1,
+      "message": "I think the bdev_module config and the bdev config should belong to different unnamed or named array. (Named array is a object of string:array.)",
+      "range": {
+        "startLine": 433,
+        "startChar": 1,
+        "endLine": 433,
+        "endChar": 28
+      },
+      "revId": "807912971365c60e27c67cd6ef14d6dc1747b9aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
