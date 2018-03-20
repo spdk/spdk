@@ -351,7 +351,8 @@ static int spdk_iscsi_initialize_pdu_pool(void)
 	iscsi->pdu_pool = spdk_mempool_create("PDU_Pool",
 					      PDU_POOL_SIZE(iscsi),
 					      sizeof(struct spdk_iscsi_pdu),
-					      256, SPDK_ENV_SOCKET_ID_ANY);
+					      256,
+					      spdk_env_get_socket_id(spdk_env_get_current_core()));
 	if (!iscsi->pdu_pool) {
 		SPDK_ERRLOG("create PDU pool failed\n");
 		return -1;
