@@ -1133,8 +1133,6 @@ spdk_lvol_resize(struct spdk_lvol *lvol, uint64_t sz,
 
 	lvol->num_clusters = new_clusters;
 
-	spdk_blob_set_xattr(blob, "length", &sz, sizeof(sz));
-
 	spdk_blob_sync_md(blob, _spdk_lvol_resize_cb, req);
 
 	return rc;
