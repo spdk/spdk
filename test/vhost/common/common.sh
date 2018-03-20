@@ -464,7 +464,7 @@ function vm_shutdown_all()
 	while [[ $timeo -gt 0 ]]; do
 		local all_vms_down=1
 		for vm in $vms; do
-			if [[ -r $VM_BASE_DIR/$vm/qemu.pid ]] && pkill -0 -F "$VM_BASE_DIR/$vm/qemu.pid"; then
+			if vm_is_running $vm; then
 				all_vms_down=0
 				break
 			fi
