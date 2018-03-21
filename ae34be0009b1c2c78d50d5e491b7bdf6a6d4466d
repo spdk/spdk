@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "bd57f92c_fc320317",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 63
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-03-21T16:39:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a9062a3a_ced2d8f8",
+      "revId": "ae34be0009b1c2c78d50d5e491b7bdf6a6d4466d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ef073f52_d79cd064",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 63
@@ -30,6 +48,24 @@
       "writtenOn": "2018-03-16T21:04:24Z",
       "side": 1,
       "message": "I think \"snapshot\" should be added somewhere in these cleanup function names.  Just _spdk_bs_cleanup_* is too generic.",
+      "revId": "ae34be0009b1c2c78d50d5e491b7bdf6a6d4466d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e102c9a_ba07e4b6",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 3542,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-03-21T16:39:44Z",
+      "side": 1,
+      "message": "These cleanup functions are also used for clones and are pretty generic for both, clones and snapshots. I think more accurate will be \"clone_snapshot\" in the name (like for \"struct spdk_clone_snapshot_ctx\" which is used here).",
+      "parentUuid": "ef073f52_d79cd064",
       "revId": "ae34be0009b1c2c78d50d5e491b7bdf6a6d4466d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "bc6647d6_7019b20c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 3717,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-03-21T16:39:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cf0420bb_b2c1bfeb",
+      "revId": "ae34be0009b1c2c78d50d5e491b7bdf6a6d4466d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b784efae_bcfbc30c",
         "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
         "patchSetId": 63
@@ -64,6 +118,24 @@
       "writtenOn": "2018-03-16T21:04:24Z",
       "side": 1,
       "message": "you could use the new spdk_mem_all_zero() function here instead (#include \"spdk/string.h\")",
+      "revId": "ae34be0009b1c2c78d50d5e491b7bdf6a6d4466d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bc52405e_641f0330",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 607,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-03-21T16:39:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b784efae_bcfbc30c",
       "revId": "ae34be0009b1c2c78d50d5e491b7bdf6a6d4466d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
