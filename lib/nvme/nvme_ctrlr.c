@@ -765,8 +765,9 @@ nvme_ctrlr_identify(struct spdk_nvme_ctrlr *ctrlr)
 	int					rc;
 
 	status.done = false;
-	rc = nvme_ctrlr_cmd_identify_controller(ctrlr, &ctrlr->cdata,
-						nvme_completion_poll_cb, &status);
+	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_CTRLR, 0, 0,
+				     &ctrlr->cdata, sizeof(ctrlr->cdata),
+				     nvme_completion_poll_cb, &status);
 	if (rc != 0) {
 		return rc;
 	}

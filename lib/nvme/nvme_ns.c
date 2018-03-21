@@ -48,8 +48,9 @@ int nvme_ns_identify_update(struct spdk_nvme_ns *ns)
 
 	nsdata = _nvme_ns_get_data(ns);
 	status.done = false;
-	rc = nvme_ctrlr_cmd_identify_namespace(ns->ctrlr, ns->id, nsdata,
-					       nvme_completion_poll_cb, &status);
+	rc = nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS, 0, ns->id,
+				     nsdata, sizeof(*nsdata),
+				     nvme_completion_poll_cb, &status);
 	if (rc != 0) {
 		return rc;
 	}

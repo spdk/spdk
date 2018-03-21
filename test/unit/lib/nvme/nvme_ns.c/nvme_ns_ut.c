@@ -42,8 +42,9 @@
 SPDK_LOG_REGISTER_COMPONENT("nvme", SPDK_LOG_NVME)
 
 int
-nvme_ctrlr_cmd_identify_namespace(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, void *payload,
-				  spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+nvme_ctrlr_cmd_identify(struct spdk_nvme_ctrlr *ctrlr, uint8_t cns, uint16_t cntid, uint32_t nsid,
+			void *payload, size_t payload_size,
+			spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	return -1;
 }

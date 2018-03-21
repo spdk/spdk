@@ -524,12 +524,10 @@ nvme_robust_mutex_unlock(pthread_mutex_t *mtx)
 }
 
 /* Admin functions */
-int	nvme_ctrlr_cmd_identify_controller(struct spdk_nvme_ctrlr *ctrlr,
-		void *payload,
-		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
-int	nvme_ctrlr_cmd_identify_namespace(struct spdk_nvme_ctrlr *ctrlr,
-		uint32_t nsid, void *payload,
-		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+int	nvme_ctrlr_cmd_identify(struct spdk_nvme_ctrlr *ctrlr,
+				uint8_t cns, uint16_t cntid, uint32_t nsid,
+				void *payload, size_t payload_size,
+				spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 int	nvme_ctrlr_cmd_set_num_queues(struct spdk_nvme_ctrlr *ctrlr,
 				      uint32_t num_queues, spdk_nvme_cmd_cb cb_fn,
 				      void *cb_arg);

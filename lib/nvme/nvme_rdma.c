@@ -1244,8 +1244,9 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 
 	/* get the cdata info */
 	status.done = false;
-	rc = nvme_ctrlr_cmd_identify_controller(discovery_ctrlr, &discovery_ctrlr->cdata,
-						nvme_completion_poll_cb, &status);
+	rc = nvme_ctrlr_cmd_identify(discovery_ctrlr, SPDK_NVME_IDENTIFY_CTRLR, 0, 0,
+				     &discovery_ctrlr->cdata, sizeof(discovery_ctrlr->cdata),
+				     nvme_completion_poll_cb, &status);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to identify cdata\n");
 		return rc;
