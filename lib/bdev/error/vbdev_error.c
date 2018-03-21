@@ -81,6 +81,8 @@ static void vbdev_error_fini(void);
 
 static void vbdev_error_examine(struct spdk_bdev *bdev);
 
+static int vbdev_error_config_remove(const char *base_bdev_name);
+
 static struct spdk_bdev_module error_if = {
 	.name = "error",
 	.module_init = vbdev_error_init,
@@ -207,9 +209,16 @@ static int
 vbdev_error_destruct(void *ctx)
 {
 	struct error_disk *error_disk = ctx;
+	struct spdk_bdev *base_bdev = error_disk->part.base->bdev;
+	int rc;
+
+	rc = vbdev_error_config_remove(base_bdev->name);
+	if (rc != 0) {
+		SPDK_ERRLOG("vbdev_error_config_remove() failed\n");
+	}
 
 	spdk_bdev_part_free(&error_disk->part);
-	return 0;
+	return rc;
 }
 
 static int
@@ -306,6 +315,36 @@ vbdev_error_clear_config(void)
 	}
 }
 
+static struct spdk_vbdev_error_config *
+vbdev_error_config_find_by_base_name(const char *base_bdev_name)
+{
+	struct spdk_vbdev_error_config *cfg;
+
+	TAILQ_FOREACH(cfg, &g_error_config, tailq) {
+		if (strcmp(cfg->base_bdev, base_bdev_name) == 0) {
+			return cfg;
+		}
+	}
+
+	return NULL;
+}
+
+static int
+vbdev_error_config_remove(const char *base_bdev_name)
+{
+	struct spdk_vbdev_error_config *cfg;
+
+	cfg = vbdev_error_config_find_by_base_name(base_bdev_name);
+	if (!cfg) {
+		return -ENOENT;
+	}
+
+	TAILQ_REMOVE(&g_error_config, cfg, tailq);
+	free(cfg->base_bdev);
+	free(cfg);
+	return 0;
+}
+
 static int
 vbdev_error_init(void)
 {
@@ -374,17 +413,12 @@ vbdev_error_examine(struct spdk_bdev *bdev)
 	struct spdk_vbdev_error_config *cfg;
 	int rc;
 
-	TAILQ_FOREACH(cfg, &g_error_config, tailq) {
-		if (strcmp(cfg->base_bdev, bdev->name) != 0) {
-			continue;
-		}
-
+	cfg = vbdev_error_config_find_by_base_name(bdev->name);
+	if (cfg != NULL) {
 		rc = spdk_vbdev_error_create(bdev);
 		if (rc != 0) {
 			SPDK_ERRLOG("could not create error vbdev for bdev %s\n", bdev->name);
 		}
-
-		break;
 	}
 
 	spdk_bdev_module_examine_done(&error_if);
