@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ada01e6a_bfc7d5b8",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-21T12:59:49Z",
+      "side": 1,
+      "message": "Its shame that spdk_bdev is added here, as lvol.c to uses same requests :( Those request types should be split proabaly, so vbdev_lvol.c can use other ones than lvol.c.\n\nBut that is for completely another patch to fix. I will try to look into it.",
+      "range": {
+        "startLine": 57,
+        "startChar": 1,
+        "endLine": 57,
+        "endChar": 24
+      },
+      "revId": "a9bf9e0b28ee29299f2a42db5a6dbe7e9c853993",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c03e09d2_d0eddf2e",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1137,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-21T12:59:49Z",
+      "side": 1,
+      "message": "return is missing here.",
+      "revId": "a9bf9e0b28ee29299f2a42db5a6dbe7e9c853993",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
