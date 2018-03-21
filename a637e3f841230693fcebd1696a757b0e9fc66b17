@@ -93,6 +93,30 @@
       "revId": "a637e3f841230693fcebd1696a757b0e9fc66b17",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c060254c_ee8458ca",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 523,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-03-21T18:10:31Z",
+      "side": 1,
+      "message": "I\u0027m not sure yet if I want to dequeue everything outstanding on the PMD on every run of the poller actually. Doesn\u0027t it makes more sense to just ask the PMD to give me everything that is ready right now and I\u0027ll come back later and get the rest?",
+      "parentUuid": "0ea62230_0282e0f0",
+      "range": {
+        "startLine": 522,
+        "startChar": 0,
+        "endLine": 523,
+        "endChar": 31
+      },
+      "revId": "a637e3f841230693fcebd1696a757b0e9fc66b17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
