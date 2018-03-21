@@ -37,13 +37,49 @@
 #include "spdk/stdinc.h"
 #include "spdk/bdev.h"
 
+struct spdk_vbdev_error_config;
+
 enum vbdev_error_type {
 	VBDEV_IO_FAILURE = 1,
 	VBDEV_IO_PENDING,
 };
 
-int spdk_vbdev_error_create(struct spdk_bdev *base_bdev);
+/**
+ * Create a vbdev on the base bdev to inject error into it.
+ *
+ * \param base_bdev Config of error injection
+ * \return 0 on success or negative on failure.
+ */
+int spdk_vbdev_error_create(struct spdk_vbdev_error_config *cfg);
+
+/**
+ * Inject error to the base bdev. Users can specify which IO type error is injected,
+ * what type of error is injected, and how many errors are injected.
+ *
+ * \param name Name of the base bdev into which error is injected.
+ * \param io_type IO type into which error is injected.
+ * \param error_num Count of injected errors
+ */
 int spdk_vbdev_inject_error(char *name, uint32_t io_type, uint32_t error_type,
 			    uint32_t error_num);
 
+/**
+ * Add the name of the base bdev to the config of error injection.
+ * If the specified base bdev doesn't exist or is already included in the cofig,
+ * this function will result in failure.
+ *
+ * \param base_bdev_name Name of the base bdev.
+ * \param cfg Pointer to the added config
+ * \return 0 on success or negative on failure.
+ */
+int vbdev_error_config_add(const char *base_bdev_name,
+			   struct spdk_vbdev_error_config **cfg);
+
+/**
+ * Remove the name of the base bdev from the config of error injection.
+ *
+ * \param base_bdev_name Name of the base bdev.
+ * \return 0 on success or negative on failure.
+ */
+int vbdev_error_config_remove(const char *base_bdev_name);
 #endif // SPDK_VBDEV_ERROR_H
