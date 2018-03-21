@@ -455,7 +455,13 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 	old_num_channels = sgroup->num_channels;
 
 	if (new_num_channels == old_num_channels) {
-		/* Nothing to do */
+		/* Initialize new channels */
+		for (i = 0; i < new_num_channels; i++) {
+			ns = subsystem->ns[i];
+			if ((ns != NULL) && (sgroup->channels[i] == NULL)) {
+				sgroup->channels[i] = spdk_bdev_get_io_channel(ns->desc);
+			}
+		}
 	} else if (old_num_channels == 0) {
 		/* First allocation */
 		sgroup->channels = calloc(new_num_channels, sizeof(sgroup->channels[0]));
