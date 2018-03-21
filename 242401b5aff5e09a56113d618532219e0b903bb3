@@ -22,6 +22,46 @@
       "revId": "242401b5aff5e09a56113d618532219e0b903bb3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "352f739e_d271b821",
+        "filename": "lib/bdev/split/vbdev_split_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-21T06:42:04Z",
+      "side": 1,
+      "message": "Will you add this into the python script?",
+      "range": {
+        "startLine": 150,
+        "startChar": 19,
+        "endLine": 150,
+        "endChar": 39
+      },
+      "revId": "242401b5aff5e09a56113d618532219e0b903bb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf9d672d_40708af7",
+        "filename": "lib/bdev/split/vbdev_split_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-21T06:42:04Z",
+      "side": 1,
+      "message": "I just want to confirm your policy.\n\n-  delete_bdev(vbdev_split) -\u003e delete the vbdev_split.\n-  delete_bdev(base_bdev) -\u003e  delete the base bdev and all vbdev_split on it (including part_base).\n- destruct_split_vbdev(base_bdev) -\u003e delete all vbdev_split and part_base\n\nAnd we can use either one depending on the case?",
+      "revId": "242401b5aff5e09a56113d618532219e0b903bb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
