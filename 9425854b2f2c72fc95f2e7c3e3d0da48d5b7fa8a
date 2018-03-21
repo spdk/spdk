@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f62778e0_a4c149ac",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 842,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-21T22:41:40Z",
+      "side": 1,
+      "message": "This polling loop and error check also need to be done inside the num_pages loop above (otherwise, whichever nvme_completion_poll_cb runs first will set status.done \u003d true and we might return early).\n\nAlternatively, you could use a different completion callback that decrements a counter and then wait for the counter to reach 0 here.",
+      "revId": "9425854b2f2c72fc95f2e7c3e3d0da48d5b7fa8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
