@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a4b31e68_17265491",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 375,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-03-21T17:47:12Z",
+      "side": 1,
+      "message": "Thanks, its not async to us though as we get an immediate count back.  I assume you meant we can call it any time and may not get everything back depending on when we call it.  Anyway, yeah I had a comment in there along those lines and already started addressing it.  Really appreciate the feedback though! \n\nI hadn\u0027t thought of dequeueing here, have you used these API and found it necessary to dequeue in your function that is enqueueing?",
+      "parentUuid": "c7d66f69_45d717af",
+      "range": {
+        "startLine": 369,
+        "startChar": 0,
+        "endLine": 375,
+        "endChar": 32
+      },
+      "revId": "a637e3f841230693fcebd1696a757b0e9fc66b17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "21873931_3beba393",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 5
@@ -36,6 +60,30 @@
       "writtenOn": "2018-03-20T17:33:01Z",
       "side": 1,
       "message": "The return value of rte_cryptodev_dequeue_burst may be lower than total of enqueued operations, e.g. when not all are processed yet on hw.\n\nI think you should enqueue-\u003edequeue operations here like I mentioned in previous comment.",
+      "range": {
+        "startLine": 522,
+        "startChar": 0,
+        "endLine": 523,
+        "endChar": 31
+      },
+      "revId": "a637e3f841230693fcebd1696a757b0e9fc66b17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ea62230_0282e0f0",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 523,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-03-21T17:47:12Z",
+      "side": 1,
+      "message": "thanks again!",
+      "parentUuid": "21873931_3beba393",
       "range": {
         "startLine": 522,
         "startChar": 0,
