@@ -805,11 +805,20 @@ spdk_nvmf_listener_get_trid(struct spdk_nvmf_listener *listener)
 	return &listener->trid;
 }
 
+static void
+spdk_nvmf_subsystem_ns_changed(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
+{
+	struct spdk_nvmf_ctrlr *ctrlr;
+
+	TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
+		spdk_nvmf_ctrlr_ns_changed(ctrlr, nsid);
+	}
+}
+
 int
 spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
 {
 	struct spdk_nvmf_ns *ns;
-	struct spdk_nvmf_ctrlr *ctrlr, *ctrlr_tmp;
 
 	assert(subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED ||
 	       subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE);
@@ -834,9 +843,7 @@ spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t ns
 	free(ns);
 	subsystem->num_allocated_nsid--;
 
-	TAILQ_FOREACH_SAFE(ctrlr, &subsystem->ctrlrs, link, ctrlr_tmp) {
-		spdk_nvmf_ctrlr_async_event_ns_notice(ctrlr);
-	}
+	spdk_nvmf_subsystem_ns_changed(subsystem, nsid);
 
 	return 0;
 }
@@ -877,7 +884,6 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 {
 	struct spdk_nvmf_ns_opts opts;
 	struct spdk_nvmf_ns *ns;
-	struct spdk_nvmf_ctrlr *ctrlr, *ctrlr_tmp;
 	uint32_t i;
 	int rc;
 
@@ -961,10 +967,6 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	}
 	subsystem->ns[opts.nsid - 1] = ns;
 
-	TAILQ_FOREACH_SAFE(ctrlr, &subsystem->ctrlrs, link, ctrlr_tmp) {
-		spdk_nvmf_ctrlr_async_event_ns_notice(ctrlr);
-	}
-
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Subsystem %s: bdev %s assigned nsid %" PRIu32 "\n",
 		      spdk_nvmf_subsystem_get_nqn(subsystem),
 		      spdk_bdev_get_name(bdev),
@@ -972,6 +974,8 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 
 	subsystem->max_nsid = spdk_max(subsystem->max_nsid, opts.nsid);
 	subsystem->num_allocated_nsid++;
+
+	spdk_nvmf_subsystem_ns_changed(subsystem, opts.nsid);
 
 	return opts.nsid;
 }
