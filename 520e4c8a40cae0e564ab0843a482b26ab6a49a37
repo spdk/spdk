@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "be849ba2_23074bee",
+        "filename": "scripts/fio.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1012941
+      },
+      "writtenOn": "2018-03-21T15:10:07Z",
+      "side": 1,
+      "message": "Ok. I will leave in final patch nr_requests 128",
+      "parentUuid": "81309317_015b709c",
+      "range": {
+        "startLine": 110,
+        "startChar": 70,
+        "endLine": 110,
+        "endChar": 72
+      },
+      "revId": "520e4c8a40cae0e564ab0843a482b26ab6a49a37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bcd5f6db_94d84351",
         "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
         "patchSetId": 6
@@ -36,6 +60,30 @@
       "writtenOn": "2018-03-21T08:35:07Z",
       "side": 1,
       "message": "Is this change necessary ?",
+      "range": {
+        "startLine": 14,
+        "startChar": 21,
+        "endLine": 14,
+        "endChar": 24
+      },
+      "revId": "520e4c8a40cae0e564ab0843a482b26ab6a49a37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "012c1e61_c9f7fe5e",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1012941
+      },
+      "writtenOn": "2018-03-21T15:10:07Z",
+      "side": 1,
+      "message": "There is a problem wit connect to the target. I need to check it.",
+      "parentUuid": "bcd5f6db_94d84351",
       "range": {
         "startLine": 14,
         "startChar": 21,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "70d9662f_d915bbd3",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1012941
+      },
+      "writtenOn": "2018-03-21T15:10:07Z",
+      "side": 1,
+      "message": "I will add separate function start_vpp",
+      "parentUuid": "f1b24064_4216317a",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 33
+      },
+      "revId": "520e4c8a40cae0e564ab0843a482b26ab6a49a37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fa79961e_d7b8babc",
         "filename": "test/iscsi_tgt/iscsi_tgt.sh",
         "patchSetId": 6
@@ -82,6 +154,30 @@
       "writtenOn": "2018-03-21T08:35:07Z",
       "side": 1,
       "message": "Let\u0027s change from directly pointing to binaries, assume that it is installed. So just call \u0027vpp\u0027 or \u0027vppctl\u0027.\nPatch below is probably the way VPP will be installed on TP\nhttps://review.gerrithub.io/#/c/404144/",
+      "range": {
+        "startLine": 14,
+        "startChar": 1,
+        "endLine": 15,
+        "endChar": 32
+      },
+      "revId": "520e4c8a40cae0e564ab0843a482b26ab6a49a37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8f5005a4_c91ca433",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1012941
+      },
+      "writtenOn": "2018-03-21T15:10:07Z",
+      "side": 1,
+      "message": "ok I will call only \u0027vpp\u0027 and \u0027vppctl\u0027",
+      "parentUuid": "fa79961e_d7b8babc",
       "range": {
         "startLine": 14,
         "startChar": 1,
@@ -111,6 +207,24 @@
     },
     {
       "key": {
+        "uuid": "723bf7e2_d599d681",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1012941
+      },
+      "writtenOn": "2018-03-21T15:10:07Z",
+      "side": 1,
+      "message": "I will manage separate changes for address related variables",
+      "parentUuid": "e3d10550_0b59cef3",
+      "revId": "520e4c8a40cae0e564ab0843a482b26ab6a49a37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7bb87b5b_703d389a",
         "filename": "test/iscsi_tgt/iscsi_tgt.sh",
         "patchSetId": 6
@@ -134,6 +248,30 @@
     },
     {
       "key": {
+        "uuid": "2e25e6c2_b459780c",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1012941
+      },
+      "writtenOn": "2018-03-21T15:10:07Z",
+      "side": 1,
+      "message": "I will create separate function kill_vpp.",
+      "parentUuid": "7bb87b5b_703d389a",
+      "range": {
+        "startLine": 81,
+        "startChar": 0,
+        "endLine": 84,
+        "endChar": 2
+      },
+      "revId": "520e4c8a40cae0e564ab0843a482b26ab6a49a37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7bd8203a_3cad63a4",
         "filename": "test/iscsi_tgt/rpc_config/rpc_config.sh",
         "patchSetId": 6
@@ -145,6 +283,30 @@
       "writtenOn": "2018-03-21T08:35:07Z",
       "side": 1,
       "message": "Is this change necessary ?",
+      "range": {
+        "startLine": 14,
+        "startChar": 21,
+        "endLine": 14,
+        "endChar": 24
+      },
+      "revId": "520e4c8a40cae0e564ab0843a482b26ab6a49a37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "97faa9f8_7d7af8b2",
+        "filename": "test/iscsi_tgt/rpc_config/rpc_config.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1012941
+      },
+      "writtenOn": "2018-03-21T15:10:07Z",
+      "side": 1,
+      "message": "There is a problem wit connect to the target. I need to check it.",
+      "parentUuid": "7bd8203a_3cad63a4",
       "range": {
         "startLine": 14,
         "startChar": 21,

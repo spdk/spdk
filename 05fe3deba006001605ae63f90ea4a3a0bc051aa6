@@ -46,6 +46,30 @@
       "revId": "05fe3deba006001605ae63f90ea4a3a0bc051aa6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e3d04ec_56dda308",
+        "filename": "test/iscsi_tgt/rpc_config/rpc_config.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1012941
+      },
+      "writtenOn": "2018-03-21T15:10:07Z",
+      "side": 0,
+      "message": "This part of code I need to check.",
+      "parentUuid": "85fe22c8_2bf52de1",
+      "range": {
+        "startLine": 183,
+        "startChar": 26,
+        "endLine": 183,
+        "endChar": 37
+      },
+      "revId": "05fe3deba006001605ae63f90ea4a3a0bc051aa6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
