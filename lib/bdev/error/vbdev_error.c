@@ -294,13 +294,25 @@ spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 	return 0;
 }
 
+static void
+vbdev_error_clear_config(void)
+{
+	struct spdk_vbdev_error_config *cfg;
+
+	while ((cfg = TAILQ_FIRST(&g_error_config))) {
+		TAILQ_REMOVE(&g_error_config, cfg, tailq);
+		free(cfg->base_bdev);
+		free(cfg);
+	}
+}
+
 static int
 vbdev_error_init(void)
 {
 	struct spdk_conf_section *sp;
 	struct spdk_vbdev_error_config *cfg;
 	const char *base_bdev_name;
-	int i;
+	int i, rc;
 
 	sp = spdk_conf_find_section(NULL, "BdevError");
 	if (sp == NULL) {
@@ -315,38 +327,39 @@ vbdev_error_init(void)
 		base_bdev_name = spdk_conf_section_get_nmval(sp, "BdevError", i, 0);
 		if (!base_bdev_name) {
 			SPDK_ERRLOG("ErrorInjection configuration missing bdev name\n");
-			return -EINVAL;
+			rc = -EINVAL;
+			goto error;
 		}
 
 		cfg = calloc(1, sizeof(*cfg));
 		if (!cfg) {
 			SPDK_ERRLOG("calloc() failed for vbdev_error_config\n");
-			return -ENOMEM;
+			rc = -ENOMEM;
+			goto error;
 		}
 
 		cfg->base_bdev = strdup(base_bdev_name);
 		if (!cfg->base_bdev) {
 			free(cfg);
 			SPDK_ERRLOG("strdup() failed for bdev name\n");
-			return -ENOMEM;
+			rc = -ENOMEM;
+			goto error;
 		}
 
 		TAILQ_INSERT_TAIL(&g_error_config, cfg, tailq);
 	}
 
 	return 0;
+
+error:
+	vbdev_error_clear_config();
+	return rc;
 }
 
 static void
 vbdev_error_fini(void)
 {
-	struct spdk_vbdev_error_config *cfg;
-
-	while ((cfg = TAILQ_FIRST(&g_error_config))) {
-		TAILQ_REMOVE(&g_error_config, cfg, tailq);
-		free(cfg->base_bdev);
-		free(cfg);
-	}
+	vbdev_error_clear_config();
 }
 
 static void
