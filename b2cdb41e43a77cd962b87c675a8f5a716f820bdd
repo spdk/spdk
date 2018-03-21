@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "25bebd9f_52998a7c",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 62
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-03-21T16:39:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a7745056_a7a08180",
+      "revId": "b2cdb41e43a77cd962b87c675a8f5a716f820bdd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0550fdca_c1081dc0",
         "filename": "include/spdk/blob.h",
         "patchSetId": 62
@@ -30,6 +48,24 @@
       "writtenOn": "2018-03-16T21:19:02Z",
       "side": 1,
       "message": "similar to previous review, comment should talk about lifetime of memory/data associated with clone_xattrs (must be valid until complete function is called)",
+      "revId": "b2cdb41e43a77cd962b87c675a8f5a716f820bdd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c46befa0_94f5ecb2",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 62
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-03-21T16:39:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0550fdca_c1081dc0",
       "revId": "b2cdb41e43a77cd962b87c675a8f5a716f820bdd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "86d14cb0_f1314596",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 62
+      },
+      "lineNbr": 3796,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-03-21T16:39:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b322719c_597d2bfe",
+      "revId": "b2cdb41e43a77cd962b87c675a8f5a716f820bdd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3c42a30e_213848cd",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 62
@@ -64,6 +118,24 @@
       "writtenOn": "2018-03-16T21:19:02Z",
       "side": 1,
       "message": "Clone not from read-only blob",
+      "revId": "b2cdb41e43a77cd962b87c675a8f5a716f820bdd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a2c88c71_435822ab",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 62
+      },
+      "lineNbr": 3828,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-03-21T16:39:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3c42a30e_213848cd",
       "revId": "b2cdb41e43a77cd962b87c675a8f5a716f820bdd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
