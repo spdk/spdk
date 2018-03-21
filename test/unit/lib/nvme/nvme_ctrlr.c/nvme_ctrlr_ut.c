@@ -272,8 +272,9 @@ nvme_ctrlr_cmd_set_async_event_config(struct spdk_nvme_ctrlr *ctrlr,
 }
 
 int
-nvme_ctrlr_cmd_identify_controller(struct spdk_nvme_ctrlr *ctrlr, void *payload,
-				   spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+nvme_ctrlr_cmd_identify(struct spdk_nvme_ctrlr *ctrlr, uint8_t cns, uint16_t cntid, uint32_t nsid,
+			void *payload, size_t payload_size,
+			spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	fake_cpl_success(cb_fn, cb_arg);
 	return 0;

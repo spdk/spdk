@@ -102,14 +102,15 @@ spdk_nvme_ctrlr_cmd_admin_raw(struct spdk_nvme_ctrlr *ctrlr,
 }
 
 int
-nvme_ctrlr_cmd_identify_controller(struct spdk_nvme_ctrlr *ctrlr, void *payload,
-				   spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+nvme_ctrlr_cmd_identify(struct spdk_nvme_ctrlr *ctrlr, uint8_t cns, uint16_t cntid, uint32_t nsid,
+			void *payload, size_t payload_size,
+			spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	struct nvme_request *req;
 	struct spdk_nvme_cmd *cmd;
 
 	req = nvme_allocate_request_user_copy(ctrlr->adminq,
-					      payload, sizeof(struct spdk_nvme_ctrlr_data),
+					      payload, payload_size,
 					      cb_fn, cb_arg, false);
 	if (req == NULL) {
 		return -ENOMEM;
@@ -117,37 +118,7 @@ nvme_ctrlr_cmd_identify_controller(struct spdk_nvme_ctrlr *ctrlr, void *payload,
 
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_IDENTIFY;
-
-	/*
-	 * TODO: create an identify command data structure, which
-	 *  includes this CNS bit in cdw10.
-	 */
-	cmd->cdw10 = SPDK_NVME_IDENTIFY_CTRLR;
-
-	return nvme_ctrlr_submit_admin_request(ctrlr, req);
-}
-
-int
-nvme_ctrlr_cmd_identify_namespace(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
-				  void *payload, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
-{
-	struct nvme_request *req;
-	struct spdk_nvme_cmd *cmd;
-
-	req = nvme_allocate_request_user_copy(ctrlr->adminq,
-					      payload, sizeof(struct spdk_nvme_ns_data),
-					      cb_fn, cb_arg, false);
-	if (req == NULL) {
-		return -ENOMEM;
-	}
-
-	cmd = &req->cmd;
-	cmd->opc = SPDK_NVME_OPC_IDENTIFY;
-
-	/*
-	 * TODO: create an identify command data structure
-	 */
-	cmd->cdw10 = SPDK_NVME_IDENTIFY_NS;
+	cmd->cdw10 = cns | ((uint32_t)cntid << 16);
 	cmd->nsid = nsid;
 
 	return nvme_ctrlr_submit_admin_request(ctrlr, req);
