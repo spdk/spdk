@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4ae2d3f3_a74a5908",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-21T07:38:46Z",
+      "side": 1,
+      "message": "I think default value for SPDK_TEST_ISCSI_INITIATOR should be added in this section.",
+      "revId": "21aebf21202ff9316987c37ffb4c20da3c195956",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
