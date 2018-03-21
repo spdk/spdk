@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "8e040a23_f94a7e4c",
+        "filename": "autotest.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-21T15:04:00Z",
+      "side": 1,
+      "message": "Yup, will move back autotest.sh to its original state once I have +1 from test pool",
+      "parentUuid": "38b0ca99_442017c0",
+      "range": {
+        "startLine": 175,
+        "startChar": 0,
+        "endLine": 181,
+        "endChar": 29
+      },
+      "revId": "74e32e09293b943994ed52b31e6ce5a229a4e8c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6f5ce175_de33ccc3",
         "filename": "test/vhost/integrity/integrity_start.sh",
         "patchSetId": 15
@@ -36,6 +60,30 @@
       "writtenOn": "2018-03-20T13:12:20Z",
       "side": 1,
       "message": "Does this ignore any error during deletion of bdev or destruction of lvol store ?",
+      "range": {
+        "startLine": 28,
+        "startChar": 41,
+        "endLine": 28,
+        "endChar": 49
+      },
+      "revId": "74e32e09293b943994ed52b31e6ce5a229a4e8c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "498aeba0_2860ba6f",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-21T15:04:00Z",
+      "side": 1,
+      "message": "Removed, done",
+      "parentUuid": "6f5ce175_de33ccc3",
       "range": {
         "startLine": 28,
         "startChar": 41,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "149b0aa4_4afc2569",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-21T15:04:00Z",
+      "side": 1,
+      "message": "Done. 10G should suffice for the test",
+      "parentUuid": "b8f64914_63362735",
+      "range": {
+        "startLine": 65,
+        "startChar": 38,
+        "endLine": 65,
+        "endChar": 66
+      },
+      "revId": "74e32e09293b943994ed52b31e6ce5a229a4e8c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2897a125_463c0465",
         "filename": "test/vhost/integrity/integrity_vm.sh",
         "patchSetId": 15
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "3aaf9dd1_9acbd1ff",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-21T15:04:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2897a125_463c0465",
+      "range": {
+        "startLine": 24,
+        "startChar": 0,
+        "endLine": 27,
+        "endChar": 4
+      },
+      "revId": "74e32e09293b943994ed52b31e6ce5a229a4e8c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ad4557eb_3fd13827",
         "filename": "test/vhost/integrity/integrity_vm.sh",
         "patchSetId": 15
@@ -105,6 +201,30 @@
       "writtenOn": "2018-03-20T13:12:20Z",
       "side": 1,
       "message": "Shouldn\u0027t those be enabled here ?",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 50,
+        "endChar": 8
+      },
+      "revId": "74e32e09293b943994ed52b31e6ce5a229a4e8c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "24c62684_73d56308",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-21T15:04:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ad4557eb_3fd13827",
       "range": {
         "startLine": 48,
         "startChar": 0,
