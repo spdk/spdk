@@ -2,6 +2,46 @@
   "comments": [
     {
       "key": {
+        "uuid": "5605be9c_0973b60c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-03-21T07:13:34Z",
+      "side": 1,
+      "message": "scsi",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 5
+      },
+      "revId": "82e9765b8b8d1447368848f2cf49a8184104bba0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a09a7088_b3f1344a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-03-21T07:13:34Z",
+      "side": 1,
+      "message": "It looks like this patch defers LUN hotremoval under some circumstances. Is it trying to workaround some iscsi race issue? Could this at least be stated in the commit msg? The current message is too generic and doesn\u0027t describe the reason behind this change.",
+      "revId": "82e9765b8b8d1447368848f2cf49a8184104bba0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ab11dcf4_323be844",
         "filename": "lib/scsi/lun.c",
         "patchSetId": 5
