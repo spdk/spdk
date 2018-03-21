@@ -462,7 +462,7 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 		if (!sgroup->channels) {
 			return -ENOMEM;
 		}
-		sgroup->num_channels = new_num_channels;
+		sgroup->num_channels++;
 
 		/* Initialize new channels */
 		for (i = old_num_channels; i < new_num_channels; i++) {
@@ -498,10 +498,10 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 		}
 
 		sgroup->channels = buf;
-		sgroup->num_channels = new_num_channels;
+		sgroup->num_channels++;
 
 		/* Initialize new channels */
-		for (i = old_num_channels; i < new_num_channels; i++) {
+		for (i = 0; i < new_num_channels; i++) {
 			ns = subsystem->ns[i];
 			if (ns) {
 				sgroup->channels[i] = spdk_bdev_get_io_channel(ns->desc);
