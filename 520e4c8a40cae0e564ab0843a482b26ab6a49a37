@@ -1,0 +1,159 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "81309317_015b709c",
+        "filename": "scripts/fio.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-21T08:35:07Z",
+      "side": 1,
+      "message": "Isn\u0027t this change related to distribution differences when running autotest ? This belongs to another patch, after cause is determined.",
+      "range": {
+        "startLine": 110,
+        "startChar": 70,
+        "endLine": 110,
+        "endChar": 72
+      },
+      "revId": "520e4c8a40cae0e564ab0843a482b26ab6a49a37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bcd5f6db_94d84351",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-21T08:35:07Z",
+      "side": 1,
+      "message": "Is this change necessary ?",
+      "range": {
+        "startLine": 14,
+        "startChar": 21,
+        "endLine": 14,
+        "endChar": 24
+      },
+      "revId": "520e4c8a40cae0e564ab0843a482b26ab6a49a37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f1b24064_4216317a",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-21T08:35:07Z",
+      "side": 1,
+      "message": "Starting and configuring VPP should be done in a function, similar to start_stub.",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 33
+      },
+      "revId": "520e4c8a40cae0e564ab0843a482b26ab6a49a37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa79961e_d7b8babc",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-21T08:35:07Z",
+      "side": 1,
+      "message": "Let\u0027s change from directly pointing to binaries, assume that it is installed. So just call \u0027vpp\u0027 or \u0027vppctl\u0027.\nPatch below is probably the way VPP will be installed on TP\nhttps://review.gerrithub.io/#/c/404144/",
+      "range": {
+        "startLine": 14,
+        "startChar": 1,
+        "endLine": 15,
+        "endChar": 32
+      },
+      "revId": "520e4c8a40cae0e564ab0843a482b26ab6a49a37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e3d10550_0b59cef3",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-21T08:35:07Z",
+      "side": 1,
+      "message": "Setting all variables related to addresses in top level script iscsi_tgt.sh might be best. This would mean moving here PORT and NETMASK variables as well. Having them in one place would simplify the process of changing for tests with VPP.\n\nHow about separating changes of moving address related variables to another patch before this one ? As they are not only for VPP.",
+      "revId": "520e4c8a40cae0e564ab0843a482b26ab6a49a37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7bb87b5b_703d389a",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-21T08:35:07Z",
+      "side": 1,
+      "message": "This would be more suited for function executed after all scripts pass or on trap.\nPlease see start_stub and kill_stub for reference.",
+      "range": {
+        "startLine": 81,
+        "startChar": 0,
+        "endLine": 84,
+        "endChar": 2
+      },
+      "revId": "520e4c8a40cae0e564ab0843a482b26ab6a49a37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7bd8203a_3cad63a4",
+        "filename": "test/iscsi_tgt/rpc_config/rpc_config.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-21T08:35:07Z",
+      "side": 1,
+      "message": "Is this change necessary ?",
+      "range": {
+        "startLine": 14,
+        "startChar": 21,
+        "endLine": 14,
+        "endChar": 24
+      },
+      "revId": "520e4c8a40cae0e564ab0843a482b26ab6a49a37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

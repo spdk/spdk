@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8092e594_b140dcb0",
+        "filename": "test/iscsi_tgt/rpc_config/rpc_config.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-21T08:35:07Z",
+      "side": 0,
+      "message": "Does it change flow of the test after change ? It is now set to 127.0.0.1, instead of 127.0.0.1.",
+      "range": {
+        "startLine": 183,
+        "startChar": 26,
+        "endLine": 183,
+        "endChar": 37
+      },
+      "revId": "05fe3deba006001605ae63f90ea4a3a0bc051aa6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
