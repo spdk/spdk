@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da48fe31_3aff8c63",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-03-21T02:25:45Z",
+      "side": 1,
+      "message": "Let\u0027s say \"Using maximum 2048MiB to reduce the test time\", otherwise looks good to me.",
+      "revId": "7a844d27de0bd8f1f2a8a243bf1710b67214b4dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
