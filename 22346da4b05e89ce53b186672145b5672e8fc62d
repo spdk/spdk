@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "167aacd0_2ac08ea8",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-21T21:35:48Z",
+      "side": 1,
+      "message": "This should default to 1 like all the other options.  Then your config check below can set it to 0 if the required library version isn\u0027t found.\n\nAlso please sort this next to SPDK_TEST_ISCSI.",
+      "revId": "22346da4b05e89ce53b186672145b5672e8fc62d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
