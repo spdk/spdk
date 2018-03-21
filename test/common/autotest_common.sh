@@ -553,3 +553,4 @@ function autotest_cleanup()
 
 set -o errtrace
 trap "trap - ERR; print_backtrace >&2" ERR
+DATE='Wed Mar 21 05:00:08 MST 2018'
