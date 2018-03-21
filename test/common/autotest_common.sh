@@ -9,7 +9,7 @@ set -e
 PS4=' \t	\$ '
 ulimit -c unlimited
 
-: ${RUN_NIGHTLY:=0}
+: ${RUN_NIGHTLY:=1}
 export RUN_NIGHTLY
 
 : ${RUN_NIGHTLY_FAILING:=0}
@@ -556,3 +556,4 @@ function autotest_cleanup()
 
 set -o errtrace
 trap "trap - ERR; print_backtrace >&2" ERR
+DATE='Wed Mar 21 10:18:57 MST 2018'
