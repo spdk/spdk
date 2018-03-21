@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a488f766_4ea6a2db",
+        "filename": "lib/bdev/error/vbdev_error.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 368,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-03-21T05:53:03Z",
+      "side": 1,
+      "message": "Could this call vbdev_error_clear_config() instead? It did in v1 and got rollbacked now. Is this intended?",
+      "range": {
+        "startLine": 362,
+        "startChar": 0,
+        "endLine": 368,
+        "endChar": 2
+      },
+      "revId": "1887784d815e7394043bb7947564a60509aa44e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
