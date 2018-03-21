@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "2a2ca2b1_c40123b4",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 355,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-03-21T10:39:05Z",
+      "side": 1,
+      "message": "Yes. Looking through DPDK code, it worked as you described here. In this way, it seems that we can make changes to the mempool_create related APIs to not expose this socket parameter and always have the SOCKET_ID_ANY to let DPDK handle properly. Or we can still leave this parameter there and change other callings to these APIs with SOCKET_ID_ANY parameter. For example, below line 364.",
+      "parentUuid": "c1ec7893_47661033",
+      "revId": "a5385ebac8d7ca4f61f446d90346b1a75fc49390",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "709c59ea_da34333c",
         "filename": "lib/iscsi/iscsi_subsystem.c",
         "patchSetId": 1
