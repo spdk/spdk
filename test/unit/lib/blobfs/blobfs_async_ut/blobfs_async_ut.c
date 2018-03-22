@@ -35,7 +35,7 @@
 
 #include "CUnit/Basic.h"
 
-#include "lib/test_env.c"
+#include "common/lib/test_env.c"
 
 #include "spdk_cunit.h"
 #include "blobfs/blobfs.c"
