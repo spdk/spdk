@@ -41,6 +41,7 @@ fi
 : ${SPDK_TEST_VHOST_INIT=1}; export SPDK_TEST_VHOST_INIT
 : ${SPDK_TEST_NVML=1}; export SPDK_TEST_NVML
 : ${SPDK_TEST_LVOL=1}; export SPDK_TEST_LVOL
+: ${SPDK_TEST_VPP=1}; export SPDK_TEST_VPP
 : ${SPDK_RUN_ASAN=1}; export SPDK_RUN_ASAN
 : ${SPDK_RUN_UBSAN=1}; export SPDK_RUN_UBSAN
 
@@ -85,6 +86,15 @@ case `uname` in
 				config_params+=' --enable-asan'
 			else
 				SPDK_RUN_ASAN=0
+			fi
+		fi
+		if [ $SPDK_TEST_VPP -eq 1 ]; then
+			SPDK_VPP_DIR=/home/smrozowx/works/vpp/build-root/install-vpp-native/vpp
+			if [ -d $SPDK_VPP_DIR ]; then
+				export SPDK_VPP_DIR
+				config_params+=' --with-vpp='$SPDK_VPP_DIR
+			else
+				config_params+=' --with-vpp'
 			fi
 		fi
 		;;
@@ -352,6 +362,37 @@ function kill_stub() {
 	kill $stubpid
 	wait $stubpid
 	rm -f /var/run/spdk_stub0
+}
+
+function start_vpp() {
+if [ $SPDK_TEST_VPP -eq 1 ]; then
+	export TARGET_IP=10.10.1.10
+	export INITIATOR_IP=10.10.1.11
+	export VCL_DEBUG=0
+	VPP_CTL="$SPDK_VPP_DIR/bin/vppctl"
+	VPP_APP="$SPDK_VPP_DIR/bin/vpp"
+	
+	sudo $VPP_APP unix { cli-listen /run/vpp/cli.sock gid 0 } &
+	sleep 5
+	vpp_pid=$(pgrep vpp)
+	echo "VPP Process pid: $vpp_pid"
+	
+	$VPP_CTL tap connect tap0
+	ip addr add $INITIATOR_IP/24 dev tap0
+	ip link set tap0 up
+	$VPP_CTL set interface state tapcli-0 up
+	$VPP_CTL set interface ip address tapcli-0 $TARGET_IP/24
+else
+	export TARGET_IP=127.0.0.1
+	export INITIATOR_IP=127.0.0.1
+fi
+}
+
+function kill_vpp() {
+if [ $SPDK_TEST_VPP -eq 1 ]; then
+	$VPP_CTL tap delete tapcli-0
+	kill $vpp_pid
+fi
 }
 
 function run_test() {

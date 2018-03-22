@@ -7,12 +7,11 @@ if [ ! $(uname -s) = Linux ]; then
 	exit 0
 fi
 
-export TARGET_IP=127.0.0.1
-export INITIATOR_IP=127.0.0.1
-
 source $rootdir/test/iscsi_tgt/common.sh
 
 timing_enter iscsi_tgt
+
+start_vpp
 
 # ISCSI_TEST_CORE_MASK is the biggest core mask specified by
 #  any of the iscsi_tgt tests.  Using this mask for the stub
@@ -29,9 +28,9 @@ export ISCSI_APP="./app/iscsi_tgt/iscsi_tgt -i 0"
 run_test ./test/iscsi_tgt/calsoft/calsoft.sh
 run_test ./test/iscsi_tgt/filesystem/filesystem.sh
 run_test ./test/iscsi_tgt/reset/reset.sh
-run_test ./test/iscsi_tgt/rpc_config/rpc_config.sh
-run_test ./test/iscsi_tgt/lvol/iscsi_lvol.sh
-run_test ./test/iscsi_tgt/fio/fio.sh
+#run_test ./test/iscsi_tgt/rpc_config/rpc_config.sh
+#run_test ./test/iscsi_tgt/lvol/iscsi_lvol.sh
+#run_test ./test/iscsi_tgt/fio/fio.sh
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	if [ $SPDK_TEST_NVML -eq 1 ]; then
@@ -64,5 +63,7 @@ fi
 if [ $SPDK_TEST_ISCSI_INITIATOR -eq 1 ]; then
 	run_test ./test/iscsi_tgt/initiator/initiator.sh
 fi
+
+kill_vpp
 
 timing_exit iscsi_tgt
