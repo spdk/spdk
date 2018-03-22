@@ -541,7 +541,7 @@ for the NVMe driver.
     enable WRR, set the `arb_mechanism` field during `spdk_nvme_probe()`.
   - A simplified "Hello World" example was added to show the proper way to use
     the NVMe library API; see `examples/nvme/hello_world/hello_world.c`.
-  - A test for measuring software overhead was added. See `test/lib/nvme/overhead`.
+  - A test for measuring software overhead was added. See `test/nvme/overhead`.
 
 ## v16.06: NVMf userspace target
 

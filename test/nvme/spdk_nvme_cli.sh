@@ -3,7 +3,7 @@
 set -ex
 
 testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../../..)
+rootdir=$(readlink -f $testdir/../..)
 source $rootdir/scripts/common.sh
 source $rootdir/test/common/autotest_common.sh
 spdk_nvme_cli="/home/sys_sgsw/nvme-cli"
