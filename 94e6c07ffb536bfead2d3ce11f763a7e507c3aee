@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d68b5582_a4d786b3",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-22T13:27:29Z",
+      "side": 1,
+      "message": "This directory was not created within this test - no need to remove it.",
+      "range": {
+        "startLine": 50,
+        "startChar": 2,
+        "endLine": 50,
+        "endChar": 32
+      },
+      "revId": "94e6c07ffb536bfead2d3ce11f763a7e507c3aee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d3dd2b3e_cd3ca5fb",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-22T13:27:29Z",
+      "side": 1,
+      "message": "Nitpick. Maybe to make it more clear, use \"Running file system integrity suite on vhost SCSI...\". Otherwise it implies there is such thing like \"SCSI filesystem\".",
+      "range": {
+        "startLine": 107,
+        "startChar": 8,
+        "endLine": 107,
+        "endChar": 50
+      },
+      "revId": "94e6c07ffb536bfead2d3ce11f763a7e507c3aee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e88c9204_0426a1e6",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-22T13:27:29Z",
+      "side": 1,
+      "message": "Same as above",
+      "range": {
+        "startLine": 112,
+        "startChar": 7,
+        "endLine": 112,
+        "endChar": 50
+      },
+      "revId": "94e6c07ffb536bfead2d3ce11f763a7e507c3aee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
