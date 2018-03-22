@@ -21,6 +21,8 @@ subsystemname=nqn.2016-06.io.spdk:testnqn
 modprobe null_blk nr_devices=1
 modprobe nvmet
 modprobe nvmet-rdma
+modprobe nvmet-fc
+modprobe lpfc
 
 if [ ! -d /sys/kernel/config/nvmet/subsystems/$subsystemname ]; then
 	mkdir /sys/kernel/config/nvmet/subsystems/$subsystemname
@@ -63,6 +65,8 @@ rmdir --ignore-fail-on-non-empty /sys/kernel/config/nvmet/subsystems/$subsystemn
 rmdir --ignore-fail-on-non-empty /sys/kernel/config/nvmet/subsystems/$subsystemname
 rmdir --ignore-fail-on-non-empty /sys/kernel/config/nvmet/ports/1
 
+rmmod lpfc
+rmmod nvmet_fc
 rmmod nvmet-rdma
 rmmod null_blk
 rmmod nvmet
