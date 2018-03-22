@@ -138,6 +138,11 @@ struct spdk_blob {
 	struct spdk_xattr_tailq xattrs;
 	struct spdk_xattr_tailq xattrs_internal;
 
+	/* Snapshot and clones relationships */
+	struct spdk_blob *snapshot;
+	TAILQ_HEAD(, spdk_blob) clones;
+	TAILQ_ENTRY(spdk_blob) next_clone;
+
 	TAILQ_ENTRY(spdk_blob) link;
 };
 
@@ -258,8 +263,6 @@ struct spdk_blob_md_descriptor_extent {
 #define SPDK_BLOB_READ_ONLY (1ULL << 0)
 #define SPDK_BLOB_DATA_RO_FLAGS_MASK	SPDK_BLOB_READ_ONLY
 #define SPDK_BLOB_MD_RO_FLAGS_MASK	0
-
-#define spdk_blob_is_thin_provisioned(blob) (blob->invalid_flags & SPDK_BLOB_THIN_PROV)
 
 struct spdk_blob_md_descriptor_flags {
 	uint8_t		type;

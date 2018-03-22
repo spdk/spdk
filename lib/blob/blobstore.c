@@ -4672,4 +4672,35 @@ spdk_bs_set_bstype(struct spdk_blob_store *bs, struct spdk_bs_type bstype)
 	memcpy(&bs->bstype, &bstype, sizeof(bstype));
 }
 
+bool
+spdk_blob_is_read_only(struct spdk_blob *blob)
+{
+	return (blob->data_ro || blob->md_ro);
+}
+
+bool
+spdk_blob_is_snapshot(struct spdk_blob *blob)
+{
+	/* FIXIT: Introduce a new flag for invalid_flags to distinguish read
+	 *        only blobs and snapshots (similar to SPDK_BLOB_THIN_PROV).
+	 */
+	return spdk_blob_is_read_only(blob);
+}
+
+bool
+spdk_blob_is_clone(struct spdk_blob *blob)
+{
+	if (blob->snapshot != NULL) {
+		assert(spdk_blob_is_thin_provisioned(blob));
+		return true;
+	}
+	return false;
+}
+
+bool
+spdk_blob_is_thin_provisioned(struct spdk_blob *blob)
+{
+	return blob->invalid_flags & SPDK_BLOB_THIN_PROV;
+}
+
 SPDK_LOG_REGISTER_COMPONENT("blob", SPDK_LOG_BLOB)
