@@ -101,7 +101,7 @@ if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
 fi
 
 if [ $SPDK_TEST_EVENT -eq 1 ]; then
-	run_test test/lib/event/event.sh
+	run_test test/event/event.sh
 fi
 
 if [ $SPDK_TEST_NVME -eq 1 ]; then
