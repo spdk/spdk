@@ -167,7 +167,7 @@ Bringing machine 'default' up with 'virtualbox' provider...
 ==> default:   CC lib/blob/blobstore.o
 ==> default:   CC lib/bdev/bdev.o
 << some output trimmed >>
-==> default:   LINK test/lib/nvme/e2edp/nvme_dp
+==> default:   LINK test/nvme/e2edp/nvme_dp
 ==> default: Running provisioner: shell...
     default: Running: inline script
 ==> default: 0000:00:0e.0 (80ee 4e56): nvme -> uio_pci_generic
