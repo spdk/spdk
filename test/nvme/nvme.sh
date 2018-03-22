@@ -3,7 +3,7 @@
 set -e
 
 testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../../..)
+rootdir=$(readlink -f $testdir/../..)
 source $rootdir/scripts/common.sh
 source $rootdir/test/common/autotest_common.sh
 
@@ -140,7 +140,7 @@ $testdir/e2edp/nvme_dp
 timing_exit e2edp
 
 timing_enter overhead
-$rootdir/test/lib/nvme/overhead/overhead -s 4096 -t 1 -H
+$testdir/overhead/overhead -s 4096 -t 1 -H
 timing_exit overhead
 
 timing_enter arbitration
