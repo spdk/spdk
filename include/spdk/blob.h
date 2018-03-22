@@ -374,6 +374,7 @@ void spdk_bs_create_clone(struct spdk_blob_store *bs, spdk_blob_id blobid,
 
 bool spdk_blob_is_read_only(struct spdk_blob *blob);
 bool spdk_blob_is_snapshot(struct spdk_blob *blob);
+bool spdk_blob_is_clone(struct spdk_blob *blob);
 bool spdk_blob_is_thin_provisioned(struct spdk_blob *blob);
 
 /**
