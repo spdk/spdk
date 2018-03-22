@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = blobfs env event json nvme util
+DIRS-y = env event json nvme util
 
 .PHONY: all clean $(DIRS-y)
 

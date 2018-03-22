@@ -31,14 +31,14 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-APP = mkfs
+APP = fuse
 
-C_SRCS := mkfs.c
+C_SRCS := fuse.c
 
 SPDK_LIB_LIST = event_bdev event_copy
 SPDK_LIB_LIST += blobfs blob bdev blob_bdev copy event util conf trace \
@@ -46,6 +46,7 @@ SPDK_LIB_LIST += blobfs blob bdev blob_bdev copy event util conf trace \
 
 LIBS += $(COPY_MODULES_LINKER_ARGS) $(BLOCKDEV_MODULES_LINKER_ARGS)
 LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
+LIBS+= -L/usr/local/lib -lfuse3
 
 all : $(APP)
 	@:
