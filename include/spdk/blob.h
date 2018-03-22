@@ -372,6 +372,10 @@ void spdk_bs_create_clone(struct spdk_blob_store *bs, spdk_blob_id blobid,
 			  const struct spdk_blob_xattr_opts *clone_xattrs,
 			  spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
 
+bool spdk_blob_is_read_only(struct spdk_blob *blob);
+bool spdk_blob_is_snapshot(struct spdk_blob *blob);
+bool spdk_blob_is_thin_provisioned(struct spdk_blob *blob);
+
 /**
  * Delete an existing blob from the given blobstore.
  *
