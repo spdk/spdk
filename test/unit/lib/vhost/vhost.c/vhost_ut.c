@@ -37,7 +37,7 @@
 #include "spdk_cunit.h"
 #include "spdk/io_channel.h"
 #include "spdk_internal/mock.h"
-#include "lib/test_env.c"
+#include "common/libs/test_env.c"
 
 #include "vhost/vhost.c"
 

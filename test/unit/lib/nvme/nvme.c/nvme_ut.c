@@ -39,7 +39,7 @@
 
 #include "spdk_internal/mock.h"
 
-#include "lib/test_env.c"
+#include "common/libs/test_env.c"
 
 DEFINE_STUB_V(nvme_ctrlr_fail,
 	      (struct spdk_nvme_ctrlr *ctrlr, bool hot_remove))
