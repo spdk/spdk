@@ -2,6 +2,7 @@
 
 import argparse
 import rpc
+import sys
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -32,6 +33,15 @@ if __name__ == "__main__":
     provided or file is '-' read configuration from stdin.""")
     p.add_argument('--filename', help="""JSON Configuration file.""")
     p.set_defaults(func=rpc.load_config)
+
+    p = subparsers.add_parser('clear_config', help="""Clear SPDK subsystems and tagets using JSON RPC. If no file is
+    provided or file is '-' read configuration from stdin.""")
+    p.set_defaults(func=rpc.clear_config, rpc=sys.argv[0])
+
+    p = subparsers.add_parser('clear_subsystem', help="""Clear SPDK subsystems and tagets using JSON RPC. If no file is
+    provided or file is '-' read configuration from stdin.""")
+    p.add_argument('--subsystem', help="""Subsystem name""")
+    p.set_defaults(func=rpc.clear_subsystem, rpc=sys.argv[0])
 
     # app
     p = subparsers.add_parser('kill_instance', help='Send signal to instance')
