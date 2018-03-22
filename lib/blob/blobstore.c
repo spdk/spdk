@@ -184,6 +184,8 @@ _spdk_blob_alloc(struct spdk_blob_store *bs, spdk_blob_id id)
 	TAILQ_INIT(&blob->xattrs);
 	TAILQ_INIT(&blob->xattrs_internal);
 
+	TAILQ_INIT(&blob->clones);
+
 	return blob;
 }
 
@@ -810,6 +812,10 @@ _spdk_blob_load_snapshot_cpl(void *cb_arg, struct spdk_blob *snapshot, int bserr
 		bserrno = -ENOMEM;
 		goto error;
 	}
+
+	blob->snapshot = snapshot;
+
+	TAILQ_INSERT_TAIL(&snapshot->clones, blob, next_clone);
 
 	_spdk_blob_load_final(ctx, bserrno);
 	return;
@@ -3678,6 +3684,8 @@ _spdk_bs_snapshot_origblob_sync_cpl(void *cb_arg, int bserrno)
 		return;
 	}
 
+	TAILQ_INSERT_TAIL(&newblob->clones, ctx->original.blob, next_clone);
+
 	spdk_blob_set_read_only(newblob);
 
 	/* sync snapshot metadata */
@@ -3712,6 +3720,9 @@ _spdk_bs_snapshot_newblob_sync_cpl(void *cb_arg, int bserrno)
 
 	/* set clone blob as thin provisioned */
 	_spdk_blob_set_thin_provision(origblob);
+
+	origblob->snapshot = newblob;
+	//TAILQ_INSERT_TAIL(&newblob->clones, origblob, next_clone);
 
 	/* Zero out origblob cluster map */
 	memset(origblob->active.clusters, 0,
@@ -4017,6 +4028,10 @@ _spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
 		return;
 	}
 
+	if (spdk_blob_is_clone(blob)) {
+		TAILQ_REMOVE(&blob->snapshot->clones, blob, next_clone);
+	}
+
 	/*
 	 * Remove the blob from the blob_store list now, to ensure it does not
 	 *  get returned after this point by _spdk_blob_lookup().
@@ -4272,6 +4287,9 @@ _spdk_blob_close_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 			 */
 			if (blob->active.num_pages > 0) {
 				TAILQ_REMOVE(&blob->bs->blobs, blob, link);
+			}
+			if (blob->snapshot != NULL /* && !TAILQ_EMPTY(&blob->snapshot->clones) */) {
+				TAILQ_REMOVE(&blob->snapshot->clones, blob, next_clone);
 			}
 			_spdk_blob_free(blob);
 		}
@@ -4695,6 +4713,17 @@ spdk_blob_is_snapshot(struct spdk_blob *blob)
 	 *        only blobs and snapshots (similar to SPDK_BLOB_THIN_PROV).
 	 */
 	return spdk_blob_is_read_only(blob);
+}
+
+bool
+spdk_blob_is_clone(struct spdk_blob *blob)
+{
+	assert(blob != NULL);
+	if (blob->snapshot != NULL) {
+		assert(spdk_blob_is_thin_provisioned(blob));
+		return true;
+	}
+	return false;
 }
 
 bool
