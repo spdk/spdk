@@ -33,7 +33,7 @@
 
 #include "spdk_cunit.h"
 
-#include "lib/test_env.c"
+#include "common/lib/test_env.c"
 #include "unit/lib/json_mock.c"
 
 #include "bdev/pmem/bdev_pmem.c"

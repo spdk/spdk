@@ -36,7 +36,7 @@
 #include "CUnit/Basic.h"
 #include "spdk_cunit.h"
 #include "spdk_internal/mock.h"
-#include "lib/test_env.c"
+#include "common/lib/test_env.c"
 
 #include "vhost/vhost_blk.c"
 #include "unit/lib/vhost/test_vhost.c"
