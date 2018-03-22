@@ -122,6 +122,30 @@ int nvme_ns_identify_update(struct spdk_nvme_ns *ns)
 		ns->flags |= SPDK_NVME_NS_DPS_PI_SUPPORTED;
 		ns->pi_type = nsdata->dps.pit;
 	}
+
+	memset(ns->id_desc_list, 0, sizeof(ns->id_desc_list));
+	if (ns->ctrlr->cdata.ver.raw >= SPDK_NVME_VERSION(1, 3, 0)) {
+		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Attempting to retrieve NS ID Descriptor List\n");
+		status.done = false;
+		rc = nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS_ID_DESCRIPTOR_LIST, 0, ns->id,
+					     ns->id_desc_list, sizeof(ns->id_desc_list),
+					     nvme_completion_poll_cb, &status);
+		if (rc == 0) {
+			while (status.done == false) {
+				nvme_robust_mutex_lock(&ns->ctrlr->ctrlr_lock);
+				spdk_nvme_qpair_process_completions(ns->ctrlr->adminq, 0);
+				nvme_robust_mutex_unlock(&ns->ctrlr->ctrlr_lock);
+			}
+		}
+
+		if (rc != 0 || spdk_nvme_cpl_is_error(&status.cpl)) {
+			SPDK_WARNLOG("Failed to retrieve NS ID Descriptor List\n");
+			memset(ns->id_desc_list, 0, sizeof(ns->id_desc_list));
+		}
+	} else {
+		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Version < 1.3; not attempting to retrieve NS ID Descriptor List\n");
+	}
+
 	return rc;
 }
 
@@ -221,6 +245,55 @@ uint32_t
 spdk_nvme_ns_get_optimal_io_boundary(struct spdk_nvme_ns *ns)
 {
 	return ns->sectors_per_stripe;
+}
+
+static const void *
+_spdk_nvme_ns_find_id_desc(const struct spdk_nvme_ns *ns, enum spdk_nvme_nidt type, size_t *length)
+{
+	const struct spdk_nvme_ns_id_desc *desc;
+	size_t offset;
+
+	offset = 0;
+	while (offset + 4 < sizeof(ns->id_desc_list)) {
+		desc = (const struct spdk_nvme_ns_id_desc *)&ns->id_desc_list[offset];
+
+		if (desc->nidl == 0) {
+			/* End of list */
+			return NULL;
+		}
+
+		/*
+		 * Check if this descriptor fits within the list.
+		 * 4 is the fixed-size descriptor header (not counted in NIDL).
+		 */
+		if (offset + desc->nidl + 4 > sizeof(ns->id_desc_list)) {
+			/* Descriptor longer than remaining space in list (invalid) */
+			return NULL;
+		}
+
+		if (desc->nidt == type) {
+			*length = desc->nidl;
+			return &desc->nid[0];
+		}
+
+		offset += 4 + desc->nidl;
+	}
+
+	return NULL;
+}
+
+const struct spdk_uuid *
+spdk_nvme_ns_get_uuid(const struct spdk_nvme_ns *ns)
+{
+	const struct spdk_uuid *uuid;
+	size_t uuid_size;
+
+	uuid = _spdk_nvme_ns_find_id_desc(ns, SPDK_NVME_NIDT_UUID, &uuid_size);
+	if (uuid == NULL || uuid_size != sizeof(*uuid)) {
+		return NULL;
+	}
+
+	return uuid;
 }
 
 int nvme_ns_construct(struct spdk_nvme_ns *ns, uint32_t id,

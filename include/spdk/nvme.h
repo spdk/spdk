@@ -1053,6 +1053,15 @@ enum spdk_nvme_dealloc_logical_block_read_value spdk_nvme_ns_get_dealloc_logical
 uint32_t spdk_nvme_ns_get_optimal_io_boundary(struct spdk_nvme_ns *ns);
 
 /**
+ * Get the UUID for the given namespace.
+ *
+ * \param ns Namespace to query.
+ *
+ * \return Pointer to namespace UUID, or NULL if ns does not have a UUID.
+ */
+const struct spdk_uuid *spdk_nvme_ns_get_uuid(const struct spdk_nvme_ns *ns);
+
+/**
  * \brief Namespace command support flags.
  */
 enum spdk_nvme_ns_flags {
