@@ -105,6 +105,12 @@ enum spdk_blob_state {
 
 TAILQ_HEAD(spdk_xattr_tailq, spdk_xattr);
 
+struct spdk_blob_list {
+	spdk_blob_id id;
+	TAILQ_HEAD(, spdk_blob_list) clones;
+	TAILQ_ENTRY(spdk_blob_list) link;
+};
+
 struct spdk_blob {
 	struct spdk_blob_store *bs;
 
@@ -176,6 +182,7 @@ struct spdk_blob_store {
 	int				unload_err;
 
 	TAILQ_HEAD(, spdk_blob)		blobs;
+	TAILQ_HEAD(, spdk_blob_list)	snapshots;
 };
 
 struct spdk_bs_channel {
