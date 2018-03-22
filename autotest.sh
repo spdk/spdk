@@ -118,7 +118,7 @@ fi
 run_test test/lib/env/env.sh
 
 if [ $SPDK_TEST_IOAT -eq 1 ]; then
-	run_test test/lib/ioat/ioat.sh
+	run_test test/ioat/ioat.sh
 fi
 
 timing_exit lib
