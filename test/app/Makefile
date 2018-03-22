@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += stub bdev_svc
+DIRS-y += bdev_svc histogram_perf stub
 
 .PHONY: all clean $(DIRS-y)
 
