@@ -425,7 +425,7 @@ Example response:
 
 ## nvmf_subsystem_remove_ns method {#rpc_nvmf_subsystem_remove_ns}
 
-Remove a namespace to a subsystem.
+Remove a namespace from a subsystem.
 
 ### Parameters
 
@@ -458,6 +458,7 @@ Example response:
   "id": 1,
   "result": true
 }
+~~~
 
 ## nvmf_subsystem_add_host method {#rpc_nvmf_subsystem_add_host}
 
