@@ -458,6 +458,7 @@ Example response:
   "id": 1,
   "result": true
 }
+~~~
 
 ## nvmf_subsystem_add_host method {#rpc_nvmf_subsystem_add_host}
 
