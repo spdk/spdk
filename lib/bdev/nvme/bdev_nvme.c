@@ -1104,6 +1104,7 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 	struct spdk_nvme_ctrlr	*ctrlr = nvme_ctrlr->ctrlr;
 	struct spdk_nvme_ns	*ns;
 	const struct spdk_nvme_ctrlr_data *cdata;
+	const struct spdk_uuid	*uuid;
 	int			ns_id, num_ns, rc;
 	int			bdev_created = 0;
 
@@ -1146,6 +1147,12 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 		bdev->disk.blocklen = spdk_nvme_ns_get_sector_size(ns);
 		bdev->disk.blockcnt = spdk_nvme_ns_get_num_sectors(ns);
 		bdev->disk.optimal_io_boundary = spdk_nvme_ns_get_optimal_io_boundary(ns);
+
+		uuid = spdk_nvme_ns_get_uuid(ns);
+		if (uuid != NULL) {
+			bdev->disk.uuid = *uuid;
+		}
+
 		bdev->disk.ctxt = bdev;
 		bdev->disk.fn_table = &nvmelib_fn_table;
 		bdev->disk.module = &nvme_if;
