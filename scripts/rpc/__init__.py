@@ -12,6 +12,7 @@ import subsystem
 import vhost
 import json
 import sys
+import subprocess
 
 
 def get_rpc_methods(args):
@@ -60,3 +61,31 @@ def load_config(args):
             continue
         for elem in subsystem['config']:
             args.client.call(elem['method'], elem['params'])
+
+
+def clear_config(args):
+    import os
+    print os.system("pwd")
+    proc = subprocess.Popen(["python", args.rpc, "-s", args.server_addr, "save_config"], stdout=subprocess.PIPE)
+    output = proc.communicate()[0]
+    config = json.loads(output)
+    for subsystem in config['subsystems']:
+        print "subsystem: %s" % subsystem
+        if subsystem['subsystem'] == "bdev":
+            clear_bdev_subsystem(args, subsystem['config'])
+
+
+def clear_subsystem(args):
+    proc = subprocess.Popen(["python", args.rpc, "-s", args.server_addr, "get_subsystem", args.subsystem], stdout=subprocess.PIPE)
+    output = proc.communicate()[0]
+    config = json.loads(output)
+    if args.subsystem == 'bdev':
+        clear_bdev_subsystem(config)
+
+def clear_bdev_subsystem(args, bdev_config):
+    for bdev in bdev_config:
+        print "bdev: %s" % bdev
+        if 'name' in bdev:
+            args.client.call("delete_bdev", {'name': bdev['name']})
+        #elif 'params' in bdev and 'name' in bdev['params']:
+        #    args.client.call("delete_bdev", {'name': bdev['params']['name']})
