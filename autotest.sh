@@ -105,13 +105,13 @@ if [ $SPDK_TEST_EVENT -eq 1 ]; then
 fi
 
 if [ $SPDK_TEST_NVME -eq 1 ]; then
-	run_test test/lib/nvme/nvme.sh
-	run_test test/lib/nvme/spdk_nvme_cli.sh
+	run_test test/nvme/nvme.sh
+	run_test test/nvme/spdk_nvme_cli.sh
 	# Only test hotplug without ASAN enabled. Since if it is
 	# enabled, it catches SEGV earlier than our handler which
 	# breaks the hotplug logic
 	if [ $SPDK_RUN_ASAN -eq 0 ]; then
-		run_test test/lib/nvme/hotplug.sh intel
+		run_test test/nvme/hotplug.sh intel
 	fi
 fi
 
