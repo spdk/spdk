@@ -33,7 +33,7 @@
 
 #include "spdk_cunit.h"
 
-#include "lib/test_env.c"
+#include "common/libs/test_env.c"
 #include "lib/ut_multithread.c"
 
 /* HACK: disable VTune integration so the unit test doesn't need VTune headers and libs to build */

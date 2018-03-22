@@ -33,7 +33,7 @@
 
 #include "env_dpdk/memory.c"
 
-#include "test_env.c"
+#include "common/libs/test_env.c"
 #include "spdk_cunit.h"
 
 #include "spdk/bit_array.h"
