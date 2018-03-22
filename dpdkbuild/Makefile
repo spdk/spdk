@@ -36,6 +36,8 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 .PHONY: all clean install
 
+IPSEC_OPTS=SHARED=n
+
 ifeq ($(TARGET_MACHINE),aarch64)
 DPDK_CONFIG := arm64-armv8a
 else
@@ -64,6 +66,7 @@ endif
 
 ifeq ($(CONFIG_DEBUG),y)
 DPDK_CFLAGS += -O0 -g
+IPSEC_OPTS += DEBUG=y
 endif
 
 ifeq ($(CONFIG_WERROR),y)
@@ -76,9 +79,11 @@ $(SPDK_ROOT_DIR)/dpdk/build:
 	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/dpdk config T=$(DPDK_CONFIG)
 
 all: $(SPDK_ROOT_DIR)/dpdk/build
-	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/dpdk/build EXTRA_CFLAGS="$(DPDK_CFLAGS)" MAKEFLAGS="T=$(DPDK_CONFIG) -j$(NPROC)"
+	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/intel-ipsec-mb EXTRA_CFLAGS="$(IPSEC_MB_CFLAGS)" $(IPSEC_OPTS) MAKEFLAGS="j$(NPROC)" && \
+	$(MAKE) -C $(SPDK_ROOT_DIR)/dpdk/build EXTRA_CFLAGS="$(DPDK_CFLAGS)" MAKEFLAGS="T=$(DPDK_CONFIG) -j$(NPROC)"
 
 clean:
-	$(Q)rm -rf $(SPDK_ROOT_DIR)/dpdk/build
+	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/intel-ipsec-mb clean; \
+	rm -rf $(SPDK_ROOT_DIR)/dpdk/build
 
 install: all
