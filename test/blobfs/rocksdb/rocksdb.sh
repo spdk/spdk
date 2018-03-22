@@ -47,7 +47,7 @@ $rootdir/scripts/gen_nvme.sh >> $ROCKSDB_CONF
 trap 'rm -f $ROCKSDB_CONF; exit 1' SIGINT SIGTERM EXIT
 
 timing_enter mkfs
-$rootdir/test/lib/blobfs/mkfs/mkfs $ROCKSDB_CONF Nvme0n1
+$rootdir/test/blobfs/mkfs/mkfs $ROCKSDB_CONF Nvme0n1
 timing_exit mkfs
 
 mkdir $output_dir/rocksdb
@@ -62,7 +62,6 @@ else
 fi
 
 cd $RESULTS_DIR
-
 cp $testdir/common_flags.txt insert_flags.txt
 echo "--benchmarks=fillseq" >> insert_flags.txt
 echo "--threads=1" >> insert_flags.txt
