@@ -138,6 +138,11 @@ struct spdk_blob {
 	struct spdk_xattr_tailq xattrs;
 	struct spdk_xattr_tailq xattrs_internal;
 
+	/* Snapshot and clones relationships */
+	struct spdk_blob *snapshot;
+	TAILQ_HEAD(, spdk_blob) clones;
+	TAILQ_ENTRY(spdk_blob) next_clone;
+
 	TAILQ_ENTRY(spdk_blob) link;
 };
 
