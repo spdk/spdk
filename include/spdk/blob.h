@@ -390,6 +390,28 @@ void spdk_bs_create_clone(struct spdk_blob_store *bs, spdk_blob_id blobid,
 			  const struct spdk_blob_xattr_opts *clone_xattrs,
 			  spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
 
+/* TODO Note: This calls should be synchronous */
+
+/**
+ * Provide table with blob id's of clones are dependent on specified snapshot.
+ *
+ * \param snapshot Snapshots blob.
+ * \param ids Array of the clone ids. This array is internally allocated and must be freed.
+ * \param count Number of clones in ids array.
+ *
+ * \return -EINVAL if specified blob is not a snapshot.
+ */
+int spdk_blob_get_clones(struct spdk_blob *snapshot, spdk_blob_id **ids, size_t *count);
+
+/**
+ * Get snapshot blob id of the clone.
+ *
+ * \param blob Clones blob id.
+ *
+ * \return blob id of snapshot or SPDK_BLOBID_INVALID is blob is not a clone
+ */
+spdk_blob_id spdk_blob_get_snapshot(struct spdk_blob *blob);
+
 /**
  * Check if blob is read only.
  *
@@ -407,6 +429,15 @@ bool spdk_blob_is_read_only(struct spdk_blob *blob);
  * \return true if blob is a snapshot.
  */
 bool spdk_blob_is_snapshot(struct spdk_blob *blob);
+
+/**
+ * Check if blob is a clone.
+ *
+ * \param blob Blob id.
+ *
+ * \return true if blob is a clone.
+ */
+bool spdk_blob_is_clone(struct spdk_blob *blob);
 
 /**
  * Check if blob is thin-provisioned.
