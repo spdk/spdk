@@ -266,6 +266,13 @@ void spdk_bs_create_clone(struct spdk_blob_store *bs, spdk_blob_id blobid,
 			  spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
 
 
+/* TODO Note: This should probably go to separate patch
+ * Maybe spdk_blob_get_options instead? */
+bool spdk_blob_is_read_only(struct spdk_blob *blob);
+bool spdk_blob_is_snapshot(struct spdk_blob *blob);
+bool spdk_blob_is_clone(struct spdk_blob *blob);
+bool spdk_blob_is_thin_provisioned(struct spdk_blob *blob);
+
 /* Delete an existing blob. */
 void spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 			 spdk_blob_op_complete cb_fn, void *cb_arg);
