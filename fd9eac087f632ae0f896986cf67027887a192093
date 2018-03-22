@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f74ff5e7_78076843",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 370,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-22T13:06:28Z",
+      "side": 1,
+      "message": "Addresses should be passed as arguments, rather than defining here. So the start_vpp function is more versatile later.",
+      "range": {
+        "startLine": 369,
+        "startChar": 1,
+        "endLine": 370,
+        "endChar": 31
+      },
+      "revId": "fd9eac087f632ae0f896986cf67027887a192093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c269794c_c1612fc0",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 373,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-22T13:06:28Z",
+      "side": 1,
+      "message": "As previously noted, please use binaries installed in system.",
+      "range": {
+        "startLine": 372,
+        "startChar": 0,
+        "endLine": 373,
+        "endChar": 32
+      },
+      "revId": "fd9eac087f632ae0f896986cf67027887a192093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa5346d5_52a7eb76",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 374,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-22T13:06:28Z",
+      "side": 1,
+      "message": "./scripts/check_format.sh",
+      "range": {
+        "startLine": 374,
+        "startChar": 0,
+        "endLine": 374,
+        "endChar": 1
+      },
+      "revId": "fd9eac087f632ae0f896986cf67027887a192093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eaf521a6_04d17401",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-22T13:06:28Z",
+      "side": 1,
+      "message": "This definitely does not belong here. Normal iSCSI test shouldn\u0027t depend on function start_vpp.",
+      "range": {
+        "startLine": 385,
+        "startChar": 0,
+        "endLine": 387,
+        "endChar": 30
+      },
+      "revId": "fd9eac087f632ae0f896986cf67027887a192093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "722bea4a_1674cdb5",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-22T13:06:28Z",
+      "side": 1,
+      "message": "Since this trap overrides the one set previously, kill_vpp() might be better suited here. Otherwise kill_vpp won\u0027t execute on test fail, as this script won\u0027t reach line 67.",
+      "range": {
+        "startLine": 24,
+        "startChar": 0,
+        "endLine": 24,
+        "endChar": 44
+      },
+      "revId": "fd9eac087f632ae0f896986cf67027887a192093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
