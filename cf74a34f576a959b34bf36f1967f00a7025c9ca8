@@ -16,6 +16,24 @@
       "revId": "cf74a34f576a959b34bf36f1967f00a7025c9ca8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b4a9a4a_d0b66b2c",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-22T22:25:34Z",
+      "side": 1,
+      "message": "Agreed, I think we actually need to enforce this a few levels up (when we read the config for MaxQueuesPerSession), but it should definitely be checked somewhere.",
+      "parentUuid": "d28ff882_f4ccd2d8",
+      "revId": "cf74a34f576a959b34bf36f1967f00a7025c9ca8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
