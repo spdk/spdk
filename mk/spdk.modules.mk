@@ -31,10 +31,11 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-BLOCKDEV_MODULES_LIST = bdev_malloc bdev_null bdev_nvme nvme vbdev_passthru vbdev_error vbdev_gpt vbdev_lvol vbdev_split
+BLOCKDEV_MODULES_LIST = bdev_malloc bdev_null bdev_nvme nvme vbdev_passthru vbdev_error vbdev_gpt vbdev_split
 
+LVOL_MODULES_LIST = vbdev_lvol
 # Modules below are added as dependency for vbdev_lvol
-BLOCKDEV_MODULES_LIST += blob blob_bdev lvol
+LVOL_MODULES_LIST += blob blob_bdev lvol
 
 ifeq ($(CONFIG_RDMA),y)
 BLOCKDEV_MODULES_DEPS += -libverbs -lrdmacm
@@ -76,10 +77,19 @@ COPY_MODULES_LIST = copy_ioat ioat
 
 BLOCKDEV_MODULES_LINKER_ARGS = -Wl,--whole-archive \
 			       $(BLOCKDEV_MODULES_LIST:%=-lspdk_%) \
+			       $(LVOL_MODULES_LIST:%=-lspdk_%) \
 			       -Wl,--no-whole-archive \
 			       $(BLOCKDEV_MODULES_DEPS)
 
 BLOCKDEV_MODULES_FILES = $(call spdk_lib_list_to_files,$(BLOCKDEV_MODULES_LIST))
+BLOCKDEV_MODULES_FILES += $(call spdk_lib_list_to_files,$(LVOL_MODULES_LIST))
+
+BLOCKDEV_NO_LVOL_MODULES_LINKER_ARGS = -Wl,--whole-archive \
+			       $(BLOCKDEV_MODULES_LIST:%=-lspdk_%) \
+			       -Wl,--no-whole-archive \
+			       $(BLOCKDEV_MODULES_DEPS)
+
+BLOCKDEV_NO_LVOL_MODULES_FILES = $(call spdk_lib_list_to_files,$(BLOCKDEV_MODULES_LIST))
 
 COPY_MODULES_LINKER_ARGS = -Wl,--whole-archive \
 			   $(COPY_MODULES_LIST:%=-lspdk_%) \
