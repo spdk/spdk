@@ -31,12 +31,12 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-APP = reactor
-C_SRCS := reactor.c
+APP = event_perf
+C_SRCS := event_perf.c
 
 SPDK_LIB_LIST = event trace conf util log rpc jsonrpc json
 
