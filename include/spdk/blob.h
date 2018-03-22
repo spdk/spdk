@@ -391,6 +391,24 @@ void spdk_bs_create_clone(struct spdk_blob_store *bs, spdk_blob_id blobid,
 			  spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
 
 /**
+ * Check if blob is read only.
+ *
+ * \param blob Blob.
+ *
+ * \return true if blob is read only.
+ */
+bool spdk_blob_is_read_only(struct spdk_blob *blob);
+
+/**
+ * Check if blob is thin-provisioned.
+ *
+ * \param blob Blob.
+ *
+ * \return true if blob is thin-provisioned.
+ */
+bool spdk_blob_is_thin_provisioned(struct spdk_blob *blob);
+
+/**
  * Delete an existing blob from the given blobstore.
  *
  * \param bs blobstore.

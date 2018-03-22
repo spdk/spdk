@@ -4679,4 +4679,18 @@ spdk_bs_set_bstype(struct spdk_blob_store *bs, struct spdk_bs_type bstype)
 	memcpy(&bs->bstype, &bstype, sizeof(bstype));
 }
 
+bool
+spdk_blob_is_read_only(struct spdk_blob *blob)
+{
+	assert(blob != NULL);
+	return (blob->data_ro || blob->md_ro);
+}
+
+bool
+spdk_blob_is_thin_provisioned(struct spdk_blob *blob)
+{
+	assert(blob != NULL);
+	return !!(blob->invalid_flags & SPDK_BLOB_THIN_PROV);
+}
+
 SPDK_LOG_REGISTER_COMPONENT("blob", SPDK_LOG_BLOB)
