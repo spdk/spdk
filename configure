@@ -31,6 +31,8 @@ function usage()
 	echo "                           disable features and components."
 	echo ""
 	echo "Valid dependencies are listed below."
+	echo " crypto                    Required to build vbdev crypto module."
+	echo "                           No path required."
 	echo " dpdk                      Optional.  Uses dpdk submodule in spdk tree if not specified."
 	echo "                           example: /usr/share/dpdk/x86_64-default-linuxapp-gcc"
 	echo " fio                       Required to build fio_plugin."
@@ -154,6 +156,12 @@ for i in "$@"; do
 			;;
 		--without-dpdk)
 			CONFIG_DPDK_DIR=
+			;;
+		--with-crypto)
+			CONFIG_CRYPTO=y
+			;;
+		--without-crypto)
+			CONFIG_CRYPTO=n
 			;;
 		--with-vhost)
 			CONFIG_VHOST=y
@@ -293,6 +301,9 @@ if [ -n "$CONFIG_ENV" ]; then
 fi
 if [ -n "$CONFIG_DPDK_DIR" ]; then
 	echo "CONFIG_DPDK_DIR?=$CONFIG_DPDK_DIR" >> CONFIG.local
+fi
+if [ -n "$CONFIG_CRYPTO" ]; then
+	echo "CONFIG_CRYPTO?=$CONFIG_CRYPTO" >> CONFIG.local
 fi
 if [ -n "$CONFIG_VHOST" ]; then
 	echo "CONFIG_VHOST?=$CONFIG_VHOST" >> CONFIG.local

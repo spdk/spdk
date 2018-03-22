@@ -98,3 +98,6 @@ CONFIG_VPP?=n
 
 # Requires libiscsi development libraries.
 CONFIG_ISCSI_INITIATOR?=n
+
+# Enables the dependencies for building the cyrpto vbdev
+CONFIG_CRYPTO?=n

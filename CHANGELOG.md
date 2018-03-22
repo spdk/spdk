@@ -11,6 +11,9 @@ against SPDK easier.
 The static libraries are also still provided for users that prefer to link only the
 minimal set of components required.
 
+A new configure option was added `--with-crypto` that, when set, will enable the
+dependencies for building the crypto vbdev as well as the crypto vbdev module itself.
+
 ### RPC
 
 The `start_nbd_disk` RPC method now returns the path to the kernel NBD device node
