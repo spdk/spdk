@@ -37,7 +37,7 @@
 
 #include "util/io_channel.c"
 #include "common/lib/test_env.c"
-#include "lib/ut_multithread.c"
+#include "common/lib/ut_multithread.c"
 
 static void
 _send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
