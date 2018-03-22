@@ -31,11 +31,12 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-LIBS += $(ENV_LINKER_ARGS)
-TEST_FILE = vtophys.c
+CFLAGS += $(ENV_CFLAGS)
+CFLAGS += -I$(SPDK_ROOT_DIR)/test/lib
+TEST_FILE = memory_ut.c
 
 include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
