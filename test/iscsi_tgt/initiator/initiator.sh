@@ -40,7 +40,7 @@ $rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
 $rpc_py construct_target_node disk1 disk1_alias 'Malloc0:0' '1:2' 256 -d
 sleep 1
 trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
-$rootdir/test/lib/bdev/bdevperf/bdevperf -c $testdir/bdev.conf -q 128 -s 4096 -w verify -t 5 -d 512
+$rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdev.conf -q 128 -s 4096 -w verify -t 5 -d 512
 
 trap - SIGINT SIGTERM EXIT
 

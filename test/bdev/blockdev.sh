@@ -3,7 +3,7 @@
 set -e
 
 testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../../..)
+rootdir=$(readlink -f $testdir/../..)
 plugindir=$rootdir/examples/bdev/fio_plugin
 
 function run_fio()
@@ -89,7 +89,7 @@ if [ -d /usr/src/fio ] && [ $SPDK_RUN_ASAN -eq 0 ]; then
 		fio_config_add_job $testdir/bdev.fio $b
 	done
 
-	run_fio --spdk_conf=./test/lib/bdev/bdev.conf
+	run_fio --spdk_conf=./test/bdev/bdev.conf
 
 	rm -f *.state
 	rm -f $testdir/bdev.fio
@@ -102,7 +102,7 @@ if [ -d /usr/src/fio ] && [ $SPDK_RUN_ASAN -eq 0 ]; then
 		fio_config_add_job $testdir/bdev.fio $b
 	done
 
-	run_fio --spdk_conf=./test/lib/bdev/bdev.conf
+	run_fio --spdk_conf=./test/bdev/bdev.conf
 
 	rm -f *.state
 	rm -f $testdir/bdev.fio
