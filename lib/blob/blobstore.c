@@ -184,6 +184,8 @@ _spdk_blob_alloc(struct spdk_blob_store *bs, spdk_blob_id id)
 	TAILQ_INIT(&blob->xattrs);
 	TAILQ_INIT(&blob->xattrs_internal);
 
+	TAILQ_INIT(&blob->clones);
+
 	return blob;
 }
 
@@ -810,6 +812,12 @@ _spdk_blob_load_snapshot_cpl(void *cb_arg, struct spdk_blob *snapshot, int bserr
 		bserrno = -ENOMEM;
 		goto error;
 	}
+
+	blob->snapshot = snapshot;
+
+	TAILQ_INSERT_TAIL(&snapshot->clones, blob, next_clone);
+	printf(">>> Insert blob #%" PRIu64 " to the snapshot #%" PRIu64 "\n",
+	       blob->id, snapshot->id);
 
 	_spdk_blob_load_final(ctx, bserrno);
 	return;
@@ -3669,6 +3677,8 @@ _spdk_bs_snapshot_origblob_sync_cpl(void *cb_arg, int bserrno)
 		return;
 	}
 
+	TAILQ_INSERT_TAIL(&newblob->clones, ctx->original.blob, next_clone);
+
 	spdk_blob_set_read_only(newblob);
 
 	/* sync snapshot metadata */
@@ -3703,6 +3713,8 @@ _spdk_bs_snapshot_newblob_sync_cpl(void *cb_arg, int bserrno)
 
 	/* set clone blob as thin provisioned */
 	_spdk_blob_set_thin_provision(origblob);
+
+	origblob->snapshot = newblob;
 
 	/* Zero out origblob cluster map */
 	memset(origblob->active.clusters, 0,
@@ -4008,6 +4020,10 @@ _spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
 		return;
 	}
 
+	if (spdk_blob_is_clone(blob)) {
+		TAILQ_REMOVE(&blob->snapshot->clones, blob, next_clone);
+	}
+
 	/*
 	 * Remove the blob from the blob_store list now, to ensure it does not
 	 *  get returned after this point by _spdk_blob_lookup().
@@ -4263,6 +4279,20 @@ _spdk_blob_close_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 			 */
 			if (blob->active.num_pages > 0) {
 				TAILQ_REMOVE(&blob->bs->blobs, blob, link);
+				if (blob->snapshot != NULL && !TAILQ_EMPTY(&blob->snapshot->clones)) {
+					TAILQ_REMOVE(&blob->snapshot->clones, blob, next_clone);
+#if 0
+					printf(">>> Remove blob #%" PRIu64 " from the snapshot #%" PRIu64 "\n",
+					       blob->id, blob->snapshot->id);
+#endif
+				}
+#if 0
+				if (blob->snapshot == NULL) {
+					printf(">>> Blob #%" PRIu64 " is not clone\n", blob->id);
+				} else if (TAILQ_EMPTY(&blob->snapshot->clones)) {
+					printf(">>> Snapshot #%" PRIu64 " have no clones and can be closed\n", blob->snapshot->id);
+				}
+#endif
 			}
 			_spdk_blob_free(blob);
 		}
