@@ -2075,9 +2075,152 @@ _spdk_bs_dev_destroy(void *io_device)
 	free(bs);
 }
 
+static int
+_spdk_bs_blob_list_add(struct spdk_blob *blob)
+{
+	struct spdk_blob_list *snapshot_entry = NULL;
+	struct spdk_blob_list *clone_entry = NULL;
+	size_t value_len;
+	const void *value;
+	int rc;
+
+	if (spdk_blob_is_snapshot(blob)) {
+
+		/* Insert snapshot to the list */
+
+		TAILQ_FOREACH(snapshot_entry, &blob->bs->snapshots, link) {
+			if (snapshot_entry->id == blob->id) {
+				break;
+			}
+		}
+		if (snapshot_entry == NULL) {
+			/* Snapshot not found */
+			snapshot_entry = calloc(1, sizeof(struct spdk_blob_list));
+			snapshot_entry->id = blob->id;
+			TAILQ_INIT(&snapshot_entry->clones);
+			TAILQ_INSERT_TAIL(&blob->bs->snapshots, snapshot_entry, link);
+		}
+	}
+
+	if (spdk_blob_is_clone(blob)) {
+		rc = _spdk_blob_get_xattr_value(blob, BLOB_SNAPSHOT, &value, &value_len, true);
+		if (rc == 0) {
+			TAILQ_FOREACH(snapshot_entry, &blob->bs->snapshots, link) {
+				if (snapshot_entry->id == *(spdk_blob_id *)value) {
+					break;
+				}
+			}
+			if (snapshot_entry == NULL) {
+				/* Snapshot not found */
+				snapshot_entry = calloc(1, sizeof(struct spdk_blob_list));
+				snapshot_entry->id = *(spdk_blob_id *)value;
+				TAILQ_INIT(&snapshot_entry->clones);
+				TAILQ_INSERT_TAIL(&blob->bs->snapshots, snapshot_entry, link);
+			} else {
+				TAILQ_FOREACH(clone_entry, &snapshot_entry->clones, link) {
+					if (clone_entry->id == blob->id) {
+						break;
+					}
+				}
+			}
+			if (clone_entry == NULL) {
+				/* Clone not found */
+				clone_entry = calloc(1, sizeof(struct spdk_blob_list));
+				clone_entry->id = blob->id;
+				TAILQ_INIT(&clone_entry->clones);
+				TAILQ_INSERT_TAIL(&snapshot_entry->clones, clone_entry, link);
+			}
+		} else {
+			/* Cannot take BLOB_SNAPSHOT xattr */
+		}
+	}
+	return 0;
+}
+
+static int
+_spdk_bs_blob_list_remove(struct spdk_blob *blob)
+{
+	struct spdk_blob_list *snapshot_entry = NULL;
+	struct spdk_blob_list *clone_entry = NULL;
+	size_t value_len;
+	const void *value;
+	int rc;
+
+	if (spdk_blob_is_snapshot(blob)) {
+		TAILQ_FOREACH(snapshot_entry, &blob->bs->snapshots, link) {
+			if (snapshot_entry->id == blob->id) {
+				break;
+			}
+		}
+		if (snapshot_entry == NULL) {
+			SPDK_ERRLOG("Snapshot not found\n");
+		} else {
+			/* If snapshot have clones, we cannot to remove it */
+			if (!TAILQ_EMPTY(&snapshot_entry->clones)) {
+				SPDK_ERRLOG("Cannot remove snapshot with clones\n");
+				return -EINVAL;
+			}
+			TAILQ_REMOVE(&blob->bs->snapshots, snapshot_entry, link);
+			free(snapshot_entry);
+		}
+	}
+
+	if (spdk_blob_is_clone(blob)) {
+		rc = _spdk_blob_get_xattr_value(blob, BLOB_SNAPSHOT, &value, &value_len, true);
+		if (rc == 0) {
+			TAILQ_FOREACH(snapshot_entry, &blob->bs->snapshots, link) {
+				if (snapshot_entry->id == *(spdk_blob_id *)value) {
+					break;
+				}
+			}
+			if (snapshot_entry == NULL) {
+				SPDK_ERRLOG("Snapshot not found\n");
+			} else {
+				TAILQ_FOREACH(clone_entry, &snapshot_entry->clones, link) {
+					if (clone_entry->id == blob->id) {
+						break;
+					}
+				}
+			}
+			if (clone_entry == NULL) {
+				SPDK_ERRLOG("Clone not found\n");
+			} else {
+				TAILQ_REMOVE(&snapshot_entry->clones, clone_entry, link);
+				free(clone_entry);
+			}
+		} else {
+			SPDK_ERRLOG("Cannot take BLOB_SNAPSHOT xattr\n");
+		}
+	}
+
+	return 0;
+}
+
+static int
+_spdk_bs_blob_list_free(struct spdk_blob_store *bs)
+{
+	struct spdk_blob_list *snapshot_entry;
+	struct spdk_blob_list *snapshot_entry_tmp;
+	struct spdk_blob_list *clone_entry;
+	struct spdk_blob_list *clone_entry_tmp;
+
+	TAILQ_FOREACH_SAFE(snapshot_entry, &bs->snapshots, link, snapshot_entry_tmp) {
+		TAILQ_FOREACH_SAFE(clone_entry, &snapshot_entry->clones, link, clone_entry_tmp) {
+			TAILQ_REMOVE(&snapshot_entry->clones, clone_entry, link);
+			free(clone_entry);
+		}
+		TAILQ_REMOVE(&bs->snapshots, snapshot_entry, link);
+		free(snapshot_entry);
+	}
+
+	return 0;
+}
+
 static void
 _spdk_bs_free(struct spdk_blob_store *bs)
 {
+	_spdk_bs_blob_list_free(bs);
+
 	spdk_bs_unregister_md_thread(bs);
 	spdk_io_device_unregister(bs, _spdk_bs_dev_destroy);
 }
@@ -2132,6 +2275,7 @@ _spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts)
 	}
 
 	TAILQ_INIT(&bs->blobs);
+	TAILQ_INIT(&bs->snapshots);
 	bs->dev = dev;
 	bs->md_thread = spdk_get_thread();
 	assert(bs->md_thread != NULL);
@@ -2318,16 +2462,16 @@ _spdk_bs_write_used_blobids(spdk_bs_sequence_t *seq, void *arg, spdk_bs_sequence
 	spdk_bs_sequence_write_dev(seq, ctx->mask, lba, lba_count, cb_fn, arg);
 }
 
-static void _spdk_bs_load_complete(spdk_bs_sequence_t *seq, struct spdk_bs_load_ctx *ctx,
-				   int bserrno);
-
 static void
 _spdk_bs_load_iter(void *arg, struct spdk_blob *blob, int bserrno)
 {
 	struct spdk_bs_load_ctx *ctx = arg;
 
 	if (bserrno == 0) {
-		ctx->iter_cb_fn(ctx->iter_cb_arg, blob, 0);
+		if (ctx->iter_cb_fn) {
+			ctx->iter_cb_fn(ctx->iter_cb_arg, blob, 0);
+		}
+		_spdk_bs_blob_list_add(blob);
 		spdk_bs_iter_next(ctx->bs, blob, _spdk_bs_load_iter, ctx);
 		return;
 	}
@@ -2345,22 +2489,18 @@ _spdk_bs_load_iter(void *arg, struct spdk_blob *blob, int bserrno)
 	}
 
 	ctx->iter_cb_fn = NULL;
-	_spdk_bs_load_complete(ctx->seq, ctx, bserrno);
+
+	spdk_dma_free(ctx->super);
+	spdk_dma_free(ctx->mask);
+	spdk_bs_sequence_finish(ctx->seq, bserrno);
+	free(ctx);
 }
 
 static void
 _spdk_bs_load_complete(spdk_bs_sequence_t *seq, struct spdk_bs_load_ctx *ctx, int bserrno)
 {
-	if (ctx->iter_cb_fn) {
-		ctx->seq = seq;
-		spdk_bs_iter_first(ctx->bs, _spdk_bs_load_iter, ctx);
-		return;
-	}
-
-	spdk_dma_free(ctx->super);
-	spdk_dma_free(ctx->mask);
-	free(ctx);
-	spdk_bs_sequence_finish(seq, bserrno);
+	ctx->seq = seq;
+	spdk_bs_iter_first(ctx->bs, _spdk_bs_load_iter, ctx);
 }
 
 static void
@@ -3685,6 +3825,7 @@ _spdk_bs_snapshot_origblob_sync_cpl(void *cb_arg, int bserrno)
 	}
 
 	TAILQ_INSERT_TAIL(&newblob->clones, ctx->original.blob, next_clone);
+	_spdk_bs_blob_list_add(ctx->original.blob);
 
 	spdk_blob_set_read_only(newblob);
 
@@ -3723,6 +3864,8 @@ _spdk_bs_snapshot_newblob_sync_cpl(void *cb_arg, int bserrno)
 
 	origblob->snapshot = newblob;
 	//TAILQ_INSERT_TAIL(&newblob->clones, origblob, next_clone);
+
+	_spdk_bs_blob_list_add(newblob);
 
 	/* Zero out origblob cluster map */
 	memset(origblob->active.clusters, 0,
@@ -3868,12 +4011,24 @@ _spdk_bs_xattr_clone(void *arg, const char *name,
 }
 
 static void
+_spdk_bs_clone_newblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
+{
+	struct spdk_clone_snapshot_ctx *ctx = (struct spdk_clone_snapshot_ctx *)cb_arg;
+	struct spdk_blob *clone = _blob;
+
+	ctx->new.blob = clone;
+	_spdk_bs_blob_list_add(clone);
+
+	spdk_blob_close(clone, _spdk_bs_clone_snapshot_origblob_cleanup, ctx);
+}
+
+static void
 _spdk_bs_clone_newblob_create_cpl(void *cb_arg, spdk_blob_id blobid, int bserrno)
 {
 	struct spdk_clone_snapshot_ctx *ctx = (struct spdk_clone_snapshot_ctx *)cb_arg;
 
 	ctx->cpl.u.blobid.blobid = blobid;
-	_spdk_bs_clone_snapshot_origblob_cleanup(ctx, bserrno);
+	spdk_bs_open_blob(ctx->original.blob->bs, blobid, _spdk_bs_clone_newblob_open_cpl, ctx);
 }
 
 static void
@@ -4032,6 +4187,13 @@ _spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
 		TAILQ_REMOVE(&blob->snapshot->clones, blob, next_clone);
 	}
 
+	bserrno = _spdk_bs_blob_list_remove(blob);
+	if (bserrno != 0) {
+		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Remove blob #%" PRIu64 " from a list\n", blob->id);
+		spdk_bs_sequence_finish(seq, bserrno);
+		return;
+	}
+
 	/*
 	 * Remove the blob from the blob_store list now, to ensure it does not
 	 *  get returned after this point by _spdk_blob_lookup().
@@ -4052,10 +4214,26 @@ spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 {
 	struct spdk_bs_cpl	cpl;
 	spdk_bs_sequence_t	*seq;
+	struct spdk_blob_list	*snapshot_entry = NULL;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Deleting blob %lu\n", blobid);
 
 	assert(spdk_get_thread() == bs->md_thread);
+
+	/* Check if this is a snapshot with clones */
+	TAILQ_FOREACH(snapshot_entry, &bs->snapshots, link) {
+		if (snapshot_entry->id == blobid) {
+			break;
+		}
+	}
+	if (snapshot_entry != NULL) {
+		/* If snapshot have clones, we cannot to remove it */
+		if (!TAILQ_EMPTY(&snapshot_entry->clones)) {
+			SPDK_ERRLOG("Cannot remove snapshot with clones\n");
+			cb_fn(cb_arg, -EBUSY);
+			return;
+		}
+	}
 
 	cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
 	cpl.u.blob_basic.cb_fn = cb_fn;
@@ -4731,6 +4909,74 @@ spdk_blob_is_thin_provisioned(struct spdk_blob *blob)
 {
 	assert(blob != NULL);
 	return blob->invalid_flags & SPDK_BLOB_THIN_PROV;
+}
+
+spdk_blob_id
+spdk_blob_get_snapshot(struct spdk_blob *blob)
+{
+	struct spdk_blob_list *snapshot_entry, *clone_entry;
+
+	if (blob == NULL || blob->snapshot == NULL) {
+		return SPDK_BLOBID_INVALID;
+	}
+
+	TAILQ_FOREACH(snapshot_entry, &blob->bs->snapshots, link) {
+		TAILQ_FOREACH(clone_entry, &snapshot_entry->clones, link) {
+			if (clone_entry->id == blob->id) {
+				return snapshot_entry->id;
+			}
+		}
+	}
+
+	return SPDK_BLOBID_INVALID;
+}
+
+int
+spdk_blob_get_clones(struct spdk_blob *blob, spdk_blob_id **ids, size_t *count)
+{
+	struct spdk_blob_list *snapshot_entry, *clone_entry;
+	size_t n;
+
+	if (spdk_blob_is_snapshot(blob) == false) {
+		return -EINVAL;
+	}
+
+	if (ids == NULL || count == NULL) {
+		return -EINVAL;
+	}
+
+	TAILQ_FOREACH(snapshot_entry, &blob->bs->snapshots, link) {
+		if (snapshot_entry->id == blob->id) {
+			break;
+		}
+	}
+	if (snapshot_entry == NULL) {
+		SPDK_ERRLOG("Snapshot not found\n");
+		return -EINVAL;
+	}
+
+	n = 0;
+	TAILQ_FOREACH(clone_entry, &snapshot_entry->clones, link) {
+		n++;
+	}
+
+	*count = n;
+
+	if (n == 0) {
+		return 0;
+	}
+
+	*ids = calloc(n, sizeof(spdk_blob_id));
+	if (*ids == NULL) {
+		return -ENOMEM;
+	}
+
+	n = 0;
+	TAILQ_FOREACH(clone_entry, &snapshot_entry->clones, link) {
+		(*ids)[n++] = clone_entry->id;
+	}
+
+	return 0;
 }
 
 SPDK_LOG_REGISTER_COMPONENT("blob", SPDK_LOG_BLOB)
