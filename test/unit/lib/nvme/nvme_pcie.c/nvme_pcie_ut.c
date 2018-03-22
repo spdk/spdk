@@ -35,7 +35,7 @@
 
 #include "spdk_cunit.h"
 
-#include "lib/test_env.c"
+#include "common/lib/test_env.c"
 
 #include "nvme/nvme_pcie.c"
 
