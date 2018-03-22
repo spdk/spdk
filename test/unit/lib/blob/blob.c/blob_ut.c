@@ -36,7 +36,7 @@
 #include "spdk_cunit.h"
 #include "spdk/blob.h"
 
-#include "lib/test_env.c"
+#include "common/libs/test_env.c"
 #include "../bs_dev_common.c"
 #include "blob/blobstore.c"
 #include "blob/request.c"

@@ -37,7 +37,7 @@
 
 #include "nvme/nvme_ns.c"
 
-#include "lib/test_env.c"
+#include "common/libs/test_env.c"
 
 SPDK_LOG_REGISTER_COMPONENT("nvme", SPDK_LOG_NVME)
 

@@ -36,7 +36,7 @@
 #include "spdk/io_channel.h"
 #include "spdk/util.h"
 
-#include "lib/test_env.c"
+#include "common/libs/test_env.c"
 
 #include "lvol/lvol.c"
 

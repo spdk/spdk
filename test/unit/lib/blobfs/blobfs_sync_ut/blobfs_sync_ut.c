@@ -41,7 +41,7 @@
 
 #include "spdk_cunit.h"
 #include "unit/lib/blob/bs_dev_common.c"
-#include "lib/test_env.c"
+#include "common/libs/test_env.c"
 #include "blobfs/blobfs.c"
 #include "blobfs/tree.c"
 
