@@ -30,7 +30,7 @@ timing_exit start_nvmf_tgt
 bdevs="$bdevs $($rpc_py construct_malloc_bdev 64 512)"
 $rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" '' -a -s SPDK00000000000001 -n "$bdevs"
 
-$rootdir/test/lib/nvme/aer/aer -r "\
+$rootdir/test/nvme/aer/aer -r "\
         trtype:RDMA \
         adrfam:IPv4 \
         traddr:$NVMF_FIRST_TARGET_IP \
