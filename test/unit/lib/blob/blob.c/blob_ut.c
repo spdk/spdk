@@ -3761,6 +3761,275 @@ blob_snapshot_rw_iov(void)
 	g_blobid = 0;
 }
 
+/**
+ * Snapshot-clones relation test
+ *
+ *      snapshot
+ *          |
+ *     +----+----+
+ *     |         |
+ *   blob      clone
+ *     |
+ *  clone2
+ */
+static void
+blob_relations(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_bs_dev *dev;
+	struct spdk_bs_opts bs_opts;
+	struct spdk_blob_opts opts;
+	struct spdk_blob *blob, *snapshot, *clone, *clone2;
+	spdk_blob_id blobid, cloneid, snapshotid, cloneid2;
+	int rc;
+	size_t count;
+	spdk_blob_id ids[10];
+
+	dev = init_dev();
+	spdk_bs_opts_init(&bs_opts);
+	snprintf(bs_opts.bstype.bstype, sizeof(bs_opts.bstype.bstype), "TESTTYPE");
+
+	spdk_bs_init(dev, &bs_opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	/* 1. Create blob with 10 clusters */
+
+	spdk_blob_opts_init(&opts);
+	opts.num_clusters = 10;
+
+	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+
+	CU_ASSERT(!spdk_blob_is_read_only(blob));
+	CU_ASSERT(!spdk_blob_is_snapshot(blob));
+	CU_ASSERT(!spdk_blob_is_clone(blob));
+	CU_ASSERT(!spdk_blob_is_thin_provisioned(blob));
+
+	/* blob should not have underlying snapshot nor clones */
+	CU_ASSERT(spdk_blob_get_parent_snapshot(bs, blobid) == SPDK_BLOBID_INVALID);
+	count = SPDK_COUNTOF(ids);
+	rc = spdk_blob_get_clones(bs, blobid, ids, &count);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(count == 0);
+
+
+	/* 2. Create snapshot */
+
+	spdk_bs_create_snapshot(bs, blobid, NULL, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	snapshotid = g_blobid;
+
+	spdk_bs_open_blob(bs, snapshotid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	snapshot = g_blob;
+
+	CU_ASSERT(spdk_blob_is_read_only(snapshot));
+	CU_ASSERT(spdk_blob_is_snapshot(snapshot));
+	CU_ASSERT(!spdk_blob_is_clone(snapshot));
+	CU_ASSERT(spdk_blob_get_parent_snapshot(bs, snapshotid) == SPDK_BLOBID_INVALID);
+
+	/* Check if original blob is converted to the clone of snapshot */
+	CU_ASSERT(!spdk_blob_is_read_only(blob));
+	CU_ASSERT(!spdk_blob_is_snapshot(blob));
+	CU_ASSERT(spdk_blob_is_clone(blob));
+	CU_ASSERT(spdk_blob_is_thin_provisioned(blob));
+
+	CU_ASSERT(spdk_blob_get_parent_snapshot(bs, blobid) == snapshotid);
+
+	count = SPDK_COUNTOF(ids);
+	rc = spdk_blob_get_clones(bs, snapshotid, ids, &count);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(count == 1);
+	CU_ASSERT(ids[0] == blobid);
+
+
+	/* 3. Create clone from snapshot */
+
+	spdk_bs_create_clone(bs, snapshotid, NULL, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	cloneid = g_blobid;
+
+	spdk_bs_open_blob(bs, cloneid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	clone = g_blob;
+
+	CU_ASSERT(!spdk_blob_is_read_only(clone));
+	CU_ASSERT(!spdk_blob_is_snapshot(clone));
+	CU_ASSERT(spdk_blob_is_clone(clone));
+	CU_ASSERT(spdk_blob_is_thin_provisioned(clone));
+
+	CU_ASSERT(spdk_blob_get_parent_snapshot(bs, cloneid) == snapshotid);
+
+	count = SPDK_COUNTOF(ids);
+	rc = spdk_blob_get_clones(bs, cloneid, ids, &count);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(count == 0);
+
+	/* Check if clone is on the snapshot's list */
+	count = SPDK_COUNTOF(ids);
+	rc = spdk_blob_get_clones(bs, snapshotid, ids, &count);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ids[0] == blobid || ids[1] == blobid);
+	CU_ASSERT(ids[0] == cloneid || ids[1] == cloneid);
+
+
+	/* 4. Try to create clone from read only blob */
+
+	/* Mark blob as read only */
+	spdk_blob_set_read_only(blob);
+	spdk_blob_sync_md(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Check if previously created blob is read only clone */
+	CU_ASSERT(spdk_blob_is_read_only(blob));
+	CU_ASSERT(!spdk_blob_is_snapshot(blob));
+	CU_ASSERT(spdk_blob_is_clone(blob));
+	CU_ASSERT(spdk_blob_is_thin_provisioned(blob));
+
+	/* Create clone from read only blob */
+	spdk_bs_create_clone(bs, blobid, NULL, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	cloneid2 = g_blobid;
+
+	spdk_bs_open_blob(bs, cloneid2, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	clone2 = g_blob;
+
+	CU_ASSERT(!spdk_blob_is_read_only(clone2));
+	CU_ASSERT(!spdk_blob_is_snapshot(clone2));
+	CU_ASSERT(spdk_blob_is_clone(clone2));
+	CU_ASSERT(spdk_blob_is_thin_provisioned(clone2));
+
+	CU_ASSERT(spdk_blob_get_parent_snapshot(bs, cloneid2) == blobid);
+
+	count = SPDK_COUNTOF(ids);
+	rc = spdk_blob_get_clones(bs, blobid, ids, &count);
+	CU_ASSERT(rc == 0);
+
+	CU_ASSERT(count == 1);
+	CU_ASSERT(ids[0] == cloneid2);
+
+	/* Close blobs */
+
+	spdk_blob_close(clone2, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_blob_close(clone, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_blob_close(snapshot, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Try to delete snapshot with created clones */
+	spdk_bs_delete_blob(bs, snapshotid, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno != 0);
+
+	spdk_bs_unload(bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+
+	/* Load an existing blob store */
+	dev = init_dev();
+	snprintf(bs_opts.bstype.bstype, sizeof(bs_opts.bstype.bstype), "TESTTYPE");
+
+	spdk_bs_load(dev, NULL, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+
+	/* NULL ids array should return number of clones in count */
+	count = SPDK_COUNTOF(ids);
+	rc = spdk_blob_get_clones(bs, snapshotid, NULL, &count);
+	CU_ASSERT(rc == -ENOMEM);
+	CU_ASSERT(count == 2);
+
+	/* incorrect array size */
+	count = 1;
+	rc = spdk_blob_get_clones(bs, snapshotid, ids, &count);
+	CU_ASSERT(rc == -ENOMEM);
+	CU_ASSERT(count == 2);
+
+
+	/* Verify structure of loaded blob store */
+
+	/* snapshot */
+	CU_ASSERT(spdk_blob_get_parent_snapshot(bs, snapshotid) == SPDK_BLOBID_INVALID);
+
+	count = SPDK_COUNTOF(ids);
+	rc = spdk_blob_get_clones(bs, snapshotid, ids, &count);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(count == 2);
+	CU_ASSERT(ids[0] == blobid || ids[1] == blobid);
+	CU_ASSERT(ids[0] == cloneid || ids[1] == cloneid);
+
+	/* blob */
+	CU_ASSERT(spdk_blob_get_parent_snapshot(bs, blobid) == snapshotid);
+	count = SPDK_COUNTOF(ids);
+	rc = spdk_blob_get_clones(bs, blobid, ids, &count);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(count == 1);
+	CU_ASSERT(ids[0] == cloneid2);
+
+	/* clone */
+	CU_ASSERT(spdk_blob_get_parent_snapshot(bs, cloneid) == snapshotid);
+	count = SPDK_COUNTOF(ids);
+	rc = spdk_blob_get_clones(bs, cloneid, ids, &count);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(count == 0);
+
+	/* clone2 */
+	CU_ASSERT(spdk_blob_get_parent_snapshot(bs, cloneid2) == blobid);
+	count = SPDK_COUNTOF(ids);
+	rc = spdk_blob_get_clones(bs, cloneid2, ids, &count);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(count == 0);
+
+	/* Try to delete all blobs */
+	spdk_bs_delete_blob(bs, cloneid, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Try to delete snapshot with clones */
+	spdk_bs_delete_blob(bs, snapshotid, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno != 0);
+
+	/* Try to delete ro blob with clones */
+	spdk_bs_delete_blob(bs, blobid, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno != 0);
+
+	spdk_bs_delete_blob(bs, cloneid2, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_delete_blob(bs, blobid, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_delete_blob(bs, snapshotid, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_unload(bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	g_bs = NULL;
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -3819,7 +4088,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "blob_thin_prov_rw_iov", blob_thin_prov_rw_iov) == NULL ||
 		CU_add_test(suite, "bs_load_iter", bs_load_iter) == NULL ||
 		CU_add_test(suite, "blob_snapshot_rw", blob_snapshot_rw) == NULL ||
-		CU_add_test(suite, "blob_snapshot_rw_iov", blob_snapshot_rw_iov) == NULL
+		CU_add_test(suite, "blob_snapshot_rw_iov", blob_snapshot_rw_iov) == NULL ||
+		CU_add_test(suite, "blob_relations", blob_relations) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
