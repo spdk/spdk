@@ -163,6 +163,52 @@ spdk_blob_get_num_clusters(struct spdk_blob *b)
 	return 0;
 }
 
+int
+spdk_blob_get_clones(struct spdk_blob_store *bs, spdk_blob_id blobid, spdk_blob_id *ids,
+		     size_t *count)
+{
+	*count = 0;
+	return 0;
+}
+
+spdk_blob_id
+spdk_blob_get_parent_snapshot(struct spdk_blob_store *bs, spdk_blob_id blobid)
+{
+	return 0;
+}
+
+bool g_blob_is_read_only = false;
+
+bool
+spdk_blob_is_read_only(struct spdk_blob *blob)
+{
+	return g_blob_is_read_only;
+}
+
+bool
+spdk_blob_is_snapshot(struct spdk_blob *blob)
+{
+	return false;
+}
+
+bool
+spdk_blob_is_clone(struct spdk_blob *blob)
+{
+	return false;
+}
+
+bool
+spdk_blob_is_thin_provisioned(struct spdk_blob *blob)
+{
+	return false;
+}
+
+char *
+spdk_bs_blob_get_name(struct spdk_blob_store *bs, spdk_blob_id blobid)
+{
+	return NULL;
+}
+
 static struct spdk_lvol *_lvol_create(struct spdk_lvol_store *lvs);
 
 void
