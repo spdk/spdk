@@ -3,7 +3,7 @@
 set -e
 
 testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../../..)
+rootdir=$(readlink -f $testdir/../..)
 plugindir=$rootdir/examples/bdev/fio_plugin
 
 function run_fio()
