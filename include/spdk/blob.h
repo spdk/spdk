@@ -391,6 +391,36 @@ void spdk_bs_create_clone(struct spdk_blob_store *bs, spdk_blob_id blobid,
 			  spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
 
 /**
+ * Provide table with blob id's of clones are dependent on specified snapshot.
+ *
+ * Ids array should be allocated and the count parameter set to the number of
+ * id's it can store, before calling this function.
+ *
+ * If ids is NULL or count parameter is not sufficient to handle ids of all
+ * clones, -ENOMEM error is returned and count parameter is updated to the
+ * total number of clones.
+ *
+ * \param bs blobstore.
+ * \param blobid Snapshots blob id.
+ * \param ids Array of the clone ids or NULL to get required size in count.
+ * \param count Size of ids. After call it is updated to the number of clones.
+ *
+ * \return -ENOMEM if count is not sufficient to store all clones.
+ */
+int spdk_blob_get_clones(struct spdk_blob_store *bs, spdk_blob_id blobid, spdk_blob_id *ids,
+			 size_t *count);
+
+/**
+ * Get the blob id for the parent snapshot of this blob.
+ *
+ * \param bs blobstore.
+ * \param blobid Blob id.
+ *
+ * \return blob id of parent blob or SPDK_BLOBID_INVALID if have no parent
+ */
+spdk_blob_id spdk_blob_get_parent_snapshot(struct spdk_blob_store *bs, spdk_blob_id blobid);
+
+/**
  * Check if blob is read only.
  *
  * \param blob Blob.
@@ -398,6 +428,24 @@ void spdk_bs_create_clone(struct spdk_blob_store *bs, spdk_blob_id blobid,
  * \return true if blob is read only.
  */
 bool spdk_blob_is_read_only(struct spdk_blob *blob);
+
+/**
+ * Check if blob is a snapshot.
+ *
+ * \param blob Blob.
+ *
+ * \return true if blob is a snapshot.
+ */
+bool spdk_blob_is_snapshot(struct spdk_blob *blob);
+
+/**
+ * Check if blob is a clone.
+ *
+ * \param blob Blob.
+ *
+ * \return true if blob is a clone.
+ */
+bool spdk_blob_is_clone(struct spdk_blob *blob);
 
 /**
  * Check if blob is thin-provisioned.
