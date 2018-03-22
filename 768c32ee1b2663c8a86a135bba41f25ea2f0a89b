@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c070ce8b_c1a23ab1",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 582,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-03-22T18:21:07Z",
+      "side": 1,
+      "message": "meeting with the maintainer to ask some questions including whether it makes sense to run the poller in this case and if I need to modify the last 2 parms of enqueue when I get a smaller number back than what I submitted",
+      "revId": "768c32ee1b2663c8a86a135bba41f25ea2f0a89b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
