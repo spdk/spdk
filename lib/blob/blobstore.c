@@ -4315,6 +4315,16 @@ void spdk_blob_close(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *
 		return;
 	}
 
+	/* Check if blob have opened clones */
+	if (!TAILQ_EMPTY(&blob->clones)) {
+		printf(">>> (blob close) Snapshot #%" PRIu64 " have clones and cannot be closed\n", blob->id);
+#if 0
+		printf("Cannot close blob\n");
+		cb_fn(cb_arg, -EBUSY);
+		return;
+#endif
+	}
+
 	cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
 	cpl.u.blob_basic.cb_fn = cb_fn;
 	cpl.u.blob_basic.cb_arg = cb_arg;
