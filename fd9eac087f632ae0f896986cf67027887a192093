@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "b55d1b5d_bcd24a06",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 370,
+      "author": {
+        "id": 1012941
+      },
+      "writtenOn": "2018-03-23T09:09:04Z",
+      "side": 1,
+      "message": "Yes. I will change it in next step.",
+      "parentUuid": "f74ff5e7_78076843",
+      "range": {
+        "startLine": 369,
+        "startChar": 1,
+        "endLine": 370,
+        "endChar": 31
+      },
+      "revId": "fd9eac087f632ae0f896986cf67027887a192093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c269794c_c1612fc0",
         "filename": "test/common/autotest_common.sh",
         "patchSetId": 7
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "ea8417a5_c6a02d1a",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 373,
+      "author": {
+        "id": 1012941
+      },
+      "writtenOn": "2018-03-23T09:09:04Z",
+      "side": 1,
+      "message": "Yes. I will change it in next step.",
+      "parentUuid": "c269794c_c1612fc0",
+      "range": {
+        "startLine": 372,
+        "startChar": 0,
+        "endLine": 373,
+        "endChar": 32
+      },
+      "revId": "fd9eac087f632ae0f896986cf67027887a192093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fa5346d5_52a7eb76",
         "filename": "test/common/autotest_common.sh",
         "patchSetId": 7
@@ -59,6 +107,30 @@
       "writtenOn": "2018-03-22T13:06:28Z",
       "side": 1,
       "message": "./scripts/check_format.sh",
+      "range": {
+        "startLine": 374,
+        "startChar": 0,
+        "endLine": 374,
+        "endChar": 1
+      },
+      "revId": "fd9eac087f632ae0f896986cf67027887a192093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "098e4be2_caf8344b",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 374,
+      "author": {
+        "id": 1012941
+      },
+      "writtenOn": "2018-03-23T09:09:04Z",
+      "side": 1,
+      "message": "sure",
+      "parentUuid": "fa5346d5_52a7eb76",
       "range": {
         "startLine": 374,
         "startChar": 0,
