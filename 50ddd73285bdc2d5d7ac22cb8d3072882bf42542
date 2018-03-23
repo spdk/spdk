@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "55e5299c_a7a37762",
+        "filename": "lib/bdev/error/vbdev_error_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-23T09:43:56Z",
+      "side": 1,
+      "message": "maybe \n\u003e if (rc !\u003d 0 \u0026\u0026 rc !\u003d -ENODEV) {\n\nwould do the trick :)",
+      "range": {
+        "startLine": 113,
+        "startChar": 5,
+        "endLine": 115,
+        "endChar": 9
+      },
+      "revId": "50ddd73285bdc2d5d7ac22cb8d3072882bf42542",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
