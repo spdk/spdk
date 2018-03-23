@@ -156,6 +156,24 @@
       "revId": "ae34be0009b1c2c78d50d5e491b7bdf6a6d4466d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "87612b2c_7577bc53",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 626,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-23T08:19:57Z",
+      "side": 1,
+      "message": "\u003e maybe add some tests here to confirm that blob is backed by\n \u003e snapshot2 and snapshot2 is backed by snapshot?\n\nI think this comment left to be addressed",
+      "parentUuid": "74c94e72_d1dc77bc",
+      "revId": "ae34be0009b1c2c78d50d5e491b7bdf6a6d4466d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
