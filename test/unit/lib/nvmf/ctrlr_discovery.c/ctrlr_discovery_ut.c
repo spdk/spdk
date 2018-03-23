@@ -154,6 +154,11 @@ spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
 }
 
 void
+spdk_nvmf_ctrlr_ns_changed(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid)
+{
+}
+
+void
 spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 {
 }
@@ -182,12 +187,6 @@ spdk_nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
 int
 spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 				      struct spdk_nvmf_subsystem *subsystem)
-{
-	return 0;
-}
-
-int
-spdk_nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr)
 {
 	return 0;
 }
