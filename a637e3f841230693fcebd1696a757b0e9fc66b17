@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "fe415a73_cb847e82",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 375,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-03-23T12:50:35Z",
+      "side": 1,
+      "message": "By async I mean the way that operations are processed by the crypto hardware (in between of enqueuing and dequeuing in a crypto driver), so you need to poll both -- enqueuing as well as dequeuing.\n\nYou need to dequeue operations to free resources in the PMD for new operations.\n\nYou may start processing on two threads, one will be preparing operations and send it to the crypto device while another will dequeue results and process them.\n\nTHREAD 1:\n---------\n\n\t// 1. Prepare operations\n\n\t// 2. Enqueue operations\n\tnb_enq \u003d 0;\n\tdo {\n\t\tret \u003d rte_cryptodev_enqueue_burst(crypto_ch-\u003ecdev_id, 0,\n\t\t\t\t\u0026crypto_ops[nb_enq], cryop_cnt - nb_enq);\n\n\t\t/* number of enqueued operations may be lower than cryop_cnt, so\n\t\t * we will try to enqueue rest of ops next time */\n\n\t\tnb_enq +\u003d ret;\n\t} while (nb_deq \u003c cryop_cnt);\n\n\t// 3. Here we\u0027re ready to process next part of operations\n\n\nTHREAD 2:\n---------\n\tdo {\n\n\t\tret \u003d rte_cryptodev_dequeue_burst(crypto_ch-\u003ecdev_id, 0,\n\t\t\t\t\u0026crypto_ops, MAX_BURST_SIZE);\n\n\t\t// Process results\n\n\t} while (is_running);",
+      "parentUuid": "a4b31e68_17265491",
+      "range": {
+        "startLine": 369,
+        "startChar": 0,
+        "endLine": 375,
+        "endChar": 32
+      },
+      "revId": "a637e3f841230693fcebd1696a757b0e9fc66b17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "21873931_3beba393",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 5
