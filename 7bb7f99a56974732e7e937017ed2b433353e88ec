@@ -16,6 +16,24 @@
       "revId": "7bb7f99a56974732e7e937017ed2b433353e88ec",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7842a109_b1fa6720",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-23T16:05:48Z",
+      "side": 1,
+      "message": "I think it\u0027s OK, since we are just looking for the empty string (conversion won\u0027t affect whether it\u0027s the empty string or not).",
+      "parentUuid": "b6eed4dc_2dbde517",
+      "revId": "7bb7f99a56974732e7e937017ed2b433353e88ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
