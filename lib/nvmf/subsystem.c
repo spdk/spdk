@@ -816,7 +816,7 @@ spdk_nvmf_subsystem_ns_changed(struct spdk_nvmf_subsystem *subsystem, uint32_t n
 	struct spdk_nvmf_ctrlr *ctrlr;
 
 	TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
-		spdk_nvmf_ctrlr_async_event_ns_notice(ctrlr);
+		spdk_nvmf_ctrlr_ns_changed(ctrlr, nsid);
 	}
 }
 

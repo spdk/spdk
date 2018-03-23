@@ -183,6 +183,11 @@ spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 {
 }
 
+void
+spdk_nvmf_ctrlr_ns_changed(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid)
+{
+}
+
 int
 spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
 	       void *remove_ctx, struct spdk_bdev_desc **desc)
@@ -205,12 +210,6 @@ const struct spdk_uuid *
 spdk_bdev_get_uuid(const struct spdk_bdev *bdev)
 {
 	return &bdev->uuid;
-}
-
-int
-spdk_nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr)
-{
-	return 0;
 }
 
 static void
