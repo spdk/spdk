@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "115e2da2_1d8303ea",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-23T08:57:56Z",
+      "side": 1,
+      "message": "I don\u0027t think we should go back and modify the CHANGELOG for previous releases.  If it was documentation describing current behavior (i.e. users or programming guide) we definitely should change it, but the CHANGELOG should reflect what was current at the time.",
+      "revId": "4c3616a04e7fda028bece039778e9c3b2ad9d0e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
