@@ -82,7 +82,7 @@ class JSONRPCClient(object):
             print_dict(json.loads(reqstr))
             print("response:")
             print_dict(response['error'])
-            exit(1)
+            #exit(1)
 
         if verbose:
             print("response:")
