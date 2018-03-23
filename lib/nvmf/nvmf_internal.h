@@ -190,6 +190,9 @@ struct spdk_nvmf_ctrlr {
 	struct spdk_nvmf_request *aer_req;
 	uint8_t hostid[16];
 
+	uint16_t changed_ns_list_count;
+	struct spdk_nvme_ns_list changed_ns_list;
+
 	TAILQ_ENTRY(spdk_nvmf_ctrlr)		link;
 };
 
@@ -251,6 +254,7 @@ int spdk_nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req);
 int spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req);
 bool spdk_nvmf_ctrlr_dsm_supported(struct spdk_nvmf_ctrlr *ctrlr);
 bool spdk_nvmf_ctrlr_write_zeroes_supported(struct spdk_nvmf_ctrlr *ctrlr);
+void spdk_nvmf_ctrlr_ns_changed(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid);
 
 int spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *nsdata);
 
