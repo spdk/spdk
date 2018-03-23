@@ -65,10 +65,6 @@
 #define virtio_rmb()	spdk_smp_rmb()
 #define virtio_wmb()	spdk_smp_wmb()
 
-struct virtio_driver g_virtio_driver = {
-	.scsi_devs = TAILQ_HEAD_INITIALIZER(g_virtio_driver.scsi_devs),
-};
-
 /* Chain all the descriptors in the ring with an END */
 static inline void
 vring_desc_init(struct vring_desc *dp, uint16_t n)

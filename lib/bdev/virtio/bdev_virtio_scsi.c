@@ -96,6 +96,8 @@ struct virtio_scsi_dev {
 
 	/** Context for the `remove_cb`. */
 	void				*remove_ctx;
+
+	TAILQ_ENTRY(virtio_scsi_dev) tailq;
 };
 
 struct virtio_scsi_io_ctx {
@@ -178,6 +180,9 @@ struct bdev_virtio_io_channel {
 	/** Virtio response poller. */
 	struct spdk_poller	*poller;
 };
+
+TAILQ_HEAD(, virtio_scsi_dev) g_virtio_scsi_devs =
+	TAILQ_HEAD_INITIALIZER(g_virtio_scsi_devs);
 
 /** Module finish in progress */
 static bool g_bdev_virtio_finish = false;
@@ -288,7 +293,7 @@ virtio_scsi_dev_init(struct virtio_scsi_dev *svdev, uint16_t max_queues)
 				bdev_virtio_scsi_ch_destroy_cb,
 				sizeof(struct bdev_virtio_io_channel));
 
-	TAILQ_INSERT_TAIL(&g_virtio_driver.scsi_devs, &svdev->vdev, tailq);
+	TAILQ_INSERT_TAIL(&g_virtio_scsi_devs, svdev, tailq);
 	return 0;
 }
 
@@ -409,12 +414,6 @@ static struct spdk_bdev_module virtio_scsi_if = {
 };
 
 SPDK_BDEV_MODULE_REGISTER(&virtio_scsi_if)
-
-static struct virtio_scsi_dev *
-virtio_dev_to_scsi(struct virtio_dev *vdev)
-{
-	return SPDK_CONTAINEROF(vdev, struct virtio_scsi_dev, vdev);
-}
 
 static struct virtio_scsi_io_ctx *
 bdev_virtio_init_io_vreq(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
@@ -1686,10 +1685,10 @@ bdev_virtio_initial_scan_complete(void *ctx __attribute__((unused)),
 				  int result  __attribute__((unused)),
 				  struct spdk_bdev **bdevs __attribute__((unused)), size_t bdevs_cnt __attribute__((unused)))
 {
-	struct virtio_dev *vdev;
+	struct virtio_scsi_dev *svdev;
 
-	TAILQ_FOREACH(vdev, &g_virtio_driver.scsi_devs, tailq) {
-		if (virtio_dev_to_scsi(vdev)->scan_ctx) {
+	TAILQ_FOREACH(svdev, &g_virtio_scsi_devs, tailq) {
+		if (svdev->scan_ctx) {
 			/* another device is still being scanned */
 			return;
 		}
@@ -1701,8 +1700,7 @@ bdev_virtio_initial_scan_complete(void *ctx __attribute__((unused)),
 static int
 bdev_virtio_initialize(void)
 {
-	struct virtio_scsi_dev *svdev;
-	struct virtio_dev *vdev, *next_vdev;
+	struct virtio_scsi_dev *svdev, *next_svdev;
 	int rc;
 
 	rc = bdev_virtio_process_config();
@@ -1710,14 +1708,13 @@ bdev_virtio_initialize(void)
 		goto out;
 	}
 
-	if (TAILQ_EMPTY(&g_virtio_driver.scsi_devs)) {
+	if (TAILQ_EMPTY(&g_virtio_scsi_devs)) {
 		spdk_bdev_module_init_done(&virtio_scsi_if);
 		return 0;
 	}
 
 	/* Initialize all created devices and scan available targets */
-	TAILQ_FOREACH(vdev, &g_virtio_driver.scsi_devs, tailq) {
-		svdev = virtio_dev_to_scsi(vdev);
+	TAILQ_FOREACH(svdev, &g_virtio_scsi_devs, tailq) {
 		rc = virtio_scsi_dev_scan(svdev, bdev_virtio_initial_scan_complete, NULL);
 		if (rc != 0) {
 			goto out;
@@ -1728,9 +1725,8 @@ bdev_virtio_initialize(void)
 
 out:
 	/* Remove any created devices */
-	TAILQ_FOREACH_SAFE(vdev, &g_virtio_driver.scsi_devs, tailq, next_vdev) {
-		svdev = virtio_dev_to_scsi(vdev);
-		TAILQ_REMOVE(&g_virtio_driver.scsi_devs, vdev, tailq);
+	TAILQ_FOREACH_SAFE(svdev, &g_virtio_scsi_devs, tailq, next_svdev) {
+		TAILQ_REMOVE(&g_virtio_scsi_devs, svdev, tailq);
 		virtio_scsi_dev_remove(svdev, NULL, NULL);
 	}
 
@@ -1765,7 +1761,7 @@ virtio_scsi_dev_unregister_cb(void *io_device)
 	virtio_dev_stop(vdev);
 	virtio_dev_destruct(vdev);
 
-	TAILQ_REMOVE(&g_virtio_driver.scsi_devs, vdev, tailq);
+	TAILQ_REMOVE(&g_virtio_scsi_devs, svdev, tailq);
 	remove_cb = svdev->remove_cb;
 	remove_ctx = svdev->remove_ctx;
 	spdk_dma_free(svdev->eventq_ios);
@@ -1775,7 +1771,7 @@ virtio_scsi_dev_unregister_cb(void *io_device)
 		remove_cb(remove_ctx, 0);
 	}
 
-	finish_module = TAILQ_EMPTY(&g_virtio_driver.scsi_devs);
+	finish_module = TAILQ_EMPTY(&g_virtio_scsi_devs);
 
 	if (g_bdev_virtio_finish && finish_module) {
 		spdk_bdev_module_finish_done();
@@ -1820,18 +1816,18 @@ virtio_scsi_dev_remove(struct virtio_scsi_dev *svdev,
 static void
 bdev_virtio_finish(void)
 {
-	struct virtio_dev *vdev, *next;
+	struct virtio_scsi_dev *svdev, *next;
 
 	g_bdev_virtio_finish = true;
 
-	if (TAILQ_EMPTY(&g_virtio_driver.scsi_devs)) {
+	if (TAILQ_EMPTY(&g_virtio_scsi_devs)) {
 		spdk_bdev_module_finish_done();
 		return;
 	}
 
 	/* Defer module finish until all controllers are removed. */
-	TAILQ_FOREACH_SAFE(vdev, &g_virtio_driver.scsi_devs, tailq, next) {
-		virtio_scsi_dev_remove(virtio_dev_to_scsi(vdev), NULL, NULL);
+	TAILQ_FOREACH_SAFE(svdev, &g_virtio_scsi_devs, tailq, next) {
+		virtio_scsi_dev_remove(svdev, NULL, NULL);
 	}
 }
 
@@ -1899,12 +1895,10 @@ bdev_virtio_pci_scsi_dev_create(const char *name, struct spdk_pci_addr *pci_addr
 void
 bdev_virtio_scsi_dev_remove(const char *name, bdev_virtio_remove_cb cb_fn, void *cb_arg)
 {
-	struct virtio_scsi_dev *svdev = NULL;
-	struct virtio_dev *vdev;
+	struct virtio_scsi_dev *svdev;
 
-	TAILQ_FOREACH(vdev, &g_virtio_driver.scsi_devs, tailq) {
-		if (strcmp(vdev->name, name) == 0) {
-			svdev = virtio_dev_to_scsi(vdev);
+	TAILQ_FOREACH(svdev, &g_virtio_scsi_devs, tailq) {
+		if (strcmp(svdev->vdev.name, name) == 0) {
 			break;
 		}
 	}
