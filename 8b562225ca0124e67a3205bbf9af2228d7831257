@@ -67,6 +67,24 @@
       "revId": "8b562225ca0124e67a3205bbf9af2228d7831257",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98e7a5e2_7947402f",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-23T06:36:37Z",
+      "side": 1,
+      "message": "I guess this RPC might be useful to just get the config information for a single bdev.  But it seems this RPC w/o a name is very similar to get_subsystem_config(\"bdev\")",
+      "parentUuid": "2dddfa04_67bd23fd",
+      "revId": "8b562225ca0124e67a3205bbf9af2228d7831257",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
