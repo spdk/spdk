@@ -1,0 +1,203 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0e58f3f0_ac790d6e",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-23T20:33:27Z",
+      "side": 1,
+      "message": "Namespace ID should be 32 bits (also please name this \"nsid\" or just \"id\" for consistency).",
+      "revId": "77ac6066de04263fb6c53cc8eb7f6823c7993b22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "543efcee_a5b93e05",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-23T20:33:27Z",
+      "side": 1,
+      "message": "Since cqe is a volatile pointer, all of these bitfield accesses will probably turn into memory read/modify/write sequences; it might be more efficient to build up a cqe in a local variable, then copy it over in one shot. We still need to flip the phase bit as a separate operation (which also probably needs a barrier), but filling out the rest of the CQE should be doable in one step.  Make sure to initialize status.p to the opposite of the final phase bit value in this step so that the host can\u0027t see a phase bit flip until we\u0027re actually finished writing it.\n\nSomething like:\n\n  struct spdk_nvme_cpl cqe;\n\n  memset(\u0026cqe, 0, sizeof(cqe);\n  cqe.sqid \u003d task-\u003esqid;\n  cqe.cid \u003d cmd-\u003ecid;\n  cqe-\u003estatus.sct \u003d 0;\n  cqe-\u003estatus.sc \u003d 0;\n  ...\n\n  /* Write updated CQE with previous phase bit */\n  cqe.status.p \u003d !cq-\u003ephase;\n  cq-\u003ecq_cqe[cq-\u003ecq_head] \u003d cqe;\n  spdk_smp_wmb();\n\n  /* Flip phase bit */\n  cqe.status.p \u003d cq-\u003ephase;\n  cq-\u003ecq_cqe[cq-\u003ecq_head] \u003d cqe;",
+      "revId": "77ac6066de04263fb6c53cc8eb7f6823c7993b22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "80474c5b_02433101",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 328,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-23T20:33:27Z",
+      "side": 1,
+      "message": "I\u0027m not sure this is right; if status was previously false, this could set it to true.  We probably want to fail the whole request if any of the tasks failed.",
+      "revId": "77ac6066de04263fb6c53cc8eb7f6823c7993b22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e0fb2e4_3f0d73e2",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-23T20:33:27Z",
+      "side": 1,
+      "message": "We shouldn\u0027t abort() here.\n\nCan we just stop picking up submission queue entries and exit the loop?  Then, the next time the polling process is kicked off, we should pick up where we left off.",
+      "revId": "77ac6066de04263fb6c53cc8eb7f6823c7993b22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1d127fa_04c75ed6",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-23T20:33:27Z",
+      "side": 1,
+      "message": "Please clean up these extra spaces.  They seem to have been copy-pasted everywhere that sets qid.",
+      "range": {
+        "startLine": 563,
+        "startChar": 4,
+        "endLine": 563,
+        "endChar": 7
+      },
+      "revId": "77ac6066de04263fb6c53cc8eb7f6823c7993b22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b4ace88_e45d1759",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 567,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-23T20:33:27Z",
+      "side": 1,
+      "message": "These checks should probably just fail the command rather than asserting.",
+      "revId": "77ac6066de04263fb6c53cc8eb7f6823c7993b22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56a229e9_6bdfae38",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 569,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-23T20:33:27Z",
+      "side": 1,
+      "message": "This looks like it needs a bounds check (same for all of the other functions using data from a command to index an array).",
+      "revId": "77ac6066de04263fb6c53cc8eb7f6823c7993b22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d22d9a38_45141769",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 576,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-23T20:33:27Z",
+      "side": 1,
+      "message": "I don\u0027t think we need to zero out the submission queue - the host owns this memory and needs to initialize it before ringing the doorbell.",
+      "revId": "77ac6066de04263fb6c53cc8eb7f6823c7993b22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d78ae54_fa5b62e9",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 594,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-23T20:33:27Z",
+      "side": 1,
+      "message": "Can this TODO be implemented?",
+      "revId": "77ac6066de04263fb6c53cc8eb7f6823c7993b22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d063436_822a354e",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 749,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-23T20:33:27Z",
+      "side": 1,
+      "message": "We should at least set completion DW0 bit 1:\n\n\u003e If the command to abort was not aborted for any reason, then bit 0 of Dword 0 shall be set to ‘1’ in the completion queue entry for the Abort command.",
+      "revId": "77ac6066de04263fb6c53cc8eb7f6823c7993b22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1ac8f2c9_abaaa59b",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 1067,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-23T20:33:27Z",
+      "side": 1,
+      "message": "Please only use spdk_dma_*malloc() for memory that actually needs to be DMA-capable.",
+      "range": {
+        "startLine": 1067,
+        "startChar": 35,
+        "endLine": 1067,
+        "endChar": 51
+      },
+      "revId": "77ac6066de04263fb6c53cc8eb7f6823c7993b22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
