@@ -85,6 +85,24 @@
       "revId": "8b562225ca0124e67a3205bbf9af2228d7831257",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed9ce3b9_b088afc8",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-23T10:06:30Z",
+      "side": 1,
+      "message": "Do you want to remove this RPC, leave it or make \u0027name\u0027 mandatory?",
+      "parentUuid": "98e7a5e2_7947402f",
+      "revId": "8b562225ca0124e67a3205bbf9af2228d7831257",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
