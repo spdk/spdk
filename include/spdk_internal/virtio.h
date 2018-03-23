@@ -91,8 +91,6 @@ struct virtio_dev {
 
 	/** Context for the backend ops */
 	void		*ctx;
-
-	TAILQ_ENTRY(virtio_dev) tailq;
 };
 
 struct virtio_dev_ops {
@@ -179,12 +177,6 @@ enum spdk_virtio_desc_type {
 	SPDK_VIRTIO_DESC_WR = VRING_DESC_F_WRITE, /**< Write only */
 	/* TODO VIRTIO_DESC_INDIRECT */
 };
-
-struct virtio_driver {
-	TAILQ_HEAD(, virtio_dev) scsi_devs;
-};
-
-extern struct virtio_driver g_virtio_driver;
 
 /** Context for creating PCI virtio_devs */
 struct virtio_pci_ctx;
