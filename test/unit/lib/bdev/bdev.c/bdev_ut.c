@@ -89,6 +89,45 @@ vbdev_ut_examine(struct spdk_bdev *bdev)
 	spdk_bdev_module_examine_done(&vbdev_ut_if);
 }
 
+static bool
+is_vbdev(struct spdk_bdev *base, struct spdk_bdev *vbdev)
+{
+	size_t i;
+	int found = 0;
+
+	for (i = 0; i < base->vbdevs_cnt; i++) {
+		found += base->vbdevs[i] == vbdev;
+	}
+
+	CU_ASSERT(found <= 1);
+	return !!found;
+}
+
+static bool
+is_base_bdev(struct spdk_bdev *base, struct spdk_bdev *vbdev)
+{
+	size_t i;
+	int found = 0;
+
+	for (i = 0; i < vbdev->base_bdevs_cnt; i++) {
+		found += vbdev->base_bdevs[i] == base;
+	}
+
+	CU_ASSERT(found <= 1);
+	return !!found;
+}
+
+static bool
+check_base_and_vbdev(struct spdk_bdev *base, struct spdk_bdev *vbdev)
+{
+	bool _is_vbdev = is_vbdev(base, vbdev);
+	bool _is_base = is_base_bdev(base, vbdev);
+
+	CU_ASSERT(_is_vbdev == _is_base);
+
+	return _is_base && _is_vbdev;
+}
+
 static struct spdk_bdev *
 allocate_bdev(char *name)
 {
@@ -104,8 +143,8 @@ allocate_bdev(char *name)
 
 	rc = spdk_bdev_register(bdev);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(TAILQ_EMPTY(&bdev->base_bdevs));
-	CU_ASSERT(TAILQ_EMPTY(&bdev->vbdevs));
+	CU_ASSERT(bdev->base_bdevs_cnt == 0);
+	CU_ASSERT(bdev->vbdevs_cnt == 0);
 
 	return bdev;
 }
@@ -132,8 +171,14 @@ allocate_vbdev(char *name, struct spdk_bdev *base1, struct spdk_bdev *base2)
 
 	rc = spdk_vbdev_register(bdev, array, base2 == NULL ? 1 : 2);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(!TAILQ_EMPTY(&bdev->base_bdevs));
-	CU_ASSERT(TAILQ_EMPTY(&bdev->vbdevs));
+	CU_ASSERT(bdev->base_bdevs_cnt > 0);
+	CU_ASSERT(bdev->vbdevs_cnt == 0);
+
+	CU_ASSERT(check_base_and_vbdev(base1, bdev) == true);
+
+	if (base2) {
+		CU_ASSERT(check_base_and_vbdev(base2, bdev) == true);
+	}
 
 	return bdev;
 }
@@ -142,48 +187,55 @@ static void
 free_bdev(struct spdk_bdev *bdev)
 {
 	spdk_bdev_unregister(bdev, NULL, NULL);
+	memset(bdev, 0xFF, sizeof(*bdev));
 	free(bdev);
 }
 
 static void
 free_vbdev(struct spdk_bdev *bdev)
 {
-	CU_ASSERT(!TAILQ_EMPTY(&bdev->base_bdevs));
+	CU_ASSERT(bdev->base_bdevs_cnt != 0);
 	spdk_bdev_unregister(bdev, NULL, NULL);
+	memset(bdev, 0xFF, sizeof(*bdev));
 	free(bdev);
 }
 
 static void
 open_write_test(void)
 {
-	struct spdk_bdev *bdev[8];
-	struct spdk_bdev_desc *desc[8] = {};
+	struct spdk_bdev *bdev[9];
+	struct spdk_bdev_desc *desc[9] = {};
 	int rc;
 
 	/*
 	 * Create a tree of bdevs to test various open w/ write cases.
 	 *
-	 * bdev0 through bdev2 are physical block devices, such as NVMe
+	 * bdev0 through bdev3 are physical block devices, such as NVMe
 	 * namespaces or Ceph block devices.
 	 *
-	 * bdev3 is a virtual bdev with multiple base bdevs.  This models
+	 * bdev4 is a virtual bdev with multiple base bdevs.  This models
 	 * caching or RAID use cases.
 	 *
-	 * bdev4 through bdev6 are all virtual bdevs with the same base
-	 * bdev.  This models partitioning or logical volume use cases.
+	 * bdev5 through bdev7 are all virtual bdevs with the same base
+	 * bdev (except bdev7). This models partitioning or logical volume
+	 * use cases.
 	 *
-	 * bdev7 is a virtual bdev with multiple base bdevs, but these
+	 * bdev7 is a virtual bdev with multiple base bdevs. One of base bdevs
+	 * (bdev2) is shared with other virtual bdevs: bdev5 and bdev6. This
+	 * models caching, RAID, partitioning or logical volumes use cases.
+	 *
+	 * bdev8 is a virtual bdev with multiple base bdevs, but these
 	 * base bdevs are themselves virtual bdevs.
 	 *
-	 *                bdev7
+	 *                bdev8
 	 *                  |
 	 *            +----------+
 	 *            |          |
-	 *          bdev3      bdev4   bdev5   bdev6
+	 *          bdev4      bdev5   bdev6   bdev7
 	 *            |          |       |       |
-	 *        +---+---+      +-------+-------+
-	 *        |       |              |
-	 *      bdev0   bdev1          bdev2
+	 *        +---+---+      +---+   +   +---+---+
+	 *        |       |           \  |  /         \
+	 *      bdev0   bdev1          bdev2         bdev3
 	 */
 
 	bdev[0] = allocate_bdev("bdev0");
@@ -198,18 +250,48 @@ open_write_test(void)
 	rc = spdk_bdev_module_claim_bdev(bdev[2], NULL, &bdev_ut_if);
 	CU_ASSERT(rc == 0);
 
-	bdev[3] = allocate_vbdev("bdev3", bdev[0], bdev[1]);
+	bdev[3] = allocate_bdev("bdev3");
 	rc = spdk_bdev_module_claim_bdev(bdev[3], NULL, &bdev_ut_if);
 	CU_ASSERT(rc == 0);
 
-	bdev[4] = allocate_vbdev("bdev4", bdev[2], NULL);
+	bdev[4] = allocate_vbdev("bdev4", bdev[0], bdev[1]);
 	rc = spdk_bdev_module_claim_bdev(bdev[4], NULL, &bdev_ut_if);
 	CU_ASSERT(rc == 0);
 
 	bdev[5] = allocate_vbdev("bdev5", bdev[2], NULL);
+	rc = spdk_bdev_module_claim_bdev(bdev[5], NULL, &bdev_ut_if);
+	CU_ASSERT(rc == 0);
+
 	bdev[6] = allocate_vbdev("bdev6", bdev[2], NULL);
 
-	bdev[7] = allocate_vbdev("bdev7", bdev[3], bdev[4]);
+	bdev[7] = allocate_vbdev("bdev7", bdev[2], bdev[3]);
+
+	bdev[8] = allocate_vbdev("bdev8", bdev[4], bdev[5]);
+
+	/* Check tree */
+	CU_ASSERT(check_base_and_vbdev(bdev[0], bdev[4]) == true);
+	CU_ASSERT(check_base_and_vbdev(bdev[0], bdev[5]) == false);
+	CU_ASSERT(check_base_and_vbdev(bdev[0], bdev[6]) == false);
+	CU_ASSERT(check_base_and_vbdev(bdev[0], bdev[7]) == false);
+	CU_ASSERT(check_base_and_vbdev(bdev[0], bdev[8]) == false);
+
+	CU_ASSERT(check_base_and_vbdev(bdev[1], bdev[4]) == true);
+	CU_ASSERT(check_base_and_vbdev(bdev[1], bdev[5]) == false);
+	CU_ASSERT(check_base_and_vbdev(bdev[1], bdev[6]) == false);
+	CU_ASSERT(check_base_and_vbdev(bdev[1], bdev[7]) == false);
+	CU_ASSERT(check_base_and_vbdev(bdev[1], bdev[8]) == false);
+
+	CU_ASSERT(check_base_and_vbdev(bdev[2], bdev[4]) == false);
+	CU_ASSERT(check_base_and_vbdev(bdev[2], bdev[5]) == true);
+	CU_ASSERT(check_base_and_vbdev(bdev[2], bdev[6]) == true);
+	CU_ASSERT(check_base_and_vbdev(bdev[2], bdev[7]) == true);
+	CU_ASSERT(check_base_and_vbdev(bdev[2], bdev[8]) == false);
+
+	CU_ASSERT(check_base_and_vbdev(bdev[3], bdev[4]) == false);
+	CU_ASSERT(check_base_and_vbdev(bdev[3], bdev[5]) == false);
+	CU_ASSERT(check_base_and_vbdev(bdev[3], bdev[6]) == false);
+	CU_ASSERT(check_base_and_vbdev(bdev[3], bdev[7]) == true);
+	CU_ASSERT(check_base_and_vbdev(bdev[3], bdev[8]) == false);
 
 	/* Open bdev0 read-only.  This should succeed. */
 	rc = spdk_bdev_open(bdev[0], false, NULL, NULL, &desc[0]);
@@ -225,29 +307,7 @@ open_write_test(void)
 	CU_ASSERT(rc == -EPERM);
 
 	/*
-	 * Open bdev3 read/write.  This should fail since bdev3 has been claimed
-	 * by a vbdev module.
-	 */
-	rc = spdk_bdev_open(bdev[3], true, NULL, NULL, &desc[3]);
-	CU_ASSERT(rc == -EPERM);
-
-	/* Open bdev3 read-only.  This should succeed. */
-	rc = spdk_bdev_open(bdev[3], false, NULL, NULL, &desc[3]);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(desc[3] != NULL);
-	spdk_bdev_close(desc[3]);
-
-	/*
-	 * Open bdev7 read/write.  This should succeed since it is a leaf
-	 * bdev.
-	 */
-	rc = spdk_bdev_open(bdev[7], true, NULL, NULL, &desc[7]);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(desc[7] != NULL);
-	spdk_bdev_close(desc[7]);
-
-	/*
-	 * Open bdev4 read/write.  This should fail since bdev4 has been claimed
+	 * Open bdev4 read/write.  This should fail since bdev3 has been claimed
 	 * by a vbdev module.
 	 */
 	rc = spdk_bdev_open(bdev[4], true, NULL, NULL, &desc[4]);
@@ -259,17 +319,40 @@ open_write_test(void)
 	CU_ASSERT(desc[4] != NULL);
 	spdk_bdev_close(desc[4]);
 
-	free_vbdev(bdev[7]);
+	/*
+	 * Open bdev8 read/write.  This should succeed since it is a leaf
+	 * bdev.
+	 */
+	rc = spdk_bdev_open(bdev[8], true, NULL, NULL, &desc[8]);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc[8] != NULL);
+	spdk_bdev_close(desc[8]);
 
-	free_vbdev(bdev[3]);
-	free_vbdev(bdev[4]);
+	/*
+	 * Open bdev5 read/write.  This should fail since bdev4 has been claimed
+	 * by a vbdev module.
+	 */
+	rc = spdk_bdev_open(bdev[5], true, NULL, NULL, &desc[5]);
+	CU_ASSERT(rc == -EPERM);
+
+	/* Open bdev4 read-only.  This should succeed. */
+	rc = spdk_bdev_open(bdev[5], false, NULL, NULL, &desc[5]);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc[5] != NULL);
+	spdk_bdev_close(desc[5]);
+
+	free_vbdev(bdev[8]);
+
 	free_vbdev(bdev[5]);
 	free_vbdev(bdev[6]);
+	free_vbdev(bdev[7]);
+
+	free_vbdev(bdev[4]);
 
 	free_bdev(bdev[0]);
 	free_bdev(bdev[1]);
 	free_bdev(bdev[2]);
-
+	free_bdev(bdev[3]);
 }
 
 static void

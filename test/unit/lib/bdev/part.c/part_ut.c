@@ -91,7 +91,8 @@ static void
 part_test(void)
 {
 	struct spdk_bdev_part_base	*base;
-	struct spdk_bdev_part		part1, part2;
+	struct spdk_bdev_part		part1 = {};
+	struct spdk_bdev_part		part2 = {};
 	struct spdk_bdev		bdev_base = {};
 	SPDK_BDEV_PART_TAILQ		tailq = TAILQ_HEAD_INITIALIZER(tailq);
 	int rc;
@@ -116,7 +117,7 @@ part_test(void)
 	 * The base device was removed - ensure that the partition vbdevs were
 	 *  removed from the base's vbdev list.
 	 */
-	CU_ASSERT(TAILQ_EMPTY(&bdev_base.vbdevs));
+	CU_ASSERT(bdev_base.vbdevs_cnt == 0);
 
 	spdk_bdev_part_base_free(base);
 	spdk_bdev_unregister(&bdev_base, NULL, NULL);
