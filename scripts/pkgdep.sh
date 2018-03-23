@@ -20,6 +20,8 @@ if [ -s /etc/redhat-release ]; then
 	yum install -y doxygen mscgen graphviz
 	# Additional dependencies for building pmem based backends
 	yum install -y libpmemblk-devel || true
+	# Additional dependencies for SPDK CLI
+	yum install -y python-configshell
 elif [ -f /etc/debian_version ]; then
 	# Includes Ubuntu, Debian
 	apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev \
@@ -30,6 +32,8 @@ elif [ -f /etc/debian_version ]; then
 	apt-get install -y libnuma-dev
 	# Additional dependencies for building docs
 	apt-get install -y doxygen mscgen graphviz
+	# Additional dependencies for SPDK CLI
+	apt-get install -y "python-configshell*"
 elif [ $SYSTEM = "FreeBSD" ] ; then
 	pkg install gmake cunit openssl git devel/astyle bash devel/pep8 \
 		python misc/e2fsprogs-libuuid sysutils/sg3_utils
