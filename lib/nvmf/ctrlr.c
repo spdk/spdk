@@ -807,10 +807,59 @@ spdk_nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 }
 
+void
+spdk_nvmf_ctrlr_ns_changed(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid)
+{
+	uint16_t max_changes = SPDK_COUNTOF(ctrlr->changed_ns_list.ns_list);
+	uint16_t i;
+	bool found = false;
+
+	for (i = 0; i < ctrlr->changed_ns_list_count; i++) {
+		if (ctrlr->changed_ns_list.ns_list[i] == nsid) {
+			/* nsid is already in the list */
+			found = true;
+			break;
+		}
+	}
+
+	if (!found) {
+		if (ctrlr->changed_ns_list_count == max_changes) {
+			/* Out of space - set first entry to FFFFFFFFh and zero-fill the rest. */
+			ctrlr->changed_ns_list.ns_list[0] = 0xFFFFFFFFu;
+			for (i = 1; i < max_changes; i++) {
+				ctrlr->changed_ns_list.ns_list[i] = 0;
+			}
+		} else {
+			ctrlr->changed_ns_list.ns_list[ctrlr->changed_ns_list_count++] = nsid;
+		}
+	}
+
+	spdk_nvmf_ctrlr_async_event_ns_notice(ctrlr);
+}
+
+static void
+spdk_nvmf_get_changed_ns_list_log_page(struct spdk_nvmf_ctrlr *ctrlr,
+				       void *buffer, uint64_t offset, uint32_t length)
+{
+	size_t copy_length;
+
+	if (offset < sizeof(ctrlr->changed_ns_list)) {
+		copy_length = spdk_min(length, sizeof(ctrlr->changed_ns_list) - offset);
+		if (copy_length) {
+			memcpy(buffer, (char *)&ctrlr->changed_ns_list + offset, copy_length);
+		}
+	}
+
+	/* Clear log page each time it is read */
+	ctrlr->changed_ns_list_count = 0;
+	memset(&ctrlr->changed_ns_list, 0, sizeof(ctrlr->changed_ns_list));
+}
+
 static int
 spdk_nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_subsystem *subsystem = req->qpair->ctrlr->subsys;
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 	uint64_t offset, len;
@@ -864,6 +913,9 @@ spdk_nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		case SPDK_NVME_LOG_COMMAND_EFFECTS_LOG:
 			spdk_nvmf_get_cmds_and_effects_log_page(req->data, offset, len);
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		case SPDK_NVME_LOG_CHANGED_NS_LIST:
+			spdk_nvmf_get_changed_ns_list_log_page(ctrlr, req->data, offset, len);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		default:
 			goto invalid_log_page;
@@ -1362,12 +1414,7 @@ spdk_nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr)
 
 	event.bits.async_event_type = SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE;
 	event.bits.async_event_info = SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED;
-	/* Alternatively, host may request Changed Namespace List log(04h)
-	 * to determine which namespaces have changed. While here, we
-	 * set invalid log page identifier to indicate that host doesn't
-	 * need to send such log page.
-	 */
-	event.bits.log_page_identifier = 0;
+	event.bits.log_page_identifier = SPDK_NVME_LOG_CHANGED_NS_LIST;
 
 	/* Queued the event */
 	if (!ctrlr->aer_req) {
