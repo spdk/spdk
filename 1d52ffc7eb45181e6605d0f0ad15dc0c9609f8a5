@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "65ef6a7e_b8641430",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 270,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-23T14:25:37Z",
+      "side": 1,
+      "message": "Please update comments. This probably can be removed.",
+      "range": {
+        "startLine": 269,
+        "startChar": 0,
+        "endLine": 270,
+        "endChar": 42
+      },
+      "revId": "1d52ffc7eb45181e6605d0f0ad15dc0c9609f8a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47ea83fc_094b84c5",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4686,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-23T14:25:37Z",
+      "side": 1,
+      "message": "This comment is based on previous review done by me. Yet since then some feedback on main clone/snapshot series suggests that being read only for blob is enough of criteria to classify as snapshot. \n\nI see that at this time there is not much more done with snapshots (except setting to read only), so it works currently. Just feels awkward to have function spdk_blob_set_read_only() create a \"snapshot\" without creating clone - yet be seemingly unrelated.\n\nWonder what are other\u0027s opinion on this.",
+      "range": {
+        "startLine": 4684,
+        "startChar": 0,
+        "endLine": 4686,
+        "endChar": 4
+      },
+      "revId": "1d52ffc7eb45181e6605d0f0ad15dc0c9609f8a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "11ba8202_d9e6b48c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4691,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-23T14:25:37Z",
+      "side": 1,
+      "message": "Since this patch adds only the API for already provided functionality. Assigning blob-\u003esnapshot is not yet implemented, maybe spdk_blob_is_clone() could be further in the series ?",
+      "range": {
+        "startLine": 4691,
+        "startChar": 0,
+        "endLine": 4691,
+        "endChar": 18
+      },
+      "revId": "1d52ffc7eb45181e6605d0f0ad15dc0c9609f8a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "518e8e61_afbae028",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-23T14:25:37Z",
+      "side": 1,
+      "message": "If spdk_blob_is_clone() is moved further in series (see feedback on next file), when it is actually implemented. Those additions to spdk_blob struct can be moved further in series as well.",
+      "range": {
+        "startLine": 141,
+        "startChar": 0,
+        "endLine": 144,
+        "endChar": 35
+      },
+      "revId": "1d52ffc7eb45181e6605d0f0ad15dc0c9609f8a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
