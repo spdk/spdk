@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "00b2e9f0_f683e93d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 6
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-23T08:30:15Z",
+      "side": 1,
+      "message": "Commit message is too long, makes it hard to read in some GUIs.\nCould you leave a short first line as a commit subject and then describe reason for changes in message body? Thanks!",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 160
+      },
+      "revId": "35cc2108553965b6ca06336868b7243b356e1a1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38ec63dd_2fc7e243",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-23T08:30:15Z",
+      "side": 1,
+      "message": "Looking at the commit subject I\u0027d say that this is an unrelated change and should not be included in this commit.",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 28
+      },
+      "revId": "35cc2108553965b6ca06336868b7243b356e1a1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
