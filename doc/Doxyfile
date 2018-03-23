@@ -804,6 +804,7 @@ INPUT                  = ../include/spdk \
                          nvmf.md \
                          nvmf_tgt_pg.md \
                          peer_2_peer.md \
+                         spdkcli.md \
                          ssd_internals.md \
                          userspace.md \
                          vagrant.md \
