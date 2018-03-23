@@ -2350,10 +2350,8 @@ spdk_bdev_io_get_thread(struct spdk_bdev_io *bdev_io)
 }
 
 static int
-_spdk_bdev_register(struct spdk_bdev *bdev)
+spdk_bdev_init(struct spdk_bdev *bdev)
 {
-	struct spdk_bdev_module *module;
-
 	assert(bdev->module != NULL);
 
 	if (!bdev->name) {
@@ -2370,9 +2368,6 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 
 	TAILQ_INIT(&bdev->open_descs);
 
-	TAILQ_INIT(&bdev->vbdevs);
-	TAILQ_INIT(&bdev->base_bdevs);
-
 	TAILQ_INIT(&bdev->aliases);
 
 	bdev->reset_in_progress = NULL;
@@ -2382,6 +2377,22 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 				sizeof(struct spdk_bdev_channel));
 
 	pthread_mutex_init(&bdev->mutex, NULL);
+	return 0;
+}
+
+static void
+spdk_bdev_fini(struct spdk_bdev *bdev)
+{
+	pthread_mutex_destroy(&bdev->mutex);
+
+	spdk_io_device_unregister(__bdev_to_io_dev(bdev), NULL);
+}
+
+static void
+spdk_bdev_start(struct spdk_bdev *bdev)
+{
+	struct spdk_bdev_module *module;
+
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Inserting bdev %s into list\n", bdev->name);
 	TAILQ_INSERT_TAIL(&g_bdev_mgr.bdevs, bdev, link);
 
@@ -2392,33 +2403,121 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 		}
 	}
 
-	return 0;
 }
 
 int
 spdk_bdev_register(struct spdk_bdev *bdev)
 {
-	return _spdk_bdev_register(bdev);
+	int rc = spdk_bdev_init(bdev);
+
+	if (rc == 0) {
+		spdk_bdev_start(bdev);
+	}
+
+	return rc;
+}
+
+static int
+spdk_bdev_add_vbdev(struct spdk_bdev *base, struct spdk_bdev *vbdev)
+{
+	struct spdk_bdev **vbdevs;
+
+	vbdevs = realloc(base->vbdevs, (base->vbdevs_cnt + 1) * sizeof(vbdevs[0]));
+	if (!vbdevs) {
+		SPDK_ERRLOG("%s - realloc() failed\n", base->name);
+		return -ENOMEM;
+	}
+
+	vbdevs[base->vbdevs_cnt] = vbdev;
+	base->vbdevs = vbdevs;
+	base->vbdevs_cnt++;
+	return 0;
+}
+
+static void
+spdk_bdev_remove_vbdev(struct spdk_bdev *base, struct spdk_bdev *vbdev)
+{
+	struct spdk_bdev **vbdevs;
+	size_t i, j;
+
+	for (i = 0; i < base->vbdevs_cnt; i++) {
+		if (base->vbdevs[i] != vbdev) {
+			continue;
+		}
+
+		for (j = i; j < base->vbdevs_cnt - 1; j++) {
+			base->vbdevs[j] = base->vbdevs[j + 1];
+		}
+
+		base->vbdevs_cnt--;
+		if (base->vbdevs_cnt > 0) {
+                  	vbdevs = realloc(base->vbdevs, base->vbdevs_cnt * sizeof(vbdevs[0]));
+			/* It would be odd if shrinking memory block fail. */
+			assert(vbdevs);
+			base->vbdevs = vbdevs;
+		} else {
+			free(base->vbdevs);
+			base->vbdevs = NULL;
+                }
+
+		
+		return;
+	}
+
+	SPDK_WARNLOG("Bdev '%s' is not base bdev of '%s'", base->name, vbdev->name);
 }
 
 int
 spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs, int base_bdev_count)
 {
-	int i, rc;
+	size_t base_size;
+	int i = 0;
+	int rc;
 
-	rc = _spdk_bdev_register(vbdev);
+	rc = spdk_bdev_init(vbdev);
 	if (rc) {
 		return rc;
 	}
 
-	for (i = 0; i < base_bdev_count; i++) {
-		assert(base_bdevs[i] != NULL);
-		assert(base_bdevs[i]->claim_module != NULL);
-		TAILQ_INSERT_TAIL(&vbdev->base_bdevs, base_bdevs[i], base_bdev_link);
-		TAILQ_INSERT_TAIL(&base_bdevs[i]->vbdevs, vbdev, vbdev_link);
+	if (base_bdev_count == 0) {
+		spdk_bdev_start(vbdev);
+		return 0;
 	}
 
+	base_size = base_bdev_count * sizeof(base_bdevs[0]);
+	vbdev->base_bdevs = malloc(base_size);
+	if (vbdev->base_bdevs == NULL) {
+		rc = -ENOMEM;
+		goto err;
+	}
+
+	memcpy(vbdev->base_bdevs, base_bdevs, base_size);
+	vbdev->base_bdevs_cnt = base_bdev_count;
+
+	for (; i < base_bdev_count; i++) {
+		assert(base_bdevs[i] != NULL);
+		assert(base_bdevs[i]->claim_module != NULL);
+		rc = spdk_bdev_add_vbdev(base_bdevs[i], vbdev);
+		if (rc) {
+			goto err;
+		}
+	}
+
+	spdk_bdev_start(vbdev);
 	return 0;
+
+err:
+	while (i) {
+		i--;
+		spdk_bdev_remove_vbdev(vbdev->base_bdevs[i], vbdev);
+	}
+
+	vbdev->base_bdevs_cnt = 0;
+	free(vbdev->base_bdevs);
+
+	spdk_bdev_fini(vbdev);
+	return rc;
+
 }
 
 void
@@ -2443,17 +2542,18 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	struct spdk_bdev_desc	*desc, *tmp;
 	int			rc;
 	bool			do_destruct = true;
-	struct spdk_bdev	*base_bdev;
+	size_t			i;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Removing bdev %s from list\n", bdev->name);
 
 	pthread_mutex_lock(&bdev->mutex);
 
-	if (!TAILQ_EMPTY(&bdev->base_bdevs)) {
-		TAILQ_FOREACH(base_bdev, &bdev->base_bdevs, base_bdev_link) {
-			TAILQ_REMOVE(&base_bdev->vbdevs, bdev, vbdev_link);
-		}
+	for (i = 0; i < bdev->base_bdevs_cnt; i++) {
+		spdk_bdev_remove_vbdev(bdev->base_bdevs[i], bdev);
 	}
+
+	bdev->base_bdevs_cnt = 0;
+	free(bdev->base_bdevs);
 
 	bdev->status = SPDK_BDEV_STATUS_REMOVING;
 	bdev->unregister_cb = cb_fn;
@@ -2480,9 +2580,7 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	TAILQ_REMOVE(&g_bdev_mgr.bdevs, bdev, link);
 	pthread_mutex_unlock(&bdev->mutex);
 
-	pthread_mutex_destroy(&bdev->mutex);
-
-	spdk_io_device_unregister(__bdev_to_io_dev(bdev), NULL);
+	spdk_bdev_fini(bdev);
 
 	rc = bdev->fn_table->destruct(bdev->ctxt);
 	if (rc < 0) {

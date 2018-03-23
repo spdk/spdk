@@ -104,8 +104,8 @@ allocate_bdev(char *name)
 
 	rc = spdk_bdev_register(bdev);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(TAILQ_EMPTY(&bdev->base_bdevs));
-	CU_ASSERT(TAILQ_EMPTY(&bdev->vbdevs));
+	CU_ASSERT(bdev->base_bdevs_cnt == 0);
+	CU_ASSERT(bdev->vbdevs_cnt == 0);
 
 	return bdev;
 }
@@ -132,8 +132,8 @@ allocate_vbdev(char *name, struct spdk_bdev *base1, struct spdk_bdev *base2)
 
 	rc = spdk_vbdev_register(bdev, array, base2 == NULL ? 1 : 2);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(!TAILQ_EMPTY(&bdev->base_bdevs));
-	CU_ASSERT(TAILQ_EMPTY(&bdev->vbdevs));
+	CU_ASSERT(bdev->base_bdevs_cnt > 0);
+	CU_ASSERT(bdev->vbdevs_cnt == 0);
 
 	return bdev;
 }
@@ -148,7 +148,7 @@ free_bdev(struct spdk_bdev *bdev)
 static void
 free_vbdev(struct spdk_bdev *bdev)
 {
-	CU_ASSERT(!TAILQ_EMPTY(&bdev->base_bdevs));
+	CU_ASSERT(bdev->base_bdevs_cnt != 0);
 	spdk_bdev_unregister(bdev, NULL, NULL);
 	free(bdev);
 }

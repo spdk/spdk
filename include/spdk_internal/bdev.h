@@ -282,15 +282,14 @@ struct spdk_bdev {
 	/** The bdev status */
 	enum spdk_bdev_status status;
 
-	/** The list of block devices that this block device is built on top of (if any). */
-	TAILQ_HEAD(, spdk_bdev) base_bdevs;
+	/** The array of block devices that this block device is built on top of (if any). */
+	struct spdk_bdev **base_bdevs;
+	size_t base_bdevs_cnt;
 
-	TAILQ_ENTRY(spdk_bdev) base_bdev_link;
 
-	/** The list of virtual block devices built on top of this block device. */
-	TAILQ_HEAD(, spdk_bdev) vbdevs;
-
-	TAILQ_ENTRY(spdk_bdev) vbdev_link;
+	/** The array of virtual block devices built on top of this block device. */
+	struct spdk_bdev **vbdevs;
+	size_t vbdevs_cnt;
 
 	/**
 	 * Pointer to the module that has claimed this bdev for purposes of creating virtual
