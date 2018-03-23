@@ -226,10 +226,10 @@ spdk_rpc_get_bdevs_config(struct spdk_jsonrpc_request *request,
 
 	spdk_json_write_array_begin(w);
 	if (bdev != NULL) {
-		spdk_bdev_write_config_json(bdev, w);
+		spdk_bdev_config_json(bdev, w);
 	} else {
 		for (bdev = spdk_bdev_first(); bdev != NULL; bdev = spdk_bdev_next(bdev)) {
-			spdk_bdev_write_config_json(bdev, w);
+			spdk_bdev_config_json(bdev, w);
 		}
 	}
 

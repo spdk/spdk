@@ -69,7 +69,7 @@ static struct spdk_subsystem g_spdk_subsystem_bdev = {
 	.init = spdk_bdev_subsystem_initialize,
 	.fini = spdk_bdev_subsystem_finish,
 	.config = spdk_bdev_config_text,
-	.write_config_json = spdk_bdev_config_json,
+	.write_config_json = spdk_bdev_subsystem_config_json,
 };
 
 SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_bdev);

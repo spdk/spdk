@@ -151,11 +151,9 @@ void spdk_bdev_config_text(FILE *fp);
 /**
  * Get the full configuration options for the registered block device modules and created bdevs.
  *
- * \param w The pointer to a JSON write context where the configuration will be written.
- * \return result of \c spdk_bdev_dump_bdev_config_json() or negative error code:
- * -EINVAL if w == NULL
+ * \param w pointer to a JSON write context where the configuration will be written.
  */
-int spdk_bdev_config_json(struct spdk_json_write_ctx *w);
+void spdk_bdev_subsystem_config_json(struct spdk_json_write_ctx *w);
 
 /**
  * Get block device by the block device name.
@@ -262,13 +260,10 @@ int spdk_bdev_dump_info_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx 
  * If \c bdev does not support writing JSON configuration then object will be written
  * with only one key - the name of this bdev.
  *
- * \param w JSON write context. It will store the driver-specific configuration context.
  * \param bdev block device to query configuration.
- * \return 0 on success, negated errno on failure.
- *  -EINVAL - bdev == NULL or w == NULL
- *  -ENOSYS - this block device doesn't support dumping configuration.
+ * \param w pointer to a JSON write context where \c bdev the configuration will be written.
  */
-int spdk_bdev_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w);
+void spdk_bdev_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w);
 
 /**
  * Get block device name.

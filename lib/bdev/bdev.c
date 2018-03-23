@@ -426,15 +426,13 @@ spdk_bdev_config_text(FILE *fp)
 	}
 }
 
-int
-spdk_bdev_config_json(struct spdk_json_write_ctx *w)
+void
+spdk_bdev_subsystem_config_json(struct spdk_json_write_ctx *w)
 {
 	struct spdk_bdev_module *bdev_module;
 	struct spdk_bdev *bdev;
 
-	if (!w) {
-		return -EINVAL;
-	}
+	assert(w != NULL);
 
 	spdk_json_write_array_begin(w);
 
@@ -445,11 +443,10 @@ spdk_bdev_config_json(struct spdk_json_write_ctx *w)
 	}
 
 	TAILQ_FOREACH(bdev, &g_bdev_mgr.bdevs, link) {
-		spdk_bdev_write_config_json(bdev, w);
+		spdk_bdev_config_json(bdev, w);
 	}
 
 	spdk_json_write_array_end(w);
-	return 0;
 }
 
 static int
@@ -978,12 +975,11 @@ spdk_bdev_dump_info_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 	return 0;
 }
 
-int
-spdk_bdev_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+void
+spdk_bdev_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 {
-	if (bdev == NULL || w == NULL) {
-		return -EINVAL;
-	}
+	assert(bdev == NULL);
+	assert(w == NULL);
 
 	if (bdev->fn_table->write_config_json) {
 		bdev->fn_table->write_config_json(bdev, w);
@@ -992,8 +988,6 @@ spdk_bdev_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *
 		spdk_json_write_named_string(w, "name", bdev->name);
 		spdk_json_write_object_end(w);
 	}
-
-	return 0;
 }
 
 static void
