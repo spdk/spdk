@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f0eb473f_2785abdb",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-23T06:33:34Z",
+      "side": 1,
+      "message": "spdk_bdev_config_json and spdk_bdev_write_config_json - I think these names are somewhat confusing - it\u0027s not really obvious what the difference is just be looking at the names.\n\nWhat about spdk_bdev_subsystem_config_json and spdk_bdev_config_json?  Then it is clear that the first one is for the entire subsystem, and the second is just for a single bdev.",
+      "revId": "8b562225ca0124e67a3205bbf9af2228d7831257",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "67842469_45119ded",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-23T06:33:34Z",
+      "side": 1,
+      "message": "I think this should be an assert.  There is no reason anyone should pass a NULL write_ctx to this function.  Let\u0027s specify that in the header file too.\n\nThen we can just make this function return void.",
+      "revId": "8b562225ca0124e67a3205bbf9af2228d7831257",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d5567721_572cf5e5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 984,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-23T06:33:34Z",
+      "side": 1,
+      "message": "same here - let\u0027s specify in the header file that bdev and w must not be NULL, and just assert here.\n\nThen this function can return void as well.",
+      "revId": "8b562225ca0124e67a3205bbf9af2228d7831257",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2dddfa04_67bd23fd",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-23T06:33:34Z",
+      "side": 1,
+      "message": "Maybe this is a silly question - but do we need this RPC?  Is getting config for bdev subsystem the same thing?",
+      "revId": "8b562225ca0124e67a3205bbf9af2228d7831257",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
