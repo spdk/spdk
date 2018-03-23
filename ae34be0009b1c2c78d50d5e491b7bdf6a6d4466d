@@ -174,6 +174,24 @@
       "revId": "ae34be0009b1c2c78d50d5e491b7bdf6a6d4466d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "57406051_82d58b1c",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 626,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-03-23T12:08:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "87612b2c_7577bc53",
+      "revId": "ae34be0009b1c2c78d50d5e491b7bdf6a6d4466d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
