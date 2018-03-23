@@ -58,7 +58,7 @@ struct spdk_subsystem {
 	void (*init)(void);
 	void (*fini)(void);
 	void (*config)(FILE *fp);
-	int (*write_config_json)(struct spdk_json_write_ctx *w);
+	void (*write_config_json)(struct spdk_json_write_ctx *w);
 	TAILQ_ENTRY(spdk_subsystem) tailq;
 };
 
