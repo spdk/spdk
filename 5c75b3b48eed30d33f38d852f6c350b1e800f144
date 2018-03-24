@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8bc67b64_3e4661f0",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-24T13:22:38Z",
+      "side": 1,
+      "message": "head should be NULL after being freed?",
+      "range": {
+        "startLine": 128,
+        "startChar": 0,
+        "endLine": 128,
+        "endChar": 13
+      },
+      "revId": "5c75b3b48eed30d33f38d852f6c350b1e800f144",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f6a36e06_951d27c4",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-24T13:22:38Z",
+      "side": 1,
+      "message": "if head \u003d\u003d NULL then the for loop should be skipped ?",
+      "revId": "5c75b3b48eed30d33f38d852f6c350b1e800f144",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "859df37b_a9ed3724",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-24T13:22:38Z",
+      "side": 1,
+      "message": "heads should be cleared to NULL after being freed?",
+      "range": {
+        "startLine": 172,
+        "startChar": 6,
+        "endLine": 172,
+        "endChar": 10
+      },
+      "revId": "5c75b3b48eed30d33f38d852f6c350b1e800f144",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "806c97b6_73c28379",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-24T13:22:38Z",
+      "side": 1,
+      "message": "coremap should be cleared to NULL after being freed?",
+      "range": {
+        "startLine": 173,
+        "startChar": 6,
+        "endLine": 173,
+        "endChar": 13
+      },
+      "revId": "5c75b3b48eed30d33f38d852f6c350b1e800f144",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
