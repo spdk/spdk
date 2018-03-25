@@ -1726,7 +1726,6 @@ bdev_virtio_initialize(void)
 out:
 	/* Remove any created devices */
 	TAILQ_FOREACH_SAFE(svdev, &g_virtio_scsi_devs, tailq, next_svdev) {
-		TAILQ_REMOVE(&g_virtio_scsi_devs, svdev, tailq);
 		virtio_scsi_dev_remove(svdev, NULL, NULL);
 	}
 
