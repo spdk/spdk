@@ -184,6 +184,8 @@ struct bdev_virtio_io_channel {
 TAILQ_HEAD(, virtio_scsi_dev) g_virtio_scsi_devs =
 	TAILQ_HEAD_INITIALIZER(g_virtio_scsi_devs);
 
+pthread_mutex_t g_virtio_scsi_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 /** Module finish in progress */
 static bool g_bdev_virtio_finish = false;
 
@@ -293,7 +295,9 @@ virtio_scsi_dev_init(struct virtio_scsi_dev *svdev, uint16_t max_queues)
 				bdev_virtio_scsi_ch_destroy_cb,
 				sizeof(struct bdev_virtio_io_channel));
 
+	pthread_mutex_lock(&g_virtio_scsi_mutex);
 	TAILQ_INSERT_TAIL(&g_virtio_scsi_devs, svdev, tailq);
+	pthread_mutex_unlock(&g_virtio_scsi_mutex);
 	return 0;
 }
 
@@ -1687,13 +1691,16 @@ bdev_virtio_initial_scan_complete(void *ctx __attribute__((unused)),
 {
 	struct virtio_scsi_dev *svdev;
 
+	pthread_mutex_lock(&g_virtio_scsi_mutex);
 	TAILQ_FOREACH(svdev, &g_virtio_scsi_devs, tailq) {
 		if (svdev->scan_ctx) {
 			/* another device is still being scanned */
+			pthread_mutex_unlock(&g_virtio_scsi_mutex);
 			return;
 		}
 	}
 
+	pthread_mutex_unlock(&g_virtio_scsi_mutex);
 	spdk_bdev_module_init_done(&virtio_scsi_if);
 }
 
@@ -1704,52 +1711,48 @@ bdev_virtio_initialize(void)
 	int rc;
 
 	rc = bdev_virtio_process_config();
+	pthread_mutex_lock(&g_virtio_scsi_mutex);
+
 	if (rc != 0) {
-		goto out;
+		goto err_unlock;
 	}
 
 	if (TAILQ_EMPTY(&g_virtio_scsi_devs)) {
-		spdk_bdev_module_init_done(&virtio_scsi_if);
-		return 0;
+		goto out_unlock;
 	}
 
 	/* Initialize all created devices and scan available targets */
 	TAILQ_FOREACH(svdev, &g_virtio_scsi_devs, tailq) {
 		rc = virtio_scsi_dev_scan(svdev, bdev_virtio_initial_scan_complete, NULL);
 		if (rc != 0) {
-			goto out;
+			goto err_unlock;
 		}
 	}
 
+	pthread_mutex_unlock(&g_virtio_scsi_mutex);
 	return 0;
 
-out:
+err_unlock:
 	/* Remove any created devices */
 	TAILQ_FOREACH_SAFE(svdev, &g_virtio_scsi_devs, tailq, next_svdev) {
 		virtio_scsi_dev_remove(svdev, NULL, NULL);
 	}
 
+out_unlock:
+	pthread_mutex_unlock(&g_virtio_scsi_mutex);
 	spdk_bdev_module_init_done(&virtio_scsi_if);
 	return rc;
 }
 
 static void
-virtio_scsi_dev_unregister_cb(void *io_device)
+_virtio_scsi_dev_unregister_cb(void *io_device)
 {
 	struct virtio_scsi_dev *svdev = io_device;
 	struct virtio_dev *vdev = &svdev->vdev;
-	struct spdk_thread *thread;
 	bool finish_module;
 	bdev_virtio_remove_cb remove_cb;
 	void *remove_ctx;
 
-	thread = virtio_dev_queue_get_thread(vdev, VIRTIO_SCSI_CONTROLQ);
-	if (thread != spdk_get_thread()) {
-		spdk_thread_send_msg(thread, virtio_scsi_dev_unregister_cb, io_device);
-		return;
-	}
-
-	/* bdevs built on top of this vdev mustn't be destroyed with outstanding I/O. */
 	assert(spdk_ring_count(svdev->ctrlq_ring) == 0);
 	spdk_ring_free(svdev->ctrlq_ring);
 	spdk_poller_unregister(&svdev->mgmt_poller);
@@ -1760,7 +1763,10 @@ virtio_scsi_dev_unregister_cb(void *io_device)
 	virtio_dev_stop(vdev);
 	virtio_dev_destruct(vdev);
 
+	pthread_mutex_lock(&g_virtio_scsi_mutex);
 	TAILQ_REMOVE(&g_virtio_scsi_devs, svdev, tailq);
+	pthread_mutex_unlock(&g_virtio_scsi_mutex);
+
 	remove_cb = svdev->remove_cb;
 	remove_ctx = svdev->remove_ctx;
 	spdk_dma_free(svdev->eventq_ios);
@@ -1775,6 +1781,16 @@ virtio_scsi_dev_unregister_cb(void *io_device)
 	if (g_bdev_virtio_finish && finish_module) {
 		spdk_bdev_module_finish_done();
 	}
+}
+
+static void
+virtio_scsi_dev_unregister_cb(void *io_device)
+{
+	struct virtio_scsi_dev *svdev = io_device;
+	struct spdk_thread *thread;
+
+	thread = virtio_dev_queue_get_thread(&svdev->vdev, VIRTIO_SCSI_CONTROLQ);
+	spdk_thread_send_msg(thread, _virtio_scsi_dev_unregister_cb, io_device);
 }
 
 static void
@@ -1819,7 +1835,9 @@ bdev_virtio_finish(void)
 
 	g_bdev_virtio_finish = true;
 
+	pthread_mutex_lock(&g_virtio_scsi_mutex);
 	if (TAILQ_EMPTY(&g_virtio_scsi_devs)) {
+		pthread_mutex_unlock(&g_virtio_scsi_mutex);
 		spdk_bdev_module_finish_done();
 		return;
 	}
@@ -1828,6 +1846,7 @@ bdev_virtio_finish(void)
 	TAILQ_FOREACH_SAFE(svdev, &g_virtio_scsi_devs, tailq, next) {
 		virtio_scsi_dev_remove(svdev, NULL, NULL);
 	}
+	pthread_mutex_unlock(&g_virtio_scsi_mutex);
 }
 
 int
@@ -1896,6 +1915,7 @@ bdev_virtio_scsi_dev_remove(const char *name, bdev_virtio_remove_cb cb_fn, void 
 {
 	struct virtio_scsi_dev *svdev;
 
+	pthread_mutex_lock(&g_virtio_scsi_mutex);
 	TAILQ_FOREACH(svdev, &g_virtio_scsi_devs, tailq) {
 		if (strcmp(svdev->vdev.name, name) == 0) {
 			break;
@@ -1903,12 +1923,14 @@ bdev_virtio_scsi_dev_remove(const char *name, bdev_virtio_remove_cb cb_fn, void 
 	}
 
 	if (svdev == NULL) {
+		pthread_mutex_unlock(&g_virtio_scsi_mutex);
 		SPDK_ERRLOG("Cannot find Virtio-SCSI device named '%s'\n", name);
 		cb_fn(cb_arg, -ENODEV);
 		return;
 	}
 
 	virtio_scsi_dev_remove(svdev, cb_fn, cb_arg);
+	pthread_mutex_unlock(&g_virtio_scsi_mutex);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("virtio", SPDK_LOG_VIRTIO)
