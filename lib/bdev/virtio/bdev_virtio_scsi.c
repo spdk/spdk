@@ -1933,4 +1933,27 @@ bdev_virtio_scsi_dev_remove(const char *name, bdev_virtio_remove_cb cb_fn, void 
 	pthread_mutex_unlock(&g_virtio_scsi_mutex);
 }
 
+void
+bdev_virtio_scsi_dev_list(struct spdk_json_write_ctx *w)
+{
+	struct virtio_scsi_dev *svdev;
+
+	spdk_json_write_array_begin(w);
+
+	pthread_mutex_lock(&g_virtio_scsi_mutex);
+	TAILQ_FOREACH(svdev, &g_virtio_scsi_devs, tailq) {
+		spdk_json_write_object_begin(w);
+
+		spdk_json_write_name(w, "name");
+		spdk_json_write_string(w, svdev->vdev.name);
+
+		virtio_dev_dump_json_config(&svdev->vdev, w);
+
+		spdk_json_write_object_end(w);
+	}
+	pthread_mutex_unlock(&g_virtio_scsi_mutex);
+
+	spdk_json_write_array_end(w);
+}
+
 SPDK_LOG_REGISTER_COMPONENT("virtio", SPDK_LOG_VIRTIO)
