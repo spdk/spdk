@@ -265,6 +265,28 @@ invalid:
 }
 SPDK_RPC_REGISTER("remove_virtio_scsi_bdev", spdk_rpc_remove_virtio_scsi_bdev);
 
+static void
+spdk_rpc_get_virtio_scsi_devs(struct spdk_jsonrpc_request *request,
+			      const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "get_virtio_scsi_devs requires no parameters");
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	bdev_virtio_scsi_dev_list(w);
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("get_virtio_scsi_devs", spdk_rpc_get_virtio_scsi_devs)
+
 struct rpc_construct_virtio_blk_dev {
 	char *path;
 	char *pci_address;

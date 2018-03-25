@@ -117,6 +117,13 @@ void bdev_virtio_scsi_dev_remove(const char *name,
 				 bdev_virtio_remove_cb cb_fn, void *cb_arg);
 
 /**
+ * List all created Virtio-SCSI devices.
+ *
+ * \param write_ctx JSON context to write into
+ */
+void bdev_virtio_scsi_dev_list(struct spdk_json_write_ctx *write_ctx);
+
+/**
  * Connect to a vhost-user Unix domain socket and create a Virtio BLK bdev.
  *
  * \param name name for the virtio bdev

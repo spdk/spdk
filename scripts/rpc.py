@@ -516,6 +516,9 @@ if __name__ == "__main__":
     It will be inhereted by all created bdevs, which are named n the following format: <name>t<target_id>""")
     p.set_defaults(func=rpc.vhost.construct_virtio_pci_scsi_bdev)
 
+    p = subparsers.add_parser('get_virtio_scsi_devs', help='List all Virtio-SCSI devices.')
+    p.set_defaults(func=rpc.vhost.get_virtio_scsi_devs)
+
     p = subparsers.add_parser('remove_virtio_scsi_bdev', help="""Remove a Virtio-SCSI device
     This will delete all bdevs exposed by this device""")
     p.add_argument('name', help='Virtio device name. E.g. VirtioUser0')
