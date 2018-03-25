@@ -79,6 +79,10 @@ def remove_virtio_scsi_bdev(args):
     return args.client.call('remove_virtio_scsi_bdev', params)
 
 
+def get_virtio_scsi_devs(args):
+    return args.client.call('get_virtio_scsi_devs')
+
+
 def construct_virtio_user_blk_bdev(args):
     params = {
         'path': args.path,
