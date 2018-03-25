@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6b8f6561_a30e03d6",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-25T13:37:26Z",
+      "side": 1,
+      "message": "To know the usage of link or tailq is very difficult. Would you consider the name of them again?\n\nFor example req-\u003etailq looks to be used in the state of free or outstanding and req-\u003elink looks to be used in the state of pending.\nSo, req_link and pend_link may be a little more meaningful.",
+      "range": {
+        "startLine": 148,
+        "startChar": 0,
+        "endLine": 149,
+        "endChar": 43
+      },
+      "revId": "251365077ba6ad3efac3a9638ff4ac575fcfe02a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b9625da_b8d112a6",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 297,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-25T13:37:26Z",
+      "side": 1,
+      "message": "the name of this function doesn\u0027t look to describe the operation of this function.\n\nI think you have better name for example but how about spdk_nvmf_rdma_qpair_put_outstanding_data_bufs ?",
+      "range": {
+        "startLine": 297,
+        "startChar": 0,
+        "endLine": 297,
+        "endChar": 36
+      },
+      "revId": "251365077ba6ad3efac3a9638ff4ac575fcfe02a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
