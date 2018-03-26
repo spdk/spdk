@@ -2825,12 +2825,14 @@ spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	}
 
 	if (opts.max_md_ops == 0 || opts.max_channel_ops == 0) {
+		dev->destroy(dev);
 		cb_fn(cb_arg, NULL, -EINVAL);
 		return;
 	}
 
 	bs = _spdk_bs_alloc(dev, &opts);
 	if (!bs) {
+		dev->destroy(dev);
 		cb_fn(cb_arg, NULL, -ENOMEM);
 		return;
 	}
