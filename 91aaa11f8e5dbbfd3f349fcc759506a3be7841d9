@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c7d9edfc_3df9f5d1",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 6
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-26T23:06:13Z",
+      "side": 1,
+      "message": "So, what is correct?\n\nWould you figure out what issue is fixed and what is correct by unit tests and comments? Honestly, I haven\u0027t understood them exactly yet. In other words, would you clarify what is fixed by conversion from list to resizable array?",
+      "range": {
+        "startLine": 19,
+        "startChar": 10,
+        "endLine": 19,
+        "endChar": 35
+      },
+      "revId": "91aaa11f8e5dbbfd3f349fcc759506a3be7841d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
