@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-export TARGET_IP=127.0.0.1
-export INITIATOR_IP=127.0.0.1
-
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
