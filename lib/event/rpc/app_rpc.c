@@ -93,8 +93,8 @@ spdk_rpc_kill_instance(struct spdk_jsonrpc_request *request,
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "sending signal %d\n", signals[i].signal);
-	kill(getpid(), signals[i].signal);
 	free_rpc_kill_instance(&req);
+	kill(getpid(), signals[i].signal);
 
 	w = spdk_jsonrpc_begin_result(request);
 	if (w == NULL) {
