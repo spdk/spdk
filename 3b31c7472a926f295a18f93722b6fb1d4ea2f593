@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "55447fdd_9fcd30d4",
+        "filename": "lib/bdev/virtio/bdev_virtio_scsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1752,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-26T09:12:45Z",
+      "side": 0,
+      "message": "Is it OK to remove this comment?",
+      "range": {
+        "startLine": 1752,
+        "startChar": 1,
+        "endLine": 1752,
+        "endChar": 81
+      },
+      "revId": "3b31c7472a926f295a18f93722b6fb1d4ea2f593",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
