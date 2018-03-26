@@ -781,7 +781,12 @@ _spdk_bdev_finish_unregister_bdevs_iter(void *cb_arg, int bdeverrno)
 
 	if (TAILQ_EMPTY(&g_bdev_mgr.bdevs)) {
 		SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Done unregistering bdevs\n");
-		spdk_bdev_module_finish_iter(NULL);
+		/*
+		 * Bdev module finish need to be deffered as we might be in the middle of some context
+		 * (like bdev part free) that will use this bdev (or private bdev driver ctx data)
+		 * after returning.
+		 */
+		spdk_thread_send_msg(spdk_get_thread(), spdk_bdev_module_finish_iter, NULL);
 		return;
 	}
 
