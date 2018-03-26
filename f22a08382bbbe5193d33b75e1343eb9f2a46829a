@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c91654d0_7a79840d",
+        "filename": "autorun_post.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-26T21:38:43Z",
+      "side": 1,
+      "message": "The build_pool pool/pool.py code already creates a file called post_process.log in the output directory; I think this will overwrite it.",
+      "revId": "f22a08382bbbe5193d33b75e1343eb9f2a46829a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
