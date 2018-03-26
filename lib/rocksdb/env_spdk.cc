@@ -244,7 +244,6 @@ public:
 	{
 		return Status::OK();
 	}
-#ifdef ROCKSDB_FALLOCATE_PRESENT
 	virtual Status Allocate(uint64_t offset, uint64_t len) override
 	{
 		spdk_file_truncate(mFile, g_sync_args.channel, offset + len);
@@ -263,7 +262,6 @@ public:
 	{
 		return 0;
 	}
-#endif
 };
 
 Status
