@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dbc1782e_5465245a",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 520,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-26T21:11:23Z",
+      "side": 1,
+      "message": "This needs to be updated for df897ed49002 (\"scripts/rpc.py: move printing into main rpc.py\").",
+      "revId": "3a86d435739f676fe0718539011ca50870505e5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
