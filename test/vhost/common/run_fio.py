@@ -157,5 +157,6 @@ def main():
     print("Running job file: {0}".format(fio_cfg))
     run_fio(vms, fio_cfg, out_dir, perf_vmex)
 
+
 if __name__ == "__main__":
     sys.exit(main())
