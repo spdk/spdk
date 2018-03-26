@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "74066673_70e1bec4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2815,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-26T08:48:56Z",
+      "side": 1,
+      "message": "Sure. I\u0027ve set it to SPDK_DEBUGLOG, because otherwise it would show up on bdev examine of any device with unsupported block len.",
+      "parentUuid": "f0c0f28e_8035c9fa",
+      "revId": "ff7771cf25a1ff518d2370ad1f57adc11e7f9382",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ff269237_07799441",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 3
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "4f2cadb8_4d72b021",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2816,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-26T08:48:56Z",
+      "side": 1,
+      "message": "Thanks for noticing this.\nPlease see patch https://review.gerrithub.io/#/c/405223/",
+      "parentUuid": "ff269237_07799441",
+      "revId": "ff7771cf25a1ff518d2370ad1f57adc11e7f9382",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5c9ca2b8_a21272cc",
         "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
         "patchSetId": 3
@@ -47,6 +83,24 @@
       "writtenOn": "2018-03-26T06:24:55Z",
       "side": 1,
       "message": "comment says \"Load\" but this is calling spdk_bs_init().\n\nShould we actually have tests though for both init and load with unsupported blocklen?",
+      "revId": "ff7771cf25a1ff518d2370ad1f57adc11e7f9382",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36a8ae6d_f025e4c4",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1548,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-26T08:48:56Z",
+      "side": 1,
+      "message": "Missed this, of course this should be spdk_bs_load().\nInit path for unsupported blocklen is already tested on line 194.",
+      "parentUuid": "5c9ca2b8_a21272cc",
       "revId": "ff7771cf25a1ff518d2370ad1f57adc11e7f9382",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
