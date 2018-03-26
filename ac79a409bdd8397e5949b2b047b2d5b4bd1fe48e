@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b5d00ff0_1a1c0cd6",
+        "filename": "app/iscsi_tgt/iscsi_tgt.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-26T21:19:48Z",
+      "side": 1,
+      "message": "SPDK_ERRLOG() and similar macros are defined in spdk/log.h; it might get included via some other header, but we should still include it explicitly.\n\nWhat was your goal for removing the #include?",
+      "revId": "ac79a409bdd8397e5949b2b047b2d5b4bd1fe48e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
