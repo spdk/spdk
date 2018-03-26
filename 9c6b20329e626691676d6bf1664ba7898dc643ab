@@ -62,6 +62,30 @@
       "revId": "9c6b20329e626691676d6bf1664ba7898dc643ab",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9fcf1856_f6c26f94",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2518,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-26T13:50:56Z",
+      "side": 1,
+      "message": "init and fini is for resource allocation/initialization and destruction/dealocation (linke bdev mutext, IO channel register/unregister).",
+      "parentUuid": "de12f42c_a024d4b2",
+      "range": {
+        "startLine": 2518,
+        "startChar": 1,
+        "endLine": 2518,
+        "endChar": 15
+      },
+      "revId": "9c6b20329e626691676d6bf1664ba7898dc643ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
