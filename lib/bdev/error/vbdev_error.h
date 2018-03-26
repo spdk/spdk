@@ -42,7 +42,22 @@ enum vbdev_error_type {
 	VBDEV_IO_PENDING,
 };
 
-int spdk_vbdev_error_create(struct spdk_bdev *base_bdev);
+/**
+ * Create a vbdev on the base bdev to inject error into it.
+ *
+ * \param base_bdev_name Name of the base bdev.
+ * \return 0 on success or negative on failure.
+ */
+int spdk_vbdev_error_create(const char *base_bdev_name);
+
+/**
+ * Inject error to the base bdev. Users can specify which IO type error is injected,
+ * what type of error is injected, and how many errors are injected.
+ *
+ * \param name Name of the base bdev into which error is injected.
+ * \param io_type IO type into which error is injected.
+ * \param error_num Count of injected errors
+ */
 int spdk_vbdev_inject_error(char *name, uint32_t io_type, uint32_t error_type,
 			    uint32_t error_num);
 

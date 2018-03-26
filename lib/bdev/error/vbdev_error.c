@@ -81,6 +81,7 @@ static void vbdev_error_fini(void);
 
 static void vbdev_error_examine(struct spdk_bdev *bdev);
 
+static int vbdev_error_config_add(const char *base_bdev_name);
 static int vbdev_error_config_remove(const char *base_bdev_name);
 
 static struct spdk_bdev_module error_if = {
@@ -249,8 +250,8 @@ spdk_vbdev_error_base_bdev_hotremove_cb(void *_base_bdev)
 	spdk_bdev_part_base_hotremove(_base_bdev, &g_error_disks);
 }
 
-int
-spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
+static int
+_spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 {
 	struct spdk_bdev_part_base *base = NULL;
 	struct error_disk *disk = NULL;
@@ -270,14 +271,14 @@ spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 					   sizeof(struct error_channel), NULL, NULL);
 	if (rc) {
 		SPDK_ERRLOG("could not construct part base for bdev %s\n", spdk_bdev_get_name(base_bdev));
-		return -1;
+		return rc;
 	}
 
 	disk = calloc(1, sizeof(*disk));
 	if (!disk) {
 		SPDK_ERRLOG("Memory allocation failure\n");
 		spdk_error_free_base(base);
-		return -1;
+		return -ENOMEM;
 	}
 
 	name = spdk_sprintf_alloc("EE_%s", spdk_bdev_get_name(base_bdev));
@@ -285,7 +286,7 @@ spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 		SPDK_ERRLOG("name allocation failure\n");
 		spdk_error_free_base(base);
 		free(disk);
-		return -1;
+		return -ENOMEM;
 	}
 
 	rc = spdk_bdev_part_construct(&disk->part, base, name, 0, base_bdev->blockcnt,
@@ -295,12 +296,40 @@ spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 		/* spdk_bdev_part_construct will free name on failure */
 		spdk_error_free_base(base);
 		free(disk);
-		return -1;
+		return rc;
 	}
 
 	TAILQ_INIT(&disk->pending_ios);
 
 	return 0;
+}
+
+int
+spdk_vbdev_error_create(const char *base_bdev_name)
+{
+	int rc;
+	struct spdk_bdev *base_bdev;
+
+	rc = vbdev_error_config_add(base_bdev_name);
+	if (rc != 0) {
+		SPDK_ERRLOG("Adding config for ErrorInjection bdev %s failed (rc=%d)\n",
+			    base_bdev_name, rc);
+		return rc;
+	}
+
+	base_bdev = spdk_bdev_get_by_name(base_bdev_name);
+	if (!base_bdev) {
+		return 0;
+	}
+
+	rc = _spdk_vbdev_error_create(base_bdev);
+	if (rc != 0) {
+		vbdev_error_config_remove(base_bdev_name);
+		SPDK_ERRLOG("Could not create ErrorInjection bdev %s (rc=%d)\n",
+			    base_bdev_name, rc);
+	}
+
+	return rc;
 }
 
 static void
@@ -327,6 +356,36 @@ vbdev_error_config_find_by_base_name(const char *base_bdev_name)
 	}
 
 	return NULL;
+}
+
+static int
+vbdev_error_config_add(const char *base_bdev_name)
+{
+	struct spdk_vbdev_error_config *cfg;
+
+	cfg = vbdev_error_config_find_by_base_name(base_bdev_name);
+	if (cfg) {
+		SPDK_ERRLOG("vbdev_error_config for bdev %s already exists\n",
+			    base_bdev_name);
+		return -EEXIST;
+	}
+
+	cfg = calloc(1, sizeof(*cfg));
+	if (!cfg) {
+		SPDK_ERRLOG("calloc() failed for vbdev_error_config\n");
+		return -ENOMEM;
+	}
+
+	cfg->base_bdev = strdup(base_bdev_name);
+	if (!cfg->base_bdev) {
+		free(cfg);
+		SPDK_ERRLOG("strdup() failed for base_bdev_name\n");
+		return -ENOMEM;
+	}
+
+	TAILQ_INSERT_TAIL(&g_error_config, cfg, tailq);
+
+	return 0;
 }
 
 static int
@@ -409,9 +468,10 @@ vbdev_error_examine(struct spdk_bdev *bdev)
 
 	cfg = vbdev_error_config_find_by_base_name(bdev->name);
 	if (cfg != NULL) {
-		rc = spdk_vbdev_error_create(bdev);
+		rc = _spdk_vbdev_error_create(bdev);
 		if (rc != 0) {
-			SPDK_ERRLOG("could not create error vbdev for bdev %s\n", bdev->name);
+			SPDK_ERRLOG("could not create error vbdev for bdev %s at examine\n",
+				    bdev->name);
 		}
 	}
 
