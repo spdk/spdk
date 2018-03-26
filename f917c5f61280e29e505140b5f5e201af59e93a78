@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "471ff059_2ca9f215",
+        "filename": "test/iscsi_tgt/fio/nvme_lovl.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-26T08:04:20Z",
+      "side": 1,
+      "message": "Filename: \nshould be nvme_lvol.sh instead of nvme_lovl.sh",
+      "revId": "f917c5f61280e29e505140b5f5e201af59e93a78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ebabc942_686a29b1",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-26T08:04:20Z",
+      "side": 1,
+      "message": "lvol",
+      "range": {
+        "startLine": 51,
+        "startChar": 30,
+        "endLine": 51,
+        "endChar": 39
+      },
+      "revId": "f917c5f61280e29e505140b5f5e201af59e93a78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
