@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f0c0f28e_8035c9fa",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2815,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-26T06:24:55Z",
+      "side": 1,
+      "message": "Should this be SPDK_ERRLOG or SPDK_DEBUGLOG instead?  I don\u0027t see any other SPDK_INFOLOG\u0027s in blobstore currently.  Not sure we should just have this one print be an INFOLOG.",
+      "revId": "ff7771cf25a1ff518d2370ad1f57adc11e7f9382",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff269237_07799441",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2816,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-26T06:24:55Z",
+      "side": 1,
+      "message": "Many other error paths below do not dev-\u003edestroy().  Do they need to be added too - maybe in a separate patch?",
+      "revId": "ff7771cf25a1ff518d2370ad1f57adc11e7f9382",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c9ca2b8_a21272cc",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1548,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-26T06:24:55Z",
+      "side": 1,
+      "message": "comment says \"Load\" but this is calling spdk_bs_init().\n\nShould we actually have tests though for both init and load with unsupported blocklen?",
+      "revId": "ff7771cf25a1ff518d2370ad1f57adc11e7f9382",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
