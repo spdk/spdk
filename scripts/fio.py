@@ -107,7 +107,8 @@ def set_device_parameter(devices, filename_template, value):
 
 def configure_devices(devices):
     set_device_parameter(devices, "/sys/block/%s/queue/nomerges", "2")
-    set_device_parameter(devices, "/sys/block/%s/queue/nr_requests", "128")
+# TODO keep nr_requests 128
+    set_device_parameter(devices, "/sys/block/%s/queue/nr_requests", "96")
     requested_qd = 128
     qd = requested_qd
     while qd > 0:
