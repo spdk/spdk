@@ -9,6 +9,7 @@ def check_fail_count(fail_count, num_test):
     else:
         print("Test: {num_test} - FAIL".format(num_test=num_test))
 
+
 if __name__ == "__main__":
     rpc_py = None
     total_size = None
