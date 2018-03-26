@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "de255622_77abbc78",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-03-26T00:47:46Z",
+      "side": 1,
+      "message": "Good point, I can add some comments here to say what the usage for the 2 list entries.",
+      "parentUuid": "6b8f6561_a30e03d6",
+      "range": {
+        "startLine": 148,
+        "startChar": 0,
+        "endLine": 149,
+        "endChar": 43
+      },
+      "revId": "251365077ba6ad3efac3a9638ff4ac575fcfe02a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8b9625da_b8d112a6",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2018-03-25T13:37:26Z",
       "side": 1,
       "message": "the name of this function doesn\u0027t look to describe the operation of this function.\n\nI think you have better name for example but how about spdk_nvmf_rdma_qpair_put_outstanding_data_bufs ?",
+      "range": {
+        "startLine": 297,
+        "startChar": 0,
+        "endLine": 297,
+        "endChar": 36
+      },
+      "revId": "251365077ba6ad3efac3a9638ff4ac575fcfe02a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a54dd60e_9b3e3b09",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 297,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-03-26T00:47:46Z",
+      "side": 1,
+      "message": "Currently the function just free the outstanding buffers, we should do more based on each request\u0027s state in future, but for now, I think it\u0027s okay to rename it.",
+      "parentUuid": "8b9625da_b8d112a6",
       "range": {
         "startLine": 297,
         "startChar": 0,
