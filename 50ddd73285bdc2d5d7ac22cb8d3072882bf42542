@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "35f1d943_7e0de0ec",
+        "filename": "lib/bdev/error/vbdev_error.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-26T01:00:17Z",
+      "side": 1,
+      "message": "Thank you, much better.",
+      "parentUuid": "5d8017c5_95472631",
+      "range": {
+        "startLine": 53,
+        "startChar": 28,
+        "endLine": 53,
+        "endChar": 63
+      },
+      "revId": "50ddd73285bdc2d5d7ac22cb8d3072882bf42542",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "55e5299c_a7a37762",
         "filename": "lib/bdev/error/vbdev_error_rpc.c",
         "patchSetId": 6
@@ -36,6 +60,30 @@
       "writtenOn": "2018-03-23T09:43:56Z",
       "side": 1,
       "message": "maybe \n\u003e if (rc !\u003d 0 \u0026\u0026 rc !\u003d -ENODEV) {\n\nwould do the trick :)",
+      "range": {
+        "startLine": 113,
+        "startChar": 5,
+        "endLine": 115,
+        "endChar": 9
+      },
+      "revId": "50ddd73285bdc2d5d7ac22cb8d3072882bf42542",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f3b167c_3b902196",
+        "filename": "lib/bdev/error/vbdev_error_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-26T01:00:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "55e5299c_a7a37762",
       "range": {
         "startLine": 113,
         "startChar": 5,
