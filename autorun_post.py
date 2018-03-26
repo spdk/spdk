@@ -78,6 +78,7 @@ def aggregateCompletedTests(output_dir, repo_dir):
     completionFilePath = os.path.join(output_dir, '**', 'test_completions.txt')
     testFiles = glob.glob(testFilePath, recursive=True)
     completionFiles = glob.glob(completionFilePath, recursive=True)
+    testSummary = os.path.join(output_dir, "test_execution.log")
 
     if len(testFiles) == 0:
         print("Unable to perform test completion aggregator. No input files.")
@@ -108,27 +109,31 @@ def aggregateCompletedTests(output_dir, repo_dir):
                 except KeyError:
                     continue
 
-    print("\n\n-----Tests Executed in Build------")
-    for item in sorted(test_list):
-        if test_list[item][0]:
-            print(item)
+    with open(testSummary, 'w') as fh:
+        fh.write("\n\n-----Tests Executed in Build------\n")
+        for item in sorted(test_list):
+            if test_list[item][0]:
+                fh.write(item + "\n")
 
-    print("\n\n-----Tests Missing From Build------")
-    if not test_unit_with_valgrind:
-        print("UNITTEST_WITH_VALGRIND\n")
-    for item in sorted(test_list):
-        if test_list[item][0] is False:
-            print(item)
+        fh.write("\n\n-----Tests Missing From Build------\n")
+        if not test_unit_with_valgrind:
+            fh.write("UNITTEST_WITH_VALGRIND\n")
+        for item in sorted(test_list):
+            if test_list[item][0] is False:
+                fh.write(item + "\n")
 
-    print("\n\n-----Tests Missing ASAN------")
-    for item in sorted(test_list):
-        if test_list[item][1] is False:
-            print(item)
+        fh.write("\n\n-----Tests Missing ASAN------\n")
+        for item in sorted(test_list):
+            if test_list[item][1] is False:
+                fh.write(item + "\n")
 
-    print("\n\n-----Tests Missing UBSAN------")
-    for item in sorted(test_list):
-        if test_list[item][2] is False:
-            print(item)
+        fh.write("\n\n-----Tests Missing UBSAN------\n")
+        for item in sorted(test_list):
+            if test_list[item][2] is False:
+                fh.write(item + "\n")
+
+    with open(testSummary, 'r') as fh:
+        print(fh.read())
 
 
 def main(output_dir, repo_dir):
