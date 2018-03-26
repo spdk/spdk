@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a6db01c3_b3dda1b4",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2462,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-26T13:23:39Z",
+      "side": 1,
+      "message": "this blank line can be removed.",
+      "revId": "9c6b20329e626691676d6bf1664ba7898dc643ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "465377c4_f5e8ebd9",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2467,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-26T13:23:39Z",
+      "side": 1,
+      "message": "+ ¥n",
+      "range": {
+        "startLine": 2467,
+        "startChar": 49,
+        "endLine": 2467,
+        "endChar": 50
+      },
+      "revId": "9c6b20329e626691676d6bf1664ba7898dc643ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de12f42c_a024d4b2",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2518,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-26T13:23:39Z",
+      "side": 1,
+      "message": "It looks that fini() is called even if start() was not executed?",
+      "range": {
+        "startLine": 2518,
+        "startChar": 1,
+        "endLine": 2518,
+        "endChar": 15
+      },
+      "revId": "9c6b20329e626691676d6bf1664ba7898dc643ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
