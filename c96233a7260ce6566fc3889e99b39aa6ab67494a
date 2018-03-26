@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0709c31c_a661c2be",
+        "filename": "lib/bdev/virtio/bdev_virtio_scsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-26T20:54:57Z",
+      "side": 1,
+      "message": "This can probably be static (but that can be fixed up in another patch if the rest of the series looks OK).",
+      "revId": "c96233a7260ce6566fc3889e99b39aa6ab67494a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
