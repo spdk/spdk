@@ -187,7 +187,7 @@ SpdkRandomAccessFile::InvalidateCache(size_t offset, size_t length)
 class SpdkWritableFile : public WritableFile
 {
 	struct spdk_file *mFile;
-	uint32_t mSize;
+	uint64_t mSize;
 
 public:
 	SpdkWritableFile(struct spdk_file *file) : mFile(file), mSize(0) {}
