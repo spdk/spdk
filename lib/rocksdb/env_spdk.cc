@@ -158,17 +158,12 @@ class SpdkRandomAccessFile : public RandomAccessFile
 {
 	struct spdk_file *mFile;
 public:
-	SpdkRandomAccessFile(const std::string &fname, const EnvOptions &options);
+	SpdkRandomAccessFile(struct spdk_file *file) : mFile(file) {}
 	virtual ~SpdkRandomAccessFile();
 
 	virtual Status Read(uint64_t offset, size_t n, Slice *result, char *scratch) const override;
 	virtual Status InvalidateCache(size_t offset, size_t length) override;
 };
-
-SpdkRandomAccessFile::SpdkRandomAccessFile(const std::string &fname, const EnvOptions &options)
-{
-	spdk_fs_open_file(g_fs, g_sync_args.channel, fname.c_str(), 0, &mFile);
-}
 
 SpdkRandomAccessFile::~SpdkRandomAccessFile(void)
 {
@@ -195,7 +190,7 @@ class SpdkWritableFile : public WritableFile
 	uint32_t mSize;
 
 public:
-	SpdkWritableFile(const std::string &fname, const EnvOptions &options);
+	SpdkWritableFile(struct spdk_file *file) : mFile(file), mSize(0) {}
 	~SpdkWritableFile()
 	{
 		if (mFile != NULL) {
@@ -271,11 +266,6 @@ public:
 #endif
 };
 
-SpdkWritableFile::SpdkWritableFile(const std::string &fname, const EnvOptions &options) : mSize(0)
-{
-	spdk_fs_open_file(g_fs, g_sync_args.channel, fname.c_str(), SPDK_BLOBFS_OPEN_CREATE, &mFile);
-}
-
 Status
 SpdkWritableFile::Append(const Slice &data)
 {
@@ -349,8 +339,18 @@ public:
 	{
 		if (fname.compare(0, mDirectory.length(), mDirectory) == 0) {
 			std::string name = sanitize_path(fname, mDirectory);
-			result->reset(new SpdkRandomAccessFile(name, options));
-			return Status::OK();
+			struct spdk_file *file;
+			int rc;
+
+			rc = spdk_fs_open_file(g_fs, g_sync_args.channel,
+					       name.c_str(), 0, &file);
+			if (rc == 0) {
+				result->reset(new SpdkRandomAccessFile(file));
+				return Status::OK();
+			} else {
+				errno = -rc;
+				return Status::IOError(name, strerror(errno));
+			}
 		} else {
 			return EnvWrapper::NewRandomAccessFile(fname, result, options);
 		}
@@ -362,8 +362,18 @@ public:
 	{
 		if (fname.compare(0, mDirectory.length(), mDirectory) == 0) {
 			std::string name = sanitize_path(fname, mDirectory);
-			result->reset(new SpdkWritableFile(name, options));
-			return Status::OK();
+			struct spdk_file *file;
+			int rc;
+
+			rc = spdk_fs_open_file(g_fs, g_sync_args.channel, name.c_str(),
+					       SPDK_BLOBFS_OPEN_CREATE, &file);
+			if (rc == 0) {
+				result->reset(new SpdkWritableFile(file));
+				return Status::OK();
+			} else {
+				errno = -rc;
+				return Status::IOError(name, strerror(errno));
+			}
 		} else {
 			return EnvWrapper::NewWritableFile(fname, result, options);
 		}
