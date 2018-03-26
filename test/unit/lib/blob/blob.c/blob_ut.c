@@ -1547,8 +1547,23 @@ bs_load(void)
 	spdk_bs_load(dev, NULL, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == -EINVAL);
 
+	/* Load should when max_md_ops is set to zero */
+	dev = init_dev();
+	spdk_bs_opts_init(&opts);
+	opts.max_md_ops = 0;
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == -EINVAL);
+
+	/* Load should when max_channel_ops is set to zero */
+	dev = init_dev();
+	spdk_bs_opts_init(&opts);
+	opts.max_channel_ops = 0;
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == -EINVAL);
+
 	/* Load an existing blob store */
 	dev = init_dev();
+	spdk_bs_opts_init(&opts);
 	strncpy(opts.bstype.bstype, "TESTTYPE", SPDK_BLOBSTORE_TYPE_LENGTH);
 	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
