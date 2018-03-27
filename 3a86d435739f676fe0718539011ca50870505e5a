@@ -16,6 +16,24 @@
       "revId": "3a86d435739f676fe0718539011ca50870505e5a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b992a24b_510b7668",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 520,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-03-27T06:46:52Z",
+      "side": 1,
+      "message": "Thanks, done",
+      "parentUuid": "dbc1782e_5465245a",
+      "revId": "3a86d435739f676fe0718539011ca50870505e5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
