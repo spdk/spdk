@@ -1,33 +1,33 @@
-def construct_malloc_bdev(args):
+def construct_malloc_bdev(client, args):
     num_blocks = (args.total_size * 1024 * 1024) / args.block_size
     params = {'num_blocks': num_blocks, 'block_size': args.block_size}
     if args.name:
         params['name'] = args.name
     if args.uuid:
         params['uuid'] = args.uuid
-    return args.client.call('construct_malloc_bdev', params)
+    return client.call('construct_malloc_bdev', params)
 
 
-def construct_null_bdev(args):
+def construct_null_bdev(client, args):
     num_blocks = (args.total_size * 1024 * 1024) / args.block_size
     params = {'name': args.name, 'num_blocks': num_blocks,
               'block_size': args.block_size}
     if args.uuid:
         params['uuid'] = args.uuid
-    return args.client.call('construct_null_bdev', params)
+    return client.call('construct_null_bdev', params)
 
 
-def construct_aio_bdev(args):
+def construct_aio_bdev(client, args):
     params = {'name': args.name,
               'filename': args.filename}
 
     if args.block_size:
         params['block_size'] = args.block_size
 
-    return args.client.call('construct_aio_bdev', params)
+    return client.call('construct_aio_bdev', params)
 
 
-def construct_nvme_bdev(args):
+def construct_nvme_bdev(client, args):
     params = {'name': args.name,
               'trtype': args.trtype,
               'traddr': args.traddr}
@@ -41,10 +41,10 @@ def construct_nvme_bdev(args):
     if args.subnqn:
         params['subnqn'] = args.subnqn
 
-    return args.client.call('construct_nvme_bdev', params)
+    return client.call('construct_nvme_bdev', params)
 
 
-def construct_rbd_bdev(args):
+def construct_rbd_bdev(client, args):
     params = {
         'pool_name': args.pool_name,
         'rbd_name': args.rbd_name,
@@ -54,42 +54,42 @@ def construct_rbd_bdev(args):
     if args.name:
         params['name'] = args.name
 
-    return args.client.call('construct_rbd_bdev', params)
+    return client.call('construct_rbd_bdev', params)
 
 
-def construct_error_bdev(args):
+def construct_error_bdev(client, args):
     params = {'base_name': args.base_name}
-    return args.client.call('construct_error_bdev', params)
+    return client.call('construct_error_bdev', params)
 
 
-def construct_pmem_bdev(args):
+def construct_pmem_bdev(client, args):
     params = {
         'pmem_file': args.pmem_file,
         'name': args.name
     }
-    return args.client.call('construct_pmem_bdev', params)
+    return client.call('construct_pmem_bdev', params)
 
 
-def get_bdevs(args):
+def get_bdevs(client, args):
     params = {}
     if args.name:
         params['name'] = args.name
-    return args.client.call('get_bdevs', params)
+    return client.call('get_bdevs', params)
 
 
-def get_bdevs_config(args):
+def get_bdevs_config(client, args):
     params = {}
     if args.name:
         params['name'] = args.name
-    return args.client.call('get_bdevs_config', params)
+    return client.call('get_bdevs_config', params)
 
 
-def delete_bdev(args):
+def delete_bdev(client, args):
     params = {'name': args.bdev_name}
-    return args.client.call('delete_bdev', params)
+    return client.call('delete_bdev', params)
 
 
-def bdev_inject_error(args):
+def bdev_inject_error(client, args):
     params = {
         'name': args.name,
         'io_type': args.io_type,
@@ -97,12 +97,12 @@ def bdev_inject_error(args):
         'num': args.num,
     }
 
-    return args.client.call('bdev_inject_error', params)
+    return client.call('bdev_inject_error', params)
 
 
-def apply_firmware(args):
+def apply_firmware(client, args):
     params = {
         'filename': args.filename,
         'bdev_name': args.bdev_name,
     }
-    return args.client.call('apply_nvme_firmware', params)
+    return client.call('apply_nvme_firmware', params)
