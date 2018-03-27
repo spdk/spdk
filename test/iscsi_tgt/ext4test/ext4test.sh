@@ -14,11 +14,6 @@ timing_enter ext4test
 cp $testdir/iscsi.conf.in $testdir/iscsi.conf
 $rootdir/scripts/gen_nvme.sh >> $testdir/iscsi.conf
 
-# iSCSI target configuration
-ISCSI_PORT=3260
-INITIATOR_TAG=2
-INITIATOR_NAME=ANY
-NETMASK=$INITIATOR_IP/32
 
 rpc_py="python $rootdir/scripts/rpc.py"
 

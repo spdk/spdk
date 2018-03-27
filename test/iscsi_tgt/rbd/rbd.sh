@@ -12,11 +12,6 @@ fi
 
 timing_enter rbd
 
-# iSCSI target configuration
-ISCSI_PORT=3260
-INITIATOR_TAG=2
-INITIATOR_NAME=ANY
-NETMASK=$INITIATOR_IP/32
 
 rpc_py="python $rootdir/scripts/rpc.py"
 fio_py="python $rootdir/scripts/fio.py"

@@ -9,11 +9,6 @@ source $rootdir/test/iscsi_tgt/common.sh
 
 timing_enter reset
 
-# iSCSI target configuration
-ISCSI_PORT=3260
-INITIATOR_TAG=2
-INITIATOR_NAME=ANY
-NETMASK=$INITIATOR_IP/32
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 

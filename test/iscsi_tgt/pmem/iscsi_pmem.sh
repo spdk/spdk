@@ -1,21 +1,13 @@
 #!/usr/bin/env bash
 
-export TARGET_IP=127.0.0.1
-export INITIATOR_IP=127.0.0.1
-
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
-# iSCSI target configuration
 BLOCKSIZE=$1
 RUNTIME=$2
 PMEM_BDEVS=""
-ISCSI_PORT=3260
-INITIATOR_TAG=2
-INITIATOR_NAME=ANY
-NETMASK=$INITIATOR_IP/32
 PMEM_SIZE=128
 PMEM_BLOCK_SIZE=512
 TGT_NR=10
