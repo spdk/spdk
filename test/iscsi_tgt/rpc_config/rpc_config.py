@@ -10,7 +10,7 @@ import json
 import random
 from subprocess import check_call, call, check_output, Popen, PIPE, CalledProcessError
 
-netmask = ('127.0.0.1', '127.0.0.0')
+netmask = '127.0.0.1/32'
 rpc_param = {
     'target_ip': '127.0.0.1',
     'port': 3260,
@@ -90,7 +90,7 @@ def verify_iscsi_connection_rpc_methods(rpc_py):
     initiator_tag = '1'
     rpc.construct_malloc_bdev(rpc_param['malloc_bdev_size'], rpc_param['malloc_block_size'])
     rpc.add_portal_group(portal_tag, "{}:{}".format(rpc_param['target_ip'], str(rpc_param['port'])))
-    rpc.add_initiator_group(initiator_tag, rpc_param['initiator_name'], rpc_param['netmask'][0])
+    rpc.add_initiator_group(initiator_tag, rpc_param['initiator_name'], rpc_param['netmask'])
 
     lun_mapping = "Malloc" + str(rpc_param['lun_total']) + ":0"
     net_mapping = portal_tag + ":" + initiator_tag
@@ -133,7 +133,7 @@ def verify_scsi_devices_rpc_methods(rpc_py):
     initiator_tag = '1'
     rpc.construct_malloc_bdev(rpc_param['malloc_bdev_size'], rpc_param['malloc_block_size'])
     rpc.add_portal_group(portal_tag, "{}:{}".format(rpc_param['target_ip'], str(rpc_param['port'])))
-    rpc.add_initiator_group(initiator_tag, rpc_param['initiator_name'], rpc_param['netmask'][0])
+    rpc.add_initiator_group(initiator_tag, rpc_param['initiator_name'], rpc_param['netmask'])
 
     lun_mapping = "Malloc" + str(rpc_param['lun_total']) + ":0"
     net_mapping = portal_tag + ":" + initiator_tag
@@ -327,7 +327,7 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
 
     rpc.construct_malloc_bdev(rpc_param['malloc_bdev_size'], rpc_param['malloc_block_size'])
     rpc.add_portal_group(portal_tag, "{}:{}".format(rpc_param['target_ip'], str(rpc_param['port'])))
-    rpc.add_initiator_group(initiator_tag, rpc_param['initiator_name'], rpc_param['netmask'][0])
+    rpc.add_initiator_group(initiator_tag, rpc_param['initiator_name'], rpc_param['netmask'])
 
     lun_mapping = "Malloc" + str(rpc_param['lun_total']) + ":0"
     net_mapping = portal_tag + ":" + initiator_tag
