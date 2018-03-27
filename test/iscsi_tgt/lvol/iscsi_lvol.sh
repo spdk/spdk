@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-export TARGET_IP=127.0.0.1
-export INITIATOR_IP=127.0.0.1
-
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
@@ -10,11 +7,6 @@ source $rootdir/test/iscsi_tgt/common.sh
 
 timing_enter iscsi_lvol
 
-# iSCSI target configuration
-ISCSI_PORT=3260
-INITIATOR_TAG=2
-INITIATOR_NAME=ANY
-NETMASK=$INITIATOR_IP/32
 MALLOC_BDEV_SIZE=128
 MALLOC_BLOCK_SIZE=512
 if [ $RUN_NIGHTLY -eq 1 ]; then

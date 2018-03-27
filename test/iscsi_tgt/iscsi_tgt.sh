@@ -7,9 +7,6 @@ if [ ! $(uname -s) = Linux ]; then
 	exit 0
 fi
 
-export TARGET_IP=127.0.0.1
-export INITIATOR_IP=127.0.0.1
-
 source $rootdir/test/iscsi_tgt/common.sh
 
 timing_enter iscsi_tgt
@@ -23,8 +20,6 @@ timing_enter iscsi_tgt
 #  specifying the bigger core mask.
 start_stub "-s 2048 -i 0 -m $ISCSI_TEST_CORE_MASK"
 trap "kill_stub; exit 1" SIGINT SIGTERM EXIT
-
-export ISCSI_APP="./app/iscsi_tgt/iscsi_tgt -i 0"
 
 run_test ./test/iscsi_tgt/calsoft/calsoft.sh
 run_test ./test/iscsi_tgt/filesystem/filesystem.sh

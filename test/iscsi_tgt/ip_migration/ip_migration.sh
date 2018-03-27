@@ -8,7 +8,6 @@ source $rootdir/test/iscsi_tgt/common.sh
 rpc_py="python $rootdir/scripts/rpc.py"
 fio_py="python $rootdir/scripts/fio.py"
 
-ISCSI_PORT=3260
 NETMASK=127.0.0.0/24
 MIGRATION_ADDRESS=127.0.0.2
 
@@ -35,7 +34,6 @@ function rpc_add_target_node() {
 
 timing_enter ip_migration
 
-# iSCSI target configuration
 
 echo "Running ip migration tests"
 for ((i=0; i<2; i++))
