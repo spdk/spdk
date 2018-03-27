@@ -157,9 +157,6 @@ if __name__ == "__main__":
     p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1", required=False)
     p.set_defaults(func=get_bdevs)
 
-    def delete_bdev(args):
-        rpc.bdev.delete_bdev(args.client, args)
-
     def get_bdevs_config(args):
         print_dict(rpc.bdev.get_bdevs_config(args.client, args))
 
@@ -167,6 +164,9 @@ if __name__ == "__main__":
         'get_bdevs_config', help='Display current (live) blockdev configuration list or required blockdev')
     p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1", required=False)
     p.set_defaults(func=get_bdevs_config)
+
+    def delete_bdev(args):
+        rpc.bdev.delete_bdev(args.client, args)
 
     p = subparsers.add_parser('delete_bdev', help='Delete a blockdev')
     p.add_argument(
