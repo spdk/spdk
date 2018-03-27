@@ -244,7 +244,7 @@ bdev_virtio_dump_json_config(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct virtio_blk_dev *bvdev = ctx;
 
-	virtio_dev_dump_json_config(&bvdev->vdev, w);
+	virtio_dev_dump_json_info(&bvdev->vdev, w);
 	return 0;
 }
 
