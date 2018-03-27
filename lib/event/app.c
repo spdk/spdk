@@ -60,10 +60,6 @@ static struct spdk_event *g_shutdown_event = NULL;
 static int g_init_lcore;
 static bool g_shutdown_sig_received = false;
 
-static spdk_event_fn g_app_start_fn;
-static void *g_app_start_arg1;
-static void *g_app_start_arg2;
-
 int
 spdk_app_get_shm_id(void)
 {
@@ -268,9 +264,13 @@ static void
 start_rpc(void *arg1, void *arg2)
 {
 	const char *rpc_addr = arg1;
+	struct spdk_event *app_start_event = arg2;
 
 	spdk_rpc_initialize(rpc_addr);
-	g_app_start_fn(g_app_start_arg1, g_app_start_arg2);
+
+	if (app_start_event != NULL) {
+		spdk_event_call(app_start_event);
+	}
 }
 
 static struct spdk_conf *
@@ -397,7 +397,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 {
 	struct spdk_conf	*config = NULL;
 	int			rc;
-	struct spdk_event	*app_start_event;
+	struct spdk_event	*app_start_event, *rpc_start_event;
 
 	if (!opts) {
 		SPDK_ERRLOG("opts should not be NULL\n");
@@ -472,12 +472,12 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	g_spdk_app.shutdown_cb = opts->shutdown_cb;
 	g_spdk_app.rc = 0;
 	g_init_lcore = spdk_env_get_current_core();
-	g_app_start_fn = start_fn;
-	g_app_start_arg1 = arg1;
-	g_app_start_arg2 = arg2;
-	app_start_event = spdk_event_allocate(g_init_lcore, start_rpc, (void *)opts->rpc_addr, NULL);
 
-	spdk_subsystem_init(app_start_event);
+	app_start_event = spdk_event_allocate(g_init_lcore, start_fn, arg1, arg2);
+	rpc_start_event = spdk_event_allocate(g_init_lcore, start_rpc, (void *)opts->rpc_addr,
+					      app_start_event);
+
+	spdk_subsystem_init(rpc_start_event);
 
 	/* This blocks until spdk_app_stop is called */
 	spdk_reactors_start();
