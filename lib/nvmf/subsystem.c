@@ -711,6 +711,7 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 {
 	struct spdk_nvmf_transport *transport;
 	struct spdk_nvmf_listener *listener;
+	int rc;
 
 	if (!(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
 	      subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED)) {
@@ -726,6 +727,12 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 	if (transport == NULL) {
 		SPDK_ERRLOG("Unknown transport type %d\n", trid->trtype);
 		return -EINVAL;
+	}
+
+	rc = spdk_nvmf_transport_listen(transport, trid);
+	if (rc) {
+		SPDK_ERRLOG("failed to listen\n");
+		return rc;
 	}
 
 	listener = calloc(1, sizeof(*listener));
@@ -746,6 +753,8 @@ spdk_nvmf_subsystem_remove_listener(struct spdk_nvmf_subsystem *subsystem,
 				    const struct spdk_nvme_transport_id *trid)
 {
 	struct spdk_nvmf_listener *listener;
+	struct spdk_nvmf_transport *transport;
+	int rc;
 
 	if (!(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
 	      subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED)) {
@@ -756,7 +765,16 @@ spdk_nvmf_subsystem_remove_listener(struct spdk_nvmf_subsystem *subsystem,
 	if (listener == NULL) {
 		return -ENOENT;
 	}
-
+	TAILQ_FOREACH(transport, &subsystem->tgt->transports, link) {
+		if (transport->ops->type == trid->trtype) {
+			rc = spdk_nvmf_transport_stop_listen(transport, trid);
+			if (rc) {
+				SPDK_ERRLOG("nvmf_transport_stop_listen failed\n");
+				return rc;
+			}
+			break;
+		}
+	}
 	TAILQ_REMOVE(&subsystem->listeners, listener, link);
 	free(listener);
 
