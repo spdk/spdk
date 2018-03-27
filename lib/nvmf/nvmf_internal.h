@@ -204,6 +204,8 @@ struct spdk_nvmf_subsystem {
 	/* Array of pointers to namespaces of size max_nsid indexed by nsid - 1 */
 	struct spdk_nvmf_ns			**ns;
 	uint32_t				max_nsid;
+	/* This is the maximum allowed nsid to a subsystem */
+	uint32_t				max_allowed_nsid;
 	uint32_t				num_allocated_nsid;
 
 	TAILQ_HEAD(, spdk_nvmf_ctrlr)		ctrlrs;

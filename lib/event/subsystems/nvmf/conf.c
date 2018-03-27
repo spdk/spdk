@@ -138,10 +138,16 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	bool allow_any_host;
 	const char *sn;
 	struct spdk_nvmf_subsystem *subsystem;
+	int num_ns;
 
 	nqn = spdk_conf_section_get_val(sp, "NQN");
 	mode = spdk_conf_section_get_val(sp, "Mode");
 	lcore = spdk_conf_section_get_intval(sp, "Core");
+	num_ns = spdk_conf_section_get_intval(sp, "MaxNamespaces");
+
+	if (num_ns < 1) {
+		num_ns = 0;
+	}
 
 	/* Mode is no longer a valid parameter, but print out a nice
 	 * message if it exists to inform users.
@@ -173,7 +179,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		return -1;
 	}
 
-	subsystem = spdk_nvmf_subsystem_create(g_spdk_nvmf_tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = spdk_nvmf_subsystem_create(g_spdk_nvmf_tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, num_ns);
 	if (subsystem == NULL) {
 		goto done;
 	}
