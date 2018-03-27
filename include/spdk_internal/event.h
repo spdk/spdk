@@ -54,6 +54,7 @@ void spdk_reactors_stop(void *arg1, void *arg2);
 
 struct spdk_subsystem {
 	const char *name;
+	bool initialized;
 	/* User must call spdk_subsystem_init_next() when they are done with their initialization. */
 	void (*init)(void);
 	void (*fini)(void);
