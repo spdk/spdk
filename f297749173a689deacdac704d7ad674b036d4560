@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6db8d990_5b961ee7",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-27T17:51:02Z",
+      "side": 1,
+      "message": "This looks pretty fragile; why is this specific to Ubuntu?  Is it really trying to check for a specific kernel or targetcli version?  What about Debian or other distros?\n\nCan we use a file in /var/tmp or something like that to back the device instead to just avoid this issue?",
+      "revId": "f297749173a689deacdac704d7ad674b036d4560",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13e0ff3c_6367691f",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-27T17:51:02Z",
+      "side": 1,
+      "message": "This doesn\u0027t look quite right; there shouldn\u0027t be a spdk.tar.gz in $FIO_PATH normally.  Should this be fio.tar.gz or just removed?",
+      "range": {
+        "startLine": 153,
+        "startChar": 15,
+        "endLine": 153,
+        "endChar": 26
+      },
+      "revId": "f297749173a689deacdac704d7ad674b036d4560",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
