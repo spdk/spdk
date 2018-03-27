@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a13513f8_b69100ca",
+        "filename": "test/vhost/performance/perf_regression.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-27T08:00:44Z",
+      "side": 1,
+      "message": "No need to add all that stuff line by line.\nTake a look at: https://review.gerrithub.io/#/c/398753/44/test/vhost/migration/migration.sh @ 47 as an example",
+      "range": {
+        "startLine": 2,
+        "startChar": 0,
+        "endLine": 3,
+        "endChar": 72
+      },
+      "revId": "210b798b35eb198e626b88d313ecbc253b6f4ab7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec65ce25_043dfa3b",
+        "filename": "test/vhost/performance/perf_regression.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-27T08:00:44Z",
+      "side": 1,
+      "message": "Could you add the description about the setup to the usage description? \nThe setup was to use 6 NVMe\u0027s, 12 VMs 2CPU cores each, with 2 CPUs for SPDK and controllers.",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 42
+      },
+      "revId": "210b798b35eb198e626b88d313ecbc253b6f4ab7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab20198f_2cc7029e",
+        "filename": "test/vhost/performance/perf_regression.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-27T08:00:44Z",
+      "side": 1,
+      "message": "Move stuff like this to top of the script",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 16
+      },
+      "revId": "210b798b35eb198e626b88d313ecbc253b6f4ab7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca4b98fa_a1954c53",
+        "filename": "test/vhost/performance/perf_regression.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-27T08:00:44Z",
+      "side": 1,
+      "message": "Ask Pawel W. how\u0027s the work on split RPC command. If it\u0027s soon available to use then maybe we could use that in tests.",
+      "range": {
+        "startLine": 44,
+        "startChar": 0,
+        "endLine": 50,
+        "endChar": 4
+      },
+      "revId": "210b798b35eb198e626b88d313ecbc253b6f4ab7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "860be293_0effedc2",
+        "filename": "test/vhost/performance/perf_regression.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-27T08:00:44Z",
+      "side": 1,
+      "message": "Remove",
+      "range": {
+        "startLine": 114,
+        "startChar": 0,
+        "endLine": 115,
+        "endChar": 61
+      },
+      "revId": "210b798b35eb198e626b88d313ecbc253b6f4ab7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "287f712a_d72636d4",
+        "filename": "test/vhost/performance/perf_regression.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-27T08:00:44Z",
+      "side": 1,
+      "message": "Can we keep the syntax as:\nfor (()); do\n    xxx\ndone\n\nthanks!",
+      "range": {
+        "startLine": 118,
+        "startChar": 0,
+        "endLine": 119,
+        "endChar": 2
+      },
+      "revId": "210b798b35eb198e626b88d313ecbc253b6f4ab7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a37b3f1_cd993e44",
+        "filename": "test/vhost/performance/perf_regression.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-27T08:00:44Z",
+      "side": 1,
+      "message": "tabs/spaces consistency\nuse tabs",
+      "range": {
+        "startLine": 127,
+        "startChar": 0,
+        "endLine": 127,
+        "endChar": 4
+      },
+      "revId": "210b798b35eb198e626b88d313ecbc253b6f4ab7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
