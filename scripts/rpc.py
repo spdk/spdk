@@ -490,7 +490,9 @@ if __name__ == "__main__":
 
     # nbd
     def start_nbd_disk(args):
-        rpc.nbd.start_nbd_disk(args.client, args)
+        rpc.nbd.start_nbd_disk(args.client,
+                               bdev_name=args.bdev_name,
+                               nbd_device=args.nbd_device)
 
     p = subparsers.add_parser('start_nbd_disk', help='Export a bdev as a nbd disk')
     p.add_argument('bdev_name', help='Blockdev name to be exported. Example: Malloc0.')
@@ -498,14 +500,16 @@ if __name__ == "__main__":
     p.set_defaults(func=start_nbd_disk)
 
     def stop_nbd_disk(args):
-        rpc.nbd.stop_nbd_disk(args.client, args)
+        rpc.nbd.stop_nbd_disk(args.client,
+                              nbd_device=args.nbd_device)
 
     p = subparsers.add_parser('stop_nbd_disk', help='Stop a nbd disk')
     p.add_argument('nbd_device', help='Nbd device name to be stopped. Example: /dev/nbd0.')
     p.set_defaults(func=stop_nbd_disk)
 
     def get_nbd_disks(args):
-        print_dict(rpc.nbd.get_nbd_disks(args.client, args))
+        print_dict(rpc.nbd.get_nbd_disks(args.client,
+                                         nbd_device=args.nbd_device))
 
     p = subparsers.add_parser('get_nbd_disks', help='Display full or specified nbd device list')
     p.add_argument('-n', '--nbd_device', help="Path of the nbd device. Example: /dev/nbd0", required=False)
