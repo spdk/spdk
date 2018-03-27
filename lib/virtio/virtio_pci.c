@@ -108,7 +108,7 @@ free_virtio_hw(struct virtio_hw *hw)
 }
 
 static void
-pci_dump_json_config(struct virtio_dev *dev, struct spdk_json_write_ctx *w)
+pci_dump_json_info(struct virtio_dev *dev, struct spdk_json_write_ctx *w)
 {
 	struct virtio_hw *hw = dev->ctx;
 	struct spdk_pci_addr pci_addr = spdk_pci_device_get_addr((struct spdk_pci_device *)hw->pci_dev);
@@ -124,6 +124,19 @@ pci_dump_json_config(struct virtio_dev *dev, struct spdk_json_write_ctx *w)
 	spdk_json_write_name(w, "pci_address");
 	spdk_pci_addr_fmt(addr, sizeof(addr), &pci_addr);
 	spdk_json_write_string(w, addr);
+}
+
+static void
+pci_write_json_config(struct virtio_dev *dev, struct spdk_json_write_ctx *w)
+{
+	struct virtio_hw *hw = dev->ctx;
+	struct spdk_pci_addr pci_addr = spdk_pci_device_get_addr(hw->pci_dev);
+	char addr[32];
+
+	spdk_pci_addr_fmt(addr, sizeof(addr), &pci_addr);
+
+	spdk_json_write_named_string(w, "trtype", "pci");
+	spdk_json_write_named_string(w, "traddr", addr);
 }
 
 static inline void
@@ -314,7 +327,8 @@ static const struct virtio_dev_ops modern_ops = {
 	.setup_queue	= modern_setup_queue,
 	.del_queue	= modern_del_queue,
 	.notify_queue	= modern_notify_queue,
-	.dump_json_config = pci_dump_json_config,
+	.dump_json_info = pci_dump_json_info,
+	.write_json_config = pci_write_json_config,
 };
 
 static void *
