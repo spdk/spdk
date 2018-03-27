@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b8976fb5_cab50ab5",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 864,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-27T00:42:42Z",
+      "side": 1,
+      "message": "spdk_dma_free() has similar semantics to free() - meaning you can pass it NULL\n\nso this could all be simplified to:\nspdk_dma_free(ctrlr-\u003eactive_ns_list);\nctrlr-\u003eactive_ns_list \u003d new_ns_list;",
+      "revId": "4ece432b49bee2b6d26ab27ac5cf3501b7789835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "665482c9_a833b5c9",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 872,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-27T00:42:42Z",
+      "side": 1,
+      "message": "new_ns_list !\u003d NULL check is not needed",
+      "revId": "4ece432b49bee2b6d26ab27ac5cf3501b7789835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3b68d8b_206afe71",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1094,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-27T00:42:42Z",
+      "side": 1,
+      "message": "this check is not needed",
+      "revId": "4ece432b49bee2b6d26ab27ac5cf3501b7789835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a505f18_db250262",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1883,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-27T00:42:42Z",
+      "side": 1,
+      "message": "You can remove one level of indentation by doing this instead:\n\nif (ctrlr-\u003eactive_ns_list \u003d\u003d NULL || nsid \u003d\u003d 0 || nsid \u003e ctrlr-\u003enum_ns) {\n  return -1;\n}",
+      "revId": "4ece432b49bee2b6d26ab27ac5cf3501b7789835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b118aeb_1a394fc2",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1886,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-27T00:42:42Z",
+      "side": 1,
+      "message": "extra space between mid and ;",
+      "revId": "4ece432b49bee2b6d26ab27ac5cf3501b7789835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
