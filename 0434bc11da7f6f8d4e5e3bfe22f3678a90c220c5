@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "d3acebbb_14bb85dc",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 23
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-27T05:53:00Z",
+      "side": 1,
+      "message": "As long as I know, sysstat uses binary format.",
+      "range": {
+        "startLine": 12,
+        "startChar": 50,
+        "endLine": 12,
+        "endChar": 57
+      },
+      "revId": "0434bc11da7f6f8d4e5e3bfe22f3678a90c220c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a5446d5b_2d523944",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 23
