@@ -23,7 +23,7 @@ function kill_all_iscsi_target() {
 function rpc_config() {
 	# $1 = RPC server address
 	# $2 = Netmask
-	$rpc_py -s $1 add_initiator_group 1 ANY $2
+	$rpc_py -s $1 add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $2
 	$rpc_py -s $1 construct_malloc_bdev 64 512
 }
 
