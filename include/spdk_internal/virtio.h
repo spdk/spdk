@@ -122,7 +122,8 @@ struct virtio_dev_ops {
 	void (*del_queue)(struct virtio_dev *hw, struct virtqueue *vq);
 	void (*notify_queue)(struct virtio_dev *hw, struct virtqueue *vq);
 
-	void (*dump_json_config)(struct virtio_dev *hw, struct spdk_json_write_ctx *w);
+	void (*dump_json_info)(struct virtio_dev *hw, struct spdk_json_write_ctx *w);
+	void (*write_json_config)(struct virtio_dev *hw, struct spdk_json_write_ctx *w);
 };
 
 struct vq_desc_extra {
@@ -424,7 +425,7 @@ virtio_dev_has_feature(struct virtio_dev *vdev, uint64_t bit)
  * \param vdev virtio device
  * \param w json stream
  */
-void virtio_dev_dump_json_config(struct virtio_dev *vdev, struct spdk_json_write_ctx *w);
+void virtio_dev_dump_json_info(struct virtio_dev *vdev, struct spdk_json_write_ctx *w);
 
 /**
  * Enumerate all PCI Virtio devices of given type on the system.
