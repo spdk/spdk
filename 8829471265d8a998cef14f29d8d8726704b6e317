@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e5b3dfec_25556b5d",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 465,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-27T16:38:21Z",
+      "side": 1,
+      "message": "What happens if the added subsystem has more than one namespace?  This seems like it will only ever add a single channel, which isn\u0027t sufficient for multi-namespace subsystems.\n\nWhat cases does this fix - is new_num_channels calculated incorrectly?\n\nI believe the change in the loop below should fix the bug, and the num_channels change should not be needed.",
+      "revId": "8829471265d8a998cef14f29d8d8726704b6e317",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb839dca_b2c8e419",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 504,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-27T16:38:21Z",
+      "side": 1,
+      "message": "This looks like the core of the fix for the bug mentioned in the commit message.  I think the general idea is okay, but it needs a few tweaks.\n\nThis will reinitialize all of the channels, not just the newly-added ones, which we want to avoid, since it will increment the ref count on the existing I/O channels again.\n\nI think the simplest way to fix this is by NULLing out all of the new channels after the realloc() but before entering this loop (it does also still need to be changed to iterate from 0 to new_num_channels), and then only getting an I/O channel for namespaces that don\u0027t already have one.\n\nSomething like:\n\n    buf \u003d realloc(...);\n    ...\n    sgroup-\u003echannels \u003d buf;\n    for (i \u003d old_num_channels; i \u003c new_num_channels; i++) {\n        sgroup-\u003echannels[i] \u003d NULL;\n    }\n    for (i \u003d 0; i \u003c new_num_channels; i++) {\n        ns \u003d subsystem-\u003ens[i];\n        if (ns \u003d\u003d NULL) {\n            sgroup-\u003echannels[i] \u003d NULL;\n        } else if (sgroup-\u003echannels[i] \u003d\u003d NULL) {\n            sgroup-\u003echannels[i] \u003d spdk_bdev_get_io_channel(ns-\u003edesc);\n        }\n    }",
+      "revId": "8829471265d8a998cef14f29d8d8726704b6e317",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
