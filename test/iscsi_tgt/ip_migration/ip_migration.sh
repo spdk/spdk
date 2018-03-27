@@ -8,7 +8,7 @@ source $rootdir/test/iscsi_tgt/common.sh
 rpc_py="python $rootdir/scripts/rpc.py"
 fio_py="python $rootdir/scripts/fio.py"
 
-PORT=3260
+ISCSI_PORT=3260
 NETMASK=127.0.0.0/24
 MIGRATION_ADDRESS=127.0.0.2
 
@@ -29,7 +29,7 @@ function rpc_config() {
 
 function rpc_add_target_node() {
 	$rpc_py -s $1 add_ip_address 1  $MIGRATION_ADDRESS
-	$rpc_py -s $1 add_portal_group 1 $MIGRATION_ADDRESS:$PORT
+	$rpc_py -s $1 add_portal_group 1 $MIGRATION_ADDRESS:$ISCSI_PORT
 	$rpc_py -s $1 construct_target_node target1 target1_alias 'Malloc0:0' '1:1' 64 -d
 }
 
@@ -65,9 +65,9 @@ rpc_first_addr="/var/tmp/spdk0.sock"
 rpc_add_target_node $rpc_first_addr
 
 sleep 1
-iscsiadm -m discovery -t sendtargets -p $MIGRATION_ADDRESS:$PORT
+iscsiadm -m discovery -t sendtargets -p $MIGRATION_ADDRESS:$ISCSI_PORT
 sleep 1
-iscsiadm -m node --login -p $MIGRATION_ADDRESS:$PORT
+iscsiadm -m node --login -p $MIGRATION_ADDRESS:$ISCSI_PORT
 
 # fio tests for multi-process
 sleep 1
