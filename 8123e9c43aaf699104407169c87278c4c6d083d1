@@ -93,6 +93,30 @@
     },
     {
       "key": {
+        "uuid": "a42068aa_609cb6e5",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 574,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-27T17:04:34Z",
+      "side": 1,
+      "message": "We should also update doc/jsonrpc.md to document this new field.\nhttp://www.spdk.io/doc/jsonrpc.html#rpc_construct_nvmf_subsystem",
+      "parentUuid": "d1c37777_1ea53c4b",
+      "range": {
+        "startLine": 574,
+        "startChar": 3,
+        "endLine": 574,
+        "endChar": 24
+      },
+      "revId": "8123e9c43aaf699104407169c87278c4c6d083d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5d53619c_089adec8",
         "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
         "patchSetId": 1
