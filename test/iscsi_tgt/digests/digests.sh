@@ -9,13 +9,13 @@ function node_login_fio_logout()
 {
 	for arg in "$@"
 	do
-		iscsiadm -m node -p $TARGET_IP:$PORT -o update -n node.conn[0].iscsi.$arg
+		iscsiadm -m node -p $TARGET_IP:$ISCSI_PORT -o update -n node.conn[0].iscsi.$arg
 	done
-	iscsiadm -m node --login -p $TARGET_IP:$PORT
+	iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 	sleep 1
 	$fio_py 512 1 write 2
 	$fio_py 512 1 read 2
-	iscsiadm -m node --logout -p $TARGET_IP:$PORT
+	iscsiadm -m node --logout -p $TARGET_IP:$ISCSI_PORT
 	sleep 1
 }
 
@@ -60,7 +60,7 @@ function iscsi_header_data_digest_test()
 timing_enter digests
 
 # iSCSI target configuration
-PORT=3260
+ISCSI_PORT=3260
 INITIATOR_TAG=2
 INITIATOR_NAME=ANY
 NETMASK=$INITIATOR_IP/32
@@ -83,7 +83,7 @@ echo "iscsi_tgt is listening. Running tests..."
 
 timing_exit start_iscsi_tgt
 
-$rpc_py add_portal_group 1 $TARGET_IP:$PORT
+$rpc_py add_portal_group 1 $TARGET_IP:$ISCSI_PORT
 $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 $rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
 # "Malloc0:0" ==> use Malloc0 blockdev for LUN0
@@ -93,11 +93,11 @@ $rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
 $rpc_py construct_target_node Target3 Target3_alias 'Malloc0:0' '1:2' 64 -d
 sleep 1
 
-iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$PORT
+iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
 
 # iscsiadm installed by some Fedora releases loses DataDigest parameter.
 # Check and avoid setting DataDigest.
-DataDigestAbility=`iscsiadm -m node -p $TARGET_IP:$PORT | grep DataDigest || true`
+DataDigestAbility=`iscsiadm -m node -p $TARGET_IP:$ISCSI_PORT | grep DataDigest || true`
 if [ "$DataDigestAbility"x = x ]; then
 	iscsi_header_digest_test
 else

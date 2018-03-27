@@ -47,7 +47,7 @@ timing_enter fio
 cp $testdir/iscsi.conf.in $testdir/iscsi.conf
 
 # iSCSI target configuration
-PORT=3260
+ISCSI_PORT=3260
 INITIATOR_TAG=2
 INITIATOR_NAME=ANY
 NETMASK=$INITIATOR_IP/32
@@ -70,7 +70,7 @@ echo "iscsi_tgt is listening. Running tests..."
 
 timing_exit start_iscsi_tgt
 
-$rpc_py add_portal_group 1 $TARGET_IP:$PORT
+$rpc_py add_portal_group 1 $TARGET_IP:$ISCSI_PORT
 $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 $rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
 # "Malloc0:0" ==> use Malloc0 blockdev for LUN0
@@ -80,8 +80,8 @@ $rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
 $rpc_py construct_target_node Target3 Target3_alias 'Malloc0:0' '1:2' 64 -d
 sleep 1
 
-iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$PORT
-iscsiadm -m node --login -p $TARGET_IP:$PORT
+iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
+iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 
 trap "iscsicleanup; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 

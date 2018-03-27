@@ -9,7 +9,7 @@ source $rootdir/scripts/common.sh
 timing_enter filesystem
 
 # iSCSI target configuration
-PORT=3260
+ISCSI_PORT=3260
 INITIATOR_TAG=2
 INITIATOR_NAME=ANY
 NETMASK=$INITIATOR_IP/32
@@ -40,7 +40,7 @@ echo "iscsi_tgt is listening. Running tests..."
 timing_exit start_iscsi_tgt
 
 bdf=`iter_pci_class_code 01 08 02 | head -1`
-$rpc_py add_portal_group 1 $TARGET_IP:$PORT
+$rpc_py add_portal_group 1 $TARGET_IP:$ISCSI_PORT
 $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 $rpc_py construct_nvme_bdev -b "Nvme0" -t "pcie" -a $bdf
 
@@ -59,8 +59,8 @@ fi
 $rpc_py construct_target_node Target1 Target1_alias 'lvs_0/lbd_0:0' '1:2' 256 -d
 sleep 1
 
-iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$PORT
-iscsiadm -m node --login -p $TARGET_IP:$PORT
+iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
+iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 
 trap "remove_backends; umount /mnt/device; rm -rf /mnt/device; iscsicleanup; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
@@ -87,7 +87,7 @@ for fstype in "ext4" "btrfs" "xfs"; do
 
 	iscsiadm -m node --logout
 	sleep 1
-	iscsiadm -m node --login -p $TARGET_IP:$PORT
+	iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 	sleep 1
 	dev=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
 	mount -o rw /dev/${dev}1 /mnt/device

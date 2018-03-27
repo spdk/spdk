@@ -12,7 +12,7 @@ source $rootdir/test/iscsi_tgt/common.sh
 BLOCKSIZE=$1
 RUNTIME=$2
 PMEM_BDEVS=""
-PORT=3260
+ISCSI_PORT=3260
 INITIATOR_TAG=2
 INITIATOR_NAME=ANY
 NETMASK=$INITIATOR_IP/32
@@ -37,7 +37,7 @@ echo "iscsi_tgt is listening. Running tests..."
 timing_exit start_iscsi_target
 
 timing_enter setup
-$rpc_py add_portal_group 1 $TARGET_IP:$PORT
+$rpc_py add_portal_group 1 $TARGET_IP:$ISCSI_PORT
 for i in `seq 1 $TGT_NR`; do
 	INITIATOR_TAG=$((i+1))
 	$rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
@@ -55,8 +55,8 @@ timing_exit setup
 sleep 1
 
 timing_enter discovery
-iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$PORT
-iscsiadm -m node --login -p $TARGET_IP:$PORT
+iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
+iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 timing_exit discovery
 
 timing_enter fio_test

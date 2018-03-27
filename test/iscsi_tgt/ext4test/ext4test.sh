@@ -15,7 +15,7 @@ cp $testdir/iscsi.conf.in $testdir/iscsi.conf
 $rootdir/scripts/gen_nvme.sh >> $testdir/iscsi.conf
 
 # iSCSI target configuration
-PORT=3260
+ISCSI_PORT=3260
 INITIATOR_TAG=2
 INITIATOR_NAME=ANY
 NETMASK=$INITIATOR_IP/32
@@ -35,7 +35,7 @@ echo "iscsi_tgt is listening. Running tests..."
 
 timing_exit start_iscsi_tgt
 
-$rpc_py add_portal_group 1 $TARGET_IP:$PORT
+$rpc_py add_portal_group 1 $TARGET_IP:$ISCSI_PORT
 $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 $rpc_py construct_error_bdev 'Malloc0'
 # "1:2" ==> map PortalGroup1 to InitiatorGroup2
@@ -44,8 +44,8 @@ $rpc_py construct_error_bdev 'Malloc0'
 $rpc_py construct_target_node Target0 Target0_alias EE_Malloc0:0 1:2 64 -d
 sleep 1
 
-iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$PORT
-iscsiadm -m node --login -p $TARGET_IP:$PORT
+iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
+iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 
 trap 'for new_dir in `dir -d /mnt/*dir`; do umount $new_dir; rm -rf $new_dir; done; \
 	iscsicleanup; killprocess $pid; exit 1' SIGINT SIGTERM EXIT
@@ -79,8 +79,8 @@ if [ -z "$NO_NVME" ]; then
 $rpc_py construct_target_node Target1 Target1_alias Nvme0n1:0 1:2 64 -d
 fi
 
-iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$PORT
-iscsiadm -m node --login -p $TARGET_IP:$PORT
+iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
+iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 
 devs=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
 

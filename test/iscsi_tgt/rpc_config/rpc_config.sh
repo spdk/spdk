@@ -8,7 +8,7 @@ source $rootdir/test/iscsi_tgt/common.sh
 timing_enter rpc_config
 
 # iSCSI target configuration
-PORT=3260
+ISCSI_PORT=3260
 INITIATOR_TAG=2
 INITIATOR_NAME=ANY
 NETMASK=$INITIATOR_IP/32
@@ -31,7 +31,7 @@ echo "iscsi_tgt is listening. Running tests..."
 
 timing_exit start_iscsi_tgt
 
-$rpc_config_py $rpc_py $TARGET_IP $INITIATOR_IP $PORT $NETMASK
+$rpc_config_py $rpc_py $TARGET_IP $INITIATOR_IP $ISCSI_PORT $NETMASK
 
 $rpc_py get_bdevs
 

@@ -12,7 +12,7 @@ fi
 timing_enter calsoft
 
 # iSCSI target configuration
-PORT=3260
+ISCSI_PORT=3260
 INITIATOR_TAG=2
 INITIATOR_NAME=ANY
 NETMASK=$INITIATOR_IP/32
@@ -40,7 +40,7 @@ echo "iscsi_tgt is listening. Running tests..."
 
 timing_exit start_iscsi_tgt
 
-$rpc_py add_portal_group 1 $TARGET_IP:$PORT
+$rpc_py add_portal_group 1 $TARGET_IP:$ISCSI_PORT
 $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 $rpc_py construct_malloc_bdev -b MyBdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
 # "MyBdev:0" ==> use MyBdev blockdev for LUN0
