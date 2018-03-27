@@ -265,6 +265,11 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 	subsystem->id = sid;
 	subsystem->subtype = type;
 	subsystem->max_nsid = num_ns;
+	/*
+	 *  Initially max_nsid and max_allowed_nsid will be same. If max_allowed_nsid is zero nsid range can grow dynamically
+	 *  but if it is more than 1 nsid range cannot be extended beyond max_allowed_nsid
+	 */
+	subsystem->max_allowed_nsid = num_ns;
 	subsystem->num_allocated_nsid = 0;
 	subsystem->next_cntlid = 0;
 	snprintf(subsystem->subnqn, sizeof(subsystem->subnqn), "%s", nqn);
@@ -891,6 +896,11 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 
 	if (opts.nsid == SPDK_NVME_GLOBAL_NS_TAG) {
 		SPDK_ERRLOG("Invalid NSID %" PRIu32 "\n", opts.nsid);
+		return 0;
+	}
+
+	if ((subsystem->max_allowed_nsid > 0) && (opts.nsid > subsystem->max_allowed_nsid)) {
+		SPDK_ERRLOG("Can't extend NSID range above MaxNamespaces\n");
 		return 0;
 	}
 

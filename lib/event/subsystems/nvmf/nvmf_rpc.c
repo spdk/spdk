@@ -532,6 +532,7 @@ struct rpc_subsystem {
 	char *pci_address;
 	char *serial_number;
 	struct rpc_namespaces namespaces;
+	uint32_t num_ns;
 };
 
 static void
@@ -570,6 +571,7 @@ static const struct spdk_json_object_decoder rpc_subsystem_decoders[] = {
 	{"allow_any_host", offsetof(struct rpc_subsystem, allow_any_host), spdk_json_decode_bool, true},
 	{"serial_number", offsetof(struct rpc_subsystem, serial_number), spdk_json_decode_string, true},
 	{"namespaces", offsetof(struct rpc_subsystem, namespaces), decode_rpc_namespaces, true},
+	{"max_namespaces", offsetof(struct rpc_subsystem, num_ns), spdk_json_decode_uint32, true},
 };
 
 static void
@@ -613,7 +615,8 @@ spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_request *request,
 		SPDK_NOTICELOG("Ignoring it and continuing.\n");
 	}
 
-	subsystem = spdk_nvmf_subsystem_create(g_spdk_nvmf_tgt, req.nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = spdk_nvmf_subsystem_create(g_spdk_nvmf_tgt, req.nqn, SPDK_NVMF_SUBTYPE_NVME,
+					       req.num_ns);
 	if (!subsystem) {
 		goto invalid;
 	}
