@@ -53,7 +53,7 @@ echo "iSCSI target has started."
 timing_exit start_iscsi_tgt
 
 echo "Creating an iSCSI target node."
-$rpc_py -s "$iscsi_rpc_addr" add_portal_group 1 $TARGET_IP:$ISCSI_PORT
+$rpc_py -s "$iscsi_rpc_addr" add_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
 $rpc_py -s "$iscsi_rpc_addr" add_initiator_group 1 ANY $INITIATOR_IP/32
 if [ $1 -eq 0 ]; then
 	$rpc_py -s "$iscsi_rpc_addr" construct_nvme_bdev -b "Nvme0" -t "rdma" -f "ipv4" -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -n nqn.2016-06.io.spdk:cnode1
