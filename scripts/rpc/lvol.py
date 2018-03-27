@@ -1,19 +1,19 @@
-def construct_lvol_store(args):
+def construct_lvol_store(client, args):
     params = {'bdev_name': args.bdev_name, 'lvs_name': args.lvs_name}
     if args.cluster_sz:
         params['cluster_sz'] = args.cluster_sz
-    return args.client.call('construct_lvol_store', params)
+    return client.call('construct_lvol_store', params)
 
 
-def rename_lvol_store(args):
+def rename_lvol_store(client, args):
     params = {
         'old_name': args.old_name,
         'new_name': args.new_name
     }
-    return args.client.call('rename_lvol_store', params)
+    return client.call('rename_lvol_store', params)
 
 
-def construct_lvol_bdev(args):
+def construct_lvol_bdev(client, args):
     num_bytes = (args.size * 1024 * 1024)
     params = {'lvol_name': args.lvol_name, 'size': num_bytes}
     if args.thin_provision:
@@ -25,28 +25,28 @@ def construct_lvol_bdev(args):
             params['uuid'] = args.uuid
         if args.lvs_name:
             params['lvs_name'] = args.lvs_name
-        return args.client.call('construct_lvol_bdev', params)
+        return client.call('construct_lvol_bdev', params)
 
 
-def rename_lvol_bdev(args):
+def rename_lvol_bdev(client, args):
     params = {
         'old_name': args.old_name,
         'new_name': args.new_name
     }
-    return args.client.call('rename_lvol_bdev', params)
+    return client.call('rename_lvol_bdev', params)
 
 
 # Logical volume resize feature is disabled, as it is currently work in progress
 #
-# def resize_lvol_bdev(args):
+# def resize_lvol_bdev(client, args):
 #     params = {
 #         'name': args.name,
 #         'size': args.size,
 #     }
-#     return args.client.call('resize_lvol_bdev', params)
+#     return client.call('resize_lvol_bdev', params)
 
 
-def destroy_lvol_store(args):
+def destroy_lvol_store(client, args):
     params = {}
     if (args.uuid and args.lvs_name) or (not args.uuid and not args.lvs_name):
         print("You need to specify either uuid or name of lvolstore")
@@ -55,10 +55,10 @@ def destroy_lvol_store(args):
             params['uuid'] = args.uuid
         if args.lvs_name:
             params['lvs_name'] = args.lvs_name
-        return args.client.call('destroy_lvol_store', params)
+        return client.call('destroy_lvol_store', params)
 
 
-def get_lvol_stores(args):
+def get_lvol_stores(client, args):
     params = {}
     if (args.uuid and args.lvs_name):
         print("You can only specify either uuid or name of lvolstore")
@@ -66,4 +66,4 @@ def get_lvol_stores(args):
         params['uuid'] = args.uuid
     if args.lvs_name:
         params['lvs_name'] = args.lvs_name
-    return args.client.call('get_lvol_stores', params)
+    return client.call('get_lvol_stores', params)

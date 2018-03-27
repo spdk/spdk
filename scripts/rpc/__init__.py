@@ -14,19 +14,19 @@ from . import subsystem
 from . import vhost
 
 
-def get_rpc_methods(args):
-    return args.client.call('get_rpc_methods')
+def get_rpc_methods(client):
+    return client.call('get_rpc_methods')
 
 
-def save_config(args):
+def save_config(client, args):
     config = {
         'subsystems': []
     }
 
-    for elem in args.client.call('get_subsystems'):
+    for elem in client.call('get_subsystems'):
         cfg = {
             'subsystem': elem['subsystem'],
-            'config': args.client.call('get_subsystem_config', {"name": elem['subsystem']})
+            'config': client.call('get_subsystem_config', {"name": elem['subsystem']})
         }
         config['subsystems'].append(cfg)
 
@@ -59,4 +59,4 @@ def load_config(args):
         if not config:
             continue
         for elem in subsystem['config']:
-            args.client.call(elem['method'], elem['params'])
+            client.call(elem['method'], elem['params'])

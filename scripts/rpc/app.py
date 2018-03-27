@@ -1,12 +1,12 @@
-def kill_instance(args):
+def kill_instance(client, args):
     params = {'sig_name': args.sig_name}
-    return args.client.call('kill_instance', params)
+    return client.call('kill_instance', params)
 
 
-def context_switch_monitor(args):
+def context_switch_monitor(client, args):
     params = {}
     if args.enable:
         params['enabled'] = True
     if args.disable:
         params['enabled'] = False
-    return args.client.call('context_switch_monitor', params)
+    return client.call('context_switch_monitor', params)

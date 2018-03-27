@@ -1,18 +1,18 @@
-def start_nbd_disk(args):
+def start_nbd_disk(client, args):
     params = {
         'bdev_name': args.bdev_name,
         'nbd_device': args.nbd_device
     }
-    return args.client.call('start_nbd_disk', params)
+    return client.call('start_nbd_disk', params)
 
 
-def stop_nbd_disk(args):
+def stop_nbd_disk(client, args):
     params = {'nbd_device': args.nbd_device}
-    return args.client.call('stop_nbd_disk', params)
+    return client.call('stop_nbd_disk', params)
 
 
-def get_nbd_disks(args):
+def get_nbd_disks(client, args):
     params = {}
     if args.nbd_device:
         params['nbd_device'] = args.nbd_device
-    return args.client.call('get_nbd_disks', params)
+    return client.call('get_nbd_disks', params)

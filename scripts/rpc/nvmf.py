@@ -1,8 +1,8 @@
-def get_nvmf_subsystems(args):
-    return args.client.call('get_nvmf_subsystems')
+def get_nvmf_subsystems(client, args):
+    return client.call('get_nvmf_subsystems')
 
 
-def construct_nvmf_subsystem(args):
+def construct_nvmf_subsystem(client, args):
     params = {
         'nqn': args.nqn,
         'serial_number': args.serial_number,
@@ -38,10 +38,10 @@ def construct_nvmf_subsystem(args):
             namespaces.append(ns_params)
         params['namespaces'] = namespaces
 
-    return args.client.call('construct_nvmf_subsystem', params)
+    return client.call('construct_nvmf_subsystem', params)
 
 
-def nvmf_subsystem_add_listener(args):
+def nvmf_subsystem_add_listener(client, args):
     listen_address = {'trtype': args.trtype,
                       'traddr': args.traddr,
                       'trsvcid': args.trsvcid}
@@ -52,10 +52,10 @@ def nvmf_subsystem_add_listener(args):
     params = {'nqn': args.nqn,
               'listen_address': listen_address}
 
-    return args.client.call('nvmf_subsystem_add_listener', params)
+    return client.call('nvmf_subsystem_add_listener', params)
 
 
-def nvmf_subsystem_remove_listener(args):
+def nvmf_subsystem_remove_listener(client, args):
     listen_address = {'trtype': args.trtype,
                       'traddr': args.traddr,
                       'trsvcid': args.trsvcid}
@@ -66,10 +66,10 @@ def nvmf_subsystem_remove_listener(args):
     params = {'nqn': args.nqn,
               'listen_address': listen_address}
 
-    return args.client.call('nvmf_subsystem_remove_listener', params)
+    return client.call('nvmf_subsystem_remove_listener', params)
 
 
-def nvmf_subsystem_add_ns(args):
+def nvmf_subsystem_add_ns(client, args):
     ns = {'bdev_name': args.bdev_name}
 
     if args.nsid:
@@ -84,38 +84,38 @@ def nvmf_subsystem_add_ns(args):
     params = {'nqn': args.nqn,
               'namespace': ns}
 
-    return args.client.call('nvmf_subsystem_add_ns', params)
+    return client.call('nvmf_subsystem_add_ns', params)
 
 
-def nvmf_subsystem_remove_ns(args):
+def nvmf_subsystem_remove_ns(client, args):
 
     params = {'nqn': args.nqn,
               'nsid': args.nsid}
 
-    return args.client.call('nvmf_subsystem_remove_ns', params)
+    return client.call('nvmf_subsystem_remove_ns', params)
 
 
-def nvmf_subsystem_add_host(args):
+def nvmf_subsystem_add_host(client, args):
     params = {'nqn': args.nqn,
               'host': args.host}
 
-    return args.client.call('nvmf_subsystem_add_host', params)
+    return client.call('nvmf_subsystem_add_host', params)
 
 
-def nvmf_subsystem_remove_host(args):
+def nvmf_subsystem_remove_host(client, args):
     params = {'nqn': args.nqn,
               'host': args.host}
 
-    return args.client.call('nvmf_subsystem_remove_host', params)
+    return client.call('nvmf_subsystem_remove_host', params)
 
 
-def nvmf_subsystem_allow_any_host(args):
+def nvmf_subsystem_allow_any_host(client, args):
     params = {'nqn': args.nqn}
     params['allow_any_host'] = False if args.disable else True
 
-    return args.client.call('nvmf_subsystem_allow_any_host', params)
+    return client.call('nvmf_subsystem_allow_any_host', params)
 
 
-def delete_nvmf_subsystem(args):
+def delete_nvmf_subsystem(client, args):
     params = {'nqn': args.subsystem_nqn}
-    return args.client.call('delete_nvmf_subsystem', params)
+    return client.call('delete_nvmf_subsystem', params)
