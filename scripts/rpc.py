@@ -759,6 +759,23 @@ if __name__ == "__main__":
     p.add_argument('ctrlr', help='controller name')
     p.set_defaults(func=remove_vhost_controller)
 
+    def construct_virtio_dev(args):
+        print_dict(rpc.vhost.construct_virtio_dev(args))
+
+    p = subparsers.add_parser('construct_virtio_dev', help="""Construct new virtio device using provided
+    transport type and device type. In case of SCSI device type this imply scan and add bdevs offered by
+    remote side. Result is array of added bdevs.""")
+    p.add_argument('name', help="Use this name as base for new created bdevs")
+    p.add_argument('-t', '--trtype',
+                   help='Virtio target transport type: pci or user', required=True)
+    p.add_argument('-a', '--traddr',
+                   help='Transport type specifig target address: e.g. UNIX domain socket path or BDF', required=True)
+    p.add_argument('-d', '--dev-type',
+                   help='Device type: blk or scsi', required=True)
+    p.add_argument('--vq-count', help='Number of virtual queues to be used.', type=int)
+    p.add_argument('--vq-size', help='Size of each queue', type=int)
+    p.set_defaults(func=construct_virtio_dev)
+
     def construct_virtio_user_scsi_bdev(args):
         print_dict(rpc.vhost.construct_virtio_user_scsi_bdev(args))
 
