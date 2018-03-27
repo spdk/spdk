@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "62df0fd6_add5f5ea",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-03-27T23:36:45Z",
+      "side": 1,
+      "message": "During this make step, vpp tries to install a version of openssl using debuginfo-install. This step fails because the version of the openssl development that we install earlier (line 48) conflicts with the version being installed through vpp. I was able to change openssl-devel to compat-openssl10-devel on my machine to make it work, but I am not 100% that doesn\u0027t break other things that depend on openssl-devel. See this thread for more info: https://bugzilla.redhat.com/show_bug.cgi?id\u003d1525565",
+      "revId": "194db01b4e6b3085e473d622ac0b14b26cf404b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7eb54b01_cff53d68",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-03-27T23:36:45Z",
+      "side": 1,
+      "message": "Need to install lib first, then devel, then vpp-18.01.1-release.x86_64.rpm. Otherwise the installer for vpp-18.01.1-release.x86_64.rpm complains about a missing .so file (libsvm.so.0) which is provided by lib.",
+      "revId": "194db01b4e6b3085e473d622ac0b14b26cf404b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
