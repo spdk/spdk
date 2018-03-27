@@ -56,7 +56,7 @@ trap "remove_backends; iscsicleanup; killprocess $iscsipid; exit 1" SIGINT SIGTE
 waitforlisten $iscsipid
 timing_exit start_iscsi_tgt
 
-$rpc_py add_portal_group 1 $TARGET_IP:$ISCSI_PORT
+$rpc_py add_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
 $rpc_py add_initiator_group 1 ANY $INITIATOR_IP/32
 
 echo "Creating an iSCSI target node."

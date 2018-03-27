@@ -34,7 +34,7 @@ echo "iscsi_tgt is listening. Running tests..."
 timing_exit start_iscsi_tgt
 
 timing_enter setup
-$rpc_py add_portal_group 1 $TARGET_IP:$ISCSI_PORT
+$rpc_py add_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
 for i in `seq 1 $NUM_MALLOC`; do
     INITIATOR_TAG=$((i+2))
     $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
