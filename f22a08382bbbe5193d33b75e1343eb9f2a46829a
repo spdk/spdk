@@ -16,6 +16,24 @@
       "revId": "f22a08382bbbe5193d33b75e1343eb9f2a46829a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "435fb51a_d2b7de4b",
+        "filename": "autorun_post.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-27T07:23:43Z",
+      "side": 1,
+      "message": "Changed file name.\n\nIsn\u0027t it the other way around? That in this case it\u0027d be the build pool which overwrites the file which I\u0027ve crated here? Also, the contents of the file are the same so it\u0027s not that bad:)\n\nBTW. Why do we aggregate info for \"post_process.log\" here in autorun_post.py, but create the file in build pool scripts? What\u0027s the reason for separating it?",
+      "parentUuid": "c91654d0_7a79840d",
+      "revId": "f22a08382bbbe5193d33b75e1343eb9f2a46829a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
