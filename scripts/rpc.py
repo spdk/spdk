@@ -31,13 +31,13 @@ if __name__ == "__main__":
     subparsers = parser.add_subparsers(help='RPC methods')
 
     def get_rpc_methods(args):
-        print_dict(rpc.get_rpc_methods(args))
+        print_dict(rpc.get_rpc_methods(args.client, args))
 
     p = subparsers.add_parser('get_rpc_methods', help='Get list of supported RPC methods')
     p.set_defaults(func=get_rpc_methods)
 
     def save_config(args):
-        rpc.save_config(args)
+        rpc.save_config(args.client, args)
 
     p = subparsers.add_parser('save_config', help="""Write current (live) configuration of SPDK subsystems and targets.
     If no filename is given write configuration to stdout.""")
@@ -47,7 +47,7 @@ if __name__ == "__main__":
     p.set_defaults(func=save_config)
 
     def load_config(args):
-        rpc.load_config(args)
+        rpc.load_config(args.client, args)
 
     p = subparsers.add_parser('load_config', help="""Configure SPDK subsystems and tagets using JSON RPC. If no file is
     provided or file is '-' read configuration from stdin.""")
@@ -56,14 +56,14 @@ if __name__ == "__main__":
 
     # app
     def kill_instance(args):
-        rpc.app.kill_instance(args)
+        rpc.app.kill_instance(args.client, args)
 
     p = subparsers.add_parser('kill_instance', help='Send signal to instance')
     p.add_argument('sig_name', help='signal will be sent to server.')
     p.set_defaults(func=kill_instance)
 
     def context_switch_monitor(args):
-        print_dict(rpc.app.context_switch_monitor(args))
+        print_dict(rpc.app.context_switch_monitor(args.client, args))
 
     p = subparsers.add_parser('context_switch_monitor', help='Control whether the context switch monitor is enabled')
     p.add_argument('-e', '--enable', action='store_true', help='Enable context switch monitoring')
@@ -72,7 +72,7 @@ if __name__ == "__main__":
 
     # bdev
     def construct_malloc_bdev(args):
-        print_array(rpc.bdev.construct_malloc_bdev(args))
+        print_array(rpc.bdev.construct_malloc_bdev(args.client, args))
 
     p = subparsers.add_parser('construct_malloc_bdev',
                               help='Add a bdev with malloc backend')
@@ -84,7 +84,7 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_malloc_bdev)
 
     def construct_null_bdev(args):
-        print_array(rpc.bdev.construct_null_bdev(args))
+        print_array(rpc.bdev.construct_null_bdev(args.client, args))
 
     p = subparsers.add_parser('construct_null_bdev',
                               help='Add a bdev with null backend')
@@ -96,7 +96,7 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_null_bdev)
 
     def construct_aio_bdev(args):
-        print_array(rpc.bdev.construct_aio_bdev(args))
+        print_array(rpc.bdev.construct_aio_bdev(args.client, args))
 
     p = subparsers.add_parser('construct_aio_bdev',
                               help='Add a bdev with aio backend')
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_aio_bdev)
 
     def construct_nvme_bdev(args):
-        print_array(rpc.bdev.construct_nvme_bdev(args))
+        print_array(rpc.bdev.construct_nvme_bdev(args.client, args))
 
     p = subparsers.add_parser('construct_nvme_bdev',
                               help='Add bdev with nvme backend')
@@ -123,7 +123,7 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_nvme_bdev)
 
     def construct_rbd_bdev(args):
-        print_array(rpc.bdev.construct_rbd_bdev(args))
+        print_array(rpc.bdev.construct_rbd_bdev(args.client, args))
 
     p = subparsers.add_parser('construct_rbd_bdev',
                               help='Add a bdev with ceph rbd backend')
@@ -134,7 +134,7 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_rbd_bdev)
 
     def construct_error_bdev(args):
-        rpc.bdev.construct_error_bdev(args)
+        rpc.bdev.construct_error_bdev(args.client, args)
 
     p = subparsers.add_parser('construct_error_bdev',
                               help='Add bdev with error injection backend')
@@ -142,7 +142,7 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_error_bdev)
 
     def construct_pmem_bdev(args):
-        print_array(rpc.bdev.construct_pmem_bdev(args))
+        print_array(rpc.bdev.construct_pmem_bdev(args.client, args))
 
     p = subparsers.add_parser('construct_pmem_bdev', help='Add a bdev with pmem backend')
     p.add_argument('pmem_file', help='Path to pmemblk pool file')
@@ -150,7 +150,7 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_pmem_bdev)
 
     def get_bdevs(args):
-        print_dict(rpc.bdev.get_bdevs(args))
+        print_dict(rpc.bdev.get_bdevs(args.client, args))
 
     p = subparsers.add_parser(
         'get_bdevs', help='Display current blockdev list or required blockdev')
@@ -158,10 +158,10 @@ if __name__ == "__main__":
     p.set_defaults(func=get_bdevs)
 
     def delete_bdev(args):
-        rpc.bdev.delete_bdev(args)
+        rpc.bdev.delete_bdev(args.client, args)
 
     def get_bdevs_config(args):
-        print_dict(rpc.bdev.get_bdevs_config(args))
+        print_dict(rpc.bdev.get_bdevs_config(args.client, args))
 
     p = subparsers.add_parser(
         'get_bdevs_config', help='Display current (live) blockdev configuration list or required blockdev')
@@ -174,7 +174,7 @@ if __name__ == "__main__":
     p.set_defaults(func=delete_bdev)
 
     def bdev_inject_error(args):
-        rpc.bdev.bdev_inject_error(args)
+        rpc.bdev.bdev_inject_error(args.client, args)
 
     p = subparsers.add_parser('bdev_inject_error', help='bdev inject error')
     p.add_argument('name', help="""the name of the error injection bdev""")
@@ -185,7 +185,7 @@ if __name__ == "__main__":
     p.set_defaults(func=bdev_inject_error)
 
     def apply_firmware(args):
-        print_dict(rpc.bdev.apply_firmware(args))
+        print_dict(rpc.bdev.apply_firmware(args.client, args))
 
     p = subparsers.add_parser('apply_firmware', help='Download and commit firmware to NVMe device')
     p.add_argument('filename', help='filename of the firmware to download')
@@ -194,27 +194,27 @@ if __name__ == "__main__":
 
     # iSCSI
     def get_portal_groups(args):
-        print_dict(rpc.iscsi.get_portal_groups(args))
+        print_dict(rpc.iscsi.get_portal_groups(args.client, args))
 
     p = subparsers.add_parser(
         'get_portal_groups', help='Display current portal group configuration')
     p.set_defaults(func=get_portal_groups)
 
     def get_initiator_groups(args):
-        print_dict(rpc.iscsi.get_initiator_groups(args))
+        print_dict(rpc.iscsi.get_initiator_groups(args.client, args))
 
     p = subparsers.add_parser('get_initiator_groups',
                               help='Display current initiator group configuration')
     p.set_defaults(func=get_initiator_groups)
 
     def get_target_nodes(args):
-        print_dict(rpc.iscsi.get_target_nodes(args))
+        print_dict(rpc.iscsi.get_target_nodes(args.client, args))
 
     p = subparsers.add_parser('get_target_nodes', help='Display target nodes')
     p.set_defaults(func=get_target_nodes)
 
     def construct_target_node(args):
-        rpc.iscsi.construct_target_node(args)
+        rpc.iscsi.construct_target_node(args.client, args)
 
     p = subparsers.add_parser('construct_target_node',
                               help='Add a target node')
@@ -247,7 +247,7 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_target_node)
 
     def target_node_add_lun(args):
-        rpc.iscsi.target_node_add_lun(args)
+        rpc.iscsi.target_node_add_lun(args.client, args)
 
     p = subparsers.add_parser('target_node_add_lun', help='Add LUN to the target node')
     p.add_argument('name', help='Target node name (ASCII)')
@@ -258,7 +258,7 @@ if __name__ == "__main__":
     p.set_defaults(func=target_node_add_lun)
 
     def add_pg_ig_maps(args):
-        rpc.iscsi.add_pg_ig_maps(args)
+        rpc.iscsi.add_pg_ig_maps(args.client, args)
 
     p = subparsers.add_parser('add_pg_ig_maps', help='Add PG-IG maps to the target node')
     p.add_argument('name', help='Target node name (ASCII)')
@@ -270,7 +270,7 @@ if __name__ == "__main__":
     p.set_defaults(func=add_pg_ig_maps)
 
     def delete_pg_ig_maps(args):
-        rpc.iscsi.delete_pg_ig_maps(args)
+        rpc.iscsi.delete_pg_ig_maps(args.client, args)
 
     p = subparsers.add_parser('delete_pg_ig_maps', help='Delete PG-IG maps from the target node')
     p.add_argument('name', help='Target node name (ASCII)')
@@ -282,7 +282,7 @@ if __name__ == "__main__":
     p.set_defaults(func=delete_pg_ig_maps)
 
     def add_portal_group(args):
-        rpc.iscsi.add_portal_group(args)
+        rpc.iscsi.add_portal_group(args.client, args)
 
     p = subparsers.add_parser('add_portal_group', help='Add a portal group')
     p.add_argument(
@@ -293,7 +293,7 @@ if __name__ == "__main__":
     p.set_defaults(func=add_portal_group)
 
     def add_initiator_group(args):
-        rpc.iscsi.add_initiator_group(args)
+        rpc.iscsi.add_initiator_group(args.client, args)
 
     p = subparsers.add_parser('add_initiator_group',
                               help='Add an initiator group')
@@ -306,7 +306,7 @@ if __name__ == "__main__":
     p.set_defaults(func=add_initiator_group)
 
     def add_initiators_to_initiator_group(args):
-        rpc.iscsi.add_initiators_to_initiator_group(args)
+        rpc.iscsi.add_initiators_to_initiator_group(args.client, args)
 
     p = subparsers.add_parser('add_initiators_to_initiator_group',
                               help='Add initiators to an existing initiator group')
@@ -319,7 +319,7 @@ if __name__ == "__main__":
     p.set_defaults(func=add_initiators_to_initiator_group)
 
     def delete_initiators_from_initiator_group(args):
-        rpc.iscsi.delete_initiators_from_initiator_group(args)
+        rpc.iscsi.delete_initiators_from_initiator_group(args.client, args)
 
     p = subparsers.add_parser('delete_initiators_from_initiator_group',
                               help='Delete initiators from an existing initiator group')
@@ -332,7 +332,7 @@ if __name__ == "__main__":
     p.set_defaults(func=delete_initiators_from_initiator_group)
 
     def delete_target_node(args):
-        rpc.iscsi.delete_target_node(args)
+        rpc.iscsi.delete_target_node(args.client, args)
 
     p = subparsers.add_parser('delete_target_node',
                               help='Delete a target node')
@@ -341,7 +341,7 @@ if __name__ == "__main__":
     p.set_defaults(func=delete_target_node)
 
     def delete_portal_group(args):
-        rpc.iscsi.delete_portal_group(args)
+        rpc.iscsi.delete_portal_group(args.client, args)
 
     p = subparsers.add_parser('delete_portal_group',
                               help='Delete a portal group')
@@ -350,7 +350,7 @@ if __name__ == "__main__":
     p.set_defaults(func=delete_portal_group)
 
     def delete_initiator_group(args):
-        rpc.iscsi.delete_initiator_group(args)
+        rpc.iscsi.delete_initiator_group(args.client, args)
 
     p = subparsers.add_parser('delete_initiator_group',
                               help='Delete an initiator group')
@@ -359,27 +359,27 @@ if __name__ == "__main__":
     p.set_defaults(func=delete_initiator_group)
 
     def get_iscsi_connections(args):
-        print_dict(rpc.iscsi.get_iscsi_connections(args))
+        print_dict(rpc.iscsi.get_iscsi_connections(args.client, args))
 
     p = subparsers.add_parser('get_iscsi_connections',
                               help='Display iSCSI connections')
     p.set_defaults(func=get_iscsi_connections)
 
     def get_iscsi_global_params(args):
-        print_dict(rpc.iscsi.get_iscsi_global_params(args))
+        print_dict(rpc.iscsi.get_iscsi_global_params(args.client, args))
 
     p = subparsers.add_parser('get_iscsi_global_params', help='Display iSCSI global parameters')
     p.set_defaults(func=get_iscsi_global_params)
 
     def get_scsi_devices(args):
-        print_dict(rpc.iscsi.get_scsi_devices(args))
+        print_dict(rpc.iscsi.get_scsi_devices(args.client, args))
 
     p = subparsers.add_parser('get_scsi_devices', help='Display SCSI devices')
     p.set_defaults(func=get_scsi_devices)
 
     # log
     def set_trace_flag(args):
-        rpc.log.set_trace_flag(args)
+        rpc.log.set_trace_flag(args.client, args)
 
     p = subparsers.add_parser('set_trace_flag', help='set trace flag')
     p.add_argument(
@@ -387,7 +387,7 @@ if __name__ == "__main__":
     p.set_defaults(func=set_trace_flag)
 
     def clear_trace_flag(args):
-        rpc.log.clear_trace_flag(args)
+        rpc.log.clear_trace_flag(args.client, args)
 
     p = subparsers.add_parser('clear_trace_flag', help='clear trace flag')
     p.add_argument(
@@ -395,40 +395,40 @@ if __name__ == "__main__":
     p.set_defaults(func=clear_trace_flag)
 
     def get_trace_flags(args):
-        print_dict(rpc.log.get_trace_flags(args))
+        print_dict(rpc.log.get_trace_flags(args.client, args))
 
     p = subparsers.add_parser('get_trace_flags', help='get trace flags')
     p.set_defaults(func=get_trace_flags)
 
     def set_log_level(args):
-        rpc.log.set_log_level(args)
+        rpc.log.set_log_level(args.client, args)
 
     p = subparsers.add_parser('set_log_level', help='set log level')
     p.add_argument('level', help='log level we want to set. (for example "DEBUG").')
     p.set_defaults(func=set_log_level)
 
     def get_log_level(args):
-        print_dict(rpc.log.get_log_level(args))
+        print_dict(rpc.log.get_log_level(args.client, args))
 
     p = subparsers.add_parser('get_log_level', help='get log level')
     p.set_defaults(func=get_log_level)
 
     def set_log_print_level(args):
-        rpc.log.set_log_print_level(args)
+        rpc.log.set_log_print_level(args.client, args)
 
     p = subparsers.add_parser('set_log_print_level', help='set log print level')
     p.add_argument('level', help='log print level we want to set. (for example "DEBUG").')
     p.set_defaults(func=set_log_print_level)
 
     def get_log_print_level(args):
-        print_dict(rpc.log.get_log_print_level(args))
+        print_dict(rpc.log.get_log_print_level(args.client, args))
 
     p = subparsers.add_parser('get_log_print_level', help='get log print level')
     p.set_defaults(func=get_log_print_level)
 
     # lvol
     def construct_lvol_store(args):
-        print_array(rpc.lvol.construct_lvol_store(args))
+        print_array(rpc.lvol.construct_lvol_store(args.client, args))
 
     p = subparsers.add_parser('construct_lvol_store', help='Add logical volume store on base bdev')
     p.add_argument('bdev_name', help='base bdev name')
@@ -437,7 +437,7 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_lvol_store)
 
     def rename_lvol_store(args):
-        rpc.lvol.rename_lvol_store(args)
+        rpc.lvol.rename_lvol_store(args.client, args)
 
     p = subparsers.add_parser('rename_lvol_store', help='Change logical volume store name')
     p.add_argument('old_name', help='old name')
@@ -445,7 +445,7 @@ if __name__ == "__main__":
     p.set_defaults(func=rename_lvol_store)
 
     def construct_lvol_bdev(args):
-        print_array(rpc.lvol.construct_lvol_bdev(args))
+        print_array(rpc.lvol.construct_lvol_bdev(args.client, args))
 
     p = subparsers.add_parser('construct_lvol_bdev', help='Add a bdev with an logical volume backend')
     p.add_argument('-u', '--uuid', help='lvol store UUID', required=False)
@@ -456,7 +456,7 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_lvol_bdev)
 
     def rename_lvol_bdev(args):
-        rpc.lvol.rename_lvol_bdev(args)
+        rpc.lvol.rename_lvol_bdev(args.client, args)
 
     p = subparsers.add_parser('rename_lvol_bdev', help='Change lvol bdev name')
     p.add_argument('old_name', help='lvol bdev name')
@@ -465,7 +465,7 @@ if __name__ == "__main__":
 
     # Logical volume resize feature is disabled, as it is currently work in progress
     # def resize_lvol_bdev(args):
-    #     rpc.lvol.resize_bdev(args)
+    #     rpc.lvol.resize_bdev(args.client, args)
     #
     # p = subparsers.add_parser('resize_lvol_bdev', help='Resize existing lvol bdev')
     # p.add_argument('name', help='lvol bdev name')
@@ -473,7 +473,7 @@ if __name__ == "__main__":
     # p.set_defaults(func=resize_lvol_bdev)
 
     def destroy_lvol_store(args):
-        rpc.lvol.destroy_lvol_store(args)
+        rpc.lvol.destroy_lvol_store(args.client, args)
 
     p = subparsers.add_parser('destroy_lvol_store', help='Destroy an logical volume store')
     p.add_argument('-u', '--uuid', help='lvol store UUID', required=False)
@@ -481,7 +481,7 @@ if __name__ == "__main__":
     p.set_defaults(func=destroy_lvol_store)
 
     def get_lvol_stores(args):
-        print_dict(rpc.lvol.get_lvol_stores(args))
+        print_dict(rpc.lvol.get_lvol_stores(args.client, args))
 
     p = subparsers.add_parser('get_lvol_stores', help='Display current logical volume store list')
     p.add_argument('-u', '--uuid', help='lvol store UUID', required=False)
@@ -490,7 +490,7 @@ if __name__ == "__main__":
 
     # nbd
     def start_nbd_disk(args):
-        rpc.nbd.start_nbd_disk(args)
+        rpc.nbd.start_nbd_disk(args.client, args)
 
     p = subparsers.add_parser('start_nbd_disk', help='Export a bdev as a nbd disk')
     p.add_argument('bdev_name', help='Blockdev name to be exported. Example: Malloc0.')
@@ -498,14 +498,14 @@ if __name__ == "__main__":
     p.set_defaults(func=start_nbd_disk)
 
     def stop_nbd_disk(args):
-        rpc.nbd.stop_nbd_disk(args)
+        rpc.nbd.stop_nbd_disk(args.client, args)
 
     p = subparsers.add_parser('stop_nbd_disk', help='Stop a nbd disk')
     p.add_argument('nbd_device', help='Nbd device name to be stopped. Example: /dev/nbd0.')
     p.set_defaults(func=stop_nbd_disk)
 
     def get_nbd_disks(args):
-        print_dict(rpc.nbd.get_nbd_disks(args))
+        print_dict(rpc.nbd.get_nbd_disks(args.client, args))
 
     p = subparsers.add_parser('get_nbd_disks', help='Display full or specified nbd device list')
     p.add_argument('-n', '--nbd_device', help="Path of the nbd device. Example: /dev/nbd0", required=False)
@@ -513,7 +513,7 @@ if __name__ == "__main__":
 
     # net
     def add_ip_address(args):
-        rpc.net.add_ip_address(args)
+        rpc.net.add_ip_address(args.client, args)
 
     p = subparsers.add_parser('add_ip_address', help='Add IP address')
     p.add_argument('ifc_index', help='ifc index of the nic device.', type=int)
@@ -521,7 +521,7 @@ if __name__ == "__main__":
     p.set_defaults(func=add_ip_address)
 
     def delete_ip_address(args):
-        rpc.net.delete_ip_address(args)
+        rpc.net.delete_ip_address(args.client, args)
 
     p = subparsers.add_parser('delete_ip_address', help='Delete IP address')
     p.add_argument('ifc_index', help='ifc index of the nic device.', type=int)
@@ -529,7 +529,7 @@ if __name__ == "__main__":
     p.set_defaults(func=delete_ip_address)
 
     def get_interfaces(args):
-        print_dict(rpc.net.get_interfaces(args))
+        print_dict(rpc.net.get_interfaces(args.client, args))
 
     p = subparsers.add_parser(
         'get_interfaces', help='Display current interface list')
@@ -537,14 +537,14 @@ if __name__ == "__main__":
 
     # NVMe-oF
     def get_nvmf_subsystems(args):
-        print_dict(rpc.nvmf.get_nvmf_subsystems(args))
+        print_dict(rpc.nvmf.get_nvmf_subsystems(args.client, args))
 
     p = subparsers.add_parser('get_nvmf_subsystems',
                               help='Display nvmf subsystems')
     p.set_defaults(func=get_nvmf_subsystems)
 
     def construct_nvmf_subsystem(args):
-        rpc.nvmf.construct_nvmf_subsystem(args)
+        rpc.nvmf.construct_nvmf_subsystem(args.client, args)
 
     p = subparsers.add_parser('construct_nvmf_subsystem', help='Add a nvmf subsystem')
     p.add_argument('nqn', help='Target nqn(ASCII)')
@@ -565,7 +565,7 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_nvmf_subsystem)
 
     def delete_nvmf_subsystem(args):
-        rpc.nvmf.delete_nvmf_subsystem(args)
+        rpc.nvmf.delete_nvmf_subsystem(args.client, args)
 
     p = subparsers.add_parser('delete_nvmf_subsystem',
                               help='Delete a nvmf subsystem')
@@ -574,7 +574,7 @@ if __name__ == "__main__":
     p.set_defaults(func=delete_nvmf_subsystem)
 
     def nvmf_subsystem_add_listener(args):
-        rpc.nvmf.nvmf_subsystem_add_listener(args)
+        rpc.nvmf.nvmf_subsystem_add_listener(args.client, args)
 
     p = subparsers.add_parser('nvmf_subsystem_add_listener', help='Add a listener to an NVMe-oF subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
@@ -585,7 +585,7 @@ if __name__ == "__main__":
     p.set_defaults(func=nvmf_subsystem_add_listener)
 
     def nvmf_subsystem_remove_listener(args):
-        rpc.nvmf.nvmf_subsystem_remove_listener(args)
+        rpc.nvmf.nvmf_subsystem_remove_listener(args.client, args)
 
     p = subparsers.add_parser('nvmf_subsystem_remove_listener', help='Remove a listener from an NVMe-oF subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
@@ -596,7 +596,7 @@ if __name__ == "__main__":
     p.set_defaults(func=nvmf_subsystem_remove_listener)
 
     def nvmf_subsystem_add_ns(args):
-        rpc.nvmf.nvmf_subsystem_add_ns(args)
+        rpc.nvmf.nvmf_subsystem_add_ns(args.client, args)
 
     p = subparsers.add_parser('nvmf_subsystem_add_ns', help='Add a namespace to an NVMe-oF subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
@@ -607,7 +607,7 @@ if __name__ == "__main__":
     p.set_defaults(func=nvmf_subsystem_add_ns)
 
     def nvmf_subsystem_remove_ns(args):
-        rpc.nvmf.nvmf_subsystem_remove_ns(args)
+        rpc.nvmf.nvmf_subsystem_remove_ns(args.client, args)
 
     p = subparsers.add_parser('nvmf_subsystem_remove_ns', help='Remove a namespace to an NVMe-oF subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
@@ -615,7 +615,7 @@ if __name__ == "__main__":
     p.set_defaults(func=nvmf_subsystem_remove_ns)
 
     def nvmf_subsystem_add_host(args):
-        rpc.nvmf.nvmf_subsystem_add_host(args)
+        rpc.nvmf.nvmf_subsystem_add_host(args.client, args)
 
     p = subparsers.add_parser('nvmf_subsystem_add_host', help='Add a host to an NVMe-oF subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
@@ -623,7 +623,7 @@ if __name__ == "__main__":
     p.set_defaults(func=nvmf_subsystem_add_host)
 
     def nvmf_subsystem_remove_host(args):
-        rpc.nvmf.nvmf_subsystem_remove_host(args)
+        rpc.nvmf.nvmf_subsystem_remove_host(args.client, args)
 
     p = subparsers.add_parser('nvmf_subsystem_remove_host', help='Remove a host from an NVMe-oF subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
@@ -631,7 +631,7 @@ if __name__ == "__main__":
     p.set_defaults(func=nvmf_subsystem_remove_host)
 
     def nvmf_subsystem_allow_any_host(args):
-        rpc.nvmf.nvmf_subsystem_allow_any_host(args)
+        rpc.nvmf.nvmf_subsystem_allow_any_host(args.client, args)
 
     p = subparsers.add_parser('nvmf_subsystem_allow_any_host', help='Allow any host to connect to the subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
@@ -641,7 +641,7 @@ if __name__ == "__main__":
 
     # pmem
     def create_pmem_pool(args):
-        rpc.pmem.create_pmem_pool(args)
+        rpc.pmem.create_pmem_pool(args.client, args)
 
     p = subparsers.add_parser('create_pmem_pool', help='Create pmem pool')
     p.add_argument('pmem_file', help='Path to pmemblk pool file')
@@ -650,14 +650,14 @@ if __name__ == "__main__":
     p.set_defaults(func=create_pmem_pool)
 
     def pmem_pool_info(args):
-        print_dict(rpc.pmem.pmem_pool_info(args))
+        print_dict(rpc.pmem.pmem_pool_info(args.client, args))
 
     p = subparsers.add_parser('pmem_pool_info', help='Display pmem pool info and check consistency')
     p.add_argument('pmem_file', help='Path to pmemblk pool file')
     p.set_defaults(func=pmem_pool_info)
 
     def delete_pmem_pool(args):
-        rpc.pmem.delete_pmem_pool(args)
+        rpc.pmem.delete_pmem_pool(args.client, args)
 
     p = subparsers.add_parser('delete_pmem_pool', help='Delete pmem pool')
     p.add_argument('pmem_file', help='Path to pmemblk pool file')
@@ -665,14 +665,14 @@ if __name__ == "__main__":
 
     # subsystem
     def get_subsystems(args):
-        print_dict(rpc.subsystem.get_subsystems(args))
+        print_dict(rpc.subsystem.get_subsystems(args.client, args))
 
     p = subparsers.add_parser('get_subsystems', help=""""Print subsystems array in initialization order. Each subsystem
     entry contain (unsorted) array of subsystems it depends on.""")
     p.set_defaults(func=get_subsystems)
 
     def get_subsystem_config(args):
-        print_dict(rpc.subsystem.get_subsystem_config(args))
+        print_dict(rpc.subsystem.get_subsystem_config(args.client, args))
 
     p = subparsers.add_parser('get_subsystem_config', help=""""Print subsystem configuration""")
     p.add_argument('name', help='Name of subsystem to query')
@@ -680,7 +680,7 @@ if __name__ == "__main__":
 
     # vhost
     def set_vhost_controller_coalescing(args):
-        rpc.vhost.set_vhost_controller_coalescing(args)
+        rpc.vhost.set_vhost_controller_coalescing(args.client, args)
 
     p = subparsers.add_parser('set_vhost_controller_coalescing', help='Set vhost controller coalescing')
     p.add_argument('ctrlr', help='controller name')
@@ -689,7 +689,7 @@ if __name__ == "__main__":
     p.set_defaults(func=set_vhost_controller_coalescing)
 
     def construct_vhost_scsi_controller(args):
-        rpc.vhost.construct_vhost_scsi_controller(args)
+        rpc.vhost.construct_vhost_scsi_controller(args.client, args)
 
     p = subparsers.add_parser(
         'construct_vhost_scsi_controller', help='Add new vhost controller')
@@ -698,7 +698,7 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_vhost_scsi_controller)
 
     def add_vhost_scsi_lun(args):
-        rpc.vhost.add_vhost_scsi_lun(args)
+        rpc.vhost.add_vhost_scsi_lun(args.client, args)
 
     p = subparsers.add_parser('add_vhost_scsi_lun',
                               help='Add lun to vhost controller')
@@ -708,7 +708,7 @@ if __name__ == "__main__":
     p.set_defaults(func=add_vhost_scsi_lun)
 
     def remove_vhost_scsi_target(args):
-        rpc.vhost.remove_vhost_scsi_target(args)
+        rpc.vhost.remove_vhost_scsi_target(args.client, args)
 
     p = subparsers.add_parser('remove_vhost_scsi_target', help='Remove target from vhost controller')
     p.add_argument('ctrlr', help='controller name to remove target from')
@@ -716,7 +716,7 @@ if __name__ == "__main__":
     p.set_defaults(func=remove_vhost_scsi_target)
 
     def construct_vhost_blk_controller(args):
-        rpc.vhost.construct_vhost_blk_controller(args)
+        rpc.vhost.construct_vhost_blk_controller(args.client, args)
 
     p = subparsers.add_parser('construct_vhost_blk_controller', help='Add a new vhost block controller')
     p.add_argument('ctrlr', help='controller name')
@@ -726,20 +726,20 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_vhost_blk_controller)
 
     def get_vhost_controllers(args):
-        print_dict(rpc.vhost.get_vhost_controllers(args))
+        print_dict(rpc.vhost.get_vhost_controllers(args.client, args))
 
     p = subparsers.add_parser('get_vhost_controllers', help='List vhost controllers')
     p.set_defaults(func=get_vhost_controllers)
 
     def remove_vhost_controller(args):
-        rpc.vhost.remove_vhost_controller(args)
+        rpc.vhost.remove_vhost_controller(args.client, args)
 
     p = subparsers.add_parser('remove_vhost_controller', help='Remove a vhost controller')
     p.add_argument('ctrlr', help='controller name')
     p.set_defaults(func=remove_vhost_controller)
 
     def construct_virtio_user_scsi_bdev(args):
-        print_dict(rpc.vhost.construct_virtio_user_scsi_bdev(args))
+        print_dict(rpc.vhost.construct_virtio_user_scsi_bdev(args.client, args))
 
     p = subparsers.add_parser('construct_virtio_user_scsi_bdev', help="""Connect to virtio user scsi device.
     This imply scan and add bdevs offered by remote side.
@@ -752,7 +752,7 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_virtio_user_scsi_bdev)
 
     def construct_virtio_pci_scsi_bdev(args):
-        print_dict(rpc.vhost.construct_virtio_pci_scsi_bdev(args))
+        print_dict(rpc.vhost.construct_virtio_pci_scsi_bdev(args.client, args))
 
     p = subparsers.add_parser('construct_virtio_pci_scsi_bdev', help="""Create a Virtio
     SCSI device from a virtio-pci device.""")
@@ -763,13 +763,13 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_virtio_pci_scsi_bdev)
 
     def get_virtio_scsi_devs(args):
-        print_dict(rpc.vhost.get_virtio_scsi_devs(args))
+        print_dict(rpc.vhost.get_virtio_scsi_devs(args.client, args))
 
     p = subparsers.add_parser('get_virtio_scsi_devs', help='List all Virtio-SCSI devices.')
     p.set_defaults(func=get_virtio_scsi_devs)
 
     def remove_virtio_scsi_bdev(args):
-        rpc.vhost.remove_virtio_scsi_bdev(args)
+        rpc.vhost.remove_virtio_scsi_bdev(args.client, args)
 
     p = subparsers.add_parser('remove_virtio_scsi_bdev', help="""Remove a Virtio-SCSI device
     This will delete all bdevs exposed by this device""")
@@ -777,7 +777,7 @@ if __name__ == "__main__":
     p.set_defaults(func=remove_virtio_scsi_bdev)
 
     def construct_virtio_user_blk_bdev(args):
-        print_dict(rpc.vhost.construct_virtio_user_blk_bdev(args))
+        print_dict(rpc.vhost.construct_virtio_user_blk_bdev(args.client, args))
 
     p = subparsers.add_parser('construct_virtio_user_blk_bdev', help='Connect to a virtio user blk device.')
     p.add_argument('path', help='Path to Virtio BLK socket')
@@ -787,7 +787,7 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_virtio_user_blk_bdev)
 
     def construct_virtio_pci_blk_bdev(args):
-        print_dict(rpc.vhost.construct_virtio_pci_blk_bdev(args))
+        print_dict(rpc.vhost.construct_virtio_pci_blk_bdev(args.client, args))
 
     p = subparsers.add_parser('construct_virtio_pci_blk_bdev', help='Create a Virtio Blk device from a virtio-pci device.')
     p.add_argument('pci_address', help="""PCI address in domain:bus:device.function format or
