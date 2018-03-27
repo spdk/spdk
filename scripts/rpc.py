@@ -672,7 +672,7 @@ if __name__ == "__main__":
     p.set_defaults(func=get_subsystems)
 
     def get_subsystem_config(args):
-        print_dict(rpc.subsystem.get_subsystem_config(args.client, args))
+        print_dict(rpc.subsystem.get_subsystem_config(args.client, args.name))
 
     p = subparsers.add_parser('get_subsystem_config', help=""""Print subsystem configuration""")
     p.add_argument('name', help='Name of subsystem to query')
