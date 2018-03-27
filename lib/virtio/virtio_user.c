@@ -387,7 +387,7 @@ virtio_user_destroy(struct virtio_dev *vdev)
 }
 
 static void
-virtio_user_dump_json_config(struct virtio_dev *vdev, struct spdk_json_write_ctx *w)
+virtio_user_dump_json_info(struct virtio_dev *vdev, struct spdk_json_write_ctx *w)
 {
 	struct virtio_user_dev *dev = vdev->ctx;
 
@@ -396,6 +396,16 @@ virtio_user_dump_json_config(struct virtio_dev *vdev, struct spdk_json_write_ctx
 
 	spdk_json_write_name(w, "socket");
 	spdk_json_write_string(w, dev->path);
+}
+
+static void
+virtio_user_wrtie_json_config(struct virtio_dev *vdev, struct spdk_json_write_ctx *w)
+{
+	struct virtio_user_dev *dev = vdev->ctx;
+
+	spdk_json_write_named_uint32(w, "vq_count", vdev->max_queues);
+	spdk_json_write_named_uint32(w, "vq_size", virtio_dev_backend_ops(vdev)->get_queue_num(vdev, 0));
+	spdk_json_write_named_string(w, "path", dev->path);
 }
 
 static const struct virtio_dev_ops virtio_user_ops = {
@@ -410,7 +420,8 @@ static const struct virtio_dev_ops virtio_user_ops = {
 	.setup_queue	= virtio_user_setup_queue,
 	.del_queue	= virtio_user_del_queue,
 	.notify_queue	= virtio_user_notify_queue,
-	.dump_json_config = virtio_user_dump_json_config,
+	.dump_json_info = virtio_user_dump_json_info,
+	.wrtie_json_config = virtio_user_wrtie_json_config,
 };
 
 int
