@@ -301,6 +301,32 @@ spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 	}
 }
 
+void
+spdk_nvmf_tgt_stop_listen(struct spdk_nvmf_tgt *tgt,
+			  struct spdk_nvme_transport_id *trid)
+{
+	struct spdk_nvmf_transport *transport;
+	int rc;
+
+	transport = spdk_nvmf_tgt_get_transport(tgt, trid->trtype);
+	if (!transport) {
+		SPDK_ERRLOG("Unable to find the transport for the given ID\n");
+		return;
+	}
+
+	//When this call is made it is made sure that listener is part of the subsytem and
+	//when the listener was added to subsystem the ref in spdk_nvmf_rdma_port will be incremented.
+	//The call to below function decrements the ref and if the ref is zero there are
+	//no more subsystems listenening and the rdma_cm_id will be destroyed
+	rc = spdk_nvmf_transport_stop_listen(transport, trid);
+	if (rc < 0) {
+		SPDK_ERRLOG("Unable to stop listening on address '%s'\n", trid->traddr);
+		return;
+	}
+
+	return;
+}
+
 struct spdk_nvmf_subsystem *
 spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *tgt, const char *subnqn)
 {

@@ -777,7 +777,6 @@ spdk_nvmf_subsystem_remove_listener(struct spdk_nvmf_subsystem *subsystem,
 	if (listener == NULL) {
 		return -ENOENT;
 	}
-
 	TAILQ_REMOVE(&subsystem->listeners, listener, link);
 	free(listener);
 

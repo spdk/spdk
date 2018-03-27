@@ -111,6 +111,20 @@ void spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 			  struct spdk_nvme_transport_id *trid,
 			  spdk_nvmf_tgt_listen_done_fn cb_fn,
 			  void *cb_arg);
+/**
+ * Stop listening on the connections at the address provided
+ *
+ * The function makes sure that the tgt will not listen on the provided
+ * only when the listener address is not part of any of the subsystem
+
+ * \param tgt The target associated with this listen address
+ * \param trid The address to listen at
+
+ * \return void.
+ */
+void
+spdk_nvmf_tgt_stop_listen(struct spdk_nvmf_tgt *tgt,
+			  struct spdk_nvme_transport_id *trid);
 
 typedef void (*new_qpair_fn)(struct spdk_nvmf_qpair *qpair);
 

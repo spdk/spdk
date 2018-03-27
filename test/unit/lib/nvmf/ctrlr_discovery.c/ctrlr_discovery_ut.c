@@ -89,6 +89,13 @@ spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
 	return 0;
 }
 
+int
+spdk_nvmf_transport_stop_listen(struct spdk_nvmf_transport *transport,
+				const struct spdk_nvme_transport_id *trid)
+{
+	return 0;
+}
+
 void
 spdk_nvmf_transport_listener_discover(struct spdk_nvmf_transport *transport,
 				      struct spdk_nvme_transport_id *trid,

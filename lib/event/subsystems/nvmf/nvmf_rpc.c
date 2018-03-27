@@ -934,6 +934,7 @@ nvmf_rpc_listen_paused(struct spdk_nvmf_subsystem *subsystem,
 							 "Invalid parameters");
 			ctx->response_sent = true;
 		}
+		spdk_nvmf_tgt_stop_listen(g_spdk_nvmf_tgt, &ctx->trid);
 	} else {
 		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");

@@ -1581,6 +1581,8 @@ spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 	struct spdk_nvmf_rdma_qpair		*rqpair;
 	struct spdk_nvmf_rdma_device		*device;
 	struct spdk_nvmf_rdma_poller		*poller;
+	struct spdk_nvmf_ctrlr			*ctrlr;
+	struct spdk_nvmf_listener		*listener;
 	int					rc;
 
 	rtransport = SPDK_CONTAINEROF(qpair->transport, struct spdk_nvmf_rdma_transport, transport);
@@ -1588,6 +1590,7 @@ spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
 	device = rqpair->port->device;
+	ctrlr = qpair->ctrlr;
 
 	if (device->pd != rqpair->cm_id->pd) {
 		SPDK_ERRLOG("Mismatched protection domains\n");
@@ -1602,6 +1605,21 @@ spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 
 	if (!poller) {
 		SPDK_ERRLOG("No poller found for device.\n");
+		return -1;
+	}
+
+	TAILQ_FOREACH(listener, &ctrlr->subsys->listeners, link) {
+		struct spdk_nvme_transport_id *tmp_id;
+		tmp_id = &listener->trid;
+		if (spdk_nvme_transport_id_compare(tmp_id, &rqpair->port->trid) == 0) {
+			break;
+		} else {
+			listener = NULL;
+		}
+	}
+	if (!listener) {
+		//TODO Tmp error type. Should new error defined in file in nvmf_spec.h ??
+		spdk_nvmf_rdma_event_reject(rqpair->cm_id, SPDK_NVMF_RDMA_ERROR_NO_RESOURCES);
 		return -1;
 	}
 
