@@ -88,6 +88,52 @@
     },
     {
       "key": {
+        "uuid": "cac35c39_d907b482",
+        "filename": "test/vhost/nvmf/nvmf.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-27T13:54:36Z",
+      "side": 1,
+      "message": "-\u003e use_virito_initiator",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 10
+      },
+      "revId": "c4e92213a7c7924f907e4df647f77989f7c1450c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "53284f2d_0ed6883f",
+        "filename": "test/vhost/nvmf/nvmf.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-27T13:54:36Z",
+      "side": 1,
+      "message": "-\u003e with-virtio-initiator",
+      "range": {
+        "startLine": 24,
+        "startChar": 13,
+        "endLine": 24,
+        "endChar": 24
+      },
+      "revId": "c4e92213a7c7924f907e4df647f77989f7c1450c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bd215ca7_369d342e",
         "filename": "test/vhost/nvmf/nvmf.sh",
         "patchSetId": 18
@@ -127,6 +173,52 @@
         "startChar": 2,
         "endLine": 71,
         "endChar": 4
+      },
+      "revId": "c4e92213a7c7924f907e4df647f77989f7c1450c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3df0fea_50f7fb94",
+        "filename": "test/vhost/nvmf/nvmf.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-27T13:54:36Z",
+      "side": 1,
+      "message": "can you move this to kill_nvmf_tgt or something?",
+      "range": {
+        "startLine": 80,
+        "startChar": 1,
+        "endLine": 80,
+        "endChar": 67
+      },
+      "revId": "c4e92213a7c7924f907e4df647f77989f7c1450c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b06a6d0c_cb90b88d",
+        "filename": "test/vhost/nvmf/nvmf.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-27T13:54:36Z",
+      "side": 1,
+      "message": "in case of error handler this could use SIGKILL to not wait 60s.",
+      "range": {
+        "startLine": 81,
+        "startChar": 1,
+        "endLine": 81,
+        "endChar": 14
       },
       "revId": "c4e92213a7c7924f907e4df647f77989f7c1450c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
@@ -196,6 +288,52 @@
         "startChar": 13,
         "endLine": 114,
         "endChar": 23
+      },
+      "revId": "c4e92213a7c7924f907e4df647f77989f7c1450c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0825081_27e5d618",
+        "filename": "test/vhost/nvmf/nvmf.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-27T13:54:36Z",
+      "side": 1,
+      "message": "-\u003e vm_no",
+      "range": {
+        "startLine": 163,
+        "startChar": 22,
+        "endLine": 163,
+        "endChar": 28
+      },
+      "revId": "c4e92213a7c7924f907e4df647f77989f7c1450c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "18552509_9c19660c",
+        "filename": "test/vhost/nvmf/nvmf.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-27T13:54:36Z",
+      "side": 1,
+      "message": "can you move this to kill_nvmf_tgt or something?",
+      "range": {
+        "startLine": 201,
+        "startChar": 0,
+        "endLine": 201,
+        "endChar": 66
       },
       "revId": "c4e92213a7c7924f907e4df647f77989f7c1450c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
