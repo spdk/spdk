@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "57278373_eb26561e",
+        "filename": "lib/event/subsystems/nbd/nbd_conf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-27T18:12:54Z",
+      "side": 1,
+      "message": "spdk_nbd_init() is returning int. I know that it is returning zero but pls check error code or change it to return void.",
+      "range": {
+        "startLine": 54,
+        "startChar": 1,
+        "endLine": 54,
+        "endChar": 17
+      },
+      "revId": "f9c31da492f4266f9e8273f702dd60b061b36de1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
