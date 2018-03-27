@@ -50,6 +50,8 @@
 extern "C" {
 #endif
 
+#define MIN_NAMESPACES  1
+
 struct spdk_nvmf_tgt;
 struct spdk_nvmf_subsystem;
 struct spdk_nvmf_ctrlr;
