@@ -40,6 +40,9 @@
 
 #include "bdev_virtio.h"
 
+#define SPDK_VIRTIO_USER_DEFAULT_VQ_COUNT		1
+#define SPDK_VIRTIO_USER_DEFAULT_QUEUE_SIZE		512
+
 struct rpc_construct_virtio_scsi_dev {
 	char *path;
 	char *pci_address;
@@ -113,8 +116,8 @@ spdk_rpc_create_virtio_user_scsi_bdev(struct spdk_jsonrpc_request *request,
 	}
 
 	req->pci_address = NULL;
-	req->vq_count = 1;
-	req->vq_size = 512;
+	req->vq_count = SPDK_VIRTIO_USER_DEFAULT_VQ_COUNT;
+	req->vq_size = SPDK_VIRTIO_USER_DEFAULT_QUEUE_SIZE;
 
 	if (spdk_json_decode_object(params, rpc_construct_virtio_user_scsi_dev,
 				    SPDK_COUNTOF(rpc_construct_virtio_user_scsi_dev),
@@ -320,8 +323,8 @@ spdk_rpc_create_virtio_user_blk_bdev(struct spdk_jsonrpc_request *request,
 	int rc;
 
 	req.pci_address = NULL;
-	req.vq_count = 1;
-	req.vq_size = 512;
+	req.vq_count = SPDK_VIRTIO_USER_DEFAULT_VQ_COUNT;
+	req.vq_size = SPDK_VIRTIO_USER_DEFAULT_QUEUE_SIZE;
 
 	if (spdk_json_decode_object(params, rpc_construct_virtio_user_blk_dev,
 				    SPDK_COUNTOF(rpc_construct_virtio_user_blk_dev),
@@ -407,3 +410,148 @@ invalid:
 	free_rpc_construct_virtio_blk_dev(&req);
 }
 SPDK_RPC_REGISTER("construct_virtio_pci_blk_bdev", spdk_rpc_create_virtio_pci_blk_bdev);
+
+struct rpc_construct_virtio_dev {
+	char *name;
+	char *trtype;
+	char *traddr;
+	char *dev_type;
+	uint32_t vq_count;
+	uint32_t vq_size;
+	struct spdk_jsonrpc_request *request;
+};
+
+static const struct spdk_json_object_decoder rpc_construct_virtio_dev[] = {
+	{"name", offsetof(struct rpc_construct_virtio_dev, name), spdk_json_decode_string },
+	{"trtype", offsetof(struct rpc_construct_virtio_dev, trtype), spdk_json_decode_string },
+	{"traddr", offsetof(struct rpc_construct_virtio_dev, traddr), spdk_json_decode_string },
+	{"dev_type", offsetof(struct rpc_construct_virtio_dev, dev_type), spdk_json_decode_string },
+	{"vq_count", offsetof(struct rpc_construct_virtio_dev, vq_count), spdk_json_decode_uint32, true },
+	{"vq_size", offsetof(struct rpc_construct_virtio_dev, vq_size), spdk_json_decode_uint32, true },
+};
+
+static void
+free_rpc_construct_virtio_dev(struct rpc_construct_virtio_dev *req)
+{
+	free(req->name);
+	free(req->trtype);
+	free(req->traddr);
+	free(req->dev_type);
+	free(req);
+}
+
+static void
+spdk_rpc_create_virtio_dev_cb(void *ctx, int result, struct spdk_bdev **bdevs, size_t cnt)
+{
+	struct rpc_construct_virtio_dev *req = ctx;
+	struct spdk_json_write_ctx *w;
+	size_t i;
+
+	if (result) {
+		spdk_jsonrpc_send_error_response(req->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 spdk_strerror(-result));
+		free_rpc_construct_virtio_dev(req);
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(req->request);
+	if (w) {
+		spdk_json_write_array_begin(w);
+
+		for (i = 0; i < cnt; i++) {
+			spdk_json_write_string(w, spdk_bdev_get_name(bdevs[i]));
+		}
+
+		spdk_json_write_array_end(w);
+		spdk_jsonrpc_end_result(req->request, w);
+	}
+
+	free_rpc_construct_virtio_dev(ctx);
+}
+
+static void
+spdk_rpc_create_virtio_dev(struct spdk_jsonrpc_request *request,
+			   const struct spdk_json_val *params)
+{
+	struct rpc_construct_virtio_dev *req;
+	struct spdk_bdev *bdev;
+	struct spdk_pci_addr pci_addr;
+	bool pci;
+	int rc;
+
+	req = calloc(1, sizeof(*req));
+	if (!req) {
+		SPDK_ERRLOG("calloc() failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(ENOMEM));
+		return;
+	}
+
+	if (spdk_json_decode_object(params, rpc_construct_virtio_dev,
+				    SPDK_COUNTOF(rpc_construct_virtio_dev),
+				    req)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(EINVAL));
+		goto invalid;
+	}
+
+	if (strcmp(req->trtype, "pci") == 0) {
+		if (req->vq_count != 0 || req->vq_size != 0) {
+			SPDK_ERRLOG("VQ count or size is not allowed for PCI transport type\n");
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							 "vq_count or vq_size is not allowed for PCI transport type.");
+			goto invalid;
+		}
+
+		if (spdk_pci_addr_parse(&pci_addr, req->traddr) != 0) {
+			SPDK_ERRLOG("Invalid PCI address '%s'\n", req->traddr);
+			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							     "Invalid PCI address '%s'", req->traddr);
+			goto invalid;
+		}
+
+		pci = true;
+	} else if (strcmp(req->trtype, "user") == 0) {
+		req->vq_count = req->vq_count == 0 ? SPDK_VIRTIO_USER_DEFAULT_VQ_COUNT : req->vq_count;
+		req->vq_size = req->vq_size == 0 ? SPDK_VIRTIO_USER_DEFAULT_QUEUE_SIZE : req->vq_size;
+		pci = false;
+	} else {
+		SPDK_ERRLOG("Invalid trtype '%s'\n", req->trtype);
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						     "Invalid trtype '%s'", req->trtype);
+		goto invalid;
+	}
+
+	req->request = request;
+	if (strcmp(req->dev_type, "blk") == 0) {
+		if (pci) {
+			bdev = bdev_virtio_pci_blk_dev_create(req->name, &pci_addr);
+		} else {
+			bdev = bdev_virtio_user_blk_dev_create(req->name, req->traddr, req->vq_count, req->vq_size);
+		}
+
+		/* Virtio blk doesn't use callback so call it manually to send result. */
+		rc = bdev ? 0 : -EINVAL;
+		spdk_rpc_create_virtio_dev_cb(req, rc, &bdev, bdev ? 1 : 0);
+	} else if (strcmp(req->dev_type, "scsi") == 0) {
+		if (pci) {
+			rc = bdev_virtio_pci_scsi_dev_create(req->name, &pci_addr, spdk_rpc_create_virtio_dev_cb, req);
+		} else {
+			rc = bdev_virtio_user_scsi_dev_create(req->name, req->traddr, req->vq_count, req->vq_size,
+							      spdk_rpc_create_virtio_dev_cb, req);
+		}
+
+		if (rc < 0) {
+			/* In case of error callback is not called so do it manually to send result. */
+			spdk_rpc_create_virtio_dev_cb(req, rc, NULL, 0);
+		}
+	} else {
+		SPDK_ERRLOG("Invalid dev_type '%s'\n", req->dev_type);
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						     "Invalid dev_type '%s'", req->dev_type);
+		goto invalid;
+	}
+
+	return;
+invalid:
+	free_rpc_construct_virtio_dev(req);
+}
+SPDK_RPC_REGISTER("construct_virtio_dev", spdk_rpc_create_virtio_dev);

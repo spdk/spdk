@@ -408,11 +408,41 @@ bdev_virtio_get_ctx_size(void)
 	return sizeof(struct virtio_scsi_io_ctx);
 }
 
+static int
+bdev_virtio_scsi_config_json(struct spdk_json_write_ctx *w)
+{
+	struct virtio_scsi_dev *svdev;
+
+	pthread_mutex_lock(&g_virtio_scsi_mutex);
+	TAILQ_FOREACH(svdev, &g_virtio_scsi_devs, tailq) {
+		spdk_json_write_object_begin(w);
+
+		spdk_json_write_named_string(w, "method", "construct_virtio_dev");
+
+		spdk_json_write_named_object_begin(w, "params");
+		spdk_json_write_named_string(w, "name", svdev->vdev.name);
+		spdk_json_write_named_string(w, "dev_type", "scsi");
+
+		/* Write transport specific parameters. */
+		svdev->vdev.backend_ops->write_json_config(&svdev->vdev, w);
+
+		spdk_json_write_object_end(w);
+
+		spdk_json_write_object_end(w);
+
+	}
+	pthread_mutex_unlock(&g_virtio_scsi_mutex);
+
+	return 0;
+}
+
+
 static struct spdk_bdev_module virtio_scsi_if = {
 	.name = "virtio_scsi",
 	.module_init = bdev_virtio_initialize,
 	.module_fini = bdev_virtio_finish,
 	.get_ctx_size = bdev_virtio_get_ctx_size,
+	.config_json = bdev_virtio_scsi_config_json,
 	.async_init = true,
 	.async_fini = true,
 };
@@ -675,12 +705,20 @@ bdev_virtio_disk_destruct(void *ctx)
 }
 
 static int
-bdev_virtio_dump_info_config(void *ctx, struct spdk_json_write_ctx *w)
+bdev_virtio_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct virtio_scsi_disk *disk = ctx;
 
-	virtio_dev_dump_json_config(&disk->svdev->vdev, w);
+	virtio_dev_dump_json_info(&disk->svdev->vdev, w);
 	return 0;
+}
+
+static void
+bdev_virtio_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+{
+	/* SCSI targets and LUNS are discovered during scan process so nothing
+	 * to save here.
+	 */
 }
 
 static const struct spdk_bdev_fn_table virtio_fn_table = {
@@ -688,7 +726,8 @@ static const struct spdk_bdev_fn_table virtio_fn_table = {
 	.submit_request		= bdev_virtio_submit_request,
 	.io_type_supported	= bdev_virtio_io_type_supported,
 	.get_io_channel		= bdev_virtio_get_io_channel,
-	.dump_info_json		= bdev_virtio_dump_info_config,
+	.dump_info_json		= bdev_virtio_dump_info_json,
+	.write_config_json	= bdev_virtio_write_config_json,
 };
 
 static void
@@ -1948,7 +1987,7 @@ bdev_virtio_scsi_dev_list(struct spdk_json_write_ctx *w)
 		spdk_json_write_name(w, "name");
 		spdk_json_write_string(w, svdev->vdev.name);
 
-		virtio_dev_dump_json_config(&svdev->vdev, w);
+		virtio_dev_dump_json_info(&svdev->vdev, w);
 
 		spdk_json_write_object_end(w);
 	}
