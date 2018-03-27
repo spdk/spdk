@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "534ace4c_f7282966",
+        "filename": "lib/event/subsystems/vhost/vhost_conf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-27T18:22:17Z",
+      "side": 1,
+      "message": "This function can fail. Pls check error code.",
+      "range": {
+        "startLine": 55,
+        "startChar": 1,
+        "endLine": 55,
+        "endChar": 19
+      },
+      "revId": "e13977de14f7827fa23a9884d6f616b71cc18358",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
