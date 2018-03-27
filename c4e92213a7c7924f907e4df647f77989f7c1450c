@@ -1,0 +1,159 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "63547029_e1e08e44",
+        "filename": "test/vhost/nvmf/migration-tc2.job",
+        "patchSetId": 18
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-27T08:21:23Z",
+      "side": 1,
+      "message": "Wrong filename",
+      "revId": "c4e92213a7c7924f907e4df647f77989f7c1450c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea33152a_018eb2ff",
+        "filename": "test/vhost/nvmf/migration-tc2.job",
+        "patchSetId": 18
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-27T08:21:23Z",
+      "side": 1,
+      "message": "not needed?\nalso maybe add fsync_on_close",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 15,
+        "endChar": 15
+      },
+      "revId": "c4e92213a7c7924f907e4df647f77989f7c1450c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b6249786_c6974cc4",
+        "filename": "test/vhost/nvmf/nvmf.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-27T08:21:23Z",
+      "side": 1,
+      "message": "These are already defined in spdk_vhost.sh, remove",
+      "range": {
+        "startLine": 5,
+        "startChar": 0,
+        "endLine": 6,
+        "endChar": 45
+      },
+      "revId": "c4e92213a7c7924f907e4df647f77989f7c1450c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "09351550_7b164d7f",
+        "filename": "test/vhost/nvmf/nvmf.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-27T08:21:23Z",
+      "side": 1,
+      "message": "Already defined as an argument in spdk_vhost.sh, remove",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 61
+      },
+      "revId": "c4e92213a7c7924f907e4df647f77989f7c1450c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0f5ad95_8d84702a",
+        "filename": "test/vhost/nvmf/nvmf.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-27T08:21:23Z",
+      "side": 1,
+      "message": "Could we move starting Vhost a couple of lines down, so that it\u0027s in the same place as controller configuration?",
+      "range": {
+        "startLine": 110,
+        "startChar": 0,
+        "endLine": 110,
+        "endChar": 27
+      },
+      "revId": "c4e92213a7c7924f907e4df647f77989f7c1450c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c2da9fc7_34685099",
+        "filename": "test/vhost/nvmf/nvmf.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-27T08:21:23Z",
+      "side": 1,
+      "message": "cant see any trap that\u0027d stop the vhost in case of error. If it\u0027s done somewhere then please explain as I might be missing something.",
+      "range": {
+        "startLine": 111,
+        "startChar": 0,
+        "endLine": 111,
+        "endChar": 36
+      },
+      "revId": "c4e92213a7c7924f907e4df647f77989f7c1450c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d1d078c_e3ae7a81",
+        "filename": "test/vhost/nvmf/nvmf.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-27T08:21:23Z",
+      "side": 1,
+      "message": "there are nvmf_tgt related operations here, so name \"bdev_setup\" is wrong",
+      "range": {
+        "startLine": 114,
+        "startChar": 13,
+        "endLine": 114,
+        "endChar": 23
+      },
+      "revId": "c4e92213a7c7924f907e4df647f77989f7c1450c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
