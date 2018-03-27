@@ -133,21 +133,31 @@ struct spdk_vhost_dev_backend {
 };
 
 struct spdk_vhost_dev {
-	struct rte_vhost_memory *mem;
 	char *name;
 	char *path;
 
 	/* Unique device ID. */
 	unsigned id;
-
-	/* rte_vhost device ID. */
+	/* rte_vhost channel ID */
 	int vid;
-	int task_cnt;
 	int32_t lcore;
+
 	struct spdk_cpuset *cpumask;
 	bool registered;
 
 	const struct spdk_vhost_dev_backend *backend;
+
+	struct spdk_vhost_dev_channel *channel;
+
+	size_t channel_ctx_size;
+
+	TAILQ_ENTRY(spdk_vhost_dev) tailq;
+};
+
+struct spdk_vhost_dev_channel {
+	struct rte_vhost_memory *mem;
+
+	int task_cnt;
 
 	uint32_t coalescing_delay_time_base;
 
@@ -166,7 +176,7 @@ struct spdk_vhost_dev {
 
 	struct spdk_vhost_virtqueue virtqueue[SPDK_VHOST_MAX_VQUEUES];
 
-	TAILQ_ENTRY(spdk_vhost_dev) tailq;
+	TAILQ_ENTRY(spdk_vhost_dev_channel) tailq;
 };
 
 struct spdk_vhost_dev *spdk_vhost_dev_find(const char *ctrlr_name);
@@ -242,7 +252,7 @@ int spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
 static inline bool __attribute__((always_inline))
 spdk_vhost_dev_has_feature(struct spdk_vhost_dev *vdev, unsigned feature_id)
 {
-	return vdev->negotiated_features & (1ULL << feature_id);
+	return vdev->channel->negotiated_features & (1ULL << feature_id);
 }
 
 int spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,

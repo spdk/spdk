@@ -130,8 +130,8 @@ spdk_vhost_scsi_task_free_cb(struct spdk_scsi_task *scsi_task)
 {
 	struct spdk_vhost_scsi_task *task = SPDK_CONTAINEROF(scsi_task, struct spdk_vhost_scsi_task, scsi);
 
-	assert(task->svdev->vdev.task_cnt > 0);
-	task->svdev->vdev.task_cnt--;
+	assert(task->svdev->vdev.channel->task_cnt > 0);
+	task->svdev->vdev.channel->task_cnt--;
 	task->used = false;
 }
 
@@ -171,7 +171,7 @@ eventq_enqueue(struct spdk_vhost_scsi_dev *svdev, unsigned scsi_dev_num, uint32_
 	int rc;
 
 	assert(scsi_dev_num < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS);
-	vq = &svdev->vdev.virtqueue[VIRTIO_SCSI_EVENTQ];
+	vq = &svdev->vdev.channel->virtqueue[VIRTIO_SCSI_EVENTQ];
 
 	if (spdk_vhost_vq_avail_ring_get(vq, &req, 1) != 1) {
 		SPDK_ERRLOG("Controller %s: Failed to send virtio event (no avail ring entries?).\n",
@@ -585,7 +585,7 @@ process_controlq(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_virtqueue 
 			continue;
 		}
 
-		svdev->vdev.task_cnt++;
+		svdev->vdev.channel->task_cnt++;
 		memset(&task->scsi, 0, sizeof(task->scsi));
 		task->tmf_resp = NULL;
 		task->used = true;
@@ -623,7 +623,7 @@ process_requestq(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_virtqueue 
 			continue;
 		}
 
-		svdev->vdev.task_cnt++;
+		svdev->vdev.channel->task_cnt++;
 		memset(&task->scsi, 0, sizeof(task->scsi));
 		task->resp = NULL;
 		task->used = true;
@@ -651,10 +651,12 @@ vdev_mgmt_worker(void *arg)
 	struct spdk_vhost_scsi_dev *svdev = arg;
 
 	process_removed_devs(svdev);
-	spdk_vhost_vq_used_signal(&svdev->vdev, &svdev->vdev.virtqueue[VIRTIO_SCSI_EVENTQ]);
+	spdk_vhost_vq_used_signal(&svdev->vdev,
+			&svdev->vdev.channel->virtqueue[VIRTIO_SCSI_EVENTQ]);
 
-	process_controlq(svdev, &svdev->vdev.virtqueue[VIRTIO_SCSI_CONTROLQ]);
-	spdk_vhost_vq_used_signal(&svdev->vdev, &svdev->vdev.virtqueue[VIRTIO_SCSI_CONTROLQ]);
+	process_controlq(svdev, &svdev->vdev.channel->virtqueue[VIRTIO_SCSI_CONTROLQ]);
+	spdk_vhost_vq_used_signal(&svdev->vdev,
+			&svdev->vdev.channel->virtqueue[VIRTIO_SCSI_CONTROLQ]);
 
 	return -1;
 }
@@ -665,8 +667,8 @@ vdev_worker(void *arg)
 	struct spdk_vhost_scsi_dev *svdev = arg;
 	uint32_t q_idx;
 
-	for (q_idx = VIRTIO_SCSI_REQUESTQ; q_idx < svdev->vdev.num_queues; q_idx++) {
-		process_requestq(svdev, &svdev->vdev.virtqueue[q_idx]);
+	for (q_idx = VIRTIO_SCSI_REQUESTQ; q_idx < svdev->vdev.channel->num_queues; q_idx++) {
+		process_requestq(svdev, &svdev->vdev.channel->virtqueue[q_idx]);
 	}
 
 	spdk_vhost_dev_used_signal(&svdev->vdev);
@@ -1000,8 +1002,8 @@ free_task_pool(struct spdk_vhost_scsi_dev *svdev)
 	struct spdk_vhost_virtqueue *vq;
 	uint16_t i;
 
-	for (i = 0; i < svdev->vdev.num_queues; i++) {
-		vq = &svdev->vdev.virtqueue[i];
+	for (i = 0; i < svdev->vdev.channel->num_queues; i++) {
+		vq = &svdev->vdev.channel->virtqueue[i];
 		if (vq->tasks == NULL) {
 			continue;
 		}
@@ -1020,8 +1022,8 @@ alloc_task_pool(struct spdk_vhost_scsi_dev *svdev)
 	uint16_t i;
 	uint32_t j;
 
-	for (i = 0; i < svdev->vdev.num_queues; i++) {
-		vq = &svdev->vdev.virtqueue[i];
+	for (i = 0; i < svdev->vdev.channel->num_queues; i++) {
+		vq = &svdev->vdev.channel->virtqueue[i];
 		task_cnt = vq->vring.size;
 		if (task_cnt > SPDK_VHOST_MAX_VQ_SIZE) {
 			/* sanity check */
@@ -1105,13 +1107,13 @@ destroy_device_poller_cb(void *arg)
 	struct spdk_vhost_scsi_dev *svdev = ctx->svdev;
 	uint32_t i;
 
-	if (svdev->vdev.task_cnt > 0) {
+	if (svdev->vdev.channel->task_cnt > 0) {
 		return -1;
 	}
 
 
-	for (i = 0; i < svdev->vdev.num_queues; i++) {
-		spdk_vhost_vq_used_signal(&svdev->vdev, &svdev->vdev.virtqueue[i]);
+	for (i = 0; i < svdev->vdev.channel->num_queues; i++) {
+		spdk_vhost_vq_used_signal(&svdev->vdev, &svdev->vdev.channel->virtqueue[i]);
 	}
 
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {

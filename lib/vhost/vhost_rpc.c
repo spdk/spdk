@@ -299,68 +299,6 @@ invalid:
 
 SPDK_RPC_REGISTER("remove_vhost_scsi_target", spdk_rpc_remove_vhost_scsi_target)
 
-struct rpc_vhost_blk_ctrlr {
-	char *ctrlr;
-	char *dev_name;
-	char *cpumask;
-	bool readonly;
-};
-
-static const struct spdk_json_object_decoder rpc_construct_vhost_blk_ctrlr[] = {
-	{"ctrlr", offsetof(struct rpc_vhost_blk_ctrlr, ctrlr), spdk_json_decode_string },
-	{"dev_name", offsetof(struct rpc_vhost_blk_ctrlr, dev_name), spdk_json_decode_string },
-	{"cpumask", offsetof(struct rpc_vhost_blk_ctrlr, cpumask), spdk_json_decode_string, true},
-	{"readonly", offsetof(struct rpc_vhost_blk_ctrlr, readonly), spdk_json_decode_bool, true},
-};
-
-static void
-free_rpc_vhost_blk_ctrlr(struct rpc_vhost_blk_ctrlr *req)
-{
-	free(req->ctrlr);
-	free(req->dev_name);
-	free(req->cpumask);
-}
-
-static void
-spdk_rpc_construct_vhost_blk_controller(struct spdk_jsonrpc_request *request,
-					const struct spdk_json_val *params)
-{
-	struct rpc_vhost_blk_ctrlr req = {0};
-	struct spdk_json_write_ctx *w;
-	int rc;
-
-	if (spdk_json_decode_object(params, rpc_construct_vhost_blk_ctrlr,
-				    SPDK_COUNTOF(rpc_construct_vhost_blk_ctrlr),
-				    &req)) {
-		SPDK_DEBUGLOG(SPDK_LOG_VHOST_RPC, "spdk_json_decode_object failed\n");
-		rc = -EINVAL;
-		goto invalid;
-	}
-
-	rc = spdk_vhost_blk_construct(req.ctrlr, req.cpumask, req.dev_name, req.readonly);
-	if (rc < 0) {
-		goto invalid;
-	}
-
-	free_rpc_vhost_blk_ctrlr(&req);
-
-	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
-	return;
-
-invalid:
-	free_rpc_vhost_blk_ctrlr(&req);
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-					 spdk_strerror(-rc));
-
-}
-SPDK_RPC_REGISTER("construct_vhost_blk_controller", spdk_rpc_construct_vhost_blk_controller)
-
 struct rpc_remove_vhost_ctrlr {
 	char *ctrlr;
 
