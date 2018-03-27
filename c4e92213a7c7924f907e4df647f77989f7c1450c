@@ -88,6 +88,52 @@
     },
     {
       "key": {
+        "uuid": "bd215ca7_369d342e",
+        "filename": "test/vhost/nvmf/nvmf.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-27T11:37:28Z",
+      "side": 1,
+      "message": "Don\u0027t hide output it is sometime usefull",
+      "range": {
+        "startLine": 60,
+        "startChar": 32,
+        "endLine": 60,
+        "endChar": 43
+      },
+      "revId": "c4e92213a7c7924f907e4df647f77989f7c1450c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "734a515f_26a7fa57",
+        "filename": "test/vhost/nvmf/nvmf.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-27T11:37:28Z",
+      "side": 1,
+      "message": "This need to throw some error.",
+      "range": {
+        "startLine": 69,
+        "startChar": 2,
+        "endLine": 71,
+        "endChar": 4
+      },
+      "revId": "c4e92213a7c7924f907e4df647f77989f7c1450c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b0f5ad95_8d84702a",
         "filename": "test/vhost/nvmf/nvmf.sh",
         "patchSetId": 18
@@ -150,6 +196,52 @@
         "startChar": 13,
         "endLine": 114,
         "endChar": 23
+      },
+      "revId": "c4e92213a7c7924f907e4df647f77989f7c1450c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7b49b15_1ba0f6c8",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-27T11:37:28Z",
+      "side": 1,
+      "message": "-\u003e fio-bin",
+      "range": {
+        "startLine": 109,
+        "startChar": 26,
+        "endLine": 109,
+        "endChar": 32
+      },
+      "revId": "c4e92213a7c7924f907e4df647f77989f7c1450c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ccbc48d_3d06402f",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-27T11:37:28Z",
+      "side": 1,
+      "message": "-\u003e vm-image",
+      "range": {
+        "startLine": 110,
+        "startChar": 4,
+        "endLine": 110,
+        "endChar": 12
       },
       "revId": "c4e92213a7c7924f907e4df647f77989f7c1450c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
