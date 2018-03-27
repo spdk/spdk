@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fdb82a4d_da654a4e",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1229,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-27T17:29:34Z",
+      "side": 1,
+      "message": "cofnig -\u003e config",
+      "range": {
+        "startLine": 1229,
+        "startChar": 22,
+        "endLine": 1229,
+        "endChar": 28
+      },
+      "revId": "d4e2ec4d232bb88d9cb893c7d3c9e5fed4d594e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1ebdc014_63fc85dc",
+        "filename": "test/unit/lib/vhost/vhost_blk.c/vhost_blk_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-27T17:29:34Z",
+      "side": 1,
+      "message": "Unrelated whitespace change",
+      "revId": "d4e2ec4d232bb88d9cb893c7d3c9e5fed4d594e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
