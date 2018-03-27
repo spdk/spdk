@@ -1,0 +1,158 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a17cbaa4_8895f465",
+        "filename": "etc/spdk/nvmf.conf.in",
+        "patchSetId": 1
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-27T17:02:37Z",
+      "side": 1,
+      "message": "Please add spaces between sentences.",
+      "revId": "8123e9c43aaf699104407169c87278c4c6d083d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33ba891e_b729f864",
+        "filename": "etc/spdk/nvmf.conf.in",
+        "patchSetId": 1
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-27T17:02:37Z",
+      "side": 1,
+      "message": "Can we just call this MaxNamespaces?",
+      "revId": "8123e9c43aaf699104407169c87278c4c6d083d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78b548ed_87ed4459",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-27T17:02:37Z",
+      "side": 1,
+      "message": "I don\u0027t think this needs to go in the public header.  Can you move it to the .c file where it\u0027s used, or just hard-code 1?",
+      "revId": "8123e9c43aaf699104407169c87278c4c6d083d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d1096cd_852517e8",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 535,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-27T17:02:37Z",
+      "side": 1,
+      "message": "Maybe max_namespaces to be consistent with other names.\n\nThis should also probably be uint32_t (it doesn\u0027t make sense to have a negative number of namespaces).",
+      "revId": "8123e9c43aaf699104407169c87278c4c6d083d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1c37777_1ea53c4b",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 574,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-27T17:02:37Z",
+      "side": 1,
+      "message": "Please use underscore-separated words like the other fields.\n\nI think this could be \"max_namespaces\" to shorten it a bit too.",
+      "range": {
+        "startLine": 574,
+        "startChar": 3,
+        "endLine": 574,
+        "endChar": 24
+      },
+      "revId": "8123e9c43aaf699104407169c87278c4c6d083d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d53619c_089adec8",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 618,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-27T17:02:37Z",
+      "side": 1,
+      "message": "If we make this field unsigned, then I don\u0027t think this check would be necessary (MIN_NAMESPACES is 1, so the only value this would trigger for is 0).",
+      "revId": "8123e9c43aaf699104407169c87278c4c6d083d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6dba87ab_a5ebc973",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-27T17:02:37Z",
+      "side": 1,
+      "message": "Please use the same comment style as elsewhere, e.g.:\n\n    /*\n     * Multi-line comment\n     * Etc.\n     */\n\nAlso please add spaces between sentences.",
+      "range": {
+        "startLine": 269,
+        "startChar": 1,
+        "endLine": 269,
+        "endChar": 2
+      },
+      "revId": "8123e9c43aaf699104407169c87278c4c6d083d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4c05075_abd6e898",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 565,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-27T17:02:37Z",
+      "side": 1,
+      "message": "Maybe just --max-namespaces here as well.",
+      "range": {
+        "startLine": 565,
+        "startChar": 28,
+        "endLine": 565,
+        "endChar": 49
+      },
+      "revId": "8123e9c43aaf699104407169c87278c4c6d083d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
