@@ -74,18 +74,27 @@ mkdir -p spdk_repo
 # The librxe-dev repository provides a command line tool called rxe_cfg which makes it
 # very easy to use Soft-RoCE. The build pool utilizes this command line tool in the absence
 # of any real RDMA NICs to simulate one for the NVMe-oF tests.
-git clone https://github.com/SoftRoCE/librxe-dev.git
+if [ -d librxe-dev ]; then
+    echo "librxe-dev source already present, not cloning"
+elif [ hash rxe_cfg ]; then
+    echo "rxe_cfg is already installed. skipping"
+else
+    git clone https://github.com/SoftRoCE/librxe-dev.git
+    cd librxe-dev
+    ./configure --libdir=/usr/lib64/ --prefix=
+    make -j${jobs}
+    sudo make install
+    cd ~
+fi
 sudo dnf install -y perl-Switch librdmacm-utils libibverbs-utils
-
-cd librxe-dev
-./configure --libdir=/usr/lib64/ --prefix=
-make -j${jobs}
-sudo make install
-cd ~
 
 cd spdk_repo
 mkdir -p output
-git clone https://review.gerrithub.io/spdk/spdk
+if [ -d spdk ]; then
+    echo "spdk source already present, not cloning"
+else
+    git clone https://review.gerrithub.io/spdk/spdk
+fi
 cd spdk
 git submodule update --init --recursive
 cd ~
@@ -96,56 +105,81 @@ cd ~
 CURRENT_VERSION=$(iscsiadm --version)
 OPEN_ISCSI_VER='iscsiadm version 6.2.0.874'
 if [ "$CURRENT_VERSION" == "$OPEN_ISCSI_VER" ]; then
-    mkdir -p open-iscsi-install
-    cd open-iscsi-install
-    sudo dnf download --source iscsi-initiator-utils
-    rpm2cpio iscsi-initiator-utils-6.2.0.874-3.git86e8892.fc26.src.rpm | cpio -idmv
-    mkdir -p patches
-    mv 00* patches/
-    git clone https://github.com/open-iscsi/open-iscsi
+    if [ ! -d open-iscsi-install ]; then
+        mkdir -p open-iscsi-install
+        cd open-iscsi-install
+        sudo dnf download --source iscsi-initiator-utils
+        rpm2cpio iscsi-initiator-utils-6.2.0.874-3.git86e8892.fc26.src.rpm | cpio -idmv
+        mkdir -p patches
+        mv 00* patches/
+        git clone https://github.com/open-iscsi/open-iscsi
 
-    cd open-iscsi
+        cd open-iscsi
 
-    # the configurations of username and email are needed for applying patches to iscsiadm.
-    git config user.name none
-    git config user.email none
+        # the configurations of username and email are needed for applying patches to iscsiadm.
+        git config user.name none
+        git config user.email none
 
-    git checkout 86e8892
-    for patch in `ls ../patches`; do
-        git am ../patches/$patch
-    done
-    sed -i '427s/.*/-1);/' usr/session_info.c
-    make -j${jobs}
-    sudo make install
-    cd ~
+        git checkout 86e8892
+        for patch in `ls ../patches`; do
+            git am ../patches/$patch
+        done
+        sed -i '427s/.*/-1);/' usr/session_info.c
+        make -j${jobs}
+        sudo make install
+        cd ~
+    else
+        echo "custom open-iscsi install located, not reinstalling"
+    fi
 fi
 
 
 sudo mkdir -p /usr/src
 
 # Rocksdb is installed for use with the blobfs tests.
-git clone https://review.gerrithub.io/spdk/rocksdb
-git -C ./rocksdb checkout spdk-v5.6.1
-sudo mv rocksdb /usr/src/
-
-git clone http://git.kernel.dk/fio.git
-sudo mv fio /usr/src/
-(
-    cd /usr/src/fio &&
-    git checkout fio-3.3 &&
-    make -j${jobs} &&
-    sudo make install
-)
+if [ ! -d /usr/src/rocksdb ]; then
+    git clone https://review.gerrithub.io/spdk/rocksdb
+    git -C ./rocksdb checkout spdk-v5.6.1
+    sudo mv rocksdb /usr/src/
+else
+    sudo git -C /usr/src/rocksdb checkout spdk-v5.6.1
+    echo "rocksdb already in /usr/src. Not checking out again"
+fi
+if [ ! -d /usr/src/fio ]; then
+    if [ ! -d fio ]; then
+        git clone http://git.kernel.dk/fio.git
+        sudo mv fio /usr/src/
+    else
+        sudo mv fio /usr/src/
+    fi
+    (
+        cd /usr/src/fio &&
+        git checkout master &&
+        git pull &&
+        git checkout fio-3.3 &&
+        make -j${jobs} &&
+        sudo make install
+    )
+else
+    echo "fio already in /usr/src/fio. Not installing"
+fi
 cd ~
 
-git clone https://github.com/brendangregg/FlameGraph.git
-mkdir -p /usr/local
-sudo mv FlameGraph /usr/local/FlameGraph
-
+if [ ! -d /usr/local/flamegraph ]; then
+    git clone https://github.com/brendangregg/FlameGraph.git
+    mkdir -p /usr/local
+    sudo mv FlameGraph /usr/local/FlameGraph
+else
+    echo "flamegraph already installed. Skipping"
+fi
 SPDK_QEMU_BRANCH=spdk-2.12-pre
 mkdir -p qemu
 cd qemu
-git clone https://github.com/spdk/qemu -b "$SPDK_QEMU_BRANCH" "$SPDK_QEMU_BRANCH"
+if [ ! -d "$SPDK_QEMU_BRANCH" ]; then
+    git clone https://github.com/spdk/qemu -b "$SPDK_QEMU_BRANCH" "$SPDK_QEMU_BRANCH"
+else
+    echo "qemu already checked out. Skipping"
+fi
 cd "$SPDK_QEMU_BRANCH"
 if hash tsocks &> /dev/null; then
     git_param="--with-git='tsocks git'"
@@ -183,7 +217,11 @@ cd ~
 
 # We currently don't make any changes to the libiscsi repository for our tests, but it is possible that we will need
 # to later. Cloning from git is just future proofing the machines.
-git clone https://github.com/sahlberg/libiscsi
+if [ ! -d libiscsi ]; then
+    git clone https://github.com/sahlberg/libiscsi
+else
+    echo "libiscsi already checked out. Skipping"
+fi
 cd libiscsi
 ./autogen.sh
 ./configure --prefix=/usr/local/libiscsi
