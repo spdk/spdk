@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9376e84b_2efe55ca",
+        "filename": "test/nvmf/multi_nvmf/multi_nvme_manage.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-03-27T15:28:21Z",
+      "side": 1,
+      "message": "iSCSI",
+      "revId": "b22338f67b6bc990d95daa3f420b0073e7822e87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
