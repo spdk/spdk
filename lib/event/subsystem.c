@@ -113,6 +113,50 @@ subsystem_sort(void)
 	}
 }
 
+static bool
+spdk_subsystem_post_verify(void)
+{
+	struct spdk_subsystem *subsystem;
+
+	TAILQ_FOREACH(subsystem, &g_subsystems, tailq) {
+		if (subsystem->init) {
+			if (!subsystem->initialized) {
+				SPDK_ERRLOG("subsystem %s is not initialized at SPDK boot\n",
+					    subsystem->name);
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+static bool
+spdk_subsystem_init_next_verify(struct spdk_subsystem *subsystem)
+{
+	struct spdk_subsystem *subsystem_tmp;
+	struct spdk_subsystem_depend *subsystem_dep;
+
+	TAILQ_FOREACH(subsystem_dep, &g_subsystems_deps, tailq) {
+		if (strcmp(subsystem->name, subsystem_dep->name) != 0) {
+			continue;
+		}
+
+		subsystem_tmp = spdk_subsystem_find(&g_subsystems, subsystem_dep->depends_on);
+		if (!subsystem_tmp) {
+			SPDK_ERRLOG("Subsystem %s that depends on %s is not found\n",
+				    subsystem_dep->depends_on, subsystem->name);
+			return false;
+		}
+		if (!subsystem_tmp->initialized) {
+			SPDK_ERRLOG("Subsystem %s that depends on %s is not initialized\n",
+				    subsystem_dep->depends_on, subsystem->name);
+			return false;
+		}
+	}
+
+	return true;
+}
+
 void
 spdk_subsystem_init_next(int rc)
 {
@@ -122,6 +166,10 @@ spdk_subsystem_init_next(int rc)
 		return;
 	}
 
+	if (g_next_subsystem) {
+		g_next_subsystem->initialized = true;
+	}
+
 	if (!g_next_subsystem) {
 		g_next_subsystem = TAILQ_FIRST(&g_subsystems);
 	} else {
@@ -129,12 +177,20 @@ spdk_subsystem_init_next(int rc)
 	}
 
 	if (!g_next_subsystem) {
-		g_subsystems_initialized = true;
+		g_subsystems_initialized = spdk_subsystem_post_verify();
+		if (!g_subsystems_initialized) {
+			spdk_app_stop(-1);
+			return;
+		}
 		spdk_event_call(g_app_start_event);
 		return;
 	}
 
 	if (g_next_subsystem->init) {
+		if (!spdk_subsystem_init_next_verify(g_next_subsystem)) {
+			spdk_app_stop(-1);
+			return;
+		}
 		g_next_subsystem->init();
 	} else {
 		spdk_subsystem_init_next(0);
@@ -142,7 +198,7 @@ spdk_subsystem_init_next(int rc)
 }
 
 static void
-spdk_subsystem_verify(void *arg1, void *arg2)
+spdk_subsystem_pre_verify(void *arg1, void *arg2)
 {
 	struct spdk_subsystem_depend *dep;
 
@@ -173,7 +229,8 @@ spdk_subsystem_init(struct spdk_event *app_start_event)
 
 	g_app_start_event = app_start_event;
 
-	verify_event = spdk_event_allocate(spdk_env_get_current_core(), spdk_subsystem_verify, NULL, NULL);
+	verify_event = spdk_event_allocate(spdk_env_get_current_core(),
+					   spdk_subsystem_pre_verify, NULL, NULL);
 	spdk_event_call(verify_event);
 }
 
