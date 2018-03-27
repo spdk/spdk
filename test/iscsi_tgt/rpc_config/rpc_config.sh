@@ -11,7 +11,7 @@ timing_enter rpc_config
 PORT=3260
 INITIATOR_TAG=2
 INITIATOR_NAME=ANY
-NETMASK=$INITIATOR_IP/32
+NETMASK=$INITIATOR_IP/24
 MALLOC_BDEV_SIZE=64
 
 
@@ -31,7 +31,7 @@ echo "iscsi_tgt is listening. Running tests..."
 
 timing_exit start_iscsi_tgt
 
-$rpc_config_py $rpc_py
+$rpc_config_py $rpc_py $TARGET_IP $INITIATOR_IP
 
 $rpc_py get_bdevs
 
