@@ -22,6 +22,86 @@
       "revId": "91aaa11f8e5dbbfd3f349fcc759506a3be7841d9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d244a4b4_b08b2001",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2405,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-27T09:17:06Z",
+      "side": 1,
+      "message": "this line can be removed.",
+      "revId": "91aaa11f8e5dbbfd3f349fcc759506a3be7841d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f0454160_3fbf3877",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2442,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-27T09:17:06Z",
+      "side": 1,
+      "message": "patch #6 looks cleaner than patch #3. However I\u0027m afraid out-of-bounds of index when j \u003d\u003d base-\u003evbdevs_cnt (before decrementing base-\u003evbdevs_cnt).",
+      "range": {
+        "startLine": 2442,
+        "startChar": 30,
+        "endLine": 2442,
+        "endChar": 50
+      },
+      "revId": "91aaa11f8e5dbbfd3f349fcc759506a3be7841d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f31e75b_a8deb759",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2442,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-27T09:17:06Z",
+      "side": 1,
+      "message": "(base-\u003evbdevs_cnt - 1) - (j + 1) + 1 ?",
+      "range": {
+        "startLine": 2442,
+        "startChar": 52,
+        "endLine": 2442,
+        "endChar": 68
+      },
+      "revId": "91aaa11f8e5dbbfd3f349fcc759506a3be7841d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2f5d9fa2_4ec896f8",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2489,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-27T09:17:06Z",
+      "side": 1,
+      "message": "this blank line can be removed.",
+      "revId": "91aaa11f8e5dbbfd3f349fcc759506a3be7841d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
