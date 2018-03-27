@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f5f9e014_093c65bd",
+        "filename": "lib/bdev/virtio/bdev_virtio_scsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-27T17:31:06Z",
+      "side": 1,
+      "message": "wrtie -\u003e write",
+      "range": {
+        "startLine": 430,
+        "startChar": 27,
+        "endLine": 430,
+        "endChar": 32
+      },
+      "revId": "eb5ebea022c6a4c6b8aed856dae93c69cd3050dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "370f0c40_0d3aad8d",
+        "filename": "lib/virtio/virtio_user.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-27T17:31:06Z",
+      "side": 1,
+      "message": "wrtie -\u003e write",
+      "range": {
+        "startLine": 402,
+        "startChar": 12,
+        "endLine": 402,
+        "endChar": 17
+      },
+      "revId": "eb5ebea022c6a4c6b8aed856dae93c69cd3050dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
