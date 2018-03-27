@@ -665,14 +665,14 @@ if __name__ == "__main__":
 
     # subsystem
     def get_subsystems(args):
-        print_dict(rpc.subsystem.get_subsystems(args.client, args))
+        print_dict(rpc.subsystem.get_subsystems(args.client))
 
     p = subparsers.add_parser('get_subsystems', help=""""Print subsystems array in initialization order. Each subsystem
     entry contain (unsorted) array of subsystems it depends on.""")
     p.set_defaults(func=get_subsystems)
 
     def get_subsystem_config(args):
-        print_dict(rpc.subsystem.get_subsystem_config(args.client, args))
+        print_dict(rpc.subsystem.get_subsystem_config(args.client, args.name))
 
     p = subparsers.add_parser('get_subsystem_config', help=""""Print subsystem configuration""")
     p.add_argument('name', help='Name of subsystem to query')
