@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e3a3af38_0833a444",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2417,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-27T08:40:38Z",
+      "side": 0,
+      "message": "This is first issue. The TAILQ_ENTRY base_bdevs[i]-\u003ebase_bdev_link is added to TAILQ_HEAD of vbdev-\u003ebase_bdevs. This fine if the base bdev is used only to construct one vbdev, but if the same base bdev is used to construct another vbdev the same TAILQ_ENTRY is added to another TAILQ_HEAD  overwriting previous one. You can\u0027t do that. To fix this base_bdev_link should be an array of TAILQ_ENTRY but this don\u0027t make sense so base_bdev_link is converted to array of pointers.",
+      "range": {
+        "startLine": 2417,
+        "startChar": 2,
+        "endLine": 2417,
+        "endChar": 71
+      },
+      "revId": "3592f9df967fffdea005bdb1f1a367dad35aabd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ac88745_403d6893",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2418,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-27T08:40:38Z",
+      "side": 0,
+      "message": "This is analogue issue. The TAILQ_ENTRY vbdev-\u003evbdev_link is added to multiple TAILQ_HEADS. You can\u0027t do that. To fix this vbdev_link should be an array of TAILQ_ENTRY but this don\u0027t make sense so vbdevs is converted to array of pointers.",
+      "range": {
+        "startLine": 2418,
+        "startChar": 2,
+        "endLine": 2418,
+        "endChar": 63
+      },
+      "revId": "3592f9df967fffdea005bdb1f1a367dad35aabd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
