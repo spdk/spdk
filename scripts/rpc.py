@@ -566,6 +566,8 @@ if __name__ == "__main__":
     Format:  'bdev_name1[:nsid1] bdev_name2[:nsid2] bdev_name3[:nsid3]' etc
     Example: '1:Malloc0 2:Malloc1 3:Malloc2'
     *** The devices must pre-exist ***""")
+    p.add_argument("-m", "--max-namespaces", help="Maximum number of namespaces allowed to added during active connection",
+                   type=int, default=0)
     p.set_defaults(func=construct_nvmf_subsystem)
 
     def delete_nvmf_subsystem(args):

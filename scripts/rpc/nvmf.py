@@ -8,6 +8,9 @@ def construct_nvmf_subsystem(client, args):
         'serial_number': args.serial_number,
     }
 
+    if args.max_namespaces:
+        params['max_namespaces'] = args.max_namespaces
+
     if args.listen:
         params['listen_addresses'] = [dict(u.split(":", 1) for u in a.split(" "))
                                       for a in args.listen.split(",")]
