@@ -54,6 +54,20 @@ def remove_vhost_controller(args):
     return args.client.call('remove_vhost_controller', params)
 
 
+def construct_virtio_dev(args):
+    params = {
+        'name': args.name,
+        'trtype': args.trtype,
+        'traddr': args.traddr,
+        'dev_type':args.dev_type
+    }
+    if args.vq_count:
+        params['vq_count'] = args.vq_count
+    if args.vq_size:
+        params['vq_size'] = args.vq_size
+    return args.client.call('construct_virtio_dev', params)
+
+
 def construct_virtio_user_scsi_bdev(args):
     params = {
         'path': args.path,

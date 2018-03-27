@@ -244,8 +244,29 @@ bdev_virtio_dump_json_config(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct virtio_blk_dev *bvdev = ctx;
 
-	virtio_dev_dump_json_config(&bvdev->vdev, w);
+	virtio_dev_dump_json_info(&bvdev->vdev, w);
 	return 0;
+}
+
+static void
+bdev_virtio_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+{
+	struct virtio_blk_dev *bvdev = bdev->ctxt;
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "method", "construct_virtio_dev");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_string(w, "name", bvdev->vdev.name);
+	spdk_json_write_named_string(w, "dev_type", "blk");
+
+	/* Write transport specific parameters. */
+	bvdev->vdev.backend_ops->write_json_config(&bvdev->vdev, w);
+
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
 }
 
 static const struct spdk_bdev_fn_table virtio_fn_table = {
@@ -254,6 +275,7 @@ static const struct spdk_bdev_fn_table virtio_fn_table = {
 	.io_type_supported	= bdev_virtio_io_type_supported,
 	.get_io_channel		= bdev_virtio_get_io_channel,
 	.dump_info_json		= bdev_virtio_dump_json_config,
+	.write_config_json	= bdev_virtio_write_config_json,
 };
 
 static void
