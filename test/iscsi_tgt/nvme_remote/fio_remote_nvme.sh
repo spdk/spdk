@@ -18,7 +18,6 @@ fi
 rpc_py="python $rootdir/scripts/rpc.py"
 fio_py="python $rootdir/scripts/fio.py"
 
-ISCSI_PORT=3260
 NVMF_PORT=4420
 
 timing_enter nvme_remote
