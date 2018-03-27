@@ -181,10 +181,10 @@ struct bdev_virtio_io_channel {
 	struct spdk_poller	*poller;
 };
 
-TAILQ_HEAD(, virtio_scsi_dev) g_virtio_scsi_devs =
+static TAILQ_HEAD(, virtio_scsi_dev) g_virtio_scsi_devs =
 	TAILQ_HEAD_INITIALIZER(g_virtio_scsi_devs);
 
-pthread_mutex_t g_virtio_scsi_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t g_virtio_scsi_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /** Module finish in progress */
 static bool g_bdev_virtio_finish = false;
@@ -1685,9 +1685,8 @@ virtio_scsi_dev_scan_tgt(struct virtio_scsi_dev *svdev, uint8_t target)
 }
 
 static void
-bdev_virtio_initial_scan_complete(void *ctx __attribute__((unused)),
-				  int result  __attribute__((unused)),
-				  struct spdk_bdev **bdevs __attribute__((unused)), size_t bdevs_cnt __attribute__((unused)))
+bdev_virtio_initial_scan_complete(void *ctx, int result,
+				  struct spdk_bdev **bdevs, size_t bdevs_cnt)
 {
 	struct virtio_scsi_dev *svdev;
 
