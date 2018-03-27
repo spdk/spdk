@@ -698,7 +698,7 @@ virtio_dev_backend_ops(struct virtio_dev *dev)
 }
 
 void
-virtio_dev_dump_json_config(struct virtio_dev *hw, struct spdk_json_write_ctx *w)
+virtio_dev_dump_json_info(struct virtio_dev *hw, struct spdk_json_write_ctx *w)
 {
 	spdk_json_write_name(w, "virtio");
 	spdk_json_write_object_begin(w);
@@ -709,7 +709,7 @@ virtio_dev_dump_json_config(struct virtio_dev *hw, struct spdk_json_write_ctx *w
 	spdk_json_write_name(w, "vq_size");
 	spdk_json_write_uint32(w, virtio_dev_backend_ops(hw)->get_queue_num(hw, 0));
 
-	virtio_dev_backend_ops(hw)->dump_json_config(hw, w);
+	virtio_dev_backend_ops(hw)->dump_json_info(hw, w);
 
 	spdk_json_write_object_end(w);
 }
