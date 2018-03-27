@@ -10,11 +10,21 @@ import json
 import random
 from subprocess import check_call, call, check_output, Popen, PIPE, CalledProcessError
 
-netmask = '127.0.0.1/32'
+if (len(sys.argv) == 6):
+    target_ip = sys.argv[2]
+    initiator_ip = sys.argv[3]
+    port = sys.argv[4]
+    netmask = sys.argv[5]
+
+other_ip = '127.0.0.6'
+initiator_name = 'ANY'
+portal_tag = '1'
+initiator_tag = '1'
+
 rpc_param = {
-    'target_ip': '127.0.0.1',
-    'port': 3260,
-    'initiator_name': 'ANY',
+    'target_ip': target_ip,
+    'port': port,
+    'initiator_name': initiator_name,
     'netmask': netmask,
     'lun_total': 3,
     'malloc_bdev_size': 64,
@@ -86,8 +96,6 @@ def verify_iscsi_connection_rpc_methods(rpc_py):
     verify(not jsonvalue, 1,
            "get_iscsi_connections returned {}, expected empty".format(jsonvalue))
 
-    portal_tag = '1'
-    initiator_tag = '1'
     rpc.construct_malloc_bdev(rpc_param['malloc_bdev_size'], rpc_param['malloc_block_size'])
     rpc.add_portal_group(portal_tag, "{}:{}".format(rpc_param['target_ip'], str(rpc_param['port'])))
     rpc.add_initiator_group(initiator_tag, rpc_param['initiator_name'], rpc_param['netmask'])
@@ -129,8 +137,6 @@ def verify_scsi_devices_rpc_methods(rpc_py):
     verify(not jsonvalue, 1,
            "get_scsi_devices returned {}, expected empty".format(jsonvalue))
 
-    portal_tag = '1'
-    initiator_tag = '1'
     rpc.construct_malloc_bdev(rpc_param['malloc_bdev_size'], rpc_param['malloc_block_size'])
     rpc.add_portal_group(portal_tag, "{}:{}".format(rpc_param['target_ip'], str(rpc_param['port'])))
     rpc.add_initiator_group(initiator_tag, rpc_param['initiator_name'], rpc_param['netmask'])
@@ -180,7 +186,7 @@ def verify_portal_groups_rpc_methods(rpc_py, rpc_param):
     verify(not jsonvalues, 1,
            "get_portal_groups returned {} groups, expected empty".format(jsonvalues))
 
-    lo_ip = ('127.0.0.1', '127.0.0.6')
+    lo_ip = (target_ip, other_ip)
     nics = json.loads(rpc.get_interfaces())
     for x in nics:
         if x["ifc_index"] == 'lo':
@@ -315,8 +321,6 @@ def verify_initiator_groups_rpc_methods(rpc_py, rpc_param):
 
 def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
     rpc = spdk_rpc(rpc_py)
-    portal_tag = '1'
-    initiator_tag = '1'
     output = rpc.get_iscsi_global_params()
     jsonvalues = json.loads(output)
     nodebase = jsonvalues['node_base']
