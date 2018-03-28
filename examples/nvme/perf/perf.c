@@ -1427,33 +1427,17 @@ static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
-	struct spdk_pci_addr	pci_addr;
-	struct spdk_pci_device	*pci_dev;
-	struct spdk_pci_id	pci_id;
-
 	if (trid->trtype != SPDK_NVME_TRANSPORT_PCIE) {
 		printf("Attaching to NVMe over Fabrics controller at %s:%s: %s\n",
 		       trid->traddr, trid->trsvcid,
 		       trid->subnqn);
 	} else {
-		if (spdk_pci_addr_parse(&pci_addr, trid->traddr)) {
-			return false;
-		}
-
-		pci_dev = spdk_pci_get_device(&pci_addr);
-		if (!pci_dev) {
-			return false;
-		}
-
 		if (g_disable_sq_cmb) {
 			opts->use_cmb_sqs = false;
 		}
 
-		pci_id = spdk_pci_device_get_id(pci_dev);
-
-		printf("Attaching to NVMe Controller at %s [%04x:%04x]\n",
-		       trid->traddr,
-		       pci_id.vendor_id, pci_id.device_id);
+		printf("Attaching to NVMe Controller at %s\n",
+		       trid->traddr);
 	}
 
 	/* Set io_queue_size to UINT16_MAX, NVMe driver
