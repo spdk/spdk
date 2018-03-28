@@ -401,7 +401,7 @@ def verify_get_interfaces(rpc_py):
     nics = json.loads(rpc.get_interfaces())
     nics_names = set(x["name"].encode('ascii', 'ignore') for x in nics)
     # parse ip link show to verify the get_interfaces result
-    ifcfg_nics = set(re.findall("\S+:\s(\S+):\s<.*", check_output(["ip", "link", "show"])))
+    ifcfg_nics = set(re.findall("\S+:\s(\S+):\s<.*", check_output("ip netns exec spdk_iscsi_ns ip link show", shell=True)))
     verify(nics_names == ifcfg_nics, 1, "get_interfaces returned {}".format(nics))
     print "verify_get_interfaces passed."
 

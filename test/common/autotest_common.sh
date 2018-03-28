@@ -233,7 +233,7 @@ function waitforlisten() {
 		if ! kill -s 0 $1; then
 			exit 1
 		fi
-		if netstat -an -x | grep -iw LISTENING | grep -q $rpc_addr; then
+		if ip netns exec spdk_iscsi_ns netstat -an -x | grep -iw LISTENING | grep -q $rpc_addr; then
 			ret=0
 		fi
 	done
