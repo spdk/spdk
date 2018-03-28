@@ -571,7 +571,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 			return;
 		}
 
-		pci_dev = spdk_pci_get_device(&pci_addr);
+		pci_dev = spdk_nvme_ctrlr_get_pci_device(ctrlr);
 		if (!pci_dev) {
 			return;
 		}

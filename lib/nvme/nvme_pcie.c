@@ -441,6 +441,14 @@ nvme_pcie_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
 	return NVME_MAX_SGL_DESCRIPTORS;
 }
 
+struct spdk_pci_device *
+nvme_pcie_ctrlr_get_pci_device(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
+
+	return pctrlr->devhandle;
+}
+
 static void
 nvme_pcie_ctrlr_map_cmb(struct nvme_pcie_ctrlr *pctrlr)
 {

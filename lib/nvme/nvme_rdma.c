@@ -1570,6 +1570,12 @@ nvme_rdma_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
 	return 1;
 }
 
+struct spdk_pci_device *
+nvme_rdma_ctrlr_get_pci_device(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return NULL;
+}
+
 void *
 nvme_rdma_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size)
 {

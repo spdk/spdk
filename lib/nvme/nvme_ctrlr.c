@@ -1796,6 +1796,16 @@ spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t ns_id)
 	return &ctrlr->ns[ns_id - 1];
 }
 
+struct spdk_pci_device *
+spdk_nvme_ctrlr_get_pci_device(struct spdk_nvme_ctrlr *ctrlr)
+{
+	if (ctrlr == NULL) {
+		return NULL;
+	}
+
+	return nvme_transport_ctrlr_get_pci_device(ctrlr);
+}
+
 void
 spdk_nvme_ctrlr_register_aer_callback(struct spdk_nvme_ctrlr *ctrlr,
 				      spdk_nvme_aer_cb aer_cb_fn,

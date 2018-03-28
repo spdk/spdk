@@ -146,6 +146,12 @@ nvme_transport_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
 	NVME_TRANSPORT_CALL(ctrlr->trid.trtype, ctrlr_get_max_sges, (ctrlr));
 }
 
+struct spdk_pci_device *
+nvme_transport_ctrlr_get_pci_device(struct spdk_nvme_ctrlr *ctrlr)
+{
+	NVME_TRANSPORT_CALL(ctrlr->trid.trtype, ctrlr_get_pci_device, (ctrlr));
+}
+
 void *
 nvme_transport_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size)
 {
