@@ -480,8 +480,8 @@ spdk_pci_device_claim(const struct spdk_pci_addr *pci_addr)
 
 	dev_map = mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE,
 		       MAP_SHARED, dev_fd, 0);
-	if (dev_map == NULL) {
-		fprintf(stderr, "could not mmap dev %s\n", dev_name);
+	if (dev_map == MAP_FAILED) {
+		fprintf(stderr, "could not mmap dev %s (%d)\n", dev_name, errno);
 		close(dev_fd);
 		return -1;
 	}

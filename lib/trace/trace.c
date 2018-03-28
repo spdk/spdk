@@ -106,7 +106,7 @@ spdk_trace_init(const char *shm_name)
 
 	g_trace_histories = mmap(NULL, sizeof(*g_trace_histories), PROT_READ | PROT_WRITE,
 				 MAP_SHARED, g_trace_fd, 0);
-	if (g_trace_histories == NULL) {
+	if (g_trace_histories == MAP_FAILED) {
 		fprintf(stderr, "could not mmap shm\n");
 		goto trace_init_err;
 	}
