@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ea28bbf9_df193ddb",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2352,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-28T12:01:45Z",
+      "side": 1,
+      "message": "About spdk_bdev_init/spdk_bdev_fini - I\u0027m unable to invent better names here. I\u0027m open for better names here if someone can propose them.",
+      "parentUuid": "00b6c061_a9cf4566",
+      "range": {
+        "startLine": 2352,
+        "startChar": 7,
+        "endLine": 2352,
+        "endChar": 10
+      },
+      "revId": "bd827ebe0aa1b94bf41d8029bc0f15af135c5156",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "723a95ea_f3b44af6",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 7
