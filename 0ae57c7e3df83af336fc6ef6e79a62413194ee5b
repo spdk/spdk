@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "544aad2b_9786d981",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-28T16:34:39Z",
+      "side": 1,
+      "message": "scan-build thinks that conns_size can be uninitialized here; we can probably just move the conns_size initialization earlier in the function (it is a constant anyway).",
+      "revId": "0ae57c7e3df83af336fc6ef6e79a62413194ee5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
