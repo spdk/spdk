@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4b4f06f5_149d8497",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-28T23:51:39Z",
+      "side": 1,
+      "message": "Actually, this is time-based, so I\u0027m not sure that changing the size should matter.  What is the actual time difference in practice?",
+      "range": {
+        "startLine": 46,
+        "startChar": 56,
+        "endLine": 46,
+        "endChar": 70
+      },
+      "revId": "1a8ba52c17fdb03a27cf8719f20d78696619fcca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
