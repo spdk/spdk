@@ -1,0 +1,107 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "00b6c061_a9cf4566",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2352,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-28T01:54:00Z",
+      "side": 1,
+      "message": "I thought that extracting two name check from bdev_init() and turn bdev_init() to void function may be possible. But current your code is better.",
+      "range": {
+        "startLine": 2352,
+        "startChar": 7,
+        "endLine": 2352,
+        "endChar": 10
+      },
+      "revId": "bd827ebe0aa1b94bf41d8029bc0f15af135c5156",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "723a95ea_f3b44af6",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2420,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-28T01:54:00Z",
+      "side": 1,
+      "message": "spdk_vbdev_remove_from_base_bdevs?\n(or spdk_bdev_remove_vbdev_from_base_bdevs?)",
+      "range": {
+        "startLine": 2420,
+        "startChar": 0,
+        "endLine": 2420,
+        "endChar": 27
+      },
+      "revId": "bd827ebe0aa1b94bf41d8029bc0f15af135c5156",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1653c40b_4fee3b39",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2431,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-28T01:54:00Z",
+      "side": 1,
+      "message": "A little refactoring may be possible but I\u0027ll leave it to you.\n\nExtracting the line 2432-2454 into \n  static bool spdk_vbdev_remove_from_base_bdev(vbdev, base)\n\nand\n  if (!spdk_vbdev_remove_from_base_bdev(vbdev, vbdev-\u003ebase_bdevs[i]) {\n    SPDK_WARNLOG();\n  }",
+      "revId": "bd827ebe0aa1b94bf41d8029bc0f15af135c5156",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aa8601e2_dfea6e5f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2467,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-28T01:54:00Z",
+      "side": 1,
+      "message": "spdk_vbdev_add_to_base_bdevs? (or spdk_bdev_add_vbdev_to_base_bdevs?)",
+      "range": {
+        "startLine": 2467,
+        "startChar": 0,
+        "endLine": 2467,
+        "endChar": 24
+      },
+      "revId": "bd827ebe0aa1b94bf41d8029bc0f15af135c5156",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dbcecea6_c0a84b62",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2484,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-28T01:54:00Z",
+      "side": 1,
+      "message": "Would you add the comment like the line 2427?\n\nIterate over base bdevs to add vbdev to them.",
+      "revId": "bd827ebe0aa1b94bf41d8029bc0f15af135c5156",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
