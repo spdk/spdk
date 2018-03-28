@@ -46,6 +46,30 @@
       "revId": "17ac2aa70e126d2a3c080be99a2f8bc5a039f3f4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82391b6c_84100bb5",
+        "filename": "lib/event/subsystems/copy/copy_conf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-28T07:04:54Z",
+      "side": 1,
+      "message": "Hi Pawel, thank you so much, I\u0027ll work on this and update to Gerrit.",
+      "parentUuid": "b307aa10_87279d49",
+      "range": {
+        "startLine": 48,
+        "startChar": 1,
+        "endLine": 48,
+        "endChar": 20
+      },
+      "revId": "17ac2aa70e126d2a3c080be99a2f8bc5a039f3f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
