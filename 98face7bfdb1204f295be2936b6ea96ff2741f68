@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "61bd5e0c_1ebc9af0",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-28T22:14:19Z",
+      "side": 1,
+      "message": "I don\u0027t think this should be inside a test ([]).\n\nThis also looks like it will break for later versions of Ceph; can we just detect whether the pool exists or unconditionally try to delete and then create it?",
+      "revId": "98face7bfdb1204f295be2936b6ea96ff2741f68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
