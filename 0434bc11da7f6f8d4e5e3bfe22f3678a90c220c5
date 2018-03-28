@@ -164,6 +164,29 @@
     },
     {
       "key": {
+        "uuid": "2cf0cba0_f8bd2e68",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-28T13:25:08Z",
+      "side": 1,
+      "message": "If I understand correctly, \nBetween the line 165 and the line 59, the bdev may be hot-removed and spdk_bdev_get_name() may fail. In that case the below should be skipped.",
+      "range": {
+        "startLine": 59,
+        "startChar": 27,
+        "endLine": 59,
+        "endChar": 45
+      },
+      "revId": "0434bc11da7f6f8d4e5e3bfe22f3678a90c220c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2150f072_00809e13",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 23
