@@ -572,7 +572,7 @@ spdk_iscsi_log_globals(void)
 		      spdk_iscsi_conn_get_min_per_core());
 }
 
-static void
+void
 spdk_iscsi_opts_init(struct spdk_iscsi_opts *opts)
 {
 	opts->MaxSessions = DEFAULT_MAX_SESSIONS;
@@ -589,16 +589,103 @@ spdk_iscsi_opts_init(struct spdk_iscsi_opts *opts)
 	opts->req_discovery_auth = false;
 	opts->req_discovery_auth_mutual = false;
 	opts->discovery_auth_group = 0;
-	opts->authfile = strdup(SPDK_ISCSI_DEFAULT_AUTHFILE);
-	opts->nodebase = strdup(SPDK_ISCSI_DEFAULT_NODEBASE);
+	opts->authfile = NULL;
+	opts->nodebase = NULL;
 	opts->min_connections_per_core = DEFAULT_CONNECTIONS_PER_LCORE;
 }
 
-static void
-spdk_iscsi_opts_free(struct spdk_iscsi_opts *opts)
+static int
+spdk_iscsi_opts_verify(struct spdk_iscsi_opts *opts)
 {
+	int rc;
+
+	if (opts->authfile == NULL) {
+		opts->authfile = strdup(SPDK_ISCSI_DEFAULT_AUTHFILE);
+		if (!opts->authfile) {
+			SPDK_ERRLOG("strdup() failed for default authfile\n");
+			rc = -ENOMEM;
+			goto error;
+		}
+	}
+
+	if (opts->nodebase == NULL) {
+		opts->nodebase = strdup(SPDK_ISCSI_DEFAULT_NODEBASE);
+		if (!opts->nodebase) {
+			SPDK_ERRLOG("strdup() failed for default nodebase\n");
+			rc = -ENOMEM;
+			goto error;
+		}
+	}
+
+	if (opts->MaxSessions == 0 || opts->MaxSessions > 65535) {
+		SPDK_ERRLOG("%d is invalid. MaxSessions must be more than 0 and no more than 65535\n",
+			    opts->MaxSessions);
+		rc = -EINVAL;
+		goto error;
+	}
+
+	if (opts->MaxConnectionsPerSession == 0 || opts->MaxConnectionsPerSession > 65535) {
+		SPDK_ERRLOG("%d is invalid. MaxConnectionsPerSession must be more than 0 and no more than 65535\n",
+			    opts->MaxConnectionsPerSession);
+		rc = -EINVAL;
+		goto error;
+	}
+
+	if (opts->MaxQueueDepth == 0 || opts->MaxQueueDepth > 256) {
+		SPDK_ERRLOG("%d is invalid. MaxQueueDepth must be more than 0 and no more than 256\n",
+			    opts->MaxQueueDepth);
+		rc = -EINVAL;
+		goto error;
+	}
+
+	if (opts->DefaultTime2Wait > 3600) {
+		SPDK_ERRLOG("%d is invalid. DefaultTime2Wait must be no more than 3600\n",
+			    opts->DefaultTime2Wait);
+		rc = -EINVAL;
+		goto error;
+	}
+
+	if (opts->DefaultTime2Retain > 3600) {
+		SPDK_ERRLOG("%d is invalid. DefaultTime2Retain must be no more than 3600\n",
+			    opts->DefaultTime2Retain);
+		rc = -EINVAL;
+		goto error;
+	}
+
+	if (opts->ErrorRecoveryLevel > 2) {
+		SPDK_ERRLOG("ErrorRecoveryLevel %d is not supported.\n", opts->ErrorRecoveryLevel);
+		rc = -EINVAL;
+		goto error;
+	}
+
+	if (opts->timeout < 0) {
+		SPDK_ERRLOG("%d is invalid. timeout must be more than 0\n", opts->timeout);
+		rc = -EINVAL;
+		goto error;
+	}
+
+	if (opts->nopininterval < 0 || opts->nopininterval > MAX_NOPININTERVAL) {
+		SPDK_ERRLOG("%d is invalid. nopinterval must be more than 0 and no more than %d\n",
+			    opts->nopininterval, MAX_NOPININTERVAL);
+		rc = -EINVAL;
+		goto error;
+	}
+
+	if (!spdk_iscsi_check_chap_params(opts->no_discovery_auth, opts->req_discovery_auth,
+					  opts->req_discovery_auth_mutual,
+					  opts->discovery_auth_group)) {
+		SPDK_ERRLOG("CHAP params in opts are illegal combination\n");
+		rc = -EINVAL;
+		goto error;
+	}
+
+	return 0;
+
+error:
 	free(opts->authfile);
 	free(opts->nodebase);
+
+	return rc;
 }
 
 static void
@@ -625,13 +712,11 @@ spdk_iscsi_read_config_file_params(struct spdk_conf_section *sp,
 
 	val = spdk_conf_section_get_val(sp, "AuthFile");
 	if (val != NULL) {
-		free(opts->authfile);
 		opts->authfile = strdup(val);
 	}
 
 	val = spdk_conf_section_get_val(sp, "NodeBase");
 	if (val != NULL) {
-		free(opts->nodebase);
 		opts->nodebase = strdup(val);
 	}
 
@@ -760,39 +845,19 @@ spdk_iscsi_read_config_file_params(struct spdk_conf_section *sp,
 	}
 }
 
-static int
+int
 spdk_iscsi_initialize_iscsi_globals(struct spdk_iscsi_opts *opts)
 {
 	int rc;
 
-	if (!opts->authfile) {
-		SPDK_ERRLOG("opts->authfile is NULL\n");
-		return -EINVAL;
+	rc = spdk_iscsi_opts_verify(opts);
+	if (rc != 0) {
+		SPDK_ERRLOG("spdk_iscsi_opts_verify() failed\n");
+		return rc;
 	}
 
-	if (!opts->nodebase) {
-		SPDK_ERRLOG("opts->nodebase is NULL\n");
-		return -EINVAL;
-	}
-
-	if (!spdk_iscsi_check_chap_params(opts->no_discovery_auth, opts->req_discovery_auth,
-					  opts->req_discovery_auth_mutual,
-					  opts->discovery_auth_group)) {
-		SPDK_ERRLOG("CHAP params in opts are illegal combination\n");
-		return -EINVAL;
-	}
-
-	g_spdk_iscsi.authfile = strdup(opts->authfile);
-	if (!g_spdk_iscsi.authfile) {
-		SPDK_ERRLOG("failed to strdup for auth file %s\n", opts->authfile);
-		return -ENOMEM;
-	}
-
-	g_spdk_iscsi.nodebase = strdup(opts->nodebase);
-	if (!g_spdk_iscsi.nodebase) {
-		SPDK_ERRLOG("failed to strdup for nodebase %s\n", opts->nodebase);
-		return -ENOMEM;
-	}
+	g_spdk_iscsi.authfile = opts->authfile;
+	g_spdk_iscsi.nodebase = opts->nodebase;
 
 	g_spdk_iscsi.MaxSessions = opts->MaxSessions;
 	g_spdk_iscsi.MaxConnectionsPerSession = opts->MaxConnectionsPerSession;
@@ -814,7 +879,8 @@ spdk_iscsi_initialize_iscsi_globals(struct spdk_iscsi_opts *opts)
 	g_spdk_iscsi.session = spdk_dma_zmalloc(sizeof(void *) * g_spdk_iscsi.MaxSessions, 0, NULL);
 	if (!g_spdk_iscsi.session) {
 		SPDK_ERRLOG("spdk_dma_zmalloc() failed for session array\n");
-		return -1;
+		rc = -ENOMEM;
+		goto error;
 	}
 
 	/*
@@ -828,13 +894,13 @@ spdk_iscsi_initialize_iscsi_globals(struct spdk_iscsi_opts *opts)
 	rc = pthread_mutex_init(&g_spdk_iscsi.mutex, NULL);
 	if (rc != 0) {
 		SPDK_ERRLOG("mutex_init() failed\n");
-		return -1;
+		goto error;
 	}
 
 	rc = spdk_iscsi_initialize_all_pools();
 	if (rc != 0) {
 		SPDK_ERRLOG("spdk_initialize_all_pools() failed\n");
-		return -1;
+		goto error;
 	}
 
 	TAILQ_INIT(&g_spdk_iscsi.portal_head);
@@ -845,6 +911,12 @@ spdk_iscsi_initialize_iscsi_globals(struct spdk_iscsi_opts *opts)
 	spdk_iscsi_log_globals();
 
 	return 0;
+
+error:
+	free(g_spdk_iscsi.authfile);
+	free(g_spdk_iscsi.nodebase);
+
+	return rc;
 }
 
 static void
@@ -930,8 +1002,8 @@ iscsi_unregister_poll_group(void *ctx)
 	spdk_poller_unregister(&pg->nop_poller);
 }
 
-static void
-spdk_initialize_iscsi_poll_group(spdk_thread_fn cpl)
+void
+spdk_initialize_iscsi_poll_group(spdk_thread_fn cpl, void *ctx)
 {
 	size_t g_num_poll_groups = spdk_env_get_last_core() + 1;
 
@@ -943,7 +1015,7 @@ spdk_initialize_iscsi_poll_group(spdk_thread_fn cpl)
 	}
 
 	/* Send a message to each thread and create a poll group */
-	spdk_for_each_thread(iscsi_create_poll_group, NULL, cpl);
+	spdk_for_each_thread(iscsi_create_poll_group, ctx, cpl);
 }
 
 static void
@@ -989,7 +1061,6 @@ spdk_iscsi_parse_iscsi_globals(void)
 	}
 
 	rc = spdk_iscsi_initialize_iscsi_globals(&opts);
-	spdk_iscsi_opts_free(&opts);
 	if (rc != 0) {
 		SPDK_ERRLOG("spdk_iscsi_initialize_iscsi_globals() failed\n");
 		return rc;
@@ -1001,7 +1072,7 @@ spdk_iscsi_parse_iscsi_globals(void)
 		return rc;
 	}
 
-	spdk_initialize_iscsi_poll_group(spdk_iscsi_parse_iscsi_configuration);
+	spdk_initialize_iscsi_poll_group(spdk_iscsi_parse_iscsi_configuration, NULL);
 	return 0;
 }
 
