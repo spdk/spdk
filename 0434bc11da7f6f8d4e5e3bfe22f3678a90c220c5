@@ -48,6 +48,29 @@
     },
     {
       "key": {
+        "uuid": "f6e466d9_8948d882",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1917,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-28T04:58:05Z",
+      "side": 1,
+      "message": "This may not be thread-safe as Dariusz pointed out in my patch because any bdev may be unregistered during this RPC call.",
+      "range": {
+        "startLine": 1917,
+        "startChar": 0,
+        "endLine": 1917,
+        "endChar": 64
+      },
+      "revId": "0434bc11da7f6f8d4e5e3bfe22f3678a90c220c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "affbd94f_55998246",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 23
