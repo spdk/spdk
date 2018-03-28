@@ -689,19 +689,19 @@ static const struct spdk_json_object_decoder rpc_vhost_nvme_add_ns[] = {
 };
 
 static int
-spdk_rpc_add_vhost_nvme_ns_cb(struct spdk_vhost_dev *vdev, void *arg)
+spdk_rpc_add_vhost_nvme_ns_cb(struct spdk_vhost_tgt *vtgt, void *arg)
 {
 	struct rpc_add_vhost_nvme_ctrlr_ns *rpc = arg;
 	struct spdk_jsonrpc_request *request = rpc->request;
 	struct spdk_json_write_ctx *w;
 	int rc;
 
-	if (vdev == NULL) {
+	if (vtgt == NULL) {
 		rc = -ENODEV;
 		goto invalid;
 	}
 
-	rc = spdk_vhost_nvme_tgt_add_ns(vdev, rpc->bdev_name);
+	rc = spdk_vhost_nvme_tgt_add_ns(vtgt, rpc->bdev_name);
 	if (rc < 0) {
 		goto invalid;
 	}

@@ -107,7 +107,7 @@ static int
 blk_iovs_setup(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq, uint16_t req_idx,
 	       struct iovec *iovs, uint16_t *iovs_cnt, uint32_t *length)
 {
-	struct spdk_vhost_tgt *vtgt = vdev;
+	struct spdk_vhost_tgt *vtgt = vdev->vtgt;
 	struct vring_desc *desc, *desc_table;
 	uint16_t out_cnt = 0, cnt = 0;
 	uint32_t desc_table_size, len = 0;
@@ -283,7 +283,7 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 static void
 process_vq(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq)
 {
-	struct spdk_vhost_tgt *vtgt = vdev;
+	struct spdk_vhost_tgt *vtgt = vdev->vtgt;
 	struct spdk_vhost_blk_task *task;
 	int rc;
 	uint16_t reqs[32];
@@ -408,7 +408,7 @@ static int
 _bdev_remove_cb(struct spdk_vhost_tgt *vtgt, void *arg)
 {
 	struct spdk_vhost_blk_dev *bvdev = arg;
-	struct spdk_vhost_dev *vdev = vtgt;
+	struct spdk_vhost_dev *vdev = vtgt->vdev;
 
 	SPDK_WARNLOG("Controller %s: Hot-removing bdev - all further requests will fail.\n",
 		     bvdev->vtgt.name);
@@ -452,7 +452,7 @@ free_task_pool(struct spdk_vhost_dev *vdev)
 static int
 alloc_task_pool(struct spdk_vhost_dev *vdev)
 {
-	struct spdk_vhost_tgt *vtgt = vdev;
+	struct spdk_vhost_tgt *vtgt = vdev->vtgt;
 	struct spdk_vhost_virtqueue *vq;
 	struct spdk_vhost_blk_task *task;
 	uint32_t task_cnt;
@@ -500,7 +500,7 @@ alloc_task_pool(struct spdk_vhost_dev *vdev)
 static int
 spdk_vhost_blk_start(struct spdk_vhost_tgt *vtgt, void *event_ctx)
 {
-	struct spdk_vhost_dev *vdev = vtgt;
+	struct spdk_vhost_dev *vdev = vtgt->vdev;
 	struct spdk_vhost_blk_dev *bvdev;
 	int i, rc = 0;
 
@@ -514,7 +514,7 @@ spdk_vhost_blk_start(struct spdk_vhost_tgt *vtgt, void *event_ctx)
 	/* validate all I/O queues are in a contiguous index range */
 	for (i = 0; i < vdev->max_queues; i++) {
 		if (vdev->virtqueue[i].vring.desc == NULL) {
-			SPDK_ERRLOG("%s: queue %"PRIu32" is empty\n", vdev->name, i);
+			SPDK_ERRLOG("%s: queue %"PRIu32" is empty\n", vtgt->name, i);
 			rc = -1;
 			goto out;
 		}
@@ -555,7 +555,7 @@ destroy_device_poller_cb(void *arg)
 {
 	struct spdk_vhost_dev_destroy_ctx *ctx = arg;
 	struct spdk_vhost_dev *vdev = ctx->vdev;
-	struct spdk_vhost_tgt *vtgt = vdev;
+	struct spdk_vhost_tgt *vtgt = vdev->vtgt;
 	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vtgt);
 	int i;
 
@@ -587,7 +587,7 @@ destroy_device_poller_cb(void *arg)
 static int
 spdk_vhost_blk_stop(struct spdk_vhost_tgt *vtgt, void *event_ctx)
 {
-	struct spdk_vhost_dev *vdev = vtgt;
+	struct spdk_vhost_dev *vdev = vtgt->vdev;
 	struct spdk_vhost_blk_dev *bvdev;
 	struct spdk_vhost_dev_destroy_ctx *destroy_ctx;
 

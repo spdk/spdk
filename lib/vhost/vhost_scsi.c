@@ -143,7 +143,7 @@ spdk_vhost_scsi_task_free_cb(struct spdk_scsi_task *scsi_task)
 static void
 process_removed_devs(struct spdk_vhost_dev *vdev)
 {
-	struct spdk_vhost_tgt *vtgt = vdev;
+	struct spdk_vhost_tgt *vtgt = vdev->vtgt;
 	struct spdk_vhost_scsi_dev *svdev = to_scsi_dev(vtgt);
 	struct spdk_scsi_dev *dev;
 	struct spdk_scsi_dev_vhost_state *state;
@@ -171,6 +171,7 @@ static void
 eventq_enqueue(struct spdk_vhost_dev *vdev, unsigned scsi_dev_num, uint32_t event,
 	       uint32_t reason)
 {
+	struct spdk_vhost_tgt *vtgt = vdev->vtgt;
 	struct spdk_vhost_virtqueue *vq;
 	struct vring_desc *desc, *desc_table;
 	struct virtio_scsi_event *desc_ev;
@@ -183,21 +184,21 @@ eventq_enqueue(struct spdk_vhost_dev *vdev, unsigned scsi_dev_num, uint32_t even
 
 	if (spdk_vhost_vq_avail_ring_get(vq, &req, 1) != 1) {
 		SPDK_ERRLOG("Controller %s: Failed to send virtio event (no avail ring entries?).\n",
-			    vdev->name);
+			    vtgt->name);
 		return;
 	}
 
 	rc = spdk_vhost_vq_get_desc(vdev, vq, req, &desc, &desc_table, &desc_table_size);
 	if (rc != 0 || desc->len < sizeof(*desc_ev)) {
 		SPDK_ERRLOG("Controller %s: Invalid eventq descriptor at index %"PRIu16".\n",
-			    vdev->name, req);
+			    vtgt->name, req);
 		goto out;
 	}
 
 	desc_ev = spdk_vhost_gpa_to_vva(vdev, desc->addr, sizeof(*desc_ev));
 	if (desc_ev == NULL) {
 		SPDK_ERRLOG("Controller %s: Eventq descriptor at index %"PRIu16" points to unmapped guest memory address %p.\n",
-			    vdev->name, req, (void *)(uintptr_t)desc->addr);
+			    vtgt->name, req, (void *)(uintptr_t)desc->addr);
 		goto out;
 	}
 
@@ -286,7 +287,7 @@ invalid_request(struct spdk_vhost_scsi_task *task)
 static int
 spdk_vhost_scsi_task_init_target(struct spdk_vhost_scsi_task *task, const __u8 *lun)
 {
-	struct spdk_vhost_tgt *vtgt = task->vdev;
+	struct spdk_vhost_tgt *vtgt = task->vdev->vtgt;
 	struct spdk_vhost_scsi_dev *svdev = to_scsi_dev(vtgt);
 	struct spdk_scsi_dev *dev;
 	uint16_t lun_id = (((uint16_t)lun[2] << 8) | lun[3]) & 0x3FFF;
@@ -316,7 +317,7 @@ static void
 process_ctrl_request(struct spdk_vhost_scsi_task *task)
 {
 	struct spdk_vhost_dev *vdev = task->vdev;
-	struct spdk_vhost_tgt *vtgt = vdev;
+	struct spdk_vhost_tgt *vtgt = vdev->vtgt;
 	struct vring_desc *desc, *desc_table;
 	struct virtio_scsi_ctrl_tmf_req *ctrl_req;
 	struct virtio_scsi_ctrl_an_resp *an_resp;
@@ -334,7 +335,7 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
 	ctrl_req = spdk_vhost_gpa_to_vva(vdev, desc->addr, sizeof(*ctrl_req));
 	if (ctrl_req == NULL) {
 		SPDK_ERRLOG("%s: Invalid task management request at index %d.\n",
-			    vdev->name, task->req_idx);
+			    vtgt->name, task->req_idx);
 		goto out;
 	}
 
@@ -418,7 +419,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 		struct virtio_scsi_cmd_req **req)
 {
 	struct spdk_vhost_dev *vdev = task->vdev;
-	struct spdk_vhost_tgt *vtgt = vdev;
+	struct spdk_vhost_tgt *vtgt = vdev->vtgt;
 	struct vring_desc *desc, *desc_table;
 	struct iovec *iovs = task->iovs;
 	uint16_t iovcnt = 0;
@@ -581,7 +582,7 @@ process_request(struct spdk_vhost_scsi_task *task)
 static void
 process_controlq(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq)
 {
-	struct spdk_vhost_tgt *vtgt = vdev;
+	struct spdk_vhost_tgt *vtgt = vdev->vtgt;
 	struct spdk_vhost_scsi_task *task;
 	uint16_t reqs[32];
 	uint16_t reqs_cnt, i;
@@ -614,7 +615,7 @@ process_controlq(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq)
 static void
 process_requestq(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq)
 {
-	struct spdk_vhost_tgt *vtgt = vdev;
+	struct spdk_vhost_tgt *vtgt = vdev->vtgt;
 	struct spdk_vhost_scsi_task *task;
 	uint16_t reqs[32];
 	uint16_t reqs_cnt, i;
@@ -786,7 +787,7 @@ spdk_vhost_scsi_lun_hotremove(const struct spdk_scsi_lun *lun, void *arg)
 	assert(lun != NULL);
 	assert(svdev != NULL);
 	if (svdev->vtgt.lcore != -1 &&
-	    !spdk_vhost_dev_has_feature(&svdev->vtgt, VIRTIO_SCSI_F_HOTPLUG)) {
+	    !spdk_vhost_dev_has_feature(svdev->vtgt.vdev, VIRTIO_SCSI_F_HOTPLUG)) {
 		SPDK_WARNLOG("%s: hotremove is not enabled for this controller.\n", svdev->vtgt.name);
 		return;
 	}
@@ -833,7 +834,7 @@ spdk_vhost_scsi_tgt_add_tgt(struct spdk_vhost_tgt *vtgt, unsigned scsi_tgt_num,
 		return -EINVAL;
 	}
 
-	vdev = vtgt;
+	vdev = vtgt->vdev;
 	if (vtgt->lcore != -1 && !spdk_vhost_dev_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG)) {
 		SPDK_ERRLOG("Controller %s is in use and hotplug is not supported\n", vtgt->name);
 		return -ENOTSUP;
@@ -899,7 +900,7 @@ spdk_vhost_scsi_tgt_remove_tgt(struct spdk_vhost_tgt *vtgt, unsigned scsi_tgt_nu
 		return -ENODEV;
 	}
 
-	vdev = vtgt;
+	vdev = vtgt->vdev;
 	if (vtgt->lcore == -1) {
 		/* controller is not in use, remove dev and exit */
 		svdev->scsi_dev[scsi_tgt_num] = NULL;
@@ -1022,7 +1023,7 @@ free_task_pool(struct spdk_vhost_dev *vdev)
 static int
 alloc_task_pool(struct spdk_vhost_dev *vdev)
 {
-	struct spdk_vhost_tgt *vtgt = vdev;
+	struct spdk_vhost_tgt *vtgt = vdev->vtgt;
 	struct spdk_vhost_virtqueue *vq;
 	struct spdk_vhost_scsi_task *task;
 	uint32_t task_cnt;
@@ -1066,7 +1067,7 @@ alloc_task_pool(struct spdk_vhost_dev *vdev)
 static int
 spdk_vhost_scsi_start(struct spdk_vhost_tgt *vtgt, void *event_ctx)
 {
-	struct spdk_vhost_dev *vdev = vtgt;
+	struct spdk_vhost_dev *vdev = vtgt->vdev;
 	struct spdk_vhost_scsi_dev *svdev;
 	uint32_t i;
 	int rc;
@@ -1081,7 +1082,7 @@ spdk_vhost_scsi_start(struct spdk_vhost_tgt *vtgt, void *event_ctx)
 	/* validate all I/O queues are in a contiguous index range */
 	for (i = VIRTIO_SCSI_REQUESTQ; i < vdev->max_queues; i++) {
 		if (vdev->virtqueue[i].vring.desc == NULL) {
-			SPDK_ERRLOG("%s: queue %"PRIu32" is empty\n", vdev->name, i);
+			SPDK_ERRLOG("%s: queue %"PRIu32" is empty\n", vtgt->name, i);
 			rc = -1;
 			goto out;
 		}
@@ -1124,7 +1125,7 @@ destroy_device_poller_cb(void *arg)
 {
 	struct spdk_vhost_dev_destroy_ctx *ctx = arg;
 	struct spdk_vhost_dev *vdev = ctx->vdev;
-	struct spdk_vhost_tgt *vtgt = vdev;
+	struct spdk_vhost_tgt *vtgt = vdev->vtgt;
 	struct spdk_vhost_scsi_dev *svdev = to_scsi_dev(vtgt);
 	uint32_t i;
 
@@ -1158,7 +1159,7 @@ destroy_device_poller_cb(void *arg)
 static int
 spdk_vhost_scsi_stop(struct spdk_vhost_tgt *vtgt, void *event_ctx)
 {
-	struct spdk_vhost_dev *vdev = vtgt;
+	struct spdk_vhost_dev *vdev = vtgt->vdev;
 	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_vhost_dev_destroy_ctx *destroy_ctx;
 
