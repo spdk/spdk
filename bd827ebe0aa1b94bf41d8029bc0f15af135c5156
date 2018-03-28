@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "8bd1ea3a_04d4d53d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2352,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-28T13:15:15Z",
+      "side": 1,
+      "message": "my feedback is not for the name. bdev_init/bdev_fini looks fine. Thank you.",
+      "parentUuid": "ea28bbf9_df193ddb",
+      "range": {
+        "startLine": 2352,
+        "startChar": 7,
+        "endLine": 2352,
+        "endChar": 10
+      },
+      "revId": "bd827ebe0aa1b94bf41d8029bc0f15af135c5156",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "723a95ea_f3b44af6",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 7
@@ -96,6 +120,30 @@
     },
     {
       "key": {
+        "uuid": "a51d2bb6_760f7406",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2420,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-28T13:15:15Z",
+      "side": 1,
+      "message": "looks nice, thank you.",
+      "parentUuid": "9c3af6f6_8ca068be",
+      "range": {
+        "startLine": 2420,
+        "startChar": 0,
+        "endLine": 2420,
+        "endChar": 27
+      },
+      "revId": "bd827ebe0aa1b94bf41d8029bc0f15af135c5156",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1653c40b_4fee3b39",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 7
@@ -125,6 +173,24 @@
       "side": 1,
       "message": "Let keep it one function. If we ever need to reuse this logic then it will be quite easy to do that but for now I don\u0027t think this is necessary.",
       "parentUuid": "1653c40b_4fee3b39",
+      "revId": "bd827ebe0aa1b94bf41d8029bc0f15af135c5156",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "986c0453_c43852a1",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2431,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-28T13:15:15Z",
+      "side": 1,
+      "message": "OK, I got it.",
+      "parentUuid": "4751dd08_90c413ed",
       "revId": "bd827ebe0aa1b94bf41d8029bc0f15af135c5156",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -183,6 +249,24 @@
       "side": 1,
       "message": "sure.",
       "parentUuid": "dbcecea6_c0a84b62",
+      "revId": "bd827ebe0aa1b94bf41d8029bc0f15af135c5156",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "97231b7a_f6d1165d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2484,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-28T13:15:15Z",
+      "side": 1,
+      "message": "Thank you!",
+      "parentUuid": "c001d5de_b04db83a",
       "revId": "bd827ebe0aa1b94bf41d8029bc0f15af135c5156",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
