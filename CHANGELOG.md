@@ -49,6 +49,8 @@ option, but instead returns SPDK_APP_PARSE_ARGS_HELP and
 SPDK_APP_PARSE_ARGS_FAIL, respectively, and SPDK_APP_PARSE_ARGS_SUCCESS
 on success.
 
+spdk_pci_get_device() has been deprecated and will be removed in SPDK v18.07.
+
 ### I/O Channels
 
 The prototype for spdk_poller_fn() has been modified; it now returns a value indicating

@@ -353,7 +353,8 @@ int spdk_pci_nvme_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx);
 int spdk_pci_ioat_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx);
 int spdk_pci_virtio_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx);
 
-struct spdk_pci_device *spdk_pci_get_device(struct spdk_pci_addr *pci_addr);
+struct spdk_pci_device *spdk_pci_get_device(struct spdk_pci_addr *pci_addr)
+__attribute__((deprecated));
 
 int spdk_pci_device_map_bar(struct spdk_pci_device *dev, uint32_t bar,
 			    void **mapped_addr, uint64_t *phys_addr, uint64_t *size);
