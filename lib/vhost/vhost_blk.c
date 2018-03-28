@@ -337,7 +337,7 @@ vdev_worker(void *arg)
 		process_vq(bvdev, &bvdev->vdev.virtqueue[q_idx]);
 	}
 
-	spdk_vhost_dev_used_signal(&bvdev->vdev);
+	spdk_vhost_dev_channel_used_signal(&bvdev->vdev);
 
 	return -1;
 }
@@ -372,7 +372,7 @@ no_bdev_vdev_worker(void *arg)
 		no_bdev_process_vq(bvdev, &bvdev->vdev.virtqueue[q_idx]);
 	}
 
-	spdk_vhost_dev_used_signal(&bvdev->vdev);
+	spdk_vhost_dev_channel_used_signal(&bvdev->vdev);
 
 	return -1;
 }

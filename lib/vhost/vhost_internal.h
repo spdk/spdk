@@ -128,26 +128,57 @@ struct spdk_vhost_dev_backend {
 	int (*vhost_set_config)(struct spdk_vhost_dev *vdev, uint8_t *config,
 				uint32_t offset, uint32_t size, uint32_t flags);
 
-	void (*dump_config_json)(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
-	int (*remove_device)(struct spdk_vhost_dev *vdev);
+	void (*dump_config_json)(struct spdk_vhost_tgt *vtgt, struct spdk_json_write_ctx *w);
+	int (*remove_device)(struct spdk_vhost_tgt *vtgt);
+};
+
+struct spdk_vhost_tgt {
+	/* Name of the target. Read-only. */
+	char *name;
+
+	/* Path to the associated Unix domain socket file. Read-only. */
+	char *path;
+
+	/* Unique target ID. Read-only. */
+	unsigned id;
+
+	/* rte_vhost device ID */
+	int vid;
+
+	/* Logical core ID this target is polling on. If unused, lcore = -1 */
+	int32_t lcore;
+
+	/* Subset of CPU cores to be potentially used for this target. Read-only. */
+	struct spdk_cpuset *cpumask;
+
+	/* TODO */
+	bool registered;
+
+	/* Device specific data. Read-only. */
+	const struct spdk_vhost_dev_backend *backend;
+
+	/* TODO */
+	uint32_t coalescing_delay_time_base;
+
+	/* Threshold when event coalescing for virtqueue will be turned on. */
+	uint32_t  coalescing_io_rate_threshold;
+
+	/* Active device built on top of this target. */
+	struct spdk_vhost_dev *vdev;
+
+	/* Size of the extra memory allocated with each device. Read-only. */
+	size_t channel_ctx_size;
+
+	TAILQ_ENTRY(spdk_vhost_tgt) tailq;
 };
 
 struct spdk_vhost_dev {
+	/* TODO remove me. This is for convenient vid and lcore access. */
+	struct spdk_vhost_tgt *vtgt;
+
 	struct rte_vhost_memory *mem;
-	char *name;
-	char *path;
 
-	/* Unique device ID. */
-	unsigned id;
-
-	/* rte_vhost device ID. */
-	int vid;
 	int task_cnt;
-	int32_t lcore;
-	struct spdk_cpuset *cpumask;
-	bool registered;
-
-	const struct spdk_vhost_dev_backend *backend;
 
 	uint32_t coalescing_delay_time_base;
 
@@ -169,7 +200,7 @@ struct spdk_vhost_dev {
 	TAILQ_ENTRY(spdk_vhost_dev) tailq;
 };
 
-struct spdk_vhost_dev *spdk_vhost_dev_find(const char *ctrlr_name);
+struct spdk_vhost_tgt *spdk_vhost_tgt_find(const char *vtgt_name);
 void spdk_vhost_dev_mem_register(struct spdk_vhost_dev *vdev);
 void spdk_vhost_dev_mem_unregister(struct spdk_vhost_dev *vdev);
 
@@ -210,7 +241,6 @@ int spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqu
  */
 int spdk_vhost_vq_used_signal(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq);
 
-
 /**
  * Send IRQs for all queues that need to be signaled.
  * \param vdev vhost device
@@ -245,13 +275,13 @@ spdk_vhost_dev_has_feature(struct spdk_vhost_dev *vdev, unsigned feature_id)
 	return vdev->negotiated_features & (1ULL << feature_id);
 }
 
-int spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
+int spdk_vhost_tgt_register(struct spdk_vhost_tgt *vtgt, const char *name, const char *mask_str,
 			    const struct spdk_vhost_dev_backend *backend);
-int spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev);
+int spdk_vhost_tgt_unregister(struct spdk_vhost_tgt *vtgt);
 
 int spdk_vhost_scsi_controller_construct(void);
 int spdk_vhost_blk_controller_construct(void);
-void spdk_vhost_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
+void spdk_vhost_tgt_dump_config_json(struct spdk_vhost_tgt *vtgt, struct spdk_json_write_ctx *w);
 void spdk_vhost_dev_backend_event_done(void *event_ctx, int response);
 void spdk_vhost_lock(void);
 void spdk_vhost_unlock(void);

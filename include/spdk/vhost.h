@@ -83,6 +83,12 @@ void spdk_vhost_fini(spdk_vhost_fini_cb fini_cb);
 void spdk_vhost_shutdown_cb(void);
 
 /**
+ * TODO
+ */
+struct spdk_vhost_tgt;
+
+/**
+ * TODO
  * SPDK vhost device (vdev).  An equivalent of Virtio device.
  * Both virtio-blk and virtio-scsi devices are represented by this
  * struct. For virtio-scsi a single vhost device (also called SCSI
@@ -107,7 +113,7 @@ struct spdk_vhost_dev;
  *
  * \return 0 on success, -1 on failure.
  */
-typedef int (*spdk_vhost_event_fn)(struct spdk_vhost_dev *vdev, void *arg);
+typedef int (*spdk_vhost_event_fn)(struct spdk_vhost_tgt *vtgt, void *arg);
 
 /**
  * Get the name of the vhost device.  This is equal to the filename
@@ -118,7 +124,7 @@ typedef int (*spdk_vhost_event_fn)(struct spdk_vhost_dev *vdev, void *arg);
  *
  * \return name of the vdev.
  */
-const char *spdk_vhost_dev_get_name(struct spdk_vhost_dev *vdev);
+const char *spdk_vhost_tgt_get_name(struct spdk_vhost_tgt *vtgt);
 
 /**
  * Get cpuset of the vhost device.  The cpuset is constant throughout the lifetime
@@ -128,7 +134,7 @@ const char *spdk_vhost_dev_get_name(struct spdk_vhost_dev *vdev);
  *
  * \return cpuset of the vdev.
  */
-const struct spdk_cpuset *spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *vdev);
+const struct spdk_cpuset *spdk_vhost_tgt_get_cpumask(struct spdk_vhost_tgt *vtgt);
 
 /**
  * By default, events are generated when asked, but for high queue depth and
@@ -149,7 +155,7 @@ const struct spdk_cpuset *spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *vdev
  * \param delay_base_us Base delay time in microseconds. If 0, coalescing is disabled.
  * \param iops_threshold IOPS threshold when coalescing is activated.
  */
-int spdk_vhost_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
+int spdk_vhost_tgt_set_coalescing(struct spdk_vhost_tgt *vtgt, uint32_t delay_base_us,
 			      uint32_t iops_threshold);
 
 /**
@@ -172,7 +178,7 @@ int spdk_vhost_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_u
  *
  * \return 0 on success, negative errno on error.
  */
-int spdk_vhost_scsi_dev_construct(const char *name, const char *cpumask);
+int spdk_vhost_scsi_tgt_construct(const char *name, const char *cpumask);
 
 /**
  * Construct and attach new SCSI target to the vhost SCSI device
@@ -190,7 +196,7 @@ int spdk_vhost_scsi_dev_construct(const char *name, const char *cpumask);
  *
  * \return 0 on success, negative errno on error.
  */
-int spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num,
+int spdk_vhost_scsi_tgt_add_tgt(struct spdk_vhost_tgt *vtgt, unsigned scsi_tgt_num,
 				const char *bdev_name);
 
 /**
@@ -203,7 +209,7 @@ int spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_n
  *
  * \return SCSI device on given slot or NULL.
  */
-struct spdk_scsi_dev *spdk_vhost_scsi_dev_get_tgt(struct spdk_vhost_dev *vdev, uint8_t num);
+struct spdk_scsi_dev *spdk_vhost_scsi_tgt_get_tgt(struct spdk_vhost_tgt *vtgt, uint8_t num);
 
 /**
  * Detach and destruct SCSI target from a vhost SCSI device.
@@ -227,7 +233,7 @@ struct spdk_scsi_dev *spdk_vhost_scsi_dev_get_tgt(struct spdk_vhost_dev *vdev, u
  *
  * \return 0 on success, negative errno on error.
  */
-int spdk_vhost_scsi_dev_remove_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num,
+int spdk_vhost_scsi_tgt_remove_tgt(struct spdk_vhost_tgt *vtgt, unsigned scsi_tgt_num,
 				   spdk_vhost_event_fn cb_fn, void *cb_arg);
 
 /**
@@ -255,7 +261,7 @@ int spdk_vhost_scsi_dev_remove_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tg
  *
  * \return 0 on success, negative errno on error.
  */
-int spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_name,
+int spdk_vhost_blk_tgt_construct(const char *name, const char *cpumask, const char *dev_name,
 			     bool readonly);
 
 /**
@@ -265,7 +271,7 @@ int spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *
  *
  * \return 0 on success, negative errno on error.
  */
-int spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev);
+int spdk_vhost_tgt_remove(struct spdk_vhost_tgt *vtgt);
 
 /**
  * Get underlying SPDK bdev from vhost blk device. The bdev might be NULL, as it
@@ -275,7 +281,7 @@ int spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev);
  *
  * \return SPDK bdev associated with given vdev.
  */
-struct spdk_bdev *spdk_vhost_blk_get_dev(struct spdk_vhost_dev *ctrlr);
+struct spdk_bdev *spdk_vhost_blk_tgt_get_dev(struct spdk_vhost_tgt *vtgt);
 
 /**
  * Call function on reactor of given vhost device. If device is not in use, the
@@ -283,13 +289,13 @@ struct spdk_bdev *spdk_vhost_blk_get_dev(struct spdk_vhost_dev *ctrlr);
  *
  * This function is thread safe.
  *
- * \param vdev_name name of the vhost device to run this event on.
+ * \param vtgt_name name of the vhost target to run this event on.
  * \param fn function to be called. The first parameter of callback function is
  * either actual spdk_vhost_dev pointer or NULL in case vdev with given name doesn't
  * exist. The second param is user provided argument *arg*.
  * \param arg parameter to be passed to *fn*.
  */
-void spdk_vhost_call_external_event(const char *vdev_name, spdk_vhost_event_fn fn, void *arg);
+void spdk_vhost_call_external_event(const char *vtgt_name, spdk_vhost_event_fn fn, void *arg);
 
 /**
  * Call function for each available vhost device on
