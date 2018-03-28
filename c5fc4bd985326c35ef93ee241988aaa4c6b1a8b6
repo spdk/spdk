@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3111ee68_506996db",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-28T20:08:32Z",
+      "side": 1,
+      "message": "The names in the commit message should be updated to match.",
+      "range": {
+        "startLine": 9,
+        "startChar": 27,
+        "endLine": 9,
+        "endChar": 48
+      },
+      "revId": "c5fc4bd985326c35ef93ee241988aaa4c6b1a8b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "381abe07_5e789835",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-28T20:08:32Z",
+      "side": 1,
+      "message": "These tabs should be spaces to match the other rows.",
+      "range": {
+        "startLine": 247,
+        "startChar": 13,
+        "endLine": 247,
+        "endChar": 15
+      },
+      "revId": "c5fc4bd985326c35ef93ee241988aaa4c6b1a8b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ce9aa16_ad7cf9cb",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-28T20:08:32Z",
+      "side": 1,
+      "message": "Number -\u003e number for consistency (these are the types names defined by the JSON spec).",
+      "range": {
+        "startLine": 247,
+        "startChar": 28,
+        "endLine": 247,
+        "endChar": 34
+      },
+      "revId": "c5fc4bd985326c35ef93ee241988aaa4c6b1a8b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d553f31_c1d933d1",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 574,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-28T20:08:32Z",
+      "side": 1,
+      "message": "The decoder also needs to be updated to uint32.",
+      "range": {
+        "startLine": 574,
+        "startChar": 60,
+        "endLine": 574,
+        "endChar": 82
+      },
+      "revId": "c5fc4bd985326c35ef93ee241988aaa4c6b1a8b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
