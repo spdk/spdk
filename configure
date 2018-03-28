@@ -52,6 +52,13 @@ function usage()
 	echo " vtune                     Required to profile I/O under Intel VTune Amplifier XE."
 	echo "                           example: /opt/intel/vtune_amplifier_xe_version"
 	echo ""
+	echo "Environment variables:"
+	echo ""
+	echo "CFLAGS                     C compiler flags"
+	echo "CXXFLAGS                   C++ compiler flags"
+	echo "LDFLAGS                    Linker flags"
+	echo "DESTDIR                    Destination for 'make install'"
+	echo ""
 }
 
 function check_dir() {
@@ -325,6 +332,20 @@ if [ -n "$CONFIG_VTUNE" ]; then
 fi
 if [ -n "$VTUNE_SOURCE_DIR" ]; then
 	echo "VTUNE_SOURCE_DIR?=$VTUNE_SOURCE_DIR" >> CONFIG.local
+fi
+
+# Environment variables
+if [ -n "$CFLAGS" ]; then
+	echo "CFLAGS?=$CFLAGS" >> CONFIG.local
+fi
+if [ -n "$CXXFLAGS" ]; then
+	echo "CXXFLAGS?=$CXXFLAGS" >> CONFIG.local
+fi
+if [ -n "$LDFLAGS" ]; then
+	echo "LDFLAGS?=$LDFLAGS" >> CONFIG.local
+fi
+if [ -n "$DESTDIR" ]; then
+	echo "DESTDIR?=$DESTDIR" >> CONFIG.local
 fi
 
 python_command=
