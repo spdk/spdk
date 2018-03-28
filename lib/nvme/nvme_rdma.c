@@ -62,6 +62,14 @@ NVME RDMA qpair Resouce Defaults
 #define NVME_RDMA_DEFAULT_TX_SGE		2
 #define NVME_RDMA_DEFAULT_RX_SGE		1
 
+/* Mapping from virtual address to ibv_mr pointer for a protection domain */
+struct spdk_nvme_rdma_mr_map {
+	struct ibv_pd				*pd;
+	struct spdk_mem_map			*map;
+	uint64_t				ref;
+	LIST_ENTRY(spdk_nvme_rdma_mr_map)	link;
+};
+
 /* NVMe RDMA transport extensions for spdk_nvme_ctrlr */
 struct nvme_rdma_ctrlr {
 	struct spdk_nvme_ctrlr			ctrlr;
@@ -101,8 +109,7 @@ struct nvme_rdma_qpair {
 	/* Memory region describing all cmds for this qpair */
 	struct ibv_mr				*cmd_mr;
 
-	/* Mapping from virtual address to ibv_mr pointer */
-	struct spdk_mem_map			*mr_map;
+	struct spdk_nvme_rdma_mr_map		*mr_map;
 
 	STAILQ_HEAD(, spdk_nvme_rdma_req)	free_reqs;
 };
@@ -137,6 +144,9 @@ static const char *rdma_cm_event_str[] = {
 	"RDMA_CM_EVENT_ADDR_CHANGE",
 	"RDMA_CM_EVENT_TIMEWAIT_EXIT"
 };
+
+static LIST_HEAD(, spdk_nvme_rdma_mr_map) g_rdma_mr_maps = LIST_HEAD_INITIALIZER(&g_rdma_mr_maps);
+static pthread_mutex_t g_rdma_mr_maps_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static int nvme_rdma_qpair_destroy(struct spdk_nvme_qpair *qpair);
 
@@ -700,17 +710,41 @@ static int
 nvme_rdma_register_mem(struct nvme_rdma_qpair *rqpair)
 {
 	struct ibv_pd *pd = rqpair->cm_id->qp->pd;
-	struct spdk_mem_map *mr_map;
+	struct spdk_nvme_rdma_mr_map *mr_map;
 
-	// TODO: look up existing mem map registration for this pd
+	pthread_mutex_lock(&g_rdma_mr_maps_mutex);
 
-	mr_map = spdk_mem_map_alloc((uint64_t)NULL, nvme_rdma_mr_map_notify, pd);
+	/* Look up existing mem map registration for this pd */
+	LIST_FOREACH(mr_map, &g_rdma_mr_maps, link) {
+		if (mr_map->pd == pd) {
+			mr_map->ref++;
+			rqpair->mr_map = mr_map;
+			pthread_mutex_unlock(&g_rdma_mr_maps_mutex);
+			return 0;
+		}
+	}
+
+	mr_map = calloc(1, sizeof(*mr_map));
+	if (mr_map == NULL) {
+		SPDK_ERRLOG("calloc() failed\n");
+		pthread_mutex_unlock(&g_rdma_mr_maps_mutex);
+		return -1;
+	}
+
+	mr_map->ref = 1;
+	mr_map->pd = pd;
+	mr_map->map = spdk_mem_map_alloc((uint64_t)NULL, nvme_rdma_mr_map_notify, pd);
 	if (mr_map == NULL) {
 		SPDK_ERRLOG("spdk_mem_map_alloc() failed\n");
+		free(mr_map);
+		pthread_mutex_unlock(&g_rdma_mr_maps_mutex);
 		return -1;
 	}
 
 	rqpair->mr_map = mr_map;
+	LIST_INSERT_HEAD(&g_rdma_mr_maps, mr_map, link);
+
+	pthread_mutex_unlock(&g_rdma_mr_maps_mutex);
 
 	return 0;
 }
@@ -718,7 +752,26 @@ nvme_rdma_register_mem(struct nvme_rdma_qpair *rqpair)
 static void
 nvme_rdma_unregister_mem(struct nvme_rdma_qpair *rqpair)
 {
-	spdk_mem_map_free(&rqpair->mr_map);
+	struct spdk_nvme_rdma_mr_map *mr_map;
+
+	mr_map = rqpair->mr_map;
+	rqpair->mr_map = NULL;
+
+	if (mr_map == NULL) {
+		return;
+	}
+
+	pthread_mutex_lock(&g_rdma_mr_maps_mutex);
+
+	assert(mr_map->ref > 0);
+	mr_map->ref--;
+	if (mr_map->ref == 0) {
+		LIST_REMOVE(mr_map, link);
+		spdk_mem_map_free(&mr_map->map);
+		free(mr_map);
+	}
+
+	pthread_mutex_unlock(&g_rdma_mr_maps_mutex);
 }
 
 static int
@@ -863,7 +916,7 @@ nvme_rdma_build_contig_request(struct nvme_rdma_qpair *rqpair, struct nvme_reque
 	assert(req->payload_size != 0);
 	assert(req->payload.type == NVME_PAYLOAD_TYPE_CONTIG);
 
-	mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map, (uint64_t)payload);
+	mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map, (uint64_t)payload);
 	if (mr == NULL) {
 		return -1;
 	}
@@ -906,7 +959,7 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair, struct nvme_request 
 		return -1;
 	}
 
-	mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map, (uint64_t)virt_addr);
+	mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map, (uint64_t)virt_addr);
 	if (mr == NULL) {
 		return -1;
 	}
