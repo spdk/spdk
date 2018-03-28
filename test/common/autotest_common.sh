@@ -329,9 +329,14 @@ function start_iscsi_service() {
 
 function rbd_setup() {
 	if hash ceph; then
+		export PG_NUM=128
 		export RBD_POOL=rbd
 		export RBD_NAME=foo
 		$rootdir/scripts/ceph/start.sh
+		if [ ceph --version | grep -q luminous ]; then
+			ceph osd pool create $RBD_POOL $PG_NUM
+			rbd pool init $RBD_POOL
+		fi
 		rbd create $RBD_NAME --size 1000
 	fi
 }
