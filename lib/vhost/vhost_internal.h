@@ -133,21 +133,50 @@ struct spdk_vhost_tgt_backend {
 };
 
 struct spdk_vhost_tgt {
-	struct rte_vhost_memory *mem;
+	/* Name of the target. Read-only. */
 	char *name;
+
+	/* Path to the associated Unix domain socket file. Read-only. */
 	char *path;
 
-	/* Unique device ID. */
+	/* Unique target ID. Read-only. */
 	unsigned id;
 
-	/* rte_vhost device ID. */
+	/* rte_vhost device ID */
 	int vid;
-	int task_cnt;
+
+	/* Logical core ID this target is polling on. If unused, lcore = -1 */
 	int32_t lcore;
+
+	/* Subset of CPU cores to be potentially used for this target. Read-only. */
 	struct spdk_cpuset *cpumask;
+
 	bool registered;
 
+	/* Device specific data. Read-only. */
 	const struct spdk_vhost_tgt_backend *backend;
+
+	uint32_t coalescing_delay_time_base;
+
+	/* Threshold when event coalescing for virtqueue will be turned on. */
+	uint32_t  coalescing_io_rate_threshold;
+
+	/* Active device built on top of this target. */
+	struct spdk_vhost_dev *vdev;
+
+	/* Size of the extra memory allocated with each device. Read-only. */
+	size_t channel_ctx_size;
+
+	TAILQ_ENTRY(spdk_vhost_tgt) tailq;
+};
+
+struct spdk_vhost_dev {
+	/* Parent vhost target */
+	struct spdk_vhost_tgt *vtgt;
+
+	struct rte_vhost_memory *mem;
+
+	int task_cnt;
 
 	uint32_t coalescing_delay_time_base;
 
@@ -166,25 +195,25 @@ struct spdk_vhost_tgt {
 
 	struct spdk_vhost_virtqueue virtqueue[SPDK_VHOST_MAX_VQUEUES];
 
-	TAILQ_ENTRY(spdk_vhost_tgt) tailq;
+	TAILQ_ENTRY(spdk_vhost_dev) tailq;
 };
 
-struct spdk_vhost_tgt *spdk_vhost_tgt_find(const char *tgt_name);
-void spdk_vhost_tgt_mem_register(struct spdk_vhost_tgt *vtgt);
-void spdk_vhost_tgt_mem_unregister(struct spdk_vhost_tgt *vtgt);
+struct spdk_vhost_tgt *spdk_vhost_tgt_find(const char *vtgt_name);
+void spdk_vhost_dev_mem_register(struct spdk_vhost_dev *vdev);
+void spdk_vhost_dev_mem_unregister(struct spdk_vhost_dev *vdev);
 
-void *spdk_vhost_gpa_to_vva(struct spdk_vhost_tgt *vtgt, uint64_t addr);
+void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr);
 
 uint16_t spdk_vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *vq, uint16_t *reqs,
 				      uint16_t reqs_len);
-bool spdk_vhost_vq_should_notify(struct spdk_vhost_tgt *vtgt, struct spdk_vhost_virtqueue *vq);
+bool spdk_vhost_vq_should_notify(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq);
 
 /**
  * Get a virtio descriptor at given index in given virtqueue.
  * The descriptor will provide access to the entire descriptor
  * chain. The subsequent descriptors are accesible via
  * \c spdk_vhost_vring_desc_get_next.
- * \param vtgt vhost target
+ * \param vdev vhost device
  * \param vq virtqueue
  * \param req_idx descriptor index
  * \param desc pointer to be set to the descriptor
@@ -196,29 +225,28 @@ bool spdk_vhost_vq_should_notify(struct spdk_vhost_tgt *vtgt, struct spdk_vhost_
  * \return 0 on success, -1 if given index is invalid.
  * If -1 is returned, the content of params is undefined.
  */
-int spdk_vhost_vq_get_desc(struct spdk_vhost_tgt *vtgt, struct spdk_vhost_virtqueue *vq,
+int spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq,
 			   uint16_t req_idx, struct vring_desc **desc, struct vring_desc **desc_table,
 			   uint32_t *desc_table_size);
 
 /**
  * Send IRQ/call client (if pending) for \c vq.
- * \param vtgt vhost target
+ * \param vdev vhost device
  * \param vq virtqueue
  * \return
  *   0 - if no interrupt was signalled
  *   1 - if interrupt was signalled
  */
-int spdk_vhost_vq_used_signal(struct spdk_vhost_tgt *vtgt, struct spdk_vhost_virtqueue *vq);
-
+int spdk_vhost_vq_used_signal(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq);
 
 /**
  * Send IRQs for all queues that need to be signaled.
- * \param vtgt vhost target
+ * \param vdev vhost device
  * \param vq virtqueue
  */
-void spdk_vhost_tgt_used_signal(struct spdk_vhost_tgt *vtgt);
+void spdk_vhost_dev_used_signal(struct spdk_vhost_dev *vdev);
 
-void spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_tgt *vtgt, struct spdk_vhost_virtqueue *vq,
+void spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq,
 				     uint16_t id, uint32_t len);
 
 /**
@@ -236,13 +264,13 @@ int spdk_vhost_vring_desc_get_next(struct vring_desc **desc,
 				   struct vring_desc *desc_table, uint32_t desc_table_size);
 bool spdk_vhost_vring_desc_is_wr(struct vring_desc *cur_desc);
 
-int spdk_vhost_vring_desc_to_iov(struct spdk_vhost_tgt *vtgt, struct iovec *iov,
+int spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
 				 uint16_t *iov_index, const struct vring_desc *desc);
 
 static inline bool __attribute__((always_inline))
-spdk_vhost_tgt_has_feature(struct spdk_vhost_tgt *vtgt, unsigned feature_id)
+spdk_vhost_dev_has_feature(struct spdk_vhost_dev *vdev, unsigned feature_id)
 {
-	return vtgt->negotiated_features & (1ULL << feature_id);
+	return vdev->negotiated_features & (1ULL << feature_id);
 }
 
 int spdk_vhost_tgt_register(struct spdk_vhost_tgt *vtgt, const char *name, const char *mask_str,
