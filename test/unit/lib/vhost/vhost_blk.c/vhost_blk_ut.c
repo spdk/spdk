@@ -100,14 +100,14 @@ vhost_blk_controller_construct_test(void)
 }
 
 static struct spdk_vhost_blk_dev *
-alloc_bvtgt(void)
+alloc_bvdev(void)
 {
-	struct spdk_vhost_blk_dev *bvtgt = spdk_dma_zmalloc(sizeof(struct spdk_vhost_blk_dev),
+	struct spdk_vhost_blk_dev *bvdev = spdk_dma_zmalloc(sizeof(struct spdk_vhost_blk_dev),
 					   SPDK_CACHE_LINE_SIZE, NULL);
 
-	SPDK_CU_ASSERT_FATAL(bvtgt != NULL);
-	bvtgt->vtgt.backend = &g_vhost_blk_tgt_backend;
-	return bvtgt;
+	SPDK_CU_ASSERT_FATAL(bvdev != NULL);
+	bvdev->vtgt.backend = &vhost_blk_device_backend;
+	return bvdev;
 }
 
 static void
@@ -151,23 +151,23 @@ static void
 vhost_blk_destroy_test(void)
 {
 	int rc;
-	struct spdk_vhost_blk_dev *bvtgt = NULL;
+	struct spdk_vhost_blk_dev *bvdev = NULL;
 
-	bvtgt = alloc_bvtgt();
+	bvdev = alloc_bvdev();
 
 	/* Device has an incorrect type */
-	bvtgt->vtgt.backend = NULL;;
-	rc = spdk_vhost_blk_destroy(&bvtgt->vtgt);
+	bvdev->vtgt.backend = NULL;;
+	rc = spdk_vhost_blk_destroy(&bvdev->vtgt);
 	CU_ASSERT(rc == -EINVAL);
 
 	/* Failed to remove device */
-	bvtgt->vtgt.backend = &g_vhost_blk_tgt_backend;
+	bvdev->vtgt.backend = &vhost_blk_device_backend;
 	MOCK_SET(spdk_vhost_dev_unregister_fail, bool, true);
-	rc = spdk_vhost_blk_destroy(&bvtgt->vtgt);
+	rc = spdk_vhost_blk_destroy(&bvdev->vtgt);
 	CU_ASSERT(rc == -1);
 
 	if (rc != 0) {
-		free(bvtgt);
+		free(bvdev);
 	}
 }
 

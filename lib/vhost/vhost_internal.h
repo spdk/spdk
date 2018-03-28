@@ -133,21 +133,47 @@ struct spdk_vhost_tgt_backend {
 };
 
 struct spdk_vhost_tgt {
-	struct rte_vhost_memory *mem;
+	/* Name of the target. Read-only. */
 	char *name;
+
+	/* Path to the associated Unix domain socket file. Read-only. */
 	char *path;
 
-	/* Unique device ID. */
+	/* Unique target ID. Read-only. */
 	unsigned id;
 
-	/* rte_vhost device ID. */
+	/* rte_vhost device ID */
 	int vid;
-	int task_cnt;
+
+	/* Logical core ID this target is polling on. If unused, lcore = -1 */
 	int32_t lcore;
+
+	/* Subset of CPU cores to be potentially used for this target. Read-only. */
 	struct spdk_cpuset *cpumask;
+
 	bool registered;
 
+	/* Device specific data. Read-only. */
 	const struct spdk_vhost_tgt_backend *backend;
+
+	uint32_t coalescing_delay_time_base;
+
+	/* Threshold when event coalescing for virtqueue will be turned on. */
+	uint32_t  coalescing_io_rate_threshold;
+
+	/* Active device built on top of this target. */
+	struct spdk_vhost_dev *vdev;
+
+	TAILQ_ENTRY(spdk_vhost_tgt) tailq;
+};
+
+struct spdk_vhost_dev {
+	/* Parent vhost target */
+	struct spdk_vhost_tgt *vtgt;
+
+	struct rte_vhost_memory *mem;
+
+	int task_cnt;
 
 	uint32_t coalescing_delay_time_base;
 
@@ -166,12 +192,10 @@ struct spdk_vhost_tgt {
 
 	struct spdk_vhost_virtqueue virtqueue[SPDK_VHOST_MAX_VQUEUES];
 
-	TAILQ_ENTRY(spdk_vhost_tgt) tailq;
+	TAILQ_ENTRY(spdk_vhost_dev) tailq;
 };
 
-#define spdk_vhost_dev spdk_vhost_tgt
-
-struct spdk_vhost_tgt *spdk_vhost_tgt_find(const char *tgt_name);
+struct spdk_vhost_tgt *spdk_vhost_tgt_find(const char *vtgt_name);
 void spdk_vhost_dev_mem_register(struct spdk_vhost_dev *vdev);
 void spdk_vhost_dev_mem_unregister(struct spdk_vhost_dev *vdev);
 
