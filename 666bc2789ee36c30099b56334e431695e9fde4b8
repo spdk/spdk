@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "81dac0eb_42a803e7",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-03-28T02:59:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5b1453fc_2b819be0",
+      "revId": "666bc2789ee36c30099b56334e431695e9fde4b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0cd82737_1aac4d59",
         "filename": "include/spdk/env.h",
         "patchSetId": 3
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "5882dd7d_cdc64a3d",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 427,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-03-28T02:59:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0cd82737_1aac4d59",
+      "revId": "666bc2789ee36c30099b56334e431695e9fde4b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "672df4f6_ce562d65",
         "filename": "include/spdk/env.h",
         "patchSetId": 3
@@ -47,6 +83,30 @@
       "writtenOn": "2018-03-19T20:43:45Z",
       "side": 1,
       "message": "Maybe \"Size of the ring in elements\" or something like that.",
+      "range": {
+        "startLine": 428,
+        "startChar": 16,
+        "endLine": 428,
+        "endChar": 34
+      },
+      "revId": "666bc2789ee36c30099b56334e431695e9fde4b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dfc0482e_0e9a1d22",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 428,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-03-28T02:59:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "672df4f6_ce562d65",
       "range": {
         "startLine": 428,
         "startChar": 16,
@@ -82,6 +142,30 @@
     },
     {
       "key": {
+        "uuid": "c2573470_e6f26c73",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 468,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-03-28T02:59:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ed2ee725_5fc69ea5",
+      "range": {
+        "startLine": 468,
+        "startChar": 16,
+        "endLine": 468,
+        "endChar": 53
+      },
+      "revId": "666bc2789ee36c30099b56334e431695e9fde4b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "64da50ca_c35034ee",
         "filename": "include/spdk/env.h",
         "patchSetId": 3
@@ -93,6 +177,30 @@
       "writtenOn": "2018-03-19T20:43:45Z",
       "side": 1,
       "message": "spdk_vtophys() returns SPDK_VTOPHYS_ERROR on failure, not negative errno.",
+      "range": {
+        "startLine": 481,
+        "startChar": 59,
+        "endLine": 482,
+        "endChar": 14
+      },
+      "revId": "666bc2789ee36c30099b56334e431695e9fde4b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "288ae333_b366b4b3",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 482,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-03-28T02:59:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "64da50ca_c35034ee",
       "range": {
         "startLine": 481,
         "startChar": 59,
@@ -128,6 +236,30 @@
     },
     {
       "key": {
+        "uuid": "b96e4b78_5a12b25e",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 503,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-03-28T02:59:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c87bb496_9a5d43e4",
+      "range": {
+        "startLine": 503,
+        "startChar": 18,
+        "endLine": 503,
+        "endChar": 24
+      },
+      "revId": "666bc2789ee36c30099b56334e431695e9fde4b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "40e934f5_dcaa7a19",
         "filename": "include/spdk/env.h",
         "patchSetId": 3
@@ -139,6 +271,24 @@
       "writtenOn": "2018-03-19T20:43:45Z",
       "side": 1,
       "message": "I think this can also return NULL if no device is found at the given address.",
+      "revId": "666bc2789ee36c30099b56334e431695e9fde4b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "876c4889_4816dd33",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 537,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-03-28T02:59:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "40e934f5_dcaa7a19",
       "revId": "666bc2789ee36c30099b56334e431695e9fde4b8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -162,6 +312,24 @@
     },
     {
       "key": {
+        "uuid": "c851f3f0_60757e41",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-03-28T02:59:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "645d4b9b_c9444ecd",
+      "revId": "666bc2789ee36c30099b56334e431695e9fde4b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7cc71dce_9dcc3b16",
         "filename": "include/spdk/env.h",
         "patchSetId": 3
@@ -173,6 +341,24 @@
       "writtenOn": "2018-03-19T20:43:45Z",
       "side": 1,
       "message": "This comment should be removed.  The DPDK implementation of the env layer doesn\u0027t need to do anything for unmap, but other implementations may need to do some cleanup.",
+      "revId": "666bc2789ee36c30099b56334e431695e9fde4b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc7379d3_79b855bf",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-03-28T02:59:53Z",
+      "side": 1,
+      "message": "ok, thanks",
+      "parentUuid": "7cc71dce_9dcc3b16",
       "revId": "666bc2789ee36c30099b56334e431695e9fde4b8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -196,6 +382,24 @@
     },
     {
       "key": {
+        "uuid": "6d5c1946_05e57b20",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 564,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-03-28T02:59:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "108a75d4_1034aef0",
+      "revId": "666bc2789ee36c30099b56334e431695e9fde4b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "15ef45cc_4222638a",
         "filename": "include/spdk/env.h",
         "patchSetId": 3
@@ -207,6 +411,24 @@
       "writtenOn": "2018-03-19T20:43:45Z",
       "side": 1,
       "message": "This function can\u0027t return a negative errno; it returns an unsigned value.  Please double check this and the other functions below.",
+      "revId": "666bc2789ee36c30099b56334e431695e9fde4b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91d77abe_f5367797",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 620,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-03-28T02:59:53Z",
+      "side": 1,
+      "message": "ok, thanks",
+      "parentUuid": "15ef45cc_4222638a",
       "revId": "666bc2789ee36c30099b56334e431695e9fde4b8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
