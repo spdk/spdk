@@ -572,7 +572,7 @@ spdk_iscsi_log_globals(void)
 		      spdk_iscsi_conn_get_min_per_core());
 }
 
-static void
+void
 spdk_iscsi_opts_init(struct spdk_iscsi_opts *opts)
 {
 	opts->MaxSessions = DEFAULT_MAX_SESSIONS;
@@ -589,16 +589,76 @@ spdk_iscsi_opts_init(struct spdk_iscsi_opts *opts)
 	opts->req_discovery_auth = false;
 	opts->req_discovery_auth_mutual = false;
 	opts->discovery_auth_group = 0;
-	opts->authfile = strdup(SPDK_ISCSI_DEFAULT_AUTHFILE);
-	opts->nodebase = strdup(SPDK_ISCSI_DEFAULT_NODEBASE);
+	opts->authfile = NULL;
+	opts->nodebase = NULL;
 	opts->min_connections_per_core = DEFAULT_CONNECTIONS_PER_LCORE;
 }
 
-static void
+void
 spdk_iscsi_opts_free(struct spdk_iscsi_opts *opts)
 {
 	free(opts->authfile);
 	free(opts->nodebase);
+}
+
+int
+spdk_iscsi_opts_verify(struct spdk_iscsi_opts *opts)
+{
+	if (opts->authfile == NULL) {
+		opts->authfile = strdup(SPDK_ISCSI_DEFAULT_AUTHFILE);
+	}
+
+	if (opts->nodebase == NULL) {
+		opts->nodebase = strdup(SPDK_ISCSI_DEFAULT_NODEBASE);
+	}
+
+	if (opts->MaxSessions == 0 || opts->MaxSessions > 65535) {
+		SPDK_ERRLOG("%d is invalid. MaxSessions must be more than 0 and no more than 65535\n",
+			    opts->MaxSessions);
+		return -1;
+	}
+
+	if (opts->MaxConnectionsPerSession == 0 || opts->MaxConnectionsPerSession > 65535) {
+		SPDK_ERRLOG("%d is invalid. MaxConnectionsPerSession must be more than 0 and no more than 65535\n",
+			    opts->MaxConnectionsPerSession);
+		return -1;
+	}
+
+	if (opts->MaxQueueDepth == 0 || opts->MaxQueueDepth > 256) {
+		SPDK_ERRLOG("%d is invalid. MaxQueueDepth must be more than 0 and no more than 256\n",
+			    opts->MaxQueueDepth);
+		return -1;
+	}
+
+	if (opts->DefaultTime2Wait > 3600) {
+		SPDK_ERRLOG("%d is invalid. DefaultTime2Wait must be no more than 3600\n",
+			    opts->DefaultTime2Wait);
+		return -1;
+	}
+
+	if (opts->DefaultTime2Retain > 3600) {
+		SPDK_ERRLOG("%d is invalid. DefaultTime2Retain must be no more than 3600\n",
+			    opts->DefaultTime2Retain);
+		return -1;
+	}
+
+	if (opts->ErrorRecoveryLevel > 2) {
+		SPDK_ERRLOG("ErrorRecoveryLevel %d is not supported.\n", opts->ErrorRecoveryLevel);
+		return -1;
+	}
+
+	if (opts->timeout < 0) {
+		SPDK_ERRLOG("%d is invalid. timeout must be more than 0\n", opts->timeout);
+		return -1;
+	}
+
+	if (opts->nopininterval < 0 || opts->nopininterval > MAX_NOPININTERVAL) {
+		SPDK_ERRLOG("%d is invalid. nopinterval must be more than 0 and no more than %d\n",
+			    opts->nopininterval, MAX_NOPININTERVAL);
+		return -1;
+	}
+
+	return 0;
 }
 
 static void
@@ -625,14 +685,17 @@ spdk_iscsi_read_config_file_params(struct spdk_conf_section *sp,
 
 	val = spdk_conf_section_get_val(sp, "AuthFile");
 	if (val != NULL) {
-		free(opts->authfile);
 		opts->authfile = strdup(val);
+	} else {
+		opts->authfile = strdup(SPDK_ISCSI_DEFAULT_AUTHFILE);
 	}
 
 	val = spdk_conf_section_get_val(sp, "NodeBase");
 	if (val != NULL) {
 		free(opts->nodebase);
 		opts->nodebase = strdup(val);
+	} else {
+		opts->nodebase = strdup(SPDK_ISCSI_DEFAULT_NODEBASE);
 	}
 
 	MaxSessions = spdk_conf_section_get_intval(sp, "MaxSessions");
@@ -760,7 +823,7 @@ spdk_iscsi_read_config_file_params(struct spdk_conf_section *sp,
 	}
 }
 
-static int
+int
 spdk_iscsi_initialize_iscsi_globals(struct spdk_iscsi_opts *opts)
 {
 	int rc;
@@ -930,8 +993,8 @@ iscsi_unregister_poll_group(void *ctx)
 	spdk_poller_unregister(&pg->nop_poller);
 }
 
-static void
-spdk_initialize_iscsi_poll_group(spdk_thread_fn cpl)
+void
+spdk_initialize_iscsi_poll_group(spdk_thread_fn cpl, void *ctx)
 {
 	size_t g_num_poll_groups = spdk_env_get_last_core() + 1;
 
@@ -943,7 +1006,7 @@ spdk_initialize_iscsi_poll_group(spdk_thread_fn cpl)
 	}
 
 	/* Send a message to each thread and create a poll group */
-	spdk_for_each_thread(iscsi_create_poll_group, NULL, cpl);
+	spdk_for_each_thread(iscsi_create_poll_group, ctx, cpl);
 }
 
 static void
@@ -1001,7 +1064,7 @@ spdk_iscsi_parse_iscsi_globals(void)
 		return rc;
 	}
 
-	spdk_initialize_iscsi_poll_group(spdk_iscsi_parse_iscsi_configuration);
+	spdk_initialize_iscsi_poll_group(spdk_iscsi_parse_iscsi_configuration, NULL);
 	return 0;
 }
 
