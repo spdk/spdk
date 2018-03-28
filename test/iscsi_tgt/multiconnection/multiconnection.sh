@@ -57,7 +57,7 @@ waitforlisten $iscsipid
 timing_exit start_iscsi_tgt
 
 $rpc_py add_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
-$rpc_py add_initiator_group 1 ANY $INITIATOR_IP/32
+$rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 
 echo "Creating an iSCSI target node."
 ls_guid=$($rpc_py construct_lvol_store "Nvme0n1" "lvs0" -c 1048576)
@@ -71,7 +71,7 @@ done
 
 for i in `seq 1 $CONNECTION_NUMBER`; do
 	lun="lvs0/lbd_$i:0"
-	$rpc_py construct_target_node Target$i Target${i}_alias "$lun" "1:1" 256 -d
+	$rpc_py construct_target_node Target$i Target${i}_alias "$lun" $PORTAL_TAG:$INITIATOR_TAG 256 -d
 done
 sleep 1
 

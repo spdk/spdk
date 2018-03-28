@@ -51,7 +51,7 @@ fi
 # "1:2" ==> map PortalGroup1 to InitiatorGroup2
 # "256" ==> iSCSI queue depth 256
 # "-d" ==> disable CHAP authentication
-$rpc_py construct_target_node Target1 Target1_alias 'lvs_0/lbd_0:0' '1:2' 256 -d
+$rpc_py construct_target_node Target1 Target1_alias 'lvs_0/lbd_0:0' $PORTAL_TAG:$INITIATOR_TAG 256 -d
 sleep 1
 
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
