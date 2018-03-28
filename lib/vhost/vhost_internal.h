@@ -177,7 +177,6 @@ void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr);
 
 uint16_t spdk_vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *vq, uint16_t *reqs,
 				      uint16_t reqs_len);
-bool spdk_vhost_vq_should_notify(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq);
 
 /**
  * Get a virtio descriptor at given index in given virtqueue.
