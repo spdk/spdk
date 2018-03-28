@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ebc49702_5b224d49",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-28T02:01:44Z",
+      "side": 1,
+      "message": "deferred",
+      "range": {
+        "startLine": 785,
+        "startChar": 35,
+        "endLine": 785,
+        "endChar": 43
+      },
+      "revId": "142ce5a6b8b0efe9201062b7937d15fbd76e8486",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
