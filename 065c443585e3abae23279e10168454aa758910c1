@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "73a5abb8_3f52fd9d",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-28T13:30:11Z",
+      "side": 1,
+      "message": "Nope, development artifact artifact.",
+      "parentUuid": "e39e81e8_95971608",
+      "revId": "065c443585e3abae23279e10168454aa758910c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4036b3d9_7561ecb0",
         "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
         "patchSetId": 9
