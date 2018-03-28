@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "afafe65e_1274fbfd",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-03-28T16:03:24Z",
+      "side": 1,
+      "message": "I\u0027d be really upset if I had run the autotest script locally and got such an error message. What do I do then? My only shot is probably to grep through sources to see where the message comes from and what\u0027s really causing the error.\n\nThe patch is fine for now though, but please write more descriptive error messages in future.",
+      "range": {
+        "startLine": 65,
+        "startChar": 8,
+        "endLine": 65,
+        "endChar": 42
+      },
+      "revId": "85b22ccab99002fc485d995bd8768052ccc194b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
