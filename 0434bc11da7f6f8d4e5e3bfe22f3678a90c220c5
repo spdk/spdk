@@ -117,6 +117,30 @@
     },
     {
       "key": {
+        "uuid": "162c1f26_e66f2cde",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-03-28T02:11:25Z",
+      "side": 1,
+      "message": "Thank you Shuhei. Your suggestion is much better. Let me check and update it later.",
+      "parentUuid": "1527de28_a67698da",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 28
+      },
+      "revId": "0434bc11da7f6f8d4e5e3bfe22f3678a90c220c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2150f072_00809e13",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 23
