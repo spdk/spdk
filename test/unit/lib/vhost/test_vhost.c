@@ -62,7 +62,7 @@ DEFINE_STUB(spdk_vhost_vq_avail_ring_get, uint16_t, (struct spdk_vhost_virtqueue
 DEFINE_STUB(spdk_vhost_vq_used_signal, int, (struct spdk_vhost_dev *vdev,
 		struct spdk_vhost_virtqueue *virtqueue), 0);
 DEFINE_STUB_V(spdk_vhost_dev_used_signal, (struct spdk_vhost_dev *vdev));
-DEFINE_STUB_V(spdk_vhost_dev_mem_register, (struct spdk_vhost_dev *vdev));
+DEFINE_STUB_V(spdk_vhost_dev_channel_mem_register, (struct spdk_vhost_dev *vdev));
 DEFINE_STUB_P(spdk_vhost_dev_find, struct spdk_vhost_dev, (const char *ctrlr_name), {0});
 DEFINE_STUB_V(spdk_ring_free, (struct spdk_ring *ring));
 DEFINE_STUB_P(spdk_conf_first_section, struct spdk_conf_section, (struct spdk_conf *cp), {0});
@@ -74,7 +74,7 @@ DEFINE_STUB(spdk_conf_section_get_boolval, bool, (struct spdk_conf_section *sp, 
 		bool default_val), false);
 DEFINE_STUB_P(spdk_conf_section_get_nmval, char, (struct spdk_conf_section *sp, const char *key,
 		int idx1, int idx2), {0});
-DEFINE_STUB_V(spdk_vhost_dev_mem_unregister, (struct spdk_vhost_dev *vdev));
+DEFINE_STUB_V(spdk_vhost_dev_channel_mem_unregister, (struct spdk_vhost_dev *vdev));
 DEFINE_STUB(spdk_vhost_event_send, int, (struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn,
 		void *arg, unsigned timeout_sec, const char *errmsg), 0);
 DEFINE_STUB(spdk_env_get_socket_id, uint32_t, (uint32_t core), 0);
