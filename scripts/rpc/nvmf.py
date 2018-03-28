@@ -9,8 +9,11 @@ def construct_nvmf_subsystem(args):
     }
 
     if args.listen:
-        params['listen_addresses'] = [dict(u.split(":", 1) for u in a.split(" "))
-                                      for a in args.listen.split(",")]
+        params['listen_addresses'] = [
+            dict(
+                u.split(
+                    ":",
+                    1) for u in a.split(" ")) for a in args.listen.split(",")]
 
     if args.hosts:
         hosts = []
