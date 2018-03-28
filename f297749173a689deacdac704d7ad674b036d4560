@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "83f86425_c06a803f",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-03-28T15:22:15Z",
+      "side": 1,
+      "message": "There are different targetcli versions used on ubuntu and fedora and each have different path names. For fedora version it is /backstores/ramdisk and for ubuntu it\u0027s /backstores/rd_mcp, I don\u0027t know how it\u0027s on other distributions. I think we could just grep the by name of path",
+      "parentUuid": "6db8d990_5b961ee7",
+      "revId": "f297749173a689deacdac704d7ad674b036d4560",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "13e0ff3c_6367691f",
         "filename": "test/vhost/initiator/blockdev.sh",
         "patchSetId": 18
@@ -48,6 +66,30 @@
       "writtenOn": "2018-03-27T17:51:02Z",
       "side": 1,
       "message": "This doesn\u0027t look quite right; there shouldn\u0027t be a spdk.tar.gz in $FIO_PATH normally.  Should this be fio.tar.gz or just removed?",
+      "range": {
+        "startLine": 153,
+        "startChar": 15,
+        "endLine": 153,
+        "endChar": 26
+      },
+      "revId": "f297749173a689deacdac704d7ad674b036d4560",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b5c2ea14_c6ff6f3f",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-03-28T15:22:15Z",
+      "side": 1,
+      "message": "This should be fio.tar.gz obviously",
+      "parentUuid": "13e0ff3c_6367691f",
       "range": {
         "startLine": 153,
         "startChar": 15,
