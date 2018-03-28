@@ -8,7 +8,6 @@ source $rootdir/scripts/common.sh
 
 timing_enter filesystem
 
-
 rpc_py="python $rootdir/scripts/rpc.py"
 # Remove lvol bdevs and stores.
 function remove_backends()
@@ -77,25 +76,49 @@ for fstype in "ext4" "btrfs" "xfs"; do
 		mkfs.${fstype} -f /dev/${dev}1
 	fi
 	mount /dev/${dev}1 /mnt/device
-	touch /mnt/device/aaa
-	umount /mnt/device
+	if [ $RUN_NIGHTLY -eq 1 ]; then
+		fio -filename=/mnt/device/test -direct=1 -iodepth 64 -thread=1 -invalidate=1 -rw=randwrite -ioengine=libaio -bs=4k \
+		 -size=1024M -name=job0
+		umount /mnt/device
 
-	iscsiadm -m node --logout
-	sleep 1
-	iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
-	sleep 1
-	dev=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
-	mount -o rw /dev/${dev}1 /mnt/device
+		iscsiadm -m node --logout
+		sleep 1
+		iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
+		sleep 1
+		dev=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
+		mount -o rw /dev/${dev}1 /mnt/device
+		if [ -f "/mnt/device/test" ]; then
+			echo "File existed."
+			fio -filename=/mnt/device/test -direct=1 -iodepth 64 -thread=1 -invalidate=1 -rw=randread \
+			-ioengine=libaio -bs=4k -runtime=20 -time_based=1 -name=job0
+		else
+			echo "File doesn't exist."
+			exit 1
+		fi
 
-	if [ -f "/mnt/device/aaa" ]; then
-		echo "File existed."
+		rm -rf /mnt/device/test
+		umount /mnt/device
 	else
-		echo "File doesn't exist."
-		exit 1
-	fi
+		touch /mnt/device/aaa
+		umount /mnt/device
 
-	rm -rf /mnt/device/aaa
-	umount /mnt/device
+		iscsiadm -m node --logout
+		sleep 1
+		iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
+		sleep 1
+		dev=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
+		mount -o rw /dev/${dev}1 /mnt/device
+
+		if [ -f "/mnt/device/aaa" ]; then
+			echo "File existed."
+		else
+			echo "File doesn't exist."
+			exit 1
+		fi
+
+		rm -rf /mnt/device/aaa
+		umount /mnt/device
+	fi
 done
 
 rm -rf /mnt/device
