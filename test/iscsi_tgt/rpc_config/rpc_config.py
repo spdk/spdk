@@ -12,6 +12,7 @@ from subprocess import check_call, call, check_output, Popen, PIPE, CalledProces
 
 netmask = ('127.0.0.1', '127.0.0.0')
 rpc_param = {
+    'initiator_ip': '127.0.0.1',
     'target_ip': '127.0.0.1',
     'port': 3260,
     'initiator_name': 'ANY',
@@ -104,8 +105,8 @@ def verify_iscsi_connection_rpc_methods(rpc_py):
            "target node name vaule is {}, expected {}".format(jsonvalues[0]['target_node_name'], rpc_param['target_name']))
     verify(jsonvalues[0]['id'] == 0, 1,
            "device id value is {}, expected 0".format(jsonvalues[0]['id']))
-    verify(jsonvalues[0]['initiator_addr'] == rpc_param['target_ip'], 1,
-           "initiator address values is {}, expected {}".format(jsonvalues[0]['initiator_addr'], rpc_param['target_ip']))
+    verify(jsonvalues[0]['initiator_addr'] == rpc_param['initiator_ip'], 1,
+           "initiator address values is {}, expected {}".format(jsonvalues[0]['initiator_addr'], rpc_param['initiator_ip']))
     verify(jsonvalues[0]['target_addr'] == rpc_param['target_ip'], 1,
            "target address values is {}, expected {}".format(jsonvalues[0]['target_addr'], rpc_param['target_ip']))
 
