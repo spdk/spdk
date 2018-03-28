@@ -1,0 +1,130 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e39e81e8_95971608",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-28T13:15:15Z",
+      "side": 1,
+      "message": "this is necessary?",
+      "revId": "065c443585e3abae23279e10168454aa758910c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4036b3d9_7561ecb0",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-28T13:15:15Z",
+      "side": 1,
+      "message": "bdev2 is special by your addition and a little explanation may be helpful but I\u0027m not sure the following is good.\n\nFor bdev2, part of it is used ls partitioning or logical volumes and remaining of it is used caching or RAID combined with bdev3.",
+      "revId": "065c443585e3abae23279e10168454aa758910c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "551840f9_55be687b",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-28T13:15:15Z",
+      "side": 1,
+      "message": "3",
+      "range": {
+        "startLine": 215,
+        "startChar": 22,
+        "endLine": 215,
+        "endChar": 23
+      },
+      "revId": "065c443585e3abae23279e10168454aa758910c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f07721a_011fbbad",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-28T13:15:15Z",
+      "side": 1,
+      "message": "bdev4 and bdev7 are virtual bdevs",
+      "range": {
+        "startLine": 218,
+        "startChar": 4,
+        "endLine": 218,
+        "endChar": 12
+      },
+      "revId": "065c443585e3abae23279e10168454aa758910c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3bec7c9e_abbabeae",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-28T13:15:15Z",
+      "side": 1,
+      "message": "4",
+      "range": {
+        "startLine": 218,
+        "startChar": 8,
+        "endLine": 218,
+        "endChar": 9
+      },
+      "revId": "065c443585e3abae23279e10168454aa758910c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a6429e4_61d49be9",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-28T13:15:15Z",
+      "side": 1,
+      "message": "bdev5 and bdev6",
+      "range": {
+        "startLine": 221,
+        "startChar": 4,
+        "endLine": 221,
+        "endChar": 23
+      },
+      "revId": "065c443585e3abae23279e10168454aa758910c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
