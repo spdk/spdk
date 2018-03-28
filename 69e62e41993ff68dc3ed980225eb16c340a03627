@@ -25,6 +25,54 @@
     },
     {
       "key": {
+        "uuid": "a9ab6be7_475417a3",
+        "filename": "lib/event/subsystems/iscsi/iscsi_conf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-28T05:29:12Z",
+      "side": 1,
+      "message": "make sense to me.",
+      "parentUuid": "1b96f260_a82e1677",
+      "range": {
+        "startLine": 65,
+        "startChar": 1,
+        "endLine": 73,
+        "endChar": 2
+      },
+      "revId": "69e62e41993ff68dc3ed980225eb16c340a03627",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5330f718_79e047d3",
+        "filename": "lib/event/subsystems/iscsi/iscsi_conf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-28T05:29:12Z",
+      "side": 1,
+      "message": "make sense to me.",
+      "parentUuid": "1b96f260_a82e1677",
+      "range": {
+        "startLine": 65,
+        "startChar": 1,
+        "endLine": 73,
+        "endChar": 2
+      },
+      "revId": "69e62e41993ff68dc3ed980225eb16c340a03627",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c10e5976_e28b0b23",
         "filename": "lib/event/subsystems/iscsi/iscsi_conf_rpc.c",
         "patchSetId": 1
@@ -36,6 +84,30 @@
       "writtenOn": "2018-03-27T18:11:11Z",
       "side": 1,
       "message": "I think error RPC result should be send here rather than ignoring invalid value here. Can those checks be moved to spdk_iscsi_initialize_iscsi_globals()?",
+      "range": {
+        "startLine": 75,
+        "startChar": 0,
+        "endLine": 81,
+        "endChar": 2
+      },
+      "revId": "69e62e41993ff68dc3ed980225eb16c340a03627",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27a13cf9_ae9f2fd2",
+        "filename": "lib/event/subsystems/iscsi/iscsi_conf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-28T05:29:12Z",
+      "side": 1,
+      "message": "make sense to me.",
+      "parentUuid": "c10e5976_e28b0b23",
       "range": {
         "startLine": 75,
         "startChar": 0,
