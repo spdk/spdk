@@ -460,6 +460,15 @@ union spdk_nvme_vs_register spdk_nvme_ctrlr_get_regs_vs(struct spdk_nvme_ctrlr *
 uint32_t spdk_nvme_ctrlr_get_num_ns(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
+ * \brief Get the PCI device of a given NVMe controller.
+ *
+ * \return PCI device of the NVMe controller, or NULL if not available.
+ *
+ * This only works for local (PCIe-attached) NVMe controllers; other transports will return NULL.
+ */
+struct spdk_pci_device *spdk_nvme_ctrlr_get_pci_device(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
  * \brief Determine if a particular log page is supported by the given NVMe controller.
  *
  * This function is thread safe and can be called at any point while the controller is attached to

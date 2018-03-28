@@ -1483,7 +1483,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 			return;
 		}
 
-		pci_dev = spdk_pci_get_device(&pci_addr);
+		pci_dev = spdk_nvme_ctrlr_get_pci_device(ctrlr);
 		if (!pci_dev) {
 			return;
 		}
