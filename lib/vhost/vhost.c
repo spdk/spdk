@@ -117,7 +117,8 @@ spdk_vhost_log_req_desc(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue
 			 * doing so would require tracking those changes in each backed.
 			 * Also backend most likely will touch all/most of those pages so
 			 * for lets assume we touched all pages passed to as writeable buffers. */
-			rte_vhost_log_write(vdev->vid, desc->addr, desc->len);
+
+			rte_vhost_log_write(vdev->vtgt->vid, desc->addr, desc->len);
 		}
 		spdk_vhost_vring_desc_get_next(&desc, desc_table, desc_table_size);
 	} while (desc);
@@ -138,7 +139,7 @@ spdk_vhost_log_used_vring_elem(struct spdk_vhost_dev *vdev, struct spdk_vhost_vi
 	len = sizeof(virtqueue->vring.used->ring[idx]);
 	vq_idx = virtqueue - vdev->virtqueue;
 
-	rte_vhost_log_used_vring(vdev->vid, vq_idx, offset, len);
+	rte_vhost_log_used_vring(vdev->vtgt->vid, vq_idx, offset, len);
 }
 
 static void
@@ -155,7 +156,7 @@ spdk_vhost_log_used_vring_idx(struct spdk_vhost_dev *vdev, struct spdk_vhost_vir
 	len = sizeof(virtqueue->vring.used->idx);
 	vq_idx = virtqueue - vdev->virtqueue;
 
-	rte_vhost_log_used_vring(vdev->vid, vq_idx, offset, len);
+	rte_vhost_log_used_vring(vdev->vtgt->vid, vq_idx, offset, len);
 }
 
 /*
@@ -325,6 +326,7 @@ int
 spdk_vhost_set_coalescing(struct spdk_vhost_tgt *vtgt, uint32_t delay_base_us,
 			  uint32_t iops_threshold)
 {
+	struct spdk_vhost_dev *vdev;
 	uint64_t delay_time_base = delay_base_us * spdk_get_ticks_hz() / 1000000ULL;
 	uint32_t io_rate = iops_threshold * SPDK_VHOST_DEV_STATS_CHECK_INTERVAL_MS / 1000;
 
@@ -339,6 +341,12 @@ spdk_vhost_set_coalescing(struct spdk_vhost_tgt *vtgt, uint32_t delay_base_us,
 
 	vtgt->coalescing_delay_time_base = delay_time_base;
 	vtgt->coalescing_io_rate_threshold = io_rate;
+
+	vdev = vtgt->vdev;
+	if (vdev) {
+		vdev->coalescing_delay_time_base = vtgt->coalescing_delay_time_base;
+		vdev->coalescing_io_rate_threshold = vtgt->coalescing_io_rate_threshold;
+	}
 	return 0;
 }
 
@@ -480,8 +488,8 @@ spdk_vhost_dev_find_by_vid(int vid)
 	struct spdk_vhost_tgt *vtgt;
 
 	TAILQ_FOREACH(vtgt, &g_spdk_vhost_tgts, tailq) {
-		if (vtgt->vid == vid) {
-			return vtgt;
+		if (vtgt->vdev && vtgt->vid == vid) {
+			return vtgt->vdev;
 		}
 	}
 
@@ -722,9 +730,6 @@ spdk_vhost_tgt_register(struct spdk_vhost_tgt *vtgt, const char *name, const cha
 
 	spdk_vhost_set_coalescing(vtgt, SPDK_VHOST_COALESCING_DELAY_BASE_US,
 				  SPDK_VHOST_VQ_IOPS_COALESCING_THRESHOLD);
-	vtgt->next_stats_check_time = 0;
-	vtgt->stats_check_interval = SPDK_VHOST_DEV_STATS_CHECK_INTERVAL_MS * spdk_get_ticks_hz() /
-				     1000UL;
 
 	TAILQ_INSERT_TAIL(&g_spdk_vhost_tgts, vtgt, tailq);
 
@@ -739,7 +744,7 @@ out:
 int
 spdk_vhost_tgt_unregister(struct spdk_vhost_tgt *vtgt)
 {
-	if (vtgt->vid != -1) {
+	if (vtgt->vdev) {
 		SPDK_ERRLOG("Controller %s has still valid connection.\n", vtgt->name);
 		return -ENODEV;
 	}
@@ -964,7 +969,7 @@ stop_device(int vid)
 		return;
 	}
 
-	vtgt = vdev;
+	vtgt = vdev->vtgt;
 	if (vtgt->lcore == -1) {
 		SPDK_ERRLOG("Controller %s is not loaded.\n", vtgt->name);
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
@@ -980,7 +985,7 @@ stop_device(int vid)
 
 	for (i = 0; i < vdev->num_queues; i++) {
 		q = &vdev->virtqueue[i].vring;
-		rte_vhost_set_vhost_vring_last_idx(vdev->vid, i, q->last_avail_idx, q->last_used_idx);
+		rte_vhost_set_vhost_vring_last_idx(vdev->vtgt->vid, i, q->last_avail_idx, q->last_used_idx);
 	}
 
 	free(vdev->mem);
@@ -1007,7 +1012,7 @@ start_device(int vid)
 		goto out;
 	}
 
-	vtgt = vdev;
+	vtgt = vdev->vtgt;
 	if (vtgt->lcore != -1) {
 		SPDK_ERRLOG("Controller %s already loaded.\n", vtgt->name);
 		goto out;
@@ -1049,6 +1054,12 @@ start_device(int vid)
 		SPDK_ERRLOG("vhost device %d: Failed to get guest memory table\n", vid);
 		goto out;
 	}
+
+	vdev->coalescing_delay_time_base = vtgt->coalescing_delay_time_base;
+	vdev->coalescing_io_rate_threshold = vtgt->coalescing_io_rate_threshold;
+	vdev->next_stats_check_time = 0;
+	vdev->stats_check_interval = SPDK_VHOST_DEV_STATS_CHECK_INTERVAL_MS * spdk_get_ticks_hz() /
+				     1000UL;
 
 	/*
 	 * Not sure right now but this look like some kind of QEMU bug and guest IO
@@ -1092,7 +1103,7 @@ get_config(int vid, uint8_t *config, uint32_t len)
 		goto out;
 	}
 
-	vtgt = vdev;
+	vtgt = vdev->vtgt;
 	if (vtgt->backend->vhost_get_config) {
 		rc = vtgt->backend->vhost_get_config(vtgt, config, len);
 	}
@@ -1116,7 +1127,7 @@ set_config(int vid, uint8_t *config, uint32_t offset, uint32_t size, uint32_t fl
 		goto out;
 	}
 
-	vtgt = vdev;
+	vtgt = vdev->vtgt;
 	if (vtgt->backend->vhost_set_config) {
 		rc = vtgt->backend->vhost_set_config(vtgt, config, offset, size, flags);
 	}
@@ -1182,32 +1193,40 @@ new_connection(int vid)
 	struct spdk_vhost_dev *vdev;
 	struct spdk_vhost_tgt *vtgt;
 	char ifname[PATH_MAX];
+	int rc = -1;
 
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
 	if (rte_vhost_get_ifname(vid, ifname, PATH_MAX) < 0) {
 		SPDK_ERRLOG("Couldn't get a valid ifname for device with vid %d\n", vid);
-		pthread_mutex_unlock(&g_spdk_vhost_mutex);
-		return -1;
+		goto err;
 	}
 
 	vtgt = spdk_vhost_tgt_find(ifname);
 	if (vtgt == NULL) {
 		SPDK_ERRLOG("Couldn't find device with vid %d to create connection for.\n", vid);
-		pthread_mutex_unlock(&g_spdk_vhost_mutex);
-		return -1;
+		goto err;
 	}
 
 	/* since pollers are not running it safe not to use spdk_event here */
-	vdev = vtgt;
-	if (vdev->vid != -1) {
+	if (vtgt->vdev) {
 		SPDK_ERRLOG("Device with vid %d is already connected.\n", vid);
-		pthread_mutex_unlock(&g_spdk_vhost_mutex);
-		return -1;
+		goto err;
 	}
 
-	vdev->vid = vid;
+	vdev = calloc(1, sizeof(struct spdk_vhost_dev));
+	if (vdev == NULL) {
+		SPDK_ERRLOG("vdev calloc failed.\n");
+		goto err;
+	}
+
+	vdev->vtgt = vtgt;
+	vtgt->vid = vid;
+	vtgt->vdev = vdev;
+
+	rc = 0;
+err:
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
-	return 0;
+	return rc;
 }
 
 static void
@@ -1224,7 +1243,9 @@ destroy_connection(int vid)
 	}
 
 	/* since pollers are not running it safe not to use spdk_event here */
-	vdev->vid = -1;
+	vdev->vtgt->vid = -1;
+	vdev->vtgt->vdev = NULL;
+	free(vdev);
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 

@@ -878,7 +878,7 @@ alloc_task_pool(struct spdk_vhost_nvme_dev *nvme)
 static int
 spdk_vhost_nvme_start_device(struct spdk_vhost_tgt *vtgt, void *event_ctx)
 {
-	struct spdk_vhost_dev *vdev = vtgt;
+	struct spdk_vhost_dev *vdev = vtgt->vdev;
 	struct spdk_vhost_nvme_dev *nvme = to_nvme_dev(vtgt);
 	struct spdk_vhost_nvme_ns *ns_dev;
 	uint32_t i;
@@ -962,7 +962,7 @@ destroy_device_poller_cb(void *arg)
 			nvme->num_cqs = 0;
 			nvme->dbbuf_dbs = NULL;
 			nvme->dbbuf_eis = NULL;
-			spdk_vhost_dev_mem_unregister(&nvme->vtgt);
+			spdk_vhost_dev_mem_unregister(nvme->vtgt.vdev);
 		}
 	}
 
