@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "c7da0a1e_08359696",
+        "filename": "lib/event/subsystems/iscsi/iscsi_conf_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-29T00:35:46Z",
+      "side": 1,
+      "message": "Nice idea, thank you.",
+      "parentUuid": "8bc4d7ac_07f77914",
+      "range": {
+        "startLine": 93,
+        "startChar": 6,
+        "endLine": 93,
+        "endChar": 35
+      },
+      "revId": "004ed300094f43bf4891db9129b06b68d138460a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "df6b1663_cc114075",
         "filename": "lib/iscsi/iscsi_subsystem.c",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2018-03-28T10:08:25Z",
       "side": 1,
       "message": "Can this be safely moved to spdk_iscsi_initialize_iscsi_globals() so spdk_iscsi_opts_free() can be removed? lines 689-690 and 697-698 will not be needed then.\n\nThis should stay backward compatible.",
+      "range": {
+        "startLine": 607,
+        "startChar": 1,
+        "endLine": 613,
+        "endChar": 2
+      },
+      "revId": "004ed300094f43bf4891db9129b06b68d138460a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "251e0bdd_7b241910",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 613,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-29T00:35:46Z",
+      "side": 1,
+      "message": "Nice idea, thank you.",
+      "parentUuid": "df6b1663_cc114075",
       "range": {
         "startLine": 607,
         "startChar": 1,
