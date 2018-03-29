@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3e37ba2a_0285ecbc",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-03-29T14:30:34Z",
+      "side": 1,
+      "message": "I have a strange feeling that this could not work on my setup :p",
+      "range": {
+        "startLine": 92,
+        "startChar": 36,
+        "endLine": 92,
+        "endChar": 37
+      },
+      "revId": "06073f0fe127be4f47a3d9726af17e08cd9dd54d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
