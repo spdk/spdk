@@ -983,8 +983,8 @@ spdk_bdev_dump_info_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 void
 spdk_bdev_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 {
-	assert(bdev == NULL);
-	assert(w == NULL);
+	assert(bdev != NULL);
+	assert(w != NULL);
 
 	if (bdev->fn_table->write_config_json) {
 		bdev->fn_table->write_config_json(bdev, w);
