@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-C_SRCS = net.c
+C_SRCS = net.c net_conf_rpc.c
 LIBNAME = event_net
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
