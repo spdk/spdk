@@ -22,6 +22,30 @@
       "revId": "06073f0fe127be4f47a3d9726af17e08cd9dd54d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "395bdca7_fe00b3cc",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-29T15:44:49Z",
+      "side": 1,
+      "message": "Agree, thats why it was first mentioned here https://review.gerrithub.io/#/c/394174/6/test/iscsi_tgt/iscsi_tgt.sh@15\n\nLatest patchset should have it now.",
+      "parentUuid": "3e37ba2a_0285ecbc",
+      "range": {
+        "startLine": 92,
+        "startChar": 36,
+        "endLine": 92,
+        "endChar": 37
+      },
+      "revId": "06073f0fe127be4f47a3d9726af17e08cd9dd54d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
