@@ -795,6 +795,25 @@ spdk_nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 }
 
+static void
+spdk_nvmf_get_firmware_slot_log_page(void *buffer, uint64_t offset, uint32_t length)
+{
+	struct spdk_nvme_firmware_page fw_page;
+	size_t copy_len;
+
+	memset(&fw_page, 0, sizeof(fw_page));
+	fw_page.afi.active_slot = 1;
+	fw_page.afi.next_reset_slot = 0;
+	spdk_strcpy_pad(fw_page.revision[0], FW_VERSION, sizeof(fw_page.revision[0]), ' ');
+
+	if (offset < sizeof(fw_page)) {
+		copy_len = spdk_min(sizeof(fw_page) - offset, length);
+		if (copy_len > 0) {
+			memcpy(buffer, (const char *)&fw_page + offset, copy_len);
+		}
+	}
+}
+
 static int
 spdk_nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 {
@@ -847,8 +866,10 @@ spdk_nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 		switch (lid) {
 		case SPDK_NVME_LOG_ERROR:
 		case SPDK_NVME_LOG_HEALTH_INFORMATION:
-		case SPDK_NVME_LOG_FIRMWARE_SLOT:
 			/* TODO: actually fill out log page data */
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		case SPDK_NVME_LOG_FIRMWARE_SLOT:
+			spdk_nvmf_get_firmware_slot_log_page(req->data, offset, len);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		case SPDK_NVME_LOG_COMMAND_EFFECTS_LOG:
 			spdk_nvmf_get_cmds_and_effects_log_page(req->data, offset, len);
