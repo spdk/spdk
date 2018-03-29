@@ -943,6 +943,8 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->frmw.slot1_ro = 1;
 		cdata->frmw.num_slots = 1;
 
+		cdata->lpa.celp = 1; /* Command Effects log page supported */
+
 		cdata->sqes.min = 6;
 		cdata->sqes.max = 6;
 		cdata->cqes.min = 4;
