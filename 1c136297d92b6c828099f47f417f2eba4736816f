@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b3f13c48_cf191f47",
+        "filename": "lib/vhost/rte_vhost/vhost_user.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-29T19:31:14Z",
+      "side": 1,
+      "message": "These should be tab-indented.",
+      "revId": "1c136297d92b6c828099f47f417f2eba4736816f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b6e5ba11_2f3a1756",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-29T19:31:14Z",
+      "side": 1,
+      "message": "This still sets the phase bit before the wmb; we need to make sure the host driver can\u0027t see a state where phase is already flipped but the complete CQE hasn\u0027t been written yet.\n\nIf you tweak what you have currently just a little bit, this should be correct:\n\n    cqe.status.p \u003d !cq-\u003ephase;\n    cq-\u003ecq_cqe[cq-\u003ecq_head] \u003d cqe;\n    spdk_smp_wmb();\n    cq-\u003ecq_cqe[cq-\u003ecq_head].status.p \u003d cq-\u003ephase;",
+      "revId": "1c136297d92b6c828099f47f417f2eba4736816f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
