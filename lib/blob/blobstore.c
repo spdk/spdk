@@ -3612,6 +3612,24 @@ _spdk_blob_set_thin_provision(struct spdk_blob *blob)
 	blob->state = SPDK_BLOB_STATE_DIRTY;
 }
 
+int
+spdk_blob_set_snapshot(struct spdk_blob *blob)
+{
+	int rc;
+
+	_spdk_blob_verify_md_op(blob);
+
+	rc = spdk_blob_set_read_only(blob);
+	if (rc < 0) {
+		return rc;
+	}
+
+	blob->invalid_flags |= SPDK_BLOB_SNAPSHOT;
+	blob->state = SPDK_BLOB_STATE_DIRTY;
+
+	return 0;
+}
+
 static void
 _spdk_bs_create_blob(struct spdk_blob_store *bs,
 		     const struct spdk_blob_opts *opts,
@@ -3815,7 +3833,7 @@ _spdk_bs_snapshot_origblob_sync_cpl(void *cb_arg, int bserrno)
 
 	_spdk_bs_blob_list_add(ctx->original.blob);
 
-	spdk_blob_set_read_only(newblob);
+	spdk_blob_set_snapshot(newblob);
 
 	/* sync snapshot metadata */
 	spdk_blob_sync_md(newblob, _spdk_bs_clone_snapshot_origblob_cleanup, cb_arg);
@@ -4864,7 +4882,7 @@ bool
 spdk_blob_is_snapshot(struct spdk_blob *blob)
 {
 	assert(blob != NULL);
-	return spdk_blob_is_read_only(blob);
+	return blob->invalid_flags & SPDK_BLOB_SNAPSHOT;
 }
 
 bool
