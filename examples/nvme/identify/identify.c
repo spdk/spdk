@@ -42,6 +42,7 @@
 #include "spdk/pci_ids.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
+#include "spdk/uuid.h"
 
 #define MAX_DISCOVERY_LOG_ENTRIES	((uint64_t)1000)
 
@@ -455,8 +456,10 @@ static void
 print_namespace(struct spdk_nvme_ns *ns)
 {
 	const struct spdk_nvme_ns_data		*nsdata;
+	const struct spdk_uuid			*uuid;
 	uint32_t				i;
 	uint32_t				flags;
+	char					uuid_str[SPDK_UUID_STRING_LEN];
 
 	nsdata = spdk_nvme_ns_get_data(ns);
 	flags  = spdk_nvme_ns_get_flags(ns);
@@ -518,6 +521,11 @@ print_namespace(struct spdk_nvme_ns *ns)
 		printf("EUI64:                       ");
 		print_hex_be(&nsdata->eui64, sizeof(nsdata->eui64));
 		printf("\n");
+	}
+	uuid = spdk_nvme_ns_get_uuid(ns);
+	if (uuid) {
+		spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), uuid);
+		printf("UUID:                        %s\n", uuid_str);
 	}
 	printf("Thin Provisioning:           %s\n",
 	       nsdata->nsfeat.thin_prov ? "Supported" : "Not Supported");
