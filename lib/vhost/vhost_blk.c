@@ -498,11 +498,11 @@ alloc_task_pool(struct spdk_vhost_dev *vdev)
  *
  */
 static int
-spdk_vhost_blk_start(struct spdk_vhost_tgt *vtgt, void *event_ctx)
+spdk_vhost_blk_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 {
+	struct spdk_vhost_tgt *vtgt = vdev->vtgt;
 	struct spdk_vhost_blk_tgt *bvtgt = to_blk_tgt(vtgt);
-	struct spdk_vhost_dev *vdev;
-	struct spdk_vhost_blk_dev *bvdev;
+	struct spdk_vhost_blk_dev *bvdev = spdk_vhost_dev_get_ctx(vdev);
 	int rc = 0;
 
 	vdev = vtgt->vdev;
@@ -515,7 +515,6 @@ spdk_vhost_blk_start(struct spdk_vhost_tgt *vtgt, void *event_ctx)
 	}
 
 	spdk_vhost_dev_mem_register(vdev);
-	bvdev = spdk_vhost_dev_get_ctx(vdev);
 
 	if (bvtgt->bdev) {
 		bvdev->bdev_io_channel = spdk_bdev_get_io_channel(bvtgt->bdev_desc);
@@ -529,7 +528,7 @@ spdk_vhost_blk_start(struct spdk_vhost_tgt *vtgt, void *event_ctx)
 	bvdev->requestq_poller = spdk_poller_register(bvtgt->bdev ? vdev_worker : no_bdev_vdev_worker,
 				 vdev, 0);
 	SPDK_NOTICELOG("Started poller for vhost controller %s on lcore %d\n",
-		       vtgt->name, vtgt->lcore);
+		       vtgt->name, vdev->lcore);
 out:
 	spdk_vhost_tgt_backend_event_done(event_ctx, rc);
 	return rc;
@@ -577,11 +576,11 @@ destroy_device_poller_cb(void *arg)
 }
 
 static int
-spdk_vhost_blk_stop(struct spdk_vhost_tgt *vtgt, void *event_ctx)
+spdk_vhost_blk_stop(struct spdk_vhost_dev *vdev, void *event_ctx)
 {
+	struct spdk_vhost_tgt *vtgt = vdev->vtgt;
 	struct spdk_vhost_blk_tgt *bvtgt;
 	struct spdk_vhost_dev_destroy_ctx *destroy_ctx;
-	struct spdk_vhost_dev *vdev = vtgt->vdev;
 	struct spdk_vhost_blk_dev *bvdev = spdk_vhost_dev_get_ctx(vdev);
 
 	bvtgt = to_blk_tgt(vtgt);

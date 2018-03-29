@@ -93,6 +93,18 @@
 #define SPDK_VHOST_DISABLED_FEATURES ((1ULL << VIRTIO_RING_F_EVENT_IDX) | \
 	(1ULL << VIRTIO_F_NOTIFY_ON_EMPTY))
 
+struct spdk_vhost_dev;
+
+/**
+ * Synchronized vhost device event used for backend callbacks.
+ *
+ * \param vdev vhost device.
+ * \param arg user-provided parameter.
+ *
+ * \return 0 on success, -1 on failure.
+ */
+typedef int (*spdk_vhost_dev_fn)(struct spdk_vhost_dev *vdev, void *arg);
+
 struct spdk_vhost_virtqueue {
 	struct rte_vhost_vring vring;
 	void *tasks;
@@ -123,8 +135,8 @@ struct spdk_vhost_tgt_backend {
 	 * The second one is event context that has to be
 	 * passed to spdk_vhost_dev_backend_event_done().
 	 */
-	spdk_vhost_event_fn start_device;
-	spdk_vhost_event_fn stop_device;
+	spdk_vhost_dev_fn start_device;
+	spdk_vhost_dev_fn stop_device;
 
 	int (*vhost_get_config)(struct spdk_vhost_tgt *vtgt, uint8_t *config, uint32_t len);
 	int (*vhost_set_config)(struct spdk_vhost_tgt *vtgt, uint8_t *config,
@@ -143,12 +155,6 @@ struct spdk_vhost_tgt {
 
 	/* Unique target ID. Read-only. */
 	unsigned id;
-
-	/* rte_vhost device ID */
-	int vid;
-
-	/* Logical core ID this target is polling on. If unused, lcore = -1 */
-	int32_t lcore;
 
 	/* Subset of CPU cores to be potentially used for this target. Read-only. */
 	struct spdk_cpuset *cpumask;
@@ -177,6 +183,12 @@ struct spdk_vhost_dev {
 	struct spdk_vhost_tgt *vtgt;
 
 	struct rte_vhost_memory *mem;
+
+	/* rte_vhost device ID */
+	int vid;
+
+	/* Logical core ID this target is polling on. If unused, lcore = -1 */
+	int32_t lcore;
 
 	int task_cnt;
 
@@ -293,6 +305,7 @@ int spdk_vhost_scsi_controller_construct(void);
 int spdk_vhost_blk_controller_construct(void);
 void spdk_vhost_dump_config_json(struct spdk_vhost_tgt *vtgt, struct spdk_json_write_ctx *w);
 void spdk_vhost_tgt_backend_event_done(void *event_ctx, int response);
+void spdk_vhost_tgt_foreach_vdev(struct spdk_vhost_tgt *vtgt, spdk_vhost_dev_fn fn, void *arg);
 void spdk_vhost_lock(void);
 void spdk_vhost_unlock(void);
 
