@@ -22,6 +22,30 @@
       "revId": "1a8ba52c17fdb03a27cf8719f20d78696619fcca",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f2552a3_3d18f11d",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-29T08:10:11Z",
+      "side": 1,
+      "message": "Since we cannot use a mounted filesystem as target for FIO job, we have to use a file - \"/mnt/X/test_file here.\nBefore running FIO needs to know on what \"area\" of the file system can it run, so before traffic starts - it lays out a file with the same size as \"size\" parameter. I didn\u0027t check but I suspect it\u0027s laying out the space with zeroes.\nAfter that it runs for X seconds on created file.",
+      "parentUuid": "4b4f06f5_149d8497",
+      "range": {
+        "startLine": 46,
+        "startChar": 56,
+        "endLine": 46,
+        "endChar": 70
+      },
+      "revId": "1a8ba52c17fdb03a27cf8719f20d78696619fcca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
