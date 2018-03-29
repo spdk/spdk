@@ -2162,12 +2162,14 @@ SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_host_identifier) == 4, "Incorrect
  */
 struct spdk_nvme_firmware_page {
 	struct {
-		uint8_t	slot		: 3; /* slot for current FW */
-		uint8_t	reserved	: 5;
+		uint8_t	active_slot	: 3; /**< Slot for current FW */
+		uint8_t	reserved3	: 1;
+		uint8_t	next_reset_slot	: 3; /**< Slot that will be active at next controller reset */
+		uint8_t	reserved7	: 1;
 	} afi;
 
 	uint8_t			reserved[7];
-	uint64_t		revision[7]; /* revisions for 7 slots */
+	uint8_t			revision[7][8]; /** Revisions for 7 slots (ASCII strings) */
 	uint8_t			reserved2[448];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_firmware_page) == 512, "Incorrect size");
