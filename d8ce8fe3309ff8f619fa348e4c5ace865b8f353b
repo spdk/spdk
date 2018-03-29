@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "569d8ac9_50455d1b",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-03-29T10:56:00Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be handled in similar as those below ? kill_instance returns RPC response and then rpc.py can choose (and probably should) to exit.",
+      "range": {
+        "startLine": 75,
+        "startChar": 0,
+        "endLine": 76,
+        "endChar": 23
+      },
+      "revId": "d8ce8fe3309ff8f619fa348e4c5ace865b8f353b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
