@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1e1abb5d_971b7adf",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-03-29T08:40:37Z",
+      "side": 1,
+      "message": "for latest patch set, is this change related with the purpose?",
+      "revId": "e19db6cd343fdef51463198ce1e12d6c48c306ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
