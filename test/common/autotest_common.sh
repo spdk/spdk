@@ -226,6 +226,12 @@ function waitforlisten() {
 
 	rpc_addr="${2:-$DEFAULT_RPC_ADDR}"
 
+	namespace=$(ip netns identify $1)
+	if [ -n "$namespace" ]; then
+		echo "Process $1 is running in $namespace namespace"
+		ns_cmd="ip netns exec $namespace"
+	fi
+
 	echo "Waiting for process to start up and listen on UNIX domain socket $rpc_addr..."
 	# turn off trace for this loop
 	set +x
@@ -237,12 +243,12 @@ function waitforlisten() {
 			exit 1
 		fi
 		if hash ss; then
-			if ss -lx | grep -q $rpc_addr; then
+			if $ns_cmd ss -lx | grep -q $rpc_addr; then
 				ret=0
 			fi
 		else
 			# if system doesn't have ss, just assume it has netstat
-			if netstat -an -x | grep -iw LISTENING | grep -q $rpc_addr; then
+			if $ns_cmd netstat -an -x | grep -iw LISTENING | grep -q $rpc_addr; then
 				ret=0
 			fi
 		fi
