@@ -22,6 +22,30 @@
       "revId": "d8ce8fe3309ff8f619fa348e4c5ace865b8f353b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b99dda63_91ec5a24",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-03-29T11:24:59Z",
+      "side": 1,
+      "message": "This is the case where we don\u0027t get the response, but we can just return here and exit in app.py as you suggested.",
+      "parentUuid": "569d8ac9_50455d1b",
+      "range": {
+        "startLine": 75,
+        "startChar": 0,
+        "endLine": 76,
+        "endChar": 23
+      },
+      "revId": "d8ce8fe3309ff8f619fa348e4c5ace865b8f353b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
