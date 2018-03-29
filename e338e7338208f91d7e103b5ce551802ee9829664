@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "960c512c_dd05d51d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1002,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-29T22:15:27Z",
+      "side": 1,
+      "message": "The modifications to this function look like the same as the ones in https://review.gerrithub.io/#/c/405438/ - please rebase that patch into this series before this one so we don\u0027t end up with a merge conflict.",
+      "revId": "e338e7338208f91d7e103b5ce551802ee9829664",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
