@@ -23,7 +23,8 @@ NVMF_PORT=4420
 timing_enter nvme_remote
 
 # Start the NVMf target
-$rootdir/app/nvmf_tgt/nvmf_tgt -c $rootdir/test/nvmf/nvmf.conf -m 0x2 -p 1 -s 512 &
+NVMF_APP="$TARGET_NS_CMD $rootdir/app/nvmf_tgt/nvmf_tgt"
+$NVMF_APP -c $rootdir/test/nvmf/nvmf.conf -m 0x2 -p 1 -s 512 &
 nvmfpid=$!
 echo "NVMf target launched. pid: $nvmfpid"
 trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
@@ -43,7 +44,7 @@ if [ $1 -eq 1 ]; then
 fi
 # Start the iSCSI target without using stub
 iscsi_rpc_addr="/var/tmp/spdk-iscsi.sock"
-$rootdir/app/iscsi_tgt/iscsi_tgt -r "$iscsi_rpc_addr" -c $testdir/iscsi.conf.tmp -m 0x1 -p 0 -s 512 &
+$ISCSI_APP -r "$iscsi_rpc_addr" -c $testdir/iscsi.conf.tmp -m 0x1 -p 0 -s 512 &
 iscsipid=$!
 echo "iSCSI target launched. pid: $iscsipid"
 trap "killprocess $iscsipid; killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
