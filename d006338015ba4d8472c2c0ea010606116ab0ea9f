@@ -50,6 +50,24 @@
       "revId": "d006338015ba4d8472c2c0ea010606116ab0ea9f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6872ad82_53b6c4a0",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 547,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-03-29T23:20:35Z",
+      "side": 1,
+      "message": "Hi Daniel, For this I am not clear for your suggestion. Actually this code is nearly same in libiscsi, I think that it is correct.",
+      "parentUuid": "02fca7ac_6d56e274",
+      "revId": "d006338015ba4d8472c2c0ea010606116ab0ea9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
