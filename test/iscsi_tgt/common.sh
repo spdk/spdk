@@ -28,16 +28,48 @@ function create_veth_interfaces() {
 	ip netns add $TARGET_NAMESPACE
 	ip link set $TARGET_INTERFACE netns $TARGET_NAMESPACE
 
-	$TARGET_NS_CMD ip link set lo up
-	$TARGET_NS_CMD ip addr add $TARGET_IP/24 dev $TARGET_INTERFACE
-	$TARGET_NS_CMD ip link set $TARGET_INTERFACE up
-
 	trap "cleanup_veth_interfaces; exit 1" SIGINT SIGTERM EXIT
+
+	if [ $SPDK_TEST_VPP -eq 0 ]; then
+		$TARGET_NS_CMD ip link set lo up
+		$TARGET_NS_CMD ip addr add $TARGET_IP/24 dev $TARGET_INTERFACE
+		$TARGET_NS_CMD ip link set $TARGET_INTERFACE up
+	else
+		start_vpp
+	fi
 }
 
 function cleanup_veth_interfaces() {
+
+	if [ $SPDK_TEST_VPP -eq 1 ]; then
+		kill_vpp
+	fi
+
 	# Cleanup veth interfaces and network namespace
 	# Note: removing one veth, removes the pair
 	ip link delete $INITIATOR_INTERFACE
 	ip netns del $TARGET_NAMESPACE
+}
+
+function start_vpp() {
+	# Disable VPP communication library debug
+	export VCL_DEBUG=0
+
+	# Start VPP process in SPDK target network namespace
+	$TARGET_NS_CMD vpp unix { cli-listen /run/vpp/cli.sock gid 0 } &
+	sleep 5
+	vpp_pid=$(pgrep vpp)
+	echo "VPP Process pid: $vpp_pid"
+
+	# Setup host interface
+	vppctl create host-interface name $TARGET_INTERFACE
+	VPP_TGT_INT="host-$TARGET_INTERFACE"
+	vppctl set interface state $VPP_TGT_INT up
+	vppctl set interface ip address $VPP_TGT_INT $TARGET_IP/24
+}
+
+function kill_vpp() {
+	vppctl delete host-interface name $TARGET_INTERFACE
+	vpp_pid=$(pgrep vpp)
+	killprocess $vpp_pid
 }
