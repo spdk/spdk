@@ -11,6 +11,17 @@ source $rootdir/test/iscsi_tgt/common.sh
 
 timing_enter iscsi_tgt
 
+if [ $SPDK_TEST_VPP -eq 1 ]; then
+	export TARGET_IP=10.10.1.10
+	export INITIATOR_IP=10.10.1.11
+
+	start_vpp
+else
+	export TARGET_IP=127.0.0.1
+	export INITIATOR_IP=127.0.0.1
+fi
+
+
 # ISCSI_TEST_CORE_MASK is the biggest core mask specified by
 #  any of the iscsi_tgt tests.  Using this mask for the stub
 #  ensures that if this mask spans CPU sockets, that we will
@@ -19,7 +30,11 @@ timing_enter iscsi_tgt
 #  core 0) so there is no impact to the iscsi_tgt tests by
 #  specifying the bigger core mask.
 start_stub "-s 2048 -i 0 -m $ISCSI_TEST_CORE_MASK"
-trap "kill_stub; exit 1" SIGINT SIGTERM EXIT
+if [ $SPDK_TEST_VPP -eq 1 ]; then
+	trap "kill_stub; kill_vpp; exit 1" SIGINT SIGTERM EXIT
+else
+	trap "kill_stub; exit 1" SIGINT SIGTERM EXIT
+fi
 
 run_test ./test/iscsi_tgt/calsoft/calsoft.sh
 run_test ./test/iscsi_tgt/filesystem/filesystem.sh
@@ -58,6 +73,10 @@ fi
 
 if [ $SPDK_TEST_ISCSI_INITIATOR -eq 1 ]; then
 	run_test ./test/iscsi_tgt/initiator/initiator.sh
+fi
+
+if [ $SPDK_TEST_VPP -eq 1 ]; then
+	kill_vpp
 fi
 
 timing_exit iscsi_tgt
