@@ -4,6 +4,7 @@ from subprocess import check_call, call, check_output, Popen, PIPE
 import re
 import sys
 import signal
+import time
 
 fio_template = """
 [global]
@@ -61,6 +62,7 @@ def main():
     else:
         verify = False
 
+    time.sleep(1)
     devices = get_target_devices()
     print "Found devices: ", devices
 
