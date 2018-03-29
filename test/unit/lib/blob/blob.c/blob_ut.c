@@ -773,8 +773,8 @@ blob_clone(void)
 	CU_ASSERT(g_bserrno == -EINVAL);
 	CU_ASSERT(g_blobid == SPDK_BLOBID_INVALID);
 
-	/* Mark blob as read only */
-	spdk_blob_set_read_only(blob);
+	/* Mark blob as snapshot */
+	spdk_blob_set_snapshot(blob);
 	spdk_blob_sync_md(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
@@ -3904,8 +3904,8 @@ blob_relations(void)
 
 	/* 4. Try to create clone from not read only blob */
 
-	/* Mark blob as read only */
-	spdk_blob_set_read_only(blob);
+	/* Mark blob as snapshot */
+	spdk_blob_set_snapshot(blob);
 	spdk_blob_sync_md(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
