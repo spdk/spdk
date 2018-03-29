@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from rpc.client import print_dict
+from rpc.client import print_dict, JSONRPCException
 
 import argparse
 import rpc
@@ -13,6 +13,16 @@ except ImportError:
 
 def print_array(a):
     print(" ".join((quote(v) for v in a)))
+
+
+def call_cmd(func):
+    def rpc_cmd(*args, **kwargs):
+        try:
+            func(*args, **kwargs)
+        except JSONRPCException as ex:
+            print(ex.message)
+            exit(1)
+    return rpc_cmd
 
 
 if __name__ == "__main__":
@@ -30,12 +40,14 @@ if __name__ == "__main__":
                         help='Verbose mode', action='store_true')
     subparsers = parser.add_subparsers(help='RPC methods')
 
+    @call_cmd
     def get_rpc_methods(args):
         print_dict(rpc.get_rpc_methods(args.client, args))
 
     p = subparsers.add_parser('get_rpc_methods', help='Get list of supported RPC methods')
     p.set_defaults(func=get_rpc_methods)
 
+    @call_cmd
     def save_config(args):
         rpc.save_config(args.client, args)
 
@@ -46,6 +58,7 @@ if __name__ == "__main__":
     indent level is 2. If writing to file of filename is '-' then default is compact mode.""", type=int, default=2)
     p.set_defaults(func=save_config)
 
+    @call_cmd
     def load_config(args):
         rpc.load_config(args.client, args)
 
@@ -55,6 +68,7 @@ if __name__ == "__main__":
     p.set_defaults(func=load_config)
 
     # app
+    @call_cmd
     def kill_instance(args):
         rpc.app.kill_instance(args.client, args)
 
@@ -62,6 +76,7 @@ if __name__ == "__main__":
     p.add_argument('sig_name', help='signal will be sent to server.')
     p.set_defaults(func=kill_instance)
 
+    @call_cmd
     def context_switch_monitor(args):
         print_dict(rpc.app.context_switch_monitor(args.client, args))
 
@@ -71,6 +86,7 @@ if __name__ == "__main__":
     p.set_defaults(func=context_switch_monitor)
 
     # bdev
+    @call_cmd
     def construct_malloc_bdev(args):
         print_array(rpc.bdev.construct_malloc_bdev(args.client, args))
 
@@ -83,6 +99,7 @@ if __name__ == "__main__":
     p.add_argument('block_size', help='Block size for this bdev', type=int)
     p.set_defaults(func=construct_malloc_bdev)
 
+    @call_cmd
     def construct_null_bdev(args):
         print_array(rpc.bdev.construct_null_bdev(args.client, args))
 
@@ -95,6 +112,7 @@ if __name__ == "__main__":
     p.add_argument('block_size', help='Block size for this bdev', type=int)
     p.set_defaults(func=construct_null_bdev)
 
+    @call_cmd
     def construct_aio_bdev(args):
         print_array(rpc.bdev.construct_aio_bdev(args.client, args))
 
@@ -105,6 +123,7 @@ if __name__ == "__main__":
     p.add_argument('block_size', help='Block size for this bdev', type=int, default=argparse.SUPPRESS)
     p.set_defaults(func=construct_aio_bdev)
 
+    @call_cmd
     def construct_nvme_bdev(args):
         print_array(rpc.bdev.construct_nvme_bdev(args.client, args))
 
@@ -122,6 +141,7 @@ if __name__ == "__main__":
     p.add_argument('-n', '--subnqn', help='NVMe-oF target subnqn')
     p.set_defaults(func=construct_nvme_bdev)
 
+    @call_cmd
     def construct_rbd_bdev(args):
         print_array(rpc.bdev.construct_rbd_bdev(args.client, args))
 
@@ -133,6 +153,7 @@ if __name__ == "__main__":
     p.add_argument('block_size', help='rbd block size', type=int)
     p.set_defaults(func=construct_rbd_bdev)
 
+    @call_cmd
     def construct_error_bdev(args):
         rpc.bdev.construct_error_bdev(args.client, args)
 
@@ -141,6 +162,7 @@ if __name__ == "__main__":
     p.add_argument('base_name', help='base bdev name')
     p.set_defaults(func=construct_error_bdev)
 
+    @call_cmd
     def construct_pmem_bdev(args):
         print_array(rpc.bdev.construct_pmem_bdev(args.client, args))
 
@@ -149,6 +171,7 @@ if __name__ == "__main__":
     p.add_argument('-n', '--name', help='Block device name', required=True)
     p.set_defaults(func=construct_pmem_bdev)
 
+    @call_cmd
     def get_bdevs(args):
         print_dict(rpc.bdev.get_bdevs(args.client, args))
 
@@ -157,6 +180,7 @@ if __name__ == "__main__":
     p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1", required=False)
     p.set_defaults(func=get_bdevs)
 
+    @call_cmd
     def get_bdevs_config(args):
         print_dict(rpc.bdev.get_bdevs_config(args.client, args))
 
@@ -165,6 +189,7 @@ if __name__ == "__main__":
     p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1", required=False)
     p.set_defaults(func=get_bdevs_config)
 
+    @call_cmd
     def delete_bdev(args):
         rpc.bdev.delete_bdev(args.client, args)
 
@@ -173,6 +198,7 @@ if __name__ == "__main__":
         'bdev_name', help='Blockdev name to be deleted. Example: Malloc0.')
     p.set_defaults(func=delete_bdev)
 
+    @call_cmd
     def bdev_inject_error(args):
         rpc.bdev.bdev_inject_error(args.client, args)
 
@@ -184,6 +210,7 @@ if __name__ == "__main__":
         '-n', '--num', help='the number of commands you want to fail', type=int, default=1)
     p.set_defaults(func=bdev_inject_error)
 
+    @call_cmd
     def apply_firmware(args):
         print_dict(rpc.bdev.apply_firmware(args.client, args))
 
@@ -193,6 +220,7 @@ if __name__ == "__main__":
     p.set_defaults(func=apply_firmware)
 
     # iSCSI
+    @call_cmd
     def get_portal_groups(args):
         print_dict(rpc.iscsi.get_portal_groups(args.client, args))
 
@@ -200,6 +228,7 @@ if __name__ == "__main__":
         'get_portal_groups', help='Display current portal group configuration')
     p.set_defaults(func=get_portal_groups)
 
+    @call_cmd
     def get_initiator_groups(args):
         print_dict(rpc.iscsi.get_initiator_groups(args.client, args))
 
@@ -207,12 +236,14 @@ if __name__ == "__main__":
                               help='Display current initiator group configuration')
     p.set_defaults(func=get_initiator_groups)
 
+    @call_cmd
     def get_target_nodes(args):
         print_dict(rpc.iscsi.get_target_nodes(args.client, args))
 
     p = subparsers.add_parser('get_target_nodes', help='Display target nodes')
     p.set_defaults(func=get_target_nodes)
 
+    @call_cmd
     def construct_target_node(args):
         rpc.iscsi.construct_target_node(args.client, args)
 
@@ -246,6 +277,7 @@ if __name__ == "__main__":
                    help='Data Digest should be required for this target node.', action='store_true')
     p.set_defaults(func=construct_target_node)
 
+    @call_cmd
     def target_node_add_lun(args):
         rpc.iscsi.target_node_add_lun(args.client, args)
 
@@ -257,6 +289,7 @@ if __name__ == "__main__":
     *** If LUN ID is omitted or -1, the lowest free one is assigned ***""", type=int, required=False)
     p.set_defaults(func=target_node_add_lun)
 
+    @call_cmd
     def add_pg_ig_maps(args):
         rpc.iscsi.add_pg_ig_maps(args.client, args)
 
@@ -269,6 +302,7 @@ if __name__ == "__main__":
     *** The Portal/Initiator Groups must be precreated ***""")
     p.set_defaults(func=add_pg_ig_maps)
 
+    @call_cmd
     def delete_pg_ig_maps(args):
         rpc.iscsi.delete_pg_ig_maps(args.client, args)
 
@@ -281,6 +315,7 @@ if __name__ == "__main__":
     *** The Portal/Initiator Groups must be precreated ***""")
     p.set_defaults(func=delete_pg_ig_maps)
 
+    @call_cmd
     def add_portal_group(args):
         rpc.iscsi.add_portal_group(args.client, args)
 
@@ -292,6 +327,7 @@ if __name__ == "__main__":
     Example: '192.168.100.100:3260' '192.168.100.100:3261' '192.168.100.100:3262@0x1""")
     p.set_defaults(func=add_portal_group)
 
+    @call_cmd
     def add_initiator_group(args):
         rpc.iscsi.add_initiator_group(args.client, args)
 
@@ -305,6 +341,7 @@ if __name__ == "__main__":
     Example: '255.255.0.0 255.248.0.0' etc""")
     p.set_defaults(func=add_initiator_group)
 
+    @call_cmd
     def add_initiators_to_initiator_group(args):
         rpc.iscsi.add_initiators_to_initiator_group(args.client, args)
 
@@ -318,6 +355,7 @@ if __name__ == "__main__":
     This parameter can be omitted.  Example: '255.255.0.0 255.248.0.0' etc""", required=False)
     p.set_defaults(func=add_initiators_to_initiator_group)
 
+    @call_cmd
     def delete_initiators_from_initiator_group(args):
         rpc.iscsi.delete_initiators_from_initiator_group(args.client, args)
 
@@ -331,6 +369,7 @@ if __name__ == "__main__":
     This parameter can be omitted.  Example: '255.255.0.0 255.248.0.0' etc""", required=False)
     p.set_defaults(func=delete_initiators_from_initiator_group)
 
+    @call_cmd
     def delete_target_node(args):
         rpc.iscsi.delete_target_node(args.client, args)
 
@@ -340,6 +379,7 @@ if __name__ == "__main__":
                    help='Target node name to be deleted. Example: iqn.2016-06.io.spdk:disk1.')
     p.set_defaults(func=delete_target_node)
 
+    @call_cmd
     def delete_portal_group(args):
         rpc.iscsi.delete_portal_group(args.client, args)
 
@@ -349,6 +389,7 @@ if __name__ == "__main__":
         'tag', help='Portal group tag (unique, integer > 0)', type=int)
     p.set_defaults(func=delete_portal_group)
 
+    @call_cmd
     def delete_initiator_group(args):
         rpc.iscsi.delete_initiator_group(args.client, args)
 
@@ -358,6 +399,7 @@ if __name__ == "__main__":
         'tag', help='Initiator group tag (unique, integer > 0)', type=int)
     p.set_defaults(func=delete_initiator_group)
 
+    @call_cmd
     def get_iscsi_connections(args):
         print_dict(rpc.iscsi.get_iscsi_connections(args.client, args))
 
@@ -365,12 +407,14 @@ if __name__ == "__main__":
                               help='Display iSCSI connections')
     p.set_defaults(func=get_iscsi_connections)
 
+    @call_cmd
     def get_iscsi_global_params(args):
         print_dict(rpc.iscsi.get_iscsi_global_params(args.client, args))
 
     p = subparsers.add_parser('get_iscsi_global_params', help='Display iSCSI global parameters')
     p.set_defaults(func=get_iscsi_global_params)
 
+    @call_cmd
     def get_scsi_devices(args):
         print_dict(rpc.iscsi.get_scsi_devices(args.client, args))
 
@@ -378,6 +422,7 @@ if __name__ == "__main__":
     p.set_defaults(func=get_scsi_devices)
 
     # log
+    @call_cmd
     def set_trace_flag(args):
         rpc.log.set_trace_flag(args.client, args)
 
@@ -386,6 +431,7 @@ if __name__ == "__main__":
         'flag', help='trace mask we want to set. (for example "debug").')
     p.set_defaults(func=set_trace_flag)
 
+    @call_cmd
     def clear_trace_flag(args):
         rpc.log.clear_trace_flag(args.client, args)
 
@@ -394,12 +440,14 @@ if __name__ == "__main__":
         'flag', help='trace mask we want to clear. (for example "debug").')
     p.set_defaults(func=clear_trace_flag)
 
+    @call_cmd
     def get_trace_flags(args):
         print_dict(rpc.log.get_trace_flags(args.client, args))
 
     p = subparsers.add_parser('get_trace_flags', help='get trace flags')
     p.set_defaults(func=get_trace_flags)
 
+    @call_cmd
     def set_log_level(args):
         rpc.log.set_log_level(args.client, args)
 
@@ -407,12 +455,14 @@ if __name__ == "__main__":
     p.add_argument('level', help='log level we want to set. (for example "DEBUG").')
     p.set_defaults(func=set_log_level)
 
+    @call_cmd
     def get_log_level(args):
         print_dict(rpc.log.get_log_level(args.client, args))
 
     p = subparsers.add_parser('get_log_level', help='get log level')
     p.set_defaults(func=get_log_level)
 
+    @call_cmd
     def set_log_print_level(args):
         rpc.log.set_log_print_level(args.client, args)
 
@@ -420,6 +470,7 @@ if __name__ == "__main__":
     p.add_argument('level', help='log print level we want to set. (for example "DEBUG").')
     p.set_defaults(func=set_log_print_level)
 
+    @call_cmd
     def get_log_print_level(args):
         print_dict(rpc.log.get_log_print_level(args.client, args))
 
@@ -427,6 +478,7 @@ if __name__ == "__main__":
     p.set_defaults(func=get_log_print_level)
 
     # lvol
+    @call_cmd
     def construct_lvol_store(args):
         print_array(rpc.lvol.construct_lvol_store(args.client, args))
 
@@ -436,6 +488,7 @@ if __name__ == "__main__":
     p.add_argument('-c', '--cluster-sz', help='size of cluster (in bytes)', type=int, required=False)
     p.set_defaults(func=construct_lvol_store)
 
+    @call_cmd
     def rename_lvol_store(args):
         rpc.lvol.rename_lvol_store(args.client, args)
 
@@ -444,6 +497,7 @@ if __name__ == "__main__":
     p.add_argument('new_name', help='new name')
     p.set_defaults(func=rename_lvol_store)
 
+    @call_cmd
     def construct_lvol_bdev(args):
         print_array(rpc.lvol.construct_lvol_bdev(args.client, args))
 
@@ -455,6 +509,7 @@ if __name__ == "__main__":
     p.add_argument('size', help='size in MiB for this bdev', type=int)
     p.set_defaults(func=construct_lvol_bdev)
 
+    @call_cmd
     def rename_lvol_bdev(args):
         rpc.lvol.rename_lvol_bdev(args.client, args)
 
@@ -472,6 +527,7 @@ if __name__ == "__main__":
     # p.add_argument('size', help='new size in MiB for this bdev', type=int)
     # p.set_defaults(func=resize_lvol_bdev)
 
+    @call_cmd
     def destroy_lvol_store(args):
         rpc.lvol.destroy_lvol_store(args.client, args)
 
@@ -480,6 +536,7 @@ if __name__ == "__main__":
     p.add_argument('-l', '--lvs_name', help='lvol store name', required=False)
     p.set_defaults(func=destroy_lvol_store)
 
+    @call_cmd
     def get_lvol_stores(args):
         print_dict(rpc.lvol.get_lvol_stores(args.client, args))
 
@@ -489,6 +546,7 @@ if __name__ == "__main__":
     p.set_defaults(func=get_lvol_stores)
 
     # nbd
+    @call_cmd
     def start_nbd_disk(args):
         rpc.nbd.start_nbd_disk(args.client,
                                bdev_name=args.bdev_name,
@@ -499,6 +557,7 @@ if __name__ == "__main__":
     p.add_argument('nbd_device', help='Nbd device name to be assigned. Example: /dev/nbd0.')
     p.set_defaults(func=start_nbd_disk)
 
+    @call_cmd
     def stop_nbd_disk(args):
         rpc.nbd.stop_nbd_disk(args.client,
                               nbd_device=args.nbd_device)
@@ -507,6 +566,7 @@ if __name__ == "__main__":
     p.add_argument('nbd_device', help='Nbd device name to be stopped. Example: /dev/nbd0.')
     p.set_defaults(func=stop_nbd_disk)
 
+    @call_cmd
     def get_nbd_disks(args):
         print_dict(rpc.nbd.get_nbd_disks(args.client,
                                          nbd_device=args.nbd_device))
@@ -516,6 +576,7 @@ if __name__ == "__main__":
     p.set_defaults(func=get_nbd_disks)
 
     # net
+    @call_cmd
     def add_ip_address(args):
         rpc.net.add_ip_address(args.client, args)
 
@@ -524,6 +585,7 @@ if __name__ == "__main__":
     p.add_argument('ip_addr', help='ip address will be added.')
     p.set_defaults(func=add_ip_address)
 
+    @call_cmd
     def delete_ip_address(args):
         rpc.net.delete_ip_address(args.client, args)
 
@@ -532,6 +594,7 @@ if __name__ == "__main__":
     p.add_argument('ip_addr', help='ip address will be deleted.')
     p.set_defaults(func=delete_ip_address)
 
+    @call_cmd
     def get_interfaces(args):
         print_dict(rpc.net.get_interfaces(args.client, args))
 
@@ -540,6 +603,7 @@ if __name__ == "__main__":
     p.set_defaults(func=get_interfaces)
 
     # NVMe-oF
+    @call_cmd
     def get_nvmf_subsystems(args):
         print_dict(rpc.nvmf.get_nvmf_subsystems(args.client, args))
 
@@ -547,6 +611,7 @@ if __name__ == "__main__":
                               help='Display nvmf subsystems')
     p.set_defaults(func=get_nvmf_subsystems)
 
+    @call_cmd
     def construct_nvmf_subsystem(args):
         rpc.nvmf.construct_nvmf_subsystem(args.client, args)
 
@@ -570,6 +635,7 @@ if __name__ == "__main__":
                    type=int, default=0)
     p.set_defaults(func=construct_nvmf_subsystem)
 
+    @call_cmd
     def delete_nvmf_subsystem(args):
         rpc.nvmf.delete_nvmf_subsystem(args.client, args)
 
@@ -579,6 +645,7 @@ if __name__ == "__main__":
                    help='subsystem nqn to be deleted. Example: nqn.2016-06.io.spdk:cnode1.')
     p.set_defaults(func=delete_nvmf_subsystem)
 
+    @call_cmd
     def nvmf_subsystem_add_listener(args):
         rpc.nvmf.nvmf_subsystem_add_listener(args.client, args)
 
@@ -590,6 +657,7 @@ if __name__ == "__main__":
     p.add_argument('-s', '--trsvcid', help='NVMe-oF transport service id: e.g., a port number')
     p.set_defaults(func=nvmf_subsystem_add_listener)
 
+    @call_cmd
     def nvmf_subsystem_remove_listener(args):
         rpc.nvmf.nvmf_subsystem_remove_listener(args.client, args)
 
@@ -601,6 +669,7 @@ if __name__ == "__main__":
     p.add_argument('-s', '--trsvcid', help='NVMe-oF transport service id: e.g., a port number')
     p.set_defaults(func=nvmf_subsystem_remove_listener)
 
+    @call_cmd
     def nvmf_subsystem_add_ns(args):
         rpc.nvmf.nvmf_subsystem_add_ns(args.client, args)
 
@@ -612,6 +681,7 @@ if __name__ == "__main__":
     p.add_argument('-e', '--eui64', help='Namespace EUI-64 identifier (optional)')
     p.set_defaults(func=nvmf_subsystem_add_ns)
 
+    @call_cmd
     def nvmf_subsystem_remove_ns(args):
         rpc.nvmf.nvmf_subsystem_remove_ns(args.client, args)
 
@@ -620,6 +690,7 @@ if __name__ == "__main__":
     p.add_argument('nsid', help='The requested NSID', type=int)
     p.set_defaults(func=nvmf_subsystem_remove_ns)
 
+    @call_cmd
     def nvmf_subsystem_add_host(args):
         rpc.nvmf.nvmf_subsystem_add_host(args.client, args)
 
@@ -628,6 +699,7 @@ if __name__ == "__main__":
     p.add_argument('host', help='Host NQN to allow')
     p.set_defaults(func=nvmf_subsystem_add_host)
 
+    @call_cmd
     def nvmf_subsystem_remove_host(args):
         rpc.nvmf.nvmf_subsystem_remove_host(args.client, args)
 
@@ -636,6 +708,7 @@ if __name__ == "__main__":
     p.add_argument('host', help='Host NQN to remove')
     p.set_defaults(func=nvmf_subsystem_remove_host)
 
+    @call_cmd
     def nvmf_subsystem_allow_any_host(args):
         rpc.nvmf.nvmf_subsystem_allow_any_host(args.client, args)
 
@@ -646,6 +719,7 @@ if __name__ == "__main__":
     p.set_defaults(func=nvmf_subsystem_allow_any_host)
 
     # pmem
+    @call_cmd
     def create_pmem_pool(args):
         rpc.pmem.create_pmem_pool(args.client, args)
 
@@ -655,6 +729,7 @@ if __name__ == "__main__":
     p.add_argument('block_size', help='Block size for this pmem pool', type=int)
     p.set_defaults(func=create_pmem_pool)
 
+    @call_cmd
     def pmem_pool_info(args):
         print_dict(rpc.pmem.pmem_pool_info(args.client, args))
 
@@ -662,6 +737,7 @@ if __name__ == "__main__":
     p.add_argument('pmem_file', help='Path to pmemblk pool file')
     p.set_defaults(func=pmem_pool_info)
 
+    @call_cmd
     def delete_pmem_pool(args):
         rpc.pmem.delete_pmem_pool(args.client, args)
 
@@ -670,6 +746,7 @@ if __name__ == "__main__":
     p.set_defaults(func=delete_pmem_pool)
 
     # subsystem
+    @call_cmd
     def get_subsystems(args):
         print_dict(rpc.subsystem.get_subsystems(args.client))
 
@@ -677,6 +754,7 @@ if __name__ == "__main__":
     entry contain (unsorted) array of subsystems it depends on.""")
     p.set_defaults(func=get_subsystems)
 
+    @call_cmd
     def get_subsystem_config(args):
         print_dict(rpc.subsystem.get_subsystem_config(args.client, args.name))
 
@@ -685,6 +763,7 @@ if __name__ == "__main__":
     p.set_defaults(func=get_subsystem_config)
 
     # vhost
+    @call_cmd
     def set_vhost_controller_coalescing(args):
         rpc.vhost.set_vhost_controller_coalescing(args.client, args)
 
@@ -694,6 +773,7 @@ if __name__ == "__main__":
     p.add_argument('iops_threshold', help='IOPS threshold when coalescing is enabled', type=int)
     p.set_defaults(func=set_vhost_controller_coalescing)
 
+    @call_cmd
     def construct_vhost_scsi_controller(args):
         rpc.vhost.construct_vhost_scsi_controller(args.client, args)
 
@@ -703,6 +783,7 @@ if __name__ == "__main__":
     p.add_argument('--cpumask', help='cpu mask for this controller')
     p.set_defaults(func=construct_vhost_scsi_controller)
 
+    @call_cmd
     def add_vhost_scsi_lun(args):
         rpc.vhost.add_vhost_scsi_lun(args.client, args)
 
@@ -713,6 +794,7 @@ if __name__ == "__main__":
     p.add_argument('bdev_name', help='bdev name')
     p.set_defaults(func=add_vhost_scsi_lun)
 
+    @call_cmd
     def remove_vhost_scsi_target(args):
         rpc.vhost.remove_vhost_scsi_target(args.client, args)
 
@@ -721,6 +803,7 @@ if __name__ == "__main__":
     p.add_argument('scsi_target_num', help='scsi_target_num', type=int)
     p.set_defaults(func=remove_vhost_scsi_target)
 
+    @call_cmd
     def construct_vhost_blk_controller(args):
         rpc.vhost.construct_vhost_blk_controller(args.client, args)
 
@@ -731,12 +814,14 @@ if __name__ == "__main__":
     p.add_argument("-r", "--readonly", action='store_true', help='Set controller as read-only')
     p.set_defaults(func=construct_vhost_blk_controller)
 
+    @call_cmd
     def get_vhost_controllers(args):
         print_dict(rpc.vhost.get_vhost_controllers(args.client, args))
 
     p = subparsers.add_parser('get_vhost_controllers', help='List vhost controllers')
     p.set_defaults(func=get_vhost_controllers)
 
+    @call_cmd
     def remove_vhost_controller(args):
         rpc.vhost.remove_vhost_controller(args.client, args)
 
@@ -744,6 +829,7 @@ if __name__ == "__main__":
     p.add_argument('ctrlr', help='controller name')
     p.set_defaults(func=remove_vhost_controller)
 
+    @call_cmd
     def construct_virtio_user_scsi_bdev(args):
         print_dict(rpc.vhost.construct_virtio_user_scsi_bdev(args.client, args))
 
@@ -757,6 +843,7 @@ if __name__ == "__main__":
     p.add_argument('--vq-size', help='Size of each queue', type=int)
     p.set_defaults(func=construct_virtio_user_scsi_bdev)
 
+    @call_cmd
     def construct_virtio_pci_scsi_bdev(args):
         print_dict(rpc.vhost.construct_virtio_pci_scsi_bdev(args.client, args))
 
@@ -768,12 +855,14 @@ if __name__ == "__main__":
     It will be inhereted by all created bdevs, which are named n the following format: <name>t<target_id>""")
     p.set_defaults(func=construct_virtio_pci_scsi_bdev)
 
+    @call_cmd
     def get_virtio_scsi_devs(args):
         print_dict(rpc.vhost.get_virtio_scsi_devs(args.client, args))
 
     p = subparsers.add_parser('get_virtio_scsi_devs', help='List all Virtio-SCSI devices.')
     p.set_defaults(func=get_virtio_scsi_devs)
 
+    @call_cmd
     def remove_virtio_scsi_bdev(args):
         rpc.vhost.remove_virtio_scsi_bdev(args.client, args)
 
@@ -782,6 +871,7 @@ if __name__ == "__main__":
     p.add_argument('name', help='Virtio device name. E.g. VirtioUser0')
     p.set_defaults(func=remove_virtio_scsi_bdev)
 
+    @call_cmd
     def construct_virtio_user_blk_bdev(args):
         print_dict(rpc.vhost.construct_virtio_user_blk_bdev(args.client, args))
 
@@ -792,6 +882,7 @@ if __name__ == "__main__":
     p.add_argument('--vq-size', help='Size of each queue', type=int)
     p.set_defaults(func=construct_virtio_user_blk_bdev)
 
+    @call_cmd
     def construct_virtio_pci_blk_bdev(args):
         print_dict(rpc.vhost.construct_virtio_pci_blk_bdev(args.client, args))
 
