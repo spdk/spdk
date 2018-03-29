@@ -59,6 +59,8 @@ static struct spdk_nvme_error_information_entry error_page[256];
 
 static struct spdk_nvme_health_information_page health_page;
 
+static struct spdk_nvme_firmware_page firmware_page;
+
 static struct spdk_nvme_intel_smart_information_page intel_smart_page;
 
 static struct spdk_nvme_intel_temperature_page intel_temperature_page;
@@ -224,6 +226,18 @@ get_health_log_page(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 static int
+get_firmware_log_page(struct spdk_nvme_ctrlr *ctrlr)
+{
+	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_LOG_FIRMWARE_SLOT,
+					     SPDK_NVME_GLOBAL_NS_TAG, &firmware_page, sizeof(firmware_page), 0, get_log_page_completion, NULL)) {
+		printf("spdk_nvme_ctrlr_cmd_get_log_page() failed\n");
+		exit(1);
+	}
+
+	return 0;
+}
+
+static int
 get_intel_smart_log_page(struct spdk_nvme_ctrlr *ctrlr)
 {
 	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_INTEL_LOG_SMART, SPDK_NVME_GLOBAL_NS_TAG,
@@ -371,6 +385,12 @@ get_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 		printf("Get Log Page (SMART/health) failed\n");
 	}
 
+	if (get_firmware_log_page(ctrlr) == 0) {
+		outstanding_commands++;
+	} else {
+		printf("Get Log Page (Firmware Slot Information) failed\n");
+	}
+
 	if (cdata->vid == SPDK_PCI_VID_INTEL) {
 		if (spdk_nvme_ctrlr_is_log_page_supported(ctrlr, SPDK_NVME_INTEL_LOG_SMART)) {
 			if (get_intel_smart_log_page(ctrlr) == 0) {
@@ -450,6 +470,27 @@ print_uint_var_dec(uint8_t *array, unsigned int len)
 		i--;
 	}
 	printf("%lu", result);
+}
+
+/* Print ASCII string as defined by the NVMe spec */
+static void
+print_ascii_string(const void *buf, size_t size)
+{
+	const uint8_t *str = buf;
+
+	/* Trim trailing spaces */
+	while (size > 0 && str[size - 1] == ' ') {
+		size--;
+	}
+
+	while (size--) {
+		if (*str >= 0x20 && *str <= 0x7E) {
+			printf("%c", *str);
+		} else {
+			printf(".");
+		}
+		str++;
+	}
 }
 
 static void
@@ -778,6 +819,25 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	       cdata->sgls.metadata_address ? "Supported" : "Not Supported");
 	printf("  SGL Offset:                %s\n",
 	       cdata->sgls.sgl_offset ? "Supported" : "Not Supported");
+	printf("\n");
+
+	printf("Firmware Slot Information\n");
+	printf("=========================\n");
+	if (g_hex_dump) {
+		hex_dump(&firmware_page, sizeof(firmware_page));
+		printf("\n");
+	}
+	printf("Active slot:                 %u\n", firmware_page.afi.active_slot);
+	if (firmware_page.afi.next_reset_slot) {
+		printf("Next controller reset slot:  %u\n", firmware_page.afi.next_reset_slot);
+	}
+	for (i = 0; i < 7; i++) {
+		if (!spdk_mem_all_zero(firmware_page.revision[i], sizeof(firmware_page.revision[i]))) {
+			printf("Slot %u Firmware Revision:    ", i + 1);
+			print_ascii_string(firmware_page.revision[i], sizeof(firmware_page.revision[i]));
+			printf("\n");
+		}
+	}
 	printf("\n");
 
 	printf("Error Log\n");
