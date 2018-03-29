@@ -46,6 +46,30 @@
       "revId": "1a8ba52c17fdb03a27cf8719f20d78696619fcca",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b5d0aa5_c3e9fb04",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-03-29T12:51:58Z",
+      "side": 1,
+      "message": "Just like Karol wrote. For each fio run it creates a file with \"size\" and then runs test for \"runtime\" seconds.",
+      "parentUuid": "7f2552a3_3d18f11d",
+      "range": {
+        "startLine": 46,
+        "startChar": 56,
+        "endLine": 46,
+        "endChar": 70
+      },
+      "revId": "1a8ba52c17fdb03a27cf8719f20d78696619fcca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
