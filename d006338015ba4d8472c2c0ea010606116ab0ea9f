@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1dc3a1f1_2a49c71a",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 499,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-29T17:28:53Z",
+      "side": 1,
+      "message": "This should either be uncommented or removed.",
+      "revId": "d006338015ba4d8472c2c0ea010606116ab0ea9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5b9e9ee_8834b0ee",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 525,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-29T17:28:53Z",
+      "side": 1,
+      "message": "Same here.",
+      "revId": "d006338015ba4d8472c2c0ea010606116ab0ea9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02fca7ac_6d56e274",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 547,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-29T17:28:53Z",
+      "side": 1,
+      "message": "We probably need to check if poll() returns 0 (this is valid and means that no error occurred and no file descriptors were ready); in this case, pfd.revents won\u0027t be filled out, so we should not enter the check below.",
+      "revId": "d006338015ba4d8472c2c0ea010606116ab0ea9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
