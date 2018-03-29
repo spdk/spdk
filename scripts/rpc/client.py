@@ -7,6 +7,11 @@ def print_dict(d):
     print(json.dumps(d, indent=2))
 
 
+class JSONRPCException(Exception):
+    def __init__(self, message):
+        self.message = message
+
+
 class JSONRPCClient(object):
     def __init__(self, addr, port=None, verbose=False, timeout=60.0):
         self.verbose = verbose
@@ -68,21 +73,21 @@ class JSONRPCClient(object):
 
         if not response:
             if method == "kill_instance":
-                exit(0)
+                return {}
             if closed:
-                print("Connection closed with partial response:")
+                msg = "Connection closed with partial response:"
             else:
-                print("Timeout while waiting for response:")
-            print(buf)
-            exit(1)
+                msg = "Timeout while waiting for response:"
+            msg = "\n".join([msg, buf])
+            raise JSONRPCException(msg)
 
         if 'error' in response:
-            print("Got JSON-RPC error response")
-            print("request:")
-            print_dict(json.loads(reqstr))
-            print("response:")
-            print_dict(response['error'])
-            exit(1)
+            msg = "\n".join(["Got JSON-RPC error response",
+                             "request:",
+                             json.dumps(req, indent=2),
+                             "response:",
+                             json.dumps(response['error'], indent=2)])
+            raise JSONRPCException(msg)
 
         if verbose:
             print("response:")
