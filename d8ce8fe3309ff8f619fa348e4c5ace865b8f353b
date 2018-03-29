@@ -46,6 +46,30 @@
       "revId": "d8ce8fe3309ff8f619fa348e4c5ace865b8f353b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c7dcb32f_7fa640ad",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-29T13:15:18Z",
+      "side": 1,
+      "message": "Kill instance does not provide any response, and will end with \"Connection closed with partial response\" if these 2 lines are removed.\nSince we return a dict with result on line 96, I changed exit(0) to retrun {} (with empty dict) to avoid exiting or raising exceptions.",
+      "parentUuid": "b99dda63_91ec5a24",
+      "range": {
+        "startLine": 75,
+        "startChar": 0,
+        "endLine": 76,
+        "endChar": 23
+      },
+      "revId": "d8ce8fe3309ff8f619fa348e4c5ace865b8f353b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
