@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "939c92f0_c37114ed",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-29T23:43:09Z",
+      "side": 1,
+      "message": "This should probably just be:\n\n   elif hash rxe_cfg; then\n\nWe just want to run hash and get its return code, so we don\u0027t need \u0027test\u0027 - the [] - to do that.",
+      "revId": "0b422a34ec37d89e48e92f67fcd3f462cc79b292",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
