@@ -10,12 +10,14 @@ import json
 import random
 from subprocess import check_call, call, check_output, Popen, PIPE, CalledProcessError
 
-if (len(sys.argv) == 6):
+if (len(sys.argv) == 7):
     target_ip = sys.argv[2]
     initiator_ip = sys.argv[3]
     port = sys.argv[4]
     netmask = sys.argv[5]
+    namespace = sys.argv[6]
 
+ns_cmd = 'ip netns exec ' + namespace
 other_ip = '127.0.0.6'
 initiator_name = 'ANY'
 portal_tag = '1'
@@ -401,7 +403,8 @@ def verify_get_interfaces(rpc_py):
     nics = json.loads(rpc.get_interfaces())
     nics_names = set(x["name"].encode('ascii', 'ignore') for x in nics)
     # parse ip link show to verify the get_interfaces result
-    ifcfg_nics = set(re.findall("\S+:\s(\S+?)(?:@\S+){0,1}:\s<.*", check_output(["ip", "link", "show"])))
+    ip_show = ns_cmd + " ip link show"
+    ifcfg_nics = set(re.findall("\S+:\s(\S+?)(?:@\S+){0,1}:\s<.*", check_output(ip_show.split())))
     verify(nics_names == ifcfg_nics, 1, "get_interfaces returned {}".format(nics))
     print "verify_get_interfaces passed."
 
@@ -421,11 +424,12 @@ def verify_add_delete_ip_address(rpc_py):
     # add ip on up to first 2 nics
     for x in nics[:2]:
         faked_ip = "123.123.{}.{}".format(random.randint(1, 254), random.randint(1, 254))
+        ping_cmd = ns_cmd + " ping -c 1 -W 1 " + faked_ip
         rpc.add_ip_address(x["ifc_index"], faked_ip)
         verify(faked_ip in help_get_interface_ip_list(rpc_py, x["name"]), 1,
                "add ip {} to nic {} failed.".format(faked_ip, x["name"]))
         try:
-            check_call(["ping", "-c", "1", "-W", "1", faked_ip])
+            check_call(ping_cmd.split())
         except:
             verify(False, 1,
                    "ping ip {} for {} was failed(adding was successful)".format
@@ -436,7 +440,7 @@ def verify_add_delete_ip_address(rpc_py):
                (faked_ip, x["name"]))
         # ping should be failed and throw an CalledProcessError exception
         try:
-            check_call(["ping", "-c", "1", "-W", "1", faked_ip])
+            check_call(ping_cmd.split())
         except CalledProcessError as _:
             pass
         except Exception as e:

@@ -223,6 +223,12 @@ function waitforlisten() {
 
 	rpc_addr="${2:-$DEFAULT_RPC_ADDR}"
 
+	namespace=$(ip netns identify $1)
+	if [ -n "$namespace" ]; then
+		echo "Process $1 is running in $namespace namespace"
+		ns_cmd="ip netns exec $namespace"
+	fi
+
 	echo "Waiting for process to start up and listen on UNIX domain socket $rpc_addr..."
 	# turn off trace for this loop
 	set +x
@@ -233,7 +239,7 @@ function waitforlisten() {
 		if ! kill -s 0 $1; then
 			exit 1
 		fi
-		if netstat -an -x | grep -iw LISTENING | grep -q $rpc_addr; then
+		if $ns_cmd netstat -an -x | grep -iw LISTENING | grep -q $rpc_addr; then
 			ret=0
 		fi
 	done
@@ -247,6 +253,12 @@ function waitforlisten_tcp() {
 		exit 1
 	fi
 
+	namespace=$(ip netns identify $1)
+	if [ -n "$namespace" ]; then
+		echo "Process $1 is running in $namespace namespace"
+		ns_cmd="ip netns exec $namespace"
+	fi
+
 	echo "Waiting for process to start up and listen on TCP port $2..."
 	# turn off trace for this loop
 	set +x
@@ -257,7 +269,7 @@ function waitforlisten_tcp() {
 		if ! kill -s 0 $1; then
 			exit
 		fi
-		if netstat -an --tcp | grep -iw listen | grep -q $2; then
+		if $ns_cmd netstat -an --tcp | grep -iw listen | grep -q $2; then
 			ret=0
 		fi
 	done
