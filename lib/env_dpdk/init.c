@@ -250,6 +250,20 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 		}
 	}
 
+	if (opts->num_pci_addr) {
+		int i;
+		const char *list_opt[2] = { "-b", "-w" };
+
+		for (i = 0; i < opts->num_pci_addr; i++) {
+			args = spdk_push_arg(args, &argcount, _sprintf_alloc("%s %s",
+					     list_opt[opts->pci_addr_list_type],
+					     opts->pci_addr_list[i]));
+			if (args == NULL) {
+				return -1;
+			}
+		}
+	}
+
 #ifdef __linux__
 	if (opts->shm_id < 0) {
 		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--file-prefix=spdk_pid%d",
