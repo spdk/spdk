@@ -121,7 +121,7 @@ if [ -d /usr/include/rbd ] &&  [ -d /usr/include/rados ]; then
 	config_params+=' --with-rbd'
 fi
 
-if [ -d /usr/include/iscsi ]; then
+if [ -f /usr/include/iscsi/iscsi.h ]; then
 	libiscsi_version=`grep LIBISCSI_API_VERSION /usr/include/iscsi/iscsi.h | head -1 | awk '{print $3}' | awk -F '(' '{print $2}' | awk -F ')' '{print $1}'`
 	if [ $libiscsi_version -ge 20150621 ]; then
 		config_params+=' --with-iscsi-initiator'
