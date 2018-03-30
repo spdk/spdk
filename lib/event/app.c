@@ -337,7 +337,72 @@ static int
 spdk_app_setup_env(struct spdk_app_opts *opts)
 {
 	struct spdk_env_opts env_opts = {};
+	struct spdk_conf_section *sp;
 	int rc;
+	int i, found = 0;
+	const char *list[2] = { "PciBlacklist", "PciWhitelist" };
+	const char *nm = NULL, *bdf = NULL;
+
+	sp = spdk_conf_find_section(NULL, "Global");
+
+	if (sp == NULL) {
+		goto skip_pci_addr_list;
+	}
+
+	for (i = 0; i < 2; i++) {
+		nm = list[i];
+		bdf = spdk_conf_section_get_nmval(sp, nm, 0, 0);
+		if (bdf) {
+			opts->pci_addr_list_is_white = ((i == 0) ? false : true);
+			found++;
+		}
+	}
+
+	if (found == 2) {
+		SPDK_ERRLOG("PciBlacklist and PciWhitelist cannot be used at the same time\n");
+		return -1;
+	}
+
+	if (found == 0) {
+		goto skip_pci_addr_list;
+	}
+
+	i = (opts->pci_addr_list_is_white ? 1 : 0);
+	nm = list[i];
+	for (i = 0; i < SPDK_ENV_PCI_ADDR_LIST_LEN; i++) {
+		struct spdk_pci_addr addr;
+		void *old_ptr = opts->pci_addr_list;
+
+		bdf = spdk_conf_section_get_nmval(sp, nm, i, 0);
+
+		if (!bdf) {
+			break;
+		}
+
+		if (spdk_pci_addr_parse(&addr, bdf) < 0) {
+			SPDK_ERRLOG("Invalid %s address %s\n", nm, bdf);
+			if (old_ptr) {
+				free(old_ptr);
+			}
+			opts->num_pci_addr = 0;
+			opts->pci_addr_list = NULL;
+			return -1;
+		}
+
+		opts->pci_addr_list = realloc(old_ptr, sizeof(struct spdk_pci_addr) * (i + 1));
+		if (opts->pci_addr_list == NULL) {
+			SPDK_ERRLOG("%s realloc error\n", nm);
+			if (old_ptr) {
+				free(old_ptr);
+			}
+			opts->num_pci_addr = 0;
+			return -1;
+		}
+
+		memcpy(&opts->pci_addr_list[i], &addr, sizeof(struct spdk_pci_addr));
+		opts->num_pci_addr++;
+	}
+skip_pci_addr_list:
 
 	spdk_env_opts_init(&env_opts);
 
@@ -348,6 +413,12 @@ spdk_app_setup_env(struct spdk_app_opts *opts)
 	env_opts.master_core = opts->master_core;
 	env_opts.mem_size = opts->mem_size;
 	env_opts.no_pci = opts->no_pci;
+	if (opts->num_pci_addr) {
+		env_opts.pci_addr_list_is_white = opts->pci_addr_list_is_white;
+		env_opts.num_pci_addr = opts->num_pci_addr;
+		env_opts.pci_addr_list = opts->pci_addr_list;
+		opts->pci_addr_list = NULL;
+	}
 
 	rc = spdk_env_init(&env_opts);
 	if (rc < 0) {
