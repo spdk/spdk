@@ -304,14 +304,19 @@ virtio_dev_reset(struct virtio_dev *dev, uint64_t req_features)
 {
 	req_features |= (1ULL << VIRTIO_F_VERSION_1);
 
-	/* Reset the device although not necessary at startup */
 	virtio_dev_stop(dev);
 
-	/* Tell the host we've noticed this device. */
 	virtio_dev_set_status(dev, VIRTIO_CONFIG_S_ACKNOWLEDGE);
+	if (!(virtio_dev_get_status(dev) & VIRTIO_CONFIG_S_ACKNOWLEDGE)) {
+		SPDK_ERRLOG("Failed to set VIRTIO_CONFIG_S_ACKNOWLEDGE status.\n");
+		return -1;
+	}
 
-	/* Tell the host we've known how to drive the device. */
 	virtio_dev_set_status(dev, VIRTIO_CONFIG_S_DRIVER);
+	if (!(virtio_dev_get_status(dev) & VIRTIO_CONFIG_S_DRIVER)) {
+		SPDK_ERRLOG("Failed to set VIRTIO_CONFIG_S_DRIVER status.\n");
+		return -1;
+	}
 
 	return virtio_negotiate_features(dev, req_features);
 }
@@ -327,6 +332,11 @@ virtio_dev_start(struct virtio_dev *vdev, uint16_t max_queues, uint16_t fixed_qu
 	}
 
 	virtio_dev_set_status(vdev, VIRTIO_CONFIG_S_DRIVER_OK);
+	if (!(virtio_dev_get_status(vdev) & VIRTIO_CONFIG_S_DRIVER_OK)) {
+		SPDK_ERRLOG("Failed to set VIRTIO_CONFIG_S_DRIVER_OK status.\n");
+		return -1;
+	}
+
 	return 0;
 }
 
