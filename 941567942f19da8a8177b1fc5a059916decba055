@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5f947be8_f05d42a1",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 811,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-30T09:19:15Z",
+      "side": 1,
+      "message": "the reason that 1024 is not used is for future spec change?",
+      "range": {
+        "startLine": 811,
+        "startChar": 24,
+        "endLine": 811,
+        "endChar": 68
+      },
+      "revId": "941567942f19da8a8177b1fc5a059916decba055",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
