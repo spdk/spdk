@@ -1133,7 +1133,7 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 	rtransport->transport.tgt = tgt;
 	rtransport->transport.ops = &spdk_nvmf_transport_rdma;
 
-	SPDK_NOTICELOG("*** RDMA Transport Init ***\n");
+	SPDK_INFOLOG(SPDK_LOG_RDMA, "*** RDMA Transport Init ***\n");
 
 	rtransport->max_queue_depth = tgt->opts.max_queue_depth;
 	rtransport->max_io_size = tgt->opts.max_io_size;
@@ -1372,8 +1372,8 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 		assert(device->pd == port->id->pd);
 	}
 
-	SPDK_NOTICELOG("*** NVMf Target Listening on %s port %d ***\n",
-		       port->trid.traddr, ntohs(rdma_get_src_port(port->id)));
+	SPDK_INFOLOG(SPDK_LOG_RDMA, "*** NVMf Target Listening on %s port %d ***\n",
+		     port->trid.traddr, ntohs(rdma_get_src_port(port->id)));
 
 	port->ref = 1;
 
