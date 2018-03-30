@@ -448,12 +448,14 @@ virtio_pci_blk_dev_create(const char *name, struct virtio_pci_ctx *pci_ctx)
 	free(default_name);
 
 	if (rc != 0) {
-		free(vdev);
+		free(bvdev);
 		return NULL;
 	}
 
 	rc = virtio_dev_reset(vdev, VIRTIO_BLK_DEV_SUPPORTED_FEATURES);
 	if (rc != 0) {
+		virtio_dev_destruct(vdev);
+		free(bvdev);
 		return NULL;
 	}
 
