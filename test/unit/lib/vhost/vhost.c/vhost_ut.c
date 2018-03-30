@@ -141,7 +141,6 @@ vtgt_create_dev(struct spdk_vhost_tgt *vtgt)
 {
 	struct spdk_vhost_dev *vdev;
 
-	assert(vtgt->vdev == NULL);
 	vdev = calloc(1, sizeof(*vdev));
 	SPDK_CU_ASSERT_FATAL(vdev != NULL);
 	vdev->mem = calloc(1, sizeof(*vdev->mem) + 2 * sizeof(struct rte_vhost_mem_region));
@@ -157,14 +156,14 @@ vtgt_create_dev(struct spdk_vhost_tgt *vtgt)
 	vdev->lcore = 0;
 
 	vdev->vtgt = vtgt;
-	vtgt->vdev = vdev;
+	TAILQ_INSERT_TAIL(&vtgt->vdevs, vdev, tailq);
 	return vdev;
 }
 
 static void
 remove_dev(struct spdk_vhost_dev *vdev)
 {
-	vdev->vtgt->vdev = NULL;
+	TAILQ_REMOVE(&vdev->vtgt->vdevs, vdev, tailq);
 	free(vdev->mem);
 	free(vdev);
 }
@@ -172,8 +171,10 @@ remove_dev(struct spdk_vhost_dev *vdev)
 static void
 cleanup_vtgt(struct spdk_vhost_tgt *vtgt)
 {
-	if (vtgt->vdev) {
-		remove_dev(vtgt->vdev);
+	struct spdk_vhost_dev *vdev, *tmp;
+
+	TAILQ_FOREACH_SAFE(vdev, &vtgt->vdevs, tailq, tmp) {
+		remove_dev(vdev);
 	}
 	spdk_vhost_tgt_unregister(vtgt);
 	free(vtgt);
