@@ -57,6 +57,30 @@
       "revId": "a5385ebac8d7ca4f61f446d90346b1a75fc49390",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eed36b0a_7d94eb35",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 358,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-03-30T06:19:04Z",
+      "side": 1,
+      "message": "Hi Gang,\n\nFor this patch, could we wrap it into env_dpdk lib. It means that if given ANY, we will allocate in the socket first, then if failed, we create by ANY to DPDK.",
+      "parentUuid": "709c59ea_da34333c",
+      "range": {
+        "startLine": 358,
+        "startChar": 2,
+        "endLine": 358,
+        "endChar": 12
+      },
+      "revId": "a5385ebac8d7ca4f61f446d90346b1a75fc49390",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
