@@ -61,6 +61,8 @@ DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
 DEFINE_STUB(rte_vhost_driver_enable_features, int, (const char *path, uint64_t features), 0);
 DEFINE_STUB_P(spdk_bdev_get_io_channel, struct spdk_io_channel, (struct spdk_bdev_desc *desc), {0});
 
+SPDK_LOG_REGISTER_COMPONENT("vhost", SPDK_LOG_VHOST)
+
 uint32_t
 spdk_bdev_get_block_size(const struct spdk_bdev *bdev)
 {
