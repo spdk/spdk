@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "b5895e3f_fba6a89d",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-03-30T18:06:02Z",
+      "side": 1,
+      "message": "We could drop it, I guess. Less is better. +1",
+      "parentUuid": "14a10eec_d6549c43",
+      "range": {
+        "startLine": 181,
+        "startChar": 20,
+        "endLine": 181,
+        "endChar": 23
+      },
+      "revId": "4b147c5c94f28eba6bcfea36be575eb23ee17d15",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "68339ae1_9c17a125",
         "filename": "include/spdk/vhost.h",
         "patchSetId": 2
@@ -94,6 +118,30 @@
     },
     {
       "key": {
+        "uuid": "70c52dbb_0e594b64",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1031,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-03-30T18:06:02Z",
+      "side": 1,
+      "message": "It will remain a property of a target for now. At least until we add a way to print active devices via RPC and know how to differentiate between them. This is a good question indeed, but we do not necessarily have to answer it now.\n\nThe reason behind keeping coalescing data in both target and device structs is to avoid data races. target data can be modified from any thread keeping g_vhost_mutex, but device pollers do not use that lock. I\u0027ll eventually make set_coalescing(target) also update all active devices via spdk_vhost_tgt_foreach_dev().",
+      "parentUuid": "b9e1557d_4399e1f2",
+      "range": {
+        "startLine": 1027,
+        "startChar": 0,
+        "endLine": 1031,
+        "endChar": 15
+      },
+      "revId": "4b147c5c94f28eba6bcfea36be575eb23ee17d15",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fd4adc9d_a2ab7080",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 2
@@ -128,6 +176,30 @@
       "writtenOn": "2018-03-30T17:18:43Z",
       "side": 1,
       "message": "tgt?",
+      "range": {
+        "startLine": 158,
+        "startChar": 25,
+        "endLine": 158,
+        "endChar": 28
+      },
+      "revId": "4b147c5c94f28eba6bcfea36be575eb23ee17d15",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cfb2b29f_34861106",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-03-30T18:06:02Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "5c31ae38_c82fb926",
       "range": {
         "startLine": 158,
         "startChar": 25,
