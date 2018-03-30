@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "516cddd1_0eb642ad",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 797,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-30T09:00:59Z",
+      "side": 1,
+      "message": "Is it OK to add \"TODO: one AER queue per event type\"?",
+      "revId": "cda63ad771d4eecd22fdc47483266c470edb62bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "231f80b7_5bed27dd",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 1370,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-30T09:00:59Z",
+      "side": 1,
+      "message": "\"Queue the event because of no outstanding AER commands.\n This is notified when receiving AER command\"\nor similar one may be kind comment?",
+      "range": {
+        "startLine": 1370,
+        "startChar": 1,
+        "endLine": 1370,
+        "endChar": 23
+      },
+      "revId": "cda63ad771d4eecd22fdc47483266c470edb62bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "458e929c_d91097a5",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 1374,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-30T09:00:59Z",
+      "side": 1,
+      "message": "I think this doesn\u0027t describe just below. This may be better to be placed at the top of the function?",
+      "range": {
+        "startLine": 1372,
+        "startChar": 2,
+        "endLine": 1374,
+        "endChar": 5
+      },
+      "revId": "cda63ad771d4eecd22fdc47483266c470edb62bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
