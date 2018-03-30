@@ -412,19 +412,7 @@ spdk_vhost_blk_tgt_get_dev(struct spdk_vhost_tgt *vtgt)
 static int
 _bdev_remove_cb(struct spdk_vhost_tgt *vtgt, void *arg)
 {
-	struct spdk_vhost_blk_tgt *bvtgt = arg;
-	struct spdk_vhost_blk_dev *bvdev = spdk_vhost_dev_get_ctx(vtgt->vdev);
-
-	SPDK_WARNLOG("Controller %s: Hot-removing bdev - all further requests will fail.\n",
-		     vtgt->name);
-	if (bvdev->requestq_poller) {
-		spdk_poller_unregister(&bvdev->requestq_poller);
-		bvdev->requestq_poller = spdk_poller_register(no_bdev_vdev_worker, vtgt->vdev, 0);
-	}
-
-	spdk_bdev_close(bvtgt->bdev_desc);
-	bvtgt->bdev_desc = NULL;
-	bvtgt->bdev = NULL;
+	/* TODO we need to use spdk_vhost_tgt_foreach_vdev() to stop all pollers. */
 	return 0;
 }
 
@@ -506,9 +494,6 @@ spdk_vhost_blk_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 	struct spdk_vhost_blk_tgt *bvtgt = to_blk_tgt(vtgt);
 	struct spdk_vhost_blk_dev *bvdev = spdk_vhost_dev_get_ctx(vdev);
 	int rc = 0;
-
-	vdev = vtgt->vdev;
-	assert(vdev);
 
 	rc = alloc_task_pool(vdev);
 	if (rc != 0) {
