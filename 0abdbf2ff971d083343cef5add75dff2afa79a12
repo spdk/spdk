@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7553bf2c_39ad947b",
+        "filename": "lib/bdev/split/vbdev_split.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-03-30T06:33:21Z",
+      "side": 1,
+      "message": "SPDK_VBDEV_SPLIT_H",
+      "range": {
+        "startLine": 61,
+        "startChar": 10,
+        "endLine": 61,
+        "endChar": 25
+      },
+      "revId": "0abdbf2ff971d083343cef5add75dff2afa79a12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1120fbd7_e6599375",
+        "filename": "lib/bdev/split/vbdev_split_rpc.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-03-30T06:33:21Z",
+      "side": 1,
+      "message": "a newline could help here",
+      "range": {
+        "startLine": 76,
+        "startChar": 67,
+        "endLine": 76,
+        "endChar": 98
+      },
+      "revId": "0abdbf2ff971d083343cef5add75dff2afa79a12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e8fffaec_c35a1d39",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 494,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-03-30T06:33:21Z",
+      "side": 1,
+      "message": "Could you explicitly mention it\u0027s optional?",
+      "revId": "0abdbf2ff971d083343cef5add75dff2afa79a12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
