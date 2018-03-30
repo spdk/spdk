@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8a03a9e8_57dbd4b9",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 492,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-30T13:23:44Z",
+      "side": 1,
+      "message": "this may not be opaque but may be the pointer to the struct scsi_task.\nIf so this should be used at the line 502.",
+      "range": {
+        "startLine": 492,
+        "startChar": 9,
+        "endLine": 492,
+        "endChar": 21
+      },
+      "revId": "0f2b0dddbca616165cfb9ef2804d63e8d65b4e68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b97bea67_685ddaec",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 528,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-30T13:23:44Z",
+      "side": 1,
+      "message": "is this expected to be used as the input to scsi_datain_unmarshall() at the line 502?\n\nI can\u0027t feel the expectation that return from async function comes earlier than callback is safe.",
+      "range": {
+        "startLine": 528,
+        "startChar": 2,
+        "endLine": 528,
+        "endChar": 19
+      },
+      "revId": "0f2b0dddbca616165cfb9ef2804d63e8d65b4e68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4cbb6e19_c0d5186b",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 626,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-30T13:23:44Z",
+      "side": 1,
+      "message": "Is this manner usual and safe? Does this always come earlier than iscsi_connect_cb()?",
+      "range": {
+        "startLine": 626,
+        "startChar": 2,
+        "endLine": 626,
+        "endChar": 19
+      },
+      "revId": "0f2b0dddbca616165cfb9ef2804d63e8d65b4e68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
