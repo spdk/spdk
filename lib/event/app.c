@@ -273,6 +273,33 @@ start_rpc(void *arg1, void *arg2)
 	g_app_start_fn(g_app_start_arg1, g_app_start_arg2);
 }
 
+static struct spdk_conf *
+spdk_app_setup_conf(const char *config_file)
+{
+	struct spdk_conf *config;
+	int rc;
+
+	config = spdk_conf_allocate();
+	assert(config != NULL);
+	if (config_file) {
+		rc = spdk_conf_read(config, config_file);
+		if (rc != 0) {
+			SPDK_ERRLOG("Could not read config file %s\n", config_file);
+			goto error;
+		}
+		if (spdk_conf_first_section(config) == NULL) {
+			SPDK_ERRLOG("Invalid config file %s\n", config_file);
+			goto error;
+		}
+	}
+	spdk_conf_set_as_default(config);
+	return config;
+
+error:
+	spdk_conf_free(config);
+	return NULL;
+}
+
 int
 spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	       void *arg1, void *arg2)
@@ -312,20 +339,10 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	}
 #endif
 
-	config = spdk_conf_allocate();
-	assert(config != NULL);
-	if (opts->config_file) {
-		rc = spdk_conf_read(config, opts->config_file);
-		if (rc != 0) {
-			SPDK_ERRLOG("Could not read config file %s\n", opts->config_file);
-			goto app_start_conf_free_err;
-		}
-		if (spdk_conf_first_section(config) == NULL) {
-			SPDK_ERRLOG("Invalid config file %s\n", opts->config_file);
-			goto app_start_conf_free_err;
-		}
+	config = spdk_app_setup_conf(opts->config_file);
+	if (config == NULL) {
+		goto app_start_setup_conf_err;
 	}
-	spdk_conf_set_as_default(config);
 
 	if (opts->shm_id == -1) {
 		sp = spdk_conf_find_section(config, "Global");
@@ -445,9 +462,7 @@ app_start_trace_cleanup_err:
 app_start_log_close_err:
 	spdk_log_close();
 
-app_start_conf_free_err:
-	spdk_conf_free(config);
-
+app_start_setup_conf_err:
 	return 1;
 }
 
