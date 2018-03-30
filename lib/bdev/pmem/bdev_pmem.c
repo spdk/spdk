@@ -385,6 +385,41 @@ spdk_create_pmem_disk(const char *pmem_file, const char *name, struct spdk_bdev 
 	return 0;
 }
 
+static void
+bdev_pmem_read_conf(void)
+{
+	struct spdk_conf_section *sp;
+	struct spdk_bdev *bdev;
+	const char *pmem_file;
+	const char *bdev_name;
+	int i;
+
+	sp = spdk_conf_find_section(NULL, "Pmem");
+	if (sp == NULL) {
+		return;
+	}
+
+	for (i = 0; ; i++) {
+		if (!spdk_conf_section_get_nval(sp, "Blk", i)) {
+			break;
+		}
+
+		pmem_file = spdk_conf_section_get_nmval(sp, "Blk", i, 0);
+		if (pmem_file == NULL) {
+			SPDK_ERRLOG("Pmem: missing filename\n");
+			continue;
+		}
+
+		bdev_name = spdk_conf_section_get_nmval(sp, "Blk", i, 1);
+		if (bdev_name == NULL) {
+			SPDK_ERRLOG("Pmem: missing bdev name\n");
+			continue;
+		}
+
+		spdk_create_pmem_disk(pmem_file, bdev_name, &bdev);
+	}
+}
+
 static int
 bdev_pmem_initialize(void)
 {
@@ -397,6 +432,8 @@ bdev_pmem_initialize(void)
 	}
 
 	spdk_io_device_register(&g_pmem_disks, bdev_pmem_create_cb, bdev_pmem_destroy_cb, 0);
+
+	bdev_pmem_read_conf();
 
 	return 0;
 
