@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f1c8510b_3166e939",
+        "filename": "lib/copy/ioat/copy_engine_ioat.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-30T18:03:40Z",
+      "side": 1,
+      "message": "If you invent this variable the \"return 0\" should be removed to save config and probing skipped. This allow dumping white list configuration",
+      "range": {
+        "startLine": 287,
+        "startChar": 3,
+        "endLine": 287,
+        "endChar": 25
+      },
+      "revId": "9f6e082059b1a4f0d3dab3e27930fc7e28ca7643",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
