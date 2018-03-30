@@ -802,6 +802,14 @@ if __name__ == "__main__":
     p = subparsers.add_parser('add_memcpy_copy_engine', help='Add memcpy copy engine.')
     p.set_defaults(func=add_memcpy_copy_engine)
 
+    def add_ioat_copy_engine(args):
+        rpc.copy.add_ioat_copy_engine(args)
+
+    p = subarsers.add_parser('add_ioat_copy_engine', help='Add ioat copy engine.')
+    p.add_argument('-d', '--disable', help='Disable ioat copy engine.', action='store_true')
+    p.add_argument('pci_whitelist', help='List of PCI whitelist addresses separated by whitespace')
+    p.set_defaults(func=add_ioat_copy_engine)
+
     args = parser.parse_args()
 
     args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.verbose, args.timeout)
