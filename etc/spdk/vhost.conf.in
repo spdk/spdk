@@ -43,6 +43,12 @@
   #AIO /dev/sdb AIO0
   #AIO /dev/sdc AIO1
 
+# PMDK libpmemblk-based block device
+[Pmem]
+  # Syntax:
+  #   Blk <pmemblk pool file name> <bdev name>
+  Blk /path/to/pmem-pool Pmem0
+
 # Users may change this section to create a different number or size of
 #  malloc LUNs.
 # If the system has hardware DMA engine, it will use an IOAT
