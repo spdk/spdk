@@ -22,6 +22,30 @@
       "revId": "b3bd4241a83e768ef4b6a709fd94c843f6653e9b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "87195c54_bf18e1b6",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 2518,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-30T08:31:54Z",
+      "side": 1,
+      "message": "hmmm... this will be equivalend of spdk_bdev_register() then.\n\nBut your comment reminded me that spdk_bdev_init() should set base_bdev_cnt to zero.",
+      "parentUuid": "ec753c93_4e9a9b8b",
+      "range": {
+        "startLine": 2518,
+        "startChar": 2,
+        "endLine": 2518,
+        "endChar": 25
+      },
+      "revId": "b3bd4241a83e768ef4b6a709fd94c843f6653e9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
