@@ -90,6 +90,9 @@ struct spdk_app_opts {
 	bool			no_pci;
 	bool			hugepage_single_segments;
 	enum spdk_log_level	print_level;
+	size_t			num_pci_addr;
+	struct spdk_pci_addr	*pci_blacklist;
+	struct spdk_pci_addr	*pci_whitelist;
 
 	/* The maximum latency allowed when passing an event
 	 * from one core to another. A value of 0
@@ -186,7 +189,7 @@ int spdk_app_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask);
  */
 struct spdk_cpuset *spdk_app_get_core_mask(void);
 
-#define SPDK_APP_GETOPT_STRING "c:de:ghi:m:n:p:qr:s:t:u"
+#define SPDK_APP_GETOPT_STRING "c:de:ghi:m:n:p:qr:s:t:uB:W:"
 
 enum spdk_app_parse_args_rvals {
 	SPDK_APP_PARSE_ARGS_HELP = 0,

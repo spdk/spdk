@@ -20,6 +20,12 @@
   # Set to 0xFFFFFFFFFFFFFFFF to enable all tracepoint groups.
   #TpointGroupMask 0x0
 
+  # PciBlacklist and PciWhitelist cannot be used at the same time
+  #PciBlacklist 0000:01:00.0
+  #PciBlacklist 0000:02:00.0
+  #PciWhitelist 0000:03:00.0
+  #PciWhitelist 0000:04:00.0
+
 # Users may change this section to create a different number or size of
 #  malloc LUNs.
 # This will generate 8 LUNs with a malloc-allocated backend.
