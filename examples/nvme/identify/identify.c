@@ -643,12 +643,15 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	printf("================================\n");
 	printf("Vendor ID:                             %04x\n", cdata->vid);
 	printf("Subsystem Vendor ID:                   %04x\n", cdata->ssvid);
-	snprintf(str, sizeof(cdata->sn) + 1, "%s", cdata->sn);
-	printf("Serial Number:                         %s\n", str);
-	snprintf(str, sizeof(cdata->mn) + 1, "%s", cdata->mn);
-	printf("Model Number:                          %s\n", str);
-	snprintf(str, sizeof(cdata->fr) + 1, "%s", cdata->fr);
-	printf("Firmware Version:                      %s\n", str);
+	printf("Serial Number:                         ");
+	print_ascii_string(cdata->sn, sizeof(cdata->sn));
+	printf("\n");
+	printf("Model Number:                          ");
+	print_ascii_string(cdata->mn, sizeof(cdata->mn));
+	printf("\n");
+	printf("Firmware Version:                      ");
+	print_ascii_string(cdata->fr, sizeof(cdata->fr));
+	printf("\n");
 	printf("Recommended Arb Burst:                 %d\n", cdata->rab);
 	printf("IEEE OUI Identifier:                   %02x %02x %02x\n",
 	       cdata->ieee[0], cdata->ieee[1], cdata->ieee[2]);
