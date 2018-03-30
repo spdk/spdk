@@ -90,6 +90,9 @@ struct spdk_app_opts {
 	bool			no_pci;
 	bool			hugepage_single_segments;
 	enum spdk_log_level	print_level;
+	bool			pci_addr_list_is_white;
+	size_t			num_pci_addr;
+	struct spdk_pci_addr	*pci_addr_list;
 
 	/* The maximum latency allowed when passing an event
 	 * from one core to another. A value of 0
