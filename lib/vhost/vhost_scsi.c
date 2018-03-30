@@ -154,7 +154,8 @@ process_removed_devs(struct spdk_vhost_scsi_dev *svdev)
 				state->remove_cb(&svdev->vdev, state->remove_ctx);
 				state->remove_cb = NULL;
 			}
-			SPDK_NOTICELOG("%s: hot-detached device 'Dev %u'.\n", svdev->vdev.name, i);
+			SPDK_INFOLOG(SPDK_LOG_VHOST, "%s: hot-detached device 'Dev %u'.\n",
+				     svdev->vdev.name, i);
 		}
 	}
 }
@@ -847,8 +848,8 @@ spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num,
 		eventq_enqueue(svdev, scsi_tgt_num, VIRTIO_SCSI_T_TRANSPORT_RESET, VIRTIO_SCSI_EVT_RESET_RESCAN);
 	}
 
-	SPDK_NOTICELOG("Controller %s: defined target '%s' using bdev '%s'\n",
-		       vdev->name, target_name, bdev_name);
+	SPDK_INFOLOG(SPDK_LOG_VHOST, "Controller %s: defined target '%s' using bdev '%s'\n",
+		     vdev->name, target_name, bdev_name);
 	return 0;
 }
 
@@ -884,7 +885,8 @@ spdk_vhost_scsi_dev_remove_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_nu
 		if (cb_fn) {
 			rc = cb_fn(vdev, cb_arg);
 		}
-		SPDK_NOTICELOG("%s: removed target 'Target %u'\n", vdev->name, scsi_tgt_num);
+		SPDK_INFOLOG(SPDK_LOG_VHOST, "%s: removed target 'Target %u'\n",
+			     vdev->name, scsi_tgt_num);
 		return rc;
 	}
 
@@ -906,7 +908,7 @@ spdk_vhost_scsi_dev_remove_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_nu
 	scsi_dev_state->removed = true;
 	eventq_enqueue(svdev, scsi_tgt_num, VIRTIO_SCSI_T_TRANSPORT_RESET, VIRTIO_SCSI_EVT_RESET_REMOVED);
 
-	SPDK_NOTICELOG("%s: queued 'Target %u' for hot-detach.\n", vdev->name, scsi_tgt_num);
+	SPDK_INFOLOG(SPDK_LOG_VHOST, "%s: queued 'Target %u' for hot-detach.\n", vdev->name, scsi_tgt_num);
 	return 0;
 }
 
@@ -1080,7 +1082,8 @@ spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 		}
 		spdk_scsi_dev_allocate_io_channels(svdev->scsi_dev[i]);
 	}
-	SPDK_NOTICELOG("Started poller for vhost controller %s on lcore %d\n", vdev->name, vdev->lcore);
+	SPDK_INFOLOG(SPDK_LOG_VHOST, "Started poller for vhost controller %s on lcore %d\n",
+		     vdev->name, vdev->lcore);
 
 	spdk_vhost_dev_mem_register(vdev);
 
@@ -1121,7 +1124,7 @@ destroy_device_poller_cb(void *arg)
 		spdk_scsi_dev_free_io_channels(svdev->scsi_dev[i]);
 	}
 
-	SPDK_NOTICELOG("Stopping poller for vhost controller %s\n", svdev->vdev.name);
+	SPDK_INFOLOG(SPDK_LOG_VHOST, "Stopping poller for vhost controller %s\n", svdev->vdev.name);
 	spdk_vhost_dev_mem_unregister(&svdev->vdev);
 
 	free_task_pool(svdev);
