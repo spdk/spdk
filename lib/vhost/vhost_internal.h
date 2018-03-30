@@ -169,8 +169,8 @@ struct spdk_vhost_tgt {
 	/* Threshold when event coalescing for virtqueue will be turned on. */
 	uint32_t  coalescing_io_rate_threshold;
 
-	/* Active device built on top of this target. */
-	struct spdk_vhost_dev *vdev;
+	/* Active devices built on top of this target. */
+	TAILQ_HEAD(, spdk_vhost_dev) vdevs;
 
 	/* Size of the extra memory allocated with each device. Read-only. */
 	size_t channel_ctx_size;
@@ -183,6 +183,9 @@ struct spdk_vhost_dev {
 	struct spdk_vhost_tgt *vtgt;
 
 	struct rte_vhost_memory *mem;
+
+	/* Target-unique device ID. Read-only. */
+	unsigned id;
 
 	/* rte_vhost device ID */
 	int vid;
