@@ -49,12 +49,23 @@
 #define SPDK_VFIO_ENABLED 0
 #else
 #include <linux/version.h>
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0)
+/*
+ * DPDK versions before 17.11 don't provide a way to get VFIO information in the public API,
+ * and we can't link to internal symbols when built against shared library DPDK,
+ * so disable VFIO entirely in that case.
+ */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0) && \
+    (RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3) || !defined(RTE_BUILD_SHARED_LIB))
+
 #define SPDK_VFIO_ENABLED 1
 #include <linux/vfio.h>
 
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
+#include <rte_vfio.h>
+#else
 /* Internal DPDK function forward declaration */
 int pci_vfio_is_enabled(void);
+#endif
 
 struct spdk_vfio_dma_map {
 	struct vfio_iommu_type1_dma_map map;
@@ -372,6 +383,17 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 }
 
 #if SPDK_VFIO_ENABLED
+
+static bool
+spdk_vfio_enabled(void)
+{
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
+	return rte_vfio_is_enabled("vfio_pci");
+#else
+	return pci_vfio_is_enabled();
+#endif
+}
+
 static void
 spdk_vtophys_iommu_init(void)
 {
@@ -381,7 +403,7 @@ spdk_vtophys_iommu_init(void)
 	DIR *dir;
 	struct dirent *d;
 
-	if (!pci_vfio_is_enabled()) {
+	if (!spdk_vfio_enabled()) {
 		return;
 	}
 
