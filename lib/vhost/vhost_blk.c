@@ -520,7 +520,8 @@ spdk_vhost_blk_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 
 	bvdev->requestq_poller = spdk_poller_register(bvdev->bdev ? vdev_worker : no_bdev_vdev_worker,
 				 bvdev, 0);
-	SPDK_NOTICELOG("Started poller for vhost controller %s on lcore %d\n", vdev->name, vdev->lcore);
+	SPDK_INFOLOG(SPDK_LOG_VHOST, "Started poller for vhost controller %s on lcore %d\n",
+		     vdev->name, vdev->lcore);
 out:
 	spdk_vhost_dev_backend_event_done(event_ctx, rc);
 	return rc;
@@ -548,7 +549,7 @@ destroy_device_poller_cb(void *arg)
 		spdk_vhost_vq_used_signal(&bvdev->vdev, &bvdev->vdev.virtqueue[i]);
 	}
 
-	SPDK_NOTICELOG("Stopping poller for vhost controller %s\n", bvdev->vdev.name);
+	SPDK_INFOLOG(SPDK_LOG_VHOST, "Stopping poller for vhost controller %s\n", bvdev->vdev.name);
 
 	if (bvdev->bdev_io_channel) {
 		spdk_put_io_channel(bvdev->bdev_io_channel);
@@ -772,7 +773,7 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 		goto out;
 	}
 
-	SPDK_NOTICELOG("Controller %s: using bdev '%s'\n", name, dev_name);
+	SPDK_INFOLOG(SPDK_LOG_VHOST, "Controller %s: using bdev '%s'\n", name, dev_name);
 out:
 	if (ret != 0 && bvdev) {
 		spdk_dma_free(bvdev);
