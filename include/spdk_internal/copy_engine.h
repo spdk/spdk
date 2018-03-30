@@ -78,6 +78,7 @@ struct spdk_copy_module_if {
 };
 
 void spdk_copy_engine_register(struct spdk_copy_engine *copy_engine);
+bool spdk_copy_engine_is_registered(void);
 void spdk_copy_module_list_add(struct spdk_copy_module_if *copy_module);
 
 #define SPDK_COPY_MODULE_REGISTER(init_fn, fini_fn, config_fn, ctx_size_fn)				\
