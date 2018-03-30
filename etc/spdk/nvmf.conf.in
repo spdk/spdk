@@ -42,6 +42,12 @@
   AIO /dev/sdc AIO1
   AIO /tmp/myfile AIO2 4096
 
+# PMDK libpmemblk-based block device
+[Pmem]
+  # Syntax:
+  #   Blk <pmemblk pool file name> <bdev name>
+  Blk /path/to/pmem-pool Pmem0
+
 # Define NVMf protocol global options
 [Nvmf]
   # Set the maximum number of submission and completion queues per session.

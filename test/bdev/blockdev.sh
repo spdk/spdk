@@ -60,6 +60,13 @@ if [ $SPDK_TEST_RBD -eq 1 ]; then
 	$rootdir/scripts/gen_rbd.sh >> $testdir/bdev.conf
 fi
 
+if hash pmempool; then
+	rm -f /tmp/spdk-pmem-pool
+	pmempool create blk --size=32M 512 /tmp/spdk-pmem-pool
+	echo "[Pmem]" >> $testdir/bdev.conf
+	echo "  Blk /tmp/spdk-pmem-pool Pmem0" >> $testdir/bdev.conf
+fi
+
 timing_enter bounds
 $testdir/bdevio/bdevio $testdir/bdev.conf
 timing_exit bounds
@@ -138,6 +145,7 @@ if grep -q Nvme0 $testdir/bdev.conf; then
 fi
 
 rm -f /tmp/aiofile
+rm -f /tmp/spdk-pmem-pool
 rm -f $testdir/bdev.conf
 report_test_completion "bdev"
 timing_exit bdev

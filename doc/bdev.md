@@ -92,6 +92,12 @@ It is possible to create pmem bdev using SPDK RPC:
 ./scripts/rpc.py construct_pmem_bdev -n bdev_name /path/to/pmem_pool
 ~~~
 
+Configuration file syntax:
+~~~
+[Pmem]
+  Blk /path/to/pmem_pool bdev_name
+~~~
+
 ## Null {#bdev_config_null}
 
 The SPDK null bdev driver is a dummy block I/O target that discards all writes and returns undefined

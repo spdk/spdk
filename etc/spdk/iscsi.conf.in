@@ -152,6 +152,12 @@
   AIO /dev/sdc AIO1
   AIO /tmp/myfile AIO2 4096
 
+# PMDK libpmemblk-based block device
+[Pmem]
+  # Syntax:
+  #   Blk <pmemblk pool file name> <bdev name>
+  Blk /path/to/pmem-pool Pmem0
+
 # The Split virtual block device slices block devices into multiple smaller bdevs.
 [Split]
   # Syntax:
