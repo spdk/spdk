@@ -39,6 +39,7 @@
 #include "spdk/event.h"
 #include "spdk/log.h"
 #include "spdk/io_channel.h"
+#include "spdk/rpc.h"
 
 static size_t g_max_copy_module_size = 0;
 
@@ -65,11 +66,15 @@ spdk_copy_engine_register(struct spdk_copy_engine *copy_engine)
 	hw_copy_engine = copy_engine;
 }
 
-static void
+static int
 spdk_memcpy_register(struct spdk_copy_engine *copy_engine)
 {
-	assert(mem_copy_engine == NULL);
+	if (mem_copy_engine != NULL) {
+		return -1;
+	}
+
 	mem_copy_engine = copy_engine;
+	return 0;
 }
 
 static void
@@ -213,7 +218,13 @@ spdk_copy_engine_get_io_channel(void)
 static int
 copy_engine_mem_init(void)
 {
-	spdk_memcpy_register(&memcpy_copy_engine);
+	int rc;
+
+	rc = spdk_memcpy_register(&memcpy_copy_engine);
+	if (rc != 0) {
+		return rc;
+	}
+
 	spdk_io_device_register(&memcpy_copy_engine, memcpy_create_cb, memcpy_destroy_cb, 0);
 
 	return 0;
@@ -298,3 +309,37 @@ spdk_copy_engine_config_text(FILE *fp)
 }
 
 SPDK_COPY_MODULE_REGISTER(copy_engine_mem_init, NULL, NULL, copy_engine_mem_get_ctx_size)
+
+static void
+spdk_rpc_add_memcpy_copy_engine(struct spdk_jsonrpc_request *request,
+				const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+	int rc;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "add_memcpy_copy_engine requires no parameters");
+		return;
+	}
+
+	rc = copy_engine_mem_init();
+	if (rc != 0) {
+		SPDK_ERRLOG("copy_engine_mem_init() failed\n");
+		goto invalid;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 "Invalid parameters");
+}
+SPDK_RPC_REGISTER("add_memcpy_copy_engine", spdk_rpc_add_memcpy_copy_engine)

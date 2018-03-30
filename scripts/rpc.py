@@ -795,6 +795,13 @@ if __name__ == "__main__":
     p.add_argument('name', help='Name for the bdev')
     p.set_defaults(func=construct_virtio_pci_blk_bdev)
 
+    # copy
+    def add_memcpy_copy_engine(args):
+        rpc.copy.add_memcpy_copy_engine(args)
+
+    p = subparsers.add_parser('add_memcpy_copy_engine', help='Add memcpy copy engine.')
+    p.set_defaults(func=add_memcpy_copy_engine)
+
     args = parser.parse_args()
 
     args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.verbose, args.timeout)
