@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9b5e19ea_444b509b",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-30T06:28:26Z",
+      "side": 1,
+      "message": "Wrong indentation; spaces instead of tabs",
+      "range": {
+        "startLine": 80,
+        "startChar": 0,
+        "endLine": 80,
+        "endChar": 8
+      },
+      "revId": "ffcbc2543d6bcdf9c5a8e8c18d99c9244706bc60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f21d4d42_b75dafef",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-30T06:28:26Z",
+      "side": 1,
+      "message": "Why not just use randrw instead of 2 separate fio calls?",
+      "range": {
+        "startLine": 81,
+        "startChar": 0,
+        "endLine": 83,
+        "endChar": 117
+      },
+      "revId": "ffcbc2543d6bcdf9c5a8e8c18d99c9244706bc60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "021c240f_00911186",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-30T06:28:26Z",
+      "side": 1,
+      "message": "Wrong indentation; spaces instead of tabs",
+      "range": {
+        "startLine": 84,
+        "startChar": 0,
+        "endLine": 84,
+        "endChar": 17
+      },
+      "revId": "ffcbc2543d6bcdf9c5a8e8c18d99c9244706bc60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c0f05612_ace0da5b",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-30T06:28:26Z",
+      "side": 1,
+      "message": "Any reason why nightly part is different than per-patch?\nIn per-patch we unmount fs, logout iscsiadm, then login again and check if file exists. Why don\u0027t we do the same here?",
+      "range": {
+        "startLine": 86,
+        "startChar": 2,
+        "endLine": 87,
+        "endChar": 20
+      },
+      "revId": "ffcbc2543d6bcdf9c5a8e8c18d99c9244706bc60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
