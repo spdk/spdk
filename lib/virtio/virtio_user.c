@@ -236,14 +236,23 @@ static void
 virtio_user_set_status(struct virtio_dev *vdev, uint8_t status)
 {
 	struct virtio_user_dev *dev = vdev->ctx;
+	int rc = 0;
 
-	if (status & VIRTIO_CONFIG_S_DRIVER_OK) {
-		virtio_user_start_device(vdev);
+	if ((dev->status & VIRTIO_CONFIG_S_NEEDS_RESET) &&
+	    status != VIRTIO_CONFIG_S_RESET) {
+		rc = -1;
+	} else if (status & VIRTIO_CONFIG_S_DRIVER_OK) {
+		rc = virtio_user_start_device(vdev);
 	} else if (status == VIRTIO_CONFIG_S_RESET &&
 		   (dev->status & VIRTIO_CONFIG_S_DRIVER_OK)) {
-		virtio_user_stop_device(vdev);
+		rc = virtio_user_stop_device(vdev);
 	}
-	dev->status = status;
+
+	if (rc != 0) {
+		dev->status |= VIRTIO_CONFIG_S_NEEDS_RESET;
+	} else {
+		dev->status = status;
+	}
 }
 
 static uint8_t
