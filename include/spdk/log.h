@@ -66,13 +66,17 @@ enum spdk_log_level {
 };
 
 /**
- * Set the threshold to log messages. Messages with a higher
+ * Set the log level threshold to log messages. Messages with a higher
  * level than this are ignored.
+ *
+ * \param level Log level threshold to set to log messages.
  */
 void spdk_log_set_level(enum spdk_log_level level);
 
 /**
- * Get the current log threshold.
+ * Get the current log level threshold.
+ *
+ * \return the current log level threshold.
  */
 enum spdk_log_level spdk_log_get_level(void);
 
@@ -80,11 +84,15 @@ enum spdk_log_level spdk_log_get_level(void);
  * Set the current log level threshold for printing to stderr.
  * Messages with a level less than or equal to this level
  * are also printed to stderr.
+ *
+ * \param level Log level threshold for printing to stderr.
  */
 void spdk_log_set_print_level(enum spdk_log_level level);
 
 /**
  * Get the current log level print threshold.
+ *
+ * \return the current log level print threshold.
  */
 enum spdk_log_level spdk_log_get_print_level(void);
 
@@ -95,15 +103,59 @@ enum spdk_log_level spdk_log_get_print_level(void);
 #define SPDK_ERRLOG(...) \
 	spdk_log(SPDK_LOG_ERROR, __FILE__, __LINE__, __func__, __VA_ARGS__)
 
+/**
+ * Save the log information to the log file.
+ *
+ * \param level Log level threshold.
+ * \param file Log file to save the information.
+ * \param line Label to print to the log.
+ * \param func Function that causes the log notification.
+ * \param format Format of output information.
+ */
 void spdk_log(enum spdk_log_level level, const char *file, const int line, const char *func,
 	      const char *format, ...) __attribute__((__format__(__printf__, 5, 6)));
 
+/**
+ * Dump the trace to a file.
+ *
+ * \param fp File to hold the trace.
+ * \param label Label to print to the file.
+ * \param buf Buffer that holds the tarce information.
+ * \param len Length of trace to dump.
+ */
 void spdk_trace_dump(FILE *fp, const char *label, const void *buf, size_t len);
 
+/**
+ * Check whether the flag is existed and enabled.
+ *
+ * \return true if enabled, or false otherwise.
+ */
 bool spdk_log_get_trace_flag(const char *flag);
+
+/**
+ * Set a trace flag, and make it enabled.
+ *
+ * \param flag Trace flag to set.
+ *
+ * \return 0 on success, -1 on failure.
+ */
 int spdk_log_set_trace_flag(const char *flag);
+
+/**
+ * Clear a trace flag.
+ *
+ * \flag Trace flag to clear.
+ *
+ * \return 0 on success, -1 on failure.
+ */
 int spdk_log_clear_trace_flag(const char *flag);
 
+/**
+ * Show all the log trace flags.
+ *
+ * \param f File to hold all the flags' information.
+ * \param trace_arg Log trace label to show in the file.
+ */
 void spdk_tracelog_usage(FILE *f, const char *trace_arg);
 
 #ifdef __cplusplus
