@@ -45,8 +45,11 @@
 extern "C" {
 #endif
 
-#define SPDK_ENV_SOCKET_ID_ANY	(-1)
-#define SPDK_ENV_LCORE_ID_ANY	(UINT32_MAX)
+#define SPDK_ENV_SOCKET_ID_ANY		(-1)
+#define SPDK_ENV_LCORE_ID_ANY		(UINT32_MAX)
+#define SPDK_ENV_PCI_ADDR_LIST_LEN	32
+#define SPDK_ENV_PCI_ADDR_LIST_WHITE	0
+#define SPDK_ENV_PCI_ADDR_LIST_BLACK	1
 
 struct spdk_pci_device;
 
@@ -62,6 +65,10 @@ struct spdk_env_opts {
 	int			mem_size;
 	bool			no_pci;
 	bool			hugepage_single_segments;
+	int			pci_addr_list_type;
+	int			num_pci_addr;
+	char			pci_addr_list[SPDK_ENV_PCI_ADDR_LIST_LEN][16];
+
 
 	/** Opaque context for use of the env implementation. */
 	void			*env_context;
