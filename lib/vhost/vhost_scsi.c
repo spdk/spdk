@@ -790,7 +790,7 @@ spdk_vhost_scsi_lun_hotremove(const struct spdk_scsi_lun *lun, void *arg)
 {
 	struct spdk_vhost_scsi_tgt *svtgt = arg;
 	struct spdk_vhost_tgt *vtgt = &svtgt->vtgt;
-	struct spdk_vhost_dev *vdev = vtgt->vdev;
+	struct spdk_vhost_dev *vdev = TAILQ_FIRST(&vtgt->vdevs);
 	const struct spdk_scsi_dev *scsi_dev;
 	unsigned scsi_dev_num;
 
@@ -799,7 +799,7 @@ spdk_vhost_scsi_lun_hotremove(const struct spdk_scsi_lun *lun, void *arg)
 	if (vdev && vdev->lcore != -1 &&
 	    !spdk_vhost_dev_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG)) {
 		SPDK_WARNLOG("%s: hotremove is not enabled for this controller.\n",
-			     vtgt->vdev->name);
+			     vdev->name);
 		return;
 	}
 
@@ -850,7 +850,7 @@ _spdk_vhost_scsi_tgt_add_tgt(struct spdk_vhost_tgt *vtgt,
 	}
 
 	svtgt = to_scsi_tgt(vtgt);
-	assert(vdev == vtgt->vdev);
+	assert(vdev == TAILQ_FIRST(&vtgt->vdevs));
 	if (svtgt->scsi_dev[scsi_tgt_num] != NULL) {
 		SPDK_ERRLOG("Controller %s target %u already occupied\n", vtgt->name, scsi_tgt_num);
 		rc = -EEXIST;
@@ -988,7 +988,7 @@ _spdk_vhost_scsi_tgt_remove_tgt_cb(struct spdk_vhost_tgt *vtgt,
 		goto out_cb;
 	}
 
-	assert(vdev == vtgt->vdev);
+	assert(vdev == TAILQ_FIRST(&vtgt->vdevs));
 	if (vdev == NULL || vdev->lcore == -1) {
 		/* controller is not in use, remove dev and exit */
 		svtgt->scsi_dev[scsi_tgt_num] = NULL;
@@ -1217,6 +1217,13 @@ spdk_vhost_scsi_start(struct spdk_vhost_tgt *vtgt,
 			rc = -1;
 			goto out;
 		}
+	}
+
+
+	if (vdev != TAILQ_FIRST(&vtgt->vdevs)) {
+		SPDK_WARNLOG("Vhost SCSI targets support only one initiator at a time.\n");
+		rc = -1;
+		goto out;
 	}
 
 	rc = alloc_task_pool(svdev);
