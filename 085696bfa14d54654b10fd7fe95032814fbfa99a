@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b0cba219_2eef3993",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 463,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-03-30T12:27:53Z",
+      "side": 1,
+      "message": "Again!? :P\nHow often are these vm shutdown related fails? 30sec is quite long to be honest.",
+      "range": {
+        "startLine": 463,
+        "startChar": 13,
+        "endLine": 463,
+        "endChar": 15
+      },
+      "revId": "085696bfa14d54654b10fd7fe95032814fbfa99a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
