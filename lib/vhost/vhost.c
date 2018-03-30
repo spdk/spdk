@@ -1183,7 +1183,7 @@ new_connection(int vid)
 		goto err;
 	}
 
-	vdev = calloc(1, sizeof(struct spdk_vhost_dev));
+	vdev = calloc(1, sizeof(struct spdk_vhost_dev) + vtgt->backend->dev_ctx_size);
 	if (vdev == NULL) {
 		SPDK_ERRLOG("vdev calloc failed.\n");
 		goto err;

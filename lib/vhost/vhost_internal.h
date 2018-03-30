@@ -115,6 +115,8 @@ struct spdk_vhost_dev_backend {
 	uint64_t virtio_features;
 	uint64_t disabled_features;
 
+	size_t dev_ctx_size;
+
 	/**
 	 * Callbacks for starting and pausing the device.
 	 * The first param is struct spdk_vhost_dev *.
@@ -278,6 +280,16 @@ spdk_vhost_dev_has_feature(struct spdk_vhost_dev *vdev, unsigned feature_id)
 int spdk_vhost_tgt_register(struct spdk_vhost_tgt *vtgt, const char *name, const char *mask_str,
 			    const struct spdk_vhost_dev_backend *backend);
 int spdk_vhost_tgt_unregister(struct spdk_vhost_tgt *vtgt);
+
+static inline void *spdk_vhost_dev_get_ctx(struct spdk_vhost_dev *vdev)
+{
+	return (uint8_t *)vdev + sizeof(*vdev);
+}
+
+static inline struct spdk_vhost_dev *spdk_vhost_dev_from_ctx(void *ctx)
+{
+	return (struct spdk_vhost_dev *)((uint8_t *)ctx - sizeof(struct spdk_vhost_dev));
+}
 
 int spdk_vhost_scsi_controller_construct(void);
 int spdk_vhost_blk_controller_construct(void);
