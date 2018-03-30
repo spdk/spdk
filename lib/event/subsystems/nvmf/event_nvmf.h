@@ -40,6 +40,7 @@
 #include "spdk/queue.h"
 
 #include "spdk_internal/event.h"
+#include "spdk_internal/log.h"
 
 struct spdk_nvmf_tgt_conf {
 	uint32_t acceptor_poll_rate;
