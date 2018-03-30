@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "14a10eec_d6549c43",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-30T17:18:43Z",
+      "side": 1,
+      "message": "Just wondering if we can drop this \"tgt\"?\nIsnt \"spdk_vhost_scsi_construct()\" enough clear?",
+      "range": {
+        "startLine": 181,
+        "startChar": 20,
+        "endLine": 181,
+        "endChar": 23
+      },
+      "revId": "4b147c5c94f28eba6bcfea36be575eb23ee17d15",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68339ae1_9c17a125",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-30T17:18:43Z",
+      "side": 1,
+      "message": "Also here. Isnt \"spdk_vhost_scsi_add_tgt()\" enough clear? Those are just a free thoughts.",
+      "range": {
+        "startLine": 199,
+        "startChar": 20,
+        "endLine": 199,
+        "endChar": 23
+      },
+      "revId": "4b147c5c94f28eba6bcfea36be575eb23ee17d15",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e03f0cf_ca4dafad",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-30T17:18:43Z",
+      "side": 1,
+      "message": "Just spotted. This should be bdev, I think.",
+      "range": {
+        "startLine": 284,
+        "startChar": 41,
+        "endLine": 284,
+        "endChar": 44
+      },
+      "revId": "4b147c5c94f28eba6bcfea36be575eb23ee17d15",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b9e1557d_4399e1f2",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1031,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-30T17:18:43Z",
+      "side": 1,
+      "message": "And here is the question: is the interrupt coalescing property of target or device?",
+      "range": {
+        "startLine": 1027,
+        "startChar": 0,
+        "endLine": 1031,
+        "endChar": 15
+      },
+      "revId": "4b147c5c94f28eba6bcfea36be575eb23ee17d15",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fd4adc9d_a2ab7080",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1157,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-30T17:18:43Z",
+      "side": 1,
+      "message": "I think that removing target must imply removing devices.",
+      "range": {
+        "startLine": 1157,
+        "startChar": 1,
+        "endLine": 1157,
+        "endChar": 37
+      },
+      "revId": "4b147c5c94f28eba6bcfea36be575eb23ee17d15",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c31ae38_c82fb926",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-03-30T17:18:43Z",
+      "side": 1,
+      "message": "tgt?",
+      "range": {
+        "startLine": 158,
+        "startChar": 25,
+        "endLine": 158,
+        "endChar": 28
+      },
+      "revId": "4b147c5c94f28eba6bcfea36be575eb23ee17d15",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
