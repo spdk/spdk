@@ -53,8 +53,9 @@
 #define SPDK_VFIO_ENABLED 1
 #include <linux/vfio.h>
 
-/* Internal DPDK function forward declaration */
-int pci_vfio_is_enabled(void);
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
+#include <rte_vfio.h>
+#endif
 
 struct spdk_vfio_dma_map {
 	struct vfio_iommu_type1_dma_map map;
@@ -372,6 +373,20 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 }
 
 #if SPDK_VFIO_ENABLED
+
+static bool
+spdk_vfio_enabled(void)
+{
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
+	return rte_vfio_is_enabled("vfio_pci");
+#else
+	/* Internal DPDK function forward declaration */
+	int pci_vfio_is_enabled(void);
+
+	return pci_vfio_is_enabled();
+#endif
+}
+
 static void
 spdk_vtophys_iommu_init(void)
 {
@@ -381,7 +396,7 @@ spdk_vtophys_iommu_init(void)
 	DIR *dir;
 	struct dirent *d;
 
-	if (!pci_vfio_is_enabled()) {
+	if (!spdk_vfio_enabled()) {
 		return;
 	}
 
