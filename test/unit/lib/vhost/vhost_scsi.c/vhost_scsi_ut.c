@@ -69,6 +69,8 @@ DEFINE_STUB_P(spdk_scsi_dev_construct, struct spdk_scsi_dev, (const char *name,
 DEFINE_STUB(spdk_scsi_dev_add_port, int, (struct spdk_scsi_dev *dev, uint64_t id, const char *name),
 	    0);
 
+SPDK_LOG_REGISTER_COMPONENT("vhost", SPDK_LOG_VHOST)
+
 char *
 spdk_conf_section_get_nval(struct spdk_conf_section *sp, const char *key, int idx)
 {

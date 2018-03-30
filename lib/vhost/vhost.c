@@ -505,8 +505,8 @@ spdk_vhost_dev_mem_register(struct spdk_vhost_dev *vdev)
 		start = FLOOR_2MB(region->mmap_addr);
 		end = CEIL_2MB(region->mmap_addr + region->mmap_size);
 		len = end - start;
-		SPDK_NOTICELOG("Registering VM memory for vtophys translation - 0x%jx len:0x%jx\n",
-			       start, len);
+		SPDK_INFOLOG(SPDK_LOG_VHOST, "Registering VM memory for vtophys translation - 0x%jx len:0x%jx\n",
+			     start, len);
 
 		if (spdk_mem_register((void *)start, len) != 0) {
 			SPDK_WARNLOG("Failed to register memory region %"PRIu32". Future vtophys translation might fail.\n",
@@ -710,7 +710,7 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 		return -EIO;
 	}
 
-	SPDK_NOTICELOG("Controller %s: new controller added\n", vdev->name);
+	SPDK_INFOLOG(SPDK_LOG_VHOST, "Controller %s: new controller added\n", vdev->name);
 	return 0;
 
 out:
@@ -733,7 +733,7 @@ spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev)
 		return -EIO;
 	}
 
-	SPDK_NOTICELOG("Controller %s: removed\n", vdev->name);
+	SPDK_INFOLOG(SPDK_LOG_VHOST, "Controller %s: removed\n", vdev->name);
 
 	free(vdev->name);
 	free(vdev->path);
@@ -1131,7 +1131,7 @@ session_shutdown(void *arg)
 		vdev->registered = false;
 	}
 
-	SPDK_NOTICELOG("Exiting\n");
+	SPDK_INFOLOG(SPDK_LOG_VHOST, "Exiting\n");
 	spdk_event_call((struct spdk_event *)arg);
 	return NULL;
 }
@@ -1347,4 +1347,5 @@ spdk_vhost_fini(spdk_vhost_fini_cb fini_cb)
 	pthread_detach(tid);
 }
 
+SPDK_LOG_REGISTER_COMPONENT("vhost", SPDK_LOG_VHOST)
 SPDK_LOG_REGISTER_COMPONENT("vhost_ring", SPDK_LOG_VHOST_RING)
