@@ -31,6 +31,10 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/** \file
+ * Network block device layer
+ */
+
 #ifndef SPDK_NBD_H_
 #define SPDK_NBD_H_
 
@@ -41,12 +45,34 @@ extern "C" {
 struct spdk_bdev;
 struct spdk_nbd_disk;
 
+/**
+ * Initialize the environment for network block device.
+ *
+ * \return 0 on success.
+ */
 int spdk_nbd_init(void);
 
+/**
+ * Stop running network block device and close all the network block devices.
+ */
 void spdk_nbd_fini(void);
 
+/**
+ * Start SPDK network block device.
+ *
+ * \param bdev_name Name of bdev to register the nbd to.
+ * \param nbd_path Path to network block device.
+ *
+ * \return a pointer to the registered network block device on success, or NULL
+ * on failure.
+ */
 struct spdk_nbd_disk *spdk_nbd_start(const char *bdev_name, const char *nbd_path);
 
+/**
+ * Stop SPDK network block device and perform the cleanup work.
+ *
+ * \param nbd A pointer to the network block device to stop.
+ */
 void spdk_nbd_stop(struct spdk_nbd_disk *nbd);
 
 #ifdef __cplusplus
