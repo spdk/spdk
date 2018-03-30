@@ -99,6 +99,16 @@ static struct vfio_cfg g_vfio = {
 #define DEBUG_PRINT(...)
 #endif
 
+struct spdk_vtophys_pci_device {
+	struct rte_pci_device *pci_device;
+	TAILQ_ENTRY(spdk_vtophys_pci_device) tailq;
+	uint64_t ref;
+};
+
+static pthread_mutex_t g_vtophys_pci_devices_mutex = PTHREAD_MUTEX_INITIALIZER;
+static TAILQ_HEAD(, spdk_vtophys_pci_device) g_vtophys_pci_devices =
+	TAILQ_HEAD_INITIALIZER(g_vtophys_pci_devices);
+
 static struct spdk_mem_map *g_vtophys_map;
 
 #if SPDK_VFIO_ENABLED
@@ -262,16 +272,16 @@ vtophys_get_paddr_pagemap(uint64_t vaddr)
 static uint64_t
 vtophys_get_paddr_pci(uint64_t vaddr)
 {
+	struct spdk_vtophys_pci_device *vtophys_dev;
 	uintptr_t paddr;
 	struct rte_pci_device	*dev;
 	struct rte_mem_resource *res;
 	unsigned r;
 
-#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 2)
-	FOREACH_DEVICE_ON_PCIBUS(dev) {
-#else
-	TAILQ_FOREACH(dev, &pci_device_list, next) {
-#endif
+	pthread_mutex_lock(&g_vtophys_pci_devices_mutex);
+	TAILQ_FOREACH(vtophys_dev, &g_vtophys_pci_devices, tailq) {
+		dev = vtophys_dev->pci_device;
+
 		for (r = 0; r < PCI_MAX_RESOURCE; r++) {
 			res = &dev->mem_resource[r];
 			if (res->phys_addr && vaddr >= (uint64_t)res->addr &&
@@ -279,10 +289,13 @@ vtophys_get_paddr_pci(uint64_t vaddr)
 				paddr = res->phys_addr + (vaddr - (uint64_t)res->addr);
 				DEBUG_PRINT("%s: %p -> %p\n", __func__, (void *)vaddr,
 					    (void *)paddr);
+				pthread_mutex_unlock(&g_vtophys_pci_devices_mutex);
 				return paddr;
 			}
 		}
 	}
+	pthread_mutex_unlock(&g_vtophys_pci_devices_mutex);
+
 	return  SPDK_VTOPHYS_ERROR;
 }
 
@@ -443,8 +456,32 @@ spdk_vtophys_iommu_init(void)
 #endif
 
 void
-spdk_vtophys_get_ref(void)
+spdk_vtophys_pci_device_added(struct rte_pci_device *pci_device)
 {
+	struct spdk_vtophys_pci_device *vtophys_dev;
+	bool found = false;
+
+	pthread_mutex_lock(&g_vtophys_pci_devices_mutex);
+	TAILQ_FOREACH(vtophys_dev, &g_vtophys_pci_devices, tailq) {
+		if (vtophys_dev->pci_device == pci_device) {
+			vtophys_dev->ref++;
+			found = true;
+			break;
+		}
+	}
+
+	if (!found) {
+		vtophys_dev = calloc(1, sizeof(*vtophys_dev));
+		if (vtophys_dev) {
+			vtophys_dev->pci_device = pci_device;
+			vtophys_dev->ref = 1;
+			TAILQ_INSERT_TAIL(&g_vtophys_pci_devices, vtophys_dev, tailq);
+		} else {
+			DEBUG_PRINT("Memory allocation error\n");
+		}
+	}
+	pthread_mutex_unlock(&g_vtophys_pci_devices_mutex);
+
 #if SPDK_VFIO_ENABLED
 	struct spdk_vfio_dma_map *dma_map;
 	int ret;
@@ -476,8 +513,23 @@ spdk_vtophys_get_ref(void)
 }
 
 void
-spdk_vtophys_put_ref(void)
+spdk_vtophys_pci_device_removed(struct rte_pci_device *pci_device)
 {
+	struct spdk_vtophys_pci_device *vtophys_dev;
+
+	pthread_mutex_lock(&g_vtophys_pci_devices_mutex);
+	TAILQ_FOREACH(vtophys_dev, &g_vtophys_pci_devices, tailq) {
+		if (vtophys_dev->pci_device == pci_device) {
+			assert(vtophys_dev->ref > 0);
+			if (--vtophys_dev->ref == 0) {
+				TAILQ_REMOVE(&g_vtophys_pci_devices, vtophys_dev, tailq);
+				free(vtophys_dev);
+			}
+			break;
+		}
+	}
+	pthread_mutex_unlock(&g_vtophys_pci_devices_mutex);
+
 #if SPDK_VFIO_ENABLED
 	struct spdk_vfio_dma_map *dma_map;
 	int ret;
