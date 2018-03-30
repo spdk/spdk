@@ -59,9 +59,7 @@ virtio_user_create_queue(struct virtio_dev *vdev, uint32_t queue_sel)
 
 	file.index = queue_sel;
 	file.fd = dev->callfds[queue_sel];
-	dev->ops->send_request(dev, VHOST_USER_SET_VRING_CALL, &file);
-
-	return 0;
+	return dev->ops->send_request(dev, VHOST_USER_SET_VRING_CALL, &file);
 }
 
 static int
@@ -79,16 +77,26 @@ virtio_user_kick_queue(struct virtio_dev *vdev, uint32_t queue_sel)
 		.log_guest_addr = 0,
 		.flags = 0, /* disable log */
 	};
+	int rc;
 
 	state.index = queue_sel;
 	state.num = vring->num;
-	dev->ops->send_request(dev, VHOST_USER_SET_VRING_NUM, &state);
+	rc = dev->ops->send_request(dev, VHOST_USER_SET_VRING_NUM, &state);
+	if (rc < 0) {
+		return rc;
+	}
 
 	state.index = queue_sel;
 	state.num = 0; /* no reservation */
-	dev->ops->send_request(dev, VHOST_USER_SET_VRING_BASE, &state);
+	rc = dev->ops->send_request(dev, VHOST_USER_SET_VRING_BASE, &state);
+	if (rc < 0) {
+		return rc;
+	}
 
-	dev->ops->send_request(dev, VHOST_USER_SET_VRING_ADDR, &addr);
+	rc = dev->ops->send_request(dev, VHOST_USER_SET_VRING_ADDR, &addr);
+	if (rc < 0) {
+		return rc;
+	}
 
 	/* Of all per virtqueue MSGs, make sure VHOST_USER_SET_VRING_KICK comes
 	 * lastly because vhost depends on this msg to judge if
@@ -96,9 +104,7 @@ virtio_user_kick_queue(struct virtio_dev *vdev, uint32_t queue_sel)
 	 */
 	file.index = queue_sel;
 	file.fd = dev->kickfds[queue_sel];
-	dev->ops->send_request(dev, VHOST_USER_SET_VRING_KICK, &file);
-
-	return 0;
+	return dev->ops->send_request(dev, VHOST_USER_SET_VRING_KICK, &file);
 }
 
 static int
@@ -109,9 +115,8 @@ virtio_user_stop_queue(struct virtio_dev *vdev, uint32_t queue_sel)
 
 	state.index = queue_sel;
 	state.num = 0;
-	dev->ops->send_request(dev, VHOST_USER_GET_VRING_BASE, &state);
 
-	return 0;
+	return dev->ops->send_request(dev, VHOST_USER_GET_VRING_BASE, &state);
 }
 
 static int
