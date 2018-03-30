@@ -77,10 +77,10 @@ spdk_rpc_construct_vhost_scsi_controller(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	rc = spdk_vhost_scsi_tgt_construct(req.ctrlr, req.cpumask);
+	/*rc = spdk_vhost_scsi_tgt_construct(req.ctrlr, req.cpumask);
 	if (rc < 0) {
 		goto invalid;
-	}
+	}*/
 
 	free_rpc_vhost_scsi_ctrlr(&req);
 
@@ -135,10 +135,10 @@ spdk_rpc_add_vhost_scsi_lun_cb(struct spdk_vhost_tgt *vtgt, void *arg)
 		goto invalid;
 	}
 
-	rc = spdk_vhost_scsi_tgt_add_tgt(vtgt, rpc->scsi_target_num, rpc->bdev_name);
+	/*rc = spdk_vhost_scsi_tgt_add_tgt(vtgt, rpc->scsi_target_num, rpc->bdev_name);
 	if (rc < 0) {
 		goto invalid;
-	}
+	}*/
 
 	free_rpc_add_vhost_scsi_ctrlr_lun(rpc);
 
@@ -218,7 +218,7 @@ static const struct spdk_json_object_decoder rpc_vhost_remove_target[] = {
 	{"scsi_target_num", offsetof(struct rpc_remove_vhost_scsi_ctrlr_target, scsi_target_num), spdk_json_decode_uint32},
 };
 
-static int
+static int __attribute__((unused))
 spdk_rpc_remove_vhost_scsi_target_finish_cb(struct spdk_vhost_tgt *vtgt, void *arg)
 {
 	struct rpc_remove_vhost_scsi_ctrlr_target *rpc = arg;
@@ -237,7 +237,7 @@ spdk_rpc_remove_vhost_scsi_target_finish_cb(struct spdk_vhost_tgt *vtgt, void *a
 	return 0;
 }
 
-static int
+static int __attribute__((unused))
 spdk_rpc_remove_vhost_scsi_target_cb(struct spdk_vhost_tgt *vtgt, void *arg)
 {
 	struct rpc_remove_vhost_scsi_ctrlr_target *rpc = arg;
@@ -249,11 +249,11 @@ spdk_rpc_remove_vhost_scsi_target_cb(struct spdk_vhost_tgt *vtgt, void *arg)
 		goto invalid;
 	}
 
-	rc = spdk_vhost_scsi_tgt_remove_tgt(vtgt, rpc->scsi_target_num,
+/*	rc = spdk_vhost_scsi_tgt_remove_tgt(vtgt, rpc->scsi_target_num,
 					    spdk_rpc_remove_vhost_scsi_target_finish_cb, rpc);
 	if (rc < 0) {
 		goto invalid;
-	}
+	}*/
 
 	return 0;
 
@@ -285,8 +285,7 @@ spdk_rpc_remove_vhost_scsi_target(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	spdk_vhost_call_external_event(req->ctrlr, spdk_rpc_remove_vhost_scsi_target_cb, req);
-
+	/*spdk_vhost_call_external_event(req->ctrlr, spdk_rpc_remove_vhost_scsi_target_cb, req);*/
 	return;
 
 invalid:
