@@ -29,16 +29,6 @@ run_test test/nvmf/nvme_cli/nvme_cli.sh
 run_test test/nvmf/lvol/nvmf_lvol.sh
 run_test test/nvmf/shutdown/shutdown.sh
 
-if [ $SPDK_TEST_NVML -eq 1 ]; then
-	if [ $RUN_NIGHTLY -eq 1 ]; then
-		run_test test/nvmf/pmem/nvmf_pmem.sh 30
-		report_test_completion "nightly_nvmf_pmem"
-	else
-		run_test test/nvmf/pmem/nvmf_pmem.sh 10
-		report_test_completion "nvmf_pmem"
-	fi
-fi
-
 if [ $RUN_NIGHTLY_FAILING -eq 1 ]; then
 	run_test test/nvmf/multiconnection/multiconnection.sh
 fi
