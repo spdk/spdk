@@ -66,6 +66,12 @@ spdk_copy_engine_register(struct spdk_copy_engine *copy_engine)
 	hw_copy_engine = copy_engine;
 }
 
+bool
+spdk_copy_engine_is_registered(void)
+{
+	return hw_copy_engine ? true : false;
+}
+
 static int
 spdk_memcpy_register(struct spdk_copy_engine *copy_engine)
 {
