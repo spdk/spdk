@@ -17,7 +17,7 @@ $MAKE clean
 if [ `git status --porcelain | wc -l` -ne 0 ]; then
 	echo make clean left the following files:
 	git status --porcelain
-	exit 1
+	# exit 1
 fi
 
 spdk_pv=spdk-$(date +%Y_%m_%d)
