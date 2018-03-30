@@ -62,6 +62,30 @@
       "revId": "cda63ad771d4eecd22fdc47483266c470edb62bd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f25d7c4_d3129e8b",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 1374,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-30T11:26:50Z",
+      "side": 1,
+      "message": "Sorry, I understood that this comment is for notification function and it\u0027s OK.",
+      "parentUuid": "458e929c_d91097a5",
+      "range": {
+        "startLine": 1372,
+        "startChar": 2,
+        "endLine": 1374,
+        "endChar": 5
+      },
+      "revId": "cda63ad771d4eecd22fdc47483266c470edb62bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
