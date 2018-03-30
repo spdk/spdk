@@ -250,6 +250,15 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 		}
 	}
 
+	if (opts->nr_whitelist) {
+		for (int i = 0; i < opts->nr_whitelist; i++) {
+			args = spdk_push_arg(args, &argcount, _sprintf_alloc("-w %s", opts->whitelist[i]));
+			if (args == NULL) {
+				return -1;
+			}
+		}
+	}
+
 #ifdef __linux__
 	if (opts->shm_id < 0) {
 		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--file-prefix=spdk_pid%d",

@@ -205,6 +205,7 @@ spdk_app_opts_init(struct spdk_app_opts *opts)
 	opts->max_delay_us = 0;
 	opts->print_level = SPDK_LOG_NOTICE;
 	opts->rpc_addr = SPDK_DEFAULT_RPC_ADDR;
+	opts->nr_whitelist = 0;
 }
 
 static int
@@ -350,6 +351,25 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		opts->no_pci = spdk_conf_section_get_boolval(sp, "NoPci", false);
 	}
 
+	for (int i = 0; i < MAX_WHITELIST; i++) {
+		const char *bdf;
+		struct spdk_pci_addr addr;
+
+		bdf = spdk_conf_section_get_nmval(sp, "Whitelist", i, 0);
+
+		if (!bdf) {
+			break;
+		}
+
+		if (spdk_pci_addr_parse(&addr, bdf) < 0) {
+			SPDK_ERRLOG("Invalid Whitelist address %s\n", bdf);
+			return -1;
+		}
+
+		spdk_pci_addr_fmt(opts->whitelist[i], 16, &addr);
+		opts->nr_whitelist++;
+	}
+
 	spdk_env_opts_init(&env_opts);
 
 	env_opts.name = opts->name;
@@ -360,6 +380,8 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	env_opts.mem_size = opts->mem_size;
 	env_opts.no_pci = opts->no_pci;
 	env_opts.hugepage_single_segments = opts->hugepage_single_segments;
+	env_opts.nr_whitelist = opts->nr_whitelist;
+	memcpy(env_opts.whitelist, opts->whitelist, MAX_WHITELIST * 16);
 
 	if (spdk_env_init(&env_opts) < 0) {
 		SPDK_ERRLOG("Unable to initialize SPDK env\n");

@@ -67,6 +67,7 @@ typedef void (*spdk_app_shutdown_cb)(void);
 typedef void (*spdk_sighandler_t)(int);
 
 #define SPDK_DEFAULT_RPC_ADDR "/var/tmp/spdk.sock"
+#define MAX_WHITELIST  16
 
 /**
  * \brief Event framework initialization options
@@ -90,6 +91,8 @@ struct spdk_app_opts {
 	bool			no_pci;
 	bool			hugepage_single_segments;
 	enum spdk_log_level	print_level;
+	int			nr_whitelist;
+	char			whitelist[MAX_WHITELIST][16];
 
 	/* The maximum latency allowed when passing an event
 	 * from one core to another. A value of 0
