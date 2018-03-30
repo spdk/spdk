@@ -98,12 +98,16 @@ struct spdk_vhost_dev;
 /**
  * Synchronized vhost device event used for backend callbacks.
  *
- * \param vdev vhost device.
+ * \param vtgt vhost target. If the target has been unexpectedly deleted,
+ * this function will be called one last time with vtgt == NULL.
+ * \param vdev vhost device. If all devices have been iterated through,
+ * this function will be called one last time with vdev == NULL.
  * \param arg user-provided parameter.
  *
  * \return 0 on success, -1 on failure.
  */
-typedef int (*spdk_vhost_dev_fn)(struct spdk_vhost_dev *vdev, void *arg);
+typedef int (*spdk_vhost_dev_fn)(struct spdk_vhost_tgt *vtgt, struct spdk_vhost_dev *vdev,
+				 void *arg);
 
 struct spdk_vhost_virtqueue {
 	struct rte_vhost_vring vring;
@@ -173,8 +177,8 @@ struct spdk_vhost_tgt {
 	/* Threshold when event coalescing for virtqueue will be turned on. */
 	uint32_t  coalescing_io_rate_threshold;
 
-	/* Active device built on top of this target. */
-	struct spdk_vhost_dev *vdev;
+	/* Active devices built on top of this target. */
+	TAILQ_HEAD(, spdk_vhost_dev) vdevs;
 
 	TAILQ_ENTRY(spdk_vhost_tgt) tailq;
 };
@@ -186,6 +190,9 @@ struct spdk_vhost_dev {
 	struct rte_vhost_memory *mem;
 
 	char *name;
+
+	/* Target-unique device ID. Read-only. */
+	unsigned id;
 
 	/* rte_vhost device ID. */
 	int vid;
@@ -211,6 +218,8 @@ struct spdk_vhost_dev {
 	uint64_t negotiated_features;
 
 	struct spdk_vhost_virtqueue virtqueue[SPDK_VHOST_MAX_VQUEUES];
+
+	TAILQ_ENTRY(spdk_vhost_dev) tailq;
 };
 
 struct spdk_vhost_tgt *spdk_vhost_tgt_find(const char *vtgt_name);

@@ -412,11 +412,12 @@ static int
 _bdev_remove_cb(struct spdk_vhost_tgt *vtgt, void *arg)
 {
 	struct spdk_vhost_blk_tgt *bvtgt = arg;
-	struct spdk_vhost_dev *vdev = vtgt->vdev;
+	struct spdk_vhost_dev *vdev = TAILQ_FIRST(&vtgt->vdevs);
 	struct spdk_vhost_blk_dev *bvdev = (struct spdk_vhost_blk_dev *)vdev;
 
 	SPDK_WARNLOG("Controller %s: Hot-removing bdev - all further requests will fail.\n",
 		     vtgt->name);
+
 	if (bvdev->requestq_poller) {
 		spdk_poller_unregister(&bvdev->requestq_poller);
 		bvdev->requestq_poller = spdk_poller_register(no_bdev_vdev_worker, bvdev, 0);
@@ -425,6 +426,7 @@ _bdev_remove_cb(struct spdk_vhost_tgt *vtgt, void *arg)
 	spdk_bdev_close(bvtgt->bdev_desc);
 	bvtgt->bdev_desc = NULL;
 	bvtgt->bdev = NULL;
+
 	return 0;
 }
 
@@ -502,9 +504,8 @@ alloc_task_pool(struct spdk_vhost_blk_dev *bvdev)
  *
  */
 static int
-spdk_vhost_blk_start(struct spdk_vhost_dev *vdev, void *event_ctx)
+spdk_vhost_blk_start(struct spdk_vhost_tgt *vtgt, struct spdk_vhost_dev *vdev, void *event_ctx)
 {
-	struct spdk_vhost_tgt *vtgt = vdev->vtgt;
 	struct spdk_vhost_blk_tgt *bvtgt;
 	struct spdk_vhost_blk_dev *bvdev;
 	int i, rc = 0;
@@ -526,6 +527,12 @@ spdk_vhost_blk_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 			rc = -1;
 			goto out;
 		}
+	}
+
+	if (vdev != TAILQ_FIRST(&vtgt->vdevs)) {
+		SPDK_WARNLOG("Vhost Block targets support only one initiator at a time.\n");
+		rc = -1;
+		goto out;
 	}
 
 	rc = alloc_task_pool(bvdev);
@@ -591,9 +598,8 @@ destroy_device_poller_cb(void *arg)
 }
 
 static int
-spdk_vhost_blk_stop(struct spdk_vhost_dev *vdev, void *event_ctx)
+spdk_vhost_blk_stop(struct spdk_vhost_tgt *vtgt, struct spdk_vhost_dev *vdev, void *event_ctx)
 {
-	struct spdk_vhost_tgt *vtgt = vdev->vtgt;
 	struct spdk_vhost_blk_tgt *bvtgt;
 	struct spdk_vhost_dev_destroy_ctx *destroy_ctx;
 	struct spdk_vhost_blk_dev *bvdev;
