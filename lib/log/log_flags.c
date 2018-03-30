@@ -110,7 +110,7 @@ spdk_log_get_trace_flag(const char *name)
 {
 	struct spdk_trace_flag *flag = get_trace_flag(name);
 
-	if (flag && flag->enabled) {
+	if (flag && flag->print_level >= SPDK_LOG_DEBUG) {
 		return true;
 	}
 
@@ -124,7 +124,7 @@ set_trace_flag(const char *name, bool value)
 
 	if (strcasecmp(name, "all") == 0) {
 		TAILQ_FOREACH(flag, &g_trace_flags, tailq) {
-			flag->enabled = value;
+			flag->print_level = value ? SPDK_LOG_DEBUG : SPDK_LOG_INFO;
 		}
 		return 0;
 	}
@@ -134,7 +134,7 @@ set_trace_flag(const char *name, bool value)
 		return -1;
 	}
 
-	flag->enabled = value;
+	flag->print_level = value ? SPDK_LOG_DEBUG : SPDK_LOG_INFO;
 
 	return 0;
 }

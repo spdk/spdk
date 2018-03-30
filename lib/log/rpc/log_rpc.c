@@ -324,7 +324,7 @@ spdk_rpc_get_trace_flags(struct spdk_jsonrpc_request *request,
 	flag = spdk_log_get_first_trace_flag();
 	while (flag) {
 		spdk_json_write_name(w, flag->name);
-		spdk_json_write_bool(w, flag->enabled);
+		spdk_json_write_bool(w, flag->print_level >= SPDK_LOG_DEBUG ? true : false);
 		flag = spdk_log_get_next_trace_flag(flag);
 	}
 	spdk_json_write_object_end(w);
