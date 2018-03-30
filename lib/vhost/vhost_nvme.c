@@ -808,9 +808,11 @@ static struct spdk_vhost_nvme_dev *
 spdk_vhost_nvme_get_by_name(int vid)
 {
 	struct spdk_vhost_nvme_dev *nvme;
+	struct spdk_vhost_dev *vdev;
 
 	TAILQ_FOREACH(nvme, &g_nvme_ctrlrs, tailq) {
-		if (nvme->vdev && nvme->vdev->vid == vid) {
+		vdev = TAILQ_FIRST(&nvme->vtgt.vdevs);
+		if (vdev && vdev->vid == vid) {
 			return nvme;
 		}
 	}
@@ -974,14 +976,19 @@ alloc_task_pool(struct spdk_vhost_nvme_dev *nvme)
  * virtual NVMe controller
  */
 static int
-spdk_vhost_nvme_start_device(struct spdk_vhost_dev *vdev, void *event_ctx)
+spdk_vhost_nvme_start_device(struct spdk_vhost_tgt *vtgt, struct spdk_vhost_dev *vdev,
+			     void *event_ctx)
 {
-	struct spdk_vhost_tgt *vtgt = vdev->vtgt;
 	struct spdk_vhost_nvme_dev *nvme = to_nvme_dev(vtgt);
 	struct spdk_vhost_nvme_ns *ns_dev;
 	uint32_t i;
 
 	if (nvme == NULL) {
+		return -1;
+	}
+
+	if (vdev != TAILQ_FIRST(&vtgt->vdevs)) {
+		SPDK_WARNLOG("VhostNVMe targets support only a single initiator.\n");
 		return -1;
 	}
 
@@ -1072,9 +1079,10 @@ destroy_device_poller_cb(void *arg)
 /* Disable NVMe controller
  */
 static int
-spdk_vhost_nvme_stop_device(struct spdk_vhost_dev *vdev, void *event_ctx)
+spdk_vhost_nvme_stop_device(struct spdk_vhost_tgt *vtgt, struct spdk_vhost_dev *vdev,
+			    void *event_ctx)
 {
-	struct spdk_vhost_nvme_dev *nvme = to_nvme_dev(vdev->vtgt);
+	struct spdk_vhost_nvme_dev *nvme = to_nvme_dev(vtgt);
 	struct spdk_vhost_dev_destroy_ctx *destroy_ctx;
 
 	if (nvme == NULL) {

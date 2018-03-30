@@ -287,7 +287,6 @@ spdk_rpc_remove_vhost_scsi_target(struct spdk_jsonrpc_request *request,
 	}
 
 	spdk_vhost_call_external_event(req->ctrlr, spdk_rpc_remove_vhost_scsi_target_cb, req);
-
 	return;
 
 invalid:
