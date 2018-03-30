@@ -206,6 +206,8 @@ spdk_app_opts_init(struct spdk_app_opts *opts)
 	opts->max_delay_us = 0;
 	opts->print_level = SPDK_APP_DEFAULT_LOG_PRINT_LEVEL;
 	opts->rpc_addr = SPDK_DEFAULT_RPC_ADDR;
+	opts->num_pci_addr_whitelist = 0;
+	opts->pci_addr_whitelist = NULL;
 }
 
 static int
@@ -331,6 +333,45 @@ spdk_app_read_config_file_global_params(struct spdk_app_opts *opts)
 			opts->tpoint_group_mask = spdk_conf_section_get_val(sp, "TpointGroupMask");
 		}
 	}
+
+	if (sp != NULL) {
+		int i;
+
+		for (i = 0; i < SPDK_ENV_MAX_PCI_WHITELIST; i++) {
+			const char *bdf;
+			struct spdk_pci_addr addr;
+			void *old_ptr = opts->pci_addr_whitelist;
+
+			bdf = spdk_conf_section_get_nmval(sp, "PciWhitelist", i, 0);
+
+			if (!bdf) {
+				break;
+			}
+
+			if (spdk_pci_addr_parse(&addr, bdf) < 0) {
+				SPDK_ERRLOG("Invalid PciWhitelist address %s\n", bdf);
+				if (old_ptr) {
+					free(old_ptr);
+				}
+				opts->num_pci_addr_whitelist = 0;
+				opts->pci_addr_whitelist = NULL;
+				break;
+			}
+
+			opts->pci_addr_whitelist = realloc(old_ptr, 16 * (i + 1));
+			if (opts->pci_addr_whitelist == NULL) {
+				SPDK_ERRLOG("PciWhitelist realloc error\n");
+				if (old_ptr) {
+					free(old_ptr);
+				}
+				opts->num_pci_addr_whitelist = 0;
+				break;
+			}
+
+			spdk_pci_addr_fmt(opts->pci_addr_whitelist[i], 16, &addr);
+			opts->num_pci_addr_whitelist++;
+		}
+	}
 }
 
 static int
@@ -348,6 +389,9 @@ spdk_app_setup_env(struct spdk_app_opts *opts)
 	env_opts.master_core = opts->master_core;
 	env_opts.mem_size = opts->mem_size;
 	env_opts.no_pci = opts->no_pci;
+	env_opts.num_pci_addr_whitelist = opts->num_pci_addr_whitelist;
+	memcpy(env_opts.pci_addr_whitelist, opts->pci_addr_whitelist, 16 * opts->num_pci_addr_whitelist);
+	free(opts->pci_addr_whitelist);
 
 	rc = spdk_env_init(&env_opts);
 	if (rc < 0) {
