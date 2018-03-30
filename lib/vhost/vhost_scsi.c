@@ -107,8 +107,8 @@ struct spdk_vhost_scsi_task {
 	struct spdk_vhost_virtqueue *vq;
 };
 
-static int spdk_vhost_scsi_start(struct spdk_vhost_dev *, void *);
-static int spdk_vhost_scsi_stop(struct spdk_vhost_dev *, void *);
+static int spdk_vhost_scsi_start(struct spdk_vhost_tgt *, struct spdk_vhost_dev *, void *);
+static int spdk_vhost_scsi_stop(struct spdk_vhost_tgt *, struct spdk_vhost_dev *, void *);
 static void spdk_vhost_scsi_dump_info_json(struct spdk_vhost_tgt *vtgt,
 		struct spdk_json_write_ctx *w);
 static void spdk_vhost_scsi_write_config_json(struct spdk_vhost_tgt *vtgt,
@@ -790,7 +790,7 @@ spdk_vhost_scsi_lun_hotremove(const struct spdk_scsi_lun *lun, void *arg)
 {
 	struct spdk_vhost_scsi_tgt *svtgt = arg;
 	struct spdk_vhost_tgt *vtgt = &svtgt->vtgt;
-	struct spdk_vhost_dev *vdev = vtgt->vdev;
+	struct spdk_vhost_dev *vdev = TAILQ_FIRST(&vtgt->vdevs);
 	const struct spdk_scsi_dev *scsi_dev;
 	unsigned scsi_dev_num;
 
@@ -823,6 +823,7 @@ int
 spdk_vhost_scsi_tgt_add_tgt(struct spdk_vhost_tgt *vtgt, unsigned scsi_tgt_num,
 			    const char *bdev_name)
 {
+	struct spdk_vhost_dev *vdev = TAILQ_FIRST(&vtgt->vdevs);
 	struct spdk_vhost_scsi_tgt *svtgt;
 	char target_name[SPDK_SCSI_DEV_MAX_NAME];
 	int lun_id_list[1];
@@ -870,20 +871,20 @@ spdk_vhost_scsi_tgt_add_tgt(struct spdk_vhost_tgt *vtgt, unsigned scsi_tgt_num,
 	SPDK_NOTICELOG("Controller %s: defined target '%s' using bdev '%s'\n",
 		       vtgt->name, target_name, bdev_name);
 
-	if (vtgt->vdev == NULL || vtgt->vdev->lcore == -1) {
+	if (vdev == NULL || vdev->lcore == -1) {
 		/* All done. */
 		return 0;
 	}
 
 	spdk_scsi_dev_allocate_io_channels(svtgt->scsi_dev[scsi_tgt_num]);
 
-	if (spdk_vhost_dev_has_feature(vtgt->vdev, VIRTIO_SCSI_F_HOTPLUG)) {
-		eventq_enqueue(vtgt->vdev, scsi_tgt_num, VIRTIO_SCSI_T_TRANSPORT_RESET,
+	if (spdk_vhost_dev_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG)) {
+		eventq_enqueue(vdev, scsi_tgt_num, VIRTIO_SCSI_T_TRANSPORT_RESET,
 			       VIRTIO_SCSI_EVT_RESET_RESCAN);
 	} else {
 		SPDK_NOTICELOG("Device %s:%d does not support hotplug."
 			       "Please restart the initiator or perform a rescan.\n",
-			       vtgt->name, vtgt->vdev->vid);
+			       vtgt->name, vdev->vid);
 	}
 
 	return 0;
@@ -915,7 +916,7 @@ spdk_vhost_scsi_tgt_remove_tgt(struct spdk_vhost_tgt *vtgt, unsigned scsi_tgt_nu
 		return -ENODEV;
 	}
 
-	vdev = vtgt->vdev;
+	vdev = TAILQ_FIRST(&vtgt->vdevs);;
 	if (vdev == NULL || vdev->lcore == -1) {
 		/* controller is not in use, remove dev and exit */
 		svtgt->scsi_dev[scsi_tgt_num] = NULL;
@@ -1080,9 +1081,9 @@ alloc_task_pool(struct spdk_vhost_dev *vdev)
 }
 
 static int
-spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev, void *event_ctx)
+spdk_vhost_scsi_start(struct spdk_vhost_tgt *vtgt,
+		      struct spdk_vhost_dev *vdev, void *event_ctx)
 {
-	struct spdk_vhost_tgt *vtgt = vdev->vtgt;
 	struct spdk_vhost_scsi_tgt *svtgt;
 	struct spdk_vhost_scsi_dev *svdev;
 	uint32_t i;
@@ -1102,6 +1103,11 @@ spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 			rc = -1;
 			goto out;
 		}
+	}
+
+	if (vdev != TAILQ_FIRST(&vtgt->vdevs)) {
+		SPDK_WARNLOG("VhostSCSI targets support only a single initiator.\n");
+		return -1;
 	}
 
 	rc = alloc_task_pool(vdev);
@@ -1174,9 +1180,9 @@ destroy_device_poller_cb(void *arg)
 }
 
 static int
-spdk_vhost_scsi_stop(struct spdk_vhost_dev *vdev, void *event_ctx)
+spdk_vhost_scsi_stop(struct spdk_vhost_tgt *vtgt,
+		     struct spdk_vhost_dev *vdev, void *event_ctx)
 {
-	struct spdk_vhost_tgt *vtgt = vdev->vtgt;
 	struct spdk_vhost_scsi_tgt *svtgt;
 	struct spdk_vhost_scsi_dev *svdev = spdk_vhost_dev_get_ctx(vdev);
 	struct spdk_vhost_dev_destroy_ctx *destroy_ctx;
