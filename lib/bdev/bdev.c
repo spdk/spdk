@@ -877,6 +877,7 @@ _spdk_bdev_qos_io_submit(void *ctx)
 			bdev_io = TAILQ_FIRST(&ch->qos_io);
 			TAILQ_REMOVE(&ch->qos_io, bdev_io, link);
 			ch->io_submitted_this_timeslice++;
+			ch->io_outstanding++;
 			shared_ch->io_outstanding++;
 			bdev->fn_table->submit_request(ch->channel, bdev_io);
 		} else {
@@ -909,6 +910,7 @@ _spdk_bdev_io_submit(void *ctx)
 	} else if (bdev_ch->flags & BDEV_CH_RESET_IN_PROGRESS) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	} else if (bdev_ch->flags & BDEV_CH_QOS_ENABLED) {
+		bdev_ch->io_outstanding--;
 		shared_ch->io_outstanding--;
 		TAILQ_INSERT_TAIL(&bdev_ch->qos_io, bdev_io, link);
 		_spdk_bdev_qos_io_submit(bdev_ch);
