@@ -205,6 +205,7 @@ spdk_app_opts_init(struct spdk_app_opts *opts)
 	opts->max_delay_us = 0;
 	opts->print_level = SPDK_LOG_NOTICE;
 	opts->rpc_addr = SPDK_DEFAULT_RPC_ADDR;
+	opts->num_pci_addr_whitelist = 0;
 }
 
 static int
@@ -280,7 +281,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	struct spdk_conf		*config = NULL;
 	struct spdk_conf_section	*sp;
 	char			shm_name[64];
-	int			rc;
+	int			i, rc;
 	uint64_t		tpoint_group_mask;
 	char			*end;
 	struct spdk_env_opts env_opts = {};
@@ -350,6 +351,37 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		opts->no_pci = spdk_conf_section_get_boolval(sp, "NoPci", false);
 	}
 
+	opts->pci_addr_whitelist = calloc(sizeof(char *), SPDK_ENV_MAX_PCI_WHITELIST);
+	if (opts->pci_addr_whitelist == NULL) {
+		SPDK_ERRLOG("PciWhitelist array calloc error\n");
+		return -1;
+        }
+
+	for (i = 0; i < SPDK_ENV_MAX_PCI_WHITELIST; i++) {
+		const char *bdf;
+		struct spdk_pci_addr addr;
+
+		bdf = spdk_conf_section_get_nmval(sp, "PciWhitelist", i, 0);
+
+		if (!bdf) {
+			break;
+		}
+
+		if (spdk_pci_addr_parse(&addr, bdf) < 0) {
+			SPDK_ERRLOG("Invalid PciWhitelist address %s\n", bdf);
+			return -1;
+		}
+
+		opts->pci_addr_whitelist[i] = calloc(1, 16);
+		if (opts->pci_addr_whitelist[i] == NULL) {
+			SPDK_ERRLOG("PciWhitelist calloc error\n");
+			return -1;
+		}
+
+		spdk_pci_addr_fmt(opts->pci_addr_whitelist[i], 16, &addr);
+		opts->num_pci_addr_whitelist++;
+	}
+
 	spdk_env_opts_init(&env_opts);
 
 	env_opts.name = opts->name;
@@ -360,6 +392,10 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	env_opts.mem_size = opts->mem_size;
 	env_opts.no_pci = opts->no_pci;
 	env_opts.hugepage_single_segments = opts->hugepage_single_segments;
+	env_opts.num_pci_addr_whitelist = opts->num_pci_addr_whitelist;
+	for (i = 0; i < opts->num_pci_addr_whitelist; i++) {
+		memcpy(env_opts.pci_addr_whitelist[i], opts->pci_addr_whitelist[i], 16);
+	}
 
 	if (spdk_env_init(&env_opts) < 0) {
 		SPDK_ERRLOG("Unable to initialize SPDK env\n");
