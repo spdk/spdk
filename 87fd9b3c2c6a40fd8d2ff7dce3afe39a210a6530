@@ -1,0 +1,118 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bed2df18_cfbfc46b",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-30T18:00:10Z",
+      "side": 1,
+      "message": "This should be indented with tabs to match the other lines.  It also needs to start with SPDK_ like all other public API names.  Maybe something like SPDK_ENV_MAX_PCI_WHITELIST would be good.\n\nAdditionally, is 16 good enough? This seems fairly limiting, and changing this would break ABI later on, so we should probably pick a larger value, or better yet, make the whitelist point to a dynamically allocated array instead.",
+      "revId": "87fd9b3c2c6a40fd8d2ff7dce3afe39a210a6530",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "40354a9f_e5efe540",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-30T18:00:10Z",
+      "side": 1,
+      "message": "I think the name is a little bit too vague; I think this is actually a whitelist of PCI addresses, so this could be \"pci_addr_whitelist\".  It would also be nicer to just provide an array of pre-parsed struct spdk_pci_addr instead of strings.",
+      "revId": "87fd9b3c2c6a40fd8d2ff7dce3afe39a210a6530",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b89c52c_2d571344",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-30T18:00:10Z",
+      "side": 1,
+      "message": "This is duplicating the name from include/spdk/env.h, which is definitely not good; however, please see the comments in env.h as well - I think it would be best to just make this dynamically allocated with no hard-coded limit.",
+      "revId": "87fd9b3c2c6a40fd8d2ff7dce3afe39a210a6530",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83ca4482_f739499c",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-30T18:00:10Z",
+      "side": 1,
+      "message": "Same naming comments as in env.h - this could use a more descriptive name.",
+      "revId": "87fd9b3c2c6a40fd8d2ff7dce3afe39a210a6530",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf6ebc6f_ceff5ad4",
+        "filename": "lib/env_dpdk/init.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-30T18:00:10Z",
+      "side": 1,
+      "message": "Please don\u0027t use C99-style declarations in loops - this is inconsistent with the style in the rest of the code.",
+      "range": {
+        "startLine": 254,
+        "startChar": 7,
+        "endLine": 254,
+        "endChar": 12
+      },
+      "revId": "87fd9b3c2c6a40fd8d2ff7dce3afe39a210a6530",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "385fb989_b4cbe2f4",
+        "filename": "lib/event/app.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 358,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-03-30T18:00:10Z",
+      "side": 1,
+      "message": "This also needs to have a more descriptive name - PciWhitelist or something like that.",
+      "range": {
+        "startLine": 358,
+        "startChar": 41,
+        "endLine": 358,
+        "endChar": 50
+      },
+      "revId": "87fd9b3c2c6a40fd8d2ff7dce3afe39a210a6530",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
