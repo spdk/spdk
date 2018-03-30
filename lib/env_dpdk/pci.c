@@ -72,14 +72,14 @@ spdk_pci_device_init(struct rte_pci_driver *driver,
 		return rc;
 	}
 
-	spdk_vtophys_get_ref();
+	spdk_vtophys_pci_device_added(device);
 	return 0;
 }
 
 int
 spdk_pci_device_fini(struct rte_pci_device *device)
 {
-	spdk_vtophys_put_ref();
+	spdk_vtophys_pci_device_removed(device);
 	return 0;
 }
 
