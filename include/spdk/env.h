@@ -62,6 +62,10 @@ struct spdk_env_opts {
 	int			mem_size;
 	bool			no_pci;
 	bool			hugepage_single_segments;
+	bool			pci_addr_list_is_white;
+	size_t			num_pci_addr;
+	struct spdk_pci_addr	*pci_addr_list;
+
 
 	/** Opaque context for use of the env implementation. */
 	void			*env_context;

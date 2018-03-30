@@ -301,10 +301,42 @@ error:
 	return NULL;
 }
 
-static void
+static int
+spdk_app_opts_add_pci_addr(struct spdk_app_opts *opts, const char *nm, const char *bdf)
+{
+	struct spdk_pci_addr *old_list = opts->pci_addr_list;
+	size_t i = opts->num_pci_addr;
+
+	opts->pci_addr_list = realloc(old_list, sizeof(*old_list) * (i + 1));
+
+	if (opts->pci_addr_list == NULL) {
+		SPDK_ERRLOG("%s realloc error\n", nm);
+		if (old_list) {
+			free(old_list);
+		}
+		opts->num_pci_addr = 0;
+		return -ENOMEM;
+	}
+
+	if (spdk_pci_addr_parse(&opts->pci_addr_list[i], bdf) < 0) {
+		SPDK_ERRLOG("Invalid %s address %s\n", nm, bdf);
+		free(opts->pci_addr_list);
+		opts->num_pci_addr = 0;
+		opts->pci_addr_list = NULL;
+		return -EINVAL;
+	}
+
+	opts->num_pci_addr++;
+	return 0;
+}
+
+static int
 spdk_app_read_config_file_global_params(struct spdk_app_opts *opts)
 {
 	struct spdk_conf_section *sp;
+	const char *pci_addr_list[2] = { "PciBlacklist", "PciWhitelist" };
+	const char *nm, *bdf;
+	int i, found = 0, rc = 0;
 
 	sp = spdk_conf_find_section(NULL, "Global");
 
@@ -331,6 +363,46 @@ spdk_app_read_config_file_global_params(struct spdk_app_opts *opts)
 			opts->tpoint_group_mask = spdk_conf_section_get_val(sp, "TpointGroupMask");
 		}
 	}
+
+	if (sp == NULL) {
+		return 0;
+	}
+
+	for (i = 0; i < 2; i++) {
+		nm = pci_addr_list[i];
+		bdf = spdk_conf_section_get_nmval(sp, nm, 0, 0);
+		if (bdf) {
+			opts->pci_addr_list_is_white = ((i == 0) ? false : true);
+			found++;
+		}
+	}
+
+	if (found == 2) {
+		SPDK_ERRLOG("PciBlacklist and PciWhitelist cannot be used at the same time\n");
+		return -EINVAL;
+	}
+
+	if (found == 0) {
+		return 0;
+	}
+
+	i = (opts->pci_addr_list_is_white ? 1 : 0);
+	nm = pci_addr_list[i];
+
+	for (i = 0; ; i++) {
+		bdf = spdk_conf_section_get_nmval(sp, nm, i, 0);
+
+		if (bdf == NULL) {
+			break;
+		}
+
+		rc = spdk_app_opts_add_pci_addr(opts, nm, bdf);
+		if (rc < 0) {
+			break;
+		}
+	}
+
+	return rc;
 }
 
 static int
@@ -348,8 +420,23 @@ spdk_app_setup_env(struct spdk_app_opts *opts)
 	env_opts.master_core = opts->master_core;
 	env_opts.mem_size = opts->mem_size;
 	env_opts.no_pci = opts->no_pci;
+	if (opts->num_pci_addr) {
+		size_t sz = sizeof(struct spdk_pci_addr) * opts->num_pci_addr;
+
+		env_opts.pci_addr_list_is_white = opts->pci_addr_list_is_white;
+		env_opts.num_pci_addr = opts->num_pci_addr;
+		env_opts.pci_addr_list = malloc(sz);
+		if (env_opts.pci_addr_list == NULL) {
+			return -ENOMEM;
+		}
+
+		memcpy(env_opts.pci_addr_list, opts->pci_addr_list, sz);
+		free(opts->pci_addr_list);
+	}
 
 	rc = spdk_env_init(&env_opts);
+	free(env_opts.pci_addr_list);
+
 	if (rc < 0) {
 		SPDK_ERRLOG("Unable to initialize SPDK env\n");
 	}
@@ -431,7 +518,9 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		goto app_start_setup_conf_err;
 	}
 
-	spdk_app_read_config_file_global_params(opts);
+	if (spdk_app_read_config_file_global_params(opts) < 0) {
+		goto app_start_setup_conf_err;
+	}
 
 	spdk_log_set_level(SPDK_APP_DEFAULT_LOG_LEVEL);
 	spdk_log_open();
