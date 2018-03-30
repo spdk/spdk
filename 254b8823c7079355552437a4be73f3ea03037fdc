@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "969b547f_a4f35915",
+        "filename": "include/spdk/net.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-30T13:35:15Z",
+      "side": 1,
+      "message": "an ?",
+      "range": {
+        "startLine": 123,
+        "startChar": 7,
+        "endLine": 123,
+        "endChar": 10
+      },
+      "revId": "254b8823c7079355552437a4be73f3ea03037fdc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "61ba511e_e1a9e5e9",
+        "filename": "include/spdk/net.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-30T13:35:15Z",
+      "side": 1,
+      "message": "an ?",
+      "range": {
+        "startLine": 133,
+        "startChar": 10,
+        "endLine": 133,
+        "endChar": 13
+      },
+      "revId": "254b8823c7079355552437a4be73f3ea03037fdc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
