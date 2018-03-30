@@ -300,12 +300,43 @@ error:
 	return NULL;
 }
 
+static void
+spdk_app_read_config_file_global_params(struct spdk_app_opts *opts)
+{
+	struct spdk_conf_section *sp;
+
+	sp = spdk_conf_find_section(NULL, "Global");
+
+	if (opts->shm_id == -1) {
+		if (sp != NULL) {
+			opts->shm_id = spdk_conf_section_get_intval(sp, "SharedMemoryID");
+		}
+	}
+
+	if (opts->reactor_mask == NULL) {
+		if (sp && spdk_conf_section_get_val(sp, "ReactorMask")) {
+			opts->reactor_mask = spdk_conf_section_get_val(sp, "ReactorMask");
+		} else {
+			opts->reactor_mask = SPDK_APP_DPDK_DEFAULT_CORE_MASK;
+		}
+	}
+
+	if (!opts->no_pci && sp) {
+		opts->no_pci = spdk_conf_section_get_boolval(sp, "NoPci", false);
+	}
+
+	if (opts->tpoint_group_mask == NULL) {
+		if (sp != NULL) {
+			opts->tpoint_group_mask = spdk_conf_section_get_val(sp, "TpointGroupMask");
+		}
+	}
+}
+
 int
 spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	       void *arg1, void *arg2)
 {
-	struct spdk_conf		*config = NULL;
-	struct spdk_conf_section	*sp;
+	struct spdk_conf	*config = NULL;
 	char			shm_name[64];
 	int			rc;
 	uint64_t		tpoint_group_mask;
@@ -344,28 +375,10 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		goto app_start_setup_conf_err;
 	}
 
-	if (opts->shm_id == -1) {
-		sp = spdk_conf_find_section(config, "Global");
-		if (sp != NULL) {
-			opts->shm_id = spdk_conf_section_get_intval(sp, "SharedMemoryID");
-		}
-	}
+	spdk_app_read_config_file_global_params(opts);
 
 	spdk_log_set_level(SPDK_APP_DEFAULT_LOG_PRIORITY);
 	spdk_log_open();
-
-	sp = spdk_conf_find_section(config, "Global");
-	if (opts->reactor_mask == NULL) {
-		if (sp && spdk_conf_section_get_val(sp, "ReactorMask")) {
-			opts->reactor_mask = spdk_conf_section_get_val(sp, "ReactorMask");
-		} else {
-			opts->reactor_mask = SPDK_APP_DPDK_DEFAULT_CORE_MASK;
-		}
-	}
-
-	if (!opts->no_pci && sp) {
-		opts->no_pci = spdk_conf_section_get_boolval(sp, "NoPci", false);
-	}
 
 	spdk_env_opts_init(&env_opts);
 
@@ -410,13 +423,6 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 
 	if (spdk_trace_init(shm_name) != 0) {
 		goto app_start_log_close_err;
-	}
-
-	if (opts->tpoint_group_mask == NULL) {
-		sp = spdk_conf_find_section(config, "Global");
-		if (sp != NULL) {
-			opts->tpoint_group_mask = spdk_conf_section_get_val(sp, "TpointGroupMask");
-		}
 	}
 
 	if (opts->tpoint_group_mask != NULL) {
