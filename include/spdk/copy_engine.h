@@ -50,6 +50,7 @@ typedef void (*spdk_copy_fini_cb)(void *cb_arg);
 struct spdk_io_channel;
 
 struct spdk_copy_task;
+struct spdk_json_write_ctx;
 
 /**
  * Initialize the copy engine.
@@ -72,6 +73,13 @@ void spdk_copy_engine_finish(spdk_copy_fini_cb cb_fn, void *cb_arg);
  * \param fp The pointer to a file that will be written to the configuration.
  */
 void spdk_copy_engine_config_text(FILE *fp);
+
+/**
+ * Get the configuration for the registered copy engine modules
+ *
+ * \param w Pointer to a JSON write context where the configuration will be written.
+ **/
+void spdk_copy_engine_write_config_json(struct spdk_json_write_ctx *w);
 
 /**
  * Close the copy engine module and perform any necessary cleanup.

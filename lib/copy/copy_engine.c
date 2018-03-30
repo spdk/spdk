@@ -174,6 +174,19 @@ copy_engine_mem_get_ctx_size(void)
 	return sizeof(struct spdk_copy_task);
 }
 
+static void
+copy_engine_mem_write_config_json(struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "method", "add_memcpy_copy_engine");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
 size_t
 spdk_copy_task_size(void)
 {
@@ -314,7 +327,33 @@ spdk_copy_engine_config_text(FILE *fp)
 	}
 }
 
-SPDK_COPY_MODULE_REGISTER(copy_engine_mem_init, NULL, NULL, copy_engine_mem_get_ctx_size)
+void
+spdk_copy_engine_write_config_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_copy_module_if *copy_engine_module;
+
+	spdk_json_write_array_begin(w);
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "method", "initialize_copy_subsystem");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+
+	TAILQ_FOREACH(copy_engine_module, &spdk_copy_module_list, tailq) {
+		if (copy_engine_module->write_config_json) {
+			copy_engine_module->write_config_json(w);
+		}
+	}
+
+	spdk_json_write_array_end(w);
+}
+
+SPDK_COPY_MODULE_REGISTER(copy_engine_mem_init, NULL, NULL, copy_engine_mem_get_ctx_size,
+			  copy_engine_mem_write_config_json)
 
 static void
 spdk_rpc_add_memcpy_copy_engine(struct spdk_jsonrpc_request *request,
