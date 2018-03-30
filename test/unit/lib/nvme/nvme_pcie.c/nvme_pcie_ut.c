@@ -44,7 +44,7 @@ DEFINE_STUB(spdk_mem_unregister, int, (void *vaddr, size_t len), 0);
 
 struct spdk_trace_flag SPDK_LOG_NVME = {
 	.name = "nvme",
-	.enabled = false,
+	.print_level = SPDK_LOG_DEBUG,
 };
 
 static struct nvme_driver _g_nvme_driver = {

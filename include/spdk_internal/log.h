@@ -48,7 +48,7 @@ extern enum spdk_log_level g_spdk_log_print_level;
 struct spdk_trace_flag {
 	TAILQ_ENTRY(spdk_trace_flag) tailq;
 	const char *name;
-	bool enabled;
+	enum spdk_log_level print_level;
 };
 
 void spdk_log_register_trace_flag(const char *name, struct spdk_trace_flag *flag);
@@ -58,7 +58,7 @@ struct spdk_trace_flag *spdk_log_get_next_trace_flag(struct spdk_trace_flag *fla
 
 #define SPDK_LOG_REGISTER_COMPONENT(str, flag) \
 struct spdk_trace_flag flag = { \
-	.enabled = false, \
+	.print_level = SPDK_LOG_INFO, \
 	.name = str, \
 }; \
 __attribute__((constructor)) static void register_trace_flag_##flag(void) \
@@ -69,7 +69,7 @@ __attribute__((constructor)) static void register_trace_flag_##flag(void) \
 #define SPDK_INFOLOG(FLAG, ...)									\
 	do {											\
 		extern struct spdk_trace_flag FLAG;						\
-		if (FLAG.enabled) {								\
+		if (FLAG.print_level <= g_spdk_log_print_level) {				\
 			spdk_log(SPDK_LOG_INFO, __FILE__, __LINE__, __func__, __VA_ARGS__);	\
 		}										\
 	} while (0)
@@ -79,7 +79,7 @@ __attribute__((constructor)) static void register_trace_flag_##flag(void) \
 #define SPDK_DEBUGLOG(FLAG, ...)								\
 	do {											\
 		extern struct spdk_trace_flag FLAG;						\
-		if (FLAG.enabled) {								\
+		if (FLAG.print_level <= g_spdk_log_print_level) {				\
 			spdk_log(SPDK_LOG_INFO, __FILE__, __LINE__, __func__, __VA_ARGS__);	\
 		}										\
 	} while (0)
@@ -87,7 +87,7 @@ __attribute__((constructor)) static void register_trace_flag_##flag(void) \
 #define SPDK_TRACEDUMP(FLAG, LABEL, BUF, LEN)						\
 	do {										\
 		extern struct spdk_trace_flag FLAG;					\
-		if ((FLAG.enabled) && (LEN)) {						\
+		if ((FLAG.print_level <= g_spdk_log_print_level) && (LEN)) {		\
 			spdk_trace_dump(stderr, (LABEL), (BUF), (LEN));			\
 		}									\
 	} while (0)
