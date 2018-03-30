@@ -301,10 +301,70 @@ error:
 	return NULL;
 }
 
-static void
+static int
+spdk_app_opts_add_pci_whitelist_addr(struct spdk_app_opts *opts, char *bdf)
+{
+	struct spdk_pci_addr *old_list = opts->pci_whitelist;
+	size_t i = opts->num_pci_addr;
+
+	opts->pci_whitelist = realloc(old_list, sizeof(*old_list) * (i + 1));
+
+	if (opts->pci_whitelist == NULL) {
+		SPDK_ERRLOG("realloc error\n");
+		if (old_list) {
+			free(old_list);
+		}
+		opts->num_pci_addr = 0;
+		return -ENOMEM;
+	}
+
+	if (spdk_pci_addr_parse(&opts->pci_whitelist[i], bdf) < 0) {
+		SPDK_ERRLOG("Invalid address %s\n", bdf);
+		free(opts->pci_whitelist);
+		opts->pci_whitelist = NULL;
+		opts->num_pci_addr = 0;
+		return -EINVAL;
+	}
+
+	opts->num_pci_addr++;
+	return 0;
+}
+
+static int
+spdk_app_opts_add_pci_blacklist_addr(struct spdk_app_opts *opts, char *bdf)
+{
+	struct spdk_pci_addr *old_list = opts->pci_blacklist;
+	size_t i = opts->num_pci_addr;
+
+	opts->pci_blacklist = realloc(old_list, sizeof(*old_list) * (i + 1));
+
+	if (opts->pci_blacklist == NULL) {
+		SPDK_ERRLOG("realloc error\n");
+		if (old_list) {
+			free(old_list);
+		}
+		opts->num_pci_addr = 0;
+		return -ENOMEM;
+	}
+
+	if (spdk_pci_addr_parse(&opts->pci_blacklist[i], bdf) < 0) {
+		SPDK_ERRLOG("Invalid address %s\n", bdf);
+		free(opts->pci_blacklist);
+		opts->pci_blacklist = NULL;
+		opts->num_pci_addr = 0;
+		return -EINVAL;
+	}
+
+	opts->num_pci_addr++;
+	return 0;
+}
+
+static int
 spdk_app_read_config_file_global_params(struct spdk_app_opts *opts)
 {
 	struct spdk_conf_section *sp;
+	char *bdf;
+	int i, rc = 0;
 
 	sp = spdk_conf_find_section(NULL, "Global");
 
@@ -331,6 +391,51 @@ spdk_app_read_config_file_global_params(struct spdk_app_opts *opts)
 			opts->tpoint_group_mask = spdk_conf_section_get_val(sp, "TpointGroupMask");
 		}
 	}
+
+	if (sp == NULL) {
+		return 0;
+	}
+
+	for (i = 0; ; i++) {
+		if (!(bdf = spdk_conf_section_get_nmval(sp, "PciWhitelist", i, 0))) {
+			break;
+		}
+
+		rc = spdk_app_opts_add_pci_whitelist_addr(opts, bdf);
+		if (rc < 0) {
+			goto error_pci_addr_list;
+		}
+	}
+
+	for (i = 0; ; i++) {
+		if (!(bdf = spdk_conf_section_get_nmval(sp, "PciBlacklist", i, 0))) {
+			break;
+		}
+
+		if (opts->pci_whitelist != NULL) {
+			SPDK_ERRLOG("PciBlacklist and PciWhitelist cannot be used at the same time\n");
+			rc = -EINVAL;
+			goto error_pci_addr_list;
+		}
+
+		rc = spdk_app_opts_add_pci_blacklist_addr(opts, bdf);
+		if (rc < 0) {
+			goto error_pci_addr_list;
+		}
+	}
+	return 0;
+
+error_pci_addr_list:
+	if (opts->pci_whitelist) {
+		free(opts->pci_whitelist);
+		opts->pci_whitelist = NULL;
+	}
+	if (opts->pci_blacklist) {
+		free(opts->pci_blacklist);
+		opts->pci_blacklist = NULL;
+	}
+	opts->num_pci_addr = 0;
+	return rc;
 }
 
 static int
@@ -348,8 +453,34 @@ spdk_app_setup_env(struct spdk_app_opts *opts)
 	env_opts.master_core = opts->master_core;
 	env_opts.mem_size = opts->mem_size;
 	env_opts.no_pci = opts->no_pci;
+	if (opts->num_pci_addr) {
+		size_t sz = sizeof(struct spdk_pci_addr) * opts->num_pci_addr;
+
+		env_opts.num_pci_addr = opts->num_pci_addr;
+		if (opts->pci_whitelist) {
+			if (!(env_opts.pci_whitelist = malloc(sz))) {
+				return -ENOMEM;
+			}
+			memcpy(env_opts.pci_whitelist, opts->pci_whitelist, sz);
+		} else {
+			if (!(env_opts.pci_blacklist = malloc(sz))) {
+				return -ENOMEM;
+			}
+			memcpy(env_opts.pci_blacklist, opts->pci_blacklist, sz);
+		}
+	}
 
 	rc = spdk_env_init(&env_opts);
+	if (opts->num_pci_addr) {
+		if (opts->pci_whitelist) {
+			free(opts->pci_whitelist);
+			opts->pci_whitelist = NULL;
+		} else {
+			free(opts->pci_blacklist);
+			opts->pci_blacklist = NULL;
+		}
+	}
+
 	if (rc < 0) {
 		SPDK_ERRLOG("Unable to initialize SPDK env\n");
 	}
@@ -431,7 +562,9 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		goto app_start_setup_conf_err;
 	}
 
-	spdk_app_read_config_file_global_params(opts);
+	if (spdk_app_read_config_file_global_params(opts) < 0) {
+		goto app_start_setup_conf_err;
+	}
 
 	spdk_log_set_level(SPDK_APP_DEFAULT_LOG_LEVEL);
 	spdk_log_open();
@@ -552,6 +685,8 @@ usage(char *executable_name, struct spdk_app_opts *default_opts, void (*app_usag
 		printf("all hugepage memory)\n");
 	}
 	printf(" -u         disable PCI access.\n");
+	printf(" -W addr    pci addr to whitelist\n");
+	printf(" -B addr    pci addr to blacklist (-W and -B cannot be used at the same time)\n");
 	spdk_tracelog_usage(stdout, "-t");
 	app_usage();
 }
@@ -676,6 +811,28 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 #endif
 		case 'u':
 			opts->no_pci = true;
+			break;
+		case 'W':
+			rc = spdk_app_opts_add_pci_whitelist_addr(opts, optarg);
+			if (!rc && opts->pci_blacklist) {
+				usage(argv[0], &default_opts, app_usage);
+				rc = -EINVAL;
+			}
+			if (rc != 0) {
+				rval = SPDK_APP_PARSE_ARGS_FAIL;
+				goto parse_done;
+			}
+			break;
+		case 'B':
+			rc = spdk_app_opts_add_pci_blacklist_addr(opts, optarg);
+			if (!rc && opts->pci_whitelist) {
+				usage(argv[0], &default_opts, app_usage);
+				rc = -EINVAL;
+			}
+			if (rc != 0) {
+				rval = SPDK_APP_PARSE_ARGS_FAIL;
+				goto parse_done;
+			}
 			break;
 		case '?':
 			/*
