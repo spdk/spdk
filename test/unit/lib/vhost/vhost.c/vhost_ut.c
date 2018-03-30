@@ -150,7 +150,6 @@ vtgt_create_dev(struct spdk_vhost_tgt *vtgt)
 	struct spdk_vhost_dev *vdev = NULL;
 	int rc;
 
-	assert(vtgt->vdev == NULL);
 	/* spdk_vhost_dev must be allocated on a cache line boundary. */
 	rc = posix_memalign((void **)&vdev, 64, sizeof(*vdev));
 	CU_ASSERT(rc == 0);
@@ -171,7 +170,7 @@ vtgt_create_dev(struct spdk_vhost_tgt *vtgt)
 	vdev->name = spdk_sprintf_alloc("%s_%d", vtgt->name, vdev->vid);
 	SPDK_CU_ASSERT_FATAL(vdev->name != NULL);
 	vdev->lcore = 0;
-	vtgt->vdev = vdev;
+	TAILQ_INSERT_TAIL(&vtgt->vdevs, vdev, tailq);
 
 	return vdev;
 }
@@ -179,7 +178,7 @@ vtgt_create_dev(struct spdk_vhost_tgt *vtgt)
 static void
 remove_dev(struct spdk_vhost_dev *vdev)
 {
-	vdev->vtgt->vdev = NULL;
+	TAILQ_REMOVE(&vdev->vtgt->vdevs, vdev, tailq);
 	free(vdev->mem);
 	free(vdev->name);
 	free(vdev);
@@ -188,8 +187,10 @@ remove_dev(struct spdk_vhost_dev *vdev)
 static void
 cleanup_vtgt(struct spdk_vhost_tgt *vtgt)
 {
-	if (vtgt->vdev) {
-		remove_dev(vtgt->vdev);
+	struct spdk_vhost_dev *vdev, *tmp;
+
+	TAILQ_FOREACH_SAFE(vdev, &vtgt->vdevs, tailq, tmp) {
+		remove_dev(vdev);
 	}
 	spdk_vhost_tgt_unregister(vtgt);
 	free(vtgt);
