@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8f6742f5_3ebe4485",
+        "filename": "lib/event/app.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-03-31T13:12:45Z",
+      "side": 1,
+      "message": "What is the purpose of this calloc().\ncalloc() may valuable\n-  if we allocate and then realloc() according to progress, or\n-  if we get the size of array and then calloc() once.\n\nWhen and where this calloc() is freed?",
+      "range": {
+        "startLine": 354,
+        "startChar": 28,
+        "endLine": 354,
+        "endChar": 34
+      },
+      "revId": "2ae56e0a54cd0884785e68c85a3918cbda5efcba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
