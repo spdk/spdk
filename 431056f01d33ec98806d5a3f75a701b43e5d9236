@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "12ea22fb_a8bea22d",
+        "filename": "lib/bdev/split/vbdev_split.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 300,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-31T00:47:01Z",
+      "side": 1,
+      "message": "I have to admit that I\u0027m not a huge fan of adding this prefix idea as part of adding the RPC.  Shouldn\u0027t that be separate patches?\n\nI\u0027m thinking about cases where user specifies a prefix different than the bdev name.  Then later what if that prefix matches a different bdev name?  I know that\u0027s a corner case, but I don\u0027t think that gets handled here.\n\nI\u0027d really prefer to rip out the prefix stuff - let\u0027s just get the RPC functionality in that matches what the INI-based config file does now.  Or is there some use case specific to RPC that requires this prefix?",
+      "revId": "431056f01d33ec98806d5a3f75a701b43e5d9236",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
