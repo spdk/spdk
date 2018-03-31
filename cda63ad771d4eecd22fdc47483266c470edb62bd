@@ -42,6 +42,30 @@
     },
     {
       "key": {
+        "uuid": "2be86f2c_cb5bc501",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 1370,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-31T00:04:01Z",
+      "side": 1,
+      "message": "I agree - this comment could be made better.\n\n\"If there is no outstanding AER request, queue the event.  Then if an AER is later submitted, this event can be sent as a response.\"",
+      "parentUuid": "231f80b7_5bed27dd",
+      "range": {
+        "startLine": 1370,
+        "startChar": 1,
+        "endLine": 1370,
+        "endChar": 23
+      },
+      "revId": "cda63ad771d4eecd22fdc47483266c470edb62bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "458e929c_d91097a5",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 25
@@ -83,6 +107,81 @@
         "endLine": 1374,
         "endChar": 5
       },
+      "revId": "cda63ad771d4eecd22fdc47483266c470edb62bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "561153da_26c0f964",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 1374,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-31T00:04:01Z",
+      "side": 1,
+      "message": "This comment could all be in one line though.  Maybe change that while you are addressing the comment above.  :)",
+      "parentUuid": "7f25d7c4_d3129e8b",
+      "range": {
+        "startLine": 1372,
+        "startChar": 2,
+        "endLine": 1374,
+        "endChar": 5
+      },
+      "revId": "cda63ad771d4eecd22fdc47483266c470edb62bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da4c3089_9c8aeec4",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 1375,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-31T00:04:01Z",
+      "side": 1,
+      "message": "is this correct?  i\u0027m just wondering about case in the future where we support different kinds of notice async requests - couldn\u0027t we have multiple events pending?  then when AER is posted, just complete the first event - the other event can still be queued and completed when the AER is posted again\n\nor if we\u0027re only going to support one outstanding notice event at a time, just put the event directly in the ctrlr - don\u0027t make it a TAILQ - otherwise it\u0027s confusing why we have a TAILQ but only ever put one item in it",
+      "revId": "cda63ad771d4eecd22fdc47483266c470edb62bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83dd5250_6d564414",
+        "filename": "test/nvmf/host/aer.sh",
+        "patchSetId": 25
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-31T00:04:01Z",
+      "side": 1,
+      "message": "Why do we need to bypass AER tests for softroce?",
+      "revId": "cda63ad771d4eecd22fdc47483266c470edb62bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9fabf8ce_c130457f",
+        "filename": "test/nvmf/host/aer.sh",
+        "patchSetId": 25
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-03-31T00:04:01Z",
+      "side": 1,
+      "message": "We should improve this comment a bit, now that it\u0027s moved from the other .sh file.\n\nMaybe say:\n\n# TODO: this aer test tries to invoke an AER completion by setting the temperature threshold to a very low value.  This does not work with emulated controllers though so currently the test is disabled.",
       "revId": "cda63ad771d4eecd22fdc47483266c470edb62bd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
