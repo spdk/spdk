@@ -1,0 +1,320 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "04d7bb35_245221bf",
+        "filename": "include/spdk/log.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-01T13:36:50Z",
+      "side": 1,
+      "message": "I think this is correct but how about like the following?\n\"Write messages to the log file\"",
+      "range": {
+        "startLine": 107,
+        "startChar": 3,
+        "endLine": 107,
+        "endChar": 44
+      },
+      "revId": "e1b9c9312f959bbfcc2a5cf2ba86615fffdacae3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1767b45_db678b87",
+        "filename": "include/spdk/log.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-01T13:36:50Z",
+      "side": 1,
+      "message": "Name of the current source file?",
+      "range": {
+        "startLine": 110,
+        "startChar": 15,
+        "endLine": 110,
+        "endChar": 48
+      },
+      "revId": "e1b9c9312f959bbfcc2a5cf2ba86615fffdacae3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5fe9877c_baf3af46",
+        "filename": "include/spdk/log.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-01T13:36:50Z",
+      "side": 1,
+      "message": "Current source line number ?",
+      "range": {
+        "startLine": 111,
+        "startChar": 15,
+        "endLine": 111,
+        "endChar": 41
+      },
+      "revId": "e1b9c9312f959bbfcc2a5cf2ba86615fffdacae3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cfbe546e_1cfba5f5",
+        "filename": "include/spdk/log.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-01T13:36:50Z",
+      "side": 1,
+      "message": "Current source function name ?",
+      "range": {
+        "startLine": 112,
+        "startChar": 15,
+        "endLine": 112,
+        "endChar": 57
+      },
+      "revId": "e1b9c9312f959bbfcc2a5cf2ba86615fffdacae3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "165c32d6_a4c67670",
+        "filename": "include/spdk/log.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-01T13:36:50Z",
+      "side": 1,
+      "message": "Format string to the message or String constant which provides description of the message ?",
+      "range": {
+        "startLine": 113,
+        "startChar": 17,
+        "endLine": 113,
+        "endChar": 46
+      },
+      "revId": "e1b9c9312f959bbfcc2a5cf2ba86615fffdacae3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0fcd0cad_7637c065",
+        "filename": "include/spdk/log.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-01T13:36:50Z",
+      "side": 1,
+      "message": "trace",
+      "range": {
+        "startLine": 123,
+        "startChar": 36,
+        "endLine": 123,
+        "endChar": 41
+      },
+      "revId": "e1b9c9312f959bbfcc2a5cf2ba86615fffdacae3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ff7c9bb_a92b9a5a",
+        "filename": "include/spdk/log.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-01T13:36:50Z",
+      "side": 1,
+      "message": "trace flag ?",
+      "range": {
+        "startLine": 129,
+        "startChar": 21,
+        "endLine": 129,
+        "endChar": 25
+      },
+      "revId": "e1b9c9312f959bbfcc2a5cf2ba86615fffdacae3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3eda4e8_d3494c78",
+        "filename": "include/spdk/log.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-01T13:36:50Z",
+      "side": 1,
+      "message": "exists and is enabled ?",
+      "range": {
+        "startLine": 129,
+        "startChar": 26,
+        "endLine": 129,
+        "endChar": 48
+      },
+      "revId": "e1b9c9312f959bbfcc2a5cf2ba86615fffdacae3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b63b8ea_fe4a2742",
+        "filename": "include/spdk/log.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-01T13:36:50Z",
+      "side": 1,
+      "message": "¥param flag Name of the trace flag or Trace flag to check?",
+      "revId": "e1b9c9312f959bbfcc2a5cf2ba86615fffdacae3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4c3d4d7_363723a6",
+        "filename": "include/spdk/log.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-01T13:36:50Z",
+      "side": 1,
+      "message": "this looks to be done by spdk_log_register_trace_flag().",
+      "range": {
+        "startLine": 136,
+        "startChar": 3,
+        "endLine": 136,
+        "endChar": 19
+      },
+      "revId": "e1b9c9312f959bbfcc2a5cf2ba86615fffdacae3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38409a02_a00b0dd1",
+        "filename": "include/spdk/log.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-01T13:36:50Z",
+      "side": 1,
+      "message": "Enable the trace flag ?",
+      "range": {
+        "startLine": 136,
+        "startChar": 21,
+        "endLine": 136,
+        "endChar": 41
+      },
+      "revId": "e1b9c9312f959bbfcc2a5cf2ba86615fffdacae3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a55446f0_5a12c3c8",
+        "filename": "include/spdk/log.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-01T13:36:50Z",
+      "side": 1,
+      "message": "Trace flag to be enabled ?",
+      "range": {
+        "startLine": 138,
+        "startChar": 15,
+        "endLine": 138,
+        "endChar": 33
+      },
+      "revId": "e1b9c9312f959bbfcc2a5cf2ba86615fffdacae3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "26a6dda1_87998b62",
+        "filename": "include/spdk/log.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-01T13:36:50Z",
+      "side": 1,
+      "message": "and their usage ?",
+      "range": {
+        "startLine": 154,
+        "startChar": 31,
+        "endLine": 154,
+        "endChar": 32
+      },
+      "revId": "e1b9c9312f959bbfcc2a5cf2ba86615fffdacae3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6256e385_22f2f1f4",
+        "filename": "include/spdk/log.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-01T13:36:50Z",
+      "side": 1,
+      "message": "Command line option to set/enable the trace flag ?",
+      "range": {
+        "startLine": 157,
+        "startChar": 20,
+        "endLine": 157,
+        "endChar": 56
+      },
+      "revId": "e1b9c9312f959bbfcc2a5cf2ba86615fffdacae3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
