@@ -2,6 +2,75 @@
   "comments": [
     {
       "key": {
+        "uuid": "fdbd3c7e_a752fe5e",
+        "filename": "include/spdk/net.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-01T10:50:59Z",
+      "side": 1,
+      "message": "initialize the network interfaces by getting information through netlink socket ?\n\nthis function looks to get and hold the network interface information through netlink socket.",
+      "range": {
+        "startLine": 74,
+        "startChar": 3,
+        "endLine": 74,
+        "endChar": 41
+      },
+      "revId": "254b8823c7079355552437a4be73f3ea03037fdc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3c020cdf_17cfbf48",
+        "filename": "include/spdk/net.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-01T10:50:59Z",
+      "side": 1,
+      "message": "just \"the network interfaces\" ?",
+      "range": {
+        "startLine": 81,
+        "startChar": 11,
+        "endLine": 81,
+        "endChar": 37
+      },
+      "revId": "254b8823c7079355552437a4be73f3ea03037fdc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db188cc0_d6b7f9ed",
+        "filename": "include/spdk/net.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-01T10:50:59Z",
+      "side": 1,
+      "message": "this is unused. you may be able to propose to remove this.",
+      "range": {
+        "startLine": 90,
+        "startChar": 12,
+        "endLine": 90,
+        "endChar": 39
+      },
+      "revId": "254b8823c7079355552437a4be73f3ea03037fdc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "969b547f_a4f35915",
         "filename": "include/spdk/net.h",
         "patchSetId": 1
@@ -25,6 +94,46 @@
     },
     {
       "key": {
+        "uuid": "af09d8dd_b0895e91",
+        "filename": "include/spdk/net.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-01T10:50:59Z",
+      "side": 1,
+      "message": "Add an IP address to the network interface ?",
+      "revId": "254b8823c7079355552437a4be73f3ea03037fdc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cfa098b1_01645d49",
+        "filename": "include/spdk/net.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-01T10:50:59Z",
+      "side": 1,
+      "message": "the network interface ?",
+      "range": {
+        "startLine": 125,
+        "startChar": 29,
+        "endLine": 125,
+        "endChar": 37
+      },
+      "revId": "254b8823c7079355552437a4be73f3ea03037fdc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "61ba511e_e1a9e5e9",
         "filename": "include/spdk/net.h",
         "patchSetId": 1
@@ -41,6 +150,75 @@
         "startChar": 10,
         "endLine": 133,
         "endChar": 13
+      },
+      "revId": "254b8823c7079355552437a4be73f3ea03037fdc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82af5940_96bbaec2",
+        "filename": "include/spdk/net.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-01T10:50:59Z",
+      "side": 1,
+      "message": "network interfaces ?",
+      "range": {
+        "startLine": 143,
+        "startChar": 27,
+        "endLine": 143,
+        "endChar": 59
+      },
+      "revId": "254b8823c7079355552437a4be73f3ea03037fdc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9973aea3_95903597",
+        "filename": "include/spdk/net.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-01T10:50:59Z",
+      "side": 1,
+      "message": "network interfaces ?",
+      "range": {
+        "startLine": 145,
+        "startChar": 44,
+        "endLine": 145,
+        "endChar": 76
+      },
+      "revId": "254b8823c7079355552437a4be73f3ea03037fdc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b2bada68_7f915886",
+        "filename": "include/spdk/net.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-01T10:50:59Z",
+      "side": 1,
+      "message": "the head of the linked list ?",
+      "range": {
+        "startLine": 145,
+        "startChar": 24,
+        "endLine": 145,
+        "endChar": 32
       },
       "revId": "254b8823c7079355552437a4be73f3ea03037fdc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
