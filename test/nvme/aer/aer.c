@@ -60,6 +60,9 @@ static int temperature_done = 0;
 static int failed = 0;
 static struct spdk_nvme_transport_id g_trid;
 
+/* Enable AER temperature test */
+static int enable_temp_test = 0;
+
 static void
 set_temp_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 {
@@ -141,7 +144,7 @@ print_health_page(struct dev *dev, struct spdk_nvme_health_information_page *hip
 }
 
 static void
-get_log_page_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
+get_health_log_page_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct dev *dev = cb_arg;
 
@@ -164,7 +167,7 @@ get_health_log_page(struct dev *dev)
 
 	rc = spdk_nvme_ctrlr_cmd_get_log_page(dev->ctrlr, SPDK_NVME_LOG_HEALTH_INFORMATION,
 					      SPDK_NVME_GLOBAL_NS_TAG, dev->health_page, sizeof(*dev->health_page), 0,
-					      get_log_page_completion, dev);
+					      get_health_log_page_completion, dev);
 	if (rc == 0) {
 		outstanding_commands++;
 	}
@@ -212,6 +215,7 @@ usage(const char *program_name)
 	printf("%s [options]", program_name);
 	printf("\n");
 	printf("options:\n");
+	printf(" -T         enable temperature tests\n");
 	printf(" -r trid    remote NVMe over Fabrics target address\n");
 	printf("    Format: 'key:value [key:value] ...'\n");
 	printf("    Keys:\n");
@@ -236,7 +240,7 @@ parse_args(int argc, char **argv)
 	g_trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
-	while ((op = getopt(argc, argv, "r:t:H")) != -1) {
+	while ((op = getopt(argc, argv, "r:t:H:T")) != -1) {
 		switch (op) {
 		case 't':
 			rc = spdk_log_set_trace_flag(optarg);
@@ -258,6 +262,9 @@ parse_args(int argc, char **argv)
 				fprintf(stderr, "Error parsing transport address\n");
 				return 1;
 			}
+			break;
+		case 'T':
+			enable_temp_test = 1;
 			break;
 		case 'H':
 		default:
@@ -341,6 +348,61 @@ get_feature_test(struct dev *dev)
 	outstanding_commands++;
 }
 
+static int
+spdk_aer_temperature_test(void)
+{
+	struct dev *dev;
+
+	printf("Getting temperature thresholds of all controllers...\n");
+	foreach_dev(dev) {
+		/* Get the original temperature threshold */
+		get_temp_threshold(dev);
+	}
+
+	while (!failed && temperature_done < num_devs) {
+		foreach_dev(dev) {
+			spdk_nvme_ctrlr_process_admin_completions(dev->ctrlr);
+		}
+	}
+
+	if (failed) {
+		return failed;
+	}
+	temperature_done = 0;
+	aer_done = 0;
+
+	/* Send admin commands to test admin queue wraparound while waiting for the AER */
+	foreach_dev(dev) {
+		get_feature_test(dev);
+	}
+
+	if (failed) {
+		return failed;
+	}
+
+	printf("Waiting for all controllers to trigger AER...\n");
+	foreach_dev(dev) {
+		/* Set the temperature threshold to a low value */
+		set_temp_threshold(dev, 200);
+	}
+
+	if (failed) {
+		return failed;
+	}
+
+	while (!failed && (aer_done < num_devs || temperature_done < num_devs)) {
+		foreach_dev(dev) {
+			spdk_nvme_ctrlr_process_admin_completions(dev->ctrlr);
+		}
+	}
+
+	if (failed) {
+		return failed;
+	}
+
+	return 0;
+}
+
 int main(int argc, char **argv)
 {
 	struct dev		*dev;
@@ -377,50 +439,11 @@ int main(int argc, char **argv)
 		spdk_nvme_ctrlr_register_aer_callback(dev->ctrlr, aer_cb, dev);
 	}
 
-	printf("Getting temperature thresholds of all controllers...\n");
-	foreach_dev(dev) {
-		/* Get the original temperature threshold */
-		get_temp_threshold(dev);
-	}
-
-	while (!failed && temperature_done < num_devs) {
-		foreach_dev(dev) {
-			spdk_nvme_ctrlr_process_admin_completions(dev->ctrlr);
+	/* AER temperature test */
+	if (enable_temp_test) {
+		if (spdk_aer_temperature_test()) {
+			goto done;
 		}
-	}
-
-	if (failed) {
-		goto done;
-	}
-	temperature_done = 0;
-
-	/* Send admin commands to test admin queue wraparound while waiting for the AER */
-	foreach_dev(dev) {
-		get_feature_test(dev);
-	}
-
-	if (failed) {
-		goto done;
-	}
-
-	printf("Waiting for all controllers to trigger AER...\n");
-	foreach_dev(dev) {
-		/* Set the temperature threshold to a low value */
-		set_temp_threshold(dev, 200);
-	}
-
-	if (failed) {
-		goto done;
-	}
-
-	while (!failed && (aer_done < num_devs || temperature_done < num_devs)) {
-		foreach_dev(dev) {
-			spdk_nvme_ctrlr_process_admin_completions(dev->ctrlr);
-		}
-	}
-
-	if (failed) {
-		goto done;
 	}
 
 	printf("Cleaning up...\n");
