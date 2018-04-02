@@ -332,6 +332,30 @@ spdk_app_read_config_file_global_params(struct spdk_app_opts *opts)
 	}
 }
 
+static int
+spdk_app_setup_env(struct spdk_app_opts *opts)
+{
+	struct spdk_env_opts env_opts = {};
+	int rc;
+
+	spdk_env_opts_init(&env_opts);
+
+	env_opts.name = opts->name;
+	env_opts.core_mask = opts->reactor_mask;
+	env_opts.shm_id = opts->shm_id;
+	env_opts.mem_channel = opts->mem_channel;
+	env_opts.master_core = opts->master_core;
+	env_opts.mem_size = opts->mem_size;
+	env_opts.no_pci = opts->no_pci;
+
+	rc = spdk_env_init(&env_opts);
+	if (rc < 0) {
+		SPDK_ERRLOG("Unable to initialize SPDK env\n");
+	}
+
+	return rc;
+}
+
 int
 spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	       void *arg1, void *arg2)
@@ -341,7 +365,6 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	int			rc;
 	uint64_t		tpoint_group_mask;
 	char			*end;
-	struct spdk_env_opts env_opts = {};
 	struct spdk_event *app_start_event;
 
 	if (!opts) {
@@ -380,19 +403,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	spdk_log_set_level(SPDK_APP_DEFAULT_LOG_PRIORITY);
 	spdk_log_open();
 
-	spdk_env_opts_init(&env_opts);
-
-	env_opts.name = opts->name;
-	env_opts.core_mask = opts->reactor_mask;
-	env_opts.shm_id = opts->shm_id;
-	env_opts.mem_channel = opts->mem_channel;
-	env_opts.master_core = opts->master_core;
-	env_opts.mem_size = opts->mem_size;
-	env_opts.no_pci = opts->no_pci;
-	env_opts.hugepage_single_segments = opts->hugepage_single_segments;
-
-	if (spdk_env_init(&env_opts) < 0) {
-		SPDK_ERRLOG("Unable to initialize SPDK env\n");
+	if (spdk_app_setup_env(opts) < 0) {
 		goto app_start_log_close_err;
 	}
 
