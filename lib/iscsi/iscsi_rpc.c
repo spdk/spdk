@@ -1176,22 +1176,8 @@ invalid:
 SPDK_RPC_REGISTER("target_node_add_lun", spdk_rpc_target_node_add_lun)
 
 static void
-spdk_rpc_get_iscsi_global_params(struct spdk_jsonrpc_request *request,
-				 const struct spdk_json_val *params)
+dump_iscsi_global_params(struct spdk_json_write_ctx *w)
 {
-	struct spdk_json_write_ctx *w;
-
-	if (params != NULL) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "get_iscsi_global_params requires no parameters");
-		return;
-	}
-
-	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_object_begin(w);
 
 	spdk_json_write_name(w, "auth_file");
@@ -1246,7 +1232,108 @@ spdk_rpc_get_iscsi_global_params(struct spdk_jsonrpc_request *request,
 	spdk_json_write_int32(w, spdk_iscsi_conn_get_min_per_core());
 
 	spdk_json_write_object_end(w);
+}
+
+static void
+spdk_rpc_get_iscsi_global_params(struct spdk_jsonrpc_request *request,
+				 const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "get_iscsi_global_params requires no parameters");
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	dump_iscsi_global_params(w);
 
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("get_iscsi_global_params", spdk_rpc_get_iscsi_global_params)
+
+static void
+iscsi_global_params_config_json(struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "method");
+	spdk_json_write_string(w, "initialize_iscsi_subsystem");
+
+	spdk_json_write_name(w, "params");
+	dump_iscsi_global_params(w);
+
+	spdk_json_write_object_end(w);
+}
+
+static void
+iscsi_initiator_group_config_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_iscsi_init_grp *ig;
+
+	TAILQ_FOREACH(ig, &g_spdk_iscsi.ig_head, tailq) {
+		spdk_json_write_object_begin(w);
+
+		spdk_json_write_name(w, "method");
+		spdk_json_write_string(w, "add_initiator_group");
+
+		spdk_json_write_name(w, "params");
+		dump_initiator_group(w, ig);
+
+		spdk_json_write_object_end(w);
+	}
+}
+
+static void
+iscsi_portal_group_config_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_iscsi_portal_grp *pg;
+
+	TAILQ_FOREACH(pg, &g_spdk_iscsi.pg_head, tailq) {
+		spdk_json_write_object_begin(w);
+
+		spdk_json_write_name(w, "method");
+		spdk_json_write_string(w, "add_portal_group");
+
+		spdk_json_write_name(w, "params");
+		dump_portal_group(w, pg);
+
+		spdk_json_write_object_end(w);
+	}
+}
+
+static void
+iscsi_target_node_config_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_iscsi_tgt_node *tgtnode;
+
+	TAILQ_FOREACH(tgtnode, &g_spdk_iscsi.target_head, tailq) {
+		spdk_json_write_object_begin(w);
+
+		spdk_json_write_name(w, "method");
+		spdk_json_write_string(w, "construct_target_ndoe");
+
+		spdk_json_write_name(w, "params");
+		dump_target_node(w, tgtnode);
+
+		spdk_json_write_object_end(w);
+	}
+}
+
+void spdk_iscsi_config_json(struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_array_begin(w);
+
+	iscsi_global_params_config_json(w);
+	iscsi_initiator_group_config_json(w);
+	iscsi_portal_group_config_json(w);
+	iscsi_target_node_config_json(w);
+
+	spdk_json_write_array_end(w);
+
+}

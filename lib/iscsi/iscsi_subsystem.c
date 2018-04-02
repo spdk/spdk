@@ -915,7 +915,7 @@ error:
 	free(g_spdk_iscsi.authfile);
 	free(g_spdk_iscsi.nodebase);
 
-	return rc;	
+	return rc;
 }
 
 static void
