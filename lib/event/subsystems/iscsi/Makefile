@@ -35,7 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib
-C_SRCS = iscsi.c
+C_SRCS = iscsi.c iscsi_rpc.c
 LIBNAME = event_iscsi
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

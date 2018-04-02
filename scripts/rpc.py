@@ -684,6 +684,31 @@ if __name__ == "__main__":
     p.add_argument('name', help='Name of subsystem to query')
     p.set_defaults(func=get_subsystem_config)
 
+    def initialize_iscsi_subsystem(args):
+        rpc.subsystem.initialize_iscsi_subsystem(args.client, args)
+
+    p = subparsers.add_parser('initialize_iscsi_subsystem', help="""Initialize iSCSI subsystem""")
+    p.add_argument('-f', '--auth-file', help='Path to CHAP shared secret file for discovery session')
+    p.add_argument('-b', '--node-base', help='Prefix of the name of iSCSI target node')
+    p.add_argument('-o', '--nop_timeout', help='Timeout in seconds to nop-in request to the initiator', type=int)
+    p.add_argument('-n', '--nop-in-interval', help='Time interval in seconds between nop-in requests sent by the target', type=int)
+    p.add_argument('-d', '--no-discovery-auth', help="""CHAP for discovery session should be disabled.
+    *** Mutually exclusive with req_discovery_auth""", action='store_true')
+    p.add_argument('-r', '--req-discovery-auth', help="""CHAP for discovery session should be required.
+    *** Mutually exclusive with no_discovery_auth""", action='store_true')
+    p.add_argument('-m', '--req-discovery-auth-mutual', help='CHAP for discovery session should be mutual', action='store_true')
+    p.add_argument('-g', '--discovery-auth-group', help="""Authentication group ID for discovery session.
+    *** Authentication group must be precreated ***""", type=int, default=0)
+    p.add_argument('-a', '--max-sessions', help='Maximum number of sessions in the host.', type=int)
+    p.add_argument('-c', '--max-connections-per-session', help='Negotiated parameter, MaxConnections.', type=int)
+    p.add_argument('-w', '--default-time2wait', help='Negotiated parameter, DefaultTime2Wait.', type=int)
+    p.add_argument('-v', '--default-time2retain', help='Negotiated parameter, DefaultTime2Retain.', type=int)
+    p.add_argument('-i', '--immediate-data', help='Negotiated parameter, ImmediateData.', action='store_true')
+    p.add_argument('-l', '--error-recovery-level', help='Negotiated parameter, ErrorRecoveryLevel', type=int)
+    p.add_argument('-p', '--allow-duplicated-isid', help='Allow duplicated initiator session ID.', action='store_true')
+    p.add_argument('-u', '--min-connections-per-session', help='Allocation unit of connections per core', type=int)
+    p.set_defaults(func=initialize_iscsi_subsystem)
+
     # vhost
     def set_vhost_controller_coalescing(args):
         rpc.vhost.set_vhost_controller_coalescing(args.client, args)
