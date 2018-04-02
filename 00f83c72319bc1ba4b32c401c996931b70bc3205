@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "94ed299f_fa1b3409",
+        "filename": "include/spdk/net.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-02T05:36:16Z",
+      "side": 1,
+      "message": "Would you add a comment like the following?\n\nTODO: Implement spdk_net_framework_get_name(). (VPP utilizes net_framework.)",
+      "revId": "00f83c72319bc1ba4b32c401c996931b70bc3205",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
