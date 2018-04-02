@@ -356,16 +356,48 @@ spdk_app_setup_env(struct spdk_app_opts *opts)
 	return rc;
 }
 
+static int
+spdk_app_setup_trace(struct spdk_app_opts *opts)
+{
+	char		shm_name[64];
+	uint64_t	tpoint_group_mask;
+	char		*end;
+
+	if (opts->shm_id >= 0) {
+		snprintf(shm_name, sizeof(shm_name), "/%s_trace.%d", opts->name, opts->shm_id);
+	} else {
+		snprintf(shm_name, sizeof(shm_name), "/%s_trace.pid%d", opts->name, (int)getpid());
+	}
+
+	if (spdk_trace_init(shm_name) != 0) {
+		return -1;
+	}
+
+	if (opts->tpoint_group_mask != NULL) {
+		errno = 0;
+		tpoint_group_mask = strtoull(opts->tpoint_group_mask, &end, 16);
+		if (*end != '\0' || errno) {
+			SPDK_ERRLOG("invalid tpoint mask %s\n", opts->tpoint_group_mask);
+		} else {
+			SPDK_NOTICELOG("Tracepoint Group Mask %s specified.\n", opts->tpoint_group_mask);
+			SPDK_NOTICELOG("Use 'spdk_trace -s %s %s %d' to capture a snapshot of events at runtime.\n",
+				       opts->name,
+				       opts->shm_id >= 0 ? "-i" : "-p",
+				       opts->shm_id >= 0 ? opts->shm_id : getpid());
+			spdk_trace_set_tpoint_group_mask(tpoint_group_mask);
+		}
+	}
+
+	return 0;
+}
+
 int
 spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	       void *arg1, void *arg2)
 {
 	struct spdk_conf	*config = NULL;
-	char			shm_name[64];
 	int			rc;
-	uint64_t		tpoint_group_mask;
-	char			*end;
-	struct spdk_event *app_start_event;
+	struct spdk_event	*app_start_event;
 
 	if (!opts) {
 		SPDK_ERRLOG("opts should not be NULL\n");
@@ -420,35 +452,14 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	}
 
 	/*
-	 * Note the call to spdk_trace_init() is located here
+	 * Note the call to spdk_app_setup_trace() is located here
 	 * ahead of spdk_app_setup_signal_handlers().
 	 * That's because there is not an easy/direct clean
 	 * way of unwinding alloc'd resources that can occur
 	 * in spdk_app_setup_signal_handlers().
 	 */
-	if (opts->shm_id >= 0) {
-		snprintf(shm_name, sizeof(shm_name), "/%s_trace.%d", opts->name, opts->shm_id);
-	} else {
-		snprintf(shm_name, sizeof(shm_name), "/%s_trace.pid%d", opts->name, (int)getpid());
-	}
-
-	if (spdk_trace_init(shm_name) != 0) {
+	if (spdk_app_setup_trace(opts) != 0) {
 		goto app_start_log_close_err;
-	}
-
-	if (opts->tpoint_group_mask != NULL) {
-		errno = 0;
-		tpoint_group_mask = strtoull(opts->tpoint_group_mask, &end, 16);
-		if (*end != '\0' || errno) {
-			SPDK_ERRLOG("invalid tpoint mask %s\n", opts->tpoint_group_mask);
-		} else {
-			SPDK_NOTICELOG("Tracepoint Group Mask %s specified.\n", opts->tpoint_group_mask);
-			SPDK_NOTICELOG("Use 'spdk_trace -s %s %s %d' to capture a snapshot of events at runtime.\n",
-				       opts->name,
-				       opts->shm_id >= 0 ? "-i" : "-p",
-				       opts->shm_id >= 0 ? opts->shm_id : getpid());
-			spdk_trace_set_tpoint_group_mask(tpoint_group_mask);
-		}
 	}
 
 	if ((rc = spdk_app_setup_signal_handlers(opts)) != 0) {
