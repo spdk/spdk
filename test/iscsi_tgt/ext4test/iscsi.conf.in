@@ -15,5 +15,8 @@
 #  will use RPC to set up this part of the configuration.
 
 [Malloc]
-  NumberOfLuns 1
-  LunSizeInMB 512
+  NumberOfLuns 2
+  LunSizeInMB 256
+
+["BdevError"]
+  BdevError Malloc1

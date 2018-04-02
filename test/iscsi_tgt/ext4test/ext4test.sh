@@ -32,11 +32,18 @@ timing_exit start_iscsi_tgt
 
 $rpc_py add_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
 $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
+# Test if there is no requirement to creation order of error ibjection
 $rpc_py construct_error_bdev 'Malloc0'
+$rpc_py construct_malloc_bdev 128 512
+$rpc_py construct_error_bdev 'Malloc2'
+$rpc_py construct_error_bdev 'Malloc3'
+$rpc_py construct_malloc_bdev 128 512
+
 # "1:2" ==> map PortalGroup1 to InitiatorGroup2
 # "64" ==> iSCSI queue depth 64
 # "-d" ==> disable CHAP authentication
-$rpc_py construct_target_node Target0 Target0_alias EE_Malloc0:0 1:2 64 -d
+LUNs="EE_Malloc0:0 EE_Malloc1:1 EE_Malloc2:2 EE_Malloc3:3"
+$rpc_py construct_target_node Target0 Target0_alias "$LUNs" 1:2 64 -d
 sleep 1
 
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
@@ -49,23 +56,32 @@ sleep 1
 
 echo "Test error injection"
 $rpc_py bdev_inject_error EE_Malloc0 'all' 'failure' -n  1000
+$rpc_py bdev_inject_error EE_Malloc1 'all' 'failure' -n  1000
+$rpc_py bdev_inject_error EE_Malloc2 'all' 'failure' -n  1000
+$rpc_py bdev_inject_error EE_Malloc3 'all' 'failure' -n  1000
 
-dev=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
+devs=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
 
 set +e
-mkfs.ext4 -F /dev/$dev
-if [ $? -eq 0 ]; then
-	echo "mkfs successful - expected failure"
-	iscsicleanup
-	killprocess $pid
-	rm -f $testdir/iscsi.conf
-	exit 1
-else
-	echo "mkfs failed as expected"
-fi
+for dev in $devs; do
+	mkfs.ext4 -F /dev/$dev
+	if [ $? -eq 0 ]; then
+		echo "mkfs successful - expected failure"
+		iscsicleanup
+		killprocess $pid
+		rm -f $testdir/iscsi.conf
+		exit 1
+	else
+		echo "mkfs failed as expected"
+	fi
+done
 set -e
 
 $rpc_py bdev_inject_error EE_Malloc0 'clear' 'failure'
+$rpc_py bdev_inject_error EE_Malloc1 'clear' 'failure'
+$rpc_py bdev_inject_error EE_Malloc2 'clear' 'failure'
+$rpc_py bdev_inject_error EE_Malloc3 'clear' 'failure'
+
 echo "Error injection test done"
 
 iscsicleanup
