@@ -64,7 +64,7 @@ static struct spdk_subsystem g_spdk_subsystem_copy = {
 	.name = "copy",
 	.init = spdk_copy_engine_subsystem_initialize,
 	.fini = spdk_copy_engine_subsystem_finish,
-	.config = NULL,
+	.config = spdk_copy_engine_config_text,
 };
 
 SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_copy);
