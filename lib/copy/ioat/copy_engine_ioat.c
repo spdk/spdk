@@ -44,6 +44,15 @@
 
 #define IOAT_MAX_CHANNELS		64
 
+static bool g_ioat_disable = false;
+
+struct ioat_probe_ctx {
+	int num_whitelist_devices;
+	struct spdk_pci_addr whitelist[IOAT_MAX_CHANNELS];
+};
+
+static struct ioat_probe_ctx g_probe_ctx;
+
 struct ioat_device {
 	struct spdk_ioat_chan *ioat;
 	bool is_allocated;
@@ -224,11 +233,6 @@ ioat_get_io_channel(void)
 	return spdk_get_io_channel(&ioat_copy_engine);
 }
 
-struct ioat_probe_ctx {
-	int num_whitelist_devices;
-	struct spdk_pci_addr whitelist[IOAT_MAX_CHANNELS];
-};
-
 static bool
 probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev)
 {
@@ -277,12 +281,11 @@ copy_engine_ioat_init(void)
 	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Ioat");
 	const char *pci_bdf;
 	int i;
-	struct ioat_probe_ctx probe_ctx = {};
 
 	if (sp != NULL) {
 		if (spdk_conf_section_get_boolval(sp, "Disable", false)) {
+			g_ioat_disable = true;
 			/* Disable Ioat */
-			return 0;
 		}
 
 		/* Init the whitelist */
@@ -292,15 +295,20 @@ copy_engine_ioat_init(void)
 				break;
 			}
 
-			if (spdk_pci_addr_parse(&probe_ctx.whitelist[probe_ctx.num_whitelist_devices], pci_bdf) < 0) {
+			if (spdk_pci_addr_parse(&g_probe_ctx.whitelist[g_probe_ctx.num_whitelist_devices],
+						pci_bdf) < 0) {
 				SPDK_ERRLOG("Invalid Ioat Whitelist address %s\n", pci_bdf);
 				return -1;
 			}
-			probe_ctx.num_whitelist_devices++;
+			g_probe_ctx.num_whitelist_devices++;
 		}
 	}
 
-	if (spdk_ioat_probe(&probe_ctx, probe_cb, attach_cb) != 0) {
+	if (g_ioat_disable) {
+		return 0;
+	}
+
+	if (spdk_ioat_probe(&g_probe_ctx, probe_cb, attach_cb) != 0) {
 		SPDK_ERRLOG("spdk_ioat_probe() failed\n");
 		return -1;
 	}
@@ -309,6 +317,5 @@ copy_engine_ioat_init(void)
 	spdk_copy_engine_register(&ioat_copy_engine);
 	spdk_io_device_register(&ioat_copy_engine, ioat_create_cb, ioat_destroy_cb,
 				sizeof(struct ioat_io_channel));
-
 	return 0;
 }
