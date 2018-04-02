@@ -448,6 +448,7 @@ spdk_get_io_channel(void *io_device)
 	ch->destroy_cb = dev->destroy_cb;
 	ch->thread = thread;
 	ch->ref = 1;
+	ch->async_destroying = false;
 	TAILQ_INSERT_TAIL(&thread->io_channels, ch, tailq);
 
 	dev->refcnt++;
@@ -476,7 +477,12 @@ _spdk_put_io_channel(void *arg)
 	assert(ch->thread == spdk_get_thread());
 	assert(ch->ref == 0);
 
-	ch->destroy_cb(ch->dev->io_device, spdk_io_channel_get_ctx(ch));
+	if (ch->async_destroying == false) {
+		ch->destroy_cb(ch->dev->io_device, spdk_io_channel_get_ctx(ch));
+		if (ch->async_destroying == true) {
+			return;
+		}
+	}
 
 	pthread_mutex_lock(&g_devlist_mutex);
 	ch->dev->refcnt--;
@@ -500,6 +506,11 @@ _spdk_put_io_channel(void *arg)
 void
 spdk_put_io_channel(struct spdk_io_channel *ch)
 {
+	if (ch->async_destroying == true) {
+		spdk_thread_send_msg(ch->thread, _spdk_put_io_channel, ch);
+		return;
+	}
+
 	ch->ref--;
 
 	if (ch->ref == 0) {
