@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "40e16b89_60f38e52",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 492,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-04-02T01:41:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8a03a9e8_57dbd4b9",
+      "range": {
+        "startLine": 492,
+        "startChar": 9,
+        "endLine": 492,
+        "endChar": 21
+      },
+      "revId": "0f2b0dddbca616165cfb9ef2804d63e8d65b4e68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b97bea67_685ddaec",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 8
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "33b17661_cb3b2a4e",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 528,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-04-02T01:41:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b97bea67_685ddaec",
+      "range": {
+        "startLine": 528,
+        "startChar": 2,
+        "endLine": 528,
+        "endChar": 19
+      },
+      "revId": "0f2b0dddbca616165cfb9ef2804d63e8d65b4e68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4cbb6e19_c0d5186b",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 8
@@ -59,6 +107,30 @@
       "writtenOn": "2018-03-30T13:23:44Z",
       "side": 1,
       "message": "Is this manner usual and safe? Does this always come earlier than iscsi_connect_cb()?",
+      "range": {
+        "startLine": 626,
+        "startChar": 2,
+        "endLine": 626,
+        "endChar": 19
+      },
+      "revId": "0f2b0dddbca616165cfb9ef2804d63e8d65b4e68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d2c123c_1f1adfe8",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 626,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-04-02T01:41:55Z",
+      "side": 1,
+      "message": "Yes, this manner is save, it came earlier than iscsi_connect_cb",
+      "parentUuid": "4cbb6e19_c0d5186b",
       "range": {
         "startLine": 626,
         "startChar": 2,
