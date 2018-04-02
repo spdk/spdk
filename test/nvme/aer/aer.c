@@ -42,6 +42,7 @@
 struct dev {
 	struct spdk_nvme_ctrlr				*ctrlr;
 	struct spdk_nvme_health_information_page	*health_page;
+	struct spdk_nvme_ns_list			*changed_ns_list;
 	uint32_t					orig_temp_threshold;
 	char						name[SPDK_NVMF_TRADDR_MAX_LEN + 1];
 };
@@ -62,6 +63,8 @@ static struct spdk_nvme_transport_id g_trid;
 
 /* Enable AER temperature test */
 static int enable_temp_test = 0;
+/* Enable AER namespace attribute notice test */
+static uint32_t expected_ns_test = 0;
 
 static void
 set_temp_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
@@ -160,6 +163,40 @@ get_health_log_page_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 	aer_done++;
 }
 
+static void
+get_changed_ns_log_page_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct dev *dev = cb_arg;
+	bool found = false;
+	uint32_t i;
+
+	outstanding_commands --;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		printf("%s: get log page failed\n", dev->name);
+		failed = 1;
+		return;
+	}
+
+	/* Let's compare the expected namespce ID is
+	 * in changed namespace list
+	 */
+	if (dev->changed_ns_list->ns_list[0] != 0xffffffffu) {
+		for (i = 0; i < sizeof(*dev->changed_ns_list) / sizeof(uint32_t); i++) {
+			if (expected_ns_test == dev->changed_ns_list->ns_list[i]) {
+				found = true;
+				break;
+			}
+		}
+	}
+
+	if (!found) {
+		failed = 1;
+	}
+
+	aer_done++;
+}
+
 static int
 get_health_log_page(struct dev *dev)
 {
@@ -168,6 +205,24 @@ get_health_log_page(struct dev *dev)
 	rc = spdk_nvme_ctrlr_cmd_get_log_page(dev->ctrlr, SPDK_NVME_LOG_HEALTH_INFORMATION,
 					      SPDK_NVME_GLOBAL_NS_TAG, dev->health_page, sizeof(*dev->health_page), 0,
 					      get_health_log_page_completion, dev);
+
+	if (rc == 0) {
+		outstanding_commands++;
+	}
+
+	return rc;
+}
+
+static int
+get_changed_ns_log_page(struct dev *dev)
+{
+	int rc;
+
+	rc = spdk_nvme_ctrlr_cmd_get_log_page(dev->ctrlr, SPDK_NVME_LOG_CHANGED_NS_LIST,
+					      SPDK_NVME_GLOBAL_NS_TAG, dev->changed_ns_list,
+					      sizeof(*dev->changed_ns_list), 0,
+					      get_changed_ns_log_page_completion, dev);
+
 	if (rc == 0) {
 		outstanding_commands++;
 	}
@@ -183,6 +238,9 @@ cleanup(void)
 	foreach_dev(dev) {
 		if (dev->health_page) {
 			spdk_dma_free(dev->health_page);
+		}
+		if (dev->changed_ns_list) {
+			spdk_dma_free(dev->changed_ns_list);
 		}
 	}
 }
@@ -201,12 +259,15 @@ aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 
 	printf("%s: aer_cb for log page %d\n", dev->name, log_page_id);
 
-	/* Set the temperature threshold back to the original value
-	 * so the AER doesn't trigger again.
-	 */
-	set_temp_threshold(dev, dev->orig_temp_threshold);
-
-	get_health_log_page(dev);
+	if (log_page_id == SPDK_NVME_LOG_HEALTH_INFORMATION) {
+		/* Set the temperature threshold back to the original value
+		 * so the AER doesn't trigger again.
+		 */
+		set_temp_threshold(dev, dev->orig_temp_threshold);
+		get_health_log_page(dev);
+	} else if (log_page_id == SPDK_NVME_LOG_CHANGED_NS_LIST) {
+		get_changed_ns_log_page(dev);
+	}
 }
 
 static void
@@ -216,6 +277,7 @@ usage(const char *program_name)
 	printf("\n");
 	printf("options:\n");
 	printf(" -T         enable temperature tests\n");
+	printf(" -n         expected Namespace attribute notice ID\n");
 	printf(" -r trid    remote NVMe over Fabrics target address\n");
 	printf("    Format: 'key:value [key:value] ...'\n");
 	printf("    Keys:\n");
@@ -240,8 +302,11 @@ parse_args(int argc, char **argv)
 	g_trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
-	while ((op = getopt(argc, argv, "r:t:H:T")) != -1) {
+	while ((op = getopt(argc, argv, "n:r:t:H:T")) != -1) {
 		switch (op) {
+		case 'n':
+			expected_ns_test = atoi(optarg);
+			break;
 		case 't':
 			rc = spdk_log_set_trace_flag(optarg);
 			if (rc < 0) {
@@ -304,6 +369,11 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	dev->health_page = spdk_dma_zmalloc(sizeof(*dev->health_page), 4096, NULL);
 	if (dev->health_page == NULL) {
 		printf("Allocation error (health page)\n");
+		failed = 1;
+	}
+	dev->changed_ns_list = spdk_dma_zmalloc(sizeof(*dev->changed_ns_list), 4096, NULL);
+	if (dev->changed_ns_list == NULL) {
+		printf("Allocation error (changed namespace list page)\n");
 		failed = 1;
 	}
 }
@@ -403,6 +473,35 @@ spdk_aer_temperature_test(void)
 	return 0;
 }
 
+static int
+spdk_aer_changed_ns_test(void)
+{
+	struct dev *dev;
+
+	aer_done = 0;
+
+	/* Send admin commands to test admin queue wraparound while waiting for the AER */
+	foreach_dev(dev) {
+		get_feature_test(dev);
+	}
+
+	if (failed) {
+		return failed;
+	}
+
+	while (!failed && (aer_done < num_devs)) {
+		foreach_dev(dev) {
+			spdk_nvme_ctrlr_process_admin_completions(dev->ctrlr);
+		}
+	}
+
+	if (failed) {
+		return failed;
+	}
+
+	return 0;
+}
+
 int main(int argc, char **argv)
 {
 	struct dev		*dev;
@@ -442,6 +541,13 @@ int main(int argc, char **argv)
 	/* AER temperature test */
 	if (enable_temp_test) {
 		if (spdk_aer_temperature_test()) {
+			goto done;
+		}
+	}
+
+	/* AER changed namespace list test */
+	if (expected_ns_test) {
+		if (spdk_aer_changed_ns_test()) {
 			goto done;
 		}
 	}
