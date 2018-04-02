@@ -287,6 +287,8 @@ ctrlr_delete_qpair(void *ctx)
 	spdk_nvmf_transport_qpair_fini(qpair);
 
 	if (ctrlr->num_qpairs == 0) {
+		assert(ctrlr->subsys != NULL);
+		assert(ctrlr->subsys->thread != NULL);
 		spdk_thread_send_msg(ctrlr->subsys->thread, ctrlr_destruct, ctrlr);
 	}
 }
