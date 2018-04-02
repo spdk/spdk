@@ -154,6 +154,24 @@
     },
     {
       "key": {
+        "uuid": "66598ed6_518ee812",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 1375,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-04-02T01:11:04Z",
+      "side": 1,
+      "message": "According to the specification, for the same event type, we should only queue one event when no available AE requests, but yes, I think we can just use a pointer instead of TAILQ for this case.",
+      "parentUuid": "da4c3089_9c8aeec4",
+      "revId": "cda63ad771d4eecd22fdc47483266c470edb62bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "83dd5250_6d564414",
         "filename": "test/nvmf/host/aer.sh",
         "patchSetId": 25
@@ -171,6 +189,24 @@
     },
     {
       "key": {
+        "uuid": "f4c0c363_aba2944e",
+        "filename": "test/nvmf/host/aer.sh",
+        "patchSetId": 25
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-04-02T01:11:04Z",
+      "side": 1,
+      "message": "The softRoCE environment in test pool is not reliable, I run the test scripts in my local environment, it passed all the tests. I checked the dmesg.log from the Fedora6, it showed that every time, the initiator can receive the AER, but lsblk can\u0027t show the expected block device sometimes, you can see Fedora3 was more reliable. While here, I\u0027m planning add extra tests on aer.c after this commit.",
+      "parentUuid": "83dd5250_6d564414",
+      "revId": "cda63ad771d4eecd22fdc47483266c470edb62bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9fabf8ce_c130457f",
         "filename": "test/nvmf/host/aer.sh",
         "patchSetId": 25
@@ -182,6 +218,24 @@
       "writtenOn": "2018-03-31T00:04:01Z",
       "side": 1,
       "message": "We should improve this comment a bit, now that it\u0027s moved from the other .sh file.\n\nMaybe say:\n\n# TODO: this aer test tries to invoke an AER completion by setting the temperature threshold to a very low value.  This does not work with emulated controllers though so currently the test is disabled.",
+      "revId": "cda63ad771d4eecd22fdc47483266c470edb62bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "09dbd859_c0576b69",
+        "filename": "test/nvmf/host/aer.sh",
+        "patchSetId": 25
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-04-02T01:11:04Z",
+      "side": 1,
+      "message": "ok.",
+      "parentUuid": "9fabf8ce_c130457f",
       "revId": "cda63ad771d4eecd22fdc47483266c470edb62bd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
