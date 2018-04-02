@@ -1,0 +1,130 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fd1a56d6_a1f9a41f",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-02T00:35:54Z",
+      "side": 1,
+      "message": "I think 32 is safer because 256bus*32dev*8func, \u0027:\u0027*2, \u0027.\u0027*1, and NULL may need more than 16 bits. Other places in SPDK have used 32.",
+      "range": {
+        "startLine": 67,
+        "startChar": 55,
+        "endLine": 67,
+        "endChar": 57
+      },
+      "revId": "b6716ae059e4c8345badf8d1dfe37bfe3a12d4a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "76be669f_b600792f",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-02T00:35:54Z",
+      "side": 1,
+      "message": "Adding whitelist information not only env_opts but also app_opts looks nice to me even if these are freed meediately.\n\nIn near future we may support \u0027-w\u0027 option for pci-whitelist in the command line.",
+      "revId": "b6716ae059e4c8345badf8d1dfe37bfe3a12d4a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3649e2e_0fe804c2",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-02T00:35:54Z",
+      "side": 1,
+      "message": "Using double pointer and creating the following code may be another option.\n\nchar **pci_addr_whitelist;\n\ntmp \u003d (char **)realloc(opts-\u003epci_whitelist, (i+1) * sizeof(*opts-\u003epci_whitelist));\nif (!tmp) {\n  free current opts-\u003epci_whitelist;\n  goto error;\n}\nopts-\u003epci_whitelist \u003d tmp;\n\nopts-\u003epci_whitelist[i] \u003d (char *)malloc(32);\nspdk_pci_addr_fmt(opts-\u003epci_whitelist[i], 32, \u0026addr);",
+      "revId": "b6716ae059e4c8345badf8d1dfe37bfe3a12d4a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8fcc3681_4b14297a",
+        "filename": "lib/event/app.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 368,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-02T00:35:54Z",
+      "side": 1,
+      "message": "goto app_start_log_close_err ?",
+      "range": {
+        "startLine": 368,
+        "startChar": 3,
+        "endLine": 368,
+        "endChar": 13
+      },
+      "revId": "b6716ae059e4c8345badf8d1dfe37bfe3a12d4a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b3973b9_639daa10",
+        "filename": "lib/event/app.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 371,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-02T00:35:54Z",
+      "side": 1,
+      "message": "if realloc() fails, opts-\u003epci_addr_whitelist cannot be freed.\nHence we should tmp as follows:\n\ntmp \u003d realloc();\nif (!tmp) {\n  release previously allocated opts-\u003epci_addr_whitelist\n  goto error;\n}\nopts-\u003epci_addr_whitelist \u003d tmp;",
+      "range": {
+        "startLine": 371,
+        "startChar": 2,
+        "endLine": 371,
+        "endChar": 26
+      },
+      "revId": "b6716ae059e4c8345badf8d1dfe37bfe3a12d4a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e696eeb_156532d0",
+        "filename": "lib/event/app.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 374,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-02T00:35:54Z",
+      "side": 1,
+      "message": "same as above",
+      "range": {
+        "startLine": 374,
+        "startChar": 3,
+        "endLine": 374,
+        "endChar": 13
+      },
+      "revId": "b6716ae059e4c8345badf8d1dfe37bfe3a12d4a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
