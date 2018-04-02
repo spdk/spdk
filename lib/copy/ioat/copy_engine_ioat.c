@@ -116,6 +116,7 @@ struct ioat_task {
 
 static int copy_engine_ioat_init(void);
 static void copy_engine_ioat_exit(void *ctx);
+static void copy_engine_ioat_config_text(FILE *fp);
 
 static size_t
 copy_engine_ioat_get_ctx_size(void)
@@ -123,7 +124,8 @@ copy_engine_ioat_get_ctx_size(void)
 	return sizeof(struct ioat_task) + sizeof(struct spdk_copy_task);
 }
 
-SPDK_COPY_MODULE_REGISTER(copy_engine_ioat_init, copy_engine_ioat_exit, NULL,
+SPDK_COPY_MODULE_REGISTER(copy_engine_ioat_init, copy_engine_ioat_exit,
+			  copy_engine_ioat_config_text,
 			  copy_engine_ioat_get_ctx_size)
 
 static void
@@ -318,4 +320,32 @@ copy_engine_ioat_init(void)
 	spdk_io_device_register(&ioat_copy_engine, ioat_create_cb, ioat_destroy_cb,
 				sizeof(struct ioat_io_channel));
 	return 0;
+}
+
+#define COPY_ENGINE_IOAT_HEADER_TMPL \
+"[Ioat]\n" \
+"  # Users may not want to use offload even it is available.\n" \
+"  # Users may use the whitelist to initialize specified devices, IDS\n" \
+"  #  uses BUS:DEVICE.FUNCTION to identify each Ioat channel.\n"
+
+#define COPY_ENGINE_IOAT_DISABLE_TMPL \
+"  Disable %s\n"
+
+#define COPY_ENGINE_IOAT_WHITELIST_TMPL \
+"  Whitelist %.4" PRIx16 ":%.2" PRIx8 ":%.2" PRIx8 ".%" PRIx8 "\n"
+
+static void
+copy_engine_ioat_config_text(FILE *fp)
+{
+	int i;
+	struct spdk_pci_addr *dev;
+
+	fprintf(fp, COPY_ENGINE_IOAT_HEADER_TMPL);
+	fprintf(fp, COPY_ENGINE_IOAT_DISABLE_TMPL, g_ioat_disable ? "Yes" : "No");
+
+	for (i = 0; i < g_probe_ctx.num_whitelist_devices; i++) {
+		dev = &g_probe_ctx.whitelist[i];
+		fprintf(fp, COPY_ENGINE_IOAT_WHITELIST_TMPL,
+			dev->domain, dev->bus, dev->dev, dev->func);
+	}
 }

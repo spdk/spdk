@@ -67,6 +67,13 @@ int spdk_copy_engine_initialize(void);
 void spdk_copy_engine_finish(spdk_copy_fini_cb cb_fn, void *cb_arg);
 
 /**
+ * Get the configuration for the copy engine.
+ *
+ * \param fp The pointer to a file that will be written to the configuration.
+ */
+void spdk_copy_engine_config_text(FILE *fp);
+
+/**
  * Close the copy engine module and perform any necessary cleanup.
  */
 void spdk_copy_engine_module_finish(void);
