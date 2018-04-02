@@ -1210,7 +1210,7 @@ dump_iscsi_global_params(struct spdk_json_write_ctx *w)
 	spdk_json_write_name(w, "error_recovery_level");
 	spdk_json_write_uint32(w, g_spdk_iscsi.ErrorRecoveryLevel);
 
-	spdk_json_write_name(w, "timeout");
+	spdk_json_write_name(w, "nop_timeout");
 	spdk_json_write_int32(w, g_spdk_iscsi.timeout);
 
 	spdk_json_write_name(w, "nop_in_interval");
