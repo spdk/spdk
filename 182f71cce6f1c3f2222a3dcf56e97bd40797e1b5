@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "56e680f6_f98dcb7d",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 613,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-02T13:00:36Z",
+      "side": 1,
+      "message": "Will you free all allocated requests before error return ? - module_fini is not called if module_init fails.",
+      "range": {
+        "startLine": 613,
+        "startChar": 3,
+        "endLine": 613,
+        "endChar": 9
+      },
+      "revId": "182f71cce6f1c3f2222a3dcf56e97bd40797e1b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63ca4c73_dfa56b5f",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 629,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-02T13:00:36Z",
+      "side": 1,
+      "message": "Is it OK to start poller when no connection is created?",
+      "revId": "182f71cce6f1c3f2222a3dcf56e97bd40797e1b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
