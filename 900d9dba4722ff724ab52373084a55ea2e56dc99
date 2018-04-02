@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5bd423c9_bcf11402",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 902,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-02T21:15:34Z",
+      "side": 1,
+      "message": "This double semicolon looks like a typo.",
+      "range": {
+        "startLine": 902,
+        "startChar": 12,
+        "endLine": 902,
+        "endChar": 14
+      },
+      "revId": "900d9dba4722ff724ab52373084a55ea2e56dc99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
