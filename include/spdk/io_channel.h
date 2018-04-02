@@ -92,6 +92,7 @@ struct spdk_io_channel {
 	uint32_t			ref;
 	TAILQ_ENTRY(spdk_io_channel)	tailq;
 	spdk_io_channel_destroy_cb	destroy_cb;
+	bool				async_destroying;
 
 	/*
 	 * Modules will allocate extra memory off the end of this structure

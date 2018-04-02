@@ -181,6 +181,13 @@ struct spdk_bdev_channel {
 	/* Per-device channel */
 	struct spdk_bdev_module_channel *module_ch;
 
+	/*
+	 * Pointer to current QoS bdev channel.
+	 * An async destroy of current QoS bdev channel could trigger so as
+	 *  to save the pointer to properly abort its outstanding I/Os.
+	 */
+	struct spdk_bdev_channel	*qos_channel;
+
 #ifdef SPDK_CONFIG_VTUNE
 	uint64_t		start_tsc;
 	uint64_t		interval_tsc;
@@ -1072,6 +1079,7 @@ _spdk_bdev_channel_create(struct spdk_bdev_channel *ch, void *io_device)
 	ch->qos_poller = NULL;
 	ch->flags = 0;
 	ch->module_ch = shared_ch;
+	ch->qos_channel = NULL;
 
 	return 0;
 }
@@ -1241,10 +1249,12 @@ _spdk_bdev_abort_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_channel *ch)
 }
 
 static void
-_spdk_bdev_channel_destroy(struct spdk_bdev_channel *ch)
+_spdk_bdev_channel_cleanup_resource(void *ctx)
 {
+	struct spdk_bdev_channel	*ch = ctx;
 	struct spdk_bdev_mgmt_channel	*mgmt_channel;
 	struct spdk_bdev_module_channel	*shared_ch = ch->module_ch;
+	struct spdk_io_channel		*io_ch = NULL;
 
 	mgmt_channel = spdk_io_channel_get_ctx(ch->mgmt_channel);
 
@@ -1255,6 +1265,74 @@ _spdk_bdev_channel_destroy(struct spdk_bdev_channel *ch)
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_large, ch);
 
 	_spdk_bdev_channel_destroy_resource(ch);
+
+	/* This is not QoS bdev channel, need to cleanup the I/O channel resource. */
+	if (ch->qos_channel) {
+		io_ch = spdk_io_channel_from_ctx(ch);
+		if (io_ch->async_destroying == true) {
+			spdk_put_io_channel(io_ch);
+		}
+	}
+}
+
+static void
+_spdk_bdev_abort_io_complete(void *ctx)
+{
+	struct spdk_bdev_io	*bdev_io = ctx;
+
+	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+}
+
+/*
+ * Abort I/O that are queued by QoS bdev channel and waiting for submission.
+ */
+static void
+_spdk_bdev_abort_qos_queued_io(void *ctx)
+{
+	struct spdk_bdev_channel	*ch = ctx;
+	struct spdk_bdev_io             *bdev_io, *tmp;
+	struct spdk_bdev_module_channel *shared_ch = ch->module_ch;
+	struct spdk_thread		*io_thread = spdk_io_channel_get_thread(ch->channel);
+
+	TAILQ_FOREACH_SAFE(bdev_io, &ch->qos_channel->qos_io, link, tmp) {
+		if (bdev_io->io_submit_ch == ch) {
+			TAILQ_REMOVE(&ch->qos_channel->qos_io, bdev_io, link);
+			/*
+			 * spdk_bdev_io_complete() assumes that the completed I/O had
+			 *  been submitted to the bdev module.  Since in this case it
+			 *  hadn't, bump io_outstanding to account for the decrement
+			 *  that spdk_bdev_io_complete() will do.
+			 */
+			if (bdev_io->type != SPDK_BDEV_IO_TYPE_RESET) {
+				ch->io_outstanding++;
+				shared_ch->io_outstanding++;
+				bdev_io->ch = ch;
+				bdev_io->io_submit_ch = NULL;
+			}
+
+			spdk_thread_send_msg(io_thread, _spdk_bdev_abort_io_complete, bdev_io);
+		}
+	}
+
+	spdk_thread_send_msg(io_thread, _spdk_bdev_channel_cleanup_resource, ch);
+}
+
+static void
+_spdk_bdev_channel_destroy(struct spdk_bdev_channel *ch)
+{
+	struct spdk_bdev	*bdev = ch->bdev;
+	struct spdk_io_channel	*io_ch = spdk_io_channel_from_ctx(ch);
+
+	if (bdev->qos_channel && bdev->qos_thread) {
+		/* Save a pointer to the current QoS bdev channel */
+		ch->qos_channel = bdev->qos_channel;
+
+		spdk_thread_send_msg(bdev->qos_thread, _spdk_bdev_abort_qos_queued_io, ch);
+
+		io_ch->async_destroying = true;
+	} else {
+		_spdk_bdev_channel_cleanup_resource(ch);
+	}
 }
 
 static void
@@ -1262,7 +1340,7 @@ spdk_bdev_qos_channel_destroy(void *ctx)
 {
 	struct spdk_bdev_channel *qos_channel = ctx;
 
-	_spdk_bdev_channel_destroy(qos_channel);
+	_spdk_bdev_channel_cleanup_resource(qos_channel);
 
 	spdk_poller_unregister(&qos_channel->qos_poller);
 	free(qos_channel);
