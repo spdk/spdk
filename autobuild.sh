@@ -14,7 +14,7 @@ cd $rootdir
 date -u
 git describe --tags
 
-# Print some test system info out for he log
+# Print some test system info out for the log
 echo "** START ** Info for Hostname: $HOSTNAME"
 uname -a
 $MAKE cc_version
