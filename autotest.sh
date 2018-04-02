@@ -201,6 +201,7 @@ fi
 
 if [ $SPDK_TEST_VHOST_INIT -eq 1 ]; then
 	run_test ./test/vhost/initiator/blockdev.sh
+	report_test_completion "vhost_initiator"
 fi
 
 if [ $SPDK_TEST_NVML -eq 1 ]; then
