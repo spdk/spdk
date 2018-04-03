@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dd286f06_2c3e69c5",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 7
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-04-03T08:42:36Z",
+      "side": 1,
+      "message": "The message can have more details about this patch. And should begin with autotest.",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 71
+      },
+      "revId": "8e68e6d6ae1378e34246e8558442a3bdb1a427dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a96e714d_e1695518",
+        "filename": "test/iscsi_tgt/iscsi.conf",
+        "patchSetId": 7
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-04-03T08:42:36Z",
+      "side": 1,
+      "message": "I think other default parameter can be added into this file, like AuthFile, etc.",
+      "range": {
+        "startLine": 3,
+        "startChar": 0,
+        "endLine": 3,
+        "endChar": 7
+      },
+      "revId": "8e68e6d6ae1378e34246e8558442a3bdb1a427dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
