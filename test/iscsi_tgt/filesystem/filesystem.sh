@@ -8,7 +8,6 @@ source $rootdir/scripts/common.sh
 
 timing_enter filesystem
 
-
 rpc_py="python $rootdir/scripts/rpc.py"
 # Remove lvol bdevs and stores.
 function remove_backends()
@@ -22,6 +21,14 @@ function remove_backends()
 }
 
 timing_enter start_iscsi_tgt
+
+cp $testdir/../iscsi.conf $testdir/iscsi.conf
+cat << EOF >> $testdir/iscsi.conf
+  AuthFile /usr/local/etc/spdk/auth.conf
+  MaxSessions 16
+  ImmediateData Yes
+  ErrorRecoveryLevel 0
+EOF
 
 $ISCSI_APP -c $testdir/iscsi.conf -m $ISCSI_TEST_CORE_MASK &
 pid=$!
@@ -105,4 +112,5 @@ trap - SIGINT SIGTERM EXIT
 remove_backends
 iscsicleanup
 killprocess $pid
+rm -f $testdir/iscsi.conf
 timing_exit filesystem
