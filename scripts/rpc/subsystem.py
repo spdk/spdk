@@ -38,3 +38,7 @@ def initialize_iscsi_subsystem(client, args):
 
 def initialize_bdev_subsystem(client):
     return client.call('initialize_bdev_subsystem')
+
+
+def initialize_scsi_subsystem(client):
+    return client.call('initialize_scsi_subsystem')

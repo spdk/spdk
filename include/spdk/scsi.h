@@ -145,9 +145,10 @@ struct spdk_scsi_task {
 struct spdk_scsi_port;
 struct spdk_scsi_dev;
 struct spdk_scsi_lun;
+struct spdk_json_write_ctx;
 
 int spdk_scsi_init(void);
-
+void spdk_scsi_config_json(struct spdk_json_write_ctx *w);
 void spdk_scsi_fini(void);
 
 int spdk_scsi_lun_get_id(const struct spdk_scsi_lun *lun);

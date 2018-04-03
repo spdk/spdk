@@ -39,6 +39,8 @@
 
 #include "scsi/scsi.c"
 
+#include "unit/lib/json_mock.c"
+
 static void
 scsi_init(void)
 {

@@ -34,6 +34,8 @@
 
 #include "scsi_internal.h"
 
+#include "spdk/json.h"
+
 struct spdk_scsi_globals g_spdk_scsi;
 
 int
@@ -48,6 +50,17 @@ spdk_scsi_init(void)
 	}
 
 	return 0;
+}
+
+void
+spdk_scsi_config_json(struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "method");
+	spdk_json_write_string(w, "initialize_scsi_subsystem");
+
+	spdk_json_write_object_end(w);
 }
 
 void

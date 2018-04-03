@@ -31,43 +31,49 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/stdinc.h"
-
 #include "spdk/scsi.h"
 
-#include "spdk_internal/event.h"
+#include "spdk/rpc.h"
+#include "spdk/util.h"
+#include "spdk/event.h"
+
+#include "spdk_internal/log.h"
 
 static void
-spdk_scsi_subsystem_init(void)
+spdk_rpc_initialize_scsi_subsystem(struct spdk_jsonrpc_request *request,
+				   const struct spdk_json_val *params)
 {
+	struct spdk_json_write_ctx *w;
 	int rc;
 
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "initialize_scsi_subsystem requnires no parameters");
+		return;
+	}
+
+	/* TODO: Support JSON config file */
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+					 "Internal error");
+	return;
+
 	rc = spdk_scsi_init();
+	if (rc != 0) {
+		SPDK_ERRLOG("spdk_scsi_init() failed\n");
+		goto invalid;
+	}
 
-	spdk_subsystem_init_next(rc);
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 "Invalid parameters");
 }
-
-static void
-spdk_scsi_subsystem_fini(void)
-{
-	spdk_scsi_fini();
-	spdk_subsystem_fini_next();
-}
-
-static void
-spdk_scsi_subsystem_config_json(struct spdk_json_write_ctx *w, struct spdk_event *done_ev)
-{
-	spdk_scsi_config_json(w);
-	spdk_event_call(done_ev);
-}
-
-static struct spdk_subsystem g_spdk_subsystem_scsi = {
-	.name = "scsi",
-	.init = spdk_scsi_subsystem_init,
-	.fini = spdk_scsi_subsystem_fini,
-	.config = NULL,
-	.write_config_json = spdk_scsi_subsystem_config_json,
-};
-
-SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_scsi);
-SPDK_SUBSYSTEM_DEPEND(scsi, bdev)
+SPDK_RPC_REGISTER("initialize_scsi_subsystem", spdk_rpc_initialize_scsi_subsystem)
