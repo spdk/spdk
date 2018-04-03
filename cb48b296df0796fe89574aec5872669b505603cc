@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "370880b4_99250f11",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-03T00:13:56Z",
+      "side": 1,
+      "message": "Could this be even simpler, and just embed the spdk_nvme_async_event_completion directly into this structure?  That both saves space (the pointer is 8 bytes, while the completion is only 4 bytes) plus avoids a calloc/free.\n\nThen you can just check the async_event_type to know if it is pending or not - if it\u0027s zero, it is not pending.  Otherwise assert that it equals EVENT_TYPE_NOTICE.",
+      "revId": "cb48b296df0796fe89574aec5872669b505603cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
