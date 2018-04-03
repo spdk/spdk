@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "47c7182f_40d367a9",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1012287
+      },
+      "writtenOn": "2018-04-03T07:06:13Z",
+      "side": 1,
+      "message": "rolling back to check_format.sh\u0027s result.",
+      "revId": "c8c7c7c6bd0133ec7d85f0d97ecd210c37884844",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
