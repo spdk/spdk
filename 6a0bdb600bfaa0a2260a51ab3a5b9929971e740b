@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6f2dbba3_77eb972c",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 858,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-03T22:58:44Z",
+      "side": 1,
+      "message": "I know you moved the strdup into verify, but I actually think it needs to be here. The value you want to strdup is a potential value passed in by the user, not the global constant default.",
+      "revId": "6a0bdb600bfaa0a2260a51ab3a5b9929971e740b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
