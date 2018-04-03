@@ -1105,6 +1105,8 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->kas = 10;
 
 		cdata->rab = 6;
+		cdata->cmic.multi_port = 1;
+		cdata->cmic.multi_host = 1;
 		cdata->ctratt.host_id_exhid_supported = 1;
 		cdata->aerl = 0;
 		cdata->frmw.slot1_ro = 1;
