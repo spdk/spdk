@@ -16,6 +16,24 @@
       "revId": "cb48b296df0796fe89574aec5872669b505603cc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f0fc732_1b8785b9",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-04-03T00:29:06Z",
+      "side": 1,
+      "message": "The method you mentioned works, this is the first step to add NOTICE event type, we should add ERROR event type later, for ERROR event type, using a link head for event makes more sense, because there are several events for ERROR type, each should only be cleared by GET LOG page.",
+      "parentUuid": "370880b4_99250f11",
+      "revId": "cb48b296df0796fe89574aec5872669b505603cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
