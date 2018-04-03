@@ -128,6 +128,16 @@ spdk_nvmf_parse_nvmf_tgt(void)
 	return 0;
 }
 
+static void
+spdk_nvmf_tgt_listen_done(void *cb_arg, int status)
+{
+	/* TODO: Config parsing should wait for this operation to finish. */
+
+	if (status) {
+		SPDK_ERRLOG("Failed to listen on transport address\n");
+	}
+}
+
 static int
 spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 {
@@ -284,12 +294,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		snprintf(trid.trsvcid, sizeof(trid.trsvcid), "%s", port);
 		free(address_dup);
 
-		ret = spdk_nvmf_tgt_listen(g_spdk_nvmf_tgt, &trid);
-		if (ret) {
-			SPDK_ERRLOG("Failed to listen on transport %s address %s\n",
-				    transport, address);
-			continue;
-		}
+		spdk_nvmf_tgt_listen(g_spdk_nvmf_tgt, &trid, spdk_nvmf_tgt_listen_done, NULL);
 
 		spdk_nvmf_subsystem_add_listener(subsystem, &trid);
 	}
