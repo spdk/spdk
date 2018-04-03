@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8ef059a2_095baa80",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-03T04:43:32Z",
+      "side": 1,
+      "message": "please align to the above by adding two tabs.",
+      "range": {
+        "startLine": 94,
+        "startChar": 5,
+        "endLine": 94,
+        "endChar": 6
+      },
+      "revId": "a959ee13b32ea92d2622c990549a91d39b7349ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa8196d2_ab7321cf",
+        "filename": "lib/event/app.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 373,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-03T04:43:32Z",
+      "side": 1,
+      "message": "please change to \"goto app_start_log_close_err\" because log must be closed and conf must be freed.",
+      "range": {
+        "startLine": 373,
+        "startChar": 3,
+        "endLine": 373,
+        "endChar": 12
+      },
+      "revId": "a959ee13b32ea92d2622c990549a91d39b7349ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0e8864b_9df4d32a",
+        "filename": "lib/event/app.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 383,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-03T04:43:32Z",
+      "side": 1,
+      "message": "same as above",
+      "range": {
+        "startLine": 383,
+        "startChar": 3,
+        "endLine": 383,
+        "endChar": 12
+      },
+      "revId": "a959ee13b32ea92d2622c990549a91d39b7349ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
