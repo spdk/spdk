@@ -46,7 +46,7 @@ def save_config(client, args):
             file.write('\n')
 
 
-def load_config(args):
+def load_config(client, args):
     if not args.filename or args.filename == '-':
         config = json.load(sys.stdin)
     else:
