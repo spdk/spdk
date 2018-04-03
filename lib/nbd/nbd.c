@@ -127,6 +127,17 @@ spdk_nbd_init(void)
 }
 
 void
+spdk_nbd_config_json(struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "method");
+	spdk_json_write_string(w, "initialize_nbd_subsystem");
+
+	spdk_json_write_object_end(w);
+}
+
+void
 spdk_nbd_fini(void)
 {
 	struct spdk_nbd_disk *nbd_idx, *nbd_tmp;

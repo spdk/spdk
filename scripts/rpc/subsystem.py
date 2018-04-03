@@ -42,3 +42,7 @@ def initialize_bdev_subsystem(client):
 
 def initialize_scsi_subsystem(client):
     return client.call('initialize_scsi_subsystem')
+
+
+def initialize_nbd_subsystem(client):
+    return client.call('initialize_nbd_subsystem')

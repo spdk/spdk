@@ -40,9 +40,10 @@ extern "C" {
 
 struct spdk_bdev;
 struct spdk_nbd_disk;
+struct spdk_json_write_ctx;
 
 int spdk_nbd_init(void);
-
+void spdk_nbd_config_json(struct spdk_json_write_ctx *w);
 void spdk_nbd_fini(void);
 
 struct spdk_nbd_disk *spdk_nbd_start(const char *bdev_name, const char *nbd_path);
