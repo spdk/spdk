@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c3ea6e89_a6fef1fc",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-03T23:20:37Z",
+      "side": 1,
+      "message": "I don\u0027t think you need another TAILQ_ENTRY. The request can only be on a single list at a time.",
+      "revId": "b9f1b31726525a58d465cc8af310c404da1a2041",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f012c63_586bf6b7",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-03T23:20:37Z",
+      "side": 1,
+      "message": "While this list does theoretically allow you to clean up all of the requests when the target shuts down, the issue is that some other part of the code is referencing these requests. When the target is killed, shouldn\u0027t that propagate through to those other components which then release their I/O back to this layer anyway? At least theoretically speaking, that\u0027s how it should work in my mind.",
+      "revId": "b9f1b31726525a58d465cc8af310c404da1a2041",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
