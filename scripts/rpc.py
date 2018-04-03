@@ -519,6 +519,7 @@ if __name__ == "__main__":
     p.set_defaults(func=rename_lvol_bdev)
 
     # Logical volume resize feature is disabled, as it is currently work in progress
+    # @call_cmd
     # def resize_lvol_bdev(args):
     #     rpc.lvol.resize_bdev(args.client, args)
     #
