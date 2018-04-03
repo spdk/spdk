@@ -111,28 +111,28 @@ struct spdk_vhost_virtqueue {
 
 } __attribute((aligned(SPDK_CACHE_LINE_SIZE)));
 
-struct spdk_vhost_dev_backend {
+struct spdk_vhost_tgt_backend {
 	uint64_t virtio_features;
 	uint64_t disabled_features;
 
 	/**
 	 * Callbacks for starting and pausing the device.
-	 * The first param is struct spdk_vhost_dev *.
+	 * The first param is struct spdk_vhost_tgt *.
 	 * The second one is event context that has to be
 	 * passed to spdk_vhost_dev_backend_event_done().
 	 */
 	spdk_vhost_event_fn start_device;
 	spdk_vhost_event_fn stop_device;
 
-	int (*vhost_get_config)(struct spdk_vhost_dev *vdev, uint8_t *config, uint32_t len);
-	int (*vhost_set_config)(struct spdk_vhost_dev *vdev, uint8_t *config,
+	int (*vhost_get_config)(struct spdk_vhost_tgt *vtgt, uint8_t *config, uint32_t len);
+	int (*vhost_set_config)(struct spdk_vhost_tgt *vtgt, uint8_t *config,
 				uint32_t offset, uint32_t size, uint32_t flags);
 
-	void (*dump_config_json)(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
-	int (*remove_device)(struct spdk_vhost_dev *vdev);
+	void (*dump_config_json)(struct spdk_vhost_tgt *vtgt, struct spdk_json_write_ctx *w);
+	int (*remove_device)(struct spdk_vhost_tgt *vtgt);
 };
 
-struct spdk_vhost_dev {
+struct spdk_vhost_tgt {
 	struct rte_vhost_memory *mem;
 	char *name;
 	char *path;
@@ -147,7 +147,7 @@ struct spdk_vhost_dev {
 	struct spdk_cpuset *cpumask;
 	bool registered;
 
-	const struct spdk_vhost_dev_backend *backend;
+	const struct spdk_vhost_tgt_backend *backend;
 
 	uint32_t coalescing_delay_time_base;
 
@@ -166,25 +166,25 @@ struct spdk_vhost_dev {
 
 	struct spdk_vhost_virtqueue virtqueue[SPDK_VHOST_MAX_VQUEUES];
 
-	TAILQ_ENTRY(spdk_vhost_dev) tailq;
+	TAILQ_ENTRY(spdk_vhost_tgt) tailq;
 };
 
-struct spdk_vhost_dev *spdk_vhost_dev_find(const char *ctrlr_name);
-void spdk_vhost_dev_mem_register(struct spdk_vhost_dev *vdev);
-void spdk_vhost_dev_mem_unregister(struct spdk_vhost_dev *vdev);
+struct spdk_vhost_tgt *spdk_vhost_tgt_find(const char *tgt_name);
+void spdk_vhost_tgt_mem_register(struct spdk_vhost_tgt *vtgt);
+void spdk_vhost_tgt_mem_unregister(struct spdk_vhost_tgt *vtgt);
 
-void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr);
+void *spdk_vhost_gpa_to_vva(struct spdk_vhost_tgt *vtgt, uint64_t addr);
 
 uint16_t spdk_vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *vq, uint16_t *reqs,
 				      uint16_t reqs_len);
-bool spdk_vhost_vq_should_notify(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq);
+bool spdk_vhost_vq_should_notify(struct spdk_vhost_tgt *vtgt, struct spdk_vhost_virtqueue *vq);
 
 /**
  * Get a virtio descriptor at given index in given virtqueue.
  * The descriptor will provide access to the entire descriptor
  * chain. The subsequent descriptors are accesible via
  * \c spdk_vhost_vring_desc_get_next.
- * \param vdev vhost device
+ * \param vtgt vhost target
  * \param vq virtqueue
  * \param req_idx descriptor index
  * \param desc pointer to be set to the descriptor
@@ -196,29 +196,29 @@ bool spdk_vhost_vq_should_notify(struct spdk_vhost_dev *vdev, struct spdk_vhost_
  * \return 0 on success, -1 if given index is invalid.
  * If -1 is returned, the content of params is undefined.
  */
-int spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq,
+int spdk_vhost_vq_get_desc(struct spdk_vhost_tgt *vtgt, struct spdk_vhost_virtqueue *vq,
 			   uint16_t req_idx, struct vring_desc **desc, struct vring_desc **desc_table,
 			   uint32_t *desc_table_size);
 
 /**
  * Send IRQ/call client (if pending) for \c vq.
- * \param vdev vhost device
+ * \param vtgt vhost target
  * \param vq virtqueue
  * \return
  *   0 - if no interrupt was signalled
  *   1 - if interrupt was signalled
  */
-int spdk_vhost_vq_used_signal(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq);
+int spdk_vhost_vq_used_signal(struct spdk_vhost_tgt *vtgt, struct spdk_vhost_virtqueue *vq);
 
 
 /**
  * Send IRQs for all queues that need to be signaled.
- * \param vdev vhost device
+ * \param vtgt vhost target
  * \param vq virtqueue
  */
-void spdk_vhost_dev_used_signal(struct spdk_vhost_dev *vdev);
+void spdk_vhost_tgt_used_signal(struct spdk_vhost_tgt *vtgt);
 
-void spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq,
+void spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_tgt *vtgt, struct spdk_vhost_virtqueue *vq,
 				     uint16_t id, uint32_t len);
 
 /**
@@ -236,23 +236,23 @@ int spdk_vhost_vring_desc_get_next(struct vring_desc **desc,
 				   struct vring_desc *desc_table, uint32_t desc_table_size);
 bool spdk_vhost_vring_desc_is_wr(struct vring_desc *cur_desc);
 
-int spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
+int spdk_vhost_vring_desc_to_iov(struct spdk_vhost_tgt *vtgt, struct iovec *iov,
 				 uint16_t *iov_index, const struct vring_desc *desc);
 
 static inline bool __attribute__((always_inline))
-spdk_vhost_dev_has_feature(struct spdk_vhost_dev *vdev, unsigned feature_id)
+spdk_vhost_tgt_has_feature(struct spdk_vhost_tgt *vtgt, unsigned feature_id)
 {
-	return vdev->negotiated_features & (1ULL << feature_id);
+	return vtgt->negotiated_features & (1ULL << feature_id);
 }
 
-int spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
-			    const struct spdk_vhost_dev_backend *backend);
-int spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev);
+int spdk_vhost_tgt_register(struct spdk_vhost_tgt *vtgt, const char *name, const char *mask_str,
+			    const struct spdk_vhost_tgt_backend *backend);
+int spdk_vhost_tgt_unregister(struct spdk_vhost_tgt *vtgt);
 
 int spdk_vhost_scsi_controller_construct(void);
 int spdk_vhost_blk_controller_construct(void);
-void spdk_vhost_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
-void spdk_vhost_dev_backend_event_done(void *event_ctx, int response);
+void spdk_vhost_dump_config_json(struct spdk_vhost_tgt *vtgt, struct spdk_json_write_ctx *w);
+void spdk_vhost_tgt_backend_event_done(void *event_ctx, int response);
 void spdk_vhost_lock(void);
 void spdk_vhost_unlock(void);
 
