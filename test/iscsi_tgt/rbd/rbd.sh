@@ -12,6 +12,13 @@ fi
 
 timing_enter rbd
 
+cp $testdir/../iscsi.conf $testdir/iscsi.conf
+cat << EOF >> $testdir/iscsi.conf
+  AuthFile /usr/local/etc/spdk/auth.conf
+  MaxSessions 16
+  ImmediateData Yes
+  ErrorRecoveryLevel 0
+EOF
 
 rpc_py="python $rootdir/scripts/rpc.py"
 fio_py="python $rootdir/scripts/fio.py"
@@ -48,12 +55,11 @@ sleep 1
 $fio_py 4096 1 randrw 1 verify
 $fio_py 131072 32 randrw 1 verify
 
-rm -f ./local-job0-0-verify.state
-
 trap - SIGINT SIGTERM EXIT
-
 iscsicleanup
 killprocess $pid
+rm -rf ./local-job*
+rm -rf $testdir/iscsi.conf
 
 report_test_completion "iscsi_rbd"
 timing_exit rbd

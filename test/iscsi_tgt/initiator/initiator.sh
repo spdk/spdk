@@ -14,6 +14,25 @@ rpc_py="python $rootdir/scripts/rpc.py"
 
 timing_enter start_iscsi_tgt
 
+cp $testdir/../iscsi.conf $testdir/iscsi.conf
+cat << EOF > $testdir/iscsi.conf
+[Global]
+  Comment "Global section"
+
+[iSCSI]
+  NodeBase "iqn.2016-06.io.spdk"
+  AuthFile /usr/local/etc/spdk/auth.conf
+  Timeout 30
+  DiscoveryAuthMethod Auto
+  MaxSessions 4
+  ImmediateData Yes
+  ErrorRecoveryLevel 0
+
+# Do not specify InitiatorGroup, PortalGroup, Malloc,
+#  or TargetNode entries here - the autotest.sh script
+#  will use RPC to set up this part of the configuration.
+EOF
+
 # Start the iSCSI target without using stub
 # Reason: Two SPDK processes will be started
 $rootdir/app/iscsi_tgt/iscsi_tgt -c $testdir/iscsi.conf -m 0x2 -p 1 -s 512 &
@@ -40,6 +59,7 @@ $rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdev.conf -q 128 -s 4096 -w ver
 trap - SIGINT SIGTERM EXIT
 
 killprocess $pid
+rm -f $testdir/iscsi.conf
 
 report_test_completion "iscsi_initiator"
 timing_exit initiator

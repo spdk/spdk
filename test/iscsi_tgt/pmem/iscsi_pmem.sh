@@ -17,6 +17,14 @@ fio_py="python $rootdir/scripts/fio.py"
 
 timing_enter iscsi_pmem
 
+cp $testdir/../iscsi.conf $testdir/iscsi.conf
+cat << EOF >> $testdir/iscsi.conf
+  AuthFile /usr/local/etc/spdk/auth.conf
+  MaxSessions 16
+  ImmediateData Yes
+  ErrorRecoveryLevel 0
+EOF
+
 timing_enter start_iscsi_target
 $ISCSI_APP -c $testdir/iscsi.conf -m $ISCSI_TEST_CORE_MASK &
 pid=$!
@@ -72,5 +80,6 @@ trap - SIGINT SIGTERM EXIT
 rm -f ./local-job*
 rm -f /tmp/pool_file*
 killprocess $pid
+rm -rf $testdir/iscsi.conf
 report_test_completion "nightly_iscsi_pmem"
 timing_exit iscsi_pmem

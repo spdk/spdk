@@ -11,9 +11,30 @@ fi
 
 timing_enter ext4test
 
-cp $testdir/iscsi.conf.in $testdir/iscsi.conf
-$rootdir/scripts/gen_nvme.sh >> $testdir/iscsi.conf
+cp $testdir/../iscsi.conf $testdir/iscsi.conf
+cat << EOF > $testdir/iscsi.conf
+[Global]
+  Comment "Global section"
 
+[iSCSI]
+  NodeBase "iqn.2013-06.com.intel.ch.spdk"
+  AuthFile /usr/local/etc/spdk/auth.conf
+  Timeout 30
+  DiscoveryAuthMethod Auto
+  MaxSessions 4
+  ImmediateData Yes
+  ErrorRecoveryLevel 0
+
+# Do not specify InitiatorGroup, PortalGroup, Malloc,
+#  or TargetNode entries here - the autotest.sh script
+#  will use RPC to set up this part of the configuration.
+
+[Malloc]
+  NumberOfLuns 1
+  LunSizeInMB 512
+EOF
+
+$rootdir/scripts/gen_nvme.sh >> $testdir/iscsi.conf
 
 rpc_py="python $rootdir/scripts/rpc.py"
 
@@ -115,8 +136,8 @@ done
 
 trap - SIGINT SIGTERM EXIT
 
-rm -f $testdir/iscsi.conf
 iscsicleanup
 killprocess $pid
+rm -f $testdir/iscsi.conf
 report_test_completion "nightly_iscsi_ext4test"
 timing_exit ext4test
