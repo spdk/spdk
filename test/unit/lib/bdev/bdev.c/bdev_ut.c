@@ -55,6 +55,12 @@ spdk_conf_section_get_nmval(struct spdk_conf_section *sp, const char *key, int i
 	return NULL;
 }
 
+static void
+_bdev_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
+{
+	fn(ctx);
+}
+
 void
 spdk_scsi_nvme_translate(const struct spdk_bdev_io *bdev_io,
 			 int *sc, int *sk, int *asc, int *ascq)
@@ -543,9 +549,11 @@ main(int argc, char **argv)
 		return CU_get_error();
 	}
 
+	spdk_allocate_thread(_bdev_send_msg, NULL, NULL, NULL, "thread0");
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
 	num_failures = CU_get_number_of_failures();
 	CU_cleanup_registry();
+	spdk_free_thread();
 	return num_failures;
 }
