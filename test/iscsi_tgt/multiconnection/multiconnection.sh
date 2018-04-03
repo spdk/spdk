@@ -88,8 +88,8 @@ sync
 trap - SIGINT SIGTERM EXIT
 remove_backends
 
-rm -f $testdir/iscsi.conf
-rm -f ./local-job*
 iscsicleanup
 killprocess $iscsipid
+rm -f $testdir/iscsi.conf
+rm -f ./local-job*
 timing_exit multiconnection
