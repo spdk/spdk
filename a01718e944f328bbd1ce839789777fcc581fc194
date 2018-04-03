@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d090db61_225526e9",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-04-03T01:25:13Z",
+      "side": 1,
+      "message": "You didn\u0027t create file \u0027/mnt/device/test\u0027 first, I assume the test will be failed.",
+      "revId": "a01718e944f328bbd1ce839789777fcc581fc194",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
