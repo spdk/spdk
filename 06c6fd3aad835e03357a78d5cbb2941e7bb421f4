@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "99dcb491_fad5210c",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-03T07:43:24Z",
+      "side": 1,
+      "message": "This looks to be copied from spdk_nvme_probe() and is not good.\n\ncb_ctx Opaque value passed at spdk_nvme_probe() ?",
+      "revId": "06c6fd3aad835e03357a78d5cbb2941e7bb421f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a2bb57c5_466e5bd1",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-03T07:43:24Z",
+      "side": 1,
+      "message": "similar to above",
+      "revId": "06c6fd3aad835e03357a78d5cbb2941e7bb421f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3fc88e68_2f51c4f2",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 365,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-03T07:43:24Z",
+      "side": 1,
+      "message": "similar to above",
+      "revId": "06c6fd3aad835e03357a78d5cbb2941e7bb421f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
