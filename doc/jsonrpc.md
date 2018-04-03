@@ -244,7 +244,7 @@ hosts                   | Optional | array       | Array of strings containing a
 allow_any_host          | Optional | boolean     | Allow any host (`true`) or enforce allowed host whitelist (`false`). Default: `false`.
 serial_number           | Required | string      | Serial number of virtual controller
 namespaces              | Optional | array       | Array of @ref rpc_construct_nvmf_subsystem_namespace objects. Default: No namespaces.
-MaxNamespaces           | Optional | number      | Maximum number of namespaces that can be attached to the subsystem. Default: 0 (Unlimited)
+max_namespaces          | Optional | number      | Maximum number of namespaces that can be attached to the subsystem. Default: 0 (Unlimited)
 
 ### listen_address {#rpc_construct_nvmf_subsystem_listen_address}
 
