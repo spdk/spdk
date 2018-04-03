@@ -31,67 +31,49 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \file
- * Net framework abstraction layer
- */
+#include "spdk/net.h"
 
-#ifndef SPDK_NET_H
-#define SPDK_NET_H
+#include "spdk/rpc.h"
+#include "spdk/util.h"
+#include "spdk/event.h"
 
-#include "spdk/stdinc.h"
+#include "spdk_internal/log.h"
 
-#include "spdk/queue.h"
+static void
+spdk_rpc_initialize_interface_subsystem(struct spdk_jsonrpc_request *request,
+					const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+	int rc;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "initialize_net_subsystem requnires no parameters");
+		return;
+	}
 
-struct spdk_sock;
-struct spdk_json_write_ctx;
+	/* TODO: Support JSON config file */
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+					 "Internal error");
+	return;
 
-struct spdk_net_framework {
-	const char *name;
+	rc = spdk_interface_init();
+	if (rc != 0) {
+		SPDK_ERRLOG("spdk_interface_init() failed\n");
+		goto invalid;
+	}
 
-	int (*init)(void);
-	void (*fini)(void);
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
 
-	STAILQ_ENTRY(spdk_net_framework) link;
-};
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+	return;
 
-void spdk_net_framework_register(struct spdk_net_framework *frame);
-
-#define SPDK_NET_FRAMEWORK_REGISTER(name, frame) \
-static void __attribute__((constructor)) net_framework_register_##name(void) \
-{ \
-	spdk_net_framework_register(frame); \
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 "Invalid parameters");
 }
-
-int spdk_interface_init(void);
-void spdk_interface_config_json(struct spdk_json_write_ctx *w);
-void spdk_interface_destroy(void);
-
-const char *spdk_net_framework_get_name(void);
-int spdk_net_framework_start(void);
-void spdk_net_framework_clear_socket_association(struct spdk_sock *sock);
-void spdk_net_framework_fini(void);
-
-#define SPDK_IFNAMSIZE		32
-#define SPDK_MAX_IP_PER_IFC	32
-
-struct spdk_interface {
-	char name[SPDK_IFNAMSIZE];
-	uint32_t index;
-	uint32_t num_ip_addresses; /* number of IP addresses defined */
-	uint32_t ip_address[SPDK_MAX_IP_PER_IFC];
-	TAILQ_ENTRY(spdk_interface)	tailq;
-};
-
-int spdk_interface_add_ip_address(int ifc_index, char *ip_addr);
-int spdk_interface_delete_ip_address(int ifc_index, char *ip_addr);
-void *spdk_interface_get_list(void);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* SPDK_NET_H */
+SPDK_RPC_REGISTER("initialize_interface_subsystem", spdk_rpc_initialize_interface_subsystem)

@@ -727,6 +727,12 @@ if __name__ == "__main__":
     p = subparsers.add_parser('initialize_nbd_subsystem', help="""Initialize NBD subsystem""")
     p.set_defaults(func=initialize_nbd_subsystem)
 
+    def initialize_interface_subsystem(args):
+        rpc.subsystem.initialize_interface_subsystem(args.client)
+
+    p = subparsers.add_parser('initialize_interface_subsystem', help="""Initialize interface subsystem""")
+    p.set_defaults(func=initialize_interface_subsystem)
+
     # vhost
     def set_vhost_controller_coalescing(args):
         rpc.vhost.set_vhost_controller_coalescing(args.client, args)

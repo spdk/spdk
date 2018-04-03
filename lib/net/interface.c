@@ -36,6 +36,7 @@
 
 #include "spdk/log.h"
 #include "spdk/net.h"
+#include "spdk/json.h"
 
 #ifdef __linux__ /* Interface management is Linux-specific */
 
@@ -431,6 +432,17 @@ spdk_interface_init(void)
 	}
 
 	return rc;
+}
+
+void
+spdk_interface_config_json(struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "method");
+	spdk_json_write_string(w, "initialize_interface_subsystem");
+
+	spdk_json_write_object_end(w);
 }
 
 void
