@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cbbeea87_ed70347d",
+        "filename": "lib/copy/ioat/copy_engine_ioat.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-03T19:09:33Z",
+      "side": 1,
+      "message": "but since you removed the \"return 0\", I think you need to do this here instead:\n\nif (g_ioat_disable) {\n    return 0;\n}\n\nOtherwise we will still initialize and use the IOAT channels, even if the user requested to disable them.",
+      "revId": "75653a609e7201338f7a2bf61f100773347f0d17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
