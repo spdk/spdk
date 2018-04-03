@@ -31,7 +31,7 @@ if __name__ == "__main__":
     subparsers = parser.add_subparsers(help='RPC methods')
 
     def get_rpc_methods(args):
-        print_dict(rpc.get_rpc_methods(args.client, args))
+        print_dict(rpc.get_rpc_methods(args.client))
 
     p = subparsers.add_parser('get_rpc_methods', help='Get list of supported RPC methods')
     p.set_defaults(func=get_rpc_methods)
