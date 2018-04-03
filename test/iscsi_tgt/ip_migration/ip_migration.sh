@@ -34,6 +34,13 @@ function rpc_add_target_node() {
 
 timing_enter ip_migration
 
+cp $testdir/../iscsi.conf $testdir/iscsi.conf
+cat << EOF >> $testdir/iscsi.conf
+  AuthFile /usr/local/etc/spdk/auth.conf
+  MaxSessions 64
+  ImmediateData Yes
+  ErrorRecoveryLevel 0
+EOF
 
 echo "Running ip migration tests"
 for ((i=0; i<2; i++))
@@ -86,4 +93,5 @@ iscsicleanup
 
 $rpc_py -s $rpc_second_addr kill_instance SIGTERM
 report_test_completion "nightly_iscsi_ip_migration"
+rm -f $testdir/iscsi.conf
 timing_exit ip_migration
