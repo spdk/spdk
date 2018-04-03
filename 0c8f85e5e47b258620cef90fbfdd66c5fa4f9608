@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b085e409_00671b97",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-03T08:35:34Z",
+      "side": 1,
+      "message": "What file?",
+      "range": {
+        "startLine": 58,
+        "startChar": 102,
+        "endLine": 59,
+        "endChar": 58
+      },
+      "revId": "0c8f85e5e47b258620cef90fbfdd66c5fa4f9608",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "788cbb2a_303b7302",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-03T08:35:34Z",
+      "side": 1,
+      "message": "What file?",
+      "range": {
+        "startLine": 62,
+        "startChar": 106,
+        "endLine": 63,
+        "endChar": 58
+      },
+      "revId": "0c8f85e5e47b258620cef90fbfdd66c5fa4f9608",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17f9d284_d88a98d1",
+        "filename": "test/vhost/json_config/json_config.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-03T08:35:34Z",
+      "side": 1,
+      "message": "Pls use unified format.",
+      "range": {
+        "startLine": 45,
+        "startChar": 3,
+        "endLine": 45,
+        "endChar": 9
+      },
+      "revId": "0c8f85e5e47b258620cef90fbfdd66c5fa4f9608",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc05024f_c8dfb0a7",
+        "filename": "test/vhost/json_config/json_config.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-03T08:35:34Z",
+      "side": 1,
+      "message": "why \"|| true\" ?",
+      "range": {
+        "startLine": 46,
+        "startChar": 53,
+        "endLine": 46,
+        "endChar": 60
+      },
+      "revId": "0c8f85e5e47b258620cef90fbfdd66c5fa4f9608",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
