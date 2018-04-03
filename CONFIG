@@ -90,8 +90,8 @@ CONFIG_VHOST?=y
 # Build vhost initiator (Virtio) driver.
 CONFIG_VIRTIO?=y
 
-# Build with NVML backends
-CONFIG_NVML?=n
+# Build with PMDK backends
+CONFIG_PMDK?=n
 
 # Build with VPP
 CONFIG_VPP?=n
