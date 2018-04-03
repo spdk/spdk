@@ -709,6 +709,12 @@ if __name__ == "__main__":
     p.add_argument('-u', '--min-connections-per-session', help='Allocation unit of connections per core', type=int)
     p.set_defaults(func=initialize_iscsi_subsystem)
 
+    def initialize_bdev_subsystem(args):
+        rpc.subsystem.initialize_bdev_subsystem(args.client)
+
+    p = subparsers.add_parser('initialize_bdev_subsystem', help="""Initialize BDEV subsystem""")
+    p.set_defaults(func=initialize_bdev_subsystem)
+
     # vhost
     def set_vhost_controller_coalescing(args):
         rpc.vhost.set_vhost_controller_coalescing(args.client, args)

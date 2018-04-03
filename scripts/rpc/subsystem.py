@@ -34,3 +34,7 @@ def initialize_iscsi_subsystem(client, args):
     if args.allow_duplicated_isid:
         params['allow_duplicated_isid'] = args.allow_duplicated_isid
     return client.call('initialize_iscsi_subsystem', params)
+
+
+def initialize_bdev_subsystem(client):
+    return client.call('initialize_bdev_subsystem')
