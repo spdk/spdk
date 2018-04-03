@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d45d1a7d_1530e278",
+        "filename": "include/spdk/net.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-03T19:43:33Z",
+      "side": 1,
+      "message": "Let\u0027s remove this spdk_net_framework_get_name() completely.  This was from the old implementation which only supported one framework at a time.\n\nYou can do this as part of this patch or a separate patch.  If you do it as part of this patch, please add an explanation in the git commit message.",
+      "revId": "edf2592d976464b839e865c63c02a56984b2383f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d06b59de_4ad52d01",
+        "filename": "include/spdk/net.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-03T19:43:33Z",
+      "side": 1,
+      "message": "Start all registered frameworks.",
+      "revId": "edf2592d976464b839e865c63c02a56984b2383f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "452e8d25_7fcdc7ce",
+        "filename": "include/spdk/net.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-03T19:43:33Z",
+      "side": 1,
+      "message": "Let\u0027s remove this function too.  It used to be needed for libuns (an old userspace TCP stack) but I don\u0027t think VPP needs it at all.  It was for clearing the association between a TCP socket and the CPU core that was accessing it - in cases where we want to move the TCP socket to be processed on a different core.\n\nAgain - you can remove it in this patch or a different patch.  If this patch, mention it in the commit message.",
+      "revId": "edf2592d976464b839e865c63c02a56984b2383f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "55e94ed5_20d5807e",
+        "filename": "include/spdk/net.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-03T19:43:33Z",
+      "side": 1,
+      "message": "Stop all registered frameworks.",
+      "revId": "edf2592d976464b839e865c63c02a56984b2383f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf3cb784_767225b5",
+        "filename": "include/spdk/net.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-03T19:43:33Z",
+      "side": 1,
+      "message": "The comments here and below are fine - but really I think all of the code between line 113 and 149 should go into a private lib/net/net.h header file.  These functions are not really part of the public API.\n\nGo ahead and keep these changes here in this patch.  Then can you create a separate patch that moves lines 113-149 into a new lib/net/net.h header file?",
+      "revId": "edf2592d976464b839e865c63c02a56984b2383f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
