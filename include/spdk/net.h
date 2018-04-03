@@ -72,6 +72,7 @@ void spdk_interface_destroy(void);
 
 const char *spdk_net_framework_get_name(void);
 int spdk_net_framework_start(void);
+void spdk_net_framework_config_json(struct spdk_json_write_ctx *w);
 void spdk_net_framework_clear_socket_association(struct spdk_sock *sock);
 void spdk_net_framework_fini(void);
 

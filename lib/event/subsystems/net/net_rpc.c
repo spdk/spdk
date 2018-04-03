@@ -77,3 +77,42 @@ invalid:
 					 "Invalid parameters");
 }
 SPDK_RPC_REGISTER("initialize_interface_subsystem", spdk_rpc_initialize_interface_subsystem)
+
+static void
+spdk_rpc_initialize_net_subsystem(struct spdk_jsonrpc_request *request,
+				  const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+	int rc;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "initialize_net_subsystem requnires no parameters");
+		return;
+	}
+
+	/* TODO: Support JSON config file */
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+					 "Internal error");
+	return;
+
+	rc = spdk_net_framework_start();
+	if (rc != 0) {
+		SPDK_ERRLOG("spdk_net_framework_start() failed\n");
+		goto invalid;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 "Invalid parameters");
+}
+SPDK_RPC_REGISTER("initialize_net_subsystem", spdk_rpc_initialize_net_subsystem)

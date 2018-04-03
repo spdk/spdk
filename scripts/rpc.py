@@ -733,6 +733,12 @@ if __name__ == "__main__":
     p = subparsers.add_parser('initialize_interface_subsystem', help="""Initialize interface subsystem""")
     p.set_defaults(func=initialize_interface_subsystem)
 
+    def initialize_net_subsystem(args):
+        rpc.subsystem.initialize_net_subsystem(args.client)
+
+    p = subparsers.add_parser('initialize_net_subsystem', help="""Initialize net subsystem""")
+    p.set_defaults(func=initialize_net_subsystem)
+
     # vhost
     def set_vhost_controller_coalescing(args):
         rpc.vhost.set_vhost_controller_coalescing(args.client, args)

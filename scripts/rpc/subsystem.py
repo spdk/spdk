@@ -50,3 +50,7 @@ def initialize_nbd_subsystem(client):
 
 def initialize_interface_subsystem(client):
     return client.call('initialize_interface_subsystem')
+
+
+def initialize_net_subsystem(client):
+    return client.call('initialize_net_subsystem')
