@@ -51,7 +51,7 @@ $valgrind $testdir/lib/bdev/scsi_nvme.c/scsi_nvme_ut
 $valgrind $testdir/lib/bdev/gpt/gpt.c/gpt_ut
 $valgrind $testdir/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut
 
-if grep -q '#define SPDK_CONFIG_NVML 1' $rootdir/config.h; then
+if grep -q '#define SPDK_CONFIG_PMDK 1' $rootdir/config.h; then
 	$valgrind $testdir/lib/bdev/pmem/bdev_pmem_ut
 fi
 
