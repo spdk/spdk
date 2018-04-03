@@ -35,7 +35,13 @@ $rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
 $rpc_py construct_target_node disk1 disk1_alias 'Malloc0:0' $PORTAL_TAG:$INITIATOR_TAG 256 -d
 sleep 1
 trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
+
+# Prepare config file for iSCSI initiator
+cp $testdir/bdev.conf.in $testdir/bdev.conf
+echo "[iSCSI_Initiator]" >> $testdir/bdev.conf
+echo "  URL iscsi://$TARGET_IP/iqn.2016-06.io.spdk:disk1/0 iSCSI0" >> $testdir/bdev.conf
 $rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdev.conf -q 128 -s 4096 -w verify -t 5 -d 512
+rm -f $testdir/bdev.conf
 
 trap - SIGINT SIGTERM EXIT
 
