@@ -70,6 +70,12 @@ An iSCSI initiator bdev module has been added to SPDK.  This module should be co
 experimental pending additional features and tests.  More details can be found in
 lib/bdev/iscsi/README.
 
+### PMDK
+
+The persistent memory (PMDK) bdev module is now enabled using --with-pmdk instead of
+--with-nvml.  This reflects the renaming of the persistent memory library from NVML to
+PMDK.
+
 ## v18.01: Blobstore Thin Provisioning
 
 ### Build System

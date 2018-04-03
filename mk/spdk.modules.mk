@@ -55,7 +55,7 @@ BLOCKDEV_MODULES_LIST += bdev_rbd
 BLOCKDEV_MODULES_DEPS += -lrados -lrbd
 endif
 
-ifeq ($(CONFIG_NVML),y)
+ifeq ($(CONFIG_PMDK),y)
 BLOCKDEV_MODULES_LIST += bdev_pmem
 BLOCKDEV_MODULES_DEPS += -lpmemblk
 endif
