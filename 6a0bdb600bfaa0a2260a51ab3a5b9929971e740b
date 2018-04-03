@@ -16,6 +16,24 @@
       "revId": "6a0bdb600bfaa0a2260a51ab3a5b9929971e740b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a2501ed9_baade9ad",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 858,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-03T23:31:44Z",
+      "side": 1,
+      "message": "Hi Ben, Thank you, I didn\u0027t notice that.\n\nThis patch was extracted from a patch to add JSON-RPC to initialize iSCSI subsystem.  However as we discussed today, I abandon JSON-RPC based subsystem initialization and I want to wait for Pawel\u0027s idea before updating this patch. Hence your feedback will be directly usable later.\n\nThanks,\nShuhei",
+      "parentUuid": "6f2dbba3_77eb972c",
+      "revId": "6a0bdb600bfaa0a2260a51ab3a5b9929971e740b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
