@@ -59,6 +59,14 @@ function iscsi_header_data_digest_test()
 
 timing_enter digests
 
+cp $testdir/../iscsi.conf $testdir/iscsi.conf
+cat << EOF >> $testdir/iscsi.conf
+  AuthFile /usr/local/etc/spdk/auth.conf
+  MaxSessions 16
+  ImmediateData Yes
+  ErrorRecoveryLevel 0
+EOF
+
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 
@@ -102,5 +110,6 @@ fi
 trap - SIGINT SIGTERM EXIT
 
 iscsicleanup
+rm -f $testdir/iscsi.conf
 killprocess $pid
 timing_exit digests

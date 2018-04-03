@@ -11,6 +11,17 @@ fi
 
 timing_enter calsoft
 
+cp $testdir/../iscsi.conf $testdir/iscsi.conf
+cat << EOF >> $testdir/iscsi.conf
+echo AuthFile /usr/local/etc/auth.conf
+echo DiscoveryAuthGroup AuthGroup1
+echo MaxSessions 256
+echo MaxR2T 256
+echo ErrorRecoveryLevel 2
+echo NopInInterval 10
+echo AllowDuplicateIsid Yes
+EOF
+
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 
@@ -55,6 +66,7 @@ fi
 
 trap - SIGINT SIGTERM EXIT
 
+rm -rf $testdir/iscsi.conf
 killprocess $pid
 timing_exit calsoft
 exit $failed

@@ -44,7 +44,20 @@ fi
 
 timing_enter fio
 
-cp $testdir/iscsi.conf.in $testdir/iscsi.conf
+cp $testdir/../iscsi.conf $testdir/iscsi.conf
+cat << EOF >> $testdir/iscsi.conf
+  AuthFile /usr/local/etc/spdk/auth.conf
+  MaxSessions 16
+  ImmediateData Yes
+  ErrorRecoveryLevel 0
+
+[Nvme]
+  RetryCount 4
+  Timeout 0
+  ActionOnTimeout None
+  AdminPollRate 100000
+  HotplugEnable Yes
+EOF
 
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=4096

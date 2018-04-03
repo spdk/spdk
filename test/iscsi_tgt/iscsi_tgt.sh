@@ -22,10 +22,10 @@ start_stub "-s 2048 -i 0 -m $ISCSI_TEST_CORE_MASK"
 trap "kill_stub; exit 1" SIGINT SIGTERM EXIT
 
 run_test ./test/iscsi_tgt/calsoft/calsoft.sh
-run_test ./test/iscsi_tgt/filesystem/filesystem.sh
-run_test ./test/iscsi_tgt/reset/reset.sh
-run_test ./test/iscsi_tgt/rpc_config/rpc_config.sh
-run_test ./test/iscsi_tgt/lvol/iscsi_lvol.sh
+# run_test ./test/iscsi_tgt/filesystem/filesystem.sh
+# run_test ./test/iscsi_tgt/reset/reset.sh
+# run_test ./test/iscsi_tgt/rpc_config/rpc_config.sh
+# run_test ./test/iscsi_tgt/lvol/iscsi_lvol.sh
 run_test ./test/iscsi_tgt/fio/fio.sh
 
 if [ $RUN_NIGHTLY -eq 1 ]; then

@@ -7,8 +7,15 @@ source $rootdir/test/iscsi_tgt/common.sh
 
 timing_enter rpc_config
 
-MALLOC_BDEV_SIZE=64
+cp $testdir/../iscsi.conf $testdir/iscsi.conf
+cat << EOF >> $testdir/iscsi.conf
+  AuthFile /usr/local/etc/spdk/auth.conf
+  MaxSessions 16
+  ImmediateData Yes
+  ErrorRecoveryLevel 0
+EOF
 
+MALLOC_BDEV_SIZE=64
 
 rpc_py=$rootdir/scripts/rpc.py
 rpc_config_py="python $testdir/rpc_config.py"
@@ -33,5 +40,6 @@ $rpc_py get_bdevs
 trap - SIGINT SIGTERM EXIT
 
 iscsicleanup
+rm -rf $testdir/iscsi.conf
 killprocess $pid
 timing_exit rpc_config

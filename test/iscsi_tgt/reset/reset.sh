@@ -9,6 +9,14 @@ source $rootdir/test/iscsi_tgt/common.sh
 
 timing_enter reset
 
+cp $testdir/../iscsi.conf $testdir/iscsi.conf
+cat << EOF >> $testdir/iscsi.conf
+  AuthFile /usr/local/etc/spdk/auth.conf
+  MaxSessions 16
+  ImmediateData Yes
+  ErrorRecoveryLevel 0
+EOF
+
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 
@@ -71,5 +79,6 @@ wait $fiopid || true
 trap - SIGINT SIGTERM EXIT
 
 iscsicleanup
+rm -rf $testdir/iscsi.conf
 killprocess $pid
 timing_exit reset
