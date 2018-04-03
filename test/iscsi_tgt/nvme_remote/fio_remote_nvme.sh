@@ -22,6 +22,14 @@ NVMF_PORT=4420
 
 timing_enter nvme_remote
 
+cp $testdir/../iscsi.conf $testdir/iscsi.conf
+cat << EOF >> $testdir/iscsi.conf
+  AuthFile /usr/local/etc/spdk/auth.conf
+  MaxSessions 16
+  ImmediateData Yes
+  ErrorRecoveryLevel 0
+EOF
+
 # Start the NVMf target
 $rootdir/app/nvmf_tgt/nvmf_tgt -c $rootdir/test/nvmf/nvmf.conf -m 0x2 -p 1 -s 512 &
 nvmfpid=$!
@@ -75,9 +83,9 @@ trap - SIGINT SIGTERM EXIT
 
 iscsicleanup
 killprocess $iscsipid
-rm -f $testdir/iscsi.conf.tmp
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 killprocess $nvmfpid
+rm -f $testdir/iscsi.conf*
 
 report_test_completion "iscsi_nvme_remote"
 timing_exit nvme_remote
