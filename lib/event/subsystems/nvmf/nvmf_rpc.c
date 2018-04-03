@@ -538,12 +538,15 @@ struct rpc_subsystem {
 static void
 free_rpc_subsystem(struct rpc_subsystem *req)
 {
-	free(req->mode);
-	free(req->nqn);
-	free(req->serial_number);
-	free_rpc_namespaces(&req->namespaces);
-	free_rpc_listen_addresses(&req->listen_addresses);
-	free_rpc_hosts(&req->hosts);
+	if (req) {
+		free(req->mode);
+		free(req->nqn);
+		free(req->serial_number);
+		free_rpc_namespaces(&req->namespaces);
+		free_rpc_listen_addresses(&req->listen_addresses);
+		free_rpc_hosts(&req->hosts);
+	}
+	free(req);
 }
 
 static void
@@ -574,19 +577,80 @@ static const struct spdk_json_object_decoder rpc_subsystem_decoders[] = {
 	{"max_namespaces", offsetof(struct rpc_subsystem, num_ns), spdk_json_decode_uint32, true},
 };
 
+struct subsystem_listen_ctx {
+	struct rpc_subsystem *req;
+	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_jsonrpc_request *request;
+
+	uint32_t idx;
+};
+
+static void
+spdk_rpc_construct_subsystem_listen_done(void *cb_arg, int status)
+{
+	struct subsystem_listen_ctx *ctx = cb_arg;
+	struct rpc_listen_address *addr;
+	struct spdk_nvme_transport_id trid = {0};
+
+	if (status) {
+		goto invalid;
+	}
+
+	addr = &ctx->req->listen_addresses.addresses[ctx->idx];
+	if (rpc_listen_address_to_trid(addr, &trid)) {
+		goto invalid;
+	}
+
+	spdk_nvmf_subsystem_add_listener(ctx->subsystem, &trid);
+
+	ctx->idx++;
+
+	if (ctx->idx < ctx->req->listen_addresses.num_listen_address) {
+		addr = &ctx->req->listen_addresses.addresses[ctx->idx];
+
+		if (rpc_listen_address_to_trid(addr, &trid)) {
+			goto invalid;
+		}
+
+		spdk_nvmf_tgt_listen(g_spdk_nvmf_tgt, &trid, spdk_rpc_construct_subsystem_listen_done, ctx);
+		return;
+	}
+
+	spdk_nvmf_subsystem_start(ctx->subsystem,
+				  spdk_rpc_nvmf_subsystem_started,
+				  ctx->request);
+
+	free_rpc_subsystem(ctx->req);
+	free(ctx);
+
+	return;
+
+invalid:
+	spdk_nvmf_subsystem_destroy(ctx->subsystem);
+	spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 "Invalid parameters");
+	free_rpc_subsystem(ctx->req);
+	free(ctx);
+}
+
 static void
 spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_request *request,
 				  const struct spdk_json_val *params)
 {
-	struct rpc_subsystem req = {};
+	struct rpc_subsystem *req;
 	struct spdk_nvmf_subsystem *subsystem;
 	size_t i;
 
-	req.core = -1;	/* Explicitly set the core as the uninitialized value */
+	req = calloc(1, sizeof(*req));
+	if (!req) {
+		goto invalid;
+	}
+
+	req->core = -1;	/* Explicitly set the core as the uninitialized value */
 
 	if (spdk_json_decode_object(params, rpc_subsystem_decoders,
 				    SPDK_COUNTOF(rpc_subsystem_decoders),
-				    &req)) {
+				    req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;
 	}
@@ -594,10 +658,10 @@ spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_request *request,
 	/* Mode is no longer a valid parameter, but print out a nice
 	 * message if it exists to inform users.
 	 */
-	if (req.mode) {
+	if (req->mode) {
 		SPDK_NOTICELOG("Mode present in the construct NVMe-oF subsystem RPC.\n"
 			       "Mode was removed as a valid parameter.\n");
-		if (strcasecmp(req.mode, "Virtual") == 0) {
+		if (strcasecmp(req->mode, "Virtual") == 0) {
 			SPDK_NOTICELOG("Your mode value is 'Virtual' which is now the only possible mode.\n"
 				       "Your RPC will work as expected.\n");
 		} else {
@@ -609,46 +673,31 @@ spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_request *request,
 	/* Core is no longer a valid parameter, but print out a nice
 	 * message if it exists to inform users.
 	 */
-	if (req.core != -1) {
+	if (req->core != -1) {
 		SPDK_NOTICELOG("Core present in the construct NVMe-oF subsystem RPC.\n"
 			       "Core was removed as an option. Subsystems can now run on all available cores.\n");
 		SPDK_NOTICELOG("Ignoring it and continuing.\n");
 	}
 
-	subsystem = spdk_nvmf_subsystem_create(g_spdk_nvmf_tgt, req.nqn, SPDK_NVMF_SUBTYPE_NVME,
-					       req.num_ns);
+	subsystem = spdk_nvmf_subsystem_create(g_spdk_nvmf_tgt, req->nqn, SPDK_NVMF_SUBTYPE_NVME,
+					       req->num_ns);
 	if (!subsystem) {
 		goto invalid;
 	}
 
-	if (spdk_nvmf_subsystem_set_sn(subsystem, req.serial_number)) {
-		SPDK_ERRLOG("Subsystem %s: invalid serial number '%s'\n", req.nqn, req.serial_number);
+	if (spdk_nvmf_subsystem_set_sn(subsystem, req->serial_number)) {
+		SPDK_ERRLOG("Subsystem %s: invalid serial number '%s'\n", req->nqn, req->serial_number);
 		goto invalid;
 	}
 
-	for (i = 0; i < req.hosts.num_hosts; i++) {
-		spdk_nvmf_subsystem_add_host(subsystem, req.hosts.hosts[i]);
+	for (i = 0; i < req->hosts.num_hosts; i++) {
+		spdk_nvmf_subsystem_add_host(subsystem, req->hosts.hosts[i]);
 	}
 
-	spdk_nvmf_subsystem_set_allow_any_host(subsystem, req.allow_any_host);
+	spdk_nvmf_subsystem_set_allow_any_host(subsystem, req->allow_any_host);
 
-	for (i = 0; i < req.listen_addresses.num_listen_address; i++) {
-		struct rpc_listen_address *addr = &req.listen_addresses.addresses[i];
-		struct spdk_nvme_transport_id trid = {0};
-
-		if (rpc_listen_address_to_trid(addr, &trid)) {
-			goto invalid;
-		}
-
-		if (spdk_nvmf_tgt_listen(g_spdk_nvmf_tgt, &trid)) {
-			goto invalid;
-		}
-
-		spdk_nvmf_subsystem_add_listener(subsystem, &trid);
-	}
-
-	for (i = 0; i < req.namespaces.num_ns; i++) {
-		struct spdk_nvmf_ns_params *ns_params = &req.namespaces.ns_params[i];
+	for (i = 0; i < req->namespaces.num_ns; i++) {
+		struct spdk_nvmf_ns_params *ns_params = &req->namespaces.ns_params[i];
 		struct spdk_bdev *bdev;
 		struct spdk_nvmf_ns_opts ns_opts;
 
@@ -675,7 +724,36 @@ spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_request *request,
 		}
 	}
 
-	free_rpc_subsystem(&req);
+	if (req->listen_addresses.num_listen_address > 0) {
+		struct rpc_listen_address *addr;
+		struct spdk_nvme_transport_id trid = {0};
+		struct subsystem_listen_ctx *ctx;
+
+		ctx = calloc(1, sizeof(*ctx));
+		if (!ctx) {
+			spdk_nvmf_subsystem_destroy(subsystem);
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "No Memory");
+			free_rpc_subsystem(req);
+			return;
+		}
+
+		ctx->req = req;
+		ctx->subsystem = subsystem;
+		ctx->request = request;
+		ctx->idx = 0;
+
+		addr = &req->listen_addresses.addresses[0];
+
+		if (rpc_listen_address_to_trid(addr, &trid)) {
+			free(ctx);
+			goto invalid;
+		}
+
+		spdk_nvmf_tgt_listen(g_spdk_nvmf_tgt, &trid, spdk_rpc_construct_subsystem_listen_done, ctx);
+		return;
+	}
+
+	free_rpc_subsystem(req);
 
 	spdk_nvmf_subsystem_start(subsystem,
 				  spdk_rpc_nvmf_subsystem_started,
@@ -685,7 +763,7 @@ spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_request *request,
 
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-	free_rpc_subsystem(&req);
+	free_rpc_subsystem(req);
 }
 SPDK_RPC_REGISTER("construct_nvmf_subsystem", spdk_rpc_construct_nvmf_subsystem)
 
@@ -766,6 +844,7 @@ enum nvmf_rpc_listen_op {
 
 struct nvmf_rpc_listener_ctx {
 	char				*nqn;
+	struct spdk_nvmf_subsystem	*subsystem;
 	struct rpc_listen_address	address;
 
 	struct spdk_jsonrpc_request	*request;
@@ -814,42 +893,58 @@ nvmf_rpc_listen_resumed(struct spdk_nvmf_subsystem *subsystem,
 }
 
 static void
+nvmf_rpc_tgt_listen(void *cb_arg, int status)
+{
+	struct nvmf_rpc_listener_ctx *ctx = cb_arg;
+
+	if (status) {
+		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		ctx->response_sent = true;
+	} else {
+		if (spdk_nvmf_subsystem_add_listener(ctx->subsystem, &ctx->trid)) {
+			spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							 "Invalid parameters");
+			ctx->response_sent = true;
+		}
+	}
+
+	if (spdk_nvmf_subsystem_resume(ctx->subsystem, nvmf_rpc_listen_resumed, ctx)) {
+		if (!ctx->response_sent) {
+			spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+		}
+		nvmf_rpc_listener_ctx_free(ctx);
+		/* Can't really do anything to recover here - subsystem will remain paused. */
+	}
+}
+
+static void
 nvmf_rpc_listen_paused(struct spdk_nvmf_subsystem *subsystem,
 		       void *cb_arg, int status)
 {
 	struct nvmf_rpc_listener_ctx *ctx = cb_arg;
 
 	if (ctx->op == NVMF_RPC_LISTEN_ADD) {
-		if (spdk_nvmf_tgt_listen(g_spdk_nvmf_tgt, &ctx->trid)) {
-			SPDK_ERRLOG("Unable to add listener.\n");
-			goto invalid;
-		}
-
-		if (spdk_nvmf_subsystem_add_listener(subsystem, &ctx->trid)) {
-			goto invalid;
-		}
-
+		spdk_nvmf_tgt_listen(g_spdk_nvmf_tgt, &ctx->trid, nvmf_rpc_tgt_listen, ctx);
+		return;
 	} else if (ctx->op == NVMF_RPC_LISTEN_REMOVE) {
 		if (spdk_nvmf_subsystem_remove_listener(subsystem, &ctx->trid)) {
 			SPDK_ERRLOG("Unable to remove listener.\n");
-			goto invalid;
+			spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							 "Invalid parameters");
+			ctx->response_sent = true;
 		}
 	} else {
-		goto invalid;
+		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		ctx->response_sent = true;
 	}
-	if (spdk_nvmf_subsystem_resume(subsystem, nvmf_rpc_listen_resumed, ctx)) {
-		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
-		nvmf_rpc_listener_ctx_free(ctx);
-		return;
-	}
-	return;
 
-invalid:
-	spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-					 "Invalid parameters");
-	ctx->response_sent = true;
 	if (spdk_nvmf_subsystem_resume(subsystem, nvmf_rpc_listen_resumed, ctx)) {
-		SPDK_ERRLOG("Failed to resume subsystem\n");
+		if (!ctx->response_sent) {
+			spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+		}
+		nvmf_rpc_listener_ctx_free(ctx);
 		/* Can't really do anything to recover here - subsystem will remain paused. */
 	}
 }
@@ -885,6 +980,8 @@ nvmf_rpc_subsystem_add_listener(struct spdk_jsonrpc_request *request,
 		nvmf_rpc_listener_ctx_free(ctx);
 		return;
 	}
+
+	ctx->subsystem = subsystem;
 
 	if (rpc_listen_address_to_trid(&ctx->address, &ctx->trid)) {
 		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -934,6 +1031,8 @@ nvmf_rpc_subsystem_remove_listener(struct spdk_jsonrpc_request *request,
 		nvmf_rpc_listener_ctx_free(ctx);
 		return;
 	}
+
+	ctx->subsystem = subsystem;
 
 	if (rpc_listen_address_to_trid(&ctx->address, &ctx->trid)) {
 		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,

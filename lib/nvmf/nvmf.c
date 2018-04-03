@@ -215,14 +215,20 @@ spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt)
 }
 
 struct spdk_nvmf_tgt_listen_ctx {
+	struct spdk_nvmf_tgt *tgt;
 	struct spdk_nvmf_transport *transport;
 	struct spdk_nvme_transport_id trid;
+
+	spdk_nvmf_tgt_listen_done_fn cb_fn;
+	void *cb_arg;
 };
 
 static void
 spdk_nvmf_tgt_listen_done(struct spdk_io_channel_iter *i, int status)
 {
-	void *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_nvmf_tgt_listen_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+
+	ctx->cb_fn(ctx->cb_arg, status);
 
 	free(ctx);
 }
@@ -239,53 +245,60 @@ spdk_nvmf_tgt_listen_add_transport(struct spdk_io_channel_iter *i)
 	spdk_for_each_channel_continue(i, rc);
 }
 
-int
+void
 spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
-		     struct spdk_nvme_transport_id *trid)
+		     struct spdk_nvme_transport_id *trid,
+		     spdk_nvmf_tgt_listen_done_fn cb_fn,
+		     void *cb_arg)
 {
 	struct spdk_nvmf_transport *transport;
 	int rc;
+	bool propagate = false;
 
 	transport = spdk_nvmf_tgt_get_transport(tgt, trid->trtype);
 	if (!transport) {
-		struct spdk_nvmf_tgt_listen_ctx *ctx;
-
 		transport = spdk_nvmf_transport_create(tgt, trid->trtype);
 		if (!transport) {
 			SPDK_ERRLOG("Transport initialization failed\n");
-			return -EINVAL;
+			cb_fn(cb_arg, -EINVAL);
+			return;
 		}
 		TAILQ_INSERT_TAIL(&tgt->transports, transport, link);
 
-		ctx = calloc(1, sizeof(*ctx));
-		if (!ctx) {
-			return -ENOMEM;
-		}
-
-		ctx->trid = *trid;
-		ctx->transport = transport;
-
-		/* Send a message to each poll group to notify it that a new transport
-		 * is available.
-		 * TODO: This call does not currently allow the user to wait for these
-		 * messages to propagate. It also does not protect against two calls
-		 * to this function overlapping
-		 */
-		spdk_for_each_channel(tgt,
-				      spdk_nvmf_tgt_listen_add_transport,
-				      ctx,
-				      spdk_nvmf_tgt_listen_done);
+		propagate = true;
 	}
 
 	rc = spdk_nvmf_transport_listen(transport, trid);
 	if (rc < 0) {
 		SPDK_ERRLOG("Unable to listen on address '%s'\n", trid->traddr);
-		return rc;
+		cb_fn(cb_arg, rc);
+		return;
 	}
 
 	tgt->discovery_genctr++;
 
-	return 0;
+	if (propagate) {
+		struct spdk_nvmf_tgt_listen_ctx *ctx;
+
+		ctx = calloc(1, sizeof(*ctx));
+		if (!ctx) {
+			cb_fn(cb_arg, -ENOMEM);
+			return;
+		}
+
+		ctx->tgt = tgt;
+		ctx->transport = transport;
+		ctx->trid = *trid;
+		ctx->cb_fn = cb_fn;
+		ctx->cb_arg = cb_arg;
+
+		spdk_for_each_channel(tgt,
+				      spdk_nvmf_tgt_listen_add_transport,
+				      ctx,
+				      spdk_nvmf_tgt_listen_done);
+	} else {
+		cb_fn(cb_arg, 0);
+	}
 }
 
 struct spdk_nvmf_subsystem *
