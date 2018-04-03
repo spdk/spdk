@@ -61,9 +61,9 @@ Steps & expected results:
 From libpmemblk documentation:
 - PMEM block size has to be bigger than 512 internal blocks; if lower value
 is used then PMEM library will silently round it up to 512 which is defined
-in nvml/libpmemblk.h file as PMEMBLK_MIN_BLK.
+in pmem/libpmemblk.h file as PMEMBLK_MIN_BLK.
 - Total pool size cannot be less than 16MB which is defined i
-nvml/libpmemblk.h file as PMEMBLK_MIN_POOL
+pmem/libpmemblk.h file as PMEMBLK_MIN_POOL
 - Total number of segments in PMEP pool file cannot be less than 256
 
 #### create_pmem_pool_tc1

@@ -39,7 +39,7 @@ fi
 : ${SPDK_TEST_EVENT=1}; export SPDK_TEST_EVENT
 : ${SPDK_TEST_BLOBFS=1}; export SPDK_TEST_BLOBFS
 : ${SPDK_TEST_VHOST_INIT=1}; export SPDK_TEST_VHOST_INIT
-: ${SPDK_TEST_NVML=1}; export SPDK_TEST_NVML
+: ${SPDK_TEST_PMDK=1}; export SPDK_TEST_PMDK
 : ${SPDK_TEST_LVOL=1}; export SPDK_TEST_LVOL
 : ${SPDK_RUN_ASAN=1}; export SPDK_RUN_ASAN
 : ${SPDK_RUN_UBSAN=1}; export SPDK_RUN_UBSAN
@@ -106,7 +106,7 @@ if [ -f /usr/include/infiniband/verbs.h ]; then
 fi
 
 if [ -f /usr/include/libpmemblk.h ]; then
-	config_params+=' --with-nvml'
+	config_params+=' --with-pmdk'
 fi
 
 if [ -d /usr/src/fio ]; then

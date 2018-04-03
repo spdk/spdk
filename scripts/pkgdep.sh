@@ -18,7 +18,7 @@ if [ -s /etc/redhat-release ]; then
 	yum install -y numactl-devel
 	# Additional dependencies for building docs
 	yum install -y doxygen mscgen graphviz
-	# Additional dependencies for building nvml based backends
+	# Additional dependencies for building pmem based backends
 	yum install -y libpmemblk-devel || true
 elif [ -f /etc/debian_version ]; then
 	# Includes Ubuntu, Debian

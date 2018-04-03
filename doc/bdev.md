@@ -66,16 +66,16 @@ be 64MB in size.
 
 The SPDK pmem bdev driver uses pmemblk pool as the the target for block I/O operations.
 
-First, you need to compile SPDK with NVML:
+First, you need to compile SPDK with PMDK:
 ~~~
-./configure --with-nvml
+./configure --with-pmdk
 ~~~
-To create pmemblk pool for use with SPDK use pmempool tool included with NVML:
+To create pmemblk pool for use with SPDK use pmempool tool included with PMDK:
 Usage: pmempool create [<args>] <blk|log|obj> [<bsize>] <file>
 
 Example:
 ~~~
-./nvml/src/tools/pmempool/pmempool create -s 32000000 blk 512 /path/to/pmem_pool
+./pmdk/src/tools/pmempool/pmempool create -s 32000000 blk 512 /path/to/pmem_pool
 ~~~
 
 There is also pmem management included in SPDK RPC, it contains three calls:

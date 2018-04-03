@@ -114,10 +114,10 @@ LIBS += -L/usr/local/lib
 COMMON_CFLAGS += -I/usr/local/include
 endif
 
-# Attach only if NVML lib specified with configure
-ifneq ($(CONFIG_NVML_DIR),)
-LIBS += -L$(CONFIG_NVML_DIR)/src/nondebug
-COMMON_CFLAGS += -I$(CONFIG_NVML_DIR)/src/include
+# Attach only if PMDK lib specified with configure
+ifneq ($(CONFIG_PMDK_DIR),)
+LIBS += -L$(CONFIG_PMDK_DIR)/src/nondebug
+COMMON_CFLAGS += -I$(CONFIG_PMDK_DIR)/src/include
 endif
 
 ifneq ($(CONFIG_VPP_DIR),)
