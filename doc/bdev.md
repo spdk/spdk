@@ -250,9 +250,9 @@ Example commands
 
 The SPDK pmem bdev driver uses pmemblk pool as the target for block I/O operations. For
 details on Pmem memory please refer to PMDK documentation on http://pmem.io website.
-First, user needs to compile SPDK with NVML library:
+First, user needs to configure SPDK to include PMDK support:
 
-`configure --with-nvml`
+`configure --with-pmdk`
 
 To create pmemblk pool for use with SPDK user should use `create_pmem_pool` RPC command.
 
