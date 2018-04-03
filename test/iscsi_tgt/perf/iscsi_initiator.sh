@@ -7,6 +7,7 @@ testdir=$(readlink -f $(dirname $0))
 ISCSI_PORT=3260
 FIO_PATH=$1
 IP_T=$2
+USE_VPP=$3
 
 if [ ! -x $FIO_PATH/fio ]; then
 	error "Invalid path of fio binary"
@@ -17,7 +18,13 @@ function run_spdk_iscsi_fio(){
 }
 
 mkdir -p $testdir/perf_output
-iscsi_fio_results="$testdir/perf_output/iscsi_fio.json"
+
+if $USE_VPP; then
+	iscsi_fio_results="$testdir/perf_output/iscsi_vpp_fio.json"
+else
+	iscsi_fio_results="$testdir/perf_output/iscsi_fio.json"
+fi
+
 trap "iscsiadm -m node --logout; iscsiadm -m node -o delete; exit 1" ERR SIGTERM SIGABRT
 iscsiadm -m discovery -t sendtargets -p $IP_T:$ISCSI_PORT
 iscsiadm -m node --login -p $IP_T:$ISCSI_PORT

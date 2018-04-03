@@ -13,6 +13,7 @@ DISKNO="ALL"
 CPUMASK=0x02
 NUM_JOBS=1
 ISCSI_TGT_CM=0x02
+USE_VPP=false
 . $(readlink -e "$(dirname $0)/../common.sh")
 
 # Performance test for iscsi_tgt, run on devices with proper hardware support (target and inititator)
@@ -35,6 +36,8 @@ function usage()
 	echo "    --initiator_ip=IP     The IP adress of initiator used for test."
 	echo "    --init_mgmnt_ip=IP    The IP adress of initiator used for communication."
 	echo "    --iscsi_tgt_mask=HEX  iscsi_tgt core mask. [default=$ISCSI_TGT_CM]"
+	echo "    --with-vpp            Test iscsi_tgt with vpp enabled."
+	echo "    --dpdk_drv=STR        If vpp is enabled: name of the DPDK driver to bind to target NIC."
 }
 
 while getopts 'h-:' optchar; do
@@ -56,6 +59,8 @@ while getopts 'h-:' optchar; do
 			initiator_ip=*) INITIATOR_IP="${OPTARG#*=}" ;;
 			init_mgmnt_ip=*) IP_I_SSH="${OPTARG#*=}" ;;
 			iscsi_tgt_mask=*) ISCSI_TGT_CM="${OPTARG#*=}" ;;
+			with-vpp) USE_VPP=true ;;
+			dpdk_drv=*) DPDK_DRV="${OPTARG#*=}" ;;
 			*) usage $0 echo "Invalid argument '$OPTARG'"; exit 1 ;;
 		esac
 		;;
@@ -67,6 +72,11 @@ done
 . $(readlink -e "$(dirname $0)/../../common/autotest_common.sh") || exit 1
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
+trap "print_backtrace; exit 1" ERR SIGTERM SIGABRT
+TGT_NETMASK=$(ip a | grep $TARGET_IP | awk '{print $2}')
+TGT_INT=$(ip a | grep $TARGET_IP | awk '{print $NF}')
+TGT_INT_ADDR=$($rootdir/dpdk/usertools/dpdk-devbind.py --status | grep $TGT_INT | awk '{print $1}')
+TGT_INT_DRV=$($rootdir/dpdk/usertools/dpdk-devbind.py --status | grep -oP "(?<=$TGT_INT drv=).*" | awk '{print $1}')
 
 if [ -z "$TARGET_IP" ]; then
 	error "No IP adress of iscsi target is given"
@@ -80,6 +90,10 @@ if [ -z "$IP_I_SSH" ]; then
 	error "No IP adress of initiator is given"
 fi
 
+if $USE_VPP && [ -z "$DPDK_DRV" ]; then
+	error "No name of DPDK driver is given"
+fi
+
 if [[ $EUID -ne 0 ]]; then
 	error "INFO: Go away user come back as root"
 fi
@@ -88,18 +102,56 @@ function ssh_initiator(){
 	ssh -i $HOME/.ssh/spdk_vhost_id_rsa root@$IP_I_SSH "$@"
 }
 
+function setup_vpp_iscsi()
+{
+	if ! lsmod | grep $DPDK_DRV; then
+		modprobe $DPDK_DRV
+	fi
+
+	ip link set dev $TGT_INT down
+	sleep 1
+	$rootdir/dpdk/usertools/dpdk-devbind.py --bind=$DPDK_DRV $TGT_INT
+	sleep 1
+	systemctl start vpp
+	sleep 7
+	vpp_int_name=$(vppctl show int | grep Ethernet | awk '{print $1}')
+	vppctl set int ip address $vpp_int_name $TGT_NETMASK
+	vppctl set int state $vpp_int_name up
+	sleep 1
+}
+
+function clean_vpp_iscsi()
+{
+	sleep 1
+	vppctl set int state $vpp_int_name down
+	systemctl stop vpp
+	sleep 5
+	$rootdir/dpdk/usertools/dpdk-devbind.py --bind=$TGT_INT_DRV $TGT_INT_ADDR
+	sleep 1
+	ip link set dev $TGT_INT up
+}
+
 NETMASK=$INITIATOR_IP/32
 rpc_py="python $rootdir/scripts/rpc.py -s $testdir/rpc_iscsi.sock"
 iscsi_fio_results="$testdir/perf_output/iscsi_fio.json"
-rm -rf $iscsi_fio_results
-mkdir -p $testdir/perf_output
-touch $iscsi_fio_results
 
 timing_enter run_iscsi_app
-$rootdir/app/iscsi_tgt/iscsi_tgt -m $ISCSI_TGT_CM -r $testdir/rpc_iscsi.sock -c $testdir/iscsi.conf &
+if $USE_VPP; then
+	iscsi_fio_results="$testdir/perf_output/iscsi_vpp_fio.json"
+	trap "clean_vpp_iscsi; print_backtrace; exit 1" ERR SIGTERM SIGABRT
+	setup_vpp_iscsi
+fi
+
+$rootdir/app/iscsi_tgt/iscsi_tgt -r $testdir/rpc_iscsi.sock -c $testdir/iscsi.conf -m $ISCSI_TGT_CM &
 pid=$!
 waitforlisten "$pid" "$testdir/rpc_iscsi.sock"
-trap "rm -f $testdir/perf.job; killprocess $pid; print_backtrace; exit 1" ERR SIGTERM SIGABRT
+
+if $USE_VPP; then
+	trap "killprocess $pid; clean_vpp_iscsi; print_backtrace; exit 1" ERR SIGTERM SIGABRT
+else
+	trap "rm -f $testdir/perf.job; killprocess $pid; print_backtrace; exit 1" ERR SIGTERM SIGABRT
+fi
+
 sleep 1
 timing_exit run_iscsi_app
 
@@ -134,10 +186,20 @@ rm -f $testdir/perf.job
 timing_exit iscsi_config
 
 timing_enter iscsi_initiator
-ssh_initiator bash -s - < $testdir/iscsi_initiator.sh $FIO_PATH $TARGET_IP
+ssh_initiator bash -s - < $testdir/iscsi_initiator.sh $FIO_PATH $TARGET_IP $USE_VPP
 timing_exit iscsi_initiator
 
-ssh_initiator "cat perf_output/iscsi_fio.json" | cat  > $iscsi_fio_results
-ssh_initiator "rm -rf perf_output perf.job"
-
+sleep 3
 killprocess $pid
+
+rm -rf $iscsi_fio_results
+mkdir -p $testdir/perf_output
+touch $iscsi_fio_results
+if $USE_VPP; then
+	clean_vpp_iscsi
+	ssh_initiator "cat perf_output/iscsi_vpp_fio.json" | cat  > $iscsi_fio_results
+else
+	ssh_initiator "cat perf_output/iscsi_fio.json" | cat  > $iscsi_fio_results
+fi
+
+ssh_initiator "rm -rf perf_output perf.job"
