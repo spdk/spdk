@@ -2553,11 +2553,29 @@ _remove_notify(void *arg)
 	desc->remove_cb(desc->remove_ctx);
 }
 
+static void
+_destroy_bdev(void *arg)
+{
+	struct spdk_bdev	*bdev = arg;
+	spdk_bdev_unregister_cb	cb_fn = bdev->unregister_cb;
+	void			*cb_arg = bdev->unregister_ctx;
+	int			rc;
+
+	spdk_bdev_fini(bdev);
+
+	rc = bdev->fn_table->destruct(bdev->ctxt);
+	if (rc < 0) {
+		SPDK_ERRLOG("destruct failed\n");
+	}
+	if (rc <= 0 && cb_fn != NULL) {
+		cb_fn(cb_arg, rc);
+	}
+}
+
 void
 spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	struct spdk_bdev_desc	*desc, *tmp;
-	int			rc;
 	bool			do_destruct = true;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Removing bdev %s from list\n", bdev->name);
@@ -2591,15 +2609,7 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	TAILQ_REMOVE(&g_bdev_mgr.bdevs, bdev, link);
 	pthread_mutex_unlock(&bdev->mutex);
 
-	spdk_bdev_fini(bdev);
-
-	rc = bdev->fn_table->destruct(bdev->ctxt);
-	if (rc < 0) {
-		SPDK_ERRLOG("destruct failed\n");
-	}
-	if (rc <= 0 && cb_fn != NULL) {
-		cb_fn(cb_arg, rc);
-	}
+	spdk_thread_send_msg(spdk_get_thread(), _destroy_bdev, bdev);
 }
 
 int
