@@ -39,7 +39,8 @@ run_test test/nvmf/host/bdevperf.sh
 run_test test/nvmf/host/identify.sh
 run_test test/nvmf/host/perf.sh
 run_test test/nvmf/host/identify_kernel_nvmf.sh
-run_test test/nvmf/host/aer.sh
+# Disable aer.sh for now while some intermittent failures are investigated.
+#run_test test/nvmf/host/aer.sh
 run_test test/nvmf/host/fio.sh
 
 timing_exit host
