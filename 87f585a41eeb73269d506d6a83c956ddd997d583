@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b609cd71_695008c9",
+        "filename": "test/iscsi_tgt/rpc_config/rpc_config.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 489,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-04T19:18:02Z",
+      "side": 1,
+      "message": "why does this need to be commented out?",
+      "revId": "87f585a41eeb73269d506d6a83c956ddd997d583",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
