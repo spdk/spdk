@@ -59,6 +59,13 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 		      rsp->cid, rsp->cdw0, rsp->rsvd1,
 		      *(uint16_t *)&rsp->status);
 
+	if (req->qpair->ctrlr) {
+		struct spdk_nvmf_subsystem_poll_group *sgroup;
+
+		sgroup = &req->qpair->group->sgroups[req->qpair->ctrlr->subsys->id];
+		TAILQ_REMOVE(&sgroup->outstanding, req, link);
+	}
+
 	if (spdk_nvmf_transport_req_complete(req)) {
 		SPDK_ERRLOG("Transport request completion error!\n");
 	}
@@ -115,18 +122,29 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 	spdk_nvmf_request_exec_status status;
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
 
 	nvmf_trace_command(req->cmd, spdk_nvmf_qpair_is_admin_queue(qpair));
 
-	/* Check if the subsystem is paused (if there is a subsystem) */
-	if (qpair->ctrlr) {
-		struct spdk_nvmf_subsystem_poll_group *sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
-		if (sgroup->state != SPDK_NVMF_SUBSYSTEM_ACTIVE) {
-			/* The subsystem is not currently active. Queue this request. */
-			TAILQ_INSERT_TAIL(&sgroup->queued, req, link);
-			return;
+	if (spdk_unlikely(!qpair->ctrlr)) {
+		/* There is no controller. Only fabric commands can arrive without a controller */
+		status = spdk_nvmf_ctrlr_process_fabrics_cmd(req);
+		if (status == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
+			spdk_nvmf_request_complete(req);
 		}
+		return;
 	}
+
+	/* Check if the subsystem is paused */
+	sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
+	if (spdk_unlikely(sgroup->state != SPDK_NVMF_SUBSYSTEM_ACTIVE)) {
+		/* The subsystem is not currently active. Queue this request. */
+		TAILQ_INSERT_TAIL(&sgroup->queued, req, link);
+		return;
+	}
+
+	/* Place the request on the outstanding list so we can keep track of it */
+	TAILQ_INSERT_TAIL(&sgroup->outstanding, req, link);
 
 	if (spdk_unlikely(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC)) {
 		status = spdk_nvmf_ctrlr_process_fabrics_cmd(req);
