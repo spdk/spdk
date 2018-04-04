@@ -6,6 +6,10 @@ fi
 
 set -e
 
+# Export flag to skip the known bug that exists in librados
+# Bug is reported on ceph bug tracker with number 24078
+export ASAN_OPTIONS=new_delete_type_mismatch=0
+
 PS4=' \t	\$ '
 ulimit -c unlimited
 
