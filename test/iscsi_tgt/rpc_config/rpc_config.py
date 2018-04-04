@@ -402,7 +402,7 @@ def verify_get_interfaces(rpc_py):
     nics = json.loads(rpc.get_interfaces())
     nics_names = set(x["name"].encode('ascii', 'ignore') for x in nics)
     # parse ip link show to verify the get_interfaces result
-    ifcfg_nics = set(re.findall("\S+:\s(\S+):\s<.*", check_output(["ip", "link", "show"])))
+    ifcfg_nics = set(re.findall("\S+:\s(\S+?)(?:@\S+){0,1}:\s<.*", check_output(["ip", "link", "show"])))
     verify(nics_names == ifcfg_nics, 1, "get_interfaces returned {}".format(nics))
     print "verify_get_interfaces passed."
 
@@ -486,7 +486,10 @@ if __name__ == "__main__":
         verify_initiator_groups_rpc_methods(rpc_py, rpc_param)
         verify_target_nodes_rpc_methods(rpc_py, rpc_param)
         verify_scsi_devices_rpc_methods(rpc_py)
-        verify_iscsi_connection_rpc_methods(rpc_py)
+        # This test is removed due to kernel routing packets in host stack
+        # when handling connection between interfaces on same host.
+        # It is enabled back in next patch in series adding namespaces.
+        # verify_iscsi_connection_rpc_methods(rpc_py)
         verify_add_nvme_bdev_rpc_methods(rpc_py)
     except RpcException as e:
         print "{}. Exiting with status {}".format(e.message, e.retval)
