@@ -203,6 +203,10 @@ if [ $SPDK_TEST_PMDK -eq 1 ]; then
 	run_test ./test/pmem/pmem.sh -x
 fi
 
+if [ $SPDK_TEST_JSON -eq 1 ]; then
+	run_test ./test/bdev/bdevjson/json_config.sh
+fi
+
 timing_enter cleanup
 autotest_cleanup
 timing_exit cleanup
