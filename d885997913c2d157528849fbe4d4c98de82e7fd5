@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ee12e04e_26fbdf57",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1093,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-04T22:38:37Z",
+      "side": 1,
+      "message": "if it\u0027s not ascii, should we pick a different way to print out the bad sn string?",
+      "revId": "d885997913c2d157528849fbe4d4c98de82e7fd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
