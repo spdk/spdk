@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "34a4e695_2df697de",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 701,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-04T08:58:10Z",
+      "side": 1,
+      "message": "Can you pls change this function to return error code instead -1?",
+      "range": {
+        "startLine": 701,
+        "startChar": 6,
+        "endLine": 701,
+        "endChar": 32
+      },
+      "revId": "40437b373c3c0440b2bd88c32883cd704767d5cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c3d268d_e08fc998",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 710,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-04T08:58:10Z",
+      "side": 1,
+      "message": "This is not an error condition.",
+      "range": {
+        "startLine": 710,
+        "startChar": 2,
+        "endLine": 710,
+        "endChar": 12
+      },
+      "revId": "40437b373c3c0440b2bd88c32883cd704767d5cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c2484565_5372051e",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 750,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-04T08:58:10Z",
+      "side": 1,
+      "message": "ctrlr is not option so it can\u0027t be NULL here.",
+      "range": {
+        "startLine": 746,
+        "startChar": 0,
+        "endLine": 750,
+        "endChar": 2
+      },
+      "revId": "40437b373c3c0440b2bd88c32883cd704767d5cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
