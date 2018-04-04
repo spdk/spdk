@@ -91,6 +91,8 @@ struct spdk_nvmf_subsystem_poll_group {
 	uint32_t		num_channels;
 
 	enum spdk_nvmf_subsystem_state state;
+
+	TAILQ_HEAD(, spdk_nvmf_request)	queued;
 };
 
 struct spdk_nvmf_poll_group {
@@ -132,6 +134,8 @@ struct spdk_nvmf_request {
 	void				*data;
 	union nvmf_h2c_msg		*cmd;
 	union nvmf_c2h_msg		*rsp;
+
+	TAILQ_ENTRY(spdk_nvmf_request)	link;
 };
 
 struct spdk_nvmf_ns {
