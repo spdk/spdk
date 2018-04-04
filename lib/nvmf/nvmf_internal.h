@@ -85,12 +85,16 @@ struct spdk_nvmf_transport_poll_group {
 	TAILQ_ENTRY(spdk_nvmf_transport_poll_group)	link;
 };
 
+typedef void (*subsystem_poll_group_op_done)(void *cb_arg, int status);
+
 struct spdk_nvmf_subsystem_poll_group {
 	/* Array of channels for each namespace indexed by nsid - 1 */
 	struct spdk_io_channel	**channels;
 	uint32_t		num_channels;
 
-	enum spdk_nvmf_subsystem_state state;
+	enum spdk_nvmf_subsystem_state	state;
+	subsystem_poll_group_op_done	state_cb_fn;
+	void				*state_cb_arg;
 
 	TAILQ_HEAD(, spdk_nvmf_request)	queued;
 	TAILQ_HEAD(, spdk_nvmf_request) outstanding;
@@ -241,8 +245,10 @@ int spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
 				       struct spdk_nvmf_subsystem *subsystem);
 int spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
 		struct spdk_nvmf_subsystem *subsystem);
-int spdk_nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
-		struct spdk_nvmf_subsystem *subsystem);
+void spdk_nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
+		struct spdk_nvmf_subsystem *subsystem,
+		subsystem_poll_group_op_done cb_fn,
+		void *cb_arg);
 int spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 		struct spdk_nvmf_subsystem *subsystem);
 void spdk_nvmf_request_exec(struct spdk_nvmf_request *req);

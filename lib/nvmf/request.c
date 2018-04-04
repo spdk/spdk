@@ -50,6 +50,7 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_capsule_cmd *cap_hdr;
+	struct spdk_nvmf_subsystem_poll_group *sgroup = NULL;
 
 	rsp->sqid = 0;
 	rsp->status.p = 0;
@@ -66,14 +67,31 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 			  cap_hdr->fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT)) {
 		/* CONNECT commands don't actually get placed on the outstanding list. */
 	} else {
-		struct spdk_nvmf_subsystem_poll_group *sgroup;
-
 		sgroup = &req->qpair->group->sgroups[req->qpair->ctrlr->subsys->id];
 		TAILQ_REMOVE(&sgroup->outstanding, req, link);
 	}
 
 	if (spdk_nvmf_transport_req_complete(req)) {
 		SPDK_ERRLOG("Transport request completion error!\n");
+	}
+
+	if (sgroup) {
+		if (sgroup->state != SPDK_NVMF_SUBSYSTEM_ACTIVE && TAILQ_EMPTY(&sgroup->outstanding)) {
+			subsystem_poll_group_op_done cb_fn;
+			void *cb_arg;
+
+			/* The subsystem was transitioning to a new state, so it is waiting for
+			 * the outstanding I/O list to become empty. */
+			assert(sgroup->state_cb_fn != NULL);
+
+			cb_fn = sgroup->state_cb_fn;
+			cb_arg = sgroup->state_cb_arg;
+
+			sgroup->state_cb_fn = NULL;
+			sgroup->state_cb_arg = NULL;
+
+			cb_fn(cb_arg, 0);
+		}
 	}
 
 	return 0;
