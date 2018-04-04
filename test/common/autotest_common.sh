@@ -42,6 +42,7 @@ fi
 : ${SPDK_TEST_LVOL=1}; export SPDK_TEST_LVOL
 : ${SPDK_RUN_ASAN=1}; export SPDK_RUN_ASAN
 : ${SPDK_RUN_UBSAN=1}; export SPDK_RUN_UBSAN
+: ${SPDK_TEST_JSON=0}; export SPDK_TEST_JSON
 
 # pass our valgrind desire on to unittest.sh
 if [ $SPDK_RUN_VALGRIND -eq 0 ]; then
