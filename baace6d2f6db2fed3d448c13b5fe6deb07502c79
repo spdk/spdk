@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "991c892f_7bde17b9",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-04T19:03:50Z",
+      "side": 1,
+      "message": "Previously we did an mv instead of a cp -r - is there a reason to change that here?\n\nI think it\u0027s fine to change it - just curious why that was needed, since it doesn\u0027t seem related to this patch.",
+      "revId": "baace6d2f6db2fed3d448c13b5fe6deb07502c79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3d52da5_b045c5ad",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-04T19:03:50Z",
+      "side": 1,
+      "message": "\"custom fio\" might be misleading here - it might not be custom if this is being run a second time - /usr/src/fio would just contain the contents of what we copied there the first time this script was run",
+      "revId": "baace6d2f6db2fed3d448c13b5fe6deb07502c79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "663549a9_f8d43be7",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-04T19:03:50Z",
+      "side": 1,
+      "message": "maybe \"qemu already checked out\"?  makes it more consistent with other additions made in this patch",
+      "revId": "baace6d2f6db2fed3d448c13b5fe6deb07502c79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "24ac9051_dbf73649",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-04T19:03:50Z",
+      "side": 1,
+      "message": "should this also have a message that libiscsi has already been checked out?",
+      "revId": "baace6d2f6db2fed3d448c13b5fe6deb07502c79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
