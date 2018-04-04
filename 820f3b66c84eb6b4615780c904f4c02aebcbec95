@@ -62,6 +62,30 @@
       "revId": "820f3b66c84eb6b4615780c904f4c02aebcbec95",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "44d34efc_46c6adf0",
+        "filename": "test/vhost/migration/migration-tc2.sh",
+        "patchSetId": 50
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-04T08:08:48Z",
+      "side": 1,
+      "message": "vhost start timing is embedded in spdk_vhost_run",
+      "parentUuid": "225ac6d4_2c6b510e",
+      "range": {
+        "startLine": 86,
+        "startChar": 1,
+        "endLine": 86,
+        "endChar": 28
+      },
+      "revId": "820f3b66c84eb6b4615780c904f4c02aebcbec95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
