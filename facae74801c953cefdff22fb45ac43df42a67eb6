@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fd595968_355f4354",
+        "filename": "include/spdk/nbd.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-04T03:54:40Z",
+      "side": 1,
+      "message": "Sorry, layer may be more appropriate.",
+      "range": {
+        "startLine": 49,
+        "startChar": 39,
+        "endLine": 49,
+        "endChar": 45
+      },
+      "revId": "facae74801c953cefdff22fb45ac43df42a67eb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d7dfb072_ba4ce957",
+        "filename": "include/spdk/nbd.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-04T03:54:40Z",
+      "side": 1,
+      "message": "Start a network block device backed by the bdev?",
+      "range": {
+        "startLine": 61,
+        "startChar": 3,
+        "endLine": 61,
+        "endChar": 34
+      },
+      "revId": "facae74801c953cefdff22fb45ac43df42a67eb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8f1611a9_b489c87a",
+        "filename": "include/spdk/nbd.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-04T03:54:40Z",
+      "side": 1,
+      "message": "the registered network block device ?",
+      "range": {
+        "startLine": 64,
+        "startChar": 26,
+        "endLine": 64,
+        "endChar": 27
+      },
+      "revId": "facae74801c953cefdff22fb45ac43df42a67eb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e7adae4_7290b7f4",
+        "filename": "include/spdk/nbd.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-04T03:54:40Z",
+      "side": 1,
+      "message": "a pointer to the configuration of the registered network block device on success ?",
+      "revId": "facae74801c953cefdff22fb45ac43df42a67eb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2f1b59c4_1d8782a9",
+        "filename": "include/spdk/nbd.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-04T03:54:40Z",
+      "side": 1,
+      "message": "Adding SPDK as prefix may not be good?, for others too?",
+      "range": {
+        "startLine": 72,
+        "startChar": 20,
+        "endLine": 72,
+        "endChar": 24
+      },
+      "revId": "facae74801c953cefdff22fb45ac43df42a67eb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
