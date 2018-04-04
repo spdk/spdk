@@ -93,7 +93,7 @@ alloc_bvdev(void)
 					   SPDK_CACHE_LINE_SIZE, NULL);
 
 	SPDK_CU_ASSERT_FATAL(bvdev != NULL);
-	bvdev->vdev.backend = &vhost_blk_device_backend;
+	bvdev->vtgt.backend = &g_vhost_blk_tgt_backend;
 	return bvdev;
 }
 
@@ -103,8 +103,8 @@ vhost_blk_construct_test(void)
 	int rc;
 	struct spdk_bdev *ut_p_spdk_bdev = MOCK_PASS_THRU_P;
 
-	MOCK_SET(spdk_vhost_dev_unregister_fail, bool, false);
-	MOCK_SET(spdk_vhost_dev_register_fail, bool, false);
+	MOCK_SET(spdk_vhost_tgt_unregister_fail, bool, false);
+	MOCK_SET(spdk_vhost_tgt_register_fail, bool, false);
 
 	/* Create device with invalid name */
 	MOCK_SET_P(spdk_bdev_get_by_name, struct spdk_bdev *, NULL);
@@ -119,7 +119,7 @@ vhost_blk_construct_test(void)
 
 	/* Failed to construct controller */
 	MOCK_SET(spdk_bdev_open, int, 0);
-	MOCK_SET(spdk_vhost_dev_register_fail, bool, true);
+	MOCK_SET(spdk_vhost_tgt_register_fail, bool, true);
 	rc = spdk_vhost_blk_construct("vhost.0", "0x1", "Malloc0", true);
 	CU_ASSERT(rc != 0);
 
@@ -129,7 +129,7 @@ vhost_blk_construct_test(void)
 	CU_ASSERT(rc != 0);
 
 	/* Failed to set readonly as a feature and failed to remove controller */
-	MOCK_SET(spdk_vhost_dev_unregister_fail, bool, true);
+	MOCK_SET(spdk_vhost_tgt_unregister_fail, bool, true);
 	rc = spdk_vhost_blk_construct("vhost.0", "0x1", "Malloc0", true);
 	CU_ASSERT(rc != 0);
 }
@@ -143,14 +143,14 @@ vhost_blk_destroy_test(void)
 	bvdev = alloc_bvdev();
 
 	/* Device has an incorrect type */
-	bvdev->vdev.backend = NULL;;
-	rc = spdk_vhost_blk_destroy(&bvdev->vdev);
+	bvdev->vtgt.backend = NULL;;
+	rc = spdk_vhost_blk_destroy(&bvdev->vtgt);
 	CU_ASSERT(rc == -EINVAL);
 
 	/* Failed to remove device */
-	bvdev->vdev.backend = &vhost_blk_device_backend;
-	MOCK_SET(spdk_vhost_dev_unregister_fail, bool, true);
-	rc = spdk_vhost_blk_destroy(&bvdev->vdev);
+	bvdev->vtgt.backend = &g_vhost_blk_tgt_backend;
+	MOCK_SET(spdk_vhost_tgt_unregister_fail, bool, true);
+	rc = spdk_vhost_blk_destroy(&bvdev->vtgt);
 	CU_ASSERT(rc == -1);
 
 	if (rc != 0) {
