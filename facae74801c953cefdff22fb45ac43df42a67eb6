@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "629e7b61_b2d7a722",
+        "filename": "include/spdk/nbd.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-04T04:50:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fd595968_355f4354",
+      "range": {
+        "startLine": 49,
+        "startChar": 39,
+        "endLine": 49,
+        "endChar": 45
+      },
+      "revId": "facae74801c953cefdff22fb45ac43df42a67eb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d7dfb072_ba4ce957",
         "filename": "include/spdk/nbd.h",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2018-04-04T03:54:40Z",
       "side": 1,
       "message": "Start a network block device backed by the bdev?",
+      "range": {
+        "startLine": 61,
+        "startChar": 3,
+        "endLine": 61,
+        "endChar": 34
+      },
+      "revId": "facae74801c953cefdff22fb45ac43df42a67eb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b120fcff_36c68c67",
+        "filename": "include/spdk/nbd.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-04T04:50:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d7dfb072_ba4ce957",
       "range": {
         "startLine": 61,
         "startChar": 3,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "39fe6570_76256d3a",
+        "filename": "include/spdk/nbd.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-04T04:50:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8f1611a9_b489c87a",
+      "range": {
+        "startLine": 64,
+        "startChar": 26,
+        "endLine": 64,
+        "endChar": 27
+      },
+      "revId": "facae74801c953cefdff22fb45ac43df42a67eb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6e7adae4_7290b7f4",
         "filename": "include/spdk/nbd.h",
         "patchSetId": 2
@@ -88,6 +160,24 @@
     },
     {
       "key": {
+        "uuid": "0d93b055_35652bf0",
+        "filename": "include/spdk/nbd.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-04T04:50:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6e7adae4_7290b7f4",
+      "revId": "facae74801c953cefdff22fb45ac43df42a67eb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2f1b59c4_1d8782a9",
         "filename": "include/spdk/nbd.h",
         "patchSetId": 2
@@ -99,6 +189,30 @@
       "writtenOn": "2018-04-04T03:54:40Z",
       "side": 1,
       "message": "Adding SPDK as prefix may not be good?, for others too?",
+      "range": {
+        "startLine": 72,
+        "startChar": 20,
+        "endLine": 72,
+        "endChar": 24
+      },
+      "revId": "facae74801c953cefdff22fb45ac43df42a67eb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "569825d2_d591431e",
+        "filename": "include/spdk/nbd.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-04T04:50:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2f1b59c4_1d8782a9",
       "range": {
         "startLine": 72,
         "startChar": 20,
