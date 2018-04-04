@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e77f9af2_5855fa78",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-04T17:41:41Z",
+      "side": 1,
+      "message": "This name is in the public API, so it should be prefixed with spdk_ (or really spdk_nvmf_).",
+      "range": {
+        "startLine": 93,
+        "startChar": 15,
+        "endLine": 93,
+        "endChar": 29
+      },
+      "revId": "ff3f682f0f4a71e48f23315d7a47ce8d0c231bd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92f6a112_1d0784c7",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-04T17:41:41Z",
+      "side": 1,
+      "message": "This should probably tear down the subsystem instead of starting it.",
+      "revId": "ff3f682f0f4a71e48f23315d7a47ce8d0c231bd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "345e49c6_d889687a",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 728,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-04T17:41:41Z",
+      "side": 1,
+      "message": "It would be nice to keep allow_any_host next to the loop that adds hosts.",
+      "revId": "ff3f682f0f4a71e48f23315d7a47ce8d0c231bd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
