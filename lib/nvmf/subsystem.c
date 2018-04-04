@@ -61,6 +61,22 @@ enum spdk_nvmf_nqn_domain_states {
 	SPDK_NVMF_DOMAIN_ACCEPT_ANY = 2
 };
 
+/* Returns true if is a valid ASCII string as defined by the NVMe spec */
+static bool
+spdk_nvmf_valid_ascii_string(const void *buf, size_t size)
+{
+	const uint8_t *str = buf;
+	size_t i;
+
+	for (i = 0; i < size; i++) {
+		if (str[i] < 0x20 || str[i] > 0x7E) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 static bool
 spdk_nvmf_valid_nqn(const char *nqn)
 {
@@ -1070,6 +1086,12 @@ spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn
 	if (len > max_len) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Invalid sn \"%s\": length %zu > max %zu\n",
 			      sn, len, max_len);
+		return -1;
+	}
+
+	if (!spdk_nvmf_valid_ascii_string(sn, len)) {
+		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Non-ASCII sn\n");
+		SPDK_TRACEDUMP(SPDK_LOG_NVMF, "sn", sn, len);
 		return -1;
 	}
 
