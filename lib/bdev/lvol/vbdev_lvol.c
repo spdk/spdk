@@ -562,6 +562,58 @@ vbdev_lvol_destruct(void *ctx)
 	return 1;
 }
 
+static void
+_vbdev_lvol_delete_after_close_cb(void *cb_arg, int lvserrno)
+{
+	struct spdk_lvol *lvol = cb_arg;
+	struct spdk_bdev *bdev = lvol->bdev;
+
+	if (lvserrno != 0) {
+		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Could not close Lvol %s\n", lvol->unique_id);
+		spdk_bdev_destruct_done(bdev, lvserrno);
+		free(bdev->name);
+		free(bdev);
+		return;
+	}
+
+	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Lvol %s closed, begin destroying\n", lvol->unique_id);
+	spdk_lvol_destroy(lvol, _vbdev_lvol_destroy_cb, bdev);
+	pthread_mutex_unlock(lvol->mutex);
+}
+
+static void
+vbdev_lvol_delete(void *ctx)
+{
+	struct spdk_lvol *lvol = ctx;
+	char *alias;
+
+	assert(lvol != NULL);
+
+	alias = spdk_sprintf_alloc("%s/%s", lvol->lvol_store->name, lvol->name);
+	if (alias != NULL) {
+		spdk_bdev_alias_del(lvol->bdev, alias);
+		free(alias);
+	} else {
+		SPDK_ERRLOG("Cannot alloc memory for alias\n");
+	}
+
+	if (lvol->close_only) {
+		free(lvol->bdev->name);
+		free(lvol->bdev);
+		spdk_lvol_close(lvol, _vbdev_lvol_close_cb, NULL);
+	} else {
+		/* Lock lvol */
+		pthread_mutex_lock(lvol->mutex);
+		/* Check if it is possible to delete lvol */
+		if( spdk_lvol_deletable() == true) {
+			spdk_lvol_close(lvol, _vbdev_lvol_delete_after_close_cb, lvol);
+		} else {
+			/* throw an error */
+			pthread_mutex_unlock(lvol->mutex);
+		}
+	}
+}
+
 static int
 vbdev_lvol_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {

@@ -109,6 +109,7 @@ struct spdk_lvol {
 	int				ref_count;
 	bool				action_in_progress;
 	TAILQ_ENTRY(spdk_lvol) link;
+	pthread_mutex_t *mutex;
 };
 
 struct lvol_task {

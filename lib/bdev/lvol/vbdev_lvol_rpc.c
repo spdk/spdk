@@ -771,6 +771,98 @@ invalid:
 
 SPDK_RPC_REGISTER("resize_lvol_bdev", spdk_rpc_resize_lvol_bdev)
 
+
+struct rpc_delete_lvol {
+	char *name;
+};
+
+static void
+free_rpc_delete_lvol(struct rpc_delete_lvol *req)
+{
+	free(req->name);
+}
+
+static const struct spdk_json_object_decoder rpc_delete_lvol_decoders[] = {
+	{"name", offsetof(struct rpc_delete_lvolv, name), spdk_json_decode_string},
+};
+
+static void
+_spdk_rpc_delete_lvol_cb(void *cb_arg, int lvolerrno)
+{
+	struct spdk_json_write_ctx *w;
+	struct spdk_jsonrpc_request *request = cb_arg;
+
+	if (lvolerrno != 0) {
+		goto invalid;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_strerror(-lvolerrno));
+}
+
+static void
+spdk_rpc_delete_lvol(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
+{
+	struct rpc_delete_lvol req = {};
+	struct spdk_bdev *bdev;
+	struct spdk_lvol *lvol;
+	int rc = 0;
+
+	SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "Resizing lvol\n");
+
+	if (spdk_json_decode_object(params, rpc_delete_lvol_decoders,
+				    SPDK_COUNTOF(rpc_delete_lvol_decoders),
+				    &req)) {
+		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	if (req.name == NULL) {
+		SPDK_ERRLOG("missing name param\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	bdev = spdk_bdev_get_by_name(req.name);
+	if (bdev == NULL) {
+		SPDK_ERRLOG("no bdev for provided name %s\n", req.name);
+		rc = -ENODEV;
+		goto invalid;
+	}
+
+	lvol = vbdev_lvol_get_from_bdev(bdev);
+	if (lvol == NULL) {
+		rc = -ENODEV;
+		goto invalid;
+	}
+
+	vbdev_lvol_delete(lvol, _spdk_rpc_delete_lvol_cb, request);
+
+	free_rpc_delete_lvol(&req);
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_strerror(-rc));
+	free_rpc_delete_lvol(&req);
+}
+
+SPDK_RPC_REGISTER("delete_lvol", spdk_rpc_delete_lvol)
+
+
+
 struct rpc_get_lvol_stores {
 	char *uuid;
 	char *lvs_name;
