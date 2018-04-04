@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ce446f42_860eaa65",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 613,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-04-04T04:15:30Z",
+      "side": 1,
+      "message": "Currently not needed. the finialize function of bdev_iscsi is not async, and the resource of this module, will be called by bdev layer later, so the bdev_iscsi_finish will be called finally, and those resource will be freed finally",
+      "parentUuid": "56e680f6_f98dcb7d",
+      "range": {
+        "startLine": 613,
+        "startChar": 3,
+        "endLine": 613,
+        "endChar": 9
+      },
+      "revId": "182f71cce6f1c3f2222a3dcf56e97bd40797e1b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "63ca4c73_dfa56b5f",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 9
@@ -36,6 +60,24 @@
       "writtenOn": "2018-04-02T13:00:36Z",
       "side": 1,
       "message": "Is it OK to start poller when no connection is created?",
+      "revId": "182f71cce6f1c3f2222a3dcf56e97bd40797e1b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db9a99d4_e2b09bdd",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 629,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-04-04T04:15:30Z",
+      "side": 1,
+      "message": "It is OK now, the function will do nothing, so it will have no side effect.",
+      "parentUuid": "63ca4c73_dfa56b5f",
       "revId": "182f71cce6f1c3f2222a3dcf56e97bd40797e1b5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
