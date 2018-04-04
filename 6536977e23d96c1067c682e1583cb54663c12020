@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "60aef338_a75c3906",
+        "filename": "doc/vhost.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-04T09:06:55Z",
+      "side": 1,
+      "message": "18.04?",
+      "range": {
+        "startLine": 82,
+        "startChar": 75,
+        "endLine": 82,
+        "endChar": 80
+      },
+      "revId": "6536977e23d96c1067c682e1583cb54663c12020",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f330dce4_b38f5f4b",
+        "filename": "doc/vhost.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-04T09:06:55Z",
+      "side": 1,
+      "message": "\"patches for QEMU\"",
+      "range": {
+        "startLine": 83,
+        "startChar": 9,
+        "endLine": 83,
+        "endChar": 20
+      },
+      "revId": "6536977e23d96c1067c682e1583cb54663c12020",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9d2fc00_b8614f05",
+        "filename": "doc/vhost.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-04T09:06:55Z",
+      "side": 1,
+      "message": "2",
+      "range": {
+        "startLine": 249,
+        "startChar": 45,
+        "endLine": 249,
+        "endChar": 46
+      },
+      "revId": "6536977e23d96c1067c682e1583cb54663c12020",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea5f6086_de2219f0",
+        "filename": "doc/vhost.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-04T09:06:55Z",
+      "side": 1,
+      "message": "2",
+      "range": {
+        "startLine": 250,
+        "startChar": 45,
+        "endLine": 250,
+        "endChar": 46
+      },
+      "revId": "6536977e23d96c1067c682e1583cb54663c12020",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "083e3256_2d20e186",
+        "filename": "doc/vhost.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 418,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-04T09:06:55Z",
+      "side": 1,
+      "message": "\" is \"?",
+      "range": {
+        "startLine": 418,
+        "startChar": 34,
+        "endLine": 418,
+        "endChar": 35
+      },
+      "revId": "6536977e23d96c1067c682e1583cb54663c12020",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a90292a_079f488b",
+        "filename": "doc/vhost.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 420,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-04T09:06:55Z",
+      "side": 1,
+      "message": "Why only Fedora will be tested? Ubuntu 18.04 is going to be released with kernel 4.15 so I rather would skip this part.",
+      "range": {
+        "startLine": 419,
+        "startChar": 76,
+        "endLine": 420,
+        "endChar": 57
+      },
+      "revId": "6536977e23d96c1067c682e1583cb54663c12020",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
