@@ -208,6 +208,10 @@ if [ $SPDK_TEST_NVML -eq 1 ]; then
 	run_test ./test/pmem/pmem.sh -x
 fi
 
+if [ $SPDK_TEST_JSON -eq 1 ]; then
+	run_test ./test/json_config/json_config.sh
+fi
+
 timing_enter cleanup
 autotest_cleanup
 timing_exit cleanup
