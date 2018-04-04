@@ -588,26 +588,38 @@ spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
 	return 0;
 }
 
-int
+void
 spdk_nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
-				     struct spdk_nvmf_subsystem *subsystem)
+				     struct spdk_nvmf_subsystem *subsystem,
+				     subsystem_poll_group_op_done cb_fn,
+				     void *cb_arg)
 {
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
 
 	if (subsystem->id >= group->num_sgroups) {
-		return -1;
+		cb_fn(cb_arg, -1);
+		return;
 	}
 
 	sgroup = &group->sgroups[subsystem->id];
 	if (sgroup == NULL) {
-		return -1;
+		cb_fn(cb_arg, -1);
+		return;
 	}
 
 	assert(sgroup->state == SPDK_NVMF_SUBSYSTEM_ACTIVE);
-	/* TODO: This currently does not quiesce I/O */
-	sgroup->state = SPDK_NVMF_SUBSYSTEM_PAUSED;
 
-	return 0;
+	sgroup->state = SPDK_NVMF_SUBSYSTEM_PAUSING;
+
+	if (TAILQ_EMPTY(&sgroup->outstanding)) {
+		/* No I/O outstanding. Complete immediately. */
+		sgroup->state = SPDK_NVMF_SUBSYSTEM_PAUSED;
+		cb_fn(cb_arg, 0);
+		return;
+	}
+
+	sgroup->state_cb_fn = cb_fn;
+	sgroup->state_cb_arg = cb_arg;
 }
 
 int

@@ -436,6 +436,14 @@ subsystem_state_change_done(struct spdk_io_channel_iter *i, int status)
 }
 
 static void
+subsystem_state_change_on_pg_done(void *cb_arg, int status)
+{
+	struct spdk_io_channel_iter *i = cb_arg;
+
+	spdk_for_each_channel_continue(i, status);
+}
+
+static void
 subsystem_state_change_on_pg(struct spdk_io_channel_iter *i)
 {
 	struct subsystem_state_change_ctx *ctx;
@@ -459,8 +467,10 @@ subsystem_state_change_on_pg(struct spdk_io_channel_iter *i)
 		}
 		break;
 	case SPDK_NVMF_SUBSYSTEM_PAUSED:
-		rc = spdk_nvmf_poll_group_pause_subsystem(group, ctx->subsystem);
-		break;
+		spdk_nvmf_poll_group_pause_subsystem(group, ctx->subsystem,
+						     subsystem_state_change_on_pg_done,
+						     i);
+		return;
 	default:
 		assert(false);
 		break;
