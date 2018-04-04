@@ -385,6 +385,26 @@ nvmf_test_create_subsystem(void)
 	free(tgt.subsystems);
 }
 
+static void
+test_spdk_nvmf_subsystem_set_sn(void)
+{
+	struct spdk_nvmf_subsystem subsystem = {};
+
+	/* Basic valid serial number */
+	CU_ASSERT(spdk_nvmf_subsystem_set_sn(&subsystem, "abcd xyz") == 0);
+	CU_ASSERT(strcmp(subsystem.sn, "abcd xyz") == 0);
+
+	/* Exactly 20 characters (valid) */
+	CU_ASSERT(spdk_nvmf_subsystem_set_sn(&subsystem, "12345678901234567890") == 0);
+	CU_ASSERT(strcmp(subsystem.sn, "12345678901234567890") == 0);
+
+	/* 21 characters (too long, invalid) */
+	CU_ASSERT(spdk_nvmf_subsystem_set_sn(&subsystem, "123456789012345678901") < 0);
+
+	/* Non-ASCII characters (invalid) */
+	CU_ASSERT(spdk_nvmf_subsystem_set_sn(&subsystem, "abcd\txyz") < 0);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -402,7 +422,8 @@ int main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "create_subsystem", nvmf_test_create_subsystem) == NULL ||
-		CU_add_test(suite, "nvmf_subsystem_add_ns", test_spdk_nvmf_subsystem_add_ns) == NULL) {
+		CU_add_test(suite, "nvmf_subsystem_add_ns", test_spdk_nvmf_subsystem_add_ns) == NULL ||
+		CU_add_test(suite, "nvmf_subsystem_set_sn", test_spdk_nvmf_subsystem_set_sn) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
