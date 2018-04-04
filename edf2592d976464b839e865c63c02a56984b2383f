@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "45313dfa_8e0c1b4b",
+        "filename": "include/spdk/net.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-04T02:29:57Z",
+      "side": 1,
+      "message": "ok, got it.",
+      "parentUuid": "d45d1a7d_1530e278",
+      "revId": "edf2592d976464b839e865c63c02a56984b2383f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d06b59de_4ad52d01",
         "filename": "include/spdk/net.h",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2018-04-03T19:43:33Z",
       "side": 1,
       "message": "Start all registered frameworks.",
+      "revId": "edf2592d976464b839e865c63c02a56984b2383f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0e0aee3_a86272ee",
+        "filename": "include/spdk/net.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-04T02:29:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d06b59de_4ad52d01",
       "revId": "edf2592d976464b839e865c63c02a56984b2383f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "fcfcec34_80918e23",
+        "filename": "include/spdk/net.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-04T02:29:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "452e8d25_7fcdc7ce",
+      "revId": "edf2592d976464b839e865c63c02a56984b2383f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "55e94ed5_20d5807e",
         "filename": "include/spdk/net.h",
         "patchSetId": 3
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "8b15b981_77211827",
+        "filename": "include/spdk/net.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-04T02:29:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "55e94ed5_20d5807e",
+      "revId": "edf2592d976464b839e865c63c02a56984b2383f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cf3cb784_767225b5",
         "filename": "include/spdk/net.h",
         "patchSetId": 3
@@ -81,6 +153,24 @@
       "writtenOn": "2018-04-03T19:43:33Z",
       "side": 1,
       "message": "The comments here and below are fine - but really I think all of the code between line 113 and 149 should go into a private lib/net/net.h header file.  These functions are not really part of the public API.\n\nGo ahead and keep these changes here in this patch.  Then can you create a separate patch that moves lines 113-149 into a new lib/net/net.h header file?",
+      "revId": "edf2592d976464b839e865c63c02a56984b2383f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "685ad209_17bffffa",
+        "filename": "include/spdk/net.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-04T02:29:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cf3cb784_767225b5",
       "revId": "edf2592d976464b839e865c63c02a56984b2383f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
