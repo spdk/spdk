@@ -49,6 +49,7 @@ int
 spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+	struct spdk_nvmf_capsule_cmd *cap_hdr;
 
 	rsp->sqid = 0;
 	rsp->status.p = 0;
@@ -58,6 +59,22 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 		      "cpl: cid=%u cdw0=0x%08x rsvd1=%u status=0x%04x\n",
 		      rsp->cid, rsp->cdw0, rsp->rsvd1,
 		      *(uint16_t *)&rsp->status);
+
+	cap_hdr = &req->cmd->nvmf_cmd;
+
+	if (spdk_unlikely(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC &&
+			  cap_hdr->fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT)) {
+		/* CONNECT commands don't actually get placed on the outstanding list. */
+	} else {
+		struct spdk_nvmf_subsystem_poll_group *sgroup;
+
+		sgroup = &req->qpair->group->sgroups[req->qpair->ctrlr->subsys->id];
+		assert(req->sgroup == sgroup);
+		assert(req->outstanding == true);
+		TAILQ_REMOVE(&sgroup->outstanding, req, test_link);
+		req->sgroup = NULL;
+		req->outstanding = false;
+	}
 
 	if (spdk_nvmf_transport_req_complete(req)) {
 		SPDK_ERRLOG("Transport request completion error!\n");
@@ -118,6 +135,9 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 
 	nvmf_trace_command(req->cmd, spdk_nvmf_qpair_is_admin_queue(qpair));
 
+	assert(req->sgroup == NULL);
+	assert(req->outstanding == false);
+
 	/* Check if the subsystem is paused (if there is a subsystem) */
 	if (qpair->ctrlr) {
 		struct spdk_nvmf_subsystem_poll_group *sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
@@ -126,6 +146,11 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 			TAILQ_INSERT_TAIL(&sgroup->queued, req, link);
 			return;
 		}
+
+		/* Place the request on the outstanding list so we can keep track of it */
+		req->outstanding = true;
+		req->sgroup = sgroup;
+		TAILQ_INSERT_TAIL(&sgroup->outstanding, req, test_link);
 	}
 
 	if (spdk_unlikely(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC)) {
