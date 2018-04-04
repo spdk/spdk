@@ -57,6 +57,11 @@ struct spdk_net_framework {
 	STAILQ_ENTRY(spdk_net_framework) link;
 };
 
+/**
+ * Register a net framework.
+ *
+ * \param frame Net framework to register.
+ */
 void spdk_net_framework_register(struct spdk_net_framework *frame);
 
 #define SPDK_NET_FRAMEWORK_REGISTER(name, frame) \
@@ -65,10 +70,28 @@ static void __attribute__((constructor)) net_framework_register_##name(void) \
 	spdk_net_framework_register(frame); \
 }
 
+/**
+ * Initialize the network interfaces by getting information through netlink socket.
+ *
+ * \return 0 on success, 1 on failure.
+ */
 int spdk_interface_init(void);
+
+/**
+ * Destroy the network interfaces.
+ */
 void spdk_interface_destroy(void);
 
+/**
+ * Start all registered frameworks.
+ *
+ * \return 0 on success.
+ */
 int spdk_net_framework_start(void);
+
+/**
+ * Stop all registered frameworks.
+ */
 void spdk_net_framework_fini(void);
 
 #define SPDK_IFNAMSIZE		32
@@ -82,8 +105,31 @@ struct spdk_interface {
 	TAILQ_ENTRY(spdk_interface)	tailq;
 };
 
+/**
+ * Add an ip address to the network interface.
+ *
+ * \param ifc_index Index of the network interface.
+ * \param ip_addr Ip address to add.
+ *
+ * \return 0 on success, -1 on failure.
+ */
 int spdk_interface_add_ip_address(int ifc_index, char *ip_addr);
+
+/**
+ * Delete an ip address from the network interface.
+ *
+ * \param ifc_index Index of the network interface.
+ * \param ip_addr Ip address to delete.
+ *
+ * \return 0 on success, -1 on failure.
+ */
 int spdk_interface_delete_ip_address(int ifc_index, char *ip_addr);
+
+/**
+ * Get the list of all the network interfaces.
+ *
+ * \return a pointer to the head of the linked list of all the network interfaces.
+ */
 void *spdk_interface_get_list(void);
 
 #ifdef __cplusplus
