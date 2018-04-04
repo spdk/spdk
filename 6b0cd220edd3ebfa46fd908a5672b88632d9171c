@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a93974bc_920f4003",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-04T23:35:28Z",
+      "side": 1,
+      "message": "If a system has both ss and netstat, you don\u0027t need to do both.",
+      "revId": "6b0cd220edd3ebfa46fd908a5672b88632d9171c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
