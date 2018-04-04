@@ -664,6 +664,7 @@ bdev_virtio_disk_destruct(void *ctx)
 	struct virtio_scsi_dev *svdev = disk->svdev;
 
 	TAILQ_REMOVE(&svdev->luns, disk, link);
+	free(disk->bdev.name);
 	free(disk);
 
 	if (svdev->removed && TAILQ_EMPTY(&svdev->luns)) {
@@ -1292,6 +1293,7 @@ virtio_scsi_dev_add_tgt(struct virtio_scsi_dev *svdev, struct virtio_scsi_scan_i
 	rc = spdk_bdev_register(&disk->bdev);
 	if (rc) {
 		SPDK_ERRLOG("Failed to register bdev name=%s\n", disk->bdev.name);
+		free(bdev->name);
 		free(disk);
 		return rc;
 	}
