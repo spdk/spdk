@@ -6,6 +6,11 @@ fi
 
 set -e
 
+# Export flag to skip the known bug that exists in librados
+# Bug is reported on ceph bug tracker with number 24078
+echo "WARNING: Export flag to skip bug in librados"
+export ASAN_OPTIONS=new_delete_type_mismatch=0
+
 PS4=' \t	\$ '
 ulimit -c unlimited
 
@@ -51,6 +56,7 @@ fi
 : ${SPDK_TEST_LVOL=1}; export SPDK_TEST_LVOL
 : ${SPDK_RUN_ASAN=1}; export SPDK_RUN_ASAN
 : ${SPDK_RUN_UBSAN=1}; export SPDK_RUN_UBSAN
+: ${SPDK_TEST_JSON=1}; export SPDK_TEST_JSON
 
 # pass our valgrind desire on to unittest.sh
 if [ $SPDK_RUN_VALGRIND -eq 0 ]; then
