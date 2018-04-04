@@ -184,11 +184,13 @@ spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
 	return 0;
 }
 
-int
+void
 spdk_nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
-				     struct spdk_nvmf_subsystem *subsystem)
+				     struct spdk_nvmf_subsystem *subsystem,
+				     subsystem_poll_group_op_done cb_fn,
+				     void *cb_arg)
 {
-	return 0;
+	cb_fn(cb_arg, 0);
 }
 
 int
