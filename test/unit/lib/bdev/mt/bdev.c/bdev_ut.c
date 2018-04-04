@@ -221,7 +221,6 @@ unregister_bdev(struct ut_bdev *ut_bdev)
 	/* Handle any deferred messages. */
 	poll_threads();
 	spdk_bdev_unregister(&ut_bdev->bdev, NULL, NULL);
-	memset(ut_bdev, 0, sizeof(*ut_bdev));
 }
 
 static void
@@ -260,6 +259,7 @@ teardown_test(void)
 	spdk_io_device_unregister(&g_io_device, NULL);
 	spdk_bdev_finish(finish_cb, NULL);
 	poll_threads();
+	memset(&g_bdev, 0, sizeof(g_bdev));
 	CU_ASSERT(g_teardown_done == true);
 	g_teardown_done = false;
 	free_threads();
@@ -1218,8 +1218,8 @@ enomem_multi_bdev(void)
 	spdk_put_io_channel(second_ch);
 	spdk_bdev_close(second_desc);
 	unregister_bdev(second_bdev);
-	free(second_bdev);
 	poll_threads();
+	free(second_bdev);
 	teardown_test();
 }
 
