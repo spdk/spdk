@@ -549,6 +549,7 @@ spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
 
 	sgroup = &group->sgroups[subsystem->id];
 	sgroup->state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
+	TAILQ_INIT(&sgroup->queued);
 
 	return 0;
 }
@@ -603,20 +604,30 @@ int
 spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 				      struct spdk_nvmf_subsystem *subsystem)
 {
+	struct spdk_nvmf_request *req, *tmp;
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
 	int rc;
 
 	if (subsystem->id >= group->num_sgroups) {
 		return -1;
 	}
 
-	assert(group->sgroups[subsystem->id].state == SPDK_NVMF_SUBSYSTEM_PAUSED);
+	sgroup = &group->sgroups[subsystem->id];
+
+	assert(sgroup->state == SPDK_NVMF_SUBSYSTEM_PAUSED);
 
 	rc = poll_group_update_subsystem(group, subsystem);
 	if (rc) {
 		return rc;
 	}
 
-	group->sgroups[subsystem->id].state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
+	sgroup->state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
+
+	/* Release all queued requests */
+	TAILQ_FOREACH_SAFE(req, &sgroup->queued, link, tmp) {
+		TAILQ_REMOVE(&sgroup->queued, req, link);
+		spdk_nvmf_request_exec(req);
+	}
 
 	return 0;
 }

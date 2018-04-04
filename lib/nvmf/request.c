@@ -120,13 +120,10 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 
 	/* Check if the subsystem is paused (if there is a subsystem) */
 	if (qpair->ctrlr) {
-		if (qpair->group->sgroups[qpair->ctrlr->subsys->id].state != SPDK_NVMF_SUBSYSTEM_ACTIVE) {
-			struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
-
-			/* TODO: Queue requests here instead of failing */
-			rsp->status.sct = SPDK_NVME_SCT_GENERIC;
-			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-			spdk_nvmf_request_complete(req);
+		struct spdk_nvmf_subsystem_poll_group *sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
+		if (sgroup->state != SPDK_NVMF_SUBSYSTEM_ACTIVE) {
+			/* The subsystem is not currently active. Queue this request. */
+			TAILQ_INSERT_TAIL(&sgroup->queued, req, link);
 			return;
 		}
 	}
