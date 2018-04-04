@@ -82,11 +82,11 @@ spdk_nvmf_valid_nqn(const char *nqn)
 {
 	size_t len;
 	struct spdk_uuid uuid_value;
-	uint i;
+	uint32_t i;
 	int bytes_consumed;
-	uint domain_label_length;
+	uint32_t domain_label_length;
 	char *reverse_domain_end;
-	uint reverse_domain_end_index;
+	uint32_t reverse_domain_end_index;
 	enum spdk_nvmf_nqn_domain_states domain_state = SPDK_NVMF_DOMAIN_ACCEPT_LETTER;
 
 	/* Check for length requirements */
