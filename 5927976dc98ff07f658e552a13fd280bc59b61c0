@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "1c54fa9c_cbdcfea5",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-04T23:20:45Z",
+      "side": 1,
+      "message": "or ?",
+      "range": {
+        "startLine": 497,
+        "startChar": 18,
+        "endLine": 497,
+        "endChar": 21
+      },
+      "revId": "5927976dc98ff07f658e552a13fd280bc59b61c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2f0ffee2_b5945302",
         "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
         "patchSetId": 13
@@ -64,6 +87,29 @@
       "writtenOn": "2018-04-04T21:54:35Z",
       "side": 1,
       "message": "get_queue_num is not the best name - but we can fix that in a separate patch",
+      "revId": "5927976dc98ff07f658e552a13fd280bc59b61c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5719e8a7_4e859e79",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 858,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-04T23:20:45Z",
+      "side": 1,
+      "message": "implies ?",
+      "range": {
+        "startLine": 858,
+        "startChar": 69,
+        "endLine": 858,
+        "endChar": 74
+      },
       "revId": "5927976dc98ff07f658e552a13fd280bc59b61c0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
