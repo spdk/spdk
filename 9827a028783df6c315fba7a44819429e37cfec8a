@@ -1,0 +1,225 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1d929867_fdaeba2a",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-04T17:40:31Z",
+      "side": 1,
+      "message": "crypto",
+      "revId": "9827a028783df6c315fba7a44819429e37cfec8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7caffe7b_6f18acf5",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 590,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-04T17:40:31Z",
+      "side": 1,
+      "message": "need",
+      "revId": "9827a028783df6c315fba7a44819429e37cfec8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "67e161af_85b94852",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 659,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-04T17:40:31Z",
+      "side": 1,
+      "message": "bdev_io",
+      "revId": "9827a028783df6c315fba7a44819429e37cfec8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d774292_49a21e8e",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 660,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-04T17:40:31Z",
+      "side": 1,
+      "message": "crypto",
+      "revId": "9827a028783df6c315fba7a44819429e37cfec8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bac1621d_da82bb59",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 661,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-04T17:40:31Z",
+      "side": 1,
+      "message": "submit",
+      "revId": "9827a028783df6c315fba7a44819429e37cfec8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a217ba21_b694bc00",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 662,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-04T17:40:31Z",
+      "side": 1,
+      "message": "on",
+      "revId": "9827a028783df6c315fba7a44819429e37cfec8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ac8de73_21ca14ab",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 725,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-04T17:40:31Z",
+      "side": 1,
+      "message": "response",
+      "revId": "9827a028783df6c315fba7a44819429e37cfec8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3778cbe_dc06f1d8",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 877,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-04T17:40:31Z",
+      "side": 1,
+      "message": "just return if sp \u003d\u003d NULL - then the rest of the code can reduce one line of indentation",
+      "revId": "9827a028783df6c315fba7a44819429e37cfec8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "526d942b_fdabe0cc",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 895,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-04T17:40:31Z",
+      "side": 1,
+      "message": "This is probably OK for initial testing, but saving the key in the config file borders on key management and we don\u0027t want to do key management in SPDK.\n\nMy thought was that the keys always have to be provided via RPC.  Even when we save a config file in JSON-RPC format in the future, we wouldn\u0027t export the keys in there.  Only then can we say we truly do no key management in SPDK.\n\nProbably worth discussing further...",
+      "revId": "9827a028783df6c315fba7a44819429e37cfec8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "731e91ab_2534f674",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 984,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-04T17:40:31Z",
+      "side": 1,
+      "message": "the parsing code expects the key here too",
+      "revId": "9827a028783df6c315fba7a44819429e37cfec8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "810a05c9_ee7698b4",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1032,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-04T17:40:31Z",
+      "side": 1,
+      "message": "you can make this a negative check, and continue if it fails - then the rest of the code in this loop can reduce one line of indenting",
+      "revId": "9827a028783df6c315fba7a44819429e37cfec8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2abceaef_e95bf308",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1037,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-04T17:40:31Z",
+      "side": 1,
+      "message": "I think these should break instead of return - otherwise you won\u0027t call spdk_bdev_module_examine_done()",
+      "revId": "9827a028783df6c315fba7a44819429e37cfec8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13119cd1_3fe30781",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1058,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-04T17:40:31Z",
+      "side": 1,
+      "message": "extra semicolon",
+      "revId": "9827a028783df6c315fba7a44819429e37cfec8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
