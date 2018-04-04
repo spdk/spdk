@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1e0b977d_f5ca1c96",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 4696,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-04T15:22:51Z",
+      "side": 1,
+      "message": "Since at this time snapshots are only defined by being read_only. I\u0027d remove this comment.",
+      "range": {
+        "startLine": 4694,
+        "startChar": 0,
+        "endLine": 4696,
+        "endChar": 4
+      },
+      "revId": "6a95a063589a970981f7b522b829b9e461683f29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
