@@ -233,31 +233,10 @@ function waitforlisten() {
 		if ! kill -s 0 $1; then
 			exit 1
 		fi
-		if netstat -an -x | grep -iw LISTENING | grep -q $rpc_addr; then
+		if hash ss && ss -lx | grep -q $rpc_addr; then
 			ret=0
 		fi
-	done
-	set -x
-}
-
-function waitforlisten_tcp() {
-	# $1 = process pid
-	# $2 = TCP port number
-	if [ -z "$1" ] || [ -z "$2" ]; then
-		exit 1
-	fi
-
-	echo "Waiting for process to start up and listen on TCP port $2..."
-	# turn off trace for this loop
-	set +x
-	ret=1
-	while [ $ret -ne 0 ]; do
-		# if the process is no longer running, then exit the script
-		#  since it means the application crashed
-		if ! kill -s 0 $1; then
-			exit
-		fi
-		if netstat -an --tcp | grep -iw listen | grep -q $2; then
+		if hash netstat && netstat -an -x | grep -iw LISTENING | grep -q $rpc_addr; then
 			ret=0
 		fi
 	done
