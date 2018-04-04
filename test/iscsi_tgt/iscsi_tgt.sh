@@ -11,6 +11,9 @@ source $rootdir/test/iscsi_tgt/common.sh
 
 timing_enter iscsi_tgt
 
+# Network configuration
+create_veth_interfaces
+
 # ISCSI_TEST_CORE_MASK is the biggest core mask specified by
 #  any of the iscsi_tgt tests.  Using this mask for the stub
 #  ensures that if this mask spans CPU sockets, that we will
@@ -19,7 +22,7 @@ timing_enter iscsi_tgt
 #  core 0) so there is no impact to the iscsi_tgt tests by
 #  specifying the bigger core mask.
 start_stub "-s 2048 -i 0 -m $ISCSI_TEST_CORE_MASK"
-trap "kill_stub; exit 1" SIGINT SIGTERM EXIT
+trap "kill_stub; cleanup_veth_interfaces; exit 1" SIGINT SIGTERM EXIT
 
 run_test ./test/iscsi_tgt/calsoft/calsoft.sh
 run_test ./test/iscsi_tgt/filesystem/filesystem.sh
@@ -40,7 +43,7 @@ if [ $SPDK_TEST_RBD -eq 1 ]; then
 	run_test ./test/iscsi_tgt/rbd/rbd.sh
 fi
 
-trap - SIGINT SIGTERM EXIT
+trap "cleanup_veth_interfaces; exit 1" SIGINT SIGTERM EXIT
 kill_stub
 
 if [ $SPDK_TEST_NVMF -eq 1 ]; then
@@ -60,4 +63,6 @@ if [ $SPDK_TEST_ISCSI_INITIATOR -eq 1 ]; then
 	run_test ./test/iscsi_tgt/initiator/initiator.sh
 fi
 
+cleanup_veth_interfaces
+trap - SIGINT SIGTERM EXIT
 timing_exit iscsi_tgt
