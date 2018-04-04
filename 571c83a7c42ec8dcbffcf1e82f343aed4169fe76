@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "29bdd77e_7e956d4f",
+        "filename": "dpdk",
+        "patchSetId": 3
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-04T22:12:47Z",
+      "side": 1,
+      "message": "This dpdk submodule change needs to be removed.",
+      "revId": "571c83a7c42ec8dcbffcf1e82f343aed4169fe76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
