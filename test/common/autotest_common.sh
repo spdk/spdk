@@ -21,6 +21,8 @@ if [[ ! -z $1 ]]; then
 	fi
 fi
 
+SPDK_RUN_ASAN=1
+
 # Set defaults for missing test config options
 : ${SPDK_BUILD_DOC=1}; export SPDK_BUILD_DOC
 : ${SPDK_RUN_CHECK_FORMAT=1}; export SPDK_RUN_CHECK_FORMAT
