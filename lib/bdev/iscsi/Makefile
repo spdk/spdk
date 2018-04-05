@@ -40,7 +40,7 @@ CFLAGS += -I$(SPDK_ROOT_DIR)/lib/bdev/
 # this warning so just make sure the warning isn't treated as
 # an error.
 CFLAGS += -Wno-error
-C_SRCS = bdev_iscsi.c
+C_SRCS = bdev_iscsi.c bdev_iscsi_rpc.c
 LIBNAME = bdev_iscsi
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
