@@ -56,6 +56,7 @@ iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
 iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 timing_exit discovery
 
+sleep 3
 timing_enter fio
 $fio_py 131072 8 randwrite 10 verify
 timing_exit fio
