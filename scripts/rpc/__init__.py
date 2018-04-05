@@ -59,6 +59,6 @@ def load_config(client, args):
         if not config:
             continue
         for elem in subsystem['config']:
-            if not elem or 'method' not in config:
+            if not elem or 'method' not in elem:
                 continue
             client.call(elem['method'], elem['params'])
