@@ -89,6 +89,11 @@ def clear_bdev_subsystem(args, bdev_config):
             args.client.call("delete_bdev", {'name': bdev['params']['name']})
         elif 'method' in bdev and bdev['method'] == 'construct_rbd_bdev':
             args.client.call("delete_bdev", {'name': bdev['params']['name']})
+        elif 'method' in bdev and bdev['method'] == 'construct_virtio_dev':
+            if bdev['params']['dev_type'] == 'blk':
+                args.client.call("delete_bdev", {'name': bdev['params']['name']})
+            else:
+                args.client.call("remove_virtio_scsi_bdev", {'name': bdev['params']['name']})
         elif 'params' in bdev and 'name' in bdev['params']:
             args.client.call("delete_bdev", {'name': bdev['params']['name']})
 
