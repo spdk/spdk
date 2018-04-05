@@ -570,6 +570,7 @@ bdev_rbd_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 	spdk_json_write_named_string(w, "name", bdev->name);
 	spdk_json_write_named_string(w, "pool_name", rbd->pool_name);
 	spdk_json_write_named_string(w, "rbd_name", rbd->rbd_name);
+	spdk_json_write_named_uint32(w, "block_size", bdev->blocklen);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
