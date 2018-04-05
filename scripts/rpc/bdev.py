@@ -121,6 +121,25 @@ def construct_error_bdev(client, base_name):
     return client.call('construct_error_bdev', params)
 
 
+def construct_iscsi_bdev(client, name, url, initiator_iqn):
+    """Construct a iSCSI block device.
+
+    Args:
+        name: name of block device
+        url: iSCSI URL
+        initiator_iqn: IQN name to be used by initiator
+
+    Returns:
+        List of created block devices.
+    """
+    params = {
+        'name': name,
+        'url': url,
+        'initiator_iqn': initiator_iqn,
+    }
+    return client.call('construct_iscsi_bdev', params)
+
+
 def construct_pmem_bdev(client, pmem_file, name):
     """Construct a libpmemblk block device.
 

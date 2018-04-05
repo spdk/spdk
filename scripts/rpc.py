@@ -202,6 +202,20 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_error_bdev)
 
     @call_cmd
+    def construct_iscsi_bdev(args):
+        rpc.bdev.construct_iscsi_bdev(args.client,
+                                      name=args.name,
+                                      url=args.url,
+                                      initiator_iqn=args.initiator_iqn)
+
+    p = subparsers.add_parser('construct_iscsi_bdev',
+                              help='Add bdev with iSCSI initiator backend')
+    p.add_argument('-b', '--name', help="Name of the bdev", required=True)
+    p.add_argument('-i', '--initiator-iqn', help="Initiator IQN", required=True)
+    p.add_argument('--url', help="iSCSI Lun URL", required=True)
+    p.set_defaults(func=construct_iscsi_bdev)
+
+    @call_cmd
     def construct_pmem_bdev(args):
         print_array(rpc.bdev.construct_pmem_bdev(args.client,
                                                  pmem_file=args.pmem_file,
