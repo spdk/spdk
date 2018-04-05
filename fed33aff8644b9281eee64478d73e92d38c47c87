@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "06e9b53f_625cd495",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1486,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-05T20:13:18Z",
+      "side": 1,
+      "message": "Typo: vbdev vs bdev. :)",
+      "range": {
+        "startLine": 1486,
+        "startChar": 45,
+        "endLine": 1486,
+        "endChar": 65
+      },
+      "revId": "fed33aff8644b9281eee64478d73e92d38c47c87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
