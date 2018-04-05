@@ -1,0 +1,5 @@
+[Global]
+  NoPci Yes
+
+[Ioat]
+  Disable Yes

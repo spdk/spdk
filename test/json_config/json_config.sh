@@ -5,6 +5,7 @@ SPDK_BUILD_DIR=$JSON_DIR/../../
 . $JSON_DIR/../common/autotest_common.sh
 
 spdk_rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py -s /var/tmp/spdk.sock"
+initiator_rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py -s /var/tmp/virtio.sock"
 base_json_config=$JSON_DIR/base_config.json
 last_json_config=$JSON_DIR/last_config.json
 base_bdevs=$JSON_DIR/bdevs_base.txt
@@ -25,6 +26,14 @@ function run_spdk_tgt() {
 
 	rm $JSON_DIR/spdk_tgt.conf
 	echo ""
+}
+
+function run_initiator() {
+	cp $JSON_DIR/virtio.conf.base $JSON_DIR/vhost.conf.in
+	$SPDK_BUILD_DIR/app/spdk_tgt/spdk_tgt -m 0x2 -p 0 -c $JSON_DIR/vhost.conf.in -s 1024 -r /var/tmp/virtio.sock &
+	virtio_pid=$!
+	waitforlisten $virtio_pid /var/tmp/virtio.sock
+	rm $JSON_DIR/vhost.conf.in
 }
 
 function test_json_config() {
@@ -51,7 +60,7 @@ function clean_after_test_json_config() {
 }
 
 function create_bdev_subsystem_config() {
-	$rpc_py construct_split_vbdev Nvme1n1 2
+	$rpc_py construct_split_vbdev Nvme1n1 4
 	$rpc_py construct_null_bdev Null0 32 512
 	$rpc_py construct_malloc_bdev 128 512 --name Malloc0
 	$rpc_py construct_malloc_bdev 64 4096 --name Malloc1
@@ -87,6 +96,26 @@ function clean_bdev_subsystem_config() {
 	# rbd_cleanup
 }
 
+function pre_initiator_config() {
+	$rpc_py construct_vhost_scsi_controller naa.Nvme1n1p0.0
+	$rpc_py construct_vhost_scsi_controller naa.Nvme1n1p1.1
+	$rpc_py get_bdevs
+	$rpc_py add_vhost_scsi_lun naa.Nvme1n1p0.0 0 Nvme1n1p0
+	$rpc_py add_vhost_scsi_lun naa.Nvme1n1p1.1 0 Nvme1n1p1
+	$rpc_py construct_vhost_blk_controller naa.Nvme1n1p2.0 Nvme1n1p2
+	$rpc_py construct_vhost_blk_controller naa.Nvme1n1p3.1 Nvme1n1p3
+}
+
+function upload_initiator() {
+	echo ""
+	$rpc_py construct_virtio_user_scsi_bdev $JSON_DIR/naa.Nvme1n1p0.0 Nvme1n1p0
+	$rpc_py construct_virtio_user_blk_bdev $JSON_DIR/naa.Nvme1n1p2.0 Nvme1n1p2
+}
+
+function clean_upload_initiator() {
+	$rpc_py clear_config
+}
+
 function test_subsystems() {
 	# Export flag to skip the known bug that exists in librados
 	export ASAN_OPTIONS=new_delete_type_mismatch=0
@@ -95,18 +124,40 @@ function test_subsystems() {
 
 	rpc_py="$spdk_rpc_py"
 	create_bdev_subsystem_config
-	test_json_config
 
+	pre_initiator_config
+	run_initiator
+	rpc_py="$initiator_rpc_py"
+	upload_initiator
+	test_json_config
+	clean_upload_initiator
+
+	rpc_py="$spdk_rpc_py"
 	clean_bdev_subsystem_config
-	killprocess $spdk_tgt_pid
+
+	if [ ! -z $virtio_pid ]; then
+                killprocess $virtio_pid
+        fi
+        if [ ! -z $spdk_tgt_pid ]; then
+                killprocess $spdk_tgt_pid
+        fi
 }
 
 function on_error_exit() {
 	set +e
 	echo "Error on $1 - $2"
+
 	clean_after_test_json_config
+	rpc_py="$spdk_rpc_py"
 	clean_bdev_subsystem_config
-	killprocess $spdk_tgt_pid
+
+	if [ ! -z $virtio_pid ]; then
+		killprocess $virtio_pid
+	fi
+	if [ ! -z $spdk_tgt_pid ]; then
+		killprocess $spdk_tgt_pid
+	fi
+
 	print_backtrace
 	exit 1
 }
