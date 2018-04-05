@@ -16,6 +16,24 @@
       "revId": "6b0cd220edd3ebfa46fd908a5672b88632d9171c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "648457d5_470a9e88",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-05T00:05:34Z",
+      "side": 1,
+      "message": "Agreed - but what\u0027s the harm?  I just though it made the code simpler to not check for both.",
+      "parentUuid": "a93974bc_920f4003",
+      "revId": "6b0cd220edd3ebfa46fd908a5672b88632d9171c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
