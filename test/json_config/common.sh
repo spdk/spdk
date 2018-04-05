@@ -4,6 +4,8 @@ SPDK_BUILD_DIR=$JSON_DIR/../../
 
 spdk_rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py -s /var/tmp/spdk.sock"
 spdk_clear_config_py="$JSON_DIR/clear_config.py -s /var/tmp/spdk.sock"
+initiator_rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py -s /var/tmp/virtio.sock"
+initiator_clear_config_py="$JSON_DIR/clear_config.py -s /var/tmp/virtio.sock"
 base_json_config=$JSON_DIR/base_config.json
 last_json_config=$JSON_DIR/last_config.json
 full_config=$JSON_DIR/full_config.json
@@ -32,8 +34,19 @@ function load_nvme() {
 	rm nvme_config.json
 }
 
+function run_initiator() {
+	$SPDK_BUILD_DIR/app/spdk_tgt/spdk_tgt -m 0x2 -p 0 -g -u -s 1024 -r /var/tmp/virtio.sock &
+	virtio_pid=$!
+	waitforlisten $virtio_pid /var/tmp/virtio.sock
+}
+
 function kill_targets() {
-	killprocess $spdk_tgt_pid
+	if [ ! -z $virtio_pid ]; then
+		killprocess $virtio_pid
+	fi
+	if [ ! -z $spdk_tgt_pid ]; then
+		killprocess $spdk_tgt_pid
+	fi
 }
 
 function test_json_config() {
@@ -130,11 +143,20 @@ function test_params() {
 function on_error_exit() {
 	set +e
 	echo "Error on $1 - $2"
+
 	clean_after_test_json_config
-	rpc_py="$spdk_rpc_py"
+	rc_py="$spdk_rpc_py"
 	clear_config_py="$spdk_clear_config_py"
 	clean_bdev_subsystem_config
 	killprocess $spdk_tgt_pid
+
+	if [ ! -z $virtio_pid ]; then
+		killprocess $virtio_pid
+	fi
+	if [ ! -z $spdk_tgt_pid ]; then
+		killprocess $spdk_tgt_pid
+	fi
+
 	print_backtrace
 	exit 1
 }
