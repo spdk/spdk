@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a767c597_0f5f14d8",
+        "filename": "test/vhost/migration/migration-tc3a.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-05T11:40:59Z",
+      "side": 1,
+      "message": "I would be good to add timeout here and ...",
+      "range": {
+        "startLine": 149,
+        "startChar": 1,
+        "endLine": 152,
+        "endChar": 5
+      },
+      "revId": "65675a4ea52d82f2b45acf41d0804bf95c694541",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "30e8660b_3d177779",
+        "filename": "test/vhost/migration/migration-tc3a.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-05T11:40:59Z",
+      "side": 1,
+      "message": "... and here too",
+      "range": {
+        "startLine": 189,
+        "startChar": 0,
+        "endLine": 195,
+        "endChar": 22
+      },
+      "revId": "65675a4ea52d82f2b45acf41d0804bf95c694541",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "553fad59_743ed05f",
+        "filename": "test/vhost/migration/migration-tc3b.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-05T11:40:59Z",
+      "side": 1,
+      "message": "can you put some comment why we need this",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 6
+      },
+      "revId": "65675a4ea52d82f2b45acf41d0804bf95c694541",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
