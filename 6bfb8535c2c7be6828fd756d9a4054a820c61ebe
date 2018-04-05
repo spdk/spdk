@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0b52ea4a_ba2e499e",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 477,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-05T23:44:44Z",
+      "side": 1,
+      "message": "This seems like it should be handled by the new_num_channels \u003c old_num_channels case below.  (It will need a slight update to make sure we don\u0027t call realloc() with a size of 0, but otherwise it should work as-is.)",
+      "revId": "6bfb8535c2c7be6828fd756d9a4054a820c61ebe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
