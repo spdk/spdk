@@ -61,6 +61,8 @@ static struct spdk_nvme_health_information_page health_page;
 
 static struct spdk_nvme_firmware_page firmware_page;
 
+static struct spdk_nvme_cmds_and_effect_log_page cmd_effects_log_page;
+
 static struct spdk_nvme_intel_smart_information_page intel_smart_page;
 
 static struct spdk_nvme_intel_temperature_page intel_temperature_page;
@@ -238,6 +240,19 @@ get_firmware_log_page(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 static int
+get_cmd_effects_log_page(struct spdk_nvme_ctrlr *ctrlr)
+{
+	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_LOG_COMMAND_EFFECTS_LOG,
+					     SPDK_NVME_GLOBAL_NS_TAG, &cmd_effects_log_page, sizeof(cmd_effects_log_page), 0,
+					     get_log_page_completion, NULL)) {
+		printf("spdk_nvme_ctrlr_cmd_get_log_page() failed\n");
+		exit(1);
+	}
+
+	return 0;
+}
+
+static int
 get_intel_smart_log_page(struct spdk_nvme_ctrlr *ctrlr)
 {
 	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_INTEL_LOG_SMART, SPDK_NVME_GLOBAL_NS_TAG,
@@ -389,6 +404,14 @@ get_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 		outstanding_commands++;
 	} else {
 		printf("Get Log Page (Firmware Slot Information) failed\n");
+	}
+
+	if (cdata->lpa.celp) {
+		if (get_cmd_effects_log_page(ctrlr) == 0) {
+			outstanding_commands++;
+		} else {
+			printf("Get Log Page (Commands Supported and Effects) failed\n");
+		}
 	}
 
 	if (cdata->vid == SPDK_PCI_VID_INTEL) {
@@ -588,6 +611,104 @@ print_namespace(struct spdk_nvme_ns *ns)
 		printf("LBA Format #%02d: Data Size: %5d  Metadata Size: %5d\n",
 		       i, 1 << nsdata->lbaf[i].lbads, nsdata->lbaf[i].ms);
 	printf("\n");
+}
+
+static const char *
+admin_opc_name(uint8_t opc)
+{
+	switch (opc) {
+	case SPDK_NVME_OPC_DELETE_IO_SQ:
+		return "Delete I/O Submission Queue";
+	case SPDK_NVME_OPC_CREATE_IO_SQ:
+		return "Create I/O Submission Queue";
+	case SPDK_NVME_OPC_GET_LOG_PAGE:
+		return "Get Log Page";
+	case SPDK_NVME_OPC_DELETE_IO_CQ:
+		return "Delete I/O Completion Queue";
+	case SPDK_NVME_OPC_CREATE_IO_CQ:
+		return "Create I/O Completion Queue";
+	case SPDK_NVME_OPC_IDENTIFY:
+		return "Identify";
+	case SPDK_NVME_OPC_ABORT:
+		return "Abort";
+	case SPDK_NVME_OPC_SET_FEATURES:
+		return "Set Features";
+	case SPDK_NVME_OPC_GET_FEATURES:
+		return "Get Features";
+	case SPDK_NVME_OPC_ASYNC_EVENT_REQUEST:
+		return "Asynchronous Event Request";
+	case SPDK_NVME_OPC_NS_MANAGEMENT:
+		return "Namespace Management";
+	case SPDK_NVME_OPC_FIRMWARE_COMMIT:
+		return "Firmware Commit";
+	case SPDK_NVME_OPC_FIRMWARE_IMAGE_DOWNLOAD:
+		return "Firmware Image Download";
+	case SPDK_NVME_OPC_DEVICE_SELF_TEST:
+		return "Device Self-test";
+	case SPDK_NVME_OPC_NS_ATTACHMENT:
+		return "Namespace Attachment";
+	case SPDK_NVME_OPC_KEEP_ALIVE:
+		return "Keep Alive";
+	case SPDK_NVME_OPC_DIRECTIVE_SEND:
+		return "Directive Send";
+	case SPDK_NVME_OPC_DIRECTIVE_RECEIVE:
+		return "Directive Receive";
+	case SPDK_NVME_OPC_VIRTUALIZATION_MANAGEMENT:
+		return "Virtualization Management";
+	case SPDK_NVME_OPC_NVME_MI_SEND:
+		return "NVMe-MI Send";
+	case SPDK_NVME_OPC_NVME_MI_RECEIVE:
+		return "NVMe-MI Receive";
+	case SPDK_NVME_OPC_DOORBELL_BUFFER_CONFIG:
+		return "Doorbell Buffer Config";
+	case SPDK_NVME_OPC_FORMAT_NVM:
+		return "Format NVM";
+	case SPDK_NVME_OPC_SECURITY_SEND:
+		return "Security Send";
+	case SPDK_NVME_OPC_SECURITY_RECEIVE:
+		return "Security Receive";
+	case SPDK_NVME_OPC_SANITIZE:
+		return "Sanitize";
+	default:
+		if (opc >= 0xC0) {
+			return "Vendor specific";
+		}
+		return "Unknown";
+	}
+}
+
+static const char *
+io_opc_name(uint8_t opc)
+{
+	switch (opc) {
+	case SPDK_NVME_OPC_FLUSH:
+		return "Flush";
+	case SPDK_NVME_OPC_WRITE:
+		return "Write";
+	case SPDK_NVME_OPC_READ:
+		return "Read";
+	case SPDK_NVME_OPC_WRITE_UNCORRECTABLE:
+		return "Write Uncorrectable";
+	case SPDK_NVME_OPC_COMPARE:
+		return "Compare";
+	case SPDK_NVME_OPC_WRITE_ZEROES:
+		return "Write Zeroes";
+	case SPDK_NVME_OPC_DATASET_MANAGEMENT:
+		return "Dataset Management";
+	case SPDK_NVME_OPC_RESERVATION_REGISTER:
+		return "Reservation Register";
+	case SPDK_NVME_OPC_RESERVATION_REPORT:
+		return "Reservation Report";
+	case SPDK_NVME_OPC_RESERVATION_ACQUIRE:
+		return "Reservation Acquire";
+	case SPDK_NVME_OPC_RESERVATION_RELEASE:
+		return "Reservation Release";
+	default:
+		if (opc >= 0x80) {
+			return "Vendor specific";
+		}
+		return "Unknown";
+	}
 }
 
 static void
@@ -843,6 +964,47 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 		}
 	}
 	printf("\n");
+
+	if (cdata->lpa.celp) {
+		printf("Commands Supported and Effects\n");
+		printf("==============================\n");
+
+		if (g_hex_dump) {
+			hex_dump(&cmd_effects_log_page, sizeof(cmd_effects_log_page));
+			printf("\n");
+		}
+
+		printf("Admin Commands\n");
+		printf("--------------\n");
+		for (i = 0; i < SPDK_COUNTOF(cmd_effects_log_page.admin_cmds_supported); i++) {
+			struct spdk_nvme_cmds_and_effect_entry *cmd = &cmd_effects_log_page.admin_cmds_supported[i];
+			if (cmd->csupp) {
+				printf("%30s (%02Xh): Supported %s%s%s%s%s\n",
+				       admin_opc_name(i), i,
+				       cmd->lbcc ? "LBA-Change " : "",
+				       cmd->ncc ? "NS-Cap-Change " : "",
+				       cmd->nic ? "NS-Inventory-Change " : "",
+				       cmd->ccc ? "Ctrlr-Cap-Change " : "",
+				       cmd->cse == 0 ? "" : cmd->cse == 1 ? "Per-NS-Exclusive" : cmd->cse == 2 ? "All-NS-Exclusive" : "");
+			}
+		}
+
+		printf("I/O Commands\n");
+		printf("------------\n");
+		for (i = 0; i < SPDK_COUNTOF(cmd_effects_log_page.io_cmds_supported); i++) {
+			struct spdk_nvme_cmds_and_effect_entry *cmd = &cmd_effects_log_page.io_cmds_supported[i];
+			if (cmd->csupp) {
+				printf("%30s (%02Xh): Supported %s%s%s%s%s\n",
+				       io_opc_name(i), i,
+				       cmd->lbcc ? "LBA-Change " : "",
+				       cmd->ncc ? "NS-Cap-Change " : "",
+				       cmd->nic ? "NS-Inventory-Change " : "",
+				       cmd->ccc ? "Ctrlr-Cap-Change " : "",
+				       cmd->cse == 0 ? "" : cmd->cse == 1 ? "Per-NS-Exclusive" : cmd->cse == 2 ? "All-NS-Exclusive" : "");
+			}
+		}
+		printf("\n");
+	}
 
 	printf("Error Log\n");
 	printf("=========\n");
