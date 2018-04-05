@@ -440,10 +440,10 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 {
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
 	uint32_t new_num_channels, old_num_channels;
-	void *buf;
 	uint32_t i;
 	struct spdk_nvmf_ns *ns;
 
+	/* Make sure our poll group has memory for this subsystem allocated */
 	if (subsystem->id >= group->num_sgroups) {
 		void *buf;
 
@@ -464,35 +464,36 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 
 	sgroup = &group->sgroups[subsystem->id];
 
+	/* Make sure the array of channels is the correct size */
 	new_num_channels = subsystem->max_nsid;
 	old_num_channels = sgroup->num_channels;
 
-	if (new_num_channels == old_num_channels) {
-		/* Initialize new channels */
-		for (i = 0; i < new_num_channels; i++) {
-			ns = subsystem->ns[i];
-			if ((ns != NULL) && (sgroup->channels[i] == NULL)) {
-				sgroup->channels[i] = spdk_bdev_get_io_channel(ns->desc);
+	if (old_num_channels == 0) {
+		if (new_num_channels > 0) {
+			/* First allocation */
+			sgroup->channels = calloc(new_num_channels, sizeof(sgroup->channels[0]));
+			if (!sgroup->channels) {
+				return -ENOMEM;
 			}
 		}
-	} else if (old_num_channels == 0) {
-		/* First allocation */
-		sgroup->channels = calloc(new_num_channels, sizeof(sgroup->channels[0]));
-		if (!sgroup->channels) {
+	} else if (new_num_channels > old_num_channels) {
+		void *buf;
+
+		/* Make the array larger */
+		buf = realloc(sgroup->channels, new_num_channels * sizeof(sgroup->channels[0]));
+		if (!buf) {
 			return -ENOMEM;
 		}
-		sgroup->num_channels = new_num_channels;
 
-		/* Initialize new channels */
+		sgroup->channels = buf;
+
+		/* Null out the new channels slots */
 		for (i = old_num_channels; i < new_num_channels; i++) {
-			ns = subsystem->ns[i];
-			if (ns) {
-				sgroup->channels[i] = spdk_bdev_get_io_channel(ns->desc);
-			} else {
-				sgroup->channels[i] = NULL;
-			}
+			sgroup->channels[i] = NULL;
 		}
 	} else if (new_num_channels < old_num_channels) {
+		void *buf;
+
 		/* Free the extra I/O channels */
 		for (i = new_num_channels; i < old_num_channels; i++) {
 			if (sgroup->channels[i]) {
@@ -501,36 +502,39 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 			}
 		}
 
-		/* Shrink array */
-		buf = realloc(sgroup->channels, new_num_channels * sizeof(sgroup->channels[0]));
-		if (new_num_channels > 0 && !buf) {
-			return -ENOMEM;
-		}
-
-		sgroup->channels = buf;
-		sgroup->num_channels = new_num_channels;
-	} else {
-		/* Grow array */
-		buf = realloc(sgroup->channels, new_num_channels * sizeof(sgroup->channels[0]));
-		if (!buf) {
-			return -ENOMEM;
-		}
-
-		sgroup->channels = buf;
-		sgroup->num_channels = new_num_channels;
-
-		/* Initialize new channels */
-		for (i = old_num_channels; i < new_num_channels; i++) {
-			ns = subsystem->ns[i];
-			if (ns) {
-				sgroup->channels[i] = spdk_bdev_get_io_channel(ns->desc);
-			} else {
-				sgroup->channels[i] = NULL;
+		/* Make the array smaller */
+		if (new_num_channels > 0) {
+			buf = realloc(sgroup->channels, new_num_channels * sizeof(sgroup->channels[0]));
+			if (!buf) {
+				return -ENOMEM;
 			}
+			sgroup->channels = buf;
+		} else {
+			free(sgroup->channels);
+			sgroup->channels = NULL;
 		}
 	}
 
-	/* TODO: Handle namespaces where the bdev was swapped out */
+	sgroup->num_channels = new_num_channels;
+
+	/* Detect bdevs that were added or removed */
+	for (i = 0; i < sgroup->num_channels; i++) {
+		ns = subsystem->ns[i];
+		if (ns == NULL && sgroup->channels[i] == NULL) {
+			/* Both NULL. Leave empty */
+		} else if (ns == NULL && sgroup->channels[i] != NULL) {
+			/* There was a channel here, but the namespace is gone. */
+			spdk_put_io_channel(sgroup->channels[i]);
+			sgroup->channels[i] = NULL;
+		} else if (ns != NULL && sgroup->channels[i] == NULL) {
+			/* A namespace appeared but there is no channel yet */
+			sgroup->channels[i] = spdk_bdev_get_io_channel(ns->desc);
+		} else {
+			/* A namespace was present before and didn't change. */
+
+			/* TODO: Handle namespaces where the bdev was swapped out for a different one */
+		}
+	}
 
 	return 0;
 }
