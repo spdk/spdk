@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "058afb6f_6f32c7b7",
+        "filename": "test/unit/lib/vhost/test_vhost.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-05T16:58:34Z",
+      "side": 1,
+      "message": "unsolved conflict commited? :D",
+      "range": {
+        "startLine": 64,
+        "startChar": 0,
+        "endLine": 89,
+        "endChar": 63
+      },
+      "revId": "4f33d2036f48a6c0981dc3a21cd6c37e2c90876c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
