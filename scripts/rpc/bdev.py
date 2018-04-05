@@ -27,6 +27,15 @@ def construct_aio_bdev(client, args):
     return client.call('construct_aio_bdev', params)
 
 
+def construct_iscsi_bdev(client, args):
+    params = {
+        'name': args.name,
+        'initiator_iqn': args.initiator_iqn,
+        'url': args.url
+    }
+    return client.call('construct_iscsi_bdev', params)
+
+
 def construct_nvme_bdev(client, args):
     params = {'name': args.name,
               'trtype': args.trtype,
