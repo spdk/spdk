@@ -50,6 +50,7 @@
 #include "spdk_internal/log.h"
 
 static void bdev_nvme_get_spdk_running_config(FILE *fp);
+static int bdev_nvme_config_json(struct spdk_json_write_ctx *w);
 
 struct nvme_ctrlr {
 	/**
@@ -163,6 +164,7 @@ static struct spdk_bdev_module nvme_if = {
 	.module_init = bdev_nvme_library_init,
 	.module_fini = bdev_nvme_library_fini,
 	.config_text = bdev_nvme_get_spdk_running_config,
+	.config_json = bdev_nvme_config_json,
 	.get_ctx_size = bdev_nvme_get_ctx_size,
 
 };
@@ -671,6 +673,12 @@ bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	return 0;
 }
 
+static void
+bdev_nvme_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+{
+	/* No config per bdev needed */
+}
+
 static uint64_t
 bdev_nvme_get_spin_time(struct spdk_io_channel *ch)
 {
@@ -699,6 +707,7 @@ static const struct spdk_bdev_fn_table nvmelib_fn_table = {
 	.io_type_supported	= bdev_nvme_io_type_supported,
 	.get_io_channel		= bdev_nvme_get_io_channel,
 	.dump_info_json		= bdev_nvme_dump_info_json,
+	.write_config_json	= bdev_nvme_write_config_json,
 	.get_spin_time		= bdev_nvme_get_spin_time,
 };
 
@@ -1458,6 +1467,48 @@ bdev_nvme_get_spdk_running_config(FILE *fp)
 	fprintf(fp, "HotplugPollRate %d\n", g_nvme_hotplug_poll_timeout_us);
 
 	fprintf(fp, "\n");
+}
+
+static int
+bdev_nvme_config_json(struct spdk_json_write_ctx *w)
+{
+	struct nvme_ctrlr		*nvme_ctrlr;
+	struct spdk_nvme_transport_id	*trid;
+	const char			*adrfam;
+
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	TAILQ_FOREACH(nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
+		trid = &nvme_ctrlr->trid;
+
+		spdk_json_write_object_begin(w);
+
+		spdk_json_write_named_string(w, "method", "construct_nvme_bdev");
+
+		spdk_json_write_named_object_begin(w, "params");
+		spdk_json_write_named_string(w, "name", nvme_ctrlr->name);
+		spdk_json_write_named_string(w, "trtype", spdk_nvme_transport_id_trtype_str(trid->trtype));
+		spdk_json_write_named_string(w, "traddr", trid->traddr);
+
+		adrfam = spdk_nvme_transport_id_adrfam_str(trid->adrfam);
+		if (adrfam) {
+			spdk_json_write_named_string(w, "adrfam", adrfam);
+		}
+
+		if (trid->trsvcid[0] != '\0') {
+			spdk_json_write_named_string(w, "trsvcid", trid->trsvcid);
+		}
+
+		if (trid->subnqn[0] != '\0') {
+			spdk_json_write_named_string(w, "subnqn", trid->subnqn);
+		}
+
+		spdk_json_write_object_end(w);
+
+		spdk_json_write_object_end(w);
+	}
+
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+	return 0;
 }
 
 struct spdk_nvme_ctrlr *
