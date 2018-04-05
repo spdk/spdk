@@ -16,6 +16,24 @@
       "revId": "87f585a41eeb73269d506d6a83c956ddd997d583",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d32f4af_923620da",
+        "filename": "test/iscsi_tgt/rpc_config/rpc_config.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 489,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-05T15:40:38Z",
+      "side": 1,
+      "message": "ok - Tomek explained why this is commented out - it will be fixed in a later patch\n\nTomek - could you please add a brief comment here describing why it needs to be commented out?  I am OK with commenting it out for this patch and then fixing this test in the next patch",
+      "parentUuid": "b609cd71_695008c9",
+      "revId": "87f585a41eeb73269d506d6a83c956ddd997d583",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
