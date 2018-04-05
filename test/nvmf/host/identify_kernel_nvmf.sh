@@ -54,7 +54,7 @@ $rootdir/examples/nvme/identify/identify -r "\
 	adrfam:IPv4 \
 	traddr:$NVMF_FIRST_TARGET_IP \
 	trsvcid:$NVMF_PORT \
-	subnqn:nqn.2014-08.org.nvmexpress.discovery" -t all
+	subnqn:$subsystemname" -t all
 
 rm -rf /sys/kernel/config/nvmet/ports/1/subsystems/$subsystemname
 
