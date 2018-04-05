@@ -14,7 +14,7 @@ function test_subsystems() {
 	test_json_config
 
 	clear_bdev_subsystem_config
-	test_global_params
+	test_global_params "spdk_tgt"
 	kill_targets
 }
 
