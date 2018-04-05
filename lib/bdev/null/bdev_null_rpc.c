@@ -46,6 +46,13 @@ struct rpc_construct_null {
 	uint32_t block_size;
 };
 
+static void
+free_rpc_construct_null(struct rpc_construct_null *req)
+{
+	free(req->name);
+	free(req->uuid);
+}
+
 static const struct spdk_json_object_decoder rpc_construct_null_decoders[] = {
 	{"name", offsetof(struct rpc_construct_null, name), spdk_json_decode_string},
 	{"uuid", offsetof(struct rpc_construct_null, uuid), spdk_json_decode_string, true},
@@ -84,7 +91,7 @@ spdk_rpc_construct_null_bdev(struct spdk_jsonrpc_request *request,
 
 	w = spdk_jsonrpc_begin_result(request);
 	if (w == NULL) {
-		free(req.name);
+		free_rpc_construct_null(&req);
 		return;
 	}
 
@@ -92,11 +99,11 @@ spdk_rpc_construct_null_bdev(struct spdk_jsonrpc_request *request,
 	spdk_json_write_string(w, bdev->name);
 	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(request, w);
-	free(req.name);
+	free_rpc_construct_null(&req);
 	return;
 
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-	free(req.name);
+	free_rpc_construct_null(&req);
 }
 SPDK_RPC_REGISTER("construct_null_bdev", spdk_rpc_construct_null_bdev)
