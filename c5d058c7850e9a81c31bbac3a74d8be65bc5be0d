@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "04ce8be5_d0ca2e6b",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1486,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-05T17:54:24Z",
+      "side": 1,
+      "message": "This should probably be construct_nvme_bdev.",
+      "range": {
+        "startLine": 1486,
+        "startChar": 45,
+        "endLine": 1486,
+        "endChar": 66
+      },
+      "revId": "c5d058c7850e9a81c31bbac3a74d8be65bc5be0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
