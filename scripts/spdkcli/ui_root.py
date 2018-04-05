@@ -1,4 +1,4 @@
-from .ui_node import UINode, UIBdevs, UILvolStores
+from .ui_node import UINode, UIBdevs, UILvolStores, UIVhosts
 import rpc.client
 import rpc
 
@@ -11,12 +11,14 @@ class UIRoot(UINode):
         UINode.__init__(self, "/", shell=shell)
         self.current_bdevs = []
         self.current_lvol_stores = []
+        self.current_vhost_ctrls = []
         self.set_rpc_target(s)
 
     def refresh(self):
         self._children = set([])
         UIBdevs(self)
         UILvolStores(self)
+        UIVhosts(self)
 
     def set_rpc_target(self, s):
         self.client = rpc.client.JSONRPCClient(s)
@@ -118,6 +120,37 @@ class UIRoot(UINode):
         response = rpc.bdev.construct_rbd_bdev(self.client, **kwargs)
         return response
 
+    def list_vhost_ctrls(self):
+        self.current_vhost_ctrls = rpc.vhost.get_vhost_controllers(self.client)
+
+    def get_vhost_ctrlrs(self, ctrlr_type):
+        for ctrlr in filter(lambda x: ctrlr_type in x["backend_specific"].keys(),
+                            self.current_vhost_ctrls):
+            yield VhostCtrlr(ctrlr)
+
+    def remove_vhost_controller(self, **kwargs):
+        rpc.vhost.remove_vhost_controller(self.client, **kwargs)
+        self.current_vhost_ctrls = rpc.vhost.get_vhost_controllers(self.client)
+
+    def create_vhost_scsi_controller(self, **kwargs):
+        rpc.vhost.construct_vhost_scsi_controller(self.client, **kwargs)
+        self.current_vhost_ctrls = rpc.vhost.get_vhost_controllers(self.client)
+
+    def create_vhost_blk_controller(self, **kwargs):
+        rpc.vhost.construct_vhost_blk_controller(self.client, **kwargs)
+        self.current_vhost_ctrls = rpc.vhost.get_vhost_controllers(self.client)
+
+    def remove_vhost_scsi_target(self, **kwargs):
+        rpc.vhost.remove_vhost_scsi_target(self.client, **kwargs)
+        self.current_vhost_ctrls = rpc.vhost.get_vhost_controllers(self.client)
+
+    def add_vhost_scsi_lun(self, **kwargs):
+        rpc.vhost.add_vhost_scsi_lun(self.client, **kwargs)
+        self.current_vhost_ctrls = rpc.vhost.get_vhost_controllers(self.client)
+
+    def set_vhost_controller_coalescing(self, **kwargs):
+        rpc.vhost.set_vhost_controller_coalescing(self.client, **kwargs)
+
 
 class Bdev(object):
     def __init__(self, bdev_info):
@@ -141,3 +174,15 @@ class LvolStore(object):
         """
         for i in lvs_info.keys():
             setattr(self, i, lvs_info[i])
+
+
+class VhostCtrlr(object):
+    def __init__(self, ctrlr_info):
+        """
+        All class attributes are set based on what information is received
+        from get_bdevs RPC call.
+        # TODO: Document in docstring parameters which describe bdevs.
+        # TODO: Possible improvement: JSON schema might be used here in future
+        """
+        for i in ctrlr_info.keys():
+            setattr(self, i, ctrlr_info[i])
