@@ -1,5 +1,6 @@
 from configshell_fb import ConfigNode, ExecutionError
 from uuid import UUID
+import json
 
 
 def convert_bytes_to_human(size):
@@ -239,6 +240,117 @@ class UINvmeBdev(UIBdev):
         name = ret_name
         self.shell.log.info("Created NVME bdev: %s" % name)
         self.refresh()
+
+
+class UIVhosts(UINode):
+    def __init__(self, parent):
+        UINode.__init__(self, "vhost", parent)
+        self.refresh()
+
+    def refresh(self):
+        self._children = set([])
+        self.get_root().list_vhost_ctrls()
+        UIVhostBlk(self)
+        UIVhostScsi(self)
+
+    def ui_command_delete(self, name):
+        self.get_root().remove_vhost_controller(ctrlr=name)
+        self.refresh()
+
+
+class UIVhost(UINode):
+    def __init__(self, name, parent):
+        UINode.__init__(self, name, parent)
+        self.refresh()
+
+    def refresh(self):
+        self._children = set([])
+        for ctrlr in self.get_root().get_vhost_ctrlrs(self.name):
+            UIVhostCtrlObj(ctrlr, self)
+
+    def ui_command_delete(self, name):
+        self.get_root().remove_vhost_controller(ctrlr=name)
+        self.refresh()
+
+
+class UIVhostBlk(UIVhost):
+    def __init__(self, parent):
+        UIVhost.__init__(self, "block", parent)
+        self.refresh()
+
+    def ui_command_create(self, name, bdev, cpumask=None, readonly=False):
+        ret_name = self.get_root().create_vhost_blk_controller(ctrlr=name,
+                                                               dev_name=bdev,
+                                                               cpumask=cpumask,
+                                                               readonly=bool(readonly))
+        self.shell.log.info("Created Vhost BLK controller: %s" % ret_name)
+        self.refresh()
+
+
+class UIVhostScsi(UIVhost):
+    def __init__(self, parent):
+        UIVhost.__init__(self, "scsi", parent)
+        self.refresh()
+
+    def ui_command_create(self, name, cpumask=None):
+        ret_name = self.get_root().create_vhost_scsi_controller(ctrlr=name,
+                                                                cpumask=cpumask)
+        self.shell.log.info("Created Vhost SCSI controller: %s" % ret_name)
+        self.refresh()
+
+
+class UIVhostCtrlObj(UINode):
+    def __init__(self, ctrlr, parent):
+        self.ctrlr = ctrlr
+        UINode.__init__(self, self.ctrlr.ctrlr, parent)
+        self.refresh()
+
+    def refresh(self):
+        self._children = set([])
+        if "scsi" in self.parent.name:
+            for lun in self.ctrlr.backend_specific["scsi"]:
+                UIVhostTargetObj(lun, self)
+        elif "block" in self.parent.name:
+            UIVhostLunDevObj(self.ctrlr.backend_specific["block"]["bdev"], self)
+
+    def ui_command_show_details(self):
+        self.shell.log.info(json.dumps(vars(self.ctrlr), indent=2))
+
+    def summary(self):
+        cpumask = "CpuMask=%s" % self.ctrlr.cpumask
+
+        # TODO: Maybe print socket path instead of ReadOnly or target count?
+        if "scsi" in self.parent.name:
+            msg = "Targets: %s" % len(self.ctrlr.backend_specific["scsi"])
+            info = ", ".join([cpumask, msg])
+        elif "block" in self.parent.name:
+            ro = None
+            if self.ctrlr.backend_specific["block"]["readonly"]:
+                ro = "Readonly"
+            info = ", ".join(filter(None, [cpumask, ro]))
+        return info, True
+
+
+class UIVhostTargetObj(UINode):
+    def __init__(self, target, parent):
+        # Next line: configshell does not allow paths with spaces.
+        UINode.__init__(self, target["target_name"].replace(" ", "_"), parent)
+        self.target = target
+        self._children = set([])
+        for target in target["luns"]:
+            UIVhostLunDevObj(target["bdev_name"], self)
+
+    def ui_command_show_details(self):
+        self.shell.log.info(json.dumps(self.target, indent=2))
+
+    def summary(self):
+        info = "LUNs: %s" % len(self.target["luns"])
+        return info, True
+
+
+class UIVhostLunDevObj(UINode):
+    def __init__(self, name, parent):
+        UINode.__init__(self, name, parent)
 
 
 class UIBdevObj(UINode):
