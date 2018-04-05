@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "822e11e9_fb5ee793",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 947,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-05T08:35:34Z",
+      "side": 1,
+      "message": "As spdk_lvol_resize no longer returns a status we can change this function to void type and simplify spdk_rpc_resize_lvol_bdev(). This can be separate patch. Let me know what you think Jim.",
+      "range": {
+        "startLine": 947,
+        "startChar": 0,
+        "endLine": 947,
+        "endChar": 3
+      },
+      "revId": "8fdd708c548bd7627d5c44e4290201821813d9b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
