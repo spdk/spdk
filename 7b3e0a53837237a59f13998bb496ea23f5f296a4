@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b0b9c506_8e0a50ea",
+        "filename": "lib/virtio/virtio_user.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 419,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-04-05T21:41:23Z",
+      "side": 1,
+      "message": "shouldn\u0027t this apply to vq_count rather than vq_size?\n\u003eget_queue_num(vdev, 0) returns size of virtqueue #0. I know the name is misleading...",
+      "range": {
+        "startLine": 419,
+        "startChar": 75,
+        "endLine": 419,
+        "endChar": 97
+      },
+      "revId": "7b3e0a53837237a59f13998bb496ea23f5f296a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "50cadb20_cb3492af",
+        "filename": "lib/virtio/virtio_user.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 423,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-04-05T21:41:23Z",
+      "side": 1,
+      "message": "vdev-\u003emax_queues - vdev-\u003efixed_queues_num",
+      "range": {
+        "startLine": 423,
+        "startChar": 45,
+        "endLine": 423,
+        "endChar": 62
+      },
+      "revId": "7b3e0a53837237a59f13998bb496ea23f5f296a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
