@@ -62,6 +62,15 @@ def construct_error_bdev(client, args):
     return client.call('construct_error_bdev', params)
 
 
+def construct_iscsi_bdev(client, args):
+    params = {
+        'name': args.name,
+        'url': args.url,
+        'initiator_iqn': args.initiator_iqn,
+    }
+    return client.call('construct_iscsi_bdev', params)
+
+
 def construct_pmem_bdev(client, args):
     params = {
         'pmem_file': args.pmem_file,
