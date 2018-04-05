@@ -5,6 +5,9 @@ SPDK_BUILD_DIR=$JSON_DIR/../../
 . $JSON_DIR/../common/autotest_common.sh
 
 spdk_rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py -s /var/tmp/spdk.sock"
+spdk_clear_config_py="$JSON_DIR/clear_config.py -s /var/tmp/spdk.sock"
+initiator_rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py -s /var/tmp/virtio.sock"
+initiator_clear_config_py="$JSON_DIR/clear_config.py -s /var/tmp/virtio.sock"
 base_json_config=$JSON_DIR/base_config.json
 last_json_config=$JSON_DIR/last_config.json
 base_bdevs=$JSON_DIR/bdevs_base.txt
@@ -14,6 +17,7 @@ tmp_config=$JSON_DIR/tmp_config.txt
 function run_spdk_tgt() {
         cp $JSON_DIR/spdk_tgt.conf.base $JSON_DIR/spdk_tgt.conf
         $SPDK_BUILD_DIR/scripts/gen_nvme.sh >> $JSON_DIR/spdk_tgt.conf
+	ls $JSON_DIR
 
         echo "Running spdk target"
         $SPDK_BUILD_DIR/app/spdk_tgt/spdk_tgt -m 0x1 -p 0 -c $JSON_DIR/spdk_tgt.conf -s 1024 -r /var/tmp/spdk.sock &
@@ -27,14 +31,27 @@ function run_spdk_tgt() {
         echo ""
 }
 
+function run_initiator() {
+        cp $JSON_DIR/virtio.conf.base $JSON_DIR/vhost.conf.in
+        $SPDK_BUILD_DIR/app/spdk_tgt/spdk_tgt -m 0x2 -p 0 -c $JSON_DIR/vhost.conf.in -s 1024 -r /var/tmp/virtio.sock &
+        virtio_pid=$!
+        waitforlisten $virtio_pid /var/tmp/virtio.sock
+        rm $JSON_DIR/vhost.conf.in
+}
+
 function kill_targets() {
-	killprocess $spdk_tgt_pid
+        if [ ! -z $virtio_pid ]; then
+                killprocess $virtio_pid
+        fi
+        if [ ! -z $spdk_tgt_pid ]; then
+                killprocess $spdk_tgt_pid
+        fi
 }
 
 function test_json_config() {
         $rpc_py get_bdevs | jq '.|sort_by(.name)' > $base_bdevs
         $rpc_py save_config -f $base_json_config
-        $JSON_DIR/clear_config.py clear_config
+        $clear_config_py clear_config
         $rpc_py save_config -f $tmp_config
         if [ "[]" != "$(jq '.subsystems | map(select(.config != null)) | map(select(.config != []))' $tmp_config)" ]; then
                 echo "Config has not been cleared"
@@ -86,23 +103,33 @@ function clean_bdev_subsystem_config() {
         $rpc_py delete_bdev lvs_test/lvol0
         $rpc_py delete_bdev lvs_test/lvol1
         $rpc_py destroy_lvol_store -l lvs_test
-        $JSON_DIR/clear_config.py clear_config
-        if [ -f /tmp/pool_file1 ]; then
-                rm /tmp/pool_file1
-        fi
-        if [ -f /tmp/sample_aoi ]; then
-                rm /tmp/sample_aio
-        fi
-        # Uncomment after bug on ceph will be fixed
-        # rbd_cleanup
+        $clear_config_py clear_config
+	if [ -f /tmp/pool_file1 ]; then
+		rm /tmp/pool_file1
+	fi
+	if [ -f /tmp/sample_aoi ]; then
+		rm /tmp/sample_aio
+	fi
+	# Uncomment after bug on ceph will be fixed
+	# rbd_cleanup
 }
 
 function on_error_exit() {
         set +e
         echo "Error on $1 - $2"
+
         clean_after_test_json_config
+	rpc_py="$spdk_rpc_py"
+	clear_config_py="$spdk_clear_config_py"
         clean_bdev_subsystem_config
-        killprocess $spdk_tgt_pid
+
+        if [ ! -z $virtio_pid ]; then
+                killprocess $virtio_pid
+        fi
+        if [ ! -z $spdk_tgt_pid ]; then
+                killprocess $spdk_tgt_pid
+        fi
+
         print_backtrace
         exit 1
 }
