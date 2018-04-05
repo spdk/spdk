@@ -46,6 +46,8 @@
 #include "spdk_internal/log.h"
 #include "spdk_internal/bdev.h"
 
+#include "bdev_iscsi.h"
+
 #include "iscsi/iscsi.h"
 #include "iscsi/scsi-lowlevel.h"
 
@@ -374,17 +376,35 @@ bdev_iscsi_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 
 	pthread_mutex_lock(&lun->mutex);
 
-	spdk_json_write_name(w, "iscsi");
-	spdk_json_write_object_begin(w);
-	spdk_json_write_name(w, "initiator_name");
-	spdk_json_write_string(w, lun->initiator_iqn);
-	spdk_json_write_name(w, "url");
-	spdk_json_write_string(w, lun->url);
+	spdk_json_write_named_object_begin(w, "iscsi");
+	spdk_json_write_named_string(w, "initiator_name", lun->initiator_iqn);
+	spdk_json_write_named_string(w, "url", lun->url);
 	spdk_json_write_object_end(w);
 
 	pthread_mutex_unlock(&lun->mutex);
 	return 0;
 }
+
+static void
+bdev_iscsi_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+{
+	struct bdev_iscsi_lun *lun = bdev->ctxt;
+
+	pthread_mutex_lock(&lun->mutex);
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "method", "construct_iscsi_bdev");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_string(w, "name", bdev->name);
+	spdk_json_write_named_string(w, "initiator_iqn", lun->initiator_iqn);
+	spdk_json_write_named_string(w, "url", lun->url);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+	pthread_mutex_unlock(&lun->mutex);
+}
+
 
 static const struct spdk_bdev_fn_table iscsi_fn_table = {
 	.destruct		= bdev_iscsi_destruct,
@@ -392,11 +412,12 @@ static const struct spdk_bdev_fn_table iscsi_fn_table = {
 	.io_type_supported	= bdev_iscsi_io_type_supported,
 	.get_io_channel		= bdev_iscsi_get_io_channel,
 	.dump_info_json		= bdev_iscsi_dump_info_json,
+	.write_config_json	= bdev_iscsi_write_config_json,
 };
 
-static int
-create_iscsi_disk(const char *name, const char *initiator_iqn, const char *url,
-		  struct spdk_bdev **bdev)
+int
+create_iscsi_disk(const char *name, const char *initiator_iqn, const char *url, const char *user,
+		  const char *password, struct spdk_bdev **bdev)
 {
 	struct scsi_task *task = NULL;
 	struct scsi_readcapacity16 *readcap16 = NULL;
@@ -436,6 +457,14 @@ create_iscsi_disk(const char *name, const char *initiator_iqn, const char *url,
 		SPDK_ERRLOG("could not parse URL:");
 		rc = -EINVAL;
 		goto err_iscsi;
+	}
+
+	if (user) {
+		snprintf(iscsi_url->user, SPDK_COUNTOF(iscsi_url->user), "%s", user);
+	}
+
+	if (password) {
+		snprintf(iscsi_url->passwd, SPDK_COUNTOF(iscsi_url->passwd), "%s", password);
 	}
 
 	rc = iscsi_set_session_type(lun->context, ISCSI_SESSION_NORMAL);
@@ -529,7 +558,7 @@ bdev_iscsi_initialize(void)
 			break;
 		}
 
-		rc = create_iscsi_disk(bdev_name, initiator_iqn, url, NULL);
+		rc = create_iscsi_disk(bdev_name, initiator_iqn, url, NULL, NULL, NULL);
 		if (rc) {
 			break;
 		}
