@@ -42,14 +42,14 @@
 struct rpc_construct_null {
 	char *name;
 	char *uuid;
-	uint32_t num_blocks;
+	uint64_t num_blocks;
 	uint32_t block_size;
 };
 
 static const struct spdk_json_object_decoder rpc_construct_null_decoders[] = {
 	{"name", offsetof(struct rpc_construct_null, name), spdk_json_decode_string},
 	{"uuid", offsetof(struct rpc_construct_null, uuid), spdk_json_decode_string, true},
-	{"num_blocks", offsetof(struct rpc_construct_null, num_blocks), spdk_json_decode_uint32},
+	{"num_blocks", offsetof(struct rpc_construct_null, num_blocks), spdk_json_decode_uint64},
 	{"block_size", offsetof(struct rpc_construct_null, block_size), spdk_json_decode_uint32},
 };
 
