@@ -1,4 +1,4 @@
-from .ui_node import UINode, UIBdevs, UILvolStores
+from .ui_node import UINode, UIBdevs, UILvolStores, UIVhosts
 import rpc.client
 import rpc
 from argparse import Namespace as an
@@ -12,12 +12,14 @@ class UIRoot(UINode):
         UINode.__init__(self, "/", shell=shell)
         self.current_bdevs = []
         self.current_lvol_stores = []
+        self.current_vhost_ctrls = []
         self.set_rpc_target(s)
 
     def refresh(self):
         self._children = set([])
         UIBdevs(self)
         UILvolStores(self)
+        UIVhosts(self)
 
     def set_rpc_target(self, s):
         self.client = rpc.client.JSONRPCClient(s)
@@ -71,6 +73,45 @@ class UIRoot(UINode):
     def delete_lvol_store(self, **kwargs):
         rpc.lvol.destroy_lvol_store(self.client, **kwargs)
 
+    def list_vhost_ctrls(self):
+        self.current_vhost_ctrls = rpc.vhost.get_vhost_controllers(self.client, an())
+
+    def get_vhost_ctrlrs(self, ctrlr_type):
+        for ctrlr in filter(lambda x: ctrlr_type in x["backend_specific"].keys(),
+                            self.current_vhost_ctrls):
+            yield VhostCtrlr(ctrlr)
+
+    def remove_vhost_controller(self, **kwargs):
+        rpc.vhost.remove_vhost_controller(self.client, an(**kwargs))
+        for ctrlr in self.current_vhost_ctrls:
+            if ctrlr["ctrlr"] == kwargs["ctrlr"]:
+                return kwargs["ctrlr"]
+
+    def create_vhost_scsi_controller(self, **kwargs):
+        rpc.vhost.construct_vhost_scsi_controller(self.client, an(**kwargs))
+        ctrlrs = rpc.vhost.get_vhost_controllers(self.client, an(**kwargs))
+        for ctrlr in ctrlrs:
+            if ctrlr["ctrlr"] == kwargs["ctrlr"]:
+                return kwargs["ctrlr"]
+
+    def create_vhost_blk_controller(self, **kwargs):
+        rpc.vhost.construct_vhost_blk_controller(self.client, an(**kwargs))
+        ctrlrs = rpc.vhost.get_vhost_controllers(self.client, an(**kwargs))
+        for ctrlr in ctrlrs:
+            if ctrlr["ctrlr"] == kwargs["ctrlr"]:
+                return kwargs["ctrlr"]
+
+    def remove_vhost_scsi_target(self, **kwargs):
+        rpc.vhost.remove_vhost_scsi_target(self.client, an(**kwargs))
+        for ctrlr in filter(lambda x: x["ctrlr"] == kwargs["ctrlr"], self.current_vhost_ctrls):
+            for tgt in ctrlr["backend_specific"]["scsi"]:
+                if tgt["id"] == kwargs["scsi_target_num"]:
+                    ctrlr["backend_specific"]["scsi"].remove(tgt)
+
+    def add_vhost_scsi_lun(self, **kwargs):
+        rpc.vhost.add_vhost_scsi_lun(self.client, an(**kwargs))
+        self.current_vhost_ctrls = rpc.vhost.get_vhost_controllers(self.client, an(**kwargs))
+
 
 class Bdev(object):
     def __init__(self, bdev_info):
@@ -85,6 +126,18 @@ class Bdev(object):
 
 
 class LvolStore(object):
+    def __init__(self, lvs_info):
+        """
+        All class attributes are set based on what information is received
+        from get_bdevs RPC call.
+        # TODO: Document in docstring parameters which describe bdevs.
+        # TODO: Possible improvement: JSON schema might be used here in future
+        """
+        for i in lvs_info.keys():
+            setattr(self, i, lvs_info[i])
+
+
+class VhostCtrlr(object):
     def __init__(self, lvs_info):
         """
         All class attributes are set based on what information is received
