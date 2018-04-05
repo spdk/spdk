@@ -34,10 +34,10 @@
 #include "spdk/stdinc.h"
 
 #include "spdk_internal/copy_engine.h"
+#include "spdk_internal/log.h"
 
 #include "spdk/env.h"
 #include "spdk/conf.h"
-#include "spdk/log.h"
 #include "spdk/event.h"
 #include "spdk/io_channel.h"
 #include "spdk/ioat.h"
@@ -241,13 +241,14 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev)
 	struct ioat_probe_ctx *ctx = cb_ctx;
 	struct spdk_pci_addr pci_addr = spdk_pci_device_get_addr(pci_dev);
 
-	SPDK_NOTICELOG(" Found matching device at %04x:%02x:%02x.%x vendor:0x%04x device:0x%04x\n",
-		       pci_addr.domain,
-		       pci_addr.bus,
-		       pci_addr.dev,
-		       pci_addr.func,
-		       spdk_pci_device_get_vendor_id(pci_dev),
-		       spdk_pci_device_get_device_id(pci_dev));
+	SPDK_INFOLOG(SPDK_LOG_COPY_IOAT,
+		     " Found matching device at %04x:%02x:%02x.%x vendor:0x%04x device:0x%04x\n",
+		     pci_addr.domain,
+		     pci_addr.bus,
+		     pci_addr.dev,
+		     pci_addr.func,
+		     spdk_pci_device_get_vendor_id(pci_dev),
+		     spdk_pci_device_get_device_id(pci_dev));
 
 	if (ctx->num_whitelist_devices > 0 &&
 	    !ioat_find_dev_by_whitelist_bdf(&pci_addr, ctx->whitelist, ctx->num_whitelist_devices)) {
@@ -315,7 +316,7 @@ copy_engine_ioat_init(void)
 		return -1;
 	}
 
-	SPDK_NOTICELOG("Ioat Copy Engine Offload Enabled\n");
+	SPDK_INFOLOG(SPDK_LOG_COPY_IOAT, "Ioat Copy Engine Offload Enabled\n");
 	spdk_copy_engine_register(&ioat_copy_engine);
 	spdk_io_device_register(&ioat_copy_engine, ioat_create_cb, ioat_destroy_cb,
 				sizeof(struct ioat_io_channel));
@@ -349,3 +350,5 @@ copy_engine_ioat_config_text(FILE *fp)
 			dev->domain, dev->bus, dev->dev, dev->func);
 	}
 }
+
+SPDK_LOG_REGISTER_COMPONENT("copy_ioat", SPDK_LOG_COPY_IOAT)
