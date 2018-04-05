@@ -15,6 +15,10 @@ mnt_dir=${base_dir}/mnt
 dev_backend=/dev/ceph
 image=/var/tmp/ceph_raw.img
 dev=/dev/loop200
+
+umount $dev || true
+losetup -d $dev_backend || true
+
 # partition osd
 if [ -d $base_dir ]; then
 	rm -rf $base_dir
