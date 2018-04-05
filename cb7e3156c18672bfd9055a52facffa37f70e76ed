@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c196bbac_11e300d4",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-05T09:00:35Z",
+      "side": 1,
+      "message": "given",
+      "range": {
+        "startLine": 216,
+        "startChar": 21,
+        "endLine": 216,
+        "endChar": 26
+      },
+      "revId": "cb7e3156c18672bfd9055a52facffa37f70e76ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
