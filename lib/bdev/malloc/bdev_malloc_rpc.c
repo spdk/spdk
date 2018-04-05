@@ -41,7 +41,7 @@
 struct rpc_construct_malloc {
 	char *name;
 	char *uuid;
-	uint32_t num_blocks;
+	uint64_t num_blocks;
 	uint32_t block_size;
 };
 
@@ -55,7 +55,7 @@ free_rpc_construct_malloc(struct rpc_construct_malloc *r)
 static const struct spdk_json_object_decoder rpc_construct_malloc_decoders[] = {
 	{"name", offsetof(struct rpc_construct_malloc, name), spdk_json_decode_string, true},
 	{"uuid", offsetof(struct rpc_construct_malloc, uuid), spdk_json_decode_string, true},
-	{"num_blocks", offsetof(struct rpc_construct_malloc, num_blocks), spdk_json_decode_uint32},
+	{"num_blocks", offsetof(struct rpc_construct_malloc, num_blocks), spdk_json_decode_uint64},
 	{"block_size", offsetof(struct rpc_construct_malloc, block_size), spdk_json_decode_uint32},
 };
 
