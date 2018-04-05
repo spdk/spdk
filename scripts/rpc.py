@@ -124,6 +124,17 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_aio_bdev)
 
     @call_cmd
+    def construct_iscsi_bdev(args):
+        print_array(rpc.bdev.construct_iscsi_bdev(args.client, args))
+
+    p = subparsers.add_parser('construct_iscsi_bdev',
+                              help='Add a bdev with iSCSI backend')
+    p.add_argument('name', help='Block device name')
+    p.add_argument('initiator_iqn', help='connection iqn name we identify to target as')
+    p.add_argument('url', help='SCSI URL string')
+    p.set_defaults(func=construct_iscsi_bdev)
+
+    @call_cmd
     def construct_nvme_bdev(args):
         print_array(rpc.bdev.construct_nvme_bdev(args.client, args))
 
