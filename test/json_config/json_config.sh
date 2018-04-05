@@ -4,12 +4,10 @@ cd ../vhost/common
 . ./common.sh
 cd ../../json_config
 BASE_DIR=$(readlink -f $(dirname $0))
-. $BASE_DIR/../nvmf/common.sh
-. $BASE_DIR/../common/autotest_common.sh
-. $BASE_DIR/../iscsi_tgt/common.sh
 
-vhost_rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
+vhost_rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 nvme_rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py -s /var/tmp/spdk.sock"
+initiator_rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir 1)/rpc.sock"
 base_json_config=$BASE_DIR/base_config.json
 last_json_config=$BASE_DIR/last_config.json
 base_bdevs=$BASE_DIR/bdevs_base.txt
@@ -24,12 +22,17 @@ function run_vhost() {
 	notice ""
 }
 
+function run_initiator() {
+	cp $BASE_DIR/virtio.conf.base $BASE_DIR/vhost.conf.in
+	spdk_vhost_run --conf-path=$BASE_DIR --vhost-num=1
+}
+
 # Add split section into vhost config
 function gen_config() {
 	cp $BASE_DIR/vhost.conf.base $BASE_DIR/vhost.conf.in
 	cat << END_OF_CONFIG >> $BASE_DIR/vhost.conf.in
 [Split]
-  Split Nvme0n1 2
+  Split Nvme0n1 3
   Split Nvme1n1 2
 END_OF_CONFIG
 }
@@ -45,7 +48,6 @@ function test_json_config() {
 	diff $base_bdevs $last_bdevs
 	rm $last_bdevs $base_bdevs || true
 	rm $last_json_config $base_json_config || true
-	$rpc_py clear_config
 }
 
 function upload_vhost() {
@@ -55,7 +57,7 @@ function upload_vhost() {
 	$rpc_py construct_malloc_bdev 8 1024 --name Malloc2
 	$rpc_py construct_error_bdev Malloc2
 	$rpc_py construct_aio_bdev /root/sample_aio aio_disk 1024
-	$rpc_py construct_lvol_store -c 1048576 Malloc0 lvs_test
+	$rpc_py construct_lvol_store -c 1048576 Nvme0n1p2 lvs_test
 	$rpc_py construct_lvol_bdev -l lvs_test lvol0 32
 	$rpc_py construct_lvol_bdev -l lvs_test -t lvol1 32
         $rpc_py create_pmem_pool /tmp/pool_file1 32 512
@@ -65,20 +67,42 @@ function upload_vhost() {
 }
 
 function clean_upload_vhost() {
-	$rpc_py destroy_lvol_store lvs_test
+	$rpc_py destroy_lvol_store -l lvs_test
         $rpc_py delete_pmem_pool /tmp/pool_file1
         rbd_cleanup
 }
 
+function pre_initiator_config() {
+	$rpc_py construct_vhost_scsi_controller naa.Nvme0n1p0.0
+	$rpc_py construct_vhost_scsi_controller naa.Nvme1n1p0.1
+	$rpc_py add_vhost_scsi_lun naa.Nvme0n1p0.0 0 Nvme0n1p0
+	$rpc_py add_vhost_scsi_lun naa.Nvme1n1p0.1 0 Nvme1n1p0
+	$rpc_py construct_vhost_blk_controller naa.Nvme0n1p1.0 Nvme0n1p1
+	$rpc_py construct_vhost_blk_controller naa.Nvme1n1p1.1 Nvme1n1p1
+}
+
+function upload_initiator() {
+	$rpc_py construct_virtio_user_scsi_bdev $(get_vhost_dir 0)/naa.Nvme0n1p0.0 Nvme0n1p0
+	$rpc_py construct_virtio_user_blk_bdev $(get_vhost_dir 0)/naa.Nvme0n1p1.0 Nvme0n1p1
+}
+
 function test_vhost() {
+	gen_config
 	run_vhost
 	rootdir=$(readlink -f $BASE_DIR/../..)
 
 	rpc_py="$vhost_rpc_py"
 	upload_vhost
 	test_json_config
+        pre_initiator_config
+	run_initiator
+	rpc_py="$initiator_rpc_py"
+	upload_initiator
+	test_json_config
 	clean_upload_vhost
-	spdk_vhost_kill
+	for vhost_num in $(spdk_vhost_list_all); do
+		spdk_vhost_kill $vhost_num
+	done
 }
 
 function on_error_exit() {
@@ -98,7 +122,6 @@ function on_error_exit() {
 }
 
 trap 'on_error_exit "${FUNCNAME}" "${LINENO}"' ERR
-gen_config
 modprobe nbd
 
 test_vhost
