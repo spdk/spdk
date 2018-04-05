@@ -49,6 +49,8 @@
 #include "iscsi/iscsi.h"
 #include "iscsi/scsi-lowlevel.h"
 
+#include "bdev_iscsi.h"
+
 struct bdev_iscsi_lun;
 
 #define BDEV_ISCSI_CONNECTION_POLL_US 500
@@ -81,8 +83,6 @@ struct bdev_iscsi_lun {
 	TAILQ_ENTRY(bdev_iscsi_lun)	link;
 };
 
-typedef void (*spdk_bdev_iscsi_create_cb)(void);
-
 struct bdev_iscsi_io_channel {
 	struct spdk_poller	*poller;
 	struct bdev_iscsi_lun	*lun;
@@ -94,7 +94,9 @@ struct bdev_iscsi_conn_req {
 	char					*initiator_iqn;
 	struct iscsi_context			*context;
 	spdk_bdev_iscsi_create_cb		create_cb;
+	spdk_bdev_iscsi_create_cb		create_cb_arg;
 	TAILQ_ENTRY(bdev_iscsi_conn_req)	link;
+	bool					deleted;
 };
 
 static int
@@ -436,17 +438,38 @@ bdev_iscsi_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	return 0;
 }
 
+static void
+bdev_iscsi_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+{
+	struct bdev_iscsi_lun *lun = bdev->ctxt;
+
+	pthread_mutex_lock(&lun->mutex);
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "method", "construct_iscsi_bdev");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_string(w, "name", bdev->name);
+	spdk_json_write_named_string(w, "initiator_iqn", lun->initiator_iqn);
+	spdk_json_write_named_string(w, "url", lun->url);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+	pthread_mutex_unlock(&lun->mutex);
+}
+
 static const struct spdk_bdev_fn_table iscsi_fn_table = {
 	.destruct		= bdev_iscsi_destruct,
 	.submit_request		= bdev_iscsi_submit_request,
 	.io_type_supported	= bdev_iscsi_io_type_supported,
 	.get_io_channel		= bdev_iscsi_get_io_channel,
 	.dump_info_json		= bdev_iscsi_dump_info_json,
+	.write_config_json	= bdev_iscsi_write_config_json,
 };
 
-static struct spdk_bdev *
-create_iscsi_lun(struct iscsi_context *context, char *url, char *initiator_iqn,
-		 const char *name, uint64_t num_blocks, uint32_t block_size)
+static int
+create_iscsi_lun(struct iscsi_context *context, char *url, char *initiator_iqn, char *name,
+		 uint64_t num_blocks, uint32_t block_size, struct spdk_bdev **bdev)
 {
 	struct bdev_iscsi_lun *lun;
 	int rc;
@@ -454,7 +477,7 @@ create_iscsi_lun(struct iscsi_context *context, char *url, char *initiator_iqn,
 	lun = calloc(sizeof(*lun), 1);
 	if (!lun) {
 		SPDK_ERRLOG("Unable to allocate enough memory for iscsi backend\n");
-		return NULL;
+		return -ENOMEM;
 	}
 
 	lun->context = context;
@@ -463,10 +486,7 @@ create_iscsi_lun(struct iscsi_context *context, char *url, char *initiator_iqn,
 
 	pthread_mutex_init(&lun->mutex, NULL);
 
-	lun->bdev.name = strdup(name);
-	if (!lun->bdev.name) {
-		goto error_return;
-	}
+	lun->bdev.name = name;
 	lun->bdev.product_name = "iSCSI LUN";
 	lun->bdev.module = &g_iscsi_bdev_module;
 	lun->bdev.blocklen = block_size;
@@ -484,11 +504,12 @@ create_iscsi_lun(struct iscsi_context *context, char *url, char *initiator_iqn,
 	}
 
 	TAILQ_INSERT_TAIL(&g_iscsi_lun_head, lun, link);
-	return &lun->bdev;
+	*bdev = &lun->bdev;
+	return 0;
 
 error_return:
 	iscsi_free_lun(lun);
-	return NULL;
+	return rc;
 }
 
 static void
@@ -497,25 +518,31 @@ iscsi_readcapacity16_cb(struct iscsi_context *iscsi, int status,
 {
 	struct bdev_iscsi_conn_req *req = private_data;
 	struct scsi_readcapacity16 *readcap16;
-	struct spdk_bdev *bdev;
+	struct spdk_bdev *bdev = NULL;
 	struct scsi_task *task = command_data;
 
 	if (status != SPDK_SCSI_STATUS_GOOD) {
+		SPDK_ERRLOG("iSCSI error: %s\n", iscsi_get_error(iscsi));
 		goto ret;
 	}
 
 	readcap16 = scsi_datain_unmarshall(task);
-	bdev = create_iscsi_lun(req->context, req->url, req->initiator_iqn, req->bdev_name,
-				readcap16->returned_lba + 1, readcap16->block_length);
-	if (!bdev) {
-		SPDK_ERRLOG("Unable to create iscsi bdev\n");
+	if (!readcap16) {
+		status = -ENOMEM;
+		goto ret;
+	}
+
+	status = create_iscsi_lun(req->context, req->url, req->initiator_iqn, req->bdev_name,
+				  readcap16->returned_lba + 1, readcap16->block_length, &bdev);
+	if (status) {
+		SPDK_ERRLOG("Unable to create iscsi bdev: %s (%d)\n", spdk_strerror(-status), status);
 	}
 
 ret:
 	TAILQ_REMOVE(&g_iscsi_conn_req, req, link);
-	req->create_cb();
+	req->create_cb(req->create_cb_arg, bdev, status);
 	scsi_free_scsi_task(task);
-	free(req);
+	req->deleted = true;
 }
 
 static void
@@ -537,8 +564,8 @@ iscsi_connect_cb(struct iscsi_context *iscsi, int status,
 ret:
 	SPDK_ERRLOG("iSCSI error: %s\n", iscsi_get_error(req->context));
 	TAILQ_REMOVE(&g_iscsi_conn_req, req, link);
-	req->create_cb();
-	free(req);
+	req->create_cb(req->create_cb_arg, NULL, status);
+	req->deleted = true;
 }
 
 static int
@@ -561,14 +588,18 @@ iscsi_bdev_conn_poll(void *arg)
 				SPDK_ERRLOG("iscsi_service failed: %s\n", iscsi_get_error(req->context));
 			}
 		}
+
+		if (req->deleted) {
+			free(req);
+		}
 	}
 
 	return 0;
 }
 
-static int
+int
 create_iscsi_disk(const char *bdev_name, const char *url, const char *initiator_iqn,
-		  spdk_bdev_iscsi_create_cb cb_fn)
+		  spdk_bdev_iscsi_create_cb cb_fn, void *cb_arg)
 {
 	struct bdev_iscsi_conn_req *req;
 	struct iscsi_url *iscsi_url = NULL;
@@ -595,6 +626,7 @@ create_iscsi_disk(const char *bdev_name, const char *url, const char *initiator_
 	}
 
 	req->create_cb = cb_fn;
+	req->create_cb_arg = cb_arg;
 
 	iscsi_url = iscsi_parse_full_url(req->context, url);
 	if (iscsi_url == NULL) {
@@ -643,7 +675,7 @@ err:
 }
 
 static void
-bdev_iscsi_initialize_cb(void)
+bdev_iscsi_initialize_cb(void *cb_arg, struct spdk_bdev *bdev, int status)
 {
 	if (TAILQ_EMPTY(&g_iscsi_conn_req)) {
 		spdk_bdev_module_init_done(&g_iscsi_bdev_module);
@@ -678,7 +710,7 @@ bdev_iscsi_initialize(void)
 			break;
 		}
 
-		rc = create_iscsi_disk(bdev_name, url, initiator_iqn, bdev_iscsi_initialize_cb);
+		rc = create_iscsi_disk(bdev_name, url, initiator_iqn, bdev_iscsi_initialize_cb, NULL);
 		if (rc) {
 			break;
 		}
