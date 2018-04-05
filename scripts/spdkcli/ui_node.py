@@ -477,3 +477,205 @@ class UILvsObj(UINode):
         free = "=".join(["Free", free])
         info = ", ".join([str(size), str(free)])
         return info, True
+
+
+class UIVhosts(UINode):
+    def __init__(self, parent):
+        UINode.__init__(self, "vhost", parent)
+        self.refresh()
+
+    def refresh(self):
+        self._children = set([])
+        self.get_root().list_vhost_ctrls()
+        UIVhostBlk(self)
+        UIVhostScsi(self)
+
+    def ui_command_delete(self, name):
+        """
+        Delete a Vhost SCSI controller from configuration.
+
+        Arguments:
+        name - Controller name.
+        """
+        self.get_root().remove_vhost_controller(ctrlr=name)
+        self.get_root().refresh()
+        self.refresh()
+
+
+class UIVhost(UINode):
+    def __init__(self, name, parent):
+        UINode.__init__(self, name, parent)
+        self.refresh()
+
+    def refresh(self):
+        pass
+
+    def ui_command_delete(self, name):
+        """
+        Delete a Vhost SCSI controller from configuration.
+
+        Arguments:
+        name - Controller name.
+        """
+        self.get_root().remove_vhost_controller(ctrlr=name)
+        self.get_root().refresh()
+        self.refresh()
+
+
+class UIVhostBlk(UIVhost):
+    def __init__(self, parent):
+        UIVhost.__init__(self, "block", parent)
+        self.refresh()
+
+    def refresh(self):
+        self._children = set([])
+        for ctrlr in self.get_root().get_vhost_ctrlrs(self.name):
+            UIVhostBlkCtrlObj(ctrlr, self)
+
+    def ui_command_create(self, name, bdev, cpumask=None, readonly=False):
+        """
+        Construct a Vhost BLK controller.
+
+        Arguments:
+        name - Controller name.
+        bdev - Which bdev to attach to the controller.
+        cpumask - Optional. Integer to specify mask of CPUs to use.
+                  Default: 1.
+        readonly - Whether controller should be read only or not.
+                   Default: False.
+        """
+        ret_name = self.get_root().create_vhost_blk_controller(ctrlr=name,
+                                                               dev_name=bdev,
+                                                               cpumask=cpumask,
+                                                               readonly=bool(readonly))
+        self.shell.log.info("Created Vhost BLK controller: %s" % ret_name)
+        self.get_root().refresh()
+        self.refresh()
+
+
+class UIVhostScsi(UIVhost):
+    def __init__(self, parent):
+        UIVhost.__init__(self, "scsi", parent)
+        self.refresh()
+
+    def refresh(self):
+        self._children = set([])
+        for ctrlr in self.get_root().get_vhost_ctrlrs(self.name):
+            UIVhostScsiCtrlObj(ctrlr, self)
+
+    def ui_command_create(self, name, cpumask=None):
+        """
+        Construct a Vhost SCSI controller.
+
+        Arguments:
+        name - Controller name.
+        cpumask - Optional. Integer to specify mask of CPUs to use.
+        """
+        ret_name = self.get_root().create_vhost_scsi_controller(ctrlr=name,
+                                                                cpumask=cpumask)
+        self.shell.log.info("Created Vhost SCSI controller: %s" % ret_name)
+        self.get_root().refresh()
+        self.refresh()
+
+
+class UIVhostCtrl(UINode):
+    # Base class for SCSI and BLK controllers, do not instantiate
+    def __init__(self, ctrlr, parent):
+        self.ctrlr = ctrlr
+        UINode.__init__(self, self.ctrlr.ctrlr, parent)
+        self.refresh()
+
+    def ui_command_show_details(self):
+        self.shell.log.info(json.dumps(vars(self.ctrlr), indent=2))
+
+    def ui_command_set_coalescing(self, delay_base_us, iops_threshold):
+        delay_base_us = self.ui_eval_param(delay_base_us, "number", None)
+        iops_threshold = self.ui_eval_param(iops_threshold, "number", None)
+        self.get_root().set_vhost_controller_coalescing(ctrlr=self.ctrlr.ctrlr,
+                                                        delay_base_us=delay_base_us,
+                                                        iops_threshold=iops_threshold)
+
+
+class UIVhostScsiCtrlObj(UIVhostCtrl):
+    def refresh(self):
+        self._children = set([])
+        for lun in self.ctrlr.backend_specific["scsi"]:
+            UIVhostTargetObj(lun, self)
+
+    def ui_command_remove_target(self, target_num):
+        """
+        Remove target node from SCSI controller.
+
+        Arguments:
+        target_num - Integer identifier of target node to delete.
+        """
+        _ = self.get_root().remove_vhost_scsi_target(ctrlr=self.ctrlr.ctrlr,
+                                                     scsi_target_num=int(target_num))
+        # self.shell.log.info("Removed target % from SCSI controller %s" % (_, self.ctrlr.ctrlr))
+        self.refresh()
+
+    def ui_command_add_lun(self, target_num, bdev_name):
+        """
+        Add LUN to SCSI target node.
+        Currently only 1 LUN per target is supported.
+        Adding LUN to unexisting target node will create that node.
+
+        Arguments:
+        target_num - Integer identifier of target node to modify.
+        bdev - Which bdev to add as LUN.
+        """
+
+        self.get_root().add_vhost_scsi_lun(ctrlr=self.ctrlr.ctrlr,
+                                           scsi_target_num=int(target_num),
+                                           bdev_name=bdev_name)
+        self.get_root().refresh()
+        self.refresh()
+
+    def summary(self):
+        # TODO: Maybe print socket path instead of ReadOnly or target count?
+        cpumask = "CpuMask=%s" % self.ctrlr.cpumask
+        msg = "Targets: %s" % len(self.ctrlr.backend_specific["scsi"])
+        info = ", ".join([cpumask, msg])
+        return info, True
+
+
+class UIVhostBlkCtrlObj(UIVhostCtrl):
+    def refresh(self):
+        self._children = set([])
+        UIVhostLunDevObj(self.ctrlr.backend_specific["block"]["bdev"], self)
+
+    def summary(self):
+        # TODO: Maybe print socket path instead of ReadOnly or target count?
+        cpumask = "CpuMask=%s" % self.ctrlr.cpumask
+        ro = None
+        if self.ctrlr.backend_specific["block"]["readonly"]:
+            ro = "Readonly"
+        info = ", ".join(filter(None, [cpumask, ro]))
+        return info, True
+
+
+class UIVhostTargetObj(UINode):
+    def __init__(self, target, parent):
+        self.target = target
+        # Next line: configshell does not allow paths with spaces.
+        UINode.__init__(self, target["target_name"].replace(" ", "_"), parent)
+        self.refresh()
+
+    def refresh(self):
+        self._children = set([])
+        for target in self.target["luns"]:
+            UIVhostLunDevObj(target["bdev_name"], self)
+
+    def ui_command_show_details(self):
+        self.shell.log.info(json.dumps(self.target, indent=2))
+
+    def summary(self):
+        luns = "LUNs: %s" % len(self.target["luns"])
+        id = "TargetID: %s" % self.target["id"]
+        info = ",".join([luns, id])
+        return info, True
+
+
+class UIVhostLunDevObj(UINode):
+    def __init__(self, name, parent):
+        UINode.__init__(self, name, parent)
