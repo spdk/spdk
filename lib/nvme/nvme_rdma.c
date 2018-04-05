@@ -216,9 +216,9 @@ nvme_rdma_get_event(struct rdma_event_channel *channel,
 	}
 
 	if (event->event != evt) {
-		SPDK_ERRLOG("Received event: %d(%s) from CM event channel, but expected event: (%s)\n",
-			    event->event, nvme_rdma_cm_event_str_get(event->event),
-			    nvme_rdma_cm_event_str_get(evt));
+		SPDK_ERRLOG("Expected %s but received %s (%d) from CM event channel (status = %d)\n",
+			    nvme_rdma_cm_event_str_get(evt),
+			    nvme_rdma_cm_event_str_get(event->event), event->event, event->status);
 		rdma_ack_cm_event(event);
 		return NULL;
 	}
