@@ -75,6 +75,8 @@ struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_tr
 int
 nvme_transport_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
+	nvme_ctrlr_destruct_finish(ctrlr);
+
 	return 0;
 }
 
