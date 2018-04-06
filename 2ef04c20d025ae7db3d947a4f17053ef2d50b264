@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a36a5205_77d1de22",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-06T20:28:11Z",
+      "side": 1,
+      "message": "can we just do spdk_bdev_get_name(bdev) instead of making a separate copy?",
+      "revId": "2ef04c20d025ae7db3d947a4f17053ef2d50b264",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "08ee8392_cbba31b4",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 634,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-06T20:28:11Z",
+      "side": 1,
+      "message": "I\u0027m just curious - why do we use dev_name instead of bdev_name?  \n\nwe already have a separate name for the controller - it seems just using bdev_name here would be more clear\n\nNot something to change in this patch but it seems inconsistent.",
+      "revId": "2ef04c20d025ae7db3d947a4f17053ef2d50b264",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66c94f3a_0757a842",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 777,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-06T20:28:11Z",
+      "side": 1,
+      "message": "can\u0027t we just do spdk_bdev_get_name(bdev)?  then we don\u0027t need this bdev_name field at all",
+      "revId": "2ef04c20d025ae7db3d947a4f17053ef2d50b264",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
