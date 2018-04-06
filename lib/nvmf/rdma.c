@@ -261,6 +261,10 @@ struct spdk_nvmf_rdma_transport {
 	uint32_t			max_io_size;
 	uint32_t			in_capsule_data_size;
 
+	/* fields used to poll RDMA/IB events */
+	nfds_t			npoll_fds;
+	struct pollfd		*poll_fds;
+
 	TAILQ_HEAD(, spdk_nvmf_rdma_device)	devices;
 	TAILQ_HEAD(, spdk_nvmf_rdma_port)	ports;
 };
@@ -1188,6 +1192,14 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 			break;
 
 		}
+		/* set up device context async ev fd as NON_BLOCKING */
+		flag = fcntl(device->context->async_fd, F_GETFL);
+		rc = fcntl(device->context->async_fd, F_SETFL, flag | O_NONBLOCK);
+		if (rc < 0) {
+			SPDK_ERRLOG("Failed to set context async fd to NONBLOCK.\n");
+			free(device);
+			break;
+		}
 
 		device->pd = NULL;
 		device->map = NULL;
@@ -1206,6 +1218,20 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 		free(rtransport);
 		rdma_free_devices(contexts);
 		return NULL;
+	} else {
+		/* Set up poll descriptor array to monitor events from RDMA and IB
+		 * in a single poll syscall
+		 */
+		rtransport->npoll_fds = i + 1;
+		i = 0;
+		rtransport->poll_fds = calloc(rtransport->npoll_fds, sizeof(struct pollfd));
+		rtransport->poll_fds[i].fd = rtransport->event_channel->fd;
+		rtransport->poll_fds[i++].events = POLLIN;
+
+		TAILQ_FOREACH_SAFE(device, &rtransport->devices, link, tmp) {
+			rtransport->poll_fds[i].fd = device->context->async_fd;
+			rtransport->poll_fds[i++].events = POLLIN;
+		}
 	}
 
 	rdma_free_devices(contexts);
@@ -1226,6 +1252,10 @@ spdk_nvmf_rdma_destroy(struct spdk_nvmf_transport *transport)
 		TAILQ_REMOVE(&rtransport->ports, port, link);
 		rdma_destroy_id(port->id);
 		free(port);
+	}
+
+	if (rtransport->poll_fds != NULL) {
+		free(rtransport->poll_fds);
 	}
 
 	if (rtransport->event_channel != NULL) {
@@ -1421,7 +1451,7 @@ spdk_nvmf_rdma_stop_listen(struct spdk_nvmf_transport *transport,
 }
 
 static void
-spdk_nvmf_rdma_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn)
+spdk_nvmf_process_cm_event(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn)
 {
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct rdma_cm_event		*event;
@@ -1496,6 +1526,112 @@ spdk_nvmf_rdma_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn)
 			break;
 		}
 	}
+}
+
+static void
+spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
+{
+	int rc;
+	static const char * const str_event[] = {
+		[IBV_EVENT_CQ_ERR] = "IBV_EVENT_CQ_ERR",
+		[IBV_EVENT_QP_FATAL] = "IBV_EVENT_QP_FATAL",
+		[IBV_EVENT_QP_REQ_ERR] = "IBV_EVENT_QP_REQ_ERR",
+		[IBV_EVENT_QP_ACCESS_ERR] = "IBV_EVENT_QP_ACCESS_ERR",
+		[IBV_EVENT_COMM_EST] = "IBV_EVENT_COMM_EST",
+		[IBV_EVENT_SQ_DRAINED] = "IBV_EVENT_SQ_DRAINED",
+		[IBV_EVENT_PATH_MIG] = "IBV_EVENT_PATH_MIG",
+		[IBV_EVENT_PATH_MIG_ERR] = "IBV_EVENT_PATH_MIG_ERR",
+		[IBV_EVENT_DEVICE_FATAL] = "IBV_EVENT_DEVICE_FATAL",
+		[IBV_EVENT_PORT_ACTIVE] = "IBV_EVENT_PORT_ACTIVE",
+		[IBV_EVENT_PORT_ERR] = "IBV_EVENT_PORT_ERR",
+		[IBV_EVENT_LID_CHANGE] = "IBV_EVENT_LID_CHANGE",
+		[IBV_EVENT_PKEY_CHANGE] = "IBV_EVENT_PKEY_CHANGE",
+		[IBV_EVENT_SM_CHANGE] = "IBV_EVENT_SM_CHANGE",
+		[IBV_EVENT_SRQ_ERR] = "IBV_EVENT_SRQ_ERR",
+		[IBV_EVENT_SRQ_LIMIT_REACHED] =
+					"IBV_EVENT_SRQ_LIMIT_REACHED",
+		[IBV_EVENT_QP_LAST_WQE_REACHED] =
+					"IBV_EVENT_QP_LAST_WQE_REACHED",
+		[IBV_EVENT_CLIENT_REREGISTER] =
+					"IBV_EVENT_CLIENT_REREGISTER",
+		[IBV_EVENT_GID_CHANGE] = "IBV_EVENT_GID_CHANGE",
+		[IBV_EVENT_WQ_FATAL] = "IBV_EVENT_WQ_FATAL",
+	};
+	struct ibv_async_event event = {0};
+
+	rc = ibv_get_async_event(device->context, &event);
+
+	if (rc) {
+		SPDK_ERRLOG("Failed to get async_event (%d): %s\n",
+			errno, spdk_strerror(errno));
+		return;
+	}
+
+	switch (event.event_type) {
+	case IBV_EVENT_CQ_ERR:
+	case IBV_EVENT_QP_FATAL:
+	case IBV_EVENT_QP_REQ_ERR:
+	case IBV_EVENT_QP_ACCESS_ERR:
+	case IBV_EVENT_COMM_EST:
+	case IBV_EVENT_SQ_DRAINED:
+	case IBV_EVENT_PATH_MIG:
+	case IBV_EVENT_PATH_MIG_ERR:
+	case IBV_EVENT_DEVICE_FATAL:
+	case IBV_EVENT_PORT_ACTIVE:
+	case IBV_EVENT_PORT_ERR:
+	case IBV_EVENT_LID_CHANGE:
+	case IBV_EVENT_PKEY_CHANGE:
+	case IBV_EVENT_SM_CHANGE:
+	case IBV_EVENT_SRQ_ERR:
+	case IBV_EVENT_SRQ_LIMIT_REACHED:
+	case IBV_EVENT_QP_LAST_WQE_REACHED:
+	case IBV_EVENT_CLIENT_REREGISTER:
+	case IBV_EVENT_GID_CHANGE:
+	case IBV_EVENT_WQ_FATAL:
+		SPDK_NOTICELOG("Async event: %s\n",
+				str_event[event.event_type]);
+	break;
+	default:
+		SPDK_NOTICELOG("Unknown async event: %u\n",
+				event.event_type);
+	break;
+	}
+	ibv_ack_async_event(&event);
+}
+
+static void
+spdk_nvmf_rdma_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn)
+{
+	int	nfds, i = 0;
+	struct spdk_nvmf_rdma_transport *rtransport;
+	struct spdk_nvmf_rdma_device *device, *tmp;
+
+	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
+	nfds = poll(rtransport->poll_fds, rtransport->npoll_fds, 0);
+
+	if (nfds <= 0) {
+		return;
+	}
+
+	/* The first poll descriptor is RDMA CM event */
+	if (rtransport->poll_fds[i++].revents & POLLIN) {
+		spdk_nvmf_process_cm_event(transport, cb_fn);
+		nfds--;
+	}
+
+	if (nfds == 0) {
+		return;
+	}
+
+	/* Second and subsequent poll descriptors are IB async events */
+	TAILQ_FOREACH_SAFE(device, &rtransport->devices, link, tmp) {
+		if (rtransport->poll_fds[i++].revents & POLLIN) {
+			spdk_nvmf_process_ib_event(device);
+			nfds--;
+		}
+	}
+	/* check all flagged fd's have been served */
+	assert(nfds == 0);
 }
 
 static void
