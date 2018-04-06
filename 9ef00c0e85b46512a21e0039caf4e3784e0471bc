@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa1bf20a_7f4bfed4",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 585,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-06T23:12:49Z",
+      "side": 1,
+      "message": "I never actually do an spdk_io_device_unregister.",
+      "revId": "9ef00c0e85b46512a21e0039caf4e3784e0471bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
