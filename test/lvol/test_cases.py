@@ -6,6 +6,7 @@ import signal
 import subprocess
 import pprint
 import socket
+import threading
 
 from errno import ESRCH
 from os import kill, path, unlink, path, listdir, remove
@@ -15,6 +16,67 @@ from uuid import uuid4
 
 
 MEGABYTE = 1024 * 1024
+
+
+current_fio_pid = -1
+
+
+def is_process_alive(pid):
+    try:
+        os.kill(pid, 0)
+    except Exception as e:
+        return 1
+
+    return 0
+
+
+def get_fio_cmd(nbd_disk, offset, size, rw, pattern, extra_params=""):
+    fio_template = "fio --name=fio_test --filename=%(file)s --offset=%(offset)s --size=%(size)s"\
+                   " --rw=%(rw)s --direct=1 %(extra_params)s %(pattern)s"
+    pattern_template = ""
+    if pattern:
+        pattern_template = "--do_verify=1 --verify=pattern --verify_pattern=%s"\
+                           " --verify_state_save=0" % pattern
+    fio_cmd = fio_template % {"file": nbd_disk, "offset": offset, "size": size,
+                              "rw": rw, "pattern": pattern_template,
+                              "extra_params": extra_params}
+
+    return fio_cmd
+
+
+def run_fio(fio_cmd, expected_ret_value):
+    global current_fio_pid
+    try:
+        proc = subprocess.Popen([fio_cmd], shell=True)
+        current_fio_pid = proc.pid
+        proc.wait()
+        rv = proc.returncode
+    except Exception as e:
+        print("ERROR: Fio test ended with unexpected exception.")
+        rv = 1
+    if expected_ret_value == rv:
+        return 0
+
+    if rv == 0:
+        print("ERROR: Fio test ended with unexpected success")
+    else:
+        print("ERROR: Fio test ended with unexpected failure")
+    return 1
+
+
+class FioThread(threading.Thread):
+    def __init__(self, nbd_disk, offset, size, rw, pattern, expected_ret_value,
+                 extra_params=""):
+        super(FioThread, self).__init__()
+        self.fio_cmd = get_fio_cmd(nbd_disk, offset, size, rw, pattern,
+                                   extra_params=extra_params)
+        self.rv = 1
+        self.expected_ret_value = expected_ret_value
+
+    def run(self):
+        print("INFO: Starting fio")
+        self.rv = run_fio(self.fio_cmd, self.expected_ret_value)
+        print("INFO: Fio test finished")
 
 
 def test_counter():
@@ -101,32 +163,29 @@ class TestCases(object):
     def _gen_lvb_uuid(self):
         return "_".join([str(uuid4()), str(random.randrange(9999999999))])
 
-    def run_fio_test(self, nbd_disk, offset, size, rw, pattern, expected_ret_value=0):
-        fio_template = "fio --name=fio_test --filename=%(file)s --offset=%(offset)s --size=%(size)s"\
-                       " --rw=%(rw)s --direct=1 %(pattern)s"
-        pattern_template = ""
-        if pattern:
-            pattern_template = " --do_verify=1 --verify=pattern --verify_pattern=%s"\
-                               " --verify_state_save=0" % pattern
-        fio_cmd = fio_template % {"file": nbd_disk, "offset": offset, "size": size,
-                                  "rw": rw, "pattern": pattern_template}
+    def compare_two_disks(self, disk1, disk2, expected_ret_value):
+        cmp_cmd = "cmp %s %s" % (disk1, disk2)
         try:
-            output_fio = subprocess.check_output(fio_cmd, stderr=subprocess.STDOUT, shell=True)
+            process = subprocess.check_output(cmp_cmd, stderr=subprocess.STDOUT, shell=True)
             rv = 0
         except subprocess.CalledProcessError, ex:
             rv = 1
         except Exception as e:
-            print("ERROR: Fio test ended with unexpected exception.")
+            print("ERROR: Cmp ended with unexpected exception.")
             rv = 1
 
         if expected_ret_value == rv:
             return 0
-
-        if rv == 0:
-            print("ERROR: Fio test ended with unexpected success")
+        elif rv == 0:
+            print("ERROR: Cmp ended with unexpected success")
         else:
-            print("ERROR: Fio test ended with unexpected failure")
+            print("ERROR: Cmp ended with unexpected failure")
+
         return 1
+
+    def run_fio_test(self, nbd_disk, offset, size, rw, pattern, expected_ret_value=0):
+        fio_cmd = get_fio_cmd(nbd_disk, offset, size, rw, pattern)
+        return run_fio(fio_cmd, expected_ret_value)
 
     def _stop_vhost(self, pid_path):
         with io.open(pid_path, 'r') as vhost_pid:
