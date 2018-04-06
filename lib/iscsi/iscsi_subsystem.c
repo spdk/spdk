@@ -825,22 +825,11 @@ spdk_iscsi_initialize_iscsi_globals(struct spdk_iscsi_opts *opts)
 	 */
 	g_spdk_iscsi.MaxConnections = g_spdk_iscsi.MaxSessions;
 
-	rc = pthread_mutex_init(&g_spdk_iscsi.mutex, NULL);
-	if (rc != 0) {
-		SPDK_ERRLOG("mutex_init() failed\n");
-		return -1;
-	}
-
 	rc = spdk_iscsi_initialize_all_pools();
 	if (rc != 0) {
 		SPDK_ERRLOG("spdk_initialize_all_pools() failed\n");
 		return -1;
 	}
-
-	TAILQ_INIT(&g_spdk_iscsi.portal_head);
-	TAILQ_INIT(&g_spdk_iscsi.pg_head);
-	TAILQ_INIT(&g_spdk_iscsi.ig_head);
-	TAILQ_INIT(&g_spdk_iscsi.target_head);
 
 	spdk_iscsi_log_globals();
 
