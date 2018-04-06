@@ -243,10 +243,6 @@ struct spdk_bdev {
 	/** Number of blocks */
 	uint64_t blockcnt;
 
-	/** Number of active channels on this bdev except the QoS bdev channel */
-	uint32_t channel_count;
-
-	/** Quality of service parameters */
 	struct spdk_bdev_qos *qos;
 
 	/** write cache enabled, not used at the moment */
