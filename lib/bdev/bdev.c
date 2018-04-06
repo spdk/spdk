@@ -108,9 +108,6 @@ struct spdk_bdev_qos {
 	/** The channel that all I/O are funneled through */
 	struct spdk_bdev_channel *ch;
 
-	/** The thread on which the poller is running. */
-	struct spdk_thread *thread;
-
 	/** Queue of I/O waiting to be issued. */
 	bdev_io_tailq_t queued;
 
@@ -935,9 +932,12 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 	assert(bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING);
 
 	if (bdev_io->ch->flags & BDEV_CH_QOS_ENABLED) {
+		struct spdk_thread *thread;
+
+		thread = spdk_io_channel_get_thread(spdk_io_channel_from_ctx(bdev->qos->ch));
 		bdev_io->io_submit_ch = bdev_io->ch;
 		bdev_io->ch = bdev->qos->ch;
-		spdk_thread_send_msg(bdev->qos->thread, _spdk_bdev_io_submit, bdev_io);
+		spdk_thread_send_msg(thread, _spdk_bdev_io_submit, bdev_io);
 	} else {
 		_spdk_bdev_io_submit(bdev_io);
 	}
@@ -1059,8 +1059,6 @@ _spdk_bdev_enable_qos(struct spdk_bdev *bdev, struct spdk_bdev_channel *ch)
 			/* Take another reference to ch */
 			spdk_get_io_channel(__bdev_to_io_dev(bdev));
 			qos->ch = ch;
-
-			qos->thread = spdk_get_thread();
 
 			TAILQ_INIT(&qos->queued);
 			spdk_bdev_qos_update_max_ios_per_timeslice(qos);
@@ -1207,6 +1205,7 @@ spdk_bdev_qos_destroy(struct spdk_bdev *bdev)
 	 * until it completes and then releases it.
 	*/
 	struct spdk_bdev_qos *new_qos, *old_qos;
+	struct spdk_thread *thread;
 
 	old_qos = bdev->qos;
 
@@ -1221,7 +1220,6 @@ spdk_bdev_qos_destroy(struct spdk_bdev *bdev)
 
 	/* Zero out the key parts of the QoS structure */
 	new_qos->ch = NULL;
-	new_qos->thread = NULL;
 	new_qos->max_ios_per_timeslice = 0;
 	new_qos->io_submitted_this_timeslice = 0;
 	new_qos->poller = NULL;
@@ -1229,8 +1227,8 @@ spdk_bdev_qos_destroy(struct spdk_bdev *bdev)
 
 	bdev->qos = new_qos;
 
-	spdk_thread_send_msg(old_qos->thread, spdk_bdev_qos_channel_destroy,
-			     old_qos);
+	thread = spdk_io_channel_get_thread(spdk_io_channel_from_ctx(old_qos->ch));
+	spdk_thread_send_msg(thread, spdk_bdev_qos_channel_destroy, old_qos);
 
 	/* It is safe to continue with destroying the bdev even though the QoS channel hasn't
 	 * been destroyed yet. The destruction path will end up waiting for the final
@@ -2918,8 +2916,11 @@ _spdk_bdev_disable_qos_msg_done(struct spdk_io_channel_iter *i, int status)
 	void *io_device = spdk_io_channel_iter_get_io_device(i);
 	struct spdk_bdev *bdev = __bdev_from_io_dev(io_device);
 	struct set_qos_limit_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_thread *thread;
 
-	spdk_thread_send_msg(bdev->qos->thread, _spdk_bdev_disable_qos_done, ctx);
+	thread = spdk_io_channel_get_thread(spdk_io_channel_from_ctx(bdev->qos->ch));
+
+	spdk_thread_send_msg(thread, _spdk_bdev_disable_qos_done, ctx);
 }
 
 static void
@@ -3015,8 +3016,11 @@ spdk_bdev_set_qos_limit_iops(struct spdk_bdev *bdev, uint64_t ios_per_sec,
 					      _spdk_bdev_enable_qos_done);
 		} else {
 			/* Updating */
+			struct spdk_thread *thread;
+
 			bdev->qos->rate_limit = ios_per_sec;
-			spdk_thread_send_msg(bdev->qos->thread, _spdk_bdev_update_qos_limit_iops_msg, ctx);
+			thread = spdk_io_channel_get_thread(spdk_io_channel_from_ctx(bdev->qos->ch));
+			spdk_thread_send_msg(thread, _spdk_bdev_update_qos_limit_iops_msg, ctx);
 		}
 	} else {
 		if (bdev->qos != NULL) {
