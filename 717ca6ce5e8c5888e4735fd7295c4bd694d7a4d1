@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "0f9808c6_de43a5aa",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 532,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-06T15:07:10Z",
+      "side": 1,
+      "message": "This could have been done in separate patch, but I\u0027m fine with this since rest of the patch looks alright.",
+      "parentUuid": "c53477a1_5efe49ff",
+      "revId": "717ca6ce5e8c5888e4735fd7295c4bd694d7a4d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9c3bf0d4_5f4cbdff",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 51
@@ -101,6 +119,24 @@
       "side": 1,
       "message": "Yes, it will be. We want to introduce an API to check blobs capabilities (thin-provisioned, read-only, clone, snapshot) and use it here. It will be implemented in upcoming patches.",
       "parentUuid": "9c3bf0d4_5f4cbdff",
+      "revId": "717ca6ce5e8c5888e4735fd7295c4bd694d7a4d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f49501d9_bc7e04bb",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 626,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-06T15:07:10Z",
+      "side": 1,
+      "message": "Specifically here https://review.gerrithub.io/#/c/404638/20/lib/bdev/lvol/vbdev_lvol.c@679",
+      "parentUuid": "31ace7b6_01d35e4f",
       "revId": "717ca6ce5e8c5888e4735fd7295c4bd694d7a4d1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
