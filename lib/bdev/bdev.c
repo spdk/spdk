@@ -122,12 +122,35 @@ struct spdk_bdev_mgmt_channel {
 	TAILQ_HEAD(, spdk_bdev_module_channel) module_channels;
 };
 
-struct spdk_bdev_desc {
-	struct spdk_bdev		*bdev;
-	spdk_bdev_remove_cb_t		remove_cb;
-	void				*remove_ctx;
-	bool				write;
-	TAILQ_ENTRY(spdk_bdev_desc)	link;
+/*
+ * Per-module (or per-io_device) channel. Multiple bdevs built on the same io_device
+ * will queue here their IO that awaits retry. It makes it posible to retry sending
+ * IO to one bdev after IO from other bdev completes.
+ */
+struct spdk_bdev_module_channel {
+	/*
+	 * Count of I/O submitted to bdev module and waiting for completion.
+	 * Incremented before submit_request() is called on an spdk_bdev_io.
+	 */
+	uint64_t		io_outstanding;
+
+	/*
+	 * Queue of IO awaiting retry because of a previous NOMEM status returned
+	 *  on this channel.
+	 */
+	bdev_io_tailq_t		nomem_io;
+
+	/*
+	 * Threshold which io_outstanding must drop to before retrying nomem_io.
+	 */
+	uint64_t		nomem_threshold;
+
+	/* I/O channel allocated by a bdev module */
+	struct spdk_io_channel	*module_ch;
+
+	uint32_t		ref;
+
+	TAILQ_ENTRY(spdk_bdev_module_channel) link;
 };
 
 #define BDEV_CH_RESET_IN_PROGRESS	(1 << 0)
@@ -191,39 +214,16 @@ struct spdk_bdev_channel {
 
 };
 
+struct spdk_bdev_desc {
+	struct spdk_bdev		*bdev;
+	spdk_bdev_remove_cb_t		remove_cb;
+	void				*remove_ctx;
+	bool				write;
+	TAILQ_ENTRY(spdk_bdev_desc)	link;
+};
+
 #define __bdev_to_io_dev(bdev)		(((char *)bdev) + 1)
 #define __bdev_from_io_dev(io_dev)	((struct spdk_bdev *)(((char *)io_dev) - 1))
-
-/*
- * Per-module (or per-io_device) channel. Multiple bdevs built on the same io_device
- * will queue here their IO that awaits retry. It makes it posible to retry sending
- * IO to one bdev after IO from other bdev completes.
- */
-struct spdk_bdev_module_channel {
-	/*
-	 * Count of I/O submitted to bdev module and waiting for completion.
-	 * Incremented before submit_request() is called on an spdk_bdev_io.
-	 */
-	uint64_t		io_outstanding;
-
-	/*
-	 * Queue of IO awaiting retry because of a previous NOMEM status returned
-	 *  on this channel.
-	 */
-	bdev_io_tailq_t		nomem_io;
-
-	/*
-	 * Threshold which io_outstanding must drop to before retrying nomem_io.
-	 */
-	uint64_t		nomem_threshold;
-
-	/* I/O channel allocated by a bdev module */
-	struct spdk_io_channel	*module_ch;
-
-	uint32_t		ref;
-
-	TAILQ_ENTRY(spdk_bdev_module_channel) link;
-};
 
 static void spdk_bdev_write_zeroes_split(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
 
