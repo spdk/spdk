@@ -593,23 +593,17 @@ iter_cb(void *ctx, struct spdk_blob *blob, int rc)
 	size_t value_len;
 
 	if (rc < 0) {
-		args->fn.fs_op_with_handle(args->arg, fs, rc);
-		free_fs_request(req);
-		return;
+		goto error;
 	}
 
 	rc = spdk_blob_get_xattr_value(blob, "name", (const void **)&name, &value_len);
 	if (rc < 0) {
-		args->fn.fs_op_with_handle(args->arg, fs, rc);
-		free_fs_request(req);
-		return;
+		goto error;
 	}
 
 	rc = spdk_blob_get_xattr_value(blob, "length", (const void **)&length, &value_len);
 	if (rc < 0) {
-		args->fn.fs_op_with_handle(args->arg, fs, rc);
-		free_fs_request(req);
-		return;
+		goto error;
 	}
 
 	assert(value_len == 8);
@@ -621,9 +615,8 @@ iter_cb(void *ctx, struct spdk_blob *blob, int rc)
 
 		f = file_alloc(fs);
 		if (f == NULL) {
-			args->fn.fs_op_with_handle(args->arg, fs, -ENOMEM);
-			free_fs_request(req);
-			return;
+			rc = -ENOMEM;
+			goto error;
 		}
 
 		f->name = strdup(name);
@@ -637,13 +630,17 @@ iter_cb(void *ctx, struct spdk_blob *blob, int rc)
 
 		deleted_file = calloc(1, sizeof(*deleted_file));
 		if (deleted_file == NULL) {
-			args->fn.fs_op_with_handle(args->arg, fs, -ENOMEM);
-			free_fs_request(req);
-			return;
+			rc = -ENOMEM;
+			goto error;
 		}
 		deleted_file->id = spdk_blob_get_id(blob);
 		TAILQ_INSERT_TAIL(&args->op.fs_load.deleted_files, deleted_file, tailq);
 	}
+
+	return;
+error:
+	args->fn.fs_op_with_handle(args->arg, fs, rc);
+	free_fs_request(req);
 }
 
 static void
