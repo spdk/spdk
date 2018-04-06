@@ -260,21 +260,18 @@ struct spdk_bdev {
 		/** The channel that all I/O are funneled through */
 		struct spdk_bdev_channel *ch;
 
-		/** The thread on which the poller is running. */
-		struct spdk_thread *thread;
-
 		/** Queue of I/O waiting to be issued. */
-		bdev_io_tailq_t queued;
+		bdev_io_tailq_t		queued;
 
 		/** Maximum allowed IOs to be issued in one timeslice (e.g., 1ms) and
 		 *  only valid for the master channel which manages the outstanding IOs. */
-		uint64_t max_ios_per_timeslice;
+		uint64_t		max_ios_per_timeslice;
 
 		/** Submitted IO in one timeslice (e.g., 1ms) */
-		uint64_t io_submitted_this_timeslice;
+		uint64_t		io_submitted_this_timeslice;
 
-		/** Polller that processes queued I/O commands each time slice. */
-		struct spdk_poller *poller;
+		/** Periodic running QoS poller in millisecond. */
+		struct spdk_poller	*poller;
 	} qos;
 
 	/** write cache enabled, not used at the moment */
