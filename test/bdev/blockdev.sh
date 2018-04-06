@@ -142,7 +142,20 @@ $rootdir/scripts/gen_nvme.sh >> $testdir/bdev_gpt.conf
 
 # Run bdevperf with gpt
 $testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w verify -t 5
-$testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w write_zeroes -t 1
+$testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w write_zeroes -t 1 -X bdev.csv
+LC=$(cat bdev.csv | wc -l)
+# check that line count is one
+if [ $LC -ne 1 ]; then
+	echo ERROR: bdevperf dump file has incorrect number of lines
+	exit -1
+fi
+NUM=$(awk -F, '{print NF}' bdev.csv)
+# check that number of fields is six (how many parms are written)
+if [ $NUM -ne 6 ]; then
+        echo ERROR: bdevperf dump file has incorrect number of fields
+        exit -1
+fi
+rm -f bdev.csv
 rm -f $testdir/bdev_gpt.conf
 
 if [ $RUN_NIGHTLY -eq 1 ]; then

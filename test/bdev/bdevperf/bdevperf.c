@@ -76,7 +76,8 @@ static bool g_zcopy = true;
 static unsigned g_master_core;
 static int g_time_in_sec;
 static bool g_mix_specified;
-
+static bool g_export_results = false;
+static char *g_export_file;
 static struct spdk_poller *g_perf_timer = NULL;
 
 static void bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task);
@@ -603,6 +604,7 @@ bdevperf_usage(void)
 	printf("\t\t(Formula: M = 2 / (n + 1), EMA[i+1] = IO/s * M + (1 - M) * EMA[i])\n");
 	printf("\t\t(only valid with -S)\n");
 	printf(" -S                        show performance result in real time in seconds\n");
+	printf(" -X <filename>             dump results to comma delimited file (append if exists)\n");
 }
 
 /*
@@ -641,6 +643,7 @@ performance_dump(uint64_t io_time_in_usec, uint64_t ema_period)
 	double io_per_second, mb_per_second;
 	double total_io_per_second, total_mb_per_second;
 	struct io_target *target;
+	FILE *fp;
 
 	total_io_per_second = 0;
 	total_mb_per_second = 0;
@@ -669,6 +672,17 @@ performance_dump(uint64_t io_time_in_usec, uint64_t ema_period)
 	printf("\r %-20s: %10.2f IO/s %10.2f MB/s\n",
 	       "Total", total_io_per_second, total_mb_per_second);
 	fflush(stdout);
+
+	if (g_export_results && g_show_performance_real_time == 0) {
+		fp = fopen(g_export_file, "a");
+		if (fp == NULL) {
+			printf("Error opening file for output: %s\n", g_export_file);
+			return;
+		}
+		fprintf(fp, "%u, %u, %u, %u, %10.2f, %10.2f\n", g_io_size, g_queue_depth,
+			g_rw_percentage, g_is_random, total_io_per_second, total_mb_per_second);
+		fclose(fp);
+	}
 
 }
 
@@ -852,6 +866,10 @@ bdevperf_parse_arg(int ch, char *arg)
 		g_show_performance_period_in_usec = spdk_max(g_show_performance_period_in_usec,
 						    g_show_performance_period_in_usec);
 		break;
+	case 'X':
+		g_export_results = true;
+		g_export_file = optarg;
+		break;
 	}
 }
 
@@ -875,7 +893,7 @@ main(int argc, char **argv)
 	g_time_in_sec = 0;
 	g_mix_specified = false;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "q:o:t:w:M:P:S:", NULL,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "q:o:t:w:M:P:S:X:", NULL,
 				      bdevperf_parse_arg, bdevperf_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc;
