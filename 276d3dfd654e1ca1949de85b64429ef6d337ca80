@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "60e43e39_87e067dc",
+        "filename": "mk/spdk.modules.mk",
+        "patchSetId": 6
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-06T18:48:51Z",
+      "side": 1,
+      "message": "I think these changes make this file non-intuitive.  For example, BLOCKDEV_MODULES_LIST now does not contain lvol related stuff, but BLOCKDEV_MODULES_LINKER_ARGS and BLOCKDEV_MODULES_FILES do contain lvol related stuff.\n\nI think I\u0027d rather keep these variables the same.  Then create NO_LVOL variants that remove the necessary items.  Maybe using something like filter-out.",
+      "revId": "276d3dfd654e1ca1949de85b64429ef6d337ca80",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
