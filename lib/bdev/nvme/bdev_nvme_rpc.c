@@ -251,7 +251,7 @@ apply_firmware_complete_reset(struct spdk_bdev_io *bdev_io, bool success, void *
 static void
 apply_firmware_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
-	struct spdk_nvme_cmd			*cmd;
+	struct spdk_nvme_cmd			cmd = {};
 	struct spdk_nvme_fw_commit		fw_commit;
 	int					slot = 0;
 	int					rc;
@@ -270,16 +270,6 @@ apply_firmware_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 	firm_ctx->offset += firm_ctx->transfer;
 	firm_ctx->size_remaining -= firm_ctx->transfer;
 
-	cmd = malloc(sizeof(struct spdk_nvme_cmd));
-	if (!cmd) {
-		spdk_jsonrpc_send_error_response(firm_ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 "malloc failed.");
-		spdk_bdev_free_io(bdev_io);
-		apply_firmware_cleanup(firm_ctx);
-		return;
-	}
-	memset(cmd, 0, sizeof(struct spdk_nvme_cmd));
-
 	switch (firm_ctx->size_remaining) {
 	case 0:
 		/* firmware download completed. Commit firmware */
@@ -287,9 +277,9 @@ apply_firmware_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 		fw_commit.fs = slot;
 		fw_commit.ca = commit_action;
 
-		cmd->opc = SPDK_NVME_OPC_FIRMWARE_COMMIT;
-		memcpy(&cmd->cdw10, &fw_commit, sizeof(uint32_t));
-		rc = spdk_bdev_nvme_admin_passthru(firm_ctx->desc, firm_ctx->ch, cmd, NULL, 0,
+		cmd.opc = SPDK_NVME_OPC_FIRMWARE_COMMIT;
+		memcpy(&cmd.cdw10, &fw_commit, sizeof(uint32_t));
+		rc = spdk_bdev_nvme_admin_passthru(firm_ctx->desc, firm_ctx->ch, &cmd, NULL, 0,
 						   apply_firmware_complete_reset, firm_ctx);
 		if (rc) {
 			spdk_jsonrpc_send_error_response(firm_ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
@@ -301,11 +291,11 @@ apply_firmware_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 		break;
 	default:
 		firm_ctx->transfer = spdk_min(firm_ctx->size_remaining, 4096);
-		cmd->opc = SPDK_NVME_OPC_FIRMWARE_IMAGE_DOWNLOAD;
+		cmd.opc = SPDK_NVME_OPC_FIRMWARE_IMAGE_DOWNLOAD;
 
-		cmd->cdw10 = (firm_ctx->transfer >> 2) - 1;
-		cmd->cdw11 = firm_ctx->offset >> 2;
-		rc = spdk_bdev_nvme_admin_passthru(firm_ctx->desc, firm_ctx->ch, cmd, firm_ctx->p,
+		cmd.cdw10 = (firm_ctx->transfer >> 2) - 1;
+		cmd.cdw11 = firm_ctx->offset >> 2;
+		rc = spdk_bdev_nvme_admin_passthru(firm_ctx->desc, firm_ctx->ch, &cmd, firm_ctx->p,
 						   firm_ctx->transfer, apply_firmware_complete, firm_ctx);
 		if (rc) {
 			spdk_jsonrpc_send_error_response(firm_ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
