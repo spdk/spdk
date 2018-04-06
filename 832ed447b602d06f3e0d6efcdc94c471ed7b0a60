@@ -16,6 +16,29 @@
       "revId": "832ed447b602d06f3e0d6efcdc94c471ed7b0a60",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c997b61_78827112",
+        "filename": "spdkcli/scripts/ui_node.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-06T09:06:00Z",
+      "side": 1,
+      "message": "get rid of that and use self.ui_eval_param",
+      "range": {
+        "startLine": 214,
+        "startChar": 8,
+        "endLine": 215,
+        "endChar": 33
+      },
+      "revId": "832ed447b602d06f3e0d6efcdc94c471ed7b0a60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
