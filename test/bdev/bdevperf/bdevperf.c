@@ -71,6 +71,8 @@ static uint64_t g_shutdown_tsc;
 static bool g_zcopy = true;
 static int g_mem_size = 0;
 static unsigned g_master_core;
+static bool g_export_results;
+static char *g_results_file;
 
 static struct spdk_poller *g_perf_timer = NULL;
 
@@ -620,6 +622,9 @@ performance_dump(uint64_t io_time_in_usec, uint64_t ema_period)
 	double io_per_second, mb_per_second;
 	double total_io_per_second, total_mb_per_second;
 	struct io_target *target;
+	FILE *fp;
+	uint64_t bytes_written;
+	char line_out[120];
 
 	total_io_per_second = 0;
 	total_mb_per_second = 0;
@@ -648,6 +653,24 @@ performance_dump(uint64_t io_time_in_usec, uint64_t ema_period)
 	printf("\r %-20s: %10.2f IO/s %10.2f MB/s\n",
 	       "Total", total_io_per_second, total_mb_per_second);
 	fflush(stdout);
+
+	if (g_export_results) {
+		fp = fopen(g_results_file, "a");
+		if (fp == NULL) {
+			printf("Error opening file for output: %s\n", g_results_file);
+			return;
+		}
+
+		sprintf(line_out, "%u, %u, %u, %u, %10.2f, %10.2f\n", g_io_size, g_queue_depth,
+			g_rw_percentage, g_is_random, total_io_per_second, total_mb_per_second);
+
+		bytes_written = fwrite(line_out, 1, strlen(line_out), fp);
+		if (bytes_written == 0) {
+			printf("Error writting to file for output: %s\n", g_results_file);
+		}
+
+		fclose(fp);
+	}
 
 }
 
@@ -815,7 +838,7 @@ main(int argc, char **argv)
 	mix_specified = false;
 	core_mask = NULL;
 
-	while ((op = getopt(argc, argv, "c:d:m:q:s:t:w:M:P:S:")) != -1) {
+	while ((op = getopt(argc, argv, "c:d:m:q:s:t:w:M:P:S:X:")) != -1) {
 		switch (op) {
 		case 'c':
 			config_file = optarg;
@@ -850,6 +873,10 @@ main(int argc, char **argv)
 			show_performance_period_in_usec = atoi(optarg) * 1000000;
 			g_show_performance_period_in_usec = spdk_max(g_show_performance_period_in_usec,
 							    show_performance_period_in_usec);
+			break;
+		case 'X':
+			g_export_results = 1;
+			g_results_file = optarg;
 			break;
 		default:
 			usage(argv[0]);
