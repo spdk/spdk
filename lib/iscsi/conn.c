@@ -63,14 +63,11 @@ static uint32_t *g_num_connections;
 struct spdk_iscsi_conn *g_conns_array = MAP_FAILED;
 static char g_shm_name[64];
 
-static pthread_mutex_t g_conns_mutex;
+static pthread_mutex_t g_conns_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static struct spdk_poller *g_shutdown_timer = NULL;
 
 static uint32_t spdk_iscsi_conn_allocate_reactor(const struct spdk_cpuset *cpumask);
-
-void spdk_iscsi_conn_login_do_work(void *arg);
-void spdk_iscsi_conn_full_feature_do_work(void *arg);
 
 static void spdk_iscsi_conn_full_feature_migrate(void *arg1, void *arg2);
 static void spdk_iscsi_conn_stop(struct spdk_iscsi_conn *conn);
@@ -119,16 +116,10 @@ spdk_find_iscsi_connection_by_id(int cid)
 int spdk_initialize_iscsi_conns(void)
 {
 	size_t conns_size = sizeof(struct spdk_iscsi_conn) * MAX_ISCSI_CONNECTIONS;
-	int conns_array_fd, rc;
+	int conns_array_fd;
 	uint32_t i, last_core;
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_init\n");
-
-	rc = pthread_mutex_init(&g_conns_mutex, NULL);
-	if (rc != 0) {
-		SPDK_ERRLOG("mutex_init() failed\n");
-		return -1;
-	}
 
 	snprintf(g_shm_name, sizeof(g_shm_name), "/spdk_iscsi_conns.%d", spdk_app_get_shm_id());
 	conns_array_fd = shm_open(g_shm_name, O_RDWR | O_CREAT, 0600);
@@ -176,7 +167,6 @@ err:
 		shm_unlink(g_shm_name);
 	}
 
-	pthread_mutex_destroy(&g_conns_mutex);
 	return -1;
 }
 

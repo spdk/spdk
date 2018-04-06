@@ -66,7 +66,13 @@
 #define HAVE_ARC4RANDOM 1
 #endif
 
-struct spdk_iscsi_globals g_spdk_iscsi;
+struct spdk_iscsi_globals g_spdk_iscsi = {
+	.mutex = PTHREAD_MUTEX_INITIALIZER,
+	.portal_head = TAILQ_HEAD_INITIALIZER(g_spdk_iscsi.portal_head),
+	.pg_head = TAILQ_HEAD_INITIALIZER(g_spdk_iscsi.pg_head),
+	.ig_head = TAILQ_HEAD_INITIALIZER(g_spdk_iscsi.ig_head),
+	.target_head = TAILQ_HEAD_INITIALIZER(g_spdk_iscsi.target_head),
+};
 
 /* random value generation */
 static void spdk_gen_random(uint8_t *buf, size_t len);
