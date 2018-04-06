@@ -92,6 +92,7 @@ struct spdk_app_opts {
 	const char *rpc_addr; /* Can be UNIX domain socket path or IP address + TCP port */
 	const char *reactor_mask;
 	const char *tpoint_group_mask;
+	const char *export_file;
 
 	int shm_id;
 
