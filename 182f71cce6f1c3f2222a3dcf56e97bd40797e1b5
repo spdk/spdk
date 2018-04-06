@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "f0c2c068_257bb680",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-06T18:08:45Z",
+      "side": 1,
+      "message": "g_conn_poller should also be static.",
+      "revId": "182f71cce6f1c3f2222a3dcf56e97bd40797e1b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "01608d1b_086febed",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-06T18:08:45Z",
+      "side": 1,
+      "message": "If poll() returns 0, we should not be looking at pfd.revents below (it will be uninitialized data).",
+      "revId": "182f71cce6f1c3f2222a3dcf56e97bd40797e1b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "56e680f6_f98dcb7d",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 9
