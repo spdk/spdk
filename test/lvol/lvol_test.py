@@ -34,21 +34,15 @@ if __name__ == "__main__":
         tc = TestCases(rpc_py, total_size, block_size, cluster_size, base_dir_path, app_path)
 
         if "all" in tc_list:
-            for num_test in [i.split("test_case")[1] for i in dir(TestCases) if "test_case" in i]:
-                fail_count = 0
-                exec("fail_count += tc.test_case{num_test}"
-                     "()".format(num_test=num_test))
-                check_fail_count(fail_count, num_test)
-                if fail_count:
-                    tc_failed.append(num_test)
-        else:
-            for num_test in tc_list:
-                fail_count = 0
-                exec("fail_count += tc.test_case{num_test}"
-                     "()".format(num_test=num_test))
-                check_fail_count(fail_count, num_test)
-                if fail_count:
-                    tc_failed.append(num_test)
+            tc_list = sorted([i.split("test_case")[1] for i in dir(TestCases) if "test_case" in i], key=int)
+
+        for num_test in tc_list:
+            fail_count = 0
+            exec("fail_count += tc.test_case{num_test}"
+                 "()".format(num_test=num_test))
+            check_fail_count(fail_count, num_test)
+            if fail_count:
+                tc_failed.append(num_test)
 
         if not tc_failed:
             print("RESULT: All test cases - PASS")
