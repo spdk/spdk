@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "eb51d540_35181b41",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 527,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-06T13:38:46Z",
+      "side": 1,
+      "message": "This is related to the issue discussed here: \"https://trello.com/c/qEvmHGvm/124-cannot-fail-deletebdev-rpc\" and will be solved later.",
+      "parentUuid": "664fba0b_54123371",
+      "revId": "717ca6ce5e8c5888e4735fd7295c4bd694d7a4d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c632291b_6d27896e",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 51
@@ -30,6 +48,24 @@
       "writtenOn": "2018-04-04T21:33:37Z",
       "side": 1,
       "message": "I think this should have been called spdk_bdev_destruct_done() instead.  This call is in response to the bdev layer calling the lvol\u0027s destruct function specified in the bdev fn_table.\n\nIt indicates that we have completed the destruct operation, which lvol is responsible for.  Technically, this does mean that the unregister operation is also done, but lvol is not responsible for unregistration as a whole - only the bdev destruction.\n\nThis is fine for now but we should fix this in a future patch.",
+      "revId": "717ca6ce5e8c5888e4735fd7295c4bd694d7a4d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c53477a1_5efe49ff",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 532,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-06T13:38:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c632291b_6d27896e",
       "revId": "717ca6ce5e8c5888e4735fd7295c4bd694d7a4d1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "31ace7b6_01d35e4f",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 626,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-06T13:38:46Z",
+      "side": 1,
+      "message": "Yes, it will be. We want to introduce an API to check blobs capabilities (thin-provisioned, read-only, clone, snapshot) and use it here. It will be implemented in upcoming patches.",
+      "parentUuid": "9c3bf0d4_5f4cbdff",
+      "revId": "717ca6ce5e8c5888e4735fd7295c4bd694d7a4d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b5721ac5_8e9e41ea",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 51
@@ -64,6 +118,24 @@
       "writtenOn": "2018-04-04T21:33:37Z",
       "side": 1,
       "message": "would be better to do this verification refactoring in a separate patch before this one",
+      "revId": "717ca6ce5e8c5888e4735fd7295c4bd694d7a4d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8842180a_e80736d6",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 1019,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-06T13:38:46Z",
+      "side": 1,
+      "message": "Done -- https://review.gerrithub.io/#/c/406745/",
+      "parentUuid": "b5721ac5_8e9e41ea",
       "revId": "717ca6ce5e8c5888e4735fd7295c4bd694d7a4d1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "21dabe17_6e45b6f2",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 1029,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-06T13:38:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c8e74112_155cf88d",
+      "revId": "717ca6ce5e8c5888e4735fd7295c4bd694d7a4d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0842fb33_d2a9bce3",
         "filename": "scripts/rpc.py",
         "patchSetId": 51
@@ -98,6 +188,24 @@
       "writtenOn": "2018-04-04T21:33:37Z",
       "side": 1,
       "message": "I think this should not do the print_array - see similar changes made to this file recently.",
+      "revId": "717ca6ce5e8c5888e4735fd7295c4bd694d7a4d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a3fb6523_03376e9c",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 51
+      },
+      "lineNbr": 514,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-06T13:38:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0842fb33_d2a9bce3",
       "revId": "717ca6ce5e8c5888e4735fd7295c4bd694d7a4d1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "cda50d52_1ebc9f15",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 51
+      },
+      "lineNbr": 520,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-06T13:38:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0acc91a6_da88a4e1",
+      "revId": "717ca6ce5e8c5888e4735fd7295c4bd694d7a4d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "61cf9a9e_06029339",
         "filename": "scripts/rpc.py",
         "patchSetId": 51
@@ -132,6 +258,24 @@
       "writtenOn": "2018-04-04T21:33:37Z",
       "side": 1,
       "message": "no print_array here",
+      "revId": "717ca6ce5e8c5888e4735fd7295c4bd694d7a4d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a358950d_08a5741b",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 51
+      },
+      "lineNbr": 522,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-06T13:38:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "61cf9a9e_06029339",
       "revId": "717ca6ce5e8c5888e4735fd7295c4bd694d7a4d1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -155,6 +299,24 @@
     },
     {
       "key": {
+        "uuid": "980f5c24_1f59d3f9",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 592,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-06T13:38:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4057bc11_bdc417c2",
+      "revId": "717ca6ce5e8c5888e4735fd7295c4bd694d7a4d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ce643f49_bf60dcdc",
         "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
         "patchSetId": 51
@@ -166,6 +328,24 @@
       "writtenOn": "2018-04-04T21:33:37Z",
       "side": 1,
       "message": "return not needed",
+      "revId": "717ca6ce5e8c5888e4735fd7295c4bd694d7a4d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1e020df_36dd96f6",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 605,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-06T13:38:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ce643f49_bf60dcdc",
       "revId": "717ca6ce5e8c5888e4735fd7295c4bd694d7a4d1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
