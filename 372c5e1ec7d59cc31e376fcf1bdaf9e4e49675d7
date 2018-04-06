@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "348d55d3_dd6dc4fa",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-06T09:41:32Z",
+      "side": 0,
+      "message": "Unreleated change.",
+      "revId": "372c5e1ec7d59cc31e376fcf1bdaf9e4e49675d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

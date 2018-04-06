@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "73f953a7_5d880563",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-06T09:41:32Z",
+      "side": 1,
+      "message": "Pls add assert(TAILQ_EMPTY(\u0026dev-\u003eopen_descs));",
+      "revId": "37e398083eb7def6c12c7bd8d20792b95574cb02",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "161b00af_d94c8fe0",
         "filename": "lib/scsi/dev.c",
         "patchSetId": 14
@@ -22,6 +39,75 @@
       "revId": "37e398083eb7def6c12c7bd8d20792b95574cb02",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9c2f252e_6fb1e6a0",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-06T09:41:32Z",
+      "side": 1,
+      "message": "Move to alloc_dev()?",
+      "range": {
+        "startLine": 266,
+        "startChar": 1,
+        "endLine": 266,
+        "endChar": 30
+      },
+      "revId": "37e398083eb7def6c12c7bd8d20792b95574cb02",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "34ebdf56_57eea0ea",
+        "filename": "lib/scsi/scsi_internal.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-06T09:41:32Z",
+      "side": 1,
+      "message": "open_descs ?",
+      "range": {
+        "startLine": 81,
+        "startChar": 22,
+        "endLine": 81,
+        "endChar": 29
+      },
+      "revId": "37e398083eb7def6c12c7bd8d20792b95574cb02",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9404baa0_5ed23979",
+        "filename": "lib/scsi/scsi_internal.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-06T09:41:32Z",
+      "side": 1,
+      "message": "Do we need this mutex? Is scsi_dev accessed from more than one core/thread? If so why protecting only open_descs?",
+      "range": {
+        "startLine": 82,
+        "startChar": 1,
+        "endLine": 82,
+        "endChar": 23
+      },
+      "revId": "37e398083eb7def6c12c7bd8d20792b95574cb02",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
