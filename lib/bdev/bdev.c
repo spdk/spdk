@@ -807,12 +807,6 @@ _spdk_bdev_finish_unregister_bdevs_iter(void *cb_arg, int bdeverrno)
 	spdk_bdev_unregister(bdev, _spdk_bdev_finish_unregister_bdevs_iter, bdev);
 }
 
-static void
-_spdk_bdev_finish_unregister_bdevs(void)
-{
-	_spdk_bdev_finish_unregister_bdevs_iter(NULL, 0);
-}
-
 void
 spdk_bdev_finish(spdk_bdev_fini_cb cb_fn, void *cb_arg)
 {
@@ -823,7 +817,7 @@ spdk_bdev_finish(spdk_bdev_fini_cb cb_fn, void *cb_arg)
 	g_fini_cb_fn = cb_fn;
 	g_fini_cb_arg = cb_arg;
 
-	_spdk_bdev_finish_unregister_bdevs();
+	_spdk_bdev_finish_unregister_bdevs_iter(NULL, 0);
 }
 
 static struct spdk_bdev_io *
