@@ -1015,24 +1015,18 @@ spdk_lvol_get_xattr_value(void *xattr_ctx, const char *name,
 	}
 }
 
-int
-spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
-		 bool thin_provision, spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
+static int
+_spdk_lvs_verify_lvol_name(struct spdk_lvol_store *lvs, const char *name)
 {
-	struct spdk_lvol_with_handle_req *req;
-	struct spdk_blob_store *bs;
-	struct spdk_lvol *lvol, *tmp;
-	struct spdk_blob_opts opts;
-	uint64_t num_clusters;
-	char *xattr_names[] = {LVOL_NAME, "uuid"};
+	struct spdk_lvol *tmp;
 
 	if (lvs == NULL) {
 		SPDK_ERRLOG("lvol store does not exist\n");
 		return -ENODEV;
 	}
 
-	if (name == NULL || strnlen(name, SPDK_LVS_NAME_MAX) == 0) {
-		SPDK_ERRLOG("No name specified.\n");
+	if (name == NULL || strnlen(name, SPDK_LVOL_NAME_MAX) == 0) {
+		SPDK_INFOLOG(SPDK_LOG_LVOL, "lvol name not provided.\n");
 		return -EINVAL;
 	}
 
@@ -1044,8 +1038,28 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	TAILQ_FOREACH(tmp, &lvs->lvols, link) {
 		if (!strncmp(name, tmp->name, SPDK_LVOL_NAME_MAX)) {
 			SPDK_ERRLOG("lvol with name %s already exists\n", name);
-			return -EINVAL;
+			return -EEXIST;
 		}
+	}
+
+	return 0;
+}
+
+int
+spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
+		 bool thin_provision, spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvol_with_handle_req *req;
+	struct spdk_blob_store *bs;
+	struct spdk_lvol *lvol;
+	struct spdk_blob_opts opts;
+	uint64_t num_clusters;
+	char *xattr_names[] = {LVOL_NAME, "uuid"};
+	int rc;
+
+	rc = _spdk_lvs_verify_lvol_name(lvs, name);
+	if (rc < 0) {
+		return rc;
 	}
 
 	bs = lvs->blobstore;
