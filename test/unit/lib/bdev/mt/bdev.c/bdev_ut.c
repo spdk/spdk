@@ -684,6 +684,7 @@ basic_qos(void)
 
 	/* Close the descriptor, which should stop the qos channel */
 	spdk_bdev_close(g_desc);
+	poll_threads();
 	CU_ASSERT(bdev->qos->ch == NULL);
 
 	spdk_bdev_open(bdev, true, NULL, NULL, &g_desc);
@@ -699,8 +700,8 @@ basic_qos(void)
 	bdev_ch[0] = spdk_io_channel_get_ctx(io_ch[0]);
 	CU_ASSERT(bdev_ch[0]->flags == BDEV_CH_QOS_ENABLED);
 
-	/* Confirm that the qos tracking was re-enabled */
-	CU_ASSERT(bdev->qos->ch != NULL);
+	/* Confirm that the qos thread is now thread 1 */
+	CU_ASSERT(bdev->qos->ch == bdev_ch[1]);
 
 	/* Tear down the channels */
 	set_thread(0);
