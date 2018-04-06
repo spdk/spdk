@@ -1016,35 +1016,14 @@ spdk_bdev_qos_update_max_ios_per_timeslice(struct spdk_bdev_qos *qos)
 static int
 spdk_bdev_channel_poll_qos(void *arg)
 {
-	struct spdk_bdev_channel	*ch = arg;
+	struct spdk_bdev_qos *qos = arg;
 
 	/* Reset for next round of rate limiting */
-	ch->bdev->qos->io_submitted_this_timeslice = 0;
+	qos->io_submitted_this_timeslice = 0;
 
-	_spdk_bdev_qos_io_submit(ch);
+	_spdk_bdev_qos_io_submit(qos->ch);
 
 	return -1;
-}
-
-static int
-_spdk_bdev_channel_create(struct spdk_bdev_channel *ch, void *io_device)
-{
-	struct spdk_bdev		*bdev = __bdev_from_io_dev(io_device);
-
-	ch->bdev = bdev;
-	ch->channel = bdev->fn_table->get_io_channel(bdev->ctxt);
-	if (!ch->channel) {
-		return -1;
-	}
-
-	ch->module_ch = spdk_io_channel_get_ctx(spdk_get_io_channel(bdev->module));
-
-	memset(&ch->stat, 0, sizeof(ch->stat));
-	ch->io_outstanding = 0;
-	TAILQ_INIT(&ch->queued_resets);
-	ch->flags = 0;
-
-	return 0;
 }
 
 static void
@@ -1065,53 +1044,33 @@ _spdk_bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
 
 /* Caller must hold bdev->mutex. */
 static int
-spdk_bdev_qos_channel_create(struct spdk_bdev *bdev)
-{
-	assert(bdev->qos->ch == NULL);
-	assert(bdev->qos->thread == NULL);
-
-	bdev->qos->ch = calloc(1, sizeof(struct spdk_bdev_channel));
-	if (!bdev->qos->ch) {
-		return -1;
-	}
-
-	bdev->qos->thread = spdk_get_thread();
-	if (!bdev->qos->thread) {
-		free(bdev->qos->ch);
-		bdev->qos->ch = NULL;
-		return -1;
-	}
-
-	if (_spdk_bdev_channel_create(bdev->qos->ch, __bdev_to_io_dev(bdev)) != 0) {
-		free(bdev->qos->ch);
-		bdev->qos->ch = NULL;
-		bdev->qos->thread = NULL;
-		return -1;
-	}
-
-	TAILQ_INIT(&bdev->qos->queued);
-
-	bdev->qos->ch->flags |= BDEV_CH_QOS_ENABLED;
-	spdk_bdev_qos_update_max_ios_per_timeslice(bdev->qos);
-
-	bdev->qos->poller = spdk_poller_register(spdk_bdev_channel_poll_qos,
-			    bdev->qos->ch,
-			    SPDK_BDEV_QOS_TIMESLICE_IN_USEC);
-
-	return 0;
-}
-
-/* Caller must hold bdev->mutex */
-static int
 _spdk_bdev_enable_qos(struct spdk_bdev *bdev, struct spdk_bdev_channel *ch)
 {
+	struct spdk_bdev_qos *qos = bdev->qos;
+
 	/* Rate limiting on this bdev enabled */
-	if (bdev->qos) {
-		if (bdev->qos->ch == NULL) {
-			if (spdk_bdev_qos_channel_create(bdev) != 0) {
-				return -1;
-			}
+	if (qos) {
+		if (qos->ch == NULL) {
+			SPDK_INFOLOG(SPDK_LOG_BDEV, "Selecting channel %p as QoS channel for bdev %s on thread %p\n", ch,
+				     bdev->name, spdk_get_thread());
+
+			/* No qos channel has been selected, so set one up */
+
+			/* Take another reference to ch */
+			spdk_get_io_channel(__bdev_to_io_dev(bdev));
+			qos->ch = ch;
+
+			qos->thread = spdk_get_thread();
+
+			TAILQ_INIT(&qos->queued);
+			spdk_bdev_qos_update_max_ios_per_timeslice(qos);
+			qos->io_submitted_this_timeslice = 0;
+
+			qos->poller = spdk_poller_register(spdk_bdev_channel_poll_qos,
+							   qos,
+							   SPDK_BDEV_QOS_TIMESLICE_IN_USEC);
 		}
+
 		ch->flags |= BDEV_CH_QOS_ENABLED;
 	}
 
@@ -1124,10 +1083,21 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 	struct spdk_bdev		*bdev = __bdev_from_io_dev(io_device);
 	struct spdk_bdev_channel	*ch = ctx_buf;
 
-	if (_spdk_bdev_channel_create(ch, io_device) != 0) {
-		_spdk_bdev_channel_destroy_resource(ch);
+	ch->bdev = bdev;
+	ch->channel = bdev->fn_table->get_io_channel(bdev->ctxt);
+	if (!ch->channel) {
 		return -1;
 	}
+
+	SPDK_INFOLOG(SPDK_LOG_BDEV, "Creating channel %p for bdev %s on thread %p\n", ch, bdev->name,
+		     spdk_get_thread());
+
+	ch->module_ch = spdk_io_channel_get_ctx(spdk_get_io_channel(bdev->module));
+
+	memset(&ch->stat, 0, sizeof(ch->stat));
+	ch->io_outstanding = 0;
+	TAILQ_INIT(&ch->queued_resets);
+	ch->flags = 0;
 
 #ifdef SPDK_CONFIG_VTUNE
 	{
@@ -1152,8 +1122,6 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 		pthread_mutex_unlock(&bdev->mutex);
 		return -1;
 	}
-
-	bdev->channel_count++;
 
 	pthread_mutex_unlock(&bdev->mutex);
 
@@ -1213,31 +1181,15 @@ _spdk_bdev_abort_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_channel *ch)
 }
 
 static void
-_spdk_bdev_channel_destroy(struct spdk_bdev_channel *ch)
-{
-	struct spdk_bdev_mgmt_channel	*mgmt_ch;
-	struct spdk_bdev_module_channel	*module_ch = ch->module_ch;
-
-	mgmt_ch = module_ch->mgmt_ch;
-
-	_spdk_bdev_abort_queued_io(&ch->queued_resets, ch);
-	_spdk_bdev_abort_queued_io(&module_ch->nomem_io, ch);
-	_spdk_bdev_abort_buf_io(&mgmt_ch->need_buf_small, ch);
-	_spdk_bdev_abort_buf_io(&mgmt_ch->need_buf_large, ch);
-
-	_spdk_bdev_channel_destroy_resource(ch);
-}
-
-static void
 spdk_bdev_qos_channel_destroy(void *cb_arg)
 {
 	struct spdk_bdev_qos *qos = cb_arg;
 
-	_spdk_bdev_channel_destroy(qos->ch);
-
+	spdk_put_io_channel(spdk_io_channel_from_ctx(qos->ch));
 	spdk_poller_unregister(&qos->poller);
 
-	free(qos->ch);
+	SPDK_INFOLOG(SPDK_LOG_BDEV, "Free QoS %p.\n", qos);
+
 	free(qos);
 }
 
@@ -1246,8 +1198,9 @@ spdk_bdev_qos_destroy(struct spdk_bdev *bdev)
 {
 	/*
 	 * Cleanly shutting down the QoS poller is tricky, because
-	 * during the asynchronous operation the user could open a
-	 * new channel, spawning a new QoS poller.
+	 * during the asynchronous operation the user could open
+	 * a new descriptor and create a new channel, spawning
+	 * a new QoS poller.
 	 *
 	 * The strategy is to create a new QoS structure here and swap it
 	 * in. The shutdown path then continues to refer to the old one
@@ -1290,21 +1243,20 @@ static void
 spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 {
 	struct spdk_bdev_channel	*ch = ctx_buf;
-	struct spdk_bdev		*bdev = ch->bdev;
+	struct spdk_bdev_mgmt_channel	*mgmt_ch;
+	struct spdk_bdev_module_channel	*module_ch = ch->module_ch;
 
-	_spdk_bdev_channel_destroy(ch);
+	SPDK_INFOLOG(SPDK_LOG_BDEV, "Destroying channel %p for bdev %s on thread %p\n", ch, ch->bdev->name,
+		     spdk_get_thread());
 
-	pthread_mutex_lock(&bdev->mutex);
-	bdev->channel_count--;
-	if (bdev->channel_count == 0 && bdev->qos && bdev->qos->ch != NULL) {
-		if (spdk_bdev_qos_destroy(bdev)) {
-			/* There isn't anything we can do to recover from here. Just let the
-			 * old QoS poller keep running. The QoS handling won't change
-			 * cores when the user allocates a new channel, but it won't break. */
-			SPDK_ERRLOG("Unable to shut down QoS poller. It will continue running on the current thread.\n");
-		}
-	}
-	pthread_mutex_unlock(&bdev->mutex);
+	mgmt_ch = module_ch->mgmt_ch;
+
+	_spdk_bdev_abort_queued_io(&ch->queued_resets, ch);
+	_spdk_bdev_abort_queued_io(&module_ch->nomem_io, ch);
+	_spdk_bdev_abort_buf_io(&mgmt_ch->need_buf_small, ch);
+	_spdk_bdev_abort_buf_io(&mgmt_ch->need_buf_large, ch);
+
+	_spdk_bdev_channel_destroy_resource(ch);
 }
 
 int
@@ -1903,28 +1855,17 @@ _spdk_bdev_reset_freeze_channel(struct spdk_io_channel_iter *i)
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_small, channel);
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_large, channel);
 
-	spdk_for_each_channel_continue(i, 0);
-}
-
-static void
-_spdk_bdev_reset_freeze_qos_channel(void *ctx)
-{
-	struct spdk_bdev		*bdev = ctx;
-	struct spdk_bdev_mgmt_channel	*mgmt_channel = NULL;
-	struct spdk_bdev_channel	*qos_channel = bdev->qos->ch;
-	struct spdk_bdev_module_channel	*module_ch = NULL;
-
-	if (qos_channel) {
-		module_ch = qos_channel->module_ch;
-		mgmt_channel = module_ch->mgmt_ch;
-
-		qos_channel->flags |= BDEV_CH_RESET_IN_PROGRESS;
-
-		_spdk_bdev_abort_queued_io(&module_ch->nomem_io, qos_channel);
-		_spdk_bdev_abort_queued_io(&bdev->qos->queued, qos_channel);
-		_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_small, qos_channel);
-		_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_large, qos_channel);
+	pthread_mutex_lock(&channel->bdev->mutex);
+	if (channel->bdev->qos && channel->bdev->qos->ch == channel) {
+		/* TODO: This executes callbacks, so we shouldn't execute those
+		 * under the lock. Instead, we should place the aborted I/O
+		 * on a temporary list under the lock, then release the
+		 * lock and call the callbacks. */
+		_spdk_bdev_abort_queued_io(&channel->bdev->qos->queued, channel);
 	}
+	pthread_mutex_unlock(&channel->bdev->mutex);
+
+	spdk_for_each_channel_continue(i, 0);
 }
 
 static void
@@ -1983,12 +1924,6 @@ spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	pthread_mutex_unlock(&bdev->mutex);
 
 	_spdk_bdev_channel_start_reset(channel);
-
-	/* Explicitly handle the QoS bdev channel as no IO channel associated */
-	if (bdev->qos && bdev->qos->thread) {
-		spdk_thread_send_msg(bdev->qos->thread,
-				     _spdk_bdev_reset_freeze_qos_channel, bdev);
-	}
 
 	return 0;
 }
@@ -2239,17 +2174,6 @@ _spdk_bdev_io_complete(void *ctx)
 }
 
 static void
-_spdk_bdev_unfreeze_qos_channel(void *ctx)
-{
-	struct spdk_bdev	*bdev = ctx;
-
-	if (bdev->qos->ch) {
-		bdev->qos->ch->flags &= ~BDEV_CH_RESET_IN_PROGRESS;
-		assert(TAILQ_EMPTY(&bdev->qos->ch->queued_resets));
-	}
-}
-
-static void
 _spdk_bdev_reset_complete(struct spdk_io_channel_iter *i, int status)
 {
 	struct spdk_bdev_io *bdev_io = spdk_io_channel_iter_get_ctx(i);
@@ -2299,12 +2223,6 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 		pthread_mutex_unlock(&bdev->mutex);
 
 		if (unlock_channels) {
-			/* Explicitly handle the QoS bdev channel as no IO channel associated */
-			if (bdev->qos && bdev->qos->thread) {
-				spdk_thread_send_msg(bdev->qos->thread,
-						     _spdk_bdev_unfreeze_qos_channel, bdev);
-			}
-
 			spdk_for_each_channel(__bdev_to_io_dev(bdev), _spdk_bdev_unfreeze_channel,
 					      bdev_io, _spdk_bdev_reset_complete);
 			return;
@@ -2425,17 +2343,17 @@ spdk_bdev_io_get_thread(struct spdk_bdev_io *bdev_io)
 	return spdk_io_channel_get_thread(bdev_io->ch->channel);
 }
 
-static void
+static int
 _spdk_bdev_qos_config(struct spdk_bdev *bdev)
 {
 	struct spdk_conf_section	*sp = NULL;
 	const char			*val = NULL;
-	uint64_t			ios_per_sec = 0;
+	long int			ios_per_sec = 0;
 	int				i = 0;
 
 	sp = spdk_conf_find_section(NULL, "QoS");
 	if (!sp) {
-		return;
+		return -1;
 	}
 
 	while (true) {
@@ -2451,7 +2369,7 @@ _spdk_bdev_qos_config(struct spdk_bdev *bdev)
 
 		val = spdk_conf_section_get_nmval(sp, "Limit_IOPS", i, 1);
 		if (!val) {
-			return;
+			return -1;
 		}
 
 		ios_per_sec = strtoull(val, NULL, 10);
@@ -2464,7 +2382,7 @@ _spdk_bdev_qos_config(struct spdk_bdev *bdev)
 				bdev->qos = calloc(1, sizeof(*bdev->qos));
 				if (!bdev->qos) {
 					SPDK_ERRLOG("Unable to allocate memory for QoS tracking\n");
-					return;
+					return -1;
 				}
 				bdev->qos->rate_limit = ios_per_sec;
 				SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Bdev:%s QoS:%lu\n",
@@ -2472,8 +2390,10 @@ _spdk_bdev_qos_config(struct spdk_bdev *bdev)
 			}
 		}
 
-		return;
+		break;
 	}
+
+	return 0;
 }
 
 static int
@@ -2759,6 +2679,9 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 		return -ENOMEM;
 	}
 
+	SPDK_INFOLOG(SPDK_LOG_BDEV, "Opening descriptor %p for bdev %s on thread %p\n", desc, bdev->name,
+		     spdk_get_thread());
+
 	pthread_mutex_lock(&bdev->mutex);
 
 	if (write && bdev->claim_module) {
@@ -2787,10 +2710,26 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 	struct spdk_bdev *bdev = desc->bdev;
 	bool do_unregister = false;
 
+	SPDK_INFOLOG(SPDK_LOG_BDEV, "Closing descriptor %p for bdev %s on thread %p\n", desc, bdev->name,
+		     spdk_get_thread());
+
 	pthread_mutex_lock(&bdev->mutex);
 
 	TAILQ_REMOVE(&bdev->open_descs, desc, link);
 	free(desc);
+
+	/* If no more descriptors, kill QoS channel */
+	if (bdev->qos && TAILQ_EMPTY(&bdev->open_descs)) {
+		SPDK_INFOLOG(SPDK_LOG_BDEV, "Closed last descriptor for bdev %s on thread %p. Stopping QoS.\n",
+			     bdev->name, spdk_get_thread());
+
+		if (spdk_bdev_qos_destroy(bdev)) {
+			/* There isn't anything we can do to recover here. Just let the
+			* old QoS poller keep running. The QoS handling won't change
+			* cores when the user allocates a new channel, but it won't break. */
+			SPDK_ERRLOG("Unable to shut down QoS poller. It will continue running on the current thread.\n");
+		}
+	}
 
 	if (bdev->status == SPDK_BDEV_STATUS_REMOVING && TAILQ_EMPTY(&bdev->open_descs)) {
 		do_unregister = true;
@@ -2963,10 +2902,11 @@ _spdk_bdev_disable_qos_done(void *cb_arg)
 	bdev->qos = NULL;
 
 	_spdk_bdev_abort_queued_io(&qos->queued, qos->ch);
-	_spdk_bdev_channel_destroy(qos->ch);
+	spdk_put_io_channel(spdk_io_channel_from_ctx(qos->ch));
+	qos->max_ios_per_timeslice = 0;
+	qos->io_submitted_this_timeslice = 0;
 	spdk_poller_unregister(&qos->poller);
 
-	free(qos->ch);
 	free(qos);
 
 	_spdk_bdev_set_qos_limit_done(ctx, 0);
@@ -3013,6 +2953,7 @@ _spdk_bdev_enable_qos_msg(struct spdk_io_channel_iter *i)
 	int rc;
 
 	rc = _spdk_bdev_enable_qos(bdev, bdev_ch);
+
 	spdk_for_each_channel_continue(i, rc);
 }
 
