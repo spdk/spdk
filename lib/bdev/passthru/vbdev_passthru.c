@@ -310,48 +310,50 @@ vbdev_passthru_init(void)
 	int i;
 
 	sp = spdk_conf_find_section(NULL, "passthru");
-	if (sp != NULL) {
-		for (i = 0; ; i++) {
-			if (!spdk_conf_section_get_nval(sp, "PT", i)) {
-				break;
-			}
+	if (sp == NULL) {
+		return 0;
+	}
 
-			conf_bdev_name = spdk_conf_section_get_nmval(sp, "PT", i, 0);
-			if (!conf_bdev_name) {
-				SPDK_ERRLOG("Passthru configuration missing bdev name\n");
-				break;
-			}
-
-			conf_vbdev_name = spdk_conf_section_get_nmval(sp, "PT", i, 1);
-			if (!conf_vbdev_name) {
-				SPDK_ERRLOG("Passthru configuration missing pt_bdev name\n");
-				break;
-			}
-
-			name = calloc(1, sizeof(struct bdev_names));
-			if (!name) {
-				SPDK_ERRLOG("could not allocate bdev_names\n");
-				return -ENOMEM;
-			}
-			name->bdev_name = strdup(conf_bdev_name);
-			if (!name->bdev_name) {
-				SPDK_ERRLOG("could not allocate name->bdev_name\n");
-				free(name);
-				return -ENOMEM;
-			}
-
-			name->vbdev_name = strdup(conf_vbdev_name);
-			if (!name->vbdev_name) {
-				SPDK_ERRLOG("could not allocate name->vbdev_name\n");
-				free(name->bdev_name);
-				free(name);
-				return -ENOMEM;
-			}
-			TAILQ_INSERT_TAIL(&g_bdev_names, name, link);
+	for (i = 0; ; i++) {
+		if (!spdk_conf_section_get_nval(sp, "PT", i)) {
+			break;
 		}
-		TAILQ_FOREACH(name, &g_bdev_names, link) {
-			SPDK_NOTICELOG("conf parse matched: %s\n", name->bdev_name);
+
+		conf_bdev_name = spdk_conf_section_get_nmval(sp, "PT", i, 0);
+		if (!conf_bdev_name) {
+			SPDK_ERRLOG("Passthru configuration missing bdev name\n");
+			break;
 		}
+
+		conf_vbdev_name = spdk_conf_section_get_nmval(sp, "PT", i, 1);
+		if (!conf_vbdev_name) {
+			SPDK_ERRLOG("Passthru configuration missing pt_bdev name\n");
+			break;
+		}
+
+		name = calloc(1, sizeof(struct bdev_names));
+		if (!name) {
+			SPDK_ERRLOG("could not allocate bdev_names\n");
+			return -ENOMEM;
+		}
+		name->bdev_name = strdup(conf_bdev_name);
+		if (!name->bdev_name) {
+			SPDK_ERRLOG("could not allocate name->bdev_name\n");
+			free(name);
+			return -ENOMEM;
+		}
+
+		name->vbdev_name = strdup(conf_vbdev_name);
+		if (!name->vbdev_name) {
+			SPDK_ERRLOG("could not allocate name->vbdev_name\n");
+			free(name->bdev_name);
+			free(name);
+			return -ENOMEM;
+		}
+		TAILQ_INSERT_TAIL(&g_bdev_names, name, link);
+	}
+	TAILQ_FOREACH(name, &g_bdev_names, link) {
+		SPDK_NOTICELOG("conf parse matched: %s\n", name->bdev_name);
 	}
 	return 0;
 }
@@ -437,77 +439,79 @@ vbdev_passthru_examine(struct spdk_bdev *bdev)
 	 * there's a match, create the pt_node & bdev accordingly.
 	 */
 	TAILQ_FOREACH(name, &g_bdev_names, link) {
-		if (strcmp(name->bdev_name, bdev->name) == 0) {
-			SPDK_NOTICELOG("Match on %s\n", bdev->name);
-			pt_node = calloc(1, sizeof(struct vbdev_passthru));
-			if (!pt_node) {
-				SPDK_ERRLOG("could not allocate pt_node\n");
-				return;
-			}
-
-			/* The base bdev that we're attaching to. */
-			pt_node->base_bdev = bdev;
-			pt_node->pt_bdev.name = strdup(name->vbdev_name);
-			if (!pt_node->pt_bdev.name) {
-				SPDK_ERRLOG("could not allocate pt_bdev name\n");
-				free(pt_node);
-				return;
-			}
-			pt_node->pt_bdev.product_name = "passthru";
-
-			/* Copy some properties from the underying base bdev. */
-			pt_node->pt_bdev.write_cache = bdev->write_cache;
-			pt_node->pt_bdev.need_aligned_buffer = bdev->need_aligned_buffer;
-			pt_node->pt_bdev.optimal_io_boundary = bdev->optimal_io_boundary;
-			pt_node->pt_bdev.blocklen = bdev->blocklen;
-			pt_node->pt_bdev.blockcnt = bdev->blockcnt;
-
-			/* This is the context that is passed to us when the bdev
-			 * layer calls in so we'll save our pt_bdev node here.
-			 */
-			pt_node->pt_bdev.ctxt = pt_node;
-			pt_node->pt_bdev.fn_table = &vbdev_passthru_fn_table;
-			pt_node->pt_bdev.module = &passthru_if;
-			TAILQ_INSERT_TAIL(&g_pt_nodes, pt_node, link);
-
-			spdk_io_device_register(pt_node, pt_bdev_ch_create_cb, pt_bdev_ch_destroy_cb,
-						sizeof(struct pt_io_channel));
-			SPDK_NOTICELOG("io_device created at: 0x%p\n", pt_node);
-
-			rc = spdk_bdev_open(bdev, true, vbdev_passthru_examine_hotremove_cb,
-					    bdev, &pt_node->base_desc);
-			if (rc) {
-				SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(bdev));
-				TAILQ_REMOVE(&g_pt_nodes, pt_node, link);
-				free(pt_node->pt_bdev.name);
-				free(pt_node);
-				return;
-			}
-			SPDK_NOTICELOG("bdev opened\n");
-
-			rc = spdk_bdev_module_claim_bdev(bdev, pt_node->base_desc, pt_node->pt_bdev.module);
-			if (rc) {
-				SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(bdev));
-				spdk_bdev_close(pt_node->base_desc);
-				TAILQ_REMOVE(&g_pt_nodes, pt_node, link);
-				free(pt_node->pt_bdev.name);
-				free(pt_node);
-				return;
-			}
-			SPDK_NOTICELOG("bdev claimed\n");
-
-			rc = spdk_vbdev_register(&pt_node->pt_bdev, &bdev, 1);
-			if (rc) {
-				SPDK_ERRLOG("could not register pt_bdev\n");
-				spdk_bdev_close(pt_node->base_desc);
-				TAILQ_REMOVE(&g_pt_nodes, pt_node, link);
-				free(pt_node->pt_bdev.name);
-				free(pt_node);
-				return;
-			}
-			SPDK_NOTICELOG("pt_bdev registered\n");
-			SPDK_NOTICELOG("created pt_bdev for: %s\n", name->vbdev_name);
+		if (strcmp(name->bdev_name, bdev->name) != 0) {
+			continue;
 		}
+
+		SPDK_NOTICELOG("Match on %s\n", bdev->name);
+		pt_node = calloc(1, sizeof(struct vbdev_passthru));
+		if (!pt_node) {
+			SPDK_ERRLOG("could not allocate pt_node\n");
+			break;
+		}
+
+		/* The base bdev that we're attaching to. */
+		pt_node->base_bdev = bdev;
+		pt_node->pt_bdev.name = strdup(name->vbdev_name);
+		if (!pt_node->pt_bdev.name) {
+			SPDK_ERRLOG("could not allocate pt_bdev name\n");
+			free(pt_node);
+			break;
+		}
+		pt_node->pt_bdev.product_name = "passthru";
+
+		/* Copy some properties from the underying base bdev. */
+		pt_node->pt_bdev.write_cache = bdev->write_cache;
+		pt_node->pt_bdev.need_aligned_buffer = bdev->need_aligned_buffer;
+		pt_node->pt_bdev.optimal_io_boundary = bdev->optimal_io_boundary;
+		pt_node->pt_bdev.blocklen = bdev->blocklen;
+		pt_node->pt_bdev.blockcnt = bdev->blockcnt;
+
+		/* This is the context that is passed to us when the bdev
+		 * layer calls in so we'll save our pt_bdev node here.
+		 */
+		pt_node->pt_bdev.ctxt = pt_node;
+		pt_node->pt_bdev.fn_table = &vbdev_passthru_fn_table;
+		pt_node->pt_bdev.module = &passthru_if;
+		TAILQ_INSERT_TAIL(&g_pt_nodes, pt_node, link);
+
+		spdk_io_device_register(pt_node, pt_bdev_ch_create_cb, pt_bdev_ch_destroy_cb,
+					sizeof(struct pt_io_channel));
+		SPDK_NOTICELOG("io_device created at: 0x%p\n", pt_node);
+
+		rc = spdk_bdev_open(bdev, true, vbdev_passthru_examine_hotremove_cb,
+				    bdev, &pt_node->base_desc);
+		if (rc) {
+			SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(bdev));
+			TAILQ_REMOVE(&g_pt_nodes, pt_node, link);
+			free(pt_node->pt_bdev.name);
+			free(pt_node);
+			break;
+		}
+		SPDK_NOTICELOG("bdev opened\n");
+
+		rc = spdk_bdev_module_claim_bdev(bdev, pt_node->base_desc, pt_node->pt_bdev.module);
+		if (rc) {
+			SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(bdev));
+			spdk_bdev_close(pt_node->base_desc);
+			TAILQ_REMOVE(&g_pt_nodes, pt_node, link);
+			free(pt_node->pt_bdev.name);
+			free(pt_node);
+			break;
+		}
+		SPDK_NOTICELOG("bdev claimed\n");
+
+		rc = spdk_vbdev_register(&pt_node->pt_bdev, &bdev, 1);
+		if (rc) {
+			SPDK_ERRLOG("could not register pt_bdev\n");
+			spdk_bdev_close(pt_node->base_desc);
+			TAILQ_REMOVE(&g_pt_nodes, pt_node, link);
+			free(pt_node->pt_bdev.name);
+			free(pt_node);
+			break;
+		}
+		SPDK_NOTICELOG("pt_bdev registered\n");
+		SPDK_NOTICELOG("created pt_bdev for: %s\n", name->vbdev_name);
 	}
 	spdk_bdev_module_examine_done(&passthru_if);
 }
