@@ -77,7 +77,7 @@ rm -f whitespace.log
 
 echo -n "Checking for use of forbidden library functions..."
 
-git grep -w strcpy -- app examples lib test > badfunc.log || true
+git grep -w '\(strcpy\|sprintf\|vsprintf\)' -- app examples lib test > badfunc.log || true
 
 if [ -s badfunc.log ]; then
 	echo " Forbidden library functions detected"

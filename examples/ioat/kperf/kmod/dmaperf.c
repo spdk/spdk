@@ -605,7 +605,7 @@ static int perf_debugfs_setup(struct perf_ctx *perf)
 
 	for (i = 0; i < MAX_THREADS; i++) {
 		struct pthr_ctx *pctx = &perf->pthr_ctx[i];
-		sprintf(temp_name, "thread_%d", i);
+		snprintf(temp_name, sizeof(temp_name), "thread_%d", i);
 
 		pctx->debugfs_thr_dir = debugfs_create_dir(temp_name, perf->debugfs_node_dir);
 		if (!pctx->debugfs_thr_dir) {
