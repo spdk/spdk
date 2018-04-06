@@ -536,6 +536,16 @@ file_alloc(struct spdk_filesystem *fs)
 	return file;
 }
 
+static void
+file_free(struct spdk_file *file)
+{
+	TAILQ_REMOVE(&file->fs->files, file, tailq);
+
+	free(file->name);
+	free(file->tree);
+	free(file);
+}
+
 static void fs_load_done(void *ctx, int bserrno);
 
 static int
@@ -620,6 +630,11 @@ iter_cb(void *ctx, struct spdk_blob *blob, int rc)
 		}
 
 		f->name = strdup(name);
+		if (!f->name) {
+			file_free(f);
+			rc = -ENOMEM;
+			goto error;
+		}
 		f->blobid = spdk_blob_get_id(blob);
 		f->length = *length;
 		f->length_flushed = *length;
@@ -915,6 +930,7 @@ spdk_fs_create_file_async(struct spdk_filesystem *fs, const char *name,
 
 	req = alloc_fs_request(fs->md_target.md_fs_channel);
 	if (req == NULL) {
+		file_free(file);
 		cb_fn(cb_arg, -ENOMEM);
 		return;
 	}
@@ -925,6 +941,12 @@ spdk_fs_create_file_async(struct spdk_filesystem *fs, const char *name,
 	args->arg = cb_arg;
 
 	file->name = strdup(name);
+	if (!file->name) {
+		file_free(file);
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
 	spdk_bs_create_blob(fs->bs, fs_create_blob_create_cb, args);
 }
 
@@ -1307,15 +1329,11 @@ spdk_fs_delete_file_async(struct spdk_filesystem *fs, const char *name,
 		return;
 	}
 
-	TAILQ_REMOVE(&fs->files, f, tailq);
-
 	cache_free_buffers(f);
 
 	blobid = f->blobid;
 
-	free(f->name);
-	free(f->tree);
-	free(f);
+	file_free(f);
 
 	spdk_bs_delete_blob(fs->bs, blobid, blob_delete_cb, req);
 }
