@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c8bdd2d2_ff7bb687",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-06T20:41:38Z",
+      "side": 1,
+      "message": "I think you meant to remove this if block.",
+      "revId": "10b0a38041d1271f6bed4e06b1885a21ca173d17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
