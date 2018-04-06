@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "47bc3dae_2650285c",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 54
+      },
+      "lineNbr": 1124,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-06T16:33:49Z",
+      "side": 1,
+      "message": "What if the user calls spdk_lvol_create_snapshot twice in a row, with the same snapshot_name?  They will both pass the verification, since the first one is not added to the lvol list yet.\n\nThis is actually a problem with spdk_lvol_create too.  Probably these in-progress lvols need to go in a separate list so they can be checked for naming purposes.  Then removed from that list either when the creation completes or some error occurs.\n\nI\u0027m OK leaving this as it is for now, but we need a patch to fix this.",
+      "revId": "7037fcf6b7187de2f672e3f309d04d348f4a2342",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
