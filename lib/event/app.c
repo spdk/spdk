@@ -108,6 +108,8 @@ static const struct option g_cmdline_options[] = {
 	{"huge-unlink",			no_argument,		NULL, HUGE_UNLINK_OPT_IDX},
 #define PCI_WHITELIST_OPT_IDX	'W'
 	{"pci-whitelist",		required_argument,	NULL, PCI_WHITELIST_OPT_IDX},
+#define EXPORT_FILE_OPT_IDX	'X'
+	{"export-file",			required_argument,	NULL, EXPORT_FILE_OPT_IDX},
 #define SILENCE_NOTICELOG_OPT_IDX 257
 	{"silence-noticelog",		no_argument,		NULL, SILENCE_NOTICELOG_OPT_IDX},
 #define WAIT_FOR_RPC_OPT_IDX	258
@@ -915,6 +917,9 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 				opts->pci_whitelist = NULL;
 				goto out;
 			}
+			break;
+		case EXPORT_FILE_OPT_IDX:
+			opts->export_file = optarg;
 			break;
 		case '?':
 			/*
