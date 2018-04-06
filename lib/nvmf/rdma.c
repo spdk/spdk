@@ -33,6 +33,7 @@
 
 #include "spdk/stdinc.h"
 
+#include <rte_cycles.h>
 #include <infiniband/verbs.h>
 #include <rdma/rdma_cma.h>
 #include <rdma/rdma_verbs.h>
@@ -1188,6 +1189,15 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 			break;
 
 		}
+		/* set up device context async ev fd as NON_BLOCKING */
+		flag = fcntl(device->context->async_fd, F_GETFL);
+		rc = fcntl(device->context->async_fd,
+					F_SETFL, flag | O_NONBLOCK);
+		if (rc < 0) {
+			SPDK_ERRLOG("Failed to set context async fd to NONBLOCK.\n");
+			free(device);
+			break;
+		}
 
 		device->pd = NULL;
 		device->map = NULL;
@@ -1591,7 +1601,6 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 		if (poller->cq) {
 			ibv_destroy_cq(poller->cq);
 		}
-
 		free(poller);
 	}
 
@@ -1797,6 +1806,132 @@ get_rdma_recv_from_wc(struct ibv_wc *wc)
 	return rdma_recv;
 }
 
+static void _check_ibv_errors(void *ctx)
+{
+		int rc;
+		static const char * const str_event[] = {
+			[IBV_EVENT_CQ_ERR] = "IBV_EVENT_CQ_ERR",
+			[IBV_EVENT_QP_FATAL] = "IBV_EVENT_QP_FATAL",
+			[IBV_EVENT_QP_REQ_ERR] = "IBV_EVENT_QP_REQ_ERR",
+			[IBV_EVENT_QP_ACCESS_ERR] = "IBV_EVENT_QP_ACCESS_ERR",
+			[IBV_EVENT_COMM_EST] = "IBV_EVENT_COMM_EST",
+			[IBV_EVENT_SQ_DRAINED] = "IBV_EVENT_SQ_DRAINED",
+			[IBV_EVENT_PATH_MIG] = "IBV_EVENT_PATH_MIG",
+			[IBV_EVENT_PATH_MIG_ERR] = "IBV_EVENT_PATH_MIG_ERR",
+			[IBV_EVENT_DEVICE_FATAL] = "IBV_EVENT_DEVICE_FATAL",
+			[IBV_EVENT_PORT_ACTIVE] = "IBV_EVENT_PORT_ACTIVE",
+			[IBV_EVENT_PORT_ERR] = "IBV_EVENT_PORT_ERR",
+			[IBV_EVENT_LID_CHANGE] = "IBV_EVENT_LID_CHANGE",
+			[IBV_EVENT_PKEY_CHANGE] = "IBV_EVENT_PKEY_CHANGE",
+			[IBV_EVENT_SM_CHANGE] = "IBV_EVENT_SM_CHANGE",
+			[IBV_EVENT_SRQ_ERR] = "IBV_EVENT_SRQ_ERR",
+			[IBV_EVENT_SRQ_LIMIT_REACHED] =
+						"IBV_EVENT_SRQ_LIMIT_REACHED",
+			[IBV_EVENT_QP_LAST_WQE_REACHED] =
+						"IBV_EVENT_QP_LAST_WQE_REACHED",
+			[IBV_EVENT_CLIENT_REREGISTER] =
+						"IBV_EVENT_CLIENT_REREGISTER",
+			[IBV_EVENT_GID_CHANGE] = "IBV_EVENT_GID_CHANGE",
+			[IBV_EVENT_WQ_FATAL] = "IBV_EVENT_WQ_FATAL",
+		};
+		struct spdk_nvmf_rdma_poller *rpoller = ctx;
+		struct ibv_async_event event = {0};
+		struct pollfd pollfd = {
+			.fd = rpoller->device->context->async_fd,
+			.events = POLLIN,
+			.revents = 0
+		};
+
+		rc = poll(&pollfd, 1, 0);
+
+		if (rc == 0) {
+			return;
+		} else if (rc < 0) {
+			SPDK_ERRLOG("Error polling async event (%d): %s\n",
+			    errno, spdk_strerror(errno));
+			return;
+		} else if (ibv_get_async_event(rpoller->device->context,
+				&event)) {
+			SPDK_ERRLOG("Failed to get async_event (%d): %s\n",
+				errno, spdk_strerror(errno));
+			return;
+		}
+
+		switch (event.event_type) {
+		case IBV_EVENT_CQ_ERR:
+		case IBV_EVENT_QP_FATAL:
+		case IBV_EVENT_QP_REQ_ERR:
+		case IBV_EVENT_QP_ACCESS_ERR:
+		case IBV_EVENT_COMM_EST:
+		case IBV_EVENT_SQ_DRAINED:
+		case IBV_EVENT_PATH_MIG:
+		case IBV_EVENT_PATH_MIG_ERR:
+		case IBV_EVENT_DEVICE_FATAL:
+		case IBV_EVENT_PORT_ACTIVE:
+		case IBV_EVENT_PORT_ERR:
+		case IBV_EVENT_LID_CHANGE:
+		case IBV_EVENT_PKEY_CHANGE:
+		case IBV_EVENT_SM_CHANGE:
+		case IBV_EVENT_SRQ_ERR:
+		case IBV_EVENT_SRQ_LIMIT_REACHED:
+		case IBV_EVENT_QP_LAST_WQE_REACHED:
+		case IBV_EVENT_CLIENT_REREGISTER:
+		case IBV_EVENT_GID_CHANGE:
+		case IBV_EVENT_WQ_FATAL:
+			SPDK_NOTICELOG("Async event: %s\n",
+					str_event[event.event_type]);
+		break;
+		default:
+			SPDK_NOTICELOG("Unknown async event: %u\n",
+					event.event_type);
+		break;
+		}
+}
+
+#define ASYNC_EV_CHECK_TIMEOUT_MS (100)
+static inline uint64_t
+spdk_nvmf_get_system_msecs(void)
+{
+	return rte_get_timer_cycles() * MS_PER_S / rte_get_timer_hz();
+}
+
+static void spdk_nvmf_check_ibv_errors(struct spdk_nvmf_rdma_poller *rpoller,
+							bool force_check)
+{
+	struct spdk_nvmf_rdma_qpair	*rqpair;
+	struct spdk_thread *admin_thread;
+	struct spdk_nvmf_ctrlr *ctrlr;
+
+	if (TAILQ_EMPTY(&rpoller->qpairs))
+		return;
+
+	rqpair = rpoller->qpairs.tqh_first;
+
+	if (!rqpair->qpair.ctrlr)
+		return;
+
+	ctrlr = rqpair->qpair.ctrlr;
+
+	if (!ctrlr->admin_qpair)
+		return;
+
+	admin_thread = ctrlr->admin_qpair->group->thread;
+
+	if (!force_check) {
+		uint64_t last_check = ctrlr->admin_qpair->group->poll_timestamp;
+		uint64_t now = spdk_nvmf_get_system_msecs();
+
+		force_check = (now - last_check) > ASYNC_EV_CHECK_TIMEOUT_MS ?
+						true : false;
+	}
+
+	if (force_check) {
+		spdk_thread_send_msg(admin_thread, _check_ibv_errors, rpoller);
+		ctrlr->admin_qpair->group->poll_timestamp =
+						spdk_nvmf_get_system_msecs();
+	}
+}
+
 static int
 spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			   struct spdk_nvmf_rdma_poller *rpoller)
@@ -1814,7 +1949,8 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 	if (reaped < 0) {
 		SPDK_ERRLOG("Error polling CQ! (%d): %s\n",
 			    errno, spdk_strerror(errno));
-		return -1;
+		error = true;
+		goto check_rdma_err;
 	}
 
 	for (i = 0; i < reaped; i++) {
@@ -1881,11 +2017,9 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 		}
 	}
 
-	if (error == true) {
-		return -1;
-	}
-
-	return count;
+check_rdma_err:
+	spdk_nvmf_check_ibv_errors(rpoller, error);
+	return error ? -1 : count;
 }
 
 static int

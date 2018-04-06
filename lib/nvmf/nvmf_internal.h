@@ -103,6 +103,7 @@ struct spdk_nvmf_poll_group {
 	/* Array of poll groups indexed by subsystem id (sid) */
 	struct spdk_nvmf_subsystem_poll_group		*sgroups;
 	uint32_t					num_sgroups;
+	uint64_t					poll_timestamp;
 };
 
 typedef enum _spdk_nvmf_request_exec_status {
