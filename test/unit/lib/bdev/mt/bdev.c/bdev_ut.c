@@ -267,6 +267,7 @@ teardown_test(void)
 	spdk_io_device_unregister(&g_io_device, NULL);
 	spdk_bdev_finish(finish_cb, NULL);
 	poll_threads();
+	free(g_bdev.bdev.qos);
 	memset(&g_bdev, 0, sizeof(g_bdev));
 	CU_ASSERT(g_teardown_done == true);
 	g_teardown_done = false;
@@ -684,6 +685,7 @@ basic_qos(void)
 
 	/* Close the descriptor, which should stop the qos channel */
 	spdk_bdev_close(g_desc);
+	poll_threads();
 	CU_ASSERT(bdev->qos->ch == NULL);
 
 	spdk_bdev_open(bdev, true, NULL, NULL, &g_desc);
@@ -699,8 +701,8 @@ basic_qos(void)
 	bdev_ch[0] = spdk_io_channel_get_ctx(io_ch[0]);
 	CU_ASSERT(bdev_ch[0]->flags == BDEV_CH_QOS_ENABLED);
 
-	/* Confirm that the qos tracking was re-enabled */
-	CU_ASSERT(bdev->qos->ch != NULL);
+	/* Confirm that the qos thread is now thread 1 */
+	CU_ASSERT(bdev->qos->ch == bdev_ch[1]);
 
 	/* Tear down the channels */
 	set_thread(0);
@@ -710,8 +712,6 @@ basic_qos(void)
 	poll_threads();
 
 	set_thread(0);
-
-	free(bdev->qos);
 
 	teardown_test();
 }
@@ -796,8 +796,6 @@ io_during_qos_queue(void)
 	spdk_put_io_channel(io_ch[0]);
 	poll_threads();
 
-	free(bdev->qos);
-
 	teardown_test();
 }
 
@@ -869,8 +867,6 @@ io_during_qos_reset(void)
 	set_thread(0);
 	spdk_put_io_channel(io_ch[0]);
 	poll_threads();
-
-	free(bdev->qos);
 
 	teardown_test();
 }
