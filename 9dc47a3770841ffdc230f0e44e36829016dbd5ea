@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e5c5f4db_3c02fd7e",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-06T21:33:14Z",
+      "side": 1,
+      "message": "SPDK_MALLOC_DMA should just mean that the memory is DMA-safe, but not indicate at all whether it is sharable. Similarly, SPDK_MALLOC_SHARE means the memory can be shared across process boundaries, but does not indicate whether it is DMA-safe.",
+      "revId": "9dc47a3770841ffdc230f0e44e36829016dbd5ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41afaf12_1b6c6155",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-06T21:33:14Z",
+      "side": 1,
+      "message": "We should consider marking these other functions as deprecated. At a minimum, we should document what arguments can be passed to spdk_malloc to get the equivalent functionality.",
+      "revId": "9dc47a3770841ffdc230f0e44e36829016dbd5ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51c1678b_d7f4fb1d",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-06T21:33:14Z",
+      "side": 1,
+      "message": "I\u0027d actually prefer to move the call to rte_malloc_socket into spdk_malloc, then implement spdk_dma_malloc_socket as a call to spdk_malloc.",
+      "revId": "9dc47a3770841ffdc230f0e44e36829016dbd5ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
