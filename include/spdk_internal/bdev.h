@@ -324,9 +324,6 @@ struct spdk_bdev_io {
 	/** The bdev I/O channel that this was submitted on. */
 	struct spdk_bdev_channel *io_submit_ch;
 
-	/** The mgmt channel that this I/O was allocated from. */
-	struct spdk_bdev_mgmt_channel *mgmt_ch;
-
 	/** User function that will be called when this completes */
 	spdk_bdev_io_completion_cb cb;
 
