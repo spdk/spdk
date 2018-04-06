@@ -87,7 +87,7 @@ spdk_fuse_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *f
 		return 0;
 	}
 
-	rc = spdk_fs_file_stat(g_fs, g_channel, &path[1], &stat);
+	rc = spdk_fs_file_stat(g_fs, g_channel, path, &stat);
 	if (rc == 0) {
 		stbuf->st_mode = S_IFREG | 0644;
 		stbuf->st_nlink = 1;
@@ -114,7 +114,7 @@ spdk_fuse_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 		file = spdk_fs_iter_get_file(iter);
 		iter = spdk_fs_iter_next(iter);
 		filename = spdk_file_get_name(file);
-		filler(buf, filename, NULL, 0, 0);
+		filler(buf, &filename[1], NULL, 0, 0);
 	}
 
 	return 0;
@@ -123,13 +123,13 @@ spdk_fuse_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 static int
 spdk_fuse_mknod(const char *path, mode_t mode, dev_t rdev)
 {
-	return spdk_fs_create_file(g_fs, g_channel, &path[1]);
+	return spdk_fs_create_file(g_fs, g_channel, path);
 }
 
 static int
 spdk_fuse_unlink(const char *path)
 {
-	return spdk_fs_delete_file(g_fs, g_channel, &path[1]);
+	return spdk_fs_delete_file(g_fs, g_channel, path);
 }
 
 static int
@@ -138,7 +138,7 @@ spdk_fuse_truncate(const char *path, off_t size, struct fuse_file_info *fi)
 	struct spdk_file *file;
 	int rc;
 
-	rc = spdk_fs_open_file(g_fs, g_channel, &path[1], 0, &file);
+	rc = spdk_fs_open_file(g_fs, g_channel, path, 0, &file);
 	if (rc != 0) {
 		return -rc;
 	}
@@ -161,7 +161,7 @@ spdk_fuse_open(const char *path, struct fuse_file_info *info)
 	struct spdk_file *file;
 	int rc;
 
-	rc = spdk_fs_open_file(g_fs, g_channel, &path[1], 0, &file);
+	rc = spdk_fs_open_file(g_fs, g_channel, path, 0, &file);
 	if (rc != 0) {
 		return -rc;
 	}
@@ -216,7 +216,7 @@ spdk_fuse_fsync(const char *path, int datasync, struct fuse_file_info *info)
 static int
 spdk_fuse_rename(const char *old_path, const char *new_path, unsigned int flags)
 {
-	return spdk_fs_rename_file(g_fs, g_channel, &old_path[1], &new_path[1]);
+	return spdk_fs_rename_file(g_fs, g_channel, old_path, new_path);
 }
 
 static struct fuse_operations spdk_fuse_oper = {
