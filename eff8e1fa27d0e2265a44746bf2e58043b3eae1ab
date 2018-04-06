@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a3a6c6da_37e19693",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 618,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-06T18:34:08Z",
+      "side": 1,
+      "message": "This function can get called repeatedly if g_show_performance_real_time is set (-S command-line option).  It should be possible to either add a check for the real-time flag in here to bail out before the CSV dump, or split the CSV dump into its own function that is only called at the end of the run.",
+      "revId": "eff8e1fa27d0e2265a44746bf2e58043b3eae1ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4fbe08c2_fae34cf7",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 664,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-06T18:34:08Z",
+      "side": 1,
+      "message": "We should avoid sprintf(), since it can overflow the buffer since it doesn\u0027t pass the buffer size.\n\nSince you\u0027re just printing this to a file anyway, you can combine the sprintf() + fwrite() into fprintf() so you don\u0027t need line_out at all.",
+      "range": {
+        "startLine": 664,
+        "startChar": 2,
+        "endLine": 664,
+        "endChar": 9
+      },
+      "revId": "eff8e1fa27d0e2265a44746bf2e58043b3eae1ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
