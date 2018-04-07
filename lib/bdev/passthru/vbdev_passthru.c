@@ -309,7 +309,7 @@ vbdev_passthru_init(void)
 	struct bdev_names *name;
 	int i;
 
-	sp = spdk_conf_find_section(NULL, "passthru");
+	sp = spdk_conf_find_section(NULL, "Passthru");
 	if (sp == NULL) {
 		return 0;
 	}
