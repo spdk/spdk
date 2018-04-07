@@ -1,4 +1,4 @@
-[passthru]
+[Passthru]
   # PT <bdev name> <vbdev name>
   PT Malloc3 TestPT
 
