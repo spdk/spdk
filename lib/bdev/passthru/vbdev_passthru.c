@@ -309,7 +309,7 @@ vbdev_passthru_init(void)
 	struct bdev_names *name;
 	int i;
 
-	sp = spdk_conf_find_section(NULL, "passthru");
+	sp = spdk_conf_find_section(NULL, "Passthru");
 	if (sp == NULL) {
 		return 0;
 	}
@@ -390,7 +390,7 @@ vbdev_passthru_get_spdk_running_config(FILE *fp)
 {
 	struct bdev_names *names = NULL;
 
-	fprintf(fp, "\n[passthru]\n");
+	fprintf(fp, "\n[Passthru]\n");
 	TAILQ_FOREACH(names, &g_bdev_names, link) {
 		fprintf(fp, "  PT %s %s ", names->bdev_name, names->vbdev_name);
 		fprintf(fp, "\n");
