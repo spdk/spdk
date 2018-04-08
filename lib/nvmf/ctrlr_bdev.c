@@ -94,7 +94,7 @@ nvmf_bdev_ctrlr_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
 	struct spdk_nvme_cpl		*response = &req->rsp->nvme_cpl;
 	int				sc, sct;
 
-	spdk_bdev_io_get_nvme_status(bdev_io, &sc, &sct);
+	spdk_bdev_io_get_nvme_status(bdev_io, &sct, &sc);
 	response->status.sc = sc;
 	response->status.sct = sct;
 
@@ -300,7 +300,7 @@ nvmf_virtual_ctrlr_dsm_cpl(struct spdk_bdev_io *bdev_io, bool success,
 
 	if (response->status.sct == SPDK_NVME_SCT_GENERIC &&
 	    response->status.sc == SPDK_NVME_SC_SUCCESS) {
-		spdk_bdev_io_get_nvme_status(bdev_io, &sc, &sct);
+		spdk_bdev_io_get_nvme_status(bdev_io, &sct, &sc);
 		response->status.sc = sc;
 		response->status.sct = sct;
 	}
