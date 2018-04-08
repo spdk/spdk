@@ -38,6 +38,7 @@
 
 #include "spdk/stdinc.h"
 
+#include "vbdev_passthru.h"
 #include "spdk/rpc.h"
 #include "spdk/env.h"
 #include "spdk/conf.h"
@@ -299,6 +300,39 @@ pt_bdev_ch_destroy_cb(void *io_device, void *ctx_buf)
 	spdk_put_io_channel(pt_ch->base_ch);
 }
 
+/* Create the passthru association from the bdev and vbdev name and insert
+ * on the global list. */
+static int
+vbdev_passthru_insert_name(const char *bdev_name, const char *vbdev_name)
+{
+	struct bdev_names *name;
+
+	name = calloc(1, sizeof(struct bdev_names));
+	if (!name) {
+		SPDK_ERRLOG("could not allocate bdev_names\n");
+		return -ENOMEM;
+	}
+
+	name->bdev_name = strdup(bdev_name);
+	if (!name->bdev_name) {
+		SPDK_ERRLOG("could not allocate name->bdev_name\n");
+		free(name);
+		return -ENOMEM;
+	}
+
+	name->vbdev_name = strdup(vbdev_name);
+	if (!name->vbdev_name) {
+		SPDK_ERRLOG("could not allocate name->vbdev_name\n");
+		free(name->bdev_name);
+		free(name);
+		return -ENOMEM;
+	}
+
+	TAILQ_INSERT_TAIL(&g_bdev_names, name, link);
+
+	return 0;
+}
+
 /* On init, just parse config file and build list of pt vbdevs and bdev name pairs. */
 static int
 vbdev_passthru_init(void)
@@ -307,7 +341,7 @@ vbdev_passthru_init(void)
 	const char *conf_bdev_name = NULL;
 	const char *conf_vbdev_name = NULL;
 	struct bdev_names *name;
-	int i;
+	int i, rc;
 
 	sp = spdk_conf_find_section(NULL, "Passthru");
 	if (sp == NULL) {
@@ -331,26 +365,10 @@ vbdev_passthru_init(void)
 			break;
 		}
 
-		name = calloc(1, sizeof(struct bdev_names));
-		if (!name) {
-			SPDK_ERRLOG("could not allocate bdev_names\n");
-			return -ENOMEM;
+		rc = vbdev_passthru_insert_name(conf_bdev_name, conf_vbdev_name);
+		if (rc != 0) {
+			return rc;
 		}
-		name->bdev_name = strdup(conf_bdev_name);
-		if (!name->bdev_name) {
-			SPDK_ERRLOG("could not allocate name->bdev_name\n");
-			free(name);
-			return -ENOMEM;
-		}
-
-		name->vbdev_name = strdup(conf_vbdev_name);
-		if (!name->vbdev_name) {
-			SPDK_ERRLOG("could not allocate name->vbdev_name\n");
-			free(name->bdev_name);
-			free(name);
-			return -ENOMEM;
-		}
-		TAILQ_INSERT_TAIL(&g_bdev_names, name, link);
 	}
 	TAILQ_FOREACH(name, &g_bdev_names, link) {
 		SPDK_NOTICELOG("conf parse matched: %s\n", name->bdev_name);
@@ -421,15 +439,11 @@ vbdev_passthru_examine_hotremove_cb(void *ctx)
 	}
 }
 
-/* Because we specified this function in our pt bdev function table when we
- * registered our pt bdev, we'll get this call anytime a new bdev shows up.
- * Here we need to decide if we care about it and if so what to do. We
- * parsed the config file at init so we check the new bdev against the list
- * we built up at that time and if the user configured us to attach to this
- * bdev, here's where we do it.
+/* Create and register the passthru vbdev if we find it in our list of bdev names.
+ * This can be called either by the examine path or RPC method.
  */
 static void
-vbdev_passthru_examine(struct spdk_bdev *bdev)
+vbdev_passthru_register(struct spdk_bdev *bdev)
 {
 	struct bdev_names *name;
 	struct vbdev_passthru *pt_node;
@@ -513,6 +527,42 @@ vbdev_passthru_examine(struct spdk_bdev *bdev)
 		SPDK_NOTICELOG("pt_bdev registered\n");
 		SPDK_NOTICELOG("created pt_bdev for: %s\n", name->vbdev_name);
 	}
+}
+
+/* Create the passthru disk from the given bdev and vbdev name. */
+int
+create_passthru_disk(const char *bdev_name, const char *vbdev_name)
+{
+	struct spdk_bdev *bdev = NULL;
+	int rc = 0;
+
+	bdev = spdk_bdev_get_by_name(bdev_name);
+	if (!bdev) {
+		return -1;
+	}
+
+	rc = vbdev_passthru_insert_name(bdev_name, vbdev_name);
+	if (rc != 0) {
+		return rc;
+	}
+
+	vbdev_passthru_register(bdev);
+
+	return 0;
+}
+
+/* Because we specified this function in our pt bdev function table when we
+ * registered our pt bdev, we'll get this call anytime a new bdev shows up.
+ * Here we need to decide if we care about it and if so what to do. We
+ * parsed the config file at init so we check the new bdev against the list
+ * we built up at that time and if the user configured us to attach to this
+ * bdev, here's where we do it.
+ */
+static void
+vbdev_passthru_examine(struct spdk_bdev *bdev)
+{
+	vbdev_passthru_register(bdev);
+
 	spdk_bdev_module_examine_done(&passthru_if);
 }
 
