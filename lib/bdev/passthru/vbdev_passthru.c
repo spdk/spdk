@@ -416,6 +416,31 @@ vbdev_passthru_get_spdk_running_config(FILE *fp)
 	fprintf(fp, "\n");
 }
 
+/* Called when SPDK wants to output the bdev specific methods. */
+static void
+vbdev_passthru_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+{
+	struct bdev_names *name;
+
+	TAILQ_FOREACH(name, &g_bdev_names, link) {
+		if (strcmp(name->bdev_name, bdev->name) != 0) {
+			continue;
+		}
+	}
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "method", "construct_passthru_bdev");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_string(w, "bdev_name", name->bdev_name);
+	spdk_json_write_named_string(w, "vbdev_name", name->vbdev_name);
+
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
 /* When we regsiter our bdev this is how we specify our entry points. */
 static const struct spdk_bdev_fn_table vbdev_passthru_fn_table = {
 	.destruct		= vbdev_passthru_destruct,
@@ -423,6 +448,7 @@ static const struct spdk_bdev_fn_table vbdev_passthru_fn_table = {
 	.io_type_supported	= vbdev_passthru_io_type_supported,
 	.get_io_channel		= vbdev_passthru_get_io_channel,
 	.dump_info_json		= vbdev_passthru_info_config_json,
+	.write_config_json	= vbdev_passthru_write_json_config,
 };
 
 /* Called when the underlying base bdev goes away. */
