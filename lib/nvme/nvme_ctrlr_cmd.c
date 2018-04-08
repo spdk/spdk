@@ -363,12 +363,12 @@ nvme_ctrlr_cmd_get_num_queues(struct spdk_nvme_ctrlr *ctrlr,
 
 int
 nvme_ctrlr_cmd_set_async_event_config(struct spdk_nvme_ctrlr *ctrlr,
-				      union spdk_nvme_critical_warning_state state, spdk_nvme_cmd_cb cb_fn,
+				      union spdk_nvme_feat_async_event_configuration config, spdk_nvme_cmd_cb cb_fn,
 				      void *cb_arg)
 {
 	uint32_t cdw11;
 
-	cdw11 = state.raw;
+	cdw11 = config.raw;
 	return spdk_nvme_ctrlr_cmd_set_feature(ctrlr, SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION, cdw11, 0,
 					       NULL, 0,
 					       cb_fn, cb_arg);
