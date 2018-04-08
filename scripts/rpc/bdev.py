@@ -70,6 +70,14 @@ def construct_pmem_bdev(client, args):
     return client.call('construct_pmem_bdev', params)
 
 
+def construct_passthru_bdev(client, args):
+    params = {
+        'base_bdev_name': args.base_bdev_name,
+        'passthru_bdev_name': args.passthru_bdev_name,
+    }
+    return client.call('construct_passthru_bdev', params)
+
+
 def construct_split_vbdev(client, args):
     params = {
         'base_bdev': args.base_bdev,
