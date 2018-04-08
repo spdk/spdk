@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bd2931d0_0ca0e414",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 370,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-08T15:35:42Z",
+      "side": 1,
+      "message": "why note return rc?",
+      "revId": "066eedf61e0c44050d394884e8b663207cb812fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e36792a_9c484754",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 442,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-08T15:35:42Z",
+      "side": 1,
+      "message": "I would add \"if we find it in our list of bdev names.\" When adding the RPC later please make sure (if you do it) to add a sentence indicating that this can be called either by the examine path or RPC.  Since this is \u0027the\u0027 example for vbdev modules we want lots of explanatory comments.",
+      "revId": "066eedf61e0c44050d394884e8b663207cb812fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5d8471e_36dc4a5d",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-08T15:35:42Z",
+      "side": 1,
+      "message": "Why not return rc?",
+      "revId": "066eedf61e0c44050d394884e8b663207cb812fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
