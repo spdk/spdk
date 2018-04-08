@@ -1197,7 +1197,7 @@ nvme_ctrlr_construct_and_submit_aer(struct spdk_nvme_ctrlr *ctrlr,
 static int
 nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
 {
-	union spdk_nvme_critical_warning_state	state;
+	union spdk_nvme_feat_async_event_configuration config;
 	struct nvme_async_event_request		*aer;
 	uint32_t				i;
 	struct nvme_completion_poll_status	status;
@@ -1205,9 +1205,16 @@ nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
 
 	status.done = false;
 
-	state.raw = 0xFF;
-	state.bits.reserved = 0;
-	rc = nvme_ctrlr_cmd_set_async_event_config(ctrlr, state, nvme_completion_poll_cb, &status);
+	config.raw = 0;
+	config.bits.crit_warn.bits.available_spare = 1;
+	config.bits.crit_warn.bits.temperature = 1;
+	config.bits.crit_warn.bits.device_reliability = 1;
+	config.bits.crit_warn.bits.read_only = 1;
+	config.bits.crit_warn.bits.volatile_memory_backup = 1;
+	config.bits.ns_attr_notice = 1;
+	config.bits.fw_activation_notice = 1;
+	config.bits.telemetry_log_notice = 1;
+	rc = nvme_ctrlr_cmd_set_async_event_config(ctrlr, config, nvme_completion_poll_cb, &status);
 	if (rc != 0) {
 		return rc;
 	}
