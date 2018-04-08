@@ -172,6 +172,16 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_pmem_bdev)
 
     @call_cmd
+    def construct_passthru_bdev(args):
+        print_array(rpc.bdev.construct_passthru_bdev(args.client, args))
+
+    p = subparsers.add_parser('construct_passthru_bdev',
+                              help='Add a pass through bdev on existing bdev')
+    p.add_argument('-b', '--base-bdev-name', help="Name of the existing bdev", required=True)
+    p.add_argument('-p', '--passthru-bdev-name', help="Name of the passthru bdev", required=True)
+    p.set_defaults(func=construct_passthru_bdev)
+
+    @call_cmd
     def get_bdevs(args):
         print_dict(rpc.bdev.get_bdevs(args.client, args))
 
