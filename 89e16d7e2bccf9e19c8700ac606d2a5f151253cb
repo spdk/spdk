@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e7fafde6_b4a9944c",
+        "filename": "spdkcli/scripts/ui_root.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-04-09T20:17:45Z",
+      "side": 1,
+      "message": "Option not available from command.",
+      "range": {
+        "startLine": 122,
+        "startChar": 8,
+        "endLine": 122,
+        "endChar": 26
+      },
+      "revId": "89e16d7e2bccf9e19c8700ac606d2a5f151253cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
