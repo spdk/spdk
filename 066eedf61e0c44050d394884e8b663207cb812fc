@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "6f4d30de_e5872704",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 370,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-04-09T09:08:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bd2931d0_0ca0e414",
+      "revId": "066eedf61e0c44050d394884e8b663207cb812fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5e36792a_9c484754",
         "filename": "lib/bdev/passthru/vbdev_passthru.c",
         "patchSetId": 5
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "88c5e1f5_a323f611",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 442,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-04-09T09:08:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5e36792a_9c484754",
+      "revId": "066eedf61e0c44050d394884e8b663207cb812fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f5d8471e_36dc4a5d",
         "filename": "lib/bdev/passthru/vbdev_passthru.c",
         "patchSetId": 5
@@ -47,6 +83,24 @@
       "writtenOn": "2018-04-08T15:35:42Z",
       "side": 1,
       "message": "Why not return rc?",
+      "revId": "066eedf61e0c44050d394884e8b663207cb812fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ed905fa_062ebaea",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-04-09T09:08:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f5d8471e_36dc4a5d",
       "revId": "066eedf61e0c44050d394884e8b663207cb812fc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
