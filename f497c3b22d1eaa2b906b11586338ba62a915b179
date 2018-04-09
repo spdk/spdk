@@ -16,6 +16,24 @@
       "revId": "f497c3b22d1eaa2b906b11586338ba62a915b179",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c963abed_bf8a093e",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 726,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-04-09T18:27:22Z",
+      "side": 1,
+      "message": "You\u0027re right, thanks. I\u0027ll revisit this tomorrow.",
+      "parentUuid": "71428a9c_422af14e",
+      "revId": "f497c3b22d1eaa2b906b11586338ba62a915b179",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
