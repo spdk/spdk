@@ -105,7 +105,7 @@ void spdk_subsystem_config(FILE *fp);
 void spdk_subsystem_config_json(struct spdk_json_write_ctx *w, struct spdk_subsystem *subsystem,
 				struct spdk_event *done_ev);
 
-void spdk_rpc_initialize(const char *listen_addr);
+void spdk_rpc_initialize(const char *listen_addr, bool enable_subsys_init_rpc);
 void spdk_rpc_finish(void);
 
 /**

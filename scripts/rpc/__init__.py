@@ -62,3 +62,7 @@ def load_config(client, args):
             if not elem or 'method' not in elem:
                 continue
             client.call(elem['method'], elem['params'])
+
+
+def enable_post_si_rpc(client):
+    return client.call('enable_post_si_rpc')

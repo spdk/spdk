@@ -206,6 +206,7 @@ spdk_app_opts_init(struct spdk_app_opts *opts)
 	opts->max_delay_us = 0;
 	opts->print_level = SPDK_APP_DEFAULT_LOG_PRINT_LEVEL;
 	opts->rpc_addr = SPDK_DEFAULT_RPC_ADDR;
+	opts->enable_subsys_init_rpc = false;
 }
 
 static int
@@ -269,8 +270,9 @@ static void
 start_rpc(void *arg1, void *arg2)
 {
 	const char *rpc_addr = arg1;
+	bool enable_subsys_init_rpc = arg2;
 
-	spdk_rpc_initialize(rpc_addr);
+	spdk_rpc_initialize(rpc_addr, enable_subsys_init_rpc);
 	g_app_start_fn(g_app_start_arg1, g_app_start_arg2);
 }
 
@@ -476,7 +478,8 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	g_app_start_fn = start_fn;
 	g_app_start_arg1 = arg1;
 	g_app_start_arg2 = arg2;
-	app_start_event = spdk_event_allocate(g_init_lcore, start_rpc, (void *)opts->rpc_addr, NULL);
+	app_start_event = spdk_event_allocate(g_init_lcore, start_rpc, (void *)opts->rpc_addr,
+					      (void *)opts->enable_subsys_init_rpc);
 
 	spdk_subsystem_init(app_start_event);
 
@@ -540,6 +543,7 @@ usage(char *executable_name, struct spdk_app_opts *default_opts, void (*app_usag
 	printf(" -g         force creating just one hugetlbfs file\n");
 	printf(" -h         show this usage\n");
 	printf(" -i shared memory ID (optional)\n");
+	printf(" -j         enable RPCs dedicated to subsystem initialization\n");
 	printf(" -m mask    core mask for DPDK\n");
 	printf(" -n channel number of memory channels used for DPDK\n");
 	printf(" -p core    master (primary) core for DPDK\n");
@@ -598,6 +602,9 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			goto parse_done;
 		case 'i':
 			opts->shm_id = atoi(optarg);
+			break;
+		case 'j':
+			opts->enable_subsys_init_rpc = true;
 			break;
 		case 'm':
 			opts->reactor_mask = optarg;

@@ -42,6 +42,9 @@
 extern "C" {
 #endif
 
+#define RPC_STATE_PRE_SUBSYSTEM_INIT	0x1
+#define RPC_STATE_POST_SUBSYSTEM_INIT	0x2
+
 /**
  * Listen on the required address.
  *
@@ -83,6 +86,32 @@ static void __attribute__((constructor)) rpc_register_##func(void) \
 { \
 	spdk_rpc_register_method(method, func); \
 }
+
+/**
+ * Register the RPC method dedicated to subsystem initialization.
+ *
+ * \param method Name for the registered method.
+ * \param func Function registered for this method to handle the RPC request.
+ */
+void spdk_si_rpc_register_method(const char *method,
+				 spdk_rpc_method_handler func);
+
+#define SPDK_SI_RPC_REGISTER(method, func) \
+static void __attribute__((constructor)) si_rpc_register_##func(void) \
+{ \
+	spdk_si_rpc_register_method(method, func); \
+}
+
+/**
+ * Set the state mask of the RPC server. Any RPC method of which the state mask ANDed
+ * with the state mask of the RPC server is 0, it is rejected.
+ * Currently two masks are defined:
+ *  - RPC_STATE_PRE_SUBSYSTEM_INIT
+ *  - RPC_STATE_POST_SUBSYSTEM_INIT
+ *
+ * \param state_mask New state mask of the RPC server.
+ */
+void spdk_rpc_set_state(uint32_t state_mask);
 
 #ifdef __cplusplus
 }
