@@ -219,7 +219,7 @@ spdk_scsi_dev_construct(const char *name, const char *bdev_name_list[],
 		return NULL;
 	}
 
-	strncpy(dev->name, name, SPDK_SCSI_DEV_MAX_NAME);
+	snprintf(dev->name, sizeof(dev->name), "%s", name);
 
 	dev->num_ports = 0;
 	dev->protocol_id = protocol_id;
