@@ -507,8 +507,6 @@ spdk_vhost_blk_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 		goto out;
 	}
 
-	spdk_vhost_dev_mem_register(&bvdev->vdev);
-
 	if (bvdev->bdev) {
 		bvdev->bdev_io_channel = spdk_bdev_get_io_channel(bvdev->bdev_desc);
 		if (!bvdev->bdev_io_channel) {
@@ -557,7 +555,6 @@ destroy_device_poller_cb(void *arg)
 	}
 
 	free_task_pool(bvdev);
-	spdk_vhost_dev_mem_unregister(&bvdev->vdev);
 
 	spdk_poller_unregister(&ctx->poller);
 	spdk_vhost_dev_backend_event_done(ctx->event_ctx, 0);
