@@ -16,6 +16,24 @@
       "revId": "02f3ec02fbcccc5146d275e30b804b9ef5cb941a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "715e3872_9aa04ee8",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 717,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-04-09T17:29:30Z",
+      "side": 1,
+      "message": "I removed the \u0027DPDK\u0027 word.",
+      "parentUuid": "9548fadc_83e1146b",
+      "revId": "02f3ec02fbcccc5146d275e30b804b9ef5cb941a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
