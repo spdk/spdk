@@ -852,7 +852,7 @@ end:
 }
 
 int
-vbdev_lvol_create(struct spdk_lvol_store *lvs, const char *name, size_t sz,
+vbdev_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 		  bool thin_provision, spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvol_with_handle_req *req;
@@ -976,7 +976,7 @@ finish:
 }
 
 void
-vbdev_lvol_resize(struct spdk_lvol *lvol, size_t sz, spdk_lvol_op_complete cb_fn, void *cb_arg)
+vbdev_lvol_resize(struct spdk_lvol *lvol, uint64_t sz, spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvol_req *req;
 

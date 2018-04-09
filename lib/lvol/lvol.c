@@ -48,8 +48,8 @@ SPDK_LOG_REGISTER_COMPONENT("lvol", SPDK_LOG_LVOL)
 static TAILQ_HEAD(, spdk_lvol_store) g_lvol_stores = TAILQ_HEAD_INITIALIZER(g_lvol_stores);
 static pthread_mutex_t g_lvol_stores_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-static inline size_t
-divide_round_up(size_t num, size_t divisor)
+static inline uint64_t
+divide_round_up(uint64_t num, uint64_t divisor)
 {
 	return (num + divisor - 1) / divisor;
 }
