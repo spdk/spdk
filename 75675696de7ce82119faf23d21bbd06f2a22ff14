@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0dfa60dc_2d96f62f",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 22
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-09T23:43:54Z",
+      "side": 1,
+      "message": "Will you increase this to 32? 16 may overflow and other cases use 32 in SPDK.",
+      "range": {
+        "startLine": 68,
+        "startChar": 50,
+        "endLine": 68,
+        "endChar": 52
+      },
+      "revId": "75675696de7ce82119faf23d21bbd06f2a22ff14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
