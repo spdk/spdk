@@ -597,15 +597,27 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			rval = SPDK_APP_PARSE_ARGS_HELP;
 			goto parse_done;
 		case 'i':
+			if (optarg == NULL) {
+				rval = SPDK_APP_PARSE_ARGS_FAIL;
+				goto parse_done;
+			}
 			opts->shm_id = atoi(optarg);
 			break;
 		case 'm':
 			opts->reactor_mask = optarg;
 			break;
 		case 'n':
+			if (optarg == NULL) {
+				rval = SPDK_APP_PARSE_ARGS_FAIL;
+				goto parse_done;
+			}
 			opts->mem_channel = atoi(optarg);
 			break;
 		case 'p':
+			if (optarg == NULL) {
+				rval = SPDK_APP_PARSE_ARGS_FAIL;
+				goto parse_done;
+			}
 			opts->master_core = atoi(optarg);
 			break;
 		case 'q':
