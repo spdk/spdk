@@ -1085,8 +1085,6 @@ spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Started poller for vhost controller %s on lcore %d\n",
 		     vdev->name, vdev->lcore);
 
-	spdk_vhost_dev_mem_register(vdev);
-
 	svdev->requestq_poller = spdk_poller_register(vdev_worker, svdev, 0);
 	svdev->mgmt_poller = spdk_poller_register(vdev_mgmt_worker, svdev,
 			     MGMT_POLL_PERIOD_US);
@@ -1125,7 +1123,6 @@ destroy_device_poller_cb(void *arg)
 	}
 
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Stopping poller for vhost controller %s\n", svdev->vdev.name);
-	spdk_vhost_dev_mem_unregister(&svdev->vdev);
 
 	free_task_pool(svdev);
 
