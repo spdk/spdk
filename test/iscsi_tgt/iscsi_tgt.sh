@@ -29,7 +29,7 @@ run_test ./test/iscsi_tgt/lvol/iscsi_lvol.sh
 run_test ./test/iscsi_tgt/fio/fio.sh
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
-	if [ $SPDK_TEST_PMDK -eq 1 ]; then
+	if [ $SPDK_TEST_NVML -eq 1 ]; then
 		run_test ./test/iscsi_tgt/pmem/iscsi_pmem.sh 4096 10
 	fi
 	run_test ./test/iscsi_tgt/ip_migration/ip_migration.sh
@@ -46,10 +46,8 @@ kill_stub
 if [ $SPDK_TEST_NVMF -eq 1 ]; then
 	# TODO: enable remote NVMe controllers with multi-process so that
 	#  we can use the stub for this test
-	# Test configure remote NVMe device from rpc
-	run_test ./test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh 0
-	# Test configure remote NVMe device from conf file
-	run_test ./test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh 1
+	# Test configure remote NVMe device from rpc and conf file
+	run_test ./test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh
 fi
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
