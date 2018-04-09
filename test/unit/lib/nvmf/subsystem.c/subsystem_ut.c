@@ -269,21 +269,21 @@ nvmf_test_create_subsystem(void)
 	char nqn[256];
 	struct spdk_nvmf_subsystem *subsystem;
 
-	strncpy(nqn, "nqn.2016-06.io.spdk:subsystem1", sizeof(nqn));
+	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io.spdk:subsystem1");
 	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
 	spdk_nvmf_subsystem_destroy(subsystem);
 
 	/* valid name with complex reverse domain */
-	strncpy(nqn, "nqn.2016-06.io.spdk-full--rev-domain.name:subsystem1", sizeof(nqn));
+	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io.spdk-full--rev-domain.name:subsystem1");
 	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
 	spdk_nvmf_subsystem_destroy(subsystem);
 
 	/* Valid name discovery controller */
-	strncpy(nqn, "nqn.2016-06.io.spdk:subsystem1", sizeof(nqn));
+	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io.spdk:subsystem1");
 	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
@@ -291,46 +291,45 @@ nvmf_test_create_subsystem(void)
 
 
 	/* Invalid name, no user supplied string */
-	strncpy(nqn, "nqn.2016-06.io.spdk:", sizeof(nqn));
+	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io.spdk:");
 	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem == NULL);
 
 	/* Valid name, only contains top-level domain name */
-	strncpy(nqn, "nqn.2016-06.io:subsystem1", sizeof(nqn));
+	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io.spdk:subsystem1");
 	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
 	spdk_nvmf_subsystem_destroy(subsystem);
 
 	/* Invalid name, domain label > 63 characters */
-	strncpy(nqn,
-		"nqn.2016-06.io.abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz:sub",
-		sizeof(nqn));
+	snprintf(nqn, sizeof(nqn),
+		 "nqn.2016-06.io.abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz:sub");
 	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem == NULL);
 
 	/* Invalid name, domain label starts with digit */
-	strncpy(nqn, "nqn.2016-06.io.3spdk:sub", sizeof(nqn));
+	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io.3spdk:sub");
 	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem == NULL);
 
 	/* Invalid name, domain label starts with - */
-	strncpy(nqn, "nqn.2016-06.io.-spdk:subsystem1", sizeof(nqn));
+	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io.-spdk:subsystem1");
 	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem == NULL);
 
 	/* Invalid name, domain label ends with - */
-	strncpy(nqn, "nqn.2016-06.io.spdk-:subsystem1", sizeof(nqn));
+	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io.spdk-:subsystem1");
 	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem == NULL);
 
 	/* Invalid name, domain label with multiple consecutive periods */
-	strncpy(nqn, "nqn.2016-06.io..spdk:subsystem1", sizeof(nqn));
+	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io..spdk:subsystem1");
 	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem == NULL);
 
 	/* Longest valid name */
-	strncpy(nqn, "nqn.2016-06.io.spdk:", sizeof(nqn));
+	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io.spdk:");
 	memset(nqn + strlen(nqn), 'a', 223 - strlen(nqn));
 	nqn[223] = '\0';
 	CU_ASSERT(strlen(nqn) == 223);
@@ -340,7 +339,7 @@ nvmf_test_create_subsystem(void)
 	spdk_nvmf_subsystem_destroy(subsystem);
 
 	/* Invalid name, too long */
-	strncpy(nqn, "nqn.2016-06.io.spdk:", sizeof(nqn));
+	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io.spdk:");
 	memset(nqn + strlen(nqn), 'a', 224 - strlen(nqn));
 	nqn[224] = '\0';
 	CU_ASSERT(strlen(nqn) == 224);
@@ -348,37 +347,37 @@ nvmf_test_create_subsystem(void)
 	CU_ASSERT(subsystem == NULL);
 
 	/* Valid name using uuid format */
-	strncpy(nqn, "nqn.2014-08.org.nvmexpress:uuid:11111111-aaaa-bbdd-FFEE-123456789abc", sizeof(nqn));
+	snprintf(nqn, sizeof(nqn), "nqn.2014-08.org.nvmexpress:uuid:11111111-aaaa-bbdd-FFEE-123456789abc");
 	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
 	spdk_nvmf_subsystem_destroy(subsystem);
 
 	/* Invalid name user string contains an invalid utf-8 character */
-	strncpy(nqn, "nqn.2016-06.io.spdk:\xFFsubsystem1", sizeof(nqn));
+	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io.spdk:\xFFsubsystem1");
 	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem == NULL);
 
 	/* Valid name with non-ascii but valid utf-8 characters */
-	strncpy(nqn, "nqn.2016-06.io.spdk:\xe1\x8a\x88subsystem1\xca\x80", sizeof(nqn));
+	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io.spdk:\xe1\x8a\x88subsystem1\xca\x80");
 	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
 	spdk_nvmf_subsystem_destroy(subsystem);
 
 	/* Invalid uuid (too long) */
-	strncpy(nqn, "nqn.2014-08.org.nvmexpress:uuid:11111111-aaaa-bbdd-FFEE-123456789abcdef",
-		sizeof(nqn));
+	snprintf(nqn, sizeof(nqn),
+		 "nqn.2014-08.org.nvmexpress:uuid:11111111-aaaa-bbdd-FFEE-123456789abcdef");
 	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem == NULL);
 
 	/* Invalid uuid (dashes placed incorrectly) */
-	strncpy(nqn, "nqn.2014-08.org.nvmexpress:uuid:111111-11aaaa-bbdd-FFEE-123456789abc", sizeof(nqn));
+	snprintf(nqn, sizeof(nqn), "nqn.2014-08.org.nvmexpress:uuid:111111-11aaaa-bbdd-FFEE-123456789abc");
 	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem == NULL);
 
 	/* Invalid uuid (invalid characters in uuid) */
-	strncpy(nqn, "nqn.2014-08.org.nvmexpress:uuid:111hg111-aaaa-bbdd-FFEE-123456789abc", sizeof(nqn));
+	snprintf(nqn, sizeof(nqn), "nqn.2014-08.org.nvmexpress:uuid:111hg111-aaaa-bbdd-FFEE-123456789abc");
 	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem == NULL);
 
