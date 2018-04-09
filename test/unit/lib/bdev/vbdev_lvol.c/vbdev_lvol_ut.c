@@ -115,7 +115,7 @@ spdk_lvs_rename(struct spdk_lvol_store *lvs, const char *new_name,
 	if (g_lvs_with_name_already_exists) {
 		g_lvolerrno = -EEXIST;
 	} else {
-		strncpy(lvs->name, new_name, SPDK_LVS_NAME_MAX);
+		snprintf(lvs->name, sizeof(lvs->name), "%s", new_name);
 		g_lvolerrno = 0;
 	}
 
@@ -141,7 +141,7 @@ spdk_lvol_rename(struct spdk_lvol *lvol, const char *new_name,
 		}
 	}
 
-	strncpy(lvol->name, new_name, SPDK_LVOL_NAME_MAX);
+	snprintf(lvol->name, sizeof(lvol->name), "%s", new_name);
 
 	cb_fn(cb_arg, g_lvolerrno);
 }
@@ -270,7 +270,7 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 		SPDK_CU_ASSERT_FATAL(lvs != NULL);
 		TAILQ_INIT(&lvs->lvols);
 		spdk_uuid_generate(&lvs->uuid);
-		strncpy(lvs->name, o->name, SPDK_LVS_NAME_MAX);
+		snprintf(lvs->name, sizeof(lvs->name), "%s", o->name);
 		lvs->bs_dev = bs_dev;
 		error = 0;
 	}
@@ -571,7 +571,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, size_t sz,
 	struct spdk_lvol *lvol;
 
 	lvol = _lvol_create(lvs);
-	strncpy(lvol->name, name, SPDK_LVS_NAME_MAX);
+	snprintf(lvol->name, sizeof(lvol->name), "%s", name);
 	cb_fn(cb_arg, lvol, 0);
 
 	return 0;
@@ -584,7 +584,7 @@ spdk_lvol_create_snapshot(struct spdk_lvol *lvol, const char *snapshot_name,
 	struct spdk_lvol *snap;
 
 	snap = _lvol_create(lvol->lvol_store);
-	strncpy(snap->name, snapshot_name, SPDK_LVOL_NAME_MAX);
+	snprintf(snap->name, sizeof(snap->name), "%s", snapshot_name);
 	cb_fn(cb_arg, snap, 0);
 }
 
@@ -595,7 +595,7 @@ spdk_lvol_create_clone(struct spdk_lvol *lvol, const char *clone_name,
 	struct spdk_lvol *clone;
 
 	clone = _lvol_create(lvol->lvol_store);
-	strncpy(clone->name, clone_name, SPDK_LVS_NAME_MAX);
+	snprintf(clone->name, sizeof(clone->name), "%s", clone_name);
 	cb_fn(cb_arg, clone, 0);
 }
 
@@ -690,7 +690,7 @@ ut_lvol_init(void)
 	SPDK_CU_ASSERT_FATAL(g_base_bdev != NULL);
 
 	/* Assign name to lvs */
-	strncpy(g_lvs->name, "UNIT_TEST_LVS_NAME", SPDK_LVS_NAME_MAX);
+	snprintf(g_lvs->name, sizeof(g_lvs->name), "UNIT_TEST_LVS_NAME");
 	SPDK_CU_ASSERT_FATAL(g_lvs->name != NULL);
 
 	g_lvs_bdev->lvs = g_lvs;
@@ -734,7 +734,7 @@ ut_lvol_snapshot(void)
 	SPDK_CU_ASSERT_FATAL(g_base_bdev != NULL);
 
 	/* Assign name to lvs */
-	strncpy(g_lvs->name, "UNIT_TEST_LVS_NAME", SPDK_LVS_NAME_MAX);
+	snprintf(g_lvs->name, sizeof(g_lvs->name), "UNIT_TEST_LVS_NAME");
 	SPDK_CU_ASSERT_FATAL(g_lvs->name != NULL);
 
 	g_lvs_bdev->lvs = g_lvs;
@@ -793,7 +793,7 @@ ut_lvol_clone(void)
 	SPDK_CU_ASSERT_FATAL(g_base_bdev != NULL);
 
 	/* Assign name to lvs */
-	strncpy(g_lvs->name, "UNIT_TEST_LVS_NAME", SPDK_LVS_NAME_MAX);
+	snprintf(g_lvs->name, sizeof(g_lvs->name), "UNIT_TEST_LVS_NAME");
 	SPDK_CU_ASSERT_FATAL(g_lvs->name != NULL);
 
 	g_lvs_bdev->lvs = g_lvs;
@@ -945,7 +945,7 @@ ut_lvol_examine(void)
 	SPDK_CU_ASSERT_FATAL(g_base_bdev != NULL);
 
 	/* Assign name to lvs */
-	strncpy(g_lvs->name, "UNIT_TEST_LVS_NAME", SPDK_LVS_NAME_MAX);
+	snprintf(g_lvs->name, sizeof(g_lvs->name), "UNIT_TEST_LVS_NAME");
 	SPDK_CU_ASSERT_FATAL(g_lvs->name != NULL);
 
 	g_bs_dev = NULL;
@@ -991,7 +991,7 @@ ut_lvol_rename(void)
 	SPDK_CU_ASSERT_FATAL(g_base_bdev != NULL);
 
 	/* Assign name to lvs */
-	strncpy(g_lvs->name, "UNIT_TEST_LVS_NAME", SPDK_LVS_NAME_MAX);
+	snprintf(g_lvs->name, sizeof(g_lvs->name), "UNIT_TEST_LVS_NAME");
 	SPDK_CU_ASSERT_FATAL(g_lvs->name != NULL);
 
 	g_lvs_bdev->lvs = g_lvs;
