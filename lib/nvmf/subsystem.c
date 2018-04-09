@@ -361,6 +361,43 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 	free(subsystem);
 }
 
+static void
+subsystem_modify_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_nvmf_subsystem *subsystem;
+
+	subsystem = spdk_io_channel_iter_get_ctx(i);
+
+	if (status != 0) {
+		SPDK_ERRLOG("Unable to make changes to NVMe-oF subsystem with id %u\n", subsystem->id);
+	}
+}
+
+static void
+subsystem_modify_on_pg(struct spdk_io_channel_iter *i)
+{
+	int rc;
+	struct spdk_nvmf_poll_group *group;
+	struct spdk_nvmf_subsystem *subsystem;
+
+	group = spdk_io_channel_get_ctx(spdk_io_channel_iter_get_channel(i));
+	subsystem = spdk_io_channel_iter_get_ctx(i);
+
+	rc = spdk_nvmf_poll_group_update_subsystem(group, subsystem);
+	spdk_for_each_channel_continue(i, rc);
+}
+
+static int
+spdk_nvmf_subsystem_modify(struct spdk_nvmf_subsystem *subsystem)
+{
+	spdk_for_each_channel(subsystem->tgt,
+			      subsystem_modify_on_pg,
+			      (void *) subsystem,
+			      subsystem_modify_done);
+
+	return 0;
+}
+
 static int
 spdk_nvmf_subsystem_set_state(struct spdk_nvmf_subsystem *subsystem,
 			      enum spdk_nvmf_subsystem_state state)
@@ -834,6 +871,8 @@ spdk_nvmf_subsystem_ns_changed(struct spdk_nvmf_subsystem *subsystem, uint32_t n
 	TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
 		spdk_nvmf_ctrlr_ns_changed(ctrlr, nsid);
 	}
+
+	spdk_nvmf_subsystem_modify(subsystem);
 }
 
 int
