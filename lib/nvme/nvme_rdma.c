@@ -638,8 +638,8 @@ nvme_rdma_qpair_fabric_connect(struct nvme_rdma_qpair *rqpair)
 	SPDK_STATIC_ASSERT(sizeof(nvmf_data->hostid) == sizeof(ctrlr->opts.extended_host_id),
 			   "host ID size mismatch");
 	memcpy(nvmf_data->hostid, ctrlr->opts.extended_host_id, sizeof(nvmf_data->hostid));
-	strncpy((char *)nvmf_data->hostnqn, ctrlr->opts.hostnqn, sizeof(nvmf_data->hostnqn));
-	strncpy((char *)nvmf_data->subnqn, ctrlr->trid.subnqn, sizeof(nvmf_data->subnqn));
+	snprintf(nvmf_data->hostnqn, sizeof(nvmf_data->hostnqn), "%s", ctrlr->opts.hostnqn);
+	snprintf(nvmf_data->subnqn, sizeof(nvmf_data->subnqn), "%s", ctrlr->trid.subnqn);
 
 	rc = spdk_nvme_ctrlr_cmd_io_raw(ctrlr, &rqpair->qpair,
 					(struct spdk_nvme_cmd *)&cmd,
