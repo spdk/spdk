@@ -234,7 +234,7 @@ vbdev_lvs_create(struct spdk_bdev *base_bdev, const char *name, uint32_t cluster
 		SPDK_ERRLOG("name must be between 1 and %d characters\n", SPDK_LVS_NAME_MAX - 1);
 		return -EINVAL;
 	}
-	strncpy(opts.name, name, sizeof(opts.name));
+	snprintf(opts.name, sizeof(opts.name), "%s", name);
 
 	lvs_req = calloc(1, sizeof(*lvs_req));
 	if (!lvs_req) {
