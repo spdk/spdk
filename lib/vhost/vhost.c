@@ -594,6 +594,18 @@ spdk_vhost_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 	return 0;
 }
 
+static void *
+_start_rte_driver(void *arg)
+{
+	char *path = arg;
+
+	if (rte_vhost_driver_start(path) != 0) {
+		return NULL;
+	}
+
+	return path;
+}
+
 int
 spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
 			const struct spdk_vhost_dev_backend *backend)
@@ -686,6 +698,19 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 		goto out;
 	}
 
+	/* The following might start a POSIX thread that polls for incoming
+	 * socket connections and calls backend->start/stop_device. These backend
+	 * callbacks are also protected by the global SPDK vhost mutex, so we're
+	 * safe with not initializing the vdev just yet.
+	 */
+	if (spdk_call_unaffinitized(_start_rte_driver, path) == NULL) {
+		SPDK_ERRLOG("Failed to start vhost driver for controller %s (%d): %s\n",
+			    name, errno, spdk_strerror(errno));
+		rte_vhost_driver_unregister(path);
+		rc = -EIO;
+		goto out;
+	}
+
 	vdev->name = strdup(name);
 	vdev->path = strdup(path);
 	vdev->id = ctrlr_num++;
@@ -702,13 +727,6 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 				     1000UL;
 
 	TAILQ_INSERT_TAIL(&g_spdk_vhost_devices, vdev, tailq);
-
-	if (rte_vhost_driver_start(path) != 0) {
-		SPDK_ERRLOG("Failed to start vhost driver for controller %s (%d): %s\n", name, errno,
-			    spdk_strerror(errno));
-		rte_vhost_driver_unregister(path);
-		return -EIO;
-	}
 
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Controller %s: new controller added\n", vdev->name);
 	return 0;
