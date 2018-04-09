@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "379da8a0_b742bd84",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1209,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-09T15:32:25Z",
+      "side": 1,
+      "message": "I think we also need to set config.crit_warn.reserved \u003d 0 to match previous behavior.\n\nIt might be better to just explicitly set all of the fields to 1 individually now that we have named bitfields for everything.",
+      "revId": "9344926a125a51f44b4ad76ae378d3b3a92e76a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
