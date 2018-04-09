@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a9a06c0_db2e4659",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-09T15:57:45Z",
+      "side": 1,
+      "message": "I think this always gets overwritten by the assignment below; I think we can remove this assignment as well as the old ACCEPT_TIMEOUT_US #define.",
+      "revId": "0aabb221dc0a341c40d937e3504739d6d52641b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
