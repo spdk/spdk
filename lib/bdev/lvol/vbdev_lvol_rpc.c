@@ -374,7 +374,6 @@ spdk_rpc_construct_lvol_bdev(struct spdk_jsonrpc_request *request,
 			     const struct spdk_json_val *params)
 {
 	struct rpc_construct_lvol_bdev req = {};
-	size_t sz;
 	int rc;
 	struct spdk_lvol_store *lvs = NULL;
 
@@ -399,9 +398,7 @@ spdk_rpc_construct_lvol_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	sz = (size_t)req.size;
-
-	rc = vbdev_lvol_create(lvs, req.lvol_name, sz, req.thin_provision,
+	rc = vbdev_lvol_create(lvs, req.lvol_name, req.size, req.thin_provision,
 			       _spdk_rpc_construct_lvol_bdev_cb, request);
 	if (rc < 0) {
 		goto invalid;
