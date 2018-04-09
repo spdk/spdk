@@ -94,7 +94,7 @@ spdk_nvmf_read_config_file_params(struct spdk_conf_section *sp,
 
 	acceptor_poll_rate = spdk_conf_section_get_intval(sp, "AcceptorPollRate");
 	if (acceptor_poll_rate >= 0) {
-		g_spdk_nvmf_tgt_conf.acceptor_poll_rate = acceptor_poll_rate;
+		opts->acceptor_poll_rate = acceptor_poll_rate;
 	}
 }
 
@@ -112,6 +112,8 @@ spdk_nvmf_parse_nvmf_tgt(void)
 	if (sp != NULL) {
 		spdk_nvmf_read_config_file_params(sp, &opts);
 	}
+
+	g_spdk_nvmf_tgt_conf.acceptor_poll_rate = opts.acceptor_poll_rate;
 
 	g_spdk_nvmf_tgt = spdk_nvmf_tgt_create(&opts);
 	if (!g_spdk_nvmf_tgt) {
