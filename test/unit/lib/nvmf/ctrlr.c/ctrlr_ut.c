@@ -283,8 +283,8 @@ test_connect(void)
 	memset(&connect_data, 0, sizeof(connect_data));
 	memcpy(connect_data.hostid, hostid, sizeof(hostid));
 	connect_data.cntlid = 0xFFFF;
-	strncpy(connect_data.subnqn, subnqn, sizeof(connect_data.subnqn));
-	strncpy(connect_data.hostnqn, hostnqn, sizeof(connect_data.hostnqn));
+	snprintf(connect_data.subnqn, sizeof(connect_data.subnqn), "%s", subnqn);
+	snprintf(connect_data.hostnqn, sizeof(connect_data.hostnqn), "%s", hostnqn);
 
 	memset(&subsystem, 0, sizeof(subsystem));
 	subsystem.id = 1;
@@ -353,7 +353,7 @@ test_connect(void)
 	CU_ASSERT(rsp.connect_rsp.status_code_specific.invalid.iattr == 1);
 	CU_ASSERT(rsp.connect_rsp.status_code_specific.invalid.ipo == 256);
 	CU_ASSERT(qpair.ctrlr == NULL);
-	strncpy(connect_data.subnqn, subnqn, sizeof(connect_data.subnqn));
+	snprintf(connect_data.subnqn, sizeof(connect_data.subnqn), "%s", subnqn);
 
 	/* Subsystem not found */
 	memset(&rsp, 0, sizeof(rsp));
@@ -377,7 +377,7 @@ test_connect(void)
 	CU_ASSERT(rsp.connect_rsp.status_code_specific.invalid.iattr == 1);
 	CU_ASSERT(rsp.connect_rsp.status_code_specific.invalid.ipo == 512);
 	CU_ASSERT(qpair.ctrlr == NULL);
-	strncpy(connect_data.hostnqn, hostnqn, sizeof(connect_data.hostnqn));
+	snprintf(connect_data.hostnqn, sizeof(connect_data.hostnqn), "%s", hostnqn);
 
 	/* Host not allowed */
 	memset(&rsp, 0, sizeof(rsp));
