@@ -193,7 +193,7 @@ struct firmware_update_info {
 static void
 apply_firmware_cleanup(void *cb_arg)
 {
-	struct open_descriptors			*opt;
+	struct open_descriptors			*opt, *tmp;
 	struct firmware_update_info *firm_ctx = cb_arg;
 
 	if (!firm_ctx) {
@@ -208,7 +208,8 @@ apply_firmware_cleanup(void *cb_arg)
 		free_rpc_apply_firmware(firm_ctx->req);
 		free(firm_ctx->req);
 	}
-	TAILQ_FOREACH(opt, &firm_ctx->desc_head, tqlst) {
+	TAILQ_FOREACH_SAFE(opt, &firm_ctx->desc_head, tqlst, tmp) {
+		TAILQ_REMOVE(&firm_ctx->desc_head, opt, tqlst);
 		spdk_bdev_close(opt->desc);
 		free(opt);
 	}
