@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e3b5754f_4bae13c8",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 925,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-09T21:42:10Z",
+      "side": 1,
+      "message": "I tweaked this - previously, it was calculating the new size based on the requested sz, but we round it up to a cluster size inside spdk_lvol_resize(), so I changed it to calculate the new size based on the rounded number of clusters.",
+      "revId": "2e7368da0c271e613fe40d8ecd6678e070a20267",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
