@@ -53,7 +53,7 @@ spdk_rpc_subsystem_poll(void *arg)
 }
 
 void
-spdk_rpc_initialize(const char *listen_addr)
+spdk_rpc_initialize(const char *listen_addr, bool enable_subsys_init_rpc)
 {
 	int rc;
 
@@ -68,6 +68,12 @@ spdk_rpc_initialize(const char *listen_addr)
 		return;
 	}
 
+	if (!enable_subsys_init_rpc) {
+		spdk_rpc_set_state(RPC_STATE_POST_SUBSYSTEM_INIT);
+	} else {
+		spdk_rpc_set_state(RPC_STATE_PRE_SUBSYSTEM_INIT);
+	}
+
 	/* Register a poller to periodically check for RPCs */
 	g_rpc_poller = spdk_poller_register(spdk_rpc_subsystem_poll, NULL, RPC_SELECT_INTERVAL);
 }
@@ -78,3 +84,28 @@ spdk_rpc_finish(void)
 	spdk_rpc_close();
 	spdk_poller_unregister(&g_rpc_poller);
 }
+
+static void
+spdk_si_rpc_enable_post_si_rpc(struct spdk_jsonrpc_request *request,
+			       const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "enable_post_si_rpc requires no parameters");
+		return;
+	}
+
+	spdk_rpc_set_state(RPC_STATE_POST_SUBSYSTEM_INIT);
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+	return;
+}
+SPDK_SI_RPC_REGISTER("enable_post_si_rpc", spdk_si_rpc_enable_post_si_rpc)
