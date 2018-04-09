@@ -60,7 +60,8 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_uuid) == 16, "Incorrect size");
  *
  * \param uuid[output] User-provided UUID buffer.
  * \param uuid_str UUID in textual format in C string.
- * \return 0 on success, or negated errno on failure.
+ *
+ * \return 0 on success, or negative errno on failure.
  */
 int spdk_uuid_parse(struct spdk_uuid *uuid, const char *uuid_str);
 
@@ -68,15 +69,20 @@ int spdk_uuid_parse(struct spdk_uuid *uuid, const char *uuid_str);
  * Convert UUID in spdk_uuid into lowercase textual format.
  *
  * \param uuid_str User-provided string buffer to write the textual format into.
- * \param uuid_str_size Size of uuid_str buffer.  Must be at least SPDK_UUID_STRING_LEN.
+ * \param uuid_str_size Size of uuid_str buffer. Must be at least SPDK_UUID_STRING_LEN.
  * \param uuid UUID to convert to textual format.
+ *
+ * \return 0 on success, or negative errno on failure.
  */
 int spdk_uuid_fmt_lower(char *uuid_str, size_t uuid_str_size, const struct spdk_uuid *uuid);
 
 /**
  * Compare two UUIDs.
  *
- * \return 0 if u1 == u2, less than 0 if u1 < u2, greater than 0 if u1 > u2
+ * \param u1 UUID 1.
+ * \param u2 UUID 2.
+ *
+ * \return 0 if u1 == u2, less than 0 if u1 < u2, greater than 0 if u1 > u2.
  */
 int spdk_uuid_compare(const struct spdk_uuid *u1, const struct spdk_uuid *u2);
 
