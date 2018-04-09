@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ee752967_af7051dd",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-09T15:27:03Z",
+      "side": 1,
+      "message": "This looks like an unintentional revert.",
+      "revId": "9d540ea0a7d84f65f04a5e8a30f5ba415ff818e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7cb84684_fc6897ff",
+        "filename": "test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-09T15:27:03Z",
+      "side": 1,
+      "message": "The rest of this function should be indented as well.",
+      "revId": "9d540ea0a7d84f65f04a5e8a30f5ba415ff818e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f79f87f_c6527987",
+        "filename": "test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-09T15:27:03Z",
+      "side": 1,
+      "message": "Please use the standard POSIX sh \u003d operator rather than the bash \u003d\u003d extension.",
+      "range": {
+        "startLine": 28,
+        "startChar": 10,
+        "endLine": 28,
+        "endChar": 12
+      },
+      "revId": "9d540ea0a7d84f65f04a5e8a30f5ba415ff818e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
