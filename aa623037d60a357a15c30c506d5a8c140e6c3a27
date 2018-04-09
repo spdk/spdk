@@ -70,6 +70,24 @@
     },
     {
       "key": {
+        "uuid": "012771d5_f004a82e",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-09T22:57:25Z",
+      "side": 1,
+      "message": "My previous feedback may affect to this (https://review.gerrithub.io/#/c/406286/).\n\nI feel vector of buffers is normal term, for example, https://www.safaribooksonline.com/library/view/linux-system-programming/0596009585/ch04.html. I don\u0027t stick to the term :-)",
+      "parentUuid": "4fbfac75_2d5ca402",
+      "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2d61111d_047abf76",
         "filename": "include/spdk/sock.h",
         "patchSetId": 1
@@ -81,6 +99,24 @@
       "writtenOn": "2018-04-09T22:36:26Z",
       "side": 1,
       "message": "Number of IO vectors",
+      "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "86537c88_4413bf4b",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-09T22:57:25Z",
+      "side": 1,
+      "message": "Vector is 1 dimensional array or matrix. Hence \"number of vectors may\" not be correct, and if we use the term vector, \"size of vector\" may be correct.",
+      "parentUuid": "2d61111d_047abf76",
       "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
