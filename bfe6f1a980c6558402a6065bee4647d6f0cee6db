@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ef1bee45_8257c8cd",
+        "filename": "lib/bdev/lvol/vbdev_lvol.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-09T17:32:00Z",
+      "side": 1,
+      "message": "This function is already declared below.",
+      "revId": "bfe6f1a980c6558402a6065bee4647d6f0cee6db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2aec83bb_4b826882",
+        "filename": "lib/bdev/lvol/vbdev_lvol.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-09T17:32:00Z",
+      "side": 1,
+      "message": "Duplicate declaration is here.",
+      "revId": "bfe6f1a980c6558402a6065bee4647d6f0cee6db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
