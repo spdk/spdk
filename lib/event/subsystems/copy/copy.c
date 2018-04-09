@@ -39,7 +39,7 @@
 #include "spdk/env.h"
 
 static void
-spdk_copy_engine_subsystem_initialize(void)
+spdk_copy_engine_subsystem_initialize(bool enable_subsys_init_rpc)
 {
 	int rc;
 
