@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d28c40f5_9b03f886",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 1148,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-09T20:37:08Z",
+      "side": 1,
+      "message": "I think the units for size are wrong here.  spdk_lvol_resize() apparently takes sz in bytes, just like spdk_lvol_create().  However, spdk_blob_resize() wants size in clusters, not bytes.",
+      "revId": "5ee652c34ca37bb895a22d50064f656b40c4bd02",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
