@@ -16,6 +16,24 @@
       "revId": "5ee652c34ca37bb895a22d50064f656b40c4bd02",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9517f8e3_18910aa1",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 1148,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-09T20:44:12Z",
+      "side": 1,
+      "message": "I posted a patch for this bug here: https://review.gerrithub.io/#/c/407007/",
+      "parentUuid": "d28c40f5_9b03f886",
+      "revId": "5ee652c34ca37bb895a22d50064f656b40c4bd02",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
