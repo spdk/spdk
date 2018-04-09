@@ -318,7 +318,7 @@ nvmf_tgt_advance_state(void)
 }
 
 static void
-spdk_nvmf_subsystem_init(void)
+spdk_nvmf_subsystem_init(bool enable_subsys_init_rpc)
 {
 	g_tgt_state = NVMF_TGT_INIT_NONE;
 	nvmf_tgt_advance_state();

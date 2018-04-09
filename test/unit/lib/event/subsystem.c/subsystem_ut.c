@@ -121,7 +121,7 @@ subsystem_sort_test_depends_on_single(void)
 
 	global_rc = -1;
 	app_start_event = spdk_event_allocate(0, ut_event_fn, NULL, NULL);
-	spdk_subsystem_init(app_start_event);
+	spdk_subsystem_init(app_start_event, false);
 
 	i = 4;
 	TAILQ_FOREACH(subsystem, &g_subsystems, tailq) {
@@ -168,7 +168,7 @@ subsystem_sort_test_depends_on_multiple(void)
 
 	global_rc = -1;
 	app_start_event = spdk_event_allocate(0, ut_event_fn, NULL, NULL);
-	spdk_subsystem_init(app_start_event);
+	spdk_subsystem_init(app_start_event, false);
 
 	subsystem = TAILQ_FIRST(&g_subsystems);
 	CU_ASSERT(strcmp(subsystem->name, "interface") == 0);
@@ -243,7 +243,7 @@ subsystem_sort_test_missing_dependency(void)
 	spdk_add_subsystem_depend(&g_ut_subsystem_deps[0]);
 
 	global_rc = -1;
-	spdk_subsystem_init(NULL);
+	spdk_subsystem_init(NULL, false);
 	CU_ASSERT(global_rc != 0);
 
 	/*
@@ -258,7 +258,7 @@ subsystem_sort_test_missing_dependency(void)
 	spdk_add_subsystem_depend(&g_ut_subsystem_deps[0]);
 
 	global_rc = -1;
-	spdk_subsystem_init(NULL);
+	spdk_subsystem_init(NULL, false);
 	CU_ASSERT(global_rc != 0);
 
 }

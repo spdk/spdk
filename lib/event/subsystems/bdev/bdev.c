@@ -47,7 +47,7 @@ spdk_bdev_initialize_complete(void *cb_arg, int rc)
 }
 
 static void
-spdk_bdev_subsystem_initialize(void)
+spdk_bdev_subsystem_initialize(bool enable_subsys_init_rpc)
 {
 	spdk_bdev_initialize(spdk_bdev_initialize_complete, NULL);
 }

@@ -38,7 +38,7 @@
 #include "spdk_internal/event.h"
 
 static void
-spdk_vhost_subsystem_init(void)
+spdk_vhost_subsystem_init(bool enable_subsys_init_rpc)
 {
 	int rc = 0;
 
