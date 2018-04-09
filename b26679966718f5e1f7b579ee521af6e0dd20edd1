@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3ef5247d_fe02a239",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-09T15:12:40Z",
+      "side": 1,
+      "message": "didn\u0027t you want all the stuff below in the loop?",
+      "revId": "b26679966718f5e1f7b579ee521af6e0dd20edd1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49fd8df6_c1293392",
+        "filename": "lib/bdev/passthru/vbdev_passthru_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-09T15:12:40Z",
+      "side": 1,
+      "message": "Please add comments for every function given that this is supposed to be the example for vbdev",
+      "revId": "b26679966718f5e1f7b579ee521af6e0dd20edd1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
