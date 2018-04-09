@@ -1269,7 +1269,7 @@ spdk_lvol_resize(struct spdk_lvol *lvol, uint64_t sz,
 	req->cb_arg = cb_arg;
 	req->lvol = lvol;
 
-	spdk_blob_resize(blob, sz, _spdk_lvol_blob_resize_cb, req);
+	spdk_blob_resize(blob, new_clusters, _spdk_lvol_blob_resize_cb, req);
 }
 
 static void
