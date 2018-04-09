@@ -290,7 +290,7 @@ _spdk_blob_deserialize_xattr(struct spdk_blob *blob,
 		free(xattr);
 		return -ENOMEM;
 	}
-	strncpy(xattr->name, desc_xattr->name, desc_xattr->name_length);
+	memcpy(xattr->name, desc_xattr->name, desc_xattr->name_length);
 	xattr->name[desc_xattr->name_length] = '\0';
 
 	xattr->value = malloc(desc_xattr->value_length);
