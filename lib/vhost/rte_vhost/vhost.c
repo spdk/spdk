@@ -238,17 +238,12 @@ void
 vhost_set_ifname(int vid, const char *if_name, unsigned int if_len)
 {
 	struct virtio_net *dev;
-	unsigned int len;
 
 	dev = get_device(vid);
 	if (dev == NULL)
 		return;
 
-	len = if_len > sizeof(dev->ifname) ?
-		sizeof(dev->ifname) : if_len;
-
-	strncpy(dev->ifname, if_name, len);
-	dev->ifname[sizeof(dev->ifname) - 1] = '\0';
+	snprintf(dev->ifname, sizeof(dev->ifname), "%s", if_name);
 }
 
 void
@@ -337,10 +332,7 @@ rte_vhost_get_ifname(int vid, char *buf, size_t len)
 	if (dev == NULL)
 		return -1;
 
-	len = RTE_MIN(len, sizeof(dev->ifname));
-
-	strncpy(buf, dev->ifname, len);
-	buf[len - 1] = '\0';
+	snprintf(buf, len, "%s", dev->ifname);
 
 	return 0;
 }
