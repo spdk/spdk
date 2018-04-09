@@ -459,7 +459,7 @@ lvs_init_unload_success(void)
 
 	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
 	spdk_lvs_opts_init(&opts);
-	strncpy(opts.name, "lvs", sizeof(opts.name));
+	snprintf(opts.name, sizeof(opts.name), "lvs");
 
 	g_lvserrno = -1;
 
@@ -509,7 +509,7 @@ lvs_init_destroy_success(void)
 
 	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
 	spdk_lvs_opts_init(&opts);
-	strncpy(opts.name, "lvs", sizeof(opts.name));
+	snprintf(opts.name, sizeof(opts.name), "lvs");
 
 	g_lvserrno = -1;
 
@@ -557,7 +557,7 @@ lvs_init_opts_success(void)
 	g_lvserrno = -1;
 
 	spdk_lvs_opts_init(&opts);
-	strncpy(opts.name, "lvs", sizeof(opts.name));
+	snprintf(opts.name, sizeof(opts.name), "lvs");
 	opts.cluster_sz = 8192;
 	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == 0);
@@ -712,7 +712,7 @@ lvol_create_destroy_success(void)
 	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
-	strncpy(opts.name, "lvs", sizeof(opts.name));
+	snprintf(opts.name, sizeof(opts.name), "lvs");
 
 	g_lvserrno = -1;
 	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
@@ -752,7 +752,7 @@ lvol_create_fail(void)
 	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
-	strncpy(opts.name, "lvs", sizeof(opts.name));
+	snprintf(opts.name, sizeof(opts.name), "lvs");
 
 	g_lvol_store = NULL;
 	g_lvserrno = 0;
@@ -799,7 +799,7 @@ lvol_destroy_fail(void)
 	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
-	strncpy(opts.name, "lvs", sizeof(opts.name));
+	snprintf(opts.name, sizeof(opts.name), "lvs");
 
 	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == 0);
@@ -838,7 +838,7 @@ lvol_close_fail(void)
 	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
-	strncpy(opts.name, "lvs", sizeof(opts.name));
+	snprintf(opts.name, sizeof(opts.name), "lvs");
 
 	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == 0);
@@ -875,7 +875,7 @@ lvol_close_success(void)
 	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
-	strncpy(opts.name, "lvs", sizeof(opts.name));
+	snprintf(opts.name, sizeof(opts.name), "lvs");
 
 	g_lvserrno = -1;
 	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
@@ -913,7 +913,7 @@ lvol_resize(void)
 	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
-	strncpy(opts.name, "lvs", sizeof(opts.name));
+	snprintf(opts.name, sizeof(opts.name), "lvs");
 
 	g_resize_rc = 0;
 	g_lvserrno = -1;
@@ -991,7 +991,7 @@ lvs_load(void)
 
 	init_dev(&dev);
 	spdk_bs_opts_init(&bs_opts);
-	strncpy(bs_opts.bstype.bstype, "LVOLSTORE", SPDK_BLOBSTORE_TYPE_LENGTH);
+	snprintf(bs_opts.bstype.bstype, sizeof(bs_opts.bstype.bstype), "LVOLSTORE");
 	spdk_bs_init(&dev.bs_dev, &bs_opts, null_cb, NULL);
 
 	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
@@ -1084,7 +1084,7 @@ lvols_load(void)
 
 	init_dev(&dev);
 	spdk_bs_opts_init(&bs_opts);
-	strncpy(bs_opts.bstype.bstype, "LVOLSTORE", SPDK_BLOBSTORE_TYPE_LENGTH);
+	snprintf(bs_opts.bstype.bstype, sizeof(bs_opts.bstype.bstype), "LVOLSTORE");
 	spdk_bs_init(&dev.bs_dev, &bs_opts, null_cb, NULL);
 	super_blob = calloc(1, sizeof(*super_blob));
 	SPDK_CU_ASSERT_FATAL(super_blob != NULL);
@@ -1195,7 +1195,7 @@ lvol_open(void)
 
 	init_dev(&dev);
 	spdk_bs_opts_init(&bs_opts);
-	strncpy(bs_opts.bstype.bstype, "LVOLSTORE", SPDK_BLOBSTORE_TYPE_LENGTH);
+	snprintf(bs_opts.bstype.bstype, sizeof(bs_opts.bstype.bstype), "LVOLSTORE");
 	spdk_bs_init(&dev.bs_dev, &bs_opts, null_cb, NULL);
 	super_blob = calloc(1, sizeof(*super_blob));
 	SPDK_CU_ASSERT_FATAL(super_blob != NULL);
@@ -1296,7 +1296,7 @@ lvol_names(void)
 	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
-	strncpy(opts.name, "lvs", sizeof(opts.name));
+	snprintf(opts.name, sizeof(opts.name), "lvs");
 
 	g_lvserrno = -1;
 	g_lvol_store = NULL;
@@ -1373,7 +1373,7 @@ lvol_rename(void)
 	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
-	strncpy(opts.name, "lvs", sizeof(opts.name));
+	snprintf(opts.name, sizeof(opts.name), "lvs");
 
 	g_lvserrno = -1;
 	g_lvol_store = NULL;
@@ -1445,7 +1445,7 @@ lvs_rename(void)
 	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
-	strncpy(opts.name, "lvs", SPDK_LVS_NAME_MAX);
+	snprintf(opts.name, sizeof(opts.name), "lvs");
 	g_lvserrno = -1;
 	g_lvol_store = NULL;
 	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
@@ -1455,7 +1455,7 @@ lvs_rename(void)
 	lvs = g_lvol_store;
 
 	spdk_lvs_opts_init(&opts);
-	strncpy(opts.name, "unimportant_lvs_name", SPDK_LVS_NAME_MAX);
+	snprintf(opts.name, sizeof(opts.name), "unimportant_lvs_name");
 	g_lvserrno = -1;
 	g_lvol_store = NULL;
 	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
@@ -1481,14 +1481,14 @@ lvs_rename(void)
 
 	/* Trying to rename lvs with another rename process started with the same name */
 	/* Simulate renaming process in progress */
-	strncpy(lvs2->new_name, "another_new_lvs_name", SPDK_LVS_NAME_MAX);
+	snprintf(lvs2->new_name, sizeof(lvs2->new_name), "another_new_lvs_name");
 	CU_ASSERT_STRING_EQUAL(lvs2->new_name, "another_new_lvs_name");
 	/* Start second process */
 	spdk_lvs_rename(lvs, "another_new_lvs_name", lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvserrno == -EEXIST);
 	CU_ASSERT_STRING_EQUAL(lvs->name, "new_lvs_name");
 	/* reverting lvs2 new name to proper value */
-	strncpy(lvs2->new_name, "unimportant_lvs_name", SPDK_LVS_NAME_MAX);
+	snprintf(lvs2->new_name, sizeof(lvs2->new_name), "unimportant_lvs_name");
 	CU_ASSERT_STRING_EQUAL(lvs2->new_name, "unimportant_lvs_name");
 
 	/* Simulate error while lvs rename */
@@ -1523,7 +1523,7 @@ static void lvol_refcnt(void)
 
 	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
 	spdk_lvs_opts_init(&opts);
-	strncpy(opts.name, "lvs", sizeof(opts.name));
+	snprintf(opts.name, sizeof(opts.name), "lvs");
 
 	g_lvserrno = -1;
 	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
@@ -1585,7 +1585,7 @@ lvol_create_thin_provisioned(void)
 	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
-	strncpy(opts.name, "lvs", sizeof(opts.name));
+	snprintf(opts.name, sizeof(opts.name), "lvs");
 
 	g_lvserrno = -1;
 	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
