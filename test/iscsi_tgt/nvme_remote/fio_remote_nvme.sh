@@ -20,6 +20,39 @@ fio_py="python $rootdir/scripts/fio.py"
 
 NVMF_PORT=4420
 
+function run_nvme_remote() {
+	echo "now use $1 method to run iscsi tgt."
+	cp $testdir/iscsi.conf $testdir/iscsi.conf.tmp
+
+	if [ "$1" = "remote" ]; then
+		echo "[NVMe]" >> $testdir/iscsi.conf.tmp
+		echo "  TransportID \"trtype:RDMA adrfam:ipv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420 subnqn:nqn.2016-06.io.spdk:cnode1\" Nvme0" >> $testdir/iscsi.conf.tmp
+	fi
+	# Start the iSCSI target without using stub
+	iscsi_rpc_addr="/var/tmp/spdk-iscsi.sock"
+	$rootdir/app/iscsi_tgt/iscsi_tgt -r "$iscsi_rpc_addr" -c $testdir/iscsi.conf.tmp -m 0x1 -p 0 -s 512 &
+	iscsipid=$!
+	echo "iSCSI target launched. pid: $iscsipid"
+	trap "killprocess $iscsipid; killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
+	waitforlisten $iscsipid "$iscsi_rpc_addr"
+	echo "iSCSI target has started."
+
+	timing_exit start_iscsi_tgt
+
+	echo "Creating an iSCSI target node."
+	$rpc_py -s "$iscsi_rpc_addr" add_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
+	$rpc_py -s "$iscsi_rpc_addr" add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
+	if [ "$1" = "local" ]; then
+		$rpc_py -s "$iscsi_rpc_addr" construct_nvme_bdev -b "Nvme0" -t "rdma" -f "ipv4" -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -n nqn.2016-06.io.spdk:cnode1
+	fi
+	$rpc_py -s "$iscsi_rpc_addr" construct_target_node Target1 Target1_alias 'Nvme0n1:0' $PORTAL_TAG:$INITIATOR_TAG 64 -d
+	sleep 1
+
+	echo "Logging in to iSCSI target."
+	iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
+	iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
+}
+
 timing_enter nvme_remote
 
 # Start the NVMf target
@@ -35,37 +68,20 @@ echo "NVMf subsystem created."
 
 timing_enter start_iscsi_tgt
 
-cp $testdir/iscsi.conf $testdir/iscsi.conf.tmp
+run_nvme_remote "local"
 
-if [ $1 -eq 1 ]; then
-	echo "[NVMe]" >> $testdir/iscsi.conf.tmp
-	echo "  TransportID \"trtype:RDMA adrfam:ipv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420 subnqn:nqn.2016-06.io.spdk:cnode1\" Nvme0" >> $testdir/iscsi.conf.tmp
-fi
-# Start the iSCSI target without using stub
-iscsi_rpc_addr="/var/tmp/spdk-iscsi.sock"
-$rootdir/app/iscsi_tgt/iscsi_tgt -r "$iscsi_rpc_addr" -c $testdir/iscsi.conf.tmp -m 0x1 -p 0 -s 512 &
-iscsipid=$!
-echo "iSCSI target launched. pid: $iscsipid"
-trap "killprocess $iscsipid; killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
-waitforlisten $iscsipid "$iscsi_rpc_addr"
-echo "iSCSI target has started."
-
-timing_exit start_iscsi_tgt
-
-echo "Creating an iSCSI target node."
-$rpc_py -s "$iscsi_rpc_addr" add_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
-$rpc_py -s "$iscsi_rpc_addr" add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
-if [ $1 -eq 0 ]; then
-	$rpc_py -s "$iscsi_rpc_addr" construct_nvme_bdev -b "Nvme0" -t "rdma" -f "ipv4" -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -n nqn.2016-06.io.spdk:cnode1
-fi
-$rpc_py -s "$iscsi_rpc_addr" construct_target_node Target1 Target1_alias 'Nvme0n1:0' $PORTAL_TAG:$INITIATOR_TAG 64 -d
-sleep 1
-
-echo "Logging in to iSCSI target."
-iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
-iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 trap "iscsicleanup; killprocess $iscsipid; killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
 sleep 1
+
+echo "Running FIO"
+$fio_py 4096 1 randrw 1 verify
+
+rm -f ./local-job0-0-verify.state
+iscsicleanup
+killprocess $iscsipid
+rm -f $testdir/iscsi.conf.tmp
+
+run_nvme_remote "remote"
 
 echo "Running FIO"
 $fio_py 4096 1 randrw 1 verify
