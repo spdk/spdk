@@ -74,6 +74,7 @@ SPDK_BDEV_MODULE_REGISTER(&passthru_if)
 struct bdev_names {
 	char			*vbdev_name;
 	char			*bdev_name;
+	bool			attached;
 	TAILQ_ENTRY(bdev_names)	link;
 };
 static TAILQ_HEAD(, bdev_names) g_bdev_names = TAILQ_HEAD_INITIALIZER(g_bdev_names);
@@ -104,6 +105,25 @@ struct passthru_bdev_io {
 	uint8_t test;
 };
 
+/* Called to check the number of usage on the same underlying base bdev.
+ * Once at the vbdev creation, if this vbdev shares the base bdev with other vbdev,
+ * it will only support read I/O operation.
+ */
+static int
+vbdev_passthru_base_bdev_usage_count(struct spdk_bdev *bdev)
+{
+	struct vbdev_passthru *pt_node, *tmp;
+	int i = 0;
+
+	TAILQ_FOREACH_SAFE(pt_node, &g_pt_nodes, link, tmp) {
+		if (bdev == pt_node->base_bdev) {
+			i++;
+		}
+	}
+
+	return i;
+}
+
 /* Called after we've unregistered following a hot remove callback.
  * Our finish entry point will be called next.
  */
@@ -111,9 +131,14 @@ static int
 vbdev_passthru_destruct(void *ctx)
 {
 	struct vbdev_passthru *pt_node = (struct vbdev_passthru *)ctx;
+	int count = vbdev_passthru_base_bdev_usage_count(pt_node->base_bdev);
 
-	/* Unclaim the underlying bdev. */
-	spdk_bdev_module_release_bdev(pt_node->base_bdev);
+	assert(count > 0);
+	/* Last association on the underlying base bdev */
+	if (count == 1) {
+		/* Unclaim the underlying bdev. */
+		spdk_bdev_module_release_bdev(pt_node->base_bdev);
+	}
 
 	/* Close the underlying bdev. */
 	spdk_bdev_close(pt_node->base_desc);
@@ -328,6 +353,8 @@ vbdev_passthru_insert_name(const char *bdev_name, const char *vbdev_name)
 		return -ENOMEM;
 	}
 
+	name->attached = false;
+
 	TAILQ_INSERT_TAIL(&g_bdev_names, name, link);
 
 	return 0;
@@ -447,7 +474,7 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 {
 	struct bdev_names *name;
 	struct vbdev_passthru *pt_node;
-	int rc;
+	int rc, count;
 
 	/* Check our list of names from config versus this bdev and if
 	 * there's a match, create the pt_node & bdev accordingly.
@@ -456,6 +483,12 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 		if (strcmp(name->bdev_name, bdev->name) != 0) {
 			continue;
 		}
+
+		if (name->attached == true) {
+			continue;
+		}
+
+		count = vbdev_passthru_base_bdev_usage_count(bdev);
 
 		SPDK_NOTICELOG("Match on %s\n", bdev->name);
 		pt_node = calloc(1, sizeof(struct vbdev_passthru));
@@ -493,8 +526,12 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 					sizeof(struct pt_io_channel));
 		SPDK_NOTICELOG("io_device created at: 0x%p\n", pt_node);
 
-		rc = spdk_bdev_open(bdev, true, vbdev_passthru_examine_hotremove_cb,
-				    bdev, &pt_node->base_desc);
+		if (count == 0) {
+			rc = spdk_bdev_open(bdev, true, vbdev_passthru_examine_hotremove_cb,
+					    bdev, &pt_node->base_desc);
+		} else {
+			rc = spdk_bdev_open(bdev, false, NULL, NULL, &pt_node->base_desc);
+		}
 		if (rc) {
 			SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(bdev));
 			TAILQ_REMOVE(&g_pt_nodes, pt_node, link);
@@ -504,16 +541,19 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 		}
 		SPDK_NOTICELOG("bdev opened\n");
 
-		rc = spdk_bdev_module_claim_bdev(bdev, pt_node->base_desc, pt_node->pt_bdev.module);
-		if (rc) {
-			SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(bdev));
-			spdk_bdev_close(pt_node->base_desc);
-			TAILQ_REMOVE(&g_pt_nodes, pt_node, link);
-			free(pt_node->pt_bdev.name);
-			free(pt_node);
-			break;
+		if (count == 0) {
+			rc = spdk_bdev_module_claim_bdev(bdev, pt_node->base_desc,
+							 pt_node->pt_bdev.module);
+			if (rc) {
+				SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(bdev));
+				spdk_bdev_close(pt_node->base_desc);
+				TAILQ_REMOVE(&g_pt_nodes, pt_node, link);
+				free(pt_node->pt_bdev.name);
+				free(pt_node);
+				break;
+			}
+			SPDK_NOTICELOG("bdev claimed\n");
 		}
-		SPDK_NOTICELOG("bdev claimed\n");
 
 		rc = spdk_vbdev_register(&pt_node->pt_bdev, &bdev, 1);
 		if (rc) {
@@ -526,6 +566,8 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 		}
 		SPDK_NOTICELOG("pt_bdev registered\n");
 		SPDK_NOTICELOG("created pt_bdev for: %s\n", name->vbdev_name);
+
+		name->attached = true;
 	}
 }
 
