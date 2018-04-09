@@ -371,7 +371,8 @@ nvmf_bdev_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 	}
 
-	response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+	response->status.sct = SPDK_NVME_SCT_GENERIC;
+	response->status.sc = SPDK_NVME_SC_SUCCESS;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
