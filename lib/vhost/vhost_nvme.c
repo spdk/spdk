@@ -886,7 +886,6 @@ spdk_vhost_nvme_start_device(struct spdk_vhost_dev *vdev, void *event_ctx)
 		return -1;
 	}
 
-	spdk_vhost_dev_mem_register(vdev);
 	nvme->mem = vdev->mem;
 
 	if (alloc_task_pool(nvme)) {
@@ -961,7 +960,6 @@ destroy_device_poller_cb(void *arg)
 			nvme->num_cqs = 0;
 			nvme->dbbuf_dbs = NULL;
 			nvme->dbbuf_eis = NULL;
-			spdk_vhost_dev_mem_unregister(&nvme->vdev);
 		}
 	}
 

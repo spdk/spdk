@@ -493,7 +493,7 @@ spdk_vhost_dev_find_by_vid(int vid)
 #define FLOOR_2MB(x)	(((uintptr_t)x) / SIZE_2MB) << SHIFT_2MB
 #define CEIL_2MB(x)	((((uintptr_t)x) + SIZE_2MB - 1) / SIZE_2MB) << SHIFT_2MB
 
-void
+static void
 spdk_vhost_dev_mem_register(struct spdk_vhost_dev *vdev)
 {
 	struct rte_vhost_mem_region *region;
@@ -516,7 +516,7 @@ spdk_vhost_dev_mem_register(struct spdk_vhost_dev *vdev)
 	}
 }
 
-void
+static void
 spdk_vhost_dev_mem_unregister(struct spdk_vhost_dev *vdev)
 {
 	struct rte_vhost_mem_region *region;
@@ -981,6 +981,7 @@ stop_device(int vid)
 		rte_vhost_set_vhost_vring_last_idx(vdev->vid, i, q->last_avail_idx, q->last_used_idx);
 	}
 
+	spdk_vhost_dev_mem_unregister(vdev);
 	free(vdev->mem);
 	spdk_vhost_free_reactor(vdev->lcore);
 	vdev->lcore = -1;
@@ -1062,8 +1063,10 @@ start_device(int vid)
 	}
 
 	vdev->lcore = spdk_vhost_allocate_reactor(vdev->cpumask);
+	spdk_vhost_dev_mem_register(vdev);
 	rc = spdk_vhost_event_send(vdev, vdev->backend->start_device, 3, "start device");
 	if (rc != 0) {
+		spdk_vhost_dev_mem_unregister(vdev);
 		free(vdev->mem);
 		spdk_vhost_free_reactor(vdev->lcore);
 		vdev->lcore = -1;
