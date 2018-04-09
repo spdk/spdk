@@ -67,7 +67,8 @@ function remove_kernel_vhost()
 	targetcli "/backstores/$targetcli_rd_name delete ramdisk"
 }
 
-trap 'rm -f *.state $ROOT_DIR/spdk.tar.gz $ROOT_DIR/fio.tar.gz; error_exit "${FUNCNAME}""${LINENO}"' ERR SIGTERM SIGABRT
+trap 'rm -f *.state $ROOT_DIR/spdk.tar.gz $ROOT_DIR/fio.tar.gz $(get_vhost_dir)/Virtio0;\
+ error_exit "${FUNCNAME}""${LINENO}"' ERR SIGTERM SIGABRT
 function run_spdk_fio() {
 	LD_PRELOAD=$PLUGIN_DIR/fio_plugin $FIO_PATH/fio --ioengine=spdk_bdev\
          "$@" --spdk_mem=1024 --spdk_single_seg=1
@@ -132,7 +133,7 @@ timing_exit create_kernel_vhost
 timing_enter setup_vm
 vm_no="0"
 vm_setup --disk-type=spdk_vhost_scsi --force=$vm_no --os=$os_image \
- --disks="Nvme0n1_scsi0:Malloc0:Malloc1:$kernel_vhost_disk,kernel_vhost:\
+ --disks="Nvme0n1_scsi0:Malloc0:Malloc1:$kernel_vhost_disk,kernel_vhost:Virtio0,virtio:\
  Nvme0n1_blk0,spdk_vhost_blk:Nvme0n1_blk1,spdk_vhost_blk" \
  --queue_num=8 --memory=6144
 vm_run $vm_no
@@ -184,7 +185,7 @@ timing_enter vm_shutdown_all
 vm_shutdown_all
 timing_exit vm_shutdown_all
 
-rm -f *.state $ROOT_DIR/spdk.tar.gz $ROOT_DIR/fio.tar.gz
+rm -f *.state $ROOT_DIR/spdk.tar.gz $ROOT_DIR/fio.tar.gz $(get_vhost_dir)/Virtio0
 timing_enter remove_kernel_vhost
 remove_kernel_vhost
 timing_exit remove_kernel_vhost
