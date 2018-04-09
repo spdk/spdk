@@ -374,22 +374,24 @@ spdk_rpc_apply_nvme_firmware(struct spdk_jsonrpc_request *request,
 			continue;
 		}
 
-		if ((rc = spdk_bdev_open(bdev2, true, NULL, NULL, &desc)) != 0) {
-			snprintf(msg, sizeof(msg), "Device %s is in use.", firm_ctx->req->bdev_name);
+		if (!(opt = malloc(sizeof(struct open_descriptors)))) {
+			snprintf(msg, sizeof(msg), "Memory allocation error.");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, msg);
 			apply_firmware_cleanup(firm_ctx);
 			return;
-		} else {
-			if (!(opt = malloc(sizeof(struct open_descriptors)))) {
-				snprintf(msg, sizeof(msg), "Memory allocation error.");
-				spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, msg);
-				apply_firmware_cleanup(firm_ctx);
-				return;
-			}
-			opt->desc = desc;
-			opt->bdev = bdev;
-			TAILQ_INSERT_TAIL(&firm_ctx->desc_head, opt, tqlst);
 		}
+
+		if ((rc = spdk_bdev_open(bdev2, true, NULL, NULL, &desc)) != 0) {
+			snprintf(msg, sizeof(msg), "Device %s is in use.", firm_ctx->req->bdev_name);
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, msg);
+			free(opt);
+			apply_firmware_cleanup(firm_ctx);
+			return;
+		}
+
+		opt->desc = desc;
+		opt->bdev = bdev;
+		TAILQ_INSERT_TAIL(&firm_ctx->desc_head, opt, tqlst);
 	}
 
 	/*
