@@ -150,10 +150,6 @@ static const struct spdk_vhost_dev_backend spdk_vhost_nvme_device_backend;
 static struct spdk_vhost_nvme_dev *
 to_nvme_dev(struct spdk_vhost_dev *vdev)
 {
-	if (vdev == NULL) {
-		return NULL;
-	}
-
 	if (vdev->backend != &spdk_vhost_nvme_device_backend) {
 		SPDK_ERRLOG("%s: not a vhost-nvme device\n", vdev->name);
 		return NULL;
@@ -882,9 +878,18 @@ alloc_task_pool(struct spdk_vhost_nvme_dev *nvme)
 static int
 spdk_vhost_nvme_start_device(struct spdk_vhost_dev *vdev, void *event_ctx)
 {
-	struct spdk_vhost_nvme_dev *nvme = to_nvme_dev(vdev);
+	struct spdk_vhost_nvme_dev *nvme;
 	struct spdk_vhost_nvme_ns *ns_dev;
 	uint32_t i;
+
+	if (vdev == NULL) {
+		return -1;
+	}
+
+	nvme = to_nvme_dev(vdev);
+	if (nvme == NULL) {
+		return -1;
+	}
 
 	spdk_vhost_dev_mem_register(vdev);
 	nvme->mem = vdev->mem;
@@ -977,8 +982,17 @@ destroy_device_poller_cb(void *arg)
 static int
 spdk_vhost_nvme_stop_device(struct spdk_vhost_dev *vdev, void *event_ctx)
 {
-	struct spdk_vhost_nvme_dev *nvme = to_nvme_dev(vdev);
+	struct spdk_vhost_nvme_dev *nvme;
 	struct spdk_vhost_dev_destroy_ctx *destroy_ctx;
+
+	if (vdev == NULL) {
+		return -1;
+	}
+
+	nvme = to_nvme_dev(vdev);
+	if (nvme == NULL) {
+		return -1;
+	}
 
 	free_task_pool(nvme);
 	SPDK_NOTICELOG("Stopping Device %u, Path %s\n", vdev->vid, vdev->path);
@@ -1005,10 +1019,19 @@ err:
 static void
 spdk_vhost_nvme_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
 {
-	struct spdk_vhost_nvme_dev *nvme = to_nvme_dev(vdev);
+	struct spdk_vhost_nvme_dev *nvme;
 	struct spdk_vhost_nvme_ns *ns_dev;
 	struct spdk_bdev *bdev;
 	uint32_t i;
+
+	if (vdev == NULL) {
+		return;
+	}
+
+	nvme = to_nvme_dev(vdev);
+	if (nvme == NULL) {
+		return;
+	}
 
 	spdk_json_write_name(w, "namespaces");
 	spdk_json_write_object_begin(w);
@@ -1160,12 +1183,17 @@ spdk_vhost_nvme_dev_construct(const char *name, const char *cpumask, uint32_t nu
 int
 spdk_vhost_nvme_dev_remove(struct spdk_vhost_dev *vdev)
 {
-	struct spdk_vhost_nvme_dev *nvme = to_nvme_dev(vdev);
+	struct spdk_vhost_nvme_dev *nvme;
 	struct spdk_vhost_nvme_dev *dev, *tmp;
 	struct spdk_vhost_nvme_ns *ns;
 	int rc;
 	uint32_t i;
 
+	if (vdev == NULL) {
+		return -EINVAL;
+	}
+
+	nvme = to_nvme_dev(vdev);
 	if (nvme == NULL) {
 		return -EINVAL;
 	}
@@ -1194,10 +1222,19 @@ spdk_vhost_nvme_dev_remove(struct spdk_vhost_dev *vdev)
 int
 spdk_vhost_nvme_dev_add_ns(struct spdk_vhost_dev *vdev, const char *bdev_name)
 {
-	struct spdk_vhost_nvme_dev *nvme = to_nvme_dev(vdev);
+	struct spdk_vhost_nvme_dev *nvme;
 	struct spdk_vhost_nvme_ns *ns;
 	struct spdk_bdev *bdev;
 	int rc = -1;
+
+	if (vdev == NULL) {
+		return -1;
+	}
+
+	nvme = to_nvme_dev(vdev);
+	if (nvme == NULL) {
+		return -1;
+	}
 
 	if (nvme->num_ns == MAX_NAMESPACE) {
 		SPDK_ERRLOG("Can't support %d Namespaces\n", nvme->num_ns);
