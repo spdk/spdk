@@ -334,8 +334,7 @@ create_unix_socket(struct vhost_user_socket *vsocket)
 
 	memset(un, 0, sizeof(*un));
 	un->sun_family = AF_UNIX;
-	strncpy(un->sun_path, vsocket->path, sizeof(un->sun_path));
-	un->sun_path[sizeof(un->sun_path) - 1] = '\0';
+	snprintf(un->sun_path, sizeof(un->sun_path), "%s", vsocket->path);
 
 	vsocket->socket_fd = fd;
 	return 0;
