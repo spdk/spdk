@@ -41,6 +41,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/env.h"
+#include "spdk/io_channel.h"
 #include "spdk/nvme.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/queue.h"
@@ -501,10 +502,13 @@ uint32_t spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struc
  *
  * \param subsystem Subsystem the namespace belong to.
  * \param nsid Namespace ID to be removed.
+ * \param cb_fn Function to call when all thread local ns information has been updated
+ * \param ctx Context for the above cb_fn
  *
  * \return 0 on success, -1 on failure.
  */
-int spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid);
+int spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid,
+				  spdk_channel_for_each_cpl cb_fn, void *ctx);
 
 /**
  * Get the first allocated namespace in a subsystem.

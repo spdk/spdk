@@ -25,6 +25,9 @@ active namespaces and spdk_nvme_ctrlr_is_active_ns() to check if a ns id is acti
 Namespaces may now be assigned unique identifiers via new optional "eui64" and "nguid" parameters
 to the `nvmf_subsystem_add_ns` RPC method.
 
+`spdk_nvmf_subsystem_remove_ns` is now asynchronous and requires two additional arguments, cb_fn and ctx.
+cb_fn is a function pointer of type spdk_channel_for_each_cpl and context is a void pointer.
+
 ### Blobstore
 
 A number of functions have been renamed:
