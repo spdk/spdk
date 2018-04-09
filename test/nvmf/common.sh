@@ -34,7 +34,7 @@ function detect_soft_roce_nics()
 	if hash rxe_cfg; then
 		rxe_cfg start
 		rdma_nics=$(get_rdma_if_list)
-		all_nics=$(ip -o link | awk '{print $2}' | cut -d":" -f1)
+		all_nics=$(ip -o link | awk '{print $2}' | cut -d":" -f1 | cut -d"@" -f1)
 		non_rdma_nics=$(echo -e "$rdma_nics\n$all_nics" | sort | uniq -u)
 		for nic in $non_rdma_nics; do
 			if [[ -d /sys/class/net/${nic}/bridge ]]; then
@@ -114,6 +114,7 @@ function get_available_rdma_ips()
 function get_rdma_if_list()
 {
 	for nic_type in `ls /sys/class/infiniband`; do
+		#for nic_name in `cat /sys/class/infiniband/${nic_type}/parent || true`; do
 		for nic_name in `ls /sys/class/infiniband/${nic_type}/device/net`; do
 			echo "$nic_name"
 		done
@@ -142,7 +143,7 @@ function rdma_device_init()
 function revert_soft_roce()
 {
 	if hash rxe_cfg; then
-		interfaces="$(ip -o link | awk '{print $2}' | cut -d":" -f1)"
+		interfaces="$(ip -o link | awk '{print $2}' | cut -d":" -f1 | cut -d"@" -f1)"
 		for interface in $interfaces; do
 			rxe_cfg remove $interface || true
 		done
