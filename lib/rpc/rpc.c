@@ -41,11 +41,12 @@
 #include "spdk/log.h"
 #include "spdk/string.h"
 
-#define RPC_DEFAULT_PORT	"5260"
+#define RPC_DEFAULT_PORT		"5260"
 
 static struct sockaddr_un g_rpc_listen_addr_unix = {};
 static char g_rpc_lock_path[sizeof(g_rpc_listen_addr_unix.sun_path) + sizeof(".lock") + 1];
 static int g_rpc_lock_fd = -1;
+static uint32_t g_rpc_state = RPC_STATE_PRE_SUBSYSTEM_INIT;
 
 static struct spdk_jsonrpc_server *g_jsonrpc_server = NULL;
 
@@ -53,6 +54,7 @@ struct spdk_rpc_method {
 	const char *name;
 	spdk_rpc_method_handler func;
 	SLIST_ENTRY(spdk_rpc_method) slist;
+	uint32_t state_mask;
 };
 
 static SLIST_HEAD(, spdk_rpc_method) g_rpc_methods = SLIST_HEAD_INITIALIZER(g_rpc_methods);
@@ -67,7 +69,8 @@ spdk_jsonrpc_handler(struct spdk_jsonrpc_request *request,
 	assert(method != NULL);
 
 	SLIST_FOREACH(m, &g_rpc_methods, slist) {
-		if (spdk_json_strequal(method, m->name)) {
+		if (spdk_json_strequal(method, m->name) &&
+		    (m->state_mask & g_rpc_state) != 0) {
 			m->func(request, params);
 			return;
 		}
@@ -183,8 +186,9 @@ spdk_rpc_accept(void)
 	spdk_jsonrpc_server_poll(g_jsonrpc_server);
 }
 
-void
-spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func)
+static void
+_spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func,
+			  uint32_t state_mask)
 {
 	struct spdk_rpc_method *m;
 
@@ -195,9 +199,22 @@ spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func)
 	assert(m->name != NULL);
 
 	m->func = func;
+	m->state_mask = state_mask;
 
 	/* TODO: use a hash table or sorted list */
 	SLIST_INSERT_HEAD(&g_rpc_methods, m, slist);
+}
+
+void
+spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func)
+{
+	_spdk_rpc_register_method(method, func, RPC_STATE_POST_SUBSYSTEM_INIT);
+}
+
+void
+spdk_si_rpc_register_method(const char *method, spdk_rpc_method_handler func)
+{
+	_spdk_rpc_register_method(method, func, RPC_STATE_PRE_SUBSYSTEM_INIT);
 }
 
 void
@@ -251,3 +268,9 @@ spdk_rpc_get_rpc_methods(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("get_rpc_methods", spdk_rpc_get_rpc_methods)
+
+void
+spdk_rpc_set_state(uint32_t state_mask)
+{
+	g_rpc_state = state_mask;
+}
