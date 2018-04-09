@@ -594,6 +594,18 @@ spdk_vhost_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 	return 0;
 }
 
+static void *
+_start_rte_driver(void *arg)
+{
+	char *path = arg;
+
+	if (rte_vhost_driver_start(path) != 0) {
+		return NULL;
+	}
+
+	return path;
+}
+
 int
 spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
 			const struct spdk_vhost_dev_backend *backend)
@@ -703,12 +715,17 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 
 	TAILQ_INSERT_TAIL(&g_spdk_vhost_devices, vdev, tailq);
 
-	if (rte_vhost_driver_start(path) != 0) {
-		SPDK_ERRLOG("Failed to start vhost driver for controller %s (%d): %s\n", name, errno,
-			    spdk_strerror(errno));
+	/* The following might start a POSIX thread that polls for incoming
+	 * socket connections and calls backend->start/stop_device.
+	 */
+	if (spdk_call_unaffinitized(_start_rte_driver, path) == NULL) {
+		SPDK_ERRLOG("Failed to start vhost driver for controller %s (%d): %s\n",
+			    name, errno, spdk_strerror(errno));
 		rte_vhost_driver_unregister(path);
-		return -EIO;
+		rc = -EIO;
+		goto out;
 	}
+
 
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Controller %s: new controller added\n", vdev->name);
 	return 0;
