@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "acba8695_e38f4705",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 22
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-09T23:50:47Z",
+      "side": 1,
+      "message": "Where is the definition for what goes in this field?  Maybe it should be a bool or an enumerated type?",
+      "revId": "75675696de7ce82119faf23d21bbd06f2a22ff14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7154a802_ee433f01",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 22
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-09T23:50:47Z",
+      "side": 1,
+      "message": "Please make this a size_t.",
+      "revId": "75675696de7ce82119faf23d21bbd06f2a22ff14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0dfa60dc_2d96f62f",
         "filename": "include/spdk/env.h",
         "patchSetId": 22
@@ -13,6 +47,30 @@
       "writtenOn": "2018-04-09T23:43:54Z",
       "side": 1,
       "message": "Will you increase this to 32? 16 may overflow and other cases use 32 in SPDK.",
+      "range": {
+        "startLine": 68,
+        "startChar": 50,
+        "endLine": 68,
+        "endChar": 52
+      },
+      "revId": "75675696de7ce82119faf23d21bbd06f2a22ff14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "19a410d1_937f8a6e",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 22
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-09T23:50:47Z",
+      "side": 1,
+      "message": "I still think it would be best to make this a list of struct spdk_pci_addr instead of strings.  That would also avoid the issue of whether 16 bytes is long enough to hold all PCI address strings.  I\u0027d also prefer to make this dynamically allocated just like you did in the event.h layer.",
+      "parentUuid": "0dfa60dc_2d96f62f",
       "range": {
         "startLine": 68,
         "startChar": 50,
