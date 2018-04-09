@@ -130,6 +130,16 @@ void spdk_lvs_rename(struct spdk_lvol_store *lvs, const char *new_name,
 		     spdk_lvs_op_complete cb_fn, void *cb_arg);
 
 /**
+ * Load lvolstore from the given blobstore device.
+ *
+ * \param bs_dev Pointer to the blobstore device.
+ * \param cb_fn Completion callback.
+ * \param cb_arg Completion callback custom arguments.
+ */
+void spdk_lvs_load(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn,
+		   void *cb_arg);
+
+/**
  * Unload lvolstore.
  *
  * All lvols have to be closed beforehand, when doing unload.
@@ -142,6 +152,7 @@ void spdk_lvs_rename(struct spdk_lvol_store *lvs, const char *new_name,
  */
 int spdk_lvs_unload(struct spdk_lvol_store *lvol_store,
 		    spdk_lvs_op_complete cb_fn, void *cb_arg);
+
 /**
  * Destroy lvolstore.
  *
@@ -229,16 +240,6 @@ void spdk_lvol_close(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *
  * \return a pointer to the I/O channel.
  */
 struct spdk_io_channel *spdk_lvol_get_io_channel(struct spdk_lvol *lvol);
-
-/**
- * Load lvolstore from the given blobstore device.
- *
- * \param bs_dev Pointer to the blobstore device.
- * \param cb_fn Completion callback.
- * \param cb_arg Completion callback custom arguments.
- */
-void spdk_lvs_load(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn,
-		   void *cb_arg);
 
 /**
  * Open a lvol.
