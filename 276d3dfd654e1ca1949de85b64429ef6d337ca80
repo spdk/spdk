@@ -16,6 +16,24 @@
       "revId": "276d3dfd654e1ca1949de85b64429ef6d337ca80",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58b00cfc_d4d28cb7",
+        "filename": "mk/spdk.modules.mk",
+        "patchSetId": 6
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-09T11:57:39Z",
+      "side": 1,
+      "message": "Thanks, filter-out suggestion works great ! This is what was missing.",
+      "parentUuid": "60e43e39_87e067dc",
+      "revId": "276d3dfd654e1ca1949de85b64429ef6d337ca80",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
