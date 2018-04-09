@@ -495,7 +495,7 @@ blob_thin_provision(void)
 
 	dev = init_dev();
 	spdk_bs_opts_init(&bs_opts);
-	strncpy(bs_opts.bstype.bstype, "TESTTYPE", SPDK_BLOBSTORE_TYPE_LENGTH);
+	snprintf(bs_opts.bstype.bstype, sizeof(bs_opts.bstype.bstype), "TESTTYPE");
 
 	/* Initialize a new blob store */
 	spdk_bs_init(dev, &bs_opts, bs_op_with_handle_complete, NULL);
@@ -530,7 +530,7 @@ blob_thin_provision(void)
 
 	/* Load an existing blob store and check if invalid_flags is set */
 	dev = init_dev();
-	strncpy(bs_opts.bstype.bstype, "TESTTYPE", SPDK_BLOBSTORE_TYPE_LENGTH);
+	snprintf(bs_opts.bstype.bstype, sizeof(bs_opts.bstype.bstype), "TESTTYPE");
 	spdk_bs_load(dev, &bs_opts, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
@@ -920,7 +920,7 @@ blob_read_only(void)
 
 	dev = init_dev();
 	spdk_bs_opts_init(&opts);
-	strncpy(opts.bstype.bstype, "TESTTYPE", SPDK_BLOBSTORE_TYPE_LENGTH);
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
 
 	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -972,7 +972,7 @@ blob_read_only(void)
 
 	/* Load an existing blob store */
 	dev = init_dev();
-	strncpy(opts.bstype.bstype, "TESTTYPE", SPDK_BLOBSTORE_TYPE_LENGTH);
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
 	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
@@ -1731,7 +1731,7 @@ bs_load(void)
 
 	dev = init_dev();
 	spdk_bs_opts_init(&opts);
-	strncpy(opts.bstype.bstype, "TESTTYPE", SPDK_BLOBSTORE_TYPE_LENGTH);
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
 
 	/* Initialize a new blob store */
 	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
@@ -1810,7 +1810,7 @@ bs_load(void)
 	/* Load an existing blob store */
 	dev = init_dev();
 	spdk_bs_opts_init(&opts);
-	strncpy(opts.bstype.bstype, "TESTTYPE", SPDK_BLOBSTORE_TYPE_LENGTH);
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
 	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
@@ -1855,7 +1855,7 @@ bs_type(void)
 
 	dev = init_dev();
 	spdk_bs_opts_init(&opts);
-	strncpy(opts.bstype.bstype, "TESTTYPE", SPDK_BLOBSTORE_TYPE_LENGTH);
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
 
 	/* Initialize a new blob store */
 	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
@@ -1871,13 +1871,13 @@ bs_type(void)
 
 	/* Load non existing blobstore type */
 	dev = init_dev();
-	strncpy(opts.bstype.bstype, "NONEXISTING", SPDK_BLOBSTORE_TYPE_LENGTH);
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "NONEXISTING");
 	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno != 0);
 
 	/* Load with empty blobstore type */
 	dev = init_dev();
-	strncpy(opts.bstype.bstype, "", SPDK_BLOBSTORE_TYPE_LENGTH);
+	memset(opts.bstype.bstype, 0, sizeof(opts.bstype.bstype));
 	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
@@ -1887,7 +1887,7 @@ bs_type(void)
 
 	/* Initialize a new blob store with empty bstype */
 	dev = init_dev();
-	strncpy(opts.bstype.bstype, "", SPDK_BLOBSTORE_TYPE_LENGTH);
+	memset(opts.bstype.bstype, 0, sizeof(opts.bstype.bstype));
 	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
@@ -1898,13 +1898,13 @@ bs_type(void)
 
 	/* Load non existing blobstore type */
 	dev = init_dev();
-	strncpy(opts.bstype.bstype, "NONEXISTING", SPDK_BLOBSTORE_TYPE_LENGTH);
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "NONEXISTING");
 	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno != 0);
 
 	/* Load with empty blobstore type */
 	dev = init_dev();
-	strncpy(opts.bstype.bstype, "", SPDK_BLOBSTORE_TYPE_LENGTH);
+	memset(opts.bstype.bstype, 0, sizeof(opts.bstype.bstype));
 	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
@@ -1923,7 +1923,7 @@ bs_super_block(void)
 
 	dev = init_dev();
 	spdk_bs_opts_init(&opts);
-	strncpy(opts.bstype.bstype, "TESTTYPE", SPDK_BLOBSTORE_TYPE_LENGTH);
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
 
 	/* Initialize a new blob store */
 	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
@@ -1942,14 +1942,14 @@ bs_super_block(void)
 	super_block->version++;
 
 	dev = init_dev();
-	strncpy(opts.bstype.bstype, "", SPDK_BLOBSTORE_TYPE_LENGTH);
+	memset(opts.bstype.bstype, 0, sizeof(opts.bstype.bstype));
 	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno != 0);
 
 	/* Create a new blob store with super block version 1 */
 	dev = init_dev();
 	super_block_v1.version = 1;
-	strncpy(super_block_v1.signature, "SPDKBLOB", sizeof(super_block_v1.signature));
+	memcpy(super_block_v1.signature, "SPDKBLOB", sizeof(super_block_v1.signature));
 	super_block_v1.length = 0x1000;
 	super_block_v1.clean = 1;
 	super_block_v1.super_blob = 0xFFFFFFFFFFFFFFFF;
@@ -1964,7 +1964,7 @@ bs_super_block(void)
 	super_block_v1.crc = _spdk_blob_md_page_calc_crc(&super_block_v1);
 	memcpy(g_dev_buffer, &super_block_v1, sizeof(struct spdk_bs_super_block_ver1));
 
-	strncpy(opts.bstype.bstype, "", SPDK_BLOBSTORE_TYPE_LENGTH);
+	memset(opts.bstype.bstype, 0, sizeof(opts.bstype.bstype));
 	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
@@ -3480,7 +3480,7 @@ bs_load_iter(void)
 
 	dev = init_dev();
 	spdk_bs_opts_init(&opts);
-	strncpy(opts.bstype.bstype, "TESTTYPE", SPDK_BLOBSTORE_TYPE_LENGTH);
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
 
 	/* Initialize a new blob store */
 	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
@@ -3520,7 +3520,7 @@ bs_load_iter(void)
 
 	dev = init_dev();
 	spdk_bs_opts_init(&opts);
-	strncpy(opts.bstype.bstype, "TESTTYPE", SPDK_BLOBSTORE_TYPE_LENGTH);
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
 	opts.iter_cb_fn = test_iter;
 	opts.iter_cb_arg = &iter_ctx;
 
@@ -3534,7 +3534,7 @@ bs_load_iter(void)
 
 	dev = init_dev();
 	spdk_bs_opts_init(&opts);
-	strncpy(opts.bstype.bstype, "TESTTYPE", SPDK_BLOBSTORE_TYPE_LENGTH);
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
 	opts.iter_cb_fn = test_iter;
 	iter_ctx.current_iter = 0;
 	opts.iter_cb_arg = &iter_ctx;

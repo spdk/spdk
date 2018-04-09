@@ -388,7 +388,7 @@ node_access_allowed(void)
 	TAILQ_INIT(&tgtnode.pg_map_head);
 
 	memset(&scsi_dev, 0, sizeof(struct spdk_scsi_dev));
-	strncpy(scsi_dev.name, "iqn.2017-10.spdk.io:0001", SPDK_SCSI_DEV_MAX_NAME);
+	snprintf(scsi_dev.name, sizeof(scsi_dev.name), "iqn.2017-10.spdk.io:0001");
 	tgtnode.dev = &scsi_dev;
 
 	pg_map = spdk_iscsi_tgt_node_add_pg_map(&tgtnode, &pg);
@@ -450,7 +450,7 @@ node_access_denied_by_empty_netmask(void)
 	TAILQ_INIT(&tgtnode.pg_map_head);
 
 	memset(&scsi_dev, 0, sizeof(struct spdk_scsi_dev));
-	strncpy(scsi_dev.name, "iqn.2017-10.spdk.io:0001", SPDK_SCSI_DEV_MAX_NAME);
+	snprintf(scsi_dev.name, sizeof(scsi_dev.name), "iqn.2017-10.spdk.io:0001");
 	tgtnode.dev = &scsi_dev;
 
 	pg_map = spdk_iscsi_tgt_node_add_pg_map(&tgtnode, &pg);
@@ -503,7 +503,7 @@ node_access_multi_initiator_groups_cases(void)
 	TAILQ_INIT(&tgtnode.pg_map_head);
 
 	memset(&scsi_dev, 0, sizeof(struct spdk_scsi_dev));
-	strncpy(scsi_dev.name, IQN1, SPDK_SCSI_DEV_MAX_NAME);
+	snprintf(scsi_dev.name, sizeof(scsi_dev.name), IQN1);
 	tgtnode.dev = &scsi_dev;
 
 	/* initiator group initialization */
@@ -753,7 +753,7 @@ allow_iscsi_name_multi_maps_case(void)
 	TAILQ_INIT(&tgtnode.pg_map_head);
 
 	memset(&scsi_dev, 0, sizeof(struct spdk_scsi_dev));
-	strncpy(scsi_dev.name, IQN1, SPDK_SCSI_DEV_MAX_NAME);
+	snprintf(scsi_dev.name, sizeof(scsi_dev.name), IQN1);
 	tgtnode.dev = &scsi_dev;
 
 	/* initiator group initialization */
