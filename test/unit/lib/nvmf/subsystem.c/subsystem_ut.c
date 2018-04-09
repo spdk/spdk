@@ -115,6 +115,13 @@ spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt, enum spdk_nvme_transport_
 }
 
 int
+spdk_nvmf_poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
+				      struct spdk_nvmf_subsystem *subsystem)
+{
+	return 0;
+}
+
+int
 spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
 				   struct spdk_nvmf_subsystem *subsystem)
 {
@@ -221,9 +228,11 @@ spdk_bdev_get_uuid(const struct spdk_bdev *bdev)
 static void
 test_spdk_nvmf_subsystem_add_ns(void)
 {
+	struct spdk_nvmf_tgt tgt = {};
 	struct spdk_nvmf_subsystem subsystem = {
 		.max_nsid = 0,
 		.ns = NULL,
+		.tgt = &tgt
 	};
 	struct spdk_bdev bdev1 = {}, bdev2 = {};
 	struct spdk_nvmf_ns_opts ns_opts;
@@ -440,5 +449,6 @@ int main(int argc, char **argv)
 	num_failures = CU_get_number_of_failures();
 	CU_cleanup_registry();
 	spdk_free_thread();
+
 	return num_failures;
 }
