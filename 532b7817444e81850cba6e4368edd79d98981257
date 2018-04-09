@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "73e92645_21e40226",
+        "filename": "test/vhost/performance/perf_regression.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-09T11:15:15Z",
+      "side": 1,
+      "message": "could this be configurable as well, instead of having a hardcoded list?",
+      "range": {
+        "startLine": 80,
+        "startChar": 0,
+        "endLine": 80,
+        "endChar": 61
+      },
+      "revId": "532b7817444e81850cba6e4368edd79d98981257",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "31b1c719_6afef5ff",
+        "filename": "test/vhost/performance/perf_regression.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-09T11:15:15Z",
+      "side": 1,
+      "message": "use tabs for indentation",
+      "range": {
+        "startLine": 82,
+        "startChar": 0,
+        "endLine": 82,
+        "endChar": 4
+      },
+      "revId": "532b7817444e81850cba6e4368edd79d98981257",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1823dd9_96e11094",
+        "filename": "test/vhost/performance/perf_regression.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-09T11:15:15Z",
+      "side": 1,
+      "message": "Why grep the fio job file if you have the information about RW in the variable?",
+      "range": {
+        "startLine": 86,
+        "startChar": 4,
+        "endLine": 86,
+        "endChar": 85
+      },
+      "revId": "532b7817444e81850cba6e4368edd79d98981257",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "852f322a_cc5537b8",
+        "filename": "test/vhost/performance/perf_regression.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-09T11:15:15Z",
+      "side": 1,
+      "message": "Remove?",
+      "range": {
+        "startLine": 87,
+        "startChar": 8,
+        "endLine": 87,
+        "endChar": 20
+      },
+      "revId": "532b7817444e81850cba6e4368edd79d98981257",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d138dc4_882bb9c2",
+        "filename": "test/vhost/performance/perf_regression.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-09T11:15:15Z",
+      "side": 1,
+      "message": "Remove?",
+      "range": {
+        "startLine": 89,
+        "startChar": 8,
+        "endLine": 89,
+        "endChar": 20
+      },
+      "revId": "532b7817444e81850cba6e4368edd79d98981257",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d32912bc_5faa026c",
+        "filename": "test/vhost/performance/perf_regression.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-09T11:15:15Z",
+      "side": 1,
+      "message": "Could we make runtime and ramptime configurable? Then there would be no need to sed.",
+      "range": {
+        "startLine": 94,
+        "startChar": 4,
+        "endLine": 103,
+        "endChar": 6
+      },
+      "revId": "532b7817444e81850cba6e4368edd79d98981257",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2cddc7c4_a79dfb3d",
+        "filename": "test/vhost/performance/perf_regression.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-09T11:15:15Z",
+      "side": 1,
+      "message": "Actually the purpose of this script was not to use fiotest/autotest.sh because it has a number of features that we DON\u0027T want to run in performance test (like negative test cases for controllers or SCSI reset commands)",
+      "range": {
+        "startLine": 115,
+        "startChar": 0,
+        "endLine": 122,
+        "endChar": 4
+      },
+      "revId": "532b7817444e81850cba6e4368edd79d98981257",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
