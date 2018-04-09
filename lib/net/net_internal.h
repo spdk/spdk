@@ -31,71 +31,49 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \file
- * Net framework abstraction layer
- */
-
-#ifndef SPDK_NET_H
-#define SPDK_NET_H
+#ifndef SPDK_NET_INTERNAL_H
+#define SPDK_NET_INTERNAL_H
 
 #include "spdk/stdinc.h"
 
 #include "spdk/queue.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#define SPDK_IFNAMSIZE		32
+#define SPDK_MAX_IP_PER_IFC	32
 
-struct spdk_sock;
-
-struct spdk_net_framework {
-	const char *name;
-
-	int (*init)(void);
-	void (*fini)(void);
-
-	STAILQ_ENTRY(spdk_net_framework) link;
+struct spdk_interface {
+	char name[SPDK_IFNAMSIZE];
+	uint32_t index;
+	uint32_t num_ip_addresses; /* number of IP addresses defined */
+	uint32_t ip_address[SPDK_MAX_IP_PER_IFC];
+	TAILQ_ENTRY(spdk_interface)	tailq;
 };
 
 /**
- * Register a net framework.
+ * Add an ip address to the network interface.
  *
- * \param frame Net framework to register.
- */
-void spdk_net_framework_register(struct spdk_net_framework *frame);
-
-#define SPDK_NET_FRAMEWORK_REGISTER(name, frame) \
-static void __attribute__((constructor)) net_framework_register_##name(void) \
-{ \
-	spdk_net_framework_register(frame); \
-}
-
-/**
- * Initialize the network interfaces by getting information through netlink socket.
+ * \param ifc_index Index of the network interface.
+ * \param ip_addr Ip address to add.
  *
- * \return 0 on success, 1 on failure.
+ * \return 0 on success, -1 on failure.
  */
-int spdk_interface_init(void);
+int spdk_interface_add_ip_address(int ifc_index, char *ip_addr);
 
 /**
- * Destroy the network interfaces.
- */
-void spdk_interface_destroy(void);
-
-/**
- * Start all registered frameworks.
+ * Delete an ip address from the network interface.
  *
- * \return 0 on success.
+ * \param ifc_index Index of the network interface.
+ * \param ip_addr Ip address to delete.
+ *
+ * \return 0 on success, -1 on failure.
  */
-int spdk_net_framework_start(void);
+int spdk_interface_delete_ip_address(int ifc_index, char *ip_addr);
 
 /**
- * Stop all registered frameworks.
+ * Get the list of all the network interfaces.
+ *
+ * \return a pointer to the head of the linked list of all the network interfaces.
  */
-void spdk_net_framework_fini(void);
+void *spdk_interface_get_list(void);
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* SPDK_NET_H */
+#endif /* SPDK_NET_INTERNAL_H */
