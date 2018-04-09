@@ -77,7 +77,7 @@ rm -f whitespace.log
 
 echo -n "Checking for use of forbidden library functions..."
 
-git grep --line-number -w '\(strcpy\|sprintf\|vsprintf\)' -- './*.c' ':!lib/vhost/rte_vhost*/**' > badfunc.log || true
+git grep --line-number -w '\(strncpy\|strcpy\|sprintf\|vsprintf\)' -- './*.c' ':!lib/vhost/rte_vhost*/**' > badfunc.log || true
 if [ -s badfunc.log ]; then
 	echo " Forbidden library functions detected"
 	cat badfunc.log
