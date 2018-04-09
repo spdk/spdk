@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eb421ec5_e2a08f96",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-09T22:36:26Z",
+      "side": 1,
+      "message": "instead of \"Connect the\", \"Connect to the\"",
+      "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78299336_724cefc4",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-09T22:36:26Z",
+      "side": 1,
+      "message": "I think I\u0027d just leave this at \"Listen on the given IP address and port.\"",
+      "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f31b96da_08632f12",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-09T22:36:26Z",
+      "side": 1,
+      "message": "Poiinter",
+      "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4fbfac75_2d5ca402",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-09T22:36:26Z",
+      "side": 1,
+      "message": "Not a big thing but don\u0027t think I\u0027ve heard \"vector of buffers\" before as a thing.  Maybe \"from the IO vector array\" instead?",
+      "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d61111d_047abf76",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-09T22:36:26Z",
+      "side": 1,
+      "message": "Number of IO vectors",
+      "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59d57fb1_5350cd78",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-09T22:36:26Z",
+      "side": 1,
+      "message": "Maybe instead of repeating the sorta hard to read shorthand for the variable just say \"Set the value used to specify the low water mark (in bytes) for this socket.\"",
+      "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b6075b2_d6f0d78a",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-09T22:36:26Z",
+      "side": 1,
+      "message": "Maybe remove the \"with specified maximum events\" - sounds kinda funny for some reason and it\u0027s clear in the param description I think",
+      "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c7c4f17_b02348ad",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-09T22:36:26Z",
+      "side": 1,
+      "message": "What does \"clean\" mean? Either provide a quick description or just leave it at \"Close the given group.\"",
+      "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
