@@ -37,6 +37,7 @@
 #include "spdk/net.h"
 #include "spdk/util.h"
 
+#include "net.h"
 #include "spdk_internal/log.h"
 
 struct rpc_ip_address {

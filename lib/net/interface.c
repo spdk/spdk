@@ -36,6 +36,7 @@
 
 #include "spdk/log.h"
 #include "spdk/net.h"
+#include "net.h"
 
 #ifdef __linux__ /* Interface management is Linux-specific */
 
