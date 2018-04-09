@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "71428a9c_422af14e",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 726,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-09T17:58:53Z",
+      "side": 1,
+      "message": "I\u0027m not sure this \u0027goto out\u0027 is actually correct - we have pointed vdev-\u003ecpumask at cpumask, and as far as I can tell, vdev is still valid after returning with a failure (it isn\u0027t freed or removed from the global list); maybe that is the real bug, but either we need to return immediately here without freeing cpumask, or we should be totally tearing down vdev.",
+      "revId": "f497c3b22d1eaa2b906b11586338ba62a915b179",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
