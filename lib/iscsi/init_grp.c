@@ -106,7 +106,7 @@ spdk_iscsi_init_grp_add_initiator(struct spdk_iscsi_init_grp *ig, char *name)
 	if (p != NULL) {
 		SPDK_WARNLOG("Please use \"%s\" instead of \"%s\"\n", "ANY", "ALL");
 		SPDK_WARNLOG("Converting \"%s\" to \"%s\" automatically\n", "ALL", "ANY");
-		strncpy(p, "ANY", 3);
+		memcpy(p, "ANY", 3);
 	}
 
 	TAILQ_INSERT_TAIL(&ig->initiator_head, iname, tailq);
@@ -239,7 +239,7 @@ spdk_iscsi_init_grp_add_netmask(struct spdk_iscsi_init_grp *ig, char *mask)
 	if (p != NULL) {
 		SPDK_WARNLOG("Please use \"%s\" instead of \"%s\"\n", "ANY", "ALL");
 		SPDK_WARNLOG("Converting \"%s\" to \"%s\" automatically\n", "ALL", "ANY");
-		strncpy(p, "ANY", 3);
+		memcpy(p, "ANY", 3);
 	}
 
 	TAILQ_INSERT_TAIL(&ig->netmask_head, imask, tailq);

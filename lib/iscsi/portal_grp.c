@@ -253,7 +253,7 @@ spdk_iscsi_parse_portal(const char *portalstring, struct spdk_iscsi_portal **ip,
 			SPDK_ERRLOG("malloc() failed for host\n");
 			goto error_out;
 		}
-		strncpy(host, portalstring, len);
+		memcpy(host, portalstring, len);
 		host[len] = '\0';
 	}
 
@@ -288,7 +288,7 @@ spdk_iscsi_parse_portal(const char *portalstring, struct spdk_iscsi_portal **ip,
 				SPDK_ERRLOG("malloc() failed for port\n");
 				goto error_out;
 			}
-			strncpy(port, p + 1, len);
+			memcpy(port, p + 1, len);
 			port[len] = '\0';
 		}
 	}
@@ -308,7 +308,7 @@ spdk_iscsi_parse_portal(const char *portalstring, struct spdk_iscsi_portal **ip,
 				SPDK_ERRLOG("malloc() failed for cpumask\n");
 				goto error_out;
 			}
-			strncpy(cpumask, p + 1, len);
+			memcpy(cpumask, p + 1, len);
 			cpumask[len] = '\0';
 		}
 	}
