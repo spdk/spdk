@@ -224,7 +224,7 @@ _spdk_load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 		goto invalid;
 	}
 
-	strncpy(lvol->name, attr, SPDK_LVOL_NAME_MAX);
+	snprintf(lvol->name, sizeof(lvol->name), "%s", attr);
 
 	TAILQ_INSERT_TAIL(&lvs->lvols, lvol, link);
 
@@ -319,7 +319,7 @@ _spdk_lvs_read_uuid(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 		return;
 	}
 
-	strncpy(lvs->name, attr, value_len);
+	snprintf(lvs->name, sizeof(lvs->name), "%s", attr);
 
 	rc = _spdk_add_lvs_to_list(lvs);
 	if (rc) {
@@ -413,7 +413,7 @@ spdk_lvs_load(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn
 	req->bs_dev = bs_dev;
 
 	spdk_lvs_bs_opts_init(&opts);
-	strncpy(opts.bstype.bstype, "LVOLSTORE", SPDK_BLOBSTORE_TYPE_LENGTH);
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "LVOLSTORE");
 
 	spdk_bs_load(bs_dev, &opts, _spdk_lvs_load_cb, req);
 }
@@ -595,7 +595,7 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 	}
 
 	spdk_uuid_generate(&lvs->uuid);
-	strncpy(lvs->name, o->name, SPDK_LVS_NAME_MAX);
+	snprintf(lvs->name, sizeof(lvs->name), "%s", o->name);
 
 	rc = _spdk_add_lvs_to_list(lvs);
 	if (rc) {
@@ -618,7 +618,7 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 	lvs->bs_dev = bs_dev;
 	lvs->destruct = false;
 
-	strncpy(opts.bstype.bstype, "LVOLSTORE", SPDK_BLOBSTORE_TYPE_LENGTH);
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "LVOLSTORE");
 
 	SPDK_INFOLOG(SPDK_LOG_LVOL, "Initializing lvol store\n");
 	spdk_bs_init(bs_dev, &opts, _spdk_lvs_init_cb, lvs_req);
@@ -638,10 +638,14 @@ _spdk_lvs_rename_cb(void *cb_arg, int lvolerrno)
 		SPDK_ERRLOG("Lvol store rename operation failed\n");
 		/* Lvs renaming failed, so we should 'clear' new_name.
 		 * Otherwise it could cause a failure on the next attepmt to change the name to 'new_name'  */
-		strncpy(req->lvol_store->new_name, req->lvol_store->name, SPDK_LVS_NAME_MAX);
+		snprintf(req->lvol_store->new_name,
+			 sizeof(req->lvol_store->new_name),
+			 "%s", req->lvol_store->name);
 	} else {
 		/* Update lvs name with new_name */
-		strncpy(req->lvol_store->name, req->lvol_store->new_name, SPDK_LVS_NAME_MAX);
+		snprintf(req->lvol_store->name,
+			 sizeof(req->lvol_store->name),
+			 "%s", req->lvol_store->new_name);
 	}
 
 	req->cb_fn(req->cb_arg, req->lvserrno);
@@ -714,7 +718,7 @@ spdk_lvs_rename(struct spdk_lvol_store *lvs, const char *new_name,
 		cb_fn(cb_arg, -ENOMEM);
 		return;
 	}
-	strncpy(lvs->new_name, new_name, SPDK_LVS_NAME_MAX);
+	snprintf(lvs->new_name, sizeof(lvs->new_name), "%s", new_name);
 	req->lvol_store = lvs;
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
@@ -1085,7 +1089,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	num_clusters = divide_round_up(sz, spdk_bs_get_cluster_size(bs));
 	lvol->close_only = false;
 	lvol->thin_provision = thin_provision;
-	strncpy(lvol->name, name, SPDK_LVS_NAME_MAX);
+	snprintf(lvol->name, sizeof(lvol->name), "%s", name);
 	spdk_uuid_generate(&lvol->uuid);
 	spdk_uuid_fmt_lower(lvol->uuid_str, sizeof(lvol->uuid_str), &lvol->uuid);
 	req->lvol = lvol;
@@ -1145,7 +1149,7 @@ spdk_lvol_create_snapshot(struct spdk_lvol *origlvol, const char *snapshot_name,
 	}
 
 	newlvol->lvol_store = origlvol->lvol_store;
-	strncpy(newlvol->name, snapshot_name, SPDK_LVOL_NAME_MAX);
+	snprintf(newlvol->name, sizeof(newlvol->name), "%s", snapshot_name);
 	snapshot_xattrs.count = 1;
 	snapshot_xattrs.ctx = newlvol;
 	snapshot_xattrs.names = &xattr_names;
@@ -1200,7 +1204,7 @@ spdk_lvol_create_clone(struct spdk_lvol *origlvol, const char *clone_name,
 	}
 
 	newlvol->lvol_store = lvs;
-	strncpy(newlvol->name, clone_name, SPDK_LVOL_NAME_MAX);
+	snprintf(newlvol->name, sizeof(newlvol->name), "%s", clone_name);
 	clone_xattrs.count = 1;
 	clone_xattrs.ctx = newlvol;
 	clone_xattrs.names = &xattr_names;
@@ -1268,7 +1272,7 @@ _spdk_lvol_rename_cb(void *cb_arg, int lvolerrno)
 	if (lvolerrno != 0) {
 		SPDK_ERRLOG("Lvol rename operation failed\n");
 	} else {
-		strncpy(req->lvol->name, req->name, SPDK_LVOL_NAME_MAX);
+		snprintf(req->lvol->name, sizeof(req->lvol->name), "%s", req->name);
 	}
 
 	req->cb_fn(req->cb_arg, lvolerrno);
@@ -1309,7 +1313,7 @@ spdk_lvol_rename(struct spdk_lvol *lvol, const char *new_name,
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 	req->lvol = lvol;
-	strncpy(req->name, new_name, SPDK_LVOL_NAME_MAX);
+	snprintf(req->name, sizeof(req->name), "%s", new_name);
 
 	rc = spdk_blob_set_xattr(blob, "name", new_name, strlen(new_name) + 1);
 	if (rc < 0) {
