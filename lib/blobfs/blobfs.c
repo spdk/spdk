@@ -496,7 +496,7 @@ spdk_fs_init(struct spdk_bs_dev *dev, struct spdk_blobfs_opts *opt,
 	args->fs = fs;
 
 	spdk_bs_opts_init(&opts);
-	strncpy(opts.bstype.bstype, "BLOBFS", SPDK_BLOBSTORE_TYPE_LENGTH);
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "BLOBFS");
 	if (opt) {
 		opts.cluster_sz = opt->cluster_sz;
 	}
