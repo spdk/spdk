@@ -230,6 +230,24 @@ dev_construct_null_lun(void)
 }
 
 static void
+dev_construct_name_too_long(void)
+{
+	struct spdk_scsi_dev *dev;
+	const char *bdev_name_list[1] = {"malloc0"};
+	int lun_id_list[1] = { 0 };
+	char name[SPDK_SCSI_DEV_MAX_NAME + 1 + 1];
+
+	/* Try to construct a dev with a name that is one byte longer than allowed. */
+	memset(name, 'x', sizeof(name) - 1);
+	name[sizeof(name) - 1] = '\0';
+
+	dev = spdk_scsi_dev_construct(name, bdev_name_list, lun_id_list, 1,
+				      SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI, NULL, NULL);
+
+	CU_ASSERT(dev == NULL);
+}
+
+static void
 dev_construct_success(void)
 {
 	struct spdk_scsi_dev *dev;
@@ -613,6 +631,7 @@ main(int argc, char **argv)
 			       dev_construct_no_lun_zero) == NULL
 		|| CU_add_test(suite, "construct  - null lun",
 			       dev_construct_null_lun) == NULL
+		|| CU_add_test(suite, "construct - name too long", dev_construct_name_too_long) == NULL
 		|| CU_add_test(suite, "construct  - success", dev_construct_success) == NULL
 		|| CU_add_test(suite, "construct - success - LUN zero not first",
 			       dev_construct_success_lun_zero_not_first) == NULL

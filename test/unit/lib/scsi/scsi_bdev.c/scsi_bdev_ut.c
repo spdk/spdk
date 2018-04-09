@@ -542,7 +542,7 @@ inquiry_overflow_test(void)
 static void
 scsi_name_padding_test(void)
 {
-	char name[SPDK_SCSI_DEV_MAX_NAME + 10];
+	char name[SPDK_SCSI_DEV_MAX_NAME + 1];
 	char buf[SPDK_SCSI_DEV_MAX_NAME + 1];
 	int written, i;
 
@@ -569,15 +569,6 @@ scsi_name_padding_test(void)
 	/* case 3 */
 	memset(name, '\0', sizeof(name));
 	memset(name, 'x', 255);
-	written = spdk_bdev_scsi_pad_scsi_name(buf, name);
-
-	CU_ASSERT(written == 256);
-	CU_ASSERT(buf[254] == 'x');
-	CU_ASSERT(buf[255] == '\0');
-
-	/* case 4 */
-	memset(name, '\0', sizeof(name));
-	memset(name, 'x', sizeof(name));
 	written = spdk_bdev_scsi_pad_scsi_name(buf, name);
 
 	CU_ASSERT(written == 256);
