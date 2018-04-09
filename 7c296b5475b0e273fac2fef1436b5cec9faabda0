@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e7daf731_88b48cab",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 678,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-04-09T19:14:01Z",
+      "side": 1,
+      "message": "this appears to be completely broken. we don\u0027t call module finish for modules which failed to initialize, so this patch introduces another leak. we should free all bdev resources and unregister all io_devices here.\nhowever, this issue has been here long before already, so +1.",
+      "revId": "7c296b5475b0e273fac2fef1436b5cec9faabda0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
