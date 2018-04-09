@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a576e103_0f26a283",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 528,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-09T17:35:38Z",
+      "side": 1,
+      "message": "This looks wrong - func should be pointing at the resize_lvol_bdev wrapper.",
+      "revId": "81410c81c731eb872187add4e3425aa46b9ec5d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "799b7cf4_e0209f34",
+        "filename": "scripts/rpc/lvol.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-09T17:35:38Z",
+      "side": 1,
+      "message": "This is reverting the change that passes client as the first parameter.  It should look like it does in the commented-out version.",
+      "revId": "81410c81c731eb872187add4e3425aa46b9ec5d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
