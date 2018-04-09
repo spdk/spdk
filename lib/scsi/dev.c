@@ -185,8 +185,16 @@ spdk_scsi_dev_construct(const char *name, const char *bdev_name_list[],
 			void *hotremove_ctx)
 {
 	struct spdk_scsi_dev *dev;
+	size_t name_len;
 	bool found_lun_0;
 	int i, rc;
+
+	name_len = strlen(name);
+	if (name_len > sizeof(dev->name) - 1) {
+		SPDK_ERRLOG("device %s: name longer than maximum allowed length %zu\n",
+			    name, sizeof(dev->name) - 1);
+		return NULL;
+	}
 
 	if (num_luns == 0) {
 		SPDK_ERRLOG("device %s: no LUNs specified\n", name);
@@ -219,7 +227,7 @@ spdk_scsi_dev_construct(const char *name, const char *bdev_name_list[],
 		return NULL;
 	}
 
-	strncpy(dev->name, name, SPDK_SCSI_DEV_MAX_NAME);
+	memcpy(dev->name, name, name_len + 1);
 
 	dev->num_ports = 0;
 	dev->protocol_id = protocol_id;

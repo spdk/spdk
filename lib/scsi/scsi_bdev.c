@@ -174,7 +174,7 @@ spdk_bdev_scsi_pad_scsi_name(char *dst, const char *name)
 {
 	size_t len;
 
-	len = strnlen(name, SPDK_SCSI_DEV_MAX_NAME);
+	len = strlen(name);
 	memcpy(dst, name, len);
 	do {
 		dst[len++] = '\0';
