@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e2f3382c_3eaac52c",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-09T15:34:37Z",
+      "side": 1,
+      "message": "need a comment to explain what this is for, use case",
+      "revId": "2a209c1d9c74e3acd8610c1805eded5e95dd9ee0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e0016b2_daa54fe0",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-09T15:34:37Z",
+      "side": 1,
+      "message": "can we change \"usage\" to \"reference\" or even just \"ref\"",
+      "revId": "2a209c1d9c74e3acd8610c1805eded5e95dd9ee0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b7f293c7_0d0a68c5",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-09T15:34:37Z",
+      "side": 1,
+      "message": "change to \"ref_count\"",
+      "revId": "2a209c1d9c74e3acd8610c1805eded5e95dd9ee0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "daf1e4e6_d100b953",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-09T15:34:37Z",
+      "side": 1,
+      "message": "Suggest: \"When the ref count is at one, we know this is the only vbdev associated with the underlying base bdev.\"",
+      "revId": "2a209c1d9c74e3acd8610c1805eded5e95dd9ee0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6312f1fa_1adcd721",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 487,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-09T15:34:37Z",
+      "side": 1,
+      "message": "Add a clear comment here on why we skip the rest of this function if the bdev we\u0027re examining already has a PT vbdev",
+      "revId": "2a209c1d9c74e3acd8610c1805eded5e95dd9ee0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be0deb2b_33f2c2e4",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 529,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-09T15:34:37Z",
+      "side": 1,
+      "message": "change to ref_count and add a comment clearly explaining what we\u0027re doing here and why",
+      "revId": "2a209c1d9c74e3acd8610c1805eded5e95dd9ee0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "90b04e5e_f1bf5a5a",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-09T15:34:37Z",
+      "side": 1,
+      "message": "Again, comment :)",
+      "revId": "2a209c1d9c74e3acd8610c1805eded5e95dd9ee0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
