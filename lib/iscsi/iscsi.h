@@ -360,6 +360,7 @@ void spdk_iscsi_config_text(FILE *fp);
 
 int spdk_iscsi_initialize_iscsi_globals(struct spdk_iscsi_opts *opts);
 void spdk_iscsi_opts_init_rpc(struct spdk_iscsi_opts *opts);
+void spdk_initialize_iscsi_poll_group(spdk_thread_fn cpl, void *ctx);
 
 void spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn);
 void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
