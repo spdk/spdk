@@ -1245,19 +1245,7 @@ spdk_lvol_resize(struct spdk_lvol *lvol, uint64_t sz,
 	struct spdk_blob *blob = lvol->blob;
 	struct spdk_lvol_store *lvs = lvol->lvol_store;
 	struct spdk_lvol_req *req;
-	uint64_t free_clusters = spdk_bs_free_cluster_count(lvs->blobstore);
-	uint64_t used_clusters = spdk_blob_get_num_clusters(blob);
 	uint64_t new_clusters = divide_round_up(sz, spdk_bs_get_cluster_size(lvs->blobstore));
-
-	/* Check if size of lvol increasing */
-	if (new_clusters > used_clusters) {
-		/* Check if there is enough clusters left to resize */
-		if (new_clusters - used_clusters > free_clusters) {
-			SPDK_ERRLOG("Not enough free clusters left on lvol store to resize lvol to %zu clusters\n", sz);
-			cb_fn(cb_arg, -ENOMEM);
-			return;
-		}
-	}
 
 	req = calloc(1, sizeof(*req));
 	if (!req) {
