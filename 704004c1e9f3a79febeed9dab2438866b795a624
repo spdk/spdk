@@ -22,6 +22,75 @@
       "revId": "704004c1e9f3a79febeed9dab2438866b795a624",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3ea1fc28_c3b76978",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 990,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-04-09T19:54:07Z",
+      "side": 1,
+      "message": "same as above",
+      "range": {
+        "startLine": 988,
+        "startChar": 1,
+        "endLine": 990,
+        "endChar": 2
+      },
+      "revId": "704004c1e9f3a79febeed9dab2438866b795a624",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8f46fb6a_6997d499",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1029,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-04-09T19:54:07Z",
+      "side": 1,
+      "message": "this is not really required here. Other backends don\u0027t do such checks, so we cannot call the generic spdk_vhost_dump_config_json() with vdev \u003d\u003d NULL anyway.",
+      "range": {
+        "startLine": 1027,
+        "startChar": 0,
+        "endLine": 1029,
+        "endChar": 2
+      },
+      "revId": "704004c1e9f3a79febeed9dab2438866b795a624",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0f769b9e_0e600c22",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1192,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-04-09T19:54:07Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 1192,
+        "startChar": 0,
+        "endLine": 1192,
+        "endChar": 20
+      },
+      "revId": "704004c1e9f3a79febeed9dab2438866b795a624",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
