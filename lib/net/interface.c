@@ -31,6 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "net_internal.h"
+
 #include "spdk/stdinc.h"
 #include "spdk/string.h"
 
