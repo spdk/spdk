@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "820c5a5c_4cbe9663",
+        "filename": "lib/iscsi/portal_grp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-10T16:57:26Z",
+      "side": 1,
+      "message": "I think this would be better replaced with memcpy(), since we aren\u0027t really copying a null-terminated string; p marks the end of the part we are copying, and it is typically pointing at a \u0027:\u0027 dividing the host and port. (Plus we already know exactly how long the copied portion is.)\n\nThis also applies to the cases below.",
+      "revId": "9497118ad6a21c4b3eb5b03526748ff1ab10dfdd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
