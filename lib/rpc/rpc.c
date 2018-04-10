@@ -177,10 +177,10 @@ spdk_rpc_listen(const char *listen_addr)
 	return 0;
 }
 
-void
-spdk_rpc_accept(void)
+int
+spdk_rpc_poll(void)
 {
-	spdk_jsonrpc_server_poll(g_jsonrpc_server);
+	return spdk_jsonrpc_server_poll(g_jsonrpc_server);
 }
 
 void
@@ -201,27 +201,43 @@ spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func)
 }
 
 void
+spdk_rpc_shutdown(void)
+{
+	if (g_rpc_listen_addr_unix.sun_path[0]) {
+		/* Delete the Unix socket file */
+		unlink(g_rpc_listen_addr_unix.sun_path);
+		g_rpc_listen_addr_unix.sun_path[0] = 0;
+	}
+
+	if (g_rpc_lock_fd != -1) {
+		close(g_rpc_lock_fd);
+		g_rpc_lock_fd = -1;
+	}
+
+	if (g_rpc_lock_path[0]) {
+		unlink(g_rpc_lock_path);
+		g_rpc_lock_path[0] = '\0';
+	}
+
+	spdk_jsonrpc_server_shutdown(g_jsonrpc_server);
+}
+
+int
 spdk_rpc_close(void)
 {
-	if (g_jsonrpc_server) {
-		if (g_rpc_listen_addr_unix.sun_path[0]) {
-			/* Delete the Unix socket file */
-			unlink(g_rpc_listen_addr_unix.sun_path);
-		}
-
-		spdk_jsonrpc_server_shutdown(g_jsonrpc_server);
-		g_jsonrpc_server = NULL;
-
-		if (g_rpc_lock_fd != -1) {
-			close(g_rpc_lock_fd);
-			g_rpc_lock_fd = -1;
-		}
-
-		if (g_rpc_lock_path[0]) {
-			unlink(g_rpc_lock_path);
-			g_rpc_lock_path[0] = '\0';
-		}
+	if (!g_jsonrpc_server) {
+		return 0;
 	}
+
+	spdk_jsonrpc_server_close(g_jsonrpc_server);
+
+	if (spdk_jsonrpc_server_poll(g_jsonrpc_server) > 0) {
+		return -EAGAIN;
+	}
+
+	spdk_jsonrpc_server_free(g_jsonrpc_server);
+	g_jsonrpc_server = NULL;
+	return 0;
 }
 
 

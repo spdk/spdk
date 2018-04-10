@@ -72,6 +72,7 @@ struct spdk_jsonrpc_server_conn {
 	struct spdk_jsonrpc_server *server;
 	int sockfd;
 	bool closed;
+	bool shut_rd;
 	struct spdk_json_val values[SPDK_JSONRPC_MAX_VALUES];
 	size_t recv_len;
 	uint8_t recv_buf[SPDK_JSONRPC_RECV_BUF_SIZE];

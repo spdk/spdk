@@ -34,12 +34,15 @@
 #include "spdk/stdinc.h"
 
 #include "spdk_internal/event.h"
-
+#include "spdk/io_channel.h"
+#include "spdk/rpc.h"
 #include "spdk/env.h"
 #include "spdk/log.h"
 #include "spdk/conf.h"
 #include "spdk/trace.h"
 #include "spdk/string.h"
+
+#define SPDK_APP_RPC_SELECT_INTERVAL		4000 /* 4ms */
 
 #define SPDK_APP_DEFAULT_LOG_LEVEL		SPDK_LOG_NOTICE
 #define SPDK_APP_DEFAULT_LOG_PRINT_LEVEL	SPDK_LOG_INFO
@@ -54,6 +57,7 @@ struct spdk_app {
 	int				shm_id;
 	spdk_app_shutdown_cb		shutdown_cb;
 	int				rc;
+	struct spdk_poller		*app_poller;
 };
 
 static struct spdk_app g_spdk_app;
@@ -265,12 +269,23 @@ spdk_app_setup_signal_handlers(struct spdk_app_opts *opts)
 	return 0;
 }
 
+static int
+spdk_app_poll_rpc(void *arg)
+{
+	spdk_rpc_poll();
+	return -1;
+}
+
 static void
 start_rpc(void *arg1, void *arg2)
 {
 	const char *rpc_addr = arg1;
 
-	spdk_rpc_initialize(rpc_addr);
+	if (rpc_addr) {
+		/* Register RPC poller */
+		g_spdk_app.app_poller = spdk_poller_register(spdk_app_poll_rpc, NULL, SPDK_APP_RPC_SELECT_INTERVAL);
+	}
+
 	g_app_start_fn(g_app_start_arg1, g_app_start_arg2);
 }
 
@@ -467,6 +482,12 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		goto app_start_trace_cleanup_err;
 	}
 
+	/* Listen on the requested address */
+	if (spdk_rpc_listen(opts->rpc_addr) != 0) {
+		SPDK_ERRLOG("Unable to start RPC service at %s\n", opts->rpc_addr);
+		goto app_start_trace_cleanup_err;
+	}
+
 	memset(&g_spdk_app, 0, sizeof(g_spdk_app));
 	g_spdk_app.config = config;
 	g_spdk_app.shm_id = opts->shm_id;
@@ -504,15 +525,25 @@ spdk_app_fini(void)
 	spdk_log_close();
 }
 
-static void
-_spdk_app_stop(void *arg1, void *arg2)
+static int
+_spdk_app_stop(void *arg)
 {
 	struct spdk_event *app_stop_event;
 
-	spdk_rpc_finish();
+	if (spdk_rpc_poll() > 0) {
+		spdk_rpc_shutdown();
+		return 0;
 
+	}
+
+	if (spdk_rpc_close() == -EAGAIN) {
+		return 0;
+	}
+
+	spdk_poller_unregister(&g_spdk_app.app_poller);
 	app_stop_event = spdk_event_allocate(spdk_env_get_current_core(), spdk_reactors_stop, NULL, NULL);
 	spdk_subsystem_fini(app_stop_event);
+	return 0;
 }
 
 void
@@ -522,11 +553,13 @@ spdk_app_stop(int rc)
 		SPDK_WARNLOG("spdk_app_stop'd on non-zero\n");
 	}
 	g_spdk_app.rc = rc;
+
 	/*
 	 * We want to run spdk_subsystem_fini() from the same lcore where spdk_subsystem_init()
 	 * was called.
 	 */
-	spdk_event_call(spdk_event_allocate(g_init_lcore, _spdk_app_stop, NULL, NULL));
+	spdk_poller_unregister(&g_spdk_app.app_poller);
+	g_spdk_app.app_poller = spdk_poller_register(_spdk_app_stop, NULL, SPDK_APP_RPC_SELECT_INTERVAL);
 }
 
 static void
