@@ -140,3 +140,42 @@ def apply_firmware(client, args):
         'bdev_name': args.bdev_name,
     }
     return client.call('apply_nvme_firmware', params)
+
+
+def clear_bdev_subsystem(args, bdev_config):
+    delete_map = {'construct_nvme_bdev': "delete_bdev",
+                  'construct_pmem_bdev': "delete_bdev",
+                  'construct_rbd_bdev': "delete_bdev",
+                  'construct_malloc_bdev': "delete_bdev",
+                  'construct_null_bdev': "delete_bdev",
+                  'construct_aio_bdev': "delete_bdev",
+                  'construct_split_vbdev': "destruct_split_vbdev",
+                  'construct_virtio_dev': {'blk': "delete_bdev",
+                                           'scsi': "remove_virtio_scsi_bdev"
+                                           }
+                  }
+    rpc_bdevs = args.client.call("get_bdevs")
+    for bdev in reversed(bdev_config):
+        bdev_name = None
+        if 'params' in bdev and 'name' in bdev['params']:
+            bdev_name = bdev['params']['name']
+        if 'method' in bdev:
+            construct_method = bdev['method']
+            destroy_method = delete_map[bdev['method']]
+            if construct_method == 'construct_nvme_bdev':
+                for rpc_bdev in rpc_bdevs:
+                    if bdev_name in rpc_bdev['name'] and rpc_bdev['product_name'] == "NVMe disk":
+                        args.client.call(destroy_method, {'name': "%s" % rpc_bdev['name']})
+            if construct_method in ['construct_pmem_bdev', 'construct_rbd_bdev',
+                                    'construct_malloc_bdev', 'construct_null_bdev',
+                                    'construct_aio_bdev']:
+                args.client.call(destroy_method, {'name': bdev_name})
+            elif construct_method == 'construct_split_vbdev':
+                args.client.call(destroy_method, {'base_bdev': bdev['params']['base_bdev']})
+            elif construct_method == 'construct_virtio_dev':
+                if bdev['params']['dev_type'] == 'blk':
+                    args.client.call(destroy_method['blk'], {'name': bdev_name})
+                else:
+                    args.client.call(destroy_method['scsi'], {'name': bdev_name})
+        elif bdev_name:
+            args.client.call("delete_bdev", {'name': bdev_name})
