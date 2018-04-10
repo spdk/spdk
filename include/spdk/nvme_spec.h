@@ -375,7 +375,8 @@ enum spdk_nvme_sgl_descriptor_type {
 	SPDK_NVME_SGL_TYPE_SEGMENT		= 0x2,
 	SPDK_NVME_SGL_TYPE_LAST_SEGMENT		= 0x3,
 	SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK	= 0x4,
-	/* 0x5 - 0xE reserved */
+	SPDK_NVME_SGL_TYPE_TRANSPORT_DATA_BLOCK	= 0x5,
+	/* 0x6 - 0xE reserved */
 	SPDK_NVME_SGL_TYPE_VENDOR_SPECIFIC	= 0xF
 };
 
@@ -1203,7 +1204,8 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 		uint32_t	oversized_sgl : 1;
 		uint32_t	metadata_address : 1;
 		uint32_t	sgl_offset : 1;
-		uint32_t	reserved2: 11;
+		uint32_t	transport_sgl : 1;
+		uint32_t	reserved2 : 10;
 	} sgls;
 
 	uint8_t			reserved4[228];
