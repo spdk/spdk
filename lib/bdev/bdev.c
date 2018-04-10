@@ -1007,7 +1007,7 @@ spdk_bdev_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 }
 
 static void
-spdk_bdev_qos_get_max_ios_per_timeslice(struct spdk_bdev_channel *qos_ch)
+spdk_bdev_qos_update_max_ios_per_timeslice(struct spdk_bdev_channel *qos_ch)
 {
 	uint64_t		qos_max_ios_per_timeslice = 0;
 	struct spdk_bdev	*bdev = qos_ch->bdev;
@@ -1025,7 +1025,6 @@ spdk_bdev_channel_poll_qos(void *arg)
 
 	/* Reset for next round of rate limiting */
 	ch->io_submitted_this_timeslice = 0;
-	spdk_bdev_qos_get_max_ios_per_timeslice(ch);
 
 	_spdk_bdev_qos_io_submit(ch);
 
@@ -1100,7 +1099,8 @@ spdk_bdev_qos_channel_create(struct spdk_bdev *bdev)
 	}
 
 	bdev->qos_channel->flags |= BDEV_CH_QOS_ENABLED;
-	spdk_bdev_qos_get_max_ios_per_timeslice(bdev->qos_channel);
+	spdk_bdev_qos_update_max_ios_per_timeslice(bdev->qos_channel);
+
 	bdev->qos_channel->qos_poller = spdk_poller_register(
 						spdk_bdev_channel_poll_qos,
 						bdev->qos_channel,
