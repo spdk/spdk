@@ -1006,18 +1006,6 @@ spdk_bdev_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 	}
 }
 
-static void
-spdk_bdev_qos_get_max_ios_per_timeslice(struct spdk_bdev_channel *qos_ch)
-{
-	uint64_t		qos_max_ios_per_timeslice = 0;
-	struct spdk_bdev	*bdev = qos_ch->bdev;
-
-	qos_max_ios_per_timeslice = bdev->ios_per_sec * SPDK_BDEV_QOS_TIMESLICE_IN_USEC /
-				    SPDK_BDEV_SEC_TO_USEC;
-	qos_ch->qos_max_ios_per_timeslice = spdk_max(qos_max_ios_per_timeslice,
-					    SPDK_BDEV_QOS_MIN_IO_PER_TIMESLICE);
-}
-
 static int
 spdk_bdev_channel_poll_qos(void *arg)
 {
@@ -1025,7 +1013,6 @@ spdk_bdev_channel_poll_qos(void *arg)
 
 	/* Reset for next round of rate limiting */
 	ch->io_submitted_this_timeslice = 0;
-	spdk_bdev_qos_get_max_ios_per_timeslice(ch);
 
 	_spdk_bdev_qos_io_submit(ch);
 
@@ -1077,6 +1064,8 @@ _spdk_bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
 static int
 spdk_bdev_qos_channel_create(struct spdk_bdev *bdev)
 {
+	uint64_t qos_max_ios_per_timeslice;
+
 	assert(bdev->qos_channel == NULL);
 	assert(bdev->qos_thread == NULL);
 
@@ -1100,7 +1089,11 @@ spdk_bdev_qos_channel_create(struct spdk_bdev *bdev)
 	}
 
 	bdev->qos_channel->flags |= BDEV_CH_QOS_ENABLED;
-	spdk_bdev_qos_get_max_ios_per_timeslice(bdev->qos_channel);
+
+	qos_max_ios_per_timeslice = bdev->ios_per_sec * SPDK_BDEV_QOS_TIMESLICE_IN_USEC /
+				    SPDK_BDEV_SEC_TO_USEC;
+	bdev->qos_channel->qos_max_ios_per_timeslice = spdk_max(qos_max_ios_per_timeslice,
+			SPDK_BDEV_QOS_MIN_IO_PER_TIMESLICE);
 	bdev->qos_channel->qos_poller = spdk_poller_register(
 						spdk_bdev_channel_poll_qos,
 						bdev->qos_channel,
