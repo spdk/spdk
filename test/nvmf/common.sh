@@ -34,8 +34,7 @@ function detect_soft_roce_nics()
 	if hash rxe_cfg; then
 		rxe_cfg start
 		rdma_nics=$(get_rdma_if_list)
-		all_nics=$(ifconfig -s | awk '{print $1}')
-		all_nics=("${all_nics[@]/"Iface"}")
+		all_nics=$(ip -o link | awk '{print $2}' | cut -d":" -f1)
 		non_rdma_nics=$(echo -e "$rdma_nics\n$all_nics" | sort | uniq -u)
 		for nic in $non_rdma_nics; do
 			if [[ -d /sys/class/net/${nic}/bridge ]]; then
@@ -80,7 +79,7 @@ function detect_mellanox_nics()
 	fi
 
 	# The mlx4 driver takes an extra few seconds to load after modprobe returns,
-	# otherwise ifconfig operations will do nothing.
+	# otherwise iproute2 operations will do nothing.
 	sleep 5
 }
 
@@ -96,18 +95,19 @@ function allocate_nic_ips()
 	for nic_name in $(get_rdma_if_list); do
 		ip="$(get_ip_address $nic_name)"
 		if [ -z $ip ]; then
-			ifconfig $nic_name $NVMF_IP_PREFIX.$count netmask 255.255.255.0 up
+			ip addr add $NVMF_IP_PREFIX.$count/24 dev $nic_name
+			ip link set $nic_name up
 			let count=$count+1
 		fi
 		# dump configuration for debug log
-		ifconfig $nic_name
+		ip addr show $nic_name
 	done
 }
 
 function get_available_rdma_ips()
 {
 	for nic_name in $(get_rdma_if_list); do
-		ifconfig $nic_name | grep "inet " | awk '{print $2}'
+		get_ip_address $nic_name
 	done
 }
 
@@ -123,7 +123,7 @@ function get_rdma_if_list()
 function get_ip_address()
 {
 	interface=$1
-	ifconfig $interface | grep "inet " | awk '{print $2}' | sed 's/[^0-9\.]//g'
+	ip -o -4 addr show $interface | awk '{print $4}' | cut -d"/" -f1
 }
 
 function nvmfcleanup()
@@ -142,7 +142,7 @@ function rdma_device_init()
 function revert_soft_roce()
 {
 	if hash rxe_cfg; then
-		interfaces="$(ifconfig -s | awk '{print $1}')"
+		interfaces="$(ip -o link | awk '{print $2}' | cut -d":" -f1)"
 		for interface in $interfaces; do
 			rxe_cfg remove $interface || true
 		done
