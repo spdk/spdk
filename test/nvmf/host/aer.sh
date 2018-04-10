@@ -16,15 +16,10 @@ if [ -z $NVMF_FIRST_TARGET_IP ]; then
 	exit 0
 fi
 
-if check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
-        echo "Bypass AER tests for softRoCE NIC"
-        exit 0
-fi
-
 timing_enter aer
 timing_enter start_nvmf_tgt
 
-$NVMF_APP -c $testdir/../nvmf.conf &
+$NVMF_APP -s 512 -c $testdir/../nvmf.conf &
 nvmfpid=$!
 
 trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
@@ -48,41 +43,23 @@ $rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 "trtype:RDMA traddr:
 #        trsvcid:$NVMF_PORT \
 #        subnqn:nqn.2014-08.org.nvmexpress.discovery"
 
-# Namespace Attribute Notice Tests with kernel initiator
-nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
-sleep 2
-sync
+# Namespace Attribute Notice Tests
+$rootdir/test/nvme/aer/aer -r "\
+        trtype:RDMA \
+        adrfam:IPv4 \
+        traddr:$NVMF_FIRST_TARGET_IP \
+        trsvcid:$NVMF_PORT \
+        subnqn:nqn.2016-06.io.spdk:cnode1" -n 2 &
+aerpid=$!
 
-function get_nvme_name {
-	bdevs=$(lsblk -d | cut -d " " -f 1 | grep "^nvme[0-9]n2") || true
-}
-
-bdevs=""
-get_nvme_name
-
-if [ -n "$bdevs" ]; then
-	echo "Ignore adding Namespace 2 test"
-	$rpc_py delete_bdev Malloc0
-	nvmfcleanup
-	killprocess $nvmfpid
-	exit 0
-fi
+# Waiting for aer start to work
+sleep 5
 
 # Add a new namespace
-$rpc_py construct_malloc_bdev 128 4096 --name Malloc1
+$rpc_py construct_malloc_bdev 64 4096 --name Malloc1
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc1 -n 2
-sleep 3
-sync
 
-bdevs=""
-get_nvme_name
-
-if [ -z "$bdevs" ]; then
-        echo "AER for adding a Namespace test failed"
-	nvmfcleanup
-	killprocess $nvmfpid
-        exit 1
-fi
+wait $aerpid
 
 $rpc_py delete_bdev Malloc0
 $rpc_py delete_bdev Malloc1
