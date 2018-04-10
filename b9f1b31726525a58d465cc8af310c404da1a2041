@@ -33,6 +33,24 @@
       "revId": "b9f1b31726525a58d465cc8af310c404da1a2041",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8f84717_5acb4722",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-04-10T06:05:15Z",
+      "side": 1,
+      "message": "Exactly, for now there are outstanding buffers didn\u0027t release, we can add other cleanups based on different request state in future.",
+      "parentUuid": "3f012c63_586bf6b7",
+      "revId": "b9f1b31726525a58d465cc8af310c404da1a2041",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
