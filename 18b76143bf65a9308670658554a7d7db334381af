@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "25e15707_fda7d1f5",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-10T17:32:00Z",
+      "side": 1,
+      "message": "This URL is internal only; https://ci.spdk.io/spdk/nightly_status.html is the public version.",
+      "revId": "18b76143bf65a9308670658554a7d7db334381af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
