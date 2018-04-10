@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ca41f855_40ad9a76",
+        "filename": "doc/vhost.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-10T21:21:12Z",
+      "side": 1,
+      "message": "I think you can drop \"new\" here, or make it \"newly\".",
+      "range": {
+        "startLine": 82,
+        "startChar": 32,
+        "endLine": 82,
+        "endChar": 35
+      },
+      "revId": "aedecd9ada1aebe00adee10c1e4f7b82c683bf6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a2f6ede_2ff45068",
+        "filename": "doc/vhost.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-10T21:21:12Z",
+      "side": 1,
+      "message": "Please add a space between \"Vhost-NVMe\" and the parenthesis.",
+      "revId": "aedecd9ada1aebe00adee10c1e4f7b82c683bf6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c77427f1_87a40c53",
+        "filename": "doc/vhost.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-10T21:21:12Z",
+      "side": 1,
+      "message": "Fix spacing here as well, and fix spelling of \"experimental\".",
+      "revId": "aedecd9ada1aebe00adee10c1e4f7b82c683bf6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9deb54a_6ba02e20",
+        "filename": "doc/vhost.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 415,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-10T21:21:12Z",
+      "side": 1,
+      "message": "experimental (also fix spacing here)",
+      "range": {
+        "startLine": 415,
+        "startChar": 14,
+        "endLine": 415,
+        "endChar": 26
+      },
+      "revId": "aedecd9ada1aebe00adee10c1e4f7b82c683bf6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
