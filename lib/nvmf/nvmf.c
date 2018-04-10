@@ -52,6 +52,7 @@ SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 #define SPDK_NVMF_DEFAULT_MAX_QPAIRS_PER_CTRLR 64
 #define SPDK_NVMF_DEFAULT_IN_CAPSULE_DATA_SIZE 4096
 #define SPDK_NVMF_DEFAULT_MAX_IO_SIZE 131072
+#define SPDK_NVMF_DEFAULT_ACCEPT_TIMEOUT_US 10000	/* 10ms */
 
 void
 spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts)
@@ -60,6 +61,7 @@ spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts)
 	opts->max_qpairs_per_ctrlr = SPDK_NVMF_DEFAULT_MAX_QPAIRS_PER_CTRLR;
 	opts->in_capsule_data_size = SPDK_NVMF_DEFAULT_IN_CAPSULE_DATA_SIZE;
 	opts->max_io_size = SPDK_NVMF_DEFAULT_MAX_IO_SIZE;
+	opts->acceptor_poll_rate = SPDK_NVMF_DEFAULT_ACCEPT_TIMEOUT_US;
 }
 
 static int
