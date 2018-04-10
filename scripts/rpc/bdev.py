@@ -140,3 +140,80 @@ def apply_firmware(client, args):
         'bdev_name': args.bdev_name,
     }
     return client.call('apply_nvme_firmware', params)
+
+
+def get_bdev_name_key(bdev):
+    bdev_name_key = 'name'
+    if 'method' in bdev and bdev['method'] == 'construct_split_vbdev':
+        bdev_name_key = "base_bdev"
+
+    return bdev_name_key
+
+
+def get_bdev_name(bdev):
+    bdev_name = None
+    if 'params' in bdev:
+        if 'name' in bdev['params']:
+            bdev_name = bdev['params']['name']
+        elif 'base_name' in bdev['params']:
+            bdev_name = bdev['params']['base_name']
+        elif 'base_bdev' in bdev['params']:
+            bdev_name = bdev['params']['base_bdev']
+    if 'method' in bdev and bdev['method'] == 'construct_error_bdev':
+        bdev_name = "EE_%s" % bdev_name
+
+    return bdev_name
+
+
+def delete_subbdevs(args, bdev, rpc_bdevs):
+    ret_value = False
+    bdev_name = get_bdev_name(bdev)
+    if bdev_name and 'method' in bdev:
+        construct_method = bdev['method']
+        if construct_method == 'construct_nvme_bdev':
+            for rpc_bdev in rpc_bdevs:
+                if bdev_name in rpc_bdev['name'] and rpc_bdev['product_name'] == "NVMe disk":
+                    args.client.call('delete_bdev', {'name': "%s" % rpc_bdev['name']})
+                    ret_value = True
+
+    return ret_value
+
+
+def get_bdev_destroy_method(bdev):
+    destroy_method_map = {'construct_nvme_bdev': "delete_bdev",
+                          'construct_pmem_bdev': "delete_bdev",
+                          'construct_rbd_bdev': "delete_bdev",
+                          'construct_malloc_bdev': "delete_bdev",
+                          'construct_null_bdev': "delete_bdev",
+                          'construct_aio_bdev': "delete_bdev",
+                          'construct_error_bdev': "delete_bdev",
+                          'construct_split_vbdev': "destruct_split_vbdev",
+                          'construct_virtio_dev': {
+                              'blk': "delete_bdev",
+                              'scsi': "remove_virtio_scsi_bdev"
+                              }
+                          }
+    destroy_method = None
+    if 'method' in bdev:
+        construct_method = bdev['method']
+        if construct_method in destroy_method_map.keys():
+            destroy_method = destroy_method_map[bdev['method']]
+            if construct_method == 'construct_virtio_dev':
+                if bdev['params']['dev_type'] == 'blk':
+                    destroy_method = destroy_method['blk']
+                else:
+                    destroy_method = destroy_method['scsi']
+
+    return destroy_method
+
+
+def clear_bdev_subsystem(args, bdev_config):
+    rpc_bdevs = args.client.call("get_bdevs")
+    for bdev in bdev_config:
+        if delete_subbdevs(args, bdev, rpc_bdevs):
+            continue
+        bdev_name_key = get_bdev_name_key(bdev)
+        bdev_name = get_bdev_name(bdev)
+        destroy_method = get_bdev_destroy_method(bdev)
+        if destroy_method:
+            args.client.call(destroy_method, {bdev_name_key: bdev_name})
