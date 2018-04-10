@@ -816,6 +816,18 @@ if __name__ == "__main__":
     p.add_argument('-u', '--min-connections-per-session', help='Allocation unit of connections per core', type=int, required=False)
     p.set_defaults(func=initialize_iscsi_subsystem)
 
+    @call_cmd
+    def initialize_nvmf_subsystem(args):
+        rpc.subsystem.initialize_nvmf_subsystem(args.client, args)
+
+    p = subparsers.add_parser('initialize_nvmf_subsystem', help="""Initialize NVMf subsystem""")
+    p.add_argument('-q', '--max-queue-depth', help='Max number of outstanding I/O per queue', type=int, required=False)
+    p.add_argument('-p', '--max-qpairs-per-session', help='Max number of SQ and CQ per session', type=int, required=False)
+    p.add_argument('-c', '--in-capsule-data-size', help='Max number of in-capsule data size', type=int, required=False)
+    p.add_argument('-i', '--max-io-size', help='Max I/O size', type=int, required=False)
+    p.add_argument('-r', '--acceptor-poll-rate', help='How often the acceptor polls for incoming connections', type=int, required=False)
+    p.set_defaults(func=initialize_nvmf_subsystem)
+
     # vhost
     @call_cmd
     def set_vhost_controller_coalescing(args):
