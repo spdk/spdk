@@ -2278,7 +2278,7 @@ _file_sync(struct spdk_file *file, struct spdk_fs_channel *channel,
 	BLOBFS_TRACE(file, "offset=%jx\n", file->append_pos);
 
 	pthread_spin_lock(&file->lock);
-	if (file->append_pos <= file->length_flushed || file->last == NULL) {
+	if (file->append_pos <= file->length_flushed) {
 		BLOBFS_TRACE(file, "done - no data to flush\n");
 		pthread_spin_unlock(&file->lock);
 		cb_fn(cb_arg, 0);
