@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bdb0d6f7_c052258e",
+        "filename": "test/nvme/aer/aer.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-10T16:42:24Z",
+      "side": 1,
+      "message": "Please also add that something like \"This variable holds the NSID that is expected to be in the Changed NS List\".",
+      "revId": "f888532597d04f242ff1cf170b8d5d6a692cb786",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10f66566_ff8354fe",
+        "filename": "test/nvme/aer/aer.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-10T16:42:24Z",
+      "side": 1,
+      "message": "expected",
+      "range": {
+        "startLine": 187,
+        "startChar": 41,
+        "endLine": 187,
+        "endChar": 50
+      },
+      "revId": "f888532597d04f242ff1cf170b8d5d6a692cb786",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "109cce33_d6f16c4b",
+        "filename": "test/nvme/aer/aer.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-10T16:42:24Z",
+      "side": 1,
+      "message": "This should probably also print an error message.",
+      "revId": "f888532597d04f242ff1cf170b8d5d6a692cb786",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f915d303_48ed9cc5",
+        "filename": "test/nvmf/host/aer.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-10T16:42:24Z",
+      "side": 1,
+      "message": "Since the test script is running with \u0027set -e\u0027 (exit on error), this shouldn\u0027t be needed - if the \u0027wait\u0027 above returns a non-zero status, the script will already exit with an error.",
+      "revId": "f888532597d04f242ff1cf170b8d5d6a692cb786",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
