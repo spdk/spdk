@@ -316,6 +316,19 @@ _spdk_nvmf_subsystem_remove_host(struct spdk_nvmf_subsystem *subsystem, struct s
 	free(host);
 }
 
+static void
+subsystem_free_resources(void *ctx)
+{
+	struct spdk_nvmf_subsystem *subsystem = ctx;
+
+	free(subsystem->ns);
+
+	subsystem->tgt->subsystems[subsystem->id] = NULL;
+	subsystem->tgt->discovery_genctr++;
+
+	free(subsystem);
+}
+
 void
 spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 {
@@ -353,12 +366,7 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 		ns = next_ns;
 	}
 
-	free(subsystem->ns);
-
-	subsystem->tgt->subsystems[subsystem->id] = NULL;
-	subsystem->tgt->discovery_genctr++;
-
-	free(subsystem);
+	spdk_thread_send_msg(spdk_get_thread(), subsystem_free_resources, (void *) subsystem);
 }
 
 static int

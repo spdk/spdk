@@ -39,6 +39,12 @@
 
 SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 
+static void
+_subsystem_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
+{
+	fn(ctx);
+}
+
 uint32_t
 spdk_env_get_current_core(void)
 {
@@ -428,9 +434,11 @@ int main(int argc, char **argv)
 		return CU_get_error();
 	}
 
+	spdk_allocate_thread(_subsystem_send_msg, NULL, NULL, NULL, "thread0");
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
 	num_failures = CU_get_number_of_failures();
 	CU_cleanup_registry();
+	spdk_free_thread();
 	return num_failures;
 }
