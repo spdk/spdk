@@ -90,18 +90,15 @@ spdk_jsonrpc_server_listen(int domain, int protocol,
 	return server;
 }
 
-void
-spdk_jsonrpc_server_shutdown(struct spdk_jsonrpc_server *server)
+static void
+spdk_jsonrpc_server_conn_shutdown(struct spdk_jsonrpc_server_conn *conn)
 {
-	int i;
-
-	close(server->sockfd);
-
-	for (i = 0; i < server->num_conns; i++) {
-		close(server->conns[i].sockfd);
+	if (conn->shut_rd) {
+		return;
 	}
 
-	free(server);
+	conn->shut_rd = true;
+	shutdown(conn->sockfd, SHUT_RD);
 }
 
 static void
@@ -113,6 +110,44 @@ spdk_jsonrpc_server_conn_close(struct spdk_jsonrpc_server_conn *conn)
 		close(conn->sockfd);
 		conn->sockfd = -1;
 	}
+}
+
+void
+spdk_jsonrpc_server_shutdown(struct spdk_jsonrpc_server *server)
+{
+	int i;
+
+	if (server->sockfd == -1) {
+		return;
+	}
+
+	close(server->sockfd);
+	server->sockfd = -1;
+
+	for (i = 0; i < server->num_conns; i++) {
+		spdk_jsonrpc_server_conn_shutdown(&server->conns[i]);
+	}
+}
+
+void
+spdk_jsonrpc_server_close(struct spdk_jsonrpc_server *server)
+{
+	int i;
+
+	spdk_jsonrpc_server_shutdown(server);
+
+	for (i = 0; i < server->num_conns; i++) {
+		spdk_jsonrpc_server_conn_close(&server->conns[i]);
+	}
+}
+
+void
+spdk_jsonrpc_server_free(struct spdk_jsonrpc_server *server)
+{
+	assert(server->num_conns == 0);
+	assert(server->sockfd == -1);
+
+	free(server);
 }
 
 static void
@@ -365,7 +400,7 @@ spdk_jsonrpc_server_poll(struct spdk_jsonrpc_server *server)
 	}
 
 	/* Check listen socket */
-	if (server->num_conns < SPDK_JSONRPC_MAX_CONNS) {
+	if (server->sockfd != -1 && server->num_conns < SPDK_JSONRPC_MAX_CONNS) {
 		spdk_jsonrpc_server_accept(server);
 	}
 
@@ -382,6 +417,11 @@ spdk_jsonrpc_server_poll(struct spdk_jsonrpc_server *server)
 			continue;
 		}
 
+		if (conn->shut_rd && conn->outstanding_requests == 0) {
+			spdk_jsonrpc_server_conn_close(conn);
+			continue;
+		}
+
 		rc = spdk_jsonrpc_server_conn_recv(conn);
 		if (rc != 0) {
 			spdk_jsonrpc_server_conn_close(conn);
@@ -389,5 +429,5 @@ spdk_jsonrpc_server_poll(struct spdk_jsonrpc_server *server)
 		}
 	}
 
-	return 0;
+	return server->num_conns;
 }
