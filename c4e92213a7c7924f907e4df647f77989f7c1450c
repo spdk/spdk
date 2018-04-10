@@ -272,6 +272,30 @@
     },
     {
       "key": {
+        "uuid": "6810e3a7_b72cf5f2",
+        "filename": "test/vhost/nvmf/nvmf.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-04-10T10:35:37Z",
+      "side": 1,
+      "message": "at_app_exit in nvmf_error_exit terminates vhost \u0026 VMs",
+      "parentUuid": "c2da9fc7_34685099",
+      "range": {
+        "startLine": 111,
+        "startChar": 0,
+        "endLine": 111,
+        "endChar": 36
+      },
+      "revId": "c4e92213a7c7924f907e4df647f77989f7c1450c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5d1d078c_e3ae7a81",
         "filename": "test/vhost/nvmf/nvmf.sh",
         "patchSetId": 18
