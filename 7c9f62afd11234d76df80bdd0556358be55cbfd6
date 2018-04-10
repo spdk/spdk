@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9e3c0101_c3717760",
+        "filename": "lib/jsonrpc/jsonrpc_server_tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-10T19:54:13Z",
+      "side": 1,
+      "message": "We should hold the lock around this check as well.\n\nI think you can really just drop the STAILQ_EMPTY check, though:\n\n  lock();\n  request \u003d STAILQ_FIRST(...);\n  if (request) {\n    STAILQ_REMOVE_HEAD(...);\n  }\n  unlock();\n  return request;",
+      "revId": "7c9f62afd11234d76df80bdd0556358be55cbfd6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
