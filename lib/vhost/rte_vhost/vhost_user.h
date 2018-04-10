@@ -130,9 +130,9 @@ enum VhostUserNvmeQueueTypes {
 };
 
 typedef struct VhostUserNvmeIO {
-    enum VhostUserNvmeQueueTypes queue_type;
-    uint32_t qid;
-    uint32_t tail_head;
+	enum VhostUserNvmeQueueTypes queue_type;
+	uint32_t qid;
+	uint32_t tail_head;
 } VhostUserNvmeIO;
 
 typedef struct VhostUserMsg {
