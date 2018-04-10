@@ -22,6 +22,30 @@
       "revId": "bbff979647e0bc46f3814413304ec7e13dffbdb3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ac8cff8_18fb32c4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 5034,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-10T08:41:04Z",
+      "side": 1,
+      "message": "This function takes a name of blob by Id. To use spdk_blob_get_xattr_value() we need to open blob before use it.",
+      "parentUuid": "abe84593_ef8fbe77",
+      "range": {
+        "startLine": 5034,
+        "startChar": 0,
+        "endLine": 5034,
+        "endChar": 21
+      },
+      "revId": "bbff979647e0bc46f3814413304ec7e13dffbdb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
