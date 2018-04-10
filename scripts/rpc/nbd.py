@@ -16,3 +16,7 @@ def get_nbd_disks(client, nbd_device=None):
     if nbd_device:
         params['nbd_device'] = nbd_device
     return client.call('get_nbd_disks', params)
+
+
+def clear_nbd_subsystem(args, scsi_config):
+    pass
