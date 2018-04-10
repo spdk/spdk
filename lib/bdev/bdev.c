@@ -938,8 +938,7 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 
 	assert(bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING);
 
-	/* QoS channel and thread have been properly configured */
-	if (bdev->ios_per_sec > 0 && bdev->qos_channel && bdev->qos_thread) {
+	if (bdev_io->ch->flags & BDEV_CH_QOS_ENABLED) {
 		bdev_io->io_submit_ch = bdev_io->ch;
 		bdev_io->ch = bdev->qos_channel;
 		spdk_thread_send_msg(bdev->qos_thread, _spdk_bdev_io_submit, bdev_io);
@@ -1140,12 +1139,15 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 	pthread_mutex_lock(&bdev->mutex);
 
 	/* Rate limiting on this bdev enabled */
-	if (bdev->ios_per_sec > 0 && bdev->qos_channel == NULL) {
-		if (spdk_bdev_qos_channel_create(bdev) != 0) {
-			_spdk_bdev_channel_destroy_resource(ch);
-			pthread_mutex_unlock(&bdev->mutex);
-			return -1;
+	if (bdev->ios_per_sec) {
+		if (bdev->qos_channel == NULL) {
+			if (spdk_bdev_qos_channel_create(bdev) != 0) {
+				_spdk_bdev_channel_destroy_resource(ch);
+				pthread_mutex_unlock(&bdev->mutex);
+				return -1;
+			}
 		}
+		ch->flags |= BDEV_CH_QOS_ENABLED;
 	}
 
 	bdev->channel_count++;
