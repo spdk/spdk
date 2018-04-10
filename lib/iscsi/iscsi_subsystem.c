@@ -616,6 +616,18 @@ spdk_iscsi_opts_free(struct spdk_iscsi_opts *opts)
 	free(opts->nodebase);
 }
 
+void
+spdk_iscsi_opts_pre_verify_rpc(struct spdk_iscsi_opts *opts)
+{
+	if (opts->authfile == NULL) {
+		opts->authfile = strdup(SPDK_ISCSI_DEFAULT_AUTHFILE);
+	}
+
+	if (opts->nodebase == NULL) {
+		opts->nodebase = strdup(SPDK_ISCSI_DEFAULT_NODEBASE);
+	}
+}
+
 static int
 spdk_iscsi_opts_verify(struct spdk_iscsi_opts *opts)
 {
