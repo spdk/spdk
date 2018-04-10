@@ -1,0 +1,257 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5ca5096d_58d98a44",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-10T07:43:02Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be an obligatory positional argument?\nCalling clear_subsystem with no arguments provided (it\u0027s possible bc --subsystem is an optional arg here) results in error",
+      "range": {
+        "startLine": 82,
+        "startChar": 4,
+        "endLine": 82,
+        "endChar": 60
+      },
+      "revId": "9c360f4fb5d3d573672f46b0b2193f7b78b59ad8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b4ea92f_50352bc2",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-10T07:43:02Z",
+      "side": 1,
+      "message": "In my opinion these changes, as well as changes in rpc.py file should not be a part of this commit.\nThese are not part of the tests, and should either be a part of \"development\" commit which adds this functionality or totally separate.",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 67,
+        "endChar": 23
+      },
+      "revId": "9c360f4fb5d3d573672f46b0b2193f7b78b59ad8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8cb641b9_f867d40a",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-10T07:43:02Z",
+      "side": 1,
+      "message": "shouldnt *_subsystem calls be in rpc/subsystem.py?",
+      "range": {
+        "startLine": 73,
+        "startChar": 9,
+        "endLine": 73,
+        "endChar": 19
+      },
+      "revId": "9c360f4fb5d3d573672f46b0b2193f7b78b59ad8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "18ed5439_5e75433e",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-10T07:43:02Z",
+      "side": 1,
+      "message": "Also not related to commit subject, not related to bdev subsystem.",
+      "range": {
+        "startLine": 96,
+        "startChar": 0,
+        "endLine": 123,
+        "endChar": 8
+      },
+      "revId": "9c360f4fb5d3d573672f46b0b2193f7b78b59ad8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f8ef430_2f7ac9ff",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-10T07:43:02Z",
+      "side": 1,
+      "message": "Switch spaces to tabs",
+      "range": {
+        "startLine": 19,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 4
+      },
+      "revId": "9c360f4fb5d3d573672f46b0b2193f7b78b59ad8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e2a78345_eb02f43c",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-10T07:43:02Z",
+      "side": 1,
+      "message": "Remove or change to meaningful message",
+      "range": {
+        "startLine": 40,
+        "startChar": 4,
+        "endLine": 40,
+        "endChar": 17
+      },
+      "revId": "9c360f4fb5d3d573672f46b0b2193f7b78b59ad8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29172dfd_83442bf2",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-10T07:43:02Z",
+      "side": 1,
+      "message": "Remove or change to meaningful message",
+      "range": {
+        "startLine": 43,
+        "startChar": 4,
+        "endLine": 43,
+        "endChar": 16
+      },
+      "revId": "9c360f4fb5d3d573672f46b0b2193f7b78b59ad8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a157e096_15ade0b0",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-10T07:43:02Z",
+      "side": 1,
+      "message": "Is this name right for what the function does? Nothing related to vhost here.",
+      "range": {
+        "startLine": 55,
+        "startChar": 9,
+        "endLine": 55,
+        "endChar": 21
+      },
+      "revId": "9c360f4fb5d3d573672f46b0b2193f7b78b59ad8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82f2ed10_a779b1e5",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-10T07:43:02Z",
+      "side": 1,
+      "message": "Commit subject is about bdev subsystems. Is this function related?\nThis comment applies to multiple places in this script (iscsi, vhost related stuff)",
+      "range": {
+        "startLine": 64,
+        "startChar": 9,
+        "endLine": 64,
+        "endChar": 22
+      },
+      "revId": "9c360f4fb5d3d573672f46b0b2193f7b78b59ad8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ddbb4606_91ed4b6c",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-10T07:43:02Z",
+      "side": 1,
+      "message": "Why is it doubled?",
+      "range": {
+        "startLine": 65,
+        "startChar": 4,
+        "endLine": 66,
+        "endChar": 88
+      },
+      "revId": "9c360f4fb5d3d573672f46b0b2193f7b78b59ad8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6fe8562c_1095ded9",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-10T07:43:02Z",
+      "side": 1,
+      "message": "Remove or change to meaningful message",
+      "range": {
+        "startLine": 67,
+        "startChar": 4,
+        "endLine": 67,
+        "endChar": 24
+      },
+      "revId": "9c360f4fb5d3d573672f46b0b2193f7b78b59ad8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
