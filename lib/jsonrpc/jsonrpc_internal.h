@@ -36,7 +36,6 @@
 
 #include "spdk/stdinc.h"
 
-#include "spdk/env.h"
 #include "spdk/jsonrpc.h"
 
 #include "spdk_internal/log.h"
@@ -64,6 +63,8 @@ struct spdk_jsonrpc_request {
 	size_t send_offset;
 
 	uint8_t *send_buf;
+
+	STAILQ_ENTRY(spdk_jsonrpc_request) link;
 };
 
 struct spdk_jsonrpc_server_conn {
@@ -74,7 +75,10 @@ struct spdk_jsonrpc_server_conn {
 	size_t recv_len;
 	uint8_t recv_buf[SPDK_JSONRPC_RECV_BUF_SIZE];
 	uint32_t outstanding_requests;
-	struct spdk_ring *send_queue;
+
+	pthread_spinlock_t queue_lock;
+	STAILQ_HEAD(, spdk_jsonrpc_request) send_queue;
+
 	struct spdk_jsonrpc_request *send_request;
 };
 
