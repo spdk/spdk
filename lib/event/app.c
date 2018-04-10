@@ -34,12 +34,15 @@
 #include "spdk/stdinc.h"
 
 #include "spdk_internal/event.h"
-
+#include "spdk/io_channel.h"
+#include "spdk/rpc.h"
 #include "spdk/env.h"
 #include "spdk/log.h"
 #include "spdk/conf.h"
 #include "spdk/trace.h"
 #include "spdk/string.h"
+
+#define SPDK_APP_RPC_SELECT_INTERVAL		4000 /* 4ms */
 
 #define SPDK_APP_DEFAULT_LOG_LEVEL		SPDK_LOG_NOTICE
 #define SPDK_APP_DEFAULT_LOG_PRINT_LEVEL	SPDK_LOG_INFO
@@ -54,6 +57,9 @@ struct spdk_app {
 	int				shm_id;
 	spdk_app_shutdown_cb		shutdown_cb;
 	int				rc;
+	struct spdk_poller		*app_poller;
+
+	bool				poll_rpc;
 };
 
 static struct spdk_app g_spdk_app;
@@ -265,12 +271,21 @@ spdk_app_setup_signal_handlers(struct spdk_app_opts *opts)
 	return 0;
 }
 
+static int
+spdk_app_poll_rpc(void *arg)
+{
+	spdk_rpc_poll();
+	return -1;
+}
+
 static void
 start_rpc(void *arg1, void *arg2)
 {
-	const char *rpc_addr = arg1;
+	if (g_spdk_app.poll_rpc) {
+		/* Register RPC poller */
+		g_spdk_app.app_poller = spdk_poller_register(spdk_app_poll_rpc, NULL, SPDK_APP_RPC_SELECT_INTERVAL);
+	}
 
-	spdk_rpc_initialize(rpc_addr);
 	g_app_start_fn(g_app_start_arg1, g_app_start_arg2);
 }
 
@@ -467,16 +482,23 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		goto app_start_trace_cleanup_err;
 	}
 
+	/* Listen on the requested address */
+	if (opts->rpc_addr && spdk_rpc_listen(opts->rpc_addr) != 0) {
+		SPDK_ERRLOG("Unable to start RPC service at %s\n", opts->rpc_addr);
+		goto app_start_trace_cleanup_err;
+	}
+
 	memset(&g_spdk_app, 0, sizeof(g_spdk_app));
 	g_spdk_app.config = config;
 	g_spdk_app.shm_id = opts->shm_id;
 	g_spdk_app.shutdown_cb = opts->shutdown_cb;
+	g_spdk_app.poll_rpc = !!opts->rpc_addr;
 	g_spdk_app.rc = 0;
 	g_init_lcore = spdk_env_get_current_core();
 	g_app_start_fn = start_fn;
 	g_app_start_arg1 = arg1;
 	g_app_start_arg2 = arg2;
-	app_start_event = spdk_event_allocate(g_init_lcore, start_rpc, (void *)opts->rpc_addr, NULL);
+	app_start_event = spdk_event_allocate(g_init_lcore, start_rpc, NULL, NULL);
 
 	spdk_subsystem_init(app_start_event);
 
@@ -504,15 +526,40 @@ spdk_app_fini(void)
 	spdk_log_close();
 }
 
-static void
-_spdk_app_stop(void *arg1, void *arg2)
+static int
+_spdk_app_stop_poller(void *arg)
 {
 	struct spdk_event *app_stop_event;
 
-	spdk_rpc_finish();
+	if (g_spdk_app.poll_rpc) {
+		if (spdk_rpc_poll() > 0) {
+			return 0;
 
+		}
+
+		if (spdk_rpc_close() == -EAGAIN) {
+			return 0;
+		}
+
+		g_spdk_app.poll_rpc = false;
+	}
+
+	spdk_poller_unregister(&g_spdk_app.app_poller);
 	app_stop_event = spdk_event_allocate(spdk_env_get_current_core(), spdk_reactors_stop, NULL, NULL);
 	spdk_subsystem_fini(app_stop_event);
+	return 0;
+}
+
+static void
+_spdk_app_stop(void *arg1, void *arg2)
+{
+	if (g_spdk_app.poll_rpc) {
+		spdk_rpc_shutdown();
+	}
+
+	spdk_poller_unregister(&g_spdk_app.app_poller);
+	g_spdk_app.app_poller = spdk_poller_register(_spdk_app_stop_poller, NULL,
+				SPDK_APP_RPC_SELECT_INTERVAL);
 }
 
 void
