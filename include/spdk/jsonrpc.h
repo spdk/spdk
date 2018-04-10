@@ -92,16 +92,26 @@ struct spdk_jsonrpc_server *spdk_jsonrpc_server_listen(int domain, int protocol,
  *
  * \param server JSON-RPC server.
  *
- * \return 0 on success.
+ * \return Value >= 0 on success - the number of active connections.
  */
 int spdk_jsonrpc_server_poll(struct spdk_jsonrpc_server *server);
 
 /**
- * Shutdown the JSON-RPC server.
+ * Shutdown the JSON-RPC server and mark all connections as closed. You still
+ * need to wait for \c spdk_jsonrpc_server_poll() before calling
+ * \c spdk_jsonrpc_server_free() on this \c server.
  *
  * \param server JSON-RPC server.
  */
 void spdk_jsonrpc_server_shutdown(struct spdk_jsonrpc_server *server);
+
+/**
+ * Free server object. Call this only if there is no connections (\c spdk_jsonrpc_server_poll.
+ * return 0).
+ *
+ * \param server JSON-RPC server.
+ */
+void spdk_jsonrpc_server_free(struct spdk_jsonrpc_server *server);
 
 /**
  * Begin building a response to a JSON-RPC request.

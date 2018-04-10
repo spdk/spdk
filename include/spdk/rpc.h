@@ -57,9 +57,13 @@ int spdk_rpc_listen(const char *listen_addr);
 void spdk_rpc_accept(void);
 
 /**
- * Close the RPC server.
+ * Stop accepting new connections to the RPC server. If there is no active
+ * connections close the RPC server.
+ *
+ * \return 0 on success or negative error code.
+ * -EAGAIN - there are still active connections. Try again later.
  */
-void spdk_rpc_close(void);
+int spdk_rpc_close(void);
 
 /**
  * Function to handle the RPC request.
