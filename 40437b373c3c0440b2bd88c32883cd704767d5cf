@@ -68,6 +68,30 @@
       "revId": "40437b373c3c0440b2bd88c32883cd704767d5cf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d518c863_6c10335b",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 750,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-04-10T05:13:44Z",
+      "side": 1,
+      "message": "right, will remove the check",
+      "parentUuid": "c2484565_5372051e",
+      "range": {
+        "startLine": 746,
+        "startChar": 0,
+        "endLine": 750,
+        "endChar": 2
+      },
+      "revId": "40437b373c3c0440b2bd88c32883cd704767d5cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
