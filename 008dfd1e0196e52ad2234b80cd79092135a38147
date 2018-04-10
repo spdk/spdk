@@ -1,0 +1,152 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2a7cc601_df639aac",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1674,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-10T14:07:23Z",
+      "side": 1,
+      "message": "We should not use invalid_flags here, because invalid_flags are used for something that should be stored in metadata, but we don\u0027t need information about IO freeze in metadata.",
+      "range": {
+        "startLine": 1674,
+        "startChar": 4,
+        "endLine": 1674,
+        "endChar": 46
+      },
+      "revId": "008dfd1e0196e52ad2234b80cd79092135a38147",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a413c3b5_4be9c2d8",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 4164,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-10T14:07:23Z",
+      "side": 1,
+      "message": "We have similar code when creating blob - can we make a function from it and use it in both places?",
+      "range": {
+        "startLine": 4152,
+        "startChar": 0,
+        "endLine": 4164,
+        "endChar": 2
+      },
+      "revId": "008dfd1e0196e52ad2234b80cd79092135a38147",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f51ec22b_105f7929",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 4181,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-10T14:07:23Z",
+      "side": 1,
+      "message": "Unnecessary empty line.",
+      "revId": "008dfd1e0196e52ad2234b80cd79092135a38147",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e51b6eda_69be21d2",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 4184,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-10T14:07:23Z",
+      "side": 1,
+      "message": "If backing bdev was a snapshot we have to also remove information about this blob as its clone from it.",
+      "revId": "008dfd1e0196e52ad2234b80cd79092135a38147",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "753b8f0f_0f9c82d4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 4186,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-10T14:07:23Z",
+      "side": 1,
+      "message": "Unnecessary empty line.",
+      "revId": "008dfd1e0196e52ad2234b80cd79092135a38147",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d5450107_2b8fac56",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 4205,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-10T14:07:23Z",
+      "side": 1,
+      "message": "Unnecessary empty line.",
+      "revId": "008dfd1e0196e52ad2234b80cd79092135a38147",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1159342_78874980",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 824,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-10T14:07:23Z",
+      "side": 1,
+      "message": "Unnecessary empty line.",
+      "revId": "008dfd1e0196e52ad2234b80cd79092135a38147",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c549b9e2_94c93584",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 861,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-10T14:07:23Z",
+      "side": 1,
+      "message": "Unnecessary empty line.",
+      "revId": "008dfd1e0196e52ad2234b80cd79092135a38147",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
