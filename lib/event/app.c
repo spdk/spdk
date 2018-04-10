@@ -483,7 +483,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 
 	g_enable_subsys_init_rpc = opts->enable_subsys_init_rpc;
 
-	spdk_subsystem_init(app_start_event);
+	spdk_subsystem_init(app_start_event, g_enable_subsys_init_rpc);
 
 	/* This blocks until spdk_app_stop is called */
 	spdk_reactors_start();

@@ -38,7 +38,7 @@
 #include "spdk_internal/event.h"
 
 static void
-spdk_interface_subsystem_init(void)
+spdk_interface_subsystem_init(bool enable_subsys_init_rpc)
 {
 	int rc;
 
@@ -64,7 +64,7 @@ static struct spdk_subsystem g_spdk_subsystem_interface = {
 SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_interface);
 
 static void
-spdk_net_subsystem_start(void)
+spdk_net_subsystem_start(bool enable_subsys_init_rpc)
 {
 	int rc;
 

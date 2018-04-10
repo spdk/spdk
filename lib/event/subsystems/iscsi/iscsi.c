@@ -44,7 +44,7 @@ spdk_iscsi_subsystem_init_complete(void *cb_arg, int rc)
 }
 
 static void
-spdk_iscsi_subsystem_init(void)
+spdk_iscsi_subsystem_init(bool enable_subsys_init_rpc)
 {
 	spdk_iscsi_init(spdk_iscsi_subsystem_init_complete, NULL);
 }

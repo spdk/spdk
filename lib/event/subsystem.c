@@ -45,6 +45,7 @@ static bool g_subsystems_initialized = false;
 static struct spdk_event *g_app_start_event;
 static struct spdk_event *g_app_stop_event;
 static uint32_t g_fini_core;
+static bool g_enable_subsys_init_rpc = false;
 
 void
 spdk_add_subsystem(struct spdk_subsystem *subsystem)
@@ -135,7 +136,7 @@ spdk_subsystem_init_next(int rc)
 	}
 
 	if (g_next_subsystem->init) {
-		g_next_subsystem->init();
+		g_next_subsystem->init(g_enable_subsys_init_rpc);
 	} else {
 		spdk_subsystem_init_next(0);
 	}
@@ -167,11 +168,12 @@ spdk_subsystem_verify(void *arg1, void *arg2)
 }
 
 void
-spdk_subsystem_init(struct spdk_event *app_start_event)
+spdk_subsystem_init(struct spdk_event *app_start_event, bool enable_subsys_init_rpc)
 {
 	struct spdk_event *verify_event;
 
 	g_app_start_event = app_start_event;
+	g_enable_subsys_init_rpc = enable_subsys_init_rpc;
 
 	verify_event = spdk_event_allocate(spdk_env_get_current_core(), spdk_subsystem_verify, NULL, NULL);
 	spdk_event_call(verify_event);
