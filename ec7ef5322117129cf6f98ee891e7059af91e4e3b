@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4856559e_c3deeaef",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 717,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-10T18:58:37Z",
+      "side": 0,
+      "message": "This function could be moved up as-is as part of a separate patch - and would result in this patch being 30-40% smaller in size.",
+      "revId": "ec7ef5322117129cf6f98ee891e7059af91e4e3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
