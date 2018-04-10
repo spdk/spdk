@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "cbb75d71_29cf272b",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-10T08:22:00Z",
+      "side": 1,
+      "message": "In case of bdev hot-remove it will be NULL. So we need to save bdev name used to create this controller or skip dumping configuration of vhost-blk targets that have its bdevs hot-removed.",
+      "parentUuid": "a36a5205_77d1de22",
+      "revId": "2ef04c20d025ae7db3d947a4f17053ef2d50b264",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "08ee8392_cbba31b4",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 23
