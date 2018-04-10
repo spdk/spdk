@@ -10,3 +10,7 @@ def delete_ip_address(client, args):
 
 def get_interfaces(client, args):
     return client.call('get_interfaces')
+
+
+def clear_net_framework_subsystem(args, net_framework_config):
+    pass
