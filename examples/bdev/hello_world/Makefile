@@ -1,6 +1,4 @@
 #
-#  BSD LICENSE
-#
 #  Copyright (c) Intel Corporation.
 #  All rights reserved.
 #
@@ -31,18 +29,28 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-DIRS-$(CONFIG_FIO_PLUGIN) = fio_plugin
-DIRS-y += hello_world
+APP = hello_bdev
 
-.PHONY: all clean $(DIRS-y)
+C_SRCS := hello_bdev.c
 
-all: $(DIRS-y)
+SPDK_LIB_LIST = event_bdev event_copy
+SPDK_LIB_LIST += bdev copy event util conf trace log jsonrpc json rpc
+
+LIBS += $(COPY_MODULES_LINKER_ARGS) $(BLOCKDEV_MODULES_LINKER_ARGS)
+LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
+
+all : $(APP)
 	@:
 
-clean: $(DIRS-y)
-	@:
+$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(BLOCKDEV_MODULES_FILES) $(COPY_MODULES_FILES) $(LINKER_MODULES) $(ENV_LIBS)
+	$(LINK_C)
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+clean :
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
