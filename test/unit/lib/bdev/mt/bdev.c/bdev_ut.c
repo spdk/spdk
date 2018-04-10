@@ -626,7 +626,9 @@ basic_qos(void)
 
 	/* Enable QoS */
 	bdev = &g_bdev.bdev;
-	bdev->ios_per_sec = 2000; /* 2 I/O per millisecond */
+	TAILQ_INIT(&bdev->qos.queued);
+	bdev->qos.rate_limit = 2000; /* 2 I/O per millisecond */
+	bdev->qos.enabled = true;
 
 	g_get_io_channel = true;
 
@@ -681,7 +683,7 @@ basic_qos(void)
 
 	/* Close the descriptor, which should stop the qos channel */
 	spdk_bdev_close(g_desc);
-	CU_ASSERT(bdev->qos_channel == NULL);
+	CU_ASSERT(bdev->qos.ch == NULL);
 
 	spdk_bdev_open(bdev, true, NULL, NULL, &g_desc);
 
@@ -697,7 +699,7 @@ basic_qos(void)
 	CU_ASSERT(bdev_ch[0]->flags == BDEV_CH_QOS_ENABLED);
 
 	/* Confirm that the qos tracking was re-enabled */
-	CU_ASSERT(bdev->qos_channel != NULL);
+	CU_ASSERT(bdev->qos.ch != NULL);
 
 	/* Tear down the channels */
 	set_thread(0);
@@ -725,7 +727,9 @@ io_during_qos_queue(void)
 
 	/* Enable QoS */
 	bdev = &g_bdev.bdev;
-	bdev->ios_per_sec = 1000; /* 1000 I/O per second, or 1 per millisecond */
+	TAILQ_INIT(&bdev->qos.queued);
+	bdev->qos.rate_limit = 1000; /* 1000 I/O per second, or 1 per millisecond */
+	bdev->qos.enabled = true;
 
 	g_get_io_channel = true;
 
@@ -805,7 +809,9 @@ io_during_qos_reset(void)
 
 	/* Enable QoS */
 	bdev = &g_bdev.bdev;
-	bdev->ios_per_sec = 1000; /* 1000 I/O per second, or 1 per millisecond */
+	TAILQ_INIT(&bdev->qos.queued);
+	bdev->qos.rate_limit = 1000; /* 1000 I/O per second, or 1 per millisecond */
+	bdev->qos.enabled = true;
 
 	g_get_io_channel = true;
 
