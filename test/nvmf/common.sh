@@ -36,7 +36,7 @@ function detect_soft_roce_nics()
 		rdma_nics=$(get_rdma_if_list)
 		all_nics=$(ifconfig -s | awk '{print $1}')
 		all_nics=("${all_nics[@]/"Iface"}")
-		non_rdma_nics=$(echo "$rdma_nics $all_nics" | sort | uniq -u)
+		non_rdma_nics=$(echo -e "$rdma_nics\n$all_nics" | sort | uniq -u)
 		for nic in $non_rdma_nics; do
 			if [[ -d /sys/class/net/${nic}/bridge ]]; then
 				continue
