@@ -61,6 +61,8 @@ static struct spdk_event *g_shutdown_event = NULL;
 static int g_init_lcore;
 static bool g_shutdown_sig_received = false;
 
+static bool g_enable_subsys_init_rpc = false;
+
 static spdk_event_fn g_app_start_fn;
 static void *g_app_start_arg1;
 static void *g_app_start_arg2;
@@ -206,6 +208,7 @@ spdk_app_opts_init(struct spdk_app_opts *opts)
 	opts->max_delay_us = 0;
 	opts->print_level = SPDK_APP_DEFAULT_LOG_PRINT_LEVEL;
 	opts->rpc_addr = SPDK_DEFAULT_RPC_ADDR;
+	opts->enable_subsys_init_rpc = false;
 }
 
 static int
@@ -270,7 +273,7 @@ start_rpc(void *arg1, void *arg2)
 {
 	const char *rpc_addr = arg1;
 
-	spdk_rpc_initialize(rpc_addr);
+	spdk_rpc_initialize(rpc_addr, g_enable_subsys_init_rpc);
 	g_app_start_fn(g_app_start_arg1, g_app_start_arg2);
 }
 
@@ -478,6 +481,8 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	g_app_start_arg2 = arg2;
 	app_start_event = spdk_event_allocate(g_init_lcore, start_rpc, (void *)opts->rpc_addr, NULL);
 
+	g_enable_subsys_init_rpc = opts->enable_subsys_init_rpc;
+
 	spdk_subsystem_init(app_start_event);
 
 	/* This blocks until spdk_app_stop is called */
@@ -534,12 +539,14 @@ usage(char *executable_name, struct spdk_app_opts *default_opts, void (*app_usag
 {
 	printf("%s [options]\n", executable_name);
 	printf("options:\n");
-	printf(" -c config  config file (default %s)\n", default_opts->config_file);
+	printf(" -c config  config file (default %s) (-c and -j are mutually exclusive)\n",
+	       default_opts->config_file);
 	printf(" -d         disable coredump file enabling\n");
 	printf(" -e mask    tracepoint group mask for spdk trace buffers (default 0x0)\n");
 	printf(" -g         force creating just one hugetlbfs file\n");
 	printf(" -h         show this usage\n");
 	printf(" -i shared memory ID (optional)\n");
+	printf(" -j         enable subsys init RPCs (-c and -j are mutually exclusive)\n");
 	printf(" -m mask    core mask for DPDK\n");
 	printf(" -n channel number of memory channels used for DPDK\n");
 	printf(" -p core    master (primary) core for DPDK\n");
@@ -582,6 +589,12 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		switch (ch) {
 		case 'c':
 			opts->config_file = optarg;
+			if (opts->enable_subsys_init_rpc) {
+				fprintf(stderr, ".INI config file and subsys init RPCs are mutually exclusive\n");
+				usage(argv[0], &default_opts, app_usage);
+				rval = SPDK_APP_PARSE_ARGS_FAIL;
+				goto parse_done;
+			}
 			break;
 		case 'd':
 			opts->enable_coredump = false;
@@ -602,6 +615,15 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 				goto parse_done;
 			}
 			opts->shm_id = atoi(optarg);
+			break;
+		case 'j':
+			opts->enable_subsys_init_rpc = true;
+			if (opts->config_file != NULL) {
+				fprintf(stderr, ".INI config file and subsys init RPCs are mutually exclusive\n");
+				usage(argv[0], &default_opts, app_usage);
+				rval = SPDK_APP_PARSE_ARGS_FAIL;
+				goto parse_done;
+			}
 			break;
 		case 'm':
 			opts->reactor_mask = optarg;

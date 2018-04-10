@@ -67,6 +67,13 @@ if __name__ == "__main__":
     p.add_argument('--filename', help="""JSON Configuration file.""")
     p.set_defaults(func=load_config)
 
+    @call_cmd
+    def enable_post_si_rpc(args):
+        rpc.enable_post_si_rpc(args.client)
+
+    p = subparsers.add_parser('enable_post_si_rpc', help='Enable RPCs for post subsystem init')
+    p.set_defaults(func=enable_post_si_rpc)
+
     # app
     @call_cmd
     def kill_instance(args):
