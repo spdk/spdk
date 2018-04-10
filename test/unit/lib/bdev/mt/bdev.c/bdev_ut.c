@@ -78,6 +78,7 @@ struct spdk_bdev_desc *g_desc;
 bool g_teardown_done = false;
 bool g_get_io_channel = true;
 bool g_create_ch = true;
+bool g_init_complete_called = false;
 
 static int
 stub_create_ch(void *io_device, void *ctx_buf)
@@ -191,10 +192,17 @@ module_fini(void)
 {
 }
 
+static void
+init_complete(void)
+{
+	g_init_complete_called = true;
+}
+
 struct spdk_bdev_module bdev_ut_if = {
 	.name = "bdev_ut",
 	.module_init = module_init,
 	.module_fini = module_fini,
+	.init_complete = init_complete,
 };
 
 SPDK_BDEV_MODULE_REGISTER(&bdev_ut_if)
@@ -281,7 +289,9 @@ bdev_io_tailq_cnt(bdev_io_tailq_t *tailq)
 static void
 basic(void)
 {
+	g_init_complete_called = false;
 	setup_test();
+	CU_ASSERT(g_init_complete_called == true);
 
 	set_thread(0);
 
