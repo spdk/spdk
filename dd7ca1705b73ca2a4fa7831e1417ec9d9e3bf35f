@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "30bdd792_accc1fb0",
+        "filename": "lib/net/net.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-10T17:05:40Z",
+      "side": 1,
+      "message": "Looks reasonable, but can we call this header \"net_internal.h\" instead to match the pattern other SPDK libraries use?",
+      "revId": "dd7ca1705b73ca2a4fa7831e1417ec9d9e3bf35f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
