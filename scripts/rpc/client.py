@@ -72,8 +72,6 @@ class JSONRPCClient(object):
             break
 
         if not response:
-            if method == "kill_instance":
-                return {}
             if closed:
                 msg = "Connection closed with partial response:"
             else:
