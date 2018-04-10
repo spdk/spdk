@@ -944,6 +944,8 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	       cdata->sgls.metadata_address ? "Supported" : "Not Supported");
 	printf("  SGL Offset:                %s\n",
 	       cdata->sgls.sgl_offset ? "Supported" : "Not Supported");
+	printf("  Transport SGL Data Block:  %s\n",
+	       cdata->sgls.transport_sgl ? "Supported" : "Not Supported");
 	printf("\n");
 
 	printf("Firmware Slot Information\n");
