@@ -617,6 +617,7 @@ static void
 basic_qos(void)
 {
 	struct spdk_io_channel *io_ch[2];
+	struct spdk_bdev_channel *bdev_ch[2];
 	struct spdk_bdev *bdev;
 	enum spdk_bdev_io_status status;
 	int rc;
@@ -631,9 +632,13 @@ basic_qos(void)
 
 	set_thread(0);
 	io_ch[0] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[0] = spdk_io_channel_get_ctx(io_ch[0]);
+	CU_ASSERT(bdev_ch[0]->flags == BDEV_CH_QOS_ENABLED);
 
 	set_thread(1);
 	io_ch[1] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[1] = spdk_io_channel_get_ctx(io_ch[1]);
+	CU_ASSERT(bdev_ch[1]->flags == BDEV_CH_QOS_ENABLED);
 
 	/*
 	 * Send an I/O on thread 0, which is where the QoS thread is running.
@@ -683,9 +688,13 @@ basic_qos(void)
 	/* Create the channels in reverse order. */
 	set_thread(1);
 	io_ch[1] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[1] = spdk_io_channel_get_ctx(io_ch[1]);
+	CU_ASSERT(bdev_ch[1]->flags == BDEV_CH_QOS_ENABLED);
 
 	set_thread(0);
 	io_ch[0] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[0] = spdk_io_channel_get_ctx(io_ch[0]);
+	CU_ASSERT(bdev_ch[0]->flags == BDEV_CH_QOS_ENABLED);
 
 	/* Confirm that the qos tracking was re-enabled */
 	CU_ASSERT(bdev->qos_channel != NULL);
@@ -706,6 +715,7 @@ static void
 io_during_qos_queue(void)
 {
 	struct spdk_io_channel *io_ch[2];
+	struct spdk_bdev_channel *bdev_ch[2];
 	struct spdk_bdev *bdev;
 	enum spdk_bdev_io_status status0, status1;
 	int rc;
@@ -722,9 +732,13 @@ io_during_qos_queue(void)
 	/* Create channels */
 	set_thread(0);
 	io_ch[0] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[0] = spdk_io_channel_get_ctx(io_ch[0]);
+	CU_ASSERT(bdev_ch[0]->flags == BDEV_CH_QOS_ENABLED);
 
 	set_thread(1);
 	io_ch[1] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[1] = spdk_io_channel_get_ctx(io_ch[1]);
+	CU_ASSERT(bdev_ch[1]->flags == BDEV_CH_QOS_ENABLED);
 
 	/* Send two I/O */
 	status1 = SPDK_BDEV_IO_STATUS_PENDING;
@@ -781,6 +795,7 @@ static void
 io_during_qos_reset(void)
 {
 	struct spdk_io_channel *io_ch[2];
+	struct spdk_bdev_channel *bdev_ch[2];
 	struct spdk_bdev *bdev;
 	enum spdk_bdev_io_status status0, status1, reset_status;
 	int rc;
@@ -797,9 +812,13 @@ io_during_qos_reset(void)
 	/* Create channels */
 	set_thread(0);
 	io_ch[0] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[0] = spdk_io_channel_get_ctx(io_ch[0]);
+	CU_ASSERT(bdev_ch[0]->flags == BDEV_CH_QOS_ENABLED);
 
 	set_thread(1);
 	io_ch[1] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[1] = spdk_io_channel_get_ctx(io_ch[1]);
+	CU_ASSERT(bdev_ch[1]->flags == BDEV_CH_QOS_ENABLED);
 
 	/* Send two I/O. One of these gets queued by QoS. The other is sitting at the disk. */
 	status1 = SPDK_BDEV_IO_STATUS_PENDING;
