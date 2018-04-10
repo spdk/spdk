@@ -1,0 +1,246 @@
+/*-
+ *   BSD LICENSE
+ *
+ *   Copyright (c) Intel Corporation.
+ *   All rights reserved.
+ *
+ *   Redistribution and use in source and binary forms, with or without
+ *   modification, are permitted provided that the following conditions
+ *   are met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *     * Neither the name of Intel Corporation nor the names of its
+ *       contributors may be used to endorse or promote products derived
+ *       from this software without specific prior written permission.
+ *
+ *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include "spdk/stdinc.h"
+#include "spdk/io_channel.h"
+#include "spdk/bdev.h"
+#include "spdk/env.h"
+#include "spdk/event.h"
+#include "spdk/log.h"
+
+/*
+ * We'll use this struct to gather housekeeping hello_context to pass between
+ * our events and callbacks.
+ */
+struct hello_context_t {
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *bdev_desc;
+	struct spdk_io_channel *bdev_io_channel;
+	char *read_buff;
+	char *write_buff;
+	char *bdev_name;
+};
+
+/*
+ * Free up memory that we allocated.
+ */
+static void
+hello_cleanup(struct hello_context_t *hello_context)
+{
+	spdk_dma_free(hello_context->read_buff);
+	spdk_dma_free(hello_context->write_buff);
+	free(hello_context);
+}
+
+/*
+ * Callback function for read io completion.
+ */
+static void
+read_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct hello_context_t *hello_context = cb_arg;
+
+	if (success) {
+		SPDK_NOTICELOG("Read string from bdev : %s\n", hello_context->read_buff);
+	} else {
+		SPDK_NOTICELOG("bdev io read error: %d\n", EIO);
+	}
+
+	/* Cleaning up */
+	spdk_bdev_free_io(bdev_io);
+	spdk_put_io_channel(hello_context->bdev_io_channel);
+	spdk_bdev_close(hello_context->bdev_desc);
+
+	SPDK_NOTICELOG("Stopping app\n");
+	spdk_app_stop(0);
+}
+
+/*
+ * Callback function for write io completion.
+ */
+static void
+write_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct hello_context_t *hello_context = cb_arg;
+	int rc;
+
+	spdk_bdev_free_io(bdev_io);
+
+	if (success) {
+		SPDK_NOTICELOG("bdev io write completed successfully\n");
+	} else {
+		SPDK_NOTICELOG("bdev io write error: %d\n", EIO);
+		spdk_app_stop(-1);
+		return;
+	}
+
+	/* Create a new zeroed buffer for reading */
+	hello_context->read_buff = spdk_dma_zmalloc(0x200, 0x200, NULL);
+
+	SPDK_NOTICELOG("Reading io\n");
+	rc = spdk_bdev_read(hello_context->bdev_desc, hello_context->bdev_io_channel,
+			    hello_context->read_buff, 0, 512, read_complete, hello_context);
+
+	if (rc) {
+		if (rc == -ENOMEM) {
+			SPDK_ERRLOG("ENOMEM error while reading from bdev\n");
+		} else {
+			SPDK_ERRLOG("Error reading from bdev!!\n");
+		}
+		spdk_app_stop(-1);
+		return;
+	}
+}
+
+/*
+ * Our initial event that kicks off everything from main().
+ */
+static void
+hello_start(void *arg1, void *arg2)
+{
+	struct hello_context_t *hello_context = arg1;
+	hello_context->bdev = NULL;
+	hello_context->bdev_desc = NULL;
+	int rc = 0;
+
+	SPDK_NOTICELOG("Successfully started the application\n");
+
+	/*
+	 * Get the bdev. There can be many bdevs configured in
+	 * in the configuration file but this application will only
+	 * use the one input by the user at runtime so we get it via its name.
+	 */
+	hello_context->bdev = spdk_bdev_get_by_name(hello_context->bdev_name);
+	if (hello_context->bdev == NULL) {
+		SPDK_ERRLOG("Could not find the bdev: %s\n", hello_context->bdev_name);
+		spdk_app_stop(-1);
+		return;
+	}
+
+	/*
+	 * Open the bdev by calling spdk_bdev_open()
+	 * The function will return a descriptor
+	 */
+	SPDK_NOTICELOG("Opening the bdev %s\n", hello_context->bdev_name);
+	rc = spdk_bdev_open(hello_context->bdev, true, NULL, NULL, &hello_context->bdev_desc);
+	if (rc) {
+		SPDK_ERRLOG("Could not open bdev: %s\n", hello_context->bdev_name);
+		spdk_app_stop(-1);
+		return;
+	}
+
+	SPDK_NOTICELOG("Opening io channel\n");
+	/* Open I/O channel */
+	hello_context->bdev_io_channel = spdk_bdev_get_io_channel(hello_context->bdev_desc);
+	if (hello_context->bdev_io_channel == NULL) {
+		SPDK_ERRLOG("Could not create bdev I/O channel!!\n");
+		spdk_app_stop(-1);
+		return;
+	}
+
+	/* Allocate memory for the write buffer. The application uses a 512 byte buffer.
+	 * Initialize the write buffer with the string "Hello World!"
+	 */
+	hello_context->write_buff = spdk_dma_zmalloc(0x200, 0x200, NULL);
+	snprintf(hello_context->write_buff, 0x200, "%s", "Hello World!\n");
+
+	SPDK_NOTICELOG("Writing to the bdev\n");
+	rc = spdk_bdev_write(hello_context->bdev_desc, hello_context->bdev_io_channel,
+			     hello_context->write_buff, 0, 512, write_complete, hello_context);
+	if (rc) {
+		if (rc == -ENOMEM) {
+			SPDK_ERRLOG("ENOMEM error while writing to bdev\n");
+		} else {
+			SPDK_ERRLOG("Error writing to bdev!!\n");
+		}
+		spdk_app_stop(-1);
+		return;
+	}
+}
+
+int
+main(int argc, char **argv)
+{
+	struct spdk_app_opts opts = {};
+	int rc = 0;
+	struct hello_context_t *hello_context = NULL;
+
+	/*
+	 * The config file will be passed in as an argument.
+	 * We also need to know the bdevname that will be used by this app.
+	 * For example, to use Malloc0 in file bdev.conf run with params
+	 * ./hello_bdev bdev.conf Malloc0
+	 * To use passthru bdev PT0 run with params
+	 * ./hello_bdev bdev.conf PT0
+	 */
+
+	if (argc < 3) {
+		SPDK_ERRLOG("usage: %s <conffile> <bdevname>\n", argv[0]);
+		exit(1);
+	}
+
+	/* Set default values in opts structure. */
+	spdk_app_opts_init(&opts);
+
+	opts.name = "hello_bdev";
+	opts.config_file = argv[1];
+
+	hello_context = calloc(1, sizeof(struct hello_context_t));
+	if (hello_context != NULL) {
+		/* The bdev that will be used in this example is the second input param */
+		hello_context->bdev_name = strdup(argv[2]);
+
+		/*
+		 * spdk_app_start() will block running hello_start() until
+		 * spdk_app_stop() is called by someone (not simply when
+		 * hello_start() returns), or if an error occurs during
+		 * spdk_app_start() before hello_start() runs.
+		 */
+		rc = spdk_app_start(&opts, hello_start, hello_context, NULL);
+		spdk_app_fini();
+		return rc;
+		if (rc) {
+			SPDK_ERRLOG("ERROR starting application\n");
+		}
+
+		/* When the app stops, free up memory that we allocated */
+		hello_cleanup(hello_context);
+	} else {
+		SPDK_ERRLOG("Could not alloc hello_context struct!!\n");
+		rc = -ENOMEM;
+	}
+
+	/* Gracefully close out all of the SPDK subsystems. */
+	spdk_app_fini();
+	return rc;
+}
