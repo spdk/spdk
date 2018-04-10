@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cc66f068_2a97f05d",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-04-10T16:09:03Z",
+      "side": 1,
+      "message": "Paul, why didn\u0027t you use the bdev and log header files in the spdk folder? When is it recommended to use the spdk_internal header files instead of the ones in the spdk folders?",
+      "range": {
+        "startLine": 44,
+        "startChar": 0,
+        "endLine": 45,
+        "endChar": 30
+      },
+      "revId": "429b54a6486206445bf78c91f51fd73f8f01f166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "54ce3fe6_acc353e2",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-04-10T16:09:03Z",
+      "side": 1,
+      "message": "We have done quite a bit of work to abstract out DPDK so that users can swap DPDK with other frameworks. This introduces new code into SPDK with a hard dependency on DPDK. Is there a way to abstract this out? If not, how can we easily identify the code that has dependencies and help users who don\u0027t have DPDK exclude it from their builds?",
+      "range": {
+        "startLine": 47,
+        "startChar": 0,
+        "endLine": 51,
+        "endChar": 30
+      },
+      "revId": "429b54a6486206445bf78c91f51fd73f8f01f166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a6529df_dc62bf0b",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-04-10T16:09:03Z",
+      "side": 1,
+      "message": "Why are you not using spdk_mempool which helps with abstracting DPDK usage?",
+      "range": {
+        "startLine": 125,
+        "startChar": 0,
+        "endLine": 127,
+        "endChar": 52
+      },
+      "revId": "429b54a6486206445bf78c91f51fd73f8f01f166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3f24d93_e43c36e3",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-04-10T16:09:03Z",
+      "side": 1,
+      "message": "typo: asking",
+      "range": {
+        "startLine": 182,
+        "startChar": 23,
+        "endLine": 182,
+        "endChar": 28
+      },
+      "revId": "429b54a6486206445bf78c91f51fd73f8f01f166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c8dd767a_9a8f38db",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-04-10T16:09:03Z",
+      "side": 1,
+      "message": "typo: sure",
+      "range": {
+        "startLine": 182,
+        "startChar": 9,
+        "endLine": 182,
+        "endChar": 12
+      },
+      "revId": "429b54a6486206445bf78c91f51fd73f8f01f166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a57bb9b5_6e41f77a",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-04-10T16:09:03Z",
+      "side": 1,
+      "message": "Why are you not using spdk_mempool_create?",
+      "range": {
+        "startLine": 194,
+        "startChar": 25,
+        "endLine": 194,
+        "endChar": 43
+      },
+      "revId": "429b54a6486206445bf78c91f51fd73f8f01f166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
