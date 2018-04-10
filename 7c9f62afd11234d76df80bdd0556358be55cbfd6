@@ -33,6 +33,24 @@
       "revId": "7c9f62afd11234d76df80bdd0556358be55cbfd6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "11ef00c2_b03d6c7b",
+        "filename": "lib/jsonrpc/jsonrpc_server_tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-10T20:49:09Z",
+      "side": 1,
+      "message": "This is cheaper than taking spin lock every time and it is read access only so we might miss request couple of times but eventualy we hit queue non empty and take the lock for dequeue.",
+      "parentUuid": "9e3c0101_c3717760",
+      "revId": "7c9f62afd11234d76df80bdd0556358be55cbfd6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
