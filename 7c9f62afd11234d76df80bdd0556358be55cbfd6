@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "abf3b431_422e882f",
+        "filename": "lib/jsonrpc/jsonrpc_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-10T19:54:56Z",
+      "side": 1,
+      "message": "Also, if the ring is the only thing we are using from env.h, this #include can probably be removed.",
+      "revId": "7c9f62afd11234d76df80bdd0556358be55cbfd6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9e3c0101_c3717760",
         "filename": "lib/jsonrpc/jsonrpc_server_tcp.c",
         "patchSetId": 1
