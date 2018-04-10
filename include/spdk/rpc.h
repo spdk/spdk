@@ -54,12 +54,26 @@ int spdk_rpc_listen(const char *listen_addr);
 /**
  * Poll the RPC server for accepting the request.
  */
-void spdk_rpc_accept(void);
+int spdk_rpc_poll(void);
 
 /**
- * Close the RPC server.
+ * Stop accepting new connections to the RPC server. This also stop reading any
+ * new requests on existing connections. All pending requests still need be
+ * served by calling \c spdk_rpc_poll().
+ *
  */
-void spdk_rpc_close(void);
+void spdk_rpc_shutdown(void);
+
+/**
+ * Stop accepting new connections to the RPC server and close existing one.
+ * If there is no active connections close the RPC server. You might have to
+ * call this function several times to wait for all requests that are currently
+ * on-the-fly to finish and all resource be freed.
+ *
+ * \return 0 on success or negative error code.
+ * -EAGAIN - there are still active connections. Try again later.
+ */
+int spdk_rpc_close(void);
 
 /**
  * Function to handle the RPC request.
