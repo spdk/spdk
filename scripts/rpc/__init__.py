@@ -71,3 +71,9 @@ def load_config(client, args):
             if not elem or 'method' not in elem:
                 continue
             client.call(elem['method'], elem['params'])
+
+
+def clear_config(client, args):
+    for subsystem_item in client.call('get_subsystems'):
+        args.subsystem = subsystem_item['subsystem']
+        subsystem.clear_subsystem(client, args)

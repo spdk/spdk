@@ -136,3 +136,7 @@ def construct_virtio_pci_blk_bdev(client, args):
         'name': args.name,
     }
     return client.call('construct_virtio_pci_blk_bdev', params)
+
+
+def clear_vhost_subsystem(args, vhost_config):
+    pass

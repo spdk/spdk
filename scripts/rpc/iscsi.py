@@ -161,3 +161,11 @@ def get_iscsi_global_params(client, args):
 
 def get_scsi_devices(client, args):
     return client.call('get_scsi_devices')
+
+
+def clear_scsi_subsystem(args, scsi_config):
+    pass
+
+
+def clear_iscsi_subsystem(args, iscsi_config):
+    pass

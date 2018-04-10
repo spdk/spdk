@@ -75,6 +75,21 @@ if __name__ == "__main__":
     p.add_argument('-f', '--filename', help="""JSON Configuration file.""")
     p.set_defaults(func=load_config)
 
+    @call_cmd
+    def clear_config(args):
+        rpc.clear_config(args.client, args)
+
+    p = subparsers.add_parser('clear_config', help="""Clear configuration of all SPDK subsystems and targets using JSON RPC""")
+    p.set_defaults(func=clear_config)
+
+    @call_cmd
+    def clear_subsystem(args):
+        rpc.subsystem.clear_subsystem(args.client, args)
+
+    p = subparsers.add_parser('clear_subsystem', help="""Clear configuration of SPDK subsystem using JSON RPC""")
+    p.add_argument('--subsystem', help="""Subsystem name""")
+    p.set_defaults(func=clear_subsystem)
+
     # app
     @call_cmd
     def kill_instance(args):
