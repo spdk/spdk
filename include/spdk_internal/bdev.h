@@ -224,6 +224,9 @@ struct spdk_bdev_alias {
 	TAILQ_ENTRY(spdk_bdev_alias) tailq;
 };
 
+typedef TAILQ_HEAD(, spdk_bdev_io) bdev_io_tailq_t;
+typedef STAILQ_HEAD(, spdk_bdev_io) bdev_io_stailq_t;
+
 struct spdk_bdev {
 	/** User context passed in by the backend */
 	void *ctxt;
@@ -243,17 +246,36 @@ struct spdk_bdev {
 	/** Number of blocks */
 	uint64_t blockcnt;
 
-	/** QoS per second */
-	uint64_t ios_per_sec;
-
 	/** Number of active channels on this bdev except the QoS bdev channel */
 	uint32_t channel_count;
 
-	/** QoS bdev channel for this bdev */
-	struct spdk_bdev_channel *qos_channel;
+	/** Quality of service parameters */
+	struct spdk_bdev_qos {
+		/** True if QoS is enabled */
+		bool enabled;
 
-	/** QoS thread for this bdev */
-	struct spdk_thread *qos_thread;
+		/** Rate limit, in I/O per second */
+		uint64_t rate_limit;
+
+		/** The channel that all I/O are funneled through */
+		struct spdk_bdev_channel *ch;
+
+		/** The thread on which the poller is running. */
+		struct spdk_thread *thread;
+
+		/** Queue of I/O waiting to be issued. */
+		bdev_io_tailq_t queued;
+
+		/** Maximum allowed IOs to be issued in one timeslice (e.g., 1ms) and
+		 *  only valid for the master channel which manages the outstanding IOs. */
+		uint64_t max_ios_per_timeslice;
+
+		/** Submitted IO in one timeslice (e.g., 1ms) */
+		uint64_t io_submitted_this_timeslice;
+
+		/** Polller that processes queued I/O commands each time slice. */
+		struct spdk_poller *poller;
+	} qos;
 
 	/** write cache enabled, not used at the moment */
 	int write_cache;
