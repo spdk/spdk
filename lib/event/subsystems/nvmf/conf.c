@@ -97,22 +97,13 @@ spdk_nvmf_read_config_file_params(struct spdk_conf_section *sp,
 }
 
 static int
-spdk_nvmf_parse_nvmf_tgt(void)
+_spdk_nvmf_parse_nvmf_tgt(struct spdk_nvmf_tgt_opts *opts)
 {
-	struct spdk_conf_section *sp;
-	struct spdk_nvmf_tgt_opts opts;
 	int rc;
 
-	spdk_nvmf_tgt_opts_init(&opts);
+	g_spdk_nvmf_tgt_conf.acceptor_poll_rate = opts->acceptor_poll_rate;
 
-	sp = spdk_conf_find_section(NULL, "Nvmf");
-	if (sp != NULL) {
-		spdk_nvmf_read_config_file_params(sp, &opts);
-	}
-
-	g_spdk_nvmf_tgt_conf.acceptor_poll_rate = opts.acceptor_poll_rate;
-
-	g_spdk_nvmf_tgt = spdk_nvmf_tgt_create(&opts);
+	g_spdk_nvmf_tgt = spdk_nvmf_tgt_create(opts);
 	if (!g_spdk_nvmf_tgt) {
 		SPDK_ERRLOG("spdk_nvmf_tgt_create() failed\n");
 		return -1;
@@ -125,6 +116,28 @@ spdk_nvmf_parse_nvmf_tgt(void)
 	}
 
 	return 0;
+}
+
+static int
+spdk_nvmf_parse_nvmf_tgt(void)
+{
+	struct spdk_conf_section *sp;
+	struct spdk_nvmf_tgt_opts opts;
+
+	spdk_nvmf_tgt_opts_init(&opts);
+
+	sp = spdk_conf_find_section(NULL, "Nvmf");
+	if (sp != NULL) {
+		spdk_nvmf_read_config_file_params(sp, &opts);
+	}
+
+	return _spdk_nvmf_parse_nvmf_tgt(&opts);
+}
+
+int
+spdk_nvmf_parse_nvmf_tgt_rpc(struct spdk_nvmf_tgt_opts *opts)
+{
+	return _spdk_nvmf_parse_nvmf_tgt(opts);
 }
 
 static void
