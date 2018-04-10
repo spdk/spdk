@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b2f3e01c_1d43e38e",
+        "filename": "examples/bdev/hello_world/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-10T22:04:45Z",
+      "side": 1,
+      "message": "you don\u0027t need blob stuff here, you should scrub these either by inspection or just try with what you think are the minimalss and keep adding in until it works :)",
+      "revId": "91a9b968bb6fac48698918175537c5a5f95181c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "71adb4a9_2f797507",
+        "filename": "examples/bdev/hello_world/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-10T22:04:45Z",
+      "side": 1,
+      "message": "not sure you need the 2nd one here",
+      "revId": "91a9b968bb6fac48698918175537c5a5f95181c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21642ead_32b7715b",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-10T22:04:45Z",
+      "side": 1,
+      "message": "since you\u0027re not comparing read/write just use one buffer in this example.  Also given how simple the example is you might want to just use a few globals instead of a context structure that\u0027s passed back and forth.  I did that in the hello_world for blob just because I had a lot of stuff and wanted to show how the use of callback args could prevent requiring ugly globals (IMHO)",
+      "revId": "91a9b968bb6fac48698918175537c5a5f95181c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b35153e_d3e64cea",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-10T22:04:45Z",
+      "side": 1,
+      "message": "probably no big deal but most of our example apps and sample apps (not all including hello_blob I think which should be updated one of these days) use optargs and -c to pass in the filename.  Not a big deal but something to think about so the example here doesn\u0027t use the argv array values directly",
+      "revId": "91a9b968bb6fac48698918175537c5a5f95181c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
