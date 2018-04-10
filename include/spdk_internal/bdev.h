@@ -87,6 +87,14 @@ struct spdk_bdev_module {
 	int (*module_init)(void);
 
 	/**
+	 * Optional callback for modules that require notification of when
+	 * the bdev subsystem has completed initialization.
+	 *
+	 * Modules are not required to define this function.
+	 */
+	void (*init_complete)(void);
+
+	/**
 	 * Finish function for the module.  Called by the spdk application
 	 * before the spdk application exits to perform any necessary cleanup.
 	 *

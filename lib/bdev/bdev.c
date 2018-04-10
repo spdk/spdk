@@ -518,6 +518,16 @@ spdk_bdev_module_action_complete(void)
 	}
 
 	/*
+	 * For modules that need to know when subsystem init is complete,
+	 * inform them now.
+	 */
+	TAILQ_FOREACH(m, &g_bdev_mgr.bdev_modules, tailq) {
+		if (m->init_complete) {
+			m->init_complete();
+		}
+	}
+
+	/*
 	 * Modules already finished initialization - now that all
 	 * the bdev modules have finished their asynchronous I/O
 	 * processing, the entire bdev layer can be marked as complete.

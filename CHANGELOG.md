@@ -2,6 +2,12 @@
 
 ## v18.04: (Upcoming Release)
 
+### Bdev
+
+Add new optional bdev module interface function, init_complete, to notify bdev modules
+when the bdev subsystem initialization is complete. Useful for virtual bdevs that require
+notification that the set of initialization examine() calls is complete.
+
 ### RPC
 
 The Rpc configuration file section, which was deprecated in v18.01, has been removed.
