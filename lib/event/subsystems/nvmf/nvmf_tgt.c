@@ -43,6 +43,7 @@
 enum nvmf_tgt_state {
 	NVMF_TGT_INIT_NONE = 0,
 	NVMF_TGT_INIT_PARSE_CONFIG,
+	NVMF_TGT_INIT_WAIT_FOR_SI_RPC,
 	NVMF_TGT_INIT_CREATE_POLL_GROUPS,
 	NVMF_TGT_INIT_START_SUBSYSTEMS,
 	NVMF_TGT_INIT_START_ACCEPTOR,
@@ -70,6 +71,8 @@ static size_t g_num_poll_groups = 0;
 static size_t g_active_poll_groups = 0;
 
 static struct spdk_poller *g_acceptor_poller = NULL;
+
+static bool g_enable_subsys_init_rpc = false;
 
 static void nvmf_tgt_advance_state(void);
 
@@ -227,7 +230,11 @@ nvmf_tgt_advance_state(void)
 
 		switch (g_tgt_state) {
 		case NVMF_TGT_INIT_NONE: {
-			g_tgt_state = NVMF_TGT_INIT_PARSE_CONFIG;
+			if (!g_enable_subsys_init_rpc) {
+				g_tgt_state = NVMF_TGT_INIT_PARSE_CONFIG;
+			} else {
+				g_tgt_state = NVMF_TGT_INIT_WAIT_FOR_SI_RPC;
+			}
 
 			/* Find the maximum core number */
 			g_num_poll_groups = spdk_env_get_last_core() + 1;
@@ -252,6 +259,9 @@ nvmf_tgt_advance_state(void)
 				break;
 			}
 			g_tgt_state = NVMF_TGT_INIT_CREATE_POLL_GROUPS;
+			break;
+		case NVMF_TGT_INIT_WAIT_FOR_SI_RPC:
+			spdk_subsystem_init_next(0);
 			break;
 		case NVMF_TGT_INIT_CREATE_POLL_GROUPS:
 			/* Send a message to each thread and create a poll group */
@@ -321,6 +331,7 @@ static void
 spdk_nvmf_subsystem_init(bool enable_subsys_init_rpc)
 {
 	g_tgt_state = NVMF_TGT_INIT_NONE;
+	g_enable_subsys_init_rpc = enable_subsys_init_rpc;
 	nvmf_tgt_advance_state();
 }
 
