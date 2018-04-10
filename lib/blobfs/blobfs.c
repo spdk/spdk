@@ -1905,9 +1905,21 @@ __file_flush(void *_args)
 		 * There is either no data to flush, or a flush I/O is already in
 		 *  progress.  So return immediately - if a flush I/O is in
 		 *  progress we will flush more data after that is completed.
+		 *  If there is no data to flush, we still need to check for any
+		 *  outstanding sync requests to make sure metadata gets updated.
 		 */
 		__free_args(args);
 		pthread_spin_unlock(&file->lock);
+		if (next == NULL) {
+			/*
+			 * For cases where a file's cache was evicted, and then the
+			 *  file was later appended, we will write the data directly
+			 *  to disk and bypass cache.  So just update length_flushed
+			 *  here to reflect that all data was already written to disk.
+			 */
+			file->length_flushed = file->append_pos;
+			__check_sync_reqs(file);
+		}
 		return;
 	}
 
@@ -2278,7 +2290,7 @@ _file_sync(struct spdk_file *file, struct spdk_fs_channel *channel,
 	BLOBFS_TRACE(file, "offset=%jx\n", file->append_pos);
 
 	pthread_spin_lock(&file->lock);
-	if (file->append_pos <= file->length_flushed || file->last == NULL) {
+	if (file->append_pos <= file->length_flushed) {
 		BLOBFS_TRACE(file, "done - no data to flush\n");
 		pthread_spin_unlock(&file->lock);
 		cb_fn(cb_arg, 0);
