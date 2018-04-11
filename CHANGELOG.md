@@ -34,6 +34,12 @@ to the `nvmf_subsystem_add_ns` RPC method.
 `spdk_nvmf_subsystem_remove_ns` is now asynchronous and requires two additional arguments, cb_fn and cb_arg.
 cb_fn is a function pointer of type spdk_channel_for_each_cpl and cb_arg is a void pointer.
 
+`spdk_nvmf_subsystem_add_ns` is now asynchronous and requires two additional arguments, cb_fn and cb_arg.
+cb_fn is a function pointer of type spdk_channel_for_each_cpl and cb_arg is a void pointer.
+
+`spdk_nvmf_subsystem_initialize_ns` has been added and is a special case of `spdk_nvmf_subsystem_add_ns`
+to be used only when initializing a subsystem.
+
 ### Blobstore
 
 A number of functions have been renamed:
