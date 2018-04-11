@@ -22,6 +22,53 @@
       "revId": "7d57a3fb26491fd93f2bf7bfa05675d464fedb43",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e60bb05_57bf244c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2384,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T20:01:31Z",
+      "side": 1,
+      "message": "I see that you change this to strtoll() in the next patch, but I think that\u0027s simple enough to be squashed into this one.",
+      "parentUuid": "3fdfee21_bb5975eb",
+      "range": {
+        "startLine": 2384,
+        "startChar": 16,
+        "endLine": 2384,
+        "endChar": 22
+      },
+      "revId": "7d57a3fb26491fd93f2bf7bfa05675d464fedb43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d5381968_768c73e3",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2387,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T20:01:31Z",
+      "side": 1,
+      "message": "uint64_t isn\u0027t necessarily unsigned long; this should use PRIu64 for portability.",
+      "range": {
+        "startLine": 2387,
+        "startChar": 31,
+        "endLine": 2387,
+        "endChar": 34
+      },
+      "revId": "7d57a3fb26491fd93f2bf7bfa05675d464fedb43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
