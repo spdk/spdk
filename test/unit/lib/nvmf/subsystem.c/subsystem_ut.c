@@ -46,7 +46,7 @@ _subsystem_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 }
 
 static void
-subsystem_ns_remove_cb(struct spdk_nvmf_subsystem *subsystem, void *cb_arg, int status)
+subsystem_ns_remove_add_cb(struct spdk_nvmf_subsystem *subsystem, void *cb_arg, int status)
 {
 }
 
@@ -245,7 +245,8 @@ test_spdk_nvmf_subsystem_add_ns(void)
 
 	/* Allow NSID to be assigned automatically */
 	spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
-	nsid = spdk_nvmf_subsystem_add_ns(&subsystem, &bdev1, &ns_opts, sizeof(ns_opts));
+	nsid = spdk_nvmf_subsystem_add_ns(&subsystem, &bdev1, &ns_opts, sizeof(ns_opts),
+					  subsystem_ns_remove_add_cb, NULL);
 	/* NSID 1 is the first unused ID */
 	CU_ASSERT(nsid == 1);
 	CU_ASSERT(subsystem.max_nsid == 1);
@@ -256,7 +257,8 @@ test_spdk_nvmf_subsystem_add_ns(void)
 	/* Request a specific NSID */
 	spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
 	ns_opts.nsid = 5;
-	nsid = spdk_nvmf_subsystem_add_ns(&subsystem, &bdev2, &ns_opts, sizeof(ns_opts));
+	nsid = spdk_nvmf_subsystem_add_ns(&subsystem, &bdev2, &ns_opts, sizeof(ns_opts),
+					  subsystem_ns_remove_add_cb, NULL);
 	CU_ASSERT(nsid == 5);
 	CU_ASSERT(subsystem.max_nsid == 5);
 	SPDK_CU_ASSERT_FATAL(subsystem.ns[nsid - 1] != NULL);
@@ -265,19 +267,21 @@ test_spdk_nvmf_subsystem_add_ns(void)
 	/* Request an NSID that is already in use */
 	spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
 	ns_opts.nsid = 5;
-	nsid = spdk_nvmf_subsystem_add_ns(&subsystem, &bdev2, &ns_opts, sizeof(ns_opts));
+	nsid = spdk_nvmf_subsystem_add_ns(&subsystem, &bdev2, &ns_opts, sizeof(ns_opts),
+					  subsystem_ns_remove_add_cb, NULL);
 	CU_ASSERT(nsid == 0);
 	CU_ASSERT(subsystem.max_nsid == 5);
 
 	/* Request 0xFFFFFFFF (invalid NSID, reserved for broadcast) */
 	spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
 	ns_opts.nsid = 0xFFFFFFFF;
-	nsid = spdk_nvmf_subsystem_add_ns(&subsystem, &bdev2, &ns_opts, sizeof(ns_opts));
+	nsid = spdk_nvmf_subsystem_add_ns(&subsystem, &bdev2, &ns_opts, sizeof(ns_opts),
+					  subsystem_ns_remove_add_cb, NULL);
 	CU_ASSERT(nsid == 0);
 	CU_ASSERT(subsystem.max_nsid == 5);
 
-	spdk_nvmf_subsystem_remove_ns(&subsystem, 1, subsystem_ns_remove_cb, NULL);
-	spdk_nvmf_subsystem_remove_ns(&subsystem, 5, subsystem_ns_remove_cb, NULL);
+	spdk_nvmf_subsystem_remove_ns(&subsystem, 1, subsystem_ns_remove_add_cb, NULL);
+	spdk_nvmf_subsystem_remove_ns(&subsystem, 5, subsystem_ns_remove_add_cb, NULL);
 
 	free(subsystem.ns);
 }
