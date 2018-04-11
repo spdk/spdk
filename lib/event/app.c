@@ -41,6 +41,7 @@
 #include "spdk/conf.h"
 #include "spdk/trace.h"
 #include "spdk/string.h"
+#include "spdk/util.h"
 
 #define SPDK_APP_RPC_SELECT_INTERVAL		4000 /* 4ms */
 
@@ -54,6 +55,7 @@
 
 struct spdk_app {
 	struct spdk_conf		*config;
+	struct spdk_app_opts		opts;
 	int				shm_id;
 	spdk_app_shutdown_cb		shutdown_cb;
 	int				rc;
@@ -126,6 +128,43 @@ spdk_app_config_dump_global_section(FILE *fp)
 
 	fprintf(fp, GLOBAL_CONFIG_TMPL, spdk_cpuset_fmt(coremask),
 		spdk_trace_get_tpoint_group_mask());
+}
+
+static void
+spdk_app_destroy_opts(struct spdk_app_opts *opts)
+{
+	/* All strings are dynamicaly allocated. Need to discard 'const' to
+	 * silence compiler.
+	 */
+	free((char *)opts->name);
+	free((char *)opts->config_file);
+	free((char *)opts->rpc_addr);
+	free((char *)opts->reactor_mask);
+	free((char *)opts->tpoint_group_mask);
+	memset(opts, 0, sizeof(*opts));
+}
+
+static int
+spdk_app_clone_opts(struct spdk_app_opts *dst, const struct spdk_app_opts *src)
+{
+	memcpy(dst, src, sizeof(*dst));
+#define OPT_STRDUP(_OPT_NAME) \
+	if (src->_OPT_NAME) { \
+		dst->_OPT_NAME = strdup(src->_OPT_NAME); \
+		if (dst->_OPT_NAME == NULL) { \
+			spdk_app_destroy_opts(dst); \
+			return -ENOMEM; \
+		} \
+	}
+
+	OPT_STRDUP(name);
+	OPT_STRDUP(config_file);
+	OPT_STRDUP(rpc_addr);
+	OPT_STRDUP(reactor_mask);
+	OPT_STRDUP(tpoint_group_mask);
+#undef OPT_STRDUP
+
+	return 0;
 }
 
 int
@@ -288,9 +327,7 @@ spdk_app_poll_rpc(void *arg)
 static void
 start_rpc(void *arg1, void *arg2)
 {
-	const char *rpc_addr = arg1;
-
-	if (rpc_addr) {
+	if (g_spdk_app.opts.rpc_addr) {
 		/* Register RPC poller */
 		g_spdk_app.app_poller = spdk_poller_register(spdk_app_poll_rpc, NULL, SPDK_APP_RPC_SELECT_INTERVAL);
 	}
@@ -417,6 +454,84 @@ spdk_app_setup_trace(struct spdk_app_opts *opts)
 	return 0;
 }
 
+static const struct spdk_json_object_decoder rpc_set_app_opts_decoders[] = {
+	/* "name" not allowed */
+	/* "config_file" not allowed */
+	{"rpc_addr", offsetof(struct spdk_app_opts, rpc_addr), spdk_json_decode_string, true},
+	{"reactor_mask", offsetof(struct spdk_app_opts, reactor_mask), spdk_json_decode_string, true},
+	{"tpoint_group_mask", offsetof(struct spdk_app_opts, tpoint_group_mask), spdk_json_decode_string, true},
+	{"shm_id", offsetof(struct spdk_app_opts, shm_id), spdk_json_decode_int32, true},
+	/* "wait_rpc_start" not allowed */
+	{"enable_coredump", offsetof(struct spdk_app_opts, enable_coredump), spdk_json_decode_bool, true},
+	{"mem_channel", offsetof(struct spdk_app_opts, mem_channel), spdk_json_decode_int32, true},
+	{"master_core", offsetof(struct spdk_app_opts, master_core), spdk_json_decode_int32, true},
+	{"mem_size", offsetof(struct spdk_app_opts, mem_size), spdk_json_decode_int32, true},
+	{"no_pci", offsetof(struct spdk_app_opts, no_pci), spdk_json_decode_bool, true},
+	{"hugepage_single_segments", offsetof(struct spdk_app_opts, hugepage_single_segments), spdk_json_decode_bool, true},
+	/* "print_level",  not allowed */
+	/* "max_delay_us",  not allowed */
+};
+
+static void
+spdk_rpc_set_app_opts(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+	struct spdk_app_opts opts = { };
+
+	/* Initialize opts to default values - those set before. Default for string is NULL. */
+	opts.rpc_addr = NULL;
+	opts.reactor_mask = NULL;
+	opts.tpoint_group_mask = NULL;
+	opts.shm_id = g_spdk_app.opts.shm_id;
+	opts.enable_coredump = g_spdk_app.opts.enable_coredump;
+	opts.mem_channel = g_spdk_app.opts.mem_channel;
+	opts.master_core = g_spdk_app.opts.master_core;
+	opts.mem_size = g_spdk_app.opts.mem_size;
+	opts.no_pci = g_spdk_app.opts.no_pci;
+	opts.hugepage_single_segments = g_spdk_app.opts.hugepage_single_segments;
+
+	/* All parameters are optional, but providing at least one is mandatory */
+	if (spdk_json_decode_object(params, rpc_set_app_opts_decoders,
+				    SPDK_COUNTOF(rpc_set_app_opts_decoders),
+				    &opts)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		return;
+	}
+
+	if (opts.rpc_addr) {
+		free((char *)g_spdk_app.opts.rpc_addr);
+		g_spdk_app.opts.rpc_addr = opts.rpc_addr;
+	}
+
+	if (opts.tpoint_group_mask) {
+		free((char *)g_spdk_app.opts.tpoint_group_mask);
+		g_spdk_app.opts.tpoint_group_mask = opts.tpoint_group_mask;
+	}
+
+	if (opts.reactor_mask) {
+		free((char *)g_spdk_app.opts.reactor_mask);
+		g_spdk_app.opts.reactor_mask = opts.reactor_mask;
+	}
+
+	g_spdk_app.opts.shm_id = opts.shm_id;
+	g_spdk_app.opts.enable_coredump = opts.enable_coredump;
+	g_spdk_app.opts.mem_channel = opts.mem_channel;
+	g_spdk_app.opts.master_core = opts.master_core;
+	g_spdk_app.opts.mem_size = opts.mem_size;
+	g_spdk_app.opts.no_pci = opts.no_pci;
+	g_spdk_app.opts.hugepage_single_segments = opts.hugepage_single_segments;
+	/* No need to free any parameters as we consumed all of them. */
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w != NULL) {
+		spdk_json_write_bool(w, true);
+		spdk_jsonrpc_end_result(request, w);
+	}
+}
+SPDK_RPC_REGISTER_RUN_LEVEL("set_app_opts", spdk_rpc_set_app_opts, SPDK_RUNLEVEL_PRE_INIT)
+
+
 static void
 spdk_rpc_app_start(struct spdk_jsonrpc_request *request,
 		   const struct spdk_json_val *params)
@@ -442,11 +557,9 @@ spdk_rpc_app_start(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER_RUN_LEVEL("app_start", spdk_rpc_app_start, SPDK_RUNLEVEL_PRE_INIT)
 
 int
-spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
+spdk_app_start(const struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	       void *arg1, void *arg2)
 {
-	struct spdk_conf	*config = NULL;
-	int			rc;
 	struct spdk_event	*app_start_event;
 
 	if (!opts) {
@@ -454,7 +567,16 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		return 1;
 	}
 
-	if (opts->print_level > SPDK_LOG_WARN &&
+	memset(&g_spdk_app, 0, sizeof(g_spdk_app));
+
+	/* Clone opts so we can modify them in RPC handlers. All string parameters
+	 * are strdup()'ed.
+	 */
+	if (spdk_app_clone_opts(&g_spdk_app.opts, opts) != 0) {
+		return 1;
+	}
+
+	if (g_spdk_app.opts.print_level > SPDK_LOG_WARN &&
 	    isatty(STDERR_FILENO) &&
 	    !strncmp(ttyname(STDERR_FILENO), "/dev/tty", strlen("/dev/tty"))) {
 		printf("Warning: printing stderr to console terminal without -q option specified.\n");
@@ -464,37 +586,37 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		sleep(10);
 	}
 
-	spdk_log_set_print_level(opts->print_level);
+	spdk_log_set_print_level(g_spdk_app.opts.print_level);
 
 #ifndef SPDK_NO_RLIMIT
-	if (opts->enable_coredump) {
+	if (g_spdk_app.opts.enable_coredump) {
 		struct rlimit core_limits;
 
 		core_limits.rlim_cur = core_limits.rlim_max = RLIM_INFINITY;
 		setrlimit(RLIMIT_CORE, &core_limits);
 	}
 #endif
-	spdk_log_set_print_level(opts->print_level);
-	config = spdk_app_setup_conf(opts->config_file);
-	if (config == NULL) {
+	spdk_log_set_print_level(g_spdk_app.opts.print_level);
+	g_spdk_app.config = spdk_app_setup_conf(g_spdk_app.opts.config_file);
+	if (g_spdk_app.config == NULL) {
 		goto app_start_setup_conf_err;
 	}
 
-	spdk_app_read_config_file_global_params(opts);
+	spdk_app_read_config_file_global_params(&g_spdk_app.opts);
 
 	spdk_log_set_level(SPDK_APP_DEFAULT_LOG_LEVEL);
 	spdk_log_open();
 
 	g_spdk_app.runlevel = SPDK_RUNLEVEL_PRE_INIT;
-	if (opts->rpc_addr != NULL && opts->wait_rpc_start) {
+	if (g_spdk_app.opts.rpc_addr != NULL && g_spdk_app.opts.wait_rpc_start) {
 		/* Listen on the requested address */
-		g_spdk_app.rc = spdk_rpc_listen(opts->rpc_addr);
+		g_spdk_app.rc = spdk_rpc_listen(g_spdk_app.opts.rpc_addr);
 		if (g_spdk_app.rc != 0) {
-			SPDK_ERRLOG("Unable to start RPC service at %s\n", opts->rpc_addr);
+			SPDK_ERRLOG("Unable to start RPC service at %s\n", g_spdk_app.opts.rpc_addr);
 			goto app_start_log_close_err;
 		}
 
-		SPDK_NOTICELOG("Waiting for RPC start command on '%s'\n", opts->rpc_addr);
+		SPDK_NOTICELOG("Waiting for RPC start command on '%s'\n", g_spdk_app.opts.rpc_addr);
 		/* Wait for start. This is a chance to receive pre-init
 		 * RPC config.
 		 */
@@ -521,7 +643,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	}
 
 	g_spdk_app.runlevel = SPDK_RUNLEVEL_ENV_INIT;
-	if (spdk_app_setup_env(opts) < 0) {
+	if (spdk_app_setup_env(&g_spdk_app.opts) < 0) {
 		goto app_start_log_close_err;
 	}
 
@@ -532,7 +654,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	 *  reactor_mask will be 0x1 which will enable core 0 to run one
 	 *  reactor.
 	 */
-	if ((rc = spdk_reactors_init(opts->max_delay_us)) != 0) {
+	if ((g_spdk_app.rc = spdk_reactors_init(g_spdk_app.opts.max_delay_us)) != 0) {
 		SPDK_ERRLOG("Invalid reactor mask.\n");
 		goto app_start_log_close_err;
 	}
@@ -544,30 +666,28 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	 * way of unwinding alloc'd resources that can occur
 	 * in spdk_app_setup_signal_handlers().
 	 */
-	if (spdk_app_setup_trace(opts) != 0) {
+	if (spdk_app_setup_trace(&g_spdk_app.opts) != 0) {
 		goto app_start_log_close_err;
 	}
 
-	if ((rc = spdk_app_setup_signal_handlers(opts)) != 0) {
+	if ((g_spdk_app.rc = spdk_app_setup_signal_handlers(&g_spdk_app.opts)) != 0) {
 		goto app_start_trace_cleanup_err;
 	}
 
 	/* Listen on the requested address */
-	if (opts->rpc_addr && spdk_rpc_listen(opts->rpc_addr) != 0) {
-		SPDK_ERRLOG("Unable to start RPC service at %s\n", opts->rpc_addr);
+	if (g_spdk_app.opts.rpc_addr && spdk_rpc_listen(g_spdk_app.opts.rpc_addr) != 0) {
+		SPDK_ERRLOG("Unable to start RPC service at %s\n", g_spdk_app.opts.rpc_addr);
 		goto app_start_trace_cleanup_err;
 	}
 
-	memset(&g_spdk_app, 0, sizeof(g_spdk_app));
-	g_spdk_app.config = config;
-	g_spdk_app.shm_id = opts->shm_id;
-	g_spdk_app.shutdown_cb = opts->shutdown_cb;
+	g_spdk_app.shm_id = g_spdk_app.opts.shm_id;
+	g_spdk_app.shutdown_cb = g_spdk_app.opts.shutdown_cb;
 	g_spdk_app.rc = 0;
 	g_init_lcore = spdk_env_get_current_core();
 	g_app_start_fn = start_fn;
 	g_app_start_arg1 = arg1;
 	g_app_start_arg2 = arg2;
-	app_start_event = spdk_event_allocate(g_init_lcore, start_rpc, (void *)opts->rpc_addr, NULL);
+	app_start_event = spdk_event_allocate(g_init_lcore, start_rpc, NULL, NULL);
 
 	g_spdk_app.runlevel = SPDK_RUNLEVEL_SUBSYSTEMS_INIT;
 	spdk_subsystem_init(app_start_event);
@@ -584,7 +704,12 @@ app_start_log_close_err:
 	spdk_log_close();
 
 app_start_setup_conf_err:
-	return 1;
+	spdk_conf_free(g_spdk_app.config);
+	g_spdk_app.config  = NULL;
+
+	spdk_app_destroy_opts(&g_spdk_app.opts);
+
+	return g_spdk_app.rc;
 }
 
 void
@@ -593,6 +718,8 @@ spdk_app_fini(void)
 	spdk_trace_cleanup();
 	spdk_reactors_fini();
 	spdk_conf_free(g_spdk_app.config);
+	g_spdk_app.config = NULL;
+	spdk_app_destroy_opts(&g_spdk_app.opts);
 	spdk_log_close();
 }
 
@@ -624,6 +751,7 @@ spdk_app_stop(int rc)
 		SPDK_WARNLOG("spdk_app_stop'd on non-zero\n");
 	}
 	g_spdk_app.rc = rc;
+	g_spdk_app.runlevel = SPDK_RUNLEVEL_SHUTTING_DOWN;
 
 	/*
 	 * We want to run spdk_subsystem_fini() from the same lcore where spdk_subsystem_init()

@@ -78,7 +78,7 @@ struct spdk_app_opts {
 	const char *reactor_mask;
 	const char *tpoint_group_mask;
 
-	int shm_id;
+	int32_t shm_id;
 
 	spdk_app_shutdown_cb	shutdown_cb;
 	spdk_sighandler_t	usr1_handler;
@@ -87,9 +87,9 @@ struct spdk_app_opts {
 	 */
 	bool			wait_rpc_start;
 	bool			enable_coredump;
-	int			mem_channel;
-	int			master_core;
-	int			mem_size;
+	int32_t			mem_channel;
+	int32_t			master_core;
+	int32_t			mem_size;
 	bool			no_pci;
 	bool			hugepage_single_segments;
 	enum spdk_log_level	print_level;
@@ -159,7 +159,7 @@ void spdk_app_opts_init(struct spdk_app_opts *opts);
  *
  * \return 0 on success or non-zero on failure.
  */
-int spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
+int spdk_app_start(const struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		   void *arg1, void *arg2);
 
 /**
