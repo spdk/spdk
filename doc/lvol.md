@@ -58,7 +58,7 @@ destroy_lvol_store [-h] [-u UUID] [-l LVS_NAME]
     Destroy lvolstore on specified bdev. Removes lvolstore along with lvols on
     it. User can identify lvol store by UUID or its name. Note that destroying
     lvolstore requires using this call, while deleting single lvol requires
-    using delete_bdev rpc call.
+    using destroy_lvol_bdev rpc call.
     optional arguments:
     -h, --help  show help
 get_lvol_stores [-h] [-u UUID] [-l LVS_NAME]
@@ -88,8 +88,8 @@ get_bdevs [-h] [-b NAME]
     optional arguments:
     -h, --help  show help
     -b NAME, --name NAME  Name of the block device. Example: Nvme0n1
-delete_bdev [-h] bdev_name
-    Deletes spdk bdev
+destroy_lvol_bdev [-h] bdev_name
+    Deletes a logical volume previously created by construct_lvol_bdev.
     optional arguments:
     -h, --help  show help
 snapshot_lvol_bdev [-h] lvol_name snapshot_name

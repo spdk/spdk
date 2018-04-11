@@ -62,6 +62,10 @@ spdk_blob_resize() is now an asynchronous operation to enable resizing a blob wh
 are in progress to that blob on other threads.  An explicit spdk_blob_sync_md() is still
 required to sync the updated metadata to disk.
 
+### Logical Volumes
+
+A new `destroy_lvol_bdev` RPC method to delete logical volumes has been added.
+
 ### Lib
 
 A set of changes were made in the SPDK's lib code altering,

@@ -76,6 +76,14 @@ void vbdev_lvol_rename(struct spdk_lvol *lvol, const char *new_lvol_name,
 		       spdk_lvol_op_complete cb_fn, void *cb_arg);
 
 /**
+ * Destroy a logical volume
+ * \param lvol Handle to lvol
+ * \param cb_fn Completion callback
+ * \param cb_arg Completion callback custom arguments
+ */
+void vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg);
+
+/**
  * \brief Renames given lvolstore.
  *
  * \param lvs Pointer to lvolstore
