@@ -956,8 +956,8 @@ spdk_nvmf_ns_opts_get_defaults(struct spdk_nvmf_ns_opts *opts, size_t opts_size)
 }
 
 uint32_t
-spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev,
-			   const struct spdk_nvmf_ns_opts *user_opts, size_t opts_size)
+spdk_nvmf_subsystem_initialize_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev,
+				  const struct spdk_nvmf_ns_opts *user_opts, size_t opts_size)
 {
 	struct spdk_nvmf_ns_opts opts;
 	struct spdk_nvmf_ns *ns;
@@ -1060,6 +1060,24 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	spdk_nvmf_subsystem_ns_changed(subsystem, opts.nsid);
 
 	return opts.nsid;
+}
+
+uint32_t
+spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev,
+			   const struct spdk_nvmf_ns_opts *user_opts, size_t opts_size,
+			   spdk_channel_for_each_cpl cb_fn, void *ctx)
+{
+	uint32_t nsid;
+
+	nsid = spdk_nvmf_subsystem_initialize_ns(subsystem, bdev, user_opts, opts_size);
+
+	if (nsid == 0) {
+		return nsid;
+	}
+
+	spdk_nvmf_subsystem_modify(subsystem, cb_fn, ctx);
+
+	return nsid;
 }
 
 static uint32_t
