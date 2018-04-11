@@ -36,6 +36,23 @@
     },
     {
       "key": {
+        "uuid": "305cf409_32e645c7",
+        "filename": "examples/bdev/hello_world/bdev.conf",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T23:31:33Z",
+      "side": 1,
+      "message": "This needs to be updated after commit 9bad29c (\"bdev: update the name of Passthru section\") - it should now be [Passthru].",
+      "revId": "91a9b968bb6fac48698918175537c5a5f95181c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "21642ead_32b7715b",
         "filename": "examples/bdev/hello_world/hello_bdev.c",
         "patchSetId": 1
@@ -53,6 +70,103 @@
     },
     {
       "key": {
+        "uuid": "403d9838_b22829ef",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T23:31:33Z",
+      "side": 1,
+      "message": "This just prints out the hard-coded EIO value, which isn\u0027t that useful.  You can just drop the %d, in my opinion.",
+      "revId": "91a9b968bb6fac48698918175537c5a5f95181c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47225134_446b5101",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T23:31:33Z",
+      "side": 1,
+      "message": "You can use spdk_strerror() instead of hard-coding a specific case for ENOMEM.",
+      "revId": "91a9b968bb6fac48698918175537c5a5f95181c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "01c6122a_9b4935c1",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T23:31:33Z",
+      "side": 1,
+      "message": "Need to check return value of spdk_dma_zmalloc().\n\nThis should probably also use spdk_bdev_get_block_size() and spdk_bdev_get_buf_align() rather than the hard-coded 0x200 and 0x200.",
+      "revId": "91a9b968bb6fac48698918175537c5a5f95181c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b949fcba_9c36b603",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T23:31:33Z",
+      "side": 1,
+      "message": "Same here - this 0x200 is the size of the buffer, which should be the block size.",
+      "range": {
+        "startLine": 175,
+        "startChar": 37,
+        "endLine": 175,
+        "endChar": 42
+      },
+      "revId": "91a9b968bb6fac48698918175537c5a5f95181c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6282d82a_e97668c6",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T23:31:33Z",
+      "side": 1,
+      "message": "Another hard-coded 512 (\u003d\u003d 0x200) that should be the block size - please check the rest of the read/write/zmalloc calls as well.",
+      "range": {
+        "startLine": 179,
+        "startChar": 38,
+        "endLine": 179,
+        "endChar": 41
+      },
+      "revId": "91a9b968bb6fac48698918175537c5a5f95181c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0b35153e_d3e64cea",
         "filename": "examples/bdev/hello_world/hello_bdev.c",
         "patchSetId": 1
@@ -64,6 +178,23 @@
       "writtenOn": "2018-04-10T22:04:45Z",
       "side": 1,
       "message": "probably no big deal but most of our example apps and sample apps (not all including hello_blob I think which should be updated one of these days) use optargs and -c to pass in the filename.  Not a big deal but something to think about so the example here doesn\u0027t use the argv array values directly",
+      "revId": "91a9b968bb6fac48698918175537c5a5f95181c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "60c23052_db9be87d",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T23:31:33Z",
+      "side": 1,
+      "message": "If you intended to return here, the stuff below is dead code and should be removed.",
       "revId": "91a9b968bb6fac48698918175537c5a5f95181c4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
