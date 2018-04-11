@@ -91,6 +91,29 @@
       "revId": "c7cd91fe9150c4d4f34a26e5ff4731ec453496b1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1be20b1c_5382a835",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-11T08:14:22Z",
+      "side": 1,
+      "message": "As we will be adding nvmf \u0026 iscsi related tests later - we could try using unified app for all subsystems - see app/spdk_tgt",
+      "range": {
+        "startLine": 74,
+        "startChar": 1,
+        "endLine": 74,
+        "endChar": 10
+      },
+      "revId": "c7cd91fe9150c4d4f34a26e5ff4731ec453496b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
