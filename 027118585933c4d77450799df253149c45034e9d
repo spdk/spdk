@@ -36,6 +36,23 @@
     },
     {
       "key": {
+        "uuid": "97d943cd_3470852f",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 408,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-11T20:20:49Z",
+      "side": 1,
+      "message": "Is this really needed as part of the public API, or do you only need it internally?",
+      "revId": "027118585933c4d77450799df253149c45034e9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e159ca28_a9c29da1",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 16
