@@ -1112,7 +1112,7 @@ spdk_lvol_create_snapshot(struct spdk_lvol *origlvol, const char *snapshot_name,
 	struct spdk_blob *origblob;
 	struct spdk_lvol_with_handle_req *req;
 	struct spdk_blob_xattr_opts snapshot_xattrs;
-	char *xattr_names = LVOL_NAME;
+	char *xattr_names[] = {LVOL_NAME, "uuid"};
 	int rc;
 
 	if (origlvol == NULL) {
@@ -1146,9 +1146,11 @@ spdk_lvol_create_snapshot(struct spdk_lvol *origlvol, const char *snapshot_name,
 
 	newlvol->lvol_store = origlvol->lvol_store;
 	strncpy(newlvol->name, snapshot_name, SPDK_LVOL_NAME_MAX);
-	snapshot_xattrs.count = 1;
+	spdk_uuid_generate(&newlvol->uuid);
+	spdk_uuid_fmt_lower(newlvol->uuid_str, sizeof(newlvol->uuid_str), &newlvol->uuid);
+	snapshot_xattrs.count = SPDK_COUNTOF(xattr_names);
 	snapshot_xattrs.ctx = newlvol;
-	snapshot_xattrs.names = &xattr_names;
+	snapshot_xattrs.names = xattr_names;
 	snapshot_xattrs.get_value = spdk_lvol_get_xattr_value;
 	req->lvol = newlvol;
 	req->cb_fn = cb_fn;
@@ -1167,7 +1169,7 @@ spdk_lvol_create_clone(struct spdk_lvol *origlvol, const char *clone_name,
 	struct spdk_lvol_store *lvs;
 	struct spdk_blob *origblob;
 	struct spdk_blob_xattr_opts clone_xattrs;
-	char *xattr_names = LVOL_NAME;
+	char *xattr_names[] = {LVOL_NAME, "uuid"};
 	int rc;
 
 	if (origlvol == NULL) {
@@ -1201,9 +1203,11 @@ spdk_lvol_create_clone(struct spdk_lvol *origlvol, const char *clone_name,
 
 	newlvol->lvol_store = lvs;
 	strncpy(newlvol->name, clone_name, SPDK_LVOL_NAME_MAX);
-	clone_xattrs.count = 1;
+	spdk_uuid_generate(&newlvol->uuid);
+	spdk_uuid_fmt_lower(newlvol->uuid_str, sizeof(newlvol->uuid_str), &newlvol->uuid);
+	clone_xattrs.count = SPDK_COUNTOF(xattr_names);
 	clone_xattrs.ctx = newlvol;
-	clone_xattrs.names = &xattr_names;
+	clone_xattrs.names = xattr_names;
 	clone_xattrs.get_value = spdk_lvol_get_xattr_value;
 	req->lvol = newlvol;
 	req->cb_fn = cb_fn;
