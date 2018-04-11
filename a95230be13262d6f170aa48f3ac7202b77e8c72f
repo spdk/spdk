@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "47d17817_c017c5eb",
+        "filename": "test/vhost/nvmf/nvmf.job",
+        "patchSetId": 22
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-11T08:24:02Z",
+      "side": 1,
+      "message": "Too long for per-patch. Change to 10 and ass nightly version with 60 if you want to.",
+      "range": {
+        "startLine": 19,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 10
+      },
+      "revId": "a95230be13262d6f170aa48f3ac7202b77e8c72f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
