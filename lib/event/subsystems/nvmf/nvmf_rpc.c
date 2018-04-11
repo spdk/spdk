@@ -634,11 +634,60 @@ invalid:
 }
 
 static void
+spdk_rpc_construct_nvmf_subsystem_cb(struct spdk_nvmf_subsystem *subsystem, void *cb_arg,
+				     int status)
+{
+	struct subsystem_listen_ctx *ctx;
+	struct spdk_jsonrpc_request *request;
+	struct rpc_subsystem *req;
+
+	ctx = cb_arg;
+	req = ctx->req;
+	request = ctx->request;
+
+	if (status != 0) {
+		SPDK_ERRLOG("Unable to add namespace\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "unable to add namespace");
+		spdk_nvmf_subsystem_destroy(subsystem);
+		goto invalid;
+	}
+
+	if (req->listen_addresses.num_listen_address > 0) {
+		struct rpc_listen_address *addr;
+		struct spdk_nvme_transport_id trid = {0};
+
+		addr = &req->listen_addresses.addresses[0];
+
+		if (rpc_listen_address_to_trid(addr, &trid)) {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+			goto invalid;
+		}
+
+		spdk_nvmf_tgt_listen(g_spdk_nvmf_tgt, &trid, spdk_rpc_construct_subsystem_listen_done, ctx);
+		return;
+	} else {
+		free(ctx);
+	}
+
+	free_rpc_subsystem(req);
+
+	spdk_nvmf_subsystem_start(subsystem,
+				  spdk_rpc_nvmf_subsystem_started,
+				  request);
+	return;
+invalid:
+	free(ctx);
+	free_rpc_subsystem(req);
+}
+
+static void
 spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_request *request,
 				  const struct spdk_json_val *params)
 {
 	struct rpc_subsystem *req;
 	struct spdk_nvmf_subsystem *subsystem;
+	struct subsystem_listen_ctx *ctx;
 	size_t i;
 
 	req = calloc(1, sizeof(*req));
@@ -717,21 +766,8 @@ spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_request *request,
 		SPDK_STATIC_ASSERT(sizeof(ns_opts.eui64) == sizeof(ns_params->eui64), "size mismatch");
 		memcpy(ns_opts.eui64, ns_params->eui64, sizeof(ns_opts.eui64));
 
-		if (spdk_nvmf_subsystem_add_ns(subsystem, bdev, &ns_opts, sizeof(ns_opts)) == 0) {
-			SPDK_ERRLOG("Unable to add namespace\n");
-			spdk_nvmf_subsystem_destroy(subsystem);
-			goto invalid;
-		}
-	}
-
-	if (req->listen_addresses.num_listen_address > 0) {
-		struct rpc_listen_address *addr;
-		struct spdk_nvme_transport_id trid = {0};
-		struct subsystem_listen_ctx *ctx;
-
 		ctx = calloc(1, sizeof(*ctx));
 		if (!ctx) {
-			spdk_nvmf_subsystem_destroy(subsystem);
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "No Memory");
 			free_rpc_subsystem(req);
 			return;
@@ -742,22 +778,14 @@ spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_request *request,
 		ctx->request = request;
 		ctx->idx = 0;
 
-		addr = &req->listen_addresses.addresses[0];
-
-		if (rpc_listen_address_to_trid(addr, &trid)) {
+		if (spdk_nvmf_subsystem_add_ns(subsystem, bdev, &ns_opts, sizeof(ns_opts),
+					       spdk_rpc_construct_nvmf_subsystem_cb, ctx) == 0) {
 			free(ctx);
+			SPDK_ERRLOG("Unable to add namespace\n");
+			spdk_nvmf_subsystem_destroy(subsystem);
 			goto invalid;
 		}
-
-		spdk_nvmf_tgt_listen(g_spdk_nvmf_tgt, &trid, spdk_rpc_construct_subsystem_listen_done, ctx);
-		return;
 	}
-
-	free_rpc_subsystem(req);
-
-	spdk_nvmf_subsystem_start(subsystem,
-				  spdk_rpc_nvmf_subsystem_started,
-				  request);
 
 	return;
 
@@ -1056,6 +1084,7 @@ struct nvmf_rpc_ns_ctx {
 	char *nqn;
 	struct spdk_nvmf_ns_params ns_params;
 
+	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_jsonrpc_request *request;
 	bool response_sent;
 };
@@ -1100,6 +1129,27 @@ nvmf_rpc_ns_resumed(struct spdk_nvmf_subsystem *subsystem,
 }
 
 static void
+nvmf_rpc_ns_paused_cb(struct spdk_nvmf_subsystem *subsystem, void *cb_arg, int status)
+{
+	struct nvmf_rpc_ns_ctx *ctx;
+
+	ctx = cb_arg;
+
+	if (status != 0) {
+		SPDK_ERRLOG("Unable to add namespace\n");
+		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		ctx->response_sent = true;
+	}
+
+	if (spdk_nvmf_subsystem_resume(subsystem, nvmf_rpc_ns_resumed, ctx)) {
+		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+		nvmf_rpc_ns_ctx_free(ctx);
+		return;
+	}
+}
+
+static void
 nvmf_rpc_ns_paused(struct spdk_nvmf_subsystem *subsystem,
 		   void *cb_arg, int status)
 {
@@ -1125,17 +1175,19 @@ nvmf_rpc_ns_paused(struct spdk_nvmf_subsystem *subsystem,
 	SPDK_STATIC_ASSERT(sizeof(ns_opts.eui64) == sizeof(ctx->ns_params.eui64), "size mismatch");
 	memcpy(ns_opts.eui64, ctx->ns_params.eui64, sizeof(ns_opts.eui64));
 
-	ctx->ns_params.nsid = spdk_nvmf_subsystem_add_ns(subsystem, bdev, &ns_opts, sizeof(ns_opts));
+	ctx->ns_params.nsid = spdk_nvmf_subsystem_add_ns(subsystem, bdev, &ns_opts, sizeof(ns_opts),
+			      nvmf_rpc_ns_paused_cb, ctx);
 	if (ctx->ns_params.nsid == 0) {
 		SPDK_ERRLOG("Unable to add namespace\n");
 		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
 		ctx->response_sent = true;
-		goto resume;
 	}
 
+	return;
+
 resume:
-	if (spdk_nvmf_subsystem_resume(subsystem, nvmf_rpc_ns_resumed, ctx)) {
+	if (spdk_nvmf_subsystem_resume(ctx->subsystem, nvmf_rpc_ns_resumed, ctx)) {
 		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
 		nvmf_rpc_ns_ctx_free(ctx);
 		return;
@@ -1147,7 +1199,6 @@ nvmf_rpc_subsystem_add_ns(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
 	struct nvmf_rpc_ns_ctx *ctx;
-	struct spdk_nvmf_subsystem *subsystem;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
@@ -1167,15 +1218,15 @@ nvmf_rpc_subsystem_add_ns(struct spdk_jsonrpc_request *request,
 	ctx->request = request;
 	ctx->response_sent = false;
 
-	subsystem = spdk_nvmf_tgt_find_subsystem(g_spdk_nvmf_tgt, ctx->nqn);
-	if (!subsystem) {
+	ctx->subsystem = spdk_nvmf_tgt_find_subsystem(g_spdk_nvmf_tgt, ctx->nqn);
+	if (!ctx->subsystem) {
 		SPDK_ERRLOG("Unable to find subsystem with NQN %s\n", ctx->nqn);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 		nvmf_rpc_ns_ctx_free(ctx);
 		return;
 	}
 
-	if (spdk_nvmf_subsystem_pause(subsystem, nvmf_rpc_ns_paused, ctx)) {
+	if (spdk_nvmf_subsystem_pause(ctx->subsystem, nvmf_rpc_ns_paused, ctx)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
 		nvmf_rpc_ns_ctx_free(ctx);
 		return;
