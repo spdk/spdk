@@ -83,6 +83,9 @@ struct spdk_app_opts {
 	spdk_app_shutdown_cb	shutdown_cb;
 	spdk_sighandler_t	usr1_handler;
 
+	/*  Wait for RPC start call before SPSK initialization take place.
+	 */
+	bool			wait_rpc_start;
 	bool			enable_coredump;
 	int			mem_channel;
 	int			master_core;
@@ -98,6 +101,39 @@ struct spdk_app_opts {
 	 */
 	uint64_t		max_delay_us;
 };
+
+enum spdk_app_runlevel {
+	/** Nothing initialized yet. Nothing can be done using public API */
+	SPDK_RUNLEVEL_INVALID,
+
+	/** Pre subsystems init runlevel.
+	 * \note some RPC calls are are available for early configuration.
+	 */
+	SPDK_RUNLEVEL_PRE_INIT,
+
+	/** SPDK is doing environment initialization. Subsystems not initialized yet.
+	 * \note RPC is not working on this level.
+	 */
+	SPDK_RUNLEVEL_ENV_INIT,
+
+	/**
+	 * SPDK is calling all subsystems init handlers.
+	 * * \note RPC is not working on this level.
+	 */
+	SPDK_RUNLEVEL_SUBSYSTEMS_INIT,
+
+	/** Up and running. */
+	SPDK_RUNLEVEL_RUNNING,
+
+	/** Going down. */
+	SPDK_RUNLEVEL_SHUTTING_DOWN,
+};
+
+/**
+ * Return current SPDK runlevel.
+ * @return run level
+ */
+enum spdk_app_runlevel spdk_app_get_runlevel(void);
 
 /**
  * Initialize the default value of opts
@@ -186,7 +222,7 @@ int spdk_app_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask);
  */
 struct spdk_cpuset *spdk_app_get_core_mask(void);
 
-#define SPDK_APP_GETOPT_STRING "c:de:ghi:m:n:p:qr:s:t:"
+#define SPDK_APP_GETOPT_STRING "c:de:ghi:m:n:p:qr:s:t:w"
 
 enum spdk_app_parse_args_rvals {
 	SPDK_APP_PARSE_ARGS_HELP = 0,
