@@ -110,6 +110,18 @@ def resize_lvol_bdev(client, name, size):
     return client.call('resize_lvol_bdev', params)
 
 
+def destroy_lvol_bdev(client, name):
+    """Destroy a logical volume.
+
+    Args:
+        name: name of logical volume to destroy
+    """
+    params = {
+        'name': name,
+    }
+    return client.call('destroy_lvol_bdev', params)
+
+
 def destroy_lvol_store(client, uuid=None, lvs_name=None):
     """Destroy a logical volume store.
 

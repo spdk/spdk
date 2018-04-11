@@ -583,6 +583,15 @@ if __name__ == "__main__":
     p.set_defaults(func=resize_lvol_bdev)
 
     @call_cmd
+    def destroy_lvol_bdev(args):
+        rpc.lvol.destroy_lvol_bdev(args.client,
+                                   name=args.name)
+
+    p = subparsers.add_parser('destroy_lvol_bdev', help='Destroy a logical volume')
+    p.add_argument('name', help='lvol bdev name')
+    p.set_defaults(func=destroy_lvol_bdev)
+
+    @call_cmd
     def destroy_lvol_store(args):
         rpc.lvol.destroy_lvol_store(args.client,
                                     uuid=args.uuid,

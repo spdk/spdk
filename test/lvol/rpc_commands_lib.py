@@ -147,6 +147,11 @@ class Commands_Rpc(object):
         output, rc = self.rpc.delete_bdev(base_name)
         return rc
 
+    def destroy_lvol_bdev(self, bdev_name):
+        print("INFO: RPC COMMAND destroy_lvol_bdev")
+        output, rc = self.rpc.destroy_lvol_bdev(bdev_name)
+        return rc
+
     def resize_lvol_bdev(self, uuid, new_size):
         print("INFO: RPC COMMAND resize_lvol_bdev")
         output, rc = self.rpc.resize_lvol_bdev(uuid, new_size)
