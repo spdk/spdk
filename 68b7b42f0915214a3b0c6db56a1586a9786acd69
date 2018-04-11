@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "65c5838d_aaf28d11",
+        "filename": "test/nvmf/host/aer.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T16:16:35Z",
+      "side": 1,
+      "message": "This sleep is a little bit unfortunate, but I guess we have no way to know when the aer test tool is up and running.  This is OK for now, but maybe we should extend aer to enable the JSON-RPC server so we could use waitforlisten instead of sleeping.",
+      "revId": "68b7b42f0915214a3b0c6db56a1586a9786acd69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
