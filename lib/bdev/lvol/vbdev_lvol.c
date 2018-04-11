@@ -562,6 +562,16 @@ vbdev_lvol_destruct(void *ctx)
 	return 1;
 }
 
+void
+vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
+{
+	/*
+	 * TODO: This should call spdk_lvol_destroy() directly, and the bdev unregister path
+	 * should be changed so that it does not destroy the lvol.
+	 */
+	spdk_bdev_unregister(lvol->bdev, cb_fn, cb_arg);
+}
+
 static char *
 vbdev_lvol_find_name(struct spdk_lvol *lvol, spdk_blob_id blob_id)
 {
