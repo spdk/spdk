@@ -45,15 +45,19 @@
 #define NVME_IO_ALIGN		4096
 
 static bool spdk_env_initialized;
+static int spdk_enable_sgl = 0;
 
 struct spdk_fio_options {
 	void	*pad;	/* off1 used in option descriptions may not be 0 */
 	int	mem_size;
 	int	shm_id;
+	int	enable_sgl;
 };
 
 struct spdk_fio_request {
 	struct io_u		*io;
+	/** Offset in current iovec, fio only uses 1 vector */
+	uint32_t iov_offset;
 
 	struct spdk_fio_thread	*fio_thread;
 };
@@ -249,6 +253,7 @@ static int spdk_fio_setup(struct thread_data *td)
 		opts.name = "fio";
 		opts.mem_size = fio_options->mem_size;
 		opts.shm_id = fio_options->shm_id;
+		spdk_enable_sgl = fio_options->enable_sgl;
 		if (spdk_env_init(&opts) < 0) {
 			SPDK_ERRLOG("Unable to initialize SPDK env\n");
 			free(fio_thread->iocq);
@@ -385,6 +390,32 @@ static void spdk_fio_completion_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 	fio_thread->iocq[fio_thread->iocq_count++] = fio_req->io;
 }
 
+static void
+spdk_nvme_io_reset_sgl(void *ref, uint32_t sgl_offset)
+{
+	struct spdk_fio_request *fio_req = (struct spdk_fio_request *)ref;
+
+	fio_req->iov_offset = sgl_offset;
+}
+
+static int
+spdk_nvme_io_next_sge(void *ref, void **address, uint32_t *length)
+{
+	struct spdk_fio_request *fio_req = (struct spdk_fio_request *)ref;
+	struct io_u *io_u = fio_req->io;
+
+	*address = io_u->buf;
+	*length = io_u->xfer_buflen;
+
+	if (fio_req->iov_offset) {
+		assert(fio_req->iov_offset <= io_u->xfer_buflen);
+		*address += fio_req->iov_offset;
+		*length -= fio_req->iov_offset;
+	}
+
+	return 0;
+}
+
 static int spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 {
 	int rc = 1;
@@ -415,12 +446,24 @@ static int spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 
 	switch (io_u->ddir) {
 	case DDIR_READ:
-		rc = spdk_nvme_ns_cmd_read(ns, fio_qpair->qpair, io_u->buf, lba, lba_count,
-					   spdk_fio_completion_cb, fio_req, 0);
+		if (!spdk_enable_sgl) {
+			rc = spdk_nvme_ns_cmd_read(ns, fio_qpair->qpair, io_u->buf, lba, lba_count,
+						   spdk_fio_completion_cb, fio_req, 0);
+		} else {
+			rc = spdk_nvme_ns_cmd_readv(ns, fio_qpair->qpair, lba,
+						    lba_count, spdk_fio_completion_cb, fio_req, 0,
+						    spdk_nvme_io_reset_sgl, spdk_nvme_io_next_sge);
+		}
 		break;
 	case DDIR_WRITE:
-		rc = spdk_nvme_ns_cmd_write(ns, fio_qpair->qpair, io_u->buf, lba, lba_count,
-					    spdk_fio_completion_cb, fio_req, 0);
+		if (!spdk_enable_sgl) {
+			rc = spdk_nvme_ns_cmd_write(ns, fio_qpair->qpair, io_u->buf, lba, lba_count,
+						    spdk_fio_completion_cb, fio_req, 0);
+		} else {
+			rc = spdk_nvme_ns_cmd_writev(ns, fio_qpair->qpair, lba,
+						     lba_count, spdk_fio_completion_cb, fio_req, 0,
+						     spdk_nvme_io_reset_sgl, spdk_nvme_io_next_sge);
+		}
 		break;
 	default:
 		assert(false);
@@ -557,6 +600,15 @@ static struct fio_option options[] = {
 		.type		= FIO_OPT_INT,
 		.off1		= offsetof(struct spdk_fio_options, shm_id),
 		.def		= "-1",
+		.category	= FIO_OPT_C_ENGINE,
+		.group		= FIO_OPT_G_INVALID,
+	},
+	{
+		.name		= "enable_sgl",
+		.lname		= "SGL used for I/O commands",
+		.type		= FIO_OPT_INT,
+		.off1		= offsetof(struct spdk_fio_options, enable_sgl),
+		.def		= "0",
 		.category	= FIO_OPT_C_ENGINE,
 		.group		= FIO_OPT_G_INVALID,
 	},
