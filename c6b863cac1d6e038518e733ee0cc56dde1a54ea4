@@ -1,0 +1,169 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "72ed2fd4_1a5a4f55",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T16:55:53Z",
+      "side": 1,
+      "message": "Is this TODO going to be resolved in this patch?  The API already looks synchronous, so I\u0027m not sure what the issue is.",
+      "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "513deda9_555aa92b",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 413,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T16:55:53Z",
+      "side": 1,
+      "message": "This name seems confusing to me.  I think this returns the blobid of the snapshot that is the base for this blob; maybe spdk_blob_get_backing_snapshot_id() would be clearer (better suggestions welcome).",
+      "range": {
+        "startLine": 413,
+        "startChar": 13,
+        "endLine": 413,
+        "endChar": 35
+      },
+      "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5dd973b_cc65330b",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 436,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T16:55:53Z",
+      "side": 1,
+      "message": "This parameter is not a blob id.",
+      "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c091bb5c_5921d6c2",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2090,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T16:55:53Z",
+      "side": 1,
+      "message": "calloc() needs a check for allocation failure.",
+      "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f26f4e8_d20e9df0",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2107,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T16:55:53Z",
+      "side": 1,
+      "message": "Check for allocation failure here too.",
+      "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "019e1f39_2587cc17",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2120,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T16:55:53Z",
+      "side": 1,
+      "message": "Check for allocation failure here too.",
+      "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5445deb_34467218",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2161,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T16:55:53Z",
+      "side": 1,
+      "message": "We need to check that value_len is the right size before we dereference value.  (Don\u0027t assume that on-disk data is valid.)",
+      "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a626e26_48ac6fb3",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2460,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T16:55:53Z",
+      "side": 1,
+      "message": "Is this change related to the snapshot changes? I think it at least needs an explanation in the commit message, or maybe it should be split out into a separate review.",
+      "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4385268_f8004597",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 4209,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T16:55:53Z",
+      "side": 1,
+      "message": "I think this \"to\" should be removed to make this a valid sentence.",
+      "range": {
+        "startLine": 4209,
+        "startChar": 40,
+        "endLine": 4209,
+        "endChar": 42
+      },
+      "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
