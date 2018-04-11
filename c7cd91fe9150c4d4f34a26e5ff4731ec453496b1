@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "46c825ba_20b64645",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-11T08:12:15Z",
+      "side": 1,
+      "message": "As commented before - this should be an obligatory positional argument, otherwise this call ends in error. Try it out",
+      "range": {
+        "startLine": 82,
+        "startChar": 4,
+        "endLine": 82,
+        "endChar": 60
+      },
+      "revId": "c7cd91fe9150c4d4f34a26e5ff4731ec453496b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8dd55c7_ce4e29d4",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-11T08:12:15Z",
+      "side": 1,
+      "message": "Please see my previous comments and either apply changes or reply.",
+      "range": {
+        "startLine": 67,
+        "startChar": 1,
+        "endLine": 67,
+        "endChar": 22
+      },
+      "revId": "c7cd91fe9150c4d4f34a26e5ff4731ec453496b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c1511d9_a1a68bf4",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-11T08:12:15Z",
+      "side": 1,
+      "message": "Please see my previous comments and either apply changes or reply.",
+      "range": {
+        "startLine": 73,
+        "startChar": 0,
+        "endLine": 73,
+        "endChar": 26
+      },
+      "revId": "c7cd91fe9150c4d4f34a26e5ff4731ec453496b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b4b04e1_b87362ee",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-11T08:12:15Z",
+      "side": 1,
+      "message": "Again - Please see my previous comments and either apply changes or reply.\nI still think that this name is wrong as function has nothing to do with vhost configuration, only bdevs",
+      "range": {
+        "startLine": 51,
+        "startChar": 0,
+        "endLine": 51,
+        "endChar": 23
+      },
+      "revId": "c7cd91fe9150c4d4f34a26e5ff4731ec453496b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
