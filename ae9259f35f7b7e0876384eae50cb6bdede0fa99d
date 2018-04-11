@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a7a7d44_ea96ef7f",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 855,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T17:58:08Z",
+      "side": 1,
+      "message": "This needs to be updated to pass args.client as the first parameter.",
+      "revId": "ae9259f35f7b7e0876384eae50cb6bdede0fa99d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
