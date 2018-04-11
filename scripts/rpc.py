@@ -480,7 +480,10 @@ if __name__ == "__main__":
     # lvol
     @call_cmd
     def construct_lvol_store(args):
-        print_array(rpc.lvol.construct_lvol_store(args.client, args))
+        print_array(rpc.lvol.construct_lvol_store(args.client,
+                                                  bdev_name=args.bdev_name,
+                                                  lvs_name=args.lvs_name,
+                                                  cluster_sz=args.cluster_sz))
 
     p = subparsers.add_parser('construct_lvol_store', help='Add logical volume store on base bdev')
     p.add_argument('bdev_name', help='base bdev name')
@@ -490,7 +493,9 @@ if __name__ == "__main__":
 
     @call_cmd
     def rename_lvol_store(args):
-        rpc.lvol.rename_lvol_store(args.client, args)
+        rpc.lvol.rename_lvol_store(args.client,
+                                   old_name=args.old_name,
+                                   new_name=args.new_name)
 
     p = subparsers.add_parser('rename_lvol_store', help='Change logical volume store name')
     p.add_argument('old_name', help='old name')
@@ -499,7 +504,12 @@ if __name__ == "__main__":
 
     @call_cmd
     def construct_lvol_bdev(args):
-        print_array(rpc.lvol.construct_lvol_bdev(args.client, args))
+        print_array(rpc.lvol.construct_lvol_bdev(args.client,
+                                                 lvol_name=args.lvol_name,
+                                                 size=args.size * 1024 * 1024,
+                                                 thin_provision=args.thin_provision,
+                                                 uuid=args.uuid,
+                                                 lvs_name=args.lvs_name))
 
     p = subparsers.add_parser('construct_lvol_bdev', help='Add a bdev with an logical volume backend')
     p.add_argument('-u', '--uuid', help='lvol store UUID', required=False)
@@ -511,7 +521,9 @@ if __name__ == "__main__":
 
     @call_cmd
     def snapshot_lvol_bdev(args):
-        rpc.lvol.snapshot_lvol_bdev(args.client, args)
+        rpc.lvol.snapshot_lvol_bdev(args.client,
+                                    lvol_name=args.lvol_name,
+                                    snapshot_name=args.snapshot_name)
 
     p = subparsers.add_parser('snapshot_lvol_bdev', help='Create a snapshot of an lvol bdev')
     p.add_argument('lvol_name', help='lvol bdev name')
@@ -520,7 +532,9 @@ if __name__ == "__main__":
 
     @call_cmd
     def clone_lvol_bdev(args):
-        rpc.lvol.clone_lvol_bdev(args.client, args)
+        rpc.lvol.clone_lvol_bdev(args.client,
+                                 snapshot_name=args.snapshot_name,
+                                 clone_name=args.clone_name)
 
     p = subparsers.add_parser('clone_lvol_bdev', help='Create a clone of an lvol snapshot')
     p.add_argument('snapshot_name', help='lvol snapshot name')
@@ -529,7 +543,9 @@ if __name__ == "__main__":
 
     @call_cmd
     def rename_lvol_bdev(args):
-        rpc.lvol.rename_lvol_bdev(args.client, args)
+        rpc.lvol.rename_lvol_bdev(args.client,
+                                  old_name=args.old_name,
+                                  new_name=args.new_name)
 
     p = subparsers.add_parser('rename_lvol_bdev', help='Change lvol bdev name')
     p.add_argument('old_name', help='lvol bdev name')
@@ -538,7 +554,9 @@ if __name__ == "__main__":
 
     @call_cmd
     def resize_lvol_bdev(args):
-        rpc.lvol.resize_lvol_bdev(args.client, args)
+        rpc.lvol.resize_lvol_bdev(args.client,
+                                  name=args.name,
+                                  size=args.size * 1024 * 1024)
 
     p = subparsers.add_parser('resize_lvol_bdev', help='Resize existing lvol bdev')
     p.add_argument('name', help='lvol bdev name')
@@ -547,7 +565,9 @@ if __name__ == "__main__":
 
     @call_cmd
     def destroy_lvol_store(args):
-        rpc.lvol.destroy_lvol_store(args.client, args)
+        rpc.lvol.destroy_lvol_store(args.client,
+                                    uuid=args.uuid,
+                                    lvs_name=args.lvs_name)
 
     p = subparsers.add_parser('destroy_lvol_store', help='Destroy an logical volume store')
     p.add_argument('-u', '--uuid', help='lvol store UUID', required=False)
@@ -556,7 +576,9 @@ if __name__ == "__main__":
 
     @call_cmd
     def get_lvol_stores(args):
-        print_dict(rpc.lvol.get_lvol_stores(args.client, args))
+        print_dict(rpc.lvol.get_lvol_stores(args.client,
+                                            uuid=args.uuid,
+                                            lvs_name=args.lvs_name))
 
     p = subparsers.add_parser('get_lvol_stores', help='Display current logical volume store list')
     p.add_argument('-u', '--uuid', help='lvol store UUID', required=False)
