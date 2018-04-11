@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bd0a0227_d7cc859a",
+        "filename": "lib/bdev/iscsi/bdev_iscsi_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-11T07:52:29Z",
+      "side": 1,
+      "message": "I know it works here right now, but usually freeing the fields in decoders is done in separate function. Like free_rpc_construct_iscsi_bdev().\nIt is helpful if we wanted to use fields in the future (if this call was ever async), and free it at different times.",
+      "range": {
+        "startLine": 75,
+        "startChar": 0,
+        "endLine": 79,
+        "endChar": 20
+      },
+      "revId": "e3447918b301ce54f651b9329a196f9df514515a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "62a0ace6_ec286f91",
+        "filename": "lib/bdev/iscsi/bdev_iscsi_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-11T07:52:29Z",
+      "side": 1,
+      "message": "Return is needed here.",
+      "revId": "e3447918b301ce54f651b9329a196f9df514515a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
