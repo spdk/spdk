@@ -48,6 +48,24 @@ if __name__ == "__main__":
     p.set_defaults(func=app_start)
 
     @call_cmd
+    def set_app_opts(args):
+        rpc.app.set_opts(args.client, args)
+
+    p = subparsers.add_parser('set_app_opts', help="""Overwrite SPDK target commandline and config file options.
+    target need to be started with '-w' parameter.""")
+    p.add_argument('-r', '--rpc-addr', help="""after starting target RPC listen address""")
+    p.add_argument('-m', '--reactor-mask', help="""core mask for DPDK""")
+    p.add_argument('-e', '--tpoint-group-mask', help="""tracepoint group mask for spdk trace buffers""")
+    p.add_argument('-i', '--shm-id', help="""shared memory ID""", type=int)
+    p.add_argument('-d', '--enable-coredump', help="""disable coredump file enabling""", type=bool)
+    p.add_argument('-n', '--mem-channel', help="""number of memory channels used for DPDK""", type=int)
+    p.add_argument('-p', '--master-core', help="""master (primary) core for DPDK""", type=int)
+    p.add_argument('-s', '--mem-size', help="""memory size in MB for DPDK""", type=int)
+    p.add_argument('--no-pci', help="""Target name""", type=bool)
+    p.add_argument('-g', '--hugepage-single-segments', help="""Force creating just one hugetlbfs file""")
+    p.set_defaults(func=set_app_opts)
+
+    @call_cmd
     def get_rpc_methods(args):
         print_dict(rpc.get_rpc_methods(args.client))
 
