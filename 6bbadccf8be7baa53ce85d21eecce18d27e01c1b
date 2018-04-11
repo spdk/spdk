@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "902f4482_8039fbf0",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 641,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T18:27:34Z",
+      "side": 1,
+      "message": "Note that this doesn\u0027t fill the rest of the hostnqn field with zeroes in the way that strncpy() did.  That\u0027s OK in this particular case because nvmf_data is zero initialized above.",
+      "revId": "6bbadccf8be7baa53ce85d21eecce18d27e01c1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
