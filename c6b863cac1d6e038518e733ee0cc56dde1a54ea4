@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "512bac1d_2274fd47",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-11T20:49:48Z",
+      "side": 1,
+      "message": "I think these two new functions should operate entirely on blobids, not on spdk_blob *. Maybe the function should be called \"spdk_blob_get_children\".\n\nI\u0027m not entirely convinced that we need to expose this function at all.",
+      "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "513deda9_555aa92b",
         "filename": "include/spdk/blob.h",
         "patchSetId": 18
@@ -42,6 +59,30 @@
     },
     {
       "key": {
+        "uuid": "961db367_1814efd3",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 413,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-11T20:49:48Z",
+      "side": 1,
+      "message": "Or call it spdk_blob_get_parent.",
+      "parentUuid": "513deda9_555aa92b",
+      "range": {
+        "startLine": 413,
+        "startChar": 13,
+        "endLine": 413,
+        "endChar": 35
+      },
+      "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f5dd973b_cc65330b",
         "filename": "include/spdk/blob.h",
         "patchSetId": 18
@@ -53,6 +94,23 @@
       "writtenOn": "2018-04-11T16:55:53Z",
       "side": 1,
       "message": "This parameter is not a blob id.",
+      "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0f72e477_8b7aafe7",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2078,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-11T20:49:48Z",
+      "side": 1,
+      "message": "I think this can actually be quite a bit simpler. Each blob (optionally) has a pointer to its parent snapshot. If that pointer doesn\u0027t exist, just return while doing nothing. If it does exist, look up the parent in the list. If it exists, increase the ref count on it. If it doesn\u0027t exist, create it and set the ref count to 1.\n\nIt doesn\u0027t matter if it is a snapshot or a clone or whatever.",
       "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -144,6 +202,23 @@
     },
     {
       "key": {
+        "uuid": "951fe6ff_d1ba640b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2490,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-11T20:49:48Z",
+      "side": 1,
+      "message": "This was previously an optional step because reading all of the blobs can be quite expensive. I\u0027m not sure we want to force all blobs to be read on every load.",
+      "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c4385268_f8004597",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 18
@@ -161,6 +236,23 @@
         "endLine": 4209,
         "endChar": 42
       },
+      "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c734d79_215a2c08",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-11T20:49:48Z",
+      "side": 1,
+      "message": "I think this can just contain the blob_id, a ref count, and the TAILQ_ENTRY to jump to the next element.",
       "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
