@@ -52,6 +52,7 @@ static struct spdk_jsonrpc_server *g_jsonrpc_server = NULL;
 struct spdk_rpc_method {
 	const char *name;
 	spdk_rpc_method_handler func;
+	enum spdk_app_runlevel lvl;
 	SLIST_ENTRY(spdk_rpc_method) slist;
 };
 
@@ -63,10 +64,15 @@ spdk_jsonrpc_handler(struct spdk_jsonrpc_request *request,
 		     const struct spdk_json_val *params)
 {
 	struct spdk_rpc_method *m;
+	enum spdk_app_runlevel lvl = spdk_app_get_runlevel();
 
 	assert(method != NULL);
 
 	SLIST_FOREACH(m, &g_rpc_methods, slist) {
+		if (m->lvl != lvl) {
+			continue;
+		}
+
 		if (spdk_json_strequal(method, m->name)) {
 			m->func(request, params);
 			return;
@@ -184,7 +190,8 @@ spdk_rpc_poll(void)
 }
 
 void
-spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func)
+spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func,
+			 enum spdk_app_runlevel lvl)
 {
 	struct spdk_rpc_method *m;
 
@@ -195,6 +202,7 @@ spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func)
 	assert(m->name != NULL);
 
 	m->func = func;
+	m->lvl = lvl;
 
 	/* TODO: use a hash table or sorted list */
 	SLIST_INSERT_HEAD(&g_rpc_methods, m, slist);
@@ -261,6 +269,7 @@ spdk_rpc_get_rpc_methods(struct spdk_jsonrpc_request *request,
 
 	spdk_json_write_array_begin(w);
 	SLIST_FOREACH(m, &g_rpc_methods, slist) {
+		/* TODO: write run level for this command */
 		spdk_json_write_string(w, m->name);
 	}
 	spdk_json_write_array_end(w);

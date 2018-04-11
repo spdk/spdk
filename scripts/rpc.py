@@ -41,6 +41,13 @@ if __name__ == "__main__":
     subparsers = parser.add_subparsers(help='RPC methods')
 
     @call_cmd
+    def app_start(args):
+        rpc.app.start(args.client, args)
+
+    p = subparsers.add_parser('app_start', help="""Start SPDK application that is awaiting for this.""")
+    p.set_defaults(func=app_start)
+
+    @call_cmd
     def get_rpc_methods(args):
         print_dict(rpc.get_rpc_methods(args.client))
 
