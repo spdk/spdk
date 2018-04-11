@@ -106,18 +106,10 @@ bdev_iscsi_remove_conn_req(struct bdev_iscsi_conn_req *req)
 	free(req);
 }
 
-static void bdev_iscsi_finish(void)
+static void
+bdev_iscsi_finish_done(void)
 {
-	struct bdev_iscsi_lun *lun;
 	struct bdev_iscsi_conn_req *req, *tmp;
-
-	while (!TAILQ_EMPTY(&g_iscsi_lun_head)) {
-		lun = TAILQ_FIRST(&g_iscsi_lun_head);
-		TAILQ_REMOVE(&g_iscsi_lun_head, lun, link);
-		iscsi_logout_sync(lun->context);
-		iscsi_destroy_context(lun->context);
-		iscsi_destroy_url(lun->url);
-	}
 
 	TAILQ_FOREACH_SAFE(req, &g_iscsi_conn_req, link, tmp) {
 		bdev_iscsi_remove_conn_req(req);
@@ -125,6 +117,58 @@ static void bdev_iscsi_finish(void)
 
 	if (g_conn_poller) {
 		spdk_poller_unregister(&g_conn_poller);
+	}
+
+}
+
+static void iscsi_free_lun(struct bdev_iscsi_lun *lun)
+{
+	assert(lun != NULL);
+	free(lun->bdev.name);
+	free(lun);
+}
+
+static void
+bdev_iscsi_lun_cleanup(struct bdev_iscsi_lun *lun)
+{
+	TAILQ_REMOVE(&g_iscsi_lun_head, lun, link);
+	iscsi_destroy_context(lun->context);
+	iscsi_destroy_url(lun->url);
+	iscsi_free_lun(lun);
+	if (TAILQ_EMPTY(&g_iscsi_lun_head)) {
+		bdev_iscsi_finish_done();
+		spdk_bdev_module_finish_done();
+	}
+}
+
+static void
+iscsi_logout_cb(struct iscsi_context *iscsi, int status,
+		void *command_data, void *private_data)
+{
+	struct bdev_iscsi_lun *lun = private_data;
+
+	if (status != SPDK_SCSI_STATUS_GOOD) {
+		SPDK_ERRLOG("Failed to logout from lun=%p\n", lun);
+	}
+
+	bdev_iscsi_lun_cleanup(lun);
+}
+
+static void
+bdev_iscsi_finish(void)
+{
+	struct bdev_iscsi_lun *lun, *tmp;
+
+	if (TAILQ_EMPTY(&g_iscsi_lun_head)) {
+		bdev_iscsi_finish_done();
+		spdk_bdev_module_finish_done();
+		return;
+	}
+
+	TAILQ_FOREACH_SAFE(lun, &g_iscsi_lun_head, link, tmp) {
+		if (iscsi_logout_async(lun->context, iscsi_logout_cb, lun) != 0) {
+			bdev_iscsi_lun_cleanup(lun);
+		}
 	}
 }
 
@@ -134,6 +178,7 @@ static struct spdk_bdev_module g_iscsi_bdev_module = {
 	.module_fini	= bdev_iscsi_finish,
 	.get_ctx_size	= bdev_iscsi_get_ctx_size,
 	.async_init	= true,
+	.async_fini	= true,
 };
 
 SPDK_BDEV_MODULE_REGISTER(&g_iscsi_bdev_module);
@@ -398,15 +443,6 @@ static const struct spdk_bdev_fn_table iscsi_fn_table = {
 	.get_io_channel		= bdev_iscsi_get_io_channel,
 	.dump_info_json		= bdev_iscsi_dump_info_json,
 };
-
-static void iscsi_free_lun(struct bdev_iscsi_lun *lun)
-{
-	if (lun == NULL) {
-		return;
-	}
-	free(lun->bdev.name);
-	free(lun);
-}
 
 static struct spdk_bdev *
 create_iscsi_lun(struct iscsi_context *context, struct iscsi_url *url,
