@@ -37,6 +37,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/jsonrpc.h"
+#include "spdk/event.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -89,14 +90,19 @@ typedef void (*spdk_rpc_method_handler)(struct spdk_jsonrpc_request *request,
  *
  * \param method Name for the registered method.
  * \param func Function registered for this method to handle the RPC request.
+ * \param lvl target run level for this command
  */
-void spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func);
+void spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func,
+			      enum spdk_app_runlevel lvl);
 
-#define SPDK_RPC_REGISTER(method, func) \
+#define SPDK_RPC_REGISTER_RUN_LEVEL(method, func, run_level) \
 static void __attribute__((constructor)) rpc_register_##func(void) \
 { \
-	spdk_rpc_register_method(method, func); \
+	spdk_rpc_register_method(method, func, run_level); \
 }
+
+#define SPDK_RPC_REGISTER(method, func) \
+	SPDK_RPC_REGISTER_RUN_LEVEL(method, func, SPDK_RUNLEVEL_RUNNING)
 
 #ifdef __cplusplus
 }

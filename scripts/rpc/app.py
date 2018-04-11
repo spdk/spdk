@@ -10,3 +10,7 @@ def context_switch_monitor(client, args):
     if args.disable:
         params['enabled'] = False
     return client.call('context_switch_monitor', params)
+
+
+def start(client, arg):
+    return client.call('app_start', {})

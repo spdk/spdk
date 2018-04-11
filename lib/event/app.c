@@ -58,9 +58,13 @@ struct spdk_app {
 	spdk_app_shutdown_cb		shutdown_cb;
 	int				rc;
 	struct spdk_poller		*app_poller;
+	enum spdk_app_runlevel		runlevel;
 };
 
-static struct spdk_app g_spdk_app;
+static struct spdk_app g_spdk_app = {
+	.runlevel = SPDK_RUNLEVEL_INVALID,
+};
+
 static struct spdk_event *g_shutdown_event = NULL;
 static int g_init_lcore;
 static bool g_shutdown_sig_received = false;
@@ -68,6 +72,11 @@ static bool g_shutdown_sig_received = false;
 static spdk_event_fn g_app_start_fn;
 static void *g_app_start_arg1;
 static void *g_app_start_arg2;
+
+enum spdk_app_runlevel
+spdk_app_get_runlevel(void) {
+	return g_spdk_app.runlevel;
+}
 
 int
 spdk_app_get_shm_id(void)
@@ -286,6 +295,7 @@ start_rpc(void *arg1, void *arg2)
 		g_spdk_app.app_poller = spdk_poller_register(spdk_app_poll_rpc, NULL, SPDK_APP_RPC_SELECT_INTERVAL);
 	}
 
+	g_spdk_app.runlevel = SPDK_RUNLEVEL_RUNNING;
 	g_app_start_fn(g_app_start_arg1, g_app_start_arg2);
 }
 
@@ -407,6 +417,30 @@ spdk_app_setup_trace(struct spdk_app_opts *opts)
 	return 0;
 }
 
+static void
+spdk_rpc_app_start(struct spdk_jsonrpc_request *request,
+		   const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "get_rpc_methods requires no parameters");
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+
+	g_spdk_app.runlevel = SPDK_RUNLEVEL_ENV_INIT;
+}
+SPDK_RPC_REGISTER_RUN_LEVEL("app_start", spdk_rpc_app_start, SPDK_RUNLEVEL_PRE_INIT)
+
 int
 spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	       void *arg1, void *arg2)
@@ -440,7 +474,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		setrlimit(RLIMIT_CORE, &core_limits);
 	}
 #endif
-
+	spdk_log_set_print_level(opts->print_level);
 	config = spdk_app_setup_conf(opts->config_file);
 	if (config == NULL) {
 		goto app_start_setup_conf_err;
@@ -451,6 +485,42 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	spdk_log_set_level(SPDK_APP_DEFAULT_LOG_LEVEL);
 	spdk_log_open();
 
+	g_spdk_app.runlevel = SPDK_RUNLEVEL_PRE_INIT;
+	if (opts->rpc_addr != NULL && opts->wait_rpc_start) {
+		/* Listen on the requested address */
+		g_spdk_app.rc = spdk_rpc_listen(opts->rpc_addr);
+		if (g_spdk_app.rc != 0) {
+			SPDK_ERRLOG("Unable to start RPC service at %s\n", opts->rpc_addr);
+			goto app_start_log_close_err;
+		}
+
+		SPDK_NOTICELOG("Waiting for RPC start command on '%s'\n", opts->rpc_addr);
+		/* Wait for start. This is a chance to receive pre-init
+		 * RPC config.
+		 */
+		while (spdk_app_get_runlevel() == SPDK_RUNLEVEL_PRE_INIT) {
+			spdk_rpc_poll();
+			usleep(SPDK_APP_RPC_SELECT_INTERVAL);
+		}
+
+		/* Shutdown connections first but don't close them. This will
+		 * allow to send any pending responses. Then poll for all
+		 * further connections to close.
+		 */
+		spdk_rpc_shutdown();
+		while (spdk_rpc_poll() == -EAGAIN) {
+			usleep(SPDK_APP_RPC_SELECT_INTERVAL);
+		}
+
+		/* In case RPC address changed (eg from UNIX socket to IP)
+		 * close RPC socket. It will be recreated.
+		 */
+		while (spdk_rpc_close() == -EAGAIN) {
+			usleep(SPDK_APP_RPC_SELECT_INTERVAL);
+		}
+	}
+
+	g_spdk_app.runlevel = SPDK_RUNLEVEL_ENV_INIT;
 	if (spdk_app_setup_env(opts) < 0) {
 		goto app_start_log_close_err;
 	}
@@ -499,6 +569,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	g_app_start_arg2 = arg2;
 	app_start_event = spdk_event_allocate(g_init_lcore, start_rpc, (void *)opts->rpc_addr, NULL);
 
+	g_spdk_app.runlevel = SPDK_RUNLEVEL_SUBSYSTEMS_INIT;
 	spdk_subsystem_init(app_start_event);
 
 	/* This blocks until spdk_app_stop is called */
@@ -584,6 +655,7 @@ usage(char *executable_name, struct spdk_app_opts *default_opts, void (*app_usag
 	} else {
 		printf("all hugepage memory)\n");
 	}
+	printf(" -w         Hold SPDK initialization on PRE_INIT runlevel.");
 	spdk_tracelog_usage(stdout, "-t");
 	app_usage();
 }
@@ -694,6 +766,9 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 #else
 			break;
 #endif
+		case 'w':
+			opts->wait_rpc_start = true;
+			break;
 		case '?':
 			/*
 			 * In the event getopt() above detects an option
