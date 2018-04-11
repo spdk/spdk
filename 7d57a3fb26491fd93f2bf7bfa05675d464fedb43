@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3fdfee21_bb5975eb",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2384,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T20:00:11Z",
+      "side": 1,
+      "message": "This should be stroull() for best portability (ios_per_second is unsigned, and long is smaller than uint64_t on 32-bit platforms, for example).",
+      "range": {
+        "startLine": 2384,
+        "startChar": 16,
+        "endLine": 2384,
+        "endChar": 22
+      },
+      "revId": "7d57a3fb26491fd93f2bf7bfa05675d464fedb43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
