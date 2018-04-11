@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d9de75e0_3782254a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1057,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T17:38:09Z",
+      "side": 1,
+      "message": "The \u0027\u003d 0\u0027 can be removed - it\u0027s always set before use.",
+      "revId": "f7eb2bdee1907b4ada00c2d6114ada0e6421e74a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "696651ad_1afb50ae",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1061,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T17:38:09Z",
+      "side": 1,
+      "message": "Unrelated whitespace change.",
+      "revId": "f7eb2bdee1907b4ada00c2d6114ada0e6421e74a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
