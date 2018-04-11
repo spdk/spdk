@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e159ca28_a9c29da1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 4700,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T16:39:16Z",
+      "side": 1,
+      "message": "This should probably return !!(blob-\u003einvalid_flags \u0026 SPDK_BLOB_THIN_PROV) to make sure the return value is a valid 0 or 1 bool (in this case, SPDK_BLOB_THIN_PROV happens to be 1, so it works out anyway, but this pattern will probably be copied for future functions, so let\u0027s make it robust).",
+      "revId": "027118585933c4d77450799df253149c45034e9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
