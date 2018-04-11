@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d85842a2_e8816ccd",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 425,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T20:56:12Z",
+      "side": 1,
+      "message": "We already have a pointer to the bdev in question, so we shouldn\u0027t need to loop over the global configuration.\n\nThis should be something like:\n\n    struct vbdev_passthru *pt_node \u003d SPDK_CONTAINEROF(bdev, struct vbdev_passthru, pt_bdev);\n    ...\n    spdk_json_write_named_string(w, \"bdev_name\", spdk_bdev_get_name(bdev));\n    spdk_json_write_named_string(w, \"vbdev_name\", spdk_bdev_get_name(pt_node-\u003ebase_bdev));",
+      "revId": "6c7cd1520661fd1c1017e2f051694e07cb4af7bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "80a957cc_a30d6501",
+        "filename": "lib/bdev/passthru/vbdev_passthru_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T20:56:12Z",
+      "side": 1,
+      "message": "These should not be optional.",
+      "range": {
+        "startLine": 56,
+        "startChar": 90,
+        "endLine": 56,
+        "endChar": 96
+      },
+      "revId": "6c7cd1520661fd1c1017e2f051694e07cb4af7bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "786586e6_8f3112ee",
+        "filename": "lib/bdev/passthru/vbdev_passthru_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T20:56:12Z",
+      "side": 1,
+      "message": "This is the wrong log component.",
+      "range": {
+        "startLine": 74,
+        "startChar": 16,
+        "endLine": 74,
+        "endChar": 36
+      },
+      "revId": "6c7cd1520661fd1c1017e2f051694e07cb4af7bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc53810e_3def7ebe",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T20:56:12Z",
+      "side": 1,
+      "message": "These should be required\u003dTrue (or just make them positional parameters instead of named, which will make them required by default).",
+      "revId": "6c7cd1520661fd1c1017e2f051694e07cb4af7bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
