@@ -2,6 +2,10 @@
 
 ## v18.07: (Upcoming Release)
 
+### NVMe-oF Target
+
+spdk_nvmf_subsystem_add_ns() is now asynchronous and requires a callback to indicate completion.
+
 ### git pre-commit and pre-push hooks
 
 The pre-commit hook will run `scripts/check_format.sh` and verify there are no formating
