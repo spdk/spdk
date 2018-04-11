@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6c3cf1d3_be1c5a50",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2354,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T17:43:01Z",
+      "side": 1,
+      "message": "This change looks like a good idea, but it\u0027s unrelated to this patch.",
+      "revId": "15d53543fa8f371430a68030811eb74188d09502",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9156df33_3ef29c54",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2378,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T17:43:01Z",
+      "side": 1,
+      "message": "Same as above - please split this into another patch.  Also, it would make more sense to use strtoull().",
+      "revId": "15d53543fa8f371430a68030811eb74188d09502",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dfc0877f_6fbd1858",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2446,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T17:43:01Z",
+      "side": 1,
+      "message": "free(NULL) is allowed and does nothing; the if (bdev-\u003eqos) check isn\u0027t needed.",
+      "revId": "15d53543fa8f371430a68030811eb74188d09502",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b630e06_95d4b9f3",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2454,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T17:43:01Z",
+      "side": 1,
+      "message": "Unrelated whitespace change.",
+      "revId": "15d53543fa8f371430a68030811eb74188d09502",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47eb0bb3_75ceae70",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 675,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T17:43:01Z",
+      "side": 1,
+      "message": "What\u0027s going on here?",
+      "revId": "15d53543fa8f371430a68030811eb74188d09502",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "afc3f87f_0659dfc0",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 709,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T17:43:01Z",
+      "side": 1,
+      "message": "This should either be uncommented or removed.",
+      "revId": "15d53543fa8f371430a68030811eb74188d09502",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
