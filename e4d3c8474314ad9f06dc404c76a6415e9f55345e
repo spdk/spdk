@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f141235b_91e7ec93",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 452,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T17:01:43Z",
+      "side": 1,
+      "message": "Blobs do not have names, only IDs.  This looks like a helper function that is reading a particular xattr, but that shouldn\u0027t be in the generic blobstore layer.",
+      "revId": "e4d3c8474314ad9f06dc404c76a6415e9f55345e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
