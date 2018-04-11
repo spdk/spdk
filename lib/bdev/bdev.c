@@ -2381,7 +2381,7 @@ _spdk_bdev_qos_config(struct spdk_bdev *bdev)
 			return;
 		}
 
-		ios_per_sec = strtol(val, NULL, 10);
+		ios_per_sec = strtoll(val, NULL, 10);
 		if (ios_per_sec > 0) {
 			if (ios_per_sec % SPDK_BDEV_QOS_MIN_IOS_PER_SEC) {
 				SPDK_ERRLOG("Assigned IOPS %lu on bdev %s is not multiple of %u\n",
