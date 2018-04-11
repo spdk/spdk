@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "74332e20_3f451b0b",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1920,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T17:23:18Z",
+      "side": 1,
+      "message": "Is it OK to update file-\u003elength_flushed when we aren\u0027t holding file-\u003elock?",
+      "revId": "6805119de498c5987e6bc01a0920022e5699c434",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
