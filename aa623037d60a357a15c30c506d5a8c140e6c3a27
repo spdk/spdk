@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "2b4d5cb7_d09b8107",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-11T01:13:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "42b83a50_a5f757d5",
+      "range": {
+        "startLine": 51,
+        "startChar": 7,
+        "endLine": 51,
+        "endChar": 16
+      },
+      "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9b350c4b_1ec8266e",
         "filename": "include/spdk/sock.h",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2018-04-09T23:25:30Z",
       "side": 1,
       "message": "caddr",
+      "range": {
+        "startLine": 56,
+        "startChar": 10,
+        "endLine": 56,
+        "endChar": 15
+      },
+      "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa6b3de9_cdafff05",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-11T01:13:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9b350c4b_1ec8266e",
       "range": {
         "startLine": 56,
         "startChar": 10,
@@ -65,6 +113,24 @@
     },
     {
       "key": {
+        "uuid": "e6ec261a_44c60d2a",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-11T01:13:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "eb421ec5_e2a08f96",
+      "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e6de0a59_a28d2855",
         "filename": "include/spdk/sock.h",
         "patchSetId": 1
@@ -76,6 +142,24 @@
       "writtenOn": "2018-04-09T23:25:30Z",
       "side": 1,
       "message": "Create a socket, connect the socket to the specified address and port (of the server), and then return the socket. This function is used by client.",
+      "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af987312_21c17c38",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-11T01:13:32Z",
+      "side": 1,
+      "message": "thanks, it is more clear than me.",
+      "parentUuid": "e6de0a59_a28d2855",
       "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -99,6 +183,24 @@
     },
     {
       "key": {
+        "uuid": "0d0d7c4a_94211ece",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-11T01:13:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "78299336_724cefc4",
+      "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0a982ae6_c37656a1",
         "filename": "include/spdk/sock.h",
         "patchSetId": 1
@@ -110,6 +212,24 @@
       "writtenOn": "2018-04-09T23:25:30Z",
       "side": 1,
       "message": "\"Create a socket, bind the socket to the specified address and port, and listen on the socket, and then return the socket. This function is used by server\" may be what this function does.",
+      "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "67a799c6_ad276979",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-11T01:13:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0a982ae6_c37656a1",
       "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -139,6 +259,30 @@
     },
     {
       "key": {
+        "uuid": "8e78c21b_c207791a",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-11T01:13:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c2e41c39_6b476994",
+      "range": {
+        "startLine": 84,
+        "startChar": 24,
+        "endLine": 84,
+        "endChar": 27
+      },
+      "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1db13e16_b539088a",
         "filename": "include/spdk/sock.h",
         "patchSetId": 1
@@ -156,6 +300,24 @@
     },
     {
       "key": {
+        "uuid": "0a7eef82_aef4649c",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-11T01:13:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1db13e16_b539088a",
+      "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d1ed8409_1dbba9e4",
         "filename": "include/spdk/sock.h",
         "patchSetId": 1
@@ -167,6 +329,30 @@
       "writtenOn": "2018-04-09T23:25:30Z",
       "side": 1,
       "message": "Listening socket",
+      "range": {
+        "startLine": 86,
+        "startChar": 15,
+        "endLine": 86,
+        "endChar": 46
+      },
+      "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d6b791d_14a78774",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-11T01:13:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d1ed8409_1dbba9e4",
       "range": {
         "startLine": 86,
         "startChar": 15,
@@ -202,6 +388,30 @@
     },
     {
       "key": {
+        "uuid": "8717a3fe_81f91b43",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-11T01:13:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b3e872d0_8ef8fa1d",
+      "range": {
+        "startLine": 102,
+        "startChar": 10,
+        "endLine": 102,
+        "endChar": 11
+      },
+      "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f31b96da_08632f12",
         "filename": "include/spdk/sock.h",
         "patchSetId": 1
@@ -219,6 +429,24 @@
     },
     {
       "key": {
+        "uuid": "473835ce_dfae7ac0",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-11T01:13:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f31b96da_08632f12",
+      "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "13d563e5_e04f1c15",
         "filename": "include/spdk/sock.h",
         "patchSetId": 1
@@ -230,6 +458,30 @@
       "writtenOn": "2018-04-09T23:25:30Z",
       "side": 1,
       "message": "the",
+      "range": {
+        "startLine": 108,
+        "startChar": 24,
+        "endLine": 108,
+        "endChar": 25
+      },
+      "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea5b2428_7f61505c",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-11T01:13:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "13d563e5_e04f1c15",
       "range": {
         "startLine": 108,
         "startChar": 24,
@@ -277,6 +529,42 @@
     },
     {
       "key": {
+        "uuid": "a29be4d0_a5627e1d",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-11T01:13:32Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nHave used the I/O vector array as Paul mentioned instead of vector of buffers.",
+      "parentUuid": "012771d5_f004a82e",
+      "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27526485_d9aad170",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-11T01:13:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4fbfac75_2d5ca402",
+      "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2d61111d_047abf76",
         "filename": "include/spdk/sock.h",
         "patchSetId": 1
@@ -312,6 +600,42 @@
     },
     {
       "key": {
+        "uuid": "848303a7_4ef08914",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-11T01:13:32Z",
+      "side": 1,
+      "message": "Have used \"size of vector\" instead of number of I/O vectors.",
+      "parentUuid": "2d61111d_047abf76",
+      "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1241ec7_dec23c34",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-11T01:13:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "86537c88_4413bf4b",
+      "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "59d57fb1_5350cd78",
         "filename": "include/spdk/sock.h",
         "patchSetId": 1
@@ -323,6 +647,24 @@
       "writtenOn": "2018-04-09T22:36:26Z",
       "side": 1,
       "message": "Maybe instead of repeating the sorta hard to read shorthand for the variable just say \"Set the value used to specify the low water mark (in bytes) for this socket.\"",
+      "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "886aed1c_b31767ba",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-11T01:13:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "59d57fb1_5350cd78",
       "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -346,6 +688,24 @@
     },
     {
       "key": {
+        "uuid": "cb081e6e_4813eac8",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-11T01:13:32Z",
+      "side": 1,
+      "message": "Hi Pual,\n\nI have removed \"with specified maximum events\". However, add it here just want to show the difference from \"spdk_sock_group_poll()\".",
+      "parentUuid": "0b6075b2_d6f0d78a",
+      "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6c7c4f17_b02348ad",
         "filename": "include/spdk/sock.h",
         "patchSetId": 1
@@ -357,6 +717,24 @@
       "writtenOn": "2018-04-09T22:36:26Z",
       "side": 1,
       "message": "What does \"clean\" mean? Either provide a quick description or just leave it at \"Close the given group.\"",
+      "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "600f9b82_b2aac575",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-11T01:13:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6c7c4f17_b02348ad",
       "revId": "aa623037d60a357a15c30c506d5a8c140e6c3a27",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
