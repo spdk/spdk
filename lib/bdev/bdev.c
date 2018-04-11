@@ -2374,7 +2374,7 @@ _spdk_bdev_qos_config(struct spdk_bdev *bdev)
 {
 	struct spdk_conf_section	*sp = NULL;
 	const char			*val = NULL;
-	int				ios_per_sec = 0;
+	uint64_t			ios_per_sec = 0;
 	int				i = 0;
 
 	sp = spdk_conf_find_section(NULL, "QoS");
@@ -2398,14 +2398,14 @@ _spdk_bdev_qos_config(struct spdk_bdev *bdev)
 			return;
 		}
 
-		ios_per_sec = (int)strtol(val, NULL, 10);
+		ios_per_sec = strtoull(val, NULL, 10);
 		if (ios_per_sec > 0) {
 			if (ios_per_sec % SPDK_BDEV_QOS_MIN_IOS_PER_SEC) {
-				SPDK_ERRLOG("Assigned IOPS %u on bdev %s is not multiple of %u\n",
+				SPDK_ERRLOG("Assigned IOPS %" PRIu64 " on bdev %s is not multiple of %u\n",
 					    ios_per_sec, bdev->name, SPDK_BDEV_QOS_MIN_IOS_PER_SEC);
 				SPDK_ERRLOG("Failed to enable QoS on this bdev %s\n", bdev->name);
 			} else {
-				bdev->ios_per_sec = (uint64_t)ios_per_sec;
+				bdev->ios_per_sec = ios_per_sec;
 				SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Bdev:%s QoS:%lu\n",
 					      bdev->name, bdev->ios_per_sec);
 			}
