@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dea5c33b_6ca150d2",
+        "filename": "test/iscsi_tgt/perf/iscsi_initiator.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-11T08:26:39Z",
+      "side": 1,
+      "message": "I think that we should also use num_jobs parameter for fio running on kernel, because by default it will run with only 1 thread and may not generate enough IO",
+      "range": {
+        "startLine": 54,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 102
+      },
+      "revId": "e242aa0ba7c3a45590278e814c67f8b95ae709ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
