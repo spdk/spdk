@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "80f9a785_1699b787",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-11T07:21:26Z",
+      "side": 1,
+      "message": "Some of these variables are already defied a couple lines below.\nAlso - default VM image is already defined in spdk_vhost.sh - can we make use of that?",
+      "range": {
+        "startLine": 8,
+        "startChar": 0,
+        "endLine": 15,
+        "endChar": 40
+      },
+      "revId": "45dc2b7d6508186e16557a3a4a0bf422d5040248",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
