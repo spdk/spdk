@@ -22,6 +22,30 @@
       "revId": "9b333c60b3934c446c7a8318584c7ba7b6d6f6d7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bbca5779_cabec8db",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 711,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-04-11T06:02:18Z",
+      "side": 1,
+      "message": "Why? The vhost socket creation failed, so the device is unusable.",
+      "parentUuid": "7b17e119_3f11c78c",
+      "range": {
+        "startLine": 707,
+        "startChar": 0,
+        "endLine": 711,
+        "endChar": 11
+      },
+      "revId": "9b333c60b3934c446c7a8318584c7ba7b6d6f6d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
