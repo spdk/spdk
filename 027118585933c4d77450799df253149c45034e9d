@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "26bf7733_67c0dd19",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T16:42:50Z",
+      "side": 1,
+      "message": "The blob parameter is a blob, not a blob id.  This applies to all of the doc comments below too.",
+      "revId": "027118585933c4d77450799df253149c45034e9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e159ca28_a9c29da1",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 16
