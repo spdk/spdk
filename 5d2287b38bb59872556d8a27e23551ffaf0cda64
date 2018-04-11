@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b606bedd_5edbbe86",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 494,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T16:59:07Z",
+      "side": 1,
+      "message": "Comment style should be fixed to match the other doc comments.",
+      "revId": "5d2287b38bb59872556d8a27e23551ffaf0cda64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "136e8872_e6f0b113",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 498,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-11T16:59:07Z",
+      "side": 1,
+      "message": "How is this different than spdk_bs_create_snapshot()? Why do we need both?",
+      "revId": "5d2287b38bb59872556d8a27e23551ffaf0cda64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
