@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "274a0e12_e8a04e6b",
+        "filename": "spdkcli/scripts/ui_node.py",
+        "patchSetId": 17
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-11T07:05:59Z",
+      "side": 1,
+      "message": "I\u0027d rather not. ui_command_refresh is common for all classes which inherit from UINode, so I\u0027d like to keep it common and simple. I did however remove unnecessary repetitions from UIBdev and UIBdevs.",
+      "parentUuid": "bccdbfee_5a1f8a56",
+      "range": {
+        "startLine": 24,
+        "startChar": 8,
+        "endLine": 24,
+        "endChar": 22
+      },
+      "revId": "bf3bdbed911161e054963f0d02ea53eb8166c119",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "23b0ceef_11895523",
         "filename": "spdkcli/scripts/ui_root.py",
         "patchSetId": 17
@@ -36,6 +60,30 @@
       "writtenOn": "2018-04-10T13:11:22Z",
       "side": 1,
       "message": "Unused",
+      "range": {
+        "startLine": 13,
+        "startChar": 8,
+        "endLine": 13,
+        "endChar": 30
+      },
+      "revId": "bf3bdbed911161e054963f0d02ea53eb8166c119",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b7d7163e_348f2d8d",
+        "filename": "spdkcli/scripts/ui_root.py",
+        "patchSetId": 17
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-11T07:05:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "23b0ceef_11895523",
       "range": {
         "startLine": 13,
         "startChar": 8,
@@ -94,6 +142,54 @@
     },
     {
       "key": {
+        "uuid": "ffc82871_e27bc79c",
+        "filename": "spdkcli/scripts/ui_root.py",
+        "patchSetId": 17
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-11T07:05:59Z",
+      "side": 1,
+      "message": "\"replace\" as in \"Following replace (operation)\"",
+      "parentUuid": "8377a9ec_d640dc92",
+      "range": {
+        "startLine": 30,
+        "startChar": 20,
+        "endLine": 30,
+        "endChar": 27
+      },
+      "revId": "bf3bdbed911161e054963f0d02ea53eb8166c119",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f23aea62_d507eb4d",
+        "filename": "spdkcli/scripts/ui_root.py",
+        "patchSetId": 17
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-11T07:05:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e3e92f5a_bb43d659",
+      "range": {
+        "startLine": 30,
+        "startChar": 40,
+        "endLine": 30,
+        "endChar": 43
+      },
+      "revId": "bf3bdbed911161e054963f0d02ea53eb8166c119",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d8a2fa01_b2509c66",
         "filename": "spdkcli/spdkcli.py",
         "patchSetId": 17
@@ -105,6 +201,30 @@
       "writtenOn": "2018-04-10T13:11:22Z",
       "side": 1,
       "message": "Please stick to only one style: \u0027 or \"",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 25
+      },
+      "revId": "bf3bdbed911161e054963f0d02ea53eb8166c119",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b5f192c_368dd3d8",
+        "filename": "spdkcli/spdkcli.py",
+        "patchSetId": 17
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-11T07:05:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d8a2fa01_b2509c66",
       "range": {
         "startLine": 38,
         "startChar": 0,
