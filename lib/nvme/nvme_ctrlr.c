@@ -1098,16 +1098,16 @@ nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 	uint32_t i, nn = ctrlr->cdata.nn;
 	uint64_t phys_addr = 0;
 
-	if (nn == 0) {
-		SPDK_ERRLOG("controller has 0 namespaces\n");
-		return -1;
-	}
-
 	/* ctrlr->num_ns may be 0 (startup) or a different number of namespaces (reset),
 	 * so check if we need to reallocate.
 	 */
 	if (nn != ctrlr->num_ns) {
 		nvme_ctrlr_destruct_namespaces(ctrlr);
+
+		if (nn == 0) {
+			SPDK_WARNLOG("controller has 0 namespaces\n");
+			return 0;
+		}
 
 		ctrlr->ns = spdk_dma_zmalloc(nn * sizeof(struct spdk_nvme_ns), 64,
 					     &phys_addr);
