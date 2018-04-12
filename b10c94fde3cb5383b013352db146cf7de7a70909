@@ -16,6 +16,24 @@
       "revId": "b10c94fde3cb5383b013352db146cf7de7a70909",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a2da7544_71099009",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 444,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-04-12T02:44:03Z",
+      "side": 1,
+      "message": "vbdev_passthru_examine() is for the examine interface so that I have a common function here. You may also see line 566. Thanks.",
+      "parentUuid": "9b9fa578_dead59f3",
+      "revId": "b10c94fde3cb5383b013352db146cf7de7a70909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
