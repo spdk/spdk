@@ -41,6 +41,8 @@
 #include "spdk/log.h"
 #include "spdk/string.h"
 
+#include "spdk_internal/event.h"
+
 #define RPC_DEFAULT_PORT	"5260"
 
 static struct sockaddr_un g_rpc_listen_addr_unix = {};
