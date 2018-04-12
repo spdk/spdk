@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bb4801f8_46969106",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 1980,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-12T09:07:11Z",
+      "side": 1,
+      "message": "-EINVAL ?",
+      "range": {
+        "startLine": 1980,
+        "startChar": 25,
+        "endLine": 1980,
+        "endChar": 27
+      },
+      "revId": "ab7bc6fa20b41aad0527d617eaad106731e46bc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15e0aad2_32cba0e9",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 1986,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-12T09:07:11Z",
+      "side": 1,
+      "message": "-ENOMEM may be better",
+      "range": {
+        "startLine": 1986,
+        "startChar": 26,
+        "endLine": 1986,
+        "endChar": 27
+      },
+      "revId": "ab7bc6fa20b41aad0527d617eaad106731e46bc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4b3a0fd_c4fdbb41",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 1994,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-12T09:07:11Z",
+      "side": 1,
+      "message": "-ENOMEM may be better",
+      "range": {
+        "startLine": 1994,
+        "startChar": 25,
+        "endLine": 1994,
+        "endChar": 27
+      },
+      "revId": "ab7bc6fa20b41aad0527d617eaad106731e46bc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "caf89128_03808a48",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-12T09:07:11Z",
+      "side": 1,
+      "message": "If decod esucceeds, this is not necessary now as Pawel taught to me.",
+      "range": {
+        "startLine": 125,
+        "startChar": 3,
+        "endLine": 128,
+        "endChar": 4
+      },
+      "revId": "ab7bc6fa20b41aad0527d617eaad106731e46bc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ff20277_a108fefb",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-12T09:07:11Z",
+      "side": 1,
+      "message": "This is error. Hence \"move this to the line 139 and change to goto invalid\" may be better.",
+      "range": {
+        "startLine": 153,
+        "startChar": 0,
+        "endLine": 158,
+        "endChar": 2
+      },
+      "revId": "ab7bc6fa20b41aad0527d617eaad106731e46bc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ff3cfdd_8f1ae27b",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-12T09:07:11Z",
+      "side": 1,
+      "message": "Sorry, the reason you add this looks to be from my mistake.\n\nOther all RPCs related with BDEVs don\u0027t care the hole between two for loops.\n\nWould you remove this and the line 177, 181-184 and get review from others? I apologize for troubling you.",
+      "range": {
+        "startLine": 173,
+        "startChar": 2,
+        "endLine": 173,
+        "endChar": 11
+      },
+      "revId": "ab7bc6fa20b41aad0527d617eaad106731e46bc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
