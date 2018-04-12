@@ -370,6 +370,7 @@ _spdk_lvs_load_cb(void *cb_arg, struct spdk_blob_store *bs, int lvolerrno)
 	lvs->blobstore = bs;
 	lvs->bs_dev = req->bs_dev;
 	TAILQ_INIT(&lvs->lvols);
+	TAILQ_INIT(&lvs->pending_lvols);
 
 	req->lvol_store = lvs;
 
@@ -531,6 +532,7 @@ _spdk_lvs_init_cb(void *cb_arg, struct spdk_blob_store *bs, int lvserrno)
 	assert(bs != NULL);
 	lvs->blobstore = bs;
 	TAILQ_INIT(&lvs->lvols);
+	TAILQ_INIT(&lvs->pending_lvols);
 
 	SPDK_INFOLOG(SPDK_LOG_LVOL, "Lvol store initialized\n");
 
@@ -954,6 +956,8 @@ _spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	struct spdk_lvol *lvol = req->lvol;
 	char uuid[SPDK_UUID_STRING_LEN];
 
+	TAILQ_REMOVE(&req->lvol->lvol_store->pending_lvols, req->lvol, link);
+
 	if (lvolerrno < 0) {
 		free(lvol);
 		req->cb_fn(req->cb_arg, NULL, lvolerrno);
@@ -988,6 +992,7 @@ _spdk_lvol_create_cb(void *cb_arg, spdk_blob_id blobid, int lvolerrno)
 	struct spdk_blob_store *bs;
 
 	if (lvolerrno < 0) {
+		TAILQ_REMOVE(&req->lvol->lvol_store->pending_lvols, req->lvol, link);
 		free(req->lvol);
 		assert(req->cb_fn != NULL);
 		req->cb_fn(req->cb_arg, NULL, lvolerrno);
@@ -1042,6 +1047,13 @@ _spdk_lvs_verify_lvol_name(struct spdk_lvol_store *lvs, const char *name)
 		}
 	}
 
+	TAILQ_FOREACH(tmp, &lvs->pending_lvols, link) {
+		if (!strncmp(name, tmp->name, SPDK_LVOL_NAME_MAX)) {
+			SPDK_ERRLOG("lvol with name %s is being already created\n", name);
+			return -EEXIST;
+		}
+	}
+
 	return 0;
 }
 
@@ -1084,6 +1096,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	lvol->close_only = false;
 	lvol->thin_provision = thin_provision;
 	strncpy(lvol->name, name, SPDK_LVS_NAME_MAX);
+	TAILQ_INSERT_TAIL(&lvol->lvol_store->pending_lvols, lvol, link);
 	spdk_uuid_generate(&lvol->uuid);
 	spdk_uuid_fmt_lower(lvol->uuid_str, sizeof(lvol->uuid_str), &lvol->uuid);
 	req->lvol = lvol;
@@ -1144,6 +1157,7 @@ spdk_lvol_create_snapshot(struct spdk_lvol *orglvol, const char *snapshot_name,
 
 	newlvol->lvol_store = orglvol->lvol_store;
 	strncpy(newlvol->name, snapshot_name, SPDK_LVOL_NAME_MAX);
+	TAILQ_INSERT_TAIL(&newlvol->lvol_store->pending_lvols, newlvol, link);
 	snapshot_xattrs.count = 1;
 	snapshot_xattrs.ctx = newlvol;
 	snapshot_xattrs.names = &xattr_names;
@@ -1198,6 +1212,7 @@ spdk_lvol_create_clone(struct spdk_lvol *orglvol, const char *clone_name,
 
 	newlvol->lvol_store = lvs;
 	strncpy(newlvol->name, clone_name, SPDK_LVOL_NAME_MAX);
+	TAILQ_INSERT_TAIL(&newlvol->lvol_store->pending_lvols, newlvol, link);
 	clone_xattrs.count = 1;
 	clone_xattrs.ctx = newlvol;
 	clone_xattrs.names = &xattr_names;
