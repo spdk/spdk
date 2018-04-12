@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f62b3bee_6753a254",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1231,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-12T21:13:56Z",
+      "side": 1,
+      "message": "A better name here would be something like \"nvmf_rpc_remove_ns_done\"",
+      "revId": "e6fd2c6298eaa86f6369d1fd0eda09d410237a02",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c86b753f_2c932de0",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 867,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-12T21:13:56Z",
+      "side": 1,
+      "message": "Move this function up to where you declared it.",
+      "revId": "e6fd2c6298eaa86f6369d1fd0eda09d410237a02",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
