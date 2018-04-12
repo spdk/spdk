@@ -144,12 +144,15 @@ typedef void (*spdk_rpc_method_handler)(struct spdk_jsonrpc_request *request,
  *
  * \param method Name for the registered method.
  * \param func Function registered for this method to handle the RPC request.
+ * \param state_mask Mask to allow only RPC methods whose state_mask is equal to the
+ * state of the RPC server.
  */
-void spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func);
+void spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func,
+			      uint32_t state_mask);
 
 #define SPDK_RPC_REGISTER(method, func) \
 static void __attribute__((constructor)) rpc_register_##func(void) \
 { \
-	spdk_rpc_register_method(method, func); \
+	spdk_rpc_register_method(method, func, 0); \
 }
 #endif /* SPDK_INTERNAL_EVENT_H */
