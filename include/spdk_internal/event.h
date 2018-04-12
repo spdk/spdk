@@ -105,7 +105,7 @@ void spdk_subsystem_config(FILE *fp);
 void spdk_subsystem_config_json(struct spdk_json_write_ctx *w, struct spdk_subsystem *subsystem,
 				struct spdk_event *done_ev);
 
-void spdk_rpc_initialize(const char *listen_addr);
+void spdk_rpc_initialize(const char *listen_addr, bool wait_subsys_init_rpc);
 void spdk_rpc_finish(void);
 
 /**
@@ -150,9 +150,27 @@ typedef void (*spdk_rpc_method_handler)(struct spdk_jsonrpc_request *request,
 void spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func,
 			      uint32_t state_mask);
 
+#define RPC_STATE_PRE_SUBSYSTEM_INIT	0x1
+#define RPC_STATE_POST_SUBSYSTEM_INIT	0x2
+
 #define SPDK_RPC_REGISTER(method, func) \
 static void __attribute__((constructor)) rpc_register_##func(void) \
 { \
-	spdk_rpc_register_method(method, func, 0); \
+	spdk_rpc_register_method(method, func, RPC_STATE_POST_SUBSYSTEM_INIT); \
 }
+
+#define SPDK_SI_RPC_REGISTER(method, func) \
+static void __attribute__((constructor)) si_rpc_register_##func(void) \
+{ \
+	spdk_rpc_register_method(method, func, RPC_STATE_PRE_SUBSYSTEM_INIT); \
+}
+
+/**
+ * Set the state mask of the RPC server. Any RPC method whose state mask is
+ * equal to the state of the RPC server is allowed.
+ *
+ * \param state_mask New state mask of the RPC server.
+ */
+void spdk_rpc_set_state(uint32_t state_mask);
+
 #endif /* SPDK_INTERNAL_EVENT_H */

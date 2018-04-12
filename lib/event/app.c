@@ -70,6 +70,18 @@ spdk_app_get_shm_id(void)
 	return g_spdk_app.shm_id;
 }
 
+struct spdk_event *
+spdk_app_get_app_start_event(void)
+{
+	return g_app_start_event;
+}
+
+struct spdk_event *
+spdk_app_get_subsys_init_start_event(void)
+{
+	return g_subsys_init_start_event;
+}
+
 /* Global section */
 #define GLOBAL_CONFIG_TMPL \
 "# Configuration file\n" \
@@ -205,6 +217,7 @@ spdk_app_opts_init(struct spdk_app_opts *opts)
 	opts->max_delay_us = 0;
 	opts->print_level = SPDK_APP_DEFAULT_LOG_PRINT_LEVEL;
 	opts->rpc_addr = SPDK_DEFAULT_RPC_ADDR;
+	opts->wait_subsys_init_rpc = false;
 }
 
 static int
@@ -270,8 +283,12 @@ start_rpc(void *arg1, void *arg2)
 	const char *rpc_addr = arg1;
 	struct spdk_event *app_start_event = arg2;
 
-	spdk_rpc_initialize(rpc_addr);
-	spdk_event_call(app_start_event);
+	if (app_start_event != NULL) {
+		spdk_rpc_initialize(rpc_addr, false);
+		spdk_event_call(app_start_event);
+	} else {
+		spdk_rpc_initialize(rpc_addr, true);
+	}
 }
 
 static struct spdk_conf *
@@ -476,12 +493,22 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 
 	g_app_start_event = spdk_event_allocate(g_init_lcore, start_fn, arg1, arg2);
 
-	rpc_start_event = spdk_event_allocate(g_init_lcore, start_rpc, (void *)opts->rpc_addr,
-					      g_app_start_event);
+	if (!opts->wait_subsys_init_rpc) {
+		rpc_start_event = spdk_event_allocate(g_init_lcore, start_rpc, (void *)opts->rpc_addr,
+						      g_app_start_event);
 
-	g_subsys_init_start_event = spdk_event_allocate(g_init_lcore, spdk_subsystem_init,
-							rpc_start_event, NULL);
-	spdk_event_call(g_subsys_init_start_event);
+		g_subsys_init_start_event = spdk_event_allocate(g_init_lcore, spdk_subsystem_init,
+					    rpc_start_event, NULL);
+		spdk_event_call(g_subsys_init_start_event);
+	} else {
+		rpc_start_event = spdk_event_allocate(g_init_lcore, start_rpc, (void *)opts->rpc_addr,
+						      NULL);
+
+		g_subsys_init_start_event = spdk_event_allocate(g_init_lcore, spdk_subsystem_init,
+					    NULL, NULL);
+
+		spdk_event_call(rpc_start_event);
+	}
 
 	/* This blocks until spdk_app_stop is called */
 	spdk_reactors_start();
@@ -549,6 +576,7 @@ usage(char *executable_name, struct spdk_app_opts *default_opts, void (*app_usag
 	printf(" -q         disable notice level logging to stderr\n");
 	printf(" -r         RPC listen address (default %s)\n", SPDK_DEFAULT_RPC_ADDR);
 	printf(" -s size    memory size in MB for DPDK (default: ");
+	printf(" -S         wait for start subsystem initialization RPC\n");
 	if (default_opts->mem_size > 0) {
 		printf("%dMB)\n", default_opts->mem_size);
 	} else {
@@ -585,6 +613,12 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		switch (ch) {
 		case 'c':
 			opts->config_file = optarg;
+			if (opts->wait_subsys_init_rpc) {
+				fprintf(stderr, "Config file and subsys init RPCs are mutually exclusive\n");
+				usage(argv[0], &default_opts, app_usage);
+				rval = SPDK_APP_PARSE_ARGS_FAIL;
+				goto parse_done;
+			}
 			break;
 		case 'd':
 			opts->enable_coredump = false;
@@ -676,6 +710,15 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 #else
 			break;
 #endif
+		case 'S':
+			opts->wait_subsys_init_rpc = true;
+			if (opts->config_file != NULL) {
+				fprintf(stderr, "Config file and subsys init RPCs are mutually exclusive\n");
+				usage(argv[0], &default_opts, app_usage);
+				rval = SPDK_APP_PARSE_ARGS_FAIL;
+				goto parse_done;
+			}
+			break;
 		case '?':
 			/*
 			 * In the event getopt() above detects an option
