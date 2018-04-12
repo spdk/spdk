@@ -146,6 +146,25 @@ named Malloc0 and Malloc1 and made available as NSID 1 and 2:
   Namespace Malloc1 2
 ~~~
 
+#### Valid NQN Configurations
+
+SPDK adheres the NVMe spec in defining a valid NQN. In case of any confusion in the specification's definition,
+please follow the following Extended Backus-Naur description of an NQN when configuring NQNs for use with SPDK:
+~~~{.sh}
+NVMe Qualified Name = ( NVMe-oF Discovery NQN | NVMe UUID NQN | NVMe Domain NQN ), '\0'
+NVMe-oF Discovery NQN = "nqn.2014-08.org.nvmexpress.discovery"
+NVMe UUID NQN = "nqn.2014-08.org.nvmexpress:uuid:", string_uuid
+string_uuid = 8 * hex digit, '-', 3 * (4 * hex digit, '-'), 12 * hex digit
+hex digit = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
+NVMe Domain NQN = "nqn.", year, '-', month, '.', reverse domain, ':', utf-8 string
+year = 4 * digit
+digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
+month = '01' | '02' | '03' | '04' | '05' | '06' | '07' | '08' | '09' | '10' | '11' | '12'
+~~~
+Please note that the following objects are not defined here but have been previously defined elsewhere.
+utf-8 string: Defined in rfc 3629.
+reverse domain: Equivalent to domain name as defined in rfc 1034.
+
 ### Assigning CPU Cores to the NVMe over Fabrics Target {#nvmf_config_lcore}
 
 SPDK uses the [DPDK Environment Abstraction Layer](http://dpdk.org/doc/guides/prog_guide/env_abstraction_layer.html)
