@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "c2512651_0b6e7996",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1911,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-12T08:04:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a5446d5b_2d523944",
+      "range": {
+        "startLine": 1911,
+        "startChar": 77,
+        "endLine": 1911,
+        "endChar": 79
+      },
+      "revId": "0434bc11da7f6f8d4e5e3bfe22f3678a90c220c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f6e466d9_8948d882",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 23
@@ -59,6 +83,30 @@
       "writtenOn": "2018-03-28T04:58:05Z",
       "side": 1,
       "message": "This may not be thread-safe as Dariusz pointed out in my patch because any bdev may be unregistered during this RPC call.",
+      "range": {
+        "startLine": 1917,
+        "startChar": 0,
+        "endLine": 1917,
+        "endChar": 64
+      },
+      "revId": "0434bc11da7f6f8d4e5e3bfe22f3678a90c220c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "94032321_fde47ea5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1917,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-12T08:04:30Z",
+      "side": 1,
+      "message": "Hi Shuhei\n\nDo you have any good suggestion to avoid this?\n\nThanks",
+      "parentUuid": "f6e466d9_8948d882",
       "range": {
         "startLine": 1917,
         "startChar": 0,
@@ -94,6 +142,30 @@
     },
     {
       "key": {
+        "uuid": "1b935fe0_d776d618",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1943,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-12T08:04:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "affbd94f_55998246",
+      "range": {
+        "startLine": 1943,
+        "startChar": 2,
+        "endLine": 1943,
+        "endChar": 8
+      },
+      "revId": "0434bc11da7f6f8d4e5e3bfe22f3678a90c220c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f8c705ae_8de518e0",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 23
@@ -105,6 +177,30 @@
       "writtenOn": "2018-03-20T06:57:55Z",
       "side": 1,
       "message": "should call cb(arg) with stat_errno?",
+      "range": {
+        "startLine": 1950,
+        "startChar": 2,
+        "endLine": 1950,
+        "endChar": 8
+      },
+      "revId": "0434bc11da7f6f8d4e5e3bfe22f3678a90c220c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a3f3d380_3fd4abb4",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1950,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-12T08:04:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f8c705ae_8de518e0",
       "range": {
         "startLine": 1950,
         "startChar": 2,
