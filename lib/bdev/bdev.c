@@ -45,6 +45,7 @@
 #include "spdk/nvme_spec.h"
 #include "spdk/scsi_spec.h"
 #include "spdk/util.h"
+#include "spdk/json.h"
 
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"

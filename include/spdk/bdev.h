@@ -43,7 +43,6 @@
 
 #include "spdk/scsi_spec.h"
 #include "spdk/nvme_spec.h"
-#include "spdk/json.h"
 
 #ifdef __cplusplus
 extern "C" {

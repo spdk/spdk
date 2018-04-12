@@ -35,12 +35,12 @@
 
 #include "spdk/bdev.h"
 #include "spdk/log.h"
-#include "spdk/rpc.h"
 #include "spdk/env.h"
 #include "spdk/nvme.h"
 #include "spdk/nvmf.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
+#include "spdk_internal/event.h"
 
 static int
 json_write_hex_str(struct spdk_json_write_ctx *w, const void *data, size_t size)

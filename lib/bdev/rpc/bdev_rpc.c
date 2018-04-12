@@ -32,10 +32,10 @@
  */
 
 #include "spdk/log.h"
-#include "spdk/rpc.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
 
+#include "spdk_internal/event.h"
 #include "spdk_internal/bdev.h"
 
 static void

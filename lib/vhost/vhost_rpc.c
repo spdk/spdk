@@ -33,16 +33,16 @@
 
 #include "spdk/stdinc.h"
 
-#include "spdk_internal/log.h"
-#include "spdk/rpc.h"
 #include "spdk/util.h"
 #include "spdk/string.h"
 #include "spdk/env.h"
-
 #include "spdk/scsi.h"
 #include "spdk/vhost.h"
 #include "vhost_internal.h"
 #include "spdk/bdev.h"
+
+#include "spdk_internal/event.h"
+#include "spdk_internal/log.h"
 
 struct rpc_vhost_scsi_ctrlr {
 	char *ctrlr;

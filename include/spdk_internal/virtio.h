@@ -43,10 +43,11 @@
 #include "spdk_internal/log.h"
 #include "spdk/likely.h"
 #include "spdk/queue.h"
-#include "spdk/json.h"
 #include "spdk/io_channel.h"
 #include "spdk/pci_ids.h"
 #include "spdk/env.h"
+
+struct spdk_json_write_ctx;
 
 /**
  * The maximum virtqueue size is 2^15. Use that value as the end of

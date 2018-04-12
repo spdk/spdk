@@ -52,6 +52,7 @@
 #include <rte_dev.h>
 #include <rte_prefetch.h>
 
+#include "spdk/json.h"
 #include "spdk/env.h"
 #include "spdk/barrier.h"
 

@@ -38,7 +38,7 @@
 
 #include "vbdev_split.h"
 
-#include "spdk/rpc.h"
+#include "spdk/json.h"
 #include "spdk/conf.h"
 #include "spdk/endian.h"
 #include "spdk/string.h"
