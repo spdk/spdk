@@ -152,6 +152,7 @@ nvme_ctrlr_proc_add_io_qpair(struct spdk_nvme_qpair *qpair)
 		if (active_proc->pid == pid) {
 			TAILQ_INSERT_TAIL(&active_proc->allocated_io_qpairs, qpair,
 					  per_process_tailq);
+			qpair->active_proc = active_proc;
 			break;
 		}
 	}
@@ -1728,9 +1729,6 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	TAILQ_INIT(&ctrlr->active_procs);
-	ctrlr->timeout_cb_fn = NULL;
-	ctrlr->timeout_cb_arg = NULL;
-	ctrlr->timeout_ticks = 0;
 
 	return rc;
 }
@@ -1967,9 +1965,20 @@ void
 spdk_nvme_ctrlr_register_timeout_callback(struct spdk_nvme_ctrlr *ctrlr,
 		uint32_t nvme_timeout, spdk_nvme_timeout_cb cb_fn, void *cb_arg)
 {
-	ctrlr->timeout_ticks = nvme_timeout * spdk_get_ticks_hz();
-	ctrlr->timeout_cb_fn = cb_fn;
-	ctrlr->timeout_cb_arg = cb_arg;
+	struct spdk_nvme_ctrlr_process	*active_proc = NULL;
+	pid_t				pid = getpid();
+
+	TAILQ_FOREACH(active_proc, &ctrlr->active_procs, tailq) {
+		if (active_proc->pid == pid) {
+			break;
+		}
+	}
+
+	assert(active_proc != NULL);
+
+	active_proc->timeout_ticks = nvme_timeout * spdk_get_ticks_hz();
+	active_proc->timeout_cb_fn = cb_fn;
+	active_proc->timeout_cb_arg = cb_arg;
 }
 
 bool

@@ -1173,7 +1173,7 @@ nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 	struct nvme_pcie_ctrlr	*pctrlr = nvme_pcie_ctrlr(qpair->ctrlr);
 
 	tr->timed_out = 0;
-	if (spdk_unlikely(qpair->ctrlr->timeout_cb_fn != NULL)) {
+	if (spdk_unlikely(qpair->active_proc && qpair->active_proc->timeout_cb_fn != NULL)) {
 		tr->submit_tick = spdk_get_ticks();
 	}
 
@@ -2006,14 +2006,6 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
 	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
 
-	/* We don't want to expose the admin queue to the user,
-	 * so when we're timing out admin commands set the
-	 * qpair to NULL.
-	 */
-	if (qpair == ctrlr->adminq) {
-		qpair = NULL;
-	}
-
 	t02 = spdk_get_ticks();
 	TAILQ_FOREACH_SAFE(tr, &pqpair->outstanding_tr, tq_list, tmp) {
 		if (tr->timed_out) {
@@ -2025,7 +2017,7 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 			continue;
 		}
 
-		if (tr->submit_tick + ctrlr->timeout_ticks > t02) {
+		if (tr->submit_tick + qpair->active_proc->timeout_ticks > t02) {
 			/* The trackers are in order, so as soon as one has not timed out,
 			 * stop iterating.
 			 */
@@ -2033,7 +2025,7 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 		}
 
 		tr->timed_out = 1;
-		ctrlr->timeout_cb_fn(ctrlr->timeout_cb_arg, ctrlr, qpair, tr->cid);
+		qpair->active_proc->timeout_cb_fn(qpair->active_proc->timeout_cb_arg, ctrlr, qpair, tr->cid);
 	}
 }
 
@@ -2116,7 +2108,11 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		g_thread_mmio_ctrlr = NULL;
 	}
 
-	if (spdk_unlikely(qpair->ctrlr->timeout_cb_fn != NULL) &&
+	/* We don't want to expose the admin queue to the user,
+	 * so when we're timing out admin commands set the
+	 * qpair to NULL.
+	 */
+	if (!nvme_qpair_is_admin_queue(qpair) && spdk_unlikely(qpair->active_proc->timeout_cb_fn != NULL) &&
 	    qpair->ctrlr->state == NVME_CTRLR_STATE_READY) {
 		/*
 		 * User registered for timeout callback
