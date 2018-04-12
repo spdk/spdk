@@ -40,7 +40,6 @@
 #include "spdk/io_channel.h"
 #include "spdk/json.h"
 #include "spdk/util.h"
-#include "spdk/rpc.h"
 #include "spdk/string.h"
 
 #include "spdk_internal/log.h"

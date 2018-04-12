@@ -33,12 +33,12 @@
 
 #include "spdk/string.h"
 #include "spdk/env.h"
-#include "spdk/rpc.h"
 #include "spdk/util.h"
 
 #include <linux/nbd.h>
 
 #include "nbd_internal.h"
+#include "spdk_internal/event.h"
 #include "spdk_internal/log.h"
 
 struct rpc_start_nbd_disk {
