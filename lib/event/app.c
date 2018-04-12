@@ -62,6 +62,7 @@ static int g_init_lcore;
 static bool g_shutdown_sig_received = false;
 
 static struct spdk_event *g_app_start_event = NULL;
+static struct spdk_event *g_subsys_init_start_event = NULL;
 
 int
 spdk_app_get_shm_id(void)
@@ -478,7 +479,9 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	rpc_start_event = spdk_event_allocate(g_init_lcore, start_rpc, (void *)opts->rpc_addr,
 					      g_app_start_event);
 
-	spdk_subsystem_init(rpc_start_event);
+	g_subsys_init_start_event = spdk_event_allocate(g_init_lcore, spdk_subsystem_init,
+							rpc_start_event, NULL);
+	spdk_event_call(g_subsys_init_start_event);
 
 	/* This blocks until spdk_app_stop is called */
 	spdk_reactors_start();
