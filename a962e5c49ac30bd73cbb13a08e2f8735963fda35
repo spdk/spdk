@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eae51518_80ca39bd",
+        "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 294,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-12T17:42:27Z",
+      "side": 1,
+      "message": "This looks like a copy-paste mistake - the original was setting subsystem.subnqn, but the new version is setting connect_data.subnqn.",
+      "revId": "a962e5c49ac30bd73cbb13a08e2f8735963fda35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
