@@ -282,6 +282,8 @@ struct spdk_nvme_qpair {
 	/* List entry for spdk_nvme_ctrlr_process::allocated_io_qpairs */
 	TAILQ_ENTRY(spdk_nvme_qpair)	per_process_tailq;
 
+	struct spdk_nvme_ctrlr_process	*active_proc;
+
 	void				*req_buf;
 };
 
@@ -367,6 +369,13 @@ struct spdk_nvme_ctrlr_process {
 
 	/** Allocated IO qpairs */
 	TAILQ_HEAD(, spdk_nvme_qpair)			allocated_io_qpairs;
+
+	/**
+	 * A function pointer to timeout callback function
+	 */
+	spdk_nvme_timeout_cb		timeout_cb_fn;
+	void				*timeout_cb_arg;
+	uint64_t			timeout_ticks;
 };
 
 /*
@@ -466,12 +475,6 @@ struct spdk_nvme_ctrlr {
 	/** Track all the processes manage this controller */
 	TAILQ_HEAD(, spdk_nvme_ctrlr_process)	active_procs;
 
-	/**
-	 * A function pointer to timeout callback function
-	 */
-	spdk_nvme_timeout_cb		timeout_cb_fn;
-	void				*timeout_cb_arg;
-	uint64_t			timeout_ticks;
 
 	STAILQ_HEAD(, nvme_request)	queued_aborts;
 	uint32_t			outstanding_aborts;
