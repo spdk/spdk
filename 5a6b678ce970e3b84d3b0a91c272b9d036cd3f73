@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "53ff4606_ad518137",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1683,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-12T14:45:49Z",
+      "side": 1,
+      "message": "You don\u0027t need to copy the list here as there is no risk to get into infinite loop when aborting. You can work on original list.",
+      "range": {
+        "startLine": 1682,
+        "startChar": 0,
+        "endLine": 1683,
+        "endChar": 75
+      },
+      "revId": "5a6b678ce970e3b84d3b0a91c272b9d036cd3f73",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "93e5a6f1_0b2a1796",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1768,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-12T14:45:49Z",
+      "side": 1,
+      "message": "You can just do:\n\nspdk_bs_user_op_queue(_ch, op);\nif (TAILQ_EMPTY(\u0026ch-\u003eneed_cluster_alloc)) {\n    _spdk_bs_allocate_and_copy_cluster(blob, _ch, offset, op);\n}\n\nSame comment for if in line 1998.",
+      "range": {
+        "startLine": 1763,
+        "startChar": 0,
+        "endLine": 1768,
+        "endChar": 4
+      },
+      "revId": "5a6b678ce970e3b84d3b0a91c272b9d036cd3f73",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
