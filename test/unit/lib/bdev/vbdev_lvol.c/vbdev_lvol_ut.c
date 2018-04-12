@@ -176,6 +176,7 @@ spdk_lvs_load(struct spdk_bs_dev *dev,
 		lvs = calloc(1, sizeof(*lvs));
 		SPDK_CU_ASSERT_FATAL(lvs != NULL);
 		TAILQ_INIT(&lvs->lvols);
+		TAILQ_INIT(&lvs->pending_lvols);
 		g_lvol_store = lvs;
 		for (i = 0; i < g_num_lvols; i++) {
 			_lvol_create(lvs);
@@ -269,6 +270,7 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 		lvs = calloc(1, sizeof(*lvs));
 		SPDK_CU_ASSERT_FATAL(lvs != NULL);
 		TAILQ_INIT(&lvs->lvols);
+		TAILQ_INIT(&lvs->pending_lvols);
 		spdk_uuid_generate(&lvs->uuid);
 		snprintf(lvs->name, sizeof(lvs->name), "%s", o->name);
 		lvs->bs_dev = bs_dev;

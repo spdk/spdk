@@ -1627,6 +1627,27 @@ lvol_names(void)
 	spdk_lvol_close(lvol2, close_cb, NULL);
 	spdk_lvol_destroy(lvol2, destroy_cb, NULL);
 
+	/* Simulate creating two lvols with same name simultaneously. */
+	lvol = calloc(1, sizeof(*lvol));
+	SPDK_CU_ASSERT_FATAL(lvol != NULL);
+	snprintf(lvol->name, sizeof(lvol->name), "tmp_name");
+	TAILQ_INSERT_TAIL(&lvs->pending_lvols, lvol, link);
+	rc = spdk_lvol_create(lvs, "tmp_name", 1, false, lvol_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == -EEXIST);
+
+	/* Remove name from temporary list and try again. */
+	TAILQ_REMOVE(&lvs->pending_lvols, lvol, link);
+	free(lvol);
+
+	rc = spdk_lvol_create(lvs, "tmp_name", 1, false, lvol_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
+	lvol = g_lvol;
+
+	spdk_lvol_close(lvol, close_cb, NULL);
+	spdk_lvol_destroy(lvol, destroy_cb, NULL);
+
 	g_lvserrno = -1;
 	rc = spdk_lvs_destroy(lvs, lvol_store_op_complete, NULL);
 	CU_ASSERT(rc == 0);
