@@ -146,6 +146,37 @@ named Malloc0 and Malloc1 and made available as NSID 1 and 2:
   Namespace Malloc1 2
 ~~~
 
+#### NQN Formal Definition
+
+NVMe qualified names or NQNs are defined in section 7.9 of the
+[NVMe specification](http://nvmexpress.org/wp-content/uploads/NVM_Express_Revision_1.3.pdf). SPDK has attempted to
+formalize that definition using [Extended Backus-Naur form](https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form).
+SPDK modules use this formal definition (provided below) when validating NQNs.
+
+~~~{.sh}
+
+Basic Types
+year = 4 * digit ;
+month = '01' | '02' | '03' | '04' | '05' | '06' | '07' | '08' | '09' | '10' | '11' | '12' ;
+digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;
+hex digit = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;
+
+NQN Definition
+NVMe Qualified Name = ( NVMe-oF Discovery NQN | NVMe UUID NQN | NVMe Domain NQN ), '\0' ;
+NVMe-oF Discovery NQN = "nqn.2014-08.org.nvmexpress.discovery" ;
+NVMe UUID NQN = "nqn.2014-08.org.nvmexpress:uuid:", string UUID ;
+string UUID = 8 * hex digit, '-', 3 * (4 * hex digit, '-'), 12 * hex digit ;
+NVMe Domain NQN = "nqn.", year, '-', month, '.', reverse domain, ':', utf-8 string ;
+
+~~~
+
+While not stated in the formal definition, SPDK enforces the requirement from the spec that the
+"maximum name is 223 bytes in length", and will reject any names exceeding that limit.
+
+Please note that the following types from the definition above are defined elsewhere:
+1. utf-8 string: Defined in [rfc 3629](https://tools.ietf.org/html/rfc3629).
+2. reverse domain: Equivalent to domain name as defined in [rfc 1034](https://tools.ietf.org/html/rfc1034).
+
 ### Assigning CPU Cores to the NVMe over Fabrics Target {#nvmf_config_lcore}
 
 SPDK uses the [DPDK Environment Abstraction Layer](http://dpdk.org/doc/guides/prog_guide/env_abstraction_layer.html)
