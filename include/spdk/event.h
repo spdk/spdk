@@ -97,6 +97,8 @@ struct spdk_app_opts {
 	 * specified in microseconds.
 	 */
 	uint64_t		max_delay_us;
+
+	bool			wait_subsys_init_rpc;
 };
 
 /**
@@ -170,6 +172,20 @@ int spdk_app_get_running_config(char **config_str, char *name);
 int spdk_app_get_shm_id(void);
 
 /**
+ * Return the event to start subsystem initialization.
+ *
+ * \return Event to start subsystem initialization.
+ */
+struct spdk_event *spdk_app_get_subsys_init_start_event(void);
+
+/**
+ * Return the event to start SPDK application.
+ *
+ * \return Event to start SPDK application
+ */
+struct spdk_event *spdk_app_get_app_start_event(void);
+
+/**
  * Convert a string containing a CPU core mask into a bitmask
  *
  * \param mask String containing a CPU core mask.
@@ -186,7 +202,7 @@ int spdk_app_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask);
  */
 struct spdk_cpuset *spdk_app_get_core_mask(void);
 
-#define SPDK_APP_GETOPT_STRING "c:de:ghi:m:n:p:qr:s:t:"
+#define SPDK_APP_GETOPT_STRING "c:de:ghi:m:n:p:qr:s:t:S"
 
 enum spdk_app_parse_args_rvals {
 	SPDK_APP_PARSE_ARGS_HELP = 0,

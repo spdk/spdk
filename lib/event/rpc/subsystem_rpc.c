@@ -126,3 +126,57 @@ spdk_rpc_get_subsystem_config(struct spdk_jsonrpc_request *request,
 }
 
 SPDK_RPC_REGISTER("get_subsystem_config", spdk_rpc_get_subsystem_config)
+
+static void
+spdk_si_rpc_start_subsystems_init(struct spdk_jsonrpc_request *request,
+				  const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+	struct spdk_event *subsys_init_start_event;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "start_subsystems_init requires no parameters");
+		return;
+	}
+
+	subsys_init_start_event = spdk_app_get_subsys_init_start_event();
+	spdk_event_call(subsys_init_start_event);
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_SI_RPC_REGISTER("start_subsystems_init", spdk_si_rpc_start_subsystems_init)
+
+static void
+spdk_si_rpc_complete_subsystems_init(struct spdk_jsonrpc_request *request,
+				     const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+	struct spdk_event *app_start_event;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "complete_subsystems_init requires no parameters");
+		return;
+	}
+
+	spdk_rpc_set_state(RPC_STATE_POST_SUBSYSTEM_INIT);
+
+	app_start_event = spdk_app_get_app_start_event();
+	spdk_event_call(app_start_event);
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_SI_RPC_REGISTER("complete_subsystems_init", spdk_si_rpc_complete_subsystems_init)
