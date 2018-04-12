@@ -119,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "3abe1ed3_d183d892",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1917,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-12T09:07:11Z",
+      "side": 1,
+      "message": "Sorry, this was my mistake. I think that if this function is called, the existence of bdev is ensured as you thought.",
+      "parentUuid": "94032321_fde47ea5",
+      "range": {
+        "startLine": 1917,
+        "startChar": 0,
+        "endLine": 1917,
+        "endChar": 64
+      },
+      "revId": "0434bc11da7f6f8d4e5e3bfe22f3678a90c220c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "affbd94f_55998246",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 23
