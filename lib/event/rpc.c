@@ -53,7 +53,7 @@ spdk_rpc_subsystem_poll(void *arg)
 }
 
 void
-spdk_rpc_initialize(const char *listen_addr)
+spdk_rpc_initialize(const char *listen_addr, bool wait_subsys_init_rpc)
 {
 	int rc;
 
@@ -66,6 +66,10 @@ spdk_rpc_initialize(const char *listen_addr)
 	if (rc != 0) {
 		SPDK_ERRLOG("Unable to start RPC service at %s\n", listen_addr);
 		return;
+	}
+
+	if (!wait_subsys_init_rpc) {
+		spdk_rpc_set_state(RPC_STATE_POST_SUBSYSTEM_INIT);
 	}
 
 	/* Register a poller to periodically check for RPCs */

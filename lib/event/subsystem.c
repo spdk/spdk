@@ -130,7 +130,9 @@ spdk_subsystem_init_next(int rc)
 
 	if (!g_next_subsystem) {
 		g_subsystems_initialized = true;
-		spdk_event_call(g_app_start_event);
+		if (g_app_start_event != NULL) {
+			spdk_event_call(g_app_start_event);
+		}
 		return;
 	}
 
