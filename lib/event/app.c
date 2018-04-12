@@ -546,6 +546,7 @@ usage(char *executable_name, struct spdk_app_opts *default_opts, void (*app_usag
 	printf(" -q         disable notice level logging to stderr\n");
 	printf(" -r         RPC listen address (default %s)\n", SPDK_DEFAULT_RPC_ADDR);
 	printf(" -s size    memory size in MB for DPDK (default: ");
+	printf(" -u         disable PCI access.\n");
 	if (default_opts->mem_size > 0) {
 		printf("%dMB)\n", default_opts->mem_size);
 	} else {
@@ -673,6 +674,9 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 #else
 			break;
 #endif
+		case 'u':
+			opts->no_pci = true;
+			break;
 		case '?':
 			/*
 			 * In the event getopt() above detects an option
