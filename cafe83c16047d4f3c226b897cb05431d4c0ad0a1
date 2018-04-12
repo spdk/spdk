@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "432a34ce_f8255a85",
+        "filename": "lib/event/app.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 486,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-12T02:49:15Z",
+      "side": 1,
+      "message": "If what you say is the following, I\u0027ll be able to do it.\n\nCommand line option: enable subsys_init_rpc\n  -\u003e wait for start_subsystem_initialization\n\nRPC: start_subsystem_initialization\n  -\u003e initialize subsystems but iSCSI and NVMf-tgt.\nRPC: initiaize_nvmf_subsystem\nRPC: initialize_iscsi_subsystem\n\nRPC: start_application ?\n  -\u003e enable post_subsys_init_rpcs",
+      "parentUuid": "b703bf99_bf15cf02",
+      "revId": "cafe83c16047d4f3c226b897cb05431d4c0ad0a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "552b2e2b_d6c0e5dc",
         "filename": "lib/event/app.c",
         "patchSetId": 4
