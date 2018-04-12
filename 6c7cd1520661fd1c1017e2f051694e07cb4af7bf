@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b779f519_c08fb5a8",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 425,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-04-12T04:40:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d85842a2_e8816ccd",
+      "revId": "6c7cd1520661fd1c1017e2f051694e07cb4af7bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "80a957cc_a30d6501",
         "filename": "lib/bdev/passthru/vbdev_passthru_rpc.c",
         "patchSetId": 5
@@ -30,6 +48,30 @@
       "writtenOn": "2018-04-11T20:56:12Z",
       "side": 1,
       "message": "These should not be optional.",
+      "range": {
+        "startLine": 56,
+        "startChar": 90,
+        "endLine": 56,
+        "endChar": 96
+      },
+      "revId": "6c7cd1520661fd1c1017e2f051694e07cb4af7bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f2d5b75b_69448d1f",
+        "filename": "lib/bdev/passthru/vbdev_passthru_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-04-12T04:40:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "80a957cc_a30d6501",
       "range": {
         "startLine": 56,
         "startChar": 90,
@@ -65,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "7d92cf8d_0a55c45e",
+        "filename": "lib/bdev/passthru/vbdev_passthru_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-04-12T04:40:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "786586e6_8f3112ee",
+      "range": {
+        "startLine": 74,
+        "startChar": 16,
+        "endLine": 74,
+        "endChar": 36
+      },
+      "revId": "6c7cd1520661fd1c1017e2f051694e07cb4af7bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fc53810e_3def7ebe",
         "filename": "scripts/rpc.py",
         "patchSetId": 5
@@ -76,6 +142,24 @@
       "writtenOn": "2018-04-11T20:56:12Z",
       "side": 1,
       "message": "These should be required\u003dTrue (or just make them positional parameters instead of named, which will make them required by default).",
+      "revId": "6c7cd1520661fd1c1017e2f051694e07cb4af7bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a2f48f26_8b2ba0f0",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-04-12T04:40:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fc53810e_3def7ebe",
       "revId": "6c7cd1520661fd1c1017e2f051694e07cb4af7bf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
