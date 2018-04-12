@@ -167,11 +167,11 @@ spdk_subsystem_verify(void *arg1, void *arg2)
 }
 
 void
-spdk_subsystem_init(struct spdk_event *app_start_event)
+spdk_subsystem_init(void *arg1, void *arg2)
 {
 	struct spdk_event *verify_event;
 
-	g_app_start_event = app_start_event;
+	g_app_start_event = arg1;
 
 	verify_event = spdk_event_allocate(spdk_env_get_current_core(), spdk_subsystem_verify, NULL, NULL);
 	spdk_event_call(verify_event);
