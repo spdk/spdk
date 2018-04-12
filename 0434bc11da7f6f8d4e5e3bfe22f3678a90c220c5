@@ -187,6 +187,30 @@
     },
     {
       "key": {
+        "uuid": "474d068a_1792f1bf",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-12T08:02:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2cf0cba0_f8bd2e68",
+      "range": {
+        "startLine": 59,
+        "startChar": 27,
+        "endLine": 59,
+        "endChar": 45
+      },
+      "revId": "0434bc11da7f6f8d4e5e3bfe22f3678a90c220c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2150f072_00809e13",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 23
@@ -210,6 +234,30 @@
     },
     {
       "key": {
+        "uuid": "58387702_5c53c190",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-12T08:02:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2150f072_00809e13",
+      "range": {
+        "startLine": 153,
+        "startChar": 2,
+        "endLine": 153,
+        "endChar": 31
+      },
+      "revId": "0434bc11da7f6f8d4e5e3bfe22f3678a90c220c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "89603c5b_00393661",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 23
@@ -221,6 +269,30 @@
       "writtenOn": "2018-03-20T06:57:55Z",
       "side": 1,
       "message": "bdev_count may be better?",
+      "range": {
+        "startLine": 158,
+        "startChar": 6,
+        "endLine": 158,
+        "endChar": 14
+      },
+      "revId": "0434bc11da7f6f8d4e5e3bfe22f3678a90c220c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "43ea637b_a678e171",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-12T08:02:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "89603c5b_00393661",
       "range": {
         "startLine": 158,
         "startChar": 6,
