@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e07d8635_442ad831",
+        "filename": "lib/bdev/passthru/vbdev_passthru.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 421,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-04-12T05:55:44Z",
+      "side": 1,
+      "message": "The result from the RPC method:\n\n[root@localhost spdk]# python ./scripts/rpc.py get_bdevs_config\n[\n  {\n    \"params\": {\n      \"vbdev_name\": \"PT1\",\n      \"bdev_name\": \"Malloc1\"\n    },\n    \"method\": \"construct_passthru_bdev\"\n  }\n]",
+      "range": {
+        "startLine": 421,
+        "startChar": 0,
+        "endLine": 421,
+        "endChar": 32
+      },
+      "revId": "ee0ceda01c5ba93472475fec415af4c137df6be6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
