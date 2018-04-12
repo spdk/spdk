@@ -130,7 +130,9 @@ spdk_subsystem_init_next(int rc)
 
 	if (!g_next_subsystem) {
 		g_subsystems_initialized = true;
-		spdk_event_call(g_app_start_event);
+		if (g_app_start_event != NULL) {
+			spdk_event_call(g_app_start_event);
+		}
 		return;
 	}
 
@@ -170,7 +172,6 @@ void
 spdk_subsystem_init(void *arg1, void *arg2)
 {
 	struct spdk_event *verify_event;
-
 	g_app_start_event = arg1;
 
 	verify_event = spdk_event_allocate(spdk_env_get_current_core(), spdk_subsystem_verify, NULL, NULL);

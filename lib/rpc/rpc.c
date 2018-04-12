@@ -48,7 +48,7 @@
 static struct sockaddr_un g_rpc_listen_addr_unix = {};
 static char g_rpc_lock_path[sizeof(g_rpc_listen_addr_unix.sun_path) + sizeof(".lock") + 1];
 static int g_rpc_lock_fd = -1;
-static uint32_t g_rpc_state;
+static uint32_t g_rpc_state = RPC_STATE_PRE_SUBSYSTEM_INIT;
 
 static struct spdk_jsonrpc_server *g_jsonrpc_server = NULL;
 
@@ -60,6 +60,12 @@ struct spdk_rpc_method {
 };
 
 static SLIST_HEAD(, spdk_rpc_method) g_rpc_methods = SLIST_HEAD_INITIALIZER(g_rpc_methods);
+
+void
+spdk_rpc_set_state(uint32_t state_mask)
+{
+	g_rpc_state = state_mask;
+}
 
 static void
 spdk_jsonrpc_handler(struct spdk_jsonrpc_request *request,

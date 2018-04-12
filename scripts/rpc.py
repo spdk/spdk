@@ -67,6 +67,20 @@ if __name__ == "__main__":
     p.add_argument('--filename', help="""JSON Configuration file.""")
     p.set_defaults(func=load_config)
 
+    @call_cmd
+    def start_subsystems_init(args):
+        rpc.start_subsystems_init(args.client)
+
+    p = subparsers.add_parser('start_subsystems_init', help='Start initialization of subsystems')
+    p.set_defaults(func=start_subsystems_init)
+
+    @call_cmd
+    def complete_subsystems_init(args):
+        rpc.complete_subsystems_init(args.client)
+
+    p = subparsers.add_parser('complete_subsystems_init', help='Notify completion of initialization of subsystems')
+    p.set_defaults(func=complete_subsystems_init)
+
     # app
     @call_cmd
     def kill_instance(args):
