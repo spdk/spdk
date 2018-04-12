@@ -151,6 +151,11 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	int num_ns;
 
 	nqn = spdk_conf_section_get_val(sp, "NQN");
+	if (nqn == NULL) {
+		SPDK_ERRLOG("Subsystem missing NQN\n");
+		return -1;
+	}
+
 	mode = spdk_conf_section_get_val(sp, "Mode");
 	lcore = spdk_conf_section_get_intval(sp, "Core");
 	num_ns = spdk_conf_section_get_intval(sp, "MaxNamespaces");
