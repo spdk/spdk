@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "00364275_5fc28f8b",
+        "filename": "include/spdk/rpc.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-12T00:28:33Z",
+      "side": 1,
+      "message": "I think we should keep the specifics about subsystem initialization out of the RPC library.  Then the RPC library can be kept very general, possibly used in very different applications not related to SPDK subsystems.\n\nSo I think first patch should be moving the SPDK_RPC_REGISTER macro to a different header file.  I\u0027m not sure yet which header file that should be - maybe include/spdk_internal/event.h?\n\nThen this patch can change spdk_rpc_register_method to take method, func, and mask.  spdk_internal/event.h can define the different bit values that are specific to SPDK subsystem usage.\n\nI hope this is clear.  If it is not, please let me know.",
+      "revId": "cafe83c16047d4f3c226b897cb05431d4c0ad0a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b703bf99_bf15cf02",
+        "filename": "lib/event/app.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 486,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-12T00:28:33Z",
+      "side": 1,
+      "message": "If user specifies enable_subsys_init_rpc \u003d true - don\u0027t we need to wait to call spdk_subsystem_init() until the RPC has been received after the initialization RPCs are done?",
+      "revId": "cafe83c16047d4f3c226b897cb05431d4c0ad0a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "552b2e2b_d6c0e5dc",
+        "filename": "lib/event/app.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 549,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-12T00:28:33Z",
+      "side": 1,
+      "message": "\"j\" is not intuitive, but \"s\", \"i\" and \"r\" are already taken.  :)\n\nMaybe -S instead (for Subsystem)?\n\nOr did you have something in mind when choosing \"j\"?",
+      "revId": "cafe83c16047d4f3c226b897cb05431d4c0ad0a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2487a714_4dd7754d",
+        "filename": "lib/event/app.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 622,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-12T00:28:33Z",
+      "side": 1,
+      "message": "I would just say \"config file\" here and remove \"INI\" reference.  We talk about INI file format internally, but right now I think users who are not familiar with the work you are doing will find the INI reference confusing.",
+      "revId": "cafe83c16047d4f3c226b897cb05431d4c0ad0a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68a75dde_dbf0f93d",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-12T00:28:33Z",
+      "side": 1,
+      "message": "I think this should be even more specific:\n\n(m-\u003estate_mask \u0026 g_rpc_state) \u003d\u003d g_rpc_state\n\nThis code as you have it would be fine for this SPDK subsystem use case.  But other use cases of this RPC library might specify more bit mask values and might even have multiple bits set at once.\n\nI know a lot of this is theoretical right now since SPDK subsystem initialization is the only use case.",
+      "revId": "cafe83c16047d4f3c226b897cb05431d4c0ad0a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c75dca09_f06f1754",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-12T00:28:33Z",
+      "side": 1,
+      "message": "Maybe this can just be \"start_subsystem_initialization\"?\n\nThe RPCs until this point are defining the subsystem initialization parameters - once that is done, we can start subsystem initialization.",
+      "revId": "cafe83c16047d4f3c226b897cb05431d4c0ad0a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
