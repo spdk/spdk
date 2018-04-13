@@ -1,0 +1,107 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a3f71b28_2ad03a95",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-13T08:59:29Z",
+      "side": 1,
+      "message": "just \"socket group\" may be better?",
+      "range": {
+        "startLine": 184,
+        "startChar": 16,
+        "endLine": 184,
+        "endChar": 33
+      },
+      "revId": "1f63a55435ab5fee44698b7a6d5c57b1b8aec7a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1ae6816b_9507cefe",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-13T08:59:29Z",
+      "side": 1,
+      "message": "Poll incoming events for each registered socket ?",
+      "revId": "1f63a55435ab5fee44698b7a6d5c57b1b8aec7a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c8092eb8_a81aca73",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-13T08:59:29Z",
+      "side": 1,
+      "message": "Poll incoming events up to max_events for each registered socket?",
+      "revId": "1f63a55435ab5fee44698b7a6d5c57b1b8aec7a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "601039a5_a0127496",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-13T08:59:29Z",
+      "side": 1,
+      "message": "for each socket?",
+      "range": {
+        "startLine": 226,
+        "startChar": 53,
+        "endLine": 226,
+        "endChar": 54
+      },
+      "revId": "1f63a55435ab5fee44698b7a6d5c57b1b8aec7a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d849883_78dc0fb7",
+        "filename": "include/spdk/sock.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-13T08:59:29Z",
+      "side": 1,
+      "message": "Close all registered sockets of the group and then remove the group ?",
+      "range": {
+        "startLine": 233,
+        "startChar": 13,
+        "endLine": 233,
+        "endChar": 18
+      },
+      "revId": "1f63a55435ab5fee44698b7a6d5c57b1b8aec7a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
