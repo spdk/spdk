@@ -33,6 +33,108 @@
       "revId": "d1b0017393f094a64915e73ad175b7780892cbf8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a60c495_9356adcc",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-13T21:59:20Z",
+      "side": 1,
+      "message": "Maybe just zero the buffer and reuse it?  Then you don\u0027t have to get the buf_align again, and can avoid another zmalloc error check.",
+      "revId": "d1b0017393f094a64915e73ad175b7780892cbf8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "561a322a_388a083f",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-13T21:59:20Z",
+      "side": 1,
+      "message": "this if (rc \u003c 0) is not needed - spdk_bdev_read won\u0027t return positive error values",
+      "revId": "d1b0017393f094a64915e73ad175b7780892cbf8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10a935c7_1bf51e96",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-13T21:59:20Z",
+      "side": 1,
+      "message": "this if (rc \u003c 0) isn\u0027t needed - spdk_bdev_write() won\u0027t return positive error values (only negated errnos)",
+      "revId": "d1b0017393f094a64915e73ad175b7780892cbf8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27470bcc_bd27868d",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-13T21:59:20Z",
+      "side": 1,
+      "message": "You can just initialize config_file to \"bdev.conf\" when the variable is declared, then it will it get overwritten if the user specifies -c.",
+      "revId": "d1b0017393f094a64915e73ad175b7780892cbf8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b7631f84_31928174",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-13T21:59:20Z",
+      "side": 1,
+      "message": "Same here.",
+      "revId": "d1b0017393f094a64915e73ad175b7780892cbf8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8191e603_0bd12c2e",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-13T21:59:20Z",
+      "side": 1,
+      "message": "if hello_context is NULL, this will drop through and call spdk_app_fini even though spdk_app_start wasn\u0027t called\n\nit would be simpler to just return -1 if hello_context \u003d\u003d NULL.  Then the rest of the code doesn\u0027t have to be indented at all and will be cleaner to read through.\n\nyou could also just put hello_context on the stack - since spdk_app_start blocks, it would always be valid",
+      "revId": "d1b0017393f094a64915e73ad175b7780892cbf8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
