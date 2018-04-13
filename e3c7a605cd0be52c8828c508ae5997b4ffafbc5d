@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "559611ba_df00b2b8",
+        "filename": "lib/event/app.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 535,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-13T00:11:58Z",
+      "side": 1,
+      "message": "Is this retry mechanism essential to move RPC initialization prior to dpdk env initialization?",
+      "revId": "e3c7a605cd0be52c8828c508ae5997b4ffafbc5d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b6e835fe_f9426192",
+        "filename": "lib/event/app.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 540,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-13T00:11:58Z",
+      "side": 1,
+      "message": "json_rpc_server_poll() is included both in rpc_poll() and rpc_close(). Hence the above rpc_poll() can be removed.\n\nThis retry mechanism is essential too?\n\nIf essential, this retry can be proposed as a separated patch.",
+      "revId": "e3c7a605cd0be52c8828c508ae5997b4ffafbc5d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed0a1c34_06cde251",
+        "filename": "lib/event/app.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 557,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-13T00:11:58Z",
+      "side": 1,
+      "message": "What part catches -EAGAIN of spdk_rpc_shutdown() because _spdk_app_stop() is not poller but event?",
+      "range": {
+        "startLine": 557,
+        "startChar": 2,
+        "endLine": 557,
+        "endChar": 19
+      },
+      "revId": "e3c7a605cd0be52c8828c508ae5997b4ffafbc5d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "96d344dc_c4770b33",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-13T00:11:58Z",
+      "side": 1,
+      "message": "Sorry, I feel personally accept() may be natural.",
+      "revId": "e3c7a605cd0be52c8828c508ae5997b4ffafbc5d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
