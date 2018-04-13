@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e7bba5e4_447eb884",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1668,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-13T08:08:29Z",
+      "side": 1,
+      "message": "This is not needed here.",
+      "range": {
+        "startLine": 1668,
+        "startChar": 1,
+        "endLine": 1668,
+        "endChar": 44
+      },
+      "revId": "916113364166821b734c9cca295ac1c08b8e1de4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7908c6a1_b7c17584",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1672,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-13T08:08:29Z",
+      "side": 1,
+      "message": "This is not needed here.",
+      "range": {
+        "startLine": 1672,
+        "startChar": 1,
+        "endLine": 1672,
+        "endChar": 23
+      },
+      "revId": "916113364166821b734c9cca295ac1c08b8e1de4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eece07d1_11e27489",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1675,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-13T08:08:29Z",
+      "side": 1,
+      "message": "This should be ch-\u003eneed_cluster_alloc.",
+      "range": {
+        "startLine": 1675,
+        "startChar": 22,
+        "endLine": 1675,
+        "endChar": 30
+      },
+      "revId": "916113364166821b734c9cca295ac1c08b8e1de4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "acf77e7a_ec41579b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1676,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-13T08:08:29Z",
+      "side": 1,
+      "message": "This should be ch-\u003eneed_cluster_alloc.",
+      "range": {
+        "startLine": 1676,
+        "startChar": 20,
+        "endLine": 1676,
+        "endChar": 28
+      },
+      "revId": "916113364166821b734c9cca295ac1c08b8e1de4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "df4a171c_2befac01",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1677,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-13T08:08:29Z",
+      "side": 1,
+      "message": "This should be ch-\u003eneed_cluster_alloc.",
+      "range": {
+        "startLine": 1677,
+        "startChar": 16,
+        "endLine": 1677,
+        "endChar": 24
+      },
+      "revId": "916113364166821b734c9cca295ac1c08b8e1de4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb3a5285_98f2a3eb",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1761,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-13T08:08:29Z",
+      "side": 1,
+      "message": "This should be above \u0027if\u0027.",
+      "range": {
+        "startLine": 1761,
+        "startChar": 3,
+        "endLine": 1761,
+        "endChar": 34
+      },
+      "revId": "916113364166821b734c9cca295ac1c08b8e1de4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
