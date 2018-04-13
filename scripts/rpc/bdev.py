@@ -1,5 +1,5 @@
 def construct_malloc_bdev(client, args):
-    num_blocks = (args.total_size * 1024 * 1024) / args.block_size
+    num_blocks = (args.total_size * 1024 * 1024) // args.block_size
     params = {'num_blocks': num_blocks, 'block_size': args.block_size}
     if args.name:
         params['name'] = args.name
@@ -9,7 +9,7 @@ def construct_malloc_bdev(client, args):
 
 
 def construct_null_bdev(client, args):
-    num_blocks = (args.total_size * 1024 * 1024) / args.block_size
+    num_blocks = (args.total_size * 1024 * 1024) // args.block_size
     params = {'name': args.name, 'num_blocks': num_blocks,
               'block_size': args.block_size}
     if args.uuid:
