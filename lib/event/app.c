@@ -61,9 +61,8 @@ static struct spdk_event *g_shutdown_event = NULL;
 static int g_init_lcore;
 static bool g_shutdown_sig_received = false;
 
-static spdk_event_fn g_app_start_fn;
-static void *g_app_start_arg1;
-static void *g_app_start_arg2;
+static bool g_wait_subsys_init_rpc = false;
+static struct spdk_event *g_app_start_event = NULL;
 
 int
 spdk_app_get_shm_id(void)
@@ -206,6 +205,7 @@ spdk_app_opts_init(struct spdk_app_opts *opts)
 	opts->max_delay_us = 0;
 	opts->print_level = SPDK_APP_DEFAULT_LOG_PRINT_LEVEL;
 	opts->rpc_addr = SPDK_DEFAULT_RPC_ADDR;
+	opts->wait_subsys_init_rpc = false;
 }
 
 static int
@@ -271,7 +271,13 @@ start_rpc(void *arg1, void *arg2)
 	const char *rpc_addr = arg1;
 
 	spdk_rpc_initialize(rpc_addr);
-	g_app_start_fn(g_app_start_arg1, g_app_start_arg2);
+
+	if (!g_wait_subsys_init_rpc) {
+		spdk_rpc_set_state(RPC_STATE_POST_SUBSYSTEM_INIT);
+		spdk_event_call(g_app_start_event);
+	} else {
+		spdk_rpc_set_state(RPC_STATE_PRE_SUBSYSTEM_INIT);
+	}
 }
 
 static struct spdk_conf *
@@ -398,7 +404,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 {
 	struct spdk_conf	*config = NULL;
 	int			rc;
-	struct spdk_event	*app_start_event;
+	struct spdk_event	*rpc_start_event;
 
 	if (!opts) {
 		SPDK_ERRLOG("opts should not be NULL\n");
@@ -473,12 +479,18 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	g_spdk_app.shutdown_cb = opts->shutdown_cb;
 	g_spdk_app.rc = 0;
 	g_init_lcore = spdk_env_get_current_core();
-	g_app_start_fn = start_fn;
-	g_app_start_arg1 = arg1;
-	g_app_start_arg2 = arg2;
-	app_start_event = spdk_event_allocate(g_init_lcore, start_rpc, (void *)opts->rpc_addr, NULL);
 
-	spdk_subsystem_init(app_start_event);
+	g_wait_subsys_init_rpc = opts->wait_subsys_init_rpc;
+	g_app_start_event = spdk_event_allocate(g_init_lcore, start_fn, arg1, arg2);
+
+	rpc_start_event = spdk_event_allocate(g_init_lcore, start_rpc,
+					      (void *)opts->rpc_addr, NULL);
+
+	if (!g_wait_subsys_init_rpc) {
+		spdk_subsystem_init(rpc_start_event);
+	} else {
+		spdk_event_call(rpc_start_event);
+	}
 
 	/* This blocks until spdk_app_stop is called */
 	spdk_reactors_start();
@@ -547,6 +559,7 @@ usage(char *executable_name, struct spdk_app_opts *default_opts, void (*app_usag
 	printf(" -r         RPC listen address (default %s)\n", SPDK_DEFAULT_RPC_ADDR);
 	printf(" -s size    memory size in MB for DPDK (default: ");
 	printf(" -u         disable PCI access.\n");
+	printf(" -w         wait for start subsystem initialization RPC\n");
 	if (default_opts->mem_size > 0) {
 		printf("%dMB)\n", default_opts->mem_size);
 	} else {
@@ -583,6 +596,12 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		switch (ch) {
 		case 'c':
 			opts->config_file = optarg;
+			if (opts->wait_subsys_init_rpc) {
+				fprintf(stderr, "Config file and subsys init RPCs are mutually exclusive\n");
+				usage(argv[0], &default_opts, app_usage);
+				rval = SPDK_APP_PARSE_ARGS_FAIL;
+				goto parse_done;
+			}
 			break;
 		case 'd':
 			opts->enable_coredump = false;
@@ -677,6 +696,15 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		case 'u':
 			opts->no_pci = true;
 			break;
+		case 'w':
+			opts->wait_subsys_init_rpc = true;
+			if (opts->config_file != NULL) {
+				fprintf(stderr, "Config file and subsys init RPCs are mutually exclusive\n");
+				usage(argv[0], &default_opts, app_usage);
+				rval = SPDK_APP_PARSE_ARGS_FAIL;
+				goto parse_done;
+			}
+			break;
 		case '?':
 			/*
 			 * In the event getopt() above detects an option
@@ -697,3 +725,38 @@ parse_done:
 parse_early_fail:
 	return rval;
 }
+
+
+static void
+set_post_subsystems_init(void *arg1, void *arg2)
+{
+	spdk_rpc_set_state(RPC_STATE_POST_SUBSYSTEM_INIT);
+	spdk_event_call(g_app_start_event);
+}
+
+static void
+spdk_si_rpc_start_subsystems_init(struct spdk_jsonrpc_request *request,
+				  const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+	struct spdk_event *post_subsys_init_event;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "start_subsystems_init requires no parameters");
+		return;
+	}
+
+	post_subsys_init_event = spdk_event_allocate(spdk_env_get_current_core(),
+				 set_post_subsystems_init, NULL, NULL);
+	spdk_subsystem_init(post_subsys_init_event);
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_SI_RPC_REGISTER("start_subsystems_init", spdk_si_rpc_start_subsystems_init)

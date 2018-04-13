@@ -76,5 +76,6 @@ void
 spdk_rpc_finish(void)
 {
 	spdk_rpc_close();
+	spdk_rpc_set_state(RPC_STATE_INVALID);
 	spdk_poller_unregister(&g_rpc_poller);
 }
