@@ -16,6 +16,24 @@
       "revId": "e4d3c8474314ad9f06dc404c76a6415e9f55345e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a1ca74e_b9f40789",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 452,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-13T14:26:16Z",
+      "side": 1,
+      "message": "Yes, I will move it to the lvol layer.",
+      "parentUuid": "f141235b_91e7ec93",
+      "revId": "e4d3c8474314ad9f06dc404c76a6415e9f55345e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
