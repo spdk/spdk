@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "176b7f85_48df4134",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 401,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-13T21:30:25Z",
+      "side": 1,
+      "message": "It might be nicer API-wise if this function treats a non-snapshot blob as just having no children rather than returning an error.",
+      "revId": "a390a7470b5f17bcf1a00f732228c69e5146533a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eaae6fe4_72fd6ee1",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 403,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-13T21:30:25Z",
+      "side": 1,
+      "message": "It might be better to make this take an array allocated by the user instead of allocating inside the function but requiring the user to call free() on the returned array.  If the user passes in an array that is too small, we can return the required size via the *count output parameter and return an error code.",
+      "revId": "a390a7470b5f17bcf1a00f732228c69e5146533a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2639d598_4be80588",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 414,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-13T21:30:25Z",
+      "side": 1,
+      "message": "We had some discussion in IRC about naming, and we settled on spdk_blob_get_clones() and spdk_blob_get_parent_snapshot().  I think these are more descriptive while still sticking with the clone/snapshot terminology.  (Sorry for the churn).",
+      "revId": "a390a7470b5f17bcf1a00f732228c69e5146533a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
