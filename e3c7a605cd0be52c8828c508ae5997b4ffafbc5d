@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "706fa160_500f83e2",
+        "filename": "lib/event/app.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 540,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-13T15:23:03Z",
+      "side": 1,
+      "message": "Not essentional but this and in line 535 allow sending response to from command in progress during shutdown including the command that initiated SPDK app shutdown - the kill_instance.\n\nTrue, I can split this into separate patch.",
+      "parentUuid": "b6e835fe_f9426192",
+      "revId": "e3c7a605cd0be52c8828c508ae5997b4ffafbc5d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ed0a1c34_06cde251",
         "filename": "lib/event/app.c",
         "patchSetId": 7
@@ -59,6 +77,30 @@
     },
     {
       "key": {
+        "uuid": "c7b60e09_10bbd188",
+        "filename": "lib/event/app.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 557,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-13T15:23:03Z",
+      "side": 1,
+      "message": "spdk_rpc_shutdown() is simmilar to shutdown(fd, SHUT_RD). After spdk_rpc_shutdown() RPC server will stop listening for new connections and stop accepting new requests on existing connections but still can complete any pending requests and send responses. Sequence is:\n\n1. shutdown - stop listening\n2. poll for all connections to finish - this why ne poller is registered.\n3. close server and release any resources.",
+      "parentUuid": "ed0a1c34_06cde251",
+      "range": {
+        "startLine": 557,
+        "startChar": 2,
+        "endLine": 557,
+        "endChar": 19
+      },
+      "revId": "e3c7a605cd0be52c8828c508ae5997b4ffafbc5d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "96d344dc_c4770b33",
         "filename": "lib/rpc/rpc.c",
         "patchSetId": 7
@@ -70,6 +112,24 @@
       "writtenOn": "2018-04-13T00:11:58Z",
       "side": 1,
       "message": "Sorry, I feel personally accept() may be natural.",
+      "revId": "e3c7a605cd0be52c8828c508ae5997b4ffafbc5d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c2cb528_eb760db9",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-13T15:23:03Z",
+      "side": 1,
+      "message": "Ok",
+      "parentUuid": "96d344dc_c4770b33",
       "revId": "e3c7a605cd0be52c8828c508ae5997b4ffafbc5d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
