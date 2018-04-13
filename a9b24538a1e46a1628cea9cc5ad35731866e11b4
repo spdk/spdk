@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "02d13027_a6ca07b0",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-13T16:53:44Z",
+      "side": 1,
+      "message": "Does this also need to call iscsi_free_lun()?  It looks like lun is leaked currently.",
+      "revId": "a9b24538a1e46a1628cea9cc5ad35731866e11b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
