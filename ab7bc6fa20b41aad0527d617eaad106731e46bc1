@@ -94,6 +94,30 @@
     },
     {
       "key": {
+        "uuid": "219e6ad9_82e78b31",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-13T05:09:21Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nFor this, I have referred to the spdk_rpc_get_bdevs(). In this function, \"req.name \u003d\u003d NULL\" is still existing here.",
+      "parentUuid": "caf89128_03808a48",
+      "range": {
+        "startLine": 125,
+        "startChar": 3,
+        "endLine": 128,
+        "endChar": 4
+      },
+      "revId": "ab7bc6fa20b41aad0527d617eaad106731e46bc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9ff20277_a108fefb",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 29
