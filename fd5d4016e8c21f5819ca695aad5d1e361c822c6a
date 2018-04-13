@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba796064_bdf26472",
+        "filename": "lib/event/app.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 487,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-13T00:10:50Z",
+      "side": 1,
+      "message": "I understood that this is one of the practical choices. However expanding the tempollary poller code into here mainly to get options of DPDK env looks too complicated at least until JSON config file becomes stable.\n\nI think that closing the gap until DPDK env init as small as possible is safe for now.\n\nAs an alternative idea, did you consider that the RPC client load options of DPDK env and add them to the command line?",
+      "revId": "fd5d4016e8c21f5819ca695aad5d1e361c822c6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "328de101_960aebe8",
+        "filename": "lib/event/app.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 502,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-13T00:10:50Z",
+      "side": 1,
+      "message": "At this time, even if RPC server receives any RPCs, DPDK env and reactor framework have not started yet and hence we must hold all params into dynamically allocated memory.\n\nHence it looks that this addition is usable only for options of DPDK env.",
+      "revId": "fd5d4016e8c21f5819ca695aad5d1e361c822c6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
