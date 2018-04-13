@@ -97,6 +97,8 @@ struct spdk_app_opts {
 	 * specified in microseconds.
 	 */
 	uint64_t		max_delay_us;
+
+	bool			wait_subsys_init_rpc;
 };
 
 /**
@@ -168,6 +170,13 @@ int spdk_app_get_running_config(char **config_str, char *name);
  * \return shared memory id.
  */
 int spdk_app_get_shm_id(void);
+
+/**
+ * Return the event to start application
+ *
+ * \return event to start application
+ */
+struct spdk_event *spdk_app_get_start_event(void);
 
 /**
  * Convert a string containing a CPU core mask into a bitmask

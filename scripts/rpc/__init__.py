@@ -62,3 +62,7 @@ def load_config(client, args):
             if not elem or 'method' not in elem:
                 continue
             client.call(elem['method'], elem['params'])
+
+
+def start_subsystems_init(client):
+    return client.call('start_subsystems_init')
