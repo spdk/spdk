@@ -36,6 +36,40 @@
     },
     {
       "key": {
+        "uuid": "abf6fced_0e19f99a",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 403,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-13T21:42:10Z",
+      "side": 1,
+      "message": "i think it would be better for the caller to provide the memory - rather than have blobstore allocate it and make the caller free it\n\ncaller can pass the size of the array by the *count parameter; if it\u0027s not big enough, it can still write the number of clones into *count and return -EINVAL\n\nif the blob is not a snapshot, I don\u0027t think you need to return -EINVAL - just that it has no children\n\ni also liked your original name spdk_blob_get_clones better - i discussed this with ben on IRC and he agreed - sorry for the thrash",
+      "revId": "a390a7470b5f17bcf1a00f732228c69e5146533a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ee7bea29_db27821d",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-13T21:42:10Z",
+      "side": 1,
+      "message": "i would just say \"get the blob id for the parent snapshot of this blob\" and avoid using \"clone\" here\n\nthis avoids confusion with the case where someone creates a snapshot from a live blob - in that case they did not explicitly make a clone",
+      "revId": "a390a7470b5f17bcf1a00f732228c69e5146533a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2639d598_4be80588",
         "filename": "include/spdk/blob.h",
         "patchSetId": 20
@@ -47,6 +81,142 @@
       "writtenOn": "2018-04-13T21:30:25Z",
       "side": 1,
       "message": "We had some discussion in IRC about naming, and we settled on spdk_blob_get_clones() and spdk_blob_get_parent_snapshot().  I think these are more descriptive while still sticking with the clone/snapshot terminology.  (Sorry for the churn).",
+      "revId": "a390a7470b5f17bcf1a00f732228c69e5146533a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "180d2298_b6afae12",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 414,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-13T21:42:10Z",
+      "side": 1,
+      "message": "let\u0027s do spdk_blob_get_parent_snapshot",
+      "revId": "a390a7470b5f17bcf1a00f732228c69e5146533a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8f1b48cd_223b5d7a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 2082,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-13T21:42:10Z",
+      "side": 1,
+      "message": "do you need this code from lines 2082-2101?  a lot of it duplicates lines 2106-2119\n\nI think this could be simpler by just doing:\n\nif (snapshot_id \u003d\u003d SPDK_BLOBID_INVALID) {\n  return;\n}\n\n/* check if snapshot entry exists, if not add it */\n\n/* add this blob\u0027s id as a clone of the snapshot */",
+      "revId": "a390a7470b5f17bcf1a00f732228c69e5146533a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b596087_7e6bf969",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 2159,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-13T21:42:10Z",
+      "side": 1,
+      "message": "it seems like this should be an assert - shouldn\u0027t the delete function already be making sure that we don\u0027t try to delete a blob if it has clones?",
+      "revId": "a390a7470b5f17bcf1a00f732228c69e5146533a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca2b80b0_f5c6b64f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 4933,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-13T21:42:10Z",
+      "side": 1,
+      "message": "this won\u0027t work - spdk_bs_open_blob is asynchronous - if you want to use spdk_bs_open_blob here you would need to make this function asynchronous as well\n\nyou could build a list of clones and their parent snapshots during initial blobstore iteration - or you could search for this blob_id in all of the snapshots\n\nthe latter kind of sucks, but would work - and there shouldn\u0027t be that many snapshots to search - in the future, you could build up a separate list of clones with their parent snapshot ids (similar to the blobstore\u0027s snapshots list)",
+      "revId": "a390a7470b5f17bcf1a00f732228c69e5146533a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c63b5aee_88ffb86f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 4986,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-13T21:42:10Z",
+      "side": 1,
+      "message": "see comment in the header file - would keeping a count in these entries simplify things a bit?  then you wouldn\u0027t have to walk the clone list twice",
+      "revId": "a390a7470b5f17bcf1a00f732228c69e5146533a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc5885f0_e0ea0a5f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 5018,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-13T21:42:10Z",
+      "side": 1,
+      "message": "no - this can\u0027t work - spdk_bs_open_blob is asynchronous, if you want to use spdk_bs_open_blob you have to make spdk_blob_get_children asynchronous\n\nbut can\u0027t you walk bs-\u003esnapshots instead?  then you can keep this function synchronous",
+      "revId": "a390a7470b5f17bcf1a00f732228c69e5146533a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd813763_c78447cb",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-13T21:42:10Z",
+      "side": 1,
+      "message": "how about keeping a clone_count in here?  i think it might simplify some logic elsewhere",
+      "revId": "a390a7470b5f17bcf1a00f732228c69e5146533a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27282fac_ef9966be",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-13T21:42:10Z",
+      "side": 1,
+      "message": "does this need to be a TAILQ of spdk_blob_list structures?\n\nif we have a snapshot, we just need a list of blob_ids for the clones - having those blob_ids in a linked list with the extra storage for the link (and then also this TAILQ_HEAD) seems like a waste\n\nmaybe just allocate an array of 4 (or 8 or 16) spdk_blob_ids by default - if we end up needing more, we can do a realloc",
       "revId": "a390a7470b5f17bcf1a00f732228c69e5146533a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
