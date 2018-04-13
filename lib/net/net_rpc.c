@@ -35,10 +35,10 @@
 
 #include "spdk/stdinc.h"
 
-#include "spdk/rpc.h"
 #include "spdk/net.h"
 #include "spdk/util.h"
 
+#include "spdk_internal/event.h"
 #include "spdk_internal/log.h"
 
 struct rpc_ip_address {

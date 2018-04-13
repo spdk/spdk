@@ -37,7 +37,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/event.h"
-#include "spdk/json.h"
+#include "spdk/jsonrpc.h"
 
 struct spdk_event {
 	uint32_t		lcore;
@@ -130,4 +130,26 @@ void spdk_rpc_finish(void);
 		spdk_add_subsystem_depend(&__subsystem_ ## _name ## _depend_on ## _depends_on); \
 	}
 
+/**
+ * Function to handle the RPC request.
+ *
+ * \param request RPC request to handle.
+ * \param params Parameters associated with the RPC request.
+ */
+typedef void (*spdk_rpc_method_handler)(struct spdk_jsonrpc_request *request,
+					const struct spdk_json_val *params);
+
+/**
+ * Register the RPC method.
+ *
+ * \param method Name for the registered method.
+ * \param func Function registered for this method to handle the RPC request.
+ */
+void spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func);
+
+#define SPDK_RPC_REGISTER(method, func) \
+static void __attribute__((constructor)) rpc_register_##func(void) \
+{ \
+	spdk_rpc_register_method(method, func); \
+}
 #endif /* SPDK_INTERNAL_EVENT_H */

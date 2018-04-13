@@ -61,29 +61,6 @@ void spdk_rpc_accept(void);
  */
 void spdk_rpc_close(void);
 
-/**
- * Function signature for RPC request handlers.
- *
- * \param request RPC request to handle.
- * \param params Parameters associated with the RPC request.
- */
-typedef void (*spdk_rpc_method_handler)(struct spdk_jsonrpc_request *request,
-					const struct spdk_json_val *params);
-
-/**
- * Register an RPC method.
- *
- * \param method Name for the registered method.
- * \param func Function registered for this method to handle the RPC request.
- */
-void spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func);
-
-#define SPDK_RPC_REGISTER(method, func) \
-static void __attribute__((constructor)) rpc_register_##func(void) \
-{ \
-	spdk_rpc_register_method(method, func); \
-}
-
 #ifdef __cplusplus
 }
 #endif

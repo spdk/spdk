@@ -38,7 +38,7 @@
 
 #include "spdk/stdinc.h"
 
-#include "spdk/rpc.h"
+#include "spdk/json.h"
 #include "spdk/env.h"
 #include "spdk/conf.h"
 #include "spdk/endian.h"

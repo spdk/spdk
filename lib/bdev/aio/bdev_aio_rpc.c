@@ -32,9 +32,9 @@
  */
 
 #include "bdev_aio.h"
-#include "spdk/rpc.h"
 #include "spdk/util.h"
 
+#include "spdk_internal/event.h"
 #include "spdk_internal/log.h"
 
 struct rpc_construct_aio {
