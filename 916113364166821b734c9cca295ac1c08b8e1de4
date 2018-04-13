@@ -137,6 +137,29 @@
       "revId": "916113364166821b734c9cca295ac1c08b8e1de4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c839e28b_9808124a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1990,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-13T08:40:12Z",
+      "side": 1,
+      "message": "This part also should be reworked.",
+      "range": {
+        "startLine": 1981,
+        "startChar": 0,
+        "endLine": 1990,
+        "endChar": 67
+      },
+      "revId": "916113364166821b734c9cca295ac1c08b8e1de4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
