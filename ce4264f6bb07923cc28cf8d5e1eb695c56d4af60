@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "91a73d9b_c20a15f4",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-13T09:25:35Z",
+      "side": 0,
+      "message": "this removal is intentional?",
+      "range": {
+        "startLine": 241,
+        "startChar": 1,
+        "endLine": 241,
+        "endChar": 37
+      },
+      "revId": "ce4264f6bb07923cc28cf8d5e1eb695c56d4af60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
