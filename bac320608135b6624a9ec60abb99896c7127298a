@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a2163cba_31d84aa9",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-13T05:18:23Z",
+      "side": 1,
+      "message": "make sense but I think spdk_jsonrpc_send_error_response() is necessary.",
+      "parentUuid": "fd7b65cc_e53daab9",
+      "range": {
+        "startLine": 143,
+        "startChar": 2,
+        "endLine": 143,
+        "endChar": 9
+      },
+      "revId": "bac320608135b6624a9ec60abb99896c7127298a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fbdd3fde_0fe08b79",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 31
@@ -36,6 +60,30 @@
       "writtenOn": "2018-04-13T05:05:25Z",
       "side": 1,
       "message": "Hi Shuhei\n\nAdding this loop here is used to avoid the issues that caused by bdev being removed at this time. \n\nIf the number of passed bdevs is not equal to \u0027ctx-\u003ebdev_count\u0027, it will cause memory leak pointed by \u0027ctx\u0027 that is why the autotest fails in previous patches.\n\nHence I add a while loop here to ensure number of passed bdevs equal to \u0027ctx-\u003ebdev_count\u0027. \n\nThanks\nYanbo",
+      "range": {
+        "startLine": 180,
+        "startChar": 2,
+        "endLine": 183,
+        "endChar": 3
+      },
+      "revId": "bac320608135b6624a9ec60abb99896c7127298a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "39eadfb1_867d6f1b",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-13T05:18:23Z",
+      "side": 1,
+      "message": "Yes, I thought that this was clever. If you include this, it is fine.",
+      "parentUuid": "fbdd3fde_0fe08b79",
       "range": {
         "startLine": 180,
         "startChar": 2,
