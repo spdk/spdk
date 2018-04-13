@@ -89,9 +89,14 @@ typedef void (*spdk_channel_for_each_cpl)(struct spdk_io_channel_iter *i, int st
 struct spdk_io_channel {
 	struct spdk_thread		*thread;
 	struct io_device		*dev;
-	uint32_t			ref;
 	TAILQ_ENTRY(spdk_io_channel)	tailq;
 	spdk_io_channel_destroy_cb	destroy_cb;
+
+	/* The number of active references to this channel */
+	uint32_t			ref;
+	/* Incremented when spdk_put_io_channel is called, decremented
+	 * when _spdk_put_io_channel actually executes. */
+	uint32_t			pending_puts;
 
 	/*
 	 * Modules will allocate extra memory off the end of this structure
