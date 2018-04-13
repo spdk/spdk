@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "18059f2b_dcbbe153",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 4690,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-13T20:16:15Z",
+      "side": 1,
+      "message": "I think we should remove this from this patch, and add it to the next patch instead.\n\nWe really want this to return true if it has any clones.  But we don\u0027t have that information in this patch.\n\nSo the next patch, where you add spdk_blob_is_clone, can add spdk_blob_is_snapshot since you have this information.",
+      "revId": "98944ba4028c9c5e1906f150efe923ba3209bd2b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
