@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "35ac56ab_90fbb79d",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-13T15:09:38Z",
+      "side": 1,
+      "message": "Someone can accidently use this event several times. Can you at least move this to include/sdk_internal/event.h ?\n\nI feel that spdk_si_rpc_start_subsystems_init can be moved to app.c .",
+      "range": {
+        "startLine": 174,
+        "startChar": 0,
+        "endLine": 179,
+        "endChar": 50
+      },
+      "revId": "a7948587043ae3734f777c2296c3da5e363dceee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "93357f20_ed680ed3",
+        "filename": "include/spdk_internal/event.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-13T15:09:38Z",
+      "side": 1,
+      "message": "Don\u0027t know if \"Mask\" is good word. There is\n\n\u003e #define RPC_STATE_* \n\nSo maybe \u0027state\u0027?\n\nAlso this:\n\u003e whose state_mask is equal to the state of the RPC server.\n\nis not true I think. The condition in rpc.c file\n\n\u003e ((m-\u003estate_mask \u0026 g_rpc_state) \u003d\u003d g_rpc_state)) {\n\nsay that state mask must be *subset* of current RPC server state. This why I have chosen in my patches enum rather than mask when setting current state of init process.",
+      "range": {
+        "startLine": 147,
+        "startChar": 21,
+        "endLine": 147,
+        "endChar": 25
+      },
+      "revId": "a7948587043ae3734f777c2296c3da5e363dceee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2959c8af_9081add2",
+        "filename": "include/spdk_internal/event.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-13T15:09:38Z",
+      "side": 1,
+      "message": "It would be good to have some documentation about what is possible on RE_SUBSYSTEM_INIT level and what is forbidden.",
+      "range": {
+        "startLine": 153,
+        "startChar": 8,
+        "endLine": 153,
+        "endChar": 36
+      },
+      "revId": "a7948587043ae3734f777c2296c3da5e363dceee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f94af443_bb818f5d",
+        "filename": "lib/event/app.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 489,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-13T15:09:38Z",
+      "side": 1,
+      "message": "It will require less changes if this event is allocated in spdk_app_get_start_event().",
+      "range": {
+        "startLine": 489,
+        "startChar": 21,
+        "endLine": 489,
+        "endChar": 77
+      },
+      "revId": "a7948587043ae3734f777c2296c3da5e363dceee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49824d0e_ba048c5e",
+        "filename": "lib/event/rpc/subsystem_rpc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-13T15:09:38Z",
+      "side": 1,
+      "message": "What if subsystem initialization fail?\nDo we want the result be written in set_post_subsystems_init?",
+      "range": {
+        "startLine": 158,
+        "startChar": 0,
+        "endLine": 164,
+        "endChar": 37
+      },
+      "revId": "a7948587043ae3734f777c2296c3da5e363dceee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
