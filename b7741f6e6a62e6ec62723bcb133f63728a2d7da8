@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "efa0f317_40d874a6",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 625,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-13T07:55:12Z",
+      "side": 1,
+      "message": "vhost_blk on top of the hot-removed bdev may be better to be removed from JSON config file by checking if spdk_vhost_blk_get_dev(vdev) is NULL?\n\nThe reason is that if the bdev is hot removed, construction will probably fail at the next reboot?",
+      "revId": "b7741f6e6a62e6ec62723bcb133f63728a2d7da8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
