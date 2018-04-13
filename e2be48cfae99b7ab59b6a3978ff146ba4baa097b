@@ -1,0 +1,251 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fe675875_4bac73a7",
+        "filename": "test/iscsi_tgt/perf/iscsi_initiator.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-13T07:57:40Z",
+      "side": 1,
+      "message": "Isn\u0027t this parameter unused here ?",
+      "range": {
+        "startLine": 18,
+        "startChar": 3,
+        "endLine": 18,
+        "endChar": 38
+      },
+      "revId": "e2be48cfae99b7ab59b6a3978ff146ba4baa097b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15d74ca2_19334904",
+        "filename": "test/iscsi_tgt/perf/iscsi_initiator.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-13T07:57:40Z",
+      "side": 1,
+      "message": "Please source common.sh",
+      "range": {
+        "startLine": 32,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 15
+      },
+      "revId": "e2be48cfae99b7ab59b6a3978ff146ba4baa097b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ca3f7ef_e03ae3dc",
+        "filename": "test/iscsi_tgt/perf/iscsi_initiator.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-13T07:57:40Z",
+      "side": 1,
+      "message": "Might as well check presence of fio binary in that path.",
+      "range": {
+        "startLine": 34,
+        "startChar": 10,
+        "endLine": 34,
+        "endChar": 19
+      },
+      "revId": "e2be48cfae99b7ab59b6a3978ff146ba4baa097b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fcb14118_1580ac85",
+        "filename": "test/iscsi_tgt/perf/iscsi_target.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-13T07:57:40Z",
+      "side": 1,
+      "message": "Since this argument denotes just IP. Not like the name suggest \"ip target interface\". Would it be better to change to just \"target_ip\" ?",
+      "range": {
+        "startLine": 29,
+        "startChar": 13,
+        "endLine": 29,
+        "endChar": 23
+      },
+      "revId": "e2be48cfae99b7ab59b6a3978ff146ba4baa097b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d73988c8_c001c29b",
+        "filename": "test/iscsi_tgt/perf/iscsi_target.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-13T07:57:40Z",
+      "side": 1,
+      "message": "initiator_ip ?",
+      "range": {
+        "startLine": 30,
+        "startChar": 13,
+        "endLine": 30,
+        "endChar": 24
+      },
+      "revId": "e2be48cfae99b7ab59b6a3978ff146ba4baa097b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7be1ba6a_312d771d",
+        "filename": "test/iscsi_tgt/perf/iscsi_target.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-13T07:57:40Z",
+      "side": 1,
+      "message": "This might be not clear from just argument name (help notes that it is used for communication). Could this be changed to something like \"init_mgmnt_ip\" ?",
+      "range": {
+        "startLine": 31,
+        "startChar": 13,
+        "endLine": 31,
+        "endChar": 20
+      },
+      "revId": "e2be48cfae99b7ab59b6a3978ff146ba4baa097b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1112ec36_b7936edd",
+        "filename": "test/iscsi_tgt/perf/iscsi_target.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-13T07:57:40Z",
+      "side": 1,
+      "message": "It might be easier to include arguments related directly to fio as fio job file, instead of list of arguments passed from here to iscsi_initiator.sh.",
+      "revId": "e2be48cfae99b7ab59b6a3978ff146ba4baa097b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6dcbd069_86615898",
+        "filename": "test/iscsi_tgt/perf/iscsi_target.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-13T07:57:40Z",
+      "side": 1,
+      "message": "You can source test/iscsi_tgt/common.sh for all common iSCSI variables. Then just replace TARGET_IP, INITIATOR_IP and NETMASK.",
+      "range": {
+        "startLine": 63,
+        "startChar": 0,
+        "endLine": 65,
+        "endChar": 15
+      },
+      "revId": "e2be48cfae99b7ab59b6a3978ff146ba4baa097b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "72d32311_0fd04ff0",
+        "filename": "test/iscsi_tgt/perf/iscsi_target.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-13T07:57:40Z",
+      "side": 1,
+      "message": "IP_T and IP_I is very error prone when reading. Please make names more distinct.",
+      "range": {
+        "startLine": 68,
+        "startChar": 10,
+        "endLine": 68,
+        "endChar": 14
+      },
+      "revId": "e2be48cfae99b7ab59b6a3978ff146ba4baa097b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "997b6f3e_82d299ce",
+        "filename": "test/iscsi_tgt/perf/iscsi_target.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-13T07:57:40Z",
+      "side": 1,
+      "message": "Please set it as variable - PORTAL_TAG",
+      "range": {
+        "startLine": 110,
+        "startChar": 25,
+        "endLine": 110,
+        "endChar": 26
+      },
+      "revId": "e2be48cfae99b7ab59b6a3978ff146ba4baa097b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16aefdd2_22af2570",
+        "filename": "test/iscsi_tgt/perf/iscsi_target.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-13T07:57:40Z",
+      "side": 1,
+      "message": "$PORTAL_TAG:$INITIATOR_TAG",
+      "range": {
+        "startLine": 115,
+        "startChar": 76,
+        "endLine": 115,
+        "endChar": 79
+      },
+      "revId": "e2be48cfae99b7ab59b6a3978ff146ba4baa097b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
