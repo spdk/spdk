@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "09dcab76_89ef1482",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-13T20:14:31Z",
+      "side": 1,
+      "message": "This already got fixed in a different way in https://github.com/spdk/spdk/commit/af9c9a415ac7d632251bb46aa6e6cbd1f01a1c61",
+      "revId": "a9c2052238e27083849f457efdb5ac9bc89b9e4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
