@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9957da76_5f9e6b36",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-13T13:37:38Z",
+      "side": 1,
+      "message": "these clean-ups may be done also for error cases?",
+      "revId": "d1b0017393f094a64915e73ad175b7780892cbf8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8a881ba_9c6b20eb",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-13T13:37:38Z",
+      "side": 1,
+      "message": "insert spdk_bdev_io_complete(bdev_io, success) here?",
+      "revId": "d1b0017393f094a64915e73ad175b7780892cbf8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
