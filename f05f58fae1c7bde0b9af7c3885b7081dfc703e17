@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8dc9d484_ca1f43d4",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-13T08:31:35Z",
+      "side": 1,
+      "message": "Needs a better name, since temporary lvols do not mean much. Might suggest they disappear on some action.\n\nPending lvols ? In creation lvols ? I\u0027m bad at making up names :)",
+      "range": {
+        "startLine": 92,
+        "startChar": 26,
+        "endLine": 92,
+        "endChar": 36
+      },
+      "revId": "f05f58fae1c7bde0b9af7c3885b7081dfc703e17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2044c266_ccddc924",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 994,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-13T08:31:35Z",
+      "side": 1,
+      "message": "Isn\u0027t this bit early to remove from the list, since spdk_bs_open_blob() is still async ?\n\nMaybe line 961 above (_spdk_lvol_create_open_cb()) ?",
+      "range": {
+        "startLine": 994,
+        "startChar": 1,
+        "endLine": 994,
+        "endChar": 66
+      },
+      "revId": "f05f58fae1c7bde0b9af7c3885b7081dfc703e17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4527db1_a69fabc3",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 997,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-13T08:31:35Z",
+      "side": 1,
+      "message": "On error, still would have to be removed here.",
+      "revId": "f05f58fae1c7bde0b9af7c3885b7081dfc703e17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "99f2e338_8e415a5f",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1630,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-13T08:31:35Z",
+      "side": 1,
+      "message": "This UT uses implementation detail (inserts to the list directly). Not actually calling second call before first completes.\nUnfortunately there is no mechanism for scheduling those calls.\n\nI\u0027m fine with having those UT as is, but in the future there might be need to implement general UT mechanism for scheduling ops.",
+      "range": {
+        "startLine": 1630,
+        "startChar": 1,
+        "endLine": 1630,
+        "endChar": 65
+      },
+      "revId": "f05f58fae1c7bde0b9af7c3885b7081dfc703e17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
