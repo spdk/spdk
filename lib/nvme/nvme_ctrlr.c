@@ -901,7 +901,7 @@ nvme_ctrlr_set_num_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		SPDK_ERRLOG("nvme_set_num_queues failed!\n");
+		SPDK_ERRLOG("Set Features - Number of Queues failed!\n");
 	}
 
 	/* Obtain the number of queues allocated using Get Features. */
@@ -915,7 +915,7 @@ nvme_ctrlr_set_num_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		SPDK_ERRLOG("nvme_set_num_queues failed!\n");
+		SPDK_ERRLOG("Get Features - Number of Queues failed!\n");
 		ctrlr->opts.num_io_queues = 0;
 	} else {
 		/*
