@@ -56,6 +56,8 @@ struct io_device {
 	uint32_t		for_each_count;
 	TAILQ_ENTRY(io_device)	tailq;
 
+	uint32_t		refcnt;
+
 	bool			unregistered;
 };
 
@@ -314,6 +316,7 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 	dev->ctx_size = ctx_size;
 	dev->for_each_count = 0;
 	dev->unregistered = false;
+	dev->refcnt = 0;
 
 	pthread_mutex_lock(&g_devlist_mutex);
 	TAILQ_FOREACH(tmp, &g_io_devices, tailq) {
@@ -338,34 +341,20 @@ _finish_unregister(void *arg)
 }
 
 static void
-_spdk_io_device_attempt_free(struct io_device *dev, struct spdk_io_channel *ch)
+_spdk_io_device_attempt_free(struct io_device *dev)
 {
-	struct spdk_thread *thread;
-
 	pthread_mutex_lock(&g_devlist_mutex);
-
-	if (ch != NULL) {
-		TAILQ_REMOVE(&ch->thread->io_channels, ch, tailq);
-	}
 
 	if (!dev->unregistered) {
 		pthread_mutex_unlock(&g_devlist_mutex);
 		return;
 	}
 
-	TAILQ_FOREACH(thread, &g_threads, tailq) {
-		/* ch parameter is no longer needed, so use that variable here for iterating. */
-		TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
-			if (ch->dev == dev) {
-				/* A channel that references this I/O
-				 * device still exists. Defer deletion
-				 * until it is removed.
-				 */
-				pthread_mutex_unlock(&g_devlist_mutex);
-				return;
-			}
-		}
+	if (dev->refcnt > 0) {
+		pthread_mutex_unlock(&g_devlist_mutex);
+		return;
 	}
+
 	pthread_mutex_unlock(&g_devlist_mutex);
 
 	if (dev->unregister_cb == NULL) {
@@ -405,7 +394,7 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 	TAILQ_REMOVE(&g_io_devices, dev, tailq);
 	pthread_mutex_unlock(&g_devlist_mutex);
 	dev->unregister_thread = spdk_get_thread();
-	_spdk_io_device_attempt_free(dev, NULL);
+	_spdk_io_device_attempt_free(dev);
 }
 
 struct spdk_io_channel *
@@ -435,6 +424,8 @@ spdk_get_io_channel(void *io_device)
 		return NULL;
 	}
 
+	dev->refcnt++;
+
 	TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
 		if (ch->dev == dev) {
 			ch->ref++;
@@ -450,6 +441,7 @@ spdk_get_io_channel(void *io_device)
 	ch = calloc(1, sizeof(*ch) + dev->ctx_size);
 	if (ch == NULL) {
 		SPDK_ERRLOG("could not calloc spdk_io_channel\n");
+		dev->refcnt--;
 		pthread_mutex_unlock(&g_devlist_mutex);
 		return NULL;
 	}
@@ -466,6 +458,7 @@ spdk_get_io_channel(void *io_device)
 	if (rc == -1) {
 		pthread_mutex_lock(&g_devlist_mutex);
 		TAILQ_REMOVE(&ch->thread->io_channels, ch, tailq);
+		dev->refcnt--;
 		free(ch);
 		pthread_mutex_unlock(&g_devlist_mutex);
 		return NULL;
@@ -481,12 +474,11 @@ _spdk_put_io_channel(void *arg)
 
 	assert(ch->thread == spdk_get_thread());
 
-	if (ch->ref == 0) {
-		SPDK_ERRLOG("ref already zero\n");
-		return;
-	}
-
 	ch->ref--;
+
+	pthread_mutex_lock(&g_devlist_mutex);
+	ch->dev->refcnt--;
+	pthread_mutex_unlock(&g_devlist_mutex);
 
 	if (ch->ref > 0) {
 		return;
@@ -494,17 +486,20 @@ _spdk_put_io_channel(void *arg)
 
 	ch->destroy_cb(ch->dev->io_device, spdk_io_channel_get_ctx(ch));
 
-	/*
-	 * _spdk_io_device_attempt_free() will remove the ch from the thread after it
-	 *  acquires the g_devlist_mutex lock.
-	 */
-	_spdk_io_device_attempt_free(ch->dev, ch);
+	_spdk_io_device_attempt_free(ch->dev);
 	free(ch);
 }
 
 void
 spdk_put_io_channel(struct spdk_io_channel *ch)
 {
+	if (ch->ref == 1) {
+		/* If this was the last reference, remove the channel from the list */
+		pthread_mutex_lock(&g_devlist_mutex);
+		TAILQ_REMOVE(&ch->thread->io_channels, ch, tailq);
+		pthread_mutex_unlock(&g_devlist_mutex);
+	}
+
 	spdk_thread_send_msg(ch->thread, _spdk_put_io_channel, ch);
 }
 
