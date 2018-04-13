@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c980ef8e_3b305424",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1633,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-13T20:00:36Z",
+      "side": 1,
+      "message": "This is adding some new strncpy() calls - please see https://github.com/spdk/spdk/commit/9611db82a328e482a9c05b0f666873ca819cc5f9",
+      "range": {
+        "startLine": 1633,
+        "startChar": 1,
+        "endLine": 1633,
+        "endChar": 8
+      },
+      "revId": "bddb0e925de96b888c9fcdb6ec472be9e52ad70d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
