@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "cb5e109c_73382b51",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 16
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-13T14:24:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "eca100ee_4d70574a",
+      "revId": "027118585933c4d77450799df253149c45034e9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "26bf7733_67c0dd19",
         "filename": "include/spdk/blob.h",
         "patchSetId": 16
@@ -30,6 +48,24 @@
       "writtenOn": "2018-04-11T16:42:50Z",
       "side": 1,
       "message": "The blob parameter is a blob, not a blob id.  This applies to all of the doc comments below too.",
+      "revId": "027118585933c4d77450799df253149c45034e9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7290cc2b_db00d0aa",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-13T14:24:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "26bf7733_67c0dd19",
       "revId": "027118585933c4d77450799df253149c45034e9d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "60e45b98_52b6002c",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 408,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-13T14:24:40Z",
+      "side": 1,
+      "message": "It is used on the lvol layer (e.g. in get_bdev RPC see patch \"lvol: display clone/snapshot status in get_bdevs\" -- https://review.gerrithub.io/#/c/404638/).",
+      "parentUuid": "97d943cd_3470852f",
+      "revId": "027118585933c4d77450799df253149c45034e9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e159ca28_a9c29da1",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 16
@@ -64,6 +118,24 @@
       "writtenOn": "2018-04-11T16:39:16Z",
       "side": 1,
       "message": "This should probably return !!(blob-\u003einvalid_flags \u0026 SPDK_BLOB_THIN_PROV) to make sure the return value is a valid 0 or 1 bool (in this case, SPDK_BLOB_THIN_PROV happens to be 1, so it works out anyway, but this pattern will probably be copied for future functions, so let\u0027s make it robust).",
+      "revId": "027118585933c4d77450799df253149c45034e9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "01ecf440_4071c9fe",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 4700,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-13T14:24:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e159ca28_a9c29da1",
       "revId": "027118585933c4d77450799df253149c45034e9d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
