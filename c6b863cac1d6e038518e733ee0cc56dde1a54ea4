@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "2114bd7e_cd8285b5",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-13T14:24:56Z",
+      "side": 1,
+      "message": "Yes, this comment should be removed.",
+      "parentUuid": "72ed2fd4_1a5a4f55",
+      "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "512bac1d_2274fd47",
         "filename": "include/spdk/blob.h",
         "patchSetId": 18
@@ -30,6 +48,24 @@
       "writtenOn": "2018-04-11T20:49:48Z",
       "side": 1,
       "message": "I think these two new functions should operate entirely on blobids, not on spdk_blob *. Maybe the function should be called \"spdk_blob_get_children\".\n\nI\u0027m not entirely convinced that we need to expose this function at all.",
+      "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c06e505_83f84033",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-13T14:24:56Z",
+      "side": 1,
+      "message": "I use it on the lvol layer to expose list of clones in get_bdev RPC.",
+      "parentUuid": "512bac1d_2274fd47",
       "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -83,6 +119,54 @@
     },
     {
       "key": {
+        "uuid": "d939e760_7c4e9414",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 413,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-13T14:24:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "961db367_1814efd3",
+      "range": {
+        "startLine": 413,
+        "startChar": 13,
+        "endLine": 413,
+        "endChar": 35
+      },
+      "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a1a75a7_f8636558",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 413,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-13T14:24:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "513deda9_555aa92b",
+      "range": {
+        "startLine": 413,
+        "startChar": 13,
+        "endLine": 413,
+        "endChar": 35
+      },
+      "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f5dd973b_cc65330b",
         "filename": "include/spdk/blob.h",
         "patchSetId": 18
@@ -94,6 +178,24 @@
       "writtenOn": "2018-04-11T16:55:53Z",
       "side": 1,
       "message": "This parameter is not a blob id.",
+      "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0fc32594_86a09b00",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 436,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-13T14:24:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f5dd973b_cc65330b",
       "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -117,6 +219,24 @@
     },
     {
       "key": {
+        "uuid": "b6d6487f_4f9a2825",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2078,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-13T14:24:56Z",
+      "side": 1,
+      "message": "Yes, but we may try to delete snapshot with no opened clones, then we will not have an information if snapshot have any clones or not.",
+      "parentUuid": "0f72e477_8b7aafe7",
+      "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c091bb5c_5921d6c2",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 18
@@ -128,6 +248,24 @@
       "writtenOn": "2018-04-11T16:55:53Z",
       "side": 1,
       "message": "calloc() needs a check for allocation failure.",
+      "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d076ff13_a1fa4a7e",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2090,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-13T14:24:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c091bb5c_5921d6c2",
       "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -151,6 +289,24 @@
     },
     {
       "key": {
+        "uuid": "a9b0465a_1e49b1d6",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2107,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-13T14:24:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5f26f4e8_d20e9df0",
+      "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "019e1f39_2587cc17",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 18
@@ -162,6 +318,24 @@
       "writtenOn": "2018-04-11T16:55:53Z",
       "side": 1,
       "message": "Check for allocation failure here too.",
+      "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bc0f1f12_472d5ba4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2120,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-13T14:24:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "019e1f39_2587cc17",
       "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -185,6 +359,24 @@
     },
     {
       "key": {
+        "uuid": "164030b6_78c24043",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2161,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-13T14:24:56Z",
+      "side": 1,
+      "message": "I\u0027ve reworked this part. parent_id is stored in spdk_blob struct and set when clone is loaded, so no need to do it twice.",
+      "parentUuid": "f5445deb_34467218",
+      "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a626e26_48ac6fb3",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 18
@@ -196,6 +388,24 @@
       "writtenOn": "2018-04-11T16:55:53Z",
       "side": 1,
       "message": "Is this change related to the snapshot changes? I think it at least needs an explanation in the commit message, or maybe it should be split out into a separate review.",
+      "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "134a0873_ab515320",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2460,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-13T14:24:56Z",
+      "side": 1,
+      "message": "Yes, we\u0027re building snapshot-clone list when blob store is loading (in line 2463).",
+      "parentUuid": "1a626e26_48ac6fb3",
       "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -242,6 +452,30 @@
     },
     {
       "key": {
+        "uuid": "ea72a69c_eefe7230",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 4209,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-13T14:24:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c4385268_f8004597",
+      "range": {
+        "startLine": 4209,
+        "startChar": 40,
+        "endLine": 4209,
+        "endChar": 42
+      },
+      "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6c734d79_215a2c08",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 18
@@ -253,6 +487,24 @@
       "writtenOn": "2018-04-11T20:49:48Z",
       "side": 1,
       "message": "I think this can just contain the blob_id, a ref count, and the TAILQ_ENTRY to jump to the next element.",
+      "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3ae01d1_0c276bbf",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-13T14:24:56Z",
+      "side": 1,
+      "message": "For now this list is intended to store all clones (children) of snapshot and is updated when blob store is loaded or blob is created/deleted. Having only ref counter we have only an information how many children have a parent and if we can delete it.\nThis structure is also used in spdk_blob_get_children() required in the followed patch to list children (clones) in get_bdev RPC on the lvol layer.",
+      "parentUuid": "6c734d79_215a2c08",
       "revId": "c6b863cac1d6e038518e733ee0cc56dde1a54ea4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
