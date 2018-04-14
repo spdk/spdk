@@ -442,6 +442,9 @@ spdk_nvmf_ctrlr_disconnect(struct spdk_nvmf_qpair *qpair)
 	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
 	struct spdk_nvmf_qpair *admin_qpair = ctrlr->admin_qpair;
 
+	assert(admin_qpair != NULL);
+	assert(admin_qpair->group != NULL);
+	assert(admin_qpair->group->thread != NULL);
 	spdk_thread_send_msg(admin_qpair->group->thread, ctrlr_delete_qpair, qpair);
 }
 
