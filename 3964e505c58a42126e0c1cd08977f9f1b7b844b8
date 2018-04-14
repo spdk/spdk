@@ -22,6 +22,30 @@
       "revId": "3964e505c58a42126e0c1cd08977f9f1b7b844b8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91505e1d_f11035d4",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-14T15:02:46Z",
+      "side": 1,
+      "message": "Hi Gang\n\nThe spdk_bdev_get_device_stat() is used to traverse all the I/O channels of the bdev and accumulate the I/O statistics of each channel. \n\nThe results will be passed to the callback function. So the spdk_rpc_get_bdevs_iostat_cb() just used to output the result rather than obtain the I/O statistics.\n\nThanks\nYanbo",
+      "parentUuid": "dc613c4b_f3ecb939",
+      "range": {
+        "startLine": 181,
+        "startChar": 0,
+        "endLine": 184,
+        "endChar": 3
+      },
+      "revId": "3964e505c58a42126e0c1cd08977f9f1b7b844b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
