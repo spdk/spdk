@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a4d1628d_64e185c7",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1140,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-04-14T02:11:43Z",
+      "side": 1,
+      "message": "So this is to enable QoS on the existing bdev channel instead of having a specific QoS bdev channel?\n\nFor the key point here to have a specific QoS bdev channel instead of the existing bdev channel. It is the based on the SPDK current framework, that the associated I/O channel could be destroyed at runtime from the upper layer to support the flexibility. There is no restriction to keep its related bdev channel there. \n\nPreviously we have some discussion to pick a specific QoS bdev channel instead of leveraging a shared and existing bdev channel from the associated I/O channel.\n\nMaybe Jim and Daniel could also give some comments here.",
+      "range": {
+        "startLine": 1140,
+        "startChar": 2,
+        "endLine": 1140,
+        "endChar": 35
+      },
+      "revId": "a1db74f76e2018849b7e164d93dc89bcfcfc16ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
