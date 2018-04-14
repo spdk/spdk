@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc613c4b_f3ecb939",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-04-14T13:49:35Z",
+      "side": 1,
+      "message": "This logic is to handle the case that the bdev is destroyed after querying the number of existing bdevs.\n\nMy thinking is whether just directly to call the spdk_rpc_get_bdevs_iostat_cb() instead of calling the spdk_bdev_get_device_stat() which is doing nother here.\n\nWhat\u0027s your idea?",
+      "range": {
+        "startLine": 181,
+        "startChar": 0,
+        "endLine": 184,
+        "endChar": 3
+      },
+      "revId": "3964e505c58a42126e0c1cd08977f9f1b7b844b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
