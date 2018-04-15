@@ -62,18 +62,26 @@ struct spdk_vhost_blk_task {
 	struct iovec iovs[SPDK_VHOST_IOVS_MAX];
 };
 
-struct spdk_vhost_blk_dev {
+struct spdk_vhost_blk_tgt {
 	struct spdk_vhost_tgt vtgt;
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *bdev_desc;
+	bool readonly;
+};
+
+struct spdk_vhost_blk_dev {
 	struct spdk_io_channel *bdev_io_channel;
 	struct spdk_poller *requestq_poller;
-	bool readonly;
 };
 
 /* forward declaration */
 static const struct spdk_vhost_tgt_backend g_vhost_blk_tgt_backend;
-static struct spdk_vhost_blk_dev *to_blk_dev(struct spdk_vhost_tgt *vtgt);
+
+static struct spdk_vhost_blk_tgt *
+to_blk_tgt_unsafe(struct spdk_vhost_tgt *vtgt)
+{
+	return SPDK_CONTAINEROF(vtgt, struct spdk_vhost_blk_tgt, vtgt);
+}
 
 static void
 blk_task_finish(struct spdk_vhost_blk_task *task)
@@ -185,9 +193,11 @@ blk_request_complete_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 }
 
 static int
-process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev *bvdev,
+process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_dev *vdev,
 		    struct spdk_vhost_virtqueue *vq)
 {
+	struct spdk_vhost_blk_tgt *bvtgt = to_blk_tgt_unsafe(vdev->vtgt);
+	struct spdk_vhost_blk_dev *bvdev = spdk_vhost_dev_get_ctx(vdev);
 	const struct virtio_blk_outhdr *req;
 	struct iovec *iov;
 	uint32_t type;
@@ -243,12 +253,12 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 
 		if (type == VIRTIO_BLK_T_IN) {
 			task->used_len = payload_len + sizeof(*task->status);
-			rc = spdk_bdev_readv(bvdev->bdev_desc, bvdev->bdev_io_channel,
+			rc = spdk_bdev_readv(bvtgt->bdev_desc, bvdev->bdev_io_channel,
 					     &task->iovs[1], task->iovcnt, req->sector * 512,
 					     payload_len, blk_request_complete_cb, task);
-		} else if (!bvdev->readonly) {
+		} else if (!bvtgt->readonly) {
 			task->used_len = sizeof(*task->status);
-			rc = spdk_bdev_writev(bvdev->bdev_desc, bvdev->bdev_io_channel,
+			rc = spdk_bdev_writev(bvtgt->bdev_desc, bvdev->bdev_io_channel,
 					      &task->iovs[1], task->iovcnt, req->sector * 512,
 					      payload_len, blk_request_complete_cb, task);
 		} else {
@@ -267,7 +277,7 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 			return -1;
 		}
 		task->used_len = spdk_min((size_t)VIRTIO_BLK_ID_BYTES, task->iovs[1].iov_len);
-		spdk_strcpy_pad(task->iovs[1].iov_base, spdk_bdev_get_product_name(bvdev->bdev),
+		spdk_strcpy_pad(task->iovs[1].iov_base, spdk_bdev_get_product_name(bvtgt->bdev),
 				task->used_len, ' ');
 		blk_request_finish(true, task);
 		break;
@@ -320,7 +330,7 @@ process_vq(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq)
 		task->status = NULL;
 		task->used_len = 0;
 
-		rc = process_blk_request(task, to_blk_dev(vtgt), vq);
+		rc = process_blk_request(task, vdev, vq);
 		if (rc == 0) {
 			SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "====== Task %p req_idx %d submitted ======\n", task,
 				      reqs[i]);
@@ -380,8 +390,8 @@ no_bdev_vdev_worker(void *arg)
 	return -1;
 }
 
-static struct spdk_vhost_blk_dev *
-to_blk_dev(struct spdk_vhost_tgt *vtgt)
+static struct spdk_vhost_blk_tgt *
+to_blk_tgt(struct spdk_vhost_tgt *vtgt)
 {
 	if (vtgt == NULL) {
 		return NULL;
@@ -392,43 +402,44 @@ to_blk_dev(struct spdk_vhost_tgt *vtgt)
 		return NULL;
 	}
 
-	return SPDK_CONTAINEROF(vtgt, struct spdk_vhost_blk_dev, vtgt);
+	return to_blk_tgt_unsafe(vtgt);
 }
 
 struct spdk_bdev *
 spdk_vhost_blk_get_dev(struct spdk_vhost_tgt *vtgt)
 {
-	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vtgt);
+	struct spdk_vhost_blk_tgt *bvtgt = to_blk_tgt(vtgt);
 
-	assert(bvdev != NULL);
-	return bvdev->bdev;
+	assert(bvtgt != NULL);
+	return bvtgt->bdev;
 }
 
 static int
 _bdev_remove_cb(struct spdk_vhost_tgt *vtgt, void *arg)
 {
-	struct spdk_vhost_blk_dev *bvdev = arg;
+	struct spdk_vhost_blk_tgt *bvtgt = arg;
 	struct spdk_vhost_dev *vdev = vtgt->vdev;
+	struct spdk_vhost_blk_dev *bvdev = spdk_vhost_dev_get_ctx(vtgt->vdev);
 
 	SPDK_WARNLOG("Controller %s: Hot-removing bdev - all further requests will fail.\n",
-		     bvdev->vtgt.name);
+		     vtgt->name);
 	if (bvdev->requestq_poller) {
 		spdk_poller_unregister(&bvdev->requestq_poller);
 		bvdev->requestq_poller = spdk_poller_register(no_bdev_vdev_worker, vdev, 0);
 	}
 
-	spdk_bdev_close(bvdev->bdev_desc);
-	bvdev->bdev_desc = NULL;
-	bvdev->bdev = NULL;
+	spdk_bdev_close(bvtgt->bdev_desc);
+	bvtgt->bdev_desc = NULL;
+	bvtgt->bdev = NULL;
 	return 0;
 }
 
 static void
 bdev_remove_cb(void *remove_ctx)
 {
-	struct spdk_vhost_blk_dev *bvdev = remove_ctx;
+	struct spdk_vhost_blk_tgt *bvtgt = remove_ctx;
 
-	spdk_vhost_call_external_event(bvdev->vtgt.name, _bdev_remove_cb, bvdev);
+	spdk_vhost_call_external_event(bvtgt->vtgt.name, _bdev_remove_cb, bvtgt);
 }
 
 static void
@@ -501,11 +512,12 @@ static int
 spdk_vhost_blk_start(struct spdk_vhost_tgt *vtgt, void *event_ctx)
 {
 	struct spdk_vhost_dev *vdev = vtgt->vdev;
+	struct spdk_vhost_blk_tgt *bvtgt;
 	struct spdk_vhost_blk_dev *bvdev;
 	int i, rc = 0;
 
-	bvdev = to_blk_dev(vtgt);
-	if (bvdev == NULL) {
+	bvtgt = to_blk_tgt(vtgt);
+	if (bvtgt == NULL) {
 		SPDK_ERRLOG("Trying to start non-blk controller as a blk one.\n");
 		rc = -1;
 		goto out;
@@ -522,12 +534,13 @@ spdk_vhost_blk_start(struct spdk_vhost_tgt *vtgt, void *event_ctx)
 
 	rc = alloc_task_pool(vdev);
 	if (rc != 0) {
-		SPDK_ERRLOG("%s: failed to alloc task pool.\n", bvdev->vtgt.name);
+		SPDK_ERRLOG("%s: failed to alloc task pool.\n", vtgt->name);
 		goto out;
 	}
 
-	if (bvdev->bdev) {
-		bvdev->bdev_io_channel = spdk_bdev_get_io_channel(bvdev->bdev_desc);
+	bvdev = spdk_vhost_dev_get_ctx(vdev);
+	if (bvtgt->bdev) {
+		bvdev->bdev_io_channel = spdk_bdev_get_io_channel(bvtgt->bdev_desc);
 		if (!bvdev->bdev_io_channel) {
 			SPDK_ERRLOG("Controller %s: IO channel allocation failed\n", vtgt->name);
 			rc = -1;
@@ -535,7 +548,7 @@ spdk_vhost_blk_start(struct spdk_vhost_tgt *vtgt, void *event_ctx)
 		}
 	}
 
-	bvdev->requestq_poller = spdk_poller_register(bvdev->bdev ? vdev_worker : no_bdev_vdev_worker,
+	bvdev->requestq_poller = spdk_poller_register(bvtgt->bdev ? vdev_worker : no_bdev_vdev_worker,
 				 vdev, 0);
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Started poller for vhost controller %s on lcore %d\n",
 		     vtgt->name, vtgt->lcore);
@@ -556,7 +569,7 @@ destroy_device_poller_cb(void *arg)
 	struct spdk_vhost_dev_destroy_ctx *ctx = arg;
 	struct spdk_vhost_dev *vdev = ctx->vdev;
 	struct spdk_vhost_tgt *vtgt = vdev->vtgt;
-	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vtgt);
+	struct spdk_vhost_blk_dev *bvdev = spdk_vhost_dev_get_ctx(vdev);
 	int i;
 
 	if (vdev->task_cnt > 0) {
@@ -588,11 +601,12 @@ static int
 spdk_vhost_blk_stop(struct spdk_vhost_tgt *vtgt, void *event_ctx)
 {
 	struct spdk_vhost_dev *vdev = vtgt->vdev;
-	struct spdk_vhost_blk_dev *bvdev;
+	struct spdk_vhost_blk_tgt *bvtgt;
 	struct spdk_vhost_dev_destroy_ctx *destroy_ctx;
+	struct spdk_vhost_blk_dev *bvdev = spdk_vhost_dev_get_ctx(vdev);
 
-	bvdev = to_blk_dev(vtgt);
-	if (bvdev == NULL) {
+	bvtgt = to_blk_tgt(vtgt);
+	if (bvtgt == NULL) {
 		SPDK_ERRLOG("Trying to stop non-blk controller as a blk one.\n");
 		goto err;
 	}
@@ -620,19 +634,14 @@ static void
 spdk_vhost_blk_dump_info_json(struct spdk_vhost_tgt *vtgt, struct spdk_json_write_ctx *w)
 {
 	struct spdk_bdev *bdev = spdk_vhost_blk_get_dev(vtgt);
-	struct spdk_vhost_blk_dev *bvdev;
+	struct spdk_vhost_blk_tgt *bvtgt = to_blk_tgt(vtgt);
 
-	bvdev = to_blk_dev(vtgt);
-	if (bvdev == NULL) {
-		return;
-	}
-
-	assert(bvdev != NULL);
+	assert(bvtgt != NULL);
 	spdk_json_write_name(w, "block");
 	spdk_json_write_object_begin(w);
 
 	spdk_json_write_name(w, "readonly");
-	spdk_json_write_bool(w, bvdev->readonly);
+	spdk_json_write_bool(w, bvtgt->readonly);
 
 	spdk_json_write_name(w, "bdev");
 	if (bdev) {
@@ -647,14 +656,9 @@ spdk_vhost_blk_dump_info_json(struct spdk_vhost_tgt *vtgt, struct spdk_json_writ
 static void
 spdk_vhost_blk_write_config_json(struct spdk_vhost_tgt *vtgt, struct spdk_json_write_ctx *w)
 {
-	struct spdk_vhost_blk_dev *bvdev;
+	struct spdk_vhost_blk_tgt *bvtgt = to_blk_tgt(vtgt);
 
-	bvdev = to_blk_dev(vtgt);
-	if (bvdev == NULL) {
-		return;
-	}
-
-	if (!bvdev->bdev) {
+	if (!bvtgt->bdev) {
 		return;
 	}
 
@@ -663,9 +667,9 @@ spdk_vhost_blk_write_config_json(struct spdk_vhost_tgt *vtgt, struct spdk_json_w
 
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "ctrlr", vtgt->name);
-	spdk_json_write_named_string(w, "dev_name", spdk_bdev_get_name(bvdev->bdev));
+	spdk_json_write_named_string(w, "dev_name", spdk_bdev_get_name(bvtgt->bdev));
 	spdk_json_write_named_string(w, "cpumask", spdk_cpuset_fmt(vtgt->cpumask));
-	spdk_json_write_named_bool(w, "readonly", bvdev->readonly);
+	spdk_json_write_named_bool(w, "readonly", bvtgt->readonly);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
@@ -677,14 +681,14 @@ static int
 spdk_vhost_blk_get_config(struct spdk_vhost_tgt *vtgt, uint8_t *config,
 			  uint32_t len)
 {
+	struct spdk_vhost_blk_tgt *bvtgt;
 	struct virtio_blk_config *blkcfg = (struct virtio_blk_config *)config;
-	struct spdk_vhost_blk_dev *bvdev;
 	struct spdk_bdev *bdev;
 	uint32_t blk_size;
 	uint64_t blkcnt;
 
-	bvdev = to_blk_dev(vtgt);
-	if (bvdev == NULL) {
+	bvtgt = to_blk_tgt(vtgt);
+	if (bvtgt == NULL) {
 		SPDK_ERRLOG("Trying to get virito_blk configuration failed\n");
 		return -1;
 	}
@@ -693,7 +697,7 @@ spdk_vhost_blk_get_config(struct spdk_vhost_tgt *vtgt, uint8_t *config,
 		return -1;
 	}
 
-	bdev = bvdev->bdev;
+	bdev = bvtgt->bdev;
 	blk_size = spdk_bdev_get_block_size(bdev);
 	blkcnt = spdk_bdev_get_num_blocks(bdev);
 
@@ -723,6 +727,7 @@ static const struct spdk_vhost_tgt_backend g_vhost_blk_tgt_backend = {
 	.disabled_features = SPDK_VHOST_DISABLED_FEATURES | (1ULL << VIRTIO_BLK_F_GEOMETRY) |
 	(1ULL << VIRTIO_BLK_F_RO) | (1ULL << VIRTIO_BLK_F_FLUSH) | (1ULL << VIRTIO_BLK_F_CONFIG_WCE) |
 	(1ULL << VIRTIO_BLK_F_BARRIER) | (1ULL << VIRTIO_BLK_F_SCSI),
+	.dev_ctx_size = sizeof(struct spdk_vhost_blk_dev),
 	.start_device =  spdk_vhost_blk_start,
 	.stop_device = spdk_vhost_blk_stop,
 	.vhost_get_config = spdk_vhost_blk_get_config,
@@ -777,7 +782,7 @@ spdk_vhost_blk_controller_construct(void)
 int
 spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_name, bool readonly)
 {
-	struct spdk_vhost_blk_dev *bvdev = NULL;
+	struct spdk_vhost_blk_tgt *bvtgt = NULL;
 	struct spdk_bdev *bdev;
 	int ret = 0;
 
@@ -790,13 +795,13 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 		goto out;
 	}
 
-	bvdev = spdk_dma_zmalloc(sizeof(*bvdev), SPDK_CACHE_LINE_SIZE, NULL);
-	if (bvdev == NULL) {
+	bvtgt = spdk_dma_zmalloc(sizeof(*bvtgt), SPDK_CACHE_LINE_SIZE, NULL);
+	if (bvtgt == NULL) {
 		ret = -1;
 		goto out;
 	}
 
-	ret = spdk_bdev_open(bdev, true, bdev_remove_cb, bvdev, &bvdev->bdev_desc);
+	ret = spdk_bdev_open(bdev, true, bdev_remove_cb, bvtgt, &bvtgt->bdev_desc);
 	if (ret != 0) {
 		SPDK_ERRLOG("Controller %s: could not open bdev '%s', error=%d\n",
 			    name, dev_name, ret);
@@ -804,20 +809,20 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 		goto out;
 	}
 
-	bvdev->bdev = bdev;
-	bvdev->readonly = readonly;
-	ret = spdk_vhost_tgt_register(&bvdev->vtgt, name, cpumask, &g_vhost_blk_tgt_backend);
+	bvtgt->bdev = bdev;
+	bvtgt->readonly = readonly;
+	ret = spdk_vhost_tgt_register(&bvtgt->vtgt, name, cpumask, &g_vhost_blk_tgt_backend);
 	if (ret != 0) {
-		spdk_bdev_close(bvdev->bdev_desc);
+		spdk_bdev_close(bvtgt->bdev_desc);
 		ret = -1;
 		goto out;
 	}
 
-	if (readonly && rte_vhost_driver_enable_features(bvdev->vtgt.path, (1ULL << VIRTIO_BLK_F_RO))) {
+	if (readonly && rte_vhost_driver_enable_features(bvtgt->vtgt.path, (1ULL << VIRTIO_BLK_F_RO))) {
 		SPDK_ERRLOG("Controller %s: failed to set as a readonly\n", name);
-		spdk_bdev_close(bvdev->bdev_desc);
+		spdk_bdev_close(bvtgt->bdev_desc);
 
-		if (spdk_vhost_tgt_unregister(&bvdev->vtgt) != 0) {
+		if (spdk_vhost_tgt_unregister(&bvtgt->vtgt) != 0) {
 			SPDK_ERRLOG("Controller %s: failed to remove controller\n", name);
 		}
 
@@ -827,8 +832,8 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Controller %s: using bdev '%s'\n", name, dev_name);
 out:
-	if (ret != 0 && bvdev) {
-		spdk_dma_free(bvdev);
+	if (ret != 0 && bvtgt) {
+		spdk_dma_free(bvtgt);
 	}
 	spdk_vhost_unlock();
 	return ret;
@@ -837,25 +842,25 @@ out:
 static int
 spdk_vhost_blk_destroy(struct spdk_vhost_tgt *vtgt)
 {
-	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vtgt);
+	struct spdk_vhost_blk_tgt *bvtgt = to_blk_tgt(vtgt);
 	int rc;
 
-	if (!bvdev) {
+	if (!bvtgt) {
 		return -EINVAL;
 	}
 
-	rc = spdk_vhost_tgt_unregister(&bvdev->vtgt);
+	rc = spdk_vhost_tgt_unregister(vtgt);
 	if (rc != 0) {
 		return rc;
 	}
 
-	if (bvdev->bdev_desc) {
-		spdk_bdev_close(bvdev->bdev_desc);
-		bvdev->bdev_desc = NULL;
+	if (bvtgt->bdev_desc) {
+		spdk_bdev_close(bvtgt->bdev_desc);
+		bvtgt->bdev_desc = NULL;
 	}
-	bvdev->bdev = NULL;
+	bvtgt->bdev = NULL;
 
-	spdk_dma_free(bvdev);
+	spdk_dma_free(bvtgt);
 	return 0;
 }
 

@@ -1241,7 +1241,7 @@ new_connection(int vid)
 		goto err;
 	}
 
-	vdev = spdk_dma_zmalloc(sizeof(struct spdk_vhost_dev),
+	vdev = spdk_dma_zmalloc(sizeof(struct spdk_vhost_dev) + vtgt->backend->dev_ctx_size,
 				SPDK_CACHE_LINE_SIZE, NULL);
 	if (vdev == NULL) {
 		SPDK_ERRLOG("vdev calloc failed.\n");
