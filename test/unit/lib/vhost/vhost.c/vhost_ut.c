@@ -172,6 +172,8 @@ vtgt_create_dev(struct spdk_vhost_tgt *vtgt)
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(vdev != NULL);
 	memset(vdev, 0, sizeof(*vdev));
+	vdev->vid = 0;
+	vdev->lcore = 0;
 	vdev->mem = calloc(1, sizeof(*vdev->mem) + 2 * sizeof(struct rte_vhost_mem_region));
 	SPDK_CU_ASSERT_FATAL(vdev->mem != NULL);
 	vdev->mem->nregions = 2;
@@ -184,16 +186,12 @@ vtgt_create_dev(struct spdk_vhost_tgt *vtgt)
 
 	vdev->vtgt = vtgt;
 	vtgt->vdev = vdev;
-	vtgt->vid = 0;
-	vtgt->lcore = 0;
-
 	return vdev;
 }
 
 static void
 remove_dev(struct spdk_vhost_dev *vdev)
 {
-	vdev->vtgt->vid = -1;
 	vdev->vtgt->vdev = NULL;
 	free(vdev->mem);
 	free(vdev);
@@ -336,11 +334,11 @@ dev_find_by_vid_test(void)
 	vdev = vtgt_create_dev(vtgt);
 	SPDK_CU_ASSERT_FATAL(vdev);
 
-	tmp = spdk_vhost_dev_find_by_vid(vtgt->vid);
+	tmp = spdk_vhost_dev_find_by_vid(vdev->vid);
 	CU_ASSERT(tmp == vdev);
 
 	/* Search for a device with incorrect vid */
-	tmp = spdk_vhost_dev_find_by_vid(vtgt->vid + 0xFF);
+	tmp = spdk_vhost_dev_find_by_vid(vdev->vid + 0xFF);
 	CU_ASSERT(tmp == NULL);
 
 	cleanup_vtgt(vtgt);
