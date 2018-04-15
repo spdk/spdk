@@ -47,7 +47,7 @@ static uint32_t *g_num_ctrlrs;
 /* Path to folder where character device will be created. Can be set by user. */
 static char dev_dirname[PATH_MAX] = "";
 
-struct spdk_vhost_dev_event_ctx {
+struct spdk_vhost_dev_fn_ctx {
 	/** Pointer to the target obtained before enqueuing the event */
 	struct spdk_vhost_tgt *vtgt;
 
@@ -55,7 +55,7 @@ struct spdk_vhost_dev_event_ctx {
 	unsigned vtgt_id;
 
 	/** User callback function to be executed on given lcore. */
-	spdk_vhost_event_fn cb_fn;
+	spdk_vhost_dev_fn cb_fn;
 
 	/** Semaphore used to signal that event is done. */
 	sem_t sem;
@@ -799,17 +799,10 @@ spdk_vhost_tgt_unregister(struct spdk_vhost_tgt *vtgt)
 	return 0;
 }
 
-static struct spdk_vhost_tgt *
-spdk_vhost_tgt_next(unsigned i)
+static struct spdk_vhost_dev *
+spdk_vhost_dev_next(struct spdk_vhost_tgt *vtgt, unsigned i)
 {
-	struct spdk_vhost_tgt *vtgt;
-
-	TAILQ_FOREACH(vtgt, &g_spdk_vhost_tgts, tailq) {
-		if (vtgt->id > i) {
-			return vtgt;
-		}
-	}
-
+	/* We currently support only one device per target. */
 	return NULL;
 }
 
@@ -854,7 +847,7 @@ spdk_vhost_allocate_reactor(struct spdk_cpuset *cpumask)
 void
 spdk_vhost_dev_backend_event_done(void *event_ctx, int response)
 {
-	struct spdk_vhost_dev_event_ctx *ctx = event_ctx;
+	struct spdk_vhost_dev_fn_ctx *ctx = event_ctx;
 
 	ctx->response = response;
 	sem_post(&ctx->sem);
@@ -863,44 +856,20 @@ spdk_vhost_dev_backend_event_done(void *event_ctx, int response)
 static void
 spdk_vhost_event_cb(void *arg1, void *arg2)
 {
-	struct spdk_vhost_dev_event_ctx *ctx = arg1;
+	struct spdk_vhost_dev_fn_ctx *ctx = arg1;
 
-	ctx->cb_fn(ctx->vtgt, ctx);
+	ctx->cb_fn(ctx->vtgt, ctx->vtgt->vdev, ctx);
 }
 
-static void
-spdk_vhost_event_async_fn(void *arg1, void *arg2)
-{
-	struct spdk_vhost_dev_event_ctx *ctx = arg1;
-	struct spdk_vhost_tgt *vtgt;
-	struct spdk_event *ev;
-
-	if (pthread_mutex_trylock(&g_spdk_vhost_mutex) != 0) {
-		ev = spdk_event_allocate(spdk_env_get_current_core(), spdk_vhost_event_async_fn, arg1, arg2);
-		spdk_event_call(ev);
-		return;
-	}
-
-	vtgt = spdk_vhost_tgt_find_by_id(ctx->vtgt_id);
-	if (vtgt != ctx->vtgt) {
-		/* vtgt has been changed after enqueuing this event */
-		vtgt = NULL;
-	}
-
-	ctx->cb_fn(vtgt, arg2);
-	pthread_mutex_unlock(&g_spdk_vhost_mutex);
-
-	free(ctx);
-}
-
-static void spdk_vhost_external_event_foreach_continue(struct spdk_vhost_tgt *vtgt,
-		spdk_vhost_event_fn fn, void *arg);
+static void spdk_vhost_tgt_foreach_vdev_continue(struct spdk_vhost_tgt *vtgt,
+		struct spdk_vhost_dev *vdev, spdk_vhost_dev_fn fn, void *arg);
 
 static void
 spdk_vhost_event_async_foreach_fn(void *arg1, void *arg2)
 {
-	struct spdk_vhost_dev_event_ctx *ctx = arg1;
+	struct spdk_vhost_dev_fn_ctx *ctx = arg1;
 	struct spdk_vhost_tgt *vtgt;
+	struct spdk_vhost_dev *vdev;
 	struct spdk_event *ev;
 
 	if (pthread_mutex_trylock(&g_spdk_vhost_mutex) != 0) {
@@ -912,39 +881,40 @@ spdk_vhost_event_async_foreach_fn(void *arg1, void *arg2)
 
 	vtgt = spdk_vhost_tgt_find_by_id(ctx->vtgt_id);
 	if (vtgt == ctx->vtgt) {
-		ctx->cb_fn(vtgt, arg2);
+		ctx->cb_fn(vtgt, vtgt->vdev, arg2);
 	} else {
 		/* ctx->vtgt is probably a dangling pointer at this point.
 		 * It must have been removed in the meantime, so we just skip
 		 * it in our foreach chain. */
 	}
 
-	vtgt = spdk_vhost_tgt_next(ctx->vtgt_id);
-	spdk_vhost_external_event_foreach_continue(vtgt, ctx->cb_fn, arg2);
+	/* TODO pass vdev id instead of 0 */
+	vdev = spdk_vhost_dev_next(vtgt, 0);
+	spdk_vhost_tgt_foreach_vdev_continue(vtgt, vdev, ctx->cb_fn, arg2);
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 
 	free(ctx);
 }
 
 static int
-spdk_vhost_event_send(struct spdk_vhost_tgt *vtgt, spdk_vhost_event_fn cb_fn,
+spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_dev_fn cb_fn,
 		      unsigned timeout_sec, const char *errmsg)
 {
-	struct spdk_vhost_dev_event_ctx ev_ctx = {0};
+	struct spdk_vhost_dev_fn_ctx ev_ctx = {0};
 	struct spdk_event *ev;
 	struct timespec timeout;
 	int rc;
 
-	assert(vtgt->vdev);
+	assert(vdev);
 	rc = sem_init(&ev_ctx.sem, 0, 0);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to initialize semaphore for vhost timed event\n");
 		return -errno;
 	}
 
-	ev_ctx.vtgt = vtgt;
+	ev_ctx.vtgt = vdev->vtgt;
 	ev_ctx.cb_fn = cb_fn;
-	ev = spdk_event_allocate(vtgt->vdev->lcore, spdk_vhost_event_cb, &ev_ctx, NULL);
+	ev = spdk_event_allocate(vdev->lcore, spdk_vhost_event_cb, &ev_ctx, NULL);
 	assert(ev);
 	spdk_event_call(ev);
 
@@ -962,15 +932,11 @@ spdk_vhost_event_send(struct spdk_vhost_tgt *vtgt, spdk_vhost_event_fn cb_fn,
 }
 
 static int
-spdk_vhost_event_async_send(struct spdk_vhost_tgt *vtgt,
-			    spdk_vhost_event_fn cb_fn, void *arg,
-			    bool foreach)
+spdk_vhost_event_async_send(struct spdk_vhost_dev *vdev, spdk_vhost_dev_fn cb_fn, void *arg)
 {
-	struct spdk_vhost_dev_event_ctx *ev_ctx;
+	struct spdk_vhost_dev_fn_ctx *ev_ctx;
 	struct spdk_event *ev;
-	spdk_event_fn fn;
 
-	assert(vtgt->vdev);
 	ev_ctx = calloc(1, sizeof(*ev_ctx));
 	if (ev_ctx == NULL) {
 		SPDK_ERRLOG("Failed to alloc vhost event.\n");
@@ -978,12 +944,12 @@ spdk_vhost_event_async_send(struct spdk_vhost_tgt *vtgt,
 		return -ENOMEM;
 	}
 
-	ev_ctx->vtgt = vtgt;
-	ev_ctx->vtgt_id = vtgt->id;
+	ev_ctx->vtgt = vdev->vtgt;
+	ev_ctx->vtgt_id = vdev->vtgt->id;
 	ev_ctx->cb_fn = cb_fn;
 
-	fn = foreach ? spdk_vhost_event_async_foreach_fn : spdk_vhost_event_async_fn;
-	ev = spdk_event_allocate(ev_ctx->vtgt->vdev->lcore, fn, ev_ctx, arg);
+	ev = spdk_event_allocate(vdev->lcore, spdk_vhost_event_async_foreach_fn,
+				 ev_ctx, arg);
 	assert(ev);
 	spdk_event_call(ev);
 
@@ -1007,14 +973,14 @@ stop_device(int vid)
 		return;
 	}
 
+	vtgt = vdev->vtgt;
 	if (vdev->lcore == -1) {
-		SPDK_ERRLOG("Controller %s is not loaded.\n", vdev->name);
+		SPDK_ERRLOG("Device %s is not started.\n", vdev->name);
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
 		return;
 	}
 
-	vtgt = vdev->vtgt;
-	rc = spdk_vhost_event_send(vtgt, vtgt->backend->stop_device, 3, "stop device");
+	rc = spdk_vhost_event_send(vdev, vtgt->backend->stop_device, 3, "stop device");
 	if (rc != 0) {
 		SPDK_ERRLOG("Couldn't stop device with vid %d.\n", vid);
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
@@ -1113,7 +1079,7 @@ start_device(int vid)
 	vdev->lcore = spdk_vhost_allocate_reactor(vtgt->cpumask);
 	spdk_vhost_dev_mem_register(vdev);
 
-	rc = spdk_vhost_event_send(vtgt, vtgt->backend->start_device, 3, "start device");
+	rc = spdk_vhost_event_send(vdev, vtgt->backend->start_device, 3, "start device");
 	if (rc != 0) {
 		spdk_vhost_dev_mem_unregister(vdev);
 		free(vdev->mem);
@@ -1136,7 +1102,7 @@ get_config(int vid, uint8_t *config, uint32_t len)
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
 	vdev = spdk_vhost_dev_find_by_vid(vid);
 	if (vdev == NULL) {
-		SPDK_ERRLOG("Controller with vid %d doesn't exist.\n", vid);
+		SPDK_ERRLOG("Device with vid %d doesn't exist.\n", vid);
 		goto out;
 	}
 
@@ -1160,7 +1126,7 @@ set_config(int vid, uint8_t *config, uint32_t offset, uint32_t size, uint32_t fl
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
 	vdev = spdk_vhost_dev_find_by_vid(vid);
 	if (vdev == NULL) {
-		SPDK_ERRLOG("Controller with vid %d doesn't exist.\n", vid);
+		SPDK_ERRLOG("Device with vid %d doesn't exist.\n", vid);
 		goto out;
 	}
 
@@ -1246,7 +1212,6 @@ new_connection(int vid)
 		goto err;
 	}
 
-	/* since pollers are not running it safe not to use spdk_event here */
 	if (vtgt->vdev) {
 		SPDK_ERRLOG("Device with vid %d is already connected.\n", vid);
 		goto err;
@@ -1290,7 +1255,6 @@ destroy_connection(int vid)
 		return;
 	}
 
-	/* since pollers are not running it safe not to use spdk_event here */
 	vdev->vtgt->vdev = NULL;
 	free(vdev->name);
 	spdk_dma_free(vdev);
@@ -1305,57 +1269,57 @@ spdk_vhost_call_external_event(const char *vtgt_name, spdk_vhost_event_fn fn, vo
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
 	vtgt = spdk_vhost_tgt_find(vtgt_name);
 
-	if (vtgt == NULL) {
-		pthread_mutex_unlock(&g_spdk_vhost_mutex);
-		fn(NULL, arg);
-		return;
-	}
-
-	if (vtgt->vdev == NULL || vtgt->vdev->lcore == -1) {
-		fn(vtgt, arg);
-	} else {
-		spdk_vhost_event_async_send(vtgt, fn, arg, false);
-	}
-
+	fn(vtgt, arg);
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 
 static void
-spdk_vhost_external_event_foreach_continue(struct spdk_vhost_tgt *vtgt,
-		spdk_vhost_event_fn fn, void *arg)
+spdk_vhost_tgt_foreach_vdev_continue(struct spdk_vhost_tgt *vtgt,
+				     struct spdk_vhost_dev *vdev,
+				     spdk_vhost_dev_fn fn, void *arg)
 {
-	if (vtgt == NULL) {
-		fn(NULL, arg);
+	if (vtgt == NULL || vdev == NULL) {
+		/* the device we were supposed to iterate through now has
+		 * disappeared (has been removed after enqueuing this event)
+		 * and there are no other devices to iterate through.
+		 */
+		fn(vtgt, NULL, arg);
 		return;
 	}
 
-	while (vtgt->vdev == NULL || vtgt->vdev->lcore == -1) {
-		fn(vtgt, arg);
-		vtgt = spdk_vhost_tgt_next(vtgt->id);
-		if (vtgt == NULL) {
-			fn(NULL, arg);
+	while (vdev->lcore == -1) {
+		fn(vdev->vtgt, vdev, arg);
+		/* TODO pass vdev id instead of 0 */
+		vdev = spdk_vhost_dev_next(vdev->vtgt, 0);
+		if (vdev == NULL) {
+			fn(vtgt, NULL, arg);
 			return;
 		}
 	}
 
-	spdk_vhost_event_async_send(vtgt, fn, arg, true);
+	spdk_vhost_event_async_send(vdev, fn, arg);
 }
 
 void
 spdk_vhost_tgt_foreach_vdev(struct spdk_vhost_tgt *vtgt,
 			    spdk_vhost_dev_fn fn, void *arg)
 {
-	fn(vtgt, vtgt->vdev, arg);
+	struct spdk_vhost_dev *vdev;
+
+	vdev = vtgt->vdev;
+	spdk_vhost_tgt_foreach_vdev_continue(vtgt, vdev, fn, arg);
 }
 
 void
 spdk_vhost_call_external_event_foreach(spdk_vhost_event_fn fn, void *arg)
 {
-	struct spdk_vhost_tgt *vtgt;
+	struct spdk_vhost_tgt *vtgt, *vtgt_next;
 
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
-	vtgt = TAILQ_FIRST(&g_spdk_vhost_tgts);
-	spdk_vhost_external_event_foreach_continue(vtgt, fn, arg);
+	TAILQ_FOREACH_SAFE(vtgt, &g_spdk_vhost_tgts, tailq, vtgt_next) {
+		fn(vtgt, arg);
+	}
+	fn(NULL, arg);
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 

@@ -118,8 +118,8 @@ struct scsi_tgt_modify_ctx {
 	bool processed;
 };
 
-static int spdk_vhost_scsi_start(struct spdk_vhost_tgt *, void *);
-static int spdk_vhost_scsi_stop(struct spdk_vhost_tgt *, void *);
+static int spdk_vhost_scsi_start(struct spdk_vhost_tgt *, struct spdk_vhost_dev *, void *);
+static int spdk_vhost_scsi_stop(struct spdk_vhost_tgt *, struct spdk_vhost_dev *, void *);
 static void spdk_vhost_scsi_dump_info_json(struct spdk_vhost_tgt *vtgt,
 		struct spdk_json_write_ctx *w);
 static void spdk_vhost_scsi_write_config_json(struct spdk_vhost_tgt *vtgt,
@@ -790,13 +790,14 @@ spdk_vhost_scsi_lun_hotremove(const struct spdk_scsi_lun *lun, void *arg)
 {
 	struct spdk_vhost_scsi_tgt *svtgt = arg;
 	struct spdk_vhost_tgt *vtgt = &svtgt->vtgt;
+	struct spdk_vhost_dev *vdev = vtgt->vdev;
 	const struct spdk_scsi_dev *scsi_dev;
 	unsigned scsi_dev_num;
 
 	assert(lun != NULL);
 	assert(svtgt != NULL);
-	if (vtgt->vdev != NULL && vtgt->vdev->lcore != -1 &&
-	    !spdk_vhost_dev_has_feature(vtgt->vdev, VIRTIO_SCSI_F_HOTPLUG)) {
+	if (vdev && vdev->lcore != -1 &&
+	    !spdk_vhost_dev_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG)) {
 		SPDK_WARNLOG("%s: hotremove is not enabled for this controller.\n",
 			     vtgt->vdev->name);
 		return;
@@ -1191,9 +1192,9 @@ alloc_task_pool(struct spdk_vhost_scsi_dev *svdev)
 }
 
 static int
-spdk_vhost_scsi_start(struct spdk_vhost_tgt *vtgt, void *event_ctx)
+spdk_vhost_scsi_start(struct spdk_vhost_tgt *vtgt,
+		      struct spdk_vhost_dev *vdev, void *event_ctx)
 {
-	struct spdk_vhost_dev *vdev;
 	struct spdk_vhost_scsi_tgt *svtgt;
 	struct spdk_vhost_scsi_dev *svdev;
 	uint32_t i;
@@ -1202,13 +1203,6 @@ spdk_vhost_scsi_start(struct spdk_vhost_tgt *vtgt, void *event_ctx)
 	svtgt = to_scsi_tgt(vtgt);
 	if (svtgt == NULL) {
 		SPDK_ERRLOG("Trying to start non-scsi controller as a scsi one.\n");
-		rc = -1;
-		goto out;
-	}
-
-	vdev = vtgt->vdev;
-	if (vdev == NULL) {
-		SPDK_ERRLOG("Trying to start inexistent device.\n");
 		rc = -1;
 		goto out;
 	}
@@ -1293,9 +1287,9 @@ destroy_device_poller_cb(void *arg)
 }
 
 static int
-spdk_vhost_scsi_stop(struct spdk_vhost_tgt *vtgt, void *event_ctx)
+spdk_vhost_scsi_stop(struct spdk_vhost_tgt *vtgt,
+		     struct spdk_vhost_dev *vdev, void *event_ctx)
 {
-	struct spdk_vhost_dev *vdev = vtgt->vdev;
 	struct spdk_vhost_scsi_tgt *svtgt;
 	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_vhost_dev_destroy_ctx *destroy_ctx;
