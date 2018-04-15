@@ -37,6 +37,7 @@
 #include "spdk_cunit.h"
 #include "spdk/thread.h"
 #include "spdk_internal/mock.h"
+#include "spdk_internal/assert.h"
 #include "common/lib/test_env.c"
 #include "unit/lib/json_mock.c"
 
@@ -165,19 +166,16 @@ vtgt_create_dev(struct spdk_vhost_tgt *vtgt)
 	vdev->mem->regions[1].guest_phys_addr = 0x400000;
 	vdev->mem->regions[1].size = 0x400000; /* 4 MB */
 	vdev->mem->regions[1].host_user_addr = 0x2000000;
-
+	vdev->vid = 0;
+	vdev->lcore = 0;
 	vdev->vtgt = vtgt;
 	vtgt->vdev = vdev;
-	vtgt->vid = 0;
-	vtgt->lcore = 0;
-
 	return vdev;
 }
 
 static void
 remove_dev(struct spdk_vhost_dev *vdev)
 {
-	vdev->vtgt->vid = -1;
 	vdev->vtgt->vdev = NULL;
 	free(vdev->mem);
 	free(vdev);
@@ -320,11 +318,11 @@ dev_find_by_vid_test(void)
 	vdev = vtgt_create_dev(vtgt);
 	SPDK_CU_ASSERT_FATAL(vdev);
 
-	tmp = spdk_vhost_dev_find_by_vid(vtgt->vid);
+	tmp = spdk_vhost_dev_find_by_vid(vdev->vid);
 	CU_ASSERT(tmp == vdev);
 
 	/* Search for a device with incorrect vid */
-	tmp = spdk_vhost_dev_find_by_vid(vtgt->vid + 0xFF);
+	tmp = spdk_vhost_dev_find_by_vid(vdev->vid + 0xFF);
 	CU_ASSERT(tmp == NULL);
 
 	cleanup_vtgt(vtgt);
