@@ -810,7 +810,7 @@ spdk_vhost_nvme_get_by_name(int vid)
 	struct spdk_vhost_nvme_dev *nvme;
 
 	TAILQ_FOREACH(nvme, &g_nvme_ctrlrs, tailq) {
-		if (nvme->vdev->vid == vid) {
+		if (nvme->vdev && nvme->vdev->vid == vid) {
 			return nvme;
 		}
 	}
@@ -974,9 +974,9 @@ alloc_task_pool(struct spdk_vhost_nvme_dev *nvme)
  * virtual NVMe controller
  */
 static int
-spdk_vhost_nvme_start_device(struct spdk_vhost_tgt *vtgt, void *event_ctx)
+spdk_vhost_nvme_start_device(struct spdk_vhost_tgt *vtgt, struct spdk_vhost_dev *vdev,
+			     void *event_ctx)
 {
-	struct spdk_vhost_dev *vdev = vtgt->vdev;
 	struct spdk_vhost_nvme_dev *nvme = to_nvme_dev(vtgt);
 	struct spdk_vhost_nvme_ns *ns_dev;
 	uint32_t i;
@@ -1072,9 +1072,10 @@ destroy_device_poller_cb(void *arg)
 /* Disable NVMe controller
  */
 static int
-spdk_vhost_nvme_stop_device(struct spdk_vhost_tgt *vtgt, void *event_ctx)
+spdk_vhost_nvme_stop_device(struct spdk_vhost_tgt *vtgt, struct spdk_vhost_dev *vdev,
+			    void *event_ctx)
 {
-	struct spdk_vhost_nvme_dev *nvme = to_nvme_dev(vtgt);
+	struct spdk_vhost_nvme_dev *nvme = to_nvme_dev(vdev->vtgt);
 	struct spdk_vhost_dev_destroy_ctx *destroy_ctx;
 
 	if (nvme == NULL) {
@@ -1082,7 +1083,7 @@ spdk_vhost_nvme_stop_device(struct spdk_vhost_tgt *vtgt, void *event_ctx)
 	}
 
 	free_task_pool(nvme);
-	SPDK_NOTICELOG("Stopping Device %u, Path %s\n", vtgt->vdev->vid, vtgt->path);
+	SPDK_NOTICELOG("Stopping Device %u, Path %s\n", vdev->vid, vdev->vtgt->path);
 
 	destroy_ctx = malloc(sizeof(*destroy_ctx));
 	if (destroy_ctx == NULL) {

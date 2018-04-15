@@ -138,12 +138,12 @@ struct spdk_vhost_tgt_backend {
 
 	/**
 	 * Callbacks for starting and pausing the device.
-	 * The first param is struct spdk_vhost_tgt *.
+	 * The first param is struct spdk_vhost_dev *.
 	 * The second one is event context that has to be
 	 * passed to spdk_vhost_dev_backend_event_done().
 	 */
-	spdk_vhost_event_fn start_device;
-	spdk_vhost_event_fn stop_device;
+	spdk_vhost_dev_fn start_device;
+	spdk_vhost_dev_fn stop_device;
 
 	int (*vhost_get_config)(struct spdk_vhost_tgt *vtgt, uint8_t *config, uint32_t len);
 	int (*vhost_set_config)(struct spdk_vhost_tgt *vtgt, uint8_t *config,
@@ -194,6 +194,7 @@ struct spdk_vhost_dev {
 	/* rte_vhost device ID. */
 	int vid;
 
+	/* Logical core ID this device is polling on. -1 if not polling */
 	int32_t lcore;
 
 	int task_cnt;
@@ -298,6 +299,7 @@ int spdk_vhost_blk_controller_construct(void);
 void spdk_vhost_dump_info_json(struct spdk_vhost_tgt *vtgt, struct spdk_json_write_ctx *w);
 void spdk_vhost_tgt_foreach_vdev(struct spdk_vhost_tgt *vtgt, spdk_vhost_dev_fn fn, void *arg);
 void spdk_vhost_dev_backend_event_done(void *event_ctx, int response);
+void spdk_vhost_tgt_foreach_vdev(struct spdk_vhost_tgt *vtgt, spdk_vhost_dev_fn fn, void *arg);
 void spdk_vhost_lock(void);
 void spdk_vhost_unlock(void);
 int spdk_remove_vhost_controller(struct spdk_vhost_dev *vdev);
