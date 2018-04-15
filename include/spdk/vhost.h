@@ -316,8 +316,8 @@ int spdk_vhost_tgt_remove(struct spdk_vhost_tgt *vtgt);
 struct spdk_bdev *spdk_vhost_blk_get_dev(struct spdk_vhost_tgt *vtgt);
 
 /**
- * Call function on reactor of given vhost target. If the target is not in use,
- * the event will be called right away on the caller's thread.
+ * Call an event for given vhost target. It will be called from within
+ * this function.
  *
  * This function is thread safe.
  *
@@ -330,10 +330,10 @@ struct spdk_bdev *spdk_vhost_blk_get_dev(struct spdk_vhost_tgt *vtgt);
 void spdk_vhost_call_external_event(const char *vtgt_name, spdk_vhost_event_fn fn, void *arg);
 
 /**
- * Call function for each available vhost target on its reactor.  This will call
- * given function in a chain, meaning that each callback will be called after the
- * previous one has finished. After given function has been called for all targets,
- * it will be called once again with first param - vhost target - set to NULL.
+ * Call a function for each available vhost target. It will be called
+ * synchronously from within this function. After it was called
+ * for all targets, it will be called once again with the first param
+ * (vtgt) set to NULL.
  *
  * This function is thread safe.
  *
