@@ -525,9 +525,8 @@ alloc_task_pool(struct spdk_vhost_blk_dev *bvdev)
  *
  */
 static int
-spdk_vhost_blk_start(struct spdk_vhost_tgt *vtgt, void *event_ctx)
+spdk_vhost_blk_start(struct spdk_vhost_tgt *vtgt, struct spdk_vhost_dev *vdev, void *event_ctx)
 {
-	struct spdk_vhost_dev *vdev;
 	struct spdk_vhost_blk_tgt *bvtgt;
 	struct spdk_vhost_blk_dev *bvdev;
 	int i, rc = 0;
@@ -535,13 +534,6 @@ spdk_vhost_blk_start(struct spdk_vhost_tgt *vtgt, void *event_ctx)
 	bvtgt = to_blk_tgt(vtgt);
 	if (bvtgt == NULL) {
 		SPDK_ERRLOG("Trying to start non-blk controller as a blk one.\n");
-		rc = -1;
-		goto out;
-	}
-
-	vdev = vtgt->vdev;
-	if (vdev == NULL) {
-		SPDK_ERRLOG("Trying to start inexistent device.\n");
 		rc = -1;
 		goto out;
 	}
@@ -622,9 +614,8 @@ destroy_device_poller_cb(void *arg)
 }
 
 static int
-spdk_vhost_blk_stop(struct spdk_vhost_tgt *vtgt, void *event_ctx)
+spdk_vhost_blk_stop(struct spdk_vhost_tgt *vtgt, struct spdk_vhost_dev *vdev, void *event_ctx)
 {
-	struct spdk_vhost_dev *vdev = vtgt->vdev;
 	struct spdk_vhost_blk_tgt *bvtgt;
 	struct spdk_vhost_dev_destroy_ctx *destroy_ctx;
 	struct spdk_vhost_blk_dev *bvdev;
