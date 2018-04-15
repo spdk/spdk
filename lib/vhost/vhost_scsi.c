@@ -110,13 +110,13 @@ struct spdk_vhost_scsi_task {
 	struct spdk_vhost_virtqueue *vq;
 };
 
-static int spdk_vhost_scsi_start(struct spdk_vhost_tgt *, void *);
-static int spdk_vhost_scsi_stop(struct spdk_vhost_tgt *, void *);
+static int spdk_vhost_scsi_start(struct spdk_vhost_dev *, void *);
+static int spdk_vhost_scsi_stop(struct spdk_vhost_dev *, void *);
 static void spdk_vhost_scsi_dump_info_json(struct spdk_vhost_tgt *vtgt,
 		struct spdk_json_write_ctx *w);
 static void spdk_vhost_scsi_write_config_json(struct spdk_vhost_tgt *vtgt,
 		struct spdk_json_write_ctx *w);
-static int spdk_vhost_scsi_tgt_remove(struct spdk_vhost_tgt *vtgt);
+static int spdk_vhost_scsi_tgt_remove(struct spdk_vhost_tgt *);
 
 static const struct spdk_vhost_tgt_backend g_vhost_scsi_tgt_backend = {
 	.virtio_features = SPDK_VHOST_SCSI_FEATURES,
@@ -780,13 +780,14 @@ spdk_vhost_scsi_lun_hotremove(const struct spdk_scsi_lun *lun, void *arg)
 {
 	struct spdk_vhost_scsi_tgt *svtgt = arg;
 	struct spdk_vhost_tgt *vtgt = &svtgt->vtgt;
+	struct spdk_vhost_dev *vdev = vtgt->vdev;
 	const struct spdk_scsi_dev *scsi_dev;
 	unsigned scsi_dev_num;
 
 	assert(lun != NULL);
 	assert(svtgt != NULL);
-	if (vtgt->vdev != NULL && vtgt->vdev->lcore != -1 &&
-	    !spdk_vhost_dev_has_feature(vtgt->vdev, VIRTIO_SCSI_F_HOTPLUG)) {
+	if (vdev && vdev->lcore != -1 &&
+	    !spdk_vhost_dev_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG)) {
 		SPDK_WARNLOG("%s: hotremove is not enabled for this controller.\n",
 			     vtgt->vdev->name);
 		return;
@@ -814,7 +815,6 @@ spdk_vhost_scsi_tgt_add_tgt(struct spdk_vhost_tgt *vtgt, unsigned scsi_tgt_num,
 {
 	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_vhost_scsi_tgt *svtgt;
-	struct spdk_vhost_dev *vdev;
 	char target_name[SPDK_SCSI_DEV_MAX_NAME];
 	int lun_id_list[1];
 	const char *bdev_names_list[1];
@@ -835,7 +835,6 @@ spdk_vhost_scsi_tgt_add_tgt(struct spdk_vhost_tgt *vtgt, unsigned scsi_tgt_num,
 		return -EINVAL;
 	}
 
-	vdev = vtgt->vdev;
 	if (svtgt->scsi_dev[scsi_tgt_num] != NULL) {
 		SPDK_ERRLOG("Controller %s target %u already occupied\n", vtgt->name, scsi_tgt_num);
 		return -EEXIST;
@@ -862,21 +861,21 @@ spdk_vhost_scsi_tgt_add_tgt(struct spdk_vhost_tgt *vtgt, unsigned scsi_tgt_num,
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Controller %s: defined target '%s' using bdev '%s'\n",
 		     vtgt->name, target_name, bdev_name);
 
-	if (vdev->lcore == -1) {
+	if (vtgt->vdev == NULL || vtgt->vdev->lcore == -1) {
 		/* All done. */
 		return 0;
 	}
 
 	spdk_scsi_dev_allocate_io_channels(svtgt->scsi_dev[scsi_tgt_num]);
 
-	if (spdk_vhost_dev_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG)) {
-		svdev = (struct spdk_vhost_scsi_dev *)vdev;
+	if (spdk_vhost_dev_has_feature(vtgt->vdev, VIRTIO_SCSI_F_HOTPLUG)) {
+		svdev = (struct spdk_vhost_scsi_dev *)vtgt->vdev;
 		eventq_enqueue(svdev, scsi_tgt_num, VIRTIO_SCSI_T_TRANSPORT_RESET,
 			       VIRTIO_SCSI_EVT_RESET_RESCAN);
 	} else {
-		SPDK_NOTICELOG("Device %s does not support hotplug. "
-			       "Please restart the driver or perform a rescan.\n",
-			       vdev->name);
+		SPDK_NOTICELOG("Device %s does not support hotplug."
+			       "Please restart the initiator or perform a rescan.\n",
+			       vtgt->vdev->name);
 	}
 
 	return 0;
@@ -910,7 +909,7 @@ spdk_vhost_scsi_tgt_remove_tgt(struct spdk_vhost_tgt *vtgt, unsigned scsi_tgt_nu
 	}
 
 	vdev = vtgt->vdev;
-	if (!vdev || vdev->lcore == -1) {
+	if (vdev == NULL || vdev->lcore == -1) {
 		/* controller is not in use, remove dev and exit */
 		svtgt->scsi_dev[scsi_tgt_num] = NULL;
 		spdk_scsi_dev_destruct(scsi_dev);
@@ -1074,9 +1073,9 @@ alloc_task_pool(struct spdk_vhost_scsi_dev *svdev)
 }
 
 static int
-spdk_vhost_scsi_start(struct spdk_vhost_tgt *vtgt, void *event_ctx)
+spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 {
-	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_tgt *vtgt = vdev->vtgt;
 	struct spdk_vhost_scsi_tgt *svtgt;
 	struct spdk_vhost_scsi_dev *svdev;
 	uint32_t i;
@@ -1085,13 +1084,6 @@ spdk_vhost_scsi_start(struct spdk_vhost_tgt *vtgt, void *event_ctx)
 	svtgt = to_scsi_tgt(vtgt);
 	if (svtgt == NULL) {
 		SPDK_ERRLOG("Trying to start non-scsi controller as a scsi one.\n");
-		rc = -1;
-		goto out;
-	}
-
-	vdev = vtgt->vdev;
-	if (vdev == NULL) {
-		SPDK_ERRLOG("Trying to start inexistent device.\n");
 		rc = -1;
 		goto out;
 	}
@@ -1176,9 +1168,9 @@ destroy_device_poller_cb(void *arg)
 }
 
 static int
-spdk_vhost_scsi_stop(struct spdk_vhost_tgt *vtgt, void *event_ctx)
+spdk_vhost_scsi_stop(struct spdk_vhost_dev *vdev, void *event_ctx)
 {
-	struct spdk_vhost_dev *vdev = vtgt->vdev;
+	struct spdk_vhost_tgt *vtgt = vdev->vtgt;
 	struct spdk_vhost_scsi_tgt *svtgt;
 	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_vhost_dev_destroy_ctx *destroy_ctx;
