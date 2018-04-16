@@ -55,8 +55,8 @@ void spdk_reactors_stop(void *arg1, void *arg2);
 struct spdk_subsystem {
 	const char *name;
 	/* User must call spdk_subsystem_init_next() when they are done with their initialization. */
-	void (*init)(void);
-	void (*fini)(void);
+	void (*init)(void *options);
+	void (*fini)(void *options);
 	void (*config)(FILE *fp);
 
 	/**
@@ -66,6 +66,10 @@ struct spdk_subsystem {
 	 * \param done_ev Done event to be called when writing is done.
 	 */
 	void (*write_config_json)(struct spdk_json_write_ctx *w, struct spdk_event *done_ev);
+
+	/** Options for the subsystem. If init() fails, it is responsible to free options.
+	 *   fini() is responsible to free options. */
+	void *options;
 	TAILQ_ENTRY(spdk_subsystem) tailq;
 };
 

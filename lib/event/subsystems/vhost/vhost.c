@@ -38,7 +38,7 @@
 #include "spdk_internal/event.h"
 
 static void
-spdk_vhost_subsystem_init(void)
+spdk_vhost_subsystem_init(void *options)
 {
 	int rc = 0;
 
@@ -54,7 +54,7 @@ spdk_vhost_subsystem_fini_done(void)
 }
 
 static void
-spdk_vhost_subsystem_fini(void)
+spdk_vhost_subsystem_fini(void *options)
 {
 	spdk_vhost_fini(spdk_vhost_subsystem_fini_done);
 }
