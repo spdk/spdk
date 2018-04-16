@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ee6c4baa_41adbd6b",
+        "filename": "lib/bdev/part.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-16T22:18:16Z",
+      "side": 1,
+      "message": "This function is called from the bdev destruct callback, so it probably should return 1 to indicate that this is an asynchronous bdev destruct (all of the callers of spdk_bdev_part_free() need to be updated to return this value now).",
+      "revId": "90dd36a9e0f7a74d56d302b037a55aa1ac8491cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

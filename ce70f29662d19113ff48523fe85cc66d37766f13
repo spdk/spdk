@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3473b053_b9885392",
+        "filename": "lib/bdev/part.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-16T22:18:16Z",
+      "side": 0,
+      "message": "If we make this asynchronous (as mentioned below), we need to call spdk_bdev_destruct_done() here, I think.",
+      "revId": "ce70f29662d19113ff48523fe85cc66d37766f13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
