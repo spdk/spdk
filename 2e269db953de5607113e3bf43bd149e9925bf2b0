@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a54ee0b6_56cb58b0",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 471,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-04-16T21:54:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b8525c80_bb25e21a",
+      "range": {
+        "startLine": 471,
+        "startChar": 9,
+        "endLine": 471,
+        "endChar": 26
+      },
+      "revId": "2e269db953de5607113e3bf43bd149e9925bf2b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5be5f0c4_fcaf7e3d",
         "filename": "test/common/autotest_common.sh",
         "patchSetId": 1
@@ -42,6 +66,24 @@
     },
     {
       "key": {
+        "uuid": "1468c48d_e6f5752f",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 473,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-04-16T21:54:58Z",
+      "side": 1,
+      "message": "Great catch! I missed this when I ran it on my vm because the part of the loop that depends on i in the places where we call this function only executes once when we run it in on soft-roce.",
+      "parentUuid": "5be5f0c4_fcaf7e3d",
+      "revId": "2e269db953de5607113e3bf43bd149e9925bf2b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ef037c3c_9f736f96",
         "filename": "test/nvmf/filesystem/filesystem.sh",
         "patchSetId": 1
@@ -53,6 +95,24 @@
       "writtenOn": "2018-04-16T20:51:56Z",
       "side": 1,
       "message": "It might be clearer to put this right after the \u0027nvme connect\u0027 command.",
+      "revId": "2e269db953de5607113e3bf43bd149e9925bf2b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "897f3091_7f1dcbe9",
+        "filename": "test/nvmf/filesystem/filesystem.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-04-16T21:54:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ef037c3c_9f736f96",
       "revId": "2e269db953de5607113e3bf43bd149e9925bf2b0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
