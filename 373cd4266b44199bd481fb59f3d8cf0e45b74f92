@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b7e50e3d_dfe58bbc",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-16T17:54:24Z",
+      "side": 1,
+      "message": "Could you name this g_pid?  This follows the general SPDK convention of prepending global variables with g_.",
+      "revId": "373cd4266b44199bd481fb59f3d8cf0e45b74f92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
