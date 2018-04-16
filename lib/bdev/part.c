@@ -50,16 +50,17 @@ spdk_bdev_part_base_free(struct spdk_bdev_part_base *base)
 	base->base_free_fn(base);
 }
 
-void
-spdk_bdev_part_free(struct spdk_bdev_part *part)
+static void
+spdk_bdev_part_free_cb(void *io_device)
 {
+	struct spdk_bdev_part *part = io_device;
 	struct spdk_bdev_part_base *base;
 
 	assert(part);
 	assert(part->base);
 
 	base = part->base;
-	spdk_io_device_unregister(part, NULL);
+
 	TAILQ_REMOVE(base->tailq, part, tailq);
 	free(part->bdev.name);
 	free(part);
@@ -68,6 +69,12 @@ spdk_bdev_part_free(struct spdk_bdev_part *part)
 		spdk_bdev_module_release_bdev(base->bdev);
 		spdk_bdev_part_base_free(base);
 	}
+}
+
+void
+spdk_bdev_part_free(struct spdk_bdev_part *part)
+{
+	spdk_io_device_unregister(part, spdk_bdev_part_free_cb);
 }
 
 void
