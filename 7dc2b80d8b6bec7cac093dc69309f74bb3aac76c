@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f3907296_2fb95fd1",
+        "filename": "lib/bdev/part.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-16T23:40:44Z",
+      "side": 1,
+      "message": "could you add a comment here to explain the importance of returning 1?  otherwise it won\u0027t be obvious why we can\u0027t just make this void since it always returns the same value",
+      "revId": "7dc2b80d8b6bec7cac093dc69309f74bb3aac76c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
