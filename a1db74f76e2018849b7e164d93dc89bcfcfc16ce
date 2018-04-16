@@ -22,6 +22,30 @@
       "revId": "a1db74f76e2018849b7e164d93dc89bcfcfc16ce",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "81948ee1_8b3eb564",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1140,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-16T22:41:50Z",
+      "side": 1,
+      "message": "This is just a general purpose fix that should go in whether we implement QoS using an existing channel or its own channel. The issue is on line 931 above - bdev-\u003eios_per_sec, bdev-\u003eqos_channel, and bdev-\u003eqos_thread all will be updated on potentially a different thread when we go to dynamically enable or disable QoS. The code doesn\u0027t support dynamically enabling/disabling QoS today, but we certainly plan to do that. That means the code on line 931 could see the state in a partial update, which is particularly bad on the QoS disable path because it may reference a NULL pointer that only became NULL after the if check.\n\nInstead of taking a lock in the I/O path, I simply flag each channel in its thread-local memory. Later on, to enable or disable QoS, we\u0027ll send a message to each thread to either set or clear this flag.",
+      "parentUuid": "a4d1628d_64e185c7",
+      "range": {
+        "startLine": 1140,
+        "startChar": 2,
+        "endLine": 1140,
+        "endChar": 35
+      },
+      "revId": "a1db74f76e2018849b7e164d93dc89bcfcfc16ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
