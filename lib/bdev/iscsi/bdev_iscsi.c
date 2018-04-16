@@ -52,10 +52,9 @@
 struct bdev_iscsi_lun;
 
 #define DEFAULT_INITIATOR_NAME "iqn.2016-06.io.spdk:init"
-static char *g_initiator;
 
 static int bdev_iscsi_initialize(void);
-static TAILQ_HEAD(, bdev_iscsi_lun) g_iscsi_lun_head;
+static TAILQ_HEAD(, bdev_iscsi_lun) g_iscsi_lun_head = TAILQ_HEAD_INITIALIZER(g_iscsi_lun_head);
 
 struct bdev_iscsi_io {
 	struct spdk_thread *submit_td;
@@ -69,6 +68,7 @@ struct bdev_iscsi_io {
 struct bdev_iscsi_lun {
 	struct spdk_bdev		bdev;
 	struct iscsi_context		*context;
+	char				*initiator_iqn;
 	struct iscsi_url		*url;
 	pthread_mutex_t			mutex;
 	uint32_t			ch_count;
@@ -355,7 +355,7 @@ bdev_iscsi_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	spdk_json_write_name(w, "iscsi");
 	spdk_json_write_object_begin(w);
 	spdk_json_write_name(w, "initiator_name");
-	spdk_json_write_string(w, g_initiator);
+	spdk_json_write_string(w, lun->initiator_iqn);
 	spdk_json_write_name(w, "target");
 	spdk_json_write_string(w, lun->url->target);
 	spdk_json_write_object_end(w);
@@ -435,7 +435,7 @@ bdev_iscsi_initialize(void)
 	struct spdk_bdev *bdev;
 	struct scsi_task *task;
 	struct scsi_readcapacity16 *readcap16;
-	char *val, *bdev_name;
+	char *val, *bdev_name, *initiator_iqn;
 	int i, rc;
 
 	sp = spdk_conf_find_section(NULL, "iSCSI_Initiator");
@@ -443,14 +443,10 @@ bdev_iscsi_initialize(void)
 		return 0;
 	}
 
-	val = spdk_conf_section_get_val(sp, "initiator_name");
-	if (val) {
-		g_initiator = val;
-	} else {
-		g_initiator = DEFAULT_INITIATOR_NAME;
+	initiator_iqn = spdk_conf_section_get_val(sp, "initiator_name");
+	if (!initiator_iqn) {
+		initiator_iqn = DEFAULT_INITIATOR_NAME;
 	}
-
-	TAILQ_INIT(&g_iscsi_lun_head);
 
 	i = 0;
 	while (true) {
@@ -465,7 +461,7 @@ bdev_iscsi_initialize(void)
 			break;
 		}
 
-		context = iscsi_create_context(g_initiator);
+		context = iscsi_create_context(initiator_iqn);
 		if (context == NULL) {
 			SPDK_ERRLOG("could not create iscsi context\n");
 			break;
