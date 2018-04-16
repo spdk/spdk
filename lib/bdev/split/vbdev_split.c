@@ -100,8 +100,7 @@ vbdev_split_destruct(void *ctx)
 {
 	struct spdk_bdev_part *part = ctx;
 
-	spdk_bdev_part_free(part);
-	return 0;
+	return spdk_bdev_part_free(part);
 }
 
 static void

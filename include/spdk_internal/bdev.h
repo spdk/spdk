@@ -610,7 +610,7 @@ struct spdk_bdev_part_channel {
 typedef TAILQ_HEAD(bdev_part_tailq, spdk_bdev_part)	SPDK_BDEV_PART_TAILQ;
 
 void spdk_bdev_part_base_free(struct spdk_bdev_part_base *base);
-void spdk_bdev_part_free(struct spdk_bdev_part *part);
+int spdk_bdev_part_free(struct spdk_bdev_part *part);
 void spdk_bdev_part_base_hotremove(struct spdk_bdev *base_bdev, struct bdev_part_tailq *tailq);
 int spdk_bdev_part_base_construct(struct spdk_bdev_part_base *base, struct spdk_bdev *bdev,
 				  spdk_bdev_remove_cb_t remove_cb,
