@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "19a5993f_bde7695b",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-16T18:18:08Z",
+      "side": 1,
+      "message": "I think this needs to check if qpair-\u003eid \u003d\u003d 0, then set ctrlr-\u003eadmin_qpair to NULL. Or just check if ctrlr-\u003eadmin_qpair \u003d\u003d qpair.\n\nUltimately if the admin qpair disconnects, we need special handling to destroy every other connection immediately. That hasn\u0027t been written yet.",
+      "revId": "f042c7471003e53b71d989fe94f2a7011b8e8878",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
