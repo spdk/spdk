@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ce9d2f67_d42f8319",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1118,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-16T18:20:46Z",
+      "side": 1,
+      "message": "realloc doesn\u0027t guarantee that the newly allocated memory is zeroed out. You\u0027ll need to do that by memsetting the new region, if nn is larger than ctrlr-\u003enum_ns.\n\nYou should also handle the case where nn \u003c ctrlr-\u003enum_ns by destroying any namespaces that used to exist but no longer do.",
+      "revId": "728a076e87120d5dcab07cdf03377fafd0bd2594",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
