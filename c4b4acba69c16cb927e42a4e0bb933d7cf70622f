@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "296b08bf_60a6ccd0",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-16T19:22:13Z",
+      "side": 1,
+      "message": "\u0027git diff\u0027 only works if the change hasn\u0027t been committed yet.  We need some way to scan the whole tree for this problem, not just the parts changed in the working copy.",
+      "revId": "c4b4acba69c16cb927e42a4e0bb933d7cf70622f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "778a2964_6f904bd7",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-16T19:22:13Z",
+      "side": 1,
+      "message": "This should use tabs instead of spaces for indentation.",
+      "revId": "c4b4acba69c16cb927e42a4e0bb933d7cf70622f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
