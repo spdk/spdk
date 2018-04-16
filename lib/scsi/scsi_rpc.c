@@ -34,8 +34,8 @@
 
 #include "scsi_internal.h"
 
-#include "spdk/rpc.h"
 #include "spdk/util.h"
+#include "spdk_internal/event.h"
 
 static void
 spdk_rpc_get_scsi_devices(struct spdk_jsonrpc_request *request,

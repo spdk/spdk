@@ -31,11 +31,11 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/rpc.h"
 #include "spdk/bdev.h"
 #include "spdk/util.h"
 #include "vbdev_lvol.h"
 #include "spdk/string.h"
+#include "spdk_internal/event.h"
 #include "spdk_internal/log.h"
 
 SPDK_LOG_REGISTER_COMPONENT("lvolrpc", SPDK_LOG_LVOL_RPC)

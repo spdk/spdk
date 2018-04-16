@@ -36,9 +36,9 @@
 #include "bdev_nvme.h"
 
 #include "spdk/string.h"
-#include "spdk/rpc.h"
 #include "spdk/util.h"
 
+#include "spdk_internal/event.h"
 #include "spdk_internal/log.h"
 #include "spdk_internal/bdev.h"
 

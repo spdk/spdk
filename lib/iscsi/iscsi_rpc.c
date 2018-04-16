@@ -38,10 +38,10 @@
 #include "iscsi/portal_grp.h"
 #include "iscsi/init_grp.h"
 
-#include "spdk/rpc.h"
 #include "spdk/util.h"
 #include "spdk/event.h"
 
+#include "spdk_internal/event.h"
 #include "spdk_internal/log.h"
 
 static void

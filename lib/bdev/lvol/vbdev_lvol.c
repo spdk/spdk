@@ -32,7 +32,7 @@
  */
 
 #include "spdk/blob_bdev.h"
-#include "spdk/rpc.h"
+#include "spdk/json.h"
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 #include "spdk/string.h"

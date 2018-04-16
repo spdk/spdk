@@ -32,7 +32,6 @@
  */
 
 #include "spdk_internal/event.h"
-#include "spdk/rpc.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
 #include "spdk/env.h"
