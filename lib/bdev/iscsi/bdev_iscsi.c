@@ -88,17 +88,11 @@ bdev_iscsi_get_ctx_size(void)
 	return sizeof(struct bdev_iscsi_io);
 }
 
-static void bdev_iscsi_finish(void)
+static void
+bdev_iscsi_finish(void)
 {
-	struct bdev_iscsi_lun *lun;
-
-	while (!TAILQ_EMPTY(&g_iscsi_lun_head)) {
-		lun = TAILQ_FIRST(&g_iscsi_lun_head);
-		TAILQ_REMOVE(&g_iscsi_lun_head, lun, link);
-		iscsi_logout_sync(lun->context);
-		iscsi_destroy_context(lun->context);
-		iscsi_destroy_url(lun->url);
-	}
+	/* All bdevs must be removed by bdev subsystem befere module_fini. */
+	assert(TAILQ_EMPTY(&g_iscsi_lun_head));
 }
 
 static struct spdk_bdev_module g_iscsi_bdev_module = {
@@ -203,14 +197,44 @@ bdev_iscsi_writev(struct bdev_iscsi_lun *lun, struct bdev_iscsi_io *iscsi_io,
 #endif
 }
 
+static void
+bdev_iscsi_free_lun(struct bdev_iscsi_lun *lun)
+{
+	if (lun == NULL) {
+		return;
+	}
+
+	iscsi_logout_sync(lun->context);
+
+	if (lun->url) {
+		iscsi_destroy_url(lun->url);
+	}
+
+	iscsi_destroy_context(lun->context);
+
+	free(lun->initiator_iqn);
+	free(lun->bdev.name);
+
+	pthread_mutex_destroy(&lun->mutex);
+	free(lun);
+}
+
+static int
+bdev_iscsi_io_device_unregister_cb(void *ctx)
+{
+	struct bdev_iscsi_lun *lun = ctx;
+
+	bdev_iscsi_free_lun(lun);
+}
+
 static int
 bdev_iscsi_destruct(void *ctx)
 {
 	struct bdev_iscsi_lun *lun = ctx;
-	int rc = 0;
 
 	TAILQ_REMOVE(&g_iscsi_lun_head, lun, link);
-	return rc;
+	spdk_io_device_unregister(lun, bdev_iscsi_io_device_unregister_cb);
+	return 0;
 }
 
 static int
@@ -371,15 +395,6 @@ static const struct spdk_bdev_fn_table iscsi_fn_table = {
 	.dump_info_json		= bdev_iscsi_dump_info_json,
 };
 
-static void iscsi_free_lun(struct bdev_iscsi_lun *lun)
-{
-	if (lun == NULL) {
-		return;
-	}
-	free(lun->bdev.name);
-	free(lun);
-}
-
 static struct spdk_bdev *
 create_iscsi_lun(struct iscsi_context *context, struct iscsi_url *url,
 		 const char *name, uint64_t num_blocks, uint32_t block_size)
@@ -422,7 +437,7 @@ create_iscsi_lun(struct iscsi_context *context, struct iscsi_url *url,
 	return &lun->bdev;
 
 error_return:
-	iscsi_free_lun(lun);
+	bdev_iscsi_free_lun(lun);
 	return NULL;
 }
 
