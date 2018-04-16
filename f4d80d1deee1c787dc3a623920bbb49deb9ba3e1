@@ -1,0 +1,95 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7215a63d_93cfe0ab",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 25
+      },
+      "lineNbr": 663,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-16T21:47:41Z",
+      "side": 1,
+      "message": "Please spell out QoS as \"quality of service\".",
+      "revId": "f4d80d1deee1c787dc3a623920bbb49deb9ba3e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "67055a77_60efe9a6",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 25
+      },
+      "lineNbr": 675,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-16T21:47:41Z",
+      "side": 1,
+      "message": "\\parame -\u003e \\param",
+      "revId": "f4d80d1deee1c787dc3a623920bbb49deb9ba3e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b25ec963_26d1a606",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 25
+      },
+      "lineNbr": 679,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-16T21:47:41Z",
+      "side": 1,
+      "message": "This API looks a bit confusing to me - why do we have one function that just does \"enable\" and one that enables and sets the iops limit?  What happens if you enable without setting the iops limit?  Also, there doesn\u0027t seem to be a way to disable QoS after enabling it.\n\nI think a simpler interface could be something like:\n\n  // change QoS IOPS limit; if ios_per_sec \u003d\u003d 0, disable QoS\n  spdk_bdev_set_qos_limit_iops(bdev, ios_per_sec);",
+      "revId": "f4d80d1deee1c787dc3a623920bbb49deb9ba3e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b8c48a3_14352637",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 367,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-16T21:47:41Z",
+      "side": 1,
+      "message": "Can\u0027t we just update the IOPS limit instead of failing this call?",
+      "revId": "f4d80d1deee1c787dc3a623920bbb49deb9ba3e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4bb7dc0_fefcb485",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 25
+      },
+      "lineNbr": 207,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-16T21:47:41Z",
+      "side": 1,
+      "message": "Please use arguments with dashes in the name (--ios-per-sec) - the argparse code will automatically convert this to ios_per_sec in the args object.",
+      "range": {
+        "startLine": 207,
+        "startChar": 28,
+        "endLine": 207,
+        "endChar": 39
+      },
+      "revId": "f4d80d1deee1c787dc3a623920bbb49deb9ba3e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

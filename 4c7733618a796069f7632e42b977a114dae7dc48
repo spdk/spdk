@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "66714e5d_c8c6b9c9",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 25
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-16T21:47:41Z",
+      "side": 0,
+      "message": "Unrelated whitespace change",
+      "revId": "4c7733618a796069f7632e42b977a114dae7dc48",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
