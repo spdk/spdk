@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e9c1d515_1d62d835",
+        "filename": "lib/event/app.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 603,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-16T14:17:05Z",
+      "side": 1,
+      "message": "Isn\u0027t the optarg !\u003d NULL asserted by getopt when option is followed by colon? If yes we can just assert() if no all applications should be changed as well.",
+      "range": {
+        "startLine": 600,
+        "startChar": 3,
+        "endLine": 603,
+        "endChar": 4
+      },
+      "revId": "70f5228caa26b93595ab3907cc12db3ebd6e1d67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
