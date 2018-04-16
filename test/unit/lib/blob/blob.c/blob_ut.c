@@ -136,7 +136,6 @@ _bs_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 	}
 }
 
-#if 0
 static void
 _bs_flush_scheduler(void)
 {
@@ -149,7 +148,6 @@ _bs_flush_scheduler(void)
 		free(ops);
 	}
 }
-#endif
 
 static void
 bs_op_complete(void *cb_arg, int bserrno)
@@ -566,6 +564,8 @@ blob_snapshot(void)
 	const void *value;
 	size_t value_len;
 	int rc;
+	uint8_t payload[10 * 4096];
+	struct spdk_io_channel *channel;
 
 	dev = init_dev();
 
@@ -667,6 +667,39 @@ blob_snapshot(void)
 	CU_ASSERT(g_bserrno == 0);
 
 	spdk_blob_close(snapshot2, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Test freeze I/o during snapshot */
+
+	channel = spdk_bs_alloc_io_channel(bs);
+
+	g_scheduler_delay = true;
+
+	spdk_bs_create_snapshot(bs, blobid, &xattrs, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	/* This is implementation specific. Currently freeze I/O is happening after */
+	_bs_flush_scheduler(); /* spdk_bs_open_blob */
+	_bs_flush_scheduler(); /* _spdk_bs_create_blob */
+	_bs_flush_scheduler(); /* spdk_bs_open_blob */
+	_bs_flush_scheduler(); /* spdk_blob_sync_md - freeze I/O happens here*/
+
+	/* Send some I/O */
+
+	/* Write to the blob */
+	spdk_blob_io_write(blob, channel, payload, 0, 1, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Complete snapshot - unfreeze I/O */
+
+	g_scheduler_delay = false;
+	_bs_flush_scheduler();
+
+	/* Verify that I/O was postponed */
+
+	spdk_blob_io_read(blob, channel, payload, 0, 1, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
 	spdk_bs_unload(g_bs, bs_op_complete, NULL);
