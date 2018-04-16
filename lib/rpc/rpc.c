@@ -48,6 +48,7 @@
 static struct sockaddr_un g_rpc_listen_addr_unix = {};
 static char g_rpc_lock_path[sizeof(g_rpc_listen_addr_unix.sun_path) + sizeof(".lock") + 1];
 static int g_rpc_lock_fd = -1;
+static uint32_t g_rpc_state = RPC_STATE_INVALID;
 
 static struct spdk_jsonrpc_server *g_jsonrpc_server = NULL;
 
@@ -55,9 +56,16 @@ struct spdk_rpc_method {
 	const char *name;
 	spdk_rpc_method_handler func;
 	SLIST_ENTRY(spdk_rpc_method) slist;
+	uint32_t state;
 };
 
 static SLIST_HEAD(, spdk_rpc_method) g_rpc_methods = SLIST_HEAD_INITIALIZER(g_rpc_methods);
+
+void
+spdk_rpc_set_state(uint32_t state_mask)
+{
+	g_rpc_state = state_mask;
+}
 
 static void
 spdk_jsonrpc_handler(struct spdk_jsonrpc_request *request,
@@ -69,7 +77,7 @@ spdk_jsonrpc_handler(struct spdk_jsonrpc_request *request,
 	assert(method != NULL);
 
 	SLIST_FOREACH(m, &g_rpc_methods, slist) {
-		if (spdk_json_strequal(method, m->name)) {
+		if (spdk_json_strequal(method, m->name) && (m->state == g_rpc_state)) {
 			m->func(request, params);
 			return;
 		}
@@ -186,7 +194,8 @@ spdk_rpc_accept(void)
 }
 
 void
-spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func)
+spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func,
+			 uint32_t state)
 {
 	struct spdk_rpc_method *m;
 
@@ -197,6 +206,7 @@ spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func)
 	assert(m->name != NULL);
 
 	m->func = func;
+	m->state = state;
 
 	/* TODO: use a hash table or sorted list */
 	SLIST_INSERT_HEAD(&g_rpc_methods, m, slist);

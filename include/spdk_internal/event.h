@@ -144,12 +144,48 @@ typedef void (*spdk_rpc_method_handler)(struct spdk_jsonrpc_request *request,
  *
  * \param method Name for the registered method.
  * \param func Function registered for this method to handle the RPC request.
+ * \param state State to allow only RPC methods whose state is equal to the
+ * state of the RPC server.
  */
-void spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func);
+void spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func,
+			      uint32_t state);
 
+enum spdk_rpc_state {
+	RPC_STATE_INVALID = 0,
+
+	/** TBD: RPCs to initialize SPDK environment will be allowed. */
+	RPC_STATE_PRE_ENV_INIT,
+
+	/** RPCs registered by SPDK_SI_RPC_REGISTER are allowed. */
+	RPC_STATE_PRE_SUBSYSTEM_INIT,
+
+	/** RPCs registered by SPDK_RPC_REGISTER are allowed. */
+	RPC_STATE_POST_SUBSYSTEM_INIT,
+};
+
+/**
+ * \brief Register a RPC used after initializing subsystems.
+ */
 #define SPDK_RPC_REGISTER(method, func) \
 static void __attribute__((constructor)) rpc_register_##func(void) \
 { \
-	spdk_rpc_register_method(method, func); \
+	spdk_rpc_register_method(method, func, RPC_STATE_POST_SUBSYSTEM_INIT); \
 }
+
+/**
+ * \brief Register a RPC used to initialize subsystems.
+ */
+#define SPDK_SI_RPC_REGISTER(method, func) \
+static void __attribute__((constructor)) si_rpc_register_##func(void) \
+{ \
+	spdk_rpc_register_method(method, func, RPC_STATE_PRE_SUBSYSTEM_INIT); \
+}
+
+/**
+ * Set the state mask of the RPC server. Any RPC method whose state mask is
+ * equal to the state of the RPC server is allowed.
+ *
+ * \param state_mask New state mask of the RPC server.
+ */
+void spdk_rpc_set_state(uint32_t state_mask);
 #endif /* SPDK_INTERNAL_EVENT_H */
