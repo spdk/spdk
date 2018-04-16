@@ -57,6 +57,10 @@ cp $testdir/bdev.conf.in $testdir/bdev.conf
 $rootdir/scripts/gen_nvme.sh >> $testdir/bdev.conf
 
 if [ $SPDK_TEST_RBD -eq 1 ]; then
+	timing_enter rbd_setup
+	rbd_setup 127.0.0.1
+	timing_exit rbd_setup
+
 	$rootdir/scripts/gen_rbd.sh >> $testdir/bdev.conf
 fi
 
@@ -147,5 +151,7 @@ fi
 rm -f /tmp/aiofile
 rm -f /tmp/spdk-pmem-pool
 rm -f $testdir/bdev.conf
+trap - SIGINT SIGTERM EXIT
+rbd_cleanup
 report_test_completion "bdev"
 timing_exit bdev
