@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "f6037771_0d51fc27",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1114,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-16T19:18:17Z",
+      "side": 1,
+      "message": "This path was depending on the destruct_namespace to work correctly.",
+      "revId": "728a076e87120d5dcab07cdf03377fafd0bd2594",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ce9d2f67_d42f8319",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 1
@@ -13,6 +30,41 @@
       "writtenOn": "2018-04-16T18:20:46Z",
       "side": 1,
       "message": "realloc doesn\u0027t guarantee that the newly allocated memory is zeroed out. You\u0027ll need to do that by memsetting the new region, if nn is larger than ctrlr-\u003enum_ns.\n\nYou should also handle the case where nn \u003c ctrlr-\u003enum_ns by destroying any namespaces that used to exist but no longer do.",
+      "revId": "728a076e87120d5dcab07cdf03377fafd0bd2594",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4fbc52c_e8936277",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1118,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-16T19:18:17Z",
+      "side": 1,
+      "message": "I don\u0027t see how this change makes any sense - realloc can always return a different pointer than the original, so the old process of \"destroy + alloc\" accomplishes the same task and is simpler anyway.",
+      "parentUuid": "ce9d2f67_d42f8319",
+      "revId": "728a076e87120d5dcab07cdf03377fafd0bd2594",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb5502d5_d9b9a042",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1186,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-16T19:18:17Z",
+      "side": 1,
+      "message": "I don\u0027t think it\u0027s safe to call this here - the only time it\u0027s safe to resize the ns array is during controller init (when the user doesn\u0027t have access to ctrlr yet) and during reset (where the user is explicitly warned that namespace pointers may be invalidated).  If the user wants to rescan namespaces, they can register an AER callback and do it themselves when they know that all namespace pointers are possibly going to be invalidated (we can provide some kind of namespace rescan API to do that rather than requiring a full reset).",
       "revId": "728a076e87120d5dcab07cdf03377fafd0bd2594",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
