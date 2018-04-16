@@ -591,6 +591,12 @@ vbdev_lvol_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	return 0;
 }
 
+static void
+vbdev_lvol_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+{
+	/* Nothing to dump as lvol configuration is saved on physical device. */
+}
+
 static struct spdk_io_channel *
 vbdev_lvol_get_io_channel(void *ctx)
 {
@@ -756,6 +762,7 @@ static struct spdk_bdev_fn_table vbdev_lvol_fn_table = {
 	.submit_request		= vbdev_lvol_submit_request,
 	.get_io_channel		= vbdev_lvol_get_io_channel,
 	.dump_info_json		= vbdev_lvol_dump_info_json,
+	.write_config_json	= vbdev_lvol_write_config_json,
 };
 
 static struct spdk_bdev *
