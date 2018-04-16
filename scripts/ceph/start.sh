@@ -7,7 +7,7 @@ set -e
 script_dir=$(readlink -f $(dirname $0))
 
 base_dir=/var/tmp/ceph
-mon_ip=127.0.0.1
+mon_ip=$1
 mon_dir=${base_dir}/mon.a/
 pid_dir=${base_dir}/pid
 ceph_conf=${base_dir}/ceph.conf
@@ -58,6 +58,9 @@ mount /dev/disk/by-partlabel/osd-device-0-data ${mnt_pt}
 echo -e "\tosd data = ${mnt_pt}" >> "$ceph_conf"
 echo -e "\tosd journal = /dev/disk/by-partlabel/osd-device-0-journal" >> "$ceph_conf"
 
+# add mon address
+echo -e "\t[mon.a]" >> "$ceph_conf"
+echo -e "\tmon addr = ${mon_ip}:12046" >> "$ceph_conf"
 
 # create mon
 rm -rf ${mon_dir}/*

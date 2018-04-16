@@ -314,11 +314,17 @@ function start_iscsi_service() {
 }
 
 function rbd_setup() {
+	# $1 = monitor ip address
+	if [ -z "$1" ]; then
+		echo "No monitor IP address provided for ceph"
+		exit 1
+	fi
+
 	if hash ceph; then
 		export PG_NUM=128
 		export RBD_POOL=rbd
 		export RBD_NAME=foo
-		$rootdir/scripts/ceph/start.sh
+		$rootdir/scripts/ceph/start.sh $1
 
 		ceph osd pool create $RBD_POOL $PG_NUM || true
 		rbd pool init $RBD_POOL || true
@@ -577,10 +583,6 @@ function get_bdev_size()
 
 function autotest_cleanup()
 {
-	if [ $SPDK_TEST_RBD -eq 1 ]; then
-		rbd_cleanup
-	fi
-
 	$rootdir/scripts/setup.sh reset
 
 	if [ $SPDK_BUILD_IOAT_KMOD -eq 1 ]; then
