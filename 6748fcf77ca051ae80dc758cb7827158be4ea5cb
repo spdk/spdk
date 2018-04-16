@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b13cdd0a_5df7a639",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 463,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-16T20:17:50Z",
+      "side": 1,
+      "message": "This should be a Doxygen-style comment with \\param documentation, etc.",
+      "revId": "6748fcf77ca051ae80dc758cb7827158be4ea5cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b6b09b6f_2ff9f323",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 4173,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-16T20:17:50Z",
+      "side": 1,
+      "message": "This translates to \"Connection already in progress\", which is a bit confusing.\n\nIt might be best to just make this a non-error condition - if the blob is not thin provisioned, it is already inflated.",
+      "revId": "6748fcf77ca051ae80dc758cb7827158be4ea5cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e04ecf91_73589db1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 4195,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-16T20:17:50Z",
+      "side": 1,
+      "message": "Please declare variables at the top of the block.",
+      "revId": "6748fcf77ca051ae80dc758cb7827158be4ea5cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a0781b9e_63aa8a1c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 4199,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-16T20:17:50Z",
+      "side": 1,
+      "message": "This presumably needs to be handled somehow.",
+      "revId": "6748fcf77ca051ae80dc758cb7827158be4ea5cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "23d7fdc1_0f90b8f4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 4211,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-16T20:17:50Z",
+      "side": 1,
+      "message": "What is the status of this TODO and the one below?",
+      "revId": "6748fcf77ca051ae80dc758cb7827158be4ea5cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
