@@ -10,8 +10,12 @@ if ! hash ceph; then
 	exit 0
 fi
 
-timing_enter rbd
+timing_enter rbd_setup
+rbd_setup $TARGET_IP
+trap "rbd_cleanup; exit 1" SIGINT SIGTERM EXIT
+timing_exit rbd_setup
 
+timing_enter rbd
 
 rpc_py="python $rootdir/scripts/rpc.py"
 fio_py="python $rootdir/scripts/fio.py"
@@ -21,7 +25,7 @@ timing_enter start_iscsi_tgt
 $ISCSI_APP -c $testdir/iscsi.conf -m $ISCSI_TEST_CORE_MASK &
 pid=$!
 
-trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
+trap "killprocess $pid; rbd_cleanup; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid
 echo "iscsi_tgt is listening. Running tests..."
@@ -42,7 +46,7 @@ sleep 1
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
 iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 
-trap "iscsicleanup; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
+trap "iscsicleanup; killprocess $pid; rbd_cleanup; exit 1" SIGINT SIGTERM EXIT
 
 sleep 1
 $fio_py 4096 1 randrw 1 verify
@@ -54,6 +58,7 @@ trap - SIGINT SIGTERM EXIT
 
 iscsicleanup
 killprocess $pid
+rbd_cleanup
 
 report_test_completion "iscsi_rbd"
 timing_exit rbd
