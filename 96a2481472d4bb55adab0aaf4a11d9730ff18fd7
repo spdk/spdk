@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c32a75a1_fe32dc14",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 505,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-16T23:33:14Z",
+      "side": 1,
+      "message": "can you put this inside the ch-\u003eref \u003d\u003d 0?  or is there some case where you\u0027d still want to do the send_msg even if ch-\u003eref \u003e 0?\n\nand if you make that change, do you need the pending_puts logic anymore?",
+      "revId": "96a2481472d4bb55adab0aaf4a11d9730ff18fd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
