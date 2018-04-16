@@ -11,7 +11,7 @@ if ! hash ceph; then
 fi
 
 timing_enter rbd_setup
-rbd_setup $TARGET_IP
+rbd_setup $TARGET_IP $TARGET_NAMESPACE
 trap "rbd_cleanup; exit 1" SIGINT SIGTERM EXIT
 timing_exit rbd_setup
 
