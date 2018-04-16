@@ -62,16 +62,60 @@ struct spdk_file_stat {
 	uint64_t	size;
 };
 
+/**
+ * Filesystem operation completion callback with handle.
+ *
+ * \param ctx Context for the operation.
+ * \param fs Handle to a blobfs.
+ * \param fserrno 0 if it completed successfully, or negative errno if it failed.
+ */
 typedef void (*spdk_fs_op_with_handle_complete)(void *ctx, struct spdk_filesystem *fs,
 		int fserrno);
+
+/**
+ * File operation completion callback with handle.
+ *
+ * \param ctx Context for the operation.
+ * \param f Handle to a file.
+ * \param fserrno 0 if it completed successfully, or negative errno if it failed.
+ */
 typedef void (*spdk_file_op_with_handle_complete)(void *ctx, struct spdk_file *f, int fserrno);
 typedef spdk_bs_op_complete spdk_fs_op_complete;
 
+/**
+ * File operation completion callback.
+ *
+ * \param ctx Context for the operation.
+ * \param fserrno 0 if it completed successfully, or negative errno if it failed.
+ */
 typedef void (*spdk_file_op_complete)(void *ctx, int fserrno);
+
+/**
+ * File stat operation completion callback.
+ *
+ * \param ctx Context for the operation.
+ * \param stat Handle to the stat about the file.
+ * \param fserrno 0 if it completed successfully, or negative errno if it failed.
+ */
 typedef void (*spdk_file_stat_op_complete)(void *ctx, struct spdk_file_stat *stat, int fserrno);
 
-typedef void (*fs_request_fn)(void *);
-typedef void (*fs_send_request_fn)(fs_request_fn, void *);
+/**
+ * Function for a request of file system.
+ *
+ * \param arg Argument to the request function.
+ */
+typedef void (*fs_request_fn)(void *arg);
+
+/**
+ * Function for sending request.
+ *
+ * This function will be invoked any time when the filesystem wants to pass a
+ * message to the main dispatch thread.
+ *
+ * \param fs_request_fn A pointer to the request function.
+ * \param arg Argument to the request function.
+ */
+typedef void (*fs_send_request_fn)(fs_request_fn, void *arg);
 
 /**
  * Initialize a spdk_blobfs_opts structure to the default option values.
