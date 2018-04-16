@@ -1472,7 +1472,7 @@ _spdk_bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 
 	ch = spdk_io_channel_get_ctx(_ch);
 
-	if (!TAILQ_EMPTY(&ch->need_cluster_alloc)) {
+	if (op != NULL && !TAILQ_EMPTY(&ch->need_cluster_alloc)) {
 		/* There are already operations pending. Queue this user op
 		 * and return because it will be re-executed when the outstanding
 		 * cluster allocation completes. */
@@ -1489,7 +1489,9 @@ _spdk_bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
-		spdk_bs_user_op_abort(op);
+		if (op != NULL) {
+			spdk_bs_user_op_abort(op);
+		}
 		return;
 	}
 
@@ -1503,7 +1505,9 @@ _spdk_bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 		SPDK_ERRLOG("DMA allocation for cluster of size = %" PRIu32 " failed.\n",
 			    blob->bs->cluster_sz);
 		free(ctx);
-		spdk_bs_user_op_abort(op);
+		if (op != NULL) {
+			spdk_bs_user_op_abort(op);
+		}
 		return;
 	}
 
@@ -1511,7 +1515,9 @@ _spdk_bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 	if (rc != 0) {
 		spdk_dma_free(ctx->buf);
 		free(ctx);
-		spdk_bs_user_op_abort(op);
+		if (op != NULL) {
+			spdk_bs_user_op_abort(op);
+		}
 		return;
 	}
 
@@ -1524,12 +1530,16 @@ _spdk_bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 		_spdk_bs_release_cluster(blob->bs, ctx->new_cluster);
 		spdk_dma_free(ctx->buf);
 		free(ctx);
-		spdk_bs_user_op_abort(op);
+		if (op != NULL) {
+			spdk_bs_user_op_abort(op);
+		}
 		return;
 	}
 
-	/* Queue the user op to block other incoming operations */
-	TAILQ_INSERT_TAIL(&ch->need_cluster_alloc, op, link);
+	if (op != NULL) {
+		/* Queue the user op to block other incoming operations */
+		TAILQ_INSERT_TAIL(&ch->need_cluster_alloc, op, link);
+	}
 
 	/* Read cluster from backing device */
 	spdk_bs_sequence_read_bs_dev(ctx->seq, blob->back_bs_dev, ctx->buf,
