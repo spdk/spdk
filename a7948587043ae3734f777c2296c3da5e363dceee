@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ed30da78_61c0b5ec",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-16T04:14:02Z",
+      "side": 1,
+      "message": "Thank you, moving it to app.c looks much better.",
+      "parentUuid": "35ac56ab_90fbb79d",
+      "range": {
+        "startLine": 174,
+        "startChar": 0,
+        "endLine": 179,
+        "endChar": 50
+      },
+      "revId": "a7948587043ae3734f777c2296c3da5e363dceee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "93357f20_ed680ed3",
         "filename": "include/spdk_internal/event.h",
         "patchSetId": 11
@@ -36,6 +60,30 @@
       "writtenOn": "2018-04-13T15:09:38Z",
       "side": 1,
       "message": "Don\u0027t know if \"Mask\" is good word. There is\n\n\u003e #define RPC_STATE_* \n\nSo maybe \u0027state\u0027?\n\nAlso this:\n\u003e whose state_mask is equal to the state of the RPC server.\n\nis not true I think. The condition in rpc.c file\n\n\u003e ((m-\u003estate_mask \u0026 g_rpc_state) \u003d\u003d g_rpc_state)) {\n\nsay that state mask must be *subset* of current RPC server state. This why I have chosen in my patches enum rather than mask when setting current state of init process.",
+      "range": {
+        "startLine": 147,
+        "startChar": 21,
+        "endLine": 147,
+        "endChar": 25
+      },
+      "revId": "a7948587043ae3734f777c2296c3da5e363dceee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "81cec96c_eb91e5de",
+        "filename": "include/spdk_internal/event.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-16T04:14:02Z",
+      "side": 1,
+      "message": "Thank you, If we use mask, we can make RPC callable in multiple states. But each RPC will be used only in a state for now.\n\nI changed state_mask to state and used enum. If any case so that RPC is called in multiple states occur, we will be able to introduce state_mask again.",
+      "parentUuid": "93357f20_ed680ed3",
       "range": {
         "startLine": 147,
         "startChar": 21,
@@ -105,6 +153,30 @@
       "writtenOn": "2018-04-13T15:09:38Z",
       "side": 1,
       "message": "What if subsystem initialization fail?\nDo we want the result be written in set_post_subsystems_init?",
+      "range": {
+        "startLine": 158,
+        "startChar": 0,
+        "endLine": 164,
+        "endChar": 37
+      },
+      "revId": "a7948587043ae3734f777c2296c3da5e363dceee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7cb23cb5_9023b770",
+        "filename": "lib/event/rpc/subsystem_rpc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-16T04:14:02Z",
+      "side": 1,
+      "message": "Thank you, I added the code to change the rpc state to INVALID in spdk_rpc_finish(). This will be called even when subsystem initialization fails.\n\nWhen spdk_subsystem_init() fails, app_start_event will not be invoked and SPDK will exit immediately.\n\nWe can implement set_post_subsystems_init() to be called even when spdk_subsystem_init() fails and to write the result. However I don\u0027t want to add complex synchronization for now.",
+      "parentUuid": "49824d0e_ba048c5e",
       "range": {
         "startLine": 158,
         "startChar": 0,
