@@ -41,6 +41,9 @@ nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" 
 
 mkdir -p /mnt/device
 
+wait_bdev_connect "nvme0n1"
+wait_bdev_connect "nvme0n2"
+
 devs=`lsblk -l -o NAME | grep nvme`
 
 for dev in $devs; do
