@@ -166,6 +166,10 @@ if [ $SPDK_TEST_VHOST -eq 1 ]; then
 		timing_enter integrity_lvol_blk_nightly
 		run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-blk-nightly
 		timing_exit integrity_lvol_blk_nightly
+
+		timing_enter vhost_migration
+		run_test ./test/vhost/spdk_vhost.sh --migration
+		timing_exit vhost_migration
 	fi
 
 	if [ $RUN_NIGHTLY_FAILING -eq 1 ]; then
@@ -181,10 +185,6 @@ if [ $SPDK_TEST_VHOST -eq 1 ]; then
 	timing_enter integrity_lvol_blk
 	run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-blk
 	timing_exit integrity_lvol_blk
-
-	timing_enter vhost_migration
-	run_test ./test/vhost/spdk_vhost.sh --migration
-	timing_exit vhost_migration
 
 	timing_exit vhost
 fi
