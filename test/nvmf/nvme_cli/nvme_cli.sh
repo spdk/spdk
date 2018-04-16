@@ -40,6 +40,9 @@ $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t RDMA -a $NVMF_
 
 nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
+waitforblk "nvme0n1"
+waitforblk "nvme0n2"
+
 nvme list
 
 for ctrl in /dev/nvme?; do

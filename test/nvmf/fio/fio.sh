@@ -43,6 +43,9 @@ done
 
 nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
+waitforblk "nvme0n1"
+waitforblk "nvme0n2"
+
 $testdir/nvmf_fio.py 4096 1 write 1 verify
 $testdir/nvmf_fio.py 4096 1 randwrite 1 verify
 $testdir/nvmf_fio.py 4096 128 write 1 verify

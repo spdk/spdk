@@ -468,6 +468,22 @@ function discover_bdevs()
 	rm -f /var/run/spdk_bdev0
 }
 
+function waitforblk()
+{
+	local i=0
+	while ! lsblk -l -o NAME | grep -q -w $1; do
+		[ $i -lt 15 ] || break
+		i=$[$i+1]
+		sleep 1
+	done
+
+	if ! lsblk -l -o NAME | grep -q -w $1; then
+		return 1
+	fi
+
+	return 0
+}
+
 function fio_config_gen()
 {
 	local config_file=$1
