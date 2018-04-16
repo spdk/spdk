@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "59766380_920931ba",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-16T18:54:00Z",
+      "side": 1,
+      "message": "Let\u0027s name the section \"NQN Formal Definition\"",
+      "revId": "596faaafb5e0fca3b962209b0d70327a2cd36807",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "faf380a0_c1d5d3cd",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-16T18:54:00Z",
+      "side": 1,
+      "message": "Maybe say \"The NVMe specification defines NQNs in section XX.X. SPDK has attempted to translate that definition into a formal definition, below, and follows this formal definition when validating NQNs. The specification below is in [Extended Backus-Naur form](https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form).\"",
+      "revId": "596faaafb5e0fca3b962209b0d70327a2cd36807",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "521f77d2_97409300",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-16T18:54:00Z",
+      "side": 1,
+      "message": "Maybe put some extra whitespace in here to group together the discovery things, the uuid things, and the domain things. That may help it with readability.\n\nYou could also consider defining hex_digit, year, digit, and month in a separate code block up front, as your basic types.",
+      "revId": "596faaafb5e0fca3b962209b0d70327a2cd36807",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "89398b1f_3f20e3a8",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-16T18:54:00Z",
+      "side": 1,
+      "message": "There is a maximum total length for an NQN too, right? By this definition an NVMe Domain NQN can be any length. It\u0027s probably easy to just write the length limit in English instead of trying to add it to the formal definition.",
+      "revId": "596faaafb5e0fca3b962209b0d70327a2cd36807",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "97e7b21b_48596111",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-16T18:54:00Z",
+      "side": 1,
+      "message": "Make these two things a list with links to the RFC documents?",
+      "revId": "596faaafb5e0fca3b962209b0d70327a2cd36807",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
