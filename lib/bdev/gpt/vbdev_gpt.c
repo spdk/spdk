@@ -152,8 +152,7 @@ vbdev_gpt_destruct(void *ctx)
 {
 	struct gpt_disk *gpt_disk = ctx;
 
-	spdk_bdev_part_free(&gpt_disk->part);
-	return 0;
+	return spdk_bdev_part_free(&gpt_disk->part);
 }
 
 static void

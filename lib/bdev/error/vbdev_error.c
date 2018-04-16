@@ -220,8 +220,7 @@ vbdev_error_destruct(void *ctx)
 		SPDK_ERRLOG("vbdev_error_config_remove() failed\n");
 	}
 
-	spdk_bdev_part_free(&error_disk->part);
-	return rc;
+	return spdk_bdev_part_free(&error_disk->part);
 }
 
 static int
