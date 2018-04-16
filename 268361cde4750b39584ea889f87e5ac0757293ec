@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b68f5538_da8ada8a",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1263,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-16T19:35:34Z",
+      "side": 1,
+      "message": "This path won\u0027t call the callback, since spdk_nvmf_subsystem_remove_ns() failed, so we need to resume the subsystem here (the same spdk_nvmf_subsystem_resume() call as above).",
+      "revId": "268361cde4750b39584ea889f87e5ac0757293ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c35c0d08_dc5e560e",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 379,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-16T19:35:34Z",
+      "side": 1,
+      "message": "I\u0027m not sure what this is trying to accomplish - can we just pass along the current value of status?",
+      "revId": "268361cde4750b39584ea889f87e5ac0757293ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3440fb10_7a189031",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 937,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-16T19:35:34Z",
+      "side": 1,
+      "message": "calloc() needs an allocation failure check.",
+      "revId": "268361cde4750b39584ea889f87e5ac0757293ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "294fe15c_cc119244",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 964,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-16T19:35:34Z",
+      "side": 1,
+      "message": "The (void *) cast should not be necessary.",
+      "range": {
+        "startLine": 964,
+        "startChar": 10,
+        "endLine": 964,
+        "endChar": 18
+      },
+      "revId": "268361cde4750b39584ea889f87e5ac0757293ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
