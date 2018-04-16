@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "09833406_bf64af48",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 481,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-16T18:30:06Z",
+      "side": 1,
+      "message": "Let\u0027s keep it to just one call - spdk_nvmf_subsystem_add_ns. The config file parsing can give it a callback that does nothing and not wait for it to be called to continue. The config file parsing has major issues like that all over where it kicks off an asynchronous operation but doesn\u0027t wait for it to complete. That\u0027s fine for now - the whole config file parsing is on the list of things to be rewritten.",
+      "revId": "b6f502cba798b517b00d0635a53ebee24eefcb5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
