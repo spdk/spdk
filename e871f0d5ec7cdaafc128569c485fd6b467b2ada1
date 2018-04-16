@@ -1,0 +1,112 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5065fa1b_5cf901f9",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 33
+      },
+      "lineNbr": 454,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-16T19:03:39Z",
+      "side": 1,
+      "message": "I don\u0027t think this structure is needed outside of bdev.c - it should probably be declared there instead of in the header unless you foresee a need for it outside bdev.c.\n\nAlso, it would probably be clearer to name this something like \"spdk_bdev_io_stat_ctx\".",
+      "revId": "e871f0d5ec7cdaafc128569c485fd6b467b2ada1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4f96866_39b1c078",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 33
+      },
+      "lineNbr": 455,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-16T19:03:39Z",
+      "side": 1,
+      "message": "I don\u0027t think this needs to be a separately-allocated pointer; you could just nest the struct spdk_bdev_io_stat directly within this structure.",
+      "revId": "e871f0d5ec7cdaafc128569c485fd6b467b2ada1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b10f8252_2463301b",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-16T19:03:39Z",
+      "side": 1,
+      "message": "This \u0027static\u0027 variable is essentially a global, which isn\u0027t thread safe.  This should use the context passed through cb_arg to track the iterator instead.",
+      "revId": "e871f0d5ec7cdaafc128569c485fd6b467b2ada1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b15fa738_cea7f9dd",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-16T19:03:39Z",
+      "side": 1,
+      "message": "Failed",
+      "range": {
+        "startLine": 142,
+        "startChar": 15,
+        "endLine": 142,
+        "endChar": 20
+      },
+      "revId": "e871f0d5ec7cdaafc128569c485fd6b467b2ada1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d98241c1_c5d8ca77",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-16T19:03:39Z",
+      "side": 1,
+      "message": "I think this path is missing a free_rpc_get_bdevs_iostat(\u0026req) call.",
+      "revId": "e871f0d5ec7cdaafc128569c485fd6b467b2ada1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "37cc2d63_aa6497b8",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-16T19:03:39Z",
+      "side": 1,
+      "message": "This doesn\u0027t look thread safe; you are kicking off a bunch of asynchronous spdk_bdev_get_device_stat() calls to several bdevs at once (running in parallel), and they will all be modifying the same ctx without any locking or other coordination.\n\nThis should probably just start the spdk_bdev_get_device_stat() for the first bdev and only issue the next spdk_bdev_get_device_stat() once that one is done, and so on for each bdev.\n\nThis would also allow you to get rid of iter and ctx-\u003ebdev_count; just have a flag in ctx that indicates whether you are getting the stats for a single bdev (the bdev !\u003d NULL case above) or for all bdevs, and when the first bdev completes, just call spdk_bdev_next() at that point to find the next one.",
+      "revId": "e871f0d5ec7cdaafc128569c485fd6b467b2ada1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
