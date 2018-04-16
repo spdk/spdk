@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d172781e_d7115ef3",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-16T22:26:33Z",
+      "side": 1,
+      "message": "You need to wait for spdk_io_device_unregister to complete before calling bdev_iscsi_free_lun. I just hit this same mistake in the bdev_part code.",
+      "revId": "c34b030856907a7badd4223dbf6ea0c2a240c7f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
