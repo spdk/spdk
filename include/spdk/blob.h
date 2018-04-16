@@ -75,17 +75,57 @@ struct spdk_io_channel;
 struct spdk_blob;
 struct spdk_xattr_names;
 
+/**
+ * Blobstore operation completion callback.
+ *
+ * \param cb_arg Callback argument.
+ * \param bserrno 0 if it completed successfully, or negative errno if it failed.
+ */
 typedef void (*spdk_bs_op_complete)(void *cb_arg, int bserrno);
+
+/**
+ * Blobstore operation completion callback with handle.
+ *
+ * \param cb_arg Callback argument.
+ * \param bs Handle to a blobstore.
+ * \param bserrno 0 if it completed successfully, or negative errno if it failed.
+ */
 typedef void (*spdk_bs_op_with_handle_complete)(void *cb_arg, struct spdk_blob_store *bs,
 		int bserrno);
+
+/**
+ * Blob operation completion callback.
+ *
+ * \param cb_arg Callback argument.
+ * \param bserrno 0 if it completed successfully, or negative errno if it failed.
+ */
 typedef void (*spdk_blob_op_complete)(void *cb_arg, int bserrno);
+
+/**
+ * Blob operation completion callback with blob ID.
+ *
+ * \param cb_arg Callback argument.
+ * \param blobid Blob ID.
+ * \param bserrno 0 if it completed successfully, or negative errno if it failed.
+ */
 typedef void (*spdk_blob_op_with_id_complete)(void *cb_arg, spdk_blob_id blobid, int bserrno);
+
+/**
+ * Blob operation completion callback with handle.
+ *
+ * \param cb_arg Callback argument.
+ * \param bs Handle to a blob.
+ * \param bserrno 0 if it completed successfully, or negative errno if it failed.
+ */
 typedef void (*spdk_blob_op_with_handle_complete)(void *cb_arg, struct spdk_blob *blb, int bserrno);
 
-
-/* Calls to function pointers of this type must obey all of the normal
-   rules for channels. The channel passed to this completion must match
-   the channel the operation was initiated on. */
+/**
+ * Blobstore device completion callback.
+ *
+ * \param channel I/O channel the operation was initiated on.
+ * \param cb_arg Callback argument.
+ * \param bserrno 0 if it completed successfully, or negative errno if it failed.
+ */
 typedef void (*spdk_bs_dev_cpl)(struct spdk_io_channel *channel,
 				void *cb_arg, int bserrno);
 
