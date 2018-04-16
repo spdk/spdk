@@ -62,6 +62,17 @@ else
 fi
 rm -f whitespace.log
 
+echo -n 'checking for indent using tab instead of 4 spaces...'
+git diff HEAD~1 HEAD | grep $'^+ *\t\+' > indent.log || true
+if [ -s indent.log ]; then
+    echo " Tabs used to be indent detected"
+    cat indent.log
+    rc=1
+else
+    echo " OK"
+fi
+rm -rf indent.log
+
 echo -n "Checking trailing whitespace in output strings..."
 
 git grep --line-number -e ' \\n"' -- '*.[ch]' > whitespace.log || true
