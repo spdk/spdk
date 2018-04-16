@@ -39,7 +39,7 @@
 #include "spdk/env.h"
 
 static void
-spdk_copy_engine_subsystem_initialize(void)
+spdk_copy_engine_subsystem_initialize(void **poptions)
 {
 	int rc;
 
@@ -55,7 +55,7 @@ spdk_copy_engine_subsystem_finish_done(void *cb_arg)
 }
 
 static void
-spdk_copy_engine_subsystem_finish(void)
+spdk_copy_engine_subsystem_finish(void **poptions)
 {
 	spdk_copy_engine_finish(spdk_copy_engine_subsystem_finish_done, NULL);
 }

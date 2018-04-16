@@ -38,7 +38,7 @@
 #include "spdk_internal/event.h"
 
 static void
-spdk_nbd_subsystem_init(void)
+spdk_nbd_subsystem_init(void **poptions)
 {
 	int rc;
 
@@ -48,7 +48,7 @@ spdk_nbd_subsystem_init(void)
 }
 
 static void
-spdk_nbd_subsystem_fini(void)
+spdk_nbd_subsystem_fini(void **poptions)
 {
 	spdk_nbd_fini();
 	spdk_subsystem_fini_next();

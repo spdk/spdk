@@ -38,7 +38,7 @@
 #include "spdk_internal/event.h"
 
 static void
-spdk_interface_subsystem_init(void)
+spdk_interface_subsystem_init(void **poptions)
 {
 	int rc;
 
@@ -48,7 +48,7 @@ spdk_interface_subsystem_init(void)
 }
 
 static void
-spdk_interface_subsystem_destroy(void)
+spdk_interface_subsystem_destroy(void **poptions)
 {
 	spdk_interface_destroy();
 	spdk_subsystem_fini_next();
@@ -64,7 +64,7 @@ static struct spdk_subsystem g_spdk_subsystem_interface = {
 SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_interface);
 
 static void
-spdk_net_subsystem_start(void)
+spdk_net_subsystem_start(void **poptions)
 {
 	int rc;
 
@@ -74,7 +74,7 @@ spdk_net_subsystem_start(void)
 }
 
 static void
-spdk_net_subsystem_fini(void)
+spdk_net_subsystem_fini(void **poptions)
 {
 	spdk_net_framework_fini();
 	spdk_subsystem_fini_next();

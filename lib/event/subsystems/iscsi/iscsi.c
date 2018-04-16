@@ -44,7 +44,7 @@ spdk_iscsi_subsystem_init_complete(void *cb_arg, int rc)
 }
 
 static void
-spdk_iscsi_subsystem_init(void)
+spdk_iscsi_subsystem_init(void **poptions)
 {
 	spdk_iscsi_init(spdk_iscsi_subsystem_init_complete, NULL);
 }
@@ -56,7 +56,7 @@ spdk_iscsi_subsystem_fini_done(void *arg)
 }
 
 static void
-spdk_iscsi_subsystem_fini(void)
+spdk_iscsi_subsystem_fini(void **poptions)
 {
 	spdk_iscsi_fini(spdk_iscsi_subsystem_fini_done, NULL);
 }

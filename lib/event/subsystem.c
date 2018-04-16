@@ -135,7 +135,7 @@ spdk_subsystem_init_next(int rc)
 	}
 
 	if (g_next_subsystem->init) {
-		g_next_subsystem->init();
+		g_next_subsystem->init(&g_next_subsystem->options);
 	} else {
 		spdk_subsystem_init_next(0);
 	}
@@ -199,7 +199,7 @@ _spdk_subsystem_fini_next(void *arg1, void *arg2)
 
 	while (g_next_subsystem) {
 		if (g_next_subsystem->fini) {
-			g_next_subsystem->fini();
+			g_next_subsystem->fini(&g_next_subsystem->options);
 			return;
 		}
 		g_next_subsystem = TAILQ_PREV(g_next_subsystem, spdk_subsystem_list, tailq);
