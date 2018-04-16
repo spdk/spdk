@@ -51,6 +51,12 @@
 extern "C" {
 #endif
 
+/**
+ * Event handler function.
+ *
+ * \param arg1 Argument 1.
+ * \param arg2 Argument 2.
+ */
 typedef void (*spdk_event_fn)(void *arg1, void *arg2);
 
 /**
@@ -63,7 +69,14 @@ struct spdk_event;
  */
 struct spdk_poller;
 
+/**
+ * Callback function for customized shutdown handling of application.
+ */
 typedef void (*spdk_app_shutdown_cb)(void);
+
+/**
+ * Signal handler fucntion.
+ */
 typedef void (*spdk_sighandler_t)(int);
 
 #define SPDK_DEFAULT_RPC_ADDR "/var/tmp/spdk.sock"
