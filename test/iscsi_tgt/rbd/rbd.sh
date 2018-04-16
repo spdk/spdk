@@ -16,6 +16,10 @@ timing_enter rbd
 rpc_py="python $rootdir/scripts/rpc.py"
 fio_py="python $rootdir/scripts/fio.py"
 
+timing_enter rbd_setup
+rbd_setup "$TARGET_NS_CMD"
+timing_exit rbd_setup
+
 timing_enter start_iscsi_tgt
 
 $ISCSI_APP -c $testdir/iscsi.conf -m $ISCSI_TEST_CORE_MASK &
