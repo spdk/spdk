@@ -50,31 +50,92 @@ struct spdk_thread;
 struct spdk_io_channel_iter;
 struct spdk_poller;
 
+/**
+ * Callback function for a thread.
+ *
+ * \param ctx Context passed as arg to spdk_thread_pass_msg().
+ */
 typedef void (*spdk_thread_fn)(void *ctx);
+
+/**
+ * Function to be called to pass a message to a thread.
+ *
+ * \param fn Callback function for a thread.
+ * \param ctx Context passed to fn.
+ * \param thread_ctx Context for the thread.
+ */
 typedef void (*spdk_thread_pass_msg)(spdk_thread_fn fn, void *ctx,
 				     void *thread_ctx);
 
 /**
  * Callback function for a poller.
  *
- * \param ctx Context passed as arg to spdk_poller_register()
+ * \param ctx Context passed as arg to spdk_poller_register().
  * \return 0 to indicate that polling took place but no events were found;
- *         positive to indicate that polling took place and some events were processed;
- *         negative if the poller does not provide spin-wait information.
+ * positive to indicate that polling took place and some events were processed;
+ * negative if the poller does not provide spin-wait information.
  */
 typedef int (*spdk_poller_fn)(void *ctx);
+
+/**
+ * Function to be called to start a poller for the thread.
+ *
+ * \param thread_ctx Context for the thread.
+ * \param fn Callback function for a poller.
+ * \param arg Argument passed to callback.
+ * \param period Polling period in microseconds.
+ *
+ * \return a pointer to the poller on success, or NULL on failure.
+ */
 typedef struct spdk_poller *(*spdk_start_poller)(void *thread_ctx,
 		spdk_poller_fn fn,
 		void *arg,
 		uint64_t period_microseconds);
+
+/**
+ * Function to be called to stop a poller.
+ *
+ * \param poller Poller to stop.
+ * \param thread_ctx Context for the thread.
+ */
 typedef void (*spdk_stop_poller)(struct spdk_poller *poller, void *thread_ctx);
 
+/**
+ * I/O channel creation callback.
+ *
+ * \param io_device I/O device associated with this channel.
+ * \param ctx_buf Context for the I/O device.
+ */
 typedef int (*spdk_io_channel_create_cb)(void *io_device, void *ctx_buf);
+
+/**
+ * I/O channel destruction callback.
+ *
+ * \param io_device I/O device associated with this channel.
+ * \param ctx_buf Context for the I/O device.
+ */
 typedef void (*spdk_io_channel_destroy_cb)(void *io_device, void *ctx_buf);
 
+/**
+ * I/O device unregister callback.
+ *
+ * \param io_device Unregistered I/O device.
+ */
 typedef void (*spdk_io_device_unregister_cb)(void *io_device);
 
+/**
+ * Called on the appropriate thread for each channel associated with io_device.
+ *
+ * \param i I/O channel iterator.
+ */
 typedef void (*spdk_channel_msg)(struct spdk_io_channel_iter *i);
+
+/**
+ * spdk_for_each_channel() callback.
+ *
+ * \param i I/O channel iterator.
+ * \param status 0 if it completed successfully, or negative errno if it failed.
+ */
 typedef void (*spdk_channel_for_each_cpl)(struct spdk_io_channel_iter *i, int status);
 
 /**
