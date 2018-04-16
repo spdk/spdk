@@ -62,15 +62,56 @@ struct spdk_file_stat {
 	uint64_t	size;
 };
 
+/**
+ * Blobstore filesystem operation completion callback with handle.
+ *
+ * \param ctx Context for the operation.
+ * \param bs Handle to a blobfs.
+ * \param fserrno 0 if it completed successfully, or negative errno if it failed.
+ */
 typedef void (*spdk_fs_op_with_handle_complete)(void *ctx, struct spdk_filesystem *fs,
 		int fserrno);
+
+/**
+ * File operation completion callback with handle.
+ *
+ * \param ctx Context for the operation.
+ * \param f Handle to a file.
+ * \param fserrno 0 if it completed successfully, or negative errno if it failed.
+ */
 typedef void (*spdk_file_op_with_handle_complete)(void *ctx, struct spdk_file *f, int fserrno);
 typedef spdk_bs_op_complete spdk_fs_op_complete;
 
+/**
+ * File operation completion callback.
+ *
+ * \param ctx Context for the operation.
+ * \param fserrno 0 if it completed successfully, or negative errno if it failed.
+ */
 typedef void (*spdk_file_op_complete)(void *ctx, int fserrno);
+
+/**
+ * File state operation completion callback.
+ *
+ * \param ctx Context for the operation.
+ * \param stat Handle to the state about the file.
+ * \param fserrno 0 if it completed successfully, or negative errno if it failed.
+ */
 typedef void (*spdk_file_stat_op_complete)(void *ctx, struct spdk_file_stat *stat, int fserrno);
 
+/**
+ * Fcuntion for a request of file system.
+ */
 typedef void (*fs_request_fn)(void *);
+
+/**
+ * Function for sending request.
+ *
+ * This function will be invoked any time when the blobstore filesystem wants to
+ * pass a message to the main dispatch thread.
+ *
+ * \param fs_request_fn A pointer to the request function.
+ */
 typedef void (*fs_send_request_fn)(fs_request_fn, void *);
 
 /**
