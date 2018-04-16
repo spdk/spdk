@@ -1,0 +1,157 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f418d0b8_3891c506",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-16T21:39:10Z",
+      "side": 1,
+      "message": "this function can only return 0 - better to just have it return void I think",
+      "revId": "10292607870969b99ddb0260024ba9bdbccaba26",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2f5406aa_b5f90bd5",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-16T21:39:10Z",
+      "side": 1,
+      "message": "can you make this sizeof(sa)?\n\nI think there is some very old istgt code that\u0027s been copied elsewhere that doesn\u0027t put the sizeof argument in parentheses but I\u0027d prefer not to do that here too :)",
+      "revId": "10292607870969b99ddb0260024ba9bdbccaba26",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "551c9d0e_b4ab88fc",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-16T21:39:10Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "10292607870969b99ddb0260024ba9bdbccaba26",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b334b0d_8622416f",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-16T21:39:10Z",
+      "side": 1,
+      "message": "should this print an error message?  or are you avoid this (for now) for cases where VPP is connected later?",
+      "revId": "10292607870969b99ddb0260024ba9bdbccaba26",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2080ec44_c42c1557",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-16T21:39:10Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "10292607870969b99ddb0260024ba9bdbccaba26",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b679f9e_c500e9cf",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-16T21:39:10Z",
+      "side": 1,
+      "message": "I think that except for connect() and listen(), all of these g_vpp_initialized checks should be asserts().  There is no way these functions should be called if g_vpp_initialized \u003d\u003d false.  What do you think?",
+      "revId": "10292607870969b99ddb0260024ba9bdbccaba26",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4926fd04_f3c9f301",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 397,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-16T21:39:10Z",
+      "side": 1,
+      "message": "I think this kind of check belongs in the common code - not here.",
+      "revId": "10292607870969b99ddb0260024ba9bdbccaba26",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41348666_321c2a17",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 434,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-16T21:39:10Z",
+      "side": 1,
+      "message": "does VPP not support recvlowat/sendbuf/recvbuf?",
+      "revId": "10292607870969b99ddb0260024ba9bdbccaba26",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "182a0cbd_31137516",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 506,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-16T21:39:10Z",
+      "side": 1,
+      "message": "same as above - I think this check is OK, but the later ones should just assert(g_vpp_initialized)",
+      "revId": "10292607870969b99ddb0260024ba9bdbccaba26",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
