@@ -91,7 +91,7 @@ _spdk_nvmf_shutdown_cb(void *arg1, void *arg2)
 }
 
 static void
-spdk_nvmf_subsystem_fini(void)
+spdk_nvmf_subsystem_fini(void *options)
 {
 	/* Always let the first core to handle the case */
 	if (spdk_env_get_current_core() != spdk_env_get_first_core()) {
@@ -318,7 +318,7 @@ nvmf_tgt_advance_state(void)
 }
 
 static void
-spdk_nvmf_subsystem_init(void)
+spdk_nvmf_subsystem_init(void *options)
 {
 	g_tgt_state = NVMF_TGT_INIT_NONE;
 	nvmf_tgt_advance_state();

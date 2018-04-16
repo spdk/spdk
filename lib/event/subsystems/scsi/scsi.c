@@ -38,7 +38,7 @@
 #include "spdk_internal/event.h"
 
 static void
-spdk_scsi_subsystem_init(void)
+spdk_scsi_subsystem_init(void *options)
 {
 	int rc;
 
@@ -48,7 +48,7 @@ spdk_scsi_subsystem_init(void)
 }
 
 static void
-spdk_scsi_subsystem_fini(void)
+spdk_scsi_subsystem_fini(void *options)
 {
 	spdk_scsi_fini();
 	spdk_subsystem_fini_next();

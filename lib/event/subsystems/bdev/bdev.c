@@ -47,7 +47,7 @@ spdk_bdev_initialize_complete(void *cb_arg, int rc)
 }
 
 static void
-spdk_bdev_subsystem_initialize(void)
+spdk_bdev_subsystem_initialize(void *options)
 {
 	spdk_bdev_initialize(spdk_bdev_initialize_complete, NULL);
 }
@@ -59,7 +59,7 @@ spdk_bdev_subsystem_finish_done(void *cb_arg)
 }
 
 static void
-spdk_bdev_subsystem_finish(void)
+spdk_bdev_subsystem_finish(void *options)
 {
 	spdk_bdev_finish(spdk_bdev_subsystem_finish_done, NULL);
 }
