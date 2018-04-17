@@ -88,9 +88,19 @@ static TAILQ_HEAD(, spdk_vhost_dev) g_spdk_vhost_devices = TAILQ_HEAD_INITIALIZE
 			g_spdk_vhost_devices);
 static pthread_mutex_t g_spdk_vhost_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr)
+void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr, uint64_t len)
 {
-	return (void *)rte_vhost_gpa_to_vva(vdev->mem, addr);
+	void *vva;
+	uint64_t newlen;
+
+	newlen = len;
+	vva = (void *)rte_vhost_va_from_guest_pa(vdev->mem, addr, &newlen);
+	if (newlen != len) {
+		return NULL;
+	}
+
+	return vva;
+
 }
 
 static void
@@ -215,8 +225,9 @@ spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue 
 
 	if (spdk_vhost_vring_desc_is_indirect(*desc)) {
 		assert(spdk_vhost_dev_has_feature(vdev, VIRTIO_RING_F_INDIRECT_DESC));
-		*desc_table = spdk_vhost_gpa_to_vva(vdev, (*desc)->addr);
 		*desc_table_size = (*desc)->len / sizeof(**desc);
+		*desc_table = spdk_vhost_gpa_to_vva(vdev, (*desc)->addr,
+						    sizeof(**desc) * *desc_table_size);
 		*desc = *desc_table;
 		if (*desc == NULL) {
 			return -1;
@@ -425,7 +436,7 @@ spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
 			SPDK_ERRLOG("SPDK_VHOST_IOVS_MAX(%d) reached\n", SPDK_VHOST_IOVS_MAX);
 			return -1;
 		}
-		vva = (uintptr_t)spdk_vhost_gpa_to_vva(vdev, payload);
+		vva = (uintptr_t)rte_vhost_gpa_to_vva(vdev->mem, payload);
 		if (vva == 0) {
 			SPDK_ERRLOG("gpa_to_vva(%p) == NULL\n", (void *)payload);
 			return -1;
@@ -444,7 +455,7 @@ spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
 			 */
 			len = to_boundary;
 			while (len < remaining) {
-				if (vva + len != (uintptr_t)spdk_vhost_gpa_to_vva(vdev, payload + len)) {
+				if (vva + len != (uintptr_t)rte_vhost_gpa_to_vva(vdev->mem, payload + len)) {
 					break;
 				}
 				len += spdk_min(remaining - len, 0x200000);
