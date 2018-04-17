@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f9f22de2_c716e9c5",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1230,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-17T17:01:07Z",
+      "side": 1,
+      "message": "This function doesn\u0027t have a descriptive name. This is called once the namespace removal has completed, so maybe nvmf_rpc_remove_ns_done",
+      "revId": "2a6d5d6309ed20a74917f1eebb272eb74af3ec9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "953b25aa_5c449b2e",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 400,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-17T17:01:07Z",
+      "side": 1,
+      "message": "Let\u0027s call this spdk_nvmf_subsystem_update - you\u0027ve already modified the global subsystem structure and this utility is just propagating those changes to all of the thread-local caches.",
+      "revId": "2a6d5d6309ed20a74917f1eebb272eb74af3ec9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c4ece48_2de89e09",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 884,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-17T17:01:07Z",
+      "side": 1,
+      "message": "Extra whitespace",
+      "revId": "2a6d5d6309ed20a74917f1eebb272eb74af3ec9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a46d2fe9_67eb518f",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 942,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-17T17:01:07Z",
+      "side": 1,
+      "message": "The callback and the context you use here are really specific to remove_ns, not general to spdk_nvmf_subsystem_modify as a utility. That means the struct definition for the context and the callback (spdk_subsystem_modify_done) should be grouped down here above this function.\n\nI know you\u0027re probably going to want to reuse the context and callback for the add_ns path in the next patch. That is still fine to do - just name the context subsystem_modify_ns_ctx and the callback function subsystem_modify_ns_done and put them here - next to where remove_ns and add_ns are.",
+      "revId": "2a6d5d6309ed20a74917f1eebb272eb74af3ec9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
