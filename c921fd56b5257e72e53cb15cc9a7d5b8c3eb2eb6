@@ -16,6 +16,24 @@
       "revId": "c921fd56b5257e72e53cb15cc9a7d5b8c3eb2eb6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "39303ccb_a4a3fcce",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1078,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-17T15:39:33Z",
+      "side": 1,
+      "message": "It\u0027s just another reference to channel \u0027ch\u0027, which we already have in a variable.",
+      "parentUuid": "f7dd03c9_47567c41",
+      "revId": "c921fd56b5257e72e53cb15cc9a7d5b8c3eb2eb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
