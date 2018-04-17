@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "29994c7b_77be0fe3",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 2102,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-17T18:16:59Z",
+      "side": 1,
+      "message": "What if this clone is itself a snapshot that already exists in the snapshots list? What if it becomes a snapshot later and clones are added? You can\u0027t quickly traverse the tree with this data structure - you have to do a linear lookup in the top level snapshots list each time you move around a level.\n\nI think this is fine for the questions we currently need to ask (i.e. does this snapshot have any clones), but it\u0027s something to keep in mind for later.",
+      "revId": "2d468361180b0cb2e3d47b5302612609ed0550ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
