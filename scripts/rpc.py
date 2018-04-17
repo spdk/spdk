@@ -513,7 +513,7 @@ if __name__ == "__main__":
 
     p = subparsers.add_parser('construct_lvol_bdev', help='Add a bdev with an logical volume backend')
     p.add_argument('-u', '--uuid', help='lvol store UUID', required=False)
-    p.add_argument('-l', '--lvs_name', help='lvol store name', required=False)
+    p.add_argument('-l', '--lvs-name', help='lvol store name', required=False)
     p.add_argument('-t', '--thin-provision', action='store_true', help='create lvol bdev as thin provisioned')
     p.add_argument('lvol_name', help='name for this lvol')
     p.add_argument('size', help='size in MiB for this bdev', type=int)
@@ -571,7 +571,7 @@ if __name__ == "__main__":
 
     p = subparsers.add_parser('destroy_lvol_store', help='Destroy an logical volume store')
     p.add_argument('-u', '--uuid', help='lvol store UUID', required=False)
-    p.add_argument('-l', '--lvs_name', help='lvol store name', required=False)
+    p.add_argument('-l', '--lvs-name', help='lvol store name', required=False)
     p.set_defaults(func=destroy_lvol_store)
 
     @call_cmd
@@ -582,7 +582,7 @@ if __name__ == "__main__":
 
     p = subparsers.add_parser('get_lvol_stores', help='Display current logical volume store list')
     p.add_argument('-u', '--uuid', help='lvol store UUID', required=False)
-    p.add_argument('-l', '--lvs_name', help='lvol store name', required=False)
+    p.add_argument('-l', '--lvs-name', help='lvol store name', required=False)
     p.set_defaults(func=get_lvol_stores)
 
     # split
@@ -593,7 +593,7 @@ if __name__ == "__main__":
     name exist the split bdevs will be created right away, if not split bdevs will be created when base bdev became
     available (during examination process).""")
     p.add_argument('base_bdev', help='base bdev name')
-    p.add_argument('-s', '--split_size_mb', help='size in MiB for each bdev', type=int, default=0)
+    p.add_argument('-s', '--split-size-mb', help='size in MiB for each bdev', type=int, default=0)
     p.add_argument('split_count', help="""Optional - number of split bdevs to create. Total size * split_count must not
     exceed the base bdev size.""", type=int)
     p.set_defaults(func=construct_split_vbdev)
@@ -632,7 +632,7 @@ if __name__ == "__main__":
                                          nbd_device=args.nbd_device))
 
     p = subparsers.add_parser('get_nbd_disks', help='Display full or specified nbd device list')
-    p.add_argument('-n', '--nbd_device', help="Path of the nbd device. Example: /dev/nbd0", required=False)
+    p.add_argument('-n', '--nbd-device', help="Path of the nbd device. Example: /dev/nbd0", required=False)
     p.set_defaults(func=get_nbd_disks)
 
     # net
@@ -684,7 +684,7 @@ if __name__ == "__main__":
     Format:  'nqn1 nqn2' etc
     Example: 'nqn.2016-06.io.spdk:init nqn.2016-07.io.spdk:init'""")
     p.add_argument("-a", "--allow-any-host", action='store_true', help="Allow any host to connect (don't enforce host NQN whitelist)")
-    p.add_argument("-s", "--serial_number", help="""
+    p.add_argument("-s", "--serial-number", help="""
     Format:  'sn' etc
     Example: 'SPDK00000000000001'""", default='0000:00:01.0')
     p.add_argument("-n", "--namespaces", help="""Whitespace-separated list of namespaces
