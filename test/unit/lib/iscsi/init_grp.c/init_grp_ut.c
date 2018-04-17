@@ -36,6 +36,7 @@
 #include "CUnit/Basic.h"
 
 #include "iscsi/init_grp.c"
+#include "unit/lib/json_mock.c"
 
 SPDK_LOG_REGISTER_COMPONENT("iscsi", SPDK_LOG_ISCSI)
 

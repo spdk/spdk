@@ -45,39 +45,10 @@
 #include "spdk_internal/log.h"
 
 static void
-dump_initiator_group(struct spdk_json_write_ctx *w, struct spdk_iscsi_init_grp *ig)
-{
-	struct spdk_iscsi_initiator_name *iname;
-	struct spdk_iscsi_initiator_netmask *imask;
-
-	spdk_json_write_object_begin(w);
-
-	spdk_json_write_name(w, "initiators");
-	spdk_json_write_array_begin(w);
-	TAILQ_FOREACH(iname, &ig->initiator_head, tailq) {
-		spdk_json_write_string(w, iname->name);
-	}
-	spdk_json_write_array_end(w);
-
-	spdk_json_write_name(w, "tag");
-	spdk_json_write_int32(w, ig->tag);
-
-	spdk_json_write_name(w, "netmasks");
-	spdk_json_write_array_begin(w);
-	TAILQ_FOREACH(imask, &ig->netmask_head, tailq) {
-		spdk_json_write_string(w, imask->mask);
-	}
-	spdk_json_write_array_end(w);
-
-	spdk_json_write_object_end(w);
-}
-
-static void
 spdk_rpc_get_initiator_groups(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
-	struct spdk_iscsi_init_grp *ig;
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -91,11 +62,7 @@ spdk_rpc_get_initiator_groups(struct spdk_jsonrpc_request *request,
 	}
 
 	spdk_json_write_array_begin(w);
-
-	TAILQ_FOREACH(ig, &g_spdk_iscsi.ig_head, tailq) {
-		dump_initiator_group(w, ig);
-	}
-
+	spdk_iscsi_init_grps_info_json(w);
 	spdk_json_write_array_end(w);
 
 	spdk_jsonrpc_end_result(request, w);
