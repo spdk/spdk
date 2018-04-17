@@ -303,6 +303,10 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 {
 	struct io_device *dev, *tmp;
 
+	assert(io_device != NULL);
+	assert(create_cb != NULL);
+	assert(destroy_cb != NULL);
+
 	dev = calloc(1, sizeof(struct io_device));
 	if (dev == NULL) {
 		SPDK_ERRLOG("could not allocate io_device\n");
