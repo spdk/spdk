@@ -790,6 +790,7 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transpo
 
 	pctrlr = spdk_dma_zmalloc(sizeof(struct nvme_pcie_ctrlr), 64, NULL);
 	if (pctrlr == NULL) {
+		close(claim_fd);
 		SPDK_ERRLOG("could not allocate ctrlr\n");
 		return NULL;
 	}
@@ -804,6 +805,7 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transpo
 
 	rc = nvme_pcie_ctrlr_allocate_bars(pctrlr);
 	if (rc != 0) {
+		close(claim_fd);
 		spdk_dma_free(pctrlr);
 		return NULL;
 	}
@@ -815,6 +817,7 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transpo
 
 	if (nvme_ctrlr_get_cap(&pctrlr->ctrlr, &cap)) {
 		SPDK_ERRLOG("get_cap() failed\n");
+		close(claim_fd);
 		spdk_dma_free(pctrlr);
 		return NULL;
 	}
