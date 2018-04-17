@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "097ea020_5b0c01ff",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-17T17:49:57Z",
+      "side": 1,
+      "message": "You need to call spdk_bdev_destruct_done here to indicate that the bdev destruction has completed.",
+      "revId": "a02afcb27592540d54ba22e630487a11752a9a4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5b1bc0db_6eb263a5",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-17T17:49:57Z",
+      "side": 1,
+      "message": "You need to return 1 here to indicate that the destruction is asynchronous.",
+      "revId": "a02afcb27592540d54ba22e630487a11752a9a4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
