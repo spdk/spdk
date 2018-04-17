@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3610ba57_7c73ea4a",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-17T17:34:21Z",
+      "side": 1,
+      "message": "qualified",
+      "revId": "af670f60f504d04ff91e3bd785e331c7675fb3eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d59e41b_f2f5473e",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-17T17:34:21Z",
+      "side": 1,
+      "message": "SPDK",
+      "revId": "af670f60f504d04ff91e3bd785e331c7675fb3eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51fea35e_8eb58158",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-17T17:34:21Z",
+      "side": 1,
+      "message": "remove \u0027longer\u0027",
+      "revId": "af670f60f504d04ff91e3bd785e331c7675fb3eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7de5fcc8_8a4e2b9a",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-17T17:34:21Z",
+      "side": 1,
+      "message": "have been defined previously -\u003e are defined elsewhere",
+      "revId": "af670f60f504d04ff91e3bd785e331c7675fb3eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
