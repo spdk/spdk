@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dd44d411_5b39f311",
+        "filename": "ISSUE_TEMPLATE.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-17T17:00:37Z",
+      "side": 1,
+      "message": "Trailing whitespace",
+      "revId": "bd3a042c57b132b98d2e92818f0531d0857f03e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a53f9a2b_3b26214a",
+        "filename": "ISSUE_TEMPLATE.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-17T17:00:37Z",
+      "side": 1,
+      "message": "This has an extra period at the end",
+      "revId": "bd3a042c57b132b98d2e92818f0531d0857f03e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aceedc6e_b8488983",
+        "filename": "ISSUE_TEMPLATE.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-17T17:00:37Z",
+      "side": 1,
+      "message": "Extra \u0027t\u0027 after the period",
+      "range": {
+        "startLine": 24,
+        "startChar": 64,
+        "endLine": 24,
+        "endChar": 65
+      },
+      "revId": "bd3a042c57b132b98d2e92818f0531d0857f03e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
