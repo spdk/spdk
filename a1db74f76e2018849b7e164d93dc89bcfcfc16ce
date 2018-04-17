@@ -46,6 +46,30 @@
       "revId": "a1db74f76e2018849b7e164d93dc89bcfcfc16ce",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d72be489_d776d6fd",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1140,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-04-17T09:26:48Z",
+      "side": 1,
+      "message": "Got your meaning here. Thanks. In this way, as the flag is per bdev channel and not on the gloabal structure which looks like more less chance for the race issues.",
+      "parentUuid": "81948ee1_8b3eb564",
+      "range": {
+        "startLine": 1140,
+        "startChar": 2,
+        "endLine": 1140,
+        "endChar": 35
+      },
+      "revId": "a1db74f76e2018849b7e164d93dc89bcfcfc16ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
