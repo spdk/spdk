@@ -43,6 +43,7 @@ struct spdk_iscsi_conn;
 struct spdk_iscsi_init_grp;
 struct spdk_iscsi_portal_grp;
 struct spdk_iscsi_portal;
+struct spdk_json_write_ctx;
 
 #define MAX_TARGET_MAP			256
 #define SPDK_TN_TAG_MAX			0x0000ffff
@@ -136,4 +137,6 @@ void spdk_iscsi_tgt_node_delete_map(struct spdk_iscsi_portal_grp *portal_group,
 				    struct spdk_iscsi_init_grp *initiator_group);
 int spdk_iscsi_tgt_node_add_lun(struct spdk_iscsi_tgt_node *target,
 				const char *bdev_name, int lun_id);
+void spdk_iscsi_tgt_nodes_info_json(struct spdk_json_write_ctx *w);
+void spdk_iscsi_tgt_nodes_config_json(struct spdk_json_write_ctx *w);
 #endif /* SPDK_ISCSI_TGT_NODE_H_ */

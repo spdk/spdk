@@ -1331,3 +1331,110 @@ spdk_iscsi_tgt_node_add_lun(struct spdk_iscsi_tgt_node *target,
 
 	return 0;
 }
+
+static void
+spdk_iscsi_tgt_node_info_json(struct spdk_iscsi_tgt_node *target,
+			      struct spdk_json_write_ctx *w)
+{
+	struct spdk_iscsi_pg_map *pg_map;
+	struct spdk_iscsi_ig_map *ig_map;
+	int i;
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "name");
+	spdk_json_write_string(w, target->name);
+
+	if (target->alias) {
+		spdk_json_write_name(w, "alias_name");
+		spdk_json_write_string(w, target->alias);
+	}
+
+	spdk_json_write_name(w, "pg_ig_maps");
+	spdk_json_write_array_begin(w);
+	TAILQ_FOREACH(pg_map, &target->pg_map_head, tailq) {
+		TAILQ_FOREACH(ig_map, &pg_map->ig_map_head, tailq) {
+			spdk_json_write_object_begin(w);
+			spdk_json_write_name(w, "pg_tag");
+			spdk_json_write_int32(w, pg_map->pg->tag);
+			spdk_json_write_name(w, "ig_tag");
+			spdk_json_write_int32(w, ig_map->ig->tag);
+			spdk_json_write_object_end(w);
+		}
+	}
+	spdk_json_write_array_end(w);
+
+	spdk_json_write_name(w, "luns");
+	spdk_json_write_array_begin(w);
+	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+		struct spdk_scsi_lun *lun = spdk_scsi_dev_get_lun(target->dev, i);
+
+		if (lun) {
+			spdk_json_write_object_begin(w);
+			spdk_json_write_name(w, "bdev_name");
+			spdk_json_write_string(w, spdk_scsi_lun_get_bdev_name(lun));
+			spdk_json_write_name(w, "id");
+			spdk_json_write_int32(w, spdk_scsi_lun_get_id(lun));
+			spdk_json_write_object_end(w);
+		}
+	}
+	spdk_json_write_array_end(w);
+
+	spdk_json_write_name(w, "queue_depth");
+	spdk_json_write_int32(w, target->queue_depth);
+
+	spdk_json_write_name(w, "disable_chap");
+	spdk_json_write_bool(w, target->disable_chap);
+
+	spdk_json_write_name(w, "require_chap");
+	spdk_json_write_bool(w, target->require_chap);
+
+	spdk_json_write_name(w, "mutual_chap");
+	spdk_json_write_bool(w, target->mutual_chap);
+
+	spdk_json_write_name(w, "chap_group");
+	spdk_json_write_int32(w, target->chap_group);
+
+	spdk_json_write_name(w, "header_digest");
+	spdk_json_write_bool(w, target->header_digest);
+
+	spdk_json_write_name(w, "data_digest");
+	spdk_json_write_bool(w, target->data_digest);
+
+	spdk_json_write_object_end(w);
+}
+
+static void
+spdk_iscsi_tgt_node_config_json(struct spdk_iscsi_tgt_node *target,
+				struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "method");
+	spdk_json_write_string(w, "construct_target_node");
+
+	spdk_json_write_name(w, "params");
+	spdk_iscsi_tgt_node_info_json(target, w);
+
+	spdk_json_write_object_end(w);
+}
+
+void
+spdk_iscsi_tgt_nodes_info_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_iscsi_tgt_node *target;
+
+	TAILQ_FOREACH(target, &g_spdk_iscsi.target_head, tailq) {
+		spdk_iscsi_tgt_node_info_json(target, w);
+	}
+}
+
+void
+spdk_iscsi_tgt_nodes_config_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_iscsi_tgt_node *target;
+
+	TAILQ_FOREACH(target, &g_spdk_iscsi.target_head, tailq) {
+		spdk_iscsi_tgt_node_config_json(target, w);
+	}
+}
