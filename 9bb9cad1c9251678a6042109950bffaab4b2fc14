@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0dec2084_46731469",
+        "filename": "spdkcli/README.md",
+        "patchSetId": 19
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-17T19:08:07Z",
+      "side": 1,
+      "message": "I would remove this section - I think from a getting started point of view, let\u0027s just assume users are OK \"polluting\" their environment with the configshell scripts\n\nOr if we want to keep it, put it at the end of the doc, not the beginning",
+      "revId": "9bb9cad1c9251678a6042109950bffaab4b2fc14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79e61e00_728dba8b",
+        "filename": "spdkcli/README.md",
+        "patchSetId": 19
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-17T19:08:07Z",
+      "side": 1,
+      "message": "I think this can be removed assuming we are adding package dependencies to pkg_setup.sh and vm_setup.sh.",
+      "revId": "9bb9cad1c9251678a6042109950bffaab4b2fc14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
