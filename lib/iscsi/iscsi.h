@@ -348,6 +348,7 @@ enum spdk_error_codes {
 extern struct spdk_iscsi_globals g_spdk_iscsi;
 
 struct spdk_iscsi_task;
+struct spdk_json_write_ctx;
 
 typedef void (*spdk_iscsi_init_cb)(void *cb_arg, int rc);
 
@@ -356,6 +357,7 @@ typedef void (*spdk_iscsi_fini_cb)(void *arg);
 void spdk_iscsi_fini(spdk_iscsi_fini_cb cb_fn, void *cb_arg);
 void spdk_shutdown_iscsi_conns_done(void);
 void spdk_iscsi_config_text(FILE *fp);
+void spdk_iscsi_config_json(struct spdk_json_write_ctx *w);
 
 void spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn);
 void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,

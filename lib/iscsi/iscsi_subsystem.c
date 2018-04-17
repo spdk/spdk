@@ -1062,4 +1062,13 @@ spdk_iscsi_config_text(FILE *fp)
 	spdk_iscsi_config_dump_target_nodes(fp);
 }
 
+void spdk_iscsi_config_json(struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_array_begin(w);
+	spdk_iscsi_init_grps_config_json(w);
+	spdk_iscsi_portal_grps_config_json(w);
+	spdk_iscsi_tgt_nodes_config_json(w);
+	spdk_json_write_array_end(w);
+}
+
 SPDK_LOG_REGISTER_COMPONENT("iscsi", SPDK_LOG_ISCSI)
