@@ -42,8 +42,9 @@
 
 enum nvmf_tgt_state {
 	NVMF_TGT_INIT_NONE = 0,
-	NVMF_TGT_INIT_PARSE_CONFIG,
+	NVMF_TGT_INIT_PARSE_CONFIG_TGT,
 	NVMF_TGT_INIT_CREATE_POLL_GROUPS,
+	NVMF_TGT_INIT_PARSE_CONFIG_SUBSYSTEMS,
 	NVMF_TGT_INIT_START_SUBSYSTEMS,
 	NVMF_TGT_INIT_START_ACCEPTOR,
 	NVMF_TGT_RUNNING,
@@ -166,7 +167,7 @@ nvmf_tgt_destroy_poll_group(void *ctx)
 static void
 nvmf_tgt_create_poll_group_done(void *ctx)
 {
-	g_tgt_state = NVMF_TGT_INIT_START_SUBSYSTEMS;
+	g_tgt_state = NVMF_TGT_INIT_PARSE_CONFIG_SUBSYSTEMS;
 	nvmf_tgt_advance_state();
 }
 
@@ -227,7 +228,7 @@ nvmf_tgt_advance_state(void)
 
 		switch (g_tgt_state) {
 		case NVMF_TGT_INIT_NONE: {
-			g_tgt_state = NVMF_TGT_INIT_PARSE_CONFIG;
+			g_tgt_state = NVMF_TGT_INIT_PARSE_CONFIG_TGT;
 
 			/* Find the maximum core number */
 			g_num_poll_groups = spdk_env_get_last_core() + 1;
@@ -243,10 +244,10 @@ nvmf_tgt_advance_state(void)
 			g_tgt_core = spdk_env_get_first_core();
 			break;
 		}
-		case NVMF_TGT_INIT_PARSE_CONFIG:
-			rc = spdk_nvmf_parse_conf();
+		case NVMF_TGT_INIT_PARSE_CONFIG_TGT:
+			rc = spdk_nvmf_parse_conf_nvmf_tgt();
 			if (rc < 0) {
-				SPDK_ERRLOG("spdk_nvmf_parse_conf() failed\n");
+				SPDK_ERRLOG("spdk_nvmf_parse_conf_nvmf_tgt() failed\n");
 				g_tgt_state = NVMF_TGT_ERROR;
 				rc = -EINVAL;
 				break;
@@ -258,6 +259,16 @@ nvmf_tgt_advance_state(void)
 			spdk_for_each_thread(nvmf_tgt_create_poll_group,
 					     NULL,
 					     nvmf_tgt_create_poll_group_done);
+			break;
+		case NVMF_TGT_INIT_PARSE_CONFIG_SUBSYSTEMS:
+			rc = spdk_nvmf_parse_conf_subsystems();
+			if (rc < 0) {
+				SPDK_ERRLOG("spdk_nvmf_parse_conf_nvmf_tgt() failed\n");
+				g_tgt_state = NVMF_TGT_ERROR;
+				rc = -EINVAL;
+				break;
+			}
+			g_tgt_state = NVMF_TGT_INIT_START_SUBSYSTEMS;
 			break;
 		case NVMF_TGT_INIT_START_SUBSYSTEMS: {
 			struct spdk_nvmf_subsystem *subsystem;

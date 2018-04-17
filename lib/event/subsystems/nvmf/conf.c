@@ -98,8 +98,8 @@ spdk_nvmf_read_config_file_params(struct spdk_conf_section *sp,
 	}
 }
 
-static int
-spdk_nvmf_parse_nvmf_tgt(void)
+int
+spdk_nvmf_parse_conf_nvmf_tgt(void)
 {
 	struct spdk_conf_section *sp;
 	struct spdk_nvmf_tgt_opts opts;
@@ -322,8 +322,8 @@ done:
 	return (subsystem != NULL);
 }
 
-static int
-spdk_nvmf_parse_subsystems(void)
+int
+spdk_nvmf_parse_conf_subsystems(void)
 {
 	int rc = 0;
 	struct spdk_conf_section *sp;
@@ -338,25 +338,5 @@ spdk_nvmf_parse_subsystems(void)
 		}
 		sp = spdk_conf_next_section(sp);
 	}
-	return 0;
-}
-
-int
-spdk_nvmf_parse_conf(void)
-{
-	int rc;
-
-	/* NVMf section */
-	rc = spdk_nvmf_parse_nvmf_tgt();
-	if (rc < 0) {
-		return rc;
-	}
-
-	/* Subsystem sections */
-	rc = spdk_nvmf_parse_subsystems();
-	if (rc < 0) {
-		return rc;
-	}
-
 	return 0;
 }
