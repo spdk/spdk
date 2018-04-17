@@ -333,6 +333,11 @@ function rbd_cleanup() {
 }
 
 function start_stub() {
+	# Disable ASLR for multi-process testing.  SPDK does support using DPDK multi-process,
+	# but ASAN instrumentation will result in mmap hints in our specified virt address
+	# region getting ignored.   We will reenable it again after multi-process testing
+	# is complete in kill_stub()
+	echo 0 > /proc/sys/kernel/randomize_va_space
 	$rootdir/test/app/stub/stub $1 &
 	stubpid=$!
 	echo Waiting for stub to ready for secondary processes...
@@ -348,6 +353,10 @@ function kill_stub() {
 	kill $stubpid
 	wait $stubpid
 	rm -f /var/run/spdk_stub0
+	# Re-enable ASLR now that we are done with multi-process testing
+	# Note: "1" enables ASLR w/o randomizing data segments, "2" adds data segment
+	#  randomizing and is the default on all recent Linux kernels
+	echo 2 > /proc/sys/kernel/randomize_va_space
 }
 
 function run_test() {
