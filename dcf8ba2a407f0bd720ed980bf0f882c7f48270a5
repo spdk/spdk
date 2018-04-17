@@ -1,0 +1,182 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "93e9b736_bf3dd344",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 646,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-17T13:42:34Z",
+      "side": 1,
+      "message": "This overwrite retcode from spdk_vhost_nvme_dev_construct(). Please remove.",
+      "range": {
+        "startLine": 646,
+        "startChar": 2,
+        "endLine": 646,
+        "endChar": 15
+      },
+      "revId": "dcf8ba2a407f0bd720ed980bf0f882c7f48270a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bbce0b88_dc1af5c4",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 650,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-17T13:42:34Z",
+      "side": 1,
+      "message": "This need to be moved between lines 644 and 645",
+      "range": {
+        "startLine": 650,
+        "startChar": 1,
+        "endLine": 650,
+        "endChar": 33
+      },
+      "revId": "dcf8ba2a407f0bd720ed980bf0f882c7f48270a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e173a9a2_2789a585",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 655,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-17T13:42:34Z",
+      "side": 1,
+      "message": "This is not an error condition.",
+      "range": {
+        "startLine": 654,
+        "startChar": 2,
+        "endLine": 655,
+        "endChar": 15
+      },
+      "revId": "dcf8ba2a407f0bd720ed980bf0f882c7f48270a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d363b7aa_1f46ca8a",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 699,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-17T13:42:34Z",
+      "side": 1,
+      "message": "Memory leak. Pls call free_rpc_add_vhost_nvme_ctrlr_ns()",
+      "range": {
+        "startLine": 696,
+        "startChar": 1,
+        "endLine": 699,
+        "endChar": 2
+      },
+      "revId": "dcf8ba2a407f0bd720ed980bf0f882c7f48270a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "773d016c_2ef45950",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 703,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-17T13:42:34Z",
+      "side": 1,
+      "message": "Can you change spdk_vhost_nvme_dev_add_ns() to return meaningful error code instead -1 (like spdk_vhost_nvme_dev_construct) so there is no need to guess what went wrong?",
+      "range": {
+        "startLine": 703,
+        "startChar": 2,
+        "endLine": 703,
+        "endChar": 15
+      },
+      "revId": "dcf8ba2a407f0bd720ed980bf0f882c7f48270a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9323c5fb_c9b4e8fe",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 707,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-17T13:42:34Z",
+      "side": 1,
+      "message": "This need to be moved between lines 701 and 702",
+      "range": {
+        "startLine": 707,
+        "startChar": 1,
+        "endLine": 707,
+        "endChar": 39
+      },
+      "revId": "dcf8ba2a407f0bd720ed980bf0f882c7f48270a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "189b4c44_5bb5b2bc",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 712,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-17T13:42:34Z",
+      "side": 1,
+      "message": "This is not an error condition.",
+      "range": {
+        "startLine": 711,
+        "startChar": 0,
+        "endLine": 712,
+        "endChar": 15
+      },
+      "revId": "dcf8ba2a407f0bd720ed980bf0f882c7f48270a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3cdb7b3a_128d00b2",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 748,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-17T13:42:34Z",
+      "side": 1,
+      "message": "This line can be removed.",
+      "revId": "dcf8ba2a407f0bd720ed980bf0f882c7f48270a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
