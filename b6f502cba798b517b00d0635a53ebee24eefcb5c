@@ -34,6 +34,24 @@
       "revId": "b6f502cba798b517b00d0635a53ebee24eefcb5c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b90a5be5_f2463d92",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 481,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-17T17:31:12Z",
+      "side": 1,
+      "message": "Why was subsystem_modify_on_pg getting called if there aren\u0027t any poll groups created yet? spdk_for_each_channel should only be calling subsystem_modify_on_pg on threads for which a poll group exists. If there aren\u0027t any, it will just call completion callback immediately. Is spdk_for_each_channel broken or something?",
+      "parentUuid": "035d6bc4_e8ca8c08",
+      "revId": "b6f502cba798b517b00d0635a53ebee24eefcb5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
