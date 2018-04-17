@@ -50,6 +50,7 @@ extern struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf;
 
 extern struct spdk_nvmf_tgt *g_spdk_nvmf_tgt;
 
-int spdk_nvmf_parse_conf(void);
+int spdk_nvmf_parse_conf_nvmf_tgt(void);
+int spdk_nvmf_parse_conf_subsystems(void);
 
 #endif
