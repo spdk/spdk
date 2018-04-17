@@ -316,8 +316,6 @@ _spdk_nvmf_subsystem_remove_host(struct spdk_nvmf_subsystem *subsystem, struct s
 	free(host);
 }
 
-static int _spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid);
-
 void
 spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 {
@@ -351,7 +349,7 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 	while (ns != NULL) {
 		struct spdk_nvmf_ns *next_ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns);
 
-		_spdk_nvmf_subsystem_remove_ns(subsystem, ns->opts.nsid);
+		spdk_nvmf_subsystem_remove_ns(subsystem, ns->opts.nsid);
 		ns = next_ns;
 	}
 
@@ -821,56 +819,11 @@ spdk_nvmf_subsystem_get_next_listener(struct spdk_nvmf_subsystem *subsystem,
 	return TAILQ_NEXT(prev_listener, link);
 }
 
+
 const struct spdk_nvme_transport_id *
 spdk_nvmf_listener_get_trid(struct spdk_nvmf_listener *listener)
 {
 	return &listener->trid;
-}
-
-struct subsystem_update_ns_ctx {
-	struct spdk_nvmf_subsystem *subsystem;
-
-	spdk_nvmf_subsystem_state_change_done cb_fn;
-	void *cb_arg;
-};
-
-static void
-subsystem_update_ns_done(struct spdk_io_channel_iter *i, int status)
-{
-	struct subsystem_update_ns_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
-
-	if (ctx->cb_fn) {
-		ctx->cb_fn(ctx->subsystem, ctx->cb_arg, status);
-	}
-	free(ctx);
-}
-
-static void
-subsystem_update_ns_on_pg(struct spdk_io_channel_iter *i)
-{
-	int rc;
-	struct subsystem_update_ns_ctx *ctx;
-	struct spdk_nvmf_poll_group *group;
-	struct spdk_nvmf_subsystem *subsystem;
-
-	ctx = spdk_io_channel_iter_get_ctx(i);
-	group = spdk_io_channel_get_ctx(spdk_io_channel_iter_get_channel(i));
-	subsystem = ctx->subsystem;
-
-	rc = spdk_nvmf_poll_group_update_subsystem(group, subsystem);
-	spdk_for_each_channel_continue(i, rc);
-}
-
-static int
-spdk_nvmf_subsystem_update_ns(struct spdk_nvmf_subsystem *subsystem, spdk_channel_for_each_cpl cpl,
-			      void *ctx)
-{
-	spdk_for_each_channel(subsystem->tgt,
-			      subsystem_update_ns_on_pg,
-			      ctx,
-			      cpl);
-
-	return 0;
 }
 
 static void
@@ -883,8 +836,8 @@ spdk_nvmf_subsystem_ns_changed(struct spdk_nvmf_subsystem *subsystem, uint32_t n
 	}
 }
 
-static int
-_spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
+int
+spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
 {
 	struct spdk_nvmf_ns *ns;
 
@@ -916,50 +869,15 @@ _spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t n
 	return 0;
 }
 
-int
-spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid,
-			      spdk_nvmf_subsystem_state_change_done cb_fn, void *cb_arg)
-{
-	int rc;
-	struct subsystem_update_ns_ctx *ctx;
-
-	rc = _spdk_nvmf_subsystem_remove_ns(subsystem, nsid);
-	if (rc < 0) {
-		return rc;
-	}
-
-	ctx = calloc(1, sizeof(*ctx));
-
-	if (ctx == NULL) {
-		return -ENOMEM;
-	}
-
-	ctx->subsystem = subsystem;
-	ctx->cb_fn = cb_fn;
-	ctx->cb_arg = cb_arg;
-
-	spdk_nvmf_subsystem_update_ns(subsystem, subsystem_update_ns_done, ctx);
-
-	return 0;
-}
-
-static void
-_spdk_nvmf_ns_hot_remove_done(struct spdk_nvmf_subsystem *subsystem, void *cb_arg, int status)
-{
-	if (status != 0) {
-		SPDK_ERRLOG("Failed to make changes to NVMe-oF subsystem with id %u\n", subsystem->id);
-	}
-	spdk_nvmf_subsystem_resume(subsystem, NULL, NULL);
-}
-
 static void
 _spdk_nvmf_ns_hot_remove(struct spdk_nvmf_subsystem *subsystem,
 			 void *cb_arg, int status)
 {
 	struct spdk_nvmf_ns *ns = cb_arg;
 
-	spdk_nvmf_subsystem_remove_ns(subsystem, ns->opts.nsid, _spdk_nvmf_ns_hot_remove_done,
-				      subsystem);
+	spdk_nvmf_subsystem_remove_ns(subsystem, ns->opts.nsid);
+
+	spdk_nvmf_subsystem_resume(subsystem, NULL, NULL);
 }
 
 static void
