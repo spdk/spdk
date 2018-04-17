@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c9f2f73c_2c0e2abb",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-17T19:57:25Z",
+      "side": 1,
+      "message": "I don\u0027t see \"digit\" used anywhere in the NQN definition - can it be removed?",
+      "revId": "2e1464f26e719a9ff392b603aebeaede37dd01d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
