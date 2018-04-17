@@ -53,6 +53,8 @@ static void *g_init_cb_arg = NULL;
 static spdk_iscsi_fini_cb g_fini_cb_fn;
 static void *g_fini_cb_arg;
 
+static bool g_iscsi_globals_initialized = false;
+
 #define ISCSI_CONFIG_TMPL \
 "[iSCSI]\n" \
 "  # node name (not include optional part)\n" \
@@ -572,7 +574,7 @@ spdk_iscsi_log_globals(void)
 		      spdk_iscsi_conn_get_min_per_core());
 }
 
-static void
+void
 spdk_iscsi_opts_init(struct spdk_iscsi_opts *opts)
 {
 	opts->MaxSessions = DEFAULT_MAX_SESSIONS;
@@ -594,7 +596,7 @@ spdk_iscsi_opts_init(struct spdk_iscsi_opts *opts)
 	opts->min_connections_per_core = DEFAULT_CONNECTIONS_PER_LCORE;
 }
 
-static void
+void
 spdk_iscsi_opts_free(struct spdk_iscsi_opts *opts)
 {
 	free(opts->authfile);
@@ -814,10 +816,14 @@ spdk_iscsi_opts_verify(struct spdk_iscsi_opts *opts)
 	return 0;
 }
 
-static int
+int
 spdk_iscsi_initialize_iscsi_globals(struct spdk_iscsi_opts *opts)
 {
 	int rc;
+
+	if (g_iscsi_globals_initialized) {
+		return 0;
+	}
 
 	rc = spdk_iscsi_opts_verify(opts);
 	if (rc != 0) {
@@ -874,6 +880,8 @@ spdk_iscsi_initialize_iscsi_globals(struct spdk_iscsi_opts *opts)
 	}
 
 	spdk_iscsi_log_globals();
+
+	g_iscsi_globals_initialized = true;
 
 	return 0;
 }
