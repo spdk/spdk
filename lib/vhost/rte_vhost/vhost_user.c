@@ -329,7 +329,7 @@ numa_realloc(struct virtio_net *dev, int index __rte_unused)
  * used to convert the ring addresses to our address space.
  */
 static uint64_t
-qva_to_vva(struct virtio_net *dev, uint64_t qva)
+qva_to_vva(struct virtio_net *dev, uint64_t qva, uint64_t *len)
 {
 	struct rte_vhost_mem_region *reg;
 	uint32_t i;
@@ -340,6 +340,10 @@ qva_to_vva(struct virtio_net *dev, uint64_t qva)
 
 		if (qva >= reg->guest_user_addr &&
 		    qva <  reg->guest_user_addr + reg->size) {
+
+			if (unlikely(*len > reg->guest_user_addr + reg->size - qva))
+				*len = reg->guest_user_addr + reg->size - qva;
+
 			return qva - reg->guest_user_addr +
 			       reg->host_user_addr;
 		}
@@ -358,6 +362,7 @@ static int
 vhost_user_set_vring_addr(struct virtio_net *dev, VhostUserMsg *msg)
 {
 	struct vhost_virtqueue *vq;
+	uint64_t len;
 
 	if (dev->has_new_mem_table) {
 		vhost_setup_mem_table(dev);
@@ -378,11 +383,12 @@ vhost_user_set_vring_addr(struct virtio_net *dev, VhostUserMsg *msg)
 	vq = dev->virtqueue[msg->payload.addr.index];
 
 	/* The addresses are converted from QEMU virtual to Vhost virtual. */
+	len = sizeof(struct vring_desc) * vq->size;
 	vq->desc = (struct vring_desc *)(uintptr_t)qva_to_vva(dev,
-			msg->payload.addr.desc_user_addr);
-	if (vq->desc == 0) {
+			msg->payload.addr.desc_user_addr, &len);
+	if (vq->desc == 0 || len != sizeof(struct vring_desc) * vq->size) {
 		RTE_LOG(ERR, VHOST_CONFIG,
-			"(%d) failed to find desc ring address.\n",
+			"(%d) failed to map desc ring.\n",
 			dev->vid);
 		return -1;
 	}
@@ -390,18 +396,25 @@ vhost_user_set_vring_addr(struct virtio_net *dev, VhostUserMsg *msg)
 	dev = numa_realloc(dev, msg->payload.addr.index);
 	vq = dev->virtqueue[msg->payload.addr.index];
 
+	len = sizeof(struct vring_avail) + sizeof(uint16_t) * vq->size;
 	vq->avail = (struct vring_avail *)(uintptr_t)qva_to_vva(dev,
-			msg->payload.addr.avail_user_addr);
-	if (vq->avail == 0) {
+			msg->payload.addr.avail_user_addr, &len);
+	if (vq->avail == 0 ||
+			len != sizeof(struct vring_avail)
+			+ sizeof(uint16_t) * vq->size) {
 		RTE_LOG(ERR, VHOST_CONFIG,
 			"(%d) failed to find avail ring address.\n",
 			dev->vid);
 		return -1;
 	}
 
+	len = sizeof(struct vring_used) +
+		sizeof(struct vring_used_elem) * vq->size;
 	vq->used = (struct vring_used *)(uintptr_t)qva_to_vva(dev,
-			msg->payload.addr.used_user_addr);
-	if (vq->used == 0) {
+			msg->payload.addr.used_user_addr, &len);
+	if (vq->used == 0 || len != sizeof(struct vring_used) +
+			sizeof(struct vring_used_elem) * vq->size) {
+
 		RTE_LOG(ERR, VHOST_CONFIG,
 			"(%d) failed to find used ring address.\n",
 			dev->vid);
