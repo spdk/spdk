@@ -33,6 +33,23 @@
       "revId": "9bb9cad1c9251678a6042109950bffaab4b2fc14",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "65b627b3_2a556ac3",
+        "filename": "spdkcli/scripts/__init__.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-17T22:23:33Z",
+      "side": 1,
+      "message": "Move your python module to scripts/spdkcli/*.py. See what I did with the rpc python module as an example.",
+      "revId": "9bb9cad1c9251678a6042109950bffaab4b2fc14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
