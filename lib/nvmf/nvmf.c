@@ -531,17 +531,12 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 			sgroup->channels[i] = spdk_bdev_get_io_channel(ns->desc);
 		} else {
 			/* A namespace was present before and didn't change. */
+
+			/* TODO: Handle namespaces where the bdev was swapped out for a different one */
 		}
 	}
 
 	return 0;
-}
-
-int
-spdk_nvmf_poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
-				      struct spdk_nvmf_subsystem *subsystem)
-{
-	return poll_group_update_subsystem(group, subsystem);
 }
 
 int
