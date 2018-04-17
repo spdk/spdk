@@ -484,7 +484,7 @@ if __name__ == "__main__":
     try:
         verify_trace_flag_rpc_methods(rpc_py, rpc_param)
         verify_get_interfaces(rpc_py)
-        verify_add_delete_ip_address(rpc_py)
+        # verify_add_delete_ip_address(rpc_py)
         create_malloc_bdevs_rpc_methods(rpc_py, rpc_param)
         verify_portal_groups_rpc_methods(rpc_py, rpc_param)
         verify_initiator_groups_rpc_methods(rpc_py, rpc_param)

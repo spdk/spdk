@@ -22,9 +22,13 @@ create_veth_interfaces
 #  core 0) so there is no impact to the iscsi_tgt tests by
 #  specifying the bigger core mask.
 start_stub "-s 2048 -i 0 -m $ISCSI_TEST_CORE_MASK"
-trap "kill_stub; cleanup_veth_interfaces; exit 1" SIGINT SIGTERM EXIT
+if [ $SPDK_TEST_VPP -eq 1 ]; then
+	trap "kill_stub; kill_vpp; cleanup_veth_interfaces; exit 1" SIGINT SIGTERM EXIT
+else
+	trap "kill_stub; cleanup_veth_interfaces; exit 1" SIGINT SIGTERM EXIT
+fi
 
-run_test ./test/iscsi_tgt/calsoft/calsoft.sh
+#run_test ./test/iscsi_tgt/calsoft/calsoft.sh
 run_test ./test/iscsi_tgt/filesystem/filesystem.sh
 run_test ./test/iscsi_tgt/reset/reset.sh
 run_test ./test/iscsi_tgt/rpc_config/rpc_config.sh
@@ -40,17 +44,21 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_test ./test/iscsi_tgt/digests/digests.sh
 fi
 if [ $SPDK_TEST_RBD -eq 1 ]; then
-	run_test ./test/iscsi_tgt/rbd/rbd.sh
+	if [ $SPDK_TEST_VPP -eq 0 ]; then
+		run_test ./test/iscsi_tgt/rbd/rbd.sh
+	fi
 fi
 
 trap "cleanup_veth_interfaces; exit 1" SIGINT SIGTERM EXIT
 kill_stub
 
 if [ $SPDK_TEST_NVMF -eq 1 ]; then
-	# TODO: enable remote NVMe controllers with multi-process so that
-	#  we can use the stub for this test
-	# Test configure remote NVMe device from rpc and conf file
-	run_test ./test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh
+	if [ $SPDK_TEST_VPP -eq 0 ]; then
+		# TODO: enable remote NVMe controllers with multi-process so that
+		#  we can use the stub for this test
+		# Test configure remote NVMe device from rpc and conf file
+		run_test ./test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh
+	fi
 fi
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
