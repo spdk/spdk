@@ -16,6 +16,24 @@
       "revId": "b6f502cba798b517b00d0635a53ebee24eefcb5c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "035d6bc4_e8ca8c08",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 481,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-04-17T00:02:37Z",
+      "side": 1,
+      "message": "My issue doesn\u0027t actually have to do with the callback. The NVMe_oF target parses the configuration file before it allocates the poll groups, so any call to add_ns was failing because the call to subsystem_modify_on_pg was broken. However, I can change the state machine for starting the NVMe-oF target to split config file parsing in half and parse the subsystems after the poll groups have been initialized.\nSo something like this: spdk_nvmf_parse_nvmf_tgt-\u003einitialize_tgts-\u003espdk_nvmf_parse_subsystems.\nThat will enable us to drop the second function from the API.",
+      "parentUuid": "09833406_bf64af48",
+      "revId": "b6f502cba798b517b00d0635a53ebee24eefcb5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
