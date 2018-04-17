@@ -122,6 +122,24 @@
       "revId": "728a076e87120d5dcab07cdf03377fafd0bd2594",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5321bf54_b05a1e73",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1186,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-17T15:55:45Z",
+      "side": 1,
+      "message": "Yes, I think it should be safe to just update the nsdata for the existing namespaces (NSIDs 1-NN), because the controller isn\u0027t allowed to change NN at runtime.  Maybe we can split nvme_ctrlr_construct_namespaces() into two parts, one that resizes the array, and one that just updates the nsdata.",
+      "parentUuid": "3fd7ca65_ec653287",
+      "revId": "728a076e87120d5dcab07cdf03377fafd0bd2594",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
