@@ -353,12 +353,6 @@ destroy_cb_2(void *io_device, void *ctx_buf)
 	g_destroy_cb_calls++;
 }
 
-static int
-create_cb_null(void *io_device, void *ctx_buf)
-{
-	return -1;
-}
-
 static void
 channel(void)
 {
@@ -368,7 +362,6 @@ channel(void)
 	spdk_allocate_thread(_send_msg, NULL, NULL, NULL, "thread0");
 	spdk_io_device_register(&device1, create_cb_1, destroy_cb_1, sizeof(ctx1));
 	spdk_io_device_register(&device2, create_cb_2, destroy_cb_2, sizeof(ctx2));
-	spdk_io_device_register(&device3, create_cb_null, NULL, 0);
 
 	g_create_cb_calls = 0;
 	ch1 = spdk_get_io_channel(&device1);
