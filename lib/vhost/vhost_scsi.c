@@ -191,7 +191,7 @@ eventq_enqueue(struct spdk_vhost_scsi_dev *svdev, unsigned scsi_dev_num, uint32_
 		goto out;
 	}
 
-	desc_ev = spdk_vhost_gpa_to_vva(&svdev->vdev, desc->addr);
+	desc_ev = spdk_vhost_gpa_to_vva(&svdev->vdev, desc->addr, sizeof(*desc_ev));
 	if (desc_ev == NULL) {
 		SPDK_ERRLOG("Controller %s: Eventq descriptor at index %"PRIu16" points to unmapped guest memory address %p.\n",
 			    svdev->vdev.name, req, (void *)(uintptr_t)desc->addr);
@@ -325,7 +325,7 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
 		goto out;
 	}
 
-	ctrl_req = spdk_vhost_gpa_to_vva(vdev, desc->addr);
+	ctrl_req = spdk_vhost_gpa_to_vva(vdev, desc->addr, sizeof(*ctrl_req));
 
 	SPDK_DEBUGLOG(SPDK_LOG_VHOST_SCSI_QUEUE,
 		      "Processing controlq descriptor: desc %d/%p, desc_addr %p, len %d, flags %d, last_used_idx %d; kickfd %d; size %d\n",
@@ -346,7 +346,7 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
 	/* Process the TMF request */
 	switch (ctrl_req->type) {
 	case VIRTIO_SCSI_T_TMF:
-		task->tmf_resp = spdk_vhost_gpa_to_vva(vdev, desc->addr);
+		task->tmf_resp = spdk_vhost_gpa_to_vva(vdev, desc->addr, sizeof(*task->tmf_resp));
 		if (spdk_unlikely(desc->len < sizeof(struct virtio_scsi_ctrl_tmf_resp) || task->tmf_resp == NULL)) {
 			SPDK_ERRLOG("%s: TMF response descriptor at index %d points to invalid guest memory region\n",
 				    vdev->name, task->req_idx);
@@ -375,7 +375,7 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
 		break;
 	case VIRTIO_SCSI_T_AN_QUERY:
 	case VIRTIO_SCSI_T_AN_SUBSCRIBE: {
-		an_resp = spdk_vhost_gpa_to_vva(vdev, desc->addr);
+		an_resp = spdk_vhost_gpa_to_vva(vdev, desc->addr, sizeof(*an_resp));
 		if (spdk_unlikely(desc->len < sizeof(struct virtio_scsi_ctrl_an_resp) || an_resp == NULL)) {
 			SPDK_WARNLOG("%s: Asynchronous response descriptor points to invalid guest memory region\n",
 				     vdev->name);
@@ -424,7 +424,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 		goto invalid_task;
 	}
 
-	*req = spdk_vhost_gpa_to_vva(vdev, desc->addr);
+	*req = spdk_vhost_gpa_to_vva(vdev, desc->addr, sizeof(**req));
 	if (spdk_unlikely(*req == NULL)) {
 		SPDK_WARNLOG("%s: Request descriptor at index %d points to invalid guest memory region\n",
 			     vdev->name, task->req_idx);
@@ -446,7 +446,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 		/*
 		 * FROM_DEV (READ): [RD_req][WR_resp][WR_buf0]...[WR_bufN]
 		 */
-		task->resp = spdk_vhost_gpa_to_vva(vdev, desc->addr);
+		task->resp = spdk_vhost_gpa_to_vva(vdev, desc->addr, sizeof(*task->resp));
 		if (spdk_unlikely(desc->len < sizeof(struct virtio_scsi_cmd_resp) || task->resp == NULL)) {
 			SPDK_WARNLOG("%s: Response descriptor at index %d points to invalid guest memory region\n",
 				     vdev->name, task->req_idx);
@@ -516,7 +516,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 			}
 		}
 
-		task->resp = spdk_vhost_gpa_to_vva(vdev, desc->addr);
+		task->resp = spdk_vhost_gpa_to_vva(vdev, desc->addr, sizeof(*task->resp));
 		if (spdk_unlikely(desc->len < sizeof(struct virtio_scsi_cmd_resp) || task->resp == NULL)) {
 			SPDK_WARNLOG("%s: Response descriptor at index %d points to invalid guest memory region\n",
 				     vdev->name, task->req_idx);
