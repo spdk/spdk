@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b5fb026c_3fd6b5b0",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 401,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-17T16:45:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "176b7f85_48df4134",
+      "revId": "a390a7470b5f17bcf1a00f732228c69e5146533a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eaae6fe4_72fd6ee1",
         "filename": "include/spdk/blob.h",
         "patchSetId": 20
@@ -53,6 +71,42 @@
     },
     {
       "key": {
+        "uuid": "be8ad9a3_22e79292",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 403,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-17T16:45:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "eaae6fe4_72fd6ee1",
+      "revId": "a390a7470b5f17bcf1a00f732228c69e5146533a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98f179b5_2a4bdacf",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 403,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-17T16:45:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "abf6fced_0e19f99a",
+      "revId": "a390a7470b5f17bcf1a00f732228c69e5146533a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ee7bea29_db27821d",
         "filename": "include/spdk/blob.h",
         "patchSetId": 20
@@ -64,6 +118,24 @@
       "writtenOn": "2018-04-13T21:42:10Z",
       "side": 1,
       "message": "i would just say \"get the blob id for the parent snapshot of this blob\" and avoid using \"clone\" here\n\nthis avoids confusion with the case where someone creates a snapshot from a live blob - in that case they did not explicitly make a clone",
+      "revId": "a390a7470b5f17bcf1a00f732228c69e5146533a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "df767ced_9fe24cb2",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-17T16:45:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ee7bea29_db27821d",
       "revId": "a390a7470b5f17bcf1a00f732228c69e5146533a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -104,6 +176,42 @@
     },
     {
       "key": {
+        "uuid": "344cabdc_da1d841f",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 414,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-17T16:45:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2639d598_4be80588",
+      "revId": "a390a7470b5f17bcf1a00f732228c69e5146533a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e62bf4d1_0a348df4",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 414,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-17T16:45:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "180d2298_b6afae12",
+      "revId": "a390a7470b5f17bcf1a00f732228c69e5146533a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8f1b48cd_223b5d7a",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 20
@@ -115,6 +223,24 @@
       "writtenOn": "2018-04-13T21:42:10Z",
       "side": 1,
       "message": "do you need this code from lines 2082-2101?  a lot of it duplicates lines 2106-2119\n\nI think this could be simpler by just doing:\n\nif (snapshot_id \u003d\u003d SPDK_BLOBID_INVALID) {\n  return;\n}\n\n/* check if snapshot entry exists, if not add it */\n\n/* add this blob\u0027s id as a clone of the snapshot */",
+      "revId": "a390a7470b5f17bcf1a00f732228c69e5146533a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8404145c_f00da312",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 2082,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-17T16:45:40Z",
+      "side": 1,
+      "message": "Yes, it worth to simplify this part.",
+      "parentUuid": "8f1b48cd_223b5d7a",
       "revId": "a390a7470b5f17bcf1a00f732228c69e5146533a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -138,6 +264,24 @@
     },
     {
       "key": {
+        "uuid": "f6ba71ba_aaec9f3a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 2159,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-17T16:45:40Z",
+      "side": 1,
+      "message": "I have simplified this part and added asserts for conditions which shouldn\u0027t happen.",
+      "parentUuid": "0b596087_7e6bf969",
+      "revId": "a390a7470b5f17bcf1a00f732228c69e5146533a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ca2b80b0_f5c6b64f",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 20
@@ -155,6 +299,24 @@
     },
     {
       "key": {
+        "uuid": "0a893c9e_52902d7d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 4933,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-17T16:45:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ca2b80b0_f5c6b64f",
+      "revId": "a390a7470b5f17bcf1a00f732228c69e5146533a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c63b5aee_88ffb86f",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 20
@@ -166,6 +328,24 @@
       "writtenOn": "2018-04-13T21:42:10Z",
       "side": 1,
       "message": "see comment in the header file - would keeping a count in these entries simplify things a bit?  then you wouldn\u0027t have to walk the clone list twice",
+      "revId": "a390a7470b5f17bcf1a00f732228c69e5146533a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "824d9469_a67877c0",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 4986,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-17T16:45:40Z",
+      "side": 1,
+      "message": "I have added clone counter.",
+      "parentUuid": "c63b5aee_88ffb86f",
       "revId": "a390a7470b5f17bcf1a00f732228c69e5146533a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -206,6 +386,24 @@
     },
     {
       "key": {
+        "uuid": "e493304a_f00bcce6",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-17T16:45:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bd813763_c78447cb",
+      "revId": "a390a7470b5f17bcf1a00f732228c69e5146533a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "27282fac_ef9966be",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 20
@@ -217,6 +415,24 @@
       "writtenOn": "2018-04-13T21:42:10Z",
       "side": 1,
       "message": "does this need to be a TAILQ of spdk_blob_list structures?\n\nif we have a snapshot, we just need a list of blob_ids for the clones - having those blob_ids in a linked list with the extra storage for the link (and then also this TAILQ_HEAD) seems like a waste\n\nmaybe just allocate an array of 4 (or 8 or 16) spdk_blob_ids by default - if we end up needing more, we can do a realloc",
+      "revId": "a390a7470b5f17bcf1a00f732228c69e5146533a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58ce67ee_b41f2bba",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-17T16:45:40Z",
+      "side": 1,
+      "message": "The only reason I have used lists here its to simplify the management of these relations, but I see no problem to change it.",
+      "parentUuid": "27282fac_ef9966be",
       "revId": "a390a7470b5f17bcf1a00f732228c69e5146533a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
