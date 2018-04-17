@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9d4f4b45_442c6087",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 678,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-17T16:47:51Z",
+      "side": 1,
+      "message": "The qos_channel is only required to be null after the spdk_bdev_close call. With the implementation that this is based on, it\u0027s null on the last put I/O channel, but with the later changes it isn\u0027t null until this point.",
+      "parentUuid": "46620b60_19bf2729",
+      "range": {
+        "startLine": 677,
+        "startChar": 0,
+        "endLine": 678,
+        "endChar": 25
+      },
+      "revId": "8823302dd36b916e89f19ff79ba06438ab7c6c4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f52cb08e_55cdcde9",
         "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
         "patchSetId": 3
