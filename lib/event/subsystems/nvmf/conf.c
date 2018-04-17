@@ -296,7 +296,9 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		}
 
 		snprintf(trid.traddr, sizeof(trid.traddr), "%s", host);
-		snprintf(trid.trsvcid, sizeof(trid.trsvcid), "%s", port);
+		if (port) {
+			snprintf(trid.trsvcid, sizeof(trid.trsvcid), "%s", port);
+		}
 		free(address_dup);
 
 		spdk_nvmf_tgt_listen(g_spdk_nvmf_tgt, &trid, spdk_nvmf_tgt_listen_done, NULL);
