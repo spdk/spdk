@@ -52,6 +52,24 @@
       "revId": "b6f502cba798b517b00d0635a53ebee24eefcb5c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c651b94_8c34da05",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 481,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-04-17T19:55:24Z",
+      "side": 1,
+      "message": "You\u0027re absolutely right. I must have misinterpreted a seg fault I was getting early on in development to be coming from that function. I have re-based without the middle patch.",
+      "parentUuid": "b90a5be5_f2463d92",
+      "revId": "b6f502cba798b517b00d0635a53ebee24eefcb5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
