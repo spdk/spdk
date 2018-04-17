@@ -599,3 +599,66 @@ spdk_iscsi_portal_grp_release(struct spdk_iscsi_portal_grp *pg)
 	spdk_iscsi_portal_grp_close(pg);
 	spdk_iscsi_portal_grp_destroy(pg);
 }
+
+static void
+spdk_iscsi_portal_grp_info_json(struct spdk_iscsi_portal_grp *pg,
+				struct spdk_json_write_ctx *w)
+{
+	struct spdk_iscsi_portal *portal;
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "tag");
+	spdk_json_write_int32(w, pg->tag);
+
+	spdk_json_write_name(w, "portals");
+	spdk_json_write_array_begin(w);
+	TAILQ_FOREACH(portal, &pg->head, per_pg_tailq) {
+		spdk_json_write_object_begin(w);
+
+		spdk_json_write_name(w, "host");
+		spdk_json_write_string(w, portal->host);
+		spdk_json_write_name(w, "port");
+		spdk_json_write_string(w, portal->port);
+		spdk_json_write_name(w, "cpumask");
+		spdk_json_write_string_fmt(w, "0x%s", spdk_cpuset_fmt(portal->cpumask));
+
+		spdk_json_write_object_end(w);
+	}
+	spdk_json_write_array_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
+static void
+spdk_iscsi_portal_grp_config_json(struct spdk_iscsi_portal_grp *pg,
+				  struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_name(w, "method");
+	spdk_json_write_string(w, "add_portal_group");
+
+	spdk_json_write_name(w, "params");
+	spdk_iscsi_portal_grp_info_json(pg, w);
+
+	spdk_json_write_object_end(w);
+}
+
+void
+spdk_iscsi_portal_grps_info_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_iscsi_portal_grp *pg;
+
+	TAILQ_FOREACH(pg, &g_spdk_iscsi.pg_head, tailq) {
+		spdk_iscsi_portal_grp_info_json(pg, w);
+	}
+}
+
+void
+spdk_iscsi_portal_grps_config_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_iscsi_portal_grp *pg;
+
+	TAILQ_FOREACH(pg, &g_spdk_iscsi.pg_head, tailq) {
+		spdk_iscsi_portal_grp_config_json(pg, w);
+	}
+}
