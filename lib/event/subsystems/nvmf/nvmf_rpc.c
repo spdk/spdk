@@ -1511,3 +1511,68 @@ nvmf_rpc_subsystem_allow_any_host(struct spdk_jsonrpc_request *request,
 	}
 }
 SPDK_RPC_REGISTER("nvmf_subsystem_allow_any_host", nvmf_rpc_subsystem_allow_any_host)
+
+struct spdk_nvmf_tgt_opts_ext {
+	uint16_t max_queue_depth;
+	uint16_t max_qpairs_per_ctrlr;
+	uint32_t in_capsule_data_size;
+	uint32_t max_io_size;
+	uint32_t acceptor_poll_rate;
+};
+
+static const struct spdk_json_object_decoder rpc_initialize_nvmf_tgt_decoders[] = {
+	{"max_queue_depth", offsetof(struct spdk_nvmf_tgt_opts_ext, max_queue_depth), spdk_json_decode_uint32, true},
+	{"max_qpairs_per_ctrlr", offsetof(struct spdk_nvmf_tgt_opts_ext, max_qpairs_per_ctrlr), spdk_json_decode_uint32, true},
+	{"in_capsule_data_size", offsetof(struct spdk_nvmf_tgt_opts_ext, in_capsule_data_size), spdk_json_decode_uint32, true},
+	{"max_io_size", offsetof(struct spdk_nvmf_tgt_opts_ext, max_io_size), spdk_json_decode_uint32, true},
+	{"acceptor_poll_rate", offsetof(struct spdk_nvmf_tgt_opts_ext, acceptor_poll_rate), spdk_json_decode_uint32, true},
+};
+
+static void
+nvmf_si_rpc_subsystem_set_opts(struct spdk_jsonrpc_request *request,
+			       const struct spdk_json_val *params)
+{
+	struct spdk_nvmf_tgt_opts_ext req = {};
+	struct spdk_nvmf_tgt_opts *opts;
+	struct spdk_json_write_ctx *w;
+	int rc;
+
+	opts = (struct spdk_nvmf_tgt_opts *)&req;
+	spdk_nvmf_tgt_opts_init(opts);
+	req.acceptor_poll_rate = ACCEPT_TIMEOUT_US;
+
+	if (params != NULL) {
+		if (spdk_json_decode_object(params, rpc_initialize_nvmf_tgt_decoders,
+					    SPDK_COUNTOF(rpc_initialize_nvmf_tgt_decoders), &req)) {
+			SPDK_ERRLOG("spdk_json_decode_object() failed\n");
+			goto invalid;
+		}
+	}
+
+	g_spdk_nvmf_tgt_conf.acceptor_poll_rate = req.acceptor_poll_rate;
+
+	g_spdk_nvmf_tgt = spdk_nvmf_tgt_create(opts);
+	if (!g_spdk_nvmf_tgt) {
+		SPDK_ERRLOG("spdk_nvmf_tgt_create() failed\n");
+		goto invalid;
+	}
+
+	rc = spdk_add_nvmf_discovery_subsystem();
+	if (rc != 0) {
+		spdk_nvmf_tgt_destroy(g_spdk_nvmf_tgt);
+		g_spdk_nvmf_tgt = NULL;
+		SPDK_ERRLOG("spdk_add_nvmf_discovery_subsystem failed\n");
+		goto invalid;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 "Invalid parameters");
+}
+SPDK_SI_RPC_REGISTER("set_nvmf_subsystem_options", nvmf_si_rpc_subsystem_set_opts)

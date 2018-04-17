@@ -41,11 +41,9 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 
-#define ACCEPT_TIMEOUT_US		10000 /* 10ms */
-
 struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf;
 
-static int
+int
 spdk_add_nvmf_discovery_subsystem(void)
 {
 	struct spdk_nvmf_subsystem *subsystem;
@@ -345,6 +343,10 @@ int
 spdk_nvmf_parse_conf(void)
 {
 	int rc;
+
+	if (g_spdk_nvmf_tgt != NULL) {
+		return 0;
+	}
 
 	/* NVMf section */
 	rc = spdk_nvmf_parse_nvmf_tgt();

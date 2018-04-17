@@ -697,6 +697,18 @@ if __name__ == "__main__":
 
     # NVMe-oF
     @call_cmd
+    def set_nvmf_subsystem_options(args):
+        rpc.nvmf.set_nvmf_subsystem_options(args.client, args)
+
+    p = subparsers.add_parser('set_nvmf_subsystem_options', help="""Set options of NVMf subsystem""")
+    p.add_argument('-q', '--max-queue-depth', help='Max number of outstanding I/O per queue', type=int, required=False)
+    p.add_argument('-p', '--max-qpairs-per-session', help='Max number of SQ and CQ per session', type=int, required=False)
+    p.add_argument('-c', '--in-capsule-data-size', help='Max number of in-capsule data size', type=int, required=False)
+    p.add_argument('-i', '--max-io-size', help='Max I/O size', type=int, required=False)
+    p.add_argument('-r', '--acceptor-poll-rate', help='How often the acceptor polls for incoming connections', type=int, required=False)
+    p.set_defaults(func=set_nvmf_subsystem_options)
+
+    @call_cmd
     def get_nvmf_subsystems(args):
         print_dict(rpc.nvmf.get_nvmf_subsystems(args.client, args))
 
