@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "118c5237_7625eb85",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 780,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-17T21:56:53Z",
+      "side": 1,
+      "message": "This isn\u0027t going to work. You\u0027re calling spdk_nvmf_subsystem_add_ns inside of a loop, which kicks off a bunch of asynchronous operations. But in the completion callback you aren\u0027t waiting for all of those operations to be done (with a counter or something) - you just start adding all of the listeners any time one add_ns operation finishes.",
+      "revId": "d435fa3a7368290430980613b40c39dc3c2df211",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea62c7f2_a80f15ca",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1183,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-17T21:56:53Z",
+      "side": 1,
+      "message": "goto resume?",
+      "revId": "d435fa3a7368290430980613b40c39dc3c2df211",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
