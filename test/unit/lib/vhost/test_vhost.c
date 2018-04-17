@@ -87,7 +87,8 @@ DEFINE_STUB_V(spdk_vhost_call_external_event, (const char *ctrlr_name, spdk_vhos
 DEFINE_STUB(spdk_vhost_dev_has_feature, bool, (struct spdk_vhost_dev *vdev, unsigned feature_id),
 	    false);
 DEFINE_STUB(spdk_vhost_vring_desc_has_next, bool, (struct vring_desc *cur_desc), false);
-DEFINE_STUB_VP(spdk_vhost_gpa_to_vva, (struct spdk_vhost_dev *vdev, uint64_t addr), {0});
+DEFINE_STUB_VP(spdk_vhost_gpa_to_vva, (struct spdk_vhost_dev *vdev, uint64_t addr, uint64_t len),
+{0});
 DEFINE_STUB(spdk_scsi_dev_get_id, int, (const struct spdk_scsi_dev *dev), {0});
 DEFINE_STUB(spdk_json_write_null, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB(spdk_json_write_bool, int, (struct spdk_json_write_ctx *w, bool val), 0);
