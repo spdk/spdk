@@ -48,6 +48,29 @@
     },
     {
       "key": {
+        "uuid": "b3f2fdfb_693f7028",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-04-18T18:50:09Z",
+      "side": 1,
+      "message": "typo \"experimentation\"",
+      "range": {
+        "startLine": 57,
+        "startChar": 21,
+        "endLine": 57,
+        "endChar": 35
+      },
+      "revId": "429b54a6486206445bf78c91f51fd73f8f01f166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3a6529df_dc62bf0b",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 15
@@ -64,6 +87,52 @@
         "startChar": 0,
         "endLine": 127,
         "endChar": 52
+      },
+      "revId": "429b54a6486206445bf78c91f51fd73f8f01f166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8abaaeba_af06800c",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-04-18T18:50:09Z",
+      "side": 1,
+      "message": "typo \"contiguous\"",
+      "range": {
+        "startLine": 139,
+        "startChar": 51,
+        "endLine": 139,
+        "endChar": 60
+      },
+      "revId": "429b54a6486206445bf78c91f51fd73f8f01f166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a0e4f43f_4e360acc",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-04-18T18:50:09Z",
+      "side": 1,
+      "message": "typo \"of\"",
+      "range": {
+        "startLine": 176,
+        "startChar": 34,
+        "endLine": 176,
+        "endChar": 37
       },
       "revId": "429b54a6486206445bf78c91f51fd73f8f01f166",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
@@ -133,6 +202,98 @@
         "startChar": 25,
         "endLine": 194,
         "endChar": 43
+      },
+      "revId": "429b54a6486206445bf78c91f51fd73f8f01f166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9ae1a0d_71d2abad",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-04-18T18:50:09Z",
+      "side": 1,
+      "message": "typo \"for\"",
+      "range": {
+        "startLine": 252,
+        "startChar": 52,
+        "endLine": 252,
+        "endChar": 56
+      },
+      "revId": "429b54a6486206445bf78c91f51fd73f8f01f166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d4da190_7a97175e",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-04-18T18:50:09Z",
+      "side": 1,
+      "message": "typo \"order\"",
+      "range": {
+        "startLine": 341,
+        "startChar": 22,
+        "endLine": 341,
+        "endChar": 28
+      },
+      "revId": "429b54a6486206445bf78c91f51fd73f8f01f166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1159591a_f8900881",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-04-18T18:50:09Z",
+      "side": 1,
+      "message": "typo \"one and\"",
+      "range": {
+        "startLine": 342,
+        "startChar": 47,
+        "endLine": 342,
+        "endChar": 51
+      },
+      "revId": "429b54a6486206445bf78c91f51fd73f8f01f166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb42b4b0_9efd217e",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1062,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-04-18T18:50:09Z",
+      "side": 1,
+      "message": "Do you mean to open the base bdev in read/write mode? You probably took this from the passthru bdev before I submitted the patch to change this to true.",
+      "range": {
+        "startLine": 1062,
+        "startChar": 28,
+        "endLine": 1062,
+        "endChar": 33
       },
       "revId": "429b54a6486206445bf78c91f51fd73f8f01f166",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
