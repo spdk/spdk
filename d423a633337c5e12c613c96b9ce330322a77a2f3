@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3f4d0b9b_3818c59d",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 3959,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-18T18:35:59Z",
+      "side": 1,
+      "message": "Maybe verify structure of blobs is intact after unload/load by adding spdk_blob_get_clones()/spdk_blob_get_parent_snapshot() ?",
+      "revId": "d423a633337c5e12c613c96b9ce330322a77a2f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c6006bf9_f85558a9",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 3977,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-18T18:35:59Z",
+      "side": 1,
+      "message": "As per comment in previous patch on clone_count, would issuing spdk_blob_is_snapshot() sonsnapshotid result in false ?",
+      "revId": "d423a633337c5e12c613c96b9ce330322a77a2f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
