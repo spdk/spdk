@@ -892,8 +892,8 @@ iscsi_create_poll_group(void *ctx)
 	struct spdk_iscsi_poll_group *pg;
 
 	pg = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
-	pg->core = spdk_env_get_current_core();
 	assert(pg != NULL);
+	pg->core = spdk_env_get_current_core();
 
 	STAILQ_INIT(&pg->connections);
 	pg->sock_group = spdk_sock_group_create();
