@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "39524f9a_3a9024e4",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-18T23:04:51Z",
+      "side": 1,
+      "message": "The new adminq check looks right, but the commit message needs to be updated to match.",
+      "revId": "2b9da213ad5dd01b5457458c2e6f7f61887051fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
