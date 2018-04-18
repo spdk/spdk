@@ -613,20 +613,16 @@ virtio_dev_find_and_acquire_queue(struct virtio_dev *vdev, uint16_t start_index)
 struct spdk_thread *
 virtio_dev_queue_get_thread(struct virtio_dev *vdev, uint16_t index)
 {
-	struct virtqueue *vq;
 	struct spdk_thread *thread = NULL;
 
 	if (index >= vdev->max_queues) {
 		SPDK_ERRLOG("given vq index %"PRIu16" exceeds max queue count %"PRIu16"\n",
 			    index, vdev->max_queues);
-		return NULL;
+		abort(); /* This is not recoverable */
 	}
 
 	pthread_mutex_lock(&vdev->mutex);
-	vq = vdev->vqs[index];
-	if (vq != NULL) {
-		thread = vq->owner_thread;
-	}
+	thread = vdev->vqs[index]->owner_thread;
 	pthread_mutex_unlock(&vdev->mutex);
 
 	return thread;
