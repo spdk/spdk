@@ -428,8 +428,8 @@ free_rpc_snapshot_lvol_bdev(struct rpc_snapshot_lvol_bdev *req)
 }
 
 static const struct spdk_json_object_decoder rpc_snapshot_lvol_bdev_decoders[] = {
-	{"lvol_name", offsetof(struct rpc_snapshot_lvol_bdev, lvol_name), spdk_json_decode_string, true},
-	{"snapshot_name", offsetof(struct rpc_snapshot_lvol_bdev, snapshot_name), spdk_json_decode_string, true},
+	{"lvol_name", offsetof(struct rpc_snapshot_lvol_bdev, lvol_name), spdk_json_decode_string},
+	{"snapshot_name", offsetof(struct rpc_snapshot_lvol_bdev, snapshot_name), spdk_json_decode_string},
 };
 
 static void
