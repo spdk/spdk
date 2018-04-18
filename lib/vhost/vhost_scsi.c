@@ -1228,9 +1228,14 @@ spdk_vhost_scsi_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_wri
 static void
 spdk_vhost_scsi_write_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
 {
-	struct spdk_vhost_scsi_dev *svdev = to_scsi_dev(vdev);
+	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_scsi_lun *lun;
 	uint32_t i;
+
+	svdev = to_scsi_dev(vdev);
+	if (!svdev) {
+		return;
+	}
 
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "method", "construct_vhost_scsi_controller");
