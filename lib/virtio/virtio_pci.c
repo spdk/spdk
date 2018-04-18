@@ -243,7 +243,7 @@ modern_set_status(struct virtio_dev *dev, uint8_t status)
 }
 
 static uint16_t
-modern_get_queue_num(struct virtio_dev *dev, uint16_t queue_id)
+modern_get_queue_size(struct virtio_dev *dev, uint16_t queue_id)
 {
 	struct virtio_hw *hw = dev->ctx;
 
@@ -323,7 +323,7 @@ static const struct virtio_dev_ops modern_ops = {
 	.get_features	= modern_get_features,
 	.set_features	= modern_set_features,
 	.destruct_dev	= modern_destruct_dev,
-	.get_queue_num	= modern_get_queue_num,
+	.get_queue_size	= modern_get_queue_size,
 	.setup_queue	= modern_setup_queue,
 	.del_queue	= modern_del_queue,
 	.notify_queue	= modern_notify_queue,
