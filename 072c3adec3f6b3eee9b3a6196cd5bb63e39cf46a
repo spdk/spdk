@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c307df05_2c03e06f",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-18T22:15:05Z",
+      "side": 1,
+      "message": "This seems off - is the new limit really on number of namespaces, rather than subsystems?",
+      "revId": "072c3adec3f6b3eee9b3a6196cd5bb63e39cf46a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
