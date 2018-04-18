@@ -140,6 +140,24 @@
       "revId": "728a076e87120d5dcab07cdf03377fafd0bd2594",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba9b2da3_75fc8c1a",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1186,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-04-18T09:13:03Z",
+      "side": 1,
+      "message": "NVMf target may change NN during runtime, I think it spdk_nvme_ns inside NVMe controller structure should use link list or static array instead of malloc it from memory. Then the upper layer such as bdev_nvme module, don\u0027t need to get the unchanged namespace again.",
+      "parentUuid": "5321bf54_b05a1e73",
+      "revId": "728a076e87120d5dcab07cdf03377fafd0bd2594",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
