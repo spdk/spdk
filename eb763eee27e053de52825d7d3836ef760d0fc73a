@@ -151,6 +151,24 @@
     },
     {
       "key": {
+        "uuid": "6dae8399_7a58c1c9",
+        "filename": "scripts/spdkcli.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-18T23:26:53Z",
+      "side": 1,
+      "message": "Agreed.  In fact, the docs should be changed too, to say that spdkcli must be run with the same permissions as the application it is connecting to.  Usually that is root, but doesn\u0027t have to be.",
+      "parentUuid": "53a267ce_70b0b152",
+      "revId": "eb763eee27e053de52825d7d3836ef760d0fc73a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "acb0f509_994a2a91",
         "filename": "scripts/spdkcli.py",
         "patchSetId": 21
