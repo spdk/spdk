@@ -104,7 +104,7 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 }
 
-SPDK_RPC_REGISTER("start_nbd_disk", spdk_rpc_start_nbd_disk)
+SPDK_RPC_REGISTER("start_nbd_disk", spdk_rpc_start_nbd_disk, RPC_POST_SUBSYSTEM_START)
 
 struct rpc_stop_nbd_disk {
 	char *nbd_device;
@@ -217,7 +217,7 @@ out:
 	free_rpc_stop_nbd_disk(&req);
 }
 
-SPDK_RPC_REGISTER("stop_nbd_disk", spdk_rpc_stop_nbd_disk)
+SPDK_RPC_REGISTER("stop_nbd_disk", spdk_rpc_stop_nbd_disk, RPC_POST_SUBSYSTEM_START)
 
 static void
 spdk_rpc_dump_nbd_info(struct spdk_json_write_ctx *w,
@@ -304,4 +304,4 @@ invalid:
 
 	free_rpc_get_nbd_disks(&req);
 }
-SPDK_RPC_REGISTER("get_nbd_disks", spdk_rpc_get_nbd_disks)
+SPDK_RPC_REGISTER("get_nbd_disks", spdk_rpc_get_nbd_disks, RPC_POST_SUBSYSTEM_START)

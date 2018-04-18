@@ -99,7 +99,7 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(rc));
 	free_rpc_construct_pmem_bdev(&req);
 }
-SPDK_RPC_REGISTER("construct_pmem_bdev", spdk_rpc_construct_pmem_bdev)
+SPDK_RPC_REGISTER("construct_pmem_bdev", spdk_rpc_construct_pmem_bdev, RPC_POST_SUBSYSTEM_START)
 
 struct rpc_create_pmem_pool {
 	char *pmem_file;
@@ -167,7 +167,7 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_create_pmem_pool(&req);
 }
-SPDK_RPC_REGISTER("create_pmem_pool", spdk_rpc_create_pmem_pool)
+SPDK_RPC_REGISTER("create_pmem_pool", spdk_rpc_create_pmem_pool, RPC_POST_SUBSYSTEM_START)
 
 struct rpc_pmem_pool_info {
 	char *pmem_file;
@@ -237,7 +237,7 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_pmem_pool_info(&req);
 }
-SPDK_RPC_REGISTER("pmem_pool_info", spdk_rpc_pmem_pool_info)
+SPDK_RPC_REGISTER("pmem_pool_info", spdk_rpc_pmem_pool_info, RPC_POST_SUBSYSTEM_START)
 
 struct rpc_delete_pmem_pool {
 	char *pmem_file;
@@ -289,4 +289,4 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_delete_pmem_pool(&req);
 }
-SPDK_RPC_REGISTER("delete_pmem_pool", spdk_rpc_delete_pmem_pool)
+SPDK_RPC_REGISTER("delete_pmem_pool", spdk_rpc_delete_pmem_pool, RPC_POST_SUBSYSTEM_START)

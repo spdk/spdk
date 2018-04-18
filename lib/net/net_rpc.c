@@ -90,7 +90,7 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_ip_address(&req);
 }
-SPDK_RPC_REGISTER("add_ip_address", spdk_rpc_add_ip_address)
+SPDK_RPC_REGISTER("add_ip_address", spdk_rpc_add_ip_address, RPC_POST_SUBSYSTEM_START)
 
 static void
 spdk_rpc_delete_ip_address(struct spdk_jsonrpc_request *request,
@@ -125,7 +125,7 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_ip_address(&req);
 }
-SPDK_RPC_REGISTER("delete_ip_address", spdk_rpc_delete_ip_address)
+SPDK_RPC_REGISTER("delete_ip_address", spdk_rpc_delete_ip_address, RPC_POST_SUBSYSTEM_START)
 
 static void
 spdk_rpc_get_interfaces(struct spdk_jsonrpc_request *request,
@@ -175,6 +175,6 @@ spdk_rpc_get_interfaces(struct spdk_jsonrpc_request *request,
 
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("get_interfaces", spdk_rpc_get_interfaces)
+SPDK_RPC_REGISTER("get_interfaces", spdk_rpc_get_interfaces, RPC_POST_SUBSYSTEM_START)
 
 SPDK_LOG_REGISTER_COMPONENT("net", SPDK_LOG_NET)

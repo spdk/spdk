@@ -140,7 +140,8 @@ invalid:
 					 spdk_strerror(-rc));
 	free_rpc_construct_virtio_scsi_dev(req);
 }
-SPDK_RPC_REGISTER("construct_virtio_user_scsi_bdev", spdk_rpc_create_virtio_user_scsi_bdev);
+SPDK_RPC_REGISTER("construct_virtio_user_scsi_bdev", spdk_rpc_create_virtio_user_scsi_bdev,
+		  RPC_POST_SUBSYSTEM_START);
 
 static const struct spdk_json_object_decoder rpc_construct_virtio_pci_scsi_dev[] = {
 	{"pci_address", offsetof(struct rpc_construct_virtio_scsi_dev, pci_address), spdk_json_decode_string },
@@ -190,7 +191,8 @@ invalid:
 					 spdk_strerror(-rc));
 	free_rpc_construct_virtio_scsi_dev(req);
 }
-SPDK_RPC_REGISTER("construct_virtio_pci_scsi_bdev", spdk_rpc_construct_virtio_pci_scsi_dev);
+SPDK_RPC_REGISTER("construct_virtio_pci_scsi_bdev", spdk_rpc_construct_virtio_pci_scsi_dev,
+		  RPC_POST_SUBSYSTEM_START);
 
 struct rpc_remove_virtio_scsi_dev {
 	char *name;
@@ -266,7 +268,8 @@ invalid:
 					 spdk_strerror(-rc));
 	free_rpc_remove_virtio_scsi_dev(req);
 }
-SPDK_RPC_REGISTER("remove_virtio_scsi_bdev", spdk_rpc_remove_virtio_scsi_bdev);
+SPDK_RPC_REGISTER("remove_virtio_scsi_bdev", spdk_rpc_remove_virtio_scsi_bdev,
+		  RPC_POST_SUBSYSTEM_START);
 
 static void
 spdk_rpc_get_virtio_scsi_devs(struct spdk_jsonrpc_request *request,
@@ -288,7 +291,7 @@ spdk_rpc_get_virtio_scsi_devs(struct spdk_jsonrpc_request *request,
 	bdev_virtio_scsi_dev_list(w);
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("get_virtio_scsi_devs", spdk_rpc_get_virtio_scsi_devs)
+SPDK_RPC_REGISTER("get_virtio_scsi_devs", spdk_rpc_get_virtio_scsi_devs, RPC_POST_SUBSYSTEM_START)
 
 struct rpc_construct_virtio_blk_dev {
 	char *path;
@@ -355,7 +358,8 @@ invalid:
 					 spdk_strerror(-rc));
 	free_rpc_construct_virtio_blk_dev(&req);
 }
-SPDK_RPC_REGISTER("construct_virtio_user_blk_bdev", spdk_rpc_create_virtio_user_blk_bdev);
+SPDK_RPC_REGISTER("construct_virtio_user_blk_bdev", spdk_rpc_create_virtio_user_blk_bdev,
+		  RPC_POST_SUBSYSTEM_START);
 
 static const struct spdk_json_object_decoder rpc_construct_virtio_pci_blk_dev[] = {
 	{"pci_address", offsetof(struct rpc_construct_virtio_blk_dev, pci_address), spdk_json_decode_string },
@@ -409,7 +413,8 @@ invalid:
 					 spdk_strerror(-rc));
 	free_rpc_construct_virtio_blk_dev(&req);
 }
-SPDK_RPC_REGISTER("construct_virtio_pci_blk_bdev", spdk_rpc_create_virtio_pci_blk_bdev);
+SPDK_RPC_REGISTER("construct_virtio_pci_blk_bdev", spdk_rpc_create_virtio_pci_blk_bdev,
+		  RPC_POST_SUBSYSTEM_START);
 
 struct rpc_construct_virtio_dev {
 	char *name;
@@ -554,4 +559,4 @@ spdk_rpc_create_virtio_dev(struct spdk_jsonrpc_request *request,
 invalid:
 	free_rpc_construct_virtio_dev(req);
 }
-SPDK_RPC_REGISTER("construct_virtio_dev", spdk_rpc_create_virtio_dev);
+SPDK_RPC_REGISTER("construct_virtio_dev", spdk_rpc_create_virtio_dev, RPC_POST_SUBSYSTEM_START);

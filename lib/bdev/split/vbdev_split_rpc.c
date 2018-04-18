@@ -96,7 +96,7 @@ spdk_rpc_construct_split_vbdev(struct spdk_jsonrpc_request *request,
 out:
 	free(req.base_bdev);
 }
-SPDK_RPC_REGISTER("construct_split_vbdev", spdk_rpc_construct_split_vbdev)
+SPDK_RPC_REGISTER("construct_split_vbdev", spdk_rpc_construct_split_vbdev, RPC_POST_SUBSYSTEM_START)
 
 struct rpc_destruct_split {
 	char *base_bdev;
@@ -140,4 +140,4 @@ spdk_rpc_destruct_split(struct spdk_jsonrpc_request *request,
 out:
 	free(req.base_bdev);
 }
-SPDK_RPC_REGISTER("destruct_split_vbdev", spdk_rpc_destruct_split)
+SPDK_RPC_REGISTER("destruct_split_vbdev", spdk_rpc_destruct_split, RPC_POST_SUBSYSTEM_START)

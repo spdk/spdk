@@ -130,4 +130,7 @@ void spdk_rpc_finish(void);
 		spdk_add_subsystem_depend(&__subsystem_ ## _name ## _depend_on ## _depends_on); \
 	}
 
+#define RPC_PRE_ENV_INIT	0x1
+#define RPC_PRE_SUBSYSTEM_START	0x2
+
 #endif /* SPDK_INTERNAL_EVENT_H */
