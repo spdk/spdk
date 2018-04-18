@@ -90,6 +90,12 @@ static void __attribute__((constructor)) rpc_register_##func(void) \
 	spdk_rpc_register_method(method, func, state_mask); \
 }
 
+#define SPDK_EVT_RPC_REGISTER(method, func) \
+static void __attribute__((constructor)) evt_rpc_register_##func(void) \
+{ \
+	spdk_rpc_register_method(method, func, SPDK_RPC_PRE_SUBSYSTEM_START); \
+}
+
 /**
  * Set the state mask of the RPC server. Any RPC method whose state mask is
  * equal to the state of the RPC server is allowed.
