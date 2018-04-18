@@ -166,7 +166,7 @@ invalid:
 					 spdk_strerror(-rc));
 	free_rpc_construct_lvol_store(&req);
 }
-SPDK_RPC_REGISTER("construct_lvol_store", spdk_rpc_construct_lvol_store)
+SPDK_RPC_REGISTER("construct_lvol_store", spdk_rpc_construct_lvol_store, RPC_POST_SUBSYSTEM_START)
 
 struct rpc_rename_lvol_store {
 	char *old_name;
@@ -242,7 +242,7 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
 	free_rpc_rename_lvol_store(&req);
 }
-SPDK_RPC_REGISTER("rename_lvol_store", spdk_rpc_rename_lvol_store)
+SPDK_RPC_REGISTER("rename_lvol_store", spdk_rpc_rename_lvol_store, RPC_POST_SUBSYSTEM_START)
 
 struct rpc_destroy_lvol_store {
 	char *uuid;
@@ -317,7 +317,7 @@ invalid:
 					 spdk_strerror(-rc));
 	free_rpc_destroy_lvol_store(&req);
 }
-SPDK_RPC_REGISTER("destroy_lvol_store", spdk_rpc_destroy_lvol_store)
+SPDK_RPC_REGISTER("destroy_lvol_store", spdk_rpc_destroy_lvol_store, RPC_POST_SUBSYSTEM_START)
 
 struct rpc_construct_lvol_bdev {
 	char *uuid;
@@ -413,7 +413,7 @@ invalid:
 	free_rpc_construct_lvol_bdev(&req);
 }
 
-SPDK_RPC_REGISTER("construct_lvol_bdev", spdk_rpc_construct_lvol_bdev)
+SPDK_RPC_REGISTER("construct_lvol_bdev", spdk_rpc_construct_lvol_bdev, RPC_POST_SUBSYSTEM_START)
 
 struct rpc_snapshot_lvol_bdev {
 	char *lvol_name;
@@ -501,7 +501,7 @@ invalid:
 	free_rpc_snapshot_lvol_bdev(&req);
 }
 
-SPDK_RPC_REGISTER("snapshot_lvol_bdev", spdk_rpc_snapshot_lvol_bdev)
+SPDK_RPC_REGISTER("snapshot_lvol_bdev", spdk_rpc_snapshot_lvol_bdev, RPC_POST_SUBSYSTEM_START)
 
 struct rpc_clone_lvol_bdev {
 	char *snapshot_name;
@@ -589,7 +589,7 @@ invalid:
 	free_rpc_clone_lvol_bdev(&req);
 }
 
-SPDK_RPC_REGISTER("clone_lvol_bdev", spdk_rpc_clone_lvol_bdev)
+SPDK_RPC_REGISTER("clone_lvol_bdev", spdk_rpc_clone_lvol_bdev, RPC_POST_SUBSYSTEM_START)
 
 struct rpc_rename_lvol_bdev {
 	char *old_name;
@@ -675,7 +675,7 @@ invalid:
 	free_rpc_rename_lvol_bdev(&req);
 }
 
-SPDK_RPC_REGISTER("rename_lvol_bdev", spdk_rpc_rename_lvol_bdev)
+SPDK_RPC_REGISTER("rename_lvol_bdev", spdk_rpc_rename_lvol_bdev, RPC_POST_SUBSYSTEM_START)
 
 struct rpc_resize_lvol_bdev {
 	char *name;
@@ -766,7 +766,7 @@ invalid:
 	free_rpc_resize_lvol_bdev(&req);
 }
 
-SPDK_RPC_REGISTER("resize_lvol_bdev", spdk_rpc_resize_lvol_bdev)
+SPDK_RPC_REGISTER("resize_lvol_bdev", spdk_rpc_resize_lvol_bdev, RPC_POST_SUBSYSTEM_START)
 
 struct rpc_get_lvol_stores {
 	char *uuid;
@@ -884,4 +884,4 @@ invalid:
 	free_rpc_get_lvol_stores(&req);
 }
 
-SPDK_RPC_REGISTER("get_lvol_stores", spdk_rpc_get_lvol_stores)
+SPDK_RPC_REGISTER("get_lvol_stores", spdk_rpc_get_lvol_stores, RPC_POST_SUBSYSTEM_START)

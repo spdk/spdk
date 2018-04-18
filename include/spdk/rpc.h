@@ -75,14 +75,28 @@ typedef void (*spdk_rpc_method_handler)(struct spdk_jsonrpc_request *request,
  *
  * \param method Name for the registered method.
  * \param func Function registered for this method to handle the RPC request.
+ * \param state_mask State mask of the registered method. If the bit of the state of
+ * the RPC server is set in the state_mask, the method is allowed. Otherwise, it is rejected.
  */
-void spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func);
+void spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func,
+			      uint32_t state_mask);
 
-#define SPDK_RPC_REGISTER(method, func) \
+#define SPDK_RPC_REGISTER(method, func, state_mask) \
 static void __attribute__((constructor)) rpc_register_##func(void) \
 { \
-	spdk_rpc_register_method(method, func); \
+	spdk_rpc_register_method(method, func, state_mask); \
 }
+
+#define RPC_POST_SUBSYSTEM_START	0x4
+
+/**
+ * Set the state mask of the RPC server. Any RPC method whose state mask is
+ * equal to the state of the RPC server is allowed.
+ *
+ * \param state_mask New state mask of the RPC server.
+ */
+void spdk_rpc_set_state(uint32_t state_mask);
+
 
 #ifdef __cplusplus
 }

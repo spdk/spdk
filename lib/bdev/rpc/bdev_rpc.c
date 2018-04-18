@@ -175,7 +175,7 @@ invalid:
 
 	free_rpc_get_bdevs(&req);
 }
-SPDK_RPC_REGISTER("get_bdevs", spdk_rpc_get_bdevs)
+SPDK_RPC_REGISTER("get_bdevs", spdk_rpc_get_bdevs, RPC_POST_SUBSYSTEM_START)
 
 struct rpc_get_bdevs_config {
 	char *name;
@@ -237,7 +237,7 @@ spdk_rpc_get_bdevs_config(struct spdk_jsonrpc_request *request,
 
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("get_bdevs_config", spdk_rpc_get_bdevs_config)
+SPDK_RPC_REGISTER("get_bdevs_config", spdk_rpc_get_bdevs_config, RPC_POST_SUBSYSTEM_START)
 
 struct rpc_delete_bdev {
 	char *name;
@@ -303,4 +303,4 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_delete_bdev(&req);
 }
-SPDK_RPC_REGISTER("delete_bdev", spdk_rpc_delete_bdev)
+SPDK_RPC_REGISTER("delete_bdev", spdk_rpc_delete_bdev, RPC_POST_SUBSYSTEM_START)

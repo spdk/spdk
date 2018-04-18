@@ -98,7 +98,8 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 					 spdk_strerror(-rc));
 }
-SPDK_RPC_REGISTER("construct_vhost_scsi_controller", spdk_rpc_construct_vhost_scsi_controller)
+SPDK_RPC_REGISTER("construct_vhost_scsi_controller", spdk_rpc_construct_vhost_scsi_controller,
+		  RPC_POST_SUBSYSTEM_START)
 
 struct rpc_add_vhost_scsi_ctrlr_lun {
 	char *ctrlr;
@@ -197,7 +198,7 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 					 spdk_strerror(-rc));
 }
-SPDK_RPC_REGISTER("add_vhost_scsi_lun", spdk_rpc_add_vhost_scsi_lun)
+SPDK_RPC_REGISTER("add_vhost_scsi_lun", spdk_rpc_add_vhost_scsi_lun, RPC_POST_SUBSYSTEM_START)
 
 struct rpc_remove_vhost_scsi_ctrlr_target {
 	char *ctrlr;
@@ -297,7 +298,8 @@ invalid:
 					 spdk_strerror(-rc));
 }
 
-SPDK_RPC_REGISTER("remove_vhost_scsi_target", spdk_rpc_remove_vhost_scsi_target)
+SPDK_RPC_REGISTER("remove_vhost_scsi_target", spdk_rpc_remove_vhost_scsi_target,
+		  RPC_POST_SUBSYSTEM_START)
 
 struct rpc_vhost_blk_ctrlr {
 	char *ctrlr;
@@ -359,7 +361,8 @@ invalid:
 					 spdk_strerror(-rc));
 
 }
-SPDK_RPC_REGISTER("construct_vhost_blk_controller", spdk_rpc_construct_vhost_blk_controller)
+SPDK_RPC_REGISTER("construct_vhost_blk_controller", spdk_rpc_construct_vhost_blk_controller,
+		  RPC_POST_SUBSYSTEM_START)
 
 struct rpc_remove_vhost_ctrlr {
 	char *ctrlr;
@@ -446,7 +449,8 @@ invalid:
 					 spdk_strerror(-rc));
 
 }
-SPDK_RPC_REGISTER("remove_vhost_controller", spdk_rpc_remove_vhost_controller)
+SPDK_RPC_REGISTER("remove_vhost_controller", spdk_rpc_remove_vhost_controller,
+		  RPC_POST_SUBSYSTEM_START)
 
 struct rpc_get_vhost_ctrlrs {
 	struct spdk_json_write_ctx *w;
@@ -516,7 +520,7 @@ spdk_rpc_get_vhost_controllers(struct spdk_jsonrpc_request *request,
 	ctx->request = request;
 	spdk_vhost_call_external_event_foreach(spdk_rpc_get_vhost_controllers_cb, ctx);
 }
-SPDK_RPC_REGISTER("get_vhost_controllers", spdk_rpc_get_vhost_controllers)
+SPDK_RPC_REGISTER("get_vhost_controllers", spdk_rpc_get_vhost_controllers, RPC_POST_SUBSYSTEM_START)
 
 
 struct rpc_vhost_ctrlr_coalescing {
@@ -605,7 +609,8 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 					 spdk_strerror(-rc));
 }
-SPDK_RPC_REGISTER("set_vhost_controller_coalescing", spdk_rpc_set_vhost_controller_coalescing)
+SPDK_RPC_REGISTER("set_vhost_controller_coalescing", spdk_rpc_set_vhost_controller_coalescing,
+		  RPC_POST_SUBSYSTEM_START)
 
 
 SPDK_LOG_REGISTER_COMPONENT("vhost_rpc", SPDK_LOG_VHOST_RPC)

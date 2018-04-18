@@ -75,7 +75,7 @@ spdk_rpc_get_subsystems(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 
-SPDK_RPC_REGISTER("get_subsystems", spdk_rpc_get_subsystems)
+SPDK_RPC_REGISTER("get_subsystems", spdk_rpc_get_subsystems, RPC_POST_SUBSYSTEM_START)
 
 struct rpc_get_subsystem_config {
 	char *name;
@@ -126,4 +126,4 @@ spdk_rpc_get_subsystem_config(struct spdk_jsonrpc_request *request,
 	}
 }
 
-SPDK_RPC_REGISTER("get_subsystem_config", spdk_rpc_get_subsystem_config)
+SPDK_RPC_REGISTER("get_subsystem_config", spdk_rpc_get_subsystem_config, RPC_POST_SUBSYSTEM_START)

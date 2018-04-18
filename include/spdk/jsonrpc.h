@@ -52,6 +52,7 @@ extern "C" {
 #define SPDK_JSONRPC_ERROR_METHOD_NOT_FOUND	-32601
 #define SPDK_JSONRPC_ERROR_INVALID_PARAMS	-32602
 #define SPDK_JSONRPC_ERROR_INTERNAL_ERROR	-32603
+#define	SPDK_JSONRPC_ERROR_METHOD_IS_REJECTED	-32604
 
 struct spdk_jsonrpc_server;
 struct spdk_jsonrpc_request;
