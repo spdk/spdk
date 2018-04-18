@@ -2,6 +2,91 @@
   "comments": [
     {
       "key": {
+        "uuid": "b5ab6085_b3126325",
+        "filename": "doc/spdkcli.md",
+        "patchSetId": 21
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-18T15:56:41Z",
+      "side": 1,
+      "message": "# SPDK CLI {#spdkcli}\n\nThen let\u0027s add the following to doc/index.md, after the \"Tools\" section:\n\n# Experimental Tools {#experimental_tools}\n\n- @ref spdkcli\n\nAlso add spdkcli.md to doc/Doxyfile INPUT section (in correct alphabetical position in the file list)",
+      "revId": "eb763eee27e053de52825d7d3836ef760d0fc73a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "73d6fb68_d7c74066",
+        "filename": "doc/spdkcli.md",
+        "patchSetId": 21
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-18T15:56:41Z",
+      "side": 1,
+      "message": "Let\u0027s add something here saying that this is experimental only, with support for a limited number of applications and bdev modules.  How about:\n\nspdkcli is a command-line management application for SPDK.  spdkcli has support for a limited number of applications and bdev modules, and should be considered experimental for the v18.04 release.  This experimental version was added for v18.04 to get early feedback that can be incorporated as spdkcli becomes more fully-featured for the next SPDK release.\n\n(Note - we\u0027ll just remove this whole paragraph before the 18.07 release.)",
+      "revId": "eb763eee27e053de52825d7d3836ef760d0fc73a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a580808_5c810152",
+        "filename": "doc/spdkcli.md",
+        "patchSetId": 21
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-18T15:56:41Z",
+      "side": 1,
+      "message": "This sentence doesn\u0027t sound quite right.\n\nMaybe this whole section can be removed?  And just add the root account sentence to the Run SPDK CLI section.",
+      "revId": "eb763eee27e053de52825d7d3836ef760d0fc73a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a3017b00_fa96efac",
+        "filename": "doc/spdkcli.md",
+        "patchSetId": 21
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-18T15:56:41Z",
+      "side": 1,
+      "message": "scripts/spdkcli.py",
+      "revId": "eb763eee27e053de52825d7d3836ef760d0fc73a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "413e8f9e_1e1aa483",
+        "filename": "doc/spdkcli.md",
+        "patchSetId": 21
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-18T15:56:41Z",
+      "side": 1,
+      "message": "scripts/spdkcli.py",
+      "revId": "eb763eee27e053de52825d7d3836ef760d0fc73a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "75da8e3e_58855b81",
         "filename": "scripts/pkgdep.sh",
         "patchSetId": 21
