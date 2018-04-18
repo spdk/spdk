@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f6231120_afe04db6",
+        "filename": "spdkcli/README.md",
+        "patchSetId": 19
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-18T08:25:03Z",
+      "side": 1,
+      "message": "Done. I\u0027ve put it at the bottom",
+      "parentUuid": "0dec2084_46731469",
+      "revId": "9bb9cad1c9251678a6042109950bffaab4b2fc14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "79e61e00_728dba8b",
         "filename": "spdkcli/README.md",
         "patchSetId": 19
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "2916e217_c1860012",
+        "filename": "spdkcli/README.md",
+        "patchSetId": 19
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-18T08:25:03Z",
+      "side": 1,
+      "message": "Removed the .sh section, but left the description in place just to explicitly show that configshell is used for cli app",
+      "parentUuid": "79e61e00_728dba8b",
+      "revId": "9bb9cad1c9251678a6042109950bffaab4b2fc14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "65b627b3_2a556ac3",
         "filename": "spdkcli/scripts/__init__.py",
         "patchSetId": 19
@@ -47,6 +83,24 @@
       "writtenOn": "2018-04-17T22:23:33Z",
       "side": 1,
       "message": "Move your python module to scripts/spdkcli/*.py. See what I did with the rpc python module as an example.",
+      "revId": "9bb9cad1c9251678a6042109950bffaab4b2fc14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1adf8fd0_0ea3ad52",
+        "filename": "spdkcli/scripts/__init__.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-18T08:25:03Z",
+      "side": 1,
+      "message": "Done, moved to ./scripts/spdkcli",
+      "parentUuid": "65b627b3_2a556ac3",
       "revId": "9bb9cad1c9251678a6042109950bffaab4b2fc14",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
