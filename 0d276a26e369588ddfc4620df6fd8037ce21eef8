@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7da14d3f_026704dd",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 633,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-18T23:01:32Z",
+      "side": 1,
+      "message": "This looks like it should have a comment so that we don\u0027t accidentally break this in the future.\n\nAlternatively, you could remove the assert above and the first sgroup assignment, since it\u0027s the only use of sgroup before this assignment.",
+      "revId": "0d276a26e369588ddfc4620df6fd8037ce21eef8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
