@@ -87,7 +87,8 @@ found:
 	if ((m->state_mask & g_rpc_state) == g_rpc_state) {
 		m->func(request, params);
 	} else {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_METHOD_IS_REJECTED, "Method is rejected");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_METHOD_IS_REJECTED,
+						 "Method is rejected");
 	}
 }
 
