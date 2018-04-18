@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3ab43f78_20c9ef26",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 488,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-18T15:42:29Z",
+      "side": 1,
+      "message": "I think this comment might be confusing 6 months from now.  We already remove the device from the global list when it is unregistered, which means get_io_channel() will not find the device.  Maybe we can just remove this comment?",
+      "revId": "0f17456e416e507c33edf56402fedbbba3f3e254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
