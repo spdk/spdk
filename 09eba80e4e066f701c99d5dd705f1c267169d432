@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "29bdf6b7_09e3cdaa",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2394,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-18T17:04:19Z",
+      "side": 1,
+      "message": "Sorry, missed this in my previous review - this should still be changed to strtoull(), not strtoll() (unsigned vs signed).",
+      "range": {
+        "startLine": 2394,
+        "startChar": 16,
+        "endLine": 2394,
+        "endChar": 23
+      },
+      "revId": "09eba80e4e066f701c99d5dd705f1c267169d432",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
