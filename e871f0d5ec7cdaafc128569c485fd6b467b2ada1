@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1cd7c0db_b51deefd",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 33
+      },
+      "lineNbr": 454,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-18T07:44:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5065fa1b_5cf901f9",
+      "revId": "e871f0d5ec7cdaafc128569c485fd6b467b2ada1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b4f96866_39b1c078",
         "filename": "include/spdk_internal/bdev.h",
         "patchSetId": 33
@@ -30,6 +48,24 @@
       "writtenOn": "2018-04-16T19:03:39Z",
       "side": 1,
       "message": "I don\u0027t think this needs to be a separately-allocated pointer; you could just nest the struct spdk_bdev_io_stat directly within this structure.",
+      "revId": "e871f0d5ec7cdaafc128569c485fd6b467b2ada1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b12bd62_b168b883",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 33
+      },
+      "lineNbr": 455,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-18T07:44:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b4f96866_39b1c078",
       "revId": "e871f0d5ec7cdaafc128569c485fd6b467b2ada1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -76,6 +112,30 @@
     },
     {
       "key": {
+        "uuid": "73000b6f_199fbfeb",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-18T07:44:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b15fa738_cea7f9dd",
+      "range": {
+        "startLine": 142,
+        "startChar": 15,
+        "endLine": 142,
+        "endChar": 20
+      },
+      "revId": "e871f0d5ec7cdaafc128569c485fd6b467b2ada1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d98241c1_c5d8ca77",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 33
@@ -87,6 +147,24 @@
       "writtenOn": "2018-04-16T19:03:39Z",
       "side": 1,
       "message": "I think this path is missing a free_rpc_get_bdevs_iostat(\u0026req) call.",
+      "revId": "e871f0d5ec7cdaafc128569c485fd6b467b2ada1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "25717058_c1e7b051",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-18T07:44:20Z",
+      "side": 1,
+      "message": "Hi Daniel,\n\nThis has been freed in line 136.",
+      "parentUuid": "d98241c1_c5d8ca77",
       "revId": "e871f0d5ec7cdaafc128569c485fd6b467b2ada1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
