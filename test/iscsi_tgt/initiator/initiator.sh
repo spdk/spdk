@@ -38,8 +38,8 @@ trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
 # Prepare config file for iSCSI initiator
 cp $testdir/bdev.conf.in $testdir/bdev.conf
-echo "[iSCSI_Initiator]" >> $testdir/bdev.conf
-echo "  URL iscsi://$TARGET_IP/iqn.2016-06.io.spdk:disk1/0 iSCSI0" >> $testdir/bdev.conf
+echo "[iSCSI_Initiator]" >>$testdir/bdev.conf
+echo "  URL iscsi://$TARGET_IP/iqn.2016-06.io.spdk:disk1/0 iSCSI0" >>$testdir/bdev.conf
 $rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdev.conf -q 128 -s 4096 -w verify -t 5 -d 512
 rm -f $testdir/bdev.conf
 
