@@ -224,6 +224,12 @@ spdk_mempool_get(struct spdk_mempool *mp)
 	return ele;
 }
 
+int
+spdk_mempool_get_bulk(struct spdk_mempool *mp, void **ele_arr, size_t count)
+{
+	return rte_mempool_get_bulk((struct rte_mempool *)mp, ele_arr, count);
+}
+
 void
 spdk_mempool_put(struct spdk_mempool *mp, void *ele)
 {
