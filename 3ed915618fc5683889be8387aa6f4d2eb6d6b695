@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d509277f_d3d83a26",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1010,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-18T17:03:23Z",
+      "side": 0,
+      "message": "I think we should keep this function (or something like it), since it will be needed when we add support for changing QoS limits while QoS is already active.\n\nCan you respin the patch with just the call in poll_qos removed?",
+      "revId": "3ed915618fc5683889be8387aa6f4d2eb6d6b695",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
