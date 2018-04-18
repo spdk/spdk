@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9fabe15e_a313319a",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-18T02:16:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f418d0b8_3891c506",
+      "revId": "10292607870969b99ddb0260024ba9bdbccaba26",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2f5406aa_b5f90bd5",
         "filename": "lib/net/vpp/vpp.c",
         "patchSetId": 50
@@ -30,6 +48,24 @@
       "writtenOn": "2018-04-16T21:39:10Z",
       "side": 1,
       "message": "can you make this sizeof(sa)?\n\nI think there is some very old istgt code that\u0027s been copied elsewhere that doesn\u0027t put the sizeof argument in parentheses but I\u0027d prefer not to do that here too :)",
+      "revId": "10292607870969b99ddb0260024ba9bdbccaba26",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4fb2a2a0_392e21fa",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-18T02:16:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2f5406aa_b5f90bd5",
       "revId": "10292607870969b99ddb0260024ba9bdbccaba26",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "9a81d5c9_0065e131",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-18T02:16:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "551c9d0e_b4ab88fc",
+      "revId": "10292607870969b99ddb0260024ba9bdbccaba26",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3b334b0d_8622416f",
         "filename": "lib/net/vpp/vpp.c",
         "patchSetId": 50
@@ -64,6 +118,24 @@
       "writtenOn": "2018-04-16T21:39:10Z",
       "side": 1,
       "message": "should this print an error message?  or are you avoid this (for now) for cases where VPP is connected later?",
+      "revId": "10292607870969b99ddb0260024ba9bdbccaba26",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e6a15c0e_28e580d7",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-18T02:16:13Z",
+      "side": 1,
+      "message": "Since g_net_impls list in sock.c can be in any order, I wouldn\u0027t think to report error here.\nWhen VPP support is compiled in and VPP app is not connected, it should be fine to just return NULL and try other net frameworks.",
+      "parentUuid": "3b334b0d_8622416f",
       "revId": "10292607870969b99ddb0260024ba9bdbccaba26",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "dd432c86_da3f0bb9",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-18T02:16:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2080ec44_c42c1557",
+      "revId": "10292607870969b99ddb0260024ba9bdbccaba26",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2b679f9e_c500e9cf",
         "filename": "lib/net/vpp/vpp.c",
         "patchSetId": 50
@@ -98,6 +188,24 @@
       "writtenOn": "2018-04-16T21:39:10Z",
       "side": 1,
       "message": "I think that except for connect() and listen(), all of these g_vpp_initialized checks should be asserts().  There is no way these functions should be called if g_vpp_initialized \u003d\u003d false.  What do you think?",
+      "revId": "10292607870969b99ddb0260024ba9bdbccaba26",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb9ca97a_a92d32b7",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-18T02:16:13Z",
+      "side": 1,
+      "message": "I agree, since only connect() and listen() create struct spdk_sock. Other calls take that struct as argument. When no VPP was initialized there won\u0027t be any spdk_sock with net_impl set to VPP.",
+      "parentUuid": "2b679f9e_c500e9cf",
       "revId": "10292607870969b99ddb0260024ba9bdbccaba26",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "c15b1618_3d9283d6",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 397,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-18T02:16:13Z",
+      "side": 1,
+      "message": "Removed from here.",
+      "parentUuid": "4926fd04_f3c9f301",
+      "revId": "10292607870969b99ddb0260024ba9bdbccaba26",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "41348666_321c2a17",
         "filename": "lib/net/vpp/vpp.c",
         "patchSetId": 50
@@ -138,6 +264,24 @@
     },
     {
       "key": {
+        "uuid": "7b3808d4_9b96d0fa",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 434,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-18T02:16:13Z",
+      "side": 1,
+      "message": "From my understanding, no it does not support all of the SO options.\nAdded TODO, to explore if there are any settings needed related to similar options.",
+      "parentUuid": "41348666_321c2a17",
+      "revId": "10292607870969b99ddb0260024ba9bdbccaba26",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "182a0cbd_31137516",
         "filename": "lib/net/vpp/vpp.c",
         "patchSetId": 50
@@ -149,6 +293,24 @@
       "writtenOn": "2018-04-16T21:39:10Z",
       "side": 1,
       "message": "same as above - I think this check is OK, but the later ones should just assert(g_vpp_initialized)",
+      "revId": "10292607870969b99ddb0260024ba9bdbccaba26",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "57ff0824_c05a9747",
+        "filename": "lib/net/vpp/vpp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 506,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-18T02:16:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "182a0cbd_31137516",
       "revId": "10292607870969b99ddb0260024ba9bdbccaba26",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
