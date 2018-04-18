@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a6289425_3a8f747d",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 1214,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-18T09:01:59Z",
+      "side": 1,
+      "message": "ENOSPC?",
+      "range": {
+        "startLine": 1214,
+        "startChar": 10,
+        "endLine": 1214,
+        "endChar": 16
+      },
+      "revId": "fda7ef4439cf9e33a8dae3a74955ec38e4df9028",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5e484575_b3e3b43c",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 1228,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-18T09:01:59Z",
+      "side": 1,
+      "message": "spdk_bdev_open() already return proper error code so pls just re-return it.",
+      "range": {
+        "startLine": 1228,
+        "startChar": 9,
+        "endLine": 1228,
+        "endChar": 17
+      },
+      "revId": "fda7ef4439cf9e33a8dae3a74955ec38e4df9028",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
