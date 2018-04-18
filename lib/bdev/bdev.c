@@ -697,6 +697,31 @@ spdk_bdev_mgr_unregister_cb(void *io_device)
 {
 	spdk_bdev_fini_cb cb_fn = g_fini_cb_fn;
 
+	if (spdk_mempool_count(g_bdev_mgr.bdev_io_pool) != SPDK_BDEV_IO_POOL_SIZE) {
+		SPDK_ERRLOG("bdev IO pool count is %zu but should be %u\n",
+			    spdk_mempool_count(g_bdev_mgr.bdev_io_pool),
+			    SPDK_BDEV_IO_POOL_SIZE);
+	}
+
+	if (spdk_mempool_count(g_bdev_mgr.buf_small_pool) != BUF_SMALL_POOL_SIZE) {
+		SPDK_ERRLOG("Small buffer pool count is %zu but should be %u\n",
+			    spdk_mempool_count(g_bdev_mgr.buf_small_pool),
+			    BUF_SMALL_POOL_SIZE);
+		assert(false);
+	}
+
+	if (spdk_mempool_count(g_bdev_mgr.buf_large_pool) != BUF_LARGE_POOL_SIZE) {
+		SPDK_ERRLOG("Large buffer pool count is %zu but should be %u\n",
+			    spdk_mempool_count(g_bdev_mgr.buf_large_pool),
+			    BUF_LARGE_POOL_SIZE);
+		assert(false);
+	}
+
+	spdk_mempool_free(g_bdev_mgr.bdev_io_pool);
+	spdk_mempool_free(g_bdev_mgr.buf_small_pool);
+	spdk_mempool_free(g_bdev_mgr.buf_large_pool);
+	spdk_dma_free(g_bdev_mgr.zero_buffer);
+
 	cb_fn(g_fini_cb_arg);
 	g_fini_cb_fn = NULL;
 	g_fini_cb_arg = NULL;
@@ -736,31 +761,6 @@ spdk_bdev_module_finish_iter(void *arg)
 	}
 
 	g_resume_bdev_module = NULL;
-
-	if (spdk_mempool_count(g_bdev_mgr.bdev_io_pool) != SPDK_BDEV_IO_POOL_SIZE) {
-		SPDK_ERRLOG("bdev IO pool count is %zu but should be %u\n",
-			    spdk_mempool_count(g_bdev_mgr.bdev_io_pool),
-			    SPDK_BDEV_IO_POOL_SIZE);
-	}
-
-	if (spdk_mempool_count(g_bdev_mgr.buf_small_pool) != BUF_SMALL_POOL_SIZE) {
-		SPDK_ERRLOG("Small buffer pool count is %zu but should be %u\n",
-			    spdk_mempool_count(g_bdev_mgr.buf_small_pool),
-			    BUF_SMALL_POOL_SIZE);
-		assert(false);
-	}
-
-	if (spdk_mempool_count(g_bdev_mgr.buf_large_pool) != BUF_LARGE_POOL_SIZE) {
-		SPDK_ERRLOG("Large buffer pool count is %zu but should be %u\n",
-			    spdk_mempool_count(g_bdev_mgr.buf_large_pool),
-			    BUF_LARGE_POOL_SIZE);
-		assert(false);
-	}
-
-	spdk_mempool_free(g_bdev_mgr.bdev_io_pool);
-	spdk_mempool_free(g_bdev_mgr.buf_small_pool);
-	spdk_mempool_free(g_bdev_mgr.buf_large_pool);
-	spdk_dma_free(g_bdev_mgr.zero_buffer);
 
 	spdk_io_device_unregister(&g_bdev_mgr, spdk_bdev_mgr_unregister_cb);
 }
