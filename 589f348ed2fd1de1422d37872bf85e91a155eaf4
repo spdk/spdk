@@ -16,6 +16,24 @@
       "revId": "589f348ed2fd1de1422d37872bf85e91a155eaf4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4a450c1_1ac091af",
+        "filename": "lib/virtio/virtio.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 627,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-18T23:22:46Z",
+      "side": 1,
+      "message": "It\u0027s not actually possible for vq to be NULL here. vdev-\u003evqs is an array of size vdev-\u003emax_queues, so it would have failed the check on line 619. I\u0027ll remove this check.",
+      "parentUuid": "68ef9b9b_d3c6c005",
+      "revId": "589f348ed2fd1de1422d37872bf85e91a155eaf4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
