@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ced6a0aa_790e75a4",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-18T20:18:57Z",
+      "side": 1,
+      "message": "frozen_io?",
+      "revId": "efdc9fb8a454f7238074e5186a1146fdd7bf63b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e964032_fe2fcc82",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-18T20:18:57Z",
+      "side": 1,
+      "message": "these flags are for blob metadata - so I don\u0027t think a FREEZE_IO flag belongs here (this is not something we would persist to metadata)",
+      "revId": "efdc9fb8a454f7238074e5186a1146fdd7bf63b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
