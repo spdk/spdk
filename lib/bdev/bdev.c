@@ -484,10 +484,21 @@ spdk_bdev_init_complete(int rc)
 {
 	spdk_bdev_init_cb cb_fn = g_init_cb_fn;
 	void *cb_arg = g_init_cb_arg;
+	struct spdk_bdev_module *m;
 
 	g_bdev_mgr.init_complete = true;
 	g_init_cb_fn = NULL;
 	g_init_cb_arg = NULL;
+
+	/*
+	 * For modules that need to know when subsystem init is complete,
+	 * inform them now.
+	 */
+	TAILQ_FOREACH(m, &g_bdev_mgr.bdev_modules, tailq) {
+		if (m->init_complete) {
+			m->init_complete();
+		}
+	}
 
 	cb_fn(cb_arg, rc);
 }
@@ -514,16 +525,6 @@ spdk_bdev_module_action_complete(void)
 	TAILQ_FOREACH(m, &g_bdev_mgr.bdev_modules, tailq) {
 		if (m->action_in_progress > 0) {
 			return;
-		}
-	}
-
-	/*
-	 * For modules that need to know when subsystem init is complete,
-	 * inform them now.
-	 */
-	TAILQ_FOREACH(m, &g_bdev_mgr.bdev_modules, tailq) {
-		if (m->init_complete) {
-			m->init_complete();
 		}
 	}
 
