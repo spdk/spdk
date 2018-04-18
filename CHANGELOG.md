@@ -2,6 +2,10 @@
 
 ## v18.04: (Upcoming Release)
 
+## Env
+
+Add wrapper for DPDK rte_mempool_get_bulk() via spdk_mempool_get_bulk().
+
 ### Bdev
 
 Add new optional bdev module interface function, init_complete, to notify bdev modules
