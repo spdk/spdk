@@ -598,7 +598,12 @@ static void
 spdk_vhost_blk_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
 {
 	struct spdk_bdev *bdev = spdk_vhost_blk_get_dev(vdev);
-	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
+	struct spdk_vhost_blk_dev *bvdev;
+
+	bvdev = to_blk_dev(vdev);
+	if (bvdev == NULL) {
+		return;
+	}
 
 	assert(bvdev != NULL);
 	spdk_json_write_name(w, "block");
@@ -620,7 +625,12 @@ spdk_vhost_blk_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_writ
 static void
 spdk_vhost_blk_write_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
 {
-	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
+	struct spdk_vhost_blk_dev *bvdev;
+
+	bvdev = to_blk_dev(vdev);
+	if (bvdev == NULL) {
+		return;
+	}
 
 	if (!bvdev->bdev) {
 		return;
