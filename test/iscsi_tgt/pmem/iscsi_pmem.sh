@@ -32,16 +32,16 @@ timing_exit start_iscsi_target
 
 timing_enter setup
 $rpc_py add_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
-for i in `seq 1 $TGT_NR`; do
-	INITIATOR_TAG=$((i+1))
+for i in $(seq 1 $TGT_NR); do
+	INITIATOR_TAG=$((i + 1))
 	$rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 
 	luns=""
-	for j in `seq 1 $PMEM_PER_TGT`; do
+	for j in $(seq 1 $PMEM_PER_TGT); do
 		$rpc_py create_pmem_pool /tmp/pool_file${i}_${j} $PMEM_SIZE $PMEM_BLOCK_SIZE
 		bdevs_name="$($rpc_py construct_pmem_bdev -n pmem${i}_${j} /tmp/pool_file${i}_${j})"
 		PMEM_BDEVS+="$bdevs_name "
-		luns+="$bdevs_name:$((j-1)) "
+		luns+="$bdevs_name:$((j - 1)) "
 	done
 	$rpc_py construct_target_node Target$i Target${i}_alias "$luns" "1:$INITIATOR_TAG " 256 -d
 done
@@ -63,8 +63,8 @@ for pmem in $PMEM_BDEVS; do
 	$rpc_py delete_pmem_bdev $pmem
 done
 
-for i in `seq 1 $TGT_NR`; do
-	for c in `seq 1 $PMEM_PER_TGT`; do
+for i in $(seq 1 $TGT_NR); do
+	for c in $(seq 1 $PMEM_PER_TGT); do
 		$rpc_py delete_pmem_pool /tmp/pool_file${i}_${c}
 	done
 done

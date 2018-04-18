@@ -5,10 +5,8 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
-function node_login_fio_logout()
-{
-	for arg in "$@"
-	do
+function node_login_fio_logout() {
+	for arg in "$@"; do
 		iscsiadm -m node -p $TARGET_IP:$ISCSI_PORT -o update -n node.conn[0].iscsi.$arg
 	done
 	iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
@@ -19,8 +17,7 @@ function node_login_fio_logout()
 	sleep 1
 }
 
-function iscsi_header_digest_test()
-{
+function iscsi_header_digest_test() {
 	# Enable HeaderDigest to CRC32C
 	timing_enter HeaderDigest_enabled
 	node_login_fio_logout "HeaderDigest -v CRC32C"
@@ -33,8 +30,7 @@ function iscsi_header_digest_test()
 	timing_exit preferred
 }
 
-function iscsi_header_data_digest_test()
-{
+function iscsi_header_data_digest_test() {
 	# Only enable HeaderDigest to CRC32C
 	timing_enter HeaderDigest_enabled
 	node_login_fio_logout "HeaderDigest -v CRC32C" "DataDigest -v None"
@@ -94,7 +90,7 @@ iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
 
 # iscsiadm installed by some Fedora releases loses DataDigest parameter.
 # Check and avoid setting DataDigest.
-DataDigestAbility=`iscsiadm -m node -p $TARGET_IP:$ISCSI_PORT | grep DataDigest || true`
+DataDigestAbility=$(iscsiadm -m node -p $TARGET_IP:$ISCSI_PORT | grep DataDigest || true)
 if [ "$DataDigestAbility"x = x ]; then
 	iscsi_header_digest_test
 else
