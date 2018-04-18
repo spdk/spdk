@@ -117,7 +117,7 @@ struct virtio_dev_ops {
 	/** Destruct virtio device */
 	void (*destruct_dev)(struct virtio_dev *vdev);
 
-	uint16_t (*get_queue_num)(struct virtio_dev *hw, uint16_t queue_id);
+	uint16_t (*get_queue_size)(struct virtio_dev *vdev, uint16_t queue_id);
 	int (*setup_queue)(struct virtio_dev *hw, struct virtqueue *vq);
 	void (*del_queue)(struct virtio_dev *hw, struct virtqueue *vq);
 	void (*notify_queue)(struct virtio_dev *hw, struct virtqueue *vq);

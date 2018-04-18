@@ -299,16 +299,12 @@ virtio_user_set_features(struct virtio_dev *vdev, uint64_t features)
 	return 0;
 }
 
-/* This function is to get the queue size, aka, number of descs, of a specified
- * queue. Different with the VHOST_USER_GET_QUEUE_NUM, which is used to get the
- * max supported queues.
- */
 static uint16_t
-virtio_user_get_queue_num(struct virtio_dev *vdev, uint16_t queue_id)
+virtio_user_get_queue_size(struct virtio_dev *vdev, uint16_t queue_id)
 {
 	struct virtio_user_dev *dev = vdev->ctx;
 
-	/* Currently, each queue has same queue size */
+	/* Currently each queue has same queue size */
 	return dev->queue_size;
 }
 
@@ -420,7 +416,7 @@ virtio_user_write_json_config(struct virtio_dev *vdev, struct spdk_json_write_ct
 	spdk_json_write_named_string(w, "trtype", "user");
 	spdk_json_write_named_string(w, "traddr", dev->path);
 	spdk_json_write_named_uint32(w, "vq_count", vdev->max_queues - vdev->fixed_queues_num);
-	spdk_json_write_named_uint32(w, "vq_size", virtio_dev_backend_ops(vdev)->get_queue_num(vdev, 0));
+	spdk_json_write_named_uint32(w, "vq_size", virtio_dev_backend_ops(vdev)->get_queue_size(vdev, 0));
 }
 
 static const struct virtio_dev_ops virtio_user_ops = {
@@ -431,7 +427,7 @@ static const struct virtio_dev_ops virtio_user_ops = {
 	.get_features	= virtio_user_get_features,
 	.set_features	= virtio_user_set_features,
 	.destruct_dev	= virtio_user_destroy,
-	.get_queue_num	= virtio_user_get_queue_num,
+	.get_queue_size	= virtio_user_get_queue_size,
 	.setup_queue	= virtio_user_setup_queue,
 	.del_queue	= virtio_user_del_queue,
 	.notify_queue	= virtio_user_notify_queue,
