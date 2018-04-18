@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4815f08e_f5ec0063",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 467,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-18T20:39:33Z",
+      "side": 1,
+      "message": "Allocate all unallocated clusters in this blob.  If the blob does not have a backing blob, zero all newly allocated clusters.  Otherwise copy data from backing blob and removes its dependency.",
+      "revId": "c44cc02ef2622362362668f8f30d6cabe82c06f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eac57b7a_d81a7cee",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 4121,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-18T20:39:33Z",
+      "side": 1,
+      "message": "Should the user pass in this channel?  This is effectively an I/O operation.  I guess I could go either way.  There is nowhere else that blobstore calls this function internally.",
+      "revId": "c44cc02ef2622362362668f8f30d6cabe82c06f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a1d6ef3_286c8bb4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 4131,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-18T20:39:33Z",
+      "side": 1,
+      "message": "Do we want to do these all at once?  What happens if this is a 10GB blob with 9000 unallocated clusters?  I think this will exhaust all of the reqs for this channel.  Note we cannot use the previous patch in this series - you must pass in an op for each of these copies.\n\nI\u0027m concerned this patch hasn\u0027t really been tested except for some basic unit tests.",
+      "revId": "c44cc02ef2622362362668f8f30d6cabe82c06f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f8a40ec_16323ad6",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 4135,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-18T20:39:33Z",
+      "side": 1,
+      "message": "You cannot free the IO channel here.  You will have outstanding requests from the spdk_bs_allocate_and_copy_cluster calls that will need this channel.",
+      "revId": "c44cc02ef2622362362668f8f30d6cabe82c06f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4769601_9abf4ab3",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 4140,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-18T20:39:33Z",
+      "side": 1,
+      "message": "Don\u0027t you have to wait to do this until all of the copy operations are complete?",
+      "revId": "c44cc02ef2622362362668f8f30d6cabe82c06f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
