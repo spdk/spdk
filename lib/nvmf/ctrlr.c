@@ -277,15 +277,19 @@ end:
 static void
 ctrlr_delete_qpair(void *ctx)
 {
-	struct spdk_nvmf_qpair *qpair = ctx;
+	struct spdk_nvmf_qpair *qpair = ctx, *_qpair, *tmp;
 	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
 
 	assert(ctrlr != NULL);
 	assert(ctrlr->num_qpairs > 0);
-	/* Defer the admin qpair deletion since there are still io qpairs */
+
+	/* Delete all io qpairs if receving the admin qpair disconnect event early */
 	if ((ctrlr->num_qpairs > 1) && (qpair == ctrlr->admin_qpair)) {
-		spdk_thread_send_msg(qpair->group->thread, ctrlr_delete_qpair, qpair);
-		return;
+		TAILQ_FOREACH_SAFE(_qpair, &ctrlr->qpairs, link, tmp) {
+			if (_qpair != qpair) {
+				ctrlr_delete_qpair(_qpair);
+			}
+		}
 	}
 
 	ctrlr->num_qpairs--;
