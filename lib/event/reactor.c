@@ -141,6 +141,11 @@ spdk_event_allocate(uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2)
 	struct spdk_event *event = NULL;
 	struct spdk_reactor *reactor = spdk_reactor_get(lcore);
 
+	if (!reactor) {
+		assert(false);
+		return NULL;
+	}
+
 	event = spdk_mempool_get(reactor->event_mempool);
 	if (event == NULL) {
 		assert(false);
