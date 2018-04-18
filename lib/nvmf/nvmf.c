@@ -630,6 +630,8 @@ spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 		return rc;
 	}
 
+	sgroup = &group->sgroups[subsystem->id];
+
 	sgroup->state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
 
 	/* Release all queued requests */
