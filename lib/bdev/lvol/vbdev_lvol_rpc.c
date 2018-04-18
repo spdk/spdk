@@ -604,8 +604,8 @@ free_rpc_rename_lvol_bdev(struct rpc_rename_lvol_bdev *req)
 }
 
 static const struct spdk_json_object_decoder rpc_rename_lvol_bdev_decoders[] = {
-	{"old_name", offsetof(struct rpc_rename_lvol_bdev, old_name), spdk_json_decode_string, true},
-	{"new_name", offsetof(struct rpc_rename_lvol_bdev, new_name), spdk_json_decode_string, true},
+	{"old_name", offsetof(struct rpc_rename_lvol_bdev, old_name), spdk_json_decode_string},
+	{"new_name", offsetof(struct rpc_rename_lvol_bdev, new_name), spdk_json_decode_string},
 };
 
 static void
