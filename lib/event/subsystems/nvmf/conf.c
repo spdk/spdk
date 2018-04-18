@@ -43,6 +43,8 @@
 
 #define ACCEPT_TIMEOUT_US		10000 /* 10ms */
 
+#define SPDK_NVMF_MAX_NAMESPACES (1 << 14)
+
 struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf;
 
 static int
@@ -162,6 +164,8 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 
 	if (num_ns < 1) {
 		num_ns = 0;
+	} else if (num_ns > SPDK_NVMF_MAX_NAMESPACES) {
+		num_ns = SPDK_NVMF_MAX_NAMESPACES;
 	}
 
 	/* Mode is no longer a valid parameter, but print out a nice
