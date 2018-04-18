@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "75da8e3e_58855b81",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 21
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-18T08:25:03Z",
+      "side": 1,
+      "message": "\"*\" because on Ubuntu 16 it\u0027s \"python-configshell\" and on newer distros it\u0027s \"python-configshell-fb\" .\nI didn\u0027t like the idea of using \"if\u0027s\" to check for specific ubuntu version, especially that I am not sure if it\u0027s the same thing on Debian.",
+      "range": {
+        "startLine": 36,
+        "startChar": 20,
+        "endLine": 36,
+        "endChar": 39
+      },
+      "revId": "eb763eee27e053de52825d7d3836ef760d0fc73a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
