@@ -15,8 +15,7 @@ NETMASK=127.0.0.0/24
 MIGRATION_ADDRESS=127.0.0.2
 
 function kill_all_iscsi_target() {
-	for ((i=0; i<2; i++))
-	do
+	for ((i = 0; i < 2; i++)); do
 		rpc_addr="/var/tmp/spdk${i}.sock"
 		$rpc_py -s $rpc_addr kill_instance SIGTERM
 	done
@@ -30,17 +29,15 @@ function rpc_config() {
 }
 
 function rpc_add_target_node() {
-	$rpc_py -s $1 add_ip_address 1  $MIGRATION_ADDRESS
+	$rpc_py -s $1 add_ip_address 1 $MIGRATION_ADDRESS
 	$rpc_py -s $1 add_portal_group $PORTAL_TAG $MIGRATION_ADDRESS:$ISCSI_PORT
 	$rpc_py -s $1 construct_target_node target1 target1_alias 'Malloc0:0' $PORTAL_TAG:$INITIATOR_TAG 64 -d
 }
 
 timing_enter ip_migration
 
-
 echo "Running ip migration tests"
-for ((i=0; i<2; i++))
-do
+for ((i = 0; i < 2; i++)); do
 	timing_enter start_iscsi_tgt_$i
 
 	rpc_addr="/var/tmp/spdk${i}.sock"

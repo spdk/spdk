@@ -37,17 +37,17 @@ timing_exit start_iscsi_tgt
 
 timing_enter setup
 $rpc_py add_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
-for i in `seq 1 $NUM_MALLOC`; do
-    INITIATOR_TAG=$((i+2))
-    $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
-    bdev=$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)
-    ls_guid=$($rpc_py construct_lvol_store $bdev lvs_$i -c 1048576)
-    LUNs=""
-    for j in `seq 1 $NUM_LVOL`; do
-        lb_name=$($rpc_py construct_lvol_bdev -u $ls_guid lbd_$j 10)
-        LUNs+="$lb_name:$((j-1)) "
-    done
-    $rpc_py construct_target_node Target$i Target${i}_alias "$LUNs" "1:$INITIATOR_TAG" 256 -d
+for i in $(seq 1 $NUM_MALLOC); do
+	INITIATOR_TAG=$((i + 2))
+	$rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
+	bdev=$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)
+	ls_guid=$($rpc_py construct_lvol_store $bdev lvs_$i -c 1048576)
+	LUNs=""
+	for j in $(seq 1 $NUM_LVOL); do
+		lb_name=$($rpc_py construct_lvol_bdev -u $ls_guid lbd_$j 10)
+		LUNs+="$lb_name:$((j - 1)) "
+	done
+	$rpc_py construct_target_node Target$i Target${i}_alias "$LUNs" "1:$INITIATOR_TAG" 256 -d
 done
 timing_exit setup
 

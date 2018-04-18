@@ -9,8 +9,8 @@ function check_qos_works_well() {
 	local enable_limit=$1
 	local iops_limit=$2/1000
 	local retval=0
-	local read_iops=$($fio_py 8192 64 randread 5 | grep "\(read: IOPS=\|write: IOPS=\)" \
-		| awk -F, '{print $1}' | awk -F= '{print $2}' | tr -d [k])
+	local read_iops=$($fio_py 8192 64 randread 5 | grep "\(read: IOPS=\|write: IOPS=\)" |
+		awk -F, '{print $1}' | awk -F= '{print $2}' | tr -d [k])
 	if [ $enable_limit = true ]; then
 		retval=$(echo "$iops_limit*0.9 < $read_iops && $read_iops < $iops_limit*1.01" | bc)
 		if [ $retval -eq 0 ]; then
