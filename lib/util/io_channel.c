@@ -356,6 +356,9 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 {
 	struct io_device *dev;
 	uint32_t refcnt;
+	struct spdk_thread *thread;
+
+	thread = spdk_get_thread();
 
 	pthread_mutex_lock(&g_devlist_mutex);
 	TAILQ_FOREACH(dev, &g_io_devices, tailq) {
@@ -380,8 +383,8 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 	dev->unregistered = true;
 	TAILQ_REMOVE(&g_io_devices, dev, tailq);
 	refcnt = dev->refcnt;
+	dev->unregister_thread = thread;
 	pthread_mutex_unlock(&g_devlist_mutex);
-	dev->unregister_thread = spdk_get_thread();
 
 	if (refcnt > 0) {
 		/* defer deletion */
