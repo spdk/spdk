@@ -2015,7 +2015,7 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 			continue;
 		}
 
-		if (qpair == NULL &&
+		if (nvme_qpair_is_admin_queue(qpair) &&
 		    tr->req->cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
 			continue;
 		}
@@ -2028,7 +2028,9 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 		}
 
 		tr->timed_out = 1;
-		qpair->active_proc->timeout_cb_fn(qpair->active_proc->timeout_cb_arg, ctrlr, qpair, tr->cid);
+		qpair->active_proc->timeout_cb_fn(qpair->active_proc->timeout_cb_arg, ctrlr,
+						  nvme_qpair_is_admin_queue(qpair) ? NULL : qpair,
+						  tr->cid);
 	}
 }
 
