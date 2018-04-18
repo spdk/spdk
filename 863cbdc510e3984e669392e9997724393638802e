@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ecb869ab_a17a9200",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 297,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-18T23:42:29Z",
+      "side": 1,
+      "message": "This isn\u0027t a problem introduced by your patch, but I think this transport qpair_fini should probably be sent as a message to the thread that owns qpair (qpair-\u003egroup-\u003ethread) rather than executed on the adminq thread, and the message below should probably be deferred until all transport_qpair_fini calls are finished.\n\nI\u0027ll defer to Ben on this topic - can you clarify how you intended the threading model to work in this case, Ben?",
+      "revId": "863cbdc510e3984e669392e9997724393638802e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
