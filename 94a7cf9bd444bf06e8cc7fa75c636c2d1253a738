@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "73f533e3_190aa63e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-18T17:12:10Z",
+      "side": 1,
+      "message": "nit: some members are tab aligned, others just have single space after type",
+      "revId": "94a7cf9bd444bf06e8cc7fa75c636c2d1253a738",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b57d6b3_cccf6fd6",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-18T17:12:10Z",
+      "side": 1,
+      "message": "not really related to your changes (you\u0027re just moving the code) - but this mention of \"millisecond\" in the comment should probably be removed; you could say it runs once per time slice instead",
+      "revId": "94a7cf9bd444bf06e8cc7fa75c636c2d1253a738",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6436ea90_e6fe0ae6",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2394,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-18T17:12:10Z",
+      "side": 1,
+      "message": "should we just embed this structure in the bdev directly?  looks like its about 64 bytes in size; then we can avoid having to check for a calloc failure;  but then we need to pick a different mechanism to know if qos is enabled or not (probably just use ios_per_sec like we did before)\n\nI\u0027m ok with this as-is - just a though.",
+      "revId": "94a7cf9bd444bf06e8cc7fa75c636c2d1253a738",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
