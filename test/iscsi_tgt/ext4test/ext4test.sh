@@ -48,7 +48,7 @@ trap 'for new_dir in `dir -d /mnt/*dir`; do umount $new_dir; rm -rf $new_dir; do
 sleep 1
 
 echo "Test error injection"
-$rpc_py bdev_inject_error EE_Malloc0 'all' 'failure' -n  1000
+$rpc_py bdev_inject_error EE_Malloc0 'all' 'failure' -n 1000
 
 dev=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
 
@@ -101,15 +101,15 @@ for dev in $devs; do
 	umount /mnt/${dev}dir
 	rm -rf /mnt/${dev}dir
 
-	stats=( $(cat /sys/block/$dev/stat) )
+	stats=($(cat /sys/block/$dev/stat))
 	echo ""
 	echo "$dev stats"
 	printf "READ  IO cnt: % 8u merges: % 8u sectors: % 8u ticks: % 8u\n" \
-		   ${stats[0]} ${stats[1]} ${stats[2]} ${stats[3]}
+		${stats[0]} ${stats[1]} ${stats[2]} ${stats[3]}
 	printf "WRITE IO cnt: % 8u merges: % 8u sectors: % 8u ticks: % 8u\n" \
-		   ${stats[4]} ${stats[5]} ${stats[6]} ${stats[7]}
+		${stats[4]} ${stats[5]} ${stats[6]} ${stats[7]}
 	printf "in flight: % 8u io ticks: % 8u time in queue: % 8u\n" \
-		   ${stats[8]} ${stats[9]} ${stats[10]}
+		${stats[8]} ${stats[9]} ${stats[10]}
 	echo ""
 done
 

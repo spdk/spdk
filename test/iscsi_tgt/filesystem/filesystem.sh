@@ -10,8 +10,7 @@ timing_enter filesystem
 
 rpc_py="python $rootdir/scripts/rpc.py"
 # Remove lvol bdevs and stores.
-function remove_backends()
-{
+function remove_backends() {
 	echo "INFO: Removing lvol bdev"
 	$rpc_py destroy_lvol_bdev "lvs_0/lbd_0"
 
@@ -39,7 +38,7 @@ echo "iscsi_tgt is listening. Running tests..."
 
 timing_exit start_iscsi_tgt
 
-bdf=`iter_pci_class_code 01 08 02 | head -1`
+bdf=$(iter_pci_class_code 01 08 02 | head -1)
 $rpc_py add_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
 $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 $rpc_py construct_nvme_bdev -b "Nvme0" -t "pcie" -a $bdf
@@ -66,7 +65,7 @@ trap "remove_backends; umount /mnt/device; rm -rf /mnt/device; iscsicleanup; kil
 
 sleep 1
 
-mkdir -p  /mnt/device
+mkdir -p /mnt/device
 
 dev=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
 
@@ -84,7 +83,7 @@ for fstype in "ext4" "btrfs" "xfs"; do
 	mount /dev/${dev}1 /mnt/device
 	if [ $RUN_NIGHTLY -eq 1 ]; then
 		fio -filename=/mnt/device/test -direct=1 -iodepth 64 -thread=1 -invalidate=1 -rw=randwrite -ioengine=libaio -bs=4k \
-		 -size=1024M -name=job0
+			-size=1024M -name=job0
 		umount /mnt/device
 
 		iscsiadm -m node --logout
@@ -96,7 +95,7 @@ for fstype in "ext4" "btrfs" "xfs"; do
 		if [ -f "/mnt/device/test" ]; then
 			echo "File existed."
 			fio -filename=/mnt/device/test -direct=1 -iodepth 64 -thread=1 -invalidate=1 -rw=randread \
-			-ioengine=libaio -bs=4k -runtime=20 -time_based=1 -name=job0
+				-ioengine=libaio -bs=4k -runtime=20 -time_based=1 -name=job0
 		else
 			echo "File doesn't exist."
 			exit 1
