@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "68ef9b9b_d3c6c005",
+        "filename": "lib/virtio/virtio.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 627,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-18T23:03:42Z",
+      "side": 1,
+      "message": "If this condition is not true, we can end up with thread \u003d\u003d NULL and return it at the end, so I don\u0027t think putting the abort() above is sufficient.\n\nMaybe we should put it in a NULL check in the caller of this function instead?",
+      "revId": "589f348ed2fd1de1422d37872bf85e91a155eaf4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
