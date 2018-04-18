@@ -14,6 +14,10 @@ from . import subsystem
 from . import vhost
 
 
+def start_subsystems_init(client):
+    return client.call('start_subsystems_init')
+
+
 def get_rpc_methods(client):
     return client.call('get_rpc_methods')
 
