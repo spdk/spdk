@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "03b25620_c92f6d04",
+        "filename": "lib/virtio/virtio.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 628,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-18T23:49:49Z",
+      "side": 0,
+      "message": "This looks like a behavior change; is vq guaranteed to be non-NULL just because it\u0027s in range?",
+      "revId": "f811d2cb38638754c4a32b2d4e3cc07c036250b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
