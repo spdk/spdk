@@ -39,6 +39,17 @@
 
 SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 
+static void
+_subsystem_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
+{
+	fn(ctx);
+}
+
+static void
+subsystem_ns_remove_cb(struct spdk_nvmf_subsystem *subsystem, void *cb_arg, int status)
+{
+}
+
 uint32_t
 spdk_env_get_current_core(void)
 {
@@ -106,6 +117,13 @@ spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt, enum spdk_nvme_transport_
 	}
 
 	return NULL;
+}
+
+int
+spdk_nvmf_poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
+				      struct spdk_nvmf_subsystem *subsystem)
+{
+	return 0;
 }
 
 int
@@ -215,9 +233,11 @@ spdk_bdev_get_uuid(const struct spdk_bdev *bdev)
 static void
 test_spdk_nvmf_subsystem_add_ns(void)
 {
+	struct spdk_nvmf_tgt tgt = {};
 	struct spdk_nvmf_subsystem subsystem = {
 		.max_nsid = 0,
 		.ns = NULL,
+		.tgt = &tgt
 	};
 	struct spdk_bdev bdev1 = {}, bdev2 = {};
 	struct spdk_nvmf_ns_opts ns_opts;
@@ -256,8 +276,8 @@ test_spdk_nvmf_subsystem_add_ns(void)
 	CU_ASSERT(nsid == 0);
 	CU_ASSERT(subsystem.max_nsid == 5);
 
-	spdk_nvmf_subsystem_remove_ns(&subsystem, 1);
-	spdk_nvmf_subsystem_remove_ns(&subsystem, 5);
+	spdk_nvmf_subsystem_remove_ns(&subsystem, 1, subsystem_ns_remove_cb, NULL);
+	spdk_nvmf_subsystem_remove_ns(&subsystem, 5, subsystem_ns_remove_cb, NULL);
 
 	free(subsystem.ns);
 }
@@ -427,9 +447,12 @@ int main(int argc, char **argv)
 		return CU_get_error();
 	}
 
+	spdk_allocate_thread(_subsystem_send_msg, NULL, NULL, NULL, "thread0");
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
 	num_failures = CU_get_number_of_failures();
 	CU_cleanup_registry();
+	spdk_free_thread();
+
 	return num_failures;
 }
