@@ -158,6 +158,24 @@
       "revId": "728a076e87120d5dcab07cdf03377fafd0bd2594",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78fd75b4_650910df",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1186,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-18T22:55:23Z",
+      "side": 1,
+      "message": "The target definitely should not be changing NN during runtime while a controller exists; if it does, that\u0027s a bug and should be fixed.  The list of which namespaces are active within the 1..NN range can change, but the actual NN limit should not change within the lifetime of a controller, even when features like Namespace Management are supported.\n\nI think we can simplify this patch to split out the part of nvme_ctrlr_construct_namespaces() starting with the call to nvme_ctrlr_identify_active_ns() into its own function (nvme_ctrlr_update_namespaces() or something like that) and only call that on NS attr changed events.  Then we still need to add some way to notify upper layers that namespaces may have changed (so that e.g. the bdev layer can be updated, as you mentioned).",
+      "parentUuid": "ba9b2da3_75fc8c1a",
+      "revId": "728a076e87120d5dcab07cdf03377fafd0bd2594",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
