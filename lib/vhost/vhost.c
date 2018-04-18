@@ -1391,7 +1391,12 @@ spdk_vhost_config_json_cb(struct spdk_vhost_dev *vdev, void *arg)
 void
 spdk_vhost_config_json(struct spdk_json_write_ctx *w, struct spdk_event *done_ev)
 {
-	struct spdk_vhost_write_config_json_ctx *ctx = calloc(1, sizeof(*ctx));
+	struct spdk_vhost_write_config_json_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		return;
+	}
 
 	ctx->w = w;
 	ctx->done_ev = done_ev;
