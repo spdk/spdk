@@ -16,6 +16,24 @@
       "revId": "0f17456e416e507c33edf56402fedbbba3f3e254",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59c62dff_d2562e8a",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 488,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-18T16:08:47Z",
+      "side": 1,
+      "message": "I pushed a revision with the comment removed - Darek, if you have an updated version with a revised comment, we can always push that as another review.",
+      "parentUuid": "3ab43f78_20c9ef26",
+      "revId": "0f17456e416e507c33edf56402fedbbba3f3e254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
