@@ -14,9 +14,9 @@ rm -f /tmp/iscsi.conf*
 
 kill -USR1 "$pid"
 
-if [ ! -f `ls /tmp/iscsi.conf.*` ]; then
+if [ ! -f $(ls /tmp/iscsi.conf.*) ]; then
 	echo "iscsi_tgt did not generate config file"
 	exit 1
 fi
 
-mv `ls /tmp/iscsi.conf.*` /tmp/iscsi.conf
+mv $(ls /tmp/iscsi.conf.*) /tmp/iscsi.conf
