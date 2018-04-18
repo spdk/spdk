@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7d59a35d_97130ce3",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-18T09:39:38Z",
+      "side": 1,
+      "message": "This should be assert.",
+      "range": {
+        "startLine": 126,
+        "startChar": 1,
+        "endLine": 128,
+        "endChar": 2
+      },
+      "revId": "80a1255da78bd3843681e3829f183602183b9cc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1ed1eed3_7ee78e47",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-18T09:39:38Z",
+      "side": 1,
+      "message": "If we have any luns left in fini callback it mean bdev layer failed to destroy all bdevs before starting fini handlers.",
+      "range": {
+        "startLine": 170,
+        "startChar": 0,
+        "endLine": 174,
+        "endChar": 2
+      },
+      "revId": "80a1255da78bd3843681e3829f183602183b9cc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
