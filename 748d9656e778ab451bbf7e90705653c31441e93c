@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5945732b_0be476bc",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 2946,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-18T16:41:27Z",
+      "side": 1,
+      "message": "if QoS is already enabled, you don\u0027t need to send a message to each thread below.\n\nIt\u0027s also theoretically possible that the spdk_for_each_channel completes first, for some hypothetical implementation of the message passing framework. That will currently result in the user callback being called prior to the operation actually completing.",
+      "revId": "748d9656e778ab451bbf7e90705653c31441e93c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
