@@ -1128,6 +1128,9 @@ spdk_vhost_set_socket_path(const char *basename)
 
 	if (basename && strlen(basename) > 0) {
 		ret = snprintf(dev_dirname, sizeof(dev_dirname) - 2, "%s", basename);
+		if (ret <= 0) {
+			return -EINVAL;
+		}
 		if ((size_t)ret >= sizeof(dev_dirname) - 2) {
 			SPDK_ERRLOG("Char dev dir path length %d is too long\n", ret);
 			return -EINVAL;
