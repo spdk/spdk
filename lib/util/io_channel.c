@@ -480,6 +480,8 @@ _spdk_put_io_channel(void *arg)
 	ch->dev->refcnt--;
 	pthread_mutex_unlock(&g_devlist_mutex);
 
+	sleep(1);
+
 	_spdk_io_device_attempt_free(ch->dev);
 	free(ch);
 }
