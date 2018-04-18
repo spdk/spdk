@@ -119,7 +119,7 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 	 * Read the virtqueue size from the Queue Size field
 	 * Always power of 2 and if 0 virtqueue does not exist
 	 */
-	vq_size = virtio_dev_backend_ops(dev)->get_queue_num(dev, vtpci_queue_idx);
+	vq_size = virtio_dev_backend_ops(dev)->get_queue_size(dev, vtpci_queue_idx);
 	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV, "vq_size: %u\n", vq_size);
 	if (vq_size == 0) {
 		SPDK_ERRLOG("virtqueue %"PRIu16" does not exist\n", vtpci_queue_idx);
@@ -717,7 +717,7 @@ virtio_dev_dump_json_info(struct virtio_dev *hw, struct spdk_json_write_ctx *w)
 	spdk_json_write_uint32(w, hw->max_queues);
 
 	spdk_json_write_name(w, "vq_size");
-	spdk_json_write_uint32(w, virtio_dev_backend_ops(hw)->get_queue_num(hw, 0));
+	spdk_json_write_uint32(w, virtio_dev_backend_ops(hw)->get_queue_size(hw, 0));
 
 	virtio_dev_backend_ops(hw)->dump_json_info(hw, w);
 
