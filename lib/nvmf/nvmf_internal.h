@@ -234,6 +234,8 @@ struct spdk_nvmf_transport *spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tg
 
 int spdk_nvmf_poll_group_add_transport(struct spdk_nvmf_poll_group *group,
 				       struct spdk_nvmf_transport *transport);
+int spdk_nvmf_poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
+		struct spdk_nvmf_subsystem *subsystem);
 int spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
 				       struct spdk_nvmf_subsystem *subsystem);
 int spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
