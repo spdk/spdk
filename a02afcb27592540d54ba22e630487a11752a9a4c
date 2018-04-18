@@ -33,6 +33,24 @@
       "revId": "a02afcb27592540d54ba22e630487a11752a9a4c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "05e2d7ab_961b9cf4",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-18T06:51:38Z",
+      "side": 1,
+      "message": "Ok, but it would be very very nice and user friendly to have this documented.",
+      "parentUuid": "5b1bc0db_6eb263a5",
+      "revId": "a02afcb27592540d54ba22e630487a11752a9a4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
