@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8393aa9e_078c7985",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 703,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-18T19:34:37Z",
+      "side": 1,
+      "message": "This could be simplified, but I just looked and it was like this already. So we\u0027ll do that in a separate patch.",
+      "revId": "9500de7484ca69072e2a5f71a3b70c2c32acc32f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
