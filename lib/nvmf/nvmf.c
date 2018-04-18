@@ -630,6 +630,10 @@ spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 		return rc;
 	}
 
+	/* poll_group_update_subsystem may realloc the sgroups array. We need
+	 * to do a new lookup to get the correct pointer. */
+	sgroup = &group->sgroups[subsystem->id];
+
 	sgroup->state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
 
 	/* Release all queued requests */
