@@ -285,6 +285,17 @@ void spdk_mempool_free(struct spdk_mempool *mp);
 void *spdk_mempool_get(struct spdk_mempool *mp);
 
 /**
+ * Get multiple elements from a memory pool.
+ *
+ * \param mp Memory pool to get multiple elements from.
+ * \param ele_arr Array of the elements to fill.
+ * \param count Count of elements to get.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_mempool_get_bulk(struct spdk_mempool *mp, void **ele_arr, size_t count);
+
+/**
  * Put an element back into the memory pool.
  *
  * \param mp Memory pool to put element back into.
