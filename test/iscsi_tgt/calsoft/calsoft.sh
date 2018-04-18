@@ -23,7 +23,7 @@ cp $testdir/its.conf /usr/local/etc/
 cp $testdir/auth.conf /usr/local/etc/
 
 # Append target ip to calsoft config
-echo "IP=$TARGET_IP" >> /usr/local/etc/its.conf
+echo "IP=$TARGET_IP" >>/usr/local/etc/its.conf
 
 timing_enter start_iscsi_tgt
 

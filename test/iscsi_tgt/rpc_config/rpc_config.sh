@@ -9,7 +9,6 @@ timing_enter rpc_config
 
 MALLOC_BDEV_SIZE=64
 
-
 rpc_py=$rootdir/scripts/rpc.py
 rpc_config_py="python $testdir/rpc_config.py"
 

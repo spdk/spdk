@@ -106,13 +106,13 @@ wait $fio_pid
 fio_status=$?
 
 if [ $fio_status -eq 0 ]; then
-       echo "iscsi hotplug test: fio successful - expected failure"
-       iscsicleanup
-       rm -f $testdir/iscsi.conf
-       killprocess $pid
-       exit 1
+	echo "iscsi hotplug test: fio successful - expected failure"
+	iscsicleanup
+	rm -f $testdir/iscsi.conf
+	killprocess $pid
+	exit 1
 else
-       echo "iscsi hotplug test: fio failed as expected"
+	echo "iscsi hotplug test: fio failed as expected"
 fi
 
 set -e
