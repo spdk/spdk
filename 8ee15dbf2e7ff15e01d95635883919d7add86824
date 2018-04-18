@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c2a3459d_54d4f10b",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2018,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-18T21:59:36Z",
+      "side": 0,
+      "message": "I think this is intending to check whether qpair is the admin queue (it got broken by 31bf5d795e5464ba7d152d6705293221c6efa2ec - \"nvme: make timeout function per process\" - which removed the qpair \u003d NULL assigment that was previously in this function).",
+      "revId": "8ee15dbf2e7ff15e01d95635883919d7add86824",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
