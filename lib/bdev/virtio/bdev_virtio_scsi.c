@@ -1830,7 +1830,9 @@ virtio_scsi_dev_unregister_cb(void *io_device)
 	struct spdk_thread *thread;
 
 	thread = virtio_dev_queue_get_thread(&svdev->vdev, VIRTIO_SCSI_CONTROLQ);
-	spdk_thread_send_msg(thread, _virtio_scsi_dev_unregister_cb, io_device);
+	if (thread) {
+		spdk_thread_send_msg(thread, _virtio_scsi_dev_unregister_cb, io_device);
+	}
 }
 
 static void
