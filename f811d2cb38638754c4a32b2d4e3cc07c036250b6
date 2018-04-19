@@ -16,6 +16,24 @@
       "revId": "f811d2cb38638754c4a32b2d4e3cc07c036250b6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db7477f0_23d0abed",
+        "filename": "lib/virtio/virtio.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 628,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-19T04:12:22Z",
+      "side": 0,
+      "message": "Digging through the virtio.c code, it is guaranteed (at least now) that vq will be non-NULL if its in range.  But an assert() might be good just in case this changes in the future.",
+      "parentUuid": "03b25620_c92f6d04",
+      "revId": "f811d2cb38638754c4a32b2d4e3cc07c036250b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
