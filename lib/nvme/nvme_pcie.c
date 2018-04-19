@@ -2015,9 +2015,14 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 			continue;
 		}
 
-		if (nvme_qpair_is_admin_queue(qpair) &&
-		    tr->req->cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
-			continue;
+		if (nvme_qpair_is_admin_queue(qpair)) {
+			if (tr->req->pid != getpid()) {
+				continue;
+			}
+
+			if (tr->req->cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
+				continue;
+			}
 		}
 
 		if (tr->submit_tick + qpair->active_proc->timeout_ticks > t02) {
