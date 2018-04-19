@@ -39,6 +39,30 @@
       "revId": "7252907dc54f4070f9f44d9e080a52a3db31cd3d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7678a9e3_74186b85",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 4864,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-19T08:42:15Z",
+      "side": 1,
+      "message": "From the discution in:\n\nhttps://review.gerrithub.io/#/c/405022/17/lib/blob/blobstore.c@4690\nhttps://review.gerrithub.io/#/c/405784/ (\"blobstore: introduce spdk_blob_set_snapshot()\")\n\nConclusion was that snapshot is a read only blob with at least one clone.",
+      "parentUuid": "5e1ba6da_81eae980",
+      "range": {
+        "startLine": 4864,
+        "startChar": 8,
+        "endLine": 4864,
+        "endChar": 40
+      },
+      "revId": "7252907dc54f4070f9f44d9e080a52a3db31cd3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
