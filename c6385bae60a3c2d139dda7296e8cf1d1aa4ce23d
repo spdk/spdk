@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c3714454_ba1e6145",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-19T10:46:19Z",
+      "side": 1,
+      "message": "Keep in mind that this default will need to be set to 1 before merging and after we set up all the machines with correct config.",
+      "range": {
+        "startLine": 46,
+        "startChar": 0,
+        "endLine": 46,
+        "endChar": 44
+      },
+      "revId": "c6385bae60a3c2d139dda7296e8cf1d1aa4ce23d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "00565c1a_a903a5e0",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-19T10:46:19Z",
+      "side": 1,
+      "message": "Don\u0027t change directory, just source what you need.",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 4,
+        "endChar": 29
+      },
+      "revId": "c6385bae60a3c2d139dda7296e8cf1d1aa4ce23d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02f5f4f8_2d21339e",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-19T10:46:19Z",
+      "side": 1,
+      "message": "This function is the same or very similar to spdk_vhost_run() in test/vhost/common/common.sh. Why not use it for vhost start?\n\nBTW, any reason why we won\u0027t use universal spdk_tgt app?",
+      "range": {
+        "startLine": 19,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 22
+      },
+      "revId": "c6385bae60a3c2d139dda7296e8cf1d1aa4ce23d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c557124_5be37020",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-19T10:46:19Z",
+      "side": 1,
+      "message": "If I recall correctly then RPC function for creating splits is already available. You can use it instead of creating splits via config file.",
+      "range": {
+        "startLine": 73,
+        "startChar": 0,
+        "endLine": 81,
+        "endChar": 1
+      },
+      "revId": "c6385bae60a3c2d139dda7296e8cf1d1aa4ce23d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f36fc97b_09be5172",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-19T10:46:19Z",
+      "side": 1,
+      "message": "As commented before - this function name is misleading. There\u0027s nothing related to vhost functionality here, only bdev subsystem.",
+      "range": {
+        "startLine": 97,
+        "startChar": 9,
+        "endLine": 97,
+        "endChar": 21
+      },
+      "revId": "c6385bae60a3c2d139dda7296e8cf1d1aa4ce23d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c6a44c2_a1155da3",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-19T10:46:19Z",
+      "side": 1,
+      "message": "use tabs",
+      "range": {
+        "startLine": 107,
+        "startChar": 0,
+        "endLine": 107,
+        "endChar": 8
+      },
+      "revId": "c6385bae60a3c2d139dda7296e8cf1d1aa4ce23d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea2d97b5_b5a82860",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-19T10:46:19Z",
+      "side": 1,
+      "message": "use tabs",
+      "range": {
+        "startLine": 115,
+        "startChar": 0,
+        "endLine": 115,
+        "endChar": 8
+      },
+      "revId": "c6385bae60a3c2d139dda7296e8cf1d1aa4ce23d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e9a69050_51488aff",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-19T10:46:19Z",
+      "side": 1,
+      "message": "There are no such functions in this file or related files.\nAlso - this commit is for testing bdev subsystem, so there should be not nvmf or iscsi tests.",
+      "range": {
+        "startLine": 151,
+        "startChar": 0,
+        "endLine": 152,
+        "endChar": 10
+      },
+      "revId": "c6385bae60a3c2d139dda7296e8cf1d1aa4ce23d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
