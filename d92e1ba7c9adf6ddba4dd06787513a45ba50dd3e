@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "396c3bf8_4cf2e4ea",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2018,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-19T01:52:14Z",
+      "side": 1,
+      "message": "Actually, looking at why we had qpair \u003d\u003d NULL originally, I think we should restore the logic removed in https://github.com/spdk/spdk/commit/31bf5d795e5464ba7d152d6705293221c6efa2ec - although instead of assigning qpair \u003d NULL up front (which won\u0027t work now that we need to dereference qpair to get the timeout info), we should instead add a check inside the timeout_cb_fn call below (see other comment).",
+      "revId": "d92e1ba7c9adf6ddba4dd06787513a45ba50dd3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b418e98_ffab0870",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2031,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-19T01:52:14Z",
+      "side": 1,
+      "message": "qpair is passed back to the user here, and we don\u0027t want to expose the admin qpair; we should be able to replace \u0027qpair\u0027 here with something like:\n\n  timeout_cb_fn(..., nvme_qpair_is_admin_queue(qpair) ? NULL : qpair, ...);",
+      "range": {
+        "startLine": 2031,
+        "startChar": 79,
+        "endLine": 2031,
+        "endChar": 84
+      },
+      "revId": "d92e1ba7c9adf6ddba4dd06787513a45ba50dd3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
