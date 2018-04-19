@@ -235,29 +235,31 @@ sudo make install
 # probably best to only run the tests that you believe your changes have modified along with
 # Scanbuild and check format. This is because running the whole suite of tests in series can
 # take ~40 minutes to complete.
-cat > ~/autorun-spdk.conf << EOF
-# assign a value of 1 to all of the pertinent tests
-SPDK_BUILD_DOC=1
-SPDK_BUILD_IOAT_KMOD=1
-SPDK_RUN_CHECK_FORMAT=1
-SPDK_RUN_SCANBUILD=1
-SPDK_RUN_VALGRIND=1
-SPDK_TEST_UNITTEST=1
-SPDK_TEST_ISCSI=1
-SPDK_TEST_ISCSI_INITIATOR=1
-SPDK_TEST_NVME=1
-SPDK_TEST_NVMF=1
-SPDK_TEST_RBD=1
-# requires some extra configuration. see TEST_ENV_SETUP_README
-SPDK_TEST_VHOST=0
-SPDK_TEST_VHOST_INIT=0
-SPDK_TEST_BLOCKDEV=1
-# doesn't work on vm
-SPDK_TEST_IOAT=0
-SPDK_TEST_EVENT=1
-SPDK_TEST_BLOBFS=1
-SPDK_TEST_PMDK=1
-SPDK_TEST_LVOL=1
-SPDK_RUN_ASAN=1
-SPDK_RUN_UBSAN=1
-EOF
+if [ ! -e ~/autorun-spdk.conf ]; then
+	cat > ~/autorun-spdk.conf << EOF
+	# assign a value of 1 to all of the pertinent tests
+	SPDK_BUILD_DOC=1
+	SPDK_BUILD_IOAT_KMOD=1
+	SPDK_RUN_CHECK_FORMAT=1
+	SPDK_RUN_SCANBUILD=1
+	SPDK_RUN_VALGRIND=1
+	SPDK_TEST_UNITTEST=1
+	SPDK_TEST_ISCSI=1
+	SPDK_TEST_ISCSI_INITIATOR=1
+	SPDK_TEST_NVME=1
+	SPDK_TEST_NVMF=1
+	SPDK_TEST_RBD=1
+	# requires some extra configuration. see TEST_ENV_SETUP_README
+	SPDK_TEST_VHOST=0
+	SPDK_TEST_VHOST_INIT=0
+	SPDK_TEST_BLOCKDEV=1
+	# doesn't work on vm
+	SPDK_TEST_IOAT=0
+	SPDK_TEST_EVENT=1
+	SPDK_TEST_BLOBFS=1
+	SPDK_TEST_PMDK=1
+	SPDK_TEST_LVOL=1
+	SPDK_RUN_ASAN=1
+	SPDK_RUN_UBSAN=1
+	EOF
+fi
