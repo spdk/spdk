@@ -235,7 +235,8 @@ sudo make install
 # probably best to only run the tests that you believe your changes have modified along with
 # Scanbuild and check format. This is because running the whole suite of tests in series can
 # take ~40 minutes to complete.
-cat > ~/autorun-spdk.conf << EOF
+if [ ! -e ~/autorun-spdk.conf ]; then
+	cat > ~/autorun-spdk.conf << EOF
 # assign a value of 1 to all of the pertinent tests
 SPDK_BUILD_DOC=1
 SPDK_BUILD_IOAT_KMOD=1
@@ -261,3 +262,4 @@ SPDK_TEST_LVOL=1
 SPDK_RUN_ASAN=1
 SPDK_RUN_UBSAN=1
 EOF
+fi
