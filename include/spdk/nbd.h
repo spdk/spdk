@@ -44,6 +44,8 @@ extern "C" {
 
 struct spdk_bdev;
 struct spdk_nbd_disk;
+struct spdk_json_write_ctx;
+struct spdk_event;
 
 /**
  * Initialize the network block device layer.
@@ -74,6 +76,14 @@ struct spdk_nbd_disk *spdk_nbd_start(const char *bdev_name, const char *nbd_path
  * \param nbd A pointer to the network block device to stop.
  */
 void spdk_nbd_stop(struct spdk_nbd_disk *nbd);
+
+/**
+ * Write NBD subsystem configuration into provided JSON context.
+ *
+ * \param w JSON write context
+ * \param done_ev call this event when done.
+ */
+void spdk_nbd_write_config_json(struct spdk_json_write_ctx *w, struct spdk_event *done_ev);
 
 #ifdef __cplusplus
 }

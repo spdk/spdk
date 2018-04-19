@@ -44,6 +44,7 @@
 #include "spdk/log.h"
 #include "spdk/util.h"
 #include "spdk/io_channel.h"
+#include "spdk/event.h"
 
 #include "spdk_internal/log.h"
 #include "spdk/queue.h"
@@ -209,6 +210,27 @@ const char *
 spdk_nbd_disk_get_bdev_name(struct spdk_nbd_disk *nbd)
 {
 	return spdk_bdev_get_name(nbd->bdev);
+}
+
+void
+spdk_nbd_write_config_json(struct spdk_json_write_ctx *w, struct spdk_event *done_ev)
+{
+	struct spdk_nbd_disk *nbd;
+
+	TAILQ_FOREACH(nbd, &g_spdk_nbd.disk_head, tailq) {
+		spdk_json_write_object_begin(w);
+
+		spdk_json_write_named_string(w, "method", "start_nbd_disk");
+
+		spdk_json_write_named_object_begin(w, "params");
+		spdk_json_write_named_string(w, "nbd_device",  spdk_nbd_disk_get_nbd_path(nbd));
+		spdk_json_write_named_string(w, "bdev_name", spdk_nbd_disk_get_bdev_name(nbd));
+		spdk_json_write_object_end(w);
+
+		spdk_json_write_object_end(w);
+	}
+
+	spdk_event_call(done_ev);
 }
 
 void

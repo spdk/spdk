@@ -59,6 +59,7 @@ static struct spdk_subsystem g_spdk_subsystem_nbd = {
 	.init = spdk_nbd_subsystem_init,
 	.fini = spdk_nbd_subsystem_fini,
 	.config = NULL,
+	.write_config_json = spdk_nbd_write_config_json,
 };
 
 SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_nbd);
