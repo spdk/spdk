@@ -207,6 +207,39 @@ Example response:
 }
 ~~~
 
+## disable_bdev_qos_limit_iops {#rpc_disable_bdev_qos_limit_iops}
+
+Disable the IOPS-based quality of service rate limit on a bdev.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Block device name
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "disable_bdev_qos_limit_iops",
+  "params": {
+    "name": "Malloc0"
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 # NVMe-oF Target {#jsonrpc_components_nvmf_tgt}
 
 ## get_nvmf_subsystems method {#rpc_get_nvmf_subsystems}
