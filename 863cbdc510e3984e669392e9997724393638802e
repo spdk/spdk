@@ -16,6 +16,24 @@
       "revId": "863cbdc510e3984e669392e9997724393638802e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bfa09d9e_50a38cff",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 297,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-04-19T02:07:54Z",
+      "side": 1,
+      "message": "Hi Daniel,\n\nThanks for your comments. Actually this patch purpose is to disconnect the io qpairs while unexpectedly receiving the admin qpair disconnect event early (may be the wrong operation of the client side).\n\nPS: I agree with you for the transport qpair_fini. Last time.",
+      "parentUuid": "ecb869ab_a17a9200",
+      "revId": "863cbdc510e3984e669392e9997724393638802e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
