@@ -343,15 +343,14 @@ blk_unmap_complete_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		spdk_bdev_free_io(bdev_io);
 	}
 
-	if (task) {
-		task->num_children--;
-		if (!success) {
-			task->success = false;
-		}
-		if (!task->num_children) {
-			blk_request_complete_cb(NULL, task->success, task);
-		}
+	task->num_children--;
+	if (!success) {
+		task->success = false;
 	}
+	if (!task->num_children) {
+		blk_request_complete_cb(NULL, task->success, task);
+	}
+
 	STAILQ_INSERT_TAIL(&nvme->free_tasks, child, stailq);
 }
 
