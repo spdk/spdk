@@ -16,6 +16,69 @@
       "revId": "caede7cf685de999da6e620f91ff6e0a29daa0ec",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a886a30_7c255749",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1783,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-19T14:23:42Z",
+      "side": 1,
+      "message": "We should not change offset and length here as user may want to use this function (or rather spdk_blob_io_touch function) in some future for allocating only a part of a blob.",
+      "range": {
+        "startLine": 1780,
+        "startChar": 0,
+        "endLine": 1783,
+        "endChar": 2
+      },
+      "revId": "caede7cf685de999da6e620f91ff6e0a29daa0ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ae3382f5_83c143c9",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 4368,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-19T14:23:42Z",
+      "side": 1,
+      "message": "Function should take offset and length arguments - see my previous comment. Caller of this function (in this case inflate function) should set offset and size.",
+      "range": {
+        "startLine": 4367,
+        "startChar": 0,
+        "endLine": 4368,
+        "endChar": 45
+      },
+      "revId": "caede7cf685de999da6e620f91ff6e0a29daa0ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7db8ebf2_45eba014",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 4750,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-19T14:23:42Z",
+      "side": 1,
+      "message": "We should sync md here as you are changing invalid flags.",
+      "revId": "caede7cf685de999da6e620f91ff6e0a29daa0ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
