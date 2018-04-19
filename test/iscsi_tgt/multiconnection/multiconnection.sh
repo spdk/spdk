@@ -48,7 +48,7 @@ $rootdir/scripts/gen_nvme.sh >> $testdir/iscsi.conf
 
 timing_enter start_iscsi_tgt
 # Start the iSCSI target without using stub.
-$rootdir/app/iscsi_tgt/iscsi_tgt -c $testdir/iscsi.conf &
+$ISCSI_APP -c $testdir/iscsi.conf &
 iscsipid=$!
 echo "iSCSI target launched. pid: $iscsipid"
 trap "remove_backends; iscsicleanup; killprocess $iscsipid; exit 1" SIGINT SIGTERM EXIT
