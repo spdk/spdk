@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a644fdde_6cda1e1d",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 635,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-19T15:55:09Z",
+      "side": 1,
+      "message": "Shouldn\u0027t spdk_json_write_object_end(w) be called before return ?",
+      "range": {
+        "startLine": 635,
+        "startChar": 3,
+        "endLine": 635,
+        "endChar": 18
+      },
+      "revId": "bd2f184ec6472a3acb697415aec1680fb0504f2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "70fe8c8f_481aef78",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 643,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-19T15:55:09Z",
+      "side": 1,
+      "message": "Same as above",
+      "range": {
+        "startLine": 643,
+        "startChar": 4,
+        "endLine": 643,
+        "endChar": 19
+      },
+      "revId": "bd2f184ec6472a3acb697415aec1680fb0504f2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
