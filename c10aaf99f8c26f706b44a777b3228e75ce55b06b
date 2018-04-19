@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "99b96108_5c6d3728",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 895,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-19T00:13:06Z",
+      "side": 1,
+      "message": "I think you should just remove the assert() entirely.  It\u0027s kind of bogus - it only \"works\" if poll_group is NULL and you run this on core 0.",
+      "revId": "c10aaf99f8c26f706b44a777b3228e75ce55b06b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
