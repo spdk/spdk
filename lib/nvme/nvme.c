@@ -342,16 +342,14 @@ nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid, void *devhandle,
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct spdk_nvme_ctrlr_opts opts;
 
+	assert(trid != NULL);
+
 	spdk_nvme_ctrlr_get_default_ctrlr_opts(&opts, sizeof(opts));
 
 	if (!probe_cb || probe_cb(cb_ctx, trid, &opts)) {
 		ctrlr = nvme_transport_ctrlr_construct(trid, &opts, devhandle);
 		if (ctrlr == NULL) {
-			if (trid != NULL) {
-				SPDK_ERRLOG("Failed to construct NVMe controller for SSD: %s\n", trid->traddr);
-			} else {
-				SPDK_ERRLOG("Failed to construct NVMe controller\n");
-			}
+			SPDK_ERRLOG("Failed to construct NVMe controller for SSD: %s\n", trid->traddr);
 			return -1;
 		}
 

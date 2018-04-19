@@ -730,21 +730,21 @@ static void
 test_nvme_ctrlr_probe(void)
 {
 	int rc = 0;
-	const struct spdk_nvme_transport_id *trid = NULL;
+	const struct spdk_nvme_transport_id trid = {};
 	void *devhandle = NULL;
 	void *cb_ctx = NULL;
 	struct spdk_nvme_ctrlr *dummy = NULL;
 
 	/* test when probe_cb returns false */
 	MOCK_SET(dummy_probe_cb, bool, false);
-	rc = nvme_ctrlr_probe(trid, devhandle, dummy_probe_cb, cb_ctx);
+	rc = nvme_ctrlr_probe(&trid, devhandle, dummy_probe_cb, cb_ctx);
 	CU_ASSERT(rc == 1);
 
 	/* probe_cb returns true but we can't construct a ctrl */
 	MOCK_SET(dummy_probe_cb, bool, true);
 	MOCK_SET_P(nvme_transport_ctrlr_construct,
 		   struct spdk_nvme_ctrlr *, NULL);
-	rc = nvme_ctrlr_probe(trid, devhandle, dummy_probe_cb, cb_ctx);
+	rc = nvme_ctrlr_probe(&trid, devhandle, dummy_probe_cb, cb_ctx);
 	CU_ASSERT(rc == -1);
 
 	/* happy path */
@@ -754,7 +754,7 @@ test_nvme_ctrlr_probe(void)
 	MOCK_SET_P(nvme_transport_ctrlr_construct,
 		   struct spdk_nvme_ctrlr *, &ut_nvme_transport_ctrlr_construct);
 	TAILQ_INIT(&g_nvme_init_ctrlrs);
-	rc = nvme_ctrlr_probe(trid, devhandle, dummy_probe_cb, cb_ctx);
+	rc = nvme_ctrlr_probe(&trid, devhandle, dummy_probe_cb, cb_ctx);
 	CU_ASSERT(rc == 0);
 	dummy = TAILQ_FIRST(&g_nvme_init_ctrlrs);
 	CU_ASSERT(dummy == &ut_nvme_transport_ctrlr_construct);
