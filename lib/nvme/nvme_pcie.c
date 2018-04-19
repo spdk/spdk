@@ -299,9 +299,11 @@ _nvme_pcie_hotplug_monitor(void *cb_ctx, spdk_nvme_probe_cb probe_cb,
 		csts = spdk_nvme_ctrlr_get_regs_csts(ctrlr);
 		if (csts.raw == 0xffffffffU) {
 			nvme_ctrlr_fail(ctrlr, true);
-			nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
-			remove_cb(cb_ctx, ctrlr);
-			nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
+			if (remove_cb) {
+				nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
+				remove_cb(cb_ctx, ctrlr);
+				nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
+			}
 		}
 	}
 	return 0;
