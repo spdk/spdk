@@ -2141,6 +2141,43 @@ _spdk_bdev_io_complete(void *ctx)
 		return;
 	}
 
+	if (bdev_io->status == SPDK_BDEV_IO_STATUS_SUCCESS) {
+		switch (bdev_io->type) {
+		case SPDK_BDEV_IO_TYPE_READ:
+			bdev_io->ch->stat.bytes_read += bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
+			bdev_io->ch->stat.num_read_ops++;
+			bdev_io->ch->stat.read_latency_ticks += (spdk_get_ticks() - bdev_io->submit_tsc);
+			break;
+		case SPDK_BDEV_IO_TYPE_WRITE:
+			bdev_io->ch->stat.bytes_written += bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
+			bdev_io->ch->stat.num_write_ops++;
+			bdev_io->ch->stat.write_latency_ticks += (spdk_get_ticks() - bdev_io->submit_tsc);
+			break;
+		default:
+			break;
+		}
+	}
+
+#ifdef SPDK_CONFIG_VTUNE
+	uint64_t now_tsc = spdk_get_ticks();
+	if (now_tsc > (bdev_io->ch->start_tsc + bdev_io->ch->interval_tsc)) {
+		uint64_t data[5];
+
+		data[0] = bdev_io->ch->stat.num_read_ops;
+		data[1] = bdev_io->ch->stat.bytes_read;
+		data[2] = bdev_io->ch->stat.num_write_ops;
+		data[3] = bdev_io->ch->stat.bytes_written;
+		data[4] = bdev_io->bdev->fn_table->get_spin_time ?
+			  bdev_io->bdev->fn_table->get_spin_time(bdev_io->ch->channel) : 0;
+
+		__itt_metadata_add(g_bdev_mgr.domain, __itt_null, bdev_io->ch->handle,
+				   __itt_metadata_u64, 5, data);
+
+		memset(&bdev_io->ch->stat, 0, sizeof(bdev_io->ch->stat));
+		bdev_io->ch->start_tsc = now_tsc;
+	}
+#endif
+
 	assert(bdev_io->cb != NULL);
 	assert(spdk_get_thread() == spdk_io_channel_get_thread(bdev_io->ch->channel));
 
@@ -2242,43 +2279,6 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 			_spdk_bdev_ch_retry_io(bdev_ch);
 		}
 	}
-
-	if (status == SPDK_BDEV_IO_STATUS_SUCCESS) {
-		switch (bdev_io->type) {
-		case SPDK_BDEV_IO_TYPE_READ:
-			bdev_ch->stat.bytes_read += bdev_io->u.bdev.num_blocks * bdev->blocklen;
-			bdev_ch->stat.num_read_ops++;
-			bdev_ch->stat.read_latency_ticks += (spdk_get_ticks() - bdev_io->submit_tsc);
-			break;
-		case SPDK_BDEV_IO_TYPE_WRITE:
-			bdev_ch->stat.bytes_written += bdev_io->u.bdev.num_blocks * bdev->blocklen;
-			bdev_ch->stat.num_write_ops++;
-			bdev_ch->stat.write_latency_ticks += (spdk_get_ticks() - bdev_io->submit_tsc);
-			break;
-		default:
-			break;
-		}
-	}
-
-#ifdef SPDK_CONFIG_VTUNE
-	uint64_t now_tsc = spdk_get_ticks();
-	if (now_tsc > (bdev_ch->start_tsc + bdev_ch->interval_tsc)) {
-		uint64_t data[5];
-
-		data[0] = bdev_ch->stat.num_read_ops;
-		data[1] = bdev_ch->stat.bytes_read;
-		data[2] = bdev_ch->stat.num_write_ops;
-		data[3] = bdev_ch->stat.bytes_written;
-		data[4] = bdev->fn_table->get_spin_time ?
-			  bdev->fn_table->get_spin_time(bdev_ch->channel) : 0;
-
-		__itt_metadata_add(g_bdev_mgr.domain, __itt_null, bdev_ch->handle,
-				   __itt_metadata_u64, 5, data);
-
-		memset(&bdev_ch->stat, 0, sizeof(bdev_ch->stat));
-		bdev_ch->start_tsc = now_tsc;
-	}
-#endif
 
 	_spdk_bdev_io_complete(bdev_io);
 }
