@@ -53,6 +53,24 @@
     },
     {
       "key": {
+        "uuid": "4c60810e_8661893b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 4131,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-19T11:21:34Z",
+      "side": 1,
+      "message": "Can we do this as zero length writes cluster after cluster to whole blob? Completion of one cluster write would trigger next cluster write. This will allocate whole blob (regardless if cluster is already allocated or not) and will require only one cluster of memory at once. I\u0027m not sure what is the behavior for zero length write right now, but that can be changed accordingly.",
+      "parentUuid": "6a1d6ef3_286c8bb4",
+      "revId": "c44cc02ef2622362362668f8f30d6cabe82c06f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9f8a40ec_16323ad6",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 20
