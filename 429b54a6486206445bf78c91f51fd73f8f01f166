@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "e12dfd12_9a4477b6",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-19T00:11:04Z",
+      "side": 1,
+      "message": "because those are public headers for module outside of the bdev layer.  I\u0027m guessing same for log - many of the other bdev modules also include these",
+      "parentUuid": "cc66f068_2a97f05d",
+      "range": {
+        "startLine": 44,
+        "startChar": 0,
+        "endLine": 45,
+        "endChar": 30
+      },
+      "revId": "429b54a6486206445bf78c91f51fd73f8f01f166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "54ce3fe6_acc353e2",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 15
@@ -36,6 +60,30 @@
       "writtenOn": "2018-04-10T16:09:03Z",
       "side": 1,
       "message": "We have done quite a bit of work to abstract out DPDK so that users can swap DPDK with other frameworks. This introduces new code into SPDK with a hard dependency on DPDK. Is there a way to abstract this out? If not, how can we easily identify the code that has dependencies and help users who don\u0027t have DPDK exclude it from their builds?",
+      "range": {
+        "startLine": 47,
+        "startChar": 0,
+        "endLine": 51,
+        "endChar": 30
+      },
+      "revId": "429b54a6486206445bf78c91f51fd73f8f01f166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e80322b1_dc597d25",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-19T00:11:04Z",
+      "side": 1,
+      "message": "I think I answered this somewhere else - this module required DPDK so its an exception.  We can\u0027t abstract the DPDK cryptodev API.",
+      "parentUuid": "54ce3fe6_acc353e2",
       "range": {
         "startLine": 47,
         "startChar": 0,
@@ -117,6 +165,30 @@
     },
     {
       "key": {
+        "uuid": "6a104519_57f88752",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-19T00:11:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8abaaeba_af06800c",
+      "range": {
+        "startLine": 139,
+        "startChar": 51,
+        "endLine": 139,
+        "endChar": 60
+      },
+      "revId": "429b54a6486206445bf78c91f51fd73f8f01f166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a0e4f43f_4e360acc",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 15
@@ -128,6 +200,30 @@
       "writtenOn": "2018-04-18T18:50:09Z",
       "side": 1,
       "message": "typo \"of\"",
+      "range": {
+        "startLine": 176,
+        "startChar": 34,
+        "endLine": 176,
+        "endChar": 37
+      },
+      "revId": "429b54a6486206445bf78c91f51fd73f8f01f166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3194ed5b_67a2e4d1",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-19T00:11:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a0e4f43f_4e360acc",
       "range": {
         "startLine": 176,
         "startChar": 34,
@@ -209,6 +305,30 @@
     },
     {
       "key": {
+        "uuid": "d977ddf2_b70fb44d",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-19T00:11:04Z",
+      "side": 1,
+      "message": "I\u0027ve updated things to use it in all cases except one where I have to use the rte_ version because of a crypto specific thing",
+      "parentUuid": "a57bb9b5_6e41f77a",
+      "range": {
+        "startLine": 194,
+        "startChar": 25,
+        "endLine": 194,
+        "endChar": 43
+      },
+      "revId": "429b54a6486206445bf78c91f51fd73f8f01f166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f9ae1a0d_71d2abad",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 15
@@ -220,6 +340,30 @@
       "writtenOn": "2018-04-18T18:50:09Z",
       "side": 1,
       "message": "typo \"for\"",
+      "range": {
+        "startLine": 252,
+        "startChar": 52,
+        "endLine": 252,
+        "endChar": 56
+      },
+      "revId": "429b54a6486206445bf78c91f51fd73f8f01f166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9cf81222_40450391",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-19T00:11:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f9ae1a0d_71d2abad",
       "range": {
         "startLine": 252,
         "startChar": 52,
@@ -255,6 +399,30 @@
     },
     {
       "key": {
+        "uuid": "4e1fc866_9ff99e28",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-19T00:11:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4d4da190_7a97175e",
+      "range": {
+        "startLine": 341,
+        "startChar": 22,
+        "endLine": 341,
+        "endChar": 28
+      },
+      "revId": "429b54a6486206445bf78c91f51fd73f8f01f166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1159591a_f8900881",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 15
@@ -278,6 +446,30 @@
     },
     {
       "key": {
+        "uuid": "e76f3a8d_4e0da843",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-19T00:11:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1159591a_f8900881",
+      "range": {
+        "startLine": 342,
+        "startChar": 47,
+        "endLine": 342,
+        "endChar": 51
+      },
+      "revId": "429b54a6486206445bf78c91f51fd73f8f01f166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cb42b4b0_9efd217e",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 15
@@ -289,6 +481,30 @@
       "writtenOn": "2018-04-18T18:50:09Z",
       "side": 1,
       "message": "Do you mean to open the base bdev in read/write mode? You probably took this from the passthru bdev before I submitted the patch to change this to true.",
+      "range": {
+        "startLine": 1062,
+        "startChar": 28,
+        "endLine": 1062,
+        "endChar": 33
+      },
+      "revId": "429b54a6486206445bf78c91f51fd73f8f01f166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92bdee0d_5636f0a1",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1062,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-19T00:11:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cb42b4b0_9efd217e",
       "range": {
         "startLine": 1062,
         "startChar": 28,
