@@ -165,7 +165,7 @@ else
 fi
 cd ~
 
-if [ ! -d /usr/local/flamegraph ]; then
+if [ ! -d /usr/local/FlameGraph ]; then
     git clone https://github.com/brendangregg/FlameGraph.git
     mkdir -p /usr/local
     sudo mv FlameGraph /usr/local/FlameGraph
