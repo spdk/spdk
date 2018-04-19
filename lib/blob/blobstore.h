@@ -193,6 +193,7 @@ enum spdk_blob_op_type {
 	SPDK_BLOB_WRITE_ZEROES,
 	SPDK_BLOB_WRITEV,
 	SPDK_BLOB_READV,
+	SPDK_BLOB_TOUCH,
 };
 
 /* back bs_dev */

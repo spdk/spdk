@@ -1596,6 +1596,9 @@ _spdk_blob_request_submit_op_split_next(void *cb_arg, int bserrno)
 		spdk_blob_io_write(blob, ch, buf, offset, op_length,
 				   _spdk_blob_request_submit_op_split_next, ctx);
 		break;
+	case SPDK_BLOB_TOUCH:
+		spdk_blob_io_touch(blob, ch, _spdk_blob_request_submit_op_split_next, ctx);
+		break;
 	case SPDK_BLOB_UNMAP:
 		spdk_blob_io_unmap(blob, ch, offset, op_length,
 				   _spdk_blob_request_submit_op_split_next, ctx);
@@ -1723,6 +1726,21 @@ _spdk_blob_request_submit_op_single(struct spdk_io_channel *_ch, struct spdk_blo
 		}
 		break;
 	}
+	case SPDK_BLOB_TOUCH: {
+		if (!_spdk_bs_page_is_allocated(blob, offset)) {
+			/* Queue this operation and allocate the cluster */
+			spdk_bs_user_op_t *op;
+
+			op = spdk_bs_user_op_alloc(_ch, &cpl, op_type, blob, payload, 0, offset, length);
+			if (!op) {
+				cb_fn(cb_arg, -ENOMEM);
+				return;
+			}
+
+			_spdk_bs_allocate_and_copy_cluster(blob, _ch, offset, op);
+		}
+		break;
+	}
 	case SPDK_BLOB_UNMAP: {
 		spdk_bs_batch_t *batch;
 
@@ -1757,6 +1775,11 @@ _spdk_blob_request_submit_op(struct spdk_blob *blob, struct spdk_io_channel *_ch
 	if (blob->data_ro && op_type != SPDK_BLOB_READ) {
 		cb_fn(cb_arg, -EPERM);
 		return;
+	}
+
+	if (op_type == SPDK_BLOB_TOUCH) {
+		offset = 0;
+		length = blob->active.num_clusters * blob->bs->pages_per_cluster;
 	}
 
 	if (offset + length > blob->active.num_clusters * blob->bs->pages_per_cluster) {
@@ -3578,6 +3601,7 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 
 struct spdk_clone_snapshot_ctx {
 	struct spdk_bs_cpl      cpl;
+	struct spdk_io_channel  *channel;
 	int bserrno;
 
 	struct {
@@ -4340,6 +4364,13 @@ void spdk_blob_io_write(struct spdk_blob *blob, struct spdk_io_channel *channel,
 				     SPDK_BLOB_WRITE);
 }
 
+void spdk_blob_io_touch(struct spdk_blob *blob, struct spdk_io_channel *channel,
+			spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	_spdk_blob_request_submit_op(blob, channel, NULL, 0, 0, cb_fn, cb_arg,
+				     SPDK_BLOB_TOUCH);
+}
+
 void spdk_blob_io_read(struct spdk_blob *blob, struct spdk_io_channel *channel,
 		       void *payload, uint64_t offset, uint64_t length,
 		       spdk_blob_op_complete cb_fn, void *cb_arg)
@@ -4691,6 +4722,74 @@ spdk_blob_is_thin_provisioned(struct spdk_blob *blob)
 {
 	assert(blob != NULL);
 	return !!(blob->invalid_flags & SPDK_BLOB_THIN_PROV);
+}
+
+static void
+_spdk_bs_inflate_blob_touch_cpl(void *arg, int bserrno)
+{
+	struct spdk_clone_snapshot_ctx *ctx = (struct spdk_clone_snapshot_ctx *)arg;
+	struct spdk_blob *_blob = ctx->original.blob;
+
+	if (bserrno != 0) {
+		ctx->bserrno = bserrno;
+		_spdk_bs_clone_snapshot_cleanup_finish(ctx, 0);
+	}
+
+#if 0
+	// FIXIT: not implemented in this patch
+	_spdk_bs_blob_list_remove(_blob);
+#endif
+
+	/* Unset thin provision */
+	_blob->invalid_flags = _blob->invalid_flags & ~SPDK_BLOB_THIN_PROV;
+	_spdk_blob_remove_xattr(_blob, BLOB_SNAPSHOT, true);
+
+	/* Destroy back_bs_dev */
+	_blob->back_bs_dev->destroy(_blob->back_bs_dev);
+	_blob->back_bs_dev = NULL;
+
+	_spdk_bs_clone_snapshot_origblob_cleanup(ctx, 0);
+}
+
+static void
+_spdk_bs_inflate_blob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
+{
+	struct spdk_clone_snapshot_ctx *ctx = (struct spdk_clone_snapshot_ctx *)cb_arg;
+
+	if (bserrno != 0) {
+		ctx->bserrno = bserrno;
+		_spdk_bs_clone_snapshot_cleanup_finish(ctx, 0);
+		return;
+	}
+	ctx->original.blob = _blob;
+
+	if (spdk_blob_is_thin_provisioned(_blob) == false) {
+		/* This is not thin provisioned blob. No need to inflate. */
+		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, 0);
+		return;
+	}
+
+	spdk_blob_io_touch(_blob, ctx->channel, _spdk_bs_inflate_blob_touch_cpl, ctx);
+
+}
+
+void spdk_bs_inflate_blob(struct spdk_blob_store *bs, struct spdk_io_channel *channel,
+		spdk_blob_id blobid, spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_clone_snapshot_ctx *ctx = calloc(1, sizeof(*ctx));
+
+	if (!ctx) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+	ctx->cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
+	ctx->cpl.u.bs_basic.cb_fn = cb_fn;
+	ctx->cpl.u.bs_basic.cb_arg = cb_arg;
+	ctx->bserrno = 0;
+	ctx->original.id = blobid;
+	ctx->channel = channel;
+
+	spdk_bs_open_blob(bs, ctx->original.id, _spdk_bs_inflate_blob_open_cpl, ctx);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("blob", SPDK_LOG_BLOB)
