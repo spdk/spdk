@@ -54,17 +54,6 @@ char *g_xattr_names[] = {"first", "second", "third"};
 char *g_xattr_values[] = {"one", "two", "three"};
 uint64_t g_ctx = 1729;
 
-bool g_scheduler_delay = false;
-
-struct scheduled_ops {
-	spdk_thread_fn	fn;
-	void		*ctx;
-
-	TAILQ_ENTRY(scheduled_ops)	ops_queue;
-};
-
-static TAILQ_HEAD(, scheduled_ops) g_scheduled_ops = TAILQ_HEAD_INITIALIZER(g_scheduled_ops);
-
 struct spdk_bs_super_block_ver1 {
 	uint8_t		signature[8];
 	uint32_t        version;
@@ -121,35 +110,6 @@ _get_xattr_value_null(void *arg, const char *name,
 }
 
 
-static void
-_bs_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
-{
-	if (g_scheduler_delay) {
-		struct scheduled_ops *ops = calloc(1, sizeof(*ops));
-
-		SPDK_CU_ASSERT_FATAL(ops != NULL);
-		ops->fn = fn;
-		ops->ctx = ctx;
-		TAILQ_INSERT_TAIL(&g_scheduled_ops, ops, ops_queue);
-	} else {
-		fn(ctx);
-	}
-}
-
-#if 0
-static void
-_bs_flush_scheduler(void)
-{
-	struct scheduled_ops *ops;
-
-	while (!TAILQ_EMPTY(&g_scheduled_ops)) {
-		ops = TAILQ_FIRST(&g_scheduled_ops);
-		TAILQ_REMOVE(&g_scheduled_ops, ops, ops_queue);
-		ops->fn(ops->ctx);
-		free(ops);
-	}
-}
-#endif
 
 static void
 bs_op_complete(void *cb_arg, int bserrno)
