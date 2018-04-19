@@ -173,6 +173,7 @@ static uint32_t g_metacfg_prchk_flags;
 static int g_rw_percentage;
 static int g_is_random;
 static int g_queue_depth;
+static uint32_t g_io_requests;
 static int g_time_in_sec;
 static uint32_t g_max_completions;
 static int g_dpdk_mem;
@@ -230,13 +231,13 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	 * 1 more entry be used for stripe.
 	 */
 	entries = (g_io_size_bytes - 1) / max_xfer_size + 2;
+	g_io_requests = entries;
 	if ((g_queue_depth * entries) > opts.io_queue_size) {
 		printf("controller IO queue size %u less than required\n",
 		       opts.io_queue_size);
-		printf("configure an IO queue depth and IO size such that "
-		       "the product is less than or equal to %u\n", opts.io_queue_size);
+		printf("Consider using lower queue depth or small IO size because "
+		       "IO requests may be queued at the NVMe driver.\n");
 		g_warn = true;
-		return;
 	}
 
 	entry = calloc(1, sizeof(struct ns_entry));
@@ -805,7 +806,15 @@ init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 		 * TODO: If a controller has multiple namespaces, they could all use the same queue.
 		 *  For now, give each namespace/thread combination its own queue.
 		 */
-		ns_ctx->u.nvme.qpair = spdk_nvme_ctrlr_alloc_io_qpair(ns_ctx->entry->u.nvme.ctrlr, NULL, 0);
+		struct spdk_nvme_io_qpair_opts opts;
+
+		spdk_nvme_ctrlr_get_default_io_qpair_opts(ns_ctx->entry->u.nvme.ctrlr, &opts, sizeof(opts));
+		if (opts.io_queue_requests < g_io_requests) {
+			opts.io_queue_requests = g_io_requests;
+		}
+
+		ns_ctx->u.nvme.qpair = spdk_nvme_ctrlr_alloc_io_qpair(ns_ctx->entry->u.nvme.ctrlr, &opts,
+				       sizeof(opts));
 		if (!ns_ctx->u.nvme.qpair) {
 			printf("ERROR: spdk_nvme_ctrlr_alloc_io_qpair failed\n");
 			return -1;
