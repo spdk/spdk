@@ -16,6 +16,24 @@
       "revId": "eaffbbe384677964dd2e9789f0e12a3ce71c0820",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9bc15673_ac0b9695",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1447,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-19T16:35:33Z",
+      "side": 1,
+      "message": "Agreed.  We should save the number of requests we need up in register_ns() and then use that value to specify the number of io_queue_requests when allocating the IO qpair.",
+      "parentUuid": "211051df_a7d9e8ac",
+      "revId": "eaffbbe384677964dd2e9789f0e12a3ce71c0820",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
