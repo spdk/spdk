@@ -32,6 +32,7 @@
  */
 
 #include "spdk/io_channel.h"
+#include "bs_scheduler.c"
 
 #define DEV_BUFFER_SIZE (64 * 1024 * 1024)
 #define DEV_BUFFER_BLOCKLEN (4096)
@@ -66,18 +67,63 @@ dev_complete(void *arg)
 	cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, 0);
 }
 
+
+struct dev_io_ctx {
+	struct spdk_bs_dev *dev;
+	struct spdk_io_channel *channel;
+	void *payload;
+	uint64_t lba;
+	uint32_t lba_count;
+	struct spdk_bs_dev_cb_args *cb_args;
+};
+
+static void
+dev_read_execute(void *cb_arg)
+{
+	struct dev_io_ctx *ctx = (struct dev_io_ctx *)cb_arg;
+	uint64_t offset, length;
+
+	offset = ctx->lba * DEV_BUFFER_BLOCKLEN;
+	length = ctx->lba_count * DEV_BUFFER_BLOCKLEN;
+	SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
+	memcpy(ctx->payload, &g_dev_buffer[offset], length);
+	spdk_thread_send_msg(spdk_get_thread(), dev_complete, ctx->cb_args);
+}
+
+
 static void
 dev_read(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, void *payload,
 	 uint64_t lba, uint32_t lba_count,
 	 struct spdk_bs_dev_cb_args *cb_args)
 {
+	struct dev_io_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	SPDK_CU_ASSERT_FATAL(ctx != NULL);
+	ctx->dev = dev;
+	ctx->channel = channel;
+	ctx->payload = payload;
+	ctx->lba = lba;
+	ctx->lba_count = lba_count;
+	ctx->cb_args = cb_args;
+
+	_bs_send_msg(dev_read_execute, ctx, NULL);
+}
+
+
+static void
+dev_write_execute(void *cb_arg)
+{
+	struct dev_io_ctx *ctx = (struct dev_io_ctx *)cb_arg;
 	uint64_t offset, length;
 
-	offset = lba * DEV_BUFFER_BLOCKLEN;
-	length = lba_count * DEV_BUFFER_BLOCKLEN;
+	offset = ctx->lba * DEV_BUFFER_BLOCKLEN;
+	length = ctx->lba_count * DEV_BUFFER_BLOCKLEN;
 	SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
-	memcpy(payload, &g_dev_buffer[offset], length);
-	spdk_thread_send_msg(spdk_get_thread(), dev_complete, cb_args);
+	memcpy(&g_dev_buffer[offset], ctx->payload, length);
+	spdk_thread_send_msg(spdk_get_thread(), dev_complete, ctx->cb_args);
+
+	free(ctx);
 }
 
 static void
@@ -85,13 +131,18 @@ dev_write(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, void *payloa
 	  uint64_t lba, uint32_t lba_count,
 	  struct spdk_bs_dev_cb_args *cb_args)
 {
-	uint64_t offset, length;
+	struct dev_io_ctx *ctx;
 
-	offset = lba * DEV_BUFFER_BLOCKLEN;
-	length = lba_count * DEV_BUFFER_BLOCKLEN;
-	SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
-	memcpy(&g_dev_buffer[offset], payload, length);
-	spdk_thread_send_msg(spdk_get_thread(), dev_complete, cb_args);
+	ctx = calloc(1, sizeof(*ctx));
+	SPDK_CU_ASSERT_FATAL(ctx != NULL);
+	ctx->dev = dev;
+	ctx->channel = channel;
+	ctx->payload = payload;
+	ctx->lba = lba;
+	ctx->lba_count = lba_count;
+	ctx->cb_args = cb_args;
+
+	_bs_send_msg(dev_write_execute, ctx, NULL);
 }
 
 static void
