@@ -34,6 +34,24 @@
       "revId": "eaffbbe384677964dd2e9789f0e12a3ce71c0820",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cee252a6_4c142385",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1447,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-04-19T23:04:29Z",
+      "side": 1,
+      "message": "OK, will update the patch according to the comments.",
+      "parentUuid": "9bc15673_ac0b9695",
+      "revId": "eaffbbe384677964dd2e9789f0e12a3ce71c0820",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
