@@ -375,3 +375,72 @@ invalid:
 }
 
 SPDK_RPC_REGISTER("set_bdev_qos_limit_iops", spdk_rpc_set_bdev_qos_limit_iops)
+
+
+struct rpc_disable_bdev_qos_limit_iops {
+	char		*name;
+};
+
+static void
+free_rpc_disable_bdev_qos_limit_iops(struct rpc_set_bdev_qos_limit_iops *r)
+{
+	free(r->name);
+}
+
+static const struct spdk_json_object_decoder rpc_disable_bdev_qos_limit_iops_decoders[] = {
+	{"name", offsetof(struct rpc_disable_bdev_qos_limit_iops, name), spdk_json_decode_string},
+};
+
+static void
+spdk_rpc_disable_bdev_qos_limit_iops_complete(void *cb_arg, int status)
+{
+	struct spdk_jsonrpc_request *request = cb_arg;
+	struct spdk_json_write_ctx *w;
+
+	if (status != 0) {
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						     "Failed to disable IOPS limit: %s",
+						     spdk_strerror(-status));
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+}
+
+static void
+spdk_rpc_disable_bdev_qos_limit_iops(struct spdk_jsonrpc_request *request,
+				     const struct spdk_json_val *params)
+{
+	struct rpc_disable_bdev_qos_limit_iops req = {};
+	struct spdk_bdev *bdev;
+
+	if (spdk_json_decode_object(params, rpc_disable_bdev_qos_limit_iops_decoders,
+				    SPDK_COUNTOF(rpc_disable_bdev_qos_limit_iops_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		goto invalid;
+	}
+
+	bdev = spdk_bdev_get_by_name(req.name);
+	if (bdev == NULL) {
+		SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
+		goto invalid;
+	}
+
+	free_rpc_disable_bdev_qos_limit_iops(&req);
+	spdk_bdev_set_qos_limit_iops(bdev, 0,
+				     spdk_rpc_disable_bdev_qos_limit_iops_complete, request);
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	free_rpc_disable_bdev_qos_limit_iops(&req);
+}
+
+SPDK_RPC_REGISTER("disable_bdev_qos_limit_iops", spdk_rpc_disable_bdev_qos_limit_iops)
