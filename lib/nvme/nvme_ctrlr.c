@@ -1080,9 +1080,38 @@ nvme_ctrlr_destruct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 static int
-nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
+nvme_ctrlr_update_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 {
 	uint32_t i, nn = ctrlr->cdata.nn;
+	struct spdk_nvme_ns_data *nsdata;
+
+	if (nvme_ctrlr_identify_active_ns(ctrlr)) {
+		return -1;
+	}
+
+	for (i = 0; i < nn; i++) {
+		struct spdk_nvme_ns	*ns = &ctrlr->ns[i];
+		uint32_t		nsid = i + 1;
+		nsdata			= &ctrlr->nsdata[nsid - 1];
+
+		if ((nsdata->ncap == 0) && spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
+			if (nvme_ns_construct(ns, nsid, ctrlr) != 0) {
+				continue;
+			}
+		}
+
+		if (nsdata->ncap && !spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
+			nvme_ns_destruct(ns);
+		}
+	}
+
+	return 0;
+}
+
+static int
+nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
+{
+	uint32_t nn = ctrlr->cdata.nn;
 	uint64_t phys_addr = 0;
 
 	/* ctrlr->num_ns may be 0 (startup) or a different number of namespaces (reset),
@@ -1111,19 +1140,9 @@ nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 		ctrlr->num_ns = nn;
 	}
 
-	if (nvme_ctrlr_identify_active_ns(ctrlr)) {
+	if (nvme_ctrlr_update_namespaces(ctrlr)) {
 		goto fail;
 	}
-
-	for (i = 0; i < nn; i++) {
-		struct spdk_nvme_ns	*ns = &ctrlr->ns[i];
-		uint32_t		nsid = i + 1;
-
-		if (nvme_ns_construct(ns, nsid, ctrlr) != 0) {
-			goto fail;
-		}
-	}
-
 	return 0;
 
 fail:
@@ -1136,6 +1155,7 @@ nvme_ctrlr_async_event_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct nvme_async_event_request	*aer = arg;
 	struct spdk_nvme_ctrlr		*ctrlr = aer->ctrlr;
+	union spdk_nvme_async_event_completion	event;
 
 	if (cpl->status.sc == SPDK_NVME_SC_ABORTED_SQ_DELETION) {
 		/*
@@ -1145,6 +1165,12 @@ nvme_ctrlr_async_event_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 		 *  request in this case.
 		 */
 		return;
+	}
+
+	event.raw = cpl->cdw0;
+	if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) &&
+	    (event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED)) {
+		nvme_ctrlr_update_namespaces(ctrlr);
 	}
 
 	if (ctrlr->aer_cb_fn != NULL) {
