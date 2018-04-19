@@ -39,7 +39,7 @@
 #include "spdk_internal/bdev.h"
 
 struct rpc_get_bdevs_iostat_ctx {
-	int bdev_count;
+	int in_progress;
 	struct spdk_jsonrpc_request *request;
 	struct spdk_json_write_ctx *w;
 };
@@ -48,18 +48,13 @@ static void
 spdk_rpc_get_bdevs_iostat_cb(struct spdk_bdev *bdev,
 			     const struct spdk_bdev_io_stat *stat, void *cb_arg, int rc)
 {
-	static int iter = 0;
 	struct rpc_get_bdevs_iostat_ctx *ctx = cb_arg;
 	struct spdk_jsonrpc_request *request = ctx->request;
 	struct spdk_json_write_ctx *w = ctx->w;
 	const char *bdev_name;
 
-	if (rc != 0) {
-		goto done;
-	}
-
 	bdev_name = spdk_bdev_get_name(bdev);
-	if (bdev_name != NULL) {
+	if (bdev_name != NULL && rc == 0) {
 		spdk_json_write_object_begin(w);
 
 		spdk_json_write_name(w, "name");
@@ -80,11 +75,9 @@ spdk_rpc_get_bdevs_iostat_cb(struct spdk_bdev *bdev,
 		spdk_json_write_object_end(w);
 	}
 
-done:
-	if (++iter == ctx->bdev_count) {
+	if (--ctx->in_progress == 0) {
 		spdk_json_write_array_end(w);
 		spdk_jsonrpc_end_result(request, w);
-		iter = 0;
 		free(ctx);
 		return;
 	}
@@ -108,8 +101,6 @@ static void
 spdk_rpc_get_bdevs_iostat(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
-	int iter = 0;
-	int bdev_num = 0;
 	struct rpc_get_bdevs_iostat req = {};
 	struct spdk_bdev *bdev = NULL;
 	struct spdk_json_write_ctx *w;
@@ -139,7 +130,7 @@ spdk_rpc_get_bdevs_iostat(struct spdk_jsonrpc_request *request,
 
 	ctx = calloc(1, sizeof(struct rpc_get_bdevs_iostat_ctx));
 	if (ctx == NULL) {
-		SPDK_ERRLOG("Filed to allocate rpc_get_bdevs_iostat_ctx struct\n");
+		SPDK_ERRLOG("Failed to allocate rpc_get_bdevs_iostat_ctx struct\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "No memory left");
 		return;
 	}
@@ -150,21 +141,12 @@ spdk_rpc_get_bdevs_iostat(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	if (bdev != NULL) {
-		bdev_num = 1;
-	} else {
-		for (bdev = spdk_bdev_first(); bdev != NULL; bdev = spdk_bdev_next(bdev)) {
-			bdev_num++;
-		}
-	}
-
-	ctx->bdev_count = bdev_num;
 	ctx->request = request;
 	ctx->w = w;
 
 	spdk_json_write_array_begin(w);
 
-	if (bdev_num == 0) {
+	if (bdev == NULL && spdk_bdev_first() == NULL) {
 		spdk_json_write_array_end(w);
 		spdk_jsonrpc_end_result(request, w);
 		free(ctx);
@@ -172,15 +154,12 @@ spdk_rpc_get_bdevs_iostat(struct spdk_jsonrpc_request *request,
 	}
 
 	if (bdev != NULL) {
+		ctx->in_progress++;
 		spdk_bdev_get_device_stat(bdev, spdk_rpc_get_bdevs_iostat_cb, ctx);
 	} else {
 		for (bdev = spdk_bdev_first(); bdev != NULL; bdev = spdk_bdev_next(bdev)) {
+			ctx->in_progress++;
 			spdk_bdev_get_device_stat(bdev, spdk_rpc_get_bdevs_iostat_cb, ctx);
-			iter++;
-		}
-		while (iter < bdev_num) {
-			spdk_bdev_get_device_stat(NULL, spdk_rpc_get_bdevs_iostat_cb, ctx);
-			iter++;
 		}
 	}
 
