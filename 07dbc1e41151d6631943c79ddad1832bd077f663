@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6df5c6e6_2b1f498c",
+        "filename": "dpdk",
+        "patchSetId": 18
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-19T22:42:33Z",
+      "side": 1,
+      "message": "This looks unintentional - please run \u0027git submodule update\u0027 before committing.",
+      "revId": "07dbc1e41151d6631943c79ddad1832bd077f663",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "923ddceb_7379bfab",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-19T22:42:33Z",
+      "side": 1,
+      "message": "These should be Doxygen-style /**\u003c comments - see my previous patchset.",
+      "range": {
+        "startLine": 51,
+        "startChar": 32,
+        "endLine": 51,
+        "endChar": 56
+      },
+      "revId": "07dbc1e41151d6631943c79ddad1832bd077f663",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f0892e5f_2d6ece29",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-19T22:42:33Z",
+      "side": 1,
+      "message": "\\param",
+      "range": {
+        "startLine": 118,
+        "startChar": 4,
+        "endLine": 118,
+        "endChar": 10
+      },
+      "revId": "07dbc1e41151d6631943c79ddad1832bd077f663",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9562ec93_40b5fa96",
+        "filename": "lib/Makefile",
+        "patchSetId": 18
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-19T22:42:33Z",
+      "side": 1,
+      "message": "This should be a separate patch - also, $(CONFIG_ENV) can point to a full path, so this won\u0027t work as-is.",
+      "revId": "07dbc1e41151d6631943c79ddad1832bd077f663",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
