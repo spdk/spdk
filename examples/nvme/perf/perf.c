@@ -233,10 +233,9 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	if ((g_queue_depth * entries) > opts.io_queue_size) {
 		printf("controller IO queue size %u less than required\n",
 		       opts.io_queue_size);
-		printf("configure an IO queue depth and IO size such that "
-		       "the product is less than or equal to %u\n", opts.io_queue_size);
+		printf("Consider using lower queue depth or small IO size because "
+		       "IO requests may be queued at the NVMe driver.\n");
 		g_warn = true;
-		return;
 	}
 
 	entry = calloc(1, sizeof(struct ns_entry));
@@ -1445,6 +1444,7 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 * the io_queue_size as much as possible.
 	 */
 	opts->io_queue_size = UINT16_MAX;
+	opts->io_queue_requests = UINT16_MAX;
 
 	return true;
 }
