@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "451df9af_c433be1b",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 3777,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-19T18:35:43Z",
+      "side": 1,
+      "message": "we should have a test in here somewhere where you only pass in *count \u003d 1 to get_clones() even if there are two clones - just to test the -ENOMEM case",
+      "revId": "d994cfba3e40c8080bb549caeb7ae78bbcf724e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f79a050_292948d0",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 3820,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-19T18:35:43Z",
+      "side": 1,
+      "message": "count \u003d SPDK_COUNTOF(ids) would probably be better.",
+      "revId": "d994cfba3e40c8080bb549caeb7ae78bbcf724e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d0015a0_91a81c56",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 3850,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-19T18:35:43Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "d994cfba3e40c8080bb549caeb7ae78bbcf724e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a974bcc_308e748c",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 3886,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-19T18:35:43Z",
+      "side": 1,
+      "message": "These loops are a bit unclear.  I see what they\u0027re doing but it took me a minute.\n\nWould this be simpler?\n\nCU_ASSERT(blobid \u003d\u003d ids[0] || blobid \u003d\u003d ids[1]);\nCU_ASSERT(cloneid \u003d\u003d ids[0] || blobid \u003d\u003d ids[1]);\n\nIf we had a bigger list of ids, your loops would be a better method but I think this alternate proposal will make the code more clear.\n\nI like that you did not make any assumptions here on what order the ids should be in.",
+      "revId": "d994cfba3e40c8080bb549caeb7ae78bbcf724e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9326137a_b424b4fd",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 3896,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-19T18:35:43Z",
+      "side": 1,
+      "message": "This comment is a bit confusing.  We mark the blob read-only before we try to create the clone - so we are not creating it from a not read only blob.",
+      "revId": "d994cfba3e40c8080bb549caeb7ae78bbcf724e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "25f94fdf_b73c78d4",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 3975,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-19T18:35:43Z",
+      "side": 1,
+      "message": "same as above",
+      "revId": "d994cfba3e40c8080bb549caeb7ae78bbcf724e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
