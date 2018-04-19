@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "113e2e12_dec3c486",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 2103,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-19T08:55:09Z",
+      "side": 1,
+      "message": "This is protection to not add the same clone twice. If snapshot entry exists and clone is not on its list, don\u0027t add it second time.",
+      "parentUuid": "155441f4_14c90877",
+      "revId": "7252907dc54f4070f9f44d9e080a52a3db31cd3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5e1ba6da_81eae980",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 28
