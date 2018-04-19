@@ -32,6 +32,8 @@
  */
 
 #include "spdk/io_channel.h"
+#include "bs_scheduler.c"
+
 
 #define DEV_BUFFER_SIZE (64 * 1024 * 1024)
 #define DEV_BUFFER_BLOCKLEN (4096)
@@ -58,12 +60,19 @@ dev_destroy(struct spdk_bs_dev *dev)
 	free(dev);
 }
 
+
 static void
-dev_complete(void *arg)
+dev_complete_cb(void *arg)
 {
 	struct spdk_bs_dev_cb_args *cb_args = arg;
 
 	cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, 0);
+}
+
+static void
+dev_complete(void *arg)
+{
+	_bs_send_msg(dev_complete_cb, arg, NULL);
 }
 
 static void
