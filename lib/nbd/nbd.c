@@ -212,6 +212,25 @@ spdk_nbd_disk_get_bdev_name(struct spdk_nbd_disk *nbd)
 }
 
 void
+spdk_nbd_write_config_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_nbd_disk *nbd;
+
+	TAILQ_FOREACH(nbd, &g_spdk_nbd.disk_head, tailq) {
+		spdk_json_write_object_begin(w);
+
+		spdk_json_write_named_string(w, "method", "start_nbd_disk");
+
+		spdk_json_write_named_object_begin(w, "params");
+		spdk_json_write_named_string(w, "nbd_device",  spdk_nbd_disk_get_nbd_path(nbd));
+		spdk_json_write_named_string(w, "bdev_name", spdk_nbd_disk_get_bdev_name(nbd));
+		spdk_json_write_object_end(w);
+
+		spdk_json_write_object_end(w);
+	}
+}
+
+void
 nbd_disconnect(struct spdk_nbd_disk *nbd)
 {
 	/*

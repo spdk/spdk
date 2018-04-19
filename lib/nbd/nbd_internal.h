@@ -36,6 +36,7 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/nbd.h"
+#include "spdk/json.h"
 
 struct spdk_nbd_disk *spdk_nbd_disk_find_by_nbd_path(const char *nbd_path);
 
@@ -46,6 +47,8 @@ struct spdk_nbd_disk *spdk_nbd_disk_next(struct spdk_nbd_disk *prev);
 const char *spdk_nbd_disk_get_nbd_path(struct spdk_nbd_disk *nbd);
 
 const char *spdk_nbd_disk_get_bdev_name(struct spdk_nbd_disk *nbd);
+
+void spdk_nbd_write_config_json(struct spdk_json_write_ctx *w);
 
 void nbd_disconnect(struct spdk_nbd_disk *nbd);
 
