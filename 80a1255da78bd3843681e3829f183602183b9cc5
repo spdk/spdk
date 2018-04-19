@@ -45,6 +45,30 @@
       "revId": "80a1255da78bd3843681e3829f183602183b9cc5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f33862e4_b393e881",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-04-19T01:56:33Z",
+      "side": 1,
+      "message": "This case should be happen during the initialization phase, so I think that we need to add this.",
+      "parentUuid": "1ed1eed3_7ee78e47",
+      "range": {
+        "startLine": 170,
+        "startChar": 0,
+        "endLine": 174,
+        "endChar": 2
+      },
+      "revId": "80a1255da78bd3843681e3829f183602183b9cc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
