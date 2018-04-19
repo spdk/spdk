@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "211051df_a7d9e8ac",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1447,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-19T16:31:02Z",
+      "side": 1,
+      "message": "The io_queue_size is limited by the driver to the actual supported MQES, but io_queue_requests is not, so this will always allocate a full 65535 requests for each queue.  This is probably OK for perf, but it will mean we allocate 65535 * 256 bytes per queue, which will require a 16 MB spdk_dma_malloc() allocation per queue (we allocate all of the requests for a queue in a single contiguous buffer).",
+      "revId": "eaffbbe384677964dd2e9789f0e12a3ce71c0820",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
