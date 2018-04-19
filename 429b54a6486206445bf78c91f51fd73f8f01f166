@@ -119,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "40070d58_937a61ed",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-19T00:13:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b3f2fdfb_693f7028",
+      "range": {
+        "startLine": 57,
+        "startChar": 21,
+        "endLine": 57,
+        "endChar": 35
+      },
+      "revId": "429b54a6486206445bf78c91f51fd73f8f01f166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3a6529df_dc62bf0b",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 15
@@ -130,6 +154,30 @@
       "writtenOn": "2018-04-10T16:09:03Z",
       "side": 1,
       "message": "Why are you not using spdk_mempool which helps with abstracting DPDK usage?",
+      "range": {
+        "startLine": 125,
+        "startChar": 0,
+        "endLine": 127,
+        "endChar": 52
+      },
+      "revId": "429b54a6486206445bf78c91f51fd73f8f01f166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "958f2e07_07bc5917",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-04-19T00:13:34Z",
+      "side": 1,
+      "message": "Updated for 2/3 of the cases, I can\u0027t in the crypto case because it has its own mempool routines",
+      "parentUuid": "3a6529df_dc62bf0b",
       "range": {
         "startLine": 125,
         "startChar": 0,
