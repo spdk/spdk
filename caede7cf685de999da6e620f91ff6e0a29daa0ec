@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2db3d097_1d3a7cd0",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1734,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-19T13:27:28Z",
+      "side": 1,
+      "message": "This operation shouldn\u0027t be allocated (we don\u0027t want to invoke TOUCH twice)",
+      "revId": "caede7cf685de999da6e620f91ff6e0a29daa0ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
