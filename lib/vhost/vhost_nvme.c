@@ -124,8 +124,6 @@ struct spdk_vhost_nvme_dev {
 	uint32_t num_sqs;
 	uint32_t num_cqs;
 
-	struct rte_vhost_memory *mem;
-
 	uint32_t num_ns;
 	struct spdk_vhost_nvme_ns ns[MAX_NAMESPACE];
 
@@ -213,23 +211,23 @@ spdk_nvme_map_prps(struct spdk_vhost_nvme_dev *nvme, struct spdk_nvme_cmd *cmd,
 	uint64_t prp1, prp2;
 	uintptr_t vva;
 	uint32_t i;
-	uint32_t residue_len, mps = 4096;
+	uint32_t residue_len, nents, mps = 4096;
 	uint64_t *prp_list;
 
 	prp1 = cmd->dptr.prp.prp1;
 	prp2 = cmd->dptr.prp.prp2;
 
-	vva = (uintptr_t)rte_vhost_gpa_to_vva(nvme->mem, prp1);
+	/* PRP1 may started with unaligned page address */
+	residue_len = mps - (prp1 % mps);
+	residue_len = spdk_min(len, residue_len);
+
+	vva = (uintptr_t)spdk_vhost_gpa_to_vva(&nvme->vdev, prp1, residue_len);
 	if (spdk_unlikely(vva == 0)) {
 		SPDK_ERRLOG("GPA to VVA failed\n");
 		return -1;
 	}
 	task->iovs[0].iov_base = (void *)vva;
-	/* PRP1 may started with unaligned page address */
-	residue_len = mps - (prp1 % mps);
-	residue_len = spdk_min(len, residue_len);
 	task->iovs[0].iov_len = residue_len;
-
 	len -= residue_len;
 
 	if (len) {
@@ -237,7 +235,7 @@ spdk_nvme_map_prps(struct spdk_vhost_nvme_dev *nvme, struct spdk_nvme_cmd *cmd,
 			/* 2 PRP used */
 			task->iovcnt = 2;
 			assert(prp2 != 0);
-			vva = (uintptr_t)rte_vhost_gpa_to_vva(nvme->mem, prp2);
+			vva = (uintptr_t)spdk_vhost_gpa_to_vva(&nvme->vdev, prp2, len);
 			if (spdk_unlikely(vva == 0)) {
 				return -1;
 			}
@@ -246,7 +244,8 @@ spdk_nvme_map_prps(struct spdk_vhost_nvme_dev *nvme, struct spdk_nvme_cmd *cmd,
 		} else {
 			/* PRP list used */
 			assert(prp2 != 0);
-			vva = (uintptr_t)rte_vhost_gpa_to_vva(nvme->mem, prp2);
+			nents = (len + mps - 1) / mps;
+			vva = (uintptr_t)spdk_vhost_gpa_to_vva(&nvme->vdev, prp2, nents * sizeof(*prp_list));
 			if (spdk_unlikely(vva == 0)) {
 				return -1;
 			}
@@ -254,7 +253,7 @@ spdk_nvme_map_prps(struct spdk_vhost_nvme_dev *nvme, struct spdk_nvme_cmd *cmd,
 			i = 0;
 			while (len != 0) {
 				residue_len = spdk_min(len, mps);
-				vva = (uintptr_t)rte_vhost_gpa_to_vva(nvme->mem, prp_list[i]);
+				vva = (uintptr_t)spdk_vhost_gpa_to_vva(&nvme->vdev, prp_list[i], residue_len);
 				if (spdk_unlikely(vva == 0)) {
 					return -1;
 				}
@@ -546,6 +545,9 @@ vhost_nvme_doorbell_buffer_config(struct spdk_vhost_nvme_dev *nvme,
 				  struct spdk_nvme_cmd *cmd, struct spdk_nvme_cpl *cpl)
 {
 	uint64_t dbs_dma_addr, eis_dma_addr;
+	uint64_t dbbuf_size;
+
+	dbbuf_size = (nvme->num_sqs + 1) * 8;
 
 	dbs_dma_addr = cmd->dptr.prp.prp1;
 	eis_dma_addr = cmd->dptr.prp.prp2;
@@ -554,14 +556,14 @@ vhost_nvme_doorbell_buffer_config(struct spdk_vhost_nvme_dev *nvme,
 		return -1;
 	}
 	/* Guest Physical Address to Host Virtual Address */
-	nvme->dbbuf_dbs = (void *)(uintptr_t)rte_vhost_gpa_to_vva(nvme->mem, dbs_dma_addr);
-	nvme->dbbuf_eis = (void *)(uintptr_t)rte_vhost_gpa_to_vva(nvme->mem, eis_dma_addr);
+	nvme->dbbuf_dbs = (void *)(uintptr_t)spdk_vhost_gpa_to_vva(&nvme->vdev, dbs_dma_addr, dbbuf_size);
+	nvme->dbbuf_eis = (void *)(uintptr_t)spdk_vhost_gpa_to_vva(&nvme->vdev, eis_dma_addr, dbbuf_size);
 	if (!nvme->dbbuf_dbs || !nvme->dbbuf_eis) {
 		return -1;
 	}
 	/* zeroed the doorbell buffer memory */
-	memset((void *)nvme->dbbuf_dbs, 0, (nvme->num_sqs + 1) * 8);
-	memset((void *)nvme->dbbuf_eis, 0, (nvme->num_sqs + 1) * 8);
+	memset((void *)nvme->dbbuf_dbs, 0, dbbuf_size);
+	memset((void *)nvme->dbbuf_eis, 0, dbbuf_size);
 
 	cpl->status.sc = 0;
 	cpl->status.sct = 0;
@@ -574,6 +576,7 @@ vhost_nvme_create_io_sq(struct spdk_vhost_nvme_dev *nvme,
 {
 	uint16_t qid, qsize, cqid;
 	uint64_t dma_addr;
+	uint64_t requested_len;
 	struct spdk_vhost_nvme_sq *sq;
 
 	/* physical contiguous */
@@ -597,7 +600,8 @@ vhost_nvme_create_io_sq(struct spdk_vhost_nvme_dev *nvme,
 	sq->cqid = cqid;
 	sq->size = qsize + 1;
 	sq->sq_head = sq->sq_tail = 0;
-	sq->sq_cmd = (void *)(uintptr_t)rte_vhost_gpa_to_vva(nvme->mem, dma_addr);
+	requested_len = sizeof(struct spdk_nvme_cmd) * sq->size;
+	sq->sq_cmd = (void *)(uintptr_t)spdk_vhost_gpa_to_vva(&nvme->vdev, dma_addr, requested_len);
 	if (!sq->sq_cmd) {
 		return -1;
 	}
@@ -646,6 +650,7 @@ vhost_nvme_create_io_cq(struct spdk_vhost_nvme_dev *nvme,
 	uint16_t qsize, qid;
 	uint64_t dma_addr;
 	struct spdk_vhost_nvme_cq *cq;
+	uint64_t requested_len;
 
 	/* physical contiguous */
 	assert(cmd->cdw11 & 0x1);
@@ -668,7 +673,8 @@ vhost_nvme_create_io_cq(struct spdk_vhost_nvme_dev *nvme,
 	cq->virq = -1;
 	cq->cq_head = 0;
 	cq->last_signaled_cq_head = 0;
-	cq->cq_cqe = (void *)(uintptr_t)rte_vhost_gpa_to_vva(nvme->mem, dma_addr);
+	requested_len = sizeof(struct spdk_nvme_cpl) * cq->size;
+	cq->cq_cqe = (void *)(uintptr_t)spdk_vhost_gpa_to_vva(&nvme->vdev, dma_addr, requested_len);
 	if (!cq->cq_cqe) {
 		return -1;
 	}
@@ -884,8 +890,6 @@ spdk_vhost_nvme_start_device(struct spdk_vhost_dev *vdev, void *event_ctx)
 	if (nvme == NULL) {
 		return -1;
 	}
-
-	nvme->mem = vdev->mem;
 
 	if (alloc_task_pool(nvme)) {
 		return -1;
