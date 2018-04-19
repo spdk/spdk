@@ -126,6 +126,12 @@ def set_bdev_qos_limit_iops(client, args):
     return client.call('set_bdev_qos_limit_iops', params)
 
 
+def disable_bdev_qos_limit_iops(client, args):
+    params = {}
+    params['name'] = args.name
+    return client.call('disable_bdev_qos_limit_iops', params)
+
+
 def apply_firmware(client, args):
     params = {
         'filename': args.filename,
