@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2197ddee_8eeee81a",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-04-19T06:51:34Z",
+      "side": 1,
+      "message": "The reason why we do here is to make sure that the io qpair\u0027s resource is recycled.",
+      "range": {
+        "startLine": 284,
+        "startChar": 1,
+        "endLine": 284,
+        "endChar": 21
+      },
+      "revId": "986b48e47e170860721ef13ef5bb54a60cf6813b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
