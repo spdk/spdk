@@ -2930,13 +2930,81 @@ _spdk_bdev_enable_qos_done(struct spdk_io_channel_iter *i, int status)
 	_spdk_bdev_set_qos_limit_done(ctx, status);
 }
 
+static void
+_spdk_bdev_disable_qos(struct spdk_bdev *bdev)
+{
+	struct spdk_bdev_io		*bdev_io = NULL;
+	struct spdk_bdev_channel	*qos_channel = NULL;
+
+	pthread_mutex_lock(&bdev->mutex);
+
+	qos_channel = bdev->qos_channel;
+	if (!qos_channel) {
+		pthread_mutex_unlock(&bdev->mutex);
+		SPDK_ERRLOG("QoS on bdev %s already disabled.\n", bdev->name);
+		return;
+	}
+
+	while (!TAILQ_EMPTY(&qos_channel->qos_io)) {
+		bdev_io = TAILQ_FIRST(&qos_channel->qos_io);
+		TAILQ_REMOVE(&qos_channel->qos_io, bdev_io, link);
+
+		assert(bdev_io->io_submit_ch);
+		bdev_io->ch = bdev_io->io_submit_ch;
+		bdev_io->io_submit_ch = NULL;
+
+		spdk_thread_send_msg(spdk_io_channel_get_thread(bdev_io->ch->channel),
+				     _spdk_bdev_io_submit, bdev_io);
+	}
+
+	bdev->ios_per_sec = 0;
+	qos_channel->flags &= ~BDEV_CH_QOS_ENABLED;
+
+	/* All queued I/Os has been issued, destroy the QoS channel */
+	spdk_thread_send_msg(bdev->qos_thread, spdk_bdev_qos_channel_destroy, qos_channel);
+
+	bdev->qos_channel = NULL;
+	bdev->qos_thread = NULL;
+
+	pthread_mutex_unlock(&bdev->mutex);
+}
+
+static void
+_spdk_bdev_disable_qos_msg(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_bdev_channel *bdev_ch = spdk_io_channel_get_ctx(ch);
+
+	bdev_ch->flags &= ~BDEV_CH_QOS_ENABLED;
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+static void
+_spdk_bdev_disable_qos_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_bdev *bdev = spdk_io_channel_iter_get_ctx(i);
+
+	_spdk_bdev_disable_qos(bdev);
+}
+
 void
 spdk_bdev_set_qos_limit_iops(struct spdk_bdev *bdev, uint64_t ios_per_sec,
 			     void (*cb_fn)(void *cb_arg, int status), void *cb_arg)
 {
 	struct set_qos_limit_ctx *ctx;
 
-	if (ios_per_sec == 0 || ios_per_sec % SPDK_BDEV_QOS_MIN_IOS_PER_SEC) {
+	if (ios_per_sec == 0) {
+		SPDK_NOTICELOG("Request to disable QoS on bdev %s\n", bdev->name);
+		/* Disable QoS on all channels. */
+		spdk_for_each_channel(__bdev_to_io_dev(bdev),
+				      _spdk_bdev_disable_qos_msg, bdev,
+				      _spdk_bdev_disable_qos_done);
+		cb_fn(cb_arg, 0);
+		return;
+	}
+
+	if (ios_per_sec % SPDK_BDEV_QOS_MIN_IOS_PER_SEC) {
 		SPDK_ERRLOG("Requested ios_per_sec limit %" PRIu64 " is not a multiple of %u\n",
 			    ios_per_sec, SPDK_BDEV_QOS_MIN_IOS_PER_SEC);
 		cb_fn(cb_arg, -EINVAL);
