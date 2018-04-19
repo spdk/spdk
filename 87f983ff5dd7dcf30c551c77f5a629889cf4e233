@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "871405e9_78472ee5",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 29
+      },
+      "lineNbr": 401,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-19T18:16:01Z",
+      "side": 1,
+      "message": "Daniel\u0027s earlier comment said we should treat a non-snapshot blob as just having no clones rather than returning error.  Reply says \"Done\" but I think the comment here wasn\u0027t fixed.\n\nShould also add the -ENOMEM is returned if *count is not sufficient.  Actually this comment needs to be updated to describe how the new output parameter is used.",
+      "revId": "87f983ff5dd7dcf30c551c77f5a629889cf4e233",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c6a211c_88537190",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 4864,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-19T18:16:01Z",
+      "side": 1,
+      "message": "is it valid to get here with snapshot_entry-\u003eclone_count \u003e 0?  if clone_count is 0, the snapshot_entry should have been removed from bs-\u003esnapshots",
+      "revId": "87f983ff5dd7dcf30c551c77f5a629889cf4e233",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
