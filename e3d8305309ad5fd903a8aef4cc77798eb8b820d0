@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "41112ad1_909fc628",
+        "filename": "test/vhost/common/vm_setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-19T18:16:26Z",
+      "side": 1,
+      "message": "Don\u0027t we need handling for --read-only here?",
+      "revId": "e3d8305309ad5fd903a8aef4cc77798eb8b820d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
