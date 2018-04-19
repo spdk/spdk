@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a5500a9_fc60ea73",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-19T19:40:20Z",
+      "side": 1,
+      "message": "This should probably be #lvol_snapshots to avoid conflicts (names are global to the whole Doxygen project).",
+      "range": {
+        "startLine": 31,
+        "startChar": 25,
+        "endLine": 31,
+        "endChar": 34
+      },
+      "revId": "53bb735bc453b72d23bc50e0946391f3f5a98866",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
