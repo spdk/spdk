@@ -649,6 +649,7 @@ function delete_bdev_tc2()
 	return 0
 }
 
+timing_enter pmem
 vhost_start
 if ! $enable_script_debug; then
 	set +x
@@ -697,3 +698,4 @@ fi
 pmem_clean_pool_file
 report_test_completion "pmem"
 vhost_kill
+timing_exit pmem
