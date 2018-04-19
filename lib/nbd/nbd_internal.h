@@ -36,6 +36,7 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/nbd.h"
+#include "spdk/json.h"
 
 struct spdk_nbd_disk *spdk_nbd_disk_find_by_nbd_path(const char *nbd_path);
 
