@@ -905,6 +905,15 @@ end:
 	free(req);
 }
 
+bool
+spdk_lvol_deletable(struct spdk_lvol *lvol)
+{
+	size_t count;
+
+	spdk_blob_get_clones(lvol->lvol_store->blobstore, lvol->blob_id, NULL, &count);
+	return (count > 0);
+}
+
 static void
 _spdk_lvol_delete_blob_cb(void *cb_arg, int lvolerrno)
 {
@@ -1096,6 +1105,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 		SPDK_ERRLOG("Cannot alloc memory for lvol base pointer\n");
 		return -ENOMEM;
 	}
+	rc = pthread_mutex_init(&lvol->mutex, NULL);
 
 	lvol->lvol_store = lvs;
 	num_clusters = divide_round_up(sz, spdk_bs_get_cluster_size(bs));

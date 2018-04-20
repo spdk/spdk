@@ -431,6 +431,12 @@ spdk_lvol_close(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_ar
 	cb_fn(cb_arg, 0);
 }
 
+bool
+spdk_lvol_deletable(struct spdk_lvol *lvol)
+{
+	return true;
+}
+
 void
 spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
@@ -761,8 +767,8 @@ ut_lvol_init(void)
 	CU_ASSERT(g_lvol != NULL);
 	CU_ASSERT(g_lvolerrno == 0);
 
-	/* Successful lvol destruct */
-	vbdev_lvol_destruct(g_lvol);
+	/* Successful lvol destroy */
+	vbdev_lvol_destroy(g_lvol, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvol == NULL);
 
 	TAILQ_REMOVE(&g_spdk_lvol_pairs, g_lvs_bdev, lvol_stores);
@@ -814,12 +820,12 @@ ut_lvol_snapshot(void)
 	CU_ASSERT(g_lvolerrno == 0);
 
 	/* Successful lvol destruct */
-	vbdev_lvol_destruct(g_lvol);
+	vbdev_lvol_destroy(g_lvol, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvol == NULL);
 
 	/* Successful snap destruct */
 	g_lvol = lvol;
-	vbdev_lvol_destruct(g_lvol);
+	vbdev_lvol_destroy(g_lvol, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvol == NULL);
 
 	TAILQ_REMOVE(&g_spdk_lvol_pairs, g_lvs_bdev, lvol_stores);
@@ -885,17 +891,17 @@ ut_lvol_clone(void)
 
 	/* Successful lvol destruct */
 	g_lvol = lvol;
-	vbdev_lvol_destruct(g_lvol);
+	vbdev_lvol_destroy(g_lvol, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvol == NULL);
 
 	/* Successful clone destruct */
 	g_lvol = clone;
-	vbdev_lvol_destruct(g_lvol);
+	vbdev_lvol_destroy(g_lvol, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvol == NULL);
 
 	/* Successful snap destruct */
 	g_lvol = snap;
-	vbdev_lvol_destruct(g_lvol);
+	vbdev_lvol_destroy(g_lvol, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvol == NULL);
 
 	TAILQ_REMOVE(&g_spdk_lvol_pairs, g_lvs_bdev, lvol_stores);
@@ -1089,11 +1095,11 @@ ut_lvol_rename(void)
 
 	/* Successful lvols destruct */
 	g_lvol = lvol;
-	vbdev_lvol_destruct(g_lvol);
+	vbdev_lvol_destroy(g_lvol, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvol == NULL);
 
 	g_lvol = lvol2;
-	vbdev_lvol_destruct(g_lvol);
+	vbdev_lvol_destroy(g_lvol, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvol == NULL);
 
 	TAILQ_REMOVE(&g_spdk_lvol_pairs, g_lvs_bdev, lvol_stores);
@@ -1154,7 +1160,7 @@ ut_lvol_resize(void)
 	CU_ASSERT(g_lvolerrno != 0);
 
 	/* Successful lvol destruct */
-	vbdev_lvol_destruct(g_lvol);
+	vbdev_lvol_destroy(g_lvol, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvol == NULL);
 
 	TAILQ_REMOVE(&g_spdk_lvol_pairs, g_lvs_bdev, lvol_stores);
