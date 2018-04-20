@@ -96,4 +96,4 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_construct_rbd(&req);
 }
-SPDK_RPC_REGISTER("construct_rbd_bdev", spdk_rpc_construct_rbd_bdev)
+SPDK_RPC_REGISTER("construct_rbd_bdev", spdk_rpc_construct_rbd_bdev, SPDK_RPC_RUNTIME)

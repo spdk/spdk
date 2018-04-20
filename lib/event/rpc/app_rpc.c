@@ -108,7 +108,7 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_kill_instance(&req);
 }
-SPDK_RPC_REGISTER("kill_instance", spdk_rpc_kill_instance)
+SPDK_RPC_REGISTER("kill_instance", spdk_rpc_kill_instance, SPDK_RPC_RUNTIME)
 
 
 struct rpc_context_switch_monitor {
@@ -152,4 +152,4 @@ spdk_rpc_context_switch_monitor(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 
-SPDK_RPC_REGISTER("context_switch_monitor", spdk_rpc_context_switch_monitor)
+SPDK_RPC_REGISTER("context_switch_monitor", spdk_rpc_context_switch_monitor, SPDK_RPC_RUNTIME)
