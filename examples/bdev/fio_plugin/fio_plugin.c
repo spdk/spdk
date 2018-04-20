@@ -253,16 +253,16 @@ spdk_fio_init_env(struct thread_data *td)
 	}
 	opts.hugepage_single_segments = eo->mem_single_seg;
 
-	spdk_log_set_print_level(SPDK_LOG_DEBUG);
-	spdk_log_set_trace_flag("bdev");
-	spdk_log_set_trace_flag("bdev_malloc");
-	spdk_log_set_trace_flag("bdev_nvme");
-	spdk_log_set_trace_flag("nvme");
-	spdk_log_set_trace_flag("scsi");
-	spdk_log_set_trace_flag("virtio");
-	spdk_log_set_trace_flag("virtio_blk");
-	spdk_log_set_trace_flag("virtio_dev");
-	spdk_log_set_trace_flag("virtio_pci");
+//	spdk_log_set_print_level(SPDK_LOG_DEBUG);
+//	spdk_log_set_trace_flag("bdev");
+//	spdk_log_set_trace_flag("bdev_malloc");
+//	spdk_log_set_trace_flag("bdev_nvme");
+//	spdk_log_set_trace_flag("nvme");
+//	spdk_log_set_trace_flag("scsi");
+//	spdk_log_set_trace_flag("virtio");
+//	spdk_log_set_trace_flag("virtio_blk");
+//	spdk_log_set_trace_flag("virtio_dev");
+//	spdk_log_set_trace_flag("virtio_pci");
 
 	if (spdk_env_init(&opts) < 0) {
 		SPDK_ERRLOG("Unable to initialize SPDK env\n");
