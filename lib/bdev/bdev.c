@@ -2886,15 +2886,32 @@ _spdk_bdev_update_qos_limit_iops_msg(void *cb_arg)
 {
 	struct set_qos_limit_ctx *ctx = cb_arg;
 	struct spdk_bdev *bdev = ctx->bdev;
+	struct spdk_bdev_qos *qos;
 
-	/*
-	 * There is possibility that the QoS channel has been destroyed
-	 * when processing this message. Have a check here as the QoS
-	 * channel is protected through the critical section.
-	 */
-	if (bdev->qos.ch) {
-		spdk_bdev_qos_update_max_ios_per_timeslice(&bdev->qos);
+	pthread_mutex_lock(&bdev->mutex);
+	qos = &bdev->qos;
+
+	if (!qos->enabled) {
+		/* Two disable calls were racing. Just complete. */
+		pthread_mutex_unlock(&bdev->mutex);
+		_spdk_bdev_set_qos_limit_done(ctx, 0);
+		return;
 	}
+
+	if (qos->rate_limit == 0) {
+		/* Disable QoS */
+		qos->enabled = false;
+
+		_spdk_bdev_channel_destroy(qos->ch);
+		qos->thread = NULL;
+		qos->max_ios_per_timeslice = 0;
+		qos->io_submitted_this_timeslice = 0;
+		spdk_poller_unregister(&qos->poller);
+	} else {
+		spdk_bdev_qos_update_max_ios_per_timeslice(qos);
+	}
+
+	pthread_mutex_unlock(&bdev->mutex);
 
 	_spdk_bdev_set_qos_limit_done(ctx, 0);
 }
@@ -2928,8 +2945,9 @@ spdk_bdev_set_qos_limit_iops(struct spdk_bdev *bdev, uint64_t ios_per_sec,
 			     void (*cb_fn)(void *cb_arg, int status), void *cb_arg)
 {
 	struct set_qos_limit_ctx *ctx;
+	struct spdk_thread *thread;
 
-	if (ios_per_sec == 0 || ios_per_sec % SPDK_BDEV_QOS_MIN_IOS_PER_SEC) {
+	if (ios_per_sec > 0 && ios_per_sec % SPDK_BDEV_QOS_MIN_IOS_PER_SEC) {
 		SPDK_ERRLOG("Requested ios_per_sec limit %" PRIu64 " is not a multiple of %u\n",
 			    ios_per_sec, SPDK_BDEV_QOS_MIN_IOS_PER_SEC);
 		cb_fn(cb_arg, -EINVAL);
@@ -2944,24 +2962,25 @@ spdk_bdev_set_qos_limit_iops(struct spdk_bdev *bdev, uint64_t ios_per_sec,
 
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
+	ctx->bdev = bdev;
 
 	pthread_mutex_lock(&bdev->mutex);
 	bdev->qos.rate_limit = ios_per_sec;
-	if (bdev->qos.thread) {
-		/*
-		 * QoS is already enabled, so just update the limit information on the QoS thread.
-		 */
-		ctx->bdev = bdev;
-		spdk_thread_send_msg(bdev->qos.thread, _spdk_bdev_update_qos_limit_iops_msg, ctx);
-		pthread_mutex_unlock(&bdev->mutex);
-		return;
-	}
+	thread = bdev->qos.thread;
 	pthread_mutex_unlock(&bdev->mutex);
 
-	/* Enable QoS on all channels. */
-	spdk_for_each_channel(__bdev_to_io_dev(bdev),
-			      _spdk_bdev_enable_qos_msg, ctx,
-			      _spdk_bdev_enable_qos_done);
+	if (thread && ios_per_sec == 0) {
+		/* Disabling */
+		spdk_thread_send_msg(thread, _spdk_bdev_update_qos_limit_iops_msg, ctx);
+	} else if (thread) {
+		/* Updating */
+		spdk_thread_send_msg(thread, _spdk_bdev_update_qos_limit_iops_msg, ctx);
+	} else {
+		/* Enabling */
+		spdk_for_each_channel(__bdev_to_io_dev(bdev),
+				      _spdk_bdev_enable_qos_msg, ctx,
+				      _spdk_bdev_enable_qos_done);
+	}
 }
 
 SPDK_LOG_REGISTER_COMPONENT("bdev", SPDK_LOG_BDEV)
