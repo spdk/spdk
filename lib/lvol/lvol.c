@@ -905,6 +905,13 @@ end:
 	free(req);
 }
 
+bool
+spdk_lvol_deletable(struct spdk_lvol *lvol)
+{
+	/* TODO: return COUNT(lvol->blob->clones) */
+	return true;
+}
+
 static void
 _spdk_lvol_delete_blob_cb(void *cb_arg, int lvolerrno)
 {
