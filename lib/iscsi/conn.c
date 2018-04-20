@@ -61,6 +61,7 @@ static int g_connections_per_lcore;
 static uint32_t *g_num_connections;
 
 struct spdk_iscsi_conn *g_conns_array = MAP_FAILED;
+static int g_conns_array_fd = -1;
 static char g_shm_name[64];
 
 static pthread_mutex_t g_conns_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -116,24 +117,23 @@ spdk_find_iscsi_connection_by_id(int cid)
 int spdk_initialize_iscsi_conns(void)
 {
 	size_t conns_size = sizeof(struct spdk_iscsi_conn) * MAX_ISCSI_CONNECTIONS;
-	int conns_array_fd;
 	uint32_t i, last_core;
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_init\n");
 
 	snprintf(g_shm_name, sizeof(g_shm_name), "/spdk_iscsi_conns.%d", spdk_app_get_shm_id());
-	conns_array_fd = shm_open(g_shm_name, O_RDWR | O_CREAT, 0600);
-	if (conns_array_fd < 0) {
+	g_conns_array_fd = shm_open(g_shm_name, O_RDWR | O_CREAT, 0600);
+	if (g_conns_array_fd < 0) {
 		SPDK_ERRLOG("could not shm_open %s\n", g_shm_name);
 		goto err;
 	}
 
-	if (ftruncate(conns_array_fd, conns_size) != 0) {
+	if (ftruncate(g_conns_array_fd, conns_size) != 0) {
 		SPDK_ERRLOG("could not ftruncate\n");
 		goto err;
 	}
 	g_conns_array = mmap(0, conns_size, PROT_READ | PROT_WRITE, MAP_SHARED,
-			     conns_array_fd, 0);
+			     g_conns_array_fd, 0);
 
 	if (g_conns_array == MAP_FAILED) {
 		fprintf(stderr, "could not mmap cons array file %s (%d)\n", g_shm_name, errno);
@@ -162,8 +162,9 @@ err:
 		g_conns_array = MAP_FAILED;
 	}
 
-	if (conns_array_fd >= 0) {
-		close(conns_array_fd);
+	if (g_conns_array_fd >= 0) {
+		close(g_conns_array_fd);
+		g_conns_array_fd = -1;
 		shm_unlink(g_shm_name);
 	}
 
@@ -567,6 +568,10 @@ spdk_iscsi_conns_cleanup(void)
 	munmap(g_conns_array, sizeof(struct spdk_iscsi_conn) *
 	       MAX_ISCSI_CONNECTIONS);
 	shm_unlink(g_shm_name);
+	if (g_conns_array_fd >= 0) {
+		close(g_conns_array_fd);
+		g_conns_array_fd = -1;
+	}
 }
 
 static void
