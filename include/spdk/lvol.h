@@ -194,6 +194,12 @@ spdk_lvol_rename(struct spdk_lvol *lvol, const char *new_name,
 		 spdk_lvol_op_complete cb_fn, void *cb_arg);
 
 /**
+ * \brief Returns if it is possible to delete an lvol (i.e. lvol is not a snapshot that have at least one clone).
+ * \param lvol Handle to lvol
+ */
+bool spdk_lvol_deletable(struct spdk_lvol *lvol);
+
+/**
  * \brief Closes lvol and removes information about lvol from its lvolstore.
  * \param lvol Handle to lvol
  * \param cb_fn Completion callback
