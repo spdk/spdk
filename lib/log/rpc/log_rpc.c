@@ -134,7 +134,8 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_log_level(&req);
 }
-SPDK_RPC_REGISTER("set_log_print_level", spdk_rpc_set_log_print_level, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("set_log_print_level", spdk_rpc_set_log_print_level,
+		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 
 static void
 spdk_rpc_get_log_print_level(struct spdk_jsonrpc_request *request,
@@ -162,7 +163,8 @@ spdk_rpc_get_log_print_level(struct spdk_jsonrpc_request *request,
 
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("get_log_print_level", spdk_rpc_get_log_print_level, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("get_log_print_level", spdk_rpc_get_log_print_level,
+		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 
 static void
 spdk_rpc_set_log_level(struct spdk_jsonrpc_request *request,
@@ -201,7 +203,7 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_log_level(&req);
 }
-SPDK_RPC_REGISTER("set_log_level", spdk_rpc_set_log_level, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("set_log_level", spdk_rpc_set_log_level, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 
 static void
 spdk_rpc_get_log_level(struct spdk_jsonrpc_request *request,
@@ -228,7 +230,7 @@ spdk_rpc_get_log_level(struct spdk_jsonrpc_request *request,
 
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("get_log_level", spdk_rpc_get_log_level, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("get_log_level", spdk_rpc_get_log_level, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 
 static void
 spdk_rpc_set_trace_flag(struct spdk_jsonrpc_request *request,
@@ -264,7 +266,7 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_trace_flag(&req);
 }
-SPDK_RPC_REGISTER("set_trace_flag", spdk_rpc_set_trace_flag, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("set_trace_flag", spdk_rpc_set_trace_flag, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 
 static void
 spdk_rpc_clear_trace_flag(struct spdk_jsonrpc_request *request,
@@ -300,7 +302,8 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_trace_flag(&req);
 }
-SPDK_RPC_REGISTER("clear_trace_flag", spdk_rpc_clear_trace_flag, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("clear_trace_flag", spdk_rpc_clear_trace_flag,
+		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 
 static void
 spdk_rpc_get_trace_flags(struct spdk_jsonrpc_request *request,
@@ -330,4 +333,4 @@ spdk_rpc_get_trace_flags(struct spdk_jsonrpc_request *request,
 	spdk_json_write_object_end(w);
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("get_trace_flags", spdk_rpc_get_trace_flags, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("get_trace_flags", spdk_rpc_get_trace_flags, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
