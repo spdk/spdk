@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "540a2056_53f458e5",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 670,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-20T22:00:30Z",
+      "side": 1,
+      "message": "This will probably fail the test_trid_adrfam_str() unit test.\n\nIt might be best to say \"Unknown\" here as well, in case other types get added later.\n\nAlso, I think we\u0027re actually depending on this returning NULL for PCIe devices in bdev_nvme_config_json(), so it might not be possible to do this change - all of the callers should probably check for NULL instead.",
+      "revId": "a250d4e52c31226eb079038ffefa6545506cc85f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
