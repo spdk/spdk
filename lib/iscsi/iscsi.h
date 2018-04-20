@@ -287,13 +287,9 @@ struct spdk_iscsi_opts {
 };
 
 struct spdk_iscsi_globals {
+	bool params_initialized;
 	char *authfile;
 	char *nodebase;
-	pthread_mutex_t mutex;
-	TAILQ_HEAD(, spdk_iscsi_portal)		portal_head;
-	TAILQ_HEAD(, spdk_iscsi_portal_grp)	pg_head;
-	TAILQ_HEAD(, spdk_iscsi_init_grp)	ig_head;
-	TAILQ_HEAD(, spdk_iscsi_tgt_node)	target_head;
 
 	int timeout;
 	int nopininterval;
@@ -311,6 +307,12 @@ struct spdk_iscsi_globals {
 	bool ImmediateData;
 	uint32_t ErrorRecoveryLevel;
 	bool AllowDuplicateIsid;
+
+	pthread_mutex_t mutex;
+	TAILQ_HEAD(, spdk_iscsi_portal)		portal_head;
+	TAILQ_HEAD(, spdk_iscsi_portal_grp)	pg_head;
+	TAILQ_HEAD(, spdk_iscsi_init_grp)	ig_head;
+	TAILQ_HEAD(, spdk_iscsi_tgt_node)	target_head;
 
 	struct spdk_mempool *pdu_pool;
 	struct spdk_mempool *pdu_immediate_data_pool;
@@ -356,6 +358,10 @@ typedef void (*spdk_iscsi_fini_cb)(void *arg);
 void spdk_iscsi_fini(spdk_iscsi_fini_cb cb_fn, void *cb_arg);
 void spdk_shutdown_iscsi_conns_done(void);
 void spdk_iscsi_config_text(FILE *fp);
+
+void spdk_iscsi_opts_init(struct spdk_iscsi_opts *opts);
+void spdk_iscsi_opts_free(struct spdk_iscsi_opts *opts);
+int spdk_iscsi_set_global_params(struct spdk_iscsi_opts *opts);
 
 void spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn);
 void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
