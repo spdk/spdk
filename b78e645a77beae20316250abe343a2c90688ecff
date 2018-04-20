@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d5e4fb33_7cb1aa18",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 657,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-20T14:28:57Z",
+      "side": 1,
+      "message": "This should be part of previous \u0027if\u0027. There is no need to call spdk_blob_get_clones second time if count \u003d\u003d 0.",
+      "range": {
+        "startLine": 642,
+        "startChar": 0,
+        "endLine": 657,
+        "endChar": 12
+      },
+      "revId": "b78e645a77beae20316250abe343a2c90688ecff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
