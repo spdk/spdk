@@ -67,10 +67,11 @@ function remove_kernel_vhost()
 	targetcli "/backstores/$targetcli_rd_name delete ramdisk"
 }
 
-trap 'rm -f *.state $ROOT_DIR/spdk.tar.gz $ROOT_DIR/fio.tar.gz; error_exit "${FUNCNAME}""${LINENO}"' ERR SIGTERM SIGABRT
+trap 'rm -f *.state $ROOT_DIR/spdk.tar.gz $ROOT_DIR/fio.tar.gz $(get_vhost_dir)/Virtio0;\
+ error_exit "${FUNCNAME}""${LINENO}"' ERR SIGTERM SIGABRT
 function run_spdk_fio() {
 	LD_PRELOAD=$PLUGIN_DIR/fio_plugin $FIO_PATH/fio --ioengine=spdk_bdev\
-         "$@" --spdk_mem=1024 --spdk_single_seg=1
+         "$@" --spdk_mem=1024 --spdk_single_seg=1 &> /dev/null
 }
 
 function create_bdev_config()
@@ -105,7 +106,7 @@ function create_bdev_config()
 }
 
 timing_enter spdk_vhost_run
-spdk_vhost_run --conf-path=$BASE_DIR
+spdk_vhost_run --conf-path=$BASE_DIR &> /dev/null
 timing_exit spdk_vhost_run
 
 timing_enter create_bdev_config
@@ -132,7 +133,7 @@ timing_exit create_kernel_vhost
 timing_enter setup_vm
 vm_no="0"
 vm_setup --disk-type=spdk_vhost_scsi --force=$vm_no --os=$os_image \
- --disks="Nvme0n1_scsi0:Malloc0:Malloc1:$kernel_vhost_disk,kernel_vhost:\
+ --disks="Nvme0n1_scsi0:Malloc0:Malloc1:$kernel_vhost_disk,kernel_vhost:Virtio0,virtio:\
  Nvme0n1_blk0,spdk_vhost_blk:Nvme0n1_blk1,spdk_vhost_blk" \
  --queue_num=8 --memory=6144
 vm_run $vm_no
@@ -156,7 +157,7 @@ timing_exit vm_scp_spdk
 timing_enter vm_build_spdk
 nproc=$(vm_ssh $vm_no "nproc")
 vm_ssh $vm_no " cd /root/fio_src ; make clean ; make -j${nproc} ; make install"
-vm_ssh $vm_no " cd spdk ; ./configure --with-fio=/root/fio_src ; make clean ; make -j${nproc}"
+vm_ssh $vm_no " cd spdk ; ./configure --enable-debug --with-fio=/root/fio_src ; make clean ; make -j${nproc}"
 timing_exit vm_build_spdk
 
 vm_ssh $vm_no "/root/spdk/scripts/setup.sh"
@@ -171,20 +172,20 @@ timing_enter run_spdk_fio_pci
 vm_ssh $vm_no "LD_PRELOAD=/root/spdk/examples/bdev/fio_plugin/fio_plugin /root/fio_src/fio --ioengine=spdk_bdev \
  /root/spdk/test/vhost/initiator/bdev.fio --filename=$virtio_bdevs --section=job_randwrite \
  --section=job_randrw --section=job_write --section=job_rw \
- --spdk_conf=/root/spdk/test/vhost/initiator/bdev_pci.conf --spdk_mem=1024 --spdk_single_seg=1"
+ --spdk_conf=/root/spdk/test/vhost/initiator/bdev_pci.conf --spdk_mem=1024 --spdk_single_seg=1" >output
 timing_exit run_spdk_fio_pci
 
 timing_enter run_spdk_fio_pci_unmap
 vm_ssh $vm_no "LD_PRELOAD=/root/spdk/examples/bdev/fio_plugin/fio_plugin /root/fio_src/fio --ioengine=spdk_bdev \
  /root/spdk/test/vhost/initiator/bdev.fio --filename=$virtio_with_unmap \
- --spdk_conf=/root/spdk/test/vhost/initiator/bdev_pci.conf --spdk_mem=1024 --spdk_single_seg=1"
+ --spdk_conf=/root/spdk/test/vhost/initiator/bdev_pci.conf --spdk_mem=1024 --spdk_single_seg=1" >output
 timing_exit run_spdk_fio_pci_unmap
 
 timing_enter vm_shutdown_all
 vm_shutdown_all
 timing_exit vm_shutdown_all
 
-rm -f *.state $ROOT_DIR/spdk.tar.gz $ROOT_DIR/fio.tar.gz
+rm -f *.state $ROOT_DIR/spdk.tar.gz $ROOT_DIR/fio.tar.gz $(get_vhost_dir)/Virtio0
 timing_enter remove_kernel_vhost
 remove_kernel_vhost
 timing_exit remove_kernel_vhost
