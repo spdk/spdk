@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "35dfedd2_96260fab",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 3000,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-20T17:04:35Z",
+      "side": 1,
+      "message": "Should this be an error? The user wanted to disable QoS, but it was already disabled. Seems fine to me.",
+      "revId": "f4034f3fffecd3dc06c3e6d3ee2dcc69b273c688",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
