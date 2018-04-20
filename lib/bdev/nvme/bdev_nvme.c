@@ -1414,16 +1414,34 @@ bdev_nvme_get_spdk_running_config(FILE *fp)
 		"# Y is the NSID (starts at 1).\n");
 
 	TAILQ_FOREACH(nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
+		const char *trtype;
+
+		trtype = spdk_nvme_transport_id_trtype_str(nvme_ctrlr->trid.trtype);
+		if (!trtype) {
+			continue;
+		}
+
 		if (nvme_ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
 			fprintf(fp, "TransportId \"trtype:%s traddr:%s\" %s\n",
-				spdk_nvme_transport_id_trtype_str(nvme_ctrlr->trid.trtype),
+				trtype,
 				nvme_ctrlr->trid.traddr, nvme_ctrlr->name);
 		} else {
-			fprintf(fp, "TransportId \"trtype:%s adrfam:%s traddr:%s trsvcid:%s subnqn:%s\" %s\n",
-				spdk_nvme_transport_id_trtype_str(nvme_ctrlr->trid.trtype),
-				spdk_nvme_transport_id_adrfam_str(nvme_ctrlr->trid.adrfam),
-				nvme_ctrlr->trid.traddr, nvme_ctrlr->trid.trsvcid,
-				nvme_ctrlr->trid.subnqn, nvme_ctrlr->name);
+			const char *adrfam;
+
+			adrfam = spdk_nvme_transport_id_adrfam_str(nvme_ctrlr->trid.adrfam);
+
+			if (adrfam) {
+				fprintf(fp, "TransportId \"trtype:%s adrfam:%s traddr:%s trsvcid:%s subnqn:%s\" %s\n",
+					trtype,	adrfam,
+					nvme_ctrlr->trid.traddr, nvme_ctrlr->trid.trsvcid,
+					nvme_ctrlr->trid.subnqn, nvme_ctrlr->name);
+			} else {
+				fprintf(fp, "TransportId \"trtype:%s traddr:%s trsvcid:%s subnqn:%s\" %s\n",
+					trtype,
+					nvme_ctrlr->trid.traddr, nvme_ctrlr->trid.trsvcid,
+					nvme_ctrlr->trid.subnqn, nvme_ctrlr->name);
+			}
+
 		}
 	}
 
