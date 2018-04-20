@@ -225,6 +225,13 @@ spdk_blob_get_xattr_value(struct spdk_blob *blob, const char *name,
 	return -ENOENT;
 }
 
+int
+spdk_blob_get_clones(struct spdk_blob_store *bs, spdk_blob_id blobid, spdk_blob_id *ids,
+		     size_t *count)
+{
+	return 0;
+}
+
 uint64_t
 spdk_bs_get_page_size(struct spdk_blob_store *bs)
 {

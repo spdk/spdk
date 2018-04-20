@@ -331,6 +331,19 @@ _vbdev_lvs_remove_cb(void *cb_arg, int lvserrno)
 }
 
 static void
+_vbdev_lvs_remove_empty_cb(void *cb_arg, int lvolerrno)
+{
+	SPDK_DEBUGLOG(SPDK_LOG_VBDEV_LVOL, "Lvol removed with errno %d\n", lvolerrno);
+}
+
+static void
+_vbdev_lvs_unregister_empty_cb(void *cb_arg, int lvolerrno)
+{
+	SPDK_DEBUGLOG(SPDK_LOG_VBDEV_LVOL, "Lvol unregistered with errno %d\n", lvolerrno);
+}
+
+
+static void
 _vbdev_lvs_remove(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void *cb_arg,
 		  bool destroy)
 {
@@ -384,8 +397,11 @@ _vbdev_lvs_remove(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void 
 		lvs->destruct_req->cb_arg = lvs_bdev;
 		lvs->destruct = destroy;
 		TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
-			lvol->close_only = !destroy;
-			spdk_bdev_unregister(lvol->bdev, NULL, NULL);
+			if (destroy) {
+				vbdev_lvol_destroy(lvol, _vbdev_lvs_remove_empty_cb, NULL);
+			} else {
+				spdk_bdev_unregister(lvol->bdev, _vbdev_lvs_unregister_empty_cb, NULL);
+			}
 		}
 	}
 }
@@ -498,42 +514,25 @@ _vbdev_lvol_close_cb(void *cb_arg, int lvserrno)
 	}
 }
 
+struct vbdev_lvol_destroy_ctx {
+	struct spdk_lvol *lvol;
+	spdk_lvol_op_complete cb_fn;
+	void *cb_arg;
+};
+
 static void
-_vbdev_lvol_destroy_cb(void *cb_arg, int lvserrno)
+_vbdev_lvol_unregister_cb(void *ctx, int lvolerrno)
 {
-	struct spdk_bdev *bdev = cb_arg;
+	struct spdk_bdev *bdev = ctx;
 
-	if (lvserrno == -EBUSY) {
-		/* TODO: Handle reporting error to spdk_bdev_unregister */
-	}
+	spdk_bdev_destruct_done(bdev, lvolerrno);
 
-	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Lvol destroyed\n");
-
-	spdk_bdev_destruct_done(bdev, lvserrno);
 	free(bdev->name);
 	free(bdev);
 }
 
-static void
-_vbdev_lvol_destroy_after_close_cb(void *cb_arg, int lvserrno)
-{
-	struct spdk_lvol *lvol = cb_arg;
-	struct spdk_bdev *bdev = lvol->bdev;
-
-	if (lvserrno != 0) {
-		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Could not close Lvol %s\n", lvol->unique_id);
-		spdk_bdev_destruct_done(bdev, lvserrno);
-		free(bdev->name);
-		free(bdev);
-		return;
-	}
-
-	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Lvol %s closed, begin destroying\n", lvol->unique_id);
-	spdk_lvol_destroy(lvol, _vbdev_lvol_destroy_cb, bdev);
-}
-
 static int
-vbdev_lvol_destruct(void *ctx)
+vbdev_lvol_unregister(void *ctx)
 {
 	struct spdk_lvol *lvol = ctx;
 	char *alias;
@@ -547,14 +546,8 @@ vbdev_lvol_destruct(void *ctx)
 	} else {
 		SPDK_ERRLOG("Cannot alloc memory for alias\n");
 	}
-
-	if (lvol->close_only) {
-		free(lvol->bdev->name);
-		free(lvol->bdev);
-		spdk_lvol_close(lvol, _vbdev_lvol_close_cb, NULL);
-	} else {
-		spdk_lvol_close(lvol, _vbdev_lvol_destroy_after_close_cb, lvol);
-	}
+	/* Just close bdev, for deletion use vbdev_lvol_destroy */
+	spdk_lvol_close(lvol, _vbdev_lvol_unregister_cb, lvol->bdev);
 
 	/* return 1 to indicate we have an operation that must finish asynchronously before the
 	 *  lvol is closed
@@ -562,14 +555,76 @@ vbdev_lvol_destruct(void *ctx)
 	return 1;
 }
 
+static void
+_vbdev_lvol_destroy_cb(void *cb_arg, int lvolerrno)
+{
+	struct vbdev_lvol_destroy_ctx *ctx = (struct vbdev_lvol_destroy_ctx *) cb_arg;
+	struct spdk_lvol *lvol = ctx->lvol;
+
+	pthread_mutex_unlock(&lvol->mutex);
+
+	if (lvolerrno < 0) {
+		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Could not close Lvol %s\n", lvol->unique_id);
+		ctx->cb_fn(ctx->cb_arg, lvolerrno);
+		free(ctx);
+		return;
+	}
+
+	spdk_lvol_destroy(lvol, ctx->cb_fn, ctx->cb_arg);
+	free(ctx);
+}
+
 void
 vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
-	/*
-	 * TODO: This should call spdk_lvol_destroy() directly, and the bdev unregister path
-	 * should be changed so that it does not destroy the lvol.
-	 */
-	spdk_bdev_unregister(lvol->bdev, cb_fn, cb_arg);
+	struct vbdev_lvol_destroy_ctx *ctx;
+	char *alias;
+	int rc;
+
+	assert(lvol != NULL);
+	assert(cb_fn != NULL);
+
+	/* Lock lvol */
+	rc = pthread_mutex_trylock(&lvol->mutex);
+	if (rc) {
+		SPDK_ERRLOG("Lvol locked for deletion\n");
+		cb_fn(cb_arg, rc);
+		return;
+	}
+
+	/* Check if it is possible to delete lvol */
+	if (spdk_lvol_deletable(lvol) == false) {
+		/* throw an error */
+		SPDK_ERRLOG("Cannot delete lvol\n");
+		pthread_mutex_unlock(&lvol->mutex);
+		cb_fn(cb_arg, -EPERM);
+		return;
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		pthread_mutex_unlock(&lvol->mutex);
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	ctx->lvol = lvol;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	alias = spdk_sprintf_alloc("%s/%s", lvol->lvol_store->name, lvol->name);
+	if (alias != NULL) {
+		spdk_bdev_alias_del(lvol->bdev, alias);
+		free(alias);
+	} else {
+		SPDK_ERRLOG("Cannot alloc memory for alias\n");
+		pthread_mutex_unlock(&lvol->mutex);
+		cb_fn(cb_arg, -ENOMEM);
+		free(ctx);
+		return;
+	}
+
+	spdk_bdev_unregister(lvol->bdev, _vbdev_lvol_destroy_cb, ctx);
 }
 
 static char *
@@ -853,7 +908,7 @@ vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 }
 
 static struct spdk_bdev_fn_table vbdev_lvol_fn_table = {
-	.destruct		= vbdev_lvol_destruct,
+	.destruct		= vbdev_lvol_unregister,
 	.io_type_supported	= vbdev_lvol_io_type_supported,
 	.submit_request		= vbdev_lvol_submit_request,
 	.get_io_channel		= vbdev_lvol_get_io_channel,

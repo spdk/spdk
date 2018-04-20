@@ -192,7 +192,6 @@ _spdk_load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	lvol->blob = blob;
 	lvol->blob_id = blob_id;
 	lvol->lvol_store = lvs;
-	lvol->close_only = false;
 
 	rc = spdk_blob_get_xattr_value(blob, "uuid", (const void **)&attr, &value_len);
 	if (rc != 0 || value_len != SPDK_UUID_STRING_LEN || attr[SPDK_UUID_STRING_LEN - 1] != '\0' ||
@@ -905,6 +904,15 @@ end:
 	free(req);
 }
 
+bool
+spdk_lvol_deletable(struct spdk_lvol *lvol)
+{
+	size_t count;
+
+	spdk_blob_get_clones(lvol->lvol_store->blobstore, lvol->blob_id, NULL, &count);
+	return (count == 0);
+}
+
 static void
 _spdk_lvol_delete_blob_cb(void *cb_arg, int lvolerrno)
 {
@@ -1096,10 +1104,14 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 		SPDK_ERRLOG("Cannot alloc memory for lvol base pointer\n");
 		return -ENOMEM;
 	}
-
+	rc = pthread_mutex_init(&lvol->mutex, NULL);
+	if (rc < 0) {
+		free(req);
+		free(lvol);
+		return rc;
+	}
 	lvol->lvol_store = lvs;
 	num_clusters = divide_round_up(sz, spdk_bs_get_cluster_size(bs));
-	lvol->close_only = false;
 	lvol->thin_provision = thin_provision;
 	snprintf(lvol->name, sizeof(lvol->name), "%s", name);
 	TAILQ_INSERT_TAIL(&lvol->lvol_store->pending_lvols, lvol, link);

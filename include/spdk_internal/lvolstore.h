@@ -105,12 +105,12 @@ struct spdk_lvol {
 	char				name[SPDK_LVOL_NAME_MAX];
 	struct spdk_uuid		uuid;
 	char				uuid_str[SPDK_UUID_STRING_LEN];
-	bool				close_only;
 	bool				thin_provision;
 	struct spdk_bdev		*bdev;
 	int				ref_count;
 	bool				action_in_progress;
 	TAILQ_ENTRY(spdk_lvol) link;
+	pthread_mutex_t         mutex;
 };
 
 struct lvol_task {
