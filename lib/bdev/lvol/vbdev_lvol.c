@@ -600,6 +600,12 @@ vbdev_lvol_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	spdk_json_write_object_begin(w);
 
 	lvs_bdev = vbdev_get_lvs_bdev_by_lvs(lvol->lvol_store);
+	if (!lvs_bdev) {
+		SPDK_ERRLOG("No such lvol store found\n");
+		rc = -ENODEV;
+		goto end;
+	}
+
 	bdev = lvs_bdev->bdev;
 
 	spdk_uuid_fmt_lower(lvol_store_uuid, sizeof(lvol_store_uuid), &lvol->lvol_store->uuid);
