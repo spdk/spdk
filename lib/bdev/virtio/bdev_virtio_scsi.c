@@ -1567,6 +1567,8 @@ bdev_virtio_process_config(void)
 		num_queues = spdk_conf_section_get_intval(sp, "Queues");
 		if (num_queues < 1) {
 			num_queues = 1;
+		} else if (num_queues > SPDK_VIRTIO_MAX_VIRTQUEUES) {
+			num_queues = SPDK_VIRTIO_MAX_VIRTQUEUES;
 		}
 
 		name = spdk_conf_section_get_val(sp, "Name");
