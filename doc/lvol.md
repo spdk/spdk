@@ -116,3 +116,9 @@ resize_lvol_bdev [-h] name size
     optional arguments:
     -h, --help  show help
 ```
+
+# Limitations
+
+Note that calling @ref #bdev_ug_delete_bdev on previously created lvol will remove bdev from running
+spdk instance, but will leave corresponding lvol untouched. It is not possible to
+interact with it until lvolstore is reloaded.
