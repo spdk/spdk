@@ -5,14 +5,23 @@ BASE_DIR=$(readlink -f $(dirname $0))
 [[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $BASE_DIR/../common && pwd)"
 ROOT_DIR=$(readlink -f $BASE_DIR/../../..)
 
+PLUGIN_DIR=$ROOT_DIR/examples/bdev/fio_plugin
+FIO_PATH="/usr/src/fio"
+virtio_bdevs=""
+virtio_with_unmap=""
+os_image="/home/sys_sgsw/vhost_vm_image.qcow2"
+#different linux distributions have different versions of targetcli that have different names for ramdisk option
+targetcli_rd_name=""
+kernel_vhost_disk="naa.5012345678901234"
+
 function usage()
 {
 	[[ ! -z $2 ]] && ( echo "$2"; echo ""; )
 	echo "Script for running vhost initiator tests."
 	echo "Usage: $(basename $1) [-h|--help] [--fiobin=PATH]"
 	echo "-h, --help            Print help and exit"
-	echo "    --vm_image=PATH   Path to VM image used in these tests [default=/home/sys_sgsw/vhost_vm_image.qcow2]"
-	echo "    --fiobin=PATH     Path to fio binary on host [default=/usr/src/fio/fio]"
+	echo "    --vm_image=PATH   Path to VM image used in these tests [default=$os_image]"
+	echo "    --fiopath=PATH    Path to fio directory on host [default=$FIO_PATH]"
 }
 
 while getopts 'h-:' optchar; do
@@ -20,7 +29,7 @@ while getopts 'h-:' optchar; do
 		-)
 		case "$OPTARG" in
 			help) usage $0 && exit 0 ;;
-			fiobin=*) FIO_BIN="${OPTARG#*=}" ;;
+			fiopath=*) FIO_PATH="${OPTARG#*=}" ;;
 			vm_image=*) os_image="${OPTARG#*=}" ;;
 			*) usage $0 echo "Invalid argument '$OPTARG'" && exit 1 ;;
 		esac
@@ -32,14 +41,9 @@ done
 
 source $COMMON_DIR/common.sh
 source $BASE_DIR/autotest.config
-PLUGIN_DIR=$ROOT_DIR/examples/bdev/fio_plugin
 RPC_PY="$ROOT_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
-FIO_BIN="/usr/src/fio/fio"
-virtio_bdevs=""
-virtio_with_unmap=""
-os_image="/home/sys_sgsw/vhost_vm_image.qcow2"
 
-if [ ! -x $FIO_BIN ]; then
+if [ ! -x $FIO_PATH ]; then
 	error "Invalid path of fio binary"
 fi
 
@@ -48,10 +52,25 @@ if [[ $EUID -ne 0 ]]; then
 	exit 1
 fi
 
-trap 'rm -f *.state $ROOT_DIR/spdk.tar.gz; error_exit "${FUNCNAME}""${LINENO}"' ERR SIGTERM SIGABRT
+if targetcli ls backstores | grep ramdisk ; then
+	targetcli_rd_name="ramdisk"
+elif targetcli ls backstores | grep rd_mcp ; then
+	targetcli_rd_name="rd_mcp"
+else
+	error "targetcli: cannot create a ramdisk.\
+	 Neither backstores/ramdisk nor backstores/rd_mcp is available"
+fi
+
+function remove_kernel_vhost()
+{
+	targetcli "/vhost delete $kernel_vhost_disk"
+	targetcli "/backstores/$targetcli_rd_name delete ramdisk"
+}
+
+trap 'rm -f *.state $ROOT_DIR/spdk.tar.gz $ROOT_DIR/fio.tar.gz; error_exit "${FUNCNAME}""${LINENO}"' ERR SIGTERM SIGABRT
 function run_spdk_fio() {
-	LD_PRELOAD=$PLUGIN_DIR/fio_plugin $FIO_BIN --ioengine=spdk_bdev\
-         "$@" --spdk_mem=1024  --spdk_single_seg=1
+	LD_PRELOAD=$PLUGIN_DIR/fio_plugin $FIO_PATH/fio --ioengine=spdk_bdev\
+         "$@" --spdk_mem=1024 --spdk_single_seg=1
 }
 
 function create_bdev_config()
@@ -104,10 +123,17 @@ run_spdk_fio $BASE_DIR/bdev.fio --filename=$virtio_with_unmap --spdk_conf=$BASE_
 	--spdk_conf=$BASE_DIR/bdev.conf
 timing_exit run_spdk_fio_unmap
 
+timing_enter create_kernel_vhost
+targetcli "/backstores/$targetcli_rd_name create name=ramdisk size=1GB"
+targetcli "/vhost create $kernel_vhost_disk"
+targetcli "/vhost/$kernel_vhost_disk/tpg1/luns create /backstores/$targetcli_rd_name/ramdisk"
+timing_exit create_kernel_vhost
+
 timing_enter setup_vm
 vm_no="0"
 vm_setup --disk-type=spdk_vhost_scsi --force=$vm_no --os=$os_image \
- --disks="Nvme0n1_scsi0:Malloc0:Malloc1:Nvme0n1_blk0,spdk_vhost_blk:Nvme0n1_blk1,spdk_vhost_blk" \
+ --disks="Nvme0n1_scsi0:Malloc0:Malloc1:$kernel_vhost_disk,kernel_vhost:\
+ Nvme0n1_blk0,spdk_vhost_blk:Nvme0n1_blk1,spdk_vhost_blk" \
  --queue_num=8 --memory=6144
 vm_run $vm_no
 
@@ -120,11 +146,17 @@ touch $ROOT_DIR/spdk.tar.gz
 tar --exclude="spdk.tar.gz" --exclude="*.o" --exclude="*.d" --exclude=".git" -C $ROOT_DIR -zcf $ROOT_DIR/spdk.tar.gz .
 vm_scp $vm_no $ROOT_DIR/spdk.tar.gz "127.0.0.1:/root"
 vm_ssh $vm_no "mkdir -p /root/spdk; tar -zxf /root/spdk.tar.gz -C /root/spdk --strip-components=1"
+
+touch $ROOT_DIR/fio.tar.gz
+tar --exclude="fio.tar.gz" --exclude="*.o" --exclude="*.d" --exclude=".git" -C $FIO_PATH -zcf $ROOT_DIR/fio.tar.gz .
+vm_scp $vm_no $ROOT_DIR/fio.tar.gz "127.0.0.1:/root"
+vm_ssh $vm_no "rm -rf /root/fio_src; mkdir -p /root/fio_src; tar -zxf /root/fio.tar.gz -C /root/fio_src --strip-components=1"
 timing_exit vm_scp_spdk
 
 timing_enter vm_build_spdk
 nproc=$(vm_ssh $vm_no "nproc")
-vm_ssh $vm_no " cd spdk ; make clean ; ./configure --with-fio=/root/fio_src ; make -j${nproc}"
+vm_ssh $vm_no " cd /root/fio_src ; make clean ; make -j${nproc} ; make install"
+vm_ssh $vm_no " cd spdk ; ./configure --with-fio=/root/fio_src ; make clean ; make -j${nproc}"
 timing_exit vm_build_spdk
 
 vm_ssh $vm_no "/root/spdk/scripts/setup.sh"
@@ -152,7 +184,11 @@ timing_enter vm_shutdown_all
 vm_shutdown_all
 timing_exit vm_shutdown_all
 
-rm -f *.state $ROOT_DIR/spdk.tar.gz
+rm -f *.state $ROOT_DIR/spdk.tar.gz $ROOT_DIR/fio.tar.gz
+timing_enter remove_kernel_vhost
+remove_kernel_vhost
+timing_exit remove_kernel_vhost
+
 timing_enter spdk_vhost_kill
 spdk_vhost_kill
 timing_exit spdk_vhost_kill
