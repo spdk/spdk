@@ -254,6 +254,9 @@ struct spdk_bdev {
 		/** True if QoS is enabled */
 		bool enabled;
 
+		/** True if the state of the QoS is being modified */
+		bool mod_in_progress;
+
 		/** Rate limit, in I/O per second */
 		uint64_t rate_limit;
 
