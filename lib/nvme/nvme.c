@@ -667,7 +667,7 @@ spdk_nvme_transport_id_adrfam_str(enum spdk_nvmf_adrfam adrfam)
 	case SPDK_NVMF_ADRFAM_FC:
 		return "FC";
 	default:
-		return NULL;
+		return "Invalid";
 	}
 }
 
