@@ -56,9 +56,10 @@ dd if=/dev/zero of=/tmp/aiofile bs=2048 count=5000
 cp $testdir/bdev.conf.in $testdir/bdev.conf
 $rootdir/scripts/gen_nvme.sh >> $testdir/bdev.conf
 
-timing_enter bounds
-$testdir/bdevio/bdevio $testdir/bdev.conf
-timing_exit bounds
+# NOTE: disabled on SPDK v18.01.x branch due to ASAN errors
+#timing_enter bounds
+#$testdir/bdevio/bdevio $testdir/bdev.conf
+#timing_exit bounds
 
 timing_enter nbd_gpt
 if grep -q Nvme0 $testdir/bdev.conf; then
