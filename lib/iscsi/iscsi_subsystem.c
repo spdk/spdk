@@ -637,53 +637,26 @@ spdk_iscsi_read_config_file_params(struct spdk_conf_section *sp,
 
 	MaxSessions = spdk_conf_section_get_intval(sp, "MaxSessions");
 	if (MaxSessions >= 0) {
-		if (MaxSessions == 0) {
-			SPDK_ERRLOG("MaxSessions == 0 invalid, ignoring\n");
-		} else if (MaxSessions > 65535) {
-			SPDK_ERRLOG("MaxSessions == %d invalid, ignoring\n", MaxSessions);
-		} else {
-			opts->MaxSessions = MaxSessions;
-		}
+		opts->MaxSessions = MaxSessions;
 	}
 
 	MaxConnectionsPerSession = spdk_conf_section_get_intval(sp, "MaxConnectionsPerSession");
 	if (MaxConnectionsPerSession >= 0) {
-		if (MaxConnectionsPerSession == 0) {
-			SPDK_ERRLOG("MaxConnectionsPerSession == 0 invalid, ignoring\n");
-		} else if (MaxConnectionsPerSession > 65535) {
-			SPDK_ERRLOG("MaxConnectionsPerSession == %d invalid, ignoring\n",
-				    MaxConnectionsPerSession);
-		} else {
-			opts->MaxConnectionsPerSession = MaxConnectionsPerSession;
-		}
+		opts->MaxConnectionsPerSession = MaxConnectionsPerSession;
 	}
 
 	MaxQueueDepth = spdk_conf_section_get_intval(sp, "MaxQueueDepth");
 	if (MaxQueueDepth >= 0) {
-		if (MaxQueueDepth == 0) {
-			SPDK_ERRLOG("MaxQueueDepth == 0 invalid, ignoring\n");
-		} else if (MaxQueueDepth > 256) {
-			SPDK_ERRLOG("MaxQueueDepth == %d invalid, ignoring\n", MaxQueueDepth);
-		} else {
-			opts->MaxQueueDepth = MaxQueueDepth;
-		}
+		opts->MaxQueueDepth = MaxQueueDepth;
 	}
 
 	DefaultTime2Wait = spdk_conf_section_get_intval(sp, "DefaultTime2Wait");
 	if (DefaultTime2Wait >= 0) {
-		if (DefaultTime2Wait > 3600) {
-			SPDK_ERRLOG("DefaultTime2Wait == %d invalid, ignoring\n", DefaultTime2Wait);
-		} else {
-			opts->DefaultTime2Wait = DefaultTime2Wait;
-		}
+		opts->DefaultTime2Wait = DefaultTime2Wait;
 	}
 	DefaultTime2Retain = spdk_conf_section_get_intval(sp, "DefaultTime2Retain");
 	if (DefaultTime2Retain >= 0) {
-		if (DefaultTime2Retain > 3600) {
-			SPDK_ERRLOG("DefaultTime2Retain == %d invalid, ignoring\n", DefaultTime2Retain);
-		} else {
-			opts->DefaultTime2Retain = DefaultTime2Retain;
-		}
+		opts->DefaultTime2Retain = DefaultTime2Retain;
 	}
 	opts->ImmediateData = spdk_conf_section_get_boolval(sp, "ImmediateData",
 			      opts->ImmediateData);
@@ -697,12 +670,7 @@ spdk_iscsi_read_config_file_params(struct spdk_conf_section *sp,
 
 	ErrorRecoveryLevel = spdk_conf_section_get_intval(sp, "ErrorRecoveryLevel");
 	if (ErrorRecoveryLevel >= 0) {
-		if (ErrorRecoveryLevel > 2) {
-			SPDK_ERRLOG("ErrorRecoveryLevel %d not supported, keeping existing %d\n",
-				    ErrorRecoveryLevel, opts->ErrorRecoveryLevel);
-		} else {
-			opts->ErrorRecoveryLevel = ErrorRecoveryLevel;
-		}
+		opts->ErrorRecoveryLevel = ErrorRecoveryLevel;
 	}
 	timeout = spdk_conf_section_get_intval(sp, "Timeout");
 	if (timeout >= 0) {
@@ -710,11 +678,7 @@ spdk_iscsi_read_config_file_params(struct spdk_conf_section *sp,
 	}
 	nopininterval = spdk_conf_section_get_intval(sp, "NopInInterval");
 	if (nopininterval >= 0) {
-		if (nopininterval > MAX_NOPININTERVAL) {
-			SPDK_ERRLOG("NopInInterval == %d invalid, ignoring\n", nopininterval);
-		} else {
-			opts->nopininterval = nopininterval;
-		}
+		opts->nopininterval = nopininterval;
 	}
 	val = spdk_conf_section_get_val(sp, "DiscoveryAuthMethod");
 	if (val != NULL) {
@@ -761,7 +725,7 @@ spdk_iscsi_read_config_file_params(struct spdk_conf_section *sp,
 }
 
 static int
-spdk_iscsi_set_global_params(struct spdk_iscsi_opts *opts)
+spdk_iscsi_opts_verify(struct spdk_iscsi_opts *opts)
 {
 	if (!opts->authfile) {
 		SPDK_ERRLOG("opts->authfile is NULL\n");
@@ -773,11 +737,71 @@ spdk_iscsi_set_global_params(struct spdk_iscsi_opts *opts)
 		return -EINVAL;
 	}
 
+	if (opts->MaxSessions == 0 || opts->MaxSessions > 65535) {
+		SPDK_ERRLOG("%d is invalid. MaxSessions must be more than 0 and no more than 65535\n",
+			    opts->MaxSessions);
+		return -EINVAL;
+	}
+
+	if (opts->MaxConnectionsPerSession == 0 || opts->MaxConnectionsPerSession > 65535) {
+		SPDK_ERRLOG("%d is invalid. MaxConnectionsPerSession must be more than 0 and no more than 65535\n",
+			    opts->MaxConnectionsPerSession);
+		return -EINVAL;
+	}
+
+	if (opts->MaxQueueDepth == 0 || opts->MaxQueueDepth > 256) {
+		SPDK_ERRLOG("%d is invalid. MaxQueueDepth must be more than 0 and no more than 256\n",
+			    opts->MaxQueueDepth);
+		return -EINVAL;
+	}
+
+	if (opts->DefaultTime2Wait > 3600) {
+		SPDK_ERRLOG("%d is invalid. DefaultTime2Wait must be no more than 3600\n",
+			    opts->DefaultTime2Wait);
+		return -EINVAL;
+	}
+
+	if (opts->DefaultTime2Retain > 3600) {
+		SPDK_ERRLOG("%d is invalid. DefaultTime2Retain must be no more than 3600\n",
+			    opts->DefaultTime2Retain);
+		return -EINVAL;
+	}
+
+	if (opts->ErrorRecoveryLevel > 2) {
+		SPDK_ERRLOG("ErrorRecoveryLevel %d is not supported.\n", opts->ErrorRecoveryLevel);
+		return -EINVAL;
+	}
+
+	if (opts->timeout < 0) {
+		SPDK_ERRLOG("%d is invalid. timeout must be more than 0\n", opts->timeout);
+		return -EINVAL;
+	}
+
+	if (opts->nopininterval < 0 || opts->nopininterval > MAX_NOPININTERVAL) {
+		SPDK_ERRLOG("%d is invalid. nopinterval must be more than 0 and no more than %d\n",
+			    opts->nopininterval, MAX_NOPININTERVAL);
+		return -EINVAL;
+	}
+
 	if (!spdk_iscsi_check_chap_params(opts->no_discovery_auth, opts->req_discovery_auth,
 					  opts->req_discovery_auth_mutual,
 					  opts->discovery_auth_group)) {
 		SPDK_ERRLOG("CHAP params in opts are illegal combination\n");
 		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static int
+spdk_iscsi_set_global_params(struct spdk_iscsi_opts *opts)
+{
+	int rc;
+
+	rc = spdk_iscsi_opts_verify(opts);
+	if (rc != 0) {
+		SPDK_ERRLOG("spdk_iscsi_opts_verify() failed\n");
+		return rc;
 	}
 
 	g_spdk_iscsi.authfile = strdup(opts->authfile);
