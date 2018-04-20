@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "10ec4074_d1fd9f8b",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-20T11:53:25Z",
+      "side": 1,
+      "message": "Please align with above names.",
+      "range": {
+        "startLine": 112,
+        "startChar": 17,
+        "endLine": 112,
+        "endChar": 23
+      },
+      "revId": "c42cda86cf7494b724e4355d5b418de487a68a0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4cfcc6f1_541292c2",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 581,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-20T11:53:25Z",
+      "side": 1,
+      "message": "This will call vbdev_lvol_destruct that will try to remove same alias again and close lvol again. We should remove .destruct function from lvol fn table and call destruct here directly.",
+      "range": {
+        "startLine": 581,
+        "startChar": 1,
+        "endLine": 581,
+        "endChar": 49
+      },
+      "revId": "c42cda86cf7494b724e4355d5b418de487a68a0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b7ed0fd9_ba108b5e",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 608,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-20T11:53:25Z",
+      "side": 1,
+      "message": "This mutex does not do much here. We should add it to all operations that we want to block in this patch so that it will make more sense.",
+      "range": {
+        "startLine": 608,
+        "startChar": 7,
+        "endLine": 608,
+        "endChar": 38
+      },
+      "revId": "c42cda86cf7494b724e4355d5b418de487a68a0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
