@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fc466c87_225f8adc",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 901,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-20T21:57:35Z",
+      "side": 1,
+      "message": "This seems unsafe - the bdev registration could have kicked off an async examine, so we can\u0027t free the stuff below until that\u0027s done (this was already broken).",
+      "revId": "1675678649dc2f422cac946a6f3ec24a94f6a1ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
