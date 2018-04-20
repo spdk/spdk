@@ -572,7 +572,7 @@ spdk_iscsi_log_globals(void)
 		      spdk_iscsi_conn_get_min_per_core());
 }
 
-static void
+void
 spdk_iscsi_opts_init(struct spdk_iscsi_opts *opts)
 {
 	opts->MaxSessions = DEFAULT_MAX_SESSIONS;
@@ -594,7 +594,7 @@ spdk_iscsi_opts_init(struct spdk_iscsi_opts *opts)
 	opts->min_connections_per_core = DEFAULT_CONNECTIONS_PER_LCORE;
 }
 
-static void
+void
 spdk_iscsi_opts_free(struct spdk_iscsi_opts *opts)
 {
 	free(opts->authfile);
@@ -808,7 +808,7 @@ spdk_iscsi_opts_verify(struct spdk_iscsi_opts *opts)
 	return 0;
 }
 
-static int
+int
 spdk_iscsi_set_global_params(struct spdk_iscsi_opts *opts)
 {
 	int rc;
@@ -847,6 +847,8 @@ spdk_iscsi_set_global_params(struct spdk_iscsi_opts *opts)
 	g_spdk_iscsi.discovery_auth_group = opts->discovery_auth_group;
 
 	spdk_iscsi_conn_set_min_per_core(opts->min_connections_per_core);
+
+	g_spdk_iscsi.params_initialized = true;
 
 	spdk_iscsi_log_globals();
 
@@ -1012,10 +1014,12 @@ spdk_iscsi_parse_globals(void)
 {
 	int rc;
 
-	rc = spdk_iscsi_initialize_global_params();
-	if (rc != 0) {
-		SPDK_ERRLOG("spdk_iscsi_initialize_iscsi_global_params() failed\n");
-		return rc;
+	if (!g_spdk_iscsi.params_initialized) {
+		rc = spdk_iscsi_initialize_global_params();
+		if (rc != 0) {
+			SPDK_ERRLOG("spdk_iscsi_initialize_iscsi_global_params() failed\n");
+			return rc;
+		}
 	}
 
 	g_spdk_iscsi.session = spdk_dma_zmalloc(sizeof(void *) * g_spdk_iscsi.MaxSessions, 0, NULL);
