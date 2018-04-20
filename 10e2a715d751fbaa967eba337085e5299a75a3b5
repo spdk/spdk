@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e8bd6803_f93531de",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-20T21:15:10Z",
+      "side": 1,
+      "message": "How do we get doxygen to put these two flags into the documentation page? Would they be better as an enum?",
+      "revId": "10e2a715d751fbaa967eba337085e5299a75a3b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e3d6542_d704b2ef",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-20T21:15:10Z",
+      "side": 1,
+      "message": "socket_id is not documented",
+      "revId": "10e2a715d751fbaa967eba337085e5299a75a3b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b98fea5_8d4fa5e3",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-20T21:15:10Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we flip around the dependency chain of spdk_free and spdk_dma_free too?",
+      "revId": "10e2a715d751fbaa967eba337085e5299a75a3b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
