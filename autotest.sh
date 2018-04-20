@@ -194,7 +194,8 @@ if [ $SPDK_TEST_LVOL -eq 1 ]; then
 fi
 
 if [ $SPDK_TEST_VHOST_INIT -eq 1 ]; then
-	run_test ./test/vhost/initiator/blockdev.sh
+	rm -f $rootdir/../vhost.log
+	run_test ./test/vhost/initiator/blockdev.sh >> $rootdir/../vhost.log
 	report_test_completion "vhost_initiator"
 fi
 
