@@ -18,8 +18,13 @@ def start_subsystems_init(client):
     return client.call('start_subsystems_init')
 
 
-def get_rpc_methods(client):
-    return client.call('get_rpc_methods')
+def get_rpc_methods(client, args):
+    params = {}
+
+    if args.current:
+        params['current'] = args.current
+
+    return client.call('get_rpc_methods', params)
 
 
 def save_config(client, args):
