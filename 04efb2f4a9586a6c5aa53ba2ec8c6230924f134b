@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e03d1237_ae7c4fcd",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 2385,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-20T17:03:57Z",
+      "side": 1,
+      "message": "Does this also need to happen when QoS is enabled via RPC?",
+      "revId": "04efb2f4a9586a6c5aa53ba2ec8c6230924f134b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
