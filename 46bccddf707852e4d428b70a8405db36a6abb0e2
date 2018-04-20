@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c084985b_42f0f2de",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 641,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-20T15:20:28Z",
+      "side": 1,
+      "message": "Yes it\u0027s more clear.",
+      "parentUuid": "6fe4b854_8a13b069",
+      "revId": "46bccddf707852e4d428b70a8405db36a6abb0e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "282d249e_cd40505d",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 38
@@ -30,6 +48,24 @@
       "writtenOn": "2018-04-19T16:56:40Z",
       "side": 1,
       "message": "This looks like it should be part of another patch; it\u0027s not related to get_bdevs.",
+      "revId": "46bccddf707852e4d428b70a8405db36a6abb0e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b79c9ab5_704a214d",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 695,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-20T15:20:28Z",
+      "side": 1,
+      "message": "Yes this should be a part of already merged patch. I moved this feature to the new patch: https://review.gerrithub.io/#/c/408483/",
+      "parentUuid": "282d249e_cd40505d",
       "revId": "46bccddf707852e4d428b70a8405db36a6abb0e2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
