@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "096088cb_e15d0a2d",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 3777,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-20T14:16:49Z",
+      "side": 1,
+      "message": "I have also added the case when ids\u003d\u003dNULL",
+      "parentUuid": "451df9af_c433be1b",
+      "revId": "d994cfba3e40c8080bb549caeb7ae78bbcf724e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3f79a050_292948d0",
         "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
         "patchSetId": 31
@@ -30,6 +48,24 @@
       "writtenOn": "2018-04-19T18:35:43Z",
       "side": 1,
       "message": "count \u003d SPDK_COUNTOF(ids) would probably be better.",
+      "revId": "d994cfba3e40c8080bb549caeb7ae78bbcf724e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ff0e564_90682df3",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 3820,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-20T14:16:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3f79a050_292948d0",
       "revId": "d994cfba3e40c8080bb549caeb7ae78bbcf724e0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "7f2f8537_02bcb520",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 3850,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-20T14:16:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9d0015a0_91a81c56",
+      "revId": "d994cfba3e40c8080bb549caeb7ae78bbcf724e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a974bcc_308e748c",
         "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
         "patchSetId": 31
@@ -64,6 +118,24 @@
       "writtenOn": "2018-04-19T18:35:43Z",
       "side": 1,
       "message": "These loops are a bit unclear.  I see what they\u0027re doing but it took me a minute.\n\nWould this be simpler?\n\nCU_ASSERT(blobid \u003d\u003d ids[0] || blobid \u003d\u003d ids[1]);\nCU_ASSERT(cloneid \u003d\u003d ids[0] || blobid \u003d\u003d ids[1]);\n\nIf we had a bigger list of ids, your loops would be a better method but I think this alternate proposal will make the code more clear.\n\nI like that you did not make any assumptions here on what order the ids should be in.",
+      "revId": "d994cfba3e40c8080bb549caeb7ae78bbcf724e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c684528_f05cecea",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 3886,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-20T14:16:49Z",
+      "side": 1,
+      "message": "Yes I\u0027ve made it for general use scenario, but for two elements its more clear. Done.",
+      "parentUuid": "1a974bcc_308e748c",
       "revId": "d994cfba3e40c8080bb549caeb7ae78bbcf724e0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "3b7264fd_9d73e972",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 3896,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-20T14:16:49Z",
+      "side": 1,
+      "message": "Yes, it should be \"Try to create clone from read only blob\"",
+      "parentUuid": "9326137a_b424b4fd",
+      "revId": "d994cfba3e40c8080bb549caeb7ae78bbcf724e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "25f94fdf_b73c78d4",
         "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
         "patchSetId": 31
@@ -98,6 +188,24 @@
       "writtenOn": "2018-04-19T18:35:43Z",
       "side": 1,
       "message": "same as above",
+      "revId": "d994cfba3e40c8080bb549caeb7ae78bbcf724e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69cd49f7_bcdad99d",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 3975,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-20T14:16:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "25f94fdf_b73c78d4",
       "revId": "d994cfba3e40c8080bb549caeb7ae78bbcf724e0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
