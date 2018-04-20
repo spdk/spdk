@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "92fe9fa7_05de7a4b",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-20T21:28:29Z",
+      "side": 1,
+      "message": "An enum isn\u0027t really right conceptually, since these are bitwise flags.  I\u0027ll explicitly mention the available flags here at least so they will get linked.",
+      "parentUuid": "e8bd6803_f93531de",
+      "revId": "10e2a715d751fbaa967eba337085e5299a75a3b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3e3d6542_d704b2ef",
         "filename": "include/spdk/env.h",
         "patchSetId": 20
@@ -47,6 +65,24 @@
       "writtenOn": "2018-04-20T21:15:10Z",
       "side": 1,
       "message": "Shouldn\u0027t we flip around the dependency chain of spdk_free and spdk_dma_free too?",
+      "revId": "10e2a715d751fbaa967eba337085e5299a75a3b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5246c693_786c13a6",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-20T21:28:29Z",
+      "side": 1,
+      "message": "Sure, I guess that is reasonable.",
+      "parentUuid": "7b98fea5_8d4fa5e3",
       "revId": "10e2a715d751fbaa967eba337085e5299a75a3b5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
