@@ -16,6 +16,24 @@
       "revId": "f52348b6e121d8e7ae24729b59b1dc02cbe3e42c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2fabc4c4_cc7c5efc",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 603,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-20T22:42:26Z",
+      "side": 1,
+      "message": "It gets closed in the goto end;",
+      "parentUuid": "e632ba47_820a834c",
+      "revId": "f52348b6e121d8e7ae24729b59b1dc02cbe3e42c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
