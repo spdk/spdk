@@ -501,35 +501,19 @@ _vbdev_lvol_close_cb(void *cb_arg, int lvserrno)
 static void
 _vbdev_lvol_destroy_cb(void *cb_arg, int lvserrno)
 {
-	struct spdk_bdev *bdev = cb_arg;
-
-	if (lvserrno == -EBUSY) {
-		/* TODO: Handle reporting error to spdk_bdev_unregister */
-	}
-
-	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Lvol destroyed\n");
-
-	spdk_bdev_destruct_done(bdev, lvserrno);
-	free(bdev->name);
-	free(bdev);
-}
-
-static void
-_vbdev_lvol_destroy_after_close_cb(void *cb_arg, int lvserrno)
-{
 	struct spdk_lvol *lvol = cb_arg;
 	struct spdk_bdev *bdev = lvol->bdev;
 
-	if (lvserrno != 0) {
+	if (lvserrno == -EBUSY) {
+		/* TODO: Handle reporting error to spdk_bdev_unregister */
 		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Could not close Lvol %s\n", lvol->unique_id);
-		spdk_bdev_destruct_done(bdev, lvserrno);
-		free(bdev->name);
-		free(bdev);
-		return;
 	}
 
-	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Lvol %s closed, begin destroying\n", lvol->unique_id);
-	spdk_lvol_destroy(lvol, _vbdev_lvol_destroy_cb, bdev);
+	spdk_bdev_destruct_done(bdev, lvserrno);
+	pthread_mutex_unlock(lvol->mutex);
+	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Lvol destroyed\n");
+	free(bdev->name);
+	free(bdev);
 }
 
 static int
@@ -547,15 +531,10 @@ vbdev_lvol_destruct(void *ctx)
 	} else {
 		SPDK_ERRLOG("Cannot alloc memory for alias\n");
 	}
-
-	if (lvol->close_only) {
-		free(lvol->bdev->name);
-		free(lvol->bdev);
-		spdk_lvol_close(lvol, _vbdev_lvol_close_cb, NULL);
-	} else {
-		spdk_lvol_close(lvol, _vbdev_lvol_destroy_after_close_cb, lvol);
-	}
-
+	/* Just close lvol, for deletion use vbdev_lvol_destroy */
+	free(lvol->bdev->name);
+	free(lvol->bdev);
+	spdk_lvol_close(lvol, _vbdev_lvol_close_cb, NULL);
 	/* return 1 to indicate we have an operation that must finish asynchronously before the
 	 *  lvol is closed
 	 */
@@ -565,11 +544,37 @@ vbdev_lvol_destruct(void *ctx)
 void
 vbdev_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
-	/*
-	 * TODO: This should call spdk_lvol_destroy() directly, and the bdev unregister path
-	 * should be changed so that it does not destroy the lvol.
-	 */
-	spdk_bdev_unregister(lvol->bdev, cb_fn, cb_arg);
+	char *alias;
+
+	assert(lvol != NULL);
+
+	alias = spdk_sprintf_alloc("%s/%s", lvol->lvol_store->name, lvol->name);
+	if (alias != NULL) {
+		spdk_bdev_alias_del(lvol->bdev, alias);
+		free(alias);
+	} else {
+		SPDK_ERRLOG("Cannot alloc memory for alias\n");
+	}
+
+	if (lvol->close_only) {
+		free(lvol->bdev->name);
+		free(lvol->bdev);
+		spdk_lvol_close(lvol, _vbdev_lvol_close_cb, NULL);
+	} else {
+		/* Lock lvol */
+		if (!pthread_mutex_lock(lvol->mutex)) {
+			/* Check if it is possible to delete lvol */
+			if (spdk_lvol_deletable(lvol) == true) {
+				spdk_lvol_close(lvol, _vbdev_lvol_destroy_cb, lvol);
+			} else {
+				/* throw an error */
+				SPDK_ERRLOG("Cannot delete lvol\n");
+				pthread_mutex_unlock(lvol->mutex);
+			}
+		} else {
+			SPDK_ERRLOG("Lvol locked\n");
+		}
+	}
 }
 
 static char *
