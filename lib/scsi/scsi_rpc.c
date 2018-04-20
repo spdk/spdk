@@ -79,4 +79,4 @@ spdk_rpc_get_scsi_devices(struct spdk_jsonrpc_request *request,
 
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("get_scsi_devices", spdk_rpc_get_scsi_devices)
+SPDK_RPC_REGISTER("get_scsi_devices", spdk_rpc_get_scsi_devices, SPDK_RPC_RUNTIME)

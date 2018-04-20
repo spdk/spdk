@@ -122,7 +122,7 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_construct_error_bdev(&req);
 }
-SPDK_RPC_REGISTER("construct_error_bdev", spdk_rpc_construct_error_bdev)
+SPDK_RPC_REGISTER("construct_error_bdev", spdk_rpc_construct_error_bdev, SPDK_RPC_RUNTIME)
 
 struct rpc_error_information {
 	char *name;
@@ -193,4 +193,4 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_error_information(&req);
 }
-SPDK_RPC_REGISTER("bdev_inject_error", spdk_rpc_bdev_inject_error)
+SPDK_RPC_REGISTER("bdev_inject_error", spdk_rpc_bdev_inject_error, SPDK_RPC_RUNTIME)
