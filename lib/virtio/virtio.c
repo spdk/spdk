@@ -473,7 +473,7 @@ virtqueue_req_flush(struct virtqueue *vq)
 	virtio_mb();
 	if (spdk_unlikely(!(vq->vq_ring.used->flags & VRING_USED_F_NO_NOTIFY))) {
 		virtio_dev_backend_ops(vq->vdev)->notify_queue(vq->vdev, vq);
-		SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV, "Notified backend after xmit\n");
+//		SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV, "Notified backend after xmit\n");
 	}
 }
 
@@ -557,7 +557,7 @@ virtio_recv_pkts(struct virtqueue *vq, void **io, uint32_t *len, uint16_t nb_pkt
 	}
 
 	num = virtqueue_dequeue_burst_rx(vq, io, len, num);
-	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV, "used:%"PRIu16" dequeue:%"PRIu16"\n", nb_used, num);
+//	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV, "used:%"PRIu16" dequeue:%"PRIu16"\n", nb_used, num);
 
 	return num;
 }
