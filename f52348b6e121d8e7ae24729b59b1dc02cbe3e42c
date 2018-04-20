@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e632ba47_820a834c",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 603,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-20T22:01:58Z",
+      "side": 1,
+      "message": "This will leave the object started above open - this check should probably go before that.",
+      "revId": "f52348b6e121d8e7ae24729b59b1dc02cbe3e42c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
