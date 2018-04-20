@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d8edfa21_0bdd4c60",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-20T17:18:18Z",
+      "side": 1,
+      "message": "This can\u0027t be global, since each controller could have a different max transfer size.  You should be able to put this value into the struct ns_entry - you already have a pointer to this in init_ns_worker_ctx().",
+      "revId": "cf2ce76db11b54d148824d9ddca89bfc6735844d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
