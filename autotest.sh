@@ -92,7 +92,10 @@ fi
 timing_enter lib
 
 if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
-	run_test test/lib/bdev/blockdev.sh
+	# NOTE: disabled on SPDK v18.01.x branch when ASAN is enabled
+	if [ $SPDK_RUN_ASAN -eq 0 ]; then
+		run_test test/lib/bdev/blockdev.sh
+	fi
 fi
 
 if [ $SPDK_TEST_EVENT -eq 1 ]; then
