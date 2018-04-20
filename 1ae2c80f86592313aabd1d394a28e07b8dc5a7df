@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2b1ef6b0_e1bb2bb2",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-20T04:01:44Z",
+      "side": 1,
+      "message": "Indenting these will also indent the actual contents of the file.  That\u0027s probably harmless, but see below.",
+      "revId": "1ae2c80f86592313aabd1d394a28e07b8dc5a7df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0f361aa_47bec0b4",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-20T04:01:44Z",
+      "side": 1,
+      "message": "At least the end of the heredoc (EOF in this case) needs to be in the first column, not indented; otherwise you\u0027ll get something like:\n\n\u003e warning: here-document at line 1 delimited by end-of-file (wanted `EOF\u0027)",
+      "revId": "1ae2c80f86592313aabd1d394a28e07b8dc5a7df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
