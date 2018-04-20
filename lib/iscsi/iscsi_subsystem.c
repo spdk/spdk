@@ -761,10 +761,8 @@ spdk_iscsi_read_config_file_params(struct spdk_conf_section *sp,
 }
 
 static int
-spdk_iscsi_initialize_iscsi_globals(struct spdk_iscsi_opts *opts)
+spdk_iscsi_set_global_params(struct spdk_iscsi_opts *opts)
 {
-	int rc;
-
 	if (!opts->authfile) {
 		SPDK_ERRLOG("opts->authfile is NULL\n");
 		return -EINVAL;
@@ -811,27 +809,32 @@ spdk_iscsi_initialize_iscsi_globals(struct spdk_iscsi_opts *opts)
 
 	spdk_iscsi_conn_set_min_per_core(opts->min_connections_per_core);
 
-	g_spdk_iscsi.session = spdk_dma_zmalloc(sizeof(void *) * g_spdk_iscsi.MaxSessions, 0, NULL);
-	if (!g_spdk_iscsi.session) {
-		SPDK_ERRLOG("spdk_dma_zmalloc() failed for session array\n");
-		return -1;
-	}
-
-	/*
-	 * For now, just support same number of total connections, rather
-	 *  than MaxSessions * MaxConnectionsPerSession.  After we add better
-	 *  handling for low resource conditions from our various buffer
-	 *  pools, we can bump this up to support more connections.
-	 */
-	g_spdk_iscsi.MaxConnections = g_spdk_iscsi.MaxSessions;
-
-	rc = spdk_iscsi_initialize_all_pools();
-	if (rc != 0) {
-		SPDK_ERRLOG("spdk_initialize_all_pools() failed\n");
-		return -1;
-	}
-
 	spdk_iscsi_log_globals();
+
+	return 0;
+}
+
+static int
+spdk_iscsi_initialize_global_params(void)
+{
+	struct spdk_conf_section *sp;
+	struct spdk_iscsi_opts opts;
+	int rc;
+
+	spdk_iscsi_opts_init(&opts);
+
+	/* Process parameters */
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_read_config_file_parmas\n");
+	sp = spdk_conf_find_section(NULL, "iSCSI");
+	if (sp != NULL) {
+		spdk_iscsi_read_config_file_params(sp, &opts);
+	}
+
+	rc = spdk_iscsi_set_global_params(&opts);
+	spdk_iscsi_opts_free(&opts);
+	if (rc != 0) {
+		SPDK_ERRLOG("spdk_iscsi_set_global_params() failed\n");
+	}
 
 	return 0;
 }
@@ -936,7 +939,7 @@ spdk_initialize_iscsi_poll_group(spdk_thread_fn cpl)
 }
 
 static void
-spdk_iscsi_parse_iscsi_configuration(void *ctx)
+spdk_iscsi_parse_configuration(void *ctx)
 {
 	int rc;
 
@@ -962,26 +965,34 @@ end:
 }
 
 static int
-spdk_iscsi_parse_iscsi_globals(void)
+spdk_iscsi_parse_globals(void)
 {
-	struct spdk_conf_section *sp;
-	struct spdk_iscsi_opts opts;
 	int rc;
 
-	spdk_iscsi_opts_init(&opts);
-
-	/* Process parameters */
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_read_config_file_parmas\n");
-	sp = spdk_conf_find_section(NULL, "iSCSI");
-	if (sp != NULL) {
-		spdk_iscsi_read_config_file_params(sp, &opts);
+	rc = spdk_iscsi_initialize_global_params();
+	if (rc != 0) {
+		SPDK_ERRLOG("spdk_iscsi_initialize_iscsi_global_params() failed\n");
+		return rc;
 	}
 
-	rc = spdk_iscsi_initialize_iscsi_globals(&opts);
-	spdk_iscsi_opts_free(&opts);
+	g_spdk_iscsi.session = spdk_dma_zmalloc(sizeof(void *) * g_spdk_iscsi.MaxSessions, 0, NULL);
+	if (!g_spdk_iscsi.session) {
+		SPDK_ERRLOG("spdk_dma_zmalloc() failed for session array\n");
+		return -1;
+	}
+
+	/*
+	 * For now, just support same number of total connections, rather
+	 *  than MaxSessions * MaxConnectionsPerSession.  After we add better
+	 *  handling for low resource conditions from our various buffer
+	 *  pools, we can bump this up to support more connections.
+	 */
+	g_spdk_iscsi.MaxConnections = g_spdk_iscsi.MaxSessions;
+
+	rc = spdk_iscsi_initialize_all_pools();
 	if (rc != 0) {
-		SPDK_ERRLOG("spdk_iscsi_initialize_iscsi_globals() failed\n");
-		return rc;
+		SPDK_ERRLOG("spdk_initialize_all_pools() failed\n");
+		return -1;
 	}
 
 	rc = spdk_initialize_iscsi_conns();
@@ -990,7 +1001,7 @@ spdk_iscsi_parse_iscsi_globals(void)
 		return rc;
 	}
 
-	spdk_initialize_iscsi_poll_group(spdk_iscsi_parse_iscsi_configuration);
+	spdk_initialize_iscsi_poll_group(spdk_iscsi_parse_configuration);
 	return 0;
 }
 
@@ -1003,7 +1014,7 @@ spdk_iscsi_init(spdk_iscsi_init_cb cb_fn, void *cb_arg)
 	g_init_cb_fn = cb_fn;
 	g_init_cb_arg = cb_arg;
 
-	rc = spdk_iscsi_parse_iscsi_globals();
+	rc = spdk_iscsi_parse_globals();
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_iscsi_parse_globals() failed\n");
 		spdk_iscsi_init_complete(-1);
