@@ -181,7 +181,7 @@ Set an IOPS-based quality of service rate limit on a bdev.
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Block device name
-ios_per_sec             | Required | number      | Number of I/Os per second to allow
+ios_per_sec             | Required | number      | Number of I/Os per second to allow. 0 means unlimited.
 
 ### Example
 
