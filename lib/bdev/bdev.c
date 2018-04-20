@@ -2659,8 +2659,16 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 {
 	struct spdk_bdev_desc	*desc, *tmp;
 	bool			do_destruct = true;
+	struct spdk_thread	*thread;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Removing bdev %s from list\n", bdev->name);
+
+	thread = spdk_get_thread();
+	if (!thread) {
+		/* The user called this from a non-SPDK thread. */
+		cb_fn(cb_arg, -ENOTSUP);
+		return;
+	}
 
 	pthread_mutex_lock(&bdev->mutex);
 
@@ -2679,7 +2687,7 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 			 *  we don't recursively unregister this bdev again if the remove_cb
 			 *  immediately closes its descriptor.
 			 */
-			spdk_thread_send_msg(spdk_get_thread(), _remove_notify, desc);
+			spdk_thread_send_msg(thread, _remove_notify, desc);
 		}
 	}
 
