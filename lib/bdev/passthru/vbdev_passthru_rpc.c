@@ -97,4 +97,4 @@ invalid:
 	free_rpc_construct_passthru(&req);
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 }
-SPDK_RPC_REGISTER("construct_passthru_bdev", spdk_rpc_construct_passthru_bdev)
+SPDK_RPC_REGISTER("construct_passthru_bdev", spdk_rpc_construct_passthru_bdev, SPDK_RPC_RUNTIME)

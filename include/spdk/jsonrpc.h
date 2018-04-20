@@ -47,11 +47,19 @@
 extern "C" {
 #endif
 
+/* Defined error codes in JSON-RPC specification 2.0 */
 #define SPDK_JSONRPC_ERROR_PARSE_ERROR		-32700
 #define SPDK_JSONRPC_ERROR_INVALID_REQUEST	-32600
 #define SPDK_JSONRPC_ERROR_METHOD_NOT_FOUND	-32601
 #define SPDK_JSONRPC_ERROR_INVALID_PARAMS	-32602
 #define SPDK_JSONRPC_ERROR_INTERNAL_ERROR	-32603
+
+/* Custom error codes in SPDK
+
+ * Error codes from and including -32768 to -32000 are reserved for
+ * predefined errors, hence custom error codes must be outside of the range.
+ */
+#define SPDK_JSONRPC_ERROR_INVALID_STATE	-1
 
 struct spdk_jsonrpc_server;
 struct spdk_jsonrpc_request;

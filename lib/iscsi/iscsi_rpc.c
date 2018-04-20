@@ -100,7 +100,7 @@ spdk_rpc_get_initiator_groups(struct spdk_jsonrpc_request *request,
 
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("get_initiator_groups", spdk_rpc_get_initiator_groups)
+SPDK_RPC_REGISTER("get_initiator_groups", spdk_rpc_get_initiator_groups, SPDK_RPC_RUNTIME)
 
 struct rpc_initiator_list {
 	size_t num_initiators;
@@ -211,7 +211,7 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_initiator_group(&req);
 }
-SPDK_RPC_REGISTER("add_initiator_group", spdk_rpc_add_initiator_group)
+SPDK_RPC_REGISTER("add_initiator_group", spdk_rpc_add_initiator_group, SPDK_RPC_RUNTIME)
 
 static const struct spdk_json_object_decoder rpc_add_or_delete_initiators_decoders[] = {
 	{"tag", offsetof(struct rpc_initiator_group, tag), spdk_json_decode_int32},
@@ -256,7 +256,8 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_initiator_group(&req);
 }
-SPDK_RPC_REGISTER("add_initiators_to_initiator_group", spdk_rpc_add_initiators_to_initiator_group)
+SPDK_RPC_REGISTER("add_initiators_to_initiator_group",
+		  spdk_rpc_add_initiators_to_initiator_group, SPDK_RPC_RUNTIME)
 
 static void
 spdk_rpc_delete_initiators_from_initiator_group(struct spdk_jsonrpc_request *request,
@@ -296,7 +297,7 @@ invalid:
 	free_rpc_initiator_group(&req);
 }
 SPDK_RPC_REGISTER("delete_initiators_from_initiator_group",
-		  spdk_rpc_delete_initiators_from_initiator_group)
+		  spdk_rpc_delete_initiators_from_initiator_group, SPDK_RPC_RUNTIME)
 
 struct rpc_delete_initiator_group {
 	int32_t tag;
@@ -340,7 +341,7 @@ spdk_rpc_delete_initiator_group(struct spdk_jsonrpc_request *request,
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 }
-SPDK_RPC_REGISTER("delete_initiator_group", spdk_rpc_delete_initiator_group)
+SPDK_RPC_REGISTER("delete_initiator_group", spdk_rpc_delete_initiator_group, SPDK_RPC_RUNTIME)
 
 static void
 dump_target_node(struct spdk_json_write_ctx *w, struct spdk_iscsi_tgt_node *tgtnode)
@@ -441,7 +442,7 @@ spdk_rpc_get_target_nodes(struct spdk_jsonrpc_request *request,
 
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("get_target_nodes", spdk_rpc_get_target_nodes)
+SPDK_RPC_REGISTER("get_target_nodes", spdk_rpc_get_target_nodes, SPDK_RPC_RUNTIME)
 
 struct rpc_pg_ig_map {
 	int32_t pg_tag;
@@ -631,7 +632,7 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_target_node(&req);
 }
-SPDK_RPC_REGISTER("construct_target_node", spdk_rpc_construct_target_node)
+SPDK_RPC_REGISTER("construct_target_node", spdk_rpc_construct_target_node, SPDK_RPC_RUNTIME)
 
 struct rpc_tgt_node_pg_ig_maps {
 	char *name;
@@ -693,7 +694,7 @@ invalid:
 					 "Invalid parameters");
 	free(req.name);
 }
-SPDK_RPC_REGISTER("add_pg_ig_maps", spdk_rpc_add_pg_ig_maps)
+SPDK_RPC_REGISTER("add_pg_ig_maps", spdk_rpc_add_pg_ig_maps, SPDK_RPC_RUNTIME)
 
 static void
 spdk_rpc_delete_pg_ig_maps(struct spdk_jsonrpc_request *request,
@@ -745,7 +746,7 @@ invalid:
 					 "Invalid parameters");
 	free(req.name);
 }
-SPDK_RPC_REGISTER("delete_pg_ig_maps", spdk_rpc_delete_pg_ig_maps)
+SPDK_RPC_REGISTER("delete_pg_ig_maps", spdk_rpc_delete_pg_ig_maps, SPDK_RPC_RUNTIME)
 
 struct rpc_delete_target_node {
 	char *name;
@@ -800,7 +801,7 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_delete_target_node(&req);
 }
-SPDK_RPC_REGISTER("delete_target_node", spdk_rpc_delete_target_node)
+SPDK_RPC_REGISTER("delete_target_node", spdk_rpc_delete_target_node, SPDK_RPC_RUNTIME)
 
 static void
 dump_portal_group(struct spdk_json_write_ctx *w, struct spdk_iscsi_portal_grp *pg)
@@ -857,7 +858,7 @@ spdk_rpc_get_portal_groups(struct spdk_jsonrpc_request *request,
 
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("get_portal_groups", spdk_rpc_get_portal_groups)
+SPDK_RPC_REGISTER("get_portal_groups", spdk_rpc_get_portal_groups, SPDK_RPC_RUNTIME)
 
 struct rpc_portal {
 	char *host;
@@ -991,7 +992,7 @@ out:
 	}
 	free_rpc_portal_group(&req);
 }
-SPDK_RPC_REGISTER("add_portal_group", spdk_rpc_add_portal_group)
+SPDK_RPC_REGISTER("add_portal_group", spdk_rpc_add_portal_group, SPDK_RPC_RUNTIME)
 
 struct rpc_delete_portal_group {
 	int32_t tag;
@@ -1036,7 +1037,7 @@ spdk_rpc_delete_portal_group(struct spdk_jsonrpc_request *request,
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 }
-SPDK_RPC_REGISTER("delete_portal_group", spdk_rpc_delete_portal_group)
+SPDK_RPC_REGISTER("delete_portal_group", spdk_rpc_delete_portal_group, SPDK_RPC_RUNTIME)
 
 static void
 spdk_rpc_get_iscsi_connections(struct spdk_jsonrpc_request *request,
@@ -1107,7 +1108,7 @@ spdk_rpc_get_iscsi_connections(struct spdk_jsonrpc_request *request,
 
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("get_iscsi_connections", spdk_rpc_get_iscsi_connections)
+SPDK_RPC_REGISTER("get_iscsi_connections", spdk_rpc_get_iscsi_connections, SPDK_RPC_RUNTIME)
 
 struct rpc_target_lun {
 	char *name;
@@ -1173,7 +1174,7 @@ invalid:
 					 "Invalid parameters");
 	free_rpc_target_lun(&req);
 }
-SPDK_RPC_REGISTER("target_node_add_lun", spdk_rpc_target_node_add_lun)
+SPDK_RPC_REGISTER("target_node_add_lun", spdk_rpc_target_node_add_lun, SPDK_RPC_RUNTIME)
 
 static void
 spdk_rpc_get_iscsi_global_params(struct spdk_jsonrpc_request *request,
@@ -1249,4 +1250,4 @@ spdk_rpc_get_iscsi_global_params(struct spdk_jsonrpc_request *request,
 
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("get_iscsi_global_params", spdk_rpc_get_iscsi_global_params)
+SPDK_RPC_REGISTER("get_iscsi_global_params", spdk_rpc_get_iscsi_global_params, SPDK_RPC_RUNTIME)
