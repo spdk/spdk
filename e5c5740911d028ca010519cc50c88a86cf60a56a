@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "44a147c3_e746e9bd",
+        "filename": "lib/event/app.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 549,
+      "author": {
+        "id": 1012287
+      },
+      "writtenOn": "2018-04-21T00:35:36Z",
+      "side": 1,
+      "message": "This line should be moved after the lines for mem_size.",
+      "range": {
+        "startLine": 549,
+        "startChar": 1,
+        "endLine": 549,
+        "endChar": 7
+      },
+      "revId": "e5c5740911d028ca010519cc50c88a86cf60a56a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
