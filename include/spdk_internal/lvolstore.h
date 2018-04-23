@@ -54,6 +54,7 @@ struct spdk_lvol_req {
 	void                    *cb_arg;
 	struct spdk_lvol	*lvol;
 	size_t			sz;
+	struct spdk_io_channel	*channel;
 	char			name[SPDK_LVOL_NAME_MAX];
 };
 
