@@ -176,6 +176,24 @@
       "revId": "728a076e87120d5dcab07cdf03377fafd0bd2594",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5100201a_b0538000",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1186,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-04-23T06:53:32Z",
+      "side": 1,
+      "message": "I checked the code in SPDK NVMf target and Linux NVMf target, the logic about NN is same, it will increase the value of NN if we added a new Namespace.",
+      "parentUuid": "78fd75b4_650910df",
+      "revId": "728a076e87120d5dcab07cdf03377fafd0bd2594",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
