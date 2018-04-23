@@ -146,7 +146,7 @@ nvme_ctrlr_proc_add_io_qpair(struct spdk_nvme_qpair *qpair)
 {
 	struct spdk_nvme_ctrlr_process	*active_proc;
 	struct spdk_nvme_ctrlr		*ctrlr = qpair->ctrlr;
-	pid_t				pid = getpid();
+	pid_t				pid = spdk_env_getpid();
 
 	TAILQ_FOREACH(active_proc, &ctrlr->active_procs, tailq) {
 		if (active_proc->pid == pid) {
@@ -168,7 +168,7 @@ nvme_ctrlr_proc_remove_io_qpair(struct spdk_nvme_qpair *qpair)
 	struct spdk_nvme_ctrlr_process	*active_proc;
 	struct spdk_nvme_ctrlr		*ctrlr = qpair->ctrlr;
 	struct spdk_nvme_qpair          *active_qpair, *tmp_qpair;
-	pid_t				pid = getpid();
+	pid_t				pid = spdk_env_getpid();
 	bool				proc_found = false;
 
 	TAILQ_FOREACH(active_proc, &ctrlr->active_procs, tailq) {
@@ -1251,7 +1251,7 @@ int
 nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 {
 	struct spdk_nvme_ctrlr_process	*ctrlr_proc, *active_proc;
-	pid_t				pid = getpid();
+	pid_t				pid = spdk_env_getpid();
 
 	/* Check whether the process is already added or not */
 	TAILQ_FOREACH(active_proc, &ctrlr->active_procs, tailq) {
@@ -1390,7 +1390,7 @@ void
 nvme_ctrlr_proc_get_ref(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct spdk_nvme_ctrlr_process	*active_proc;
-	pid_t				pid = getpid();
+	pid_t				pid = spdk_env_getpid();
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
@@ -1410,7 +1410,7 @@ void
 nvme_ctrlr_proc_put_ref(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct spdk_nvme_ctrlr_process	*active_proc, *tmp;
-	pid_t				pid = getpid();
+	pid_t				pid = spdk_env_getpid();
 	int				proc_count;
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
@@ -1463,7 +1463,7 @@ struct spdk_pci_device *
 nvme_ctrlr_proc_get_devhandle(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct spdk_nvme_ctrlr_process	*active_proc;
-	pid_t				pid = getpid();
+	pid_t				pid = spdk_env_getpid();
 	struct spdk_pci_device		*devhandle = NULL;
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
@@ -1965,7 +1965,7 @@ spdk_nvme_ctrlr_register_timeout_callback(struct spdk_nvme_ctrlr *ctrlr,
 		uint32_t nvme_timeout, spdk_nvme_timeout_cb cb_fn, void *cb_arg)
 {
 	struct spdk_nvme_ctrlr_process	*active_proc = NULL;
-	pid_t				pid = getpid();
+	pid_t				pid = spdk_env_getpid();
 
 	TAILQ_FOREACH(active_proc, &ctrlr->active_procs, tailq) {
 		if (active_proc->pid == pid) {

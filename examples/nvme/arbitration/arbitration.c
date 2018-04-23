@@ -1112,7 +1112,7 @@ main(int argc, char **argv)
 		return 1;
 	}
 
-	snprintf(task_pool_name, sizeof(task_pool_name), "task_pool_%d", getpid());
+	snprintf(task_pool_name, sizeof(task_pool_name), "task_pool_%d", spdk_env_getpid());
 
 	/*
 	 * The task_count will be dynamically calculated based on the

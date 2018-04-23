@@ -367,7 +367,7 @@ spdk_app_setup_trace(struct spdk_app_opts *opts)
 	if (opts->shm_id >= 0) {
 		snprintf(shm_name, sizeof(shm_name), "/%s_trace.%d", opts->name, opts->shm_id);
 	} else {
-		snprintf(shm_name, sizeof(shm_name), "/%s_trace.pid%d", opts->name, (int)getpid());
+		snprintf(shm_name, sizeof(shm_name), "/%s_trace.pid%d", opts->name, (int)spdk_env_getpid());
 	}
 
 	if (spdk_trace_init(shm_name) != 0) {
@@ -384,7 +384,7 @@ spdk_app_setup_trace(struct spdk_app_opts *opts)
 			SPDK_NOTICELOG("Use 'spdk_trace -s %s %s %d' to capture a snapshot of events at runtime.\n",
 				       opts->name,
 				       opts->shm_id >= 0 ? "-i" : "-p",
-				       opts->shm_id >= 0 ? opts->shm_id : getpid());
+				       opts->shm_id >= 0 ? opts->shm_id : spdk_env_getpid());
 			spdk_trace_set_tpoint_group_mask(tpoint_group_mask);
 		}
 	}

@@ -165,7 +165,7 @@ srandomdev(void)
 	time_t now;
 	pid_t pid;
 
-	pid = getpid();
+	pid = spdk_env_getpid();
 	now = time(NULL);
 	seed = pid ^ now;
 	srandom(seed);
