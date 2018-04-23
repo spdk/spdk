@@ -231,10 +231,14 @@ spdk_nvme_map_prps(struct spdk_vhost_nvme_dev *nvme, struct spdk_nvme_cmd *cmd,
 	len -= residue_len;
 
 	if (len) {
+		if (spdk_unlikely(prp2 == 0)) {
+			SPDK_DEBUGLOG(SPDK_LOG_VHOST_NVME, "Invalid PRP2=0 in command\n");
+			return -1;
+		}
+
 		if (len <= mps) {
 			/* 2 PRP used */
 			task->iovcnt = 2;
-			assert(prp2 != 0);
 			vva = spdk_vhost_gpa_to_vva(&nvme->vdev, prp2, len);
 			if (spdk_unlikely(vva == NULL)) {
 				return -1;
@@ -243,7 +247,6 @@ spdk_nvme_map_prps(struct spdk_vhost_nvme_dev *nvme, struct spdk_nvme_cmd *cmd,
 			task->iovs[1].iov_len = len;
 		} else {
 			/* PRP list used */
-			assert(prp2 != 0);
 			nents = (len + mps - 1) / mps;
 			vva = spdk_vhost_gpa_to_vva(&nvme->vdev, prp2, nents * sizeof(*prp_list));
 			if (spdk_unlikely(vva == NULL)) {
@@ -402,8 +405,12 @@ spdk_nvme_process_sq(struct spdk_vhost_nvme_dev *nvme, struct spdk_vhost_nvme_sq
 
 	if (cmd->opc == SPDK_NVME_OPC_READ || cmd->opc == SPDK_NVME_OPC_WRITE ||
 	    cmd->opc == SPDK_NVME_OPC_DATASET_MANAGEMENT) {
-
-		assert(cmd->psdt == SPDK_NVME_PSDT_PRP);
+		if (cmd->psdt != SPDK_NVME_PSDT_PRP) {
+			SPDK_DEBUGLOG(SPDK_LOG_VHOST_NVME, "Invalid PSDT %u%ub in command\n",
+				      cmd->psdt >> 1, cmd->psdt & 1u);
+			blk_request_complete_cb(NULL, false, task);
+			return -1;
+		}
 
 		if (cmd->opc == SPDK_NVME_OPC_DATASET_MANAGEMENT) {
 			num_ranges = (cmd->cdw10 & 0xff) + 1;
@@ -650,7 +657,10 @@ vhost_nvme_create_io_cq(struct spdk_vhost_nvme_dev *nvme,
 	uint64_t requested_len;
 
 	/* physical contiguous */
-	assert(cmd->cdw11 & 0x1);
+	if (!(cmd->cdw11 & 0x1)) {
+		return -1;
+	}
+
 	qid = cmd->cdw10 & 0xffff;
 	qsize = (cmd->cdw10 >> 16) & 0xffff;
 	dma_addr = cmd->dptr.prp.prp1;
