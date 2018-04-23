@@ -1,0 +1,163 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba40a7d8_c7ea900e",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 31
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-23T00:09:18Z",
+      "side": 1,
+      "message": "this is not needed anymore.",
+      "revId": "d70ec01f864f7b1604dae38a42ac2541525af3f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c8e58717_79160345",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 31
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-23T00:09:18Z",
+      "side": 1,
+      "message": "same as spdk_app_opts.",
+      "revId": "d70ec01f864f7b1604dae38a42ac2541525af3f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e5e74dee_009e55ac",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 31
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-23T00:09:18Z",
+      "side": 1,
+      "message": "adding both whitelist and blacklist like the following is natural? DPDK provides -w and -b options respectively.\n\nHow about the following? Do you have better idea?\n\n  struct spdk_pci_addr *pci_wl_addrs?\n  size_t num_pci_wl_addrs\n\n  struct spdk_pci_addr *pci_bl_addrs?\n  size_t num_pci_bl_addrs",
+      "revId": "d70ec01f864f7b1604dae38a42ac2541525af3f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4405deac_f9ec03c5",
+        "filename": "lib/event/app.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-23T00:09:18Z",
+      "side": 1,
+      "message": "Can you move these code to spdk_app_read_config_file_global_params()?",
+      "revId": "d70ec01f864f7b1604dae38a42ac2541525af3f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b43d5d6_6c797696",
+        "filename": "lib/event/app.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 373,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-23T00:09:18Z",
+      "side": 1,
+      "message": "Extracting the following code block into a function, e.g., spdk_app_opts_add_pci_wl/bl_addr(bdf) ?\n\nIf done, the function can be shared between the command line options and config file.",
+      "revId": "d70ec01f864f7b1604dae38a42ac2541525af3f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f273d1e6_2b854e7b",
+        "filename": "lib/event/app.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 374,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-23T00:09:18Z",
+      "side": 1,
+      "message": "I think not void pointer but pointer to spdk_pci_addr is OK.",
+      "range": {
+        "startLine": 374,
+        "startChar": 2,
+        "endLine": 374,
+        "endChar": 8
+      },
+      "revId": "d70ec01f864f7b1604dae38a42ac2541525af3f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "54ad49d7_3b27a1e9",
+        "filename": "lib/event/app.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 382,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-23T00:09:18Z",
+      "side": 1,
+      "message": "I think realloc() first and then passing \u0026opts-\u003epci_addr_list[opts-\u003enum_pci_addr] is concise?\n\nstruct spdk_pci_addr *old_ptr \u003d opts-\u003epci_addr_list;\nopts-\u003epci_addr_list \u003d realloc(old_ptr, sizeof(*old_ptr) * opts-\u003enum_pci_addr_list);\nif (!opts-\u003epci_addr_list) {\n  free(old_ptr);\n  opts-\u003enum_pci_addr \u003d 0;\n  return -ENOMEM;\n}\n  \nif (\u0026spk_pci_addr_parse(\u0026opts-\u003epci_addr_list[opts-\u003enum_pci_addr], bdf) \u003c 0) {\n  free(opts-\u003epci_addr_list)\n  opts-\u003enum_pci_addr \u003d 0;\n  return -EINVAL;\n}\n  \nopts-\u003enum_pci_addr++;\nreturn 0",
+      "revId": "d70ec01f864f7b1604dae38a42ac2541525af3f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a157302_bb40d0d5",
+        "filename": "lib/event/app.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 416,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-23T00:09:18Z",
+      "side": 1,
+      "message": "just copying like the following is OK?\n\n  env_opts.pci_addr_list \u003d opts-\u003epci_addr_list;\n  env_opts.num_pci_addr \u003d opts-\u003enum_pci_addr;\n\nI think the resizable array of pci_addr_list should be freed as spdk_app_opts.\n\nThe reason is that when this is specified as command line options, this will be set before spdk_app_start() and freeing after returning spdk_app_start() may be reasonable.",
+      "revId": "d70ec01f864f7b1604dae38a42ac2541525af3f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ae93be63_3b401995",
+        "filename": "lib/event/app.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 427,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-23T00:09:18Z",
+      "side": 1,
+      "message": "env_opts.pci_addr_list can be freed here.",
+      "revId": "d70ec01f864f7b1604dae38a42ac2541525af3f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
