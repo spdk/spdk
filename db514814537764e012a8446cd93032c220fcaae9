@@ -16,6 +16,24 @@
       "revId": "db514814537764e012a8446cd93032c220fcaae9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fdd60015_1d456087",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2947,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-04-23T09:52:38Z",
+      "side": 1,
+      "message": "Yes. Shall send this request to the QoS thread.",
+      "parentUuid": "792b939c_0add4431",
+      "revId": "db514814537764e012a8446cd93032c220fcaae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
