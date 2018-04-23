@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ec6cae96_cfb5f409",
+        "filename": "lib/net/interface.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-23T17:20:11Z",
+      "side": 1,
+      "message": "Comment indentation needs to be fixed.",
+      "revId": "70162ccf2478bca1f32ee77d49a1a0714b104f82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
