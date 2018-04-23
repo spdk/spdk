@@ -677,6 +677,89 @@ invalid:
 
 SPDK_RPC_REGISTER("rename_lvol_bdev", spdk_rpc_rename_lvol_bdev, SPDK_RPC_RUNTIME)
 
+struct rpc_inflate_lvol_bdev {
+	char *name;
+};
+
+static void
+free_rpc_inflate_lvol_bdev(struct rpc_inflate_lvol_bdev *req)
+{
+	free(req->name);
+}
+
+static const struct spdk_json_object_decoder rpc_inflate_lvol_bdev_decoders[] = {
+	{"name", offsetof(struct rpc_inflate_lvol_bdev, name), spdk_json_decode_string},
+};
+
+static void
+_spdk_rpc_inflate_lvol_bdev_cb(void *cb_arg, int lvolerrno)
+{
+	struct spdk_json_write_ctx *w;
+	struct spdk_jsonrpc_request *request = cb_arg;
+
+	if (lvolerrno != 0) {
+		goto invalid;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_strerror(-lvolerrno));
+}
+
+static void
+spdk_rpc_inflate_lvol_bdev(struct spdk_jsonrpc_request *request,
+			   const struct spdk_json_val *params)
+{
+	struct rpc_inflate_lvol_bdev req = {};
+	struct spdk_bdev *bdev;
+	struct spdk_lvol *lvol;
+	int rc = 0;
+
+	SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "Inflating lvol\n");
+
+	if (spdk_json_decode_object(params, rpc_inflate_lvol_bdev_decoders,
+				    SPDK_COUNTOF(rpc_inflate_lvol_bdev_decoders),
+				    &req)) {
+		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	bdev = spdk_bdev_get_by_name(req.name);
+	if (bdev == NULL) {
+		SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
+		rc = -ENODEV;
+		goto invalid;
+	}
+
+	lvol = vbdev_lvol_get_from_bdev(bdev);
+	if (lvol == NULL) {
+		SPDK_ERRLOG("lvol does not exist\n");
+		rc = -ENODEV;
+		goto invalid;
+	}
+
+	spdk_lvol_inflate(lvol, _spdk_rpc_inflate_lvol_bdev_cb, request);
+
+	free_rpc_inflate_lvol_bdev(&req);
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
+	free_rpc_inflate_lvol_bdev(&req);
+}
+
+SPDK_RPC_REGISTER("inflate_lvol_bdev", spdk_rpc_inflate_lvol_bdev, SPDK_RPC_RUNTIME)
+
 struct rpc_resize_lvol_bdev {
 	char *name;
 	uint64_t size;
