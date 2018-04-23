@@ -566,8 +566,8 @@ vhost_nvme_doorbell_buffer_config(struct spdk_vhost_nvme_dev *nvme,
 		return -1;
 	}
 	/* zeroed the doorbell buffer memory */
-	memset((void *)nvme->dbbuf_dbs, 0, sizeof((nvme->num_sqs + 1) * 8));
-	memset((void *)nvme->dbbuf_eis, 0, sizeof((nvme->num_sqs + 1) * 8));
+	memset((void *)nvme->dbbuf_dbs, 0, 4096);
+	memset((void *)nvme->dbbuf_eis, 0, 4096);
 
 	cpl->status.sc = 0;
 	cpl->status.sct = 0;
