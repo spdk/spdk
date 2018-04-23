@@ -1078,7 +1078,7 @@ nvme_pcie_qpair_insert_pending_admin_request(struct spdk_nvme_qpair *qpair,
 	 *  process list for that process to handle it later.
 	 */
 	assert(nvme_qpair_is_admin_queue(qpair));
-	assert(active_req->pid != getpid());
+	assert(active_req->pid != spdk_env_getpid());
 
 	TAILQ_FOREACH(active_proc, &ctrlr->active_procs, tailq) {
 		if (active_proc->pid == active_req->pid) {
@@ -1108,7 +1108,7 @@ nvme_pcie_qpair_complete_pending_admin_request(struct spdk_nvme_qpair *qpair)
 	struct spdk_nvme_ctrlr		*ctrlr = qpair->ctrlr;
 	struct nvme_request		*req, *tmp_req;
 	bool				proc_found = false;
-	pid_t				pid = getpid();
+	pid_t				pid = spdk_env_getpid();
 	struct spdk_nvme_ctrlr_process	*proc;
 
 	/*
@@ -1240,7 +1240,7 @@ nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_trac
 	} else {
 		if (was_active) {
 			/* Only check admin requests from different processes. */
-			if (nvme_qpair_is_admin_queue(qpair) && req->pid != getpid()) {
+			if (nvme_qpair_is_admin_queue(qpair) && req->pid != spdk_env_getpid()) {
 				req_from_current_proc = false;
 				nvme_pcie_qpair_insert_pending_admin_request(qpair, req, cpl);
 			} else {
@@ -2018,7 +2018,7 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 		}
 
 		if (nvme_qpair_is_admin_queue(qpair)) {
-			if (tr->req->pid != getpid()) {
+			if (tr->req->pid != spdk_env_getpid()) {
 				continue;
 			}
 
