@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "92817505_ed0ae6c3",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1017,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-04-23T18:35:58Z",
+      "side": 1,
+      "message": "\u003e so it seems like we could go through this list, first queue is ready so we set vdev-\u003emax_queues \u003d 1, remaining queues are not ready so we exit the loop;  second queue becomes ready later - how does max_queues get updated?\n\nsecond queue becomes ready so we stop and then start the device.\nAny set_vring_addr/base/call/kick message attempts to stop the device, and starts it right after.",
+      "parentUuid": "c1b4cf46_d01c2bae",
+      "revId": "50d8b033a047c659e969ffe6cbde83dcdb6964f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3d11e9ad_c90a41ad",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2018-04-23T18:11:20Z",
       "side": 1,
       "message": "this comment is a bit confusing - isn\u0027t just checking that all of the queues are ready?\n\ni.e. if max_queues \u003d 8, and queues 0-5 have desc !\u003d NULL, then these queues are all contiguous - but this loop will fail\n\ni guess i just don\u0027t understand what \"contiguous\" is supposed to mean in the comment",
+      "revId": "50d8b033a047c659e969ffe6cbde83dcdb6964f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b89cf7e8_d78d6c1c",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 508,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-04-23T18:35:58Z",
+      "side": 1,
+      "message": "max_queues is calculated manually in vhost.c:1033 [1].\nIt is the maximum id of all existing queues and I use (desc !\u003d NULL) check to decide if a queue \"exists\".\nSo vdev-\u003evirtqeueue[vdev-\u003emax_queues - 1].desc is always !\u003d NULL.\n\n[1] https://review.gerrithub.io/c/spdk/spdk/+/408611/3/lib/vhost/vhost.c#1033",
+      "parentUuid": "3d11e9ad_c90a41ad",
       "revId": "50d8b033a047c659e969ffe6cbde83dcdb6964f6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
