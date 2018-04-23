@@ -113,16 +113,16 @@ timing_enter create_bdev_config
 create_bdev_config
 timing_exit create_bdev_config
 
-timing_enter run_spdk_fio
-run_spdk_fio $BASE_DIR/bdev.fio --filename=$virtio_bdevs --section=job_randwrite --section=job_randrw \
-	--section=job_write --section=job_rw --spdk_conf=$BASE_DIR/bdev.conf
-report_test_completion "vhost_run_spdk_fio"
-timing_exit run_spdk_fio
-
-timing_enter run_spdk_fio_unmap
-run_spdk_fio $BASE_DIR/bdev.fio --filename=$virtio_with_unmap --spdk_conf=$BASE_DIR/bdev.conf \
-	--spdk_conf=$BASE_DIR/bdev.conf
-timing_exit run_spdk_fio_unmap
+#timing_enter run_spdk_fio
+#run_spdk_fio $BASE_DIR/bdev.fio --filename=$virtio_bdevs --section=job_randwrite --section=job_randrw \
+#	--section=job_write --section=job_rw --spdk_conf=$BASE_DIR/bdev.conf
+#report_test_completion "vhost_run_spdk_fio"
+#timing_exit run_spdk_fio
+#
+#timing_enter run_spdk_fio_unmap
+#run_spdk_fio $BASE_DIR/bdev.fio --filename=$virtio_with_unmap --spdk_conf=$BASE_DIR/bdev.conf \
+#	--spdk_conf=$BASE_DIR/bdev.conf
+#timing_exit run_spdk_fio_unmap
 
 timing_enter create_kernel_vhost
 targetcli "/backstores/$targetcli_rd_name create name=ramdisk size=1GB"
@@ -168,6 +168,14 @@ virtio_with_unmap=$(jq -r '[.[] | select(.supported_io_types.unmap==true).name]
  | join(":")' <<< $vbdevs)
 timing_exit setup_vm
 
+TEST_COMPLETE=false
+while ! $TEST_COMPLETE; do
+	echo "========================================================="
+	echo "printing dmesg"
+	echo "========================================================="
+	vm_ssh $vm_no "dmesg"
+	sleep 10
+done &
 timing_enter run_spdk_fio_pci
 vm_ssh $vm_no "LD_PRELOAD=/root/spdk/examples/bdev/fio_plugin/fio_plugin /root/fio_src/fio --ioengine=spdk_bdev \
  /root/spdk/test/vhost/initiator/bdev.fio --filename=$virtio_bdevs --section=job_randwrite \
@@ -181,6 +189,7 @@ vm_ssh $vm_no "LD_PRELOAD=/root/spdk/examples/bdev/fio_plugin/fio_plugin /root/f
  --spdk_conf=/root/spdk/test/vhost/initiator/bdev_pci.conf --spdk_mem=1024 --spdk_single_seg=1"
 timing_exit run_spdk_fio_pci_unmap
 
+TEST_COMPLETE=true
 timing_enter vm_shutdown_all
 vm_shutdown_all
 timing_exit vm_shutdown_all
