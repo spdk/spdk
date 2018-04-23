@@ -40,7 +40,7 @@ h1.groupheader {
 h2.groupheader {
 	border-bottom: 1px solid #879ECB;
 	color: #354C7B;
-	font-size: 150%;
+	font-size: 125%;
 	font-weight: normal;
 	margin-top: 1.75em;
 	padding-top: 8px;
@@ -49,7 +49,7 @@ h2.groupheader {
 }
 
 h3.groupheader {
-	font-size: 100%;
+	font-size: 75%;
 }
 
 dt {
