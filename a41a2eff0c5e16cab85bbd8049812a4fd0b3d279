@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e8d1431e_14add3a4",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 556,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-23T16:37:38Z",
+      "side": 1,
+      "message": "Can this be more or less than a page?  (Maybe this should be (nvme-\u003enum_sqs + 1) * 8 like below?)",
+      "range": {
+        "startLine": 556,
+        "startChar": 87,
+        "endLine": 556,
+        "endChar": 91
+      },
+      "revId": "a41a2eff0c5e16cab85bbd8049812a4fd0b3d279",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66d5729d_d4978512",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 562,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-23T16:37:38Z",
+      "side": 1,
+      "message": "This looks like a bug (unrelated to this patch, but we should fix it as a separate patch) - we are taking sizeof() the result of the calculation, but it should probably just be using the result of the calculation.",
+      "range": {
+        "startLine": 562,
+        "startChar": 36,
+        "endLine": 562,
+        "endChar": 43
+      },
+      "revId": "a41a2eff0c5e16cab85bbd8049812a4fd0b3d279",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
