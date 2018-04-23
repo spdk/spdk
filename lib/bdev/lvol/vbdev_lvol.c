@@ -1238,4 +1238,40 @@ vbdev_lvol_get_from_bdev(struct spdk_bdev *bdev)
 	return (struct spdk_lvol *)bdev->ctxt;
 }
 
+static void
+_vbdev_lvol_inflate_cb(void *cb_arg, int lvolerrno)
+{
+	struct spdk_lvol_req *req = cb_arg;
+
+	if (lvolerrno != 0) {
+		SPDK_ERRLOG("Failed to inflate lvol - error no: %d.\n", lvolerrno);
+	}
+
+	req->cb_fn(req->cb_arg, lvolerrno);
+	free(req);
+}
+
+void
+vbdev_lvol_inflate(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvol_req *req;
+
+	if (lvol == NULL) {
+		SPDK_ERRLOG("Lvol does not exist\n");
+		cb_fn(cb_arg, -EINVAL);
+		return;
+	}
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+
+	spdk_lvol_inflate(lvol, _vbdev_lvol_inflate_cb, req);
+}
+
 SPDK_LOG_REGISTER_COMPONENT("vbdev_lvol", SPDK_LOG_VBDEV_LVOL);

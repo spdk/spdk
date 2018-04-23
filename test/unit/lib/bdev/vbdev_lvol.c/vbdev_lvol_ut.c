@@ -40,6 +40,7 @@
 
 int g_lvolerrno;
 int g_lvserrno;
+int g_inflate_rc;
 int g_cluster_size;
 int g_registered_bdevs;
 int g_num_lvols = 0;
@@ -60,6 +61,12 @@ bool lvol_already_opened = false;
 bool g_examine_done = false;
 bool g_bdev_alias_already_exists = false;
 bool g_lvs_with_name_already_exists = false;
+
+void
+spdk_lvol_inflate(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
+{
+	cb_fn(cb_arg, g_inflate_rc);
+}
 
 int
 spdk_bdev_alias_add(struct spdk_bdev *bdev, const char *alias)
@@ -696,6 +703,12 @@ vbdev_lvol_resize_complete(void *cb_arg, int lvolerrno)
 
 static void
 vbdev_lvol_rename_complete(void *cb_arg, int lvolerrno)
+{
+	g_lvolerrno = lvolerrno;
+}
+
+static void
+vbdev_lvol_inflate_complete(void *cb_arg, int lvolerrno)
 {
 	g_lvolerrno = lvolerrno;
 }
@@ -1460,6 +1473,53 @@ ut_lvs_rename(void)
 	free(g_base_bdev);
 }
 
+static void
+ut_lvol_inflate(void)
+{
+	int rc = 0;
+	int sz = 10;
+	struct spdk_lvol_store *lvs;
+	struct spdk_bs_dev *b_bdev;
+
+	rc = vbdev_lvs_create(&g_bdev, "old_lvs_name", 0, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	CU_ASSERT(g_bs_dev != NULL);
+	b_bdev = g_bs_dev;
+
+	g_bs_dev = NULL;
+	lvs = g_lvol_store;
+	g_lvol_store = NULL;
+
+	g_base_bdev = calloc(1, sizeof(*g_base_bdev));
+	SPDK_CU_ASSERT_FATAL(g_base_bdev != NULL);
+
+	g_lvolerrno = -1;
+	rc = vbdev_lvol_create(lvs, "lvol", sz, false, vbdev_lvol_create_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvolerrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
+
+	g_inflate_rc = -1;
+	vbdev_lvol_inflate(g_lvol, vbdev_lvol_inflate_complete, NULL);
+	CU_ASSERT(g_lvolerrno != 0);
+
+	g_inflate_rc = 0;
+	vbdev_lvol_inflate(g_lvol, vbdev_lvol_inflate_complete, NULL);
+	CU_ASSERT(g_lvolerrno == 0);
+
+	/* Unload lvol store */
+	g_lvol_store = lvs;
+	g_bs_dev = b_bdev;
+	vbdev_lvs_destruct(g_lvol_store, lvol_store_op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	CU_ASSERT(g_lvol_store == NULL);
+
+	free(g_base_bdev->name);
+	free(g_base_bdev);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1491,7 +1551,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "ut_vbdev_lvol_submit_request", ut_vbdev_lvol_submit_request) == NULL ||
 		CU_add_test(suite, "lvol_examine", ut_lvol_examine) == NULL ||
 		CU_add_test(suite, "ut_lvol_rename", ut_lvol_rename) == NULL ||
-		CU_add_test(suite, "ut_lvs_rename", ut_lvs_rename) == NULL
+		CU_add_test(suite, "ut_lvs_rename", ut_lvs_rename) == NULL ||
+		CU_add_test(suite, "ut_lvol_inflate", ut_lvol_inflate) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
