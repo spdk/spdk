@@ -110,16 +110,16 @@ def resize_lvol_bdev(client, name, size):
     return client.call('resize_lvol_bdev', params)
 
 
-def destroy_lvol_bdev(client, name):
-    """Destroy a logical volume.
+def inflate_lvol_bdev(client, name):
+    """Inflate a logical volume.
 
     Args:
-        name: name of logical volume to destroy
+        name: name of logical volume to inflate
     """
     params = {
         'name': name,
     }
-    return client.call('destroy_lvol_bdev', params)
+    return client.call('inflate_lvol_bdev', params)
 
 
 def destroy_lvol_store(client, uuid=None, lvs_name=None):
