@@ -1,5 +1,26 @@
 # Changelog
 
+## v18.01.1: vhost CVE fixes, NVMe getpid() caching
+
+This release contains the following fixes.  All users of SPDK v18.01 are strongly
+recommended to upgrade.
+
+### Fixes for DPDK CVE-2018-1059
+
+The SPDK vhost-scsi and vhost-blk applications now have fixes to address the DPDK rte_vhost
+vulnerability [CVE-2018-1059](http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2018-1059).
+Please see this [security advisory](https://access.redhat.com/security/cve/cve-2018-1059)
+for additional information on this DPDK vulnerability.
+
+### NVMe driver getpid() caching
+
+The SPDK NVMe driver now caches the pid in a global variable rather than calling getpid() on
+every request.  The SPDK NVMe driver associates each request with the pid of its submitting
+process to enable multi-process support.  glibc 2.25 eliminated pid caching resulting in system
+calls when getpid() is called which degraded SPDK NVMe driver efficiency.  glibc eliminated pid
+caching for use cases (such as forking) that are not support by SPDK, so pid caching is
+an acceptable solution to eliminate this degradation.
+
 ## v18.01: Blobstore Thin Provisioning
 
 ### Build System
