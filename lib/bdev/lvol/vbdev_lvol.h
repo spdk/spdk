@@ -109,4 +109,6 @@ struct lvol_store_bdev *vbdev_get_lvs_bdev_by_lvs(struct spdk_lvol_store *lvs);
 
 struct spdk_lvol *vbdev_lvol_get_from_bdev(struct spdk_bdev *bdev);
 
+void vbdev_lvol_inflate(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg);
+
 #endif /* SPDK_VBDEV_LVOL_H */
