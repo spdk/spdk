@@ -716,13 +716,14 @@ virtio_is_ready(struct virtio_net *dev)
 	for (i = 0; i < dev->nr_vring; i++) {
 		vq = dev->virtqueue[i];
 
-		if (!vq_is_ready(vq))
-			return 0;
+		if (vq_is_ready(vq)) {
+			RTE_LOG(INFO, VHOST_CONFIG,
+				"virtio is now ready for processing.\n");
+			return 1;
+		}
 	}
 
-	RTE_LOG(INFO, VHOST_CONFIG,
-		"virtio is now ready for processing.\n");
-	return 1;
+	return 0;
 }
 
 static void

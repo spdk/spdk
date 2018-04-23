@@ -333,7 +333,7 @@ vdev_worker(void *arg)
 	struct spdk_vhost_blk_dev *bvdev = arg;
 	uint16_t q_idx;
 
-	for (q_idx = 0; q_idx < bvdev->vdev.num_queues; q_idx++) {
+	for (q_idx = 0; q_idx < bvdev->vdev.max_queues; q_idx++) {
 		process_vq(bvdev, &bvdev->vdev.virtqueue[q_idx]);
 	}
 
@@ -368,7 +368,7 @@ no_bdev_vdev_worker(void *arg)
 	struct spdk_vhost_blk_dev *bvdev = arg;
 	uint16_t q_idx;
 
-	for (q_idx = 0; q_idx < bvdev->vdev.num_queues; q_idx++) {
+	for (q_idx = 0; q_idx < bvdev->vdev.max_queues; q_idx++) {
 		no_bdev_process_vq(bvdev, &bvdev->vdev.virtqueue[q_idx]);
 	}
 
@@ -433,7 +433,7 @@ free_task_pool(struct spdk_vhost_blk_dev *bvdev)
 	struct spdk_vhost_virtqueue *vq;
 	uint16_t i;
 
-	for (i = 0; i < bvdev->vdev.num_queues; i++) {
+	for (i = 0; i < bvdev->vdev.max_queues; i++) {
 		vq = &bvdev->vdev.virtqueue[i];
 		if (vq->tasks == NULL) {
 			continue;
@@ -453,8 +453,12 @@ alloc_task_pool(struct spdk_vhost_blk_dev *bvdev)
 	uint16_t i;
 	uint32_t j;
 
-	for (i = 0; i < bvdev->vdev.num_queues; i++) {
+	for (i = 0; i < bvdev->vdev.max_queues; i++) {
 		vq = &bvdev->vdev.virtqueue[i];
+		if (vq->vring.desc == NULL) {
+			continue;
+		}
+
 		task_cnt = vq->vring.size;
 		if (task_cnt > SPDK_VHOST_MAX_VQ_SIZE) {
 			/* sanity check */
@@ -492,13 +496,22 @@ static int
 spdk_vhost_blk_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 {
 	struct spdk_vhost_blk_dev *bvdev;
-	int rc = 0;
+	int i, rc = 0;
 
 	bvdev = to_blk_dev(vdev);
 	if (bvdev == NULL) {
 		SPDK_ERRLOG("Trying to start non-blk controller as a blk one.\n");
 		rc = -1;
 		goto out;
+	}
+
+	/* validate all I/O queues are in a contiguous index range */
+	for (i = 0; i < vdev->max_queues; i++) {
+		if (vdev->virtqueue[i].vring.desc == NULL) {
+			SPDK_ERRLOG("%s: queue %"PRIu32" is empty\n", vdev->name, i);
+			rc = -1;
+			goto out;
+		}
 	}
 
 	rc = alloc_task_pool(bvdev);
@@ -542,7 +555,7 @@ destroy_device_poller_cb(void *arg)
 		return -1;
 	}
 
-	for (i = 0; i < bvdev->vdev.num_queues; i++) {
+	for (i = 0; i < bvdev->vdev.max_queues; i++) {
 		bvdev->vdev.virtqueue[i].next_event_time = 0;
 		spdk_vhost_vq_used_signal(&bvdev->vdev, &bvdev->vdev.virtqueue[i]);
 	}

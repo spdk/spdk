@@ -670,7 +670,7 @@ vdev_worker(void *arg)
 	struct spdk_vhost_scsi_dev *svdev = arg;
 	uint32_t q_idx;
 
-	for (q_idx = VIRTIO_SCSI_REQUESTQ; q_idx < svdev->vdev.num_queues; q_idx++) {
+	for (q_idx = VIRTIO_SCSI_REQUESTQ; q_idx < svdev->vdev.max_queues; q_idx++) {
 		process_requestq(svdev, &svdev->vdev.virtqueue[q_idx]);
 	}
 
@@ -1006,7 +1006,7 @@ free_task_pool(struct spdk_vhost_scsi_dev *svdev)
 	struct spdk_vhost_virtqueue *vq;
 	uint16_t i;
 
-	for (i = 0; i < svdev->vdev.num_queues; i++) {
+	for (i = 0; i < svdev->vdev.max_queues; i++) {
 		vq = &svdev->vdev.virtqueue[i];
 		if (vq->tasks == NULL) {
 			continue;
@@ -1026,8 +1026,12 @@ alloc_task_pool(struct spdk_vhost_scsi_dev *svdev)
 	uint16_t i;
 	uint32_t j;
 
-	for (i = 0; i < svdev->vdev.num_queues; i++) {
+	for (i = 0; i < svdev->vdev.max_queues; i++) {
 		vq = &svdev->vdev.virtqueue[i];
+		if (vq->vring.desc == NULL) {
+			continue;
+		}
+
 		task_cnt = vq->vring.size;
 		if (task_cnt > SPDK_VHOST_MAX_VQ_SIZE) {
 			/* sanity check */
@@ -1074,6 +1078,15 @@ spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 		goto out;
 	}
 
+	/* validate all I/O queues are in a contiguous index range */
+	for (i = VIRTIO_SCSI_REQUESTQ; i < vdev->max_queues; i++) {
+		if (vdev->virtqueue[i].vring.desc == NULL) {
+			SPDK_ERRLOG("%s: queue %"PRIu32" is empty\n", vdev->name, i);
+			rc = -1;
+			goto out;
+		}
+	}
+
 	rc = alloc_task_pool(svdev);
 	if (rc != 0) {
 		SPDK_ERRLOG("%s: failed to alloc task pool.\n", vdev->name);
@@ -1090,8 +1103,11 @@ spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 		     vdev->name, vdev->lcore);
 
 	svdev->requestq_poller = spdk_poller_register(vdev_worker, svdev, 0);
-	svdev->mgmt_poller = spdk_poller_register(vdev_mgmt_worker, svdev,
-			     MGMT_POLL_PERIOD_US);
+	if (vdev->virtqueue[VIRTIO_SCSI_CONTROLQ].vring.desc &&
+	    vdev->virtqueue[VIRTIO_SCSI_EVENTQ].vring.desc) {
+		svdev->mgmt_poller = spdk_poller_register(vdev_mgmt_worker, svdev,
+				     MGMT_POLL_PERIOD_US);
+	}
 out:
 	spdk_vhost_dev_backend_event_done(event_ctx, rc);
 	return rc;
@@ -1115,7 +1131,7 @@ destroy_device_poller_cb(void *arg)
 	}
 
 
-	for (i = 0; i < svdev->vdev.num_queues; i++) {
+	for (i = 0; i < svdev->vdev.max_queues; i++) {
 		spdk_vhost_vq_used_signal(&svdev->vdev, &svdev->vdev.virtqueue[i]);
 	}
 
