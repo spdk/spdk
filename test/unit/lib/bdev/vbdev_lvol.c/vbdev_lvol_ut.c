@@ -40,6 +40,7 @@
 
 int g_lvolerrno;
 int g_lvserrno;
+int g_inflate_rc;
 int g_cluster_size;
 int g_registered_bdevs;
 int g_num_lvols = 0;
@@ -60,6 +61,12 @@ bool lvol_already_opened = false;
 bool g_examine_done = false;
 bool g_bdev_alias_already_exists = false;
 bool g_lvs_with_name_already_exists = false;
+
+void
+spdk_lvol_inflate(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
+{
+	cb_fn(cb_arg, g_inflate_rc);
+}
 
 int
 spdk_bdev_alias_add(struct spdk_bdev *bdev, const char *alias)
