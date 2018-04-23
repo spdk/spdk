@@ -133,6 +133,7 @@ def case_message(func):
             753: 'snapshot_of_snapshot',
             754: 'clone_bdev_only',
             755: 'clone_writing_clone',
+            756: 'clone_and_snapshot_consistency',
             757: 'clone_inflate',
             800: 'rename_positive',
             801: 'rename_lvs_nonexistent',
@@ -1618,6 +1619,99 @@ class TestCases(object):
         return fail_count
 
     @case_message
+    def test_case756(self):
+        """
+        clone_and_snapshot_relations
+
+        Check if relations between clones and snapshots
+        are properly set in configuration
+        """
+        fail_count = 0
+        snapshot_name = 'snapshot'
+        clone_name0 = 'clone1'
+        clone_name1 = 'clone2'
+        lbd_name = clone_name1
+
+        # Create malloc bdev
+        base_name = self.c.construct_malloc_bdev(self.total_size,
+                                                 self.block_size)
+        # Create lvol store
+        uuid_store = self.c.construct_lvol_store(base_name,
+                                                 self.lvs_name,
+                                                 self.cluster_size)
+        fail_count += self.c.check_get_lvol_stores(base_name, uuid_store,
+                                                   self.cluster_size)
+        lvs = self.c.get_lvol_stores()
+        size = int(int(lvs[0]['free_clusters'] * lvs[0]['cluster_size']) / 6 / MEGABYTE)
+
+        # Construct thick provisioned lvol bdev
+        uuid_bdev = self.c.construct_lvol_bdev(uuid_store,
+                                               lbd_name, size, thin=False)
+        lvol_bdev = self.c.get_lvol_bdev_with_name(uuid_bdev)
+
+        # Create snapshot of thick provisioned lvol bdev
+        fail_count += self.c.snapshot_lvol_bdev(lvol_bdev['name'], snapshot_name)
+        snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
+
+        # Create clone of created snapshot
+        fail_count += self.c.clone_lvol_bdev(snapshot_bdev['name'], clone_name0)
+
+        # Get current bdevs configuration
+        snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
+        lvol_clone0 = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + clone_name0)
+        lvol_clone1 = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + clone_name1)
+
+        # Check snapshot consistency
+        snapshot_lvol = snapshot_bdev['driver_specific']['lvol']
+        if snapshot_lvol['snapshot'] is not True:
+            fail_count += 1
+        if snapshot_lvol['clone'] is not False:
+            fail_count += 1
+        if sorted([clone_name0, clone_name1]) != sorted(snapshot_lvol['clones']):
+            fail_count += 1
+
+        # Check first clone consistency
+        lvol_clone0_lvol = lvol_clone0['driver_specific']['lvol']
+        if lvol_clone0_lvol['snapshot'] is not False:
+            fail_count += 1
+        if lvol_clone0_lvol['clone'] is not True:
+            fail_count += 1
+        if lvol_clone0_lvol['base_snapshot'] != 'snapshot':
+            fail_count += 1
+
+        # Check second clone consistency
+        lvol_clone1_lvol = lvol_clone1['driver_specific']['lvol']
+        if lvol_clone1_lvol['snapshot'] is not False:
+            fail_count += 1
+        if lvol_clone1_lvol['clone'] is not True:
+            fail_count += 1
+        if lvol_clone1_lvol['base_snapshot'] != 'snapshot':
+            fail_count += 1
+
+        # Destroy first clone and check if it is deleted from snapshot
+        fail_count += self.c.destroy_lvol_bdev(lvol_clone0['name'])
+        snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
+        if [clone_name1] != snapshot_bdev['driver_specific']['lvol']['clones']:
+            fail_count += 1
+
+        # Destroy second clone
+        fail_count += self.c.destroy_lvol_bdev(lvol_clone1['name'])
+
+        # Delete snapshot
+        fail_count += self.c.destroy_lvol_bdev(snapshot_bdev['name'])
+
+        # Destroy lvol store
+        fail_count += self.c.destroy_lvol_store(uuid_store)
+
+        # Delete malloc
+        fail_count += self.c.delete_bdev(base_name)
+
+        # Expected result:
+        # - calls successful, return code = 0
+        # - no other operation fails
+        return fail_count
+
+    @case_message
     def test_case757(self):
         """
         clone_inflate
@@ -1709,6 +1803,7 @@ class TestCases(object):
         # - no other operation fails
         return fail_count
 
+    @case_message
     def test_case800(self):
         fail_count = 0
 
