@@ -121,9 +121,6 @@ struct spdk_vhost_nvme_dev {
 	union spdk_nvme_csts_register csts;
 	struct spdk_nvme_ctrlr_data cdata;
 
-	uint32_t num_sqs;
-	uint32_t num_cqs;
-
 	uint32_t num_ns;
 	struct spdk_vhost_nvme_ns ns[MAX_NAMESPACE];
 
@@ -615,7 +612,6 @@ vhost_nvme_create_io_sq(struct spdk_vhost_nvme_dev *nvme,
 	if (!sq->sq_cmd) {
 		return -1;
 	}
-	nvme->num_sqs++;
 	sq->valid = true;
 
 	if (nvme->requestq_poller == NULL) {
@@ -646,7 +642,6 @@ vhost_nvme_delete_io_sq(struct spdk_vhost_nvme_dev *nvme,
 	 * queue for now, otherwise, we must ensure the poller
 	 * will not run with this submission queue.
 	 */
-	nvme->num_sqs--;
 	sq->valid = false;
 
 	memset(sq, 0, sizeof(*sq));
@@ -699,7 +694,6 @@ vhost_nvme_create_io_cq(struct spdk_vhost_nvme_dev *nvme,
 	if (!cq->cq_cqe) {
 		return -1;
 	}
-	nvme->num_cqs++;
 	cq->valid = true;
 
 	cpl->status.sc = 0;
@@ -719,7 +713,6 @@ vhost_nvme_delete_io_cq(struct spdk_vhost_nvme_dev *nvme,
 	if (!cq) {
 		return -1;
 	}
-	nvme->num_cqs--;
 	cq->valid = false;
 
 	memset(cq, 0, sizeof(*cq));
@@ -977,8 +970,6 @@ destroy_device_poller_cb(void *arg)
 					ns_dev->bdev_io_channel = NULL;
 				}
 			}
-			nvme->num_sqs = 0;
-			nvme->num_cqs = 0;
 			nvme->dbbuf_dbs = NULL;
 			nvme->dbbuf_eis = NULL;
 		}
