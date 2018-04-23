@@ -581,6 +581,7 @@ vhost_nvme_create_io_sq(struct spdk_vhost_nvme_dev *nvme,
 	uint16_t qid, qsize, cqid;
 	uint64_t dma_addr;
 	uint64_t requested_len;
+	struct spdk_vhost_nvme_cq *cq;
 	struct spdk_vhost_nvme_sq *sq;
 
 	/* physical contiguous */
@@ -597,9 +598,15 @@ vhost_nvme_create_io_sq(struct spdk_vhost_nvme_dev *nvme,
 	}
 
 	sq = spdk_vhost_nvme_get_sq_from_qid(nvme, qid);
-	if (!sq) {
+	cq = spdk_vhost_nvme_get_cq_from_qid(nvme, cqid);
+	if (!sq || !cq) {
+		SPDK_DEBUGLOG(SPDK_LOG_VHOST_NVME, "User requested invalid QID %u or CQID %u\n",
+			      qid, cqid);
+		cpl->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+		cpl->status.sc = SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER;
 		return -1;
 	}
+
 	sq->sqid = qid;
 	sq->cqid = cqid;
 	sq->size = qsize + 1;
@@ -670,6 +677,9 @@ vhost_nvme_create_io_cq(struct spdk_vhost_nvme_dev *nvme,
 
 	cq = spdk_vhost_nvme_get_cq_from_qid(nvme, qid);
 	if (!cq) {
+		SPDK_DEBUGLOG(SPDK_LOG_VHOST_NVME, "User requested invalid QID %u\n", qid);
+		cpl->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+		cpl->status.sc = SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER;
 		return -1;
 	}
 	cq->cqid = qid;
