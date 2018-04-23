@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6159df95_657c3801",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-23T02:00:04Z",
+      "side": 1,
+      "message": "Following if - else block can be removed.",
+      "revId": "64022d89f1de7f5beae5324dbc6a0daeac73603c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e15a4d63_829a8dff",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-23T02:00:04Z",
+      "side": 1,
+      "message": "the following block to 183 can be changed like the following:\n\n ctx \u003d calloc();\n  \n  w \u003d jsonrpc_begin_result(request);\n  ctx-\u003erequest \u003d request;\n  \n  json_write_array_begin(w);\n  \n  if (bdev !\u003d NULL) {\n    ctx-\u003ebdev_count \u003d 1;\n    bdev_get_device_stat(bdev, get_bdevs_iostat_cb, ctx);\n  } else {\n    for (bdev \u003d bdev_first(); bdev !\u003d NULL; bdev \u003d bdev_next(bdev)) {\n\t  ctx-\u003ebdev_count++;\n\t  bdev_get_device_stat(bdev, get_bdevs_iostat_cb, ctx);\n\t}\n  }\n\n  if (ctx-\u003ebdev_count \u003d\u003d 0) {\n    json_write_array_end(w);\n\tjsonrpc_end_result(request, w);\n\tfree(ctx);\n\treturn;\n  }",
+      "revId": "64022d89f1de7f5beae5324dbc6a0daeac73603c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
