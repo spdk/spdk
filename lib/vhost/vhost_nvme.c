@@ -493,10 +493,6 @@ nvme_worker(void *arg)
 	int ret;
 	int count = -1;
 
-	if (spdk_unlikely(!nvme->num_sqs)) {
-		return -1;
-	}
-
 	/* worker thread can't start before the admin doorbell
 	 * buffer config command
 	 */
@@ -621,6 +617,11 @@ vhost_nvme_create_io_sq(struct spdk_vhost_nvme_dev *nvme,
 	}
 	nvme->num_sqs++;
 	sq->valid = true;
+
+	if (nvme->requestq_poller == NULL) {
+		/* Start the NVMe Poller */
+		nvme->requestq_poller = spdk_poller_register(nvme_worker, nvme, 0);
+	}
 
 	cpl->status.sc = 0;
 	cpl->status.sct = 0;
@@ -926,9 +927,6 @@ spdk_vhost_nvme_start_device(struct spdk_vhost_dev *vdev, void *event_ctx)
 		}
 	}
 
-	/* Start the NVMe Poller */
-	nvme->requestq_poller = spdk_poller_register(nvme_worker, nvme, 0);
-
 	spdk_vhost_dev_backend_event_done(event_ctx, 0);
 	return 0;
 }
@@ -1017,7 +1015,9 @@ spdk_vhost_nvme_stop_device(struct spdk_vhost_dev *vdev, void *event_ctx)
 	destroy_ctx->bvdev = nvme;
 	destroy_ctx->event_ctx = event_ctx;
 
-	spdk_poller_unregister(&nvme->requestq_poller);
+	if (nvme->requestq_poller) {
+		spdk_poller_unregister(&nvme->requestq_poller);
+	}
 	destroy_ctx->poller = spdk_poller_register(destroy_device_poller_cb, destroy_ctx, 1000);
 
 	return 0;
