@@ -16,10 +16,11 @@ ISCSI_APP="$TARGET_NS_CMD ./app/iscsi_tgt/iscsi_tgt -i 0"
 ISCSI_TEST_CORE_MASK=0xFF
 
 function create_veth_interfaces() {
+	# $1 = test type (posix/vpp)
 	ip netns del $TARGET_NAMESPACE || true
 	ip link delete $INITIATOR_INTERFACE || true
 
-	trap "cleanup_veth_interfaces; exit 1" SIGINT SIGTERM EXIT
+	trap "cleanup_veth_interfaces $1; exit 1" SIGINT SIGTERM EXIT
 
 	# Create veth (Virtual ethernet) interface pair
 	ip link add $TARGET_INTERFACE type veth peer name $INITIATOR_INTERFACE
@@ -31,17 +32,22 @@ function create_veth_interfaces() {
 	ip link set $TARGET_INTERFACE netns $TARGET_NAMESPACE
 	ip netns exec $TARGET_NAMESPACE ip link set $TARGET_INTERFACE up
 
-	if [ $SPDK_TEST_VPP -eq 0  ]; then
+	if [ "$1" == "posix" ]; then
 		$TARGET_NS_CMD ip link set lo up
 		$TARGET_NS_CMD ip addr add $TARGET_IP/24 dev $TARGET_INTERFACE
 		$TARGET_NS_CMD ip link set $TARGET_INTERFACE up
+		if [ $SPDK_TEST_VPP -eq 1 ]; then
+			$TARGET_NS_CMD vpp unix { nodaemon cli-listen /run/vpp/cli.sock } &
+			sleep 5
+		fi
 	else
 		start_vpp
 	fi
 }
 
 function cleanup_veth_interfaces() {
-	if [ $SPDK_TEST_VPP -eq 1 ]; then
+	# $1 = test type (posix/vpp)
+	if [ "$1" == "vpp" ] || [ $SPDK_TEST_VPP -eq 1 ]; then
 		kill_vpp
 	fi
 
@@ -76,7 +82,7 @@ function start_vpp() {
 }
 
 function kill_vpp() {
-	vppctl delete host-interface name $TARGET_INTERFACE
+	vppctl delete host-interface name $TARGET_INTERFACE || true
 	vpp_pid=$(pgrep vpp)
 	killprocess $vpp_pid
 }
