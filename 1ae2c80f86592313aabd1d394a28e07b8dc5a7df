@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b10ee759_f5b1ef4b",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-04-23T16:35:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2b1ef6b0_e1bb2bb2",
+      "revId": "1ae2c80f86592313aabd1d394a28e07b8dc5a7df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e0f361aa_47bec0b4",
         "filename": "test/common/config/vm_setup.sh",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2018-04-20T04:01:44Z",
       "side": 1,
       "message": "At least the end of the heredoc (EOF in this case) needs to be in the first column, not indented; otherwise you\u0027ll get something like:\n\n\u003e warning: here-document at line 1 delimited by end-of-file (wanted `EOF\u0027)",
+      "revId": "1ae2c80f86592313aabd1d394a28e07b8dc5a7df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "685e87f9_85795e96",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-04-23T16:35:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e0f361aa_47bec0b4",
       "revId": "1ae2c80f86592313aabd1d394a28e07b8dc5a7df",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
