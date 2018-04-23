@@ -103,6 +103,10 @@ DEFINE_STUB_V(rte_vhost_log_used_vring, (int vid, uint16_t vring_idx, uint64_t o
 DEFINE_STUB_V(rte_vhost_log_write, (int vid, uint64_t addr, uint64_t len));
 DEFINE_STUB(spdk_vhost_scsi_controller_construct, int, (void), 0);
 DEFINE_STUB(spdk_vhost_blk_controller_construct, int, (void), 0);
+DEFINE_STUB(spdk_vhost_nvme_admin_passthrough, int, (int vid, void *cmd, void *cqe, void *buf), 0);
+DEFINE_STUB(spdk_vhost_nvme_set_cq_call, int, (int vid, uint16_t qid, int fd), 0);
+DEFINE_STUB(spdk_vhost_nvme_get_cap, int, (int vid, uint64_t *cap), 0);
+DEFINE_STUB(spdk_vhost_nvme_controller_construct, int, (void), 0);
 DEFINE_STUB(rte_vhost_set_vhost_vring_last_idx, int,
 	    (int vid, uint16_t vring_idx, uint16_t last_avail_idx, uint16_t last_used_idx), 0);
 DEFINE_STUB(spdk_env_get_current_core, uint32_t, (void), 0);
@@ -114,27 +118,6 @@ spdk_call_unaffinitized(void *cb(void *arg), void *arg)
 }
 
 static struct spdk_vhost_dev_backend g_vdev_backend;
-
-int spdk_vhost_nvme_admin_passthrough(int vid, void *cmd, void *cqe, void *buf)
-{
-	return 0;
-}
-
-int spdk_vhost_nvme_set_cq_call(int vid, uint16_t qid, int fd)
-{
-	return 0;
-}
-
-int spdk_vhost_nvme_get_cap(int vid, uint64_t *cap)
-{
-	return 0;
-}
-
-int
-spdk_vhost_nvme_controller_construct(void)
-{
-	return 0;
-}
 
 static int
 test_setup(void)
