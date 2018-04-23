@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "81d7f36e_9a6869ce",
+        "filename": "include/spdk/nbd.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-23T23:24:43Z",
+      "side": 1,
+      "message": "vhost -\u003e nbd",
+      "range": {
+        "startLine": 81,
+        "startChar": 9,
+        "endLine": 81,
+        "endChar": 14
+      },
+      "revId": "cfeb98ff9da832d7c5d328fdc275f82391fe28a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
