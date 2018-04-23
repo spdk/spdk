@@ -326,6 +326,11 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
 	}
 
 	ctrl_req = spdk_vhost_gpa_to_vva(vdev, desc->addr, sizeof(*ctrl_req));
+	if (ctrl_req == NULL) {
+		SPDK_ERRLOG("%s: Invalid task management request at index %d.\n",
+			    vdev->name, task->req_idx);
+		goto out;
+	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_VHOST_SCSI_QUEUE,
 		      "Processing controlq descriptor: desc %d/%p, desc_addr %p, len %d, flags %d, last_used_idx %d; kickfd %d; size %d\n",
