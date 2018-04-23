@@ -62,6 +62,8 @@ nvme_cb_complete_child(void *child_arg, const struct spdk_nvme_cpl *cpl)
 static void
 nvme_request_add_child(struct nvme_request *parent, struct nvme_request *child)
 {
+	assert(parent->num_children != UINT16_MAX);
+
 	if (parent->num_children == 0) {
 		/*
 		 * Defer initialization of the children TAILQ since it falls

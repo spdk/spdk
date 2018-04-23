@@ -169,7 +169,7 @@ struct nvme_request {
 	 * Number of children requests still outstanding for this
 	 *  request which was split into multiple child requests.
 	 */
-	uint8_t				num_children;
+	uint16_t			num_children;
 	uint32_t			payload_size;
 
 	/**
