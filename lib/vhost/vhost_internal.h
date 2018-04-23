@@ -161,7 +161,7 @@ struct spdk_vhost_dev {
 	/* Interval used for event coalescing checking. */
 	uint64_t stats_check_interval;
 
-	uint16_t num_queues;
+	uint16_t max_queues;
 
 	uint64_t negotiated_features;
 
