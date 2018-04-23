@@ -33,6 +33,24 @@
       "revId": "64022d89f1de7f5beae5324dbc6a0daeac73603c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e5302173_bf360b1f",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-23T02:39:14Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nThanks for your help.\n\n\nI have tried this solution. But it seems like there is a little issue.\n\n\nIn some cases, spdk_get_device_iostat_cb will execute \"--bdev-\u003ecount\" before the next ctx-\u003ebdev_count++. \n\n\nIn this situation, it will close the RPC request end clean the RPC write context. Hence it will cause the segmentfault when the next bdev write the result to RPC write context.\n\n\nHence, I think we can remain bdev_count \u003d bdev_num in ctx and just decrease it in spdk_get_device_iostat_cb which can get rid of the static iterator and avoid segmentfault. \n\n\nWhat do you think about this?\n\n\nThanks\nYanbo",
+      "parentUuid": "e15a4d63_829a8dff",
+      "revId": "64022d89f1de7f5beae5324dbc6a0daeac73603c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
