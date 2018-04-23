@@ -168,6 +168,16 @@ virtio_with_unmap=$(jq -r '[.[] | select(.supported_io_types.unmap==true).name]
  | join(":")' <<< $vbdevs)
 timing_exit setup_vm
 
+TEST_COMPLETE=false
+while ! $TEST_COMPLETE; do
+	echo "========================================================="
+	echo "printing dmesg"
+	echo "========================================================="
+	vm_ssh $vm_no "dmesg"
+	vm_ssh $vm_no "cat /proc/meminfo/"
+	vm_ssh $vm_no "ps aux"
+	sleep 10
+done &
 timing_enter run_spdk_fio_pci
 vm_ssh $vm_no "LD_PRELOAD=/root/spdk/examples/bdev/fio_plugin/fio_plugin /root/fio_src/fio --ioengine=spdk_bdev \
  /root/spdk/test/vhost/initiator/bdev.fio --filename=$virtio_bdevs --section=job_randwrite \
@@ -181,6 +191,7 @@ vm_ssh $vm_no "LD_PRELOAD=/root/spdk/examples/bdev/fio_plugin/fio_plugin /root/f
  --spdk_conf=/root/spdk/test/vhost/initiator/bdev_pci.conf --spdk_mem=1024 --spdk_single_seg=1"
 timing_exit run_spdk_fio_pci_unmap
 
+TEST_COMPLETE=true
 timing_enter vm_shutdown_all
 vm_shutdown_all
 timing_exit vm_shutdown_all
