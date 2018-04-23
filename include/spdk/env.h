@@ -988,6 +988,12 @@ int spdk_mem_register(void *vaddr, size_t len);
  */
 int spdk_mem_unregister(void *vaddr, size_t len);
 
+/**
+ * Get the pid from syscall and cache it in a local variable.
+ *
+ * \return non zero on success.
+ */
+pid_t spdk_env_getpid(void);
 #ifdef __cplusplus
 }
 #endif
