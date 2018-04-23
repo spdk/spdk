@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "2e714a69_5c00dd47",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-23T03:23:35Z",
+      "side": 1,
+      "message": "I\u0027m not confident that the following idea is feasible, but I hope it can be used at least for comparison.\n\n  spdk_event *event;\n  \n  event \u003d spdk_event_allocate(spdk_env_get_current_core(), spdk_rpc_get_bdevs_iostat_dec_cnt, ctx, NULL);\n  spdk_event_call(event);\n  return;\n\nvoid\nspdk_rpc_get_bdevs_iostat_dec_cnt(void *arg1, void *arg2)\n{\n  struct rpc_get_bdevs_iostat_ctx *ctx \u003d arg1;\n\n  if (--ctx-\u003ebdev_count \u003d\u003d 0) {\n    spdk_json_write_array_end(ctx-\u003ew);\n    spdk_jsonrpc_end_result(ctx-\u003erequest, ctx-\u003ew);\n    free(ctx);\n  }\n}",
+      "revId": "64022d89f1de7f5beae5324dbc6a0daeac73603c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6159df95_657c3801",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 38
