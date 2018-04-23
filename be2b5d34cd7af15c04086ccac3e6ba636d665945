@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "2e343d80_ea16b6e1",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 1997,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-23T01:35:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1fe2c926_d39073dc",
+      "revId": "be2b5d34cd7af15c04086ccac3e6ba636d665945",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "904dd356_fd0a077b",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 37
@@ -30,6 +48,24 @@
       "writtenOn": "2018-04-20T19:44:05Z",
       "side": 1,
       "message": "I think we still want to get rid of this static variable.",
+      "revId": "be2b5d34cd7af15c04086ccac3e6ba636d665945",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab04a88b_0e835914",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-23T01:35:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "904dd356_fd0a077b",
       "revId": "be2b5d34cd7af15c04086ccac3e6ba636d665945",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
