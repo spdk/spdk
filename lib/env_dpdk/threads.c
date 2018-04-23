@@ -102,3 +102,16 @@ spdk_env_thread_wait_all(void)
 {
 	rte_eal_mp_wait_lcore();
 }
+
+pid_t
+spdk_env_getpid(void)
+{
+	static pid_t _pid = 0;
+
+	if (!_pid) {
+		_pid = getpid();
+	}
+
+	assert(_pid != 0);
+	return _pid;
+}

@@ -988,6 +988,15 @@ int spdk_mem_register(void *vaddr, size_t len);
  */
 int spdk_mem_unregister(void *vaddr, size_t len);
 
+/**
+ * Get the process ID of the calling process.
+ *
+ * This function will cache the process ID to avoid frequent getpid system call.
+ *
+ * \return the pid of the process.
+ */
+pid_t spdk_env_getpid(void);
+
 #ifdef __cplusplus
 }
 #endif
