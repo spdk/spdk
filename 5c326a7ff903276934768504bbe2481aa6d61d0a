@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "60878fdc_2e6d5764",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 996,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-04-23T13:30:33Z",
+      "side": 1,
+      "message": "a newline after this needed?",
+      "range": {
+        "startLine": 996,
+        "startChar": 0,
+        "endLine": 996,
+        "endChar": 28
+      },
+      "revId": "5c326a7ff903276934768504bbe2481aa6d61d0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
