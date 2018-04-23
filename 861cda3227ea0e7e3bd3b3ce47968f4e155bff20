@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cbc733cb_bc02f708",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-04-23T13:52:51Z",
+      "side": 1,
+      "message": "This looks like not needed.",
+      "range": {
+        "startLine": 180,
+        "startChar": 0,
+        "endLine": 180,
+        "endChar": 9
+      },
+      "revId": "861cda3227ea0e7e3bd3b3ce47968f4e155bff20",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
