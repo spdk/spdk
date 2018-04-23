@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "65116a20_0c86103b",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-23T20:57:17Z",
+      "side": 1,
+      "message": "I\u0027m not sure we need to send a message here. This branch is only reachable when qpair is the admin queue, so we should already be on qpair-\u003egroup-\u003ethread at this point.  The only call to this function is via spdk_nvmf_ctrlr_disconnect(), which sends a message to admin_qpair-\u003egroup-\u003ethread.",
+      "revId": "43d5fb8641b7e986cda636c47a13c0fbf88c92ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
