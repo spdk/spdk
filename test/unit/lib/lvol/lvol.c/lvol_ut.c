@@ -73,6 +73,7 @@ int g_lvolerrno;
 int g_lvserrno;
 int g_close_super_status;
 int g_resize_rc;
+int g_inflate_rc;
 bool g_lvs_rename_blob_open_error = false;
 struct spdk_lvol_store *g_lvol_store;
 struct spdk_lvol *g_lvol;
@@ -91,6 +92,12 @@ struct lvol_ut_bs_dev {
 	int			load_status;
 	struct spdk_blob_store	*bs;
 };
+
+void spdk_bs_inflate_blob(struct spdk_blob_store *bs, struct spdk_io_channel *channel,
+			  spdk_blob_id blobid, spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	cb_fn(cb_arg, g_inflate_rc);
+}
 
 void
 spdk_bs_iter_next(struct spdk_blob_store *bs, struct spdk_blob *b,
@@ -167,6 +174,11 @@ spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts,
 struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs)
 {
 	return NULL;
+}
+
+void spdk_bs_free_io_channel(struct spdk_io_channel *channel)
+{
+	return;
 }
 
 int
@@ -1924,6 +1936,54 @@ lvol_create_thin_provisioned(void)
 	spdk_free_thread();
 }
 
+static void
+lvol_inflate(void)
+{
+	struct lvol_ut_bs_dev dev;
+	struct spdk_lvs_opts opts;
+	int rc = 0;
+
+	init_dev(&dev);
+
+	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
+
+	spdk_lvs_opts_init(&opts);
+	snprintf(opts.name, sizeof(opts.name), "lvs");
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+
+	spdk_lvol_create(g_lvol_store, "lvol", 10, false, lvol_op_with_handle_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
+
+	g_inflate_rc = -1;
+	spdk_lvol_inflate(g_lvol, lvol_op_complete, NULL);
+	CU_ASSERT(g_lvolerrno != 0);
+
+	g_inflate_rc = 0;
+	spdk_lvol_inflate(g_lvol, lvol_op_complete, NULL);
+	CU_ASSERT(g_lvolerrno == 0);
+
+	spdk_lvol_close(g_lvol, close_cb, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	spdk_lvol_destroy(g_lvol, destroy_cb, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	g_lvol_store = NULL;
+
+	free_dev(&dev);
+
+	spdk_free_thread();
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1965,7 +2025,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "lvol_names", lvol_names) == NULL ||
 		CU_add_test(suite, "lvol_create_thin_provisioned", lvol_create_thin_provisioned) == NULL ||
 		CU_add_test(suite, "lvol_rename", lvol_rename) == NULL ||
-		CU_add_test(suite, "lvs_rename", lvs_rename) == NULL
+		CU_add_test(suite, "lvs_rename", lvs_rename) == NULL ||
+		CU_add_test(suite, "lvol_inflate", lvol_inflate) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
