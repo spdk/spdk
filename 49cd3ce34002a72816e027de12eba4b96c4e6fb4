@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "845f0db3_c754cbc2",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2901,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-04-23T09:52:38Z",
+      "side": 1,
+      "message": "Also where is below flag cleared?\n\nqos_channel-\u003eflags \u0026\u003d ~BDEV_CH_QOS_ENABLED;",
+      "range": {
+        "startLine": 2901,
+        "startChar": 1,
+        "endLine": 2901,
+        "endChar": 28
+      },
+      "revId": "49cd3ce34002a72816e027de12eba4b96c4e6fb4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "025e278c_3b9c3f68",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2905,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-04-23T09:52:38Z",
+      "side": 1,
+      "message": "Shall we still consider there may some left queued I/Os which has not been sent down yet? In my first patch, there is code piece to cover this case.",
+      "range": {
+        "startLine": 2905,
+        "startChar": 2,
+        "endLine": 2905,
+        "endChar": 38
+      },
+      "revId": "49cd3ce34002a72816e027de12eba4b96c4e6fb4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dd234b69_17e0932f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2978,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-04-23T09:52:38Z",
+      "side": 1,
+      "message": "What about:\n\nif (thread) {\n    if (ios_per_sec \u003d\u003d 0) {\n        /* Disable */\n    } else {\n        /* Update */\n    }\n} else {\n    /* Enable */\n}\n\nAnother comment is maybe just call spdk_thread_send_msg() as in the _spdk_bdev_update_qos_limit_iops_msg() function there is another check to handle the \"disable\" logic.",
+      "range": {
+        "startLine": 2972,
+        "startChar": 0,
+        "endLine": 2978,
+        "endChar": 9
+      },
+      "revId": "49cd3ce34002a72816e027de12eba4b96c4e6fb4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
