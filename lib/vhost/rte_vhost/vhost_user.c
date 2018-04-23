@@ -1185,10 +1185,10 @@ vhost_user_msg_handler(int vid, int fd)
 		if (!dev->is_nvme) {
 			dev->is_nvme = 1;
 		}
-		memcpy(cmd, &msg.payload.nvme.cmd, 64);
+		memcpy(cmd, msg.payload.nvme.cmd.req, sizeof(cmd));
 		ret = vhost_user_nvme_admin_passthrough(dev, cmd, cqe, buf);
-		memcpy(&msg.payload.nvme.cmd, &cqe, 16);
-		msg.size = 16;
+		memcpy(msg.payload.nvme.cmd.cqe, cqe, sizeof(cqe));
+		msg.size = sizeof(cqe);
 		/* NVMe Identify Command */
 		if (cmd[0] == 0x06) {
 			memcpy(msg.payload.nvme.buf, &buf, 4096);
