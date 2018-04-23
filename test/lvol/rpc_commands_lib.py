@@ -215,3 +215,8 @@ class Commands_Rpc(object):
         print("INFO: RPC COMMAND clone_lvol_bdev")
         output, rc = self.rpc.clone_lvol_bdev(snapshot_name, clone_name)
         return rc
+
+    def inflate_lvol_bdev(self, clone_name):
+        print("INFO: RPC COMMAND inflate_lvol_bdev")
+        output, rc = self.rpc.inflate_lvol_bdev(clone_name)
+        return rc
