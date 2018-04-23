@@ -322,3 +322,16 @@ spdk_env_get_core_count(void)
 {
 	return 1;
 }
+
+pid_t
+spdk_env_getpid(void)
+{
+	static pid_t _pid = 0;
+
+	if (!_pid) {
+		_pid = getpid();
+	}
+
+	assert(_pid != 0);
+	return _pid;
+}

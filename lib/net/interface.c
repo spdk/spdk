@@ -35,6 +35,7 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/string.h"
+#include "spdk/env.h"
 
 #include "spdk/log.h"
 #include "spdk/net.h"
@@ -214,7 +215,7 @@ static int spdk_prepare_ifc_list(void)
 	struct nl_req_s req;		/* Structure that describes the rtnetlink packet itself */
 	char reply[16384];		/* a large buffer to receive lots of link information */
 
-	pid_t pid = getpid();		/* Our process ID to build the correct netlink address */
+	pid_t pid = spdk_env_getpid();		/* Our process ID to build the correct netlink address */
 	int end = 0;			/* some flag to end loop parsing */
 
 	/*
@@ -348,7 +349,7 @@ static int netlink_addr_msg(uint32_t ifc_idx, uint32_t ip_address, uint32_t crea
 	/* setup local address & bind using this address. */
 	bzero(&la, sizeof(la));
 	la.nl_family = AF_NETLINK;
-	la.nl_pid = getpid();
+	la.nl_pid = spdk_env_getpid();
 	bind(fd, (struct sockaddr *) &la, sizeof(la));
 
 	/* initalize RTNETLINK request buffer. */

@@ -105,12 +105,12 @@ spdk_env_unlink_shared_files(void)
 {
 	char buffer[PATH_MAX];
 
-	snprintf(buffer, PATH_MAX, "/var/run/.spdk_pid%d_config", getpid());
+	snprintf(buffer, PATH_MAX, "/var/run/.spdk_pid%d_config", spdk_env_getpid());
 	if (unlink(buffer)) {
 		fprintf(stderr, "Unable to unlink shared memory file: %s. Error code: %d\n", buffer, errno);
 	}
 
-	snprintf(buffer, PATH_MAX, "/var/run/.spdk_pid%d_hugepage_info", getpid());
+	snprintf(buffer, PATH_MAX, "/var/run/.spdk_pid%d_hugepage_info", spdk_env_getpid());
 	if (unlink(buffer)) {
 		fprintf(stderr, "Unable to unlink shared memory file: %s. Error code: %d\n", buffer, errno);
 	}
@@ -253,7 +253,7 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 #ifdef __linux__
 	if (opts->shm_id < 0) {
 		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--file-prefix=spdk_pid%d",
-				     getpid()));
+				     spdk_env_getpid()));
 		if (args == NULL) {
 			return -1;
 		}
