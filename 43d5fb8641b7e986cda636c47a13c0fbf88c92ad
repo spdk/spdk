@@ -16,6 +16,24 @@
       "revId": "43d5fb8641b7e986cda636c47a13c0fbf88c92ad",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cff67d6e_d577f1fe",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-23T21:11:47Z",
+      "side": 1,
+      "message": "Yeah - this is running on the right thread already. I think you should just make this do:\n\nTAILQ_REMOEV(...)\nspdk_thread_send_msg(thread, nvmf_qpair_fini, qpair);\n\nNo need to recursively call ctrlr_delete_qpair because it\u0027s only two lines of code.",
+      "parentUuid": "65116a20_0c86103b",
+      "revId": "43d5fb8641b7e986cda636c47a13c0fbf88c92ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
