@@ -10,12 +10,13 @@ import json
 import random
 from subprocess import check_call, call, check_output, Popen, PIPE, CalledProcessError
 
-if (len(sys.argv) == 7):
+if (len(sys.argv) == 8):
     target_ip = sys.argv[2]
     initiator_ip = sys.argv[3]
     port = sys.argv[4]
     netmask = sys.argv[5]
     namespace = sys.argv[6]
+    test_type = sys.argv[7]
 
 ns_cmd = 'ip netns exec ' + namespace
 other_ip = '127.0.0.6'
