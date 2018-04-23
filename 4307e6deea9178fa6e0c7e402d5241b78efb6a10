@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b42bca0f_cb0a6008",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2956,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-23T21:29:52Z",
+      "side": 1,
+      "message": "what\u0027s the path where we can get two disable calls racing?\n\nthis can only get set through spdk_bdev_set_qos_limit_iops() - if mod_in_progress \u003d\u003d true, we return with EAGAIN - i\u0027m just trying to figure out how we could get two calls to this that are racing",
+      "revId": "4307e6deea9178fa6e0c7e402d5241b78efb6a10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5abf8047_604ba140",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2963,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-23T21:29:52Z",
+      "side": 1,
+      "message": "how do we get here with rate_limit \u003d\u003d 0?",
+      "revId": "4307e6deea9178fa6e0c7e402d5241b78efb6a10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28924140_5c2d31b7",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3018,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-23T21:29:52Z",
+      "side": 1,
+      "message": "should we calloc the ctx here instead?  otherwise if the calloc fails we leave mod_in_progress \u003d true with the rate_limit changed",
+      "revId": "4307e6deea9178fa6e0c7e402d5241b78efb6a10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
