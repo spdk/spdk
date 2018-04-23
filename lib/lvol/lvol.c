@@ -1423,3 +1423,48 @@ spdk_lvol_get_io_channel(struct spdk_lvol *lvol)
 {
 	return spdk_bs_alloc_io_channel(lvol->lvol_store->blobstore);
 }
+
+static void
+_spdk_lvol_inflate_cb(void *cb_arg, int lvolerrno)
+{
+	struct spdk_lvol_req *req = cb_arg;
+
+	spdk_bs_free_io_channel(req->channel);
+
+	if (lvolerrno < 0) {
+		SPDK_ERRLOG("Could not inflate lvol\n");
+	}
+
+	req->cb_fn(req->cb_arg, lvolerrno);
+	free(req);
+}
+
+void
+spdk_lvol_inflate(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvol_req *req;
+	struct spdk_blob *blob = lvol->blob;
+	spdk_blob_id blob_id = spdk_blob_get_id(blob);
+
+	assert(cb_fn != NULL);
+
+	if (lvol == NULL) {
+		SPDK_ERRLOG("Lvol does not exist\n");
+		cb_fn(cb_arg, -ENODEV);
+		return;
+	}
+
+	req = calloc(1, sizeof(*req));
+	if (!req) {
+		SPDK_ERRLOG("Cannot alloc memory for lvol request pointer\n");
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+	req->channel = spdk_bs_alloc_io_channel(lvol->lvol_store->blobstore);
+
+	spdk_bs_inflate_blob(lvol->lvol_store->blobstore, req->channel, blob_id, _spdk_lvol_inflate_cb,
+			     req);
+}
