@@ -264,7 +264,7 @@ check_dev_io_stats(struct spdk_vhost_dev *vdev, uint64_t now)
 	}
 
 	vdev->next_stats_check_time = now + vdev->stats_check_interval;
-	for (q_idx = 0; q_idx < vdev->num_queues; q_idx++) {
+	for (q_idx = 0; q_idx < vdev->max_queues; q_idx++) {
 		virtqueue = &vdev->virtqueue[q_idx];
 
 		req_cnt = virtqueue->req_cnt + virtqueue->used_req_cnt;
@@ -288,10 +288,11 @@ spdk_vhost_dev_used_signal(struct spdk_vhost_dev *vdev)
 	uint16_t q_idx;
 
 	if (vdev->coalescing_delay_time_base == 0) {
-		for (q_idx = 0; q_idx < vdev->num_queues; q_idx++) {
+		for (q_idx = 0; q_idx < vdev->max_queues; q_idx++) {
 			virtqueue = &vdev->virtqueue[q_idx];
 
-			if (virtqueue->vring.avail->flags & VRING_AVAIL_F_NO_INTERRUPT) {
+			if (virtqueue->vring.desc == NULL ||
+			    (virtqueue->vring.avail->flags & VRING_AVAIL_F_NO_INTERRUPT)) {
 				continue;
 			}
 
@@ -301,7 +302,7 @@ spdk_vhost_dev_used_signal(struct spdk_vhost_dev *vdev)
 		now = spdk_get_ticks();
 		check_dev_io_stats(vdev, now);
 
-		for (q_idx = 0; q_idx < vdev->num_queues; q_idx++) {
+		for (q_idx = 0; q_idx < vdev->max_queues; q_idx++) {
 			virtqueue = &vdev->virtqueue[q_idx];
 
 			/* No need for event right now */
@@ -976,8 +977,11 @@ stop_device(int vid)
 		return;
 	}
 
-	for (i = 0; i < vdev->num_queues; i++) {
+	for (i = 0; i < vdev->max_queues; i++) {
 		q = &vdev->virtqueue[i].vring;
+		if (q->desc == NULL) {
+			continue;
+		}
 		rte_vhost_set_vhost_vring_last_idx(vdev->vid, i, q->last_avail_idx, q->last_used_idx);
 	}
 
@@ -993,11 +997,9 @@ start_device(int vid)
 {
 	struct spdk_vhost_dev *vdev;
 	int rc = -1;
-	uint16_t num_queues;
 	uint16_t i;
 
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
-	num_queues = rte_vhost_get_vring_num(vid);
 
 	vdev = spdk_vhost_dev_find_by_vid(vid);
 	if (vdev == NULL) {
@@ -1010,22 +1012,16 @@ start_device(int vid)
 		goto out;
 	}
 
-	if (num_queues > SPDK_VHOST_MAX_VQUEUES) {
-		SPDK_ERRLOG("vhost device %d: Too many queues (%"PRIu16"). Max %"PRIu16"\n", vid, num_queues,
-			    SPDK_VHOST_MAX_VQUEUES);
-		goto out;
-	}
-
+	vdev->max_queues = 0;
 	memset(vdev->virtqueue, 0, sizeof(vdev->virtqueue));
-	for (i = 0; i < num_queues; i++) {
+	for (i = 0; i < SPDK_VHOST_MAX_VQUEUES; i++) {
 		if (rte_vhost_get_vhost_vring(vid, i, &vdev->virtqueue[i].vring)) {
-			SPDK_ERRLOG("vhost device %d: Failed to get information of queue %"PRIu16"\n", vid, i);
-			goto out;
+			continue;
 		}
 
-		if (vdev->virtqueue[i].vring.size == 0) {
-			SPDK_ERRLOG("vhost device %d: Queue %"PRIu16" has size 0.\n", vid, i);
-			goto out;
+		if (vdev->virtqueue[i].vring.desc == NULL ||
+		    vdev->virtqueue[i].vring.size == 0) {
+			continue;
 		}
 
 		/* Disable notifications. */
@@ -1033,9 +1029,9 @@ start_device(int vid)
 			SPDK_ERRLOG("vhost device %d: Failed to disable guest notification on queue %"PRIu16"\n", vid, i);
 			goto out;
 		}
-	}
 
-	vdev->num_queues = num_queues;
+		vdev->max_queues = i + 1;
+	}
 
 	if (rte_vhost_get_negotiated_features(vid, &vdev->negotiated_features) != 0) {
 		SPDK_ERRLOG("vhost device %d: Failed to get negotiated driver features\n", vid);
@@ -1056,7 +1052,7 @@ start_device(int vid)
 	 *
 	 * Tested on QEMU 2.10.91 and 2.11.50.
 	 */
-	for (i = 0; i < num_queues; i++) {
+	for (i = 0; i < vdev->max_queues; i++) {
 		if (vdev->virtqueue[i].vring.callfd != -1) {
 			eventfd_write(vdev->virtqueue[i].vring.callfd, (eventfd_t)1);
 		}
