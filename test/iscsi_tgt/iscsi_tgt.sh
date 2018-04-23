@@ -11,8 +11,16 @@ source $rootdir/test/iscsi_tgt/common.sh
 
 timing_enter iscsi_tgt
 
+# $1 = test type (posix/vpp)
+if [ "$1" == "posix" ] || [ "$1" == "vpp" ]; then
+	TEST_TYPE=$1
+else
+	echo "No iSCSI test type specified"
+	exit 1
+fi
+
 # Network configuration
-create_veth_interfaces
+create_veth_interfaces $TEST_TYPE
 
 # ISCSI_TEST_CORE_MASK is the biggest core mask specified by
 #  any of the iscsi_tgt tests.  Using this mask for the stub
@@ -22,7 +30,7 @@ create_veth_interfaces
 #  core 0) so there is no impact to the iscsi_tgt tests by
 #  specifying the bigger core mask.
 start_stub "-s 2048 -i 0 -m $ISCSI_TEST_CORE_MASK"
-trap "kill_stub; cleanup_veth_interfaces; exit 1" SIGINT SIGTERM EXIT
+trap "kill_stub; cleanup_veth_interfaces $TEST_TYPE; exit 1" SIGINT SIGTERM EXIT
 
 if [ $SPDK_TEST_VPP -eq 0 ]; then
 # TODO: fix calsoft and reset tests with VPP
@@ -43,16 +51,16 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_test ./test/iscsi_tgt/digests/digests.sh
 fi
 if [ $SPDK_TEST_RBD -eq 1 ]; then
-	if [ $SPDK_TEST_VPP -eq 0 ]; then
+	if [ "$1" == "posix" ]; then
 		run_test ./test/iscsi_tgt/rbd/rbd.sh
 	fi
 fi
 
-trap "cleanup_veth_interfaces; exit 1" SIGINT SIGTERM EXIT
+trap "cleanup_veth_interfaces $TEST_TYPE; exit 1" SIGINT SIGTERM EXIT
 kill_stub
 
 if [ $SPDK_TEST_NVMF -eq 1 ]; then
-	if [ $SPDK_TEST_VPP -eq 0 ]; then
+	if [ "$1" == "posix" ]; then
 		# TODO: enable remote NVMe controllers with multi-process so that
 		#  we can use the stub for this test
 		# Test configure remote NVMe device from rpc and conf file
@@ -68,6 +76,6 @@ if [ $SPDK_TEST_ISCSI_INITIATOR -eq 1 ]; then
 	run_test ./test/iscsi_tgt/initiator/initiator.sh
 fi
 
-cleanup_veth_interfaces
+cleanup_veth_interfaces $TEST_TYPE
 trap - SIGINT SIGTERM EXIT
 timing_exit iscsi_tgt
