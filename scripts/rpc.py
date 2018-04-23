@@ -581,6 +581,15 @@ if __name__ == "__main__":
     p.set_defaults(func=rename_lvol_bdev)
 
     @call_cmd
+    def inflate_lvol_bdev(args):
+        rpc.lvol.inflate_lvol_bdev(args.client,
+                                   name=args.name)
+
+    p = subparsers.add_parser('inflate_lvol_bdev', help='Make thin provisioned lvol a thick provisioned lvol')
+    p.add_argument('name', help='lvol bdev name')
+    p.set_defaults(func=inflate_lvol_bdev)
+
+    @call_cmd
     def resize_lvol_bdev(args):
         rpc.lvol.resize_lvol_bdev(args.client,
                                   name=args.name,
