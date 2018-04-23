@@ -164,7 +164,7 @@ nvme_user_copy_cmd_complete(void *arg, const struct spdk_nvme_cpl *cpl)
 		xfer = spdk_nvme_opc_get_data_transfer(req->cmd.opc);
 		if (xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST ||
 		    xfer == SPDK_NVME_DATA_BIDIRECTIONAL) {
-			assert(req->pid == getpid());
+			assert(req->pid == spdk_env_getpid());
 			memcpy(req->user_buffer, req->payload.u.contig, req->payload_size);
 		}
 
@@ -258,7 +258,7 @@ nvme_driver_init(void)
 	int socket_id = -1;
 
 	/* Each process needs its own pid. */
-	g_pid = getpid();
+	g_pid = spdk_env_getpid();
 
 	/*
 	 * Only one thread from one process will do this driver init work.

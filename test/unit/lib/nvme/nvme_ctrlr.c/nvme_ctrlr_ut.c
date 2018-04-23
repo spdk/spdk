@@ -431,7 +431,7 @@ nvme_allocate_request(struct spdk_nvme_qpair *qpair,
 		req->cb_fn = cb_fn;
 		req->cb_arg = cb_arg;
 		req->qpair = qpair;
-		req->pid = getpid();
+		req->pid = spdk_env_getpid();
 	}
 
 	return req;

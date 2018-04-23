@@ -37,7 +37,7 @@
 #include "spdk/event.h"
 
 #include "spdk/vhost.h"
-
+#include "spdk/env.h"
 
 #define SPDK_VHOST_DEFAULT_CONFIG "/usr/local/etc/spdk/vhost.conf"
 #define SPDK_VHOST_DEFAULT_MEM_SIZE 1024
@@ -71,7 +71,7 @@ save_pid(const char *pid_path)
 		exit(EXIT_FAILURE);
 	}
 
-	fprintf(pid_file, "%d\n", getpid());
+	fprintf(pid_file, "%d\n", spdk_env_getpid());
 	fclose(pid_file);
 }
 
