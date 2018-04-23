@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "a5f5bab8_6935360e",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 992,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-23T20:31:31Z",
+      "side": 1,
+      "message": "This comment is somewhat misleading.  A \"local variable\" usually means one that has scope limited to the code block.  Really we are caching it in a global variable.  I think a better comment would be:\n\nGet the process ID of the calling process.\n\nThis function will cache the process ID to avoid system calls.",
+      "revId": "5c326a7ff903276934768504bbe2481aa6d61d0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8211abe4_3677f5c9",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 994,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-23T20:31:31Z",
+      "side": 1,
+      "message": "what about on failure?  getpid() is always successful - what about this function?",
+      "revId": "5c326a7ff903276934768504bbe2481aa6d61d0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "60878fdc_2e6d5764",
         "filename": "include/spdk/env.h",
         "patchSetId": 1
