@@ -36,6 +36,7 @@
 #include "spdk/event.h"
 #include "spdk/rpc.h"
 #include "spdk/util.h"
+#include "spdk/env.h"
 
 #include "spdk_internal/log.h"
 
@@ -94,7 +95,7 @@ spdk_rpc_kill_instance(struct spdk_jsonrpc_request *request,
 
 	SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "sending signal %d\n", signals[i].signal);
 	free_rpc_kill_instance(&req);
-	kill(getpid(), signals[i].signal);
+	kill(spdk_env_getpid(), signals[i].signal);
 
 	w = spdk_jsonrpc_begin_result(request);
 	if (w == NULL) {

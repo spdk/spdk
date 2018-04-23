@@ -541,7 +541,7 @@ test_nvme_user_copy_cmd_complete(void)
 	SPDK_CU_ASSERT_FATAL(req.payload.u.contig != NULL);
 	memcpy(req.payload.u.contig, &test_data, buff_size);
 	req.cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
-	req.pid = getpid();
+	req.pid = spdk_env_getpid();
 
 	/* zero out the test value set in the callback */
 	memset(&ut_spdk_nvme_cpl, 0, sizeof(ut_spdk_nvme_cpl));
@@ -601,7 +601,7 @@ test_nvme_allocate_request_null(void)
 	SPDK_CU_ASSERT_FATAL(req != NULL);
 	CU_ASSERT(req->cb_fn == cb_fn);
 	CU_ASSERT(req->cb_arg == cb_arg);
-	CU_ASSERT(req->pid == getpid());
+	CU_ASSERT(req->pid == spdk_env_getpid());
 	CU_ASSERT(req->payload.type == NVME_PAYLOAD_TYPE_CONTIG);
 	CU_ASSERT(req->payload.md == NULL);
 	CU_ASSERT(req->payload.u.contig == NULL);
@@ -640,7 +640,7 @@ test_nvme_allocate_request(void)
 	CU_ASSERT(memcmp(&req->payload, &payload, payload_struct_size) == 0);
 	CU_ASSERT(req->payload_size == payload_struct_size);
 	CU_ASSERT(req->qpair == &qpair);
-	CU_ASSERT(req->pid == getpid());
+	CU_ASSERT(req->pid == spdk_env_getpid());
 }
 
 static void

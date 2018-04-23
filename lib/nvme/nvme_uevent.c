@@ -55,7 +55,7 @@ spdk_uevent_connect(void)
 
 	memset(&addr, 0, sizeof(addr));
 	addr.nl_family = AF_NETLINK;
-	addr.nl_pid = getpid();
+	addr.nl_pid = spdk_env_getpid();
 	addr.nl_groups = 0xffffffff;
 
 	netlink_fd = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_KOBJECT_UEVENT);

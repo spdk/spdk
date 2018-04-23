@@ -38,6 +38,7 @@
 #include "spdk/net.h"
 #include "spdk/string.h"
 #include "spdk_internal/sock.h"
+#include "spdk/env.h"
 #include <vcl/vppcom.h>
 
 #define MAX_TMPBUF 1024
@@ -612,7 +613,7 @@ spdk_vpp_net_framework_init(void)
 	int rc;
 	char *app_name;
 
-	app_name = spdk_sprintf_alloc("SPDK_%d", getpid());
+	app_name = spdk_sprintf_alloc("SPDK_%d", spdk_env_getpid());
 	if (app_name == NULL) {
 		SPDK_ERRLOG("Cannot alloc memory for SPDK app name\n");
 		return -ENOMEM;

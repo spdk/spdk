@@ -661,7 +661,7 @@ spdk_reactors_init(unsigned int max_delay_us)
 
 	for (i = 0; i < SPDK_MAX_SOCKET; i++) {
 		if ((1ULL << i) & socket_mask) {
-			snprintf(mempool_name, sizeof(mempool_name), "evtpool%d_%d", i, getpid());
+			snprintf(mempool_name, sizeof(mempool_name), "evtpool%d_%d", i, spdk_env_getpid());
 			g_spdk_event_mempool[i] = spdk_mempool_create(mempool_name,
 						  (262144 / socket_count),
 						  sizeof(struct spdk_event),

@@ -619,7 +619,7 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 	g_init_cb_fn = cb_fn;
 	g_init_cb_arg = cb_arg;
 
-	snprintf(mempool_name, sizeof(mempool_name), "bdev_io_%d", getpid());
+	snprintf(mempool_name, sizeof(mempool_name), "bdev_io_%d", spdk_env_getpid());
 
 	g_bdev_mgr.bdev_io_pool = spdk_mempool_create(mempool_name,
 				  SPDK_BDEV_IO_POOL_SIZE,
@@ -640,7 +640,7 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 	 *   to account for.
 	 */
 	cache_size = BUF_SMALL_POOL_SIZE / (2 * spdk_env_get_core_count());
-	snprintf(mempool_name, sizeof(mempool_name), "buf_small_pool_%d", getpid());
+	snprintf(mempool_name, sizeof(mempool_name), "buf_small_pool_%d", spdk_env_getpid());
 
 	g_bdev_mgr.buf_small_pool = spdk_mempool_create(mempool_name,
 				    BUF_SMALL_POOL_SIZE,
@@ -654,7 +654,7 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 	}
 
 	cache_size = BUF_LARGE_POOL_SIZE / (2 * spdk_env_get_core_count());
-	snprintf(mempool_name, sizeof(mempool_name), "buf_large_pool_%d", getpid());
+	snprintf(mempool_name, sizeof(mempool_name), "buf_large_pool_%d", spdk_env_getpid());
 
 	g_bdev_mgr.buf_large_pool = spdk_mempool_create(mempool_name,
 				    BUF_LARGE_POOL_SIZE,
