@@ -546,12 +546,12 @@ usage(char *executable_name, struct spdk_app_opts *default_opts, void (*app_usag
 	printf(" -q         disable notice level logging to stderr\n");
 	printf(" -r         RPC listen address (default %s)\n", SPDK_DEFAULT_RPC_ADDR);
 	printf(" -s size    memory size in MB for DPDK (default: ");
-	printf(" -u         disable PCI access.\n");
 	if (default_opts->mem_size > 0) {
 		printf("%dMB)\n", default_opts->mem_size);
 	} else {
 		printf("all hugepage memory)\n");
 	}
+	printf(" -u         disable PCI access.\n");
 	spdk_tracelog_usage(stdout, "-t");
 	app_usage();
 }
