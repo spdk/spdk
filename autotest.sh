@@ -187,7 +187,8 @@ if [ $SPDK_TEST_LVOL -eq 1 ]; then
 	timing_enter lvol
 	test_cases="1,50,51,52,53,100,101,102,150,200,201,250,251,252,253,254,255,"
 	test_cases+="300,301,450,451,452,550,600,601,650,651,652,654,655,"
-	test_cases+="700,701,750,751,752,753,754,755,800,801,802,803,804,10000"
+	test_cases+="700,701,750,751,752,753,754,755,757,"
+	test_cases+="800,801,802,803,804,10000"
 	run_test ./test/lvol/lvol.sh --test-cases=$test_cases
 	report_test_completion "lvol"
 	timing_exit lvol
