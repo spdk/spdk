@@ -2,7 +2,14 @@
 
 ## v18.04: (Upcoming Release)
 
-## Env
+### vhost
+
+The SPDK vhost-scsi, vhost-blk and vhost-nvme applications have fixes to address the
+DPDK rte_vhost vulnerability [CVE-2018-1059](http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2018-1059).
+Please see this [security advisory](https://access.redhat.com/security/cve/cve-2018-1059)
+for additional information on the DPDK vulnerability.
+
+### Env
 
 Add wrapper for DPDK rte_mempool_get_bulk() via spdk_mempool_get_bulk().
 
