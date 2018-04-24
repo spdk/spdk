@@ -92,6 +92,53 @@
       "revId": "c42cda86cf7494b724e4355d5b418de487a68a0b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51aa6cd5_d3d25d3d",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 608,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-24T08:44:12Z",
+      "side": 1,
+      "message": "As we deleting lvol we should not allow any other operations on it like creating snapshots, resizing, renaming, etc...\nAlso in above scenario we shouldn\u0027t even get here as lvol will be null. We could set mutex before checking if that lvol still exists.",
+      "parentUuid": "47213d3d_0d395121",
+      "range": {
+        "startLine": 608,
+        "startChar": 7,
+        "endLine": 608,
+        "endChar": 38
+      },
+      "revId": "c42cda86cf7494b724e4355d5b418de487a68a0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2237e3a0_2118832c",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 610,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-24T08:44:12Z",
+      "side": 1,
+      "message": "Missing argument.",
+      "range": {
+        "startLine": 610,
+        "startChar": 26,
+        "endLine": 610,
+        "endChar": 28
+      },
+      "revId": "c42cda86cf7494b724e4355d5b418de487a68a0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
