@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2695ff1e_84f505e0",
+        "filename": "autotest.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-24T06:46:40Z",
+      "side": 1,
+      "message": "tab",
+      "range": {
+        "startLine": 191,
+        "startChar": 0,
+        "endLine": 191,
+        "endChar": 8
+      },
+      "revId": "9b2427fd9b65fa70531fff90b7966c3a57a9b309",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14386562_10a951c2",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 1697,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-24T06:46:40Z",
+      "side": 1,
+      "message": "Remove empty lines and add some better description.",
+      "range": {
+        "startLine": 1697,
+        "startChar": 0,
+        "endLine": 1697,
+        "endChar": 0
+      },
+      "revId": "9b2427fd9b65fa70531fff90b7966c3a57a9b309",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db7dac8b_49b0b4e4",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 1715,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-24T06:46:40Z",
+      "side": 1,
+      "message": "Looking at how often calculation of this type comes up in the test I think that you could add a helper function, something like \"split_into_x_parts\" function which gives you size depending on how many parts there should be.",
+      "range": {
+        "startLine": 1715,
+        "startChar": 8,
+        "endLine": 1715,
+        "endChar": 89
+      },
+      "revId": "9b2427fd9b65fa70531fff90b7966c3a57a9b309",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e7ab60b_896e4a25",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 1716,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-24T06:46:40Z",
+      "side": 1,
+      "message": "I think there\u0027s no need for that. Why not just use self.lbd_name?",
+      "range": {
+        "startLine": 1716,
+        "startChar": 8,
+        "endLine": 1716,
+        "endChar": 32
+      },
+      "revId": "9b2427fd9b65fa70531fff90b7966c3a57a9b309",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c6babd3_49b40418",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 1717,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-24T06:46:40Z",
+      "side": 1,
+      "message": "Like in the relations test script - please add single empty line before comment for better readability.",
+      "range": {
+        "startLine": 1717,
+        "startChar": 8,
+        "endLine": 1717,
+        "endChar": 47
+      },
+      "revId": "9b2427fd9b65fa70531fff90b7966c3a57a9b309",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68fcaa15_372c6f35",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 1722,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-24T06:46:40Z",
+      "side": 1,
+      "message": "there is no variable \"nbd_name\"",
+      "range": {
+        "startLine": 1722,
+        "startChar": 63,
+        "endLine": 1722,
+        "endChar": 71
+      },
+      "revId": "9b2427fd9b65fa70531fff90b7966c3a57a9b309",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e253448_20169627",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 1724,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-24T06:46:40Z",
+      "side": 1,
+      "message": "It\u0027s more complicated than that. Here you probably do a sequential write, from cluster 0 to some cluster X depending on size. I\u0027d rather have this spread out evenly in \"random\" places across  bdev. Need Tomek\u0027s input here.",
+      "range": {
+        "startLine": 1724,
+        "startChar": 8,
+        "endLine": 1724,
+        "endChar": 86
+      },
+      "revId": "9b2427fd9b65fa70531fff90b7966c3a57a9b309",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a069459_d035a9cf",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 1739,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-24T06:46:40Z",
+      "side": 1,
+      "message": "new line please",
+      "range": {
+        "startLine": 1739,
+        "startChar": 74,
+        "endLine": 1739,
+        "endChar": 90
+      },
+      "revId": "9b2427fd9b65fa70531fff90b7966c3a57a9b309",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
