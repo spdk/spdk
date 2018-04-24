@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "4cefb7cc_b02e5128",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-24T22:59:34Z",
+      "side": 1,
+      "message": "Hi Ben,\n\nAre you saying spdk_thread_send_msg() can be used here instead? Or previous Gang\u0027s proposal is better?\n\nYou will know that but this event call is to defer all callback calls until all spdk_bdev_get_device_stat are called to detect final call of callback.",
+      "parentUuid": "999cbe3f_218b9d93",
+      "revId": "c99f970cac5ec4baf0ae32f52fbbf94ade4e9659",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2f3b3229_714c2d69",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 41
