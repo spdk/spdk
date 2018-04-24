@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "55416a7a_cd66faa0",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-04-24T04:15:49Z",
+      "side": 1,
+      "message": "can we move these checks outside of if(len \u003c\u003d mps)? (line #234)",
+      "range": {
+        "startLine": 249,
+        "startChar": 3,
+        "endLine": 252,
+        "endChar": 4
+      },
+      "revId": "2b61e84e14998b8ab591b1bd472a2d8b1cdcba9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
