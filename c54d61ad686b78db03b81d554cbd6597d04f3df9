@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2f912019_115d4e64",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-24T16:07:43Z",
+      "side": 1,
+      "message": "I think this link is swapped with the lvol store one below.",
+      "revId": "c54d61ad686b78db03b81d554cbd6597d04f3df9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "54684958_7f7f4cd6",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-24T16:07:43Z",
+      "side": 1,
+      "message": "Same here - this is the spdkcli link, and the lvol link is in the spdkcli section.",
+      "revId": "c54d61ad686b78db03b81d554cbd6597d04f3df9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "adb5d09d_7aec1adf",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-24T16:07:43Z",
+      "side": 1,
+      "message": "Virtion -\u003e Virtio\n\n(Also, I think \"virtio-blk\" might be better - BLK isn\u0027t an acronym.)",
+      "range": {
+        "startLine": 109,
+        "startChar": 2,
+        "endLine": 109,
+        "endChar": 9
+      },
+      "revId": "c54d61ad686b78db03b81d554cbd6597d04f3df9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
