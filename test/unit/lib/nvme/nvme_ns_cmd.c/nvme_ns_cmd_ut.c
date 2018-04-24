@@ -512,6 +512,11 @@ test_cmd_child_request(void)
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
 	CU_ASSERT(g_request->num_children == 4);
 
+	rc = spdk_nvme_ns_cmd_read(&ns, &qpair, payload, lba, (DEFAULT_IO_QUEUE_REQUESTS + 1) * sector_size,
+				   NULL,
+				   NULL, 0);
+	SPDK_CU_ASSERT_FATAL(rc == -EINVAL);
+
 	TAILQ_FOREACH_SAFE(child, &g_request->children, child_tailq, tmp) {
 		nvme_request_remove_child(g_request, child);
 		CU_ASSERT(child->payload_offset == offset);
