@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6eb62168_a1d0d6ad",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 1673,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-24T09:27:48Z",
+      "side": 1,
+      "message": "not needed because of previous if statement",
+      "range": {
+        "startLine": 1672,
+        "startChar": 8,
+        "endLine": 1673,
+        "endChar": 27
+      },
+      "revId": "d59e47ba00b1a0a7653b802069afb2ebca0bc6bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
