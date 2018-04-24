@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0aecedff_93ad5a54",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-24T21:45:44Z",
+      "side": 1,
+      "message": "These should be tab-indented to match the rest of the file.",
+      "revId": "321a23e7e1c3d6bef52e41369ea44fa39d0c5525",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
