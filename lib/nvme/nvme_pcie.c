@@ -774,6 +774,7 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transpo
 	struct spdk_pci_device *pci_dev = devhandle;
 	struct nvme_pcie_ctrlr *pctrlr;
 	union spdk_nvme_cap_register cap;
+	union spdk_nvme_vs_register vs;
 	uint32_t cmd_reg;
 	int rc, claim_fd;
 	struct spdk_pci_id pci_id;
@@ -824,7 +825,14 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transpo
 		return NULL;
 	}
 
-	nvme_ctrlr_init_cap(&pctrlr->ctrlr, &cap);
+	if (nvme_ctrlr_get_vs(&pctrlr->ctrlr, &vs)) {
+		SPDK_ERRLOG("get_vs() failed\n");
+		close(claim_fd);
+		spdk_dma_free(pctrlr);
+		return NULL;
+	}
+
+	nvme_ctrlr_init_cap(&pctrlr->ctrlr, &cap, &vs);
 
 	/* Doorbell stride is 2 ^ (dstrd + 2),
 	 * but we want multiples of 4, so drop the + 2 */

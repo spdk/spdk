@@ -62,7 +62,7 @@ nvme_ctrlr_get_cap(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cap_register *
 					      &cap->raw);
 }
 
-static int
+int
 nvme_ctrlr_get_vs(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_vs_register *vs)
 {
 	return nvme_transport_ctrlr_get_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, vs.raw),
@@ -819,8 +819,7 @@ nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 		return -ENOMEM;
 	}
 	status.done = false;
-	if (SPDK_NVME_VERSION(ctrlr->cdata.ver.bits.mjr, ctrlr->cdata.ver.bits.mnr,
-			      ctrlr->cdata.ver.bits.ter) >= SPDK_NVME_VERSION(1, 1, 0)) {
+	if (ctrlr->vs.raw >= SPDK_NVME_VERSION(1, 1, 0)) {
 		/*
 		 * Iterate through the pages and fetch each chunk of 1024 namespaces until
 		 * there are no more active namespaces
@@ -1734,9 +1733,11 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 
 /* This function should be called once at ctrlr initialization to set up constant properties. */
 void
-nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cap_register *cap)
+nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cap_register *cap,
+		    const union spdk_nvme_vs_register *vs)
 {
 	ctrlr->cap = *cap;
+	ctrlr->vs = *vs;
 
 	ctrlr->min_page_size = 1u << (12 + ctrlr->cap.bits.mpsmin);
 
