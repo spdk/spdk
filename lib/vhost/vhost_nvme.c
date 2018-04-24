@@ -72,6 +72,7 @@ struct spdk_vhost_nvme_cq {
 	volatile struct spdk_nvme_cpl *cq_cqe;
 	uint16_t cq_head;
 	uint16_t last_signaled_cq_head;
+	STAILQ_HEAD(, spdk_vhost_nvme_task) need_signaled_tasks;
 	bool irq_enabled;
 	int virq;
 };
@@ -108,6 +109,8 @@ struct spdk_vhost_nvme_task {
 	/* parent pointer. */
 	struct spdk_vhost_nvme_task *parent;
 	bool success;
+	uint8_t sct;
+	uint8_t sc;
 	uint32_t num_children;
 	STAILQ_ENTRY(spdk_vhost_nvme_task) stailq;
 };
@@ -176,6 +179,12 @@ nvme_inc_cq_head(struct spdk_vhost_nvme_cq *cq)
 		cq->cq_head = 0;
 		cq->phase = !cq->phase;
 	}
+}
+
+static bool
+nvme_cq_is_full(struct spdk_vhost_nvme_cq *cq)
+{
+	return ((cq->cq_head + 1) % cq->size == cq->last_signaled_cq_head);
 }
 
 static void
@@ -285,15 +294,26 @@ blk_request_complete_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 	uint32_t cq_head;
 	int sc, sct;
 
-	if (spdk_likely(bdev_io)) {
-		spdk_bdev_free_io(bdev_io);
-	}
-
 	cqid = task->cqid;
 	cq = spdk_vhost_nvme_get_cq_from_qid(nvme, cqid);
 	sq = spdk_vhost_nvme_get_sq_from_qid(nvme, task->sqid);
 	if (spdk_unlikely(!cq || !sq)) {
+		return;
+	}
+
+	task->success = success;
+	if (spdk_unlikely(!success && bdev_io)) {
+		spdk_bdev_io_get_nvme_status(bdev_io, &sct, &sc);
+		task->sct = sct;
+		task->sc = sc;
+	}
+
+	if (spdk_likely(bdev_io)) {
 		spdk_bdev_free_io(bdev_io);
+	}
+
+	if (spdk_unlikely(nvme_cq_is_full(cq))) {
+		STAILQ_INSERT_TAIL(&cq->need_signaled_tasks, task, stailq);
 		return;
 	}
 
@@ -303,9 +323,8 @@ blk_request_complete_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 	cqe.status.sct = 0;
 	cqe.status.sc = 0;
 	if (spdk_unlikely(!success)) {
-		spdk_bdev_io_get_nvme_status(bdev_io, &sct, &sc);
-		cqe.status.sct = sct;
-		cqe.status.sc = sc;
+		cqe.status.sct = task->sct;
+		cqe.status.sc = task->sc;
 		cqe.status.dnr = 1;
 		SPDK_ERRLOG("I/O error, sector %u\n", cmd->cdw10);
 	}
@@ -343,11 +362,8 @@ blk_unmap_complete_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	}
 
 	task->num_children--;
-	if (!success) {
-		task->success = false;
-	}
 	if (!task->num_children) {
-		blk_request_complete_cb(NULL, task->success, task);
+		blk_request_complete_cb(NULL, success, task);
 	}
 
 	STAILQ_INSERT_TAIL(&nvme->free_tasks, child, stailq);
@@ -478,6 +494,7 @@ nvme_worker(void *arg)
 {
 	struct spdk_vhost_nvme_dev *nvme = (struct spdk_vhost_nvme_dev *)arg;
 	struct spdk_vhost_nvme_sq *sq;
+	struct spdk_vhost_nvme_cq *cq;
 	struct spdk_vhost_nvme_task *task;
 	uint32_t qid, dbbuf_sq;
 	int ret;
@@ -500,6 +517,15 @@ nvme_worker(void *arg)
 		sq = spdk_vhost_nvme_get_sq_from_qid(nvme, qid);
 		if (!sq->valid) {
 			continue;
+		}
+		cq = spdk_vhost_nvme_get_cq_from_qid(nvme, sq->cqid);
+		if (spdk_unlikely(!cq)) {
+			return -1;
+		}
+		if (spdk_unlikely(!STAILQ_EMPTY(&cq->need_signaled_tasks))) {
+			task = STAILQ_FIRST(&cq->need_signaled_tasks);
+			STAILQ_REMOVE_HEAD(&cq->need_signaled_tasks, stailq);
+			blk_request_complete_cb(NULL, task->success, task);
 		}
 
 		dbbuf_sq = nvme->dbbuf_dbs[sq_offset(qid, 1)];
@@ -677,6 +703,7 @@ vhost_nvme_create_io_cq(struct spdk_vhost_nvme_dev *nvme,
 	}
 	nvme->num_cqs++;
 	cq->valid = true;
+	STAILQ_INIT(&cq->need_signaled_tasks);
 
 	cpl->status.sc = 0;
 	cpl->status.sct = 0;
