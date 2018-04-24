@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa527078_4910990f",
+        "filename": "doc/bdev.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-24T16:12:12Z",
+      "side": 1,
+      "message": "Minor nit: there\u0027s an extra space in here",
+      "range": {
+        "startLine": 314,
+        "startChar": 7,
+        "endLine": 314,
+        "endChar": 9
+      },
+      "revId": "8fb0e80b5a39e93daf3f3e5b3dab9498d575899a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
