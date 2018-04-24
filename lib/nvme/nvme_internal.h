@@ -170,6 +170,8 @@ struct nvme_request {
 	 *  request which was split into multiple child requests.
 	 */
 	uint16_t			num_children;
+#define NVME_MAX_CHILD_REQUESTS	UINT16_MAX
+
 	uint32_t			payload_size;
 
 	/**

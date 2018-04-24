@@ -39,6 +39,23 @@ static struct nvme_request *_nvme_ns_cmd_rw(struct spdk_nvme_ns *ns, struct spdk
 		void *cb_arg, uint32_t opc, uint32_t io_flags,
 		uint16_t apptag_mask, uint16_t apptag, bool check_sgl);
 
+
+static bool
+spdk_nvme_ns_check_request_length(uint32_t lba_count, uint32_t sectors_per_max_io,
+				  uint32_t sectors_per_stripe, uint32_t qdepth)
+{
+	uint32_t child_per_max_io;
+	uint32_t child_per_stripe = 0;
+
+	child_per_max_io = ((lba_count + sectors_per_max_io - 1) / sectors_per_max_io);
+
+	if (sectors_per_stripe > 0) {
+		child_per_stripe = ((lba_count + sectors_per_stripe - 1) / sectors_per_stripe);
+	}
+
+	return spdk_max(child_per_max_io, child_per_stripe) >= spdk_min(NVME_MAX_CHILD_REQUESTS, qdepth);
+}
+
 static void
 nvme_cb_complete_child(void *child_arg, const struct spdk_nvme_cpl *cpl)
 {
@@ -501,6 +518,11 @@ spdk_nvme_ns_cmd_compare(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			      0, true);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
+	} else if (spdk_nvme_ns_check_request_length(lba_count,
+			ns->sectors_per_max_io,
+			ns->sectors_per_stripe,
+			qpair->ctrlr->cap.bits.mqes)) {
+		return -EINVAL;
 	} else {
 		return -ENOMEM;
 	}
@@ -527,6 +549,11 @@ spdk_nvme_ns_cmd_compare_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair
 			      apptag_mask, apptag, true);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
+	} else if (spdk_nvme_ns_check_request_length(lba_count,
+			ns->sectors_per_max_io,
+			ns->sectors_per_stripe,
+			qpair->ctrlr->cap.bits.mqes)) {
+		return -EINVAL;
 	} else {
 		return -ENOMEM;
 	}
@@ -557,6 +584,11 @@ spdk_nvme_ns_cmd_comparev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair
 			      io_flags, 0, 0, true);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
+	} else if (spdk_nvme_ns_check_request_length(lba_count,
+			ns->sectors_per_max_io,
+			ns->sectors_per_stripe,
+			qpair->ctrlr->cap.bits.mqes)) {
+		return -EINVAL;
 	} else {
 		return -ENOMEM;
 	}
@@ -580,6 +612,11 @@ spdk_nvme_ns_cmd_read(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, vo
 			      0, true);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
+	} else if (spdk_nvme_ns_check_request_length(lba_count,
+			ns->sectors_per_max_io,
+			ns->sectors_per_stripe,
+			qpair->ctrlr->cap.bits.mqes)) {
+		return -EINVAL;
 	} else {
 		return -ENOMEM;
 	}
@@ -604,6 +641,11 @@ spdk_nvme_ns_cmd_read_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 			      apptag_mask, apptag, true);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
+	} else if (spdk_nvme_ns_check_request_length(lba_count,
+			ns->sectors_per_max_io,
+			ns->sectors_per_stripe,
+			qpair->ctrlr->cap.bits.mqes)) {
+		return -EINVAL;
 	} else {
 		return -ENOMEM;
 	}
@@ -633,6 +675,11 @@ spdk_nvme_ns_cmd_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			      io_flags, 0, 0, true);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
+	} else if (spdk_nvme_ns_check_request_length(lba_count,
+			ns->sectors_per_max_io,
+			ns->sectors_per_stripe,
+			qpair->ctrlr->cap.bits.mqes)) {
+		return -EINVAL;
 	} else {
 		return -ENOMEM;
 	}
@@ -655,6 +702,11 @@ spdk_nvme_ns_cmd_write(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			      io_flags, 0, 0, true);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
+	} else if (spdk_nvme_ns_check_request_length(lba_count,
+			ns->sectors_per_max_io,
+			ns->sectors_per_stripe,
+			qpair->ctrlr->cap.bits.mqes)) {
+		return -EINVAL;
 	} else {
 		return -ENOMEM;
 	}
@@ -677,6 +729,11 @@ spdk_nvme_ns_cmd_write_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *
 			      io_flags, apptag_mask, apptag, true);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
+	} else if (spdk_nvme_ns_check_request_length(lba_count,
+			ns->sectors_per_max_io,
+			ns->sectors_per_stripe,
+			qpair->ctrlr->cap.bits.mqes)) {
+		return -EINVAL;
 	} else {
 		return -ENOMEM;
 	}
@@ -706,6 +763,11 @@ spdk_nvme_ns_cmd_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			      io_flags, 0, 0, true);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
+	} else if (spdk_nvme_ns_check_request_length(lba_count,
+			ns->sectors_per_max_io,
+			ns->sectors_per_stripe,
+			qpair->ctrlr->cap.bits.mqes)) {
+		return -EINVAL;
 	} else {
 		return -ENOMEM;
 	}
