@@ -22,6 +22,30 @@
       "revId": "14fe8aca233cd788f218a14e34114e862dd4ed7c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "85ce047f_cb03be37",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-24T12:02:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f126ee4a_98e1f72c",
+      "range": {
+        "startLine": 71,
+        "startChar": 6,
+        "endLine": 71,
+        "endChar": 24
+      },
+      "revId": "14fe8aca233cd788f218a14e34114e862dd4ed7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
