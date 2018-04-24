@@ -27,6 +27,10 @@ Users should switch to the `-r` command-line parameter instead.
 The JSON-RPC server implementation now allows up to 32 megabyte responses, growing as
 needed; previously, the response was limited to 32 kilobytes.
 
+### SPDKCLI
+
+New SPDKCLI interactive command tool for managing SPDK is available.
+
 ### NVMe Driver
 
 EXPERIMENTAL: Adds support for WDS and RDS capable CMBs in NVMe controllers. This support is
@@ -62,6 +66,13 @@ spdk_blob_resize() is now an asynchronous operation to enable resizing a blob wh
 are in progress to that blob on other threads.  An explicit spdk_blob_sync_md() is still
 required to sync the updated metadata to disk.
 
+### Lvol Store
+
+Lvols have own UUIDs now which replace previous LvolStoreUUID_BlobID combination.
+
+New Snapshot and Clone funtionalities have been added. User may create Snapshots of existing Lvols
+and Clones of existing Snapshots.
+
 ### Lib
 
 A set of changes were made in the SPDK's lib code altering,
@@ -89,6 +100,11 @@ return a value.
 An iSCSI initiator bdev module has been added to SPDK.  This module should be considered
 experimental pending additional features and tests.  More details can be found in
 lib/bdev/iscsi/README.
+
+### Virtio-BLK initiator
+
+A Virtion-BLK bdev module has been added. This module will export generic
+SPDK block device usable by any other SPDK application.
 
 ### PMDK
 
