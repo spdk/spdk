@@ -33,6 +33,11 @@ Users should switch to the `-r` command-line parameter instead.
 The JSON-RPC server implementation now allows up to 32 megabyte responses, growing as
 needed; previously, the response was limited to 32 kilobytes.
 
+### SPDKCLI
+
+EXPERIMENTAL: New SPDKCLI interactive command tool for managing SPDK is available.
+See the [SPDKCLI](http://www.spdk.io/doc/spdkcli.html) documentation for more details.
+
 ### NVMe Driver
 
 EXPERIMENTAL: Adds support for WDS and RDS capable CMBs in NVMe controllers. This support is
@@ -71,6 +76,13 @@ required to sync the updated metadata to disk.
 ### Logical Volumes
 
 A new `destroy_lvol_bdev` RPC method to delete logical volumes has been added.
+
+Lvols now have their own UUIDs which replace previous LvolStoreUUID_BlobID combination.
+
+New Snapshot and Clone funtionalities have been added. User may create Snapshots of existing Lvols
+and Clones of existing Snapshots.
+See the [lvol snapshots](http://www.spdk.io/doc/logical_volumes.html#lvol_snapshots) documentation
+for more details.
 
 ### Lib
 
