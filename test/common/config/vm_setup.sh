@@ -239,7 +239,6 @@ if [ ! -e ~/autorun-spdk.conf ]; then
 	cat > ~/autorun-spdk.conf << EOF
 # assign a value of 1 to all of the pertinent tests
 SPDK_BUILD_DOC=1
-SPDK_BUILD_IOAT_KMOD=1
 SPDK_RUN_CHECK_FORMAT=1
 SPDK_RUN_SCANBUILD=1
 SPDK_RUN_VALGRIND=1
