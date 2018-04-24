@@ -1369,6 +1369,7 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transpo
 {
 	struct nvme_rdma_ctrlr *rctrlr;
 	union spdk_nvme_cap_register cap;
+	union spdk_nvme_vs_register vs;
 	int rc;
 
 	rctrlr = calloc(1, sizeof(struct nvme_rdma_ctrlr));
@@ -1400,7 +1401,13 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transpo
 		return NULL;
 	}
 
-	nvme_ctrlr_init_cap(&rctrlr->ctrlr, &cap);
+	if (nvme_ctrlr_get_vs(&rctrlr->ctrlr, &vs)) {
+		SPDK_ERRLOG("get_vs() failed\n");
+		nvme_ctrlr_destruct(&rctrlr->ctrlr);
+		return NULL;
+	}
+
+	nvme_ctrlr_init_cap(&rctrlr->ctrlr, &cap, &vs);
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "succesully initialized the nvmf ctrlr\n");
 	return &rctrlr->ctrlr;
