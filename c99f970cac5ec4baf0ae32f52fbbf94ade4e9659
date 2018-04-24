@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2f3b3229_714c2d69",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-04-24T04:55:09Z",
+      "side": 1,
+      "message": "is this the reason why we defer iostat_dec_cnt()?\nCould we use additional local variable here instead of ctx-\u003ebdev_count, and then call iostat_dec_cnt inline within iostat_cb?",
+      "range": {
+        "startLine": 176,
+        "startChar": 1,
+        "endLine": 181,
+        "endChar": 0
+      },
+      "revId": "c99f970cac5ec4baf0ae32f52fbbf94ade4e9659",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
