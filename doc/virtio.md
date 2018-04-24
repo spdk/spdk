@@ -16,5 +16,5 @@ and context switching overhead of QEMU and guest kernel, significantly boosting
 the overall I/O performance.
 
 This Virtio library is currently used to implement two bdev modules:
-@ref bdev_config_virtio_scsi and Virtio Blk. These modules will export generic
-SPDK block devices usable by any SPDK application.
+@ref bdev_config_virtio_scsi and @ref bdev_config_virtio_blk.
+These modules will export generic SPDK block devices usable by any SPDK application.
