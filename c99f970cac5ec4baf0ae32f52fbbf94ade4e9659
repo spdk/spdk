@@ -46,6 +46,30 @@
       "revId": "c99f970cac5ec4baf0ae32f52fbbf94ade4e9659",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8dd1c629_175dbcbf",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-04-24T08:38:39Z",
+      "side": 1,
+      "message": "Ahh, I missed a comment on a previous review:\n\"In some cases, spdk_get_device_iostat_cb will execute \"--bdev-\u003ecount\" before the next ctx-\u003ebdev_count++.  \"\n\nEverything is fine then. Maybe we could set the bdev_count to 1 initially, then decrement it after the iteration. But it\u0027s not crucial for now. \n\nA short comment explaining this behavior would be helpful, though.",
+      "parentUuid": "5d364378_926b1e17",
+      "range": {
+        "startLine": 176,
+        "startChar": 1,
+        "endLine": 181,
+        "endChar": 0
+      },
+      "revId": "c99f970cac5ec4baf0ae32f52fbbf94ade4e9659",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
