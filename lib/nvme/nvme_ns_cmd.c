@@ -571,6 +571,11 @@ spdk_nvme_ns_cmd_read(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, vo
 	struct nvme_request *req;
 	struct nvme_payload payload;
 
+	/* Check maximum payload size */
+	if ((lba_count / ns->sectors_per_stripe) >= UINT16_MAX) {
+		return -EINVAL;
+	}
+
 	payload.type = NVME_PAYLOAD_TYPE_CONTIG;
 	payload.u.contig = buffer;
 	payload.md = NULL;
@@ -646,6 +651,11 @@ spdk_nvme_ns_cmd_write(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 {
 	struct nvme_request *req;
 	struct nvme_payload payload;
+
+	/* Check maximum payload size */
+	if ((lba_count / ns->sectors_per_stripe) >= UINT16_MAX) {
+		return -EINVAL;
+	}
 
 	payload.type = NVME_PAYLOAD_TYPE_CONTIG;
 	payload.u.contig = buffer;
