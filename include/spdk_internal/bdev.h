@@ -250,35 +250,10 @@ struct spdk_bdev {
 	uint32_t channel_count;
 
 	/** Quality of service parameters */
-	struct spdk_bdev_qos {
-		/** True if QoS is enabled */
-		bool enabled;
+	struct spdk_bdev_qos *qos;
 
-		/** True if the state of the QoS is being modified */
-		bool mod_in_progress;
-
-		/** Rate limit, in I/O per second */
-		uint64_t rate_limit;
-
-		/** The channel that all I/O are funneled through */
-		struct spdk_bdev_channel *ch;
-
-		/** The thread on which the poller is running. */
-		struct spdk_thread *thread;
-
-		/** Queue of I/O waiting to be issued. */
-		bdev_io_tailq_t queued;
-
-		/** Maximum allowed IOs to be issued in one timeslice (e.g., 1ms) and
-		 *  only valid for the master channel which manages the outstanding IOs. */
-		uint64_t max_ios_per_timeslice;
-
-		/** Submitted IO in one timeslice (e.g., 1ms) */
-		uint64_t io_submitted_this_timeslice;
-
-		/** Polller that processes queued I/O commands each time slice. */
-		struct spdk_poller *poller;
-	} qos;
+	/** True if the state of the QoS is being modified */
+	bool qos_mod_in_progress;
 
 	/** write cache enabled, not used at the moment */
 	int write_cache;
