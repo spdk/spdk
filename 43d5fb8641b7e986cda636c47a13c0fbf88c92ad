@@ -34,6 +34,24 @@
       "revId": "43d5fb8641b7e986cda636c47a13c0fbf88c92ad",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "579f2744_baeb6a4e",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-04-24T01:57:42Z",
+      "side": 1,
+      "message": "Hi Ben/Daniel,\n\nFirst time, I have the same idea as you. However, you can see that each io qpair will have their own thread to destruct, so we can not directly delete the admin qpair here. If my understanding is correct, the admin qpair should make sure that all I/O qpairs are deleted, then we can delete the admin qpair in this case. \n\nIf you directly do the remove and call the nvmf_qpair_fini, the admin qpair will be deleted earlier than other I/O qpair from logic since you cannot guarantee the order, which sounds not a correct behavior from my understanding.\n\nAnd from the initiator side, it may see the admin qpair is destroyed earlier than I/O qpair.",
+      "parentUuid": "cff67d6e_d577f1fe",
+      "revId": "43d5fb8641b7e986cda636c47a13c0fbf88c92ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
