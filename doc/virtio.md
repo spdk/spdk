@@ -17,10 +17,4 @@ the overall I/O performance.
 
 This Virtio library is currently used to implement two bdev modules:
 @ref bdev_config_virtio_scsi and Virtio Blk. These modules will export generic
-SPDK block devices usable by any other SPDK application.
-
-# Limitations {#virtio_limitations}
-
-Current Virtio-SCSI implementation has a couple of limitations:
- * supports only up to 8 hugepages (implies only 1GB sized pages are practical)
- * single LUN per target
+SPDK block devices usable by any SPDK application.
