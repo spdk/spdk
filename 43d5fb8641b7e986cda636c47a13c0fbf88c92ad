@@ -70,6 +70,24 @@
       "revId": "43d5fb8641b7e986cda636c47a13c0fbf88c92ad",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "978df166_d6b0049e",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-24T16:30:57Z",
+      "side": 1,
+      "message": "Modifying the ctrlr data structure must be done only on the core that owns the admin qpair, so you can\u0027t send a message to an arbitrary qpair\u0027s thread and call ctrlr_delete_qpair on line 319.\n\nThe way this really needs to work is in spdk_nvmf_ctrlr_disconnect, it needs to check if the qpair disconnecting is the admin qpair. If it is, it should do an spdk_for_each_channel on the spdk_nvmf_tgt structure to send a message to each poll group. On each poll group, destroy every qpair associated with the given controller. When the for_each completes, destroy the admin qpair and then the whole controller.",
+      "parentUuid": "27746558_b11de44e",
+      "revId": "43d5fb8641b7e986cda636c47a13c0fbf88c92ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
