@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f6c5b68_7a816b1c",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-24T22:55:15Z",
+      "side": 1,
+      "message": "This link name is probably a copy-paste error; I think it should probably refer to \"Virtio 2MB Hugepage support\" or something like that.",
+      "range": {
+        "startLine": 121,
+        "startChar": 4,
+        "endLine": 121,
+        "endChar": 18
+      },
+      "revId": "6b584f20fe665cf80b55f251e41bef7466808491",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
