@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "20b4f04e_617be5a2",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 41
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-24T17:00:53Z",
+      "side": 1,
+      "message": "Right now you return a pointer to the stat object that you allocated internally. The pointer is only valid within the context of this callback. I think it might be better to have the user pass in the spdk_bdev_io_stat structure, this call then fills it out and passes it back in the callback. Then the memory is owned by the caller.\n\nI\u0027m open to other opinions though, and I don\u0027t necessarily think we have to do this for the 18.04 release.",
+      "revId": "c99f970cac5ec4baf0ae32f52fbbf94ade4e9659",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "999cbe3f_218b9d93",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-24T17:00:53Z",
+      "side": 1,
+      "message": "This event is not necessary (plus the bdev layer doesn\u0027t directly depend on the event library). This callback will always be called on the same thread that originally called spdk_bdev_get_device_stat, which means two of these callbacks cannot be executing at the same time.",
+      "revId": "c99f970cac5ec4baf0ae32f52fbbf94ade4e9659",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2f3b3229_714c2d69",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 41
