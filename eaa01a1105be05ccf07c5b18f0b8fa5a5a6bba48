@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "428506e5_04c80692",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 621,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-04-24T02:24:47Z",
+      "side": 1,
+      "message": "There need much more work to optimize this part, QEMU driver will not start the device before controller memory buffer command, QEMU bios driver will not send such command, so currently the vhost-nvme target can only work with Guest OS. spdk_get_thread will return NULL for spdk_poller_register.",
+      "revId": "eaa01a1105be05ccf07c5b18f0b8fa5a5a6bba48",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
