@@ -106,6 +106,14 @@ The persistent memory (PMDK) bdev module is now enabled using --with-pmdk instea
 --with-nvml.  This reflects the renaming of the persistent memory library from NVML to
 PMDK.
 
+### Virtio Block driver
+
+A userspace driver for Virtio Block devices has been added. It was built on top of the
+[Virtio](http://www.spdk.io/doc/virtio.html) library and can be managed similarly to
+the Virtio SCSI driver. See the
+[Virtio Block](http://www.spdk.io/doc/bdev.html#bdev_config_virtio_blk) reference for
+more information.
+
 ## v18.01: Blobstore Thin Provisioning
 
 ### Build System
