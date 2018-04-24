@@ -304,3 +304,16 @@ Virtio-SCSI devices can be removed with the following command
 `rpc.py remove_virtio_scsi_bdev VirtioScsi0`
 
 Removing a Virtio-SCSI device will destroy all its bdevs.
+
+# Virtio Block {#bdev_config_virtio_blk}
+
+The Virtio-Block driver can expose an SPDK bdev from a Virtio-Block device.
+
+Virtio-Block bdevs are constructed the same way as Virtio-SCSI ones.
+
+`rpc.py construct_virtio_user_blk_bdev /tmp/virtio.0 VirtioBlk0 --vq-count 2 --vq-size 512`
+
+`rpc.py construct_virtio_pci_blk_bdev 0000:01:00.0 VirtioBlk1`
+
+Since they export only a single bdev, the Virtio-Block driver doesn't offer additional
+remove/destruct RPC calls. @ref bdev_ug_delete_bdev should be used instead.
