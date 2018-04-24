@@ -626,9 +626,10 @@ basic_qos(void)
 
 	/* Enable QoS */
 	bdev = &g_bdev.bdev;
-	TAILQ_INIT(&bdev->qos.queued);
-	bdev->qos.rate_limit = 2000; /* 2 I/O per millisecond */
-	bdev->qos.enabled = true;
+	bdev->qos = calloc(1, sizeof(*bdev->qos));
+	SPDK_CU_ASSERT_FATAL(bdev->qos != NULL);
+	TAILQ_INIT(&bdev->qos->queued);
+	bdev->qos->rate_limit = 2000; /* 2 I/O per millisecond */
 
 	g_get_io_channel = true;
 
@@ -683,7 +684,7 @@ basic_qos(void)
 
 	/* Close the descriptor, which should stop the qos channel */
 	spdk_bdev_close(g_desc);
-	CU_ASSERT(bdev->qos.ch == NULL);
+	CU_ASSERT(bdev->qos->ch == NULL);
 
 	spdk_bdev_open(bdev, true, NULL, NULL, &g_desc);
 
@@ -699,7 +700,7 @@ basic_qos(void)
 	CU_ASSERT(bdev_ch[0]->flags == BDEV_CH_QOS_ENABLED);
 
 	/* Confirm that the qos tracking was re-enabled */
-	CU_ASSERT(bdev->qos.ch != NULL);
+	CU_ASSERT(bdev->qos->ch != NULL);
 
 	/* Tear down the channels */
 	set_thread(0);
@@ -709,6 +710,8 @@ basic_qos(void)
 	poll_threads();
 
 	set_thread(0);
+
+	free(bdev->qos);
 
 	teardown_test();
 }
@@ -727,9 +730,10 @@ io_during_qos_queue(void)
 
 	/* Enable QoS */
 	bdev = &g_bdev.bdev;
-	TAILQ_INIT(&bdev->qos.queued);
-	bdev->qos.rate_limit = 1000; /* 1000 I/O per second, or 1 per millisecond */
-	bdev->qos.enabled = true;
+	bdev->qos = calloc(1, sizeof(*bdev->qos));
+	SPDK_CU_ASSERT_FATAL(bdev->qos != NULL);
+	TAILQ_INIT(&bdev->qos->queued);
+	bdev->qos->rate_limit = 1000; /* 1000 I/O per second, or 1 per millisecond */
 
 	g_get_io_channel = true;
 
@@ -792,6 +796,8 @@ io_during_qos_queue(void)
 	spdk_put_io_channel(io_ch[0]);
 	poll_threads();
 
+	free(bdev->qos);
+
 	teardown_test();
 }
 
@@ -809,9 +815,10 @@ io_during_qos_reset(void)
 
 	/* Enable QoS */
 	bdev = &g_bdev.bdev;
-	TAILQ_INIT(&bdev->qos.queued);
-	bdev->qos.rate_limit = 1000; /* 1000 I/O per second, or 1 per millisecond */
-	bdev->qos.enabled = true;
+	bdev->qos = calloc(1, sizeof(*bdev->qos));
+	SPDK_CU_ASSERT_FATAL(bdev->qos != NULL);
+	TAILQ_INIT(&bdev->qos->queued);
+	bdev->qos->rate_limit = 1000; /* 1000 I/O per second, or 1 per millisecond */
 
 	g_get_io_channel = true;
 
@@ -826,7 +833,7 @@ io_during_qos_reset(void)
 	bdev_ch[1] = spdk_io_channel_get_ctx(io_ch[1]);
 	CU_ASSERT(bdev_ch[1]->flags == BDEV_CH_QOS_ENABLED);
 
-	/* Send two I/O. One of these gets queued by QoS. The other is sitting at the disk. */
+	/* Send two I/O. One of these gets queued by qos-> The other is sitting at the disk. */
 	status1 = SPDK_BDEV_IO_STATUS_PENDING;
 	rc = spdk_bdev_read_blocks(g_desc, io_ch[1], NULL, 0, 1, io_during_io_done, &status1);
 	CU_ASSERT(rc == 0);
@@ -862,6 +869,8 @@ io_during_qos_reset(void)
 	set_thread(0);
 	spdk_put_io_channel(io_ch[0]);
 	poll_threads();
+
+	free(bdev->qos);
 
 	teardown_test();
 }
