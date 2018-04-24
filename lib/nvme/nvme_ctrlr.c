@@ -1223,7 +1223,7 @@ nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
 		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		SPDK_ERRLOG("nvme_ctrlr_cmd_set_async_event_config failed!\n");
+		SPDK_INFOLOG(SPDK_LOG_NVME, "nvme_ctrlr_cmd_set_async_event_config failed!\n");
 		return 0;
 	}
 
