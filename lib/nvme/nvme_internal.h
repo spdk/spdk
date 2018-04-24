@@ -405,6 +405,7 @@ struct spdk_nvme_ctrlr {
 	/* Cold data (not accessed in normal I/O path) is after this point. */
 
 	union spdk_nvme_cap_register	cap;
+	union spdk_nvme_vs_register	vs;
 
 	enum nvme_ctrlr_state		state;
 	uint64_t			state_timeout_tsc;
@@ -588,7 +589,9 @@ void	nvme_ctrlr_connected(struct spdk_nvme_ctrlr *ctrlr);
 int	nvme_ctrlr_submit_admin_request(struct spdk_nvme_ctrlr *ctrlr,
 					struct nvme_request *req);
 int	nvme_ctrlr_get_cap(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cap_register *cap);
-void	nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cap_register *cap);
+int	nvme_ctrlr_get_vs(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_vs_register *vs);
+void	nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cap_register *cap,
+			    const union spdk_nvme_vs_register *vs);
 int	nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 			struct spdk_nvme_ctrlr *ctrlr,
 			enum spdk_nvme_qprio qprio,
