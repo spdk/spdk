@@ -281,7 +281,7 @@ Example command
 
 # Virtio SCSI {#bdev_config_virtio_scsi}
 
-The @ref virtio allows creating SPDK block devices from Virtio-SCSI LUNs.
+The Virtio-SCSI driver allows creating SPDK block devices from Virtio-SCSI LUNs.
 
 The following command creates a Virtio-SCSI device named `VirtioScsi0` from a vhost-user
 socket `/tmp/vhost.0` exposed directly by SPDK @ref vhost. Optional `vq-count` and
@@ -296,8 +296,8 @@ reflect all parameters passed to QEMU's vhost-user-scsi-pci device.
 
 `rpc.py construct_virtio_pci_scsi_bdev 0000:00:01.0 VirtioScsi0`
 
-Each Virtio-SCSI device may export up to 64 block devices named VirtioScsi0t0 ~ VirtioScsi0t63.
-The above 2 commands will output names of all exposed bdevs.
+Each Virtio-SCSI device may export up to 64 block devices named VirtioScsi0t0 ~ VirtioScsi0t63,
+one LUN (LUN0) per SCSI device. The above 2 commands will output names of all exposed bdevs.
 
 Virtio-SCSI devices can be removed with the following command
 
