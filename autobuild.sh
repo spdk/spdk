@@ -31,12 +31,6 @@ if [ $SPDK_RUN_CHECK_FORMAT -eq 1 ]; then
 fi
 timing_exit check_format
 
-timing_enter build_kmod
-if [ $SPDK_BUILD_IOAT_KMOD -eq 1 ]; then
-	./scripts/build_kmod.sh build
-fi
-timing_exit build_kmod
-
 scanbuild=''
 make_timing_label='make'
 if [ $SPDK_RUN_SCANBUILD -eq 1 ] && hash scan-build; then

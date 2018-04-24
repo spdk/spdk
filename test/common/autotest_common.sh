@@ -23,7 +23,6 @@ fi
 
 # Set defaults for missing test config options
 : ${SPDK_BUILD_DOC=1}; export SPDK_BUILD_DOC
-: ${SPDK_BUILD_IOAT_KMOD=1}; export SPDK_BUILD_IOAT_KMOD
 : ${SPDK_RUN_CHECK_FORMAT=1}; export SPDK_RUN_CHECK_FORMAT
 : ${SPDK_RUN_SCANBUILD=1}; export SPDK_RUN_SCANBUILD
 : ${SPDK_RUN_VALGRIND=1}; export SPDK_RUN_VALGRIND
@@ -584,10 +583,6 @@ function get_bdev_size()
 function autotest_cleanup()
 {
 	$rootdir/scripts/setup.sh reset
-
-	if [ $SPDK_BUILD_IOAT_KMOD -eq 1 ]; then
-		$rootdir/scripts/build_kmod.sh clean
-	fi
 }
 
 set -o errtrace
