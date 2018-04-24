@@ -41,6 +41,13 @@ if __name__ == "__main__":
     subparsers = parser.add_subparsers(help='RPC methods')
 
     @call_cmd
+    def start_subsystems_init(args):
+        rpc.start_subsystems_init(args.client)
+
+    p = subparsers.add_parser('start_subsystems_init', help='Start initialization of subsystems')
+    p.set_defaults(func=start_subsystems_init)
+
+    @call_cmd
     def get_rpc_methods(args):
         print_dict(rpc.get_rpc_methods(args.client))
 
