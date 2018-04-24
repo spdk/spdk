@@ -39,6 +39,23 @@ static struct nvme_request *_nvme_ns_cmd_rw(struct spdk_nvme_ns *ns, struct spdk
 		void *cb_arg, uint32_t opc, uint32_t io_flags,
 		uint16_t apptag_mask, uint16_t apptag, bool check_sgl);
 
+
+static bool
+spdk_nvme_ns_check_request_length(uint32_t lba_count, uint32_t sectors_per_max_io,
+				  uint32_t sectors_per_stripe, uint32_t qdepth)
+{
+	uint32_t child_per_max_io;
+	uint32_t child_per_stripe = 0;
+
+	child_per_max_io = ((lba_count + sectors_per_max_io - 1) / sectors_per_max_io);
+
+	if (sectors_per_stripe > 0) {
+		child_per_stripe = ((lba_count + sectors_per_stripe - 1) / sectors_per_stripe);
+	}
+
+	return spdk_max(child_per_max_io, child_per_stripe) >= spdk_min(NVME_MAX_CHILD_REQUESTS, qdepth);
+}
+
 static void
 nvme_cb_complete_child(void *child_arg, const struct spdk_nvme_cpl *cpl)
 {
@@ -491,6 +508,13 @@ spdk_nvme_ns_cmd_compare(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	struct nvme_request *req;
 	struct nvme_payload payload;
 
+	if (spdk_nvme_ns_check_request_length(lba_count,
+					      ns->sectors_per_max_io,
+					      ns->sectors_per_stripe,
+					      qpair->ctrlr->cap.bits.mqes)) {
+		return -EINVAL;
+	}
+
 	payload.type = NVME_PAYLOAD_TYPE_CONTIG;
 	payload.u.contig = buffer;
 	payload.md = NULL;
@@ -517,6 +541,11 @@ spdk_nvme_ns_cmd_compare_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair
 	struct nvme_request *req;
 	struct nvme_payload payload;
 
+	if (spdk_nvme_ns_check_request_length(lba_count, ns->sectors_per_max_io, ns->sectors_per_stripe,
+					      qpair->ctrlr->cap.bits.mqes)) {
+		return -EINVAL;
+	}
+
 	payload.type = NVME_PAYLOAD_TYPE_CONTIG;
 	payload.u.contig = buffer;
 	payload.md = metadata;
@@ -541,6 +570,11 @@ spdk_nvme_ns_cmd_comparev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair
 {
 	struct nvme_request *req;
 	struct nvme_payload payload;
+
+	if (spdk_nvme_ns_check_request_length(lba_count, ns->sectors_per_max_io, ns->sectors_per_stripe,
+					      qpair->ctrlr->cap.bits.mqes)) {
+		return -EINVAL;
+	}
 
 	if (reset_sgl_fn == NULL || next_sge_fn == NULL) {
 		return -EINVAL;
@@ -571,6 +605,11 @@ spdk_nvme_ns_cmd_read(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, vo
 	struct nvme_request *req;
 	struct nvme_payload payload;
 
+	if (spdk_nvme_ns_check_request_length(lba_count, ns->sectors_per_max_io, ns->sectors_per_stripe,
+					      qpair->ctrlr->cap.bits.mqes)) {
+		return -EINVAL;
+	}
+
 	payload.type = NVME_PAYLOAD_TYPE_CONTIG;
 	payload.u.contig = buffer;
 	payload.md = NULL;
@@ -595,6 +634,11 @@ spdk_nvme_ns_cmd_read_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 	struct nvme_request *req;
 	struct nvme_payload payload;
 
+	if (spdk_nvme_ns_check_request_length(lba_count, ns->sectors_per_max_io, ns->sectors_per_stripe,
+					      qpair->ctrlr->cap.bits.mqes)) {
+		return -EINVAL;
+	}
+
 	payload.type = NVME_PAYLOAD_TYPE_CONTIG;
 	payload.u.contig = buffer;
 	payload.md = metadata;
@@ -618,6 +662,11 @@ spdk_nvme_ns_cmd_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 {
 	struct nvme_request *req;
 	struct nvme_payload payload;
+
+	if (spdk_nvme_ns_check_request_length(lba_count, ns->sectors_per_max_io, ns->sectors_per_stripe,
+					      qpair->ctrlr->cap.bits.mqes)) {
+		return -EINVAL;
+	}
 
 	if (reset_sgl_fn == NULL || next_sge_fn == NULL) {
 		return -EINVAL;
@@ -647,6 +696,11 @@ spdk_nvme_ns_cmd_write(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	struct nvme_request *req;
 	struct nvme_payload payload;
 
+	if (spdk_nvme_ns_check_request_length(lba_count, ns->sectors_per_max_io, ns->sectors_per_stripe,
+					      qpair->ctrlr->cap.bits.mqes)) {
+		return -EINVAL;
+	}
+
 	payload.type = NVME_PAYLOAD_TYPE_CONTIG;
 	payload.u.contig = buffer;
 	payload.md = NULL;
@@ -668,6 +722,11 @@ spdk_nvme_ns_cmd_write_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *
 {
 	struct nvme_request *req;
 	struct nvme_payload payload;
+
+	if (spdk_nvme_ns_check_request_length(lba_count, ns->sectors_per_max_io, ns->sectors_per_stripe,
+					      qpair->ctrlr->cap.bits.mqes)) {
+		return -EINVAL;
+	}
 
 	payload.type = NVME_PAYLOAD_TYPE_CONTIG;
 	payload.u.contig = buffer;
@@ -691,6 +750,11 @@ spdk_nvme_ns_cmd_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 {
 	struct nvme_request *req;
 	struct nvme_payload payload;
+
+	if (spdk_nvme_ns_check_request_length(lba_count, ns->sectors_per_max_io, ns->sectors_per_stripe,
+					      qpair->ctrlr->cap.bits.mqes)) {
+		return -EINVAL;
+	}
 
 	if (reset_sgl_fn == NULL || next_sge_fn == NULL) {
 		return -EINVAL;
@@ -720,6 +784,11 @@ spdk_nvme_ns_cmd_write_zeroes(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 	struct nvme_request	*req;
 	struct spdk_nvme_cmd	*cmd;
 	uint64_t		*tmp_lba;
+
+	if (spdk_nvme_ns_check_request_length(lba_count, ns->sectors_per_max_io, ns->sectors_per_stripe,
+					      qpair->ctrlr->cap.bits.mqes)) {
+		return -EINVAL;
+	}
 
 	if (lba_count == 0 || lba_count > UINT16_MAX + 1) {
 		return -EINVAL;
