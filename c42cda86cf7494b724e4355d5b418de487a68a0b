@@ -68,6 +68,30 @@
       "revId": "c42cda86cf7494b724e4355d5b418de487a68a0b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47213d3d_0d395121",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 608,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-04-24T08:33:02Z",
+      "side": 1,
+      "message": "It solves following rece condition:\n\n1. rpc delete_lvol bdev call\n2. we delete associated lvol, but bdev still exists\n3. second rpc delete_lvol bdev call\n\nWhat other operations should involve locking that mutex?",
+      "parentUuid": "b7ed0fd9_ba108b5e",
+      "range": {
+        "startLine": 608,
+        "startChar": 7,
+        "endLine": 608,
+        "endChar": 38
+      },
+      "revId": "c42cda86cf7494b724e4355d5b418de487a68a0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
