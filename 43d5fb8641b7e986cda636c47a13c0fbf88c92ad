@@ -88,6 +88,24 @@
       "revId": "43d5fb8641b7e986cda636c47a13c0fbf88c92ad",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1753309b_0df41751",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-04-24T21:33:39Z",
+      "side": 1,
+      "message": "in line319， the qpair is the admin thread, and I sent to the poller group already. And current implementation is the same meaning described by you",
+      "parentUuid": "978df166_d6b0049e",
+      "revId": "43d5fb8641b7e986cda636c47a13c0fbf88c92ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
