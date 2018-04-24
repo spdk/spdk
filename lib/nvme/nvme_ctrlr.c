@@ -1195,15 +1195,32 @@ nvme_ctrlr_construct_and_submit_aer(struct spdk_nvme_ctrlr *ctrlr,
 }
 
 static int
-nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
+_nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr,
+			  union spdk_nvme_feat_async_event_configuration config)
 {
-	union spdk_nvme_feat_async_event_configuration config;
-	struct nvme_async_event_request		*aer;
-	uint32_t				i;
 	struct nvme_completion_poll_status	status;
 	int					rc;
 
 	status.done = false;
+	rc = nvme_ctrlr_cmd_set_async_event_config(ctrlr, config, nvme_completion_poll_cb, &status);
+	if (rc != 0) {
+		return rc;
+	}
+
+	while (status.done == false) {
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
+	}
+	if (spdk_nvme_cpl_is_error(&status.cpl)) {
+		return -ENXIO;
+	}
+
+	return 0;
+}
+
+static int
+nvme_ctrlr_configure_all_aer(struct spdk_nvme_ctrlr *ctrlr)
+{
+	union spdk_nvme_feat_async_event_configuration config;
 
 	config.raw = 0;
 	config.bits.crit_warn.bits.available_spare = 1;
@@ -1214,17 +1231,38 @@ nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
 	config.bits.ns_attr_notice = 1;
 	config.bits.fw_activation_notice = 1;
 	config.bits.telemetry_log_notice = 1;
-	rc = nvme_ctrlr_cmd_set_async_event_config(ctrlr, config, nvme_completion_poll_cb, &status);
-	if (rc != 0) {
-		return rc;
-	}
 
-	while (status.done == false) {
-		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
-	}
-	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		SPDK_ERRLOG("nvme_ctrlr_cmd_set_async_event_config failed!\n");
-		return 0;
+	return _nvme_ctrlr_configure_aer(ctrlr, config);
+}
+
+static int
+nvme_ctrlr_configure_warn_aer(struct spdk_nvme_ctrlr *ctrlr)
+{
+	union spdk_nvme_feat_async_event_configuration config;
+
+	config.raw = 0;
+	config.bits.crit_warn.bits.available_spare = 1;
+	config.bits.crit_warn.bits.temperature = 1;
+	config.bits.crit_warn.bits.device_reliability = 1;
+	config.bits.crit_warn.bits.read_only = 1;
+	config.bits.crit_warn.bits.volatile_memory_backup = 1;
+
+	return _nvme_ctrlr_configure_aer(ctrlr, config);
+}
+static int
+nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct nvme_async_event_request		*aer;
+	uint32_t				i;
+	int					rc;
+
+	rc = nvme_ctrlr_configure_all_aer(ctrlr);
+	if (rc != 0) {
+		rc = nvme_ctrlr_configure_warn_aer(ctrlr);
+		if (rc != 0) {
+			SPDK_NOTICELOG("nvme_ctrlr_configure_aer failed!\n");
+			return 0;
+		}
 	}
 
 	/* aerl is a zero-based value, so we need to add 1 here. */
