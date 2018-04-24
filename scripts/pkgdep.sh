@@ -34,6 +34,17 @@ elif [ -f /etc/debian_version ]; then
 	apt-get install -y doxygen mscgen graphviz
 	# Additional dependencies for SPDK CLI
 	apt-get install -y "python-configshell*"
+elif [ -f /etc/SuSE-release ]; then
+	zypper install -y gcc gcc-c++ make cunit-devel libaio-devel libopenssl-devel \
+		git-core lcov python-base python-pep8 libuuid-devel sg3_utils
+	# Additional dependencies for NVMe over Fabrics
+	zypper install -y rdma-core-devel
+	# Additional dependencies for DPDK
+	zypper install -y libnuma-devel
+	# Additional dependencies for building nvml based backends
+	zypper install -y libpmemblk-devel
+	# Additional dependencies for building docs
+	zypper install -y doxygen mscgen graphviz
 elif [ $SYSTEM = "FreeBSD" ] ; then
 	pkg install gmake cunit openssl git devel/astyle bash devel/pep8 \
 		python misc/e2fsprogs-libuuid sysutils/sg3_utils
