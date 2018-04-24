@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "56e62af9_a58c1038",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-24T06:36:53Z",
+      "side": 1,
+      "message": "relations",
+      "range": {
+        "startLine": 7,
+        "startChar": 30,
+        "endLine": 7,
+        "endChar": 41
+      },
+      "revId": "c55b68c8d6e5b61ee07f44cf2d30439e729ce746",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ee2b74f_985c7b58",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1623,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-24T06:36:53Z",
+      "side": 1,
+      "message": "relations",
+      "range": {
+        "startLine": 1623,
+        "startChar": 27,
+        "endLine": 1623,
+        "endChar": 38
+      },
+      "revId": "c55b68c8d6e5b61ee07f44cf2d30439e729ce746",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b1aa6d82_7a30433b",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1626,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-24T06:36:53Z",
+      "side": 1,
+      "message": "empty lines? Also, some better description would be nice.",
+      "range": {
+        "startLine": 1624,
+        "startChar": 0,
+        "endLine": 1626,
+        "endChar": 11
+      },
+      "revId": "c55b68c8d6e5b61ee07f44cf2d30439e729ce746",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "34f39323_2675d90e",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1629,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-24T06:36:53Z",
+      "side": 1,
+      "message": "Please change to some meaningful name",
+      "range": {
+        "startLine": 1629,
+        "startChar": 23,
+        "endLine": 1629,
+        "endChar": 26
+      },
+      "revId": "c55b68c8d6e5b61ee07f44cf2d30439e729ce746",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f95a6ac_a6d42a61",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1642,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-24T06:36:53Z",
+      "side": 1,
+      "message": "I think this should be done at the top of test. BTW why are you assigning a clone name to a variable which should have a base lvol bdev name?",
+      "range": {
+        "startLine": 1642,
+        "startChar": 8,
+        "endLine": 1642,
+        "endChar": 31
+      },
+      "revId": "c55b68c8d6e5b61ee07f44cf2d30439e729ce746",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "18b5a0b7_491f3917",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1643,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-24T06:36:53Z",
+      "side": 1,
+      "message": "please add single empty line before each comment for better readibility",
+      "range": {
+        "startLine": 1643,
+        "startChar": 8,
+        "endLine": 1643,
+        "endChar": 47
+      },
+      "revId": "c55b68c8d6e5b61ee07f44cf2d30439e729ce746",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b80c2aba_607f24a2",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1653,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-24T06:36:53Z",
+      "side": 1,
+      "message": "Nitpicking, but why not \"/\".join() ?",
+      "range": {
+        "startLine": 1653,
+        "startChar": 69,
+        "endLine": 1653,
+        "endChar": 76
+      },
+      "revId": "c55b68c8d6e5b61ee07f44cf2d30439e729ce746",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ffc968c_2fa4f1e4",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1667,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-24T06:36:53Z",
+      "side": 1,
+      "message": "if not sorted([\"AAA\", \"CLONE1\"]) \u003d\u003d sorted(snapshot_lvol[clones]):\n   fail_count +\u003d 1\n\nSaves you separate if\u0027s and additional length check.\nBTW, don\u0027t use \"AAA\" or \"CLONE1\" strings - use variables defined at top of the function instead.",
+      "range": {
+        "startLine": 1662,
+        "startChar": 8,
+        "endLine": 1667,
+        "endChar": 27
+      },
+      "revId": "c55b68c8d6e5b61ee07f44cf2d30439e729ce746",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
