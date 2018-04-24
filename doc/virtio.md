@@ -18,3 +18,16 @@ the overall I/O performance.
 This Virtio library is currently used to implement two bdev modules:
 @ref bdev_config_virtio_scsi and @ref bdev_config_virtio_blk.
 These modules will export generic SPDK block devices usable by any SPDK application.
+
+# 2MB hugepages {#virtio_2mb}
+
+vhost-user specification puts a limitation on the number of "memory regions" used (8).
+Each region corresponds to one file descriptor, and DPDK - as SPDK's memory allocator -
+uses one file per hugepage by default. So *by default* this makes SPDK Virtio practical
+with only 1GB hugepages. To run an SPDK app using Virtio initiator with 2MB hugepages
+it is required to pass '-g' command-line option . This forces DPDK to create a single
+non-physically-contiguous hugetlbfs file for all its memory.
+
+This functionality requires latest DPDK changes that are officially landing in DPDK
+18.05, but have been also backported to spdk-18.02 branch of our internal DPDK fork
+which is currently used as a default git submodule for SPDK.

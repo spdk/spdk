@@ -114,6 +114,12 @@ the Virtio SCSI driver. See the
 [Virtio Block](http://www.spdk.io/doc/bdev.html#bdev_config_virtio_blk) reference for
 more information.
 
+### Virtio with 2MB hugepages
+
+Previous 1GB hugepage limitation has now been lifted. A new '-g' command-line option
+enables SPDK Virtio to work with 2MB hugepages.
+See [2MB hugepages](http://www.spdk.io/doc/virtio.html#virtio_2mb) for details.
+
 ## v18.01: Blobstore Thin Provisioning
 
 ### Build System
