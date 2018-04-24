@@ -124,7 +124,7 @@ _nvme_add_child_request(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 
 	child = _nvme_ns_cmd_rw(ns, qpair, payload, payload_offset, md_offset, lba, lba_count, cb_fn,
 				cb_arg, opc, io_flags, apptag_mask, apptag, check_sgl);
-	if (child == NULL) {
+	if (child == NULL || parent->num_children == UINT16_MAX) {
 		nvme_request_free_children(parent);
 		nvme_free_request(parent);
 		return NULL;
