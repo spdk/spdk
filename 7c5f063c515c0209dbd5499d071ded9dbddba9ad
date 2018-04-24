@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "412dbe53_3d6392f3",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-24T23:40:42Z",
+      "side": 1,
+      "message": "dictionary order will be better B:W:",
+      "revId": "7c5f063c515c0209dbd5499d071ded9dbddba9ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a43360f4_d48a9c5c",
+        "filename": "lib/event/app.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 400,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-24T23:40:42Z",
+      "side": 1,
+      "message": "bdf \u003d get_nmval();\nif (!bdf) {\n\nmay be aligned to SPDK well (my feedback was wrong this time too)",
+      "revId": "7c5f063c515c0209dbd5499d071ded9dbddba9ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0907617_337aeb06",
+        "filename": "lib/event/app.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 472,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-24T23:40:42Z",
+      "side": 1,
+      "message": "In the previous versions of your patch, you did as follows:\n\n  memcpy pcilists of opts to pcilists of env_opts\n  free pcilists of opts;\n  env_init(env_opts);\n  free pcilists of env_opts;\n\nI\u0027m missing freeing pcilists of env_opts?\n\nBut I\u0027m still not sure why not just copying pointers of pci_white/black_list from app_opts to env_opts. Do you see any issue for that?",
+      "revId": "7c5f063c515c0209dbd5499d071ded9dbddba9ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b4c3fed_2b3bcca7",
+        "filename": "lib/event/app.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 687,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-24T23:40:42Z",
+      "side": 1,
+      "message": "-B and then -W ?",
+      "revId": "7c5f063c515c0209dbd5499d071ded9dbddba9ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b45ab55c_c69b8061",
+        "filename": "lib/event/app.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 815,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-24T23:40:42Z",
+      "side": 1,
+      "message": "-B and then -W?",
+      "revId": "7c5f063c515c0209dbd5499d071ded9dbddba9ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e6e54796_48dec3e7",
+        "filename": "lib/event/app.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 821,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-24T23:40:42Z",
+      "side": 1,
+      "message": "would you add free(opts-\u003epci_blacklist), free(opts-\u003epci_whitelist), and opts-\u003enum_pci_addr for each failure?",
+      "revId": "7c5f063c515c0209dbd5499d071ded9dbddba9ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
