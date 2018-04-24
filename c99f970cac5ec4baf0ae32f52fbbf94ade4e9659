@@ -22,6 +22,30 @@
       "revId": "c99f970cac5ec4baf0ae32f52fbbf94ade4e9659",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5d364378_926b1e17",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-24T06:12:53Z",
+      "side": 1,
+      "message": "If we don\u0027t have any bdev required, we can close the request directly.\n\nHence line 176-180 is used to check this situation.\n\nThanks\nYanbo",
+      "parentUuid": "2f3b3229_714c2d69",
+      "range": {
+        "startLine": 176,
+        "startChar": 1,
+        "endLine": 181,
+        "endChar": 0
+      },
+      "revId": "c99f970cac5ec4baf0ae32f52fbbf94ade4e9659",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
