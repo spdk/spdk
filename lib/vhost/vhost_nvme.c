@@ -178,6 +178,12 @@ nvme_inc_cq_head(struct spdk_vhost_nvme_cq *cq)
 	}
 }
 
+static bool
+nvme_cq_is_full(struct spdk_vhost_nvme_cq *cq)
+{
+	return ((cq->cq_head + 1) % cq->size == cq->last_signaled_cq_head);
+}
+
 static void
 nvme_inc_sq_head(struct spdk_vhost_nvme_sq *sq)
 {
@@ -478,6 +484,7 @@ nvme_worker(void *arg)
 {
 	struct spdk_vhost_nvme_dev *nvme = (struct spdk_vhost_nvme_dev *)arg;
 	struct spdk_vhost_nvme_sq *sq;
+	struct spdk_vhost_nvme_cq *cq;
 	struct spdk_vhost_nvme_task *task;
 	uint32_t qid, dbbuf_sq;
 	int ret;
@@ -499,6 +506,10 @@ nvme_worker(void *arg)
 
 		sq = spdk_vhost_nvme_get_sq_from_qid(nvme, qid);
 		if (!sq->valid) {
+			continue;
+		}
+		cq = spdk_vhost_nvme_get_cq_from_qid(nvme, sq->cqid);
+		if (spdk_unlikely(!cq || nvme_cq_is_full(cq))) {
 			continue;
 		}
 
