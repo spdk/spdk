@@ -52,6 +52,24 @@
       "revId": "43d5fb8641b7e986cda636c47a13c0fbf88c92ad",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27746558_b11de44e",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-04-24T02:19:34Z",
+      "side": 1,
+      "message": "Also if you do that, nvmf_qpair_fini (executed by the I/O qpair thread will not find the admin qpair, and will cause the error.",
+      "parentUuid": "579f2744_baeb6a4e",
+      "revId": "43d5fb8641b7e986cda636c47a13c0fbf88c92ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
