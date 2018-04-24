@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5b014657_3a74f48d",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-24T16:03:48Z",
+      "side": 1,
+      "message": "eee... this can be verfied during ns/qpair initialization.",
+      "range": {
+        "startLine": 127,
+        "startChar": 18,
+        "endLine": 127,
+        "endChar": 56
+      },
+      "revId": "7f98320f1dad6b8c4a2da03fb0cf232eceb93504",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
