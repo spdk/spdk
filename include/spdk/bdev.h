@@ -308,7 +308,7 @@ uint64_t spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev);
  *
  * Return 0 for no QoS enforced on the queried block device.
  */
-uint64_t spdk_bdev_get_qos_ios_per_sec(const struct spdk_bdev *bdev);
+uint64_t spdk_bdev_get_qos_ios_per_sec(struct spdk_bdev *bdev);
 
 /**
  * Get minimum I/O buffer address alignment for a bdev.
