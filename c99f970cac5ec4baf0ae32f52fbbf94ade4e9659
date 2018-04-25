@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "787a7b3f_e8d7c9c9",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 41
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-25T00:31:46Z",
+      "side": 1,
+      "message": "OK, got it. You are right.",
+      "parentUuid": "20b4f04e_617be5a2",
+      "revId": "c99f970cac5ec4baf0ae32f52fbbf94ade4e9659",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "999cbe3f_218b9d93",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 41
