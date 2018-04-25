@@ -73,5 +73,6 @@ struct spdk_iscsi_init_grp *spdk_iscsi_init_grp_find_by_tag(int tag);
 void spdk_iscsi_init_grp_destroy(struct spdk_iscsi_init_grp *ig);
 int spdk_iscsi_parse_init_grps(void);
 void spdk_iscsi_init_grps_destroy(void);
-
+void spdk_iscsi_init_grps_info_json(struct spdk_json_write_ctx *w);
+void spdk_iscsi_init_grps_config_json(struct spdk_json_write_ctx *w);
 #endif // SPDK_INIT_GRP_H
