@@ -125,6 +125,32 @@ LIBS += -L$(CONFIG_VPP_DIR)/lib64
 COMMON_CFLAGS += -I$(CONFIG_VPP_DIR)/include
 endif
 
+#Attach only if FreeBSD and RDMA is specified with configure
+ifeq ($(OS),FreeBSD)
+ifeq ($(CONFIG_RDMA),y)
+# RDMA Userspace Verbs Library
+ifneq ("$(wildcard /usr/lib/libibverbs.*)","")
+LIBS += -libverbs
+endif
+# RDMA Connection Manager Library
+ifneq ("$(wildcard /usr/lib/librdmacm.*)","")
+LIBS += -lrdmacm
+endif
+# Mellanox - MLX4 HBA Userspace Library
+ifneq ("$(wildcard /usr/lib/libmlx4.*)","")
+LIBS += -lmlx4
+endif
+# Mellanox - MLX5 HBA Userspace Library
+ifneq ("$(wildcard /usr/lib/libmlx5.*)","")
+LIBS += -lmlx5
+endif
+# Chelsio HBA Userspace Library
+ifneq ("$(wildcard /usr/lib/libcxgb4.*)","")
+LIBS += -lcxgb4
+endif
+endif
+endif
+
 ifeq ($(CONFIG_DEBUG), y)
 COMMON_CFLAGS += -DDEBUG -O0 -fno-omit-frame-pointer
 else
