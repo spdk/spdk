@@ -8,6 +8,9 @@ source $rootdir/test/iscsi_tgt/common.sh
 rpc_py="python $rootdir/scripts/rpc.py"
 fio_py="python $rootdir/scripts/fio.py"
 
+# Namespaces are NOT used here on purpose. This test requires changes to detect
+# ifc_index for interface that was put into namespace. Needed for add_ip_address.
+ISCSI_APP="$rootdir/app/iscsi_tgt/iscsi_tgt"
 NETMASK=127.0.0.0/24
 MIGRATION_ADDRESS=127.0.0.2
 
