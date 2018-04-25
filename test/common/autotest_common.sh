@@ -21,6 +21,15 @@ if [[ ! -z $1 ]]; then
 	fi
 fi
 
+# If certain utilities are not installed, preemptively disable the tests
+if ! hash ceph; then
+	SPDK_TEST_RBD=0
+fi
+
+if ! hash pmempool; then
+	SPDK_TEST_PMDK=0
+fi
+
 # Set defaults for missing test config options
 : ${SPDK_BUILD_DOC=1}; export SPDK_BUILD_DOC
 : ${SPDK_RUN_CHECK_FORMAT=1}; export SPDK_RUN_CHECK_FORMAT
