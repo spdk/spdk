@@ -162,7 +162,7 @@ rte_vhost_gpa_to_vva(struct rte_vhost_memory *mem, uint64_t gpa)
  *  updated with actual size mapped
  * @return
  *  the host virtual address on success, 0 on failure  */
-static __rte_always_inline uint64_t
+static inline uint64_t
 rte_vhost_va_from_guest_pa(struct rte_vhost_memory *mem,
 	uint64_t gpa, uint64_t *len)
 {
