@@ -363,6 +363,12 @@ _spdk_reactor_context_switch_monitor_stop(void *arg1, void *arg2)
 	}
 }
 
+static size_t
+_spdk_reactor_get_max_event_cnt(uint8_t socket_count)
+{
+	return 262144 / socket_count - 1;
+}
+
 void
 spdk_reactor_enable_context_switch_monitor(bool enable)
 {
@@ -663,7 +669,7 @@ spdk_reactors_init(unsigned int max_delay_us)
 		if ((1ULL << i) & socket_mask) {
 			snprintf(mempool_name, sizeof(mempool_name), "evtpool%d_%d", i, getpid());
 			g_spdk_event_mempool[i] = spdk_mempool_create(mempool_name,
-						  (262144 / socket_count),
+						  _spdk_reactor_get_max_event_cnt(socket_count),
 						  sizeof(struct spdk_event),
 						  SPDK_MEMPOOL_DEFAULT_CACHE_SIZE, i);
 
@@ -678,7 +684,7 @@ spdk_reactors_init(unsigned int max_delay_us)
 				 */
 				g_spdk_event_mempool[i] = spdk_mempool_create(
 								  mempool_name,
-								  (262144 / socket_count),
+								  _spdk_reactor_get_max_event_cnt(socket_count),
 								  sizeof(struct spdk_event),
 								  SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 								  SPDK_ENV_SOCKET_ID_ANY);
