@@ -40,6 +40,7 @@
 #include "spdk/log.h"
 #include "spdk/io_channel.h"
 #include "spdk/env.h"
+#include "spdk/util.h"
 
 #define SPDK_MAX_SOCKET		64
 
@@ -366,7 +367,19 @@ _spdk_reactor_context_switch_monitor_stop(void *arg1, void *arg2)
 static size_t
 _spdk_reactor_get_max_event_cnt(uint8_t socket_count)
 {
-	return 262144 / socket_count - 1;
+	size_t cnt;
+
+	/* Try to make event ring fill at most 2MB of memory,
+	 * as some ring implementations may require physical address
+	 * contingency. We don't want to introduce a requirement of
+	 * at least 2 physically contiguous 2MB hugepages.
+	 */
+	cnt = spdk_min(262144 / socket_count, 262144 / 2);
+	/* Take into account one extra element required by
+	 * some ring implementations.
+	 */
+	cnt -= 1;
+	return cnt;
 }
 
 void
