@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1339af0b_da739c5d",
+        "filename": "lib/event/app.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 806,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-25T05:25:23Z",
+      "side": 1,
+      "message": "The following is better? case \u0027W\u0027 is same?\n\ncase \u0027B\u0027:\n  if (opts-\u003epci_whitelist) {\n    free both blacklist and whitelist;\n    rval \u003d SPDK_APP_PARSE_ARGS_FAIL;\n    goto parse_done;\n  }\n  rc \u003d spdk_app_opts_add_pci_blacklist_addr(opts, optarg);\n  if (rc !\u003d 0) {\n    rval \u003d SPDK_APP_PARSE_ARGS_FAIL;\n    goto parse_done;\n  }\n  break;",
+      "revId": "750848a79149c302ce47f560d1d2d3756768ac3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
