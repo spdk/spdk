@@ -447,7 +447,7 @@ if __name__ == "__main__":
 
     p = subparsers.add_parser('set_trace_flag', help='set trace flag')
     p.add_argument(
-        'flag', help='trace mask we want to set. (for example "debug").')
+        'flag', help='trace mask we want to set. (for example "nvme").')
     p.set_defaults(func=set_trace_flag)
 
     @call_cmd
@@ -456,7 +456,7 @@ if __name__ == "__main__":
 
     p = subparsers.add_parser('clear_trace_flag', help='clear trace flag')
     p.add_argument(
-        'flag', help='trace mask we want to clear. (for example "debug").')
+        'flag', help='trace mask we want to clear. (for example "nvme").')
     p.set_defaults(func=clear_trace_flag)
 
     @call_cmd
