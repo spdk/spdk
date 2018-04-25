@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "43063dda_aa2dcbbf",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 416,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-25T17:28:03Z",
+      "side": 1,
+      "message": "I just noticed that this is the exact same layout as \"unkeyed\", so I\u0027m going to remove it.",
+      "revId": "ad0ad910980c459ae757b00aa029a6b4df4697de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
