@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "d9bfa25d_4383178c",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-04-25T00:16:30Z",
+      "side": 1,
+      "message": "Hi Ben,\n\nAs Shuhei mentioned, this is used to defer decreasing the ctx-\u003ebdev_count. If we decrease bdev_count before next bdev_count++, it will close the RPC request and cause core\ndump. Hence I think Shuhei\u0027s suggestion here is well.\n\nOr we can remain ctx-\u003ebdev_count \u003d bdev_num, and decrease the ctx_bdev_count in callback, that can get rid of spdk_event_allocate.\n\nThanks\nYanbo",
+      "parentUuid": "999cbe3f_218b9d93",
+      "revId": "c99f970cac5ec4baf0ae32f52fbbf94ade4e9659",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2f3b3229_714c2d69",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 41
