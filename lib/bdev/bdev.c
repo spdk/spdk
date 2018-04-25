@@ -3011,6 +3011,7 @@ spdk_bdev_set_qos_limit_iops(struct spdk_bdev *bdev, uint64_t ios_per_sec,
 		cb_fn(cb_arg, -EAGAIN);
 		return;
 	}
+	bdev->qos.enabled = true;
 	bdev->qos.mod_in_progress = true;
 	bdev->qos.rate_limit = ios_per_sec;
 	thread = bdev->qos.thread;
