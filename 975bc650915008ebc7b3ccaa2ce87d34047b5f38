@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d5063903_b772f7ff",
+        "filename": "test/iscsi_tgt/perf/iscsi_initiator.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-04-25T11:44:34Z",
+      "side": 1,
+      "message": "This script is run on initiator remotely thru ssh. We would need to copy spdk repo to initiator to source that file, or I just miss something?",
+      "parentUuid": "2bcee853_e1b5d197",
+      "range": {
+        "startLine": 32,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 15
+      },
+      "revId": "975bc650915008ebc7b3ccaa2ce87d34047b5f38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "59e3a36a_dea2475e",
         "filename": "test/iscsi_tgt/perf/iscsi_target.sh",
         "patchSetId": 17
@@ -36,6 +60,30 @@
       "writtenOn": "2018-04-25T10:53:38Z",
       "side": 1,
       "message": "\u003e It might be easier to include arguments related directly to fio as\n \u003e fio job file, instead of list of arguments passed from here to\n \u003e iscsi_initiator.sh.\n\nDon\u0027t you agree or what was the reason for not changing it ?",
+      "range": {
+        "startLine": 40,
+        "startChar": 1,
+        "endLine": 40,
+        "endChar": 19
+      },
+      "revId": "975bc650915008ebc7b3ccaa2ce87d34047b5f38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b82f6ca1_863ab406",
+        "filename": "test/iscsi_tgt/perf/iscsi_target.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-04-25T11:44:34Z",
+      "side": 1,
+      "message": "I did not see reason to do this at first but we\u0027re copying fio file anyway so You might be right.",
+      "parentUuid": "59e3a36a_dea2475e",
       "range": {
         "startLine": 40,
         "startChar": 1,
