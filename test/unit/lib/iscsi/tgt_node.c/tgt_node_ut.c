@@ -41,6 +41,7 @@
 #include "../common.c"
 #include "iscsi/tgt_node.c"
 #include "scsi/scsi_internal.h"
+#include "unit/lib/json_mock.c"
 
 struct spdk_iscsi_globals g_spdk_iscsi;
 
