@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6acebc1f_f836a9c0",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-25T16:23:18Z",
+      "side": 1,
+      "message": "This was moved into the loop so that namespace is determined on each loop. kill command could see the process running, but ip netns identify couldn\u0027t verify its namespace.\nMoving it inside, it will be checked on each loop and ss/netstat will be called for appropriate namespace.",
+      "range": {
+        "startLine": 240,
+        "startChar": 0,
+        "endLine": 243,
+        "endChar": 4
+      },
+      "revId": "2f0aae923146a9f4191a6b8a9cbc53911c6e181a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
