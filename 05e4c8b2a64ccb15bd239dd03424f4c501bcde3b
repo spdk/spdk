@@ -16,6 +16,24 @@
       "revId": "05e4c8b2a64ccb15bd239dd03424f4c501bcde3b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9843b30a_3f294519",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1096,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-25T20:58:03Z",
+      "side": 1,
+      "message": "Agreed on all points; I think the long-term goal should be to unify the vhost-nvme and NVMe-oF target code that emulates a virtual NVMe controller, which would bring the namespace UUID and other features from nvmf into the vhost-nvme target.",
+      "parentUuid": "f551164f_ec6c9647",
+      "revId": "05e4c8b2a64ccb15bd239dd03424f4c501bcde3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
