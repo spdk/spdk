@@ -1029,35 +1029,27 @@ spdk_vhost_nvme_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_wri
 {
 	struct spdk_vhost_nvme_dev *nvme = to_nvme_dev(vdev);
 	struct spdk_vhost_nvme_ns *ns_dev;
-	struct spdk_bdev *bdev;
 	uint32_t i;
 
 	if (nvme == NULL) {
 		return;
 	}
 
-	spdk_json_write_name(w, "namespaces");
-	spdk_json_write_object_begin(w);
+	spdk_json_write_named_array_begin(w, "namespaces");
 
 	for (i = 0; i < nvme->num_ns; i++) {
 		ns_dev = &nvme->ns[i];
 		if (!ns_dev->active_ns) {
 			continue;
 		}
-		bdev = ns_dev->bdev;
 
-		spdk_json_write_name(w, "nsid");
-		spdk_json_write_uint32(w, ns_dev->nsid);
-
-		spdk_json_write_name(w, "bdev");
-		if (bdev) {
-			spdk_json_write_string(w, spdk_bdev_get_name(bdev));
-		} else {
-			spdk_json_write_null(w);
-		}
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_uint32(w, "nsid", ns_dev->nsid);
+		spdk_json_write_named_string(w, "bdev",  spdk_bdev_get_name(ns_dev->bdev));
+		spdk_json_write_object_end(w);
 	}
 
-	spdk_json_write_object_end(w);
+	spdk_json_write_array_end(w);
 }
 
 static void
