@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e1c1d4f2_e1e816bd",
+        "filename": "etc/spdk/nvmf.conf.in",
+        "patchSetId": 39
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-25T21:51:20Z",
+      "side": 1,
+      "message": "it would be good to show how this looks with multiple PCI addresses\n\nfor example, are they all listed in one PciBlacklist line?  or each one on a separate line?",
+      "revId": "ef076c5f266291bbe2c3041acd789e407afeb433",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "74ebf2b1_af886501",
+        "filename": "lib/event/app.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 305,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-25T21:51:20Z",
+      "side": 1,
+      "message": "these two functions are almost the exact same\n\ni think it would be better to have a single common function that does most of this work - it can take a struct spdk_pci_addr ** parameter so that you can still assign the pointer with realloc",
+      "revId": "ef076c5f266291bbe2c3041acd789e407afeb433",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6212ebda_87c5ec6a",
+        "filename": "lib/event/app.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 431,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-25T21:51:20Z",
+      "side": 1,
+      "message": "this can just free(opts-\u003epci_blacklist)\n\nfree(NULL) is OK, and there\u0027s no need to set them to NULL since the app will exit and opts won\u0027t get used",
+      "revId": "ef076c5f266291bbe2c3041acd789e407afeb433",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
