@@ -71,7 +71,8 @@ struct spdk_vhost_nvme_cq {
 	bool valid;
 	volatile struct spdk_nvme_cpl *cq_cqe;
 	uint16_t cq_head;
-	uint16_t last_signaled_cq_head;
+	uint16_t guest_signaled_cq_head;
+	uint32_t need_signaled_cnt;
 	STAILQ_HEAD(, spdk_vhost_nvme_task) need_signaled_tasks;
 	bool irq_enabled;
 	int virq;
@@ -184,7 +185,7 @@ nvme_inc_cq_head(struct spdk_vhost_nvme_cq *cq)
 static bool
 nvme_cq_is_full(struct spdk_vhost_nvme_cq *cq)
 {
-	return ((cq->cq_head + 1) % cq->size == cq->last_signaled_cq_head);
+	return ((cq->cq_head + 1) % cq->size == cq->guest_signaled_cq_head);
 }
 
 static void
@@ -284,6 +285,28 @@ spdk_nvme_map_prps(struct spdk_vhost_nvme_dev *nvme, struct spdk_nvme_cmd *cmd,
 	return 0;
 }
 
+static int
+spdk_nvme_cq_signal_fd(struct spdk_vhost_nvme_dev *nvme)
+{
+	struct spdk_vhost_nvme_cq *cq;
+	uint32_t qid, count = 0;
+
+	for (qid = 1; qid <= MAX_IO_QUEUES; qid++) {
+		cq = spdk_vhost_nvme_get_cq_from_qid(nvme, qid);
+		if (!cq || !cq->valid) {
+			continue;
+		}
+
+		if (cq->irq_enabled && (cq->need_signaled_cnt > 0)) {
+			eventfd_write(cq->virq, (eventfd_t)1);
+			cq->need_signaled_cnt = 0;
+			count++;
+		}
+	}
+
+	return count;
+}
+
 static void
 blk_request_complete_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
@@ -314,7 +337,7 @@ blk_request_complete_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 		spdk_bdev_free_io(bdev_io);
 	}
 
-	cq->last_signaled_cq_head = nvme->dbbuf_dbs[cq_offset(cqid, 1)];
+	cq->guest_signaled_cq_head = nvme->dbbuf_dbs[cq_offset(cqid, 1)];
 	if (spdk_unlikely(nvme_cq_is_full(cq))) {
 		STAILQ_INSERT_TAIL(&cq->need_signaled_tasks, task, stailq);
 		return;
@@ -337,13 +360,10 @@ blk_request_complete_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 	cq->cq_cqe[cq->cq_head].status.p = cq->phase;
 
 	nvme_inc_cq_head(cq);
+	cq->need_signaled_cnt++;
 
 	/* MMIO Controll */
-	nvme->dbbuf_eis[cq_offset(cqid, 1)] = (uint32_t)(cq->last_signaled_cq_head - 1);
-
-	if (cq->irq_enabled && (cq->cq_head != cq->last_signaled_cq_head)) {
-		eventfd_write(cq->virq, (eventfd_t)1);
-	}
+	nvme->dbbuf_eis[cq_offset(cqid, 1)] = (uint32_t)(cq->guest_signaled_cq_head - 1);
 
 	STAILQ_INSERT_TAIL(&nvme->free_tasks, task, stailq);
 }
@@ -568,6 +588,9 @@ nvme_worker(void *arg)
 		}
 	}
 
+	/* Completion Queue */
+	spdk_nvme_cq_signal_fd(nvme);
+
 	return count;
 }
 
@@ -713,7 +736,8 @@ vhost_nvme_create_io_cq(struct spdk_vhost_nvme_dev *nvme,
 	/* Setup virq through vhost messages */
 	cq->virq = -1;
 	cq->cq_head = 0;
-	cq->last_signaled_cq_head = 0;
+	cq->guest_signaled_cq_head = 0;
+	cq->need_signaled_cnt = 0;
 	requested_len = sizeof(struct spdk_nvme_cpl) * cq->size;
 	cq->cq_cqe = spdk_vhost_gpa_to_vva(&nvme->vdev, dma_addr, requested_len);
 	if (!cq->cq_cqe) {
