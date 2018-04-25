@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1fbe5a24_1d8771e6",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 1627,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-25T07:09:48Z",
+      "side": 1,
+      "message": "empty line",
+      "revId": "6fa21360d4739116ee1f5e9eb67efa8693c95f6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ce8d3949_0c316bb6",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 1630,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-25T07:09:48Z",
+      "side": 1,
+      "message": "Let\u0027s keep quote marks consistent.\nI see that most of the times you use single quotation marks so let\u0027s change all places to that.",
+      "range": {
+        "startLine": 1630,
+        "startChar": 24,
+        "endLine": 1630,
+        "endChar": 34
+      },
+      "revId": "6fa21360d4739116ee1f5e9eb67efa8693c95f6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e9650298_4b1acae4",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 1645,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-04-25T07:09:48Z",
+      "side": 1,
+      "message": "is changing to unicode here necessary? I see that in other strings you don\u0027t do that.",
+      "range": {
+        "startLine": 1645,
+        "startChar": 30,
+        "endLine": 1645,
+        "endChar": 31
+      },
+      "revId": "6fa21360d4739116ee1f5e9eb67efa8693c95f6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
