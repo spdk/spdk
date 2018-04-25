@@ -20,6 +20,11 @@ fio_py="python $rootdir/scripts/fio.py"
 
 NVMF_PORT=4420
 
+# Namespaces are NOT used here on purpose. Rxe_cfg utilility used for NVMf tests do not support namespaces.
+TARGET_IP=127.0.0.1
+INITIATOR_IP=127.0.0.1
+NETMASK=$INITIATOR_IP/32
+
 function run_nvme_remote() {
 	echo "now use $1 method to run iscsi tgt."
 	cp $testdir/iscsi.conf $testdir/iscsi.conf.tmp
@@ -30,7 +35,8 @@ function run_nvme_remote() {
 	fi
 	# Start the iSCSI target without using stub
 	iscsi_rpc_addr="/var/tmp/spdk-iscsi.sock"
-	$rootdir/app/iscsi_tgt/iscsi_tgt -r "$iscsi_rpc_addr" -c $testdir/iscsi.conf.tmp -m 0x1 -p 0 -s 512 &
+	ISCSI_APP="$rootdir/app/iscsi_tgt/iscsi_tgt"
+	$ISCSI_APP -r "$iscsi_rpc_addr" -c $testdir/iscsi.conf.tmp -m 0x1 -p 0 -s 512 &
 	iscsipid=$!
 	echo "iSCSI target launched. pid: $iscsipid"
 	trap "killprocess $iscsipid; killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
@@ -56,7 +62,8 @@ function run_nvme_remote() {
 timing_enter nvme_remote
 
 # Start the NVMf target
-$rootdir/app/nvmf_tgt/nvmf_tgt -c $rootdir/test/nvmf/nvmf.conf -m 0x2 -p 1 -s 512 &
+NVMF_APP="$rootdir/app/nvmf_tgt/nvmf_tgt"
+$NVMF_APP -c $rootdir/test/nvmf/nvmf.conf -m 0x2 -p 1 -s 512 &
 nvmfpid=$!
 echo "NVMf target launched. pid: $nvmfpid"
 trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
