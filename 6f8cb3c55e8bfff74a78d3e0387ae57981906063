@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "546113bf_20459a0a",
+        "filename": "include/spdk/rpc.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-25T08:41:04Z",
+      "side": 1,
+      "message": "Don\u0027t see any use of this macro. Rebase artifact?",
+      "range": {
+        "startLine": 93,
+        "startChar": 0,
+        "endLine": 97,
+        "endChar": 1
+      },
+      "revId": "6f8cb3c55e8bfff74a78d3e0387ae57981906063",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
