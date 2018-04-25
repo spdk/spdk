@@ -1060,10 +1060,51 @@ spdk_vhost_nvme_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_wri
 	spdk_json_write_object_end(w);
 }
 
+static void
+spdk_vhost_nvmewrite_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
+{
+	struct spdk_vhost_nvme_dev *nvme = to_nvme_dev(vdev);
+	struct spdk_vhost_nvme_ns *ns_dev;
+	uint32_t i;
+
+	if (nvme == NULL) {
+		return;
+	}
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "method", "construct_vhost_nvme_controller");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_string(w, "ctrlr", nvme->vdev.name);
+	spdk_json_write_named_uint32(w, "io_queues", nvme->num_io_queues);
+	spdk_json_write_named_string(w, "cpumask", spdk_cpuset_fmt(nvme->vdev.cpumask));
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+
+	for (i = 0; i < nvme->num_ns; i++) {
+		ns_dev = &nvme->ns[i];
+		if (!ns_dev->active_ns) {
+			continue;
+		}
+
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_string(w, "method", "add_vhost_nvme_ns");
+
+		spdk_json_write_named_object_begin(w, "params");
+		spdk_json_write_named_string(w, "ctrlr", nvme->vdev.name);
+		spdk_json_write_named_string(w, "bdev_name", spdk_bdev_get_name(ns_dev->bdev));
+		spdk_json_write_object_end(w);
+
+		spdk_json_write_object_end(w);
+	}
+}
+
 static const struct spdk_vhost_dev_backend spdk_vhost_nvme_device_backend = {
 	.start_device = spdk_vhost_nvme_start_device,
 	.stop_device = spdk_vhost_nvme_stop_device,
 	.dump_info_json = spdk_vhost_nvme_dump_info_json,
+	.write_config_json = spdk_vhost_nvmewrite_config_json,
 	.remove_device = spdk_vhost_nvme_dev_remove,
 };
 
