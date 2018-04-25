@@ -675,3 +675,67 @@ spdk_iscsi_init_grp_unregister(int tag)
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 	return NULL;
 }
+
+static void
+spdk_iscsi_init_grp_info_json(struct spdk_iscsi_init_grp *ig,
+			      struct spdk_json_write_ctx *w)
+{
+	struct spdk_iscsi_initiator_name *iname;
+	struct spdk_iscsi_initiator_netmask *imask;
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "tag");
+	spdk_json_write_int32(w, ig->tag);
+
+	spdk_json_write_name(w, "initiators");
+	spdk_json_write_array_begin(w);
+	TAILQ_FOREACH(iname, &ig->initiator_head, tailq) {
+		spdk_json_write_string(w, iname->name);
+	}
+	spdk_json_write_array_end(w);
+
+	spdk_json_write_name(w, "netmasks");
+	spdk_json_write_array_begin(w);
+	TAILQ_FOREACH(imask, &ig->netmask_head, tailq) {
+		spdk_json_write_string(w, imask->mask);
+	}
+	spdk_json_write_array_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
+static void
+spdk_iscsi_init_grp_config_json(struct spdk_iscsi_init_grp *ig,
+				struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "method");
+	spdk_json_write_string(w, "add_initiator_group");
+
+	spdk_json_write_name(w, "params");
+	spdk_iscsi_init_grp_info_json(ig, w);
+
+	spdk_json_write_object_end(w);
+}
+
+void
+spdk_iscsi_init_grps_info_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_iscsi_init_grp *ig;
+
+	TAILQ_FOREACH(ig, &g_spdk_iscsi.ig_head, tailq) {
+		spdk_iscsi_init_grp_info_json(ig, w);
+	}
+}
+
+void
+spdk_iscsi_init_grps_config_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_iscsi_init_grp *ig;
+
+	TAILQ_FOREACH(ig, &g_spdk_iscsi.ig_head, tailq) {
+		spdk_iscsi_init_grp_config_json(ig, w);
+	}
+}
