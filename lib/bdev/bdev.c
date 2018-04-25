@@ -3044,4 +3044,9 @@ spdk_bdev_set_qos_limit_iops(struct spdk_bdev *bdev, uint64_t ios_per_sec,
 	}
 }
 
+void *spdk_bdev_io_get_ctxt(struct spdk_bdev_io *bdev_io)
+{
+	return spdk_io_channel_get_ctx(bdev_io->ch->channel);
+}
+
 SPDK_LOG_REGISTER_COMPONENT("bdev", SPDK_LOG_BDEV)
