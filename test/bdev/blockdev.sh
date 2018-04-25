@@ -56,7 +56,7 @@ dd if=/dev/zero of=/tmp/aiofile bs=2048 count=5000
 cp $testdir/bdev.conf.in $testdir/bdev.conf
 $rootdir/scripts/gen_nvme.sh >> $testdir/bdev.conf
 
-if [ $SPDK_TEST_RBD -eq 1 ]; then
+if [ $SPDK_TEST_RBD -eq 1 ] && hash ceph; then
 	timing_enter rbd_setup
 	rbd_setup 127.0.0.1
 	timing_exit rbd_setup
@@ -64,7 +64,7 @@ if [ $SPDK_TEST_RBD -eq 1 ]; then
 	$rootdir/scripts/gen_rbd.sh >> $testdir/bdev.conf
 fi
 
-if hash pmempool; then
+if [ $SPDK_TEST_PMDK -eq 1 ] && hash pmempool; then
 	rm -f /tmp/spdk-pmem-pool
 	pmempool create blk --size=32M 512 /tmp/spdk-pmem-pool
 	echo "[Pmem]" >> $testdir/bdev.conf
