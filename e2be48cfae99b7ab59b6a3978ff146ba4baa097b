@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "be5cd271_72156163",
+        "filename": "test/iscsi_tgt/perf/iscsi_initiator.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-04-25T11:44:34Z",
+      "side": 1,
+      "message": "This script is copied thru ssh from target to initiator, spdk repo could be not present on initiator",
+      "parentUuid": "15d74ca2_19334904",
+      "range": {
+        "startLine": 32,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 15
+      },
+      "revId": "e2be48cfae99b7ab59b6a3978ff146ba4baa097b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0ca3f7ef_e03ae3dc",
         "filename": "test/iscsi_tgt/perf/iscsi_initiator.sh",
         "patchSetId": 9
