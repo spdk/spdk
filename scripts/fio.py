@@ -16,7 +16,6 @@ ioengine=libaio
 direct=1
 bs=%(blocksize)d
 iodepth=%(iodepth)d
-norandommap=1
 %(verify)s
 verify_dump=1
 
