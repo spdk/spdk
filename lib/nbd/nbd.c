@@ -217,6 +217,8 @@ spdk_nbd_write_config_json(struct spdk_json_write_ctx *w, struct spdk_event *don
 {
 	struct spdk_nbd_disk *nbd;
 
+	spdk_json_write_array_begin(w);
+
 	TAILQ_FOREACH(nbd, &g_spdk_nbd.disk_head, tailq) {
 		spdk_json_write_object_begin(w);
 
@@ -230,6 +232,7 @@ spdk_nbd_write_config_json(struct spdk_json_write_ctx *w, struct spdk_event *don
 		spdk_json_write_object_end(w);
 	}
 
+	spdk_json_write_array_end(w);
 	spdk_event_call(done_ev);
 }
 
