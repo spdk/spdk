@@ -1103,12 +1103,12 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 		       health_page.critical_warning.bits.read_only ? "Yes" : "No");
 		printf("  Volatile Memory Backup:    %s\n",
 		       health_page.critical_warning.bits.volatile_memory_backup ? "WARNING" : "OK");
-		printf("Current Temperature:         %u Kelvin (%u Celsius)\n",
+		printf("Current Temperature:         %u Kelvin (%d Celsius)\n",
 		       health_page.temperature,
-		       health_page.temperature - 273);
-		printf("Temperature Threshold:       %u Kelvin (%u Celsius)\n",
+		       (int)health_page.temperature - 273);
+		printf("Temperature Threshold:       %u Kelvin (%d Celsius)\n",
 		       features[SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD].result,
-		       features[SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD].result - 273);
+		       (int)features[SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD].result - 273);
 		printf("Available Spare:             %u%%\n", health_page.available_spare);
 		printf("Available Spare Threshold:   %u%%\n", health_page.available_spare_threshold);
 		printf("Life Percentage Used:        %u%%\n", health_page.percentage_used);
@@ -1146,9 +1146,9 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 		printf("Critical Temperature Time:   %u minutes\n", health_page.critical_temp_time);
 		for (i = 0; i < 8; i++) {
 			if (health_page.temp_sensor[i] != 0) {
-				printf("Temperature Sensor %d:        %u Kelvin (%u Celsius)\n",
+				printf("Temperature Sensor %d:        %u Kelvin (%d Celsius)\n",
 				       i + 1, health_page.temp_sensor[i],
-				       health_page.temp_sensor[i] - 273);
+				       (int)health_page.temp_sensor[i] - 273);
 			}
 		}
 		printf("\n");
@@ -1169,13 +1169,13 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 		printf("==================================\n");
 		printf("Minimum Thermal Management Temperature:  ");
 		if (cdata->mntmt) {
-			printf("%u Kelvin (%u Celsius)\n", cdata->mntmt, cdata->mntmt - 273);
+			printf("%u Kelvin (%d Celsius)\n", cdata->mntmt, (int)cdata->mntmt - 273);
 		} else {
 			printf("Not Reported\n");
 		}
 		printf("Maximum Thermal Managment Temperature:   ");
 		if (cdata->mxtmt) {
-			printf("%u Kelvin (%u Celsius)\n", cdata->mxtmt, cdata->mxtmt - 273);
+			printf("%u Kelvin (%d Celsius)\n", cdata->mxtmt, (int)cdata->mxtmt - 273);
 		} else {
 			printf("Not Reported\n");
 		}
