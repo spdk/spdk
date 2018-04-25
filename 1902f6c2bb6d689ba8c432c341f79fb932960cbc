@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e7f3c602_6f69a559",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-25T19:45:28Z",
+      "side": 1,
+      "message": "Don\u0027t see any use of this. Can we make this function to return void?",
+      "range": {
+        "startLine": 308,
+        "startChar": 1,
+        "endLine": 308,
+        "endChar": 14
+      },
+      "revId": "1902f6c2bb6d689ba8c432c341f79fb932960cbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
