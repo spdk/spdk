@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4f95ec20_a04836b2",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 864,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-25T08:18:28Z",
+      "side": 1,
+      "message": "Could you please add check for spdk_bs_free_cluster_count(bs) before inflate and after inflate to check that we actually allocated clusters.",
+      "revId": "7392c5519e9724a9f1c188dc6c5b56e1ee7dfe45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
