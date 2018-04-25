@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1fd83393_ba3b72b6",
+        "filename": "scripts/rpc/subsystem.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-25T23:09:42Z",
+      "side": 1,
+      "message": "This feature is very helpful. However all but virtio_scsi will be removed by delete_bdev().\n\nBy get_bdevs(), we may be able to use the name of bdevs to delete them without any change. Virtio_scsi may be exception.\n\nConfig file is to create config but using config file to remove config is natural? How do you think about that?",
+      "revId": "cfbfaf8bb50d2e2d664c1dccd17b771146c8ff6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
