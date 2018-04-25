@@ -22,6 +22,30 @@
       "revId": "2f0aae923146a9f4191a6b8a9cbc53911c6e181a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b313dedf_a993cb89",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-25T17:33:27Z",
+      "side": 1,
+      "message": "This also helps in case where maybe ip netns needs some time to report correct namespace after process is launched.",
+      "parentUuid": "6acebc1f_f836a9c0",
+      "range": {
+        "startLine": 240,
+        "startChar": 0,
+        "endLine": 243,
+        "endChar": 4
+      },
+      "revId": "2f0aae923146a9f4191a6b8a9cbc53911c6e181a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
