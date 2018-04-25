@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f551164f_ec6c9647",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1096,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-25T20:55:04Z",
+      "side": 1,
+      "message": "should we persist the namespace ID here?\n\nwe don\u0027t have a way to specify the namespace ID currently when adding a namespace - but if we add 8 namespaces, then hot remove one of them, then dump JSON and reload - some of the namespaces will now have a new nsid\n\nI think this patch is fine for now - but seems we should fix this in the future",
+      "revId": "05e4c8b2a64ccb15bd239dd03424f4c501bcde3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
