@@ -41,4 +41,18 @@ LIBS += -laio
 CFLAGS += -DHAVE_LIBAIO
 endif
 
+ifeq ($(OS),FreeBSD)
+ifeq ($(CONFIG_RDMA),y)
+ifneq ("$(wildcard /usr/lib/libmlx4.*)","")
+LIBS += -lmlx4
+endif
+ifneq ("$(wildcard /usr/lib/libmlx5.*)","")
+LIBS += -lmlx5
+endif
+ifneq ("$(wildcard /usr/lib/libcxgb4.*)","")
+LIBS += -lcxgb4
+endif
+endif
+endif
+
 include $(SPDK_ROOT_DIR)/mk/nvme.libtest.mk
