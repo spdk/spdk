@@ -106,6 +106,24 @@
       "revId": "43d5fb8641b7e986cda636c47a13c0fbf88c92ad",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0cef2fff_6767d886",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-26T16:51:13Z",
+      "side": 1,
+      "message": "oh I missed the _qpair vs qpair. Ok, I see what this is doing.",
+      "parentUuid": "1753309b_0df41751",
+      "revId": "43d5fb8641b7e986cda636c47a13c0fbf88c92ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
