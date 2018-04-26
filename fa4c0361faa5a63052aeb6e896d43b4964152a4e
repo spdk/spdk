@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c00768a1_75d0f9c8",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 478,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-26T10:45:41Z",
+      "side": 1,
+      "message": "\"dev\" -\u003e \"tgt\"",
+      "range": {
+        "startLine": 477,
+        "startChar": 0,
+        "endLine": 478,
+        "endChar": 35
+      },
+      "revId": "fa4c0361faa5a63052aeb6e896d43b4964152a4e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "34d1af08_c5298850",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 451,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-26T10:45:41Z",
+      "side": 1,
+      "message": "extra line",
+      "revId": "fa4c0361faa5a63052aeb6e896d43b4964152a4e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7028164e_72c55b96",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-26T10:45:41Z",
+      "side": 1,
+      "message": "I don\u0027t the reason of going back and forward here. Also to_scsi_dev() introduce usless checks here. Why spdk_vhost_scsi_task can\u0027t have pointer to the spdk_vhost_scsi_dev?",
+      "range": {
+        "startLine": 285,
+        "startChar": 0,
+        "endLine": 286,
+        "endChar": 55
+      },
+      "revId": "fa4c0361faa5a63052aeb6e896d43b4964152a4e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
