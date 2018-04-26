@@ -4919,7 +4919,6 @@ spdk_blob_get_clones(struct spdk_blob_store *bs, spdk_blob_id blobid, spdk_blob_
 	}
 
 	if (ids == NULL || *count < snapshot_entry->clone_count) {
-		SPDK_ERRLOG("Not enough space in array\n");
 		*count = snapshot_entry->clone_count;
 		return -ENOMEM;
 	}
