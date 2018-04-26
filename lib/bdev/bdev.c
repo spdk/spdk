@@ -3013,10 +3013,19 @@ spdk_bdev_set_qos_limit_iops(struct spdk_bdev *bdev, uint64_t ios_per_sec,
 		cb_fn(cb_arg, -EAGAIN);
 		return;
 	}
+	thread = bdev->qos.thread;
+	/* QoS not enabled on this bdev */
+	if (!thread && ios_per_sec == 0) {
+		pthread_mutex_unlock(&bdev->mutex);
+		SPDK_ERRLOG("Requested ios_per_sec limit %" PRIu64 " is not a multiple of %u\n",
+			    ios_per_sec, SPDK_BDEV_QOS_MIN_IOS_PER_SEC);
+		free(ctx);
+		cb_fn(cb_arg, -EINVAL);
+		return;
+	}
 	bdev->qos.enabled = true;
 	bdev->qos.mod_in_progress = true;
 	bdev->qos.rate_limit = ios_per_sec;
-	thread = bdev->qos.thread;
 	pthread_mutex_unlock(&bdev->mutex);
 
 	if (thread) {
