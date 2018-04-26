@@ -494,6 +494,7 @@ void spdk_bs_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 /**
  * Resize a blob to 'sz' clusters. These changes are not persisted to disk until
  * spdk_bs_md_sync_blob() is called.
+ * If called before previous resize finish, it will fail with errno -EBUSY
  *
  * \param blob Blob to resize.
  * \param sz The new number of clusters.
