@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "defd2185_dbf5b359",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 478,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-04-26T18:26:15Z",
+      "side": 1,
+      "message": "vid is a device identifier. this is correct",
+      "parentUuid": "c00768a1_75d0f9c8",
+      "range": {
+        "startLine": 477,
+        "startChar": 0,
+        "endLine": 478,
+        "endChar": 35
+      },
+      "revId": "fa4c0361faa5a63052aeb6e896d43b4964152a4e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "34d1af08_c5298850",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 5
@@ -53,6 +77,30 @@
       "writtenOn": "2018-04-26T10:45:41Z",
       "side": 1,
       "message": "I don\u0027t the reason of going back and forward here. Also to_scsi_dev() introduce usless checks here. Why spdk_vhost_scsi_task can\u0027t have pointer to the spdk_vhost_scsi_dev?",
+      "range": {
+        "startLine": 285,
+        "startChar": 0,
+        "endLine": 286,
+        "endChar": 55
+      },
+      "revId": "fa4c0361faa5a63052aeb6e896d43b4964152a4e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b5ffcf0_f7e28b63",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-04-26T18:26:15Z",
+      "side": 1,
+      "message": "\u003e Why spdk_vhost_scsi_task can\u0027t have pointer to the spdk_vhost_scsi_dev?\n\nIt\u0027s just more handy to store vhost_dev pointers. You need spdk_vhost_dev for the most I/O operations as it is passed to all virtio.c APIs. vhost_scsi_dev won\u0027t hold anything but scsi device status and poller references.\n\n\u003e Also to_scsi_dev() introduce usless checks here.\n\nThat\u0027s right. I\u0027m adding to_scsi_dev_unsafe() for this purpose later on:\nhttps://review.gerrithub.io/c/spdk/spdk/+/405891/11/lib/vhost/vhost_scsi.c",
+      "parentUuid": "7028164e_72c55b96",
       "range": {
         "startLine": 285,
         "startChar": 0,
