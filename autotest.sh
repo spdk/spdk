@@ -28,6 +28,8 @@ cd $src
 
 ./scripts/setup.sh status
 
+freebsd_update_contigmem_mod
+
 if hash lcov; then
 	# setup output dir for unittest.sh
 	export UT_COVERAGE=$out/ut_coverage

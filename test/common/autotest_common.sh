@@ -600,5 +600,14 @@ function autotest_cleanup()
 	$rootdir/scripts/setup.sh reset
 }
 
+function freebsd_update_contigmem_mod()
+{
+	if [ `uname` = FreeBSD ]; then
+		kldunload contigmem.ko || true
+		cp -f $rootdir/dpdk/build/kmod/contigmem.ko /boot/modules/
+		cp -f $rootdir/dpdk/build/kmod/contigmem.ko /boot/kernel/
+	fi
+}
+
 set -o errtrace
 trap "trap - ERR; print_backtrace >&2" ERR
