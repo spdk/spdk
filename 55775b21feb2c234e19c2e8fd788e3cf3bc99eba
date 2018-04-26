@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "2aa9f2b4_1c55f98a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-26T21:17:57Z",
+      "side": 1,
+      "message": "Commit messages should explain why the code was changed. So why does this need to be removed on CentOS?",
+      "revId": "55775b21feb2c234e19c2e8fd788e3cf3bc99eba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "79be9f73_225e8bca",
         "filename": "test/nvmf/common.sh",
         "patchSetId": 1
