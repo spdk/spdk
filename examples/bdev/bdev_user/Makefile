@@ -31,18 +31,35 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-DIRS-$(CONFIG_FIO_PLUGIN) = fio_plugin
-DIRS-y += bdev_user
+APP = bdev_user_example
 
-.PHONY: all clean $(DIRS-y)
+C_SRCS := bdev_user_example.c
 
-all: $(DIRS-y)
+SPDK_LIB_LIST = event_bdev event_copy event_nvmf
+SPDK_LIB_LIST += nvmf event log trace conf util bdev copy rpc jsonrpc json
+SPDK_LIB_LIST += app_rpc log_rpc bdev_rpc
+SPDK_LIB_LIST += bdev_user
+
+ifeq ($(OS),Linux)
+SPDK_LIB_LIST += event_nbd nbd
+endif
+
+LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
+	$(COPY_MODULES_LINKER_ARGS) \
+	$(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
+
+all : $(APP)
 	@:
 
-clean: $(DIRS-y)
-	@:
+$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(SPDK_WHOLE_LIBS) $(BLOCKDEV_MODULES_FILES) $(LINKER_MODULES) $(ENV_LIBS)
+	$(LINK_C)
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+clean :
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
