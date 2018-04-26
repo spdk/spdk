@@ -149,6 +149,7 @@ struct spdk_blob {
 	TAILQ_ENTRY(spdk_blob) link;
 
 	uint32_t frozen_refcnt;
+	bool resize_in_progress;
 };
 
 struct spdk_blob_store {
