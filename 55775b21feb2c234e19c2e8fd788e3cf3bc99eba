@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "79be9f73_225e8bca",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-26T16:06:27Z",
+      "side": 1,
+      "message": "This looks too broad; I don\u0027t think we want to filter out any driver that happens to start with i.\n\nAlso, it looks like i40iw is the driver for Intel X722, which supports iWARP according to the official docs; does it not work for some reason?",
+      "revId": "55775b21feb2c234e19c2e8fd788e3cf3bc99eba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
