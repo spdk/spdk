@@ -77,6 +77,8 @@ else
 fi
 timing_exit "$make_timing_label"
 
+freebsd_update_contigmem_mod
+
 # Check for generated files that are not listed in .gitignore
 timing_enter generated_files_check
 if [ `git status --porcelain | wc -l` -ne 0 ]; then
