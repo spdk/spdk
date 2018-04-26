@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e6197a1e_56ed4734",
+        "filename": "autobuild.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-26T23:51:14Z",
+      "side": 1,
+      "message": "autobuild.sh runs as a non-root user (on purpose); we should probably put this in autotest.sh instead.",
+      "revId": "bdf75a7088fce3fc1aafd5c35cc91932c15f9aaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
