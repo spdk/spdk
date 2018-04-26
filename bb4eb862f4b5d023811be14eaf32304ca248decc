@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8ff09312_94444fc9",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-26T13:26:53Z",
+      "side": 1,
+      "message": "What happens when io was already frozen ? On two different operations calling _spdk_blob_freeze_io(), first one to finish spdk_for_each_thread() unfreezes io for both calls.\n\nThis would result in second operation possibly doing work during unfrozen io.\n\nMaybe return error when freeze_io is already true. Alternatively handle that by queuing up the unfreeze, changing frozen_io to false only when last one is ready ?",
+      "range": {
+        "startLine": 254,
+        "startChar": 0,
+        "endLine": 255,
+        "endChar": 24
+      },
+      "revId": "bb4eb862f4b5d023811be14eaf32304ca248decc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "31a465f7_39a3efe1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1767,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-26T13:26:53Z",
+      "side": 1,
+      "message": "In general freeze io applies to all operations, not only write. Maybe it should be placed just before this switch ?",
+      "range": {
+        "startLine": 1758,
+        "startChar": 0,
+        "endLine": 1767,
+        "endChar": 50
+      },
+      "revId": "bb4eb862f4b5d023811be14eaf32304ca248decc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cef54863_141e81d3",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 3934,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-26T13:26:53Z",
+      "side": 1,
+      "message": "This is the only reason I see for adding freeze io to snapshotting. When origblob was already thin provisioned, new cluster allocation between memcpy of cluster map and zeroing cluster map here, could be lost.\n\nFor this I think this patch is alright.",
+      "range": {
+        "startLine": 3932,
+        "startChar": 0,
+        "endLine": 3934,
+        "endChar": 75
+      },
+      "revId": "bb4eb862f4b5d023811be14eaf32304ca248decc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
