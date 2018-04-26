@@ -1,6 +1,6 @@
 # Changelog
 
-## v18.04: (Upcoming Release)
+## v18.04: Logical Volume Snapshot/Clone, iSCSI Initiator, Bdev QoS, VPP Userspace TCP/IP
 
 ### vhost
 
@@ -9,9 +9,21 @@ DPDK rte_vhost vulnerability [CVE-2018-1059](http://cve.mitre.org/cgi-bin/cvenam
 Please see this [security advisory](https://access.redhat.com/security/cve/cve-2018-1059)
 for additional information on the DPDK vulnerability.
 
+Workarounds have been added to ensure vhost compatibility with QEMU 2.12.
+
+EXPERIMENTAL: Support for vhost-nvme has been added to the SPDK vhost target. See the
+[vhost documentation](http://www.spdk.io/doc/vhost.html) for more details.
+
+### Unified Target Application
+
+A new unified SPDK target application, `spdk_tgt`, has been added. This application combines the
+functionality of several existing SPDK applications, including the iSCSI target, NVMe-oF target,
+and vhost target. The new application can be managed through the existing configuration file and
+[JSON-RPC](http://www.spdk.io/doc/jsonrpc.html) methods.
+
 ### Env
 
-Add wrapper for DPDK rte_mempool_get_bulk() via spdk_mempool_get_bulk().
+spdk_mempool_get_bulk() has been added to wrap DPDK rte_mempool_get_bulk().
 
 New memory management functions spdk_malloc(), spdk_zmalloc(), and spdk_free() have been added.
 These new functions have a `flags` parameter that allows the user to specify whether the allocated
@@ -21,13 +33,20 @@ eventually be deprecated and removed.
 
 ### Bdev
 
-Add new optional bdev module interface function, init_complete, to notify bdev modules
-when the bdev subsystem initialization is complete. Useful for virtual bdevs that require
+A new optional bdev module interface function, `init_complete`, has been added to notify bdev modules
+when the bdev subsystem initialization is complete. This may be useful for virtual bdevs that require
 notification that the set of initialization examine() calls is complete.
+
+The bdev layer now allows modules to provide an optional per-bdev UUID, which can be retrieved with
+the spdk_bdev_get_uuid() function.
+
+Enforcement of IOPS limits for quality of service (QoS) has been added to the bdev layer. See the
+[set_bdev_qos_limit_iops](http://www.spdk.io/doc/jsonrpc.html#rpc_set_bdev_qos_limit_iops) documentation
+for more details.
 
 ### RPC
 
-The Rpc configuration file section, which was deprecated in v18.01, has been removed.
+The `[Rpc]` configuration file section, which was deprecated in v18.01, has been removed.
 Users should switch to the `-r` command-line parameter instead.
 
 The JSON-RPC server implementation now allows up to 32 megabyte responses, growing as
@@ -40,21 +59,22 @@ See the [SPDKCLI](http://www.spdk.io/doc/spdkcli.html) documentation for more de
 
 ### NVMe Driver
 
-EXPERIMENTAL: Adds support for WDS and RDS capable CMBs in NVMe controllers. This support is
+EXPERIMENTAL: Support for WDS and RDS capable CMBs in NVMe controllers has been added. This support is
 experimental pending a functional allocator to free and reallocate CMB buffers.
 
 spdk_nvme_ns_get_uuid() has been added to allow retrieval of per-namespace UUIDs when available.
 
-Added spdk_nvme_ctrlr_get_first_active_ns() and spdk_nvme_ctrlr_get_next_active_ns() to iterate
-active namespaces and spdk_nvme_ctrlr_is_active_ns() to check if a ns id is active.
+New API functions spdk_nvme_ctrlr_get_first_active_ns() and spdk_nvme_ctrlr_get_next_active_ns()
+have been added to iterate active namespaces, as well as spdk_nvme_ctrlr_is_active_ns() to check if
+a namespace ID is active.
 
 ### NVMe-oF Target
 
-Namespaces may now be assigned unique identifiers via new optional "eui64" and "nguid" parameters
-to the `nvmf_subsystem_add_ns` RPC method.
+Namespaces may now be assigned unique identifiers via new optional `eui64` and `nguid` parameters
+to the `nvmf_subsystem_add_ns` RPC method. Additionally, the NVMe-oF target automatically exposes
+the backing bdev's UUID as the namespace UUID when available.
 
-`spdk_nvmf_subsystem_remove_ns` is now asynchronous and requires two additional arguments, cb_fn and cb_arg.
-cb_fn is a function pointer of type spdk_channel_for_each_cpl and cb_arg is a void pointer.
+spdk_nvmf_subsystem_remove_ns() is now asynchronous and requires a callback to indicate completion.
 
 ### Blobstore
 
@@ -84,9 +104,11 @@ and Clones of existing Snapshots.
 See the [lvol snapshots](http://www.spdk.io/doc/logical_volumes.html#lvol_snapshots) documentation
 for more details.
 
+Resizing logical volumes is now supported via the `resize_lvol_bdev` RPC method.
+
 ### Lib
 
-A set of changes were made in the SPDK's lib code altering,
+A set of changes were made in the SPDK's lib code altering
 instances of calls to `exit()` and `abort()` to return a failure instead
 wherever reasonably possible.
 
@@ -106,6 +128,12 @@ The prototype for spdk_poller_fn() has been modified; it now returns a value ind
 whether or not the poller did any work.  Existing pollers will need to be updated to
 return a value.
 
+### iSCSI Target
+
+The SPDK iSCSI target now supports the fd.io Vector Packet Processing (VPP) framework userspace
+TCP/IP stack. See the [iSCSI VPP documentation](http://www.spdk.io/doc/iscsi.html#vpp) for more
+details.
+
 ### iSCSI initiator
 
 An iSCSI initiator bdev module has been added to SPDK.  This module should be considered
@@ -114,8 +142,8 @@ lib/bdev/iscsi/README.
 
 ### PMDK
 
-The persistent memory (PMDK) bdev module is now enabled using --with-pmdk instead of
---with-nvml.  This reflects the renaming of the persistent memory library from NVML to
+The persistent memory (PMDK) bdev module is now enabled using `--with-pmdk` instead of
+`--with-nvml`.  This reflects the renaming of the persistent memory library from NVML to
 PMDK.
 
 ### Virtio Block driver
@@ -128,7 +156,7 @@ more information.
 
 ### Virtio with 2MB hugepages
 
-Previous 1GB hugepage limitation has now been lifted. A new '-g' command-line option
+The previous 1GB hugepage limitation has now been lifted. A new `-g` command-line option
 enables SPDK Virtio to work with 2MB hugepages.
 See [2MB hugepages](http://www.spdk.io/doc/virtio.html#virtio_2mb) for details.
 
