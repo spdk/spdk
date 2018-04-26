@@ -1587,7 +1587,7 @@ _spdk_blob_request_submit_op_split_next(void *cb_arg, int bserrno)
 	ctx->pages_remaining -= op_length;
 	ctx->page_offset += op_length;
 	if (op_type == SPDK_BLOB_WRITE || op_type == SPDK_BLOB_READ) {
-		ctx->curr_payload += op_length;
+		ctx->curr_payload += (op_length * SPDK_BS_PAGE_SIZE);
 	}
 
 	switch (op_type) {
