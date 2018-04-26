@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d4e7f40e_d9deabf1",
+        "filename": "lib/event/app.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-26T05:13:21Z",
+      "side": 1,
+      "message": "this is OK but You can write just \"return -EINVAL\".",
+      "revId": "84fc6ead4279e25d05a0c46d152947ba4859b8f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
