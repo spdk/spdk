@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4ff60260_3982ca6e",
+        "filename": "lib/event/app.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-26T00:37:48Z",
+      "side": 1,
+      "message": "Freeing pci_addr_list in the caller of spdk_app_opts_add_pci_addr() may be better?\n\nspdk_app_opts_add_pci_addr(opts, list, bdf)\n{\n  tmp \u003d realloc(*list, (*tmp) * (i + 1));\n  if (tmp \u003d\u003d NULL)\n    return -ENOMEM;\n\n  *list \u003d tmp;\n  if (spdk_pci_addr_parse(*list + i, bdf) \u003c 0)\n    return -EINVAL;\n\n  opts-\u003enum_pci_addr++;\n  return 0;\n}\n\ncaller of spdk_app_opts_add_pci_addr()\n  rc \u003d spdk_app_opts_add_pci_addr(opts, \u0026opts-\u003epci_blacklist, bdf);\n  if (rc !\u003d 0)\n    free(opts-\u003epci_blacklist);",
+      "revId": "4a57eb57104434073a3fbe40d78be6e2bd7202f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0f17ae3_56d39c21",
+        "filename": "lib/event/app.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 401,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-26T00:37:48Z",
+      "side": 1,
+      "message": "this goto label may not be necessary if freeing either whitelist or blacklist and just return rc depending on the case.",
+      "revId": "4a57eb57104434073a3fbe40d78be6e2bd7202f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1691819a_c956fa10",
+        "filename": "lib/event/app.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-26T00:37:48Z",
+      "side": 1,
+      "message": "The following will be OK from line 430 to line 438  because env_opts is local variable and will be freed automatically and free(NULL) is allowed:\n\nfree(env_opts.pck_blacklist);\nfree(env_opts.pci_whitelist);",
+      "revId": "4a57eb57104434073a3fbe40d78be6e2bd7202f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a5b7888e_a64b7ea4",
+        "filename": "lib/event/app.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 770,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-26T00:37:48Z",
+      "side": 1,
+      "message": "The following may be better:\n\n  case \u0027B\u0027:\n    if (opts-\u003epci_whitelist) {\n      (snip)\n    }\n\n    rc \u003d spdk_app_opts_add_pci_addr(opts, \u0026opts-\u003epci_blacklist, optarg);\n    if (rc !\u003d 0) {\n      free(opts-\u003epci_blacklist);\n      rval \u003d SPDK_APP_PARSE_ARGS_FAIL;\n      goto parse_done;\n    }\n    break;",
+      "revId": "4a57eb57104434073a3fbe40d78be6e2bd7202f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
