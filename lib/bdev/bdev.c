@@ -2906,6 +2906,8 @@ _spdk_bdev_disable_qos_done(void *cb_arg)
 	qos->enabled = false;
 	_spdk_bdev_abort_queued_io(&qos->queued, qos->ch);
 	_spdk_bdev_channel_destroy(qos->ch);
+	free(qos->ch);
+	qos->ch = NULL;
 	qos->thread = NULL;
 	qos->max_ios_per_timeslice = 0;
 	qos->io_submitted_this_timeslice = 0;
