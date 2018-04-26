@@ -214,7 +214,8 @@ if __name__ == "__main__":
 
     p = subparsers.add_parser('set_bdev_qos_limit_iops', help='Set QoS IOPS limit on a blockdev')
     p.add_argument('name', help='Blockdev name to set QoS. Example: Malloc0')
-    p.add_argument('ios_per_sec', help='IOs per second limit (>=10000). Example: 20000', type=int)
+    p.add_argument('ios_per_sec',
+                   help='IOs per second limit (>=10000, example: 20000). 0 means unlimited.', type=int)
     p.set_defaults(func=set_bdev_qos_limit_iops)
 
     @call_cmd
