@@ -4223,10 +4223,48 @@ void spdk_bs_create_clone(struct spdk_blob_store *bs, spdk_blob_id blobid,
 /* END spdk_bs_create_clone */
 
 /* START spdk_blob_resize */
+struct spdk_bs_resize_ctx {
+	spdk_blob_op_complete cb_fn;
+	void *cb_arg;
+	struct spdk_blob *blob;
+	uint64_t sz;
+	int rc;
+};
+
+static void
+_spdk_bs_resize_unfreeze_cpl(void *cb_arg, int rc)
+{
+	struct spdk_bs_resize_ctx *ctx = (struct spdk_bs_resize_ctx *)cb_arg;
+
+	if (ctx->rc != 0) {
+		rc = ctx->rc;
+	}
+	ctx->cb_fn(ctx->cb_arg, rc);
+	free(ctx);
+}
+
+static void
+_spdk_bs_resize_freeze_cpl(void *cb_arg, int rc)
+{
+	struct spdk_bs_resize_ctx *ctx = (struct spdk_bs_resize_ctx *)cb_arg;
+
+	if (rc != 0) {
+		ctx->cb_fn(ctx->cb_arg, rc);
+		free(ctx);
+		return;
+	}
+
+	ctx->rc = _spdk_blob_resize(ctx->blob, ctx->sz);
+
+	_spdk_blob_unfreeze_io(ctx->blob, _spdk_bs_resize_unfreeze_cpl, ctx);
+
+}
+
+
 void
 spdk_blob_resize(struct spdk_blob *blob, uint64_t sz, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
-	int			rc;
+	struct spdk_bs_resize_ctx *ctx;
 
 	_spdk_blob_verify_md_op(blob);
 
@@ -4242,8 +4280,17 @@ spdk_blob_resize(struct spdk_blob *blob, uint64_t sz, spdk_blob_op_complete cb_f
 		return;
 	}
 
-	rc = _spdk_blob_resize(blob, sz);
-	cb_fn(cb_arg, rc);
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+	ctx->blob = blob;
+	ctx->sz = sz;
+	_spdk_blob_freeze_io(blob, _spdk_bs_resize_freeze_cpl, ctx);
 }
 
 /* END spdk_blob_resize */
