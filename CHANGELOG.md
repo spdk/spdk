@@ -1,3 +1,4 @@
+.
 # Changelog
 
 ## v18.04: (Upcoming Release)
