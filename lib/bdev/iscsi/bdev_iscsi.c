@@ -490,24 +490,6 @@ error_return:
 	return NULL;
 }
 
-static struct bdev_iscsi_conn_req *
-bdev_iscsi_allocate_conn_req(struct iscsi_context *context, char *bdev_name, struct iscsi_url *url)
-{
-	struct bdev_iscsi_conn_req *req;
-
-	req = calloc(1, sizeof(struct bdev_iscsi_conn_req));
-	if (!req) {
-		SPDK_ERRLOG("Cannot allocate pointer of struct bdev_iscsi_conn_req\n");
-		return NULL;
-	}
-
-	req->bdev_name = bdev_name;
-	req->url = url;
-	req->context = context;
-
-	return req;
-}
-
 static void
 _bdev_iscsi_set_module_init(void)
 {
@@ -596,13 +578,69 @@ iscsi_bdev_conn_poll(void *arg)
 }
 
 static int
+create_iscsi_disk(const char *bdev_name, const char *url, const char *initiator_iqn)
+{
+	struct bdev_iscsi_conn_req *req;
+	int rc;
+
+	if (!bdev_name || !url || !initiator_iqn || strlen(initiator_iqn) == 0) {
+		return -EINVAL;
+	}
+
+	req = calloc(1, sizeof(struct bdev_iscsi_conn_req));
+	if (!req) {
+		SPDK_ERRLOG("Cannot allocate pointer of struct bdev_iscsi_conn_req\n");
+		return -ENOMEM;
+	}
+
+	req->bdev_name = strdup(bdev_name);
+	req->context = iscsi_create_context(initiator_iqn);
+	if (!req->bdev_name || !req->context) {
+		SPDK_ERRLOG("Out of memory\n");
+		rc = -ENOMEM;
+		goto err;
+	}
+
+	req->url = iscsi_parse_full_url(req->context, url);
+	if (url == NULL) {
+		SPDK_ERRLOG("could not parse URL: %s\n", iscsi_get_error(req->context));
+		rc = -EINVAL;
+		goto err;
+	}
+
+	rc = iscsi_set_session_type(req->context, ISCSI_SESSION_NORMAL);
+	rc = rc ? rc : iscsi_set_header_digest(req->context, ISCSI_HEADER_DIGEST_NONE);
+	rc = rc ? rc : iscsi_full_connect_async(req->context, req->url->portal, req->url->lun,
+						iscsi_connect_cb, req);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to connect provided URL=%s: %s\n", url, iscsi_get_error(req->context));
+		goto err;
+	}
+
+	TAILQ_INSERT_TAIL(&g_iscsi_conn_req, req, link);
+	return 0;
+
+err:
+	/* iscsi_destroy_url() is not NULL-proof */
+	if (req->url) {
+		iscsi_destroy_url(req->url);
+	}
+
+	if (req->context) {
+		iscsi_destroy_context(req->context);
+	}
+
+	free(req->bdev_name);
+	free(req);
+	return rc;
+}
+
+static int
 bdev_iscsi_initialize(void)
 {
 	struct spdk_conf_section *sp;
-	struct iscsi_context *context;
-	struct iscsi_url *url;
-	char *val, *bdev_name, *initiator_iqn;
-	struct bdev_iscsi_conn_req *req;
+
+	const char *url, *bdev_name, *initiator_iqn;
 	int i, rc;
 
 	sp = spdk_conf_find_section(NULL, "iSCSI_Initiator");
@@ -616,54 +654,30 @@ bdev_iscsi_initialize(void)
 		initiator_iqn = DEFAULT_INITIATOR_NAME;
 	}
 
-	i = 0;
-	while (true) {
-		val = spdk_conf_section_get_nmval(sp, "URL", i, 0);
-		if (val == NULL) {
-			break;
-		}
-
+	rc = 0;
+	for (i = 0; (url = spdk_conf_section_get_nmval(sp, "URL", i, 0)) != NULL; i++) {
 		bdev_name = spdk_conf_section_get_nmval(sp, "URL", i, 1);
 		if (bdev_name == NULL) {
-			SPDK_ERRLOG("no bdev name specified for URL %s\n", val);
+			SPDK_ERRLOG("no bdev name specified for URL %s\n", url);
+			rc = -EINVAL;
 			break;
 		}
 
-		context = iscsi_create_context(initiator_iqn);
-		if (context == NULL) {
-			SPDK_ERRLOG("could not create iscsi context\n");
+		rc = create_iscsi_disk(bdev_name, url, initiator_iqn);
+		if (rc) {
 			break;
 		}
-
-		url = iscsi_parse_full_url(context, val);
-		if (url == NULL) {
-			SPDK_ERRLOG("could not parse URL\n");
-			break;
-		}
-
-		req = bdev_iscsi_allocate_conn_req(context, bdev_name, url);
-		if (!req) {
-			_bdev_iscsi_set_module_init();
-			return -1;
-		}
-
-		iscsi_set_session_type(context, ISCSI_SESSION_NORMAL);
-		iscsi_set_header_digest(context, ISCSI_HEADER_DIGEST_NONE);
-		rc = iscsi_full_connect_async(context, url->portal, url->lun, iscsi_connect_cb, req);
-		if (rc < 0) {
-			free(req);
-			SPDK_ERRLOG("Failed to connect provided URL=%s, will ignore it\n", val);
-			continue;
-		}
-
-		TAILQ_INSERT_TAIL(&g_iscsi_conn_req, req, link);
-		i++;
 	}
 
 	if (!TAILQ_EMPTY(&g_iscsi_conn_req)) {
 		g_conn_poller = spdk_poller_register(iscsi_bdev_conn_poll, NULL, 0);
 	}
-	return 0;
+
+	if (rc) {
+		bdev_iscsi_set_module_init();
+	}
+
+	return rc;
 }
 
 SPDK_LOG_REGISTER_COMPONENT("iscsi_init", SPDK_LOG_ISCSI_INIT)
