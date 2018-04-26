@@ -1,0 +1,234 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3c4b6183_0610b807",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 639,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-26T14:21:43Z",
+      "side": 1,
+      "message": "Values here might seem quite random. Maybe add variable for number of pages, then num_of_pages * SPDK_BS_PAGE_SIZE?",
+      "range": {
+        "startLine": 639,
+        "startChar": 22,
+        "endLine": 639,
+        "endChar": 31
+      },
+      "revId": "b4d9519a9022dd6474e40cd4bd5028c07b007651",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "349e01f0_611fcacb",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 662,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-26T14:21:43Z",
+      "side": 1,
+      "message": "Can this test be performed on thin_provisioned blob ?",
+      "range": {
+        "startLine": 662,
+        "startChar": 1,
+        "endLine": 662,
+        "endChar": 68
+      },
+      "revId": "b4d9519a9022dd6474e40cd4bd5028c07b007651",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "54f6f998_b4cb6200",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 687,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-26T14:21:43Z",
+      "side": 1,
+      "message": "I\u0027m not a fan of creating dependency in UT on internal call structure, yet unsure of better way to address this.\nEven smallest change to the tests requires thorough look all the callbacks.\n\nSmall nit, _bs_flush_scheduler() could take argument for number of flushes to perform.",
+      "range": {
+        "startLine": 684,
+        "startChar": 0,
+        "endLine": 687,
+        "endChar": 58
+      },
+      "revId": "b4d9519a9022dd6474e40cd4bd5028c07b007651",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5c2f417_9b45bd6f",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 693,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-26T14:21:43Z",
+      "side": 1,
+      "message": "This offset is for specific reason set to 4 ? Instead of 0?",
+      "range": {
+        "startLine": 693,
+        "startChar": 50,
+        "endLine": 693,
+        "endChar": 51
+      },
+      "revId": "b4d9519a9022dd6474e40cd4bd5028c07b007651",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9fe1504e_9e249f2f",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 693,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-26T14:21:43Z",
+      "side": 1,
+      "message": "num_of_pages",
+      "range": {
+        "startLine": 693,
+        "startChar": 53,
+        "endLine": 693,
+        "endChar": 55
+      },
+      "revId": "b4d9519a9022dd6474e40cd4bd5028c07b007651",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36fa31e6_d3304f04",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 708,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-26T14:21:43Z",
+      "side": 1,
+      "message": "Same as above, why not 0 ?",
+      "range": {
+        "startLine": 708,
+        "startChar": 48,
+        "endLine": 708,
+        "endChar": 49
+      },
+      "revId": "b4d9519a9022dd6474e40cd4bd5028c07b007651",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79077296_b25b7425",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 708,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-26T14:21:43Z",
+      "side": 1,
+      "message": "num_of_pages",
+      "range": {
+        "startLine": 708,
+        "startChar": 51,
+        "endLine": 708,
+        "endChar": 53
+      },
+      "revId": "b4d9519a9022dd6474e40cd4bd5028c07b007651",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0363c71_cf1d4a6f",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 710,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-26T14:21:43Z",
+      "side": 1,
+      "message": "SPDK_BS_PAGE_SIZE",
+      "range": {
+        "startLine": 710,
+        "startChar": 51,
+        "endLine": 710,
+        "endChar": 55
+      },
+      "revId": "b4d9519a9022dd6474e40cd4bd5028c07b007651",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0727fda9_8119aef4",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 710,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-26T14:21:43Z",
+      "side": 1,
+      "message": "num_of_pages should be used. In this version of patch, only 4 out of 10 pages are compared.",
+      "range": {
+        "startLine": 710,
+        "startChar": 47,
+        "endLine": 710,
+        "endChar": 48
+      },
+      "revId": "b4d9519a9022dd6474e40cd4bd5028c07b007651",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69465913_da3b6d5e",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-04-26T14:21:43Z",
+      "side": 1,
+      "message": "Maybe instead of changing all the calls for read/write in file below. The scheduling could be done in this callback ? All of calls below go through this one.",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 67,
+        "endChar": 54
+      },
+      "revId": "b4d9519a9022dd6474e40cd4bd5028c07b007651",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
