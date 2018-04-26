@@ -22,6 +22,30 @@
       "revId": "098abcf8d471b63908765056d54f6161507c1f99",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8de06396_a5162b49",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-26T21:08:22Z",
+      "side": 1,
+      "message": "Sure, I will update it - I thought only vhost-blk was affected, but if it\u0027s both, I will change it to that.",
+      "parentUuid": "570fe710_835d0dc8",
+      "range": {
+        "startLine": 12,
+        "startChar": 38,
+        "endLine": 12,
+        "endChar": 47
+      },
+      "revId": "098abcf8d471b63908765056d54f6161507c1f99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
