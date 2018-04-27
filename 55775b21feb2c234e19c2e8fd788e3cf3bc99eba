@@ -33,6 +33,24 @@
       "revId": "55775b21feb2c234e19c2e8fd788e3cf3bc99eba",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "037c7e72_844a6a4a",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1014195
+      },
+      "writtenOn": "2018-04-27T02:30:44Z",
+      "side": 1,
+      "message": "Test filesystem.sh on S2600wf with CentOS, script will choose onboard \"i40iw\" ip install of mlx5/4 ip. filesystem.sh test with \"i40iw\" reported \"Work Request Flushed Error\". I loaded i40iw modules,error also occur. So we need filter \"i40iw\" in /sys/class/infiniband .",
+      "parentUuid": "79be9f73_225e8bca",
+      "revId": "55775b21feb2c234e19c2e8fd788e3cf3bc99eba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
