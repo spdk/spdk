@@ -1043,6 +1043,110 @@ enomem_multi_bdev(void)
 	teardown_test();
 }
 
+static void
+qos_dynamic_enable_done(void *cb_arg, int status)
+{
+	int *rc = cb_arg;
+	*rc = status;
+}
+
+static void
+qos_dynamic_enable(void)
+{
+	struct spdk_io_channel *io_ch[2];
+	struct spdk_bdev_channel *bdev_ch[2];
+	struct spdk_bdev *bdev;
+	int status, second_status;
+
+	setup_test();
+	reset_time();
+
+	bdev = &g_bdev.bdev;
+
+	g_get_io_channel = true;
+
+	/* Create channels */
+	set_thread(0);
+	io_ch[0] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[0] = spdk_io_channel_get_ctx(io_ch[0]);
+	CU_ASSERT(bdev_ch[0]->flags == 0);
+
+	set_thread(1);
+	io_ch[1] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[1] = spdk_io_channel_get_ctx(io_ch[1]);
+	CU_ASSERT(bdev_ch[1]->flags == 0);
+
+	set_thread(0);
+
+	/* Enable QoS */
+	status = -1;
+	spdk_bdev_set_qos_limit_iops(bdev, 10000, qos_dynamic_enable_done, &status);
+	poll_threads();
+	CU_ASSERT(status == 0);
+	CU_ASSERT((bdev_ch[0]->flags & BDEV_CH_QOS_ENABLED) != 0);
+	CU_ASSERT((bdev_ch[1]->flags & BDEV_CH_QOS_ENABLED) != 0);
+
+	/* Disable QoS */
+	status = -1;
+	spdk_bdev_set_qos_limit_iops(bdev, 0, qos_dynamic_enable_done, &status);
+	poll_threads();
+	CU_ASSERT(status == 0);
+	CU_ASSERT((bdev_ch[0]->flags & BDEV_CH_QOS_ENABLED) == 0);
+	CU_ASSERT((bdev_ch[1]->flags & BDEV_CH_QOS_ENABLED) == 0);
+
+	/* Disable QoS again */
+	status = -1;
+	spdk_bdev_set_qos_limit_iops(bdev, 0, qos_dynamic_enable_done, &status);
+	poll_threads();
+	CU_ASSERT(status == 0); /* This should succeed */
+	CU_ASSERT((bdev_ch[0]->flags & BDEV_CH_QOS_ENABLED) == 0);
+	CU_ASSERT((bdev_ch[1]->flags & BDEV_CH_QOS_ENABLED) == 0);
+
+	/* Enable QoS on thread 0 */
+	status = -1;
+	spdk_bdev_set_qos_limit_iops(bdev, 10000, qos_dynamic_enable_done, &status);
+	poll_threads();
+	CU_ASSERT(status == 0);
+	CU_ASSERT((bdev_ch[0]->flags & BDEV_CH_QOS_ENABLED) != 0);
+	CU_ASSERT((bdev_ch[1]->flags & BDEV_CH_QOS_ENABLED) != 0);
+
+	/* Disable QoS on thread 1 */
+	set_thread(1);
+	status = -1;
+	spdk_bdev_set_qos_limit_iops(bdev, 0, qos_dynamic_enable_done, &status);
+	/* Don't poll yet. This should leave the channels with QoS enabled */
+	CU_ASSERT(status == -1);
+	CU_ASSERT((bdev_ch[0]->flags & BDEV_CH_QOS_ENABLED) != 0);
+	CU_ASSERT((bdev_ch[1]->flags & BDEV_CH_QOS_ENABLED) != 0);
+
+	/* Enable QoS. This should immediately fail because the previous disable QoS hasn't completed. */
+	second_status = 0;
+	spdk_bdev_set_qos_limit_iops(bdev, 10000, qos_dynamic_enable_done, &second_status);
+	poll_threads();
+	CU_ASSERT(status == 0); /* The disable should succeed */
+	CU_ASSERT(second_status < 0); /* The enable should fail */
+	CU_ASSERT((bdev_ch[0]->flags & BDEV_CH_QOS_ENABLED) == 0);
+	CU_ASSERT((bdev_ch[1]->flags & BDEV_CH_QOS_ENABLED) == 0);
+
+	/* Enable QoS on thread 1. This should succeed now that the disable has completed. */
+	status = -1;
+	spdk_bdev_set_qos_limit_iops(bdev, 10000, qos_dynamic_enable_done, &status);
+	poll_threads();
+	CU_ASSERT(status == 0);
+	CU_ASSERT((bdev_ch[0]->flags & BDEV_CH_QOS_ENABLED) != 0);
+	CU_ASSERT((bdev_ch[1]->flags & BDEV_CH_QOS_ENABLED) != 0);
+
+	/* Tear down the channels */
+	set_thread(0);
+	spdk_put_io_channel(io_ch[0]);
+	set_thread(1);
+	spdk_put_io_channel(io_ch[1]);
+	poll_threads();
+
+	set_thread(0);
+	teardown_test();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1069,7 +1173,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "io_during_qos_queue", io_during_qos_queue) == NULL ||
 		CU_add_test(suite, "io_during_qos_reset", io_during_qos_reset) == NULL ||
 		CU_add_test(suite, "enomem", enomem) == NULL ||
-		CU_add_test(suite, "enomem_multi_bdev", enomem_multi_bdev) == NULL
+		CU_add_test(suite, "enomem_multi_bdev", enomem_multi_bdev) == NULL ||
+		CU_add_test(suite, "qos_dynamic_enable", qos_dynamic_enable) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
