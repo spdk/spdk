@@ -25,6 +25,40 @@
     },
     {
       "key": {
+        "uuid": "9ee6ce12_a2a172ae",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-27T16:06:06Z",
+      "side": 1,
+      "message": "spdk_json_value::len is a uint32_t, so the counter i should also be of this type.",
+      "revId": "e8bf588880e9e2e8f46c88ba1cdd38f01503a547",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "579d64f2_184878b7",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-27T16:06:06Z",
+      "side": 1,
+      "message": "This should send an error response like the other failure paths.",
+      "revId": "e8bf588880e9e2e8f46c88ba1cdd38f01503a547",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2f8969fd_7ee050e3",
         "filename": "lib/jsonrpc/jsonrpc_server.c",
         "patchSetId": 1
@@ -42,6 +76,64 @@
         "endLine": 283,
         "endChar": 2
       },
+      "revId": "e8bf588880e9e2e8f46c88ba1cdd38f01503a547",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ad4c13d8_9ce346db",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 283,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-27T16:06:06Z",
+      "side": 1,
+      "message": "In addition to Pawel\u0027s notes, we need to consider that each request may be asynchronous, and all of the RPC handlers assume they have exclusive ownership of the spdk_json_write_ctx; they can complete in a different order than the original requests, and may even complete the request from a different thread than the JSON-RPC server poller - this is the reason for the queue_lock and send_queue in spdk_jsonrpc_server_send_response().\n\nIt might be enough to take the queue_lock here around the begin_batch_response modifications, but I\u0027m not sure this is sufficient.",
+      "parentUuid": "2f8969fd_7ee050e3",
+      "range": {
+        "startLine": 278,
+        "startChar": 1,
+        "endLine": 283,
+        "endChar": 2
+      },
+      "revId": "e8bf588880e9e2e8f46c88ba1cdd38f01503a547",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "580e608a_ca8b0a4a",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 300,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-27T16:06:06Z",
+      "side": 1,
+      "message": "These conn manipulations also need to be under queue_lock (or moved to the JSON-RPC poller thread somehow).",
+      "revId": "e8bf588880e9e2e8f46c88ba1cdd38f01503a547",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38231652_4b81c4a6",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-27T16:06:06Z",
+      "side": 1,
+      "message": "Please use C-style comments.",
       "revId": "e8bf588880e9e2e8f46c88ba1cdd38f01503a547",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
