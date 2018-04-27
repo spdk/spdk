@@ -12,6 +12,7 @@ from . import nvmf
 from . import pmem
 from . import subsystem
 from . import vhost
+from . import ioat_copy
 
 
 def start_subsystems_init(client):
