@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "46288e65_509017cd",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-04-27T16:25:58Z",
+      "side": 1,
+      "message": "Also please tweak the commit message to match the usual style: https://chris.beams.io/posts/git-commit/#seven-rules\n\nThe first line (subject) should be separated from the body with a blank line, and it should start with the component, something like: \"jsonrpc: add support for batch requests\"",
+      "revId": "e8bf588880e9e2e8f46c88ba1cdd38f01503a547",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e4a0db26_3cc4d30f",
         "filename": "lib/jsonrpc/jsonrpc_internal.h",
         "patchSetId": 1
