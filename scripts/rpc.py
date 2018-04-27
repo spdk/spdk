@@ -1050,6 +1050,14 @@ if __name__ == "__main__":
     p.add_argument('name', help='Name for the bdev')
     p.set_defaults(func=construct_virtio_pci_blk_bdev)
 
+    # ioat_copy
+    @call_cmd
+    def get_ioat_copy_engines(args):
+        print_dict(rpc.ioat_copy.get_ioat_copy_engines(args.client))
+
+    p = subparsers.add_parser('get_ioat_copy_engines', help='Display state of IOATs for copy engine.')
+    p.set_defaults(func=get_ioat_copy_engines)
+
     args = parser.parse_args()
 
     try:
