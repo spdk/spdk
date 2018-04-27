@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "744d57a3_04251f65",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 4176,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-04-27T20:17:17Z",
+      "side": 1,
+      "message": "There are a number of race conditions that need to be handled (even assuming that this is only called from the metadata thread).\n\nThis loop confirms that there are enough clusters to inflate the blob right now, but the clusters are not claimed right up front. They\u0027re lazily claimed as the inflation happens (mostly because the inflation is a 0 length write to re-use code). That means that some time between when this check occurs and when the inflation for a cluster is actually triggered, there could be no free clusters remaining.",
+      "revId": "45b26eec083cb13ce0b41e573aa90bab218a4b5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
