@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "67b23979_0986574b",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 478,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-27T12:43:33Z",
+      "side": 1,
+      "message": "Ohh, OK.",
+      "parentUuid": "defd2185_dbf5b359",
+      "range": {
+        "startLine": 477,
+        "startChar": 0,
+        "endLine": 478,
+        "endChar": 35
+      },
+      "revId": "fa4c0361faa5a63052aeb6e896d43b4964152a4e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "34d1af08_c5298850",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 5
@@ -101,6 +125,30 @@
       "side": 1,
       "message": "\u003e Why spdk_vhost_scsi_task can\u0027t have pointer to the spdk_vhost_scsi_dev?\n\nIt\u0027s just more handy to store vhost_dev pointers. You need spdk_vhost_dev for the most I/O operations as it is passed to all virtio.c APIs. vhost_scsi_dev won\u0027t hold anything but scsi device status and poller references.\n\n\u003e Also to_scsi_dev() introduce usless checks here.\n\nThat\u0027s right. I\u0027m adding to_scsi_dev_unsafe() for this purpose later on:\nhttps://review.gerrithub.io/c/spdk/spdk/+/405891/11/lib/vhost/vhost_scsi.c",
       "parentUuid": "7028164e_72c55b96",
+      "range": {
+        "startLine": 285,
+        "startChar": 0,
+        "endLine": 286,
+        "endChar": 55
+      },
+      "revId": "fa4c0361faa5a63052aeb6e896d43b4964152a4e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d187c07_b2162f77",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-27T12:43:33Z",
+      "side": 1,
+      "message": "I am asking why type of spdk_vhost_scsi_task::vdev is spdk_vhost_tgt? Why just make it spdk_vhost_scsi_dev?\n\nI now see you changed the whole logic here. vdev_worker now receive generic vhost device pointer. But why? Now you need explicit upcast that could be avoid if you use spdk_vhost_scsi_dev as it was up to now. Maybe there is good reason for that but can\u0027t see it. This is why I aske for squashing this with one of the next patches.",
+      "parentUuid": "6b5ffcf0_f7e28b63",
       "range": {
         "startLine": 285,
         "startChar": 0,
