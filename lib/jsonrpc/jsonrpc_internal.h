@@ -80,6 +80,8 @@ struct spdk_jsonrpc_server_conn {
 	STAILQ_HEAD(, spdk_jsonrpc_request) send_queue;
 
 	struct spdk_jsonrpc_request *send_request;
+	int begin_batch_response;
+	int batch_request_count;
 };
 
 struct spdk_jsonrpc_server {
