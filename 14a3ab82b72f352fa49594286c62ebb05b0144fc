@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fcef87c0_a838596c",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-27T08:55:45Z",
+      "side": 1,
+      "message": "sectors_per_stripe ?",
+      "range": {
+        "startLine": 52,
+        "startChar": 5,
+        "endLine": 52,
+        "endChar": 21
+      },
+      "revId": "14a3ab82b72f352fa49594286c62ebb05b0144fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e0af3a7_1f115442",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 513,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-27T08:55:45Z",
+      "side": 1,
+      "message": "This introduce additional check but it is very very unlikely that IO will be invalid. So I would move this under if () { } else { }.",
+      "range": {
+        "startLine": 511,
+        "startChar": 0,
+        "endLine": 513,
+        "endChar": 2
+      },
+      "revId": "14a3ab82b72f352fa49594286c62ebb05b0144fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
