@@ -16,6 +16,93 @@
       "revId": "cfbfaf8bb50d2e2d664c1dccd17b771146c8ff6f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88a28e8b_01d60849",
+        "filename": "scripts/rpc/subsystem.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-27T11:58:54Z",
+      "side": 1,
+      "message": "Hi Shuhei\nWe need information from bdev_config, because some bdevs store its information in base bdev instead dump configuration to JSON (like lvol). Calling delete_bdev will remove lvol irreversibly. So by looking into bdev_config we know which bdevs provide construct method so they might be safly removed here.",
+      "parentUuid": "1fd83393_ba3b72b6",
+      "revId": "cfbfaf8bb50d2e2d664c1dccd17b771146c8ff6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec01a72b_2114aeb1",
+        "filename": "scripts/rpc/subsystem.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-27T11:58:54Z",
+      "side": 1,
+      "message": "pls just use bdev_config.",
+      "range": {
+        "startLine": 20,
+        "startChar": 3,
+        "endLine": 20,
+        "endChar": 45
+      },
+      "revId": "cfbfaf8bb50d2e2d664c1dccd17b771146c8ff6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6117de86_519d230b",
+        "filename": "scripts/rpc/subsystem.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-27T11:58:54Z",
+      "side": 1,
+      "message": "Can you make dictionary that map \u0027construct_pmem_bdev\u0027 to corresponding destruct/delete call?",
+      "range": {
+        "startLine": 23,
+        "startChar": 7,
+        "endLine": 42,
+        "endChar": 64
+      },
+      "revId": "cfbfaf8bb50d2e2d664c1dccd17b771146c8ff6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "40a2c1c8_694c8807",
+        "filename": "scripts/rpc/subsystem.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-27T11:58:54Z",
+      "side": 1,
+      "message": "Moving each clear_*_subsystem to proper file would be more natural.",
+      "range": {
+        "startLine": 45,
+        "startChar": 4,
+        "endLine": 45,
+        "endChar": 23
+      },
+      "revId": "cfbfaf8bb50d2e2d664c1dccd17b771146c8ff6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
