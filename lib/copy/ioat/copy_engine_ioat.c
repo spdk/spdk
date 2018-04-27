@@ -31,6 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "copy_engine_ioat.h"
+
 #include "spdk/stdinc.h"
 
 #include "spdk_internal/copy_engine.h"
@@ -41,6 +43,7 @@
 #include "spdk/event.h"
 #include "spdk/io_channel.h"
 #include "spdk/ioat.h"
+#include "spdk/json.h"
 
 #define IOAT_MAX_CHANNELS		64
 
@@ -62,6 +65,8 @@ struct ioat_device {
 
 static TAILQ_HEAD(, ioat_device) g_devices = TAILQ_HEAD_INITIALIZER(g_devices);
 static pthread_mutex_t g_ioat_mutex = PTHREAD_MUTEX_INITIALIZER;
+static uint32_t g_num_devices = 0;
+static uint32_t g_num_alloc_devices = 0;
 
 struct ioat_io_channel {
 	struct spdk_ioat_chan	*ioat_ch;
@@ -93,6 +98,7 @@ ioat_allocate_device(void)
 	TAILQ_FOREACH(dev, &g_devices, tailq) {
 		if (!dev->is_allocated) {
 			dev->is_allocated = true;
+			g_num_alloc_devices++;
 			pthread_mutex_unlock(&g_ioat_mutex);
 			return dev;
 		}
@@ -107,6 +113,7 @@ ioat_free_device(struct ioat_device *dev)
 {
 	pthread_mutex_lock(&g_ioat_mutex);
 	dev->is_allocated = false;
+	g_num_alloc_devices--;
 	pthread_mutex_unlock(&g_ioat_mutex);
 }
 
@@ -139,6 +146,7 @@ copy_engine_ioat_exit(void *ctx)
 		spdk_ioat_detach(dev->ioat);
 		ioat_free_device(dev);
 		spdk_dma_free(dev);
+		g_num_devices--;
 	}
 	spdk_copy_engine_module_finish();
 }
@@ -276,6 +284,7 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_ioat_chan *
 
 	dev->ioat = ioat;
 	TAILQ_INSERT_TAIL(&g_devices, dev, tailq);
+	g_num_devices++;
 }
 
 static int
@@ -348,6 +357,21 @@ copy_engine_ioat_config_text(FILE *fp)
 		dev = &g_probe_ctx.whitelist[i];
 		fprintf(fp, COPY_ENGINE_IOAT_WHITELIST_TMPL,
 			dev->domain, dev->bus, dev->dev, dev->func);
+	}
+}
+
+void
+copy_engine_ioat_dump_json_info(struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_name(w, "enumerate");
+	spdk_json_write_bool(w, !g_ioat_disable);
+
+	if (!g_ioat_disable) {
+		spdk_json_write_name(w, "num_ioats");
+		spdk_json_write_uint32(w, g_num_devices);
+
+		spdk_json_write_name(w, "num_alloc_ioats");
+		spdk_json_write_uint32(w, g_num_alloc_devices);
 	}
 }
 
