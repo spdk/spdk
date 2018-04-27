@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e4a0db26_3cc4d30f",
+        "filename": "lib/jsonrpc/jsonrpc_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-27T15:24:57Z",
+      "side": 1,
+      "message": "I think putting batch request info here is not a way to go here. I think you need to add another list in spdk_json_request something like:\n\nSTAILQ_HEAD(, spdk_jsonrpc_request) batch_queue;\nSTAILQ_ENTRY(spdk_jsonrpc_request) batch_link;\n\nand put all sub-requests there. There will be required some atomic counter there to see how many batch sub-requests are  still in progress when calling end_response().",
+      "range": {
+        "startLine": 83,
+        "startChar": 0,
+        "endLine": 84,
+        "endChar": 25
+      },
+      "revId": "e8bf588880e9e2e8f46c88ba1cdd38f01503a547",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2f8969fd_7ee050e3",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 283,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-27T15:24:57Z",
+      "side": 1,
+      "message": "This is not so easy as it look like. There might be many many simultanouse requests. request-\u003econn should not be touched here as this might happen from any many threads concurently. I think this is main reason why batch requests are not implemented yet.",
+      "range": {
+        "startLine": 278,
+        "startChar": 1,
+        "endLine": 283,
+        "endChar": 2
+      },
+      "revId": "e8bf588880e9e2e8f46c88ba1cdd38f01503a547",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
