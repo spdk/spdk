@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d1372630_bad332b8",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1213,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-04-27T04:36:21Z",
+      "side": 1,
+      "message": "cdata is not used anymore, so variable cdata should be remove as well.",
+      "revId": "885651f926d199f71307bd7178c011b154ad5390",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
