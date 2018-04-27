@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "354c9983_f37b8992",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-27T12:05:15Z",
+      "side": 1,
+      "message": "Why this function is needed?",
+      "range": {
+        "startLine": 18,
+        "startChar": 9,
+        "endLine": 18,
+        "endChar": 18
+      },
+      "revId": "6a47c1b7a418f5bae121e40a0f3f0d0d09486a2b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16f40212_1155c311",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-27T12:05:15Z",
+      "side": 1,
+      "message": "RPC for splits are merged",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 71,
+        "endChar": 13
+      },
+      "revId": "6a47c1b7a418f5bae121e40a0f3f0d0d09486a2b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "893248fc_a8160bc5",
+        "filename": "test/json_config/vhost.conf.base",
+        "patchSetId": 16
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-27T12:05:15Z",
+      "side": 1,
+      "message": "You could wait for Shuhei patches and rebase. So this file won\u0027t be needed.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 19
+      },
+      "revId": "6a47c1b7a418f5bae121e40a0f3f0d0d09486a2b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
