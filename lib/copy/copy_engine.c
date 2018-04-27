@@ -136,6 +136,7 @@ mem_copy_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fill,
 static struct spdk_io_channel *mem_get_io_channel(void);
 
 static struct spdk_copy_engine memcpy_copy_engine = {
+	.name		= "memcpy",
 	.copy		= mem_copy_submit,
 	.fill		= mem_copy_fill,
 	.get_io_channel	= mem_get_io_channel,
