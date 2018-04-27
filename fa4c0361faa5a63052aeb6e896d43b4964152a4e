@@ -158,6 +158,30 @@
       "revId": "fa4c0361faa5a63052aeb6e896d43b4964152a4e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c0c62e3_6fd96ca9",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-04-27T13:51:30Z",
+      "side": 1,
+      "message": "\u003e why type of spdk_vhost_scsi_task::vdev is spdk_vhost_tgt?\n\nDid you mean spdk_vhost_dev?\n\nLet\u0027s assume spdk_vhost_scsi_task has a svdev pointer of type spdk_vhost_scsi_dev.\nNow if you want to call any of the following functions you need to manually convert it to spdk_vhost_dev:\n\n```\nspdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, ...);\nspdk_vhost_vq_used_signal(struct spdk_vhost_dev *vdev, ...);\nspdk_vhost_dev_used_signal(struct spdk_vhost_dev *vdev);\nspdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, ...);\nspdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, ...);\netc\n```\n\n\u003e Now you need explicit upcast [...]\n\nConverting svdev to vdev is just as complex as converting vdev to svdev. There\u0027s no direct inheritance between those. No direct upcasting and downcasting. see here:\nhttps://review.gerrithub.io/c/spdk/spdk/+/405891/11/lib/vhost/vhost_internal.h#268\n\nWe can keep either vdev or svdev pointer in scsi_task, but vdev is more widely used and that\u0027s why I picked it.",
+      "parentUuid": "7d187c07_b2162f77",
+      "range": {
+        "startLine": 285,
+        "startChar": 0,
+        "endLine": 286,
+        "endChar": 55
+      },
+      "revId": "fa4c0361faa5a63052aeb6e896d43b4964152a4e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
