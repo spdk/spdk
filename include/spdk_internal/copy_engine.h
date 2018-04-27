@@ -45,6 +45,7 @@ struct spdk_copy_task {
 };
 
 struct spdk_copy_engine {
+	const char *name;
 	int	(*copy)(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src,
 			uint64_t nbytes, spdk_copy_completion_cb cb);
 	int	(*fill)(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fill,
