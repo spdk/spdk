@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6fd8b09f_836b33f5",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 3957,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-27T13:39:03Z",
+      "side": 1,
+      "message": "Comment states that you write every second cluster, but you actually write clusters 1,2,3 and 4. Should this be \u0027i +\u003d 2\u0027?",
+      "range": {
+        "startLine": 3957,
+        "startChar": 20,
+        "endLine": 3957,
+        "endChar": 23
+      },
+      "revId": "5f8d71558c7982e8c851d3932b8fe00d57bf5eb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7909f722_e07ab0a0",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-27T13:39:03Z",
+      "side": 1,
+      "message": "Unrelated change.",
+      "revId": "5f8d71558c7982e8c851d3932b8fe00d57bf5eb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
