@@ -1,0 +1,193 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ec0f8411_9a5f41bc",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-27T08:35:55Z",
+      "side": 1,
+      "message": "I don\u0027t see call to pthread_spin_destroy() also pls use PTHREAD_PROCESS_PRIVATE instead 0",
+      "range": {
+        "startLine": 189,
+        "startChar": 1,
+        "endLine": 189,
+        "endChar": 18
+      },
+      "revId": "0cc1c2ee00c99410604050e93d688ef0d83ace34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ed5ac6a_f65ca260",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-27T08:35:55Z",
+      "side": 1,
+      "message": "pls add new line",
+      "range": {
+        "startLine": 257,
+        "startChar": 2,
+        "endLine": 258,
+        "endChar": 1
+      },
+      "revId": "0cc1c2ee00c99410604050e93d688ef0d83ace34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d7504a3_b15f5006",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-27T08:35:55Z",
+      "side": 1,
+      "message": "-EBUSY or -EAGAIN?",
+      "range": {
+        "startLine": 265,
+        "startChar": 17,
+        "endLine": 265,
+        "endChar": 23
+      },
+      "revId": "0cc1c2ee00c99410604050e93d688ef0d83ace34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fb908434_c8f4e639",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 283,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-27T08:35:55Z",
+      "side": 1,
+      "message": "You should not execute spdk_bs_user_op_execute under lock, just copy all needed tasks to temporal quque.\n\nAlso request should be executed on the same thread on which it was created. So I propose you iterate over this queue in spdk_for_each_thread() and check which task belong to current thread.",
+      "range": {
+        "startLine": 283,
+        "startChar": 2,
+        "endLine": 283,
+        "endChar": 30
+      },
+      "revId": "0cc1c2ee00c99410604050e93d688ef0d83ace34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b6e82400_2c159245",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 302,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-27T08:35:55Z",
+      "side": 1,
+      "message": "pls add new line",
+      "range": {
+        "startLine": 301,
+        "startChar": 2,
+        "endLine": 302,
+        "endChar": 1
+      },
+      "revId": "0cc1c2ee00c99410604050e93d688ef0d83ace34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2dee4104_6209696c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-27T08:35:55Z",
+      "side": 1,
+      "message": "New line.",
+      "revId": "0cc1c2ee00c99410604050e93d688ef0d83ace34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bba55cb5_aff7bbbb",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1771,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-27T08:35:55Z",
+      "side": 1,
+      "message": "pls add new line",
+      "range": {
+        "startLine": 1770,
+        "startChar": 3,
+        "endLine": 1771,
+        "endChar": 2
+      },
+      "revId": "0cc1c2ee00c99410604050e93d688ef0d83ace34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e62af7aa_271f7dba",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 3745,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-27T08:35:55Z",
+      "side": 1,
+      "message": "new line",
+      "revId": "0cc1c2ee00c99410604050e93d688ef0d83ace34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6349c60d_a7bce02a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 3834,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-27T08:35:55Z",
+      "side": 1,
+      "message": "new line",
+      "revId": "0cc1c2ee00c99410604050e93d688ef0d83ace34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
