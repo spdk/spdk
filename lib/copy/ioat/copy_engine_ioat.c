@@ -206,6 +206,7 @@ ioat_poll(void *arg)
 static struct spdk_io_channel *ioat_get_io_channel(void);
 
 static struct spdk_copy_engine ioat_copy_engine = {
+	.name		= "ioat",
 	.copy		= ioat_copy_submit,
 	.fill		= ioat_copy_submit_fill,
 	.get_io_channel	= ioat_get_io_channel,
