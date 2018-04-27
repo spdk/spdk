@@ -1212,8 +1212,12 @@ _nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
 	config.bits.crit_warn.bits.volatile_memory_backup = 1;
 
 	if (cdata->ver.raw >= SPDK_NVME_VERSION(1, 2, 0)) {
-		config.bits.ns_attr_notice = 1;
-		config.bits.fw_activation_notice = 1;
+		if (ctrlr->cdata.oaes.ns_attribute_notices) {
+			config.bits.ns_attr_notice = 1;
+		}
+		if (ctrlr->cdata.oaes.fw_activation_notices) {
+			config.bits.fw_activation_notice = 1;
+		}
 	}
 	if (cdata->ver.raw >= SPDK_NVME_VERSION(1, 3, 0) && cdata->lpa.telemetry) {
 		config.bits.telemetry_log_notice = 1;
