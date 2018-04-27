@@ -1,5 +1,7 @@
 # Changelog
 
+## v18.07: (Upcoming Release)
+
 ## v18.04: Logical Volume Snapshot/Clone, iSCSI Initiator, Bdev QoS, VPP Userspace TCP/IP
 
 ### vhost
