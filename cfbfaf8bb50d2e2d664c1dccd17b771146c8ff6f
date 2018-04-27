@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "0377274b_d4627cf9",
+        "filename": "scripts/rpc/subsystem.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-27T13:26:37Z",
+      "side": 1,
+      "message": "Hi Pawel Wod, Thank you, I know we are working on safe removal of LVOL and I understood that is to be done here too.",
+      "parentUuid": "88a28e8b_01d60849",
+      "revId": "cfbfaf8bb50d2e2d664c1dccd17b771146c8ff6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ec01a72b_2114aeb1",
         "filename": "scripts/rpc/subsystem.py",
         "patchSetId": 8
@@ -71,6 +89,30 @@
       "writtenOn": "2018-04-27T11:58:54Z",
       "side": 1,
       "message": "Can you make dictionary that map \u0027construct_pmem_bdev\u0027 to corresponding destruct/delete call?",
+      "range": {
+        "startLine": 23,
+        "startChar": 7,
+        "endLine": 42,
+        "endChar": 64
+      },
+      "revId": "cfbfaf8bb50d2e2d664c1dccd17b771146c8ff6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f3c2bb6_51f05053",
+        "filename": "scripts/rpc/subsystem.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-04-27T13:26:37Z",
+      "side": 1,
+      "message": "Using dictionary sounds good.",
+      "parentUuid": "6117de86_519d230b",
       "range": {
         "startLine": 23,
         "startChar": 7,
