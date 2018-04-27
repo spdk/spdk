@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c37c7e75_4bcfc3ca",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 1693,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-04-27T09:01:13Z",
+      "side": 1,
+      "message": "Do we need \u0027sorted\u0027 here and after !\u003d ?",
+      "range": {
+        "startLine": 1693,
+        "startChar": 11,
+        "endLine": 1693,
+        "endChar": 17
+      },
+      "revId": "03a9d8c41f571db3f25341e066c3ccc493a073bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
