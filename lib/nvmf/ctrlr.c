@@ -275,6 +275,32 @@ end:
 }
 
 static void
+_ctrlr_destruct_check(void *ctx)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = ctx;
+
+	assert(ctrlr != NULL);
+	assert(ctrlr->num_qpairs > 0);
+	ctrlr->num_qpairs--;
+	if (ctrlr->num_qpairs == 0) {
+		assert(ctrlr->subsys != NULL);
+		assert(ctrlr->subsys->thread != NULL);
+		spdk_thread_send_msg(ctrlr->subsys->thread, ctrlr_destruct, ctrlr);
+	}
+}
+
+static void
+nvmf_qpair_fini(void *ctx)
+{
+	struct spdk_nvmf_qpair *qpair = ctx;
+	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
+	struct spdk_thread *admin_thread = ctrlr->admin_qpair->group->thread;
+
+	spdk_nvmf_transport_qpair_fini(qpair);
+	spdk_thread_send_msg(admin_thread, _ctrlr_destruct_check, ctrlr);
+}
+
+static void
 ctrlr_delete_qpair(void *ctx)
 {
 	struct spdk_nvmf_qpair *qpair = ctx;
@@ -288,15 +314,8 @@ ctrlr_delete_qpair(void *ctx)
 		return;
 	}
 
-	ctrlr->num_qpairs--;
 	TAILQ_REMOVE(&ctrlr->qpairs, qpair, link);
-	spdk_nvmf_transport_qpair_fini(qpair);
-
-	if (ctrlr->num_qpairs == 0) {
-		assert(ctrlr->subsys != NULL);
-		assert(ctrlr->subsys->thread != NULL);
-		spdk_thread_send_msg(ctrlr->subsys->thread, ctrlr_destruct, ctrlr);
-	}
+	spdk_thread_send_msg(qpair->group->thread, nvmf_qpair_fini, qpair);
 }
 
 static void
