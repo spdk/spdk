@@ -16,6 +16,24 @@
       "revId": "45b26eec083cb13ce0b41e573aa90bab218a4b5b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "72ed8a25_7c08f97d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 4176,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-04-30T16:02:48Z",
+      "side": 1,
+      "message": "Yes, this is more sanity test for inflate operation and it doesn\u0027t guarantee that operation success. The same situation is when we want to write the whole blob with a data. To solve this problem we may use freeze IO mechanism to made inflate more atomic (or at least freeze only these which requires cluster allocation). Other solution is to let application try to inflate, and if inflation fails let her to decide what to do with that. If this is not a common situation it can be more effective and clear.",
+      "parentUuid": "744d57a3_04251f65",
+      "revId": "45b26eec083cb13ce0b41e573aa90bab218a4b5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
