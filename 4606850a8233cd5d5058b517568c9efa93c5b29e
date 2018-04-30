@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "62dc1be6_316c0769",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-04-30T07:32:53Z",
+      "side": 1,
+      "message": "This check is useless.",
+      "range": {
+        "startLine": 294,
+        "startChar": 0,
+        "endLine": 296,
+        "endChar": 2
+      },
+      "revId": "4606850a8233cd5d5058b517568c9efa93c5b29e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
