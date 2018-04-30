@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "231a91fb_a5204a6d",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-30T17:00:04Z",
+      "side": 1,
+      "message": "how about \"delay_subsystem_init\" - with a comment that this will wait for the associated RPC before initializing subsystems",
+      "revId": "ef266b2f134ce2c97b6614cb4925c95d2e9536ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "30402e6d_60f1919c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 17
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-30T17:00:04Z",
+      "side": 1,
+      "message": "I like the new RPC_STARTUP and RPC_RUNTIME states.  The commit message needs to be updated to use them though.",
+      "revId": "70274a794e780a8371e846ffc32c2fc7ea887a0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e4fb373_3b114a26",
+        "filename": "lib/event/app.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-30T17:00:04Z",
+      "side": 1,
+      "message": "how about g_delay_subsystems_init?",
+      "revId": "70274a794e780a8371e846ffc32c2fc7ea887a0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7de7ff06_da841824",
+        "filename": "lib/event/app.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 750,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-04-30T17:00:04Z",
+      "side": 1,
+      "message": "should this wait to complete the RPC until after subsystem init has completed?",
+      "revId": "70274a794e780a8371e846ffc32c2fc7ea887a0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
