@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1f0e92e8_9fda6d40",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2970,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-01T19:54:27Z",
+      "side": 0,
+      "message": "it looks like this gets removed here, and then added again in the next patch\n\ncould you take a look again at the two patches and just squash these parts into a nop?\n\ni think there are other cases of this too - this is just the one I first noticed when reviewing the next patch",
+      "revId": "86bc7ee5a612a6b814f46492fc3bd672251abc32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
