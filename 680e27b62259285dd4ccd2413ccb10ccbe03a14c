@@ -59,6 +59,23 @@
     },
     {
       "key": {
+        "uuid": "30c2179e_604a799f",
+        "filename": "lib/event/app.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 856,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-01T18:22:19Z",
+      "side": 1,
+      "message": "let\u0027s create a new function that calls spdk_app_start_application and then does the RPC completion\n\nthat\u0027s a lot cleaner than adding RPC completion stuff to spdk_app_start_application",
+      "revId": "680e27b62259285dd4ccd2413ccb10ccbe03a14c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8afa5893_df4518c1",
         "filename": "lib/event/app.c",
         "patchSetId": 19
@@ -70,6 +87,24 @@
       "writtenOn": "2018-05-01T13:49:18Z",
       "side": 1,
       "message": "We should pass callback function and this callback function should be called in both success and failure case. This callback function should receive the parameter request and rc.",
+      "revId": "680e27b62259285dd4ccd2413ccb10ccbe03a14c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b5b7508_70ebd2ed",
+        "filename": "lib/event/app.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 858,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-01T18:22:19Z",
+      "side": 1,
+      "message": "spdk_subsystem_init does not provide a good way to get the completion status yet - it just calls spdk_app_stop() directly if a failure is found\n\nwe should fix that - but i think for now this is ok for this patch",
+      "parentUuid": "8afa5893_df4518c1",
       "revId": "680e27b62259285dd4ccd2413ccb10ccbe03a14c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
