@@ -22,6 +22,40 @@
       "revId": "680e27b62259285dd4ccd2413ccb10ccbe03a14c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3111edd5_c7ddc234",
+        "filename": "lib/event/app.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 855,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-01T13:49:18Z",
+      "side": 1,
+      "message": "Holding start_app_event as static variable like g_start_app_event is easier to use?",
+      "revId": "680e27b62259285dd4ccd2413ccb10ccbe03a14c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8afa5893_df4518c1",
+        "filename": "lib/event/app.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 858,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-01T13:49:18Z",
+      "side": 1,
+      "message": "We should pass callback function and this callback function should be called in both success and failure case. This callback function should receive the parameter request and rc.",
+      "revId": "680e27b62259285dd4ccd2413ccb10ccbe03a14c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
