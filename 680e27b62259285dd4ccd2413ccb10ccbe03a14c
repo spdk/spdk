@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9abe600f_0bc09aab",
+        "filename": "lib/event/app.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 834,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-01T13:43:06Z",
+      "side": 1,
+      "message": "Pls note that I changed slightly previouse behaviour. This is because subsystems are not yet supporting init RPC like nvme which will not create bdevs etc. We can forbid config files in case \u0027-w\u0027 when all subsystems will be ready for that.",
+      "range": {
+        "startLine": 830,
+        "startChar": 0,
+        "endLine": 834,
+        "endChar": 2
+      },
+      "revId": "680e27b62259285dd4ccd2413ccb10ccbe03a14c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
