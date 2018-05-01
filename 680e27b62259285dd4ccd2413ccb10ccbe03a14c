@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "70ae2eb8_0179eb9d",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-01T14:04:46Z",
+      "side": 1,
+      "message": "Adding a comment like \"this flag will wait for the associated RPC before initializing subsystems is fine as Jim said.",
+      "revId": "680e27b62259285dd4ccd2413ccb10ccbe03a14c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9abe600f_0bc09aab",
         "filename": "lib/event/app.c",
         "patchSetId": 19

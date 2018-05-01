@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d414d8b0_d6b0deaf",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 17
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-01T14:04:46Z",
+      "side": 1,
+      "message": "Thank you Jim, Pawel.",
+      "parentUuid": "30402e6d_60f1919c",
+      "revId": "70274a794e780a8371e846ffc32c2fc7ea887a0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5e4fb373_3b114a26",
         "filename": "lib/event/app.c",
         "patchSetId": 17
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "cf5b392e_a5562ca4",
+        "filename": "lib/event/app.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-01T14:04:46Z",
+      "side": 1,
+      "message": "Looks nice.",
+      "parentUuid": "5e4fb373_3b114a26",
+      "revId": "70274a794e780a8371e846ffc32c2fc7ea887a0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7de7ff06_da841824",
         "filename": "lib/event/app.c",
         "patchSetId": 17
@@ -47,6 +83,24 @@
       "writtenOn": "2018-04-30T17:00:04Z",
       "side": 1,
       "message": "should this wait to complete the RPC until after subsystem init has completed?",
+      "revId": "70274a794e780a8371e846ffc32c2fc7ea887a0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d530f79_e7a3c262",
+        "filename": "lib/event/app.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 750,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-01T14:04:46Z",
+      "side": 1,
+      "message": "I agree but my head was not coordinated about how to handle failure case when the patch was submitted.",
+      "parentUuid": "7de7ff06_da841824",
       "revId": "70274a794e780a8371e846ffc32c2fc7ea887a0e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
