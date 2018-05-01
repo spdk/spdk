@@ -42,6 +42,30 @@
     },
     {
       "key": {
+        "uuid": "e2c65afb_c5ea54c1",
+        "filename": "lib/event/app.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 834,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-01T23:11:08Z",
+      "side": 1,
+      "message": "Looks reasonable. Let\u0027s allow user to use both config file and RPC for now.\nI add a comment \"TBD: this warning will be replaced to failure when all RPCs for startup are prepared.\"",
+      "parentUuid": "9abe600f_0bc09aab",
+      "range": {
+        "startLine": 830,
+        "startChar": 0,
+        "endLine": 834,
+        "endChar": 2
+      },
+      "revId": "680e27b62259285dd4ccd2413ccb10ccbe03a14c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3111edd5_c7ddc234",
         "filename": "lib/event/app.c",
         "patchSetId": 19
@@ -70,6 +94,24 @@
       "writtenOn": "2018-05-01T18:22:19Z",
       "side": 1,
       "message": "let\u0027s create a new function that calls spdk_app_start_application and then does the RPC completion\n\nthat\u0027s a lot cleaner than adding RPC completion stuff to spdk_app_start_application",
+      "revId": "680e27b62259285dd4ccd2413ccb10ccbe03a14c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "908269a8_e79385ea",
+        "filename": "lib/event/app.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 856,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-01T23:11:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "30c2179e_604a799f",
       "revId": "680e27b62259285dd4ccd2413ccb10ccbe03a14c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -105,6 +147,24 @@
       "side": 1,
       "message": "spdk_subsystem_init does not provide a good way to get the completion status yet - it just calls spdk_app_stop() directly if a failure is found\n\nwe should fix that - but i think for now this is ok for this patch",
       "parentUuid": "8afa5893_df4518c1",
+      "revId": "680e27b62259285dd4ccd2413ccb10ccbe03a14c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1b4b553_3237befc",
+        "filename": "lib/event/app.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 858,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-01T23:11:08Z",
+      "side": 1,
+      "message": "OK, let\u0027s fix that in subsequent patches.",
+      "parentUuid": "9b5b7508_70ebd2ed",
       "revId": "680e27b62259285dd4ccd2413ccb10ccbe03a14c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
