@@ -603,6 +603,7 @@ usage(char *executable_name, struct spdk_app_opts *default_opts, void (*app_usag
 {
 	printf("%s [options]\n", executable_name);
 	printf("options:\n");
+	printf(" -b addr    pci addr to blacklist\n");
 	printf(" -c config  config file (default %s)\n", default_opts->config_file);
 	printf(" -d         disable coredump file enabling\n");
 	printf(" -e mask    tracepoint group mask for spdk trace buffers (default 0x0)\n");
@@ -621,8 +622,7 @@ usage(char *executable_name, struct spdk_app_opts *default_opts, void (*app_usag
 		printf("all hugepage memory)\n");
 	}
 	printf(" -u         disable PCI access.\n");
-	printf(" -B addr    pci addr to blacklist\n");
-	printf(" -W addr    pci addr to whitelist (-B and -W cannot be used at the same time)\n");
+	printf(" -w addr    pci addr to whitelist (-B and -W cannot be used at the same time)\n");
 	spdk_tracelog_usage(stdout, "-t");
 	app_usage();
 }
@@ -652,6 +652,22 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 
 	while ((ch = getopt(argc, argv, getopt_str)) != -1) {
 		switch (ch) {
+		case 'b':
+			if (opts->pci_whitelist) {
+				free(opts->pci_whitelist);
+				fprintf(stderr, "-B and -W cannot be used at the same time\n");
+				usage(argv[0], &default_opts, app_usage);
+				rval = SPDK_APP_PARSE_ARGS_FAIL;
+				goto parse_done;
+			}
+
+			rc = spdk_app_opts_add_pci_addr(opts, &opts->pci_blacklist, optarg);
+			if (rc != 0) {
+				free(opts->pci_blacklist);
+				rval = SPDK_APP_PARSE_ARGS_FAIL;
+				goto parse_done;
+			}
+			break;
 		case 'c':
 			opts->config_file = optarg;
 			break;
@@ -748,23 +764,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		case 'u':
 			opts->no_pci = true;
 			break;
-		case 'B':
-			if (opts->pci_whitelist) {
-				free(opts->pci_whitelist);
-				fprintf(stderr, "-B and -W cannot be used at the same time\n");
-				usage(argv[0], &default_opts, app_usage);
-				rval = SPDK_APP_PARSE_ARGS_FAIL;
-				goto parse_done;
-			}
-
-			rc = spdk_app_opts_add_pci_addr(opts, &opts->pci_blacklist, optarg);
-			if (rc != 0) {
-				free(opts->pci_blacklist);
-				rval = SPDK_APP_PARSE_ARGS_FAIL;
-				goto parse_done;
-			}
-			break;
-		case 'W':
+		case 'w':
 			if (opts->pci_blacklist) {
 				free(opts->pci_blacklist);
 				fprintf(stderr, "-B and -W cannot be used at the same time\n");
