@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "970f4fbe_e4d304d8",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1254,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-01T19:56:08Z",
+      "side": 0,
+      "message": "this patch is really big - wondering if there are a few things you could do to reduce the size of it\n\nit looks like a lot of this code here is mostly (or completely?) a copy and paste into spdk_bdev_close() - could that part get broken out somehow so this gets eliminated from the diff in this patch",
+      "revId": "0f2f59d93c4e00647e35840bd7c540d9b0e08f84",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
