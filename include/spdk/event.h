@@ -100,6 +100,11 @@ struct spdk_app_opts {
 	 * specified in microseconds.
 	 */
 	uint64_t		max_delay_us;
+
+	/* Wait for the associated RPC before initializing subsystems
+	 * when this flag is enabled.
+	 */
+	bool			delay_subsystem_init;
 };
 
 /**
@@ -189,7 +194,7 @@ int spdk_app_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask);
  */
 struct spdk_cpuset *spdk_app_get_core_mask(void);
 
-#define SPDK_APP_GETOPT_STRING "c:de:ghi:m:n:p:qr:s:t:uB:W:"
+#define SPDK_APP_GETOPT_STRING "c:de:ghi:m:n:p:qr:s:t:uw:B:W:"
 
 enum spdk_app_parse_args_rvals {
 	SPDK_APP_PARSE_ARGS_HELP = 0,
