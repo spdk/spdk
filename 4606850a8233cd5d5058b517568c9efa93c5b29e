@@ -70,6 +70,30 @@
       "revId": "4606850a8233cd5d5058b517568c9efa93c5b29e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ad05b0c_156efade",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-05-01T23:38:48Z",
+      "side": 1,
+      "message": "ok, I\u0027ll try that.",
+      "parentUuid": "17d5f6ec_1411b363",
+      "range": {
+        "startLine": 294,
+        "startChar": 0,
+        "endLine": 296,
+        "endChar": 2
+      },
+      "revId": "4606850a8233cd5d5058b517568c9efa93c5b29e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
