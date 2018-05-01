@@ -1303,6 +1303,12 @@ virtio_scsi_dev_add_tgt(struct virtio_scsi_dev *svdev, struct virtio_scsi_scan_i
 		}
 	}
 
+	if (info->block_size == 0 || info->num_blocks == 0) {
+		SPDK_ERRLOG("%s: invalid target %u: bs=%"PRIu32" blocks=%"PRIu64"\n",
+			    svdev->vdev.name, info->target, info->block_size, info->num_blocks);
+		return -EINVAL;
+	}
+
 	disk = calloc(1, sizeof(*disk));
 	if (disk == NULL) {
 		SPDK_ERRLOG("could not allocate disk\n");
