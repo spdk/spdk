@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab73df97_26e78a7b",
+        "filename": ".githooks/pre-push",
+        "patchSetId": 1
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011300
+      },
+      "writtenOn": "2018-05-02T12:15:42Z",
+      "side": 1,
+      "message": "I think -j $(nproc) rather than hardcoded 8",
+      "revId": "feabda0877afd676e825f127aa73614d5c260baf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1822ed5a_61f865d8",
+        "filename": ".githooks/pre-push",
+        "patchSetId": 1
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011300
+      },
+      "writtenOn": "2018-05-02T12:15:42Z",
+      "side": 1,
+      "message": "This code should check for clang first.\nSomething like:\nif hash clang 2\u003e/dev/null ; then",
+      "revId": "feabda0877afd676e825f127aa73614d5c260baf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
