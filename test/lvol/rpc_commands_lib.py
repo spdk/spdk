@@ -14,13 +14,13 @@ class Spdk_Rpc(object):
                 cmd += " {}".format(arg)
             try:
                 output = check_output(cmd, shell=True)
-                return output.rstrip('\n'), 0
+                return output.decode('ascii').rstrip('\n'), 0
             except CalledProcessError as e:
                 print("ERROR: RPC Command {cmd} "
                       "execution failed:". format(cmd=cmd))
                 print("Failed command output:")
                 print(e.output)
-                return e.output, e.returncode
+                return e.output.decode('ascii'), e.returncode
         return call
 
 
