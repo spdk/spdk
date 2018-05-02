@@ -45,6 +45,8 @@
 
 #define SPDK_NVMF_DEFAULT_NUM_CTRLRS_PER_LCORE 1
 
+#define SPDK_NVMF_MAX_SGL_ENTRIES	16
+
 enum spdk_nvmf_subsystem_state {
 	SPDK_NVMF_SUBSYSTEM_INACTIVE = 0,
 	SPDK_NVMF_SUBSYSTEM_ACTIVATING,
@@ -133,6 +135,8 @@ struct spdk_nvmf_request {
 	void				*data;
 	union nvmf_h2c_msg		*cmd;
 	union nvmf_c2h_msg		*rsp;
+	struct iovec			iov[SPDK_NVMF_MAX_SGL_ENTRIES];
+	uint32_t			iovcnt;
 
 	TAILQ_ENTRY(spdk_nvmf_request)	link;
 };
