@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "facd717c_759a8712",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 45
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-02T16:42:09Z",
+      "side": 1,
+      "message": "The bdev layer isn\u0027t allowed to directly depend on the event framework. Use the abstractions in io_channel.h instead, although I don\u0027t think you need them here.",
+      "revId": "4bd168d81a9ef4e7ef190fb7a6306f2048fc39d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1c53d63_9a600c83",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 45
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-02T16:42:09Z",
+      "side": 1,
+      "message": "The bdev layer isn\u0027t allowed to depend on the event framework directly. You can send messages using spdk_thread_send_msg if you need to, but I don\u0027t actually think that sending a message is the right technical solution (although it will work). What you really need to do is only finish iterating after you know that all requests to get the stats have been made. I\u0027d do that by adding a separate flag on the ctx - you can call it \u0027done\u0027 or something. Set it to false until you\u0027ve called spdk_bdev_get_io_stat all of the times you\u0027re going to, then set it to true. Both here and in spdk_rpc_get_bdevs_iostat, complete the json request if both done is false and count is 0.",
+      "revId": "4bd168d81a9ef4e7ef190fb7a6306f2048fc39d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "19a8a2b8_67c3e00e",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 45
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-02T16:42:09Z",
+      "side": 1,
+      "message": "name is optional, right? If so, you need to set it to optional here or spdk_json_decode_object will always fail when it is not present.\n\nstatic const struct spdk_json_object_decoder rpc_get_bdevs_iostat_decoders[] \u003d {\n\t{\"name\", offsetof(struct rpc_get_bdevs_iostat, name), spdk_json_decode_string, true},\n};",
+      "revId": "4bd168d81a9ef4e7ef190fb7a6306f2048fc39d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a71df31_5d9568e2",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 45
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-02T16:42:09Z",
+      "side": 1,
+      "message": "req.name can be NULL if it isn\u0027t provided (according to the documentation you wrote). That shouldn\u0027t make the code jump to the invalid section, but rather continue on and show all bdevs.",
+      "revId": "4bd168d81a9ef4e7ef190fb7a6306f2048fc39d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
