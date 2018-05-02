@@ -76,9 +76,11 @@ ctrlr_add_qpair_and_update_rsp(struct spdk_nvmf_qpair *qpair,
 			       struct spdk_nvmf_ctrlr *ctrlr,
 			       struct spdk_nvmf_fabric_connect_rsp *rsp)
 {
+	pthread_mutex_lock(&ctrlr->lock);
 	qpair->ctrlr = ctrlr;
 	ctrlr->num_qpairs++;
 	TAILQ_INSERT_HEAD(&ctrlr->qpairs, qpair, link);
+	pthread_mutex_unlock(&ctrlr->lock);
 
 	rsp->status.sc = SPDK_NVME_SC_SUCCESS;
 	rsp->status_code_specific.success.cntlid = ctrlr->cntlid;
@@ -147,6 +149,7 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	req->qpair->ctrlr = ctrlr;
 	TAILQ_INIT(&ctrlr->qpairs);
 	ctrlr->num_qpairs = 0;
+	pthread_mutex_init(&ctrlr->lock, NULL);
 	ctrlr->subsys = subsystem;
 	ctrlr->max_qpairs_allowed = tgt->opts.max_qpairs_per_ctrlr;
 
@@ -196,12 +199,14 @@ static void ctrlr_destruct(void *ctx)
 	struct spdk_nvmf_ctrlr *ctrlr = ctx;
 
 	spdk_nvmf_subsystem_remove_ctrlr(ctrlr->subsys, ctrlr);
+	pthread_mutex_destroy(&ctrlr->lock);
 	free(ctrlr);
 }
 
 void
 spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 {
+	pthread_mutex_lock(&ctrlr->lock);
 	while (!TAILQ_EMPTY(&ctrlr->qpairs)) {
 		struct spdk_nvmf_qpair *qpair = TAILQ_FIRST(&ctrlr->qpairs);
 
@@ -209,7 +214,7 @@ spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 		ctrlr->num_qpairs--;
 		spdk_nvmf_transport_qpair_fini(qpair);
 	}
-
+	pthread_mutex_unlock(&ctrlr->lock);
 	ctrlr_destruct(ctrlr);
 }
 
@@ -288,9 +293,11 @@ ctrlr_delete_qpair(void *ctx)
 		return;
 	}
 
+	pthread_mutex_lock(&ctrlr->lock);
 	ctrlr->num_qpairs--;
 	TAILQ_REMOVE(&ctrlr->qpairs, qpair, link);
 	spdk_nvmf_transport_qpair_fini(qpair);
+	pthread_mutex_unlock(&ctrlr->lock);
 
 	if (ctrlr->num_qpairs == 0) {
 		assert(ctrlr->subsys != NULL);
@@ -457,14 +464,17 @@ spdk_nvmf_ctrlr_disconnect(struct spdk_nvmf_qpair *qpair)
 struct spdk_nvmf_qpair *
 spdk_nvmf_ctrlr_get_qpair(struct spdk_nvmf_ctrlr *ctrlr, uint16_t qid)
 {
-	struct spdk_nvmf_qpair *qpair;
+	struct spdk_nvmf_qpair *qpair, *found = NULL;
 
+	pthread_mutex_lock(&ctrlr->lock);
 	TAILQ_FOREACH(qpair, &ctrlr->qpairs, link) {
 		if (qpair->qid == qid) {
-			return qpair;
+			found = qpair;
+			break;
 		}
 	}
-	return NULL;
+	pthread_mutex_unlock(&ctrlr->lock);
+	return found;
 }
 
 static struct spdk_nvmf_request *
