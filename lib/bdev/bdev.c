@@ -1241,6 +1241,51 @@ spdk_bdev_qos_channel_destroy(void *cb_arg)
 	free(qos);
 }
 
+static int
+spdk_bdev_qos_destroy(struct spdk_bdev *bdev)
+{
+	/*
+	 * Cleanly shutting down the QoS poller is tricky, because
+	 * during the asynchronous operation the user could open a
+	 * new channel, spawning a new QoS poller.
+	 *
+	 * The strategy is to create a new QoS structure here and swap it
+	 * in. The shutdown path then continues to refer to the old one
+	 * until it completes and then releases it.
+	*/
+	struct spdk_bdev_qos *new_qos, *old_qos;
+
+	old_qos = bdev->qos;
+
+	new_qos = calloc(1, sizeof(*new_qos));
+	if (!new_qos) {
+		SPDK_ERRLOG("Unable to allocate memory to shut down QoS.\n");
+		return -ENOMEM;
+	}
+
+	/* Copy the old QoS data into the newly allocated structure */
+	memcpy(new_qos, old_qos, sizeof(*new_qos));
+
+	/* Zero out the key parts of the QoS structure */
+	new_qos->ch = NULL;
+	new_qos->thread = NULL;
+	new_qos->max_ios_per_timeslice = 0;
+	new_qos->io_submitted_this_timeslice = 0;
+	new_qos->poller = NULL;
+	TAILQ_INIT(&new_qos->queued);
+
+	bdev->qos = new_qos;
+
+	spdk_thread_send_msg(old_qos->thread, spdk_bdev_qos_channel_destroy,
+			     old_qos);
+
+	/* It is safe to continue with destroying the bdev even though the QoS channel hasn't
+	 * been destroyed yet. The destruction path will end up waiting for the final
+	 * channel to be put before it releases resources. */
+
+	return 0;
+}
+
 static void
 spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 {
@@ -1252,45 +1297,11 @@ spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 	pthread_mutex_lock(&bdev->mutex);
 	bdev->channel_count--;
 	if (bdev->channel_count == 0 && bdev->qos && bdev->qos->ch != NULL) {
-		/*
-		 * Cleanly shutting down the QoS poller is tricky, because
-		 * during the asynchronous operation the user could open a
-		 * new channel, spawning a new QoS poller.
-		 *
-		 * The strategy is to create a new QoS structure here and swap it
-		 * in. The shutdown path then continues to refer to the old one
-		 * until it completes and then releases it.
-		 */
-		struct spdk_bdev_qos *new_qos, *old_qos;
-
-		old_qos = bdev->qos;
-
-		new_qos = calloc(1, sizeof(*new_qos));
-		if (!new_qos) {
-			SPDK_ERRLOG("Unable to allocate memory to shut down QoS.\n");
+		if (spdk_bdev_qos_destroy(bdev)) {
 			/* There isn't anything we can do to recover from here. Just let the
 			 * old QoS poller keep running. The QoS handling won't change
 			 * cores when the user allocates a new channel, but it won't break. */
-		} else {
-			/* Copy the old QoS data into the newly allocated structure */
-			memcpy(new_qos, old_qos, sizeof(*new_qos));
-
-			/* Zero out the key parts of the QoS structure */
-			new_qos->ch = NULL;
-			new_qos->thread = NULL;
-			new_qos->max_ios_per_timeslice = 0;
-			new_qos->io_submitted_this_timeslice = 0;
-			new_qos->poller = NULL;
-			TAILQ_INIT(&new_qos->queued);
-
-			bdev->qos = new_qos;
-
-			spdk_thread_send_msg(old_qos->thread, spdk_bdev_qos_channel_destroy,
-					     old_qos);
-
-			/* It is safe to continue with destroying the bdev even though the QoS channel hasn't
-			 * been destroyed yet. The destruction path will end up waiting for the final
-			 * channel to be put before it releases resources. */
+			SPDK_ERRLOG("Unable to shut down QoS poller. It will continue running on the current thread.\n");
 		}
 	}
 	pthread_mutex_unlock(&bdev->mutex);
