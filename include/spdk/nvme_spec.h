@@ -61,6 +61,8 @@ extern "C" {
 #define SPDK_NVME_IO_QUEUE_MIN_ENTRIES		2
 #define SPDK_NVME_IO_QUEUE_MAX_ENTRIES		65536
 
+#define SPDK_NVME_MAX_SGE_ENTRIES		16
+
 /**
  * Indicates the maximum number of range sets that may be specified
  *  in the dataset mangement command.

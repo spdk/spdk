@@ -51,6 +51,7 @@ SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 #define SPDK_NVMF_DEFAULT_IN_CAPSULE_DATA_SIZE 4096
 #define SPDK_NVMF_DEFAULT_MAX_IO_SIZE 131072
 #define SPDK_NVMF_DEFAULT_MAX_SUBSYSTEMS 1024
+#define SPDK_NVMF_DEFAULT_IO_UNIT_SIZE 131072
 
 void
 spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts)
@@ -60,6 +61,7 @@ spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts)
 	opts->in_capsule_data_size = SPDK_NVMF_DEFAULT_IN_CAPSULE_DATA_SIZE;
 	opts->max_io_size = SPDK_NVMF_DEFAULT_MAX_IO_SIZE;
 	opts->max_subsystems = SPDK_NVMF_DEFAULT_MAX_SUBSYSTEMS;
+	opts->io_unit_size = SPDK_NVMF_DEFAULT_IO_UNIT_SIZE;
 }
 
 static int
@@ -187,6 +189,7 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Max In Capsule Data: %d bytes\n",
 		      tgt->opts.in_capsule_data_size);
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Max I/O Size: %d bytes\n", tgt->opts.max_io_size);
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "I/O Unit Size: %d bytes\n", tgt->opts.io_unit_size);
 
 	return tgt;
 }
