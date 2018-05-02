@@ -231,6 +231,17 @@ bdev_iscsi_readv(struct bdev_iscsi_lun *lun, struct bdev_iscsi_io *iscsi_io,
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI_INIT, "read %d iovs size %lu to lba: %#lx\n",
 		      iovcnt, nbytes, lba);
 
+#if defined(LIBISCSI_FEATURE_IOVECTOR)
+	task = iscsi_read16_iov_task(lun->context, 0, lba, nbytes, lun->bdev.blocklen, 0, 0, 0, 0, 0,
+				     bdev_iscsi_rw_cb, iscsi_io, iov, iovcnt);
+	if (task == NULL) {
+		SPDK_ERRLOG("failed to get read16_iov_task\n");
+		bdev_iscsi_io_complete(iscsi_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
+#else
+	int i;
+
 	task = iscsi_read16_task(lun->context, 0, lba, nbytes, lun->bdev.blocklen, 0, 0, 0, 0, 0,
 				 bdev_iscsi_rw_cb, iscsi_io);
 	if (task == NULL) {
@@ -239,10 +250,6 @@ bdev_iscsi_readv(struct bdev_iscsi_lun *lun, struct bdev_iscsi_io *iscsi_io,
 		return;
 	}
 
-#if defined(LIBISCSI_FEATURE_IOVECTOR)
-	scsi_task_set_iov_in(task, (struct scsi_iovec *)iov, iovcnt);
-#else
-	int i;
 	for (i = 0; i < iovcnt; i++) {
 		scsi_task_add_data_in_buffer(task, iov[i].iov_len, iov[i].iov_base);
 	}
@@ -258,6 +265,17 @@ bdev_iscsi_writev(struct bdev_iscsi_lun *lun, struct bdev_iscsi_io *iscsi_io,
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI_INIT, "write %d iovs size %lu to lba: %#lx\n",
 		      iovcnt, nbytes, lba);
 
+#if defined(LIBISCSI_FEATURE_IOVECTOR)
+	task = iscsi_write16_iov_task(lun->context, 0, lba, NULL, nbytes, lun->bdev.blocklen, 0, 0, 0, 0, 0,
+				      bdev_iscsi_rw_cb, iscsi_io, iov, iovcnt);
+	if (task == NULL) {
+		SPDK_ERRLOG("failed to get write16_iov_task\n");
+		bdev_iscsi_io_complete(iscsi_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
+#else
+	int i;
+
 	task = iscsi_write16_task(lun->context, 0, lba, NULL, nbytes, lun->bdev.blocklen, 0, 0, 0, 0, 0,
 				  bdev_iscsi_rw_cb, iscsi_io);
 	if (task == NULL) {
@@ -266,10 +284,6 @@ bdev_iscsi_writev(struct bdev_iscsi_lun *lun, struct bdev_iscsi_io *iscsi_io,
 		return;
 	}
 
-#if defined(LIBISCSI_FEATURE_IOVECTOR)
-	scsi_task_set_iov_out(task, (struct scsi_iovec *)iov, iovcnt);
-#else
-	int i;
 	for (i = 0; i < iovcnt; i++) {
 		scsi_task_add_data_in_buffer(task, iov[i].iov_len, iov[i].iov_base);
 	}
