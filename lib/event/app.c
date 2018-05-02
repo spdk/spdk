@@ -58,13 +58,11 @@ struct spdk_app {
 };
 
 static struct spdk_app g_spdk_app;
+static struct spdk_event *g_app_start_event = NULL;
 static struct spdk_event *g_shutdown_event = NULL;
 static int g_init_lcore;
+static bool g_delay_subsystem_init = false;
 static bool g_shutdown_sig_received = false;
-
-static spdk_event_fn g_app_start_fn;
-static void *g_app_start_arg1;
-static void *g_app_start_arg2;
 
 int
 spdk_app_get_shm_id(void)
@@ -207,6 +205,7 @@ spdk_app_opts_init(struct spdk_app_opts *opts)
 	opts->max_delay_us = 0;
 	opts->print_level = SPDK_APP_DEFAULT_LOG_PRINT_LEVEL;
 	opts->rpc_addr = SPDK_DEFAULT_RPC_ADDR;
+	opts->delay_subsystem_init = false;
 }
 
 static int
@@ -270,7 +269,7 @@ static void
 spdk_app_start_application(void)
 {
 	spdk_rpc_set_state(SPDK_RPC_RUNTIME);
-	g_app_start_fn(g_app_start_arg1, g_app_start_arg2);
+	spdk_event_call(g_app_start_event);
 }
 
 static void
@@ -279,7 +278,9 @@ spdk_app_start_rpc(void *arg1, void *arg2)
 	const char *rpc_addr = arg1;
 
 	spdk_rpc_initialize(rpc_addr);
-	spdk_app_start_application();
+	if (!g_delay_subsystem_init) {
+		spdk_app_start_application();
+	}
 }
 
 static struct spdk_conf *
@@ -550,13 +551,17 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	g_spdk_app.shutdown_cb = opts->shutdown_cb;
 	g_spdk_app.rc = 0;
 	g_init_lcore = spdk_env_get_current_core();
-	g_app_start_fn = start_fn;
-	g_app_start_arg1 = arg1;
-	g_app_start_arg2 = arg2;
+	g_delay_subsystem_init = opts->delay_subsystem_init;
+	g_app_start_event = spdk_event_allocate(g_init_lcore, start_fn, arg1, arg2);
+
 	rpc_start_event = spdk_event_allocate(g_init_lcore, spdk_app_start_rpc,
 					      (void *)opts->rpc_addr, NULL);
 
-	spdk_subsystem_init(rpc_start_event);
+	if (!g_delay_subsystem_init) {
+		spdk_subsystem_init(rpc_start_event);
+	} else {
+		spdk_event_call(rpc_start_event);
+	}
 
 	/* This blocks until spdk_app_stop is called */
 	spdk_reactors_start();
@@ -630,6 +635,7 @@ usage(char *executable_name, struct spdk_app_opts *default_opts, void (*app_usag
 		printf("all hugepage memory)\n");
 	}
 	printf(" -u         disable PCI access.\n");
+	printf(" -w         wait for RPCs to initialize subsystems\n");
 	printf(" -B addr    pci addr to blacklist\n");
 	printf(" -W addr    pci addr to whitelist (-B and -W cannot be used at the same time)\n");
 	spdk_tracelog_usage(stdout, "-t");
@@ -757,6 +763,9 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		case 'u':
 			opts->no_pci = true;
 			break;
+		case 'w':
+			opts->delay_subsystem_init = true;
+			break;
 		case 'B':
 			if (opts->pci_whitelist) {
 				free(opts->pci_whitelist);
@@ -803,9 +812,51 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		}
 	}
 
+	/* TBD: Replace warning by failure when RPCs for startup are prepared. */
+	if (opts->config_file && opts->delay_subsystem_init) {
+		fprintf(stderr,
+			"WARNING: -w and config file are used at the same time. "
+			"- Please be careful one options might overwrite others.\n");
+	}
+
 parse_done:
 	free(getopt_str);
 
 parse_early_fail:
 	return rval;
 }
+
+static void
+spdk_rpc_start_subsystem_init_cpl(void *arg1, void *arg2)
+{
+	struct spdk_jsonrpc_request *request = arg1;
+	struct spdk_json_write_ctx *w;
+
+	spdk_app_start_application();
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+}
+
+static void
+spdk_rpc_start_subsystem_init(struct spdk_jsonrpc_request *request,
+			      const struct spdk_json_val *params)
+{
+	struct spdk_event *cb_event;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "start_subsystem_init requires no parameters");
+		return;
+	}
+
+	cb_event = spdk_event_allocate(g_init_lcore, spdk_rpc_start_subsystem_init_cpl,
+				       request, NULL);
+	spdk_subsystem_init(cb_event);
+}
+SPDK_RPC_REGISTER("start_subsystem_init", spdk_rpc_start_subsystem_init, SPDK_RPC_STARTUP)
