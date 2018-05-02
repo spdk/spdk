@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d4d15c92_7a01d43d",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1104,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-05-02T06:55:02Z",
+      "side": 1,
+      "message": "The previous patch set disappeared, review comments also lost.  About this part, I looked the code in SPDK NVMF target and Linux kernel NVMf target, `NN` can be changed during namespace change, so when received notice AER, we should update identify controller first. Any comments about this ?",
+      "revId": "f5d21363bfc4690e0f89b2e73568ef22a5760297",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
