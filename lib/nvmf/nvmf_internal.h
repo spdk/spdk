@@ -134,6 +134,8 @@ struct spdk_nvmf_request {
 	void				*data;
 	union nvmf_h2c_msg		*cmd;
 	union nvmf_c2h_msg		*rsp;
+	struct iovec			iov[16];
+	uint32_t			iovcnt;
 
 	TAILQ_ENTRY(spdk_nvmf_request)	link;
 };

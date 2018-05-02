@@ -55,6 +55,7 @@
  */
 #define NVMF_DEFAULT_TX_SGE		1
 #define NVMF_DEFAULT_RX_SGE		2
+#define NVMF_DEFAULT_DATA_SGE		16
 
 /* The RDMA completion queue size */
 #define NVMF_RDMA_CQ_SIZE	4096
@@ -129,7 +130,7 @@ struct spdk_nvmf_rdma_recv {
 
 struct spdk_nvmf_rdma_request {
 	struct spdk_nvmf_request		req;
-	void					*data_from_pool;
+	bool					data_from_pool;
 
 	enum spdk_nvmf_rdma_request_state	state;
 
@@ -140,10 +141,7 @@ struct spdk_nvmf_rdma_request {
 		struct	ibv_sge			sgl[NVMF_DEFAULT_TX_SGE];
 	} rsp;
 
-	struct {
-		struct ibv_send_wr		wr;
-		struct ibv_sge			sgl[NVMF_DEFAULT_TX_SGE];
-	} data;
+	struct ibv_send_wr		data_wr;
 
 	TAILQ_ENTRY(spdk_nvmf_rdma_request)	link;
 };
@@ -204,6 +202,11 @@ struct spdk_nvmf_rdma_qpair {
 	void					*bufs;
 	struct ibv_mr				*bufs_mr;
 
+	/* Array of size "max_queue_depth * ibv_sge" containing
+	 * buffers to be used for data wr.
+	 */
+	struct ibv_sge			*sge;
+
 	TAILQ_ENTRY(spdk_nvmf_rdma_qpair)	link;
 	TAILQ_ENTRY(spdk_nvmf_rdma_qpair)	pending_link;
 
@@ -259,6 +262,8 @@ struct spdk_nvmf_rdma_transport {
 
 	uint16_t			max_queue_depth;
 	uint32_t			max_io_size;
+	uint32_t			io_unit_size;
+	uint32_t			max_sge;
 	uint32_t			in_capsule_data_size;
 
 	TAILQ_HEAD(, spdk_nvmf_rdma_device)	devices;
@@ -323,6 +328,7 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 	spdk_dma_free(rqpair->bufs);
 	free(rqpair->reqs);
 	free(rqpair->recvs);
+	free(rqpair->sge);
 	free(rqpair);
 }
 
@@ -345,8 +351,8 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	attr.recv_cq		= rqpair->poller->cq;
 	attr.cap.max_send_wr	= rqpair->max_queue_depth * 2; /* SEND, READ, and WRITE operations */
 	attr.cap.max_recv_wr	= rqpair->max_queue_depth; /* RECV operations */
-	attr.cap.max_send_sge	= NVMF_DEFAULT_TX_SGE;
-	attr.cap.max_recv_sge	= NVMF_DEFAULT_RX_SGE;
+	attr.cap.max_send_sge	= NVMF_DEFAULT_DATA_SGE;
+	attr.cap.max_recv_sge	= NVMF_DEFAULT_DATA_SGE;
 
 	rc = rdma_create_qp(rqpair->cm_id, NULL, &attr);
 	if (rc) {
@@ -359,6 +365,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 
 	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "New RDMA Connection: %p\n", qpair);
 
+	rqpair->sge = calloc(rtransport->max_sge * rqpair->max_queue_depth, sizeof(struct ibv_sge));
 	rqpair->reqs = calloc(rqpair->max_queue_depth, sizeof(*rqpair->reqs));
 	rqpair->recvs = calloc(rqpair->max_queue_depth, sizeof(*rqpair->recvs));
 	rqpair->cmds = spdk_dma_zmalloc(rqpair->max_queue_depth * sizeof(*rqpair->cmds),
@@ -368,7 +375,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	rqpair->bufs = spdk_dma_zmalloc(rqpair->max_queue_depth * rtransport->in_capsule_data_size,
 					0x1000, NULL);
 	if (!rqpair->reqs || !rqpair->recvs || !rqpair->cmds ||
-	    !rqpair->cpls || !rqpair->bufs) {
+	    !rqpair->cpls || !rqpair->bufs || !rqpair->sge) {
 		SPDK_ERRLOG("Unable to allocate sufficient memory for RDMA queue.\n");
 		spdk_nvmf_rdma_qpair_destroy(rqpair);
 		return -1;
@@ -446,11 +453,11 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 		rdma_req->rsp.wr.num_sge = SPDK_COUNTOF(rdma_req->rsp.sgl);
 
 		/* Set up memory for data buffers */
-		rdma_req->data.wr.wr_id = (uint64_t)rdma_req;
-		rdma_req->data.wr.next = NULL;
-		rdma_req->data.wr.send_flags = IBV_SEND_SIGNALED;
-		rdma_req->data.wr.sg_list = rdma_req->data.sgl;
-		rdma_req->data.wr.num_sge = SPDK_COUNTOF(rdma_req->data.sgl);
+		rdma_req->data_wr.wr_id = (uint64_t)rdma_req;
+		rdma_req->data_wr.next = NULL;
+		rdma_req->data_wr.send_flags = IBV_SEND_SIGNALED;
+		rdma_req->data_wr.sg_list = &rqpair->sge[i];
+		rdma_req->data_wr.num_sge = rtransport->max_sge;
 
 		TAILQ_INSERT_TAIL(&rqpair->free_queue, rdma_req, link);
 	}
@@ -478,9 +485,9 @@ request_transfer_in(struct spdk_nvmf_request *req)
 	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "RDMA READ POSTED. Request: %p Connection: %p\n", req, qpair);
 	spdk_trace_record(TRACE_RDMA_READ_START, 0, 0, (uintptr_t)req, 0);
 
-	rdma_req->data.wr.opcode = IBV_WR_RDMA_READ;
-	rdma_req->data.wr.next = NULL;
-	rc = ibv_post_send(rqpair->cm_id->qp, &rdma_req->data.wr, &bad_wr);
+	rdma_req->data_wr.opcode = IBV_WR_RDMA_READ;
+	rdma_req->data_wr.next = NULL;
+	rc = ibv_post_send(rqpair->cm_id->qp, &rdma_req->data_wr, &bad_wr);
 	if (rc) {
 		SPDK_ERRLOG("Unable to transfer data from host to target\n");
 
@@ -541,10 +548,10 @@ request_transfer_out(struct spdk_nvmf_request *req)
 		spdk_trace_record(TRACE_RDMA_WRITE_START, 0, 0, (uintptr_t)req, 0);
 
 		rqpair->cur_rdma_rw_depth++;
-		rdma_req->data.wr.opcode = IBV_WR_RDMA_WRITE;
+		rdma_req->data_wr.opcode = IBV_WR_RDMA_WRITE;
 
-		rdma_req->data.wr.next = send_wr;
-		send_wr = &rdma_req->data.wr;
+		rdma_req->data_wr.next = send_wr;
+		send_wr = &rdma_req->data_wr;
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "RDMA SEND POSTED. Request: %p Connection: %p\n", req, qpair);
@@ -555,7 +562,7 @@ request_transfer_out(struct spdk_nvmf_request *req)
 	if (rc) {
 		SPDK_ERRLOG("Unable to send response capsule\n");
 
-		if (rdma_req->data.wr.opcode == IBV_WR_RDMA_WRITE) {
+		if (rdma_req->data_wr.opcode == IBV_WR_RDMA_WRITE) {
 			/* Decrement r/w counter back since data transfer
 			 * has not started.
 			 */
@@ -870,6 +877,9 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 	struct spdk_nvme_cmd			*cmd;
 	struct spdk_nvme_cpl			*rsp;
 	struct spdk_nvme_sgl_descriptor		*sgl;
+	uint32_t			sge_count;
+	uint32_t			sge_length;
+	void			*buff = NULL;
 
 	cmd = &rdma_req->req.cmd->nvme_cmd;
 	rsp = &rdma_req->req.rsp->nvme_cpl;
@@ -886,23 +896,67 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		}
 
 		rdma_req->req.length = sgl->keyed.length;
-		rdma_req->data_from_pool = spdk_mempool_get(rtransport->data_buf_pool);
+
+		/* allocate memory for each SGL */
+		sge_count = rdma_req->req.length / rtransport->io_unit_size;
+		if (rdma_req->req.length < rtransport->io_unit_size ||
+		    (sge_count * rtransport->io_unit_size < rdma_req->req.length)) {
+			sge_count += 1;
+		}
+
+		sge_length = rtransport->io_unit_size;
+		if (rdma_req->req.length < rtransport->io_unit_size) {
+			sge_length = rdma_req->req.length;
+		}
+
+		for (uint32_t i = 0; i < sge_count; i++) {
+			buff = spdk_mempool_get(rtransport->data_buf_pool);
+			if (!buff) {
+				break;
+			}
+
+			/* AIO backend requires block size aligned data buffers,
+			 * 4KiB aligned data buffer should work for most devices.
+			 */
+			rdma_req->data_wr.sg_list[i].addr = (uintptr_t)(buff + NVMF_DATA_BUFFER_MASK) &
+							    ~NVMF_DATA_BUFFER_MASK;
+			rdma_req->data_wr.sg_list[i].length = sge_length;
+			rdma_req->data_wr.sg_list[i].lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
+							     (uint64_t)buff))->lkey;
+
+			rdma_req->req.iov[i].iov_base = (void *)(rdma_req->data_wr.sg_list[i].addr);
+			rdma_req->req.iov[i].iov_len = sge_length;
+			rdma_req->req.iovcnt = i + 1;
+
+		}
+
+		if (buff) {
+			rdma_req->data_from_pool = true;
+
+			if (sge_count == 1) {
+				rdma_req->req.data = (void *)((uintptr_t)(buff + NVMF_DATA_BUFFER_MASK) & ~NVMF_DATA_BUFFER_MASK);
+				rdma_req->req.iovcnt = 0;
+			} else {
+				rdma_req->req.data = NULL;
+			}
+		}
+
 		if (!rdma_req->data_from_pool) {
 			/* No available buffers. Queue this request up. */
 			SPDK_DEBUGLOG(SPDK_LOG_RDMA, "No available large data buffers. Queueing request %p\n", rdma_req);
+
+			for (uint32_t i = 0; i < rdma_req->req.iovcnt; i++) {
+				spdk_mempool_put(rtransport->data_buf_pool, (void *) rdma_req->data_wr.sg_list[i].addr);
+				rdma_req->req.iov[i].iov_base = NULL;
+				rdma_req->req.iov[i].iov_len = 0;
+			}
+			rdma_req->req.iovcnt = 0;
 			return 0;
 		}
-		/* AIO backend requires block size aligned data buffers,
-		 * 4KiB aligned data buffer should work for most devices.
-		 */
-		rdma_req->req.data = (void *)((uintptr_t)(rdma_req->data_from_pool + NVMF_DATA_BUFFER_MASK)
-					      & ~NVMF_DATA_BUFFER_MASK);
-		rdma_req->data.sgl[0].addr = (uintptr_t)rdma_req->req.data;
-		rdma_req->data.sgl[0].length = sgl->keyed.length;
-		rdma_req->data.sgl[0].lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
-					      (uint64_t)rdma_req->req.data))->lkey;
-		rdma_req->data.wr.wr.rdma.rkey = sgl->keyed.key;
-		rdma_req->data.wr.wr.rdma.remote_addr = sgl->address;
+
+		rdma_req->data_wr.num_sge = sge_count;
+		rdma_req->data_wr.wr.rdma.rkey = sgl->keyed.key;
+		rdma_req->data_wr.wr.rdma.remote_addr = sgl->address;
 
 		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Request %p took buffer from central pool\n", rdma_req);
 
@@ -931,7 +985,7 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		}
 
 		rdma_req->req.data = rdma_req->recv->buf + offset;
-		rdma_req->data_from_pool = NULL;
+		rdma_req->data_from_pool = false;
 		rdma_req->req.length = sgl->unkeyed.length;
 		return 0;
 	}
@@ -1010,8 +1064,8 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 				break;
 			}
 
-			if (!rdma_req->req.data) {
-				/* No buffers available. */
+			if (!rdma_req->req.data && !rdma_req->req.iovcnt) {
+				/* No buffers available */
 				break;
 			}
 
@@ -1020,7 +1074,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			/* If data is transferring from host to controller and the data didn't
 			 * arrive using in capsule data, we need to do a transfer from the host.
 			 */
-			if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER && rdma_req->data_from_pool != NULL) {
+			if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER && rdma_req->data_from_pool) {
 				rdma_req->state = RDMA_REQUEST_STATE_TRANSFER_PENDING_HOST_TO_CONTROLLER;
 				TAILQ_INSERT_TAIL(&rqpair->pending_rdma_rw_queue, rdma_req, link);
 				break;
@@ -1090,9 +1144,19 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			rqpair->cur_queue_depth--;
 
 			if (rdma_req->data_from_pool) {
-				/* Put the buffer back in the pool */
-				spdk_mempool_put(rtransport->data_buf_pool, rdma_req->data_from_pool);
-				rdma_req->data_from_pool = NULL;
+				/* Put the buffer/s back in the pool */
+
+				uint32_t sge_count = rdma_req->req.length / rtransport->io_unit_size;
+				if (rdma_req->req.length < rtransport->io_unit_size ||
+				    (sge_count * rtransport->io_unit_size < rdma_req->req.length)) {
+					sge_count += 1;
+				}
+
+				for (uint32_t i = 0; i < sge_count; i++) {
+					spdk_mempool_put(rtransport->data_buf_pool, (void *) rdma_req->data_wr.sg_list[i].addr);
+				}
+
+				rdma_req->data_from_pool = false;
 			}
 			rdma_req->req.length = 0;
 			rdma_req->req.data = NULL;
@@ -1137,7 +1201,20 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 
 	rtransport->max_queue_depth = tgt->opts.max_queue_depth;
 	rtransport->max_io_size = tgt->opts.max_io_size;
+	rtransport->io_unit_size = tgt->opts.io_unit_size;
 	rtransport->in_capsule_data_size = tgt->opts.in_capsule_data_size;
+
+	/* reset io_unit_size..it can neither be too big or too small. */
+	if (rtransport->io_unit_size > rtransport->max_io_size) {
+		rtransport->io_unit_size = rtransport->max_io_size;
+	}
+
+	rtransport->max_sge = rtransport->max_io_size / rtransport->io_unit_size;
+	if (rtransport->max_sge > NVMF_DEFAULT_DATA_SGE) {
+		SPDK_ERRLOG("Unsupported IO Unit size failed, %d bytes\n", rtransport->io_unit_size);
+		free(rtransport);
+		return NULL;
+	}
 
 	rtransport->event_channel = rdma_create_event_channel();
 	if (rtransport->event_channel == NULL) {
@@ -1156,7 +1233,7 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 
 	rtransport->data_buf_pool = spdk_mempool_create("spdk_nvmf_rdma",
 				    rtransport->max_queue_depth * 4, /* The 4 is arbitrarily chosen. Needs to be configurable. */
-				    rtransport->max_io_size + NVMF_DATA_BUFFER_ALIGNMENT,
+				    rtransport->io_unit_size + NVMF_DATA_BUFFER_ALIGNMENT,
 				    SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 				    SPDK_ENV_SOCKET_ID_ANY);
 	if (!rtransport->data_buf_pool) {
