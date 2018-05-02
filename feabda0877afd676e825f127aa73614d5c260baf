@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1e1d50ee_da710336",
+        "filename": ".githooks/pre-push",
+        "patchSetId": 1
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-02T16:54:47Z",
+      "side": 1,
+      "message": "I think you can probably set MAKE\u003dmake -j${nproc} at the top",
+      "parentUuid": "ab73df97_26e78a7b",
+      "revId": "feabda0877afd676e825f127aa73614d5c260baf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1822ed5a_61f865d8",
         "filename": ".githooks/pre-push",
         "patchSetId": 1
