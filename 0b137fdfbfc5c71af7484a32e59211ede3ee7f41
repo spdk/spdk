@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1dcadfd1_8634c723",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 776,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-02T23:53:37Z",
+      "side": 1,
+      "message": "timeout must not be less than 0\n\n(i.e. 0 is an OK value but this error message indicates otherwise)",
+      "revId": "0b137fdfbfc5c71af7484a32e59211ede3ee7f41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6aea1318_88abe2b6",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 781,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-02T23:53:37Z",
+      "side": 1,
+      "message": "must be between 0 and %d\n\n(i.e. 0 is an OK value but the error message indicates otherwise)",
+      "revId": "0b137fdfbfc5c71af7484a32e59211ede3ee7f41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
