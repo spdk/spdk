@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "248e4f08_99c760d1",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 471,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-02T07:20:47Z",
+      "side": 1,
+      "message": "Is this behavior generally acceptable? \n\nIf clone-\u003eback_bs_dev-\u003eback_bs_dev is thin provisioned, should the inflated clone be thin provisioned too?\n\nInheriting thin provisioning setting to the inflated clone is good enhancement? If yes, adding any TBD comment may be helpful.\n\nCurrently knowing if zeroes_bs_dev or not may not be possible because struct spdk_bs_dev doesn\u0027t have any usable information.",
+      "range": {
+        "startLine": 471,
+        "startChar": 12,
+        "endLine": 471,
+        "endChar": 49
+      },
+      "revId": "45b26eec083cb13ce0b41e573aa90bab218a4b5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "744d57a3_04251f65",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 27
