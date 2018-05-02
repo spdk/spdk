@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2d6b5d54_1da37d59",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 302,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-02T22:30:48Z",
+      "side": 1,
+      "message": "this used to free the bdev_io if cq or sq was NULL - why is that changed in this patch?",
+      "revId": "ce276179135d7bc47909f5e64600a79e79e39505",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef1f893f_adfc547f",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-02T22:30:48Z",
+      "side": 1,
+      "message": "this doesn\u0027t seem right - if we have multiple tasks on the cq_full_waited_tasks queue, we would remove the first task in nvme_worker and then put it at the back of the list here",
+      "revId": "ce276179135d7bc47909f5e64600a79e79e39505",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "86e19629_19cbd009",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 526,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-02T22:30:48Z",
+      "side": 1,
+      "message": "this code seems out of place here - the comment on line 519 says \"Submission Queue\" but then we\u0027re doing completion queue stuff here\n\nrelated to comment above, I don\u0027t think you should remove the task from the STAILQ unless you know you have room to complete it - otherwise you have completion ordering issues - we really shouldn\u0027t reorder the completions if we can avoid it",
+      "revId": "ce276179135d7bc47909f5e64600a79e79e39505",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
