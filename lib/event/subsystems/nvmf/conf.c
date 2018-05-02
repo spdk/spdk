@@ -72,6 +72,7 @@ spdk_nvmf_read_config_file_params(struct spdk_conf_section *sp,
 	int max_queues_per_sess;
 	int in_capsule_data_size;
 	int max_io_size;
+	int io_unit_size;
 	int acceptor_poll_rate;
 
 	max_queue_depth = spdk_conf_section_get_intval(sp, "MaxQueueDepth");
@@ -92,6 +93,11 @@ spdk_nvmf_read_config_file_params(struct spdk_conf_section *sp,
 	max_io_size = spdk_conf_section_get_intval(sp, "MaxIOSize");
 	if (max_io_size >= 0) {
 		opts->max_io_size = max_io_size;
+	}
+
+	io_unit_size = spdk_conf_section_get_intval(sp, "IOUnitSize");
+	if (io_unit_size >= 0) {
+		opts->io_unit_size = io_unit_size;
 	}
 
 	acceptor_poll_rate = spdk_conf_section_get_intval(sp, "AcceptorPollRate");
