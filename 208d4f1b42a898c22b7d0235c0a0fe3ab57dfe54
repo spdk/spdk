@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "f6a95e6e_6cfbf5b2",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 612,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-02T17:44:35Z",
+      "side": 1,
+      "message": "Failure here is quite unlikely. Hope you forgive me :)\n\n\u003e It also means that if any of these fail, we won\u0027t be able to differentiate which one since the same error message is shared by all of them\n\nThe iscsi_get_error(req-\u003econtext) will give proper error code here. Also the return code will be valid.",
+      "parentUuid": "00f1fe15_fa41a9cd",
+      "revId": "208d4f1b42a898c22b7d0235c0a0fe3ab57dfe54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "56a8fc2d_f2665403",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 1
