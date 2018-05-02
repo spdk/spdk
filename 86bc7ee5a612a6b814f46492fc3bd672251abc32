@@ -16,6 +16,24 @@
       "revId": "86bc7ee5a612a6b814f46492fc3bd672251abc32",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c3a8f68_4ca61623",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2970,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-02T21:28:01Z",
+      "side": 0,
+      "message": "I didn\u0027t mean to revert these changes later, so I fixed those patches up.",
+      "parentUuid": "1f0e92e8_9fda6d40",
+      "revId": "86bc7ee5a612a6b814f46492fc3bd672251abc32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
