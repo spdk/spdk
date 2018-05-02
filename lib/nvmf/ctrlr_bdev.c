@@ -180,8 +180,8 @@ nvmf_bdev_ctrlr_read_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 	}
 
 	spdk_trace_record(TRACE_NVMF_LIB_READ_START, 0, 0, (uint64_t)req, 0);
-	if (spdk_unlikely(spdk_bdev_read_blocks(desc, ch, req->data, start_lba, num_blocks,
-						nvmf_bdev_ctrlr_complete_cmd, req))) {
+	if (spdk_unlikely(spdk_bdev_readv_blocks(desc, ch, req->iov, req->iovcnt, start_lba, num_blocks,
+			  nvmf_bdev_ctrlr_complete_cmd, req))) {
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
 		rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -219,7 +219,7 @@ nvmf_bdev_ctrlr_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 	}
 
 	spdk_trace_record(TRACE_NVMF_LIB_WRITE_START, 0, 0, (uint64_t)req, 0);
-	if (spdk_unlikely(spdk_bdev_write_blocks(desc, ch, req->data, start_lba, num_blocks,
+	if (spdk_unlikely(spdk_bdev_writev_blocks(desc, ch, req->iov, req->iovcnt, start_lba, num_blocks,
 			  nvmf_bdev_ctrlr_complete_cmd, req))) {
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
 		rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
