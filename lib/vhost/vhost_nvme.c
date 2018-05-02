@@ -812,7 +812,6 @@ spdk_vhost_nvme_admin_passthrough(int vid, void *cmd, void *cqe, void *buf)
 	int ret = 0;
 	struct spdk_vhost_nvme_dev *nvme;
 	uint32_t cq_head, sq_tail;
-	uint32_t dw0;
 
 	nvme = spdk_vhost_nvme_get_by_name(vid);
 	if (!nvme) {
@@ -855,8 +854,7 @@ spdk_vhost_nvme_admin_passthrough(int vid, void *cmd, void *cqe, void *buf)
 		if (req->cdw10 == SPDK_NVME_FEAT_NUMBER_OF_QUEUES) {
 			cpl->status.sc = 0;
 			cpl->status.sct = 0;
-			dw0 = (nvme->num_io_queues - 1) | ((nvme->num_io_queues - 1) << 16);
-			memcpy(buf, &dw0, 4);
+			cpl->cdw0 = (nvme->num_io_queues - 1) | ((nvme->num_io_queues - 1) << 16);
 		} else {
 			cpl->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 			cpl->status.sct = SPDK_NVME_SCT_GENERIC;

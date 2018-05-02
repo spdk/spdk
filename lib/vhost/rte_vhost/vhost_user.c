@@ -1193,10 +1193,6 @@ vhost_user_msg_handler(int vid, int fd)
 		if (cmd[0] == 0x06) {
 			memcpy(msg.payload.nvme.buf, &buf, 4096);
 			msg.size += 4096;
-		} else if (cmd[0] == 0x09 || cmd[0] == 0x0a) {
-			memcpy(&msg.payload.nvme.buf, &buf, 4);
-			msg.size += 4096;
-
 		}
 		send_vhost_message(fd, &msg);
 		break;
