@@ -1,5 +1,6 @@
 def create_pmem_pool(client, args):
-    num_blocks = (args.total_size * 1024 * 1024) / args.block_size
+    # truncate to the nearest block.
+    num_blocks = int((args.total_size * 1024 * 1024) / args.block_size)
     params = {'pmem_file': args.pmem_file,
               'num_blocks': num_blocks,
               'block_size': args.block_size}
