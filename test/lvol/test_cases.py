@@ -309,7 +309,7 @@ class TestCases(object):
                                                  self.cluster_size)
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
-        size = ((self.total_size - 1) / 4)
+        size = int((self.total_size - 1) / 4)
 
         for j in range(2):
             uuid_bdevs = []
@@ -792,7 +792,7 @@ class TestCases(object):
                                                   self.cluster_size)
         lvs = self.c.get_lvol_stores(self.lvs_name)[0]
         free_clusters_start = int(lvs['free_clusters'])
-        bdev_size = int(lvs['cluster_size']) * int(lvs['free_clusters']) / MEGABYTE
+        bdev_size = int(int(lvs['cluster_size']) * int(lvs['free_clusters']) / MEGABYTE)
         # create thin provisioned lvol bdev with size equals to lvol store free space
         bdev_name = self.c.construct_lvol_bdev(uuid_store, self.lbd_name,
                                                bdev_size, thin=True)
