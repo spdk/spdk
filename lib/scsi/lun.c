@@ -158,7 +158,7 @@ spdk_scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *tas
 	task->status = SPDK_SCSI_STATUS_GOOD;
 	spdk_trace_record(TRACE_SCSI_TASK_START, lun->dev->id, task->length, (uintptr_t)task, 0);
 	TAILQ_INSERT_TAIL(&lun->tasks, task, scsi_link);
-	if (!lun->removed) {
+	if (!lun->removed && lun->io_channel) {
 		rc = spdk_bdev_scsi_execute(task);
 	} else {
 		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
