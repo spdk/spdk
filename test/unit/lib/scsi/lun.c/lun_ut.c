@@ -48,6 +48,7 @@ struct spdk_bdev {
 SPDK_LOG_REGISTER_COMPONENT("scsi", SPDK_LOG_SCSI)
 
 struct spdk_scsi_globals g_spdk_scsi;
+struct spdk_io_channel g_io_channel;
 
 static bool g_lun_execute_fail = false;
 static int g_lun_execute_status = SPDK_SCSI_TASK_PENDING;
@@ -207,6 +208,7 @@ lun_construct(void)
 	struct spdk_bdev		bdev;
 
 	lun = spdk_scsi_lun_construct(&bdev, NULL, NULL);
+	lun->io_channel = &g_io_channel;
 
 	SPDK_CU_ASSERT_FATAL(lun != NULL);
 	return lun;
