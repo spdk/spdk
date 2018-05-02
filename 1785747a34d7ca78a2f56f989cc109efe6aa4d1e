@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d4b9525e_7b38f5fb",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 1859,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-02T22:06:14Z",
+      "side": 1,
+      "message": "this TODO worries me\n\ncould we put a dummy descriptor on the descriptor list and then release the lock?  abort the queued io, and then reacquire the lock and remove the dummy descriptor",
+      "revId": "1785747a34d7ca78a2f56f989cc109efe6aa4d1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0342072b_10931893",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 2346,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-02T22:06:14Z",
+      "side": 1,
+      "message": "this return value doesn\u0027t get used anywhere",
+      "revId": "1785747a34d7ca78a2f56f989cc109efe6aa4d1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "12e92d6f_c567e205",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 2907,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-02T22:06:14Z",
+      "side": 1,
+      "message": "qos gets freed two lines later - do we need to explicitly set these to 0 here?",
+      "revId": "1785747a34d7ca78a2f56f989cc109efe6aa4d1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
