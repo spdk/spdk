@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "22e1c2cf_5b29ed6f",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 597,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-02T15:39:28Z",
+      "side": 1,
+      "message": "!url check not needed here - line 585 already checks this",
+      "revId": "208d4f1b42a898c22b7d0235c0a0fe3ab57dfe54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "00f1fe15_fa41a9cd",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 612,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-02T15:39:28Z",
+      "side": 1,
+      "message": "I guess this rc \u003d rc ? rc : ... saves a few lines of code - but i\u0027m not aware of anywhere else in SPDK where we do this currently.  I am glad that you\u0027ve added return value checks though we were missing that previously.\n\nIt also means that if any of these fail, we won\u0027t be able to differentiate which one since the same error message is shared by all of them",
+      "revId": "208d4f1b42a898c22b7d0235c0a0fe3ab57dfe54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56a8fc2d_f2665403",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 627,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-02T15:39:28Z",
+      "side": 1,
+      "message": "i know it\u0027s valid to pass NULL here but i had to prove it to myself by looking at the libiscsi implementation - i think it would be more clear to just check if (req-\u003econtext) here to reduce confusion",
+      "revId": "208d4f1b42a898c22b7d0235c0a0fe3ab57dfe54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5b35e8d6_51ac49e5",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 672,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-02T15:39:28Z",
+      "side": 1,
+      "message": "i think you need to call the version without the leading underscore\n\notherwise if the first entry is successful and the second one is not, you will immediately report that this module is done with initialization even though the first entry is still in progress of connecting",
+      "revId": "208d4f1b42a898c22b7d0235c0a0fe3ab57dfe54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
