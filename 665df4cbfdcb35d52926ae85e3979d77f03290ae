@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "82ccc11f_7663ae22",
+        "filename": "include/spdk/string.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-03T22:40:48Z",
+      "side": 1,
+      "message": "Typo: foramt -\u003e format",
+      "range": {
+        "startLine": 53,
+        "startChar": 10,
+        "endLine": 53,
+        "endChar": 16
+      },
+      "revId": "665df4cbfdcb35d52926ae85e3979d77f03290ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
