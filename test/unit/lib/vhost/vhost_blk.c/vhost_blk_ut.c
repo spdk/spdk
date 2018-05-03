@@ -60,26 +60,11 @@ DEFINE_STUB(spdk_bdev_open, int, (struct spdk_bdev *bdev, bool write,
 DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
 DEFINE_STUB(rte_vhost_driver_enable_features, int, (const char *path, uint64_t features), 0);
 DEFINE_STUB_P(spdk_bdev_get_io_channel, struct spdk_io_channel, (struct spdk_bdev_desc *desc), {0});
+DEFINE_STUB(spdk_bdev_get_block_size, uint32_t, (const struct spdk_bdev *bdev), 512);
+DEFINE_STUB(spdk_bdev_get_num_blocks, uint64_t, (const struct spdk_bdev *bdev), 0x1);
+DEFINE_STUB(spdk_bdev_has_write_cache, bool, (const struct spdk_bdev *bdev), false);
 
 SPDK_LOG_REGISTER_COMPONENT("vhost", SPDK_LOG_VHOST)
-
-uint32_t
-spdk_bdev_get_block_size(const struct spdk_bdev *bdev)
-{
-	return 512;
-}
-
-uint64_t
-spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev)
-{
-	return 0x1;
-}
-
-bool
-spdk_bdev_has_write_cache(const struct spdk_bdev *bdev)
-{
-	return false;
-}
 
 static void
 vhost_blk_controller_construct_test(void)
