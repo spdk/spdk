@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4478ecfc_dc7e00ce",
+        "filename": "examples/bdev/hello_world/Makefile",
+        "patchSetId": 6
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-03T22:48:39Z",
+      "side": 1,
+      "message": "This should also depend on $(COPY_MODULES_FILES), since you are adding $(COPY_MODULES_LINKER_ARGS) to LIBS above.",
+      "revId": "d6f5b36b6e7dcbf84f9a126712a881a61601c1a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b1007837_0c9e4e25",
+        "filename": "examples/bdev/hello_world/bdev.conf",
+        "patchSetId": 6
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-03T22:48:39Z",
+      "side": 1,
+      "message": "This section has been renamed to [Passthru] (uppercase p).",
+      "revId": "d6f5b36b6e7dcbf84f9a126712a881a61601c1a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f37869af_1c25d1fa",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-03T22:48:39Z",
+      "side": 1,
+      "message": "The spacing inside the usage message looks like it should be tweaked to line up correctly.",
+      "revId": "d6f5b36b6e7dcbf84f9a126712a881a61601c1a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0bbb13b_9687cd26",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-03T22:48:39Z",
+      "side": 1,
+      "message": "This size isn\u0027t going to be right - it\u0027s just the size of the pointer.  I think you want the block size here (either retrieve it again or store it in hello_context next to the buffer).",
+      "range": {
+        "startLine": 121,
+        "startChar": 32,
+        "endLine": 121,
+        "endChar": 60
+      },
+      "revId": "d6f5b36b6e7dcbf84f9a126712a881a61601c1a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
