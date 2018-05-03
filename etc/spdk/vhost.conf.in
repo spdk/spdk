@@ -109,13 +109,13 @@
   Name vhost.0
   # Assign devices from backend
   # Use the first malloc device
-  Dev 0 Malloc0
+  Target 0 Malloc0
   # Use the first AIO device
-  #Dev 1 AIO0
+  #Target 1 AIO0
   # Use the frist Nvme device
-  #Dev 2 Nvme0n1
+  #Target 2 Nvme0n1
   # Use the third partition from second Nvme device
-  #Dev 3 Nvme1n1p2
+  #Target 3 Nvme1n1p2
 
   # Start the poller for this vhost controller on one of the cores in
   #  this cpumask.  By default, it not specified, will use any core in the
@@ -124,7 +124,7 @@
 
 #[VhostScsi1]
 #  Name vhost.1
-#  Dev 0 AIO1
+#  Target 0 AIO1
 #  Cpumask 0x1
 
 #[VhostBlk0]
