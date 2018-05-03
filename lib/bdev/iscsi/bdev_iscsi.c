@@ -89,6 +89,7 @@ struct bdev_iscsi_io_channel {
 struct bdev_iscsi_conn_req {
 	char					*url;
 	char					*bdev_name;
+	char					*initiator_iqn;
 	struct iscsi_context			*context;
 	TAILQ_ENTRY(bdev_iscsi_conn_req)	link;
 };
@@ -126,6 +127,7 @@ static void iscsi_free_lun(struct bdev_iscsi_lun *lun)
 	assert(lun != NULL);
 	free(lun->bdev.name);
 	free(lun->url);
+	free(lun->initiator_iqn);
 	free(lun);
 }
 
@@ -445,7 +447,7 @@ static const struct spdk_bdev_fn_table iscsi_fn_table = {
 };
 
 static struct spdk_bdev *
-create_iscsi_lun(struct iscsi_context *context, char *url,
+create_iscsi_lun(struct iscsi_context *context, char *url, char *initiator_iqn,
 		 const char *name, uint64_t num_blocks, uint32_t block_size)
 {
 	struct bdev_iscsi_lun *lun;
@@ -459,6 +461,7 @@ create_iscsi_lun(struct iscsi_context *context, char *url,
 
 	lun->context = context;
 	lun->url = url;
+	lun->initiator_iqn = initiator_iqn;
 
 	pthread_mutex_init(&lun->mutex, NULL);
 
@@ -519,7 +522,7 @@ iscsi_readcapacity16_cb(struct iscsi_context *iscsi, int status,
 	}
 
 	readcap16 = scsi_datain_unmarshall(task);
-	bdev = create_iscsi_lun(req->context, req->url, req->bdev_name,
+	bdev = create_iscsi_lun(req->context, req->url, req->initiator_iqn, req->bdev_name,
 				readcap16->returned_lba + 1, readcap16->block_length);
 	if (!bdev) {
 		SPDK_ERRLOG("Unable to create iscsi bdev\n");
@@ -596,8 +599,9 @@ create_iscsi_disk(const char *bdev_name, const char *url, const char *initiator_
 
 	req->bdev_name = strdup(bdev_name);
 	req->url = strdup(url);
+	req->initiator_iqn = strdup(initiator_iqn);
 	req->context = iscsi_create_context(initiator_iqn);
-	if (!req->bdev_name || !req->url || !req->context) {
+	if (!req->bdev_name || !req->url || !req->initiator_iqn || !req->context) {
 		SPDK_ERRLOG("Out of memory\n");
 		rc = -ENOMEM;
 		goto err;
@@ -634,6 +638,7 @@ err:
 		iscsi_destroy_context(req->context);
 	}
 
+	free(req->initiator_iqn);
 	free(req->bdev_name);
 	free(req->url);
 	free(req);
