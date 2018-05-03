@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d6133cc0_5ba824bd",
+        "filename": ".githooks/pre-commit",
+        "patchSetId": 1
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-05-03T22:41:40Z",
+      "side": 1,
+      "message": "Fixed",
+      "parentUuid": "c577a6ed_d8e4e40c",
+      "revId": "feabda0877afd676e825f127aa73614d5c260baf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9e09bfa7_5fb79609",
         "filename": ".githooks/pre-commit",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2018-05-03T19:02:33Z",
       "side": 1,
       "message": "/bin/sh may not be bash, so this should probably not use bash-style [[ ]] especially since they aren\u0027t needed in this case - [ $rc -ne 0 ] should be equivalent.",
+      "revId": "feabda0877afd676e825f127aa73614d5c260baf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49eb2e16_5e5c0e9c",
+        "filename": ".githooks/pre-commit",
+        "patchSetId": 1
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-05-03T22:41:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9e09bfa7_5fb79609",
       "revId": "feabda0877afd676e825f127aa73614d5c260baf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -64,6 +100,24 @@
       "writtenOn": "2018-05-02T16:54:47Z",
       "side": 1,
       "message": "I think you can probably set MAKE\u003dmake -j${nproc} at the top",
+      "parentUuid": "ab73df97_26e78a7b",
+      "revId": "feabda0877afd676e825f127aa73614d5c260baf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af92f0ac_709a5fd7",
+        "filename": ".githooks/pre-push",
+        "patchSetId": 1
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2018-05-03T22:41:40Z",
+      "side": 1,
+      "message": "Done",
       "parentUuid": "ab73df97_26e78a7b",
       "revId": "feabda0877afd676e825f127aa73614d5c260baf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
