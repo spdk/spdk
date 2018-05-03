@@ -665,7 +665,7 @@ nvme_pcie_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr)
 	struct nvme_pcie_qpair *pqpair;
 	int rc;
 
-	pqpair = spdk_dma_zmalloc(sizeof(*pqpair), 64, NULL);
+	pqpair = spdk_zmalloc(sizeof(*pqpair), 64, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
 	if (pqpair == NULL) {
 		return -ENOMEM;
 	}
@@ -791,7 +791,8 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transpo
 		return NULL;
 	}
 
-	pctrlr = spdk_dma_zmalloc(sizeof(struct nvme_pcie_ctrlr), 64, NULL);
+	pctrlr = spdk_zmalloc(sizeof(struct nvme_pcie_ctrlr), 64, NULL,
+			      SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
 	if (pctrlr == NULL) {
 		close(claim_fd);
 		SPDK_ERRLOG("could not allocate ctrlr\n");
@@ -809,7 +810,7 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transpo
 	rc = nvme_pcie_ctrlr_allocate_bars(pctrlr);
 	if (rc != 0) {
 		close(claim_fd);
-		spdk_dma_free(pctrlr);
+		spdk_free(pctrlr);
 		return NULL;
 	}
 
@@ -821,14 +822,14 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transpo
 	if (nvme_ctrlr_get_cap(&pctrlr->ctrlr, &cap)) {
 		SPDK_ERRLOG("get_cap() failed\n");
 		close(claim_fd);
-		spdk_dma_free(pctrlr);
+		spdk_free(pctrlr);
 		return NULL;
 	}
 
 	if (nvme_ctrlr_get_vs(&pctrlr->ctrlr, &vs)) {
 		SPDK_ERRLOG("get_vs() failed\n");
 		close(claim_fd);
-		spdk_dma_free(pctrlr);
+		spdk_free(pctrlr);
 		return NULL;
 	}
 
@@ -920,7 +921,7 @@ nvme_pcie_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 		spdk_pci_device_detach(devhandle);
 	}
 
-	spdk_dma_free(pctrlr);
+	spdk_free(pctrlr);
 
 	return 0;
 }
@@ -970,6 +971,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 	uint64_t		offset;
 	uint16_t		num_trackers;
 	size_t			page_size = sysconf(_SC_PAGESIZE);
+	uint32_t                flags = SPDK_MALLOC_DMA;
 
 	/*
 	 * Limit the maximum number of completions to return per call to prevent wraparound,
@@ -988,6 +990,10 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 
 	pqpair->sq_in_cmb = false;
 
+	if (nvme_qpair_is_admin_queue(&pqpair->qpair)) {
+		flags |= SPDK_MALLOC_SHARE;
+	}
+
 	/* cmd and cpl rings must be aligned on page size boundaries. */
 	if (ctrlr->opts.use_cmb_sqs) {
 		if (nvme_pcie_ctrlr_alloc_cmb(ctrlr, pqpair->num_entries * sizeof(struct spdk_nvme_cmd),
@@ -998,18 +1004,18 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 		}
 	}
 	if (pqpair->sq_in_cmb == false) {
-		pqpair->cmd = spdk_dma_zmalloc(pqpair->num_entries * sizeof(struct spdk_nvme_cmd),
-					       page_size,
-					       &pqpair->cmd_bus_addr);
+		pqpair->cmd = spdk_zmalloc(pqpair->num_entries * sizeof(struct spdk_nvme_cmd),
+					   page_size, &pqpair->cmd_bus_addr,
+					   SPDK_ENV_SOCKET_ID_ANY, flags);
 		if (pqpair->cmd == NULL) {
 			SPDK_ERRLOG("alloc qpair_cmd failed\n");
 			return -ENOMEM;
 		}
 	}
 
-	pqpair->cpl = spdk_dma_zmalloc(pqpair->num_entries * sizeof(struct spdk_nvme_cpl),
-				       page_size,
-				       &pqpair->cpl_bus_addr);
+	pqpair->cpl = spdk_zmalloc(pqpair->num_entries * sizeof(struct spdk_nvme_cpl),
+				   page_size, &pqpair->cpl_bus_addr,
+				   SPDK_ENV_SOCKET_ID_ANY, flags);
 	if (pqpair->cpl == NULL) {
 		SPDK_ERRLOG("alloc qpair_cpl failed\n");
 		return -ENOMEM;
@@ -1025,7 +1031,8 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 	 *   This ensures the PRP list embedded in the nvme_tracker object will not span a
 	 *   4KB boundary, while allowing access to trackers in tr[] via normal array indexing.
 	 */
-	pqpair->tr = spdk_dma_zmalloc(num_trackers * sizeof(*tr), sizeof(*tr), &phys_addr);
+	pqpair->tr = spdk_zmalloc(num_trackers * sizeof(*tr), sizeof(*tr), &phys_addr,
+				  SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
 	if (pqpair->tr == NULL) {
 		SPDK_ERRLOG("nvme_tr failed\n");
 		return -ENOMEM;
@@ -1326,16 +1333,16 @@ nvme_pcie_qpair_destroy(struct spdk_nvme_qpair *qpair)
 		nvme_pcie_admin_qpair_destroy(qpair);
 	}
 	if (pqpair->cmd && !pqpair->sq_in_cmb) {
-		spdk_dma_free(pqpair->cmd);
+		spdk_free(pqpair->cmd);
 	}
 	if (pqpair->cpl) {
-		spdk_dma_free(pqpair->cpl);
+		spdk_free(pqpair->cpl);
 	}
 	if (pqpair->tr) {
-		spdk_dma_free(pqpair->tr);
+		spdk_free(pqpair->tr);
 	}
 
-	spdk_dma_free(pqpair);
+	spdk_free(pqpair);
 
 	return 0;
 }
@@ -1574,7 +1581,8 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 
 	assert(ctrlr != NULL);
 
-	pqpair = spdk_dma_zmalloc(sizeof(*pqpair), 64, NULL);
+	pqpair = spdk_zmalloc(sizeof(*pqpair), 64, NULL,
+			      SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
 	if (pqpair == NULL) {
 		return NULL;
 	}

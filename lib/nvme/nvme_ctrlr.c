@@ -324,7 +324,7 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 		return -1;
 	}
 
-	spdk_dma_free(req_buf);
+	spdk_free(req_buf);
 
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 	return 0;
@@ -369,8 +369,8 @@ static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 	struct nvme_completion_poll_status	status;
 	struct spdk_nvme_intel_log_page_directory *log_page_directory;
 
-	log_page_directory = spdk_dma_zmalloc(sizeof(struct spdk_nvme_intel_log_page_directory),
-					      64, &phys_addr);
+	log_page_directory = spdk_zmalloc(sizeof(struct spdk_nvme_intel_log_page_directory),
+					  64, &phys_addr, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 	if (log_page_directory == NULL) {
 		SPDK_ERRLOG("could not allocate log_page_directory\n");
 		return -ENXIO;
@@ -385,13 +385,13 @@ static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		spdk_dma_free(log_page_directory);
+		spdk_free(log_page_directory);
 		SPDK_ERRLOG("nvme_ctrlr_cmd_get_log_page failed!\n");
 		return -ENXIO;
 	}
 
 	nvme_ctrlr_construct_intel_support_log_page_list(ctrlr, log_page_directory);
-	spdk_dma_free(log_page_directory);
+	spdk_free(log_page_directory);
 	return 0;
 }
 
@@ -1065,13 +1065,13 @@ nvme_ctrlr_destruct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 			nvme_ns_destruct(&ctrlr->ns[i]);
 		}
 
-		spdk_dma_free(ctrlr->ns);
+		spdk_free(ctrlr->ns);
 		ctrlr->ns = NULL;
 		ctrlr->num_ns = 0;
 	}
 
 	if (ctrlr->nsdata) {
-		spdk_dma_free(ctrlr->nsdata);
+		spdk_free(ctrlr->nsdata);
 		ctrlr->nsdata = NULL;
 	}
 
@@ -1096,14 +1096,14 @@ nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 			return 0;
 		}
 
-		ctrlr->ns = spdk_dma_zmalloc(nn * sizeof(struct spdk_nvme_ns), 64,
-					     &phys_addr);
+		ctrlr->ns = spdk_zmalloc(nn * sizeof(struct spdk_nvme_ns), 64,
+					 &phys_addr, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
 		if (ctrlr->ns == NULL) {
 			goto fail;
 		}
 
-		ctrlr->nsdata = spdk_dma_zmalloc(nn * sizeof(struct spdk_nvme_ns_data), 64,
-						 &phys_addr);
+		ctrlr->nsdata = spdk_zmalloc(nn * sizeof(struct spdk_nvme_ns_data), 64,
+					     &phys_addr, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
 		if (ctrlr->nsdata == NULL) {
 			goto fail;
 		}
@@ -1290,7 +1290,8 @@ nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 	}
 
 	/* Initialize the per process properties for this ctrlr */
-	ctrlr_proc = spdk_dma_zmalloc(sizeof(struct spdk_nvme_ctrlr_process), 64, NULL);
+	ctrlr_proc = spdk_zmalloc(sizeof(struct spdk_nvme_ctrlr_process),
+				  64, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
 	if (ctrlr_proc == NULL) {
 		SPDK_ERRLOG("failed to allocate memory to track the process props\n");
 
@@ -1384,7 +1385,7 @@ nvme_ctrlr_free_processes(struct spdk_nvme_ctrlr *ctrlr)
 
 		assert(STAILQ_EMPTY(&active_proc->active_reqs));
 
-		spdk_dma_free(active_proc);
+		spdk_free(active_proc);
 	}
 }
 
