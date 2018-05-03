@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7efa7e93_71f10fe6",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-03T20:47:53Z",
+      "side": 1,
+      "message": "It looks like this feature check is not enough to ensure that iscsi_read16_iov_task() is supported; is there another #define that we can check instead?",
+      "range": {
+        "startLine": 234,
+        "startChar": 12,
+        "endLine": 234,
+        "endChar": 37
+      },
+      "revId": "7b06dd7c53c4c1a2d24e01640e56f56c4f2d3c51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
