@@ -369,8 +369,8 @@ static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 	struct nvme_completion_poll_status	status;
 	struct spdk_nvme_intel_log_page_directory *log_page_directory;
 
-	log_page_directory = spdk_dma_zmalloc(sizeof(struct spdk_nvme_intel_log_page_directory),
-					      64, &phys_addr);
+	log_page_directory = spdk_zmalloc(sizeof(struct spdk_nvme_intel_log_page_directory),
+					  64, &phys_addr, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
 	if (log_page_directory == NULL) {
 		SPDK_ERRLOG("could not allocate log_page_directory\n");
 		return -ENXIO;
@@ -1096,14 +1096,14 @@ nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 			return 0;
 		}
 
-		ctrlr->ns = spdk_dma_zmalloc(nn * sizeof(struct spdk_nvme_ns), 64,
-					     &phys_addr);
+		ctrlr->ns = spdk_zmalloc(nn * sizeof(struct spdk_nvme_ns), 64,
+					 &phys_addr, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
 		if (ctrlr->ns == NULL) {
 			goto fail;
 		}
 
-		ctrlr->nsdata = spdk_dma_zmalloc(nn * sizeof(struct spdk_nvme_ns_data), 64,
-						 &phys_addr);
+		ctrlr->nsdata = spdk_zmalloc(nn * sizeof(struct spdk_nvme_ns_data), 64,
+					     &phys_addr, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
 		if (ctrlr->nsdata == NULL) {
 			goto fail;
 		}
@@ -1288,7 +1288,8 @@ nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 	}
 
 	/* Initialize the per process properties for this ctrlr */
-	ctrlr_proc = spdk_dma_zmalloc(sizeof(struct spdk_nvme_ctrlr_process), 64, NULL);
+	ctrlr_proc = spdk_zmalloc(sizeof(struct spdk_nvme_ctrlr_process),
+				  64, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
 	if (ctrlr_proc == NULL) {
 		SPDK_ERRLOG("failed to allocate memory to track the process props\n");
 

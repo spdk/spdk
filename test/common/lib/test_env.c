@@ -75,7 +75,7 @@ spdk_memzone_reserve(const char *name, size_t len, int socket_id, unsigned flags
 }
 
 void *
-spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
+spdk_malloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint32_t flags)
 {
 	void *buf = NULL;
 	if (posix_memalign(&buf, align, size)) {
@@ -90,12 +90,11 @@ spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
 int ut_spdk_dma_zmalloc = (int)MOCK_PASS_THRU;
 void *ut_p_spdk_dma_zmalloc = &ut_spdk_dma_zmalloc;
 void *
-spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
+spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint32_t flags)
 {
 	if (ut_p_spdk_dma_zmalloc &&
 	    ut_spdk_dma_zmalloc == (int)MOCK_PASS_THRU) {
-		void *buf = spdk_dma_malloc(size, align, phys_addr);
-
+		void *buf = spdk_malloc(size, align, phys_addr, -1, 1);
 		if (buf != NULL) {
 			memset(buf, 0, size);
 		}
@@ -103,6 +102,18 @@ spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
 	} else {
 		return ut_p_spdk_dma_zmalloc;
 	}
+}
+
+void *
+spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
+{
+	return spdk_malloc(size, align, phys_addr, -1, 1);
+}
+
+void *
+spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
+{
+	return spdk_zmalloc(size, align, phys_addr, -1, 1);
 }
 
 void *
