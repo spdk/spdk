@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "c577a6ed_d8e4e40c",
+        "filename": ".githooks/pre-commit",
+        "patchSetId": 1
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-03T19:02:33Z",
+      "side": 1,
+      "message": "This should ideally use tab for indentation like the rest of our shell scripts.",
+      "revId": "feabda0877afd676e825f127aa73614d5c260baf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e09bfa7_5fb79609",
+        "filename": ".githooks/pre-commit",
+        "patchSetId": 1
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-03T19:02:33Z",
+      "side": 1,
+      "message": "/bin/sh may not be bash, so this should probably not use bash-style [[ ]] especially since they aren\u0027t needed in this case - [ $rc -ne 0 ] should be equivalent.",
+      "revId": "feabda0877afd676e825f127aa73614d5c260baf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ab73df97_26e78a7b",
         "filename": ".githooks/pre-push",
         "patchSetId": 1
