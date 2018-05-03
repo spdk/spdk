@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "60709786_971332b8",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-03T22:21:16Z",
+      "side": 1,
+      "message": "This is probably a reasonable API to have, but it might be simpler to just make spdk_lvol_destroy() check this itself and call cb_fn with -EBUSY or similar.",
+      "revId": "2a91f78472d305da049f952f5f9904290fc4cb11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "026b301c_9c60be66",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-03T22:21:16Z",
+      "side": 1,
+      "message": "We should fix up the indentation here.",
+      "revId": "2a91f78472d305da049f952f5f9904290fc4cb11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d9304863_8c7c103d",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 18
@@ -47,6 +81,23 @@
       "writtenOn": "2018-05-03T22:11:26Z",
       "side": 1,
       "message": "What is this for? It looks like ctx-\u003ebegin and ctx-\u003eend aren\u0027t used anywhere else.",
+      "revId": "2a91f78472d305da049f952f5f9904290fc4cb11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "895a97ee_900b30b0",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 608,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-03T22:21:16Z",
+      "side": 1,
+      "message": "Is it OK if we delete the alias but then can\u0027t delete the lvol below? (Also, it might be better to just make spdk_bdev_unregister() delete all the aliases instead of making each bdev module clean them up.)",
       "revId": "2a91f78472d305da049f952f5f9904290fc4cb11",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
