@@ -1,0 +1,129 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9bc02b85_14f026df",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-03T23:03:03Z",
+      "side": 1,
+      "message": "Looks like your .gitconfig might need tweaking (please make sure this shows your name as you want it to show up in \u0027git log\u0027).",
+      "revId": "ae2df790767cf86c1cb3f27a2dadc2430af49822",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2da9bf08_de5395cc",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-03T23:03:03Z",
+      "side": 1,
+      "message": "The subject line of the commit should start with \"nvme:\" so it\u0027s clear that this is only updating the NVMe library component.",
+      "revId": "ae2df790767cf86c1cb3f27a2dadc2430af49822",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fe840adc_57f47e65",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-03T23:03:03Z",
+      "side": 1,
+      "message": "The contig_buffer here needs to be DMA-able, so we should at least pass SPDK_MALLOC_DMA here.  I\u0027m not sure if it needs to be shared, since it should only be used from the same process that allocated it.",
+      "range": {
+        "startLine": 195,
+        "startChar": 34,
+        "endLine": 195,
+        "endChar": 51
+      },
+      "revId": "ae2df790767cf86c1cb3f27a2dadc2430af49822",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b4c6e45_c2177845",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1118,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-03T23:03:03Z",
+      "side": 1,
+      "message": "Just as a note to myself and other reviewers (no change necessary): using SHARE for nsdata should be fine, since it is never a DMA target directly; we use nvme_allocate_request_user_copy() in nvme_ctrlr_cmd_identify(), so the data is always double-buffered via a proper DMA-able buffer.",
+      "revId": "ae2df790767cf86c1cb3f27a2dadc2430af49822",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5b3d2818_43ce497b",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1004,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-03T23:03:03Z",
+      "side": 1,
+      "message": "The cmd and cpl buffers need to be SPDK_MALLOC_DMA.  The admin queue also needs to be SPDK_MALLOC_SHARE. We could do something like:\n\n    flags \u003d SPDK_MALLOC_DMA;\n    if (nvme_qpair_is_admin_queue(\u0026pqpair-\u003eqpair)) {\n        flags |\u003d SPDK_MALLOC_SHARE;\n    }\n    ... \u003d spdk_zmalloc(..., flags);",
+      "revId": "ae2df790767cf86c1cb3f27a2dadc2430af49822",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f86d7e8d_3edb18c8",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1011,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-03T23:03:03Z",
+      "side": 1,
+      "message": "As noted above, cpl is used for DMA, so it needs to be SPDK_MALLOC_DMA, as well as shared for admin queues.",
+      "revId": "ae2df790767cf86c1cb3f27a2dadc2430af49822",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77c46ac7_d79dbc32",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1030,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-03T23:03:03Z",
+      "side": 1,
+      "message": "Only the admin queue really needs trackers to be shared (although we could just always pass SHARE here to simplify).",
+      "revId": "ae2df790767cf86c1cb3f27a2dadc2430af49822",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
