@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "600227d7_72c4e95e",
+        "filename": ".githooks/pre-push",
+        "patchSetId": 3
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-03T23:40:20Z",
+      "side": 1,
+      "message": "This is running with \u0027-e\u0027 (exit on error), so all of the $? checks below will not work as expected - sh will exit before those get to run.  Since all of the operations below are already checked, I think it should be safe to just remove this -e.\n\nTo test this, just try adding a compile error and running .githooks/pre-push manually - it will fail without printing out the ERROR messages.",
+      "revId": "8fa837e82aafba95b3997f7d353c2c543b369b3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
