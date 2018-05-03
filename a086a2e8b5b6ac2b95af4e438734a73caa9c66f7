@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "94f3a2b3_95db4362",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 1691,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-03T21:41:38Z",
+      "side": 1,
+      "message": "All of the delete_bdev calls on lvols should now use destroy_lvol_bdev (the ones on malloc should still use delete_bdev, though).",
+      "range": {
+        "startLine": 1691,
+        "startChar": 29,
+        "endLine": 1691,
+        "endChar": 40
+      },
+      "revId": "a086a2e8b5b6ac2b95af4e438734a73caa9c66f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
