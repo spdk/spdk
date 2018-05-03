@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "d14eb531_b165a8ce",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 45
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-05-03T23:00:25Z",
+      "side": 1,
+      "message": "instead of introducing another flag - I\u0027d suggest setting initial refcount to 1.",
+      "parentUuid": "a1c53d63_9a600c83",
+      "revId": "4bd168d81a9ef4e7ef190fb7a6306f2048fc39d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "19a8a2b8_67c3e00e",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 45
