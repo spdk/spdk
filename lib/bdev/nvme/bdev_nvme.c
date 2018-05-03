@@ -949,7 +949,8 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 				names[j] = nvme_bdev->disk.name;
 				j++;
 			} else {
-				SPDK_ERRLOG("Unable to return all names of created bdevs\n");
+				SPDK_ERRLOG("Maximum number of namespaces supported per NVMe controller is %zu. Unable to return all names of created bdevs\n",
+					    *count);
 				free(probe_ctx);
 				return -1;
 			}

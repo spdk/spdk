@@ -79,7 +79,7 @@ static const struct spdk_json_object_decoder rpc_construct_nvme_decoders[] = {
 	{"subnqn", offsetof(struct rpc_construct_nvme, subnqn), spdk_json_decode_string, true},
 };
 
-#define NVME_MAX_BDEVS_PER_RPC 32
+#define NVME_MAX_BDEVS_PER_RPC 128
 
 static void
 spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
