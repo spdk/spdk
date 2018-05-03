@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d9304863_8c7c103d",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 561,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-03T22:11:26Z",
+      "side": 1,
+      "message": "This path seems to leave the mutex locked.",
+      "revId": "2a91f78472d305da049f952f5f9904290fc4cb11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "caa9c6a3_cfa87aac",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 564,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-03T22:11:26Z",
+      "side": 1,
+      "message": "I\u0027m not sure why we needed to keep the mutex locked until here - it doesn\u0027t look like it\u0027s protecting anything in this function.",
+      "revId": "2a91f78472d305da049f952f5f9904290fc4cb11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "818249e2_321707ce",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 599,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-03T22:11:26Z",
+      "side": 1,
+      "message": "What is this for? It looks like ctx-\u003ebegin and ctx-\u003eend aren\u0027t used anywhere else.",
+      "revId": "2a91f78472d305da049f952f5f9904290fc4cb11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
