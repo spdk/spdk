@@ -79,7 +79,7 @@ static const struct spdk_json_object_decoder rpc_construct_nvme_decoders[] = {
 	{"subnqn", offsetof(struct rpc_construct_nvme, subnqn), spdk_json_decode_string, true},
 };
 
-#define NVME_MAX_BDEVS_PER_RPC 32
+#define NVME_MAX_BDEVS_PER_DEVICE 128
 
 static void
 spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
@@ -88,7 +88,7 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 	struct rpc_construct_nvme req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_nvme_transport_id trid = {};
-	const char *names[NVME_MAX_BDEVS_PER_RPC];
+	const char *names[NVME_MAX_BDEVS_PER_DEVICE];
 	size_t count;
 	size_t i;
 	int rc;
@@ -129,7 +129,7 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 		snprintf(trid.subnqn, sizeof(trid.subnqn), "%s", req.subnqn);
 	}
 
-	count = NVME_MAX_BDEVS_PER_RPC;
+	count = NVME_MAX_BDEVS_PER_DEVICE;
 	if (spdk_bdev_nvme_create(&trid, req.name, names, &count)) {
 		goto invalid;
 	}

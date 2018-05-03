@@ -123,21 +123,21 @@ DEFINE_STUB(spdk_nvmf_bdev_ctrlr_identify_ns,
 	    (struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *nsdata),
 	    -1)
 
-DEFINE_STUB_V(spdk_nvmf_get_discovery_log_page,
-	      (struct spdk_nvmf_tgt *tgt, void *buffer, uint64_t offset, uint32_t length))
+	DEFINE_STUB_V(spdk_nvmf_get_discovery_log_page,
+	(struct spdk_nvmf_tgt *tgt, void *buffer, uint64_t offset, uint32_t length))
 
-DEFINE_STUB(spdk_nvmf_request_complete,
-	    int,
-	    (struct spdk_nvmf_request *req),
-	    -1)
+	DEFINE_STUB(spdk_nvmf_request_complete,
+	int,
+	(struct spdk_nvmf_request *req),
+	-1)
 
-DEFINE_STUB(spdk_nvmf_request_abort,
-	    int,
-	    (struct spdk_nvmf_request *req),
-	    -1)
+	DEFINE_STUB(spdk_nvmf_request_abort,
+	int,
+	(struct spdk_nvmf_request *req),
+	-1)
 
-static void
-test_get_log_page(void)
+	static void
+	test_get_log_page(void)
 {
 	struct spdk_nvmf_subsystem subsystem = {};
 	struct spdk_nvmf_request req = {};
