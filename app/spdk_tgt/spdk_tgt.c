@@ -42,18 +42,47 @@
 #undef SPDK_CONFIG_VHOST
 #endif
 
+#ifdef SPDK_CONFIG_VHOST
+#define SPDK_VHOST_OPTS "S:"
+#else
+#define SPDK_VHOST_OPTS
+#endif
+
+static const char *g_pid_path = NULL;
+static const char g_spdk_tgt_get_opts_string[] = "f:" SPDK_VHOST_OPTS;
+
 static void
 spdk_tgt_usage(void)
 {
+	printf(" -f pidfile save pid to file under given path\n");
 #ifdef SPDK_CONFIG_VHOST
 	printf(" -S dir     directory where to create vhost sockets (default: pwd)\n");
 #endif
 }
 
 static void
+spdk_tgt_save_pid(const char *pid_path)
+{
+	FILE *pid_file;
+
+	pid_file = fopen(pid_path, "w");
+	if (pid_file == NULL) {
+		fprintf(stderr, "Couldn't create pid file '%s': %s\n", pid_path, strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+
+	fprintf(pid_file, "%d\n", getpid());
+	fclose(pid_file);
+}
+
+
+static void
 spdk_tgt_parse_arg(int ch, char *arg)
 {
 	switch (ch) {
+	case 'f':
+		g_pid_path = arg;
+		break;
 #ifdef SPDK_CONFIG_VHOST
 	case 'S':
 		spdk_vhost_set_socket_path(arg);
@@ -65,6 +94,10 @@ spdk_tgt_parse_arg(int ch, char *arg)
 static void
 spdk_tgt_started(void *arg1, void *arg2)
 {
+	if (g_pid_path) {
+		spdk_tgt_save_pid(g_pid_path);
+	}
+
 	if (getenv("MEMZONE_DUMP") != NULL) {
 		spdk_memzone_dump(stdout);
 		fflush(stdout);
@@ -79,7 +112,7 @@ main(int argc, char **argv)
 
 	spdk_app_opts_init(&opts);
 	opts.name = "spdk_tgt";
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "",
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, g_spdk_tgt_get_opts_string,
 				      spdk_tgt_parse_arg, spdk_tgt_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc;
