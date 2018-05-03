@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f5b44a4f_24e54859",
+        "filename": "include/spdk_internal/event.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-03T16:38:50Z",
+      "side": 1,
+      "message": "I don\u0027t think we need to define the actual meanings of these states - just make them arbitrary integers.",
+      "revId": "6d5013b98c596d4d252c20814049a4d3c13a8990",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
