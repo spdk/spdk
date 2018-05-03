@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "0b4fa3ba_5accc300",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-05-03T00:34:28Z",
+      "side": 1,
+      "message": "yes, that\u0027s what I want to do.  The task should always be inserted to queue tail and picked from head.",
+      "parentUuid": "ef1f893f_adfc547f",
+      "revId": "ce276179135d7bc47909f5e64600a79e79e39505",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "86e19629_19cbd009",
         "filename": "lib/vhost/vhost_nvme.c",
         "patchSetId": 7
@@ -47,6 +65,24 @@
       "writtenOn": "2018-05-02T22:30:48Z",
       "side": 1,
       "message": "this code seems out of place here - the comment on line 519 says \"Submission Queue\" but then we\u0027re doing completion queue stuff here\n\nrelated to comment above, I don\u0027t think you should remove the task from the STAILQ unless you know you have room to complete it - otherwise you have completion ordering issues - we really shouldn\u0027t reorder the completions if we can avoid it",
+      "revId": "ce276179135d7bc47909f5e64600a79e79e39505",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ead12da_820f52af",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 526,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-05-03T00:34:28Z",
+      "side": 1,
+      "message": "Yeah, there is a scenario, we may pick one task from the list and then put it back to list tail if still no rooms for it, I will change it.",
+      "parentUuid": "86e19629_19cbd009",
       "revId": "ce276179135d7bc47909f5e64600a79e79e39505",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
