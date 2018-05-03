@@ -214,7 +214,7 @@ bdev_iscsi_rw_cb(struct iscsi_context *context, int status, void *_task, void *_
 	struct bdev_iscsi_io *iscsi_io = _iscsi_io;
 
 	iscsi_io->scsi_status = task->status;
-	iscsi_io->sk = task->sense.key;
+	iscsi_io->sk = (uint8_t)task->sense.key;
 	iscsi_io->asc = (task->sense.ascq >> 8) & 0xFF;
 	iscsi_io->ascq = task->sense.ascq & 0xFF;
 
