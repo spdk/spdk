@@ -612,6 +612,7 @@ create_iscsi_disk(const char *bdev_name, const char *url, const char *initiator_
 
 	rc = iscsi_set_session_type(req->context, ISCSI_SESSION_NORMAL);
 	rc = rc ? rc : iscsi_set_header_digest(req->context, ISCSI_HEADER_DIGEST_NONE);
+	rc = rc ? rc : iscsi_set_targetname(req->context, iscsi_url->target);
 	rc = rc ? rc : iscsi_full_connect_async(req->context, iscsi_url->portal, iscsi_url->lun,
 						iscsi_connect_cb, req);
 	if (rc < 0) {
