@@ -848,6 +848,7 @@ spdk_nvmf_rdma_request_get_xfer(struct spdk_nvmf_rdma_request *rdma_req)
 	case SPDK_NVME_SGL_TYPE_BIT_BUCKET:
 	case SPDK_NVME_SGL_TYPE_SEGMENT:
 	case SPDK_NVME_SGL_TYPE_LAST_SEGMENT:
+	case SPDK_NVME_SGL_TYPE_TRANSPORT_DATA_BLOCK:
 		if (sgl->unkeyed.length == 0) {
 			xfer = SPDK_NVME_DATA_NONE;
 		}
