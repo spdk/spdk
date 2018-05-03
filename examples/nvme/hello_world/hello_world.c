@@ -130,7 +130,7 @@ write_complete(void *arg, const struct spdk_nvme_cpl *completion)
 	} else {
 		spdk_dma_free(sequence->buf);
 	}
-	sequence->buf = spdk_dma_zmalloc(0x1000, 0x1000, NULL);
+	sequence->buf = spdk_zmalloc(0x1000, 0x1000, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 
 	rc = spdk_nvme_ns_cmd_read(ns_entry->ns, ns_entry->qpair, sequence->buf,
 				   0, /* LBA start */
@@ -178,7 +178,7 @@ hello_world(void)
 		sequence.buf = spdk_nvme_ctrlr_alloc_cmb_io_buffer(ns_entry->ctrlr, 0x1000);
 		if (sequence.buf == NULL) {
 			sequence.using_cmb_io = 0;
-			sequence.buf = spdk_dma_zmalloc(0x1000, 0x1000, NULL);
+			sequence.buf = spdk_zmalloc(0x1000, 0x1000, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 		}
 		if (sequence.buf == NULL) {
 			printf("ERROR: write buffer allocation failed\n");
