@@ -1,5 +1,7 @@
 # Changelog
 
+## v18.07: (Upcoming Release)
+
 ### bdev
 
 Default block device sharing mode has been changed.
@@ -7,9 +9,6 @@ Default block device sharing mode has been changed.
 Previously, multiple write descriptors could be used only for block devices that
 didn't have any claims (and thus no virtual block devices stacked upon it). This
 is now the default behavior for ANY block device, including claimed ones.
-
-## v18.07: (Upcoming Release)
-=======
 
 ## v18.04: Logical Volume Snapshot/Clone, iSCSI Initiator, Bdev QoS, VPP Userspace TCP/IP
 
