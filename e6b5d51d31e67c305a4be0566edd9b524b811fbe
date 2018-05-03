@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c7497a8b_e2a6efe2",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-03T18:03:12Z",
+      "side": 1,
+      "message": "This should go in the v18.07 section below.",
+      "revId": "e6b5d51d31e67c305a4be0566edd9b524b811fbe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "43b7c7c9_88283d58",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-03T18:03:12Z",
+      "side": 1,
+      "message": "The ## already makes the line a header - a \u003d\u003d\u003d-style line isn\u0027t needed.",
+      "revId": "e6b5d51d31e67c305a4be0566edd9b524b811fbe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
