@@ -2702,15 +2702,9 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 
 	pthread_mutex_lock(&bdev->mutex);
 
-	if (write && bdev->claim_module) {
-		SPDK_INFOLOG(SPDK_LOG_BDEV, "Could not open %s - already claimed\n", bdev->name);
-		free(desc);
-		pthread_mutex_unlock(&bdev->mutex);
-		return -EPERM;
-	}
-
 	TAILQ_INSERT_TAIL(&bdev->open_descs, desc, link);
 
+	/* XXX This could be done before acquiring the lock. */
 	desc->bdev = bdev;
 	desc->remove_cb = remove_cb;
 	desc->remove_ctx = remove_ctx;

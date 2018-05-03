@@ -13,6 +13,14 @@ Results are recorded in the `make.log` file.
 To enable type: 'git config core.hooksPath .githooks'. To override after configuration use
 the `git --no-verify` flag.
 
+### bdev
+
+Default block device sharing mode has been changed.
+
+Previously, multiple write descriptors could be used only for block devices that
+didn't have any claims (and thus no virtual block devices stacked upon it). This
+is now the default behavior for ANY block device, including claimed ones.
+
 ## v18.04: Logical Volume Snapshot/Clone, iSCSI Initiator, Bdev QoS, VPP Userspace TCP/IP
 
 ### vhost
