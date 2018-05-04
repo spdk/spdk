@@ -51,6 +51,7 @@
 
 struct bdev_iscsi_lun;
 
+#define BDEV_ISCSI_CONNECTION_POLL_US 500
 #define DEFAULT_INITIATOR_NAME "iqn.2016-06.io.spdk:init"
 
 static int bdev_iscsi_initialize(void);
@@ -58,7 +59,6 @@ static TAILQ_HEAD(, bdev_iscsi_lun) g_iscsi_lun_head = TAILQ_HEAD_INITIALIZER(g_
 static TAILQ_HEAD(, bdev_iscsi_conn_req) g_iscsi_conn_req = TAILQ_HEAD_INITIALIZER(
 			g_iscsi_conn_req);
 static struct spdk_poller *g_conn_poller = NULL;
-static bool g_module_is_initialized;
 
 struct bdev_iscsi_io {
 	struct spdk_thread *submit_td;
@@ -81,6 +81,8 @@ struct bdev_iscsi_lun {
 	TAILQ_ENTRY(bdev_iscsi_lun)	link;
 };
 
+typedef void (*spdk_bdev_iscsi_create_cb)(void);
+
 struct bdev_iscsi_io_channel {
 	struct spdk_poller	*poller;
 	struct bdev_iscsi_lun	*lun;
@@ -91,6 +93,7 @@ struct bdev_iscsi_conn_req {
 	char					*bdev_name;
 	char					*initiator_iqn;
 	struct iscsi_context			*context;
+	spdk_bdev_iscsi_create_cb		create_cb;
 	TAILQ_ENTRY(bdev_iscsi_conn_req)	link;
 };
 
@@ -101,19 +104,20 @@ bdev_iscsi_get_ctx_size(void)
 }
 
 static void
-bdev_iscsi_remove_conn_req(struct bdev_iscsi_conn_req *req)
+bdev_iscsi_free_conn_req(struct bdev_iscsi_conn_req *req)
 {
-	TAILQ_REMOVE(&g_iscsi_conn_req, req, link);
 	free(req);
 }
 
 static void
 bdev_iscsi_finish_done(void)
 {
-	struct bdev_iscsi_conn_req *req, *tmp;
+	struct bdev_iscsi_conn_req *req;
 
-	TAILQ_FOREACH_SAFE(req, &g_iscsi_conn_req, link, tmp) {
-		bdev_iscsi_remove_conn_req(req);
+	while (!TAILQ_EMPTY(&g_iscsi_conn_req)) {
+		req = TAILQ_FIRST(&g_iscsi_conn_req);
+		TAILQ_REMOVE(&g_iscsi_conn_req, req, link);
+		bdev_iscsi_free_conn_req(req);
 	}
 
 	if (g_conn_poller) {
@@ -494,21 +498,6 @@ error_return:
 }
 
 static void
-_bdev_iscsi_set_module_init(void)
-{
-	spdk_bdev_module_init_done(&g_iscsi_bdev_module);
-	g_module_is_initialized = true;
-}
-
-static void
-bdev_iscsi_set_module_init(void)
-{
-	if (!g_module_is_initialized && TAILQ_EMPTY(&g_iscsi_conn_req)) {
-		_bdev_iscsi_set_module_init();
-	}
-}
-
-static void
 iscsi_readcapacity16_cb(struct iscsi_context *iscsi, int status,
 			void *command_data, void *private_data)
 {
@@ -529,9 +518,10 @@ iscsi_readcapacity16_cb(struct iscsi_context *iscsi, int status,
 	}
 
 ret:
+	TAILQ_REMOVE(&g_iscsi_conn_req, req, link);
+	req->create_cb();
 	scsi_free_scsi_task(task);
-	bdev_iscsi_remove_conn_req(req);
-	bdev_iscsi_set_module_init();
+	bdev_iscsi_free_conn_req(req);
 }
 
 static void
@@ -549,10 +539,12 @@ iscsi_connect_cb(struct iscsi_context *iscsi, int status,
 	if (task) {
 		return;
 	}
+
 ret:
 	SPDK_ERRLOG("iSCSI error: %s\n", iscsi_get_error(req->context));
-	bdev_iscsi_remove_conn_req(req);
-	bdev_iscsi_set_module_init();
+	TAILQ_REMOVE(&g_iscsi_conn_req, req, link);
+	req->create_cb();
+	bdev_iscsi_free_conn_req(req);
 }
 
 static int
@@ -580,8 +572,14 @@ iscsi_bdev_conn_poll(void *arg)
 	return 0;
 }
 
+static void
+create_iscsi_disk_dummy_cb(void)
+{
+}
+
 static int
-create_iscsi_disk(const char *bdev_name, const char *url, const char *initiator_iqn)
+create_iscsi_disk(const char *bdev_name, const char *url, const char *initiator_iqn,
+		  spdk_bdev_iscsi_create_cb cb_fn)
 {
 	struct bdev_iscsi_conn_req *req;
 	struct iscsi_url *iscsi_url = NULL;
@@ -607,6 +605,8 @@ create_iscsi_disk(const char *bdev_name, const char *url, const char *initiator_
 		goto err;
 	}
 
+	req->create_cb = cb_fn ? cb_fn : create_iscsi_disk_dummy_cb;
+
 	iscsi_url = iscsi_parse_full_url(req->context, url);
 	if (iscsi_url == NULL) {
 		SPDK_ERRLOG("could not parse URL: %s\n", iscsi_get_error(req->context));
@@ -626,6 +626,10 @@ create_iscsi_disk(const char *bdev_name, const char *url, const char *initiator_
 
 	iscsi_destroy_url(iscsi_url);
 	TAILQ_INSERT_TAIL(&g_iscsi_conn_req, req, link);
+	if (!g_conn_poller) {
+		g_conn_poller = spdk_poller_register(iscsi_bdev_conn_poll, NULL, BDEV_ISCSI_CONNECTION_POLL_US);
+	}
+
 	return 0;
 
 err:
@@ -645,6 +649,14 @@ err:
 	return rc;
 }
 
+static void
+bdev_iscsi_initialize_cb(void)
+{
+	if (TAILQ_EMPTY(&g_iscsi_conn_req)) {
+		spdk_bdev_module_init_done(&g_iscsi_bdev_module);
+	}
+}
+
 static int
 bdev_iscsi_initialize(void)
 {
@@ -655,7 +667,7 @@ bdev_iscsi_initialize(void)
 
 	sp = spdk_conf_find_section(NULL, "iSCSI_Initiator");
 	if (sp == NULL) {
-		_bdev_iscsi_set_module_init();
+		spdk_bdev_module_init_done(&g_iscsi_bdev_module);
 		return 0;
 	}
 
@@ -673,18 +685,14 @@ bdev_iscsi_initialize(void)
 			break;
 		}
 
-		rc = create_iscsi_disk(bdev_name, url, initiator_iqn);
+		rc = create_iscsi_disk(bdev_name, url, initiator_iqn, bdev_iscsi_initialize_cb);
 		if (rc) {
 			break;
 		}
 	}
 
-	if (!TAILQ_EMPTY(&g_iscsi_conn_req)) {
-		g_conn_poller = spdk_poller_register(iscsi_bdev_conn_poll, NULL, 0);
-	}
-
-	if (rc) {
-		bdev_iscsi_set_module_init();
+	if (i == 0) {
+		spdk_bdev_module_init_done(&g_iscsi_bdev_module);
 	}
 
 	return rc;
