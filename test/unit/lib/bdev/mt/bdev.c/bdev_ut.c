@@ -883,7 +883,7 @@ enomem(void)
 {
 	struct spdk_io_channel *io_ch;
 	struct spdk_bdev_channel *bdev_ch;
-	struct spdk_bdev_module_channel *module_ch;
+	struct spdk_bdev_shared_resource *shared_resource;
 	struct ut_bdev_channel *ut_ch;
 	const uint32_t IO_ARRAY_SIZE = 64;
 	const uint32_t AVAIL = 20;
@@ -897,7 +897,7 @@ enomem(void)
 	set_thread(0);
 	io_ch = spdk_bdev_get_io_channel(g_desc);
 	bdev_ch = spdk_io_channel_get_ctx(io_ch);
-	module_ch = bdev_ch->module_ch;
+	shared_resource = bdev_ch->shared_resource;
 	ut_ch = spdk_io_channel_get_ctx(bdev_ch->channel);
 	ut_ch->avail_cnt = AVAIL;
 
@@ -907,7 +907,7 @@ enomem(void)
 		rc = spdk_bdev_read_blocks(g_desc, io_ch, NULL, 0, 1, enomem_done, &status[i]);
 		CU_ASSERT(rc == 0);
 	}
-	CU_ASSERT(TAILQ_EMPTY(&module_ch->nomem_io));
+	CU_ASSERT(TAILQ_EMPTY(&shared_resource->nomem_io));
 
 	/*
 	 * Next, submit one additional I/O.  This one should fail with ENOMEM and then go onto
@@ -916,8 +916,8 @@ enomem(void)
 	status[AVAIL] = SPDK_BDEV_IO_STATUS_PENDING;
 	rc = spdk_bdev_read_blocks(g_desc, io_ch, NULL, 0, 1, enomem_done, &status[AVAIL]);
 	CU_ASSERT(rc == 0);
-	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&module_ch->nomem_io));
-	first_io = TAILQ_FIRST(&module_ch->nomem_io);
+	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&shared_resource->nomem_io));
+	first_io = TAILQ_FIRST(&shared_resource->nomem_io);
 
 	/*
 	 * Now submit a bunch more I/O.  These should all fail with ENOMEM and get queued behind
@@ -930,10 +930,10 @@ enomem(void)
 	}
 
 	/* Assert that first_io is still at the head of the list. */
-	CU_ASSERT(TAILQ_FIRST(&module_ch->nomem_io) == first_io);
-	CU_ASSERT(bdev_io_tailq_cnt(&module_ch->nomem_io) == (IO_ARRAY_SIZE - AVAIL));
-	nomem_cnt = bdev_io_tailq_cnt(&module_ch->nomem_io);
-	CU_ASSERT(module_ch->nomem_threshold == (AVAIL - NOMEM_THRESHOLD_COUNT));
+	CU_ASSERT(TAILQ_FIRST(&shared_resource->nomem_io) == first_io);
+	CU_ASSERT(bdev_io_tailq_cnt(&shared_resource->nomem_io) == (IO_ARRAY_SIZE - AVAIL));
+	nomem_cnt = bdev_io_tailq_cnt(&shared_resource->nomem_io);
+	CU_ASSERT(shared_resource->nomem_threshold == (AVAIL - NOMEM_THRESHOLD_COUNT));
 
 	/*
 	 * Complete 1 I/O only.  The key check here is bdev_io_tailq_cnt - this should not have
@@ -941,19 +941,19 @@ enomem(void)
 	 *  list.
 	 */
 	stub_complete_io(g_bdev.io_target, 1);
-	CU_ASSERT(bdev_io_tailq_cnt(&module_ch->nomem_io) == nomem_cnt);
+	CU_ASSERT(bdev_io_tailq_cnt(&shared_resource->nomem_io) == nomem_cnt);
 
 	/*
 	 * Complete enough I/O to hit the nomem_theshold.  This should trigger retrying nomem_io,
 	 *  and we should see I/O get resubmitted to the test bdev module.
 	 */
 	stub_complete_io(g_bdev.io_target, NOMEM_THRESHOLD_COUNT - 1);
-	CU_ASSERT(bdev_io_tailq_cnt(&module_ch->nomem_io) < nomem_cnt);
-	nomem_cnt = bdev_io_tailq_cnt(&module_ch->nomem_io);
+	CU_ASSERT(bdev_io_tailq_cnt(&shared_resource->nomem_io) < nomem_cnt);
+	nomem_cnt = bdev_io_tailq_cnt(&shared_resource->nomem_io);
 
 	/* Complete 1 I/O only.  This should not trigger retrying the queued nomem_io. */
 	stub_complete_io(g_bdev.io_target, 1);
-	CU_ASSERT(bdev_io_tailq_cnt(&module_ch->nomem_io) == nomem_cnt);
+	CU_ASSERT(bdev_io_tailq_cnt(&shared_resource->nomem_io) == nomem_cnt);
 
 	/*
 	 * Send a reset and confirm that all I/O are completed, including the ones that
@@ -966,8 +966,8 @@ enomem(void)
 	/* This will complete the reset. */
 	stub_complete_io(g_bdev.io_target, 0);
 
-	CU_ASSERT(bdev_io_tailq_cnt(&module_ch->nomem_io) == 0);
-	CU_ASSERT(module_ch->io_outstanding == 0);
+	CU_ASSERT(bdev_io_tailq_cnt(&shared_resource->nomem_io) == 0);
+	CU_ASSERT(shared_resource->io_outstanding == 0);
 
 	spdk_put_io_channel(io_ch);
 	poll_threads();
@@ -979,7 +979,7 @@ enomem_multi_bdev(void)
 {
 	struct spdk_io_channel *io_ch;
 	struct spdk_bdev_channel *bdev_ch;
-	struct spdk_bdev_module_channel *module_ch;
+	struct spdk_bdev_shared_resource *shared_resource;
 	struct ut_bdev_channel *ut_ch;
 	const uint32_t IO_ARRAY_SIZE = 64;
 	const uint32_t AVAIL = 20;
@@ -1002,13 +1002,13 @@ enomem_multi_bdev(void)
 	set_thread(0);
 	io_ch = spdk_bdev_get_io_channel(g_desc);
 	bdev_ch = spdk_io_channel_get_ctx(io_ch);
-	module_ch = bdev_ch->module_ch;
+	shared_resource = bdev_ch->shared_resource;
 	ut_ch = spdk_io_channel_get_ctx(bdev_ch->channel);
 	ut_ch->avail_cnt = AVAIL;
 
 	second_ch = spdk_bdev_get_io_channel(second_desc);
 	second_bdev_ch = spdk_io_channel_get_ctx(second_ch);
-	SPDK_CU_ASSERT_FATAL(module_ch == second_bdev_ch->module_ch);
+	SPDK_CU_ASSERT_FATAL(shared_resource == second_bdev_ch->shared_resource);
 
 	/* Saturate io_target through bdev A. */
 	for (i = 0; i < AVAIL; i++) {
@@ -1016,7 +1016,7 @@ enomem_multi_bdev(void)
 		rc = spdk_bdev_read_blocks(g_desc, io_ch, NULL, 0, 1, enomem_done, &status[i]);
 		CU_ASSERT(rc == 0);
 	}
-	CU_ASSERT(TAILQ_EMPTY(&module_ch->nomem_io));
+	CU_ASSERT(TAILQ_EMPTY(&shared_resource->nomem_io));
 
 	/*
 	 * Now submit I/O through the second bdev. This should fail with ENOMEM
@@ -1025,17 +1025,17 @@ enomem_multi_bdev(void)
 	status[AVAIL] = SPDK_BDEV_IO_STATUS_PENDING;
 	rc = spdk_bdev_read_blocks(second_desc, second_ch, NULL, 0, 1, enomem_done, &status[AVAIL]);
 	CU_ASSERT(rc == 0);
-	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&module_ch->nomem_io));
+	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&shared_resource->nomem_io));
 
 	/* Complete first bdev's I/O. This should retry sending second bdev's nomem_io */
 	stub_complete_io(g_bdev.io_target, AVAIL);
 
-	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&module_ch->nomem_io));
-	CU_ASSERT(module_ch->io_outstanding == 1);
+	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&shared_resource->nomem_io));
+	CU_ASSERT(shared_resource->io_outstanding == 1);
 
 	/* Now complete our retried I/O  */
 	stub_complete_io(g_bdev.io_target, 1);
-	SPDK_CU_ASSERT_FATAL(module_ch->io_outstanding == 0);
+	SPDK_CU_ASSERT_FATAL(shared_resource->io_outstanding == 0);
 
 	spdk_put_io_channel(io_ch);
 	spdk_put_io_channel(second_ch);
@@ -1045,6 +1045,7 @@ enomem_multi_bdev(void)
 	free(second_bdev);
 	teardown_test();
 }
+
 
 static void
 enomem_multi_io_target(void)
@@ -1079,10 +1080,10 @@ enomem_multi_io_target(void)
 	ut_ch = spdk_io_channel_get_ctx(bdev_ch->channel);
 	ut_ch->avail_cnt = AVAIL;
 
-	/* Different io_target should imply a different module_ch */
+	/* Different io_target should imply a different shared_resource */
 	second_ch = spdk_bdev_get_io_channel(second_desc);
 	second_bdev_ch = spdk_io_channel_get_ctx(second_ch);
-	SPDK_CU_ASSERT_FATAL(bdev_ch->module_ch != second_bdev_ch->module_ch);
+	SPDK_CU_ASSERT_FATAL(bdev_ch->shared_resource != second_bdev_ch->shared_resource);
 
 	/* Saturate io_target through bdev A. */
 	for (i = 0; i < AVAIL; i++) {
@@ -1090,13 +1091,13 @@ enomem_multi_io_target(void)
 		rc = spdk_bdev_read_blocks(g_desc, io_ch, NULL, 0, 1, enomem_done, &status[i]);
 		CU_ASSERT(rc == 0);
 	}
-	CU_ASSERT(TAILQ_EMPTY(&bdev_ch->module_ch->nomem_io));
+	CU_ASSERT(TAILQ_EMPTY(&bdev_ch->shared_resource->nomem_io));
 
 	/* Issue one more I/O to fill ENOMEM list. */
 	status[AVAIL] = SPDK_BDEV_IO_STATUS_PENDING;
 	rc = spdk_bdev_read_blocks(g_desc, io_ch, NULL, 0, 1, enomem_done, &status[AVAIL]);
 	CU_ASSERT(rc == 0);
-	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&bdev_ch->module_ch->nomem_io));
+	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&bdev_ch->shared_resource->nomem_io));
 
 	/*
 	 * Now submit I/O through the second bdev. This should go through and complete
@@ -1105,18 +1106,18 @@ enomem_multi_io_target(void)
 	status[AVAIL] = SPDK_BDEV_IO_STATUS_PENDING;
 	rc = spdk_bdev_read_blocks(second_desc, second_ch, NULL, 0, 1, enomem_done, &status[AVAIL]);
 	CU_ASSERT(rc == 0);
-	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&second_bdev_ch->module_ch->nomem_io));
+	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&second_bdev_ch->shared_resource->nomem_io));
 	stub_complete_io(second_bdev->io_target, 1);
 
 	/* Cleanup; Complete outstanding I/O. */
 	stub_complete_io(g_bdev.io_target, AVAIL);
-	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&bdev_ch->module_ch->nomem_io));
+	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&bdev_ch->shared_resource->nomem_io));
 	/* Complete the ENOMEM I/O */
 	stub_complete_io(g_bdev.io_target, 1);
-	CU_ASSERT(bdev_ch->module_ch->io_outstanding == 0);
+	CU_ASSERT(bdev_ch->shared_resource->io_outstanding == 0);
 
-	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&bdev_ch->module_ch->nomem_io));
-	CU_ASSERT(bdev_ch->module_ch->io_outstanding == 0);
+	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&bdev_ch->shared_resource->nomem_io));
+	CU_ASSERT(bdev_ch->shared_resource->io_outstanding == 0);
 	spdk_put_io_channel(io_ch);
 	spdk_put_io_channel(second_ch);
 	spdk_bdev_close(second_desc);
