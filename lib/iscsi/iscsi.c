@@ -70,7 +70,6 @@ struct spdk_iscsi_globals g_spdk_iscsi = {
 	.mutex = PTHREAD_MUTEX_INITIALIZER,
 	.portal_head = TAILQ_HEAD_INITIALIZER(g_spdk_iscsi.portal_head),
 	.pg_head = TAILQ_HEAD_INITIALIZER(g_spdk_iscsi.pg_head),
-	.ig_head = TAILQ_HEAD_INITIALIZER(g_spdk_iscsi.ig_head),
 };
 
 /* random value generation */

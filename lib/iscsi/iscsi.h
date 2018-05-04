@@ -292,7 +292,6 @@ struct spdk_iscsi_globals {
 	pthread_mutex_t mutex;
 	TAILQ_HEAD(, spdk_iscsi_portal)		portal_head;
 	TAILQ_HEAD(, spdk_iscsi_portal_grp)	pg_head;
-	TAILQ_HEAD(, spdk_iscsi_init_grp)	ig_head;
 
 	int timeout;
 	int nopininterval;
