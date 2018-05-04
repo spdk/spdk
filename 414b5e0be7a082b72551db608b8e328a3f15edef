@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1787b5c3_befeff1a",
+        "filename": "app/spdk_tgt/spdk_tgt.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-04T22:22:55Z",
+      "side": 1,
+      "message": "I think it would be clearer to just break this out into its own #ifdef SPDK_CONFIG_VHOST block.  I think the way it is written here won\u0027t work for the case where SPDK_CONFIG_VHOST is not set (\"S:\" will be added even though vhost is disabled).",
+      "revId": "414b5e0be7a082b72551db608b8e328a3f15edef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5cc25586_2a98ba9c",
+        "filename": "app/spdk_tgt/spdk_tgt.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-04T22:22:55Z",
+      "side": 1,
+      "message": "I\u0027d prefer to remove this pid file functionality (it doesn\u0027t appear to be used anywhere, and we don\u0027t clean up the pid file after the target exits), but since it\u0027s in the vhost target currently, I guess we can add it here too for consistency (and clean them both up simultaneously).",
+      "revId": "414b5e0be7a082b72551db608b8e328a3f15edef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
