@@ -45,8 +45,6 @@ struct spdk_iscsi_globals g_spdk_iscsi;
 static int
 test_setup(void)
 {
-	TAILQ_INIT(&g_spdk_iscsi.portal_head);
-	TAILQ_INIT(&g_spdk_iscsi.pg_head);
 	pthread_mutex_init(&g_spdk_iscsi.mutex, NULL);
 	return 0;
 }
@@ -64,7 +62,7 @@ portal_create_ipv4_normal_case(void)
 	CU_ASSERT(p != NULL);
 
 	spdk_iscsi_portal_destroy(p);
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi_portal_head));
 }
 
 static void
@@ -80,7 +78,7 @@ portal_create_ipv6_normal_case(void)
 	CU_ASSERT(p != NULL);
 
 	spdk_iscsi_portal_destroy(p);
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi_portal_head));
 }
 
 static void
@@ -96,7 +94,7 @@ portal_create_ipv4_wildcard_case(void)
 	CU_ASSERT(p != NULL);
 
 	spdk_iscsi_portal_destroy(p);
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi_portal_head));
 }
 
 static void
@@ -112,7 +110,7 @@ portal_create_ipv6_wildcard_case(void)
 	CU_ASSERT(p != NULL);
 
 	spdk_iscsi_portal_destroy(p);
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi_portal_head));
 }
 
 static void
@@ -128,7 +126,7 @@ portal_create_cpumask_null_case(void)
 	CU_ASSERT(p != NULL);
 
 	spdk_iscsi_portal_destroy(p);
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi_portal_head));
 }
 
 static void
@@ -160,7 +158,7 @@ portal_create_twice_case(void)
 	CU_ASSERT(p2 == NULL);
 
 	spdk_iscsi_portal_destroy(p1);
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi_portal_head));
 }
 
 static void
@@ -185,7 +183,7 @@ parse_portal_ipv4_normal_case(void)
 	CU_ASSERT(spdk_cpuset_equal(p->cpumask, cpumask_val));
 
 	spdk_iscsi_portal_destroy(p);
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi_portal_head));
 
 	spdk_cpuset_free(cpumask_val);
 }
@@ -212,7 +210,7 @@ parse_portal_ipv6_normal_case(void)
 	CU_ASSERT(spdk_cpuset_equal(p->cpumask, cpumask_val));
 
 	spdk_iscsi_portal_destroy(p);
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi_portal_head));
 
 	spdk_cpuset_free(cpumask_val);
 }
@@ -236,7 +234,7 @@ parse_portal_ipv4_skip_cpumask_case(void)
 	CU_ASSERT(spdk_cpuset_equal(p->cpumask, cpumask_val));
 
 	spdk_iscsi_portal_destroy(p);
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi_portal_head));
 }
 
 static void
@@ -258,7 +256,7 @@ parse_portal_ipv6_skip_cpumask_case(void)
 	CU_ASSERT(spdk_cpuset_equal(p->cpumask, cpumask_val));
 
 	spdk_iscsi_portal_destroy(p);
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi_portal_head));
 }
 
 static void
@@ -280,7 +278,7 @@ parse_portal_ipv4_skip_port_and_cpumask_case(void)
 	CU_ASSERT(spdk_cpuset_equal(p->cpumask, cpumask_val));
 
 	spdk_iscsi_portal_destroy(p);
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi_portal_head));
 }
 
 static void
@@ -302,7 +300,7 @@ parse_portal_ipv6_skip_port_and_cpumask_case(void)
 	CU_ASSERT(spdk_cpuset_equal(p->cpumask, cpumask_val));
 
 	spdk_iscsi_portal_destroy(p);
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi_portal_head));
 }
 
 static void
@@ -330,11 +328,11 @@ portal_grp_register_unregister_case(void)
 	CU_ASSERT(pg2 != NULL);
 	CU_ASSERT(pg1 == pg2);
 
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.pg_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi_pg_head));
 
 	spdk_iscsi_portal_grp_destroy(pg1);
 
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi_portal_head));
 }
 
 static void
@@ -365,11 +363,11 @@ portal_grp_register_twice_case(void)
 	CU_ASSERT(pg2 != NULL);
 	CU_ASSERT(pg1 == pg2);
 
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.pg_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi_pg_head));
 
 	spdk_iscsi_portal_grp_destroy(pg1);
 
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi_portal_head));
 }
 
 static void
@@ -405,8 +403,8 @@ portal_grp_add_delete_case(void)
 
 	spdk_iscsi_portal_grp_release(pg2);
 
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.pg_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi_portal_head));
+	CU_ASSERT(TAILQ_EMPTY(&g_iscsi_pg_head));
 }
 
 int

@@ -48,12 +48,17 @@
 
 #define PORTNUMSTRLEN 32
 
+static TAILQ_HEAD(, spdk_iscsi_portal_grp) g_iscsi_pg_head = TAILQ_HEAD_INITIALIZER(
+			g_iscsi_pg_head);
+static TAILQ_HEAD(, spdk_iscsi_portal) g_iscsi_portal_head = TAILQ_HEAD_INITIALIZER(
+			g_iscsi_portal_head);
+
 static struct spdk_iscsi_portal *
 spdk_iscsi_portal_find_by_addr(const char *host, const char *port)
 {
 	struct spdk_iscsi_portal *p;
 
-	TAILQ_FOREACH(p, &g_spdk_iscsi.portal_head, g_tailq) {
+	TAILQ_FOREACH(p, &g_iscsi_portal_head, g_tailq) {
 		if (!strcmp(p->host, host) && !strcmp(p->port, port)) {
 			return p;
 		}
@@ -140,7 +145,7 @@ spdk_iscsi_portal_create(const char *host, const char *port, const char *cpumask
 		goto error_out;
 	}
 
-	TAILQ_INSERT_TAIL(&g_spdk_iscsi.portal_head, p, g_tailq);
+	TAILQ_INSERT_TAIL(&g_iscsi_portal_head, p, g_tailq);
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 
 	return p;
@@ -162,7 +167,7 @@ spdk_iscsi_portal_destroy(struct spdk_iscsi_portal *p)
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_portal_destroy\n");
 
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	TAILQ_REMOVE(&g_spdk_iscsi.portal_head, p, g_tailq);
+	TAILQ_REMOVE(&g_iscsi_portal_head, p, g_tailq);
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 
 	free(p->host);
@@ -374,7 +379,7 @@ spdk_iscsi_portal_grp_register(struct spdk_iscsi_portal_grp *pg)
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	tmp = spdk_iscsi_portal_grp_find_by_tag(pg->tag);
 	if (tmp == NULL) {
-		TAILQ_INSERT_TAIL(&g_spdk_iscsi.pg_head, pg, tailq);
+		TAILQ_INSERT_TAIL(&g_iscsi_pg_head, pg, tailq);
 		rc = 0;
 	}
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
@@ -486,7 +491,7 @@ spdk_iscsi_portal_grp_find_by_tag(int tag)
 {
 	struct spdk_iscsi_portal_grp *pg;
 
-	TAILQ_FOREACH(pg, &g_spdk_iscsi.pg_head, tailq) {
+	TAILQ_FOREACH(pg, &g_iscsi_pg_head, tailq) {
 		if (pg->tag == tag) {
 			return pg;
 		}
@@ -528,9 +533,9 @@ spdk_iscsi_portal_grps_destroy(void)
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_portal_grps_destroy\n");
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	while (!TAILQ_EMPTY(&g_spdk_iscsi.pg_head)) {
-		pg = TAILQ_FIRST(&g_spdk_iscsi.pg_head);
-		TAILQ_REMOVE(&g_spdk_iscsi.pg_head, pg, tailq);
+	while (!TAILQ_EMPTY(&g_iscsi_pg_head)) {
+		pg = TAILQ_FIRST(&g_iscsi_pg_head);
+		TAILQ_REMOVE(&g_iscsi_pg_head, pg, tailq);
 		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 		spdk_iscsi_portal_grp_destroy(pg);
 		pthread_mutex_lock(&g_spdk_iscsi.mutex);
@@ -570,7 +575,7 @@ spdk_iscsi_portal_grp_close_all(void)
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_portal_grp_close_all\n");
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	TAILQ_FOREACH(pg, &g_spdk_iscsi.pg_head, tailq) {
+	TAILQ_FOREACH(pg, &g_iscsi_pg_head, tailq) {
 		spdk_iscsi_portal_grp_close(pg);
 	}
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
@@ -582,9 +587,9 @@ spdk_iscsi_portal_grp_unregister(int tag)
 	struct spdk_iscsi_portal_grp *pg;
 
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	TAILQ_FOREACH(pg, &g_spdk_iscsi.pg_head, tailq) {
+	TAILQ_FOREACH(pg, &g_iscsi_pg_head, tailq) {
 		if (pg->tag == tag) {
-			TAILQ_REMOVE(&g_spdk_iscsi.pg_head, pg, tailq);
+			TAILQ_REMOVE(&g_iscsi_pg_head, pg, tailq);
 			pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 			return pg;
 		}
@@ -634,7 +639,7 @@ spdk_iscsi_portal_grps_config_text(FILE *fp)
 	fprintf(fp, "%s", portal_group_section);
 
 	/* Dump portal groups */
-	TAILQ_FOREACH(pg, &g_spdk_iscsi.pg_head, tailq) {
+	TAILQ_FOREACH(pg, &g_iscsi_pg_head, tailq) {
 		if (NULL == pg) { continue; }
 		fprintf(fp, PORTAL_GROUP_TMPL, pg->tag, pg->tag);
 		/* Dump portals */
@@ -694,7 +699,7 @@ spdk_iscsi_portal_grps_info_json(struct spdk_json_write_ctx *w)
 {
 	struct spdk_iscsi_portal_grp *pg;
 
-	TAILQ_FOREACH(pg, &g_spdk_iscsi.pg_head, tailq) {
+	TAILQ_FOREACH(pg, &g_iscsi_pg_head, tailq) {
 		spdk_iscsi_portal_grp_info_json(pg, w);
 	}
 }
@@ -704,7 +709,7 @@ spdk_iscsi_portal_grps_config_json(struct spdk_json_write_ctx *w)
 {
 	struct spdk_iscsi_portal_grp *pg;
 
-	TAILQ_FOREACH(pg, &g_spdk_iscsi.pg_head, tailq) {
+	TAILQ_FOREACH(pg, &g_iscsi_pg_head, tailq) {
 		spdk_iscsi_portal_grp_config_json(pg, w);
 	}
 }

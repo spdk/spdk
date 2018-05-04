@@ -290,8 +290,6 @@ struct spdk_iscsi_globals {
 	char *authfile;
 	char *nodebase;
 	pthread_mutex_t mutex;
-	TAILQ_HEAD(, spdk_iscsi_portal)		portal_head;
-	TAILQ_HEAD(, spdk_iscsi_portal_grp)	pg_head;
 
 	int timeout;
 	int nopininterval;
