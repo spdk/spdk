@@ -49,9 +49,10 @@ if __name__ == "__main__":
 
     @call_cmd
     def get_rpc_methods(args):
-        print_dict(rpc.get_rpc_methods(args.client))
+        print_dict(rpc.get_rpc_methods(args.client, args))
 
     p = subparsers.add_parser('get_rpc_methods', help='Get list of supported RPC methods')
+    p.add_argument('-c', '--current', help='Get list of RPC methods only callable in the current state.', action='store_true')
     p.set_defaults(func=get_rpc_methods)
 
     @call_cmd
