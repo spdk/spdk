@@ -931,8 +931,7 @@ spdk_vhost_scsi_controller_construct(void)
 	char *bdev_name, *tgt_num_str;
 	char *cpumask;
 	char *name;
-	char *keyword;
-	char *dev = NULL, *tgt = NULL;
+	char *tgt = NULL;
 
 	while (sp != NULL) {
 		if (!spdk_conf_section_match_prefix(sp, "VhostScsi")) {
@@ -956,40 +955,30 @@ spdk_vhost_scsi_controller_construct(void)
 		vdev = spdk_vhost_dev_find(name);
 		assert(vdev);
 
-		dev = spdk_conf_section_get_nval(sp, "Dev", 0);
 		tgt = spdk_conf_section_get_nval(sp, "Target", 0);
-
-		if (dev && tgt) {
-			SPDK_ERRLOG("Used both 'Dev' and 'Target' keywords in section [VhostScsi%u]\n"
-				    "Please use one.\n", ctrlr_num);
-			return -1;
-		} else if (dev) {
-			SPDK_NOTICELOG("'Dev' mnemonic is deprecated, and will be removed shortly.\n"
-				       "Please, use 'Target' instead\n");
-			keyword = "Dev";
-		} else {
-			keyword = "Target";
+		if (!tgt) {
+			continue;
 		}
 
 		for (i = 0; ; i++) {
 
-			tgt = spdk_conf_section_get_nval(sp, keyword, i);
+			tgt = spdk_conf_section_get_nval(sp, "Target", i);
 			if (tgt == NULL) {
 				break;
 			}
 
-			tgt_num_str = spdk_conf_section_get_nmval(sp, keyword, i, 0);
+			tgt_num_str = spdk_conf_section_get_nmval(sp, "Target", i, 0);
 			if (tgt_num_str == NULL) {
 				SPDK_ERRLOG("%s: Invalid or missing target number\n", name);
 				return -1;
 			}
 
 			dev_num = (int)strtol(tgt_num_str, NULL, 10);
-			bdev_name = spdk_conf_section_get_nmval(sp, keyword, i, 1);
+			bdev_name = spdk_conf_section_get_nmval(sp, "Target", i, 1);
 			if (bdev_name == NULL) {
 				SPDK_ERRLOG("%s: Invalid or missing bdev name for target %d\n", name, dev_num);
 				return -1;
-			} else if (spdk_conf_section_get_nmval(sp, keyword, i, 2)) {
+			} else if (spdk_conf_section_get_nmval(sp, "Target", i, 2)) {
 				SPDK_ERRLOG("%s: Only one LUN per vhost SCSI device supported\n", name);
 				return -1;
 			}
