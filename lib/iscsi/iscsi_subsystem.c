@@ -84,7 +84,7 @@ static void *g_fini_cb_arg;
 "\n"
 
 static void
-spdk_iscsi_config_dump_section(FILE *fp)
+spdk_iscsi_globals_config_text(FILE *fp)
 {
 	const char *authmethod = "None";
 	char authgroup[32] = "None";
@@ -913,10 +913,20 @@ spdk_shutdown_iscsi_conns_done(void)
 void
 spdk_iscsi_config_text(FILE *fp)
 {
-	spdk_iscsi_config_dump_section(fp);
+	spdk_iscsi_globals_config_text(fp);
 	spdk_iscsi_portal_grps_config_text(fp);
 	spdk_iscsi_init_grps_config_text(fp);
 	spdk_iscsi_tgt_nodes_config_text(fp);
+}
+
+void
+spdk_iscsi_config_json(struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_array_begin(w);
+	spdk_iscsi_init_grps_config_json(w);
+	spdk_iscsi_portal_grps_config_json(w);
+	spdk_iscsi_tgt_nodes_config_json(w);
+	spdk_json_write_array_end(w);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("iscsi", SPDK_LOG_ISCSI)
