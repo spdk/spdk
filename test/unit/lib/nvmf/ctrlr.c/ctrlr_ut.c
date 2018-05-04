@@ -47,94 +47,94 @@ struct spdk_bdev {
 DEFINE_STUB(spdk_nvmf_tgt_find_subsystem,
 	    struct spdk_nvmf_subsystem *,
 	    (struct spdk_nvmf_tgt *tgt, const char *subnqn),
-	    NULL)
+	    NULL);
 
 DEFINE_STUB(spdk_nvmf_poll_group_create,
 	    struct spdk_nvmf_poll_group *,
 	    (struct spdk_nvmf_tgt *tgt),
-	    NULL)
+	    NULL);
 
 DEFINE_STUB_V(spdk_nvmf_poll_group_destroy,
-	      (struct spdk_nvmf_poll_group *group))
+	      (struct spdk_nvmf_poll_group *group));
 
 DEFINE_STUB_V(spdk_nvmf_transport_qpair_fini,
-	      (struct spdk_nvmf_qpair *qpair))
+	      (struct spdk_nvmf_qpair *qpair));
 
 DEFINE_STUB(spdk_nvmf_poll_group_add,
 	    int,
 	    (struct spdk_nvmf_poll_group *group, struct spdk_nvmf_qpair *qpair),
-	    0)
+	    0);
 
 DEFINE_STUB(spdk_nvmf_poll_group_remove,
 	    int,
 	    (struct spdk_nvmf_poll_group *group, struct spdk_nvmf_qpair *qpair),
-	    0)
+	    0);
 
 DEFINE_STUB(spdk_nvmf_subsystem_get_sn,
 	    const char *,
 	    (const struct spdk_nvmf_subsystem *subsystem),
-	    NULL)
+	    NULL);
 
 DEFINE_STUB(spdk_nvmf_subsystem_get_ns,
 	    struct spdk_nvmf_ns *,
 	    (struct spdk_nvmf_subsystem *subsystem, uint32_t nsid),
-	    NULL)
+	    NULL);
 
 DEFINE_STUB(spdk_nvmf_subsystem_get_first_ns,
 	    struct spdk_nvmf_ns *,
 	    (struct spdk_nvmf_subsystem *subsystem),
-	    NULL)
+	    NULL);
 
 DEFINE_STUB(spdk_nvmf_subsystem_get_next_ns,
 	    struct spdk_nvmf_ns *,
 	    (struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_ns *prev_ns),
-	    NULL)
+	    NULL);
 
 DEFINE_STUB(spdk_nvmf_subsystem_host_allowed,
 	    bool,
 	    (struct spdk_nvmf_subsystem *subsystem, const char *hostnqn),
-	    true)
+	    true);
 
 DEFINE_STUB(spdk_nvmf_subsystem_add_ctrlr,
 	    int,
 	    (struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_ctrlr *ctrlr),
-	    0)
+	    0);
 
 DEFINE_STUB_V(spdk_nvmf_subsystem_remove_ctrlr,
-	      (struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_ctrlr *ctrlr))
+	      (struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_ctrlr *ctrlr));
 
 DEFINE_STUB(spdk_nvmf_subsystem_get_ctrlr,
 	    struct spdk_nvmf_ctrlr *,
 	    (struct spdk_nvmf_subsystem *subsystem, uint16_t cntlid),
-	    NULL)
+	    NULL);
 
 DEFINE_STUB(spdk_nvmf_ctrlr_dsm_supported,
 	    bool,
 	    (struct spdk_nvmf_ctrlr *ctrlr),
-	    false)
+	    false);
 
 DEFINE_STUB(spdk_nvmf_ctrlr_write_zeroes_supported,
 	    bool,
 	    (struct spdk_nvmf_ctrlr *ctrlr),
-	    false)
+	    false);
 
 DEFINE_STUB(spdk_nvmf_bdev_ctrlr_identify_ns,
 	    int,
 	    (struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *nsdata),
-	    -1)
+	    -1);
 
 DEFINE_STUB_V(spdk_nvmf_get_discovery_log_page,
-	      (struct spdk_nvmf_tgt *tgt, void *buffer, uint64_t offset, uint32_t length))
+	      (struct spdk_nvmf_tgt *tgt, void *buffer, uint64_t offset, uint32_t length));
 
 DEFINE_STUB(spdk_nvmf_request_complete,
 	    int,
 	    (struct spdk_nvmf_request *req),
-	    -1)
+	    -1);
 
 DEFINE_STUB(spdk_nvmf_request_abort,
 	    int,
 	    (struct spdk_nvmf_request *req),
-	    -1)
+	    -1);
 
 static void
 test_get_log_page(void)
