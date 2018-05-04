@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8967203f_a6a73d94",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 958,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-04T15:28:55Z",
+      "side": 1,
+      "message": "I think these 4 lines can be removed.  The check on lines 965-966 serve the same purpose.",
+      "revId": "ebdfa0bf9e882edd40013f356c85375152092c4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
