@@ -114,6 +114,8 @@ struct spdk_bdev_mgmt_channel {
 	 */
 	bdev_io_stailq_t per_thread_cache;
 	uint32_t	per_thread_cache_count;
+
+	TAILQ_HEAD(, spdk_bdev_module_channel) module_channels;
 };
 
 /*
@@ -122,7 +124,6 @@ struct spdk_bdev_mgmt_channel {
  * IO to one bdev after IO from other bdev completes.
  */
 struct spdk_bdev_module_channel {
-
 	/* The bdev management channel */
 	struct spdk_bdev_mgmt_channel *mgmt_ch;
 
@@ -142,6 +143,12 @@ struct spdk_bdev_module_channel {
 	 * Threshold which io_outstanding must drop to before retrying nomem_io.
 	 */
 	uint64_t		nomem_threshold;
+
+	/* I/O channel allocated by a bdev module */
+	struct spdk_io_channel	*module_ch;
+
+	/* Refcount of bdev channels using this channel */
+	uint32_t		ref;
 
 	TAILQ_ENTRY(spdk_bdev_module_channel) link;
 };
@@ -426,13 +433,14 @@ spdk_bdev_mgmt_channel_create(void *io_device, void *ctx_buf)
 	STAILQ_INIT(&ch->per_thread_cache);
 	ch->per_thread_cache_count = 0;
 
+	TAILQ_INIT(&ch->module_channels);
+
 	return 0;
 }
 
 static void
-spdk_bdev_mgmt_channel_destroy(void *io_device, void *ctx_buf)
+spdk_bdev_mgmt_channel_free_resources(struct spdk_bdev_mgmt_channel *ch)
 {
-	struct spdk_bdev_mgmt_channel *ch = ctx_buf;
 	struct spdk_bdev_io *bdev_io;
 
 	if (!STAILQ_EMPTY(&ch->need_buf_small) || !STAILQ_EMPTY(&ch->need_buf_large)) {
@@ -447,6 +455,14 @@ spdk_bdev_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 	}
 
 	assert(ch->per_thread_cache_count == 0);
+}
+
+static void
+spdk_bdev_mgmt_channel_destroy(void *io_device, void *ctx_buf)
+{
+	struct spdk_bdev_mgmt_channel *ch = ctx_buf;
+
+	spdk_bdev_mgmt_channel_free_resources(ch);
 }
 
 static void
@@ -527,47 +543,12 @@ spdk_bdev_module_examine_done(struct spdk_bdev_module *module)
 }
 
 static int
-spdk_bdev_module_channel_create(void *io_device, void *ctx_buf)
-{
-	struct spdk_bdev_module_channel *ch = ctx_buf;
-	struct spdk_io_channel *mgmt_ch;
-
-	ch->io_outstanding = 0;
-	TAILQ_INIT(&ch->nomem_io);
-	ch->nomem_threshold = 0;
-
-	mgmt_ch = spdk_get_io_channel(&g_bdev_mgr);
-	if (!mgmt_ch) {
-		return -1;
-	}
-
-	ch->mgmt_ch = spdk_io_channel_get_ctx(mgmt_ch);
-
-	return 0;
-}
-
-static void
-spdk_bdev_module_channel_destroy(void *io_device, void *ctx_buf)
-{
-	struct spdk_bdev_module_channel *ch = ctx_buf;
-
-	assert(ch->io_outstanding == 0);
-	assert(TAILQ_EMPTY(&ch->nomem_io));
-
-	spdk_put_io_channel(spdk_io_channel_from_ctx(ch->mgmt_ch));
-}
-
-static int
 spdk_bdev_modules_init(void)
 {
 	struct spdk_bdev_module *module;
 	int rc = 0;
 
 	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, tailq) {
-		spdk_io_device_register(module,
-					spdk_bdev_module_channel_create,
-					spdk_bdev_module_channel_destroy,
-					sizeof(struct spdk_bdev_module_channel));
 		rc = module->module_init();
 		if (rc != 0) {
 			break;
@@ -701,6 +682,22 @@ spdk_bdev_mgr_unregister_cb(void *io_device)
 static struct spdk_bdev_module *g_resume_bdev_module = NULL;
 
 static void
+mgmt_channel_free_resources(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_bdev_mgmt_channel *ch = spdk_io_channel_get_ctx(_ch);
+
+	spdk_bdev_mgmt_channel_free_resources(ch);
+	spdk_for_each_channel_continue(i, 0);
+}
+
+static void
+spdk_bdev_module_finish_complete(struct spdk_io_channel_iter *i, int status)
+{
+	spdk_io_device_unregister(&g_bdev_mgr, spdk_bdev_mgr_unregister_cb);
+}
+
+static void
 spdk_bdev_module_finish_iter(void *arg)
 {
 	struct spdk_bdev_module *bdev_module;
@@ -712,44 +709,40 @@ spdk_bdev_module_finish_iter(void *arg)
 		bdev_module = TAILQ_NEXT(g_resume_bdev_module, tailq);
 	}
 
-	if (bdev_module) {
-		/* Save our place so we can resume later. We must
-		 * save the variable here, before calling module_fini()
-		 * below, because in some cases the module may immediately
-		 * call spdk_bdev_module_finish_done() and re-enter
-		 * this function to continue iterating. */
-		g_resume_bdev_module = bdev_module;
+	while (bdev_module) {
+		if (bdev_module->async_fini) {
+			/* Save our place so we can resume later. We must
+			 * save the variable here, before calling module_fini()
+			 * below, because in some cases the module may immediately
+			 * call spdk_bdev_module_finish_done() and re-enter
+			 * this function to continue iterating. */
+			g_resume_bdev_module = bdev_module;
+		}
 
 		if (bdev_module->module_fini) {
 			bdev_module->module_fini();
 		}
 
-		if (!bdev_module->async_fini) {
-			spdk_bdev_module_finish_done();
+		if (bdev_module->async_fini) {
+			return;
 		}
 
-		return;
+		bdev_module = TAILQ_NEXT(bdev_module, tailq);
 	}
 
 	g_resume_bdev_module = NULL;
-
-	spdk_io_device_unregister(&g_bdev_mgr, spdk_bdev_mgr_unregister_cb);
+	spdk_for_each_channel(&g_bdev_mgr, mgmt_channel_free_resources, NULL,
+			      spdk_bdev_module_finish_complete);
 }
 
-static void
-spdk_bdev_module_unregister_cb(void *io_device)
+void
+spdk_bdev_module_finish_done(void)
 {
 	if (spdk_get_thread() != g_fini_thread) {
 		spdk_thread_send_msg(g_fini_thread, spdk_bdev_module_finish_iter, NULL);
 	} else {
 		spdk_bdev_module_finish_iter(NULL);
 	}
-}
-
-void
-spdk_bdev_module_finish_done(void)
-{
-	spdk_io_device_unregister(g_resume_bdev_module, spdk_bdev_module_unregister_cb);
 }
 
 static void
@@ -1006,6 +999,9 @@ static int
 _spdk_bdev_channel_create(struct spdk_bdev_channel *ch, void *io_device)
 {
 	struct spdk_bdev		*bdev = __bdev_from_io_dev(io_device);
+	struct spdk_io_channel		*mgmt_io_ch;
+	struct spdk_bdev_mgmt_channel	*mgmt_ch;
+	struct spdk_bdev_module_channel *module_ch;
 
 	ch->bdev = bdev;
 	ch->channel = bdev->fn_table->get_io_channel(bdev->ctxt);
@@ -1013,12 +1009,40 @@ _spdk_bdev_channel_create(struct spdk_bdev_channel *ch, void *io_device)
 		return -1;
 	}
 
-	ch->module_ch = spdk_io_channel_get_ctx(spdk_get_io_channel(bdev->module));
+	mgmt_io_ch = spdk_get_io_channel(&g_bdev_mgr);
+	if (!mgmt_io_ch) {
+		return -1;
+	}
+
+	mgmt_ch = spdk_io_channel_get_ctx(mgmt_io_ch);
+	TAILQ_FOREACH(module_ch, &mgmt_ch->module_channels, link) {
+		if (module_ch->module_ch == ch->channel) {
+			module_ch->ref++;
+			break;
+		}
+	}
+
+	if (module_ch == NULL) {
+		module_ch = calloc(1, sizeof(*module_ch));
+		if (module_ch == NULL) {
+			spdk_put_io_channel(mgmt_io_ch);
+			return -1;
+		}
+
+		module_ch->mgmt_ch = mgmt_ch;
+		module_ch->io_outstanding = 0;
+		TAILQ_INIT(&module_ch->nomem_io);
+		module_ch->nomem_threshold = 0;
+		module_ch->module_ch = ch->channel;
+		module_ch->ref = 1;
+		TAILQ_INSERT_TAIL(&mgmt_ch->module_channels, module_ch, link);
+	}
 
 	memset(&ch->stat, 0, sizeof(ch->stat));
 	ch->io_outstanding = 0;
 	TAILQ_INIT(&ch->queued_resets);
 	ch->flags = 0;
+	ch->module_ch = module_ch;
 
 	return 0;
 }
@@ -1026,6 +1050,8 @@ _spdk_bdev_channel_create(struct spdk_bdev_channel *ch, void *io_device)
 static void
 _spdk_bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
 {
+	struct spdk_bdev_module_channel *module_ch;
+
 	if (!ch) {
 		return;
 	}
@@ -1034,8 +1060,17 @@ _spdk_bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
 		spdk_put_io_channel(ch->channel);
 	}
 
-	if (ch->module_ch) {
-		spdk_put_io_channel(spdk_io_channel_from_ctx(ch->module_ch));
+	module_ch = ch->module_ch;
+	if (module_ch) {
+		assert(ch->io_outstanding == 0);
+		assert(module_ch->ref > 0);
+		module_ch->ref--;
+		spdk_put_io_channel(spdk_io_channel_from_ctx(module_ch->mgmt_ch));
+		if (module_ch->ref == 0) {
+			assert(module_ch->io_outstanding == 0);
+			TAILQ_REMOVE(&module_ch->mgmt_ch->module_channels, module_ch, link);
+			free(module_ch);
+		}
 	}
 }
 
