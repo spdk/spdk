@@ -2648,16 +2648,24 @@ _spdk_bs_load_replay_md_parse_page(const struct spdk_blob_md_page *page, struct 
 			struct spdk_blob_md_descriptor_extent	*desc_extent;
 			unsigned int				i, j;
 			unsigned int				cluster_count = 0;
+			uint32_t				cluster_idx;
 
 			desc_extent = (struct spdk_blob_md_descriptor_extent *)desc;
 
 			for (i = 0; i < desc_extent->length / sizeof(desc_extent->extents[0]); i++) {
 				for (j = 0; j < desc_extent->extents[i].length; j++) {
-					spdk_bit_array_set(bs->used_clusters, desc_extent->extents[i].cluster_idx + j);
-					if (bs->num_free_clusters == 0) {
-						return -1;
+					cluster_idx = desc_extent->extents[i].cluster_idx;
+					/*
+					 * cluster_idx = 0 means an unallocated cluster - don't mark that
+					 * in the used cluster map.
+					 */
+					if (cluster_idx != 0) {
+						spdk_bit_array_set(bs->used_clusters, cluster_idx + j);
+						if (bs->num_free_clusters == 0) {
+							return -1;
+						}
+						bs->num_free_clusters--;
 					}
-					bs->num_free_clusters--;
 					cluster_count++;
 				}
 			}
