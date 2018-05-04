@@ -250,20 +250,37 @@ vtophys_get_paddr_pagemap(uint64_t vaddr)
 {
 	uintptr_t paddr;
 
-	paddr = rte_mem_virt2phy((void *)vaddr);
-	if (paddr == 0) {
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
+#define BAD_ADDR RTE_BAD_IOVA
+#define VTOPHYS rte_mem_virt2iova
+#else
+#define BAD_ADDR RTE_BAD_PHYS_ADDR
+#define VTOPHYS rte_mem_virt2phy
+#endif
+
+	/*
+	 * Note: the virt2phy/virt2iova functions have changed over time, such
+	 * that older versions may return 0 while recent versions will never
+	 * return 0 but RTE_BAD_PHYS_ADDR/IOVA instead.  To support older and
+	 * newer versions, check for both return values.
+	 */
+	paddr = VTOPHYS((void *)vaddr);
+	if (paddr == 0 || paddr == BAD_ADDR) {
 		/*
-		 * The vaddr was valid but returned 0.  Touch the page
-		 * to ensure a backing page gets assigned, then call
-		 * rte_mem_virt2phy() again.
+		 * The vaddr may be valid but doesn't have a backing page
+		 * assigned yet.  Touch the page to ensure a backing page
+		 * gets assigned, then try to translate again.
 		 */
 		rte_atomic64_read((rte_atomic64_t *)vaddr);
-		paddr = rte_mem_virt2phy((void *)vaddr);
+		paddr = VTOPHYS((void *)vaddr);
 	}
-	if (paddr == RTE_BAD_PHYS_ADDR) {
+	if (paddr == 0 || paddr == BAD_ADDR) {
 		/* Unable to get to the physical address. */
 		return SPDK_VTOPHYS_ERROR;
 	}
+
+#undef BAD_ADDR
+#undef VTOPHYS
 
 	return paddr;
 }
