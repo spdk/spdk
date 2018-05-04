@@ -589,8 +589,8 @@ spdk_iscsi_opts_init(struct spdk_iscsi_opts *opts)
 	opts->req_discovery_auth = false;
 	opts->req_discovery_auth_mutual = false;
 	opts->discovery_auth_group = 0;
-	opts->authfile = strdup(SPDK_ISCSI_DEFAULT_AUTHFILE);
-	opts->nodebase = strdup(SPDK_ISCSI_DEFAULT_NODEBASE);
+	opts->authfile = NULL;
+	opts->nodebase = NULL;
 	opts->min_connections_per_core = DEFAULT_CONNECTIONS_PER_LCORE;
 }
 
@@ -601,7 +601,7 @@ spdk_iscsi_opts_free(struct spdk_iscsi_opts *opts)
 	free(opts->nodebase);
 }
 
-static void
+static int
 spdk_iscsi_read_config_file_params(struct spdk_conf_section *sp,
 				   struct spdk_iscsi_opts *opts)
 {
@@ -625,14 +625,21 @@ spdk_iscsi_read_config_file_params(struct spdk_conf_section *sp,
 
 	val = spdk_conf_section_get_val(sp, "AuthFile");
 	if (val != NULL) {
-		free(opts->authfile);
 		opts->authfile = strdup(val);
+		if (!opts->authfile) {
+			SPDK_ERRLOG("strdup() failed for AuthFile\n");
+			return -ENOMEM;
+		}
 	}
 
 	val = spdk_conf_section_get_val(sp, "NodeBase");
 	if (val != NULL) {
-		free(opts->nodebase);
 		opts->nodebase = strdup(val);
+		if (!opts->nodebase) {
+			free(opts->authfile);
+			SPDK_ERRLOG("strdup() failed for NodeBase\n");
+			return -ENOMEM;
+		}
 	}
 
 	MaxSessions = spdk_conf_section_get_intval(sp, "MaxSessions");
@@ -722,19 +729,27 @@ spdk_iscsi_read_config_file_params(struct spdk_conf_section *sp,
 	if (min_conn_per_core >= 0) {
 		opts->min_connections_per_core = min_conn_per_core;
 	}
+
+	return 0;
 }
 
 static int
 spdk_iscsi_opts_verify(struct spdk_iscsi_opts *opts)
 {
 	if (!opts->authfile) {
-		SPDK_ERRLOG("opts->authfile is NULL\n");
-		return -EINVAL;
+		opts->authfile = strdup(SPDK_ISCSI_DEFAULT_AUTHFILE);
+		if (opts->authfile == NULL) {
+			SPDK_ERRLOG("strdup() failed for default authfile\n");
+			return -ENOMEM;
+		}
 	}
 
 	if (!opts->nodebase) {
-		SPDK_ERRLOG("opts->nodebase is NULL\n");
-		return -EINVAL;
+		opts->nodebase = strdup(SPDK_ISCSI_DEFAULT_NODEBASE);
+		if (opts->nodebase == NULL) {
+			SPDK_ERRLOG("strdup() failed for default nodebase\n");
+			return -ENOMEM;
+		}
 	}
 
 	if (opts->MaxSessions == 0 || opts->MaxSessions > 65535) {
@@ -851,7 +866,11 @@ spdk_iscsi_initialize_global_params(void)
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_read_config_file_parmas\n");
 	sp = spdk_conf_find_section(NULL, "iSCSI");
 	if (sp != NULL) {
-		spdk_iscsi_read_config_file_params(sp, &opts);
+		rc = spdk_iscsi_read_config_file_params(sp, &opts);
+		if (rc != 0) {
+			SPDK_ERRLOG("spdk_iscsi_read_config_file_params() failed\n");
+			return rc;
+		}
 	}
 
 	rc = spdk_iscsi_set_global_params(&opts);
