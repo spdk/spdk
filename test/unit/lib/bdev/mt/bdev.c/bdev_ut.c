@@ -1044,6 +1044,87 @@ enomem_multi_bdev(void)
 }
 
 static void
+enomem_multi_io_target(void)
+{
+	struct spdk_io_channel *io_ch;
+	struct spdk_bdev_channel *bdev_ch;
+	struct ut_bdev_channel *ut_ch;
+	const uint32_t IO_ARRAY_SIZE = 64;
+	const uint32_t AVAIL = 20;
+	enum spdk_bdev_io_status status[IO_ARRAY_SIZE];
+	uint32_t i;
+	int new_io_device;
+	struct ut_bdev *second_bdev;
+	struct spdk_bdev_desc *second_desc;
+	struct spdk_bdev_channel *second_bdev_ch;
+	struct spdk_io_channel *second_ch;
+	int rc;
+
+	setup_test();
+
+	/* Create new io_target and a second bdev using it */
+	spdk_io_device_register(&new_io_device, stub_create_ch, stub_destroy_ch,
+				sizeof(struct ut_bdev_channel));
+	second_bdev = calloc(1, sizeof(*second_bdev));
+	SPDK_CU_ASSERT_FATAL(second_bdev != NULL);
+	register_bdev(second_bdev, "ut_bdev2", &new_io_device);
+	spdk_bdev_open(&second_bdev->bdev, true, NULL, NULL, &second_desc);
+
+	set_thread(0);
+	io_ch = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch = spdk_io_channel_get_ctx(io_ch);
+	ut_ch = spdk_io_channel_get_ctx(bdev_ch->channel);
+	ut_ch->avail_cnt = AVAIL;
+
+	/* Different io_target should imply a different module_ch */
+	second_ch = spdk_bdev_get_io_channel(second_desc);
+	second_bdev_ch = spdk_io_channel_get_ctx(second_ch);
+	SPDK_CU_ASSERT_FATAL(bdev_ch->module_ch != second_bdev_ch->module_ch);
+
+	/* Saturate io_target through bdev A. */
+	for (i = 0; i < AVAIL; i++) {
+		status[i] = SPDK_BDEV_IO_STATUS_PENDING;
+		rc = spdk_bdev_read_blocks(g_desc, io_ch, NULL, 0, 1, enomem_done, &status[i]);
+		CU_ASSERT(rc == 0);
+	}
+	CU_ASSERT(TAILQ_EMPTY(&bdev_ch->module_ch->nomem_io));
+
+	/* Issue one more I/O to fill ENOMEM list. */
+	status[AVAIL] = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch, NULL, 0, 1, enomem_done, &status[AVAIL]);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&bdev_ch->module_ch->nomem_io));
+
+	/*
+	 * Now submit I/O through the second bdev. This should go through and complete
+	 * successfully because we're using a different io_device underneath.
+	 */
+	status[AVAIL] = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(second_desc, second_ch, NULL, 0, 1, enomem_done, &status[AVAIL]);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&second_bdev_ch->module_ch->nomem_io));
+	stub_complete_io(second_bdev->io_target, 1);
+
+	/* Cleanup; Complete outstanding I/O. */
+	stub_complete_io(g_bdev.io_target, AVAIL);
+	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&bdev_ch->module_ch->nomem_io));
+	/* Complete the ENOMEM I/O */
+	stub_complete_io(g_bdev.io_target, 1);
+	CU_ASSERT(bdev_ch->module_ch->io_outstanding == 0);
+
+	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&bdev_ch->module_ch->nomem_io));
+	CU_ASSERT(bdev_ch->module_ch->io_outstanding == 0);
+	spdk_put_io_channel(io_ch);
+	spdk_put_io_channel(second_ch);
+	spdk_bdev_close(second_desc);
+	unregister_bdev(second_bdev);
+	spdk_io_device_unregister(&new_io_device, NULL);
+	poll_threads();
+	free(second_bdev);
+	teardown_test();
+}
+
+static void
 qos_dynamic_enable_done(void *cb_arg, int status)
 {
 	int *rc = cb_arg;
@@ -1174,6 +1255,7 @@ main(int argc, char **argv)
 		CU_add_test(suite, "io_during_qos_reset", io_during_qos_reset) == NULL ||
 		CU_add_test(suite, "enomem", enomem) == NULL ||
 		CU_add_test(suite, "enomem_multi_bdev", enomem_multi_bdev) == NULL ||
+		CU_add_test(suite, "enomem_multi_io_target", enomem_multi_io_target) == NULL ||
 		CU_add_test(suite, "qos_dynamic_enable", qos_dynamic_enable) == NULL
 	) {
 		CU_cleanup_registry();
