@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "6dc0df53_4b73aeb6",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 471,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-05-04T15:34:54Z",
+      "side": 1,
+      "message": "If we want to create thin provisioned inflated blob we need to check if in any of ancestors page is allocated. I\u0027m thinking about something like this:\n\n/* Check if parent allocates page */\nstatic inline bool\n_spdk_bs_page_needs_allocation_next(struct spdk_blob *blob, uint32_t page)\n{\n\tstruct spdk_blob_bs_dev *b \u003d blob-\u003eback_bs_dev;\n\n\tif (_spdk_bs_page_is_allocated(blob, page)) {\n\t\t/* if page is allocated we need to claim it */\n\t\treturn true;\n\t}\n\n\tif (b \u003d\u003d NULL || b-\u003eblob \u003d\u003d NULL) {\n\t\t/* Blob have no back_bs_dev, so we do not need to allocate page */\n\t\treturn false;\n\t}\n\n\treturn _spdk_bs_page_needs_allocation_next(b-\u003eblob, page);\n}\n\n/* Check if page needs allocation */\nstatic inline bool\n_spdk_bs_page_needs_allocation(struct spdk_blob *blob, uint32_t page)\n{\n\tstruct spdk_blob_bs_dev *b \u003d blob-\u003eback_bs_dev;\n\n\tif (_spdk_bs_page_is_allocated(blob, page)) {\n\t\t/* Page is already allocated */\n\t\treturn false;\n\t}\n\n\t/* Blob have no back_bs_dev */\n\tif (b \u003d\u003d NULL || b-\u003eblob \u003d\u003d NULL) {\n\t\t/* Page is not allocated, but there\u0027s not bs_dev */\n\t\treturn false;\n\t}\n\n\t/* Check if any of ancessors have allocated page */\n\treturn _spdk_bs_page_needs_allocation_next(b-\u003eblob, page);\n}\n\nBut this is only an idea and requires more testing. For now, most of backing devices are read only (like snapshots), so we can assume that page allocation doesn\u0027t change on ancestor elsewhere problem with synchronization will be a little challenging.\n\nThis feature is required for Cinder integration (https://trello.com/c/zsQgOW5M/3-lvol-snpashots-clones). I can go ahead with this idea if there\u0027s no other objections.\n\nI had also alternative solution https://review.gerrithub.io/#/c/408332/ which doesn\u0027t require zero length writes and may let to inflate (touch) only a part of blob, so maybe mixing both is some alternative.",
+      "parentUuid": "248e4f08_99c760d1",
+      "range": {
+        "startLine": 471,
+        "startChar": 12,
+        "endLine": 471,
+        "endChar": 49
+      },
+      "revId": "45b26eec083cb13ce0b41e573aa90bab218a4b5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "744d57a3_04251f65",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 27
