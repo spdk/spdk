@@ -40,7 +40,8 @@
 #include "../common.c"
 #include "iscsi/param.c"
 
-struct spdk_iscsi_globals g_spdk_iscsi;
+struct spdk_iscsi_globals _g_spdk_iscsi;
+struct spdk_iscsi_globals *g_spdk_iscsi = &_g_spdk_iscsi;
 
 struct spdk_iscsi_tgt_node *
 spdk_iscsi_find_tgt_node(const char *target_name)

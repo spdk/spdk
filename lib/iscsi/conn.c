@@ -174,7 +174,7 @@ err:
 static void
 spdk_iscsi_poll_group_add_conn_sock(struct spdk_iscsi_conn *conn)
 {
-	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
+	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi->poll_group[spdk_env_get_current_core()];
 	int rc;
 
 	rc = spdk_sock_group_add_sock(poll_group->sock_group, conn->sock, spdk_iscsi_conn_sock_cb, conn);
@@ -186,7 +186,7 @@ spdk_iscsi_poll_group_add_conn_sock(struct spdk_iscsi_conn *conn)
 static void
 spdk_iscsi_poll_group_remove_conn_sock(struct spdk_iscsi_conn *conn)
 {
-	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
+	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi->poll_group[spdk_env_get_current_core()];
 	int rc;
 
 	rc = spdk_sock_group_remove_sock(poll_group->sock_group, conn->sock);
@@ -198,7 +198,7 @@ spdk_iscsi_poll_group_remove_conn_sock(struct spdk_iscsi_conn *conn)
 static void
 spdk_iscsi_poll_group_add_conn(struct spdk_iscsi_conn *conn)
 {
-	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
+	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi->poll_group[spdk_env_get_current_core()];
 
 	STAILQ_INSERT_TAIL(&poll_group->connections, conn, link);
 	spdk_iscsi_poll_group_add_conn_sock(conn);
@@ -207,7 +207,7 @@ spdk_iscsi_poll_group_add_conn(struct spdk_iscsi_conn *conn)
 static void
 spdk_iscsi_poll_group_remove_conn(struct spdk_iscsi_conn *conn)
 {
-	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
+	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi->poll_group[spdk_env_get_current_core()];
 
 	STAILQ_REMOVE(&poll_group->connections, conn, spdk_iscsi_conn, link);
 }
@@ -240,8 +240,8 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	}
 
 	pthread_mutex_lock(&g_iscsi_mutex);
-	conn->timeout = g_spdk_iscsi.timeout;
-	conn->nopininterval = g_spdk_iscsi.nopininterval;
+	conn->timeout = g_spdk_iscsi->timeout;
+	conn->nopininterval = g_spdk_iscsi->nopininterval;
 	conn->nopininterval *= spdk_get_ticks_hz(); /* seconds to TSC */
 	conn->nop_outstanding = false;
 	conn->data_out_cnt = 0;
@@ -294,7 +294,7 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 		SPDK_ERRLOG("spdk_sock_set_recvbuf failed\n");
 	}
 
-	bufsize = 32 * 1024 * 1024 / g_spdk_iscsi.MaxConnections;
+	bufsize = 32 * 1024 * 1024 / g_spdk_iscsi->MaxConnections;
 	if (bufsize > 2 * 1024 * 1024) {
 		bufsize = 2 * 1024 * 1024;
 	}
@@ -474,7 +474,7 @@ spdk_iscsi_conn_cleanup_backend(struct spdk_iscsi_conn *conn)
 
 	if (conn->sess->connections > 1) {
 		/* connection specific cleanup */
-	} else if (!g_spdk_iscsi.AllowDuplicateIsid) {
+	} else if (!g_spdk_iscsi->AllowDuplicateIsid) {
 		/* clean up all tasks to all LUNs for session */
 		rc = spdk_iscsi_tgt_node_cleanup_luns(conn,
 						      conn->sess->target);
