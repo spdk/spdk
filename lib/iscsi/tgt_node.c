@@ -1331,3 +1331,208 @@ spdk_iscsi_tgt_node_add_lun(struct spdk_iscsi_tgt_node *target,
 
 	return 0;
 }
+
+static const char *target_nodes_section = \
+		"\n"
+		"# Users should change the TargetNode section(s) below to match the\n"
+		"#  desired iSCSI target node configuration.\n"
+		"# TargetName, Mapping, LUN0 are minimum required\n";
+
+#define TARGET_NODE_TMPL \
+"[TargetNode%d]\n" \
+"  Comment \"Target%d\"\n" \
+"  TargetName %s\n" \
+"  TargetAlias \"%s\"\n"
+
+#define TARGET_NODE_PGIG_MAPPING_TMPL \
+"  Mapping PortalGroup%d InitiatorGroup%d\n"
+
+#define TARGET_NODE_AUTH_TMPL \
+"  AuthMethod %s\n" \
+"  AuthGroup %s\n" \
+"  UseDigest %s\n"
+
+#define TARGET_NODE_QD_TMPL \
+"  QueueDepth %d\n\n"
+
+#define TARGET_NODE_LUN_TMPL \
+"  LUN%d %s\n"
+
+void
+spdk_iscsi_tgt_nodes_config_text(FILE *fp)
+{
+	int l = 0;
+	struct spdk_scsi_dev *dev = NULL;
+	struct spdk_iscsi_tgt_node *target = NULL;
+	struct spdk_iscsi_pg_map *pg_map;
+	struct spdk_iscsi_ig_map *ig_map;
+
+	/* Create target nodes section */
+	fprintf(fp, "%s", target_nodes_section);
+
+	TAILQ_FOREACH(target, &g_spdk_iscsi.target_head, tailq) {
+		int idx;
+		const char *authmethod = "None";
+		char authgroup[32] = "None";
+		const char *usedigest = "Auto";
+
+		dev = target->dev;
+		if (NULL == dev) { continue; }
+
+		idx = target->num;
+		fprintf(fp, TARGET_NODE_TMPL, idx, idx, target->name, spdk_scsi_dev_get_name(dev));
+
+		TAILQ_FOREACH(pg_map, &target->pg_map_head, tailq) {
+			TAILQ_FOREACH(ig_map, &pg_map->ig_map_head, tailq) {
+				fprintf(fp, TARGET_NODE_PGIG_MAPPING_TMPL,
+					pg_map->pg->tag,
+					ig_map->ig->tag);
+			}
+		}
+
+		if (target->disable_chap) {
+			authmethod = "None";
+		} else if (!target->require_chap) {
+			authmethod = "Auto";
+		} else if (target->mutual_chap) {
+			authmethod = "CHAP Mutual";
+		} else {
+			authmethod = "CHAP";
+		}
+
+		if (target->chap_group > 0) {
+			snprintf(authgroup, sizeof(authgroup), "AuthGroup%d", target->chap_group);
+		}
+
+		if (target->header_digest) {
+			usedigest = "Header";
+		} else if (target->data_digest) {
+			usedigest = "Data";
+		}
+
+		fprintf(fp, TARGET_NODE_AUTH_TMPL,
+			authmethod, authgroup, usedigest);
+
+		for (l = 0; l < SPDK_SCSI_DEV_MAX_LUN; l++) {
+			struct spdk_scsi_lun *lun = spdk_scsi_dev_get_lun(dev, l);
+
+			if (!lun) {
+				continue;
+			}
+
+			fprintf(fp, TARGET_NODE_LUN_TMPL,
+				spdk_scsi_lun_get_id(lun),
+				spdk_scsi_lun_get_bdev_name(lun));
+		}
+
+		fprintf(fp, TARGET_NODE_QD_TMPL,
+			target->queue_depth);
+	}
+}
+
+static void
+spdk_iscsi_tgt_node_info_json(struct spdk_iscsi_tgt_node *target,
+			      struct spdk_json_write_ctx *w)
+{
+	struct spdk_iscsi_pg_map *pg_map;
+	struct spdk_iscsi_ig_map *ig_map;
+	int i;
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "name");
+	spdk_json_write_string(w, target->name);
+
+	if (target->alias) {
+		spdk_json_write_name(w, "alias_name");
+		spdk_json_write_string(w, target->alias);
+	}
+
+	spdk_json_write_name(w, "pg_ig_maps");
+	spdk_json_write_array_begin(w);
+	TAILQ_FOREACH(pg_map, &target->pg_map_head, tailq) {
+		TAILQ_FOREACH(ig_map, &pg_map->ig_map_head, tailq) {
+			spdk_json_write_object_begin(w);
+			spdk_json_write_name(w, "pg_tag");
+			spdk_json_write_int32(w, pg_map->pg->tag);
+			spdk_json_write_name(w, "ig_tag");
+			spdk_json_write_int32(w, ig_map->ig->tag);
+			spdk_json_write_object_end(w);
+		}
+	}
+	spdk_json_write_array_end(w);
+
+	spdk_json_write_name(w, "luns");
+	spdk_json_write_array_begin(w);
+	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+		struct spdk_scsi_lun *lun = spdk_scsi_dev_get_lun(target->dev, i);
+
+		if (lun) {
+			spdk_json_write_object_begin(w);
+			spdk_json_write_name(w, "bdev_name");
+			spdk_json_write_string(w, spdk_scsi_lun_get_bdev_name(lun));
+			spdk_json_write_name(w, "id");
+			spdk_json_write_int32(w, spdk_scsi_lun_get_id(lun));
+			spdk_json_write_object_end(w);
+		}
+	}
+	spdk_json_write_array_end(w);
+
+	spdk_json_write_name(w, "queue_depth");
+	spdk_json_write_int32(w, target->queue_depth);
+
+	spdk_json_write_name(w, "disable_chap");
+	spdk_json_write_bool(w, target->disable_chap);
+
+	spdk_json_write_name(w, "require_chap");
+	spdk_json_write_bool(w, target->require_chap);
+
+	spdk_json_write_name(w, "mutual_chap");
+	spdk_json_write_bool(w, target->mutual_chap);
+
+	spdk_json_write_name(w, "chap_group");
+	spdk_json_write_int32(w, target->chap_group);
+
+	spdk_json_write_name(w, "header_digest");
+	spdk_json_write_bool(w, target->header_digest);
+
+	spdk_json_write_name(w, "data_digest");
+	spdk_json_write_bool(w, target->data_digest);
+
+	spdk_json_write_object_end(w);
+}
+
+static void
+spdk_iscsi_tgt_node_config_json(struct spdk_iscsi_tgt_node *target,
+				struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "method");
+	spdk_json_write_string(w, "construct_target_node");
+
+	spdk_json_write_name(w, "params");
+	spdk_iscsi_tgt_node_info_json(target, w);
+
+	spdk_json_write_object_end(w);
+}
+
+void
+spdk_iscsi_tgt_nodes_info_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_iscsi_tgt_node *target;
+
+	TAILQ_FOREACH(target, &g_spdk_iscsi.target_head, tailq) {
+		spdk_iscsi_tgt_node_info_json(target, w);
+	}
+}
+
+void
+spdk_iscsi_tgt_nodes_config_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_iscsi_tgt_node *target;
+
+	TAILQ_FOREACH(target, &g_spdk_iscsi.target_head, tailq) {
+		spdk_iscsi_tgt_node_config_json(target, w);
+	}
+}

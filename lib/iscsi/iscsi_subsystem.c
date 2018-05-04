@@ -214,105 +214,6 @@ spdk_iscsi_config_dump_initiator_groups(FILE *fp)
 	}
 }
 
-/* Target nodes */
-static const char *target_nodes_section = \
-		"\n"
-		"# Users should change the TargetNode section(s) below to match the\n"
-		"#  desired iSCSI target node configuration.\n"
-		"# TargetName, Mapping, LUN0 are minimum required\n";
-
-#define TARGET_NODE_TMPL \
-"[TargetNode%d]\n" \
-"  Comment \"Target%d\"\n" \
-"  TargetName %s\n" \
-"  TargetAlias \"%s\"\n"
-
-#define TARGET_NODE_PGIG_MAPPING_TMPL \
-"  Mapping PortalGroup%d InitiatorGroup%d\n"
-
-#define TARGET_NODE_AUTH_TMPL \
-"  AuthMethod %s\n" \
-"  AuthGroup %s\n" \
-"  UseDigest %s\n"
-
-#define TARGET_NODE_QD_TMPL \
-"  QueueDepth %d\n\n"
-
-#define TARGET_NODE_LUN_TMPL \
-"  LUN%d %s\n"
-
-static void
-spdk_iscsi_config_dump_target_nodes(FILE *fp)
-{
-	int l = 0;
-	struct spdk_scsi_dev *dev = NULL;
-	struct spdk_iscsi_tgt_node *target = NULL;
-	struct spdk_iscsi_pg_map *pg_map;
-	struct spdk_iscsi_ig_map *ig_map;
-
-	/* Create target nodes section */
-	fprintf(fp, "%s", target_nodes_section);
-
-	TAILQ_FOREACH(target, &g_spdk_iscsi.target_head, tailq) {
-		int idx;
-		const char *authmethod = "None";
-		char authgroup[32] = "None";
-		const char *usedigest = "Auto";
-
-		dev = target->dev;
-		if (NULL == dev) { continue; }
-
-		idx = target->num;
-		fprintf(fp, TARGET_NODE_TMPL, idx, idx, target->name, spdk_scsi_dev_get_name(dev));
-
-		TAILQ_FOREACH(pg_map, &target->pg_map_head, tailq) {
-			TAILQ_FOREACH(ig_map, &pg_map->ig_map_head, tailq) {
-				fprintf(fp, TARGET_NODE_PGIG_MAPPING_TMPL,
-					pg_map->pg->tag,
-					ig_map->ig->tag);
-			}
-		}
-
-		if (target->disable_chap) {
-			authmethod = "None";
-		} else if (!target->require_chap) {
-			authmethod = "Auto";
-		} else if (target->mutual_chap) {
-			authmethod = "CHAP Mutual";
-		} else {
-			authmethod = "CHAP";
-		}
-
-		if (target->chap_group > 0) {
-			snprintf(authgroup, sizeof(authgroup), "AuthGroup%d", target->chap_group);
-		}
-
-		if (target->header_digest) {
-			usedigest = "Header";
-		} else if (target->data_digest) {
-			usedigest = "Data";
-		}
-
-		fprintf(fp, TARGET_NODE_AUTH_TMPL,
-			authmethod, authgroup, usedigest);
-
-		for (l = 0; l < SPDK_SCSI_DEV_MAX_LUN; l++) {
-			struct spdk_scsi_lun *lun = spdk_scsi_dev_get_lun(dev, l);
-
-			if (!lun) {
-				continue;
-			}
-
-			fprintf(fp, TARGET_NODE_LUN_TMPL,
-				spdk_scsi_lun_get_id(lun),
-				spdk_scsi_lun_get_bdev_name(lun));
-		}
-
-		fprintf(fp, TARGET_NODE_QD_TMPL,
-			target->queue_depth);
-	}
-}
-
 static void
 spdk_mobj_ctor(struct spdk_mempool *mp, __attribute__((unused)) void *arg,
 	       void *_m, __attribute__((unused)) unsigned i)
@@ -1113,7 +1014,7 @@ spdk_iscsi_config_text(FILE *fp)
 	spdk_iscsi_config_dump_section(fp);
 	spdk_iscsi_config_dump_portal_groups(fp);
 	spdk_iscsi_config_dump_initiator_groups(fp);
-	spdk_iscsi_config_dump_target_nodes(fp);
+	spdk_iscsi_tgt_nodes_config_text(fp);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("iscsi", SPDK_LOG_ISCSI)
