@@ -524,9 +524,10 @@ blob_thin_provision(void)
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
-	spdk_bs_unload(g_bs, bs_op_complete, NULL);
-	CU_ASSERT(g_bserrno == 0);
-	g_bs = NULL;
+	/* Do not shut down cleanly.  This makes sure that when we load again
+	 *  and try to recover a valid used_cluster map, that blobstore will
+	 *  ignore clusters with index 0 since these are unallocated clusters.
+	 */
 
 	/* Load an existing blob store and check if invalid_flags is set */
 	dev = init_dev();
