@@ -139,15 +139,15 @@ struct spdk_bdev_mgmt_channel {
 	bdev_io_stailq_t per_thread_cache;
 	uint32_t	per_thread_cache_count;
 
-	TAILQ_HEAD(, spdk_bdev_module_channel) module_channels;
+	TAILQ_HEAD(, spdk_bdev_shared_resource) shared_resources;
 };
 
 /*
- * Per-module (or per-io_device) channel. Multiple bdevs built on the same io_device
+ * Per-module (or per-io_device) data. Multiple bdevs built on the same io_device
  * will queue here their IO that awaits retry. It makes it posible to retry sending
  * IO to one bdev after IO from other bdev completes.
  */
-struct spdk_bdev_module_channel {
+struct spdk_bdev_shared_resource {
 	/* The bdev management channel */
 	struct spdk_bdev_mgmt_channel *mgmt_ch;
 
@@ -169,12 +169,12 @@ struct spdk_bdev_module_channel {
 	uint64_t		nomem_threshold;
 
 	/* I/O channel allocated by a bdev module */
-	struct spdk_io_channel	*module_ch;
+	struct spdk_io_channel	*shared_ch;
 
-	/* Refcount of bdev channels using this channel */
+	/* Refcount of bdev channels using this resource */
 	uint32_t		ref;
 
-	TAILQ_ENTRY(spdk_bdev_module_channel) link;
+	TAILQ_ENTRY(spdk_bdev_shared_resource) link;
 };
 
 #define BDEV_CH_RESET_IN_PROGRESS	(1 << 0)
@@ -186,8 +186,8 @@ struct spdk_bdev_channel {
 	/* The channel for the underlying device */
 	struct spdk_io_channel	*channel;
 
-	/* Channel for the bdev module */
-	struct spdk_bdev_module_channel	*module_ch;
+	/* Per io_device per thread data */
+	struct spdk_bdev_shared_resource *shared_resource;
 
 	struct spdk_bdev_io_stat stat;
 
@@ -338,7 +338,7 @@ spdk_bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 	assert(bdev_io->u.bdev.iovcnt == 1);
 
 	buf = bdev_io->buf;
-	ch = bdev_io->ch->module_ch->mgmt_ch;
+	ch = bdev_io->ch->shared_resource->mgmt_ch;
 
 	if (bdev_io->buf_len <= SPDK_BDEV_SMALL_BUF_MAX_SIZE) {
 		pool = g_bdev_mgr.buf_small_pool;
@@ -375,7 +375,7 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 	}
 
 	assert(len <= SPDK_BDEV_LARGE_BUF_MAX_SIZE);
-	mgmt_ch = bdev_io->ch->module_ch->mgmt_ch;
+	mgmt_ch = bdev_io->ch->shared_resource->mgmt_ch;
 
 	bdev_io->buf_len = len;
 	bdev_io->get_buf_cb = cb;
@@ -457,7 +457,7 @@ spdk_bdev_mgmt_channel_create(void *io_device, void *ctx_buf)
 	STAILQ_INIT(&ch->per_thread_cache);
 	ch->per_thread_cache_count = 0;
 
-	TAILQ_INIT(&ch->module_channels);
+	TAILQ_INIT(&ch->shared_resources);
 
 	return 0;
 }
@@ -472,7 +472,7 @@ spdk_bdev_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 		SPDK_ERRLOG("Pending I/O list wasn't empty on mgmt channel free\n");
 	}
 
-	if (!TAILQ_EMPTY(&ch->module_channels)) {
+	if (!TAILQ_EMPTY(&ch->shared_resources)) {
 		SPDK_ERRLOG("Module channel list wasn't empty on mgmt channel free\n");
 	}
 
@@ -808,7 +808,7 @@ spdk_bdev_finish(spdk_bdev_fini_cb cb_fn, void *cb_arg)
 static struct spdk_bdev_io *
 spdk_bdev_get_io(struct spdk_bdev_channel *channel)
 {
-	struct spdk_bdev_mgmt_channel *ch = channel->module_ch->mgmt_ch;
+	struct spdk_bdev_mgmt_channel *ch = channel->shared_resource->mgmt_ch;
 	struct spdk_bdev_io *bdev_io;
 
 	if (ch->per_thread_cache_count > 0) {
@@ -829,7 +829,7 @@ spdk_bdev_get_io(struct spdk_bdev_channel *channel)
 static void
 spdk_bdev_put_io(struct spdk_bdev_io *bdev_io)
 {
-	struct spdk_bdev_mgmt_channel *ch = bdev_io->ch->module_ch->mgmt_ch;
+	struct spdk_bdev_mgmt_channel *ch = bdev_io->ch->shared_resource->mgmt_ch;
 
 	if (bdev_io->buf != NULL) {
 		spdk_bdev_io_put_buf(bdev_io);
@@ -849,7 +849,7 @@ _spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch)
 	struct spdk_bdev_io		*bdev_io = NULL;
 	struct spdk_bdev		*bdev = ch->bdev;
 	struct spdk_bdev_qos		*qos = bdev->qos;
-	struct spdk_bdev_module_channel *module_ch = ch->module_ch;
+	struct spdk_bdev_shared_resource *shared_resource = ch->shared_resource;
 
 	while (!TAILQ_EMPTY(&qos->queued)) {
 		if (qos->io_submitted_this_timeslice < qos->max_ios_per_timeslice) {
@@ -857,7 +857,7 @@ _spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch)
 			TAILQ_REMOVE(&qos->queued, bdev_io, link);
 			qos->io_submitted_this_timeslice++;
 			ch->io_outstanding++;
-			module_ch->io_outstanding++;
+			shared_resource->io_outstanding++;
 			bdev->fn_table->submit_request(ch->channel, bdev_io);
 		} else {
 			break;
@@ -872,25 +872,25 @@ _spdk_bdev_io_submit(void *ctx)
 	struct spdk_bdev *bdev = bdev_io->bdev;
 	struct spdk_bdev_channel *bdev_ch = bdev_io->ch;
 	struct spdk_io_channel *ch = bdev_ch->channel;
-	struct spdk_bdev_module_channel	*module_ch = bdev_ch->module_ch;
+	struct spdk_bdev_shared_resource *shared_resource = bdev_ch->shared_resource;
 
 	bdev_io->submit_tsc = spdk_get_ticks();
 	bdev_ch->io_outstanding++;
-	module_ch->io_outstanding++;
+	shared_resource->io_outstanding++;
 	bdev_io->in_submit_request = true;
 	if (spdk_likely(bdev_ch->flags == 0)) {
-		if (spdk_likely(TAILQ_EMPTY(&module_ch->nomem_io))) {
+		if (spdk_likely(TAILQ_EMPTY(&shared_resource->nomem_io))) {
 			bdev->fn_table->submit_request(ch, bdev_io);
 		} else {
 			bdev_ch->io_outstanding--;
-			module_ch->io_outstanding--;
-			TAILQ_INSERT_TAIL(&module_ch->nomem_io, bdev_io, link);
+			shared_resource->io_outstanding--;
+			TAILQ_INSERT_TAIL(&shared_resource->nomem_io, bdev_io, link);
 		}
 	} else if (bdev_ch->flags & BDEV_CH_RESET_IN_PROGRESS) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	} else if (bdev_ch->flags & BDEV_CH_QOS_ENABLED) {
 		bdev_ch->io_outstanding--;
-		module_ch->io_outstanding--;
+		shared_resource->io_outstanding--;
 		TAILQ_INSERT_TAIL(&bdev->qos->queued, bdev_io, link);
 		_spdk_bdev_qos_io_submit(bdev_ch);
 	} else {
@@ -1005,7 +1005,7 @@ _spdk_bdev_channel_create(struct spdk_bdev_channel *ch, void *io_device)
 	struct spdk_bdev		*bdev = __bdev_from_io_dev(io_device);
 	struct spdk_io_channel		*mgmt_io_ch;
 	struct spdk_bdev_mgmt_channel	*mgmt_ch;
-	struct spdk_bdev_module_channel *module_ch;
+	struct spdk_bdev_shared_resource *shared_resource;
 
 	ch->bdev = bdev;
 	ch->channel = bdev->fn_table->get_io_channel(bdev->ctxt);
@@ -1019,35 +1019,35 @@ _spdk_bdev_channel_create(struct spdk_bdev_channel *ch, void *io_device)
 	}
 
 	mgmt_ch = spdk_io_channel_get_ctx(mgmt_io_ch);
-	TAILQ_FOREACH(module_ch, &mgmt_ch->module_channels, link) {
-		if (module_ch->module_ch == ch->channel) {
+	TAILQ_FOREACH(shared_resource, &mgmt_ch->shared_resources, link) {
+		if (shared_resource->shared_ch == ch->channel) {
 			spdk_put_io_channel(mgmt_io_ch);
-			module_ch->ref++;
+			shared_resource->ref++;
 			break;
 		}
 	}
 
-	if (module_ch == NULL) {
-		module_ch = calloc(1, sizeof(*module_ch));
-		if (module_ch == NULL) {
+	if (shared_resource == NULL) {
+		shared_resource = calloc(1, sizeof(*shared_resource));
+		if (shared_resource == NULL) {
 			spdk_put_io_channel(mgmt_io_ch);
 			return -1;
 		}
 
-		module_ch->mgmt_ch = mgmt_ch;
-		module_ch->io_outstanding = 0;
-		TAILQ_INIT(&module_ch->nomem_io);
-		module_ch->nomem_threshold = 0;
-		module_ch->module_ch = ch->channel;
-		module_ch->ref = 1;
-		TAILQ_INSERT_TAIL(&mgmt_ch->module_channels, module_ch, link);
+		shared_resource->mgmt_ch = mgmt_ch;
+		shared_resource->io_outstanding = 0;
+		TAILQ_INIT(&shared_resource->nomem_io);
+		shared_resource->nomem_threshold = 0;
+		shared_resource->shared_ch = ch->channel;
+		shared_resource->ref = 1;
+		TAILQ_INSERT_TAIL(&mgmt_ch->shared_resources, shared_resource, link);
 	}
 
 	memset(&ch->stat, 0, sizeof(ch->stat));
 	ch->io_outstanding = 0;
 	TAILQ_INIT(&ch->queued_resets);
 	ch->flags = 0;
-	ch->module_ch = module_ch;
+	ch->shared_resource = shared_resource;
 
 	return 0;
 }
@@ -1055,7 +1055,7 @@ _spdk_bdev_channel_create(struct spdk_bdev_channel *ch, void *io_device)
 static void
 _spdk_bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
 {
-	struct spdk_bdev_module_channel *module_ch;
+	struct spdk_bdev_shared_resource *shared_resource;
 
 	if (!ch) {
 		return;
@@ -1067,15 +1067,16 @@ _spdk_bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
 
 	assert(ch->io_outstanding == 0);
 
-	module_ch = ch->module_ch;
-	if (module_ch) {
-		assert(module_ch->ref > 0);
-		module_ch->ref--;
-		if (module_ch->ref == 0) {
-			assert(module_ch->io_outstanding == 0);
-			spdk_put_io_channel(spdk_io_channel_from_ctx(module_ch->mgmt_ch));
-			TAILQ_REMOVE(&module_ch->mgmt_ch->module_channels, module_ch, link);
-			free(module_ch);
+	shared_resource = ch->shared_resource;
+	if (shared_resource) {
+		assert(ch->io_outstanding == 0);
+		assert(shared_resource->ref > 0);
+		shared_resource->ref--;
+		if (shared_resource->ref == 0) {
+			assert(shared_resource->io_outstanding == 0);
+			spdk_put_io_channel(spdk_io_channel_from_ctx(shared_resource->mgmt_ch));
+			TAILQ_REMOVE(&shared_resource->mgmt_ch->shared_resources, shared_resource, link);
+			free(shared_resource);
 		}
 	}
 }
@@ -1222,7 +1223,7 @@ _spdk_bdev_abort_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_channel *ch)
 			 */
 			if (bdev_io->type != SPDK_BDEV_IO_TYPE_RESET) {
 				ch->io_outstanding++;
-				ch->module_ch->io_outstanding++;
+				ch->shared_resource->io_outstanding++;
 			}
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		}
@@ -1233,12 +1234,12 @@ static void
 _spdk_bdev_channel_destroy(struct spdk_bdev_channel *ch)
 {
 	struct spdk_bdev_mgmt_channel	*mgmt_ch;
-	struct spdk_bdev_module_channel	*module_ch = ch->module_ch;
+	struct spdk_bdev_shared_resource *shared_resource = ch->shared_resource;
 
-	mgmt_ch = module_ch->mgmt_ch;
+	mgmt_ch = shared_resource->mgmt_ch;
 
 	_spdk_bdev_abort_queued_io(&ch->queued_resets, ch);
-	_spdk_bdev_abort_queued_io(&module_ch->nomem_io, ch);
+	_spdk_bdev_abort_queued_io(&shared_resource->nomem_io, ch);
 	_spdk_bdev_abort_buf_io(&mgmt_ch->need_buf_small, ch);
 	_spdk_bdev_abort_buf_io(&mgmt_ch->need_buf_large, ch);
 
@@ -1907,16 +1908,16 @@ _spdk_bdev_reset_freeze_channel(struct spdk_io_channel_iter *i)
 	struct spdk_io_channel		*ch;
 	struct spdk_bdev_channel	*channel;
 	struct spdk_bdev_mgmt_channel	*mgmt_channel;
-	struct spdk_bdev_module_channel	*module_ch;
+	struct spdk_bdev_shared_resource *shared_resource;
 
 	ch = spdk_io_channel_iter_get_channel(i);
 	channel = spdk_io_channel_get_ctx(ch);
-	module_ch = channel->module_ch;
-	mgmt_channel = module_ch->mgmt_ch;
+	shared_resource = channel->shared_resource;
+	mgmt_channel = shared_resource->mgmt_ch;
 
 	channel->flags |= BDEV_CH_RESET_IN_PROGRESS;
 
-	_spdk_bdev_abort_queued_io(&module_ch->nomem_io, channel);
+	_spdk_bdev_abort_queued_io(&shared_resource->nomem_io, channel);
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_small, channel);
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_large, channel);
 
@@ -1929,15 +1930,15 @@ _spdk_bdev_reset_freeze_qos_channel(void *ctx)
 	struct spdk_bdev		*bdev = ctx;
 	struct spdk_bdev_mgmt_channel	*mgmt_channel = NULL;
 	struct spdk_bdev_channel	*qos_channel = bdev->qos->ch;
-	struct spdk_bdev_module_channel	*module_ch = NULL;
+	struct spdk_bdev_shared_resource *shared_resource = NULL;
 
 	if (qos_channel) {
-		module_ch = qos_channel->module_ch;
-		mgmt_channel = module_ch->mgmt_ch;
+		shared_resource = qos_channel->shared_resource;
+		mgmt_channel = shared_resource->mgmt_ch;
 
 		qos_channel->flags |= BDEV_CH_RESET_IN_PROGRESS;
 
-		_spdk_bdev_abort_queued_io(&module_ch->nomem_io, qos_channel);
+		_spdk_bdev_abort_queued_io(&shared_resource->nomem_io, qos_channel);
 		_spdk_bdev_abort_queued_io(&bdev->qos->queued, qos_channel);
 		_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_small, qos_channel);
 		_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_large, qos_channel);
@@ -2159,10 +2160,10 @@ static void
 _spdk_bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch)
 {
 	struct spdk_bdev *bdev = bdev_ch->bdev;
-	struct spdk_bdev_module_channel	*module_ch = bdev_ch->module_ch;
+	struct spdk_bdev_shared_resource *shared_resource = bdev_ch->shared_resource;
 	struct spdk_bdev_io *bdev_io;
 
-	if (module_ch->io_outstanding > module_ch->nomem_threshold) {
+	if (shared_resource->io_outstanding > shared_resource->nomem_threshold) {
 		/*
 		 * Allow some more I/O to complete before retrying the nomem_io queue.
 		 *  Some drivers (such as nvme) cannot immediately take a new I/O in
@@ -2174,11 +2175,11 @@ _spdk_bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch)
 		return;
 	}
 
-	while (!TAILQ_EMPTY(&module_ch->nomem_io)) {
-		bdev_io = TAILQ_FIRST(&module_ch->nomem_io);
-		TAILQ_REMOVE(&module_ch->nomem_io, bdev_io, link);
+	while (!TAILQ_EMPTY(&shared_resource->nomem_io)) {
+		bdev_io = TAILQ_FIRST(&shared_resource->nomem_io);
+		TAILQ_REMOVE(&shared_resource->nomem_io, bdev_io, link);
 		bdev_io->ch->io_outstanding++;
-		module_ch->io_outstanding++;
+		shared_resource->io_outstanding++;
 		bdev_io->status = SPDK_BDEV_IO_STATUS_PENDING;
 		bdev->fn_table->submit_request(bdev_io->ch->channel, bdev_io);
 		if (bdev_io->status == SPDK_BDEV_IO_STATUS_NOMEM) {
@@ -2298,7 +2299,7 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 {
 	struct spdk_bdev *bdev = bdev_io->bdev;
 	struct spdk_bdev_channel *bdev_ch = bdev_io->ch;
-	struct spdk_bdev_module_channel	*module_ch = bdev_ch->module_ch;
+	struct spdk_bdev_shared_resource *shared_resource = bdev_ch->shared_resource;
 
 	bdev_io->status = status;
 
@@ -2328,24 +2329,24 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 		}
 	} else {
 		assert(bdev_ch->io_outstanding > 0);
-		assert(module_ch->io_outstanding > 0);
+		assert(shared_resource->io_outstanding > 0);
 		bdev_ch->io_outstanding--;
-		module_ch->io_outstanding--;
+		shared_resource->io_outstanding--;
 
 		if (spdk_unlikely(status == SPDK_BDEV_IO_STATUS_NOMEM)) {
-			TAILQ_INSERT_HEAD(&module_ch->nomem_io, bdev_io, link);
+			TAILQ_INSERT_HEAD(&shared_resource->nomem_io, bdev_io, link);
 			/*
 			 * Wait for some of the outstanding I/O to complete before we
 			 *  retry any of the nomem_io.  Normally we will wait for
 			 *  NOMEM_THRESHOLD_COUNT I/O to complete but for low queue
 			 *  depth channels we will instead wait for half to complete.
 			 */
-			module_ch->nomem_threshold = spdk_max((int64_t)module_ch->io_outstanding / 2,
-							      (int64_t)module_ch->io_outstanding - NOMEM_THRESHOLD_COUNT);
+			shared_resource->nomem_threshold = spdk_max((int64_t)shared_resource->io_outstanding / 2,
+							   (int64_t)shared_resource->io_outstanding - NOMEM_THRESHOLD_COUNT);
 			return;
 		}
 
-		if (spdk_unlikely(!TAILQ_EMPTY(&module_ch->nomem_io))) {
+		if (spdk_unlikely(!TAILQ_EMPTY(&shared_resource->nomem_io))) {
 			_spdk_bdev_ch_retry_io(bdev_ch);
 		}
 	}
