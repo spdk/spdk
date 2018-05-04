@@ -50,6 +50,9 @@
 #define MAX_TMPBUF 1024
 #define MAX_MASKBUF 128
 
+static TAILQ_HEAD(, spdk_iscsi_tgt_node) g_iscsi_target_head = TAILQ_HEAD_INITIALIZER(
+			g_iscsi_target_head);
+
 static bool
 spdk_iscsi_ipv6_netmask_allow_addr(const char *netmask, const char *addr)
 {
@@ -331,7 +334,7 @@ spdk_iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
 	}
 
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	TAILQ_FOREACH(target, &g_spdk_iscsi.target_head, tailq) {
+	TAILQ_FOREACH(target, &g_iscsi_target_head, tailq) {
 		if (strcasecmp(tiqn, "ALL") != 0
 		    && strcasecmp(tiqn, target->name) != 0) {
 			continue;
@@ -396,7 +399,7 @@ spdk_iscsi_find_tgt_node(const char *target_name)
 	if (target_name == NULL) {
 		return NULL;
 	}
-	TAILQ_FOREACH(target, &g_spdk_iscsi.target_head, tailq) {
+	TAILQ_FOREACH(target, &g_iscsi_target_head, tailq) {
 		if (strcasecmp(target_name, target->name) == 0) {
 			return target;
 		}
@@ -415,7 +418,7 @@ spdk_iscsi_tgt_node_register(struct spdk_iscsi_tgt_node *target)
 		return -EEXIST;
 	}
 
-	TAILQ_INSERT_TAIL(&g_spdk_iscsi.target_head, target, tailq);
+	TAILQ_INSERT_TAIL(&g_iscsi_target_head, target, tailq);
 
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 	return 0;
@@ -426,9 +429,9 @@ spdk_iscsi_tgt_node_unregister(struct spdk_iscsi_tgt_node *target)
 {
 	struct spdk_iscsi_tgt_node *t;
 
-	TAILQ_FOREACH(t, &g_spdk_iscsi.target_head, tailq) {
+	TAILQ_FOREACH(t, &g_iscsi_target_head, tailq) {
 		if (t == target) {
-			TAILQ_REMOVE(&g_spdk_iscsi.target_head, t, tailq);
+			TAILQ_REMOVE(&g_iscsi_target_head, t, tailq);
 			return 0;
 		}
 	}
@@ -1225,8 +1228,8 @@ spdk_iscsi_shutdown_tgt_nodes(void)
 	struct spdk_iscsi_tgt_node *target, *tmp;
 
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	TAILQ_FOREACH_SAFE(target, &g_spdk_iscsi.target_head, tailq, tmp) {
-		TAILQ_REMOVE(&g_spdk_iscsi.target_head, target, tailq);
+	TAILQ_FOREACH_SAFE(target, &g_iscsi_target_head, tailq, tmp) {
+		TAILQ_REMOVE(&g_iscsi_target_head, target, tailq);
 		spdk_iscsi_tgt_node_destruct(target);
 	}
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
@@ -1288,7 +1291,7 @@ void spdk_iscsi_tgt_node_delete_map(struct spdk_iscsi_portal_grp *portal_group,
 	struct spdk_iscsi_tgt_node *target;
 
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	TAILQ_FOREACH(target, &g_spdk_iscsi.target_head, tailq) {
+	TAILQ_FOREACH(target, &g_iscsi_target_head, tailq) {
 		if (portal_group) {
 			spdk_iscsi_tgt_node_delete_pg_map(target, portal_group);
 		}
@@ -1370,7 +1373,7 @@ spdk_iscsi_tgt_nodes_config_text(FILE *fp)
 	/* Create target nodes section */
 	fprintf(fp, "%s", target_nodes_section);
 
-	TAILQ_FOREACH(target, &g_spdk_iscsi.target_head, tailq) {
+	TAILQ_FOREACH(target, &g_iscsi_target_head, tailq) {
 		int idx;
 		const char *authmethod = "None";
 		char authgroup[32] = "None";
@@ -1522,7 +1525,7 @@ spdk_iscsi_tgt_nodes_info_json(struct spdk_json_write_ctx *w)
 {
 	struct spdk_iscsi_tgt_node *target;
 
-	TAILQ_FOREACH(target, &g_spdk_iscsi.target_head, tailq) {
+	TAILQ_FOREACH(target, &g_iscsi_target_head, tailq) {
 		spdk_iscsi_tgt_node_info_json(target, w);
 	}
 }
@@ -1532,7 +1535,7 @@ spdk_iscsi_tgt_nodes_config_json(struct spdk_json_write_ctx *w)
 {
 	struct spdk_iscsi_tgt_node *target;
 
-	TAILQ_FOREACH(target, &g_spdk_iscsi.target_head, tailq) {
+	TAILQ_FOREACH(target, &g_iscsi_target_head, tailq) {
 		spdk_iscsi_tgt_node_config_json(target, w);
 	}
 }
