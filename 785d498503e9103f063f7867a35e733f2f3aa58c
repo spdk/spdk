@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "68274338_b8d6b1ac",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1013095
+      },
+      "writtenOn": "2018-05-04T07:13:46Z",
+      "side": 1,
+      "message": "Retained original name",
+      "parentUuid": "7a2bf2d9_529d7a2f",
+      "revId": "785d498503e9103f063f7867a35e733f2f3aa58c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "41eee156_e481dcd5",
         "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2018-05-03T18:01:51Z",
       "side": 1,
       "message": "This formatting change looks unrelated.",
+      "revId": "785d498503e9103f063f7867a35e733f2f3aa58c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02f61fdc_bc0c4582",
+        "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1013095
+      },
+      "writtenOn": "2018-05-04T07:13:46Z",
+      "side": 1,
+      "message": "That is right. This is not related to the fix, but the scripts/check_format.sh script corrected some formatting in this file. So I included that too.",
+      "parentUuid": "41eee156_e481dcd5",
       "revId": "785d498503e9103f063f7867a35e733f2f3aa58c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
