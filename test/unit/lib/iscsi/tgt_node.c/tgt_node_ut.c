@@ -44,6 +44,7 @@
 #include "unit/lib/json_mock.c"
 
 struct spdk_iscsi_globals g_spdk_iscsi;
+pthread_mutex_t g_iscsi_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 const char *config_file;
 
