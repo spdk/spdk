@@ -251,16 +251,16 @@ vtophys_get_paddr_pagemap(uint64_t vaddr)
 	uintptr_t paddr;
 
 	paddr = rte_mem_virt2phy((void *)vaddr);
-	if (paddr == 0) {
+	if (paddr == RTE_BAD_IOVA) {
 		/*
-		 * The vaddr was valid but returned 0.  Touch the page
-		 * to ensure a backing page gets assigned, then call
-		 * rte_mem_virt2phy() again.
+		 * The vaddr may be valid but doesn't have a backing page
+		 * assigned yet.  Touch the page to ensure a backing page
+		 * gets assigned, then call rte_mem_virt2phy() again.
 		 */
 		rte_atomic64_read((rte_atomic64_t *)vaddr);
 		paddr = rte_mem_virt2phy((void *)vaddr);
 	}
-	if (paddr == RTE_BAD_PHYS_ADDR) {
+	if (paddr == RTE_BAD_IOVA) {
 		/* Unable to get to the physical address. */
 		return SPDK_VTOPHYS_ERROR;
 	}
