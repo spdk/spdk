@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "619aea6e_8bd6bd36",
+        "filename": "lib/env_dpdk/vtophys.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-04T21:48:24Z",
+      "side": 1,
+      "message": "This should be RTE_BAD_PHYS_ADDR.",
+      "range": {
+        "startLine": 257,
+        "startChar": 17,
+        "endLine": 257,
+        "endChar": 33
+      },
+      "revId": "92e763eba57ed5fd3c4d50670e8d2528cfc70ae5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "026f9fcc_9fe76cf6",
+        "filename": "lib/env_dpdk/vtophys.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-04T21:48:24Z",
+      "side": 1,
+      "message": "Also here.",
+      "range": {
+        "startLine": 264,
+        "startChar": 17,
+        "endLine": 264,
+        "endChar": 33
+      },
+      "revId": "92e763eba57ed5fd3c4d50670e8d2528cfc70ae5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
