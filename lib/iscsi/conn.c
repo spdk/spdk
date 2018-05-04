@@ -1148,6 +1148,11 @@ spdk_iscsi_conn_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 				    conn->initiator_port != NULL ? spdk_scsi_port_get_name(conn->initiator_port) : "NULL");
 			return rc;
 		}
+
+		if (conn->exit_polling) {
+			conn->exit_polling = false;
+			break;
+		}
 	}
 
 	return i;
@@ -1223,6 +1228,7 @@ spdk_iscsi_conn_migration(struct spdk_iscsi_conn *conn)
 	spdk_iscsi_poll_group_remove_conn_sock(conn);
 	spdk_iscsi_conn_stop(conn);
 
+	conn->exit_polling = true;
 	__sync_fetch_and_add(&g_num_connections[lcore], 1);
 	conn->last_nopin = spdk_get_ticks();
 	event = spdk_event_allocate(lcore, spdk_iscsi_conn_full_feature_migrate,
