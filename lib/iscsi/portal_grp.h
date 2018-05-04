@@ -38,6 +38,8 @@
 #include "spdk/conf.h"
 #include "spdk/cpuset.h"
 
+struct spdk_json_write_ctx;
+
 struct spdk_iscsi_portal {
 	struct spdk_iscsi_portal_grp	*group;
 	char				*host;
@@ -75,4 +77,7 @@ struct spdk_iscsi_portal_grp *spdk_iscsi_portal_grp_find_by_tag(int tag);
 int spdk_iscsi_portal_grp_open(struct spdk_iscsi_portal_grp *pg);
 
 void spdk_iscsi_portal_grp_close_all(void);
+void spdk_iscsi_portal_grps_config_text(FILE *fp);
+void spdk_iscsi_portal_grps_info_json(struct spdk_json_write_ctx *w);
+void spdk_iscsi_portal_grps_config_json(struct spdk_json_write_ctx *w);
 #endif // SPDK_PORTAL_GRP_H
