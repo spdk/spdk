@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ced3d48c_f6d9dae6",
+        "filename": "lib/env_dpdk/vtophys.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-04T19:35:18Z",
+      "side": 1,
+      "message": "RTE_BAD_IOVA was introduced in DPDK 17.11, so this should probably have a check like the use in virt_to_phys() from lib/env_dpdk/env.c; maybe we should also be calling rte_mem_virt2iova() in that case instead of rte_mem_virt2phy()?",
+      "revId": "89e461054e454590f5f2dca1dbca14a09234c9cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
