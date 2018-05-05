@@ -565,6 +565,7 @@ iscsi_connect_cb(struct iscsi_context *iscsi, int status,
 		return;
 	}
 ret:
+	SPDK_ERRLOG("iSCSI error: %s\n", iscsi_get_error(req->context));
 	bdev_iscsi_remove_conn_req(req);
 	bdev_iscsi_set_module_init();
 }
