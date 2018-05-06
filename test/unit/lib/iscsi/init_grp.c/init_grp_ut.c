@@ -44,13 +44,6 @@ struct spdk_iscsi_globals g_spdk_iscsi;
 
 const char *config_file;
 
-static int
-test_setup(void)
-{
-	TAILQ_INIT(&g_spdk_iscsi.ig_head);
-	return 0;
-}
-
 static void
 create_from_config_file_cases(void)
 {
@@ -646,7 +639,7 @@ main(int argc, char **argv)
 
 	config_file = argv[1];
 
-	suite = CU_add_suite("init_grp_suite", test_setup, NULL);
+	suite = CU_add_suite("init_grp_suite", NULL, NULL);
 	if (suite == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();

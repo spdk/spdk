@@ -42,6 +42,9 @@
 #include "iscsi/iscsi.h"
 #include "iscsi/init_grp.h"
 
+static TAILQ_HEAD(, spdk_iscsi_init_grp) g_iscsi_ig_head = TAILQ_HEAD_INITIALIZER(
+			g_iscsi_ig_head);
+
 static struct spdk_iscsi_init_grp *
 spdk_iscsi_init_grp_create(int tag)
 {
@@ -451,7 +454,7 @@ spdk_iscsi_init_grp_register(struct spdk_iscsi_init_grp *ig)
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	tmp = spdk_iscsi_init_grp_find_by_tag(ig->tag);
 	if (tmp == NULL) {
-		TAILQ_INSERT_TAIL(&g_spdk_iscsi.ig_head, ig, tailq);
+		TAILQ_INSERT_TAIL(&g_iscsi_ig_head, ig, tailq);
 		rc = 0;
 	}
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
@@ -612,7 +615,7 @@ spdk_iscsi_init_grp_find_by_tag(int tag)
 {
 	struct spdk_iscsi_init_grp *ig;
 
-	TAILQ_FOREACH(ig, &g_spdk_iscsi.ig_head, tailq) {
+	TAILQ_FOREACH(ig, &g_iscsi_ig_head, tailq) {
 		if (ig->tag == tag) {
 			return ig;
 		}
@@ -652,8 +655,8 @@ spdk_iscsi_init_grps_destroy(void)
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_init_grp_array_destroy\n");
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	TAILQ_FOREACH_SAFE(ig, &g_spdk_iscsi.ig_head, tailq, tmp) {
-		TAILQ_REMOVE(&g_spdk_iscsi.ig_head, ig, tailq);
+	TAILQ_FOREACH_SAFE(ig, &g_iscsi_ig_head, tailq, tmp) {
+		TAILQ_REMOVE(&g_iscsi_ig_head, ig, tailq);
 		spdk_iscsi_init_grp_destroy(ig);
 	}
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
@@ -665,9 +668,9 @@ spdk_iscsi_init_grp_unregister(int tag)
 	struct spdk_iscsi_init_grp *ig;
 
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	TAILQ_FOREACH(ig, &g_spdk_iscsi.ig_head, tailq) {
+	TAILQ_FOREACH(ig, &g_iscsi_ig_head, tailq) {
 		if (ig->tag == tag) {
-			TAILQ_REMOVE(&g_spdk_iscsi.ig_head, ig, tailq);
+			TAILQ_REMOVE(&g_iscsi_ig_head, ig, tailq);
 			pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 			return ig;
 		}
@@ -705,7 +708,7 @@ spdk_iscsi_init_grps_config_text(FILE *fp)
 	fprintf(fp, "%s", initiator_group_section);
 
 	/* Dump initiator groups */
-	TAILQ_FOREACH(ig, &g_spdk_iscsi.ig_head, tailq) {
+	TAILQ_FOREACH(ig, &g_iscsi_ig_head, tailq) {
 		if (NULL == ig) { continue; }
 		fprintf(fp, INITIATOR_GROUP_TMPL, ig->tag, ig->tag);
 
@@ -774,7 +777,7 @@ spdk_iscsi_init_grps_info_json(struct spdk_json_write_ctx *w)
 {
 	struct spdk_iscsi_init_grp *ig;
 
-	TAILQ_FOREACH(ig, &g_spdk_iscsi.ig_head, tailq) {
+	TAILQ_FOREACH(ig, &g_iscsi_ig_head, tailq) {
 		spdk_iscsi_init_grp_info_json(ig, w);
 	}
 }
@@ -784,7 +787,7 @@ spdk_iscsi_init_grps_config_json(struct spdk_json_write_ctx *w)
 {
 	struct spdk_iscsi_init_grp *ig;
 
-	TAILQ_FOREACH(ig, &g_spdk_iscsi.ig_head, tailq) {
+	TAILQ_FOREACH(ig, &g_iscsi_ig_head, tailq) {
 		spdk_iscsi_init_grp_config_json(ig, w);
 	}
 }
