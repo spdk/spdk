@@ -116,7 +116,6 @@ spdk_iscsi_config_dump_section(FILE *fp)
 		g_spdk_iscsi.ErrorRecoveryLevel);
 }
 
-
 /* Portal groups */
 static const char *portal_group_section = \
 		"\n"
@@ -161,56 +160,6 @@ spdk_iscsi_config_dump_portal_groups(FILE *fp)
 			fprintf(fp, PORTAL_TMPL, p->host, p->port,
 				spdk_cpuset_fmt(p->cpumask));
 		}
-	}
-}
-
-/* Initiator Groups */
-static const char *initiator_group_section = \
-		"\n"
-		"# Users must change the InitiatorGroup section(s) to match the IP\n"
-		"#  addresses and initiator configuration in their environment.\n"
-		"# Netmask can be used to specify a single IP address or a range of IP addresses\n"
-		"#  Netmask 192.168.1.20   <== single IP address\n"
-		"#  Netmask 192.168.1.0/24 <== IP range 192.168.1.*\n";
-
-#define INITIATOR_GROUP_TMPL \
-"[InitiatorGroup%d]\n" \
-"  Comment \"Initiator Group%d\"\n"
-
-#define INITIATOR_TMPL \
-"  InitiatorName "
-
-#define NETMASK_TMPL \
-"  Netmask "
-
-static void
-spdk_iscsi_config_dump_initiator_groups(FILE *fp)
-{
-	struct spdk_iscsi_init_grp *ig;
-	struct spdk_iscsi_initiator_name *iname;
-	struct spdk_iscsi_initiator_netmask *imask;
-
-	/* Create initiator group section */
-	fprintf(fp, "%s", initiator_group_section);
-
-	/* Dump initiator groups */
-	TAILQ_FOREACH(ig, &g_spdk_iscsi.ig_head, tailq) {
-		if (NULL == ig) { continue; }
-		fprintf(fp, INITIATOR_GROUP_TMPL, ig->tag, ig->tag);
-
-		/* Dump initiators */
-		fprintf(fp, INITIATOR_TMPL);
-		TAILQ_FOREACH(iname, &ig->initiator_head, tailq) {
-			fprintf(fp, "%s ", iname->name);
-		}
-		fprintf(fp, "\n");
-
-		/* Dump netmasks */
-		fprintf(fp, NETMASK_TMPL);
-		TAILQ_FOREACH(imask, &ig->netmask_head, tailq) {
-			fprintf(fp, "%s ", imask->mask);
-		}
-		fprintf(fp, "\n");
 	}
 }
 
@@ -1013,7 +962,7 @@ spdk_iscsi_config_text(FILE *fp)
 {
 	spdk_iscsi_config_dump_section(fp);
 	spdk_iscsi_config_dump_portal_groups(fp);
-	spdk_iscsi_config_dump_initiator_groups(fp);
+	spdk_iscsi_init_grps_config_text(fp);
 	spdk_iscsi_tgt_nodes_config_text(fp);
 }
 
