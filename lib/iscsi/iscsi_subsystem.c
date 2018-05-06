@@ -93,27 +93,28 @@ spdk_iscsi_globals_config_text(FILE *fp)
 		return;
 	}
 
-	if (g_spdk_iscsi.req_discovery_auth) {
+	if (g_spdk_iscsi->req_discovery_auth) {
 		authmethod = "CHAP";
-	} else if (g_spdk_iscsi.req_discovery_auth_mutual) {
+	} else if (g_spdk_iscsi->req_discovery_auth_mutual) {
 		authmethod = "CHAP Mutual";
-	} else if (!g_spdk_iscsi.no_discovery_auth) {
+	} else if (!g_spdk_iscsi->no_discovery_auth) {
 		authmethod = "Auto";
 	}
 
-	if (g_spdk_iscsi.discovery_auth_group) {
-		snprintf(authgroup, sizeof(authgroup), "AuthGroup%d", g_spdk_iscsi.discovery_auth_group);
+	if (g_spdk_iscsi->discovery_auth_group) {
+		snprintf(authgroup, sizeof(authgroup), "AuthGroup%d",
+			 g_spdk_iscsi->discovery_auth_group);
 	}
 
 	fprintf(fp, ISCSI_CONFIG_TMPL,
-		g_spdk_iscsi.nodebase, g_spdk_iscsi.authfile,
-		g_spdk_iscsi.timeout, authmethod, authgroup,
-		g_spdk_iscsi.MaxSessions, g_spdk_iscsi.MaxConnectionsPerSession,
-		g_spdk_iscsi.MaxConnections,
-		g_spdk_iscsi.MaxQueueDepth,
-		g_spdk_iscsi.DefaultTime2Wait, g_spdk_iscsi.DefaultTime2Retain,
-		(g_spdk_iscsi.ImmediateData) ? "Yes" : "No",
-		g_spdk_iscsi.ErrorRecoveryLevel);
+		g_spdk_iscsi->nodebase, g_spdk_iscsi->authfile,
+		g_spdk_iscsi->timeout, authmethod, authgroup,
+		g_spdk_iscsi->MaxSessions, g_spdk_iscsi->MaxConnectionsPerSession,
+		g_spdk_iscsi->MaxConnections,
+		g_spdk_iscsi->MaxQueueDepth,
+		g_spdk_iscsi->DefaultTime2Wait, g_spdk_iscsi->DefaultTime2Retain,
+		(g_spdk_iscsi->ImmediateData) ? "Yes" : "No",
+		g_spdk_iscsi->ErrorRecoveryLevel);
 }
 
 static void
@@ -144,38 +145,37 @@ spdk_mobj_ctor(struct spdk_mempool *mp, __attribute__((unused)) void *arg,
 
 static int spdk_iscsi_initialize_pdu_pool(void)
 {
-	struct spdk_iscsi_globals *iscsi = &g_spdk_iscsi;
 	int imm_mobj_size = spdk_get_immediate_data_buffer_size() +
 			    sizeof(struct spdk_mobj) + 512;
 	int dout_mobj_size = spdk_get_data_out_buffer_size() +
 			     sizeof(struct spdk_mobj) + 512;
 
 	/* create PDU pool */
-	iscsi->pdu_pool = spdk_mempool_create("PDU_Pool",
-					      PDU_POOL_SIZE(iscsi),
-					      sizeof(struct spdk_iscsi_pdu),
-					      256, SPDK_ENV_SOCKET_ID_ANY);
-	if (!iscsi->pdu_pool) {
+	g_spdk_iscsi->pdu_pool = spdk_mempool_create("PDU_Pool",
+				 PDU_POOL_SIZE(g_spdk_iscsi),
+				 sizeof(struct spdk_iscsi_pdu),
+				 256, SPDK_ENV_SOCKET_ID_ANY);
+	if (!g_spdk_iscsi->pdu_pool) {
 		SPDK_ERRLOG("create PDU pool failed\n");
 		return -1;
 	}
 
-	iscsi->pdu_immediate_data_pool = spdk_mempool_create_ctor("PDU_immediate_data_Pool",
-					 IMMEDIATE_DATA_POOL_SIZE(iscsi),
-					 imm_mobj_size, 0,
-					 spdk_env_get_socket_id(spdk_env_get_current_core()),
-					 spdk_mobj_ctor, NULL);
-	if (!iscsi->pdu_immediate_data_pool) {
+	g_spdk_iscsi->pdu_immediate_data_pool = spdk_mempool_create_ctor("PDU_immediate_data_Pool",
+						IMMEDIATE_DATA_POOL_SIZE(g_spdk_iscsi),
+						imm_mobj_size, 0,
+						spdk_env_get_socket_id(spdk_env_get_current_core()),
+						spdk_mobj_ctor, NULL);
+	if (!g_spdk_iscsi->pdu_immediate_data_pool) {
 		SPDK_ERRLOG("create PDU 8k pool failed\n");
 		return -1;
 	}
 
-	iscsi->pdu_data_out_pool = spdk_mempool_create_ctor("PDU_data_out_Pool",
-				   DATA_OUT_POOL_SIZE(iscsi),
-				   dout_mobj_size, 256,
-				   spdk_env_get_socket_id(spdk_env_get_current_core()),
-				   spdk_mobj_ctor, NULL);
-	if (!iscsi->pdu_data_out_pool) {
+	g_spdk_iscsi->pdu_data_out_pool = spdk_mempool_create_ctor("PDU_data_out_Pool",
+					  DATA_OUT_POOL_SIZE(g_spdk_iscsi),
+					  dout_mobj_size, 256,
+					  spdk_env_get_socket_id(spdk_env_get_current_core()),
+					  spdk_mobj_ctor, NULL);
+	if (!g_spdk_iscsi->pdu_data_out_pool) {
 		SPDK_ERRLOG("create PDU 64k pool failed\n");
 		return -1;
 	}
@@ -200,14 +200,12 @@ static void spdk_iscsi_sess_ctor(struct spdk_mempool *pool, void *arg,
 static int
 spdk_iscsi_initialize_task_pool(void)
 {
-	struct spdk_iscsi_globals *iscsi = &g_spdk_iscsi;
-
 	/* create scsi_task pool */
-	iscsi->task_pool = spdk_mempool_create("SCSI_TASK_Pool",
-					       DEFAULT_TASK_POOL_SIZE,
-					       sizeof(struct spdk_iscsi_task),
-					       128, SPDK_ENV_SOCKET_ID_ANY);
-	if (!iscsi->task_pool) {
+	g_spdk_iscsi->task_pool = spdk_mempool_create("SCSI_TASK_Pool",
+				  DEFAULT_TASK_POOL_SIZE,
+				  sizeof(struct spdk_iscsi_task),
+				  128, SPDK_ENV_SOCKET_ID_ANY);
+	if (!g_spdk_iscsi->task_pool) {
 		SPDK_ERRLOG("create task pool failed\n");
 		return -1;
 	}
@@ -218,14 +216,12 @@ spdk_iscsi_initialize_task_pool(void)
 #define SESSION_POOL_SIZE(iscsi)	(iscsi->MaxSessions)
 static int spdk_iscsi_initialize_session_pool(void)
 {
-	struct spdk_iscsi_globals *iscsi = &g_spdk_iscsi;
-
-	iscsi->session_pool = spdk_mempool_create_ctor("Session_Pool",
-			      SESSION_POOL_SIZE(iscsi),
-			      sizeof(struct spdk_iscsi_sess), 0,
-			      SPDK_ENV_SOCKET_ID_ANY,
-			      spdk_iscsi_sess_ctor, iscsi);
-	if (!iscsi->session_pool) {
+	g_spdk_iscsi->session_pool = spdk_mempool_create_ctor("Session_Pool",
+				     SESSION_POOL_SIZE(g_spdk_iscsi),
+				     sizeof(struct spdk_iscsi_sess), 0,
+				     SPDK_ENV_SOCKET_ID_ANY,
+				     spdk_iscsi_sess_ctor, g_spdk_iscsi);
+	if (!g_spdk_iscsi->session_pool) {
 		SPDK_ERRLOG("create session pool failed\n");
 		return -1;
 	}
@@ -263,25 +259,22 @@ spdk_iscsi_check_pool(struct spdk_mempool *pool, size_t count)
 static void
 spdk_iscsi_check_pools(void)
 {
-	struct spdk_iscsi_globals *iscsi = &g_spdk_iscsi;
-
-	spdk_iscsi_check_pool(iscsi->pdu_pool, PDU_POOL_SIZE(iscsi));
-	spdk_iscsi_check_pool(iscsi->session_pool, SESSION_POOL_SIZE(iscsi));
-	spdk_iscsi_check_pool(iscsi->pdu_immediate_data_pool, IMMEDIATE_DATA_POOL_SIZE(iscsi));
-	spdk_iscsi_check_pool(iscsi->pdu_data_out_pool, DATA_OUT_POOL_SIZE(iscsi));
+	spdk_iscsi_check_pool(g_spdk_iscsi->pdu_pool, PDU_POOL_SIZE(g_spdk_iscsi));
+	spdk_iscsi_check_pool(g_spdk_iscsi->session_pool, SESSION_POOL_SIZE(g_spdk_iscsi));
+	spdk_iscsi_check_pool(g_spdk_iscsi->pdu_immediate_data_pool,
+			      IMMEDIATE_DATA_POOL_SIZE(g_spdk_iscsi));
+	spdk_iscsi_check_pool(g_spdk_iscsi->pdu_data_out_pool, DATA_OUT_POOL_SIZE(g_spdk_iscsi));
 	/* TODO: check the task_pool on exit */
 }
 
 static void
 spdk_iscsi_free_pools(void)
 {
-	struct spdk_iscsi_globals *iscsi = &g_spdk_iscsi;
-
-	spdk_mempool_free(iscsi->pdu_pool);
-	spdk_mempool_free(iscsi->session_pool);
-	spdk_mempool_free(iscsi->pdu_immediate_data_pool);
-	spdk_mempool_free(iscsi->pdu_data_out_pool);
-	spdk_mempool_free(iscsi->task_pool);
+	spdk_mempool_free(g_spdk_iscsi->pdu_pool);
+	spdk_mempool_free(g_spdk_iscsi->session_pool);
+	spdk_mempool_free(g_spdk_iscsi->pdu_immediate_data_pool);
+	spdk_mempool_free(g_spdk_iscsi->pdu_data_out_pool);
+	spdk_mempool_free(g_spdk_iscsi->task_pool);
 }
 
 void spdk_put_pdu(struct spdk_iscsi_pdu *pdu)
@@ -306,7 +299,7 @@ void spdk_put_pdu(struct spdk_iscsi_pdu *pdu)
 			free(pdu->data);
 		}
 
-		spdk_mempool_put(g_spdk_iscsi.pdu_pool, (void *)pdu);
+		spdk_mempool_put(g_spdk_iscsi->pdu_pool, (void *)pdu);
 	}
 }
 
@@ -314,7 +307,7 @@ struct spdk_iscsi_pdu *spdk_get_pdu(void)
 {
 	struct spdk_iscsi_pdu *pdu;
 
-	pdu = spdk_mempool_get(g_spdk_iscsi.pdu_pool);
+	pdu = spdk_mempool_get(g_spdk_iscsi->pdu_pool);
 	if (!pdu) {
 		SPDK_ERRLOG("Unable to get PDU\n");
 		abort();
@@ -330,45 +323,45 @@ struct spdk_iscsi_pdu *spdk_get_pdu(void)
 static void
 spdk_iscsi_log_globals(void)
 {
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "AuthFile %s\n", g_spdk_iscsi.authfile);
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "NodeBase %s\n", g_spdk_iscsi.nodebase);
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "MaxSessions %d\n", g_spdk_iscsi.MaxSessions);
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "AuthFile %s\n", g_spdk_iscsi->authfile);
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "NodeBase %s\n", g_spdk_iscsi->nodebase);
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "MaxSessions %d\n", g_spdk_iscsi->MaxSessions);
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "MaxConnectionsPerSession %d\n",
-		      g_spdk_iscsi.MaxConnectionsPerSession);
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "MaxQueueDepth %d\n", g_spdk_iscsi.MaxQueueDepth);
+		      g_spdk_iscsi->MaxConnectionsPerSession);
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "MaxQueueDepth %d\n", g_spdk_iscsi->MaxQueueDepth);
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "DefaultTime2Wait %d\n",
-		      g_spdk_iscsi.DefaultTime2Wait);
+		      g_spdk_iscsi->DefaultTime2Wait);
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "DefaultTime2Retain %d\n",
-		      g_spdk_iscsi.DefaultTime2Retain);
+		      g_spdk_iscsi->DefaultTime2Retain);
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "ImmediateData %s\n",
-		      g_spdk_iscsi.ImmediateData ? "Yes" : "No");
+		      g_spdk_iscsi->ImmediateData ? "Yes" : "No");
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "AllowDuplicateIsid %s\n",
-		      g_spdk_iscsi.AllowDuplicateIsid ? "Yes" : "No");
+		      g_spdk_iscsi->AllowDuplicateIsid ? "Yes" : "No");
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "ErrorRecoveryLevel %d\n",
-		      g_spdk_iscsi.ErrorRecoveryLevel);
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Timeout %d\n", g_spdk_iscsi.timeout);
+		      g_spdk_iscsi->ErrorRecoveryLevel);
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Timeout %d\n", g_spdk_iscsi->timeout);
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "NopInInterval %d\n",
-		      g_spdk_iscsi.nopininterval);
-	if (g_spdk_iscsi.no_discovery_auth) {
+		      g_spdk_iscsi->nopininterval);
+	if (g_spdk_iscsi->no_discovery_auth) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 			      "DiscoveryAuthMethod None\n");
-	} else if (!g_spdk_iscsi.req_discovery_auth) {
+	} else if (!g_spdk_iscsi->req_discovery_auth) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 			      "DiscoveryAuthMethod Auto\n");
 	} else {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 			      "DiscoveryAuthMethod %s %s\n",
-			      g_spdk_iscsi.req_discovery_auth ? "CHAP" : "",
-			      g_spdk_iscsi.req_discovery_auth_mutual ? "Mutual" : "");
+			      g_spdk_iscsi->req_discovery_auth ? "CHAP" : "",
+			      g_spdk_iscsi->req_discovery_auth_mutual ? "Mutual" : "");
 	}
 
-	if (g_spdk_iscsi.discovery_auth_group == 0) {
+	if (g_spdk_iscsi->discovery_auth_group == 0) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 			      "DiscoveryAuthGroup None\n");
 	} else {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 			      "DiscoveryAuthGroup AuthGroup%d\n",
-			      g_spdk_iscsi.discovery_auth_group);
+			      g_spdk_iscsi->discovery_auth_group);
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "MinConnectionsPerCore%d\n",
@@ -611,49 +604,57 @@ spdk_iscsi_opts_verify(struct spdk_iscsi_opts *opts)
 	return 0;
 }
 
-static int
-spdk_iscsi_set_global_params(struct spdk_iscsi_opts *opts)
+static struct spdk_iscsi_globals *
+spdk_iscsi_globals_create(struct spdk_iscsi_opts *opts)
 {
 	int rc;
+	struct spdk_iscsi_globals *g_iscsi;
 
 	rc = spdk_iscsi_opts_verify(opts);
 	if (rc != 0) {
 		SPDK_ERRLOG("spdk_iscsi_opts_verify() failed\n");
-		return rc;
+		return NULL;
 	}
 
-	g_spdk_iscsi.authfile = strdup(opts->authfile);
-	if (!g_spdk_iscsi.authfile) {
+	g_iscsi = calloc(1, sizeof(*g_iscsi));
+	if (!g_iscsi) {
+		SPDK_ERRLOG("failed to calloc for iscsi globals\n");
+		return NULL;
+	}
+
+	g_iscsi->authfile = strdup(opts->authfile);
+	if (!g_iscsi->authfile) {
+		free(g_iscsi);
 		SPDK_ERRLOG("failed to strdup for auth file %s\n", opts->authfile);
-		return -ENOMEM;
+		return NULL;
 	}
 
-	g_spdk_iscsi.nodebase = strdup(opts->nodebase);
-	if (!g_spdk_iscsi.nodebase) {
+	g_iscsi->nodebase = strdup(opts->nodebase);
+	if (!g_iscsi->nodebase) {
+		free(g_iscsi->authfile);
+		free(g_iscsi);
 		SPDK_ERRLOG("failed to strdup for nodebase %s\n", opts->nodebase);
-		return -ENOMEM;
+		return NULL;
 	}
 
-	g_spdk_iscsi.MaxSessions = opts->MaxSessions;
-	g_spdk_iscsi.MaxConnectionsPerSession = opts->MaxConnectionsPerSession;
-	g_spdk_iscsi.MaxQueueDepth = opts->MaxQueueDepth;
-	g_spdk_iscsi.DefaultTime2Wait = opts->DefaultTime2Wait;
-	g_spdk_iscsi.DefaultTime2Retain = opts->DefaultTime2Retain;
-	g_spdk_iscsi.ImmediateData = opts->ImmediateData;
-	g_spdk_iscsi.AllowDuplicateIsid = opts->AllowDuplicateIsid;
-	g_spdk_iscsi.ErrorRecoveryLevel = opts->ErrorRecoveryLevel;
-	g_spdk_iscsi.timeout = opts->timeout;
-	g_spdk_iscsi.nopininterval = opts->nopininterval;
-	g_spdk_iscsi.no_discovery_auth = opts->no_discovery_auth;
-	g_spdk_iscsi.req_discovery_auth = opts->req_discovery_auth;
-	g_spdk_iscsi.req_discovery_auth_mutual = opts->req_discovery_auth;
-	g_spdk_iscsi.discovery_auth_group = opts->discovery_auth_group;
+	g_iscsi->MaxSessions = opts->MaxSessions;
+	g_iscsi->MaxConnectionsPerSession = opts->MaxConnectionsPerSession;
+	g_iscsi->MaxQueueDepth = opts->MaxQueueDepth;
+	g_iscsi->DefaultTime2Wait = opts->DefaultTime2Wait;
+	g_iscsi->DefaultTime2Retain = opts->DefaultTime2Retain;
+	g_iscsi->ImmediateData = opts->ImmediateData;
+	g_iscsi->AllowDuplicateIsid = opts->AllowDuplicateIsid;
+	g_iscsi->ErrorRecoveryLevel = opts->ErrorRecoveryLevel;
+	g_iscsi->timeout = opts->timeout;
+	g_iscsi->nopininterval = opts->nopininterval;
+	g_iscsi->no_discovery_auth = opts->no_discovery_auth;
+	g_iscsi->req_discovery_auth = opts->req_discovery_auth;
+	g_iscsi->req_discovery_auth_mutual = opts->req_discovery_auth;
+	g_iscsi->discovery_auth_group = opts->discovery_auth_group;
 
 	spdk_iscsi_conn_set_min_per_core(opts->min_connections_per_core);
 
-	spdk_iscsi_log_globals();
-
-	return 0;
+	return g_iscsi;
 }
 
 static int
@@ -676,13 +677,16 @@ spdk_iscsi_initialize_global_params(void)
 		}
 	}
 
-	rc = spdk_iscsi_set_global_params(&opts);
+	g_spdk_iscsi = spdk_iscsi_globals_create(&opts);
 	spdk_iscsi_opts_free(&opts);
-	if (rc != 0) {
-		SPDK_ERRLOG("spdk_iscsi_set_global_params() failed\n");
+	if (g_spdk_iscsi == NULL) {
+		SPDK_ERRLOG("spdk_iscsi_globals_create() failed\n");
+		return -1;
 	}
 
-	return rc;
+	spdk_iscsi_log_globals();
+
+	return 0;
 }
 
 static void
@@ -740,8 +744,8 @@ iscsi_create_poll_group(void *ctx)
 {
 	struct spdk_iscsi_poll_group *pg;
 
-	assert(g_spdk_iscsi.poll_group != NULL);
-	pg = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
+	assert(g_spdk_iscsi->poll_group != NULL);
+	pg = &g_spdk_iscsi->poll_group[spdk_env_get_current_core()];
 	pg->core = spdk_env_get_current_core();
 
 	STAILQ_INIT(&pg->connections);
@@ -758,8 +762,8 @@ iscsi_unregister_poll_group(void *ctx)
 {
 	struct spdk_iscsi_poll_group *pg;
 
-	assert(g_spdk_iscsi.poll_group != NULL);
-	pg = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
+	assert(g_spdk_iscsi->poll_group != NULL);
+	pg = &g_spdk_iscsi->poll_group[spdk_env_get_current_core()];
 	assert(pg->poller != NULL);
 	assert(pg->sock_group != NULL);
 
@@ -773,8 +777,8 @@ spdk_initialize_iscsi_poll_group(spdk_thread_fn cpl)
 {
 	size_t g_num_poll_groups = spdk_env_get_last_core() + 1;
 
-	g_spdk_iscsi.poll_group = calloc(g_num_poll_groups, sizeof(struct spdk_iscsi_poll_group));
-	if (!g_spdk_iscsi.poll_group) {
+	g_spdk_iscsi->poll_group = calloc(g_num_poll_groups, sizeof(struct spdk_iscsi_poll_group));
+	if (!g_spdk_iscsi->poll_group) {
 		SPDK_ERRLOG("Failed to allocated iscsi poll group\n");
 		spdk_iscsi_init_complete(-1);
 		return;
@@ -821,8 +825,8 @@ spdk_iscsi_parse_globals(void)
 		return rc;
 	}
 
-	g_spdk_iscsi.session = spdk_dma_zmalloc(sizeof(void *) * g_spdk_iscsi.MaxSessions, 0, NULL);
-	if (!g_spdk_iscsi.session) {
+	g_spdk_iscsi->session = spdk_dma_zmalloc(sizeof(void *) * g_spdk_iscsi->MaxSessions, 0, NULL);
+	if (!g_spdk_iscsi->session) {
 		SPDK_ERRLOG("spdk_dma_zmalloc() failed for session array\n");
 		return -1;
 	}
@@ -833,7 +837,7 @@ spdk_iscsi_parse_globals(void)
 	 *  handling for low resource conditions from our various buffer
 	 *  pools, we can bump this up to support more connections.
 	 */
-	g_spdk_iscsi.MaxConnections = g_spdk_iscsi.MaxSessions;
+	g_spdk_iscsi->MaxConnections = g_spdk_iscsi->MaxSessions;
 
 	rc = spdk_iscsi_initialize_all_pools();
 	if (rc != 0) {
@@ -892,9 +896,10 @@ spdk_iscsi_fini_done(void *arg)
 	spdk_iscsi_shutdown_tgt_nodes();
 	spdk_iscsi_init_grps_destroy();
 	spdk_iscsi_portal_grps_destroy();
-	free(g_spdk_iscsi.authfile);
-	free(g_spdk_iscsi.nodebase);
-	free(g_spdk_iscsi.poll_group);
+	free(g_spdk_iscsi->authfile);
+	free(g_spdk_iscsi->nodebase);
+	free(g_spdk_iscsi->poll_group);
+	free(g_spdk_iscsi);
 
 	g_fini_cb_fn(g_fini_cb_arg);
 }
@@ -902,7 +907,7 @@ spdk_iscsi_fini_done(void *arg)
 void
 spdk_shutdown_iscsi_conns_done(void)
 {
-	if (g_spdk_iscsi.poll_group) {
+	if (g_spdk_iscsi->poll_group) {
 		spdk_for_each_thread(iscsi_unregister_poll_group, NULL, spdk_iscsi_fini_done);
 	} else {
 		spdk_iscsi_fini_done(NULL);
