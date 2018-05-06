@@ -886,7 +886,7 @@ spdk_iscsi_tgt_node_construct(int target_index,
 	if (strncasecmp(name, "iqn.", 4) != 0
 	    && strncasecmp(name, "eui.", 4) != 0
 	    && strncasecmp(name, "naa.", 4) != 0) {
-		snprintf(fullname, sizeof(fullname), "%s:%s", g_spdk_iscsi.nodebase, name);
+		snprintf(fullname, sizeof(fullname), "%s:%s", g_spdk_iscsi->nodebase, name);
 	} else {
 		snprintf(fullname, sizeof(fullname), "%s", name);
 	}
@@ -955,12 +955,12 @@ spdk_iscsi_tgt_node_construct(int target_index,
 	target->header_digest = header_digest;
 	target->data_digest = data_digest;
 
-	if (queue_depth > 0 && ((uint32_t)queue_depth <= g_spdk_iscsi.MaxQueueDepth)) {
+	if (queue_depth > 0 && ((uint32_t)queue_depth <= g_spdk_iscsi->MaxQueueDepth)) {
 		target->queue_depth = queue_depth;
 	} else {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "QueueDepth %d is invalid and %d is used instead.\n",
-			      queue_depth, g_spdk_iscsi.MaxQueueDepth);
-		target->queue_depth = g_spdk_iscsi.MaxQueueDepth;
+			      queue_depth, g_spdk_iscsi->MaxQueueDepth);
+		target->queue_depth = g_spdk_iscsi->MaxQueueDepth;
 	}
 
 	rc = spdk_iscsi_tgt_node_register(target);
@@ -1146,7 +1146,7 @@ spdk_iscsi_parse_tgt_node(struct spdk_conf_section *sp)
 
 	val = spdk_conf_section_get_val(sp, "QueueDepth");
 	if (val == NULL) {
-		queue_depth = g_spdk_iscsi.MaxQueueDepth;
+		queue_depth = g_spdk_iscsi->MaxQueueDepth;
 	} else {
 		queue_depth = (int) strtol(val, NULL, 10);
 	}
