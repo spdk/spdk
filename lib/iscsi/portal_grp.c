@@ -599,3 +599,112 @@ spdk_iscsi_portal_grp_release(struct spdk_iscsi_portal_grp *pg)
 	spdk_iscsi_portal_grp_close(pg);
 	spdk_iscsi_portal_grp_destroy(pg);
 }
+
+static const char *portal_group_section = \
+		"\n"
+		"# Users must change the PortalGroup section(s) to match the IP addresses\n"
+		"#  for their environment.\n"
+		"# PortalGroup sections define which network portals the iSCSI target\n"
+		"# will use to listen for incoming connections.  These are also used to\n"
+		"#  determine which targets are accessible over each portal group.\n"
+		"# Up to 1024 Portal directives are allowed.  These define the network\n"
+		"#  portals of the portal group. The user must specify a IP address\n"
+		"#  for each network portal, and may optionally specify a port and\n"
+		"#  a cpumask. If the port is omitted, 3260 will be used. Cpumask will\n"
+		"#  be used to set the processor affinity of the iSCSI connection\n"
+		"#  through the portal.  If the cpumask is omitted, cpumask will be\n"
+		"#  set to all available processors.\n"
+		"#  Syntax:\n"
+		"#    Portal <Name> <IP address>[:<port>[@<cpumask>]]\n";
+
+#define PORTAL_GROUP_TMPL \
+"[PortalGroup%d]\n" \
+"  Comment \"Portal%d\"\n"
+
+#define PORTAL_TMPL \
+"  Portal DA1 %s:%s@0x%s\n"
+
+void
+spdk_iscsi_portal_grps_config_text(FILE *fp)
+{
+	struct spdk_iscsi_portal *p = NULL;
+	struct spdk_iscsi_portal_grp *pg = NULL;
+
+	/* Create portal group section */
+	fprintf(fp, "%s", portal_group_section);
+
+	/* Dump portal groups */
+	TAILQ_FOREACH(pg, &g_spdk_iscsi.pg_head, tailq) {
+		if (NULL == pg) { continue; }
+		fprintf(fp, PORTAL_GROUP_TMPL, pg->tag, pg->tag);
+		/* Dump portals */
+		TAILQ_FOREACH(p, &pg->head, per_pg_tailq) {
+			if (NULL == p) { continue; }
+			fprintf(fp, PORTAL_TMPL, p->host, p->port,
+				spdk_cpuset_fmt(p->cpumask));
+		}
+	}
+}
+
+static void
+spdk_iscsi_portal_grp_info_json(struct spdk_iscsi_portal_grp *pg,
+				struct spdk_json_write_ctx *w)
+{
+	struct spdk_iscsi_portal *portal;
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "tag");
+	spdk_json_write_int32(w, pg->tag);
+
+	spdk_json_write_name(w, "portals");
+	spdk_json_write_array_begin(w);
+	TAILQ_FOREACH(portal, &pg->head, per_pg_tailq) {
+		spdk_json_write_object_begin(w);
+
+		spdk_json_write_name(w, "host");
+		spdk_json_write_string(w, portal->host);
+		spdk_json_write_name(w, "port");
+		spdk_json_write_string(w, portal->port);
+		spdk_json_write_name(w, "cpumask");
+		spdk_json_write_string_fmt(w, "0x%s", spdk_cpuset_fmt(portal->cpumask));
+
+		spdk_json_write_object_end(w);
+	}
+	spdk_json_write_array_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
+static void
+spdk_iscsi_portal_grp_config_json(struct spdk_iscsi_portal_grp *pg,
+				  struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_name(w, "method");
+	spdk_json_write_string(w, "add_portal_group");
+
+	spdk_json_write_name(w, "params");
+	spdk_iscsi_portal_grp_info_json(pg, w);
+
+	spdk_json_write_object_end(w);
+}
+
+void
+spdk_iscsi_portal_grps_info_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_iscsi_portal_grp *pg;
+
+	TAILQ_FOREACH(pg, &g_spdk_iscsi.pg_head, tailq) {
+		spdk_iscsi_portal_grp_info_json(pg, w);
+	}
+}
+
+void
+spdk_iscsi_portal_grps_config_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_iscsi_portal_grp *pg;
+
+	TAILQ_FOREACH(pg, &g_spdk_iscsi.pg_head, tailq) {
+		spdk_iscsi_portal_grp_config_json(pg, w);
+	}
+}
