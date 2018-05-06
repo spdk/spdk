@@ -289,7 +289,6 @@ struct spdk_iscsi_opts {
 struct spdk_iscsi_globals {
 	char *authfile;
 	char *nodebase;
-	pthread_mutex_t mutex;
 
 	int timeout;
 	int nopininterval;
@@ -342,6 +341,7 @@ enum spdk_error_codes {
 #define xstrdup(s) (s ? strdup(s) : (char *)NULL)
 
 extern struct spdk_iscsi_globals g_spdk_iscsi;
+extern pthread_mutex_t g_iscsi_mutex;
 
 struct spdk_iscsi_task;
 struct spdk_json_write_ctx;

@@ -896,7 +896,6 @@ spdk_iscsi_fini_done(void *arg)
 	free(g_spdk_iscsi.nodebase);
 	free(g_spdk_iscsi.poll_group);
 
-	pthread_mutex_destroy(&g_spdk_iscsi.mutex);
 	g_fini_cb_fn(g_fini_cb_arg);
 }
 

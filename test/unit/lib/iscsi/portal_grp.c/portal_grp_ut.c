@@ -41,13 +41,7 @@
 #include "unit/lib/json_mock.c"
 
 struct spdk_iscsi_globals g_spdk_iscsi;
-
-static int
-test_setup(void)
-{
-	pthread_mutex_init(&g_spdk_iscsi.mutex, NULL);
-	return 0;
-}
+pthread_mutex_t g_iscsi_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static void
 portal_create_ipv4_normal_case(void)
@@ -417,7 +411,7 @@ main(int argc, char **argv)
 		return CU_get_error();
 	}
 
-	suite = CU_add_suite("portal_grp_suite", test_setup, NULL);
+	suite = CU_add_suite("portal_grp_suite", NULL, NULL);
 	if (suite == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();

@@ -41,6 +41,7 @@
 SPDK_LOG_REGISTER_COMPONENT("iscsi", SPDK_LOG_ISCSI)
 
 struct spdk_iscsi_globals g_spdk_iscsi;
+pthread_mutex_t g_iscsi_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 const char *config_file;
 
