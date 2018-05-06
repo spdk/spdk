@@ -41,8 +41,6 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 
-#define ACCEPT_TIMEOUT_US		10000 /* 10ms */
-
 #define SPDK_NVMF_MAX_NAMESPACES (1 << 14)
 
 struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf;

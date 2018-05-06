@@ -42,6 +42,8 @@
 #include "spdk_internal/event.h"
 #include "spdk_internal/log.h"
 
+#define ACCEPT_TIMEOUT_US	10000 /* 10ms */
+
 struct spdk_nvmf_tgt_conf {
 	uint32_t acceptor_poll_rate;
 };
