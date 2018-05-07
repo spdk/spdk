@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "10ae6c53_a3a1e411",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 737,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-07T23:39:22Z",
+      "side": 1,
+      "message": "OK, I know spdk_json_write_named_* are very nice and I\u0027ll try to do use them in all places.",
+      "parentUuid": "53fc3451_b7076f6a",
+      "range": {
+        "startLine": 737,
+        "startChar": 1,
+        "endLine": 737,
+        "endChar": 21
+      },
+      "revId": "4a342b32277dfcced96426c0914951073fa9aa0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "31f2f4fd_4971beb1",
         "filename": "lib/iscsi/init_grp.c",
         "patchSetId": 9
@@ -36,6 +60,30 @@
       "writtenOn": "2018-05-07T10:43:02Z",
       "side": 1,
       "message": "This function is not used anywhere.",
+      "range": {
+        "startLine": 782,
+        "startChar": 0,
+        "endLine": 783,
+        "endChar": 63
+      },
+      "revId": "4a342b32277dfcced96426c0914951073fa9aa0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d138c4a8_4ac01164",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 783,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-07T23:39:22Z",
+      "side": 1,
+      "message": "This will be used in https://review.gerrithub.io/#/c/spdk/spdk/+/406493/.\n\nBut I\u0027ll change to merge the base of https://review.gerrithub.io/#/c/spdk/spdk/+/406493/ to  this first.\n\nThank you so much for good feedback.",
+      "parentUuid": "31f2f4fd_4971beb1",
       "range": {
         "startLine": 782,
         "startChar": 0,
