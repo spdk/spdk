@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2f215109_4b3377ea",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-07T08:42:17Z",
+      "side": 1,
+      "message": "Not used anywhere. IMO shouldn\u0027t be in this commit, and should be added when you will be adding NVMf-related tests.",
+      "range": {
+        "startLine": 8,
+        "startChar": 0,
+        "endLine": 8,
+        "endChar": 29
+      },
+      "revId": "2ae4b92ba85baf5b04a7d065166ae1a734be2ec3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42e513f2_3f572f37",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-07T08:42:17Z",
+      "side": 1,
+      "message": "Not used anywhere. IMO shouldn\u0027t be in this commit, and should be added when you will be adding iSCSI-related tests.",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 34
+      },
+      "revId": "2ae4b92ba85baf5b04a7d065166ae1a734be2ec3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7cad747_3b540777",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-07T08:42:17Z",
+      "side": 1,
+      "message": "tabs/spaces",
+      "range": {
+        "startLine": 23,
+        "startChar": 0,
+        "endLine": 23,
+        "endChar": 8
+      },
+      "revId": "2ae4b92ba85baf5b04a7d065166ae1a734be2ec3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4738340_c1d95331",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-07T08:42:17Z",
+      "side": 1,
+      "message": "I think in vhost/common/common.sh we have functions like \"notice\", \"error\", etc. Maybe we could use them here?",
+      "range": {
+        "startLine": 26,
+        "startChar": 1,
+        "endLine": 26,
+        "endChar": 5
+      },
+      "revId": "2ae4b92ba85baf5b04a7d065166ae1a734be2ec3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "18154ed8_86041dfa",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-07T08:42:17Z",
+      "side": 1,
+      "message": "I mentioned this a couple of times - why isn\u0027t this function called something like \"create_bdev_config\"?\nThe name of application we use here is irrelevant in my opinion.",
+      "range": {
+        "startLine": 47,
+        "startChar": 9,
+        "endLine": 47,
+        "endChar": 24
+      },
+      "revId": "2ae4b92ba85baf5b04a7d065166ae1a734be2ec3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9b4756f_a40029ed",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-07T08:42:17Z",
+      "side": 1,
+      "message": "tabs/spaces",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 8
+      },
+      "revId": "2ae4b92ba85baf5b04a7d065166ae1a734be2ec3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f514735_b2f50732",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-07T08:42:17Z",
+      "side": 1,
+      "message": "tabs/spaces",
+      "range": {
+        "startLine": 93,
+        "startChar": 0,
+        "endLine": 93,
+        "endChar": 8
+      },
+      "revId": "2ae4b92ba85baf5b04a7d065166ae1a734be2ec3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
