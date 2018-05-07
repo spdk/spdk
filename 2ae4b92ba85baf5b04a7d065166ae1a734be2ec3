@@ -140,6 +140,52 @@
     },
     {
       "key": {
+        "uuid": "f35fe120_2979633f",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-07T08:45:26Z",
+      "side": 1,
+      "message": "This will probably fail as I don\u0027t see where we create this file.\nAlso - if pmem uses /tmp directory then why not use it for AIO as well?",
+      "range": {
+        "startLine": 55,
+        "startChar": 28,
+        "endLine": 55,
+        "endChar": 44
+      },
+      "revId": "2ae4b92ba85baf5b04a7d065166ae1a734be2ec3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a5ab1f0_438c9c43",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-07T08:45:26Z",
+      "side": 1,
+      "message": "destroying lvol stores should be a part of trap routine so that we don\u0027t affect other tests in case of fail",
+      "range": {
+        "startLine": 71,
+        "startChar": 9,
+        "endLine": 71,
+        "endChar": 27
+      },
+      "revId": "2ae4b92ba85baf5b04a7d065166ae1a734be2ec3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1f514735_b2f50732",
         "filename": "test/json_config/json_config.sh",
         "patchSetId": 19
