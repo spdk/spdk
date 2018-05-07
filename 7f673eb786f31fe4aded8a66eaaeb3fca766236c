@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f6f62714_0b71f4c1",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-07T08:57:41Z",
+      "side": 1,
+      "message": "remove unneeded brackets.",
+      "range": {
+        "startLine": 50,
+        "startChar": 20,
+        "endLine": 50,
+        "endChar": 21
+      },
+      "revId": "7f673eb786f31fe4aded8a66eaaeb3fca766236c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bce76310_0773b002",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-07T08:57:41Z",
+      "side": 1,
+      "message": "Can this be simplified to\n\nif (sectors_per_stripe \u003e 0) {\n    return ...;\n} else {\n    return ....;\n}\n\n?",
+      "range": {
+        "startLine": 52,
+        "startChar": 1,
+        "endLine": 52,
+        "endChar": 28
+      },
+      "revId": "7f673eb786f31fe4aded8a66eaaeb3fca766236c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e2de8744_8088ac59",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-07T08:57:41Z",
+      "side": 1,
+      "message": "Why spdk_min()? Isn\u0027t the queue depth saved somewhere?\nOne request is used as the parent so this this should be compared with value one less than queue depth.",
+      "range": {
+        "startLine": 56,
+        "startChar": 53,
+        "endLine": 56,
+        "endChar": 97
+      },
+      "revId": "7f673eb786f31fe4aded8a66eaaeb3fca766236c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
