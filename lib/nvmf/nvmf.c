@@ -52,6 +52,7 @@ SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 #define SPDK_NVMF_DEFAULT_MAX_QPAIRS_PER_CTRLR 64
 #define SPDK_NVMF_DEFAULT_IN_CAPSULE_DATA_SIZE 4096
 #define SPDK_NVMF_DEFAULT_MAX_IO_SIZE 131072
+#define SPDK_NVMF_DEFAULT_ACCEPT_TIMEOUT_US 10000 /* 10ms */
 
 void
 spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts)
@@ -60,6 +61,7 @@ spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts)
 	opts->max_qpairs_per_ctrlr = SPDK_NVMF_DEFAULT_MAX_QPAIRS_PER_CTRLR;
 	opts->in_capsule_data_size = SPDK_NVMF_DEFAULT_IN_CAPSULE_DATA_SIZE;
 	opts->max_io_size = SPDK_NVMF_DEFAULT_MAX_IO_SIZE;
+	opts->acceptor_poll_rate = SPDK_NVMF_DEFAULT_ACCEPT_TIMEOUT_US;
 }
 
 static int
@@ -149,6 +151,12 @@ spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 	free(group->sgroups);
 }
 
+const struct spdk_nvmf_tgt_opts *
+spdk_nvmf_tgt_opts(struct spdk_nvmf_tgt *tgt)
+{
+	return &tgt->opts;
+}
+
 struct spdk_nvmf_tgt *
 spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 {
@@ -222,6 +230,63 @@ struct spdk_nvmf_tgt_listen_ctx {
 	spdk_nvmf_tgt_listen_done_fn cb_fn;
 	void *cb_arg;
 };
+
+/* TODO: move it to subsystem.c */
+static void
+spdk_nvmf_subsystem_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *subsystem)
+{
+	struct spdk_nvmf_host *host;
+
+	spdk_json_write_object_begin(w); /* { */
+
+	spdk_json_write_named_string(w, "method", "construct_nvmf_subsystem");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_string(w, "nqn", subsystem->subnqn);
+	spdk_json_write_named_string(w, "max_namespaces", subsystem->max_nsid);
+	spdk_json_write_named_string(w, "serial_number", subsystem->sn);
+
+	spdk_json_write_named_array_begin(w, "hosts"); /* "hosts" : [ */
+	TAILQ_FOREACH(host, &subsystem->hosts, link) {
+		spdk_json_write_string(w, host->nqn);
+	}
+	spdk_json_write_array_end(w); /* ] */
+	spdk_json_write_named_bool(w, "allow_any_host", subsystem->allow_any_host);
+
+#error TODO: Name spaces
+#error TODO: listen_addresses
+
+	spdk_json_write_object_end(w); /* } params */
+
+	spdk_json_write_object_end(w); /* } */
+}
+
+void
+spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_tgt *tgt)
+{
+	struct spdk_nvmf_subsystem *subsystem;
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "state", "startup");
+	spdk_json_write_named_string(w, "method", "set_nvmf_subsystem_options");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_uint32(w, "max_queue_depth", tgt->opts.max_queue_depth);
+	spdk_json_write_named_uint32(w, "max_qpairs_per_ctrlr", tgt->opts.max_qpairs_per_ctrlr);
+	spdk_json_write_named_uint32(w, "in_capsule_data_size", tgt->opts.in_capsule_data_size);
+	spdk_json_write_named_uint32(w, "max_io_size", tgt->opts.max_io_size);
+	spdk_json_write_named_uint32(w, "acceptor_poll_rate", tgt->opts.acceptor_poll_rate);
+	spdk_json_write_object_end(w);
+
+	subsystem = spdk_nvmf_subsystem_get_first(tgt);
+	while (subsystem) {
+		_spdk_nvmf_subsystem_write_config_json(w, subsystem);
+		subsystem = spdk_nvmf_subsystem_get_next(subsystem);
+	}
+
+	spdk_json_write_object_end(w);
+}
 
 static void
 spdk_nvmf_tgt_listen_done(struct spdk_io_channel_iter *i, int status)
