@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8425f195_b5f6a02c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-07T19:59:50Z",
+      "side": 1,
+      "message": "This thing is a channel - the \"shared\" channel. Maybe name it shared_ch?",
+      "revId": "a6b5606ca7a943d4ab1afdd70946f4cd6807f279",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "385a7910_df66a422",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-07T19:59:50Z",
+      "side": 1,
+      "message": "Need to update the comment here",
+      "revId": "a6b5606ca7a943d4ab1afdd70946f4cd6807f279",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
