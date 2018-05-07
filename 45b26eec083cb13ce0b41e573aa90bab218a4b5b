@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "62e79f3b_a869f32c",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 471,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-05-07T11:46:55Z",
+      "side": 1,
+      "message": "Shuhei I think this is a nice idea but it does not entirely fit this function. Idea of this function was to make any thin provisioned blob to become thick provisioned. I agree that functionality that you suggested could be useful, but I would see it rather as a different function (as this would target clone/snapshot functionality only). That way user may choose between \"make any blob thick provisioned\" and \"make this blob independent from any other blob\".\n\nAnyway I think this is a topic for another patch and we can discuss approach to this during community meeting or in mailing list.",
+      "parentUuid": "6dc0df53_4b73aeb6",
+      "range": {
+        "startLine": 471,
+        "startChar": 12,
+        "endLine": 471,
+        "endChar": 49
+      },
+      "revId": "45b26eec083cb13ce0b41e573aa90bab218a4b5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "744d57a3_04251f65",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 27
