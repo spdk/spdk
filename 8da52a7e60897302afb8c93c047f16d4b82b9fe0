@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5d705be6_7e3b26ce",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1054,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-07T22:57:21Z",
+      "side": 1,
+      "message": "A lot of these INFOLOGs look like they should be DEBUGLOG at most to me (particularly anything with a pointer in it is fairly useless to humans).",
+      "revId": "8da52a7e60897302afb8c93c047f16d4b82b9fe0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f3d9360_1c2c2d1c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1063,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-07T22:57:21Z",
+      "side": 1,
+      "message": "This could probably use spdk_io_channel_get_thread() to avoid the linear lookup through all threads.",
+      "revId": "8da52a7e60897302afb8c93c047f16d4b82b9fe0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2666d67d_3b1db64d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1095,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-07T22:57:21Z",
+      "side": 1,
+      "message": "There\u0027s a spdk_get_io_channel() call nested inside here that probably needs a failure check.",
+      "revId": "8da52a7e60897302afb8c93c047f16d4b82b9fe0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "24f1ebdd_d8954eb1",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 2732,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-07T22:57:21Z",
+      "side": 1,
+      "message": "This comment formatting looks off.",
+      "revId": "8da52a7e60897302afb8c93c047f16d4b82b9fe0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
