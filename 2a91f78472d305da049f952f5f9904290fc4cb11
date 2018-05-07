@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f7595fb8_91368faf",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-05-07T08:35:48Z",
+      "side": 1,
+      "message": "With only spdk_lvol_destroy() we have to possible scenarios:\n\n1. First we call spdk_lvol_destroy(), then spdk_bdev_unregister(). Between those calls we no longer have lvol, but we still have bdev. What should we do with I/O?\n\n2. First we call spdk_bdev_unregister(), all bdevs are unregistered. Then spdk_lvol_destroy() but it fails, what should we do? Re-register all the bdevs or leave unaccesible lvol?\n\nThat is why I introduced the above call.\nThis way we can first check if it is possible to delete lvol, then we unregister bdev and finally actually delete lvol.",
+      "parentUuid": "60709786_971332b8",
+      "revId": "2a91f78472d305da049f952f5f9904290fc4cb11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "026b301c_9c60be66",
         "filename": "include/spdk_internal/lvolstore.h",
         "patchSetId": 18
@@ -47,6 +65,24 @@
       "writtenOn": "2018-05-03T22:11:26Z",
       "side": 1,
       "message": "This path seems to leave the mutex locked.",
+      "revId": "2a91f78472d305da049f952f5f9904290fc4cb11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9081c8f_229cac91",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 561,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-05-07T08:35:48Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "d9304863_8c7c103d",
       "revId": "2a91f78472d305da049f952f5f9904290fc4cb11",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +123,24 @@
     },
     {
       "key": {
+        "uuid": "04ed5bdd_12e0b4f3",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 599,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-05-07T08:35:48Z",
+      "side": 1,
+      "message": "deubg code, fixed",
+      "parentUuid": "818249e2_321707ce",
+      "revId": "2a91f78472d305da049f952f5f9904290fc4cb11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "895a97ee_900b30b0",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 18
@@ -98,6 +152,24 @@
       "writtenOn": "2018-05-03T22:21:16Z",
       "side": 1,
       "message": "Is it OK if we delete the alias but then can\u0027t delete the lvol below? (Also, it might be better to just make spdk_bdev_unregister() delete all the aliases instead of making each bdev module clean them up.)",
+      "revId": "2a91f78472d305da049f952f5f9904290fc4cb11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc9d23e9_d3f35de9",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 608,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-05-07T08:35:48Z",
+      "side": 1,
+      "message": "I\u0027m not sure. \ndelete_bdev is mainly for testing purposes, right? \n\nWe could add additional call to register existing lvol as bdev (this could also possibly simplify actual destroy_lvol_bdev path)\nWhat do you think?",
+      "parentUuid": "895a97ee_900b30b0",
       "revId": "2a91f78472d305da049f952f5f9904290fc4cb11",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
