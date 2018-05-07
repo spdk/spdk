@@ -43,8 +43,6 @@
 
 #define SPDK_NVMF_MAX_NAMESPACES (1 << 14)
 
-struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf;
-
 static int
 spdk_add_nvmf_discovery_subsystem(void)
 {
@@ -94,7 +92,7 @@ spdk_nvmf_read_config_file_params(struct spdk_conf_section *sp,
 
 	acceptor_poll_rate = spdk_conf_section_get_intval(sp, "AcceptorPollRate");
 	if (acceptor_poll_rate >= 0) {
-		g_spdk_nvmf_tgt_conf.acceptor_poll_rate = acceptor_poll_rate;
+		opts->acceptor_poll_rate = acceptor_poll_rate;
 	}
 }
 
@@ -106,7 +104,6 @@ spdk_nvmf_parse_nvmf_tgt(void)
 	int rc;
 
 	spdk_nvmf_tgt_opts_init(&opts);
-	g_spdk_nvmf_tgt_conf.acceptor_poll_rate = ACCEPT_TIMEOUT_US;
 
 	sp = spdk_conf_find_section(NULL, "Nvmf");
 	if (sp != NULL) {

@@ -38,6 +38,8 @@
 #include "spdk/io_channel.h"
 #include "spdk/nvmf.h"
 #include "spdk/trace.h"
+#include "spdk/endian.h"
+#include "spdk/string.h"
 
 #include "spdk_internal/log.h"
 
@@ -52,6 +54,7 @@ SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 #define SPDK_NVMF_DEFAULT_MAX_QPAIRS_PER_CTRLR 64
 #define SPDK_NVMF_DEFAULT_IN_CAPSULE_DATA_SIZE 4096
 #define SPDK_NVMF_DEFAULT_MAX_IO_SIZE 131072
+#define SPDK_NVMF_DEFAULT_ACCEPT_TIMEOUT_US 10000 /* 10ms */
 
 void
 spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts)
@@ -60,6 +63,7 @@ spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts)
 	opts->max_qpairs_per_ctrlr = SPDK_NVMF_DEFAULT_MAX_QPAIRS_PER_CTRLR;
 	opts->in_capsule_data_size = SPDK_NVMF_DEFAULT_IN_CAPSULE_DATA_SIZE;
 	opts->max_io_size = SPDK_NVMF_DEFAULT_MAX_IO_SIZE;
+	opts->acceptor_poll_rate = SPDK_NVMF_DEFAULT_ACCEPT_TIMEOUT_US;
 }
 
 static int
@@ -149,6 +153,12 @@ spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 	free(group->sgroups);
 }
 
+const struct spdk_nvmf_tgt_opts *
+spdk_nvmf_tgt_opts(struct spdk_nvmf_tgt *tgt)
+{
+	return &tgt->opts;
+}
+
 struct spdk_nvmf_tgt *
 spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 {
@@ -222,6 +232,120 @@ struct spdk_nvmf_tgt_listen_ctx {
 	spdk_nvmf_tgt_listen_done_fn cb_fn;
 	void *cb_arg;
 };
+
+/* TODO: move it to subsystem.c */
+static void
+spdk_nvmf_subsystem_write_config_json(struct spdk_json_write_ctx *w,
+				      struct spdk_nvmf_subsystem *subsystem)
+{
+	struct spdk_nvmf_host *host;
+	struct spdk_nvmf_listener *listener;
+	const struct spdk_nvme_transport_id *trid;
+	struct spdk_nvmf_ns *ns;
+	struct spdk_nvmf_ns_opts ns_opts;
+	char uuid_str[SPDK_UUID_STRING_LEN];
+	const char *trtype;
+	const char *adrfam;
+
+	if (spdk_nvmf_subsystem_get_type(subsystem) != SPDK_NVMF_SUBTYPE_NVME) {
+		return;
+	}
+
+	spdk_json_write_object_begin(w); /* { */
+	spdk_json_write_named_string(w, "method", "construct_nvmf_subsystem");
+
+	spdk_json_write_named_object_begin(w, "params"); /* "params" : { */
+	spdk_json_write_named_string(w, "nqn", spdk_nvmf_subsystem_get_nqn(subsystem));
+	spdk_json_write_named_bool(w, "allow_any_host", spdk_nvmf_subsystem_get_allow_any_host(subsystem));
+
+	spdk_json_write_named_array_begin(w, "listen_addresses"); /* "listen_addresses" : [ */
+	for (listener = spdk_nvmf_subsystem_get_first_listener(subsystem); listener != NULL;
+	     listener = spdk_nvmf_subsystem_get_next_listener(subsystem, listener)) {
+		trid = spdk_nvmf_listener_get_trid(listener);
+
+		trtype = spdk_nvme_transport_id_trtype_str(trid->trtype);
+		adrfam = spdk_nvme_transport_id_adrfam_str(trid->adrfam);
+
+		spdk_json_write_object_begin(w); /* { */
+		spdk_json_write_named_string(w, "trtype", trtype);
+		if (adrfam) {
+			spdk_json_write_named_string(w, "adrfam", adrfam);
+		}
+
+		spdk_json_write_named_string(w, "traddr", trid->traddr);
+		spdk_json_write_named_string(w, "trsvcid", trid->trsvcid);
+		spdk_json_write_object_end(w); /* } */
+	}
+	spdk_json_write_array_end(w); /* ] "listen_addresses" */
+
+	spdk_json_write_named_array_begin(w, "hosts"); /* "hosts" : [ */
+	for (host = spdk_nvmf_subsystem_get_first_host(subsystem); host != NULL;
+	     host = spdk_nvmf_subsystem_get_next_host(subsystem, host)) {
+		spdk_json_write_named_string(w, "nqn", spdk_nvmf_host_get_nqn(host));
+	}
+	spdk_json_write_array_end(w); /* ] "hosts" */
+
+	spdk_json_write_named_string(w, "serial_number", spdk_nvmf_subsystem_get_sn(subsystem));
+
+	spdk_json_write_named_array_begin(w, "namespaces"); /* "namespaces" : [ */
+	for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
+	     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
+		spdk_nvmf_ns_get_opts(ns, &ns_opts, sizeof(ns_opts));
+
+		spdk_json_write_object_begin(w); /* { */
+		spdk_json_write_named_uint32(w, "nsid", spdk_nvmf_ns_get_id(ns));
+		spdk_json_write_named_string(w, "bdev_name", spdk_bdev_get_name(spdk_nvmf_ns_get_bdev(ns)));
+
+		if (!spdk_mem_all_zero(ns_opts.nguid, sizeof(ns_opts.nguid))) {
+			SPDK_STATIC_ASSERT(sizeof(ns_opts.nguid) == sizeof(uint64_t) * 2, "size mismatch");
+			spdk_json_write_named_string_fmt(w, "nguid", "%"PRIX64"%"PRIX64, from_be64(&ns_opts.nguid[0]),
+							 from_be64(&ns_opts.nguid[8]));
+		}
+
+		if (!spdk_mem_all_zero(ns_opts.eui64, sizeof(ns_opts.eui64))) {
+			SPDK_STATIC_ASSERT(sizeof(ns_opts.eui64) == sizeof(uint64_t), "size mismatch");
+			spdk_json_write_named_string_fmt(w, "eui64", "%"PRIX64, from_be64(&ns_opts.eui64));
+		}
+
+		if (!spdk_mem_all_zero(&ns_opts.uuid, sizeof(ns_opts.uuid))) {
+			spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &ns_opts.uuid);
+			spdk_json_write_named_string(w, "uuid",  uuid_str);
+		}
+
+		spdk_json_write_object_end(w); /* } */
+	}
+
+	spdk_json_write_array_end(w); /* ] "namespaces" */
+	spdk_json_write_object_end(w); /* } "params" */
+	spdk_json_write_object_end(w); /* } */
+}
+
+void
+spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_tgt *tgt)
+{
+	struct spdk_nvmf_subsystem *subsystem;
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "state", "startup");
+	spdk_json_write_named_string(w, "method", "set_nvmf_subsystem_options");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_uint32(w, "max_queue_depth", tgt->opts.max_queue_depth);
+	spdk_json_write_named_uint32(w, "max_qpairs_per_ctrlr", tgt->opts.max_qpairs_per_ctrlr);
+	spdk_json_write_named_uint32(w, "in_capsule_data_size", tgt->opts.in_capsule_data_size);
+	spdk_json_write_named_uint32(w, "max_io_size", tgt->opts.max_io_size);
+	spdk_json_write_named_uint32(w, "acceptor_poll_rate", tgt->opts.acceptor_poll_rate);
+	spdk_json_write_object_end(w);
+
+	subsystem = spdk_nvmf_subsystem_get_first(tgt);
+	while (subsystem) {
+		spdk_nvmf_subsystem_write_config_json(w, subsystem);
+		subsystem = spdk_nvmf_subsystem_get_next(subsystem);
+	}
+
+	spdk_json_write_object_end(w);
+}
 
 static void
 spdk_nvmf_tgt_listen_done(struct spdk_io_channel_iter *i, int status)
