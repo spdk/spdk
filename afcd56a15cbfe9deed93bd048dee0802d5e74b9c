@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f1e3080f_1e433db7",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-07T22:57:12Z",
+      "side": 1,
+      "message": "For simplicity, we should just always use vectored I/O.",
+      "revId": "afcd56a15cbfe9deed93bd048dee0802d5e74b9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2043915a_c81141bc",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-07T22:57:12Z",
+      "side": 1,
+      "message": "I believe this is a configurable value below, so it shouldn\u0027t also be a #define",
+      "revId": "afcd56a15cbfe9deed93bd048dee0802d5e74b9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ffb7a70b_2a995679",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-07T22:57:12Z",
+      "side": 1,
+      "message": "Do you mean max_queue_depth * max_sge?\n\nEither way, putting this data here is probably not the best spot. Why pool all sge elements into the qpair struct if you allocate enough for the worst case anyway? It would be a lot clearer if you put them into spdk_nvmf_rdma_request where they were before. Instead of having this in the request:\n\nstruct {\n    struct ibv_send_wr wr;\n    struct ibv_sge sgl[NVMF_DEFAULT_TX_SGE];\n} data;\n\nDo this:\n\nstruct {\n    struct ibv_send_wr wr;\n    struct ibv_sge *sgl;\n} data;\n\nAnd then allocate the sgl array when the request array is initialized.\n\nIf you can live with the number of sgl elements being a #define, it gets even simpler.",
+      "revId": "afcd56a15cbfe9deed93bd048dee0802d5e74b9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0f691ecb_3343202d",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-07T22:57:12Z",
+      "side": 1,
+      "message": "You can\u0027t allow all 3 of io_unit_size, max_sge, and max_io_size to be configurable because the following must be true:\n\nmax_io_size \u003d\u003d io_unit_size * max_sge;\n\nSo we need to pick which two of these are configured by the user and which one is calculated.",
+      "revId": "afcd56a15cbfe9deed93bd048dee0802d5e74b9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1e4c1be_9f318850",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 353,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-07T22:57:12Z",
+      "side": 1,
+      "message": "You need to change max_send_sge to max(NVMF_DEFAULT_TX_SGE, rtransport-\u003emax_sge), but max_recv_sge should be unaffected. You\u0027re just adding SGL support for READ and WRITE operations - not for SEND and RECV.",
+      "revId": "afcd56a15cbfe9deed93bd048dee0802d5e74b9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d6e38619_6d6a24c5",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 458,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-07T22:57:12Z",
+      "side": 1,
+      "message": "This index math doesn\u0027t seem right to me. rqpair-\u003esge is an array of size (max_sge * max_queue_depth), so if you want to assign a set of elements of size max_sge that is unique to this request, you need to multiple i by max_sge.",
+      "revId": "afcd56a15cbfe9deed93bd048dee0802d5e74b9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b08426e_6a8a211d",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 911,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-07T22:57:12Z",
+      "side": 1,
+      "message": "Right now, max_io_size is 128k by default and the buffers in this memory pool are 128k. That means the number of sgl elements is always 1 in this patch (that\u0027s why it doesn\u0027t blow up even with the bad array math above). In order to actually test this code and take advantage of sgl support, the buffer pool should be changed to a collection of 4k buffers instead of 128k.",
+      "revId": "afcd56a15cbfe9deed93bd048dee0802d5e74b9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
