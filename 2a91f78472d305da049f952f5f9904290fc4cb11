@@ -54,6 +54,69 @@
     },
     {
       "key": {
+        "uuid": "d9218cf8_d471e95d",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-05-07T14:06:23Z",
+      "side": 1,
+      "message": "You can add some log with lvolerrno to display if operation succeeded. This way we won\u0027t have empty function.",
+      "range": {
+        "startLine": 336,
+        "startChar": 1,
+        "endLine": 336,
+        "endChar": 25
+      },
+      "revId": "2a91f78472d305da049f952f5f9904290fc4cb11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1557714c_865b98f1",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 522,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-05-07T14:06:23Z",
+      "side": 1,
+      "message": "This can be something like vbdev_lvol_cloes now.",
+      "range": {
+        "startLine": 522,
+        "startChar": 0,
+        "endLine": 522,
+        "endChar": 19
+      },
+      "revId": "2a91f78472d305da049f952f5f9904290fc4cb11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fef97530_4a0ed21b",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 537,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-05-07T14:06:23Z",
+      "side": 1,
+      "message": "You should call spdk_lvol_close here and don\u0027t try to close lvol in destroy call, but just destroy it right away.",
+      "revId": "2a91f78472d305da049f952f5f9904290fc4cb11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d9304863_8c7c103d",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 18
@@ -103,6 +166,29 @@
       "revId": "2a91f78472d305da049f952f5f9904290fc4cb11",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7cbd1e46_e944e41a",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 573,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-05-07T14:06:23Z",
+      "side": 1,
+      "message": "You don\u0027t need this in the context - you can read it from lvol structure.",
+      "range": {
+        "startLine": 573,
+        "startChar": 26,
+        "endLine": 573,
+        "endChar": 35
+      },
+      "revId": "2a91f78472d305da049f952f5f9904290fc4cb11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     },
     {
       "key": {
@@ -170,6 +256,24 @@
       "side": 1,
       "message": "I\u0027m not sure. \ndelete_bdev is mainly for testing purposes, right? \n\nWe could add additional call to register existing lvol as bdev (this could also possibly simplify actual destroy_lvol_bdev path)\nWhat do you think?",
       "parentUuid": "895a97ee_900b30b0",
+      "revId": "2a91f78472d305da049f952f5f9904290fc4cb11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b37326c_75698156",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 608,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-05-07T14:06:23Z",
+      "side": 1,
+      "message": "Daniel probably had in mind that we should add functionality of deleting aliases in spdk_bdev_unregister function which you call in line 617. This way, when deleting lvol will fail, we will know that we have to register alias again when re-registering bdev.",
+      "parentUuid": "fc9d23e9_d3f35de9",
       "revId": "2a91f78472d305da049f952f5f9904290fc4cb11",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
