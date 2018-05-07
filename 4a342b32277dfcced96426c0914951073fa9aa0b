@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "53fc3451_b7076f6a",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 737,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-07T10:43:02Z",
+      "side": 1,
+      "message": "can you use spdk_json_write_named_* API here. This will cut number of lines almost twice.",
+      "range": {
+        "startLine": 737,
+        "startChar": 1,
+        "endLine": 737,
+        "endChar": 21
+      },
+      "revId": "4a342b32277dfcced96426c0914951073fa9aa0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "31f2f4fd_4971beb1",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 783,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-07T10:43:02Z",
+      "side": 1,
+      "message": "This function is not used anywhere.",
+      "range": {
+        "startLine": 782,
+        "startChar": 0,
+        "endLine": 783,
+        "endChar": 63
+      },
+      "revId": "4a342b32277dfcced96426c0914951073fa9aa0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
