@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e466fe58_e4b7f5da",
+        "filename": "examples/bdev/hello_world/Makefile",
+        "patchSetId": 7
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-07T16:57:30Z",
+      "side": 1,
+      "message": "$(COPY_MODULES_FILES) should be added to the previous line as a dependency, next to $(BLOCKDEV_MODULES_FILES) - not as an argument to $(LINK_C).",
+      "range": {
+        "startLine": 51,
+        "startChar": 10,
+        "endLine": 51,
+        "endChar": 32
+      },
+      "revId": "4cfe4fe3ed7172cfc6062fb25e9dcf2a8c06335c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd32c2a2_74db96c0",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-07T16:57:30Z",
+      "side": 1,
+      "message": "This is still using the wrong size - it should also be the block size.",
+      "range": {
+        "startLine": 121,
+        "startChar": 32,
+        "endLine": 121,
+        "endChar": 60
+      },
+      "revId": "4cfe4fe3ed7172cfc6062fb25e9dcf2a8c06335c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
