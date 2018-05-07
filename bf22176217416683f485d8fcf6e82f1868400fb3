@@ -25,6 +25,29 @@
     },
     {
       "key": {
+        "uuid": "60e62f27_993a768e",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1572,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-07T10:05:40Z",
+      "side": 1,
+      "message": "This should be checked if set_nvmf_subsystem_options is not executed more than once.",
+      "range": {
+        "startLine": 1572,
+        "startChar": 1,
+        "endLine": 1572,
+        "endChar": 16
+      },
+      "revId": "bf22176217416683f485d8fcf6e82f1868400fb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5ab2244d_4cec97d4",
         "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
         "patchSetId": 7
