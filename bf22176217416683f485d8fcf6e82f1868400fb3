@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f9d441ff_75b966d6",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1537,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-07T10:01:37Z",
+      "side": 1,
+      "message": "Instead copying all entries from struct spdk_nvmf_tgt_opts you can use it directly here like:\n\nstruct nvmf_rpc_opts {\n\tstruct spdk_nvmf_tgt_opts tgt_opts;\n\tuint32_t acceptor_poll_rate;\n};\n\nThen in RPC decoders array just use offsetof(struct nvmf_rpc_opts, tgt_opts.max_queue_depth). This ensure sure those opts are always in sync with struct spdk_nvmf_tgt_opts.",
+      "range": {
+        "startLine": 1534,
+        "startChar": 0,
+        "endLine": 1537,
+        "endChar": 22
+      },
+      "revId": "bf22176217416683f485d8fcf6e82f1868400fb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ab2244d_4cec97d4",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1575,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-07T10:01:37Z",
+      "side": 1,
+      "message": "This could use some true error code here. For now it will return error only in case out of memory.",
+      "range": {
+        "startLine": 1575,
+        "startChar": 2,
+        "endLine": 1575,
+        "endChar": 15
+      },
+      "revId": "bf22176217416683f485d8fcf6e82f1868400fb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
