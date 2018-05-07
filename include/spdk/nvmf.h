@@ -60,6 +60,7 @@ struct spdk_nvmf_request;
 struct spdk_nvmf_host;
 struct spdk_nvmf_listener;
 struct spdk_nvmf_poll_group;
+struct spdk_json_write_ctx;
 
 struct spdk_nvmf_tgt_opts {
 	uint16_t max_queue_depth;
@@ -76,6 +77,13 @@ struct spdk_nvmf_tgt_opts {
 void spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts);
 
 /**
+ * Return options used to create NVMe-oF target.
+ * \param tgt The NVMe-oF target
+ * \return Pointer to options structure.
+ */
+const struct spdk_nvmf_tgt_opts *spdk_nvmf_tgt_opts(struct spdk_nvmf_tgt *tgt);
+
+/**
  * Construct an NVMe-oF target.
  *
  * \param opts Options.
@@ -90,6 +98,19 @@ struct spdk_nvmf_tgt *spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts);
  * \param tgt The target to destroy. This releases all resources.
  */
 void spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt);
+
+/**
+ * Write vhost subsystem configuration into provided JSON context.
+ *
+ * \param w JSON write context
+ * \param done_ev call this event when done.
+ */
+/**
+ * Write NVMe-oF target configuration into provided JSON context.
+ * \param w JSON write context
+ * \param tgt The NVMe-oF target
+ */
+void spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_tgt *tgt);
 
 typedef void (*spdk_nvmf_tgt_listen_done_fn)(void *ctx, int status);
 
