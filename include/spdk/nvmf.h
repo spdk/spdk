@@ -60,6 +60,7 @@ struct spdk_nvmf_request;
 struct spdk_nvmf_host;
 struct spdk_nvmf_listener;
 struct spdk_nvmf_poll_group;
+struct spdk_json_write_ctx;
 
 struct spdk_nvmf_tgt_opts {
 	uint16_t max_queue_depth;
@@ -95,6 +96,13 @@ typedef void (spdk_nvmf_tgt_destroy_done_fn)(void *ctx, int status);
 void spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt,
 			   spdk_nvmf_tgt_destroy_done_fn cb_fn,
 			   void *cb_arg);
+
+/**
+ * Write NVMe-oF target configuration into provided JSON context.
+ * \param w JSON write context
+ * \param tgt The NVMe-oF target
+ */
+void spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_tgt *tgt);
 
 /**
  * Function to be called once the target is listening.
