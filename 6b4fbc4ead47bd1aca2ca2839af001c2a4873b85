@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bf6ef1af_6aa6904e",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-07T08:55:42Z",
+      "side": 1,
+      "message": "You should clean up after the test rather than assume that there is something wrong at start of the test.",
+      "range": {
+        "startLine": 58,
+        "startChar": 8,
+        "endLine": 58,
+        "endChar": 54
+      },
+      "revId": "6b4fbc4ead47bd1aca2ca2839af001c2a4873b85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e6ac9f3_be3b23a1",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-07T08:55:42Z",
+      "side": 1,
+      "message": "tabs/spaces across file",
+      "range": {
+        "startLine": 60,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 8
+      },
+      "revId": "6b4fbc4ead47bd1aca2ca2839af001c2a4873b85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8fceab5_e842f405",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-07T08:55:42Z",
+      "side": 1,
+      "message": "Split blocks for each testing section so that it\u0027s more readable and put some messages between them (or inside the functions), so it\u0027d be easier to read the logs.",
+      "range": {
+        "startLine": 103,
+        "startChar": 1,
+        "endLine": 112,
+        "endChar": 26
+      },
+      "revId": "6b4fbc4ead47bd1aca2ca2839af001c2a4873b85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fbc20513_b8aa8187",
+        "filename": "test/vhost/common/autotest.config",
+        "patchSetId": 6
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-07T08:55:42Z",
+      "side": 1,
+      "message": "If I recall correctly then you can have your own config with masks in the test directory. See test/vhost/initiator for example.\nNo need to modify test/vhost/common/autotest.config",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 5,
+        "endChar": 21
+      },
+      "revId": "6b4fbc4ead47bd1aca2ca2839af001c2a4873b85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
