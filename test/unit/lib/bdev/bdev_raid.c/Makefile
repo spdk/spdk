@@ -31,16 +31,26 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-DIRS-y = bdev.c part.c scsi_nvme.c gpt vbdev_lvol.c mt bdev_raid.c
+SPDK_LIB_LIST = log
 
-DIRS-$(CONFIG_PMDK) += pmem
+CFLAGS += -I$(SPDK_ROOT_DIR)/test
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/bdev
+LIBS += $(SPDK_LIB_LINKER_ARGS)
+LIBS += -lcunit
 
-.PHONY: all clean $(DIRS-y)
+APP = bdev_raid_ut
+C_SRCS = bdev_raid_ut.c
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+all: $(APP)
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+$(APP): $(OBJS) $(SPDK_LIB_FILES)
+	$(LINK_C)
+
+clean:
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
