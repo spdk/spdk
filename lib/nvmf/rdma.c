@@ -292,6 +292,9 @@ spdk_nvmf_rdma_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 static void
 spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 {
+	struct spdk_nvmf_rdma_transport *rtransport;
+	int i;
+
 	if (rqpair->poller) {
 		TAILQ_REMOVE(&rqpair->poller->qpairs, rqpair, link);
 	}
@@ -321,6 +324,17 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 	spdk_dma_free(rqpair->cmds);
 	spdk_dma_free(rqpair->cpls);
 	spdk_dma_free(rqpair->bufs);
+
+	/* Free the data buffer allocated from the transport */
+	rtransport = SPDK_CONTAINEROF(rqpair->qpair.transport, struct spdk_nvmf_rdma_transport, transport);
+	for (i = 0; i < rqpair->max_queue_depth; i++) {
+		if (rqpair->reqs[i].data_from_pool) {
+			/* Put the buffer back in the pool */
+			spdk_mempool_put(rtransport->data_buf_pool, rqpair->reqs[i].data_from_pool);
+			rqpair->reqs[i].data_from_pool = NULL;
+		}
+	}
+
 	free(rqpair->reqs);
 	free(rqpair->recvs);
 	free(rqpair);
@@ -1690,9 +1704,26 @@ spdk_nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
 }
 
 static void
+_spdk_nvmf_rdma_close_qpair(void *ctx)
+{
+	struct spdk_nvmf_rdma_qpair *rqpair = ctx;
+	int i;
+
+	/* check whether there is still I/O processing in backend bdev */
+	for (i = 0; i < rqpair->max_queue_depth; i++) {
+		if (rqpair->reqs[i].req.is_processed) {
+			spdk_thread_send_msg(rqpair->qpair.group->thread, _spdk_nvmf_rdma_close_qpair, rqpair);
+			return;
+		}
+	}
+
+	spdk_nvmf_rdma_qpair_destroy(rqpair);
+}
+
+static void
 spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 {
-	spdk_nvmf_rdma_qpair_destroy(SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair));
+	_spdk_nvmf_rdma_close_qpair(SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair));
 }
 
 static void
