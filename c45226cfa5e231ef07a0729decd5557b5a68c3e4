@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9cc95b3b_4d028efd",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-08T13:31:43Z",
+      "side": 1,
+      "message": "I admit I don\u0027t understand Ben\u0027s NACK justification but OK, I will try to overcome this... somehow.",
+      "parentUuid": "fb121838_42691dad",
+      "revId": "c45226cfa5e231ef07a0729decd5557b5a68c3e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "36b9315e_305ad5d0",
         "filename": "lib/nvmf/nvmf.c",
         "patchSetId": 2
@@ -42,6 +60,30 @@
     },
     {
       "key": {
+        "uuid": "a596790c_4e5c2c3c",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-08T13:31:43Z",
+      "side": 1,
+      "message": "This is a good question. I think that only RUNTIME should be allowed.",
+      "parentUuid": "36b9315e_305ad5d0",
+      "range": {
+        "startLine": 242,
+        "startChar": 44,
+        "endLine": 242,
+        "endChar": 68
+      },
+      "revId": "c45226cfa5e231ef07a0729decd5557b5a68c3e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "58a41384_e4b31194",
         "filename": "lib/nvmf/nvmf.c",
         "patchSetId": 2
@@ -53,6 +95,24 @@
       "writtenOn": "2018-05-08T08:46:07Z",
       "side": 1,
       "message": "is this \"state\":\"startup\" new idea?",
+      "revId": "c45226cfa5e231ef07a0729decd5557b5a68c3e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e80569f_ef379403",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-08T13:31:43Z",
+      "side": 1,
+      "message": "For now it is only free tought. I came into the issue that the RPC client must know which methods he can invoke on which state. There are several possible solutions like:\n1. RPC python script will have this information hardcoded.\n2. RPC client can call RPC \"get_rpc_methods -c\" and filter out methods that can\u0027t be executed on current state - this can make issues if some methods as possible on more than one states.\n3. Introduce some kind of information like this one you spoted :)\n\nI\u0027m open to any suggestion and vote.",
+      "parentUuid": "58a41384_e4b31194",
       "revId": "c45226cfa5e231ef07a0729decd5557b5a68c3e4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
