@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "94449579_bc49356b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-05-08T14:34:35Z",
+      "side": 1,
+      "message": "Can we just pass cb_fn and cb_arg directly instead of creating context that has nothing else than function and argument?",
+      "range": {
+        "startLine": 251,
+        "startChar": 0,
+        "endLine": 261,
+        "endChar": 22
+      },
+      "revId": "ffb561e70cb777bfbcf9228262847e60c95738eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3af01afc_cb3656c3",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-05-08T14:34:35Z",
+      "side": 1,
+      "message": "\"Execute operations queued during freeze\" would be more accurate.",
+      "range": {
+        "startLine": 285,
+        "startChar": 4,
+        "endLine": 285,
+        "endChar": 26
+      },
+      "revId": "ffb561e70cb777bfbcf9228262847e60c95738eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "06eaa926_80c3b4c3",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 311,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-05-08T14:34:35Z",
+      "side": 1,
+      "message": "Too many spaces.",
+      "range": {
+        "startLine": 311,
+        "startChar": 18,
+        "endLine": 311,
+        "endChar": 20
+      },
+      "revId": "ffb561e70cb777bfbcf9228262847e60c95738eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c7c17c68_c7d471f7",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-05-08T14:34:35Z",
+      "side": 1,
+      "message": "I think this should be switched - blob-\u003efrozen_io \u003d false should be done at the end (in callback).",
+      "range": {
+        "startLine": 311,
+        "startChar": 0,
+        "endLine": 313,
+        "endChar": 76
+      },
+      "revId": "ffb561e70cb777bfbcf9228262847e60c95738eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
