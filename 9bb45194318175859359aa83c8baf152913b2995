@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fb91ae95_742fd3e6",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-08T19:50:36Z",
+      "side": 1,
+      "message": "Pls follow commit message rules.",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 24,
+        "endChar": 116
+      },
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "165f955d_b4e1f326",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-08T19:50:36Z",
+      "side": 1,
+      "message": "__builtin_popcount() ?",
+      "range": {
+        "startLine": 84,
+        "startChar": 0,
+        "endLine": 96,
+        "endChar": 1
+      },
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d7c03b3c_844794fe",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-08T19:50:36Z",
+      "side": 1,
+      "message": "Just \"waitq\" will be more than enought as variable name.",
+      "range": {
+        "startLine": 110,
+        "startChar": 31,
+        "endLine": 110,
+        "endChar": 49
+      },
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4df78b02_e83ba694",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-08T19:50:36Z",
+      "side": 1,
+      "message": "Using \"i\" is more common. I think...",
+      "range": {
+        "startLine": 188,
+        "startChar": 9,
+        "endLine": 188,
+        "endChar": 13
+      },
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a3ba23d5_384de81e",
+        "filename": "lib/bdev/pvol/bdev_pvol.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-08T19:50:36Z",
+      "side": 1,
+      "message": "Something could be added here.",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
