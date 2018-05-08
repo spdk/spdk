@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f73fb03_e1469a7e",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-08T08:23:51Z",
+      "side": 1,
+      "message": "empty line",
+      "revId": "8742c02fe40cf178a1faa2595649ca34d4cb1f9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "46b29726_f088d0e6",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-08T08:23:51Z",
+      "side": 1,
+      "message": "tabs/spaces",
+      "range": {
+        "startLine": 44,
+        "startChar": 0,
+        "endLine": 44,
+        "endChar": 8
+      },
+      "revId": "8742c02fe40cf178a1faa2595649ca34d4cb1f9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4e757b3_2813462d",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-08T08:23:51Z",
+      "side": 1,
+      "message": "Could we try adding destroying lvol stores to trap? I\u0027d rather not leave them configured on Nvme",
+      "range": {
+        "startLine": 68,
+        "startChar": 1,
+        "endLine": 68,
+        "endChar": 39
+      },
+      "revId": "8742c02fe40cf178a1faa2595649ca34d4cb1f9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
