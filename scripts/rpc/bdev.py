@@ -17,6 +17,28 @@ def construct_null_bdev(client, args):
     return client.call('construct_null_bdev', params)
 
 
+def get_pvols(client, args):
+    params = {'category': args.category}
+    return client.call('get_pvols', params)
+
+
+def construct_pvol(client, args):
+    params = {'name': args.name, 'strip_size': args.strip_size, 'raid_level': args.raid_level}
+
+    if args.base_bdevs:
+        base_bdevs = []
+        for u in args.base_bdevs.strip().split(" "):
+            base_bdevs.append(u)
+        params['base_bdevs'] = base_bdevs
+
+    return client.call('construct_pvol', params)
+
+
+def destroy_pvol(client, args):
+    params = {'name': args.name}
+    return client.call('destroy_pvol', params)
+
+
 def construct_aio_bdev(client, args):
     params = {'name': args.name,
               'filename': args.filename}
