@@ -1690,9 +1690,25 @@ spdk_nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
 }
 
 static void
+_spdk_nvmf_rdma_close_qpair(void *ctx)
+{
+	struct spdk_nvmf_rdma_qpair *rqpair = ctx;
+	int i;
+
+	for (i = 0; i < rqpair->max_queue_depth; i++) {
+		if (rqpair->reqs[i].req.is_processed) {
+			spdk_thread_send_msg(rqpair->qpair->group->thread, _spdk_nvmf_rdma_close_qpair, rqpair);
+			return;
+		}
+	}
+
+	spdk_nvmf_rdma_qpair_destroy(SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair));
+}
+
+static void
 spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 {
-	spdk_nvmf_rdma_qpair_destroy(SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair));
+	_spdk_nvmf_rdma_close_qpair(SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair));
 }
 
 static void
