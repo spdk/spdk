@@ -50,6 +50,13 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 
+	if (req->is_processed) {
+		assert(req->qpair != NULL);
+		assert(req->qpair->async_bdev_io_num > 0);
+		req->qpair->async_bdev_io_num--;
+		req->is_processed = false;
+	}
+
 	rsp->sqid = 0;
 	rsp->status.p = 0;
 	rsp->cid = req->cmd->nvme_cmd.cid;
@@ -58,6 +65,11 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 		      "cpl: cid=%u cdw0=0x%08x rsvd1=%u status=0x%04x\n",
 		      rsp->cid, rsp->cdw0, rsp->rsvd1,
 		      *(uint16_t *)&rsp->status);
+
+	/* Do not trigger the transport req complete functions if qpair is in destroying process */
+	if (spdk_unlikely(req->qpair->is_destroying)) {
+		return 0;
+	}
 
 	if (spdk_nvmf_transport_req_complete(req)) {
 		SPDK_ERRLOG("Transport request completion error!\n");
