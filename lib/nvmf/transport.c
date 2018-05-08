@@ -172,6 +172,8 @@ spdk_nvmf_transport_req_complete(struct spdk_nvmf_request *req)
 void
 spdk_nvmf_transport_qpair_fini(struct spdk_nvmf_qpair *qpair)
 {
+	assert(qpair->group != NULL);
+	spdk_nvmf_poll_group_remove(qpair->group, qpair);
 	qpair->transport->ops->qpair_fini(qpair);
 }
 
