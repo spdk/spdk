@@ -4,7 +4,6 @@
 set -m
 source $MIGRATION_DIR/autotest.config
 
-RDMA_TARGET_IP="10.0.0.1"
 incoming_vm=1
 target_vm=2
 target_vm_ctrl=naa.VhostScsi0.$target_vm
