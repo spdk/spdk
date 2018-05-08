@@ -283,9 +283,12 @@ static void
 spdk_nvmf_rdma_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 {
 	struct spdk_nvmf_rdma_mgmt_channel *ch = ctx_buf;
+	struct spdk_nvmf_rdma_request *rdma_req;
 
-	if (!TAILQ_EMPTY(&ch->pending_data_buf_queue)) {
-		SPDK_ERRLOG("Pending I/O list wasn't empty on channel destruction\n");
+	/* Remove pending data buffer */
+	while (!TAILQ_EMPTY(&ch->pending_data_buf_queue)) {
+		rdma_req = TAILQ_FIRST(&ch->pending_data_buf_queue);
+		TAILQ_REMOVE(&ch->pending_data_buf_queue, rdma_req, link);
 	}
 }
 
@@ -1690,9 +1693,25 @@ spdk_nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
 }
 
 static void
+_spdk_nvmf_rdma_close_qpair(void *ctx)
+{
+	struct spdk_nvmf_rdma_qpair *rqpair = ctx;
+	int i;
+
+	for (i = 0; i < rqpair->max_queue_depth; i++) {
+		if (rqpair->reqs[i].req.is_processed) {
+			spdk_thread_send_msg(rqpair->qpair.group->thread, _spdk_nvmf_rdma_close_qpair, rqpair);
+			return;
+		}
+	}
+
+	spdk_nvmf_rdma_qpair_destroy(rqpair);
+}
+
+static void
 spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 {
-	spdk_nvmf_rdma_qpair_destroy(SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair));
+	_spdk_nvmf_rdma_close_qpair(SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair));
 }
 
 static void
