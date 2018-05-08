@@ -947,6 +947,45 @@ if __name__ == "__main__":
     p.add_argument('-l', '--lvs-name', help='lvol store name', required=False)
     p.set_defaults(func=get_lvol_stores)
 
+    @call_cmd
+    def get_raids(args):
+        print_array(rpc.bdev.get_raids(args.client,
+                                       category=args.category))
+
+    p = subparsers.add_parser('get_raids', help="""This is used to list all the raid names based on the input category
+    requested. Category should be one of 'all', 'online', 'configuring' or 'offline'. 'all' means all the raids whether
+    they are online or configuring or offline. 'online' is the raid which is registered with bdev layer. 'configuring'
+    is the raid which does not have full configuration discovered yet. 'offline' is the raid which is not registered
+    with bdev as of now and it has encountered any error or user has requested to offline the raid""")
+    p.add_argument('category', help='all or online or configuring or offline')
+    p.set_defaults(func=get_raids)
+
+    @call_cmd
+    def construct_raid(args):
+        base_bdevs = []
+        for u in args.base_bdevs.strip().split(" "):
+            base_bdevs.append(u)
+
+        rpc.bdev.construct_raid(args.client,
+                                name=args.name,
+                                strip_size=args.strip_size,
+                                raid_level=args.raid_level,
+                                base_bdevs=base_bdevs)
+    p = subparsers.add_parser('construct_raid', help='Construct new raid volume')
+    p.add_argument('-n', '--name', help='raid name', required=True)
+    p.add_argument('-s', '--strip-size', help='strip size in KB', type=int, required=True)
+    p.add_argument('-r', '--raid-level', help='raid level, only raid level 0 is supported', type=int, required=True)
+    p.add_argument('-b', '--base-bdevs', help='base bdevs name, whitespace separated list in quotes', required=True)
+    p.set_defaults(func=construct_raid)
+
+    @call_cmd
+    def destroy_raid(args):
+        rpc.bdev.destroy_raid(args.client,
+                              name=args.name)
+    p = subparsers.add_parser('destroy_raid', help='Destroy existing raid')
+    p.add_argument('name', help='raid name')
+    p.set_defaults(func=destroy_raid)
+
     # split
     @call_cmd
     def construct_split_vbdev(args):
