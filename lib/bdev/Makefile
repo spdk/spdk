@@ -52,5 +52,6 @@ DIRS-$(CONFIG_PMDK) += pmem
 endif
 
 DIRS-$(CONFIG_RBD) += rbd
+DIRS-$(CONFIG_RAID) += raid
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

@@ -49,6 +49,8 @@ function usage()
 	echo "                           No path required."
 	echo " iscsi-initiator           [disabled]"
 	echo "                           No path required."
+	echo " raid                      [disabled]"
+	echo "                           No path required."
 	echo " vtune                     Required to profile I/O under Intel VTune Amplifier XE."
 	echo "                           example: /opt/intel/vtune_amplifier_xe_version"
 	echo ""
@@ -135,6 +137,13 @@ for i in "$@"; do
 			;;
 		--without-rbd)
 			CONFIG_RBD=n
+			;;
+		--with-raid)
+			CONFIG_RAID=y
+			echo "Warning: vhost will not work with RAID module as multiple IOV support is not there"
+			;;
+		--without-raid)
+			CONFIG_RAID=n
 			;;
 		--with-rdma)
 			CONFIG_RDMA=y
@@ -326,6 +335,9 @@ if [ -n "$CONFIG_ISCSI_INITIATOR" ]; then
 fi
 if [ -n "$CONFIG_RBD" ]; then
 	echo "CONFIG_RBD?=$CONFIG_RBD" >> CONFIG.local
+fi
+if [ -n "$CONFIG_RAID" ]; then
+	echo "CONFIG_RAID?=$CONFIG_RAID" >> CONFIG.local
 fi
 if [ -n "$CONFIG_VTUNE" ]; then
 	echo "CONFIG_VTUNE?=$CONFIG_VTUNE" >> CONFIG.local

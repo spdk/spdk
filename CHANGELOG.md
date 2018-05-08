@@ -2,6 +2,13 @@
 
 ## v18.07: (Upcoming Release)
 
+### RAID module
+A new bdev module called "raid" has been added as experimental module which
+aggregates underlying nvme bdevs and expose a single raid bdev to upper bdev
+layers. Over this LVS/LVOL can be created as per use-cases and they can be
+exposed to NVMe-oF subsystems. Please note that vhost will not work with RAID
+module as RAID module does not support multipe IOV Vectors yet.
+
 ### Log
 
 The debug log component flag has been renamed from `-t` to `-L` to prevent confusion
