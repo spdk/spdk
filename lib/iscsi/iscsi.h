@@ -340,7 +340,7 @@ enum spdk_error_codes {
 
 #define xstrdup(s) (s ? strdup(s) : (char *)NULL)
 
-extern struct spdk_iscsi_globals g_spdk_iscsi;
+extern struct spdk_iscsi_globals *g_spdk_iscsi;
 extern pthread_mutex_t g_iscsi_mutex;
 
 struct spdk_iscsi_task;

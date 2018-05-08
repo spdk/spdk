@@ -40,7 +40,8 @@
 #include "iscsi/portal_grp.c"
 #include "unit/lib/json_mock.c"
 
-struct spdk_iscsi_globals g_spdk_iscsi;
+struct spdk_iscsi_globals _g_spdk_iscsi;
+struct spdk_iscsi_globals *g_spdk_iscsi = &_g_spdk_iscsi;
 pthread_mutex_t g_iscsi_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static void
