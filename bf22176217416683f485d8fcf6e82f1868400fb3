@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "2ee37753_5cf3133c",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1537,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-08T02:33:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f9d441ff_75b966d6",
+      "range": {
+        "startLine": 1534,
+        "startChar": 0,
+        "endLine": 1537,
+        "endChar": 22
+      },
+      "revId": "bf22176217416683f485d8fcf6e82f1868400fb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "60e62f27_993a768e",
         "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
         "patchSetId": 7
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "95f46da2_851a5da1",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1572,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-08T02:33:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "60e62f27_993a768e",
+      "range": {
+        "startLine": 1572,
+        "startChar": 1,
+        "endLine": 1572,
+        "endChar": 16
+      },
+      "revId": "bf22176217416683f485d8fcf6e82f1868400fb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5ab2244d_4cec97d4",
         "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
         "patchSetId": 7
@@ -59,6 +107,30 @@
       "writtenOn": "2018-05-07T10:01:37Z",
       "side": 1,
       "message": "This could use some true error code here. For now it will return error only in case out of memory.",
+      "range": {
+        "startLine": 1575,
+        "startChar": 2,
+        "endLine": 1575,
+        "endChar": 15
+      },
+      "revId": "bf22176217416683f485d8fcf6e82f1868400fb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d5ad5f3f_8293491f",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1575,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-08T02:33:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5ab2244d_4cec97d4",
       "range": {
         "startLine": 1575,
         "startChar": 2,
