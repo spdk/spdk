@@ -74,6 +74,49 @@ def delete_null_bdev(client, name):
     return client.call('delete_null_bdev', params)
 
 
+def get_pvols(client, category):
+    """Get list of pvols based on category
+
+    Args:
+        category: any one of all or online or configuring or offline
+
+    Returns:
+        List of pvol names
+    """
+    params = {'category': category}
+    return client.call('get_pvols', params)
+
+
+def construct_pvol(client, name, strip_size, raid_level, base_bdevs):
+    """Construct pooled device
+
+    Args:
+        name: user defined pvol name
+        strip_size: strip size of pvol in KB, supported values like 8, 16, 32, 64, 128, 256, 512, 1024 etc
+        raid_level: raid level of pvol, supported values 0
+        base_bdevs: Space separated names of Nvme bdevs in double quotes, like "Nvme0n1 Nvme1n1 Nvme2n1"
+
+    Returns:
+        None
+    """
+    params = {'name': name, 'strip_size': strip_size, 'raid_level': raid_level, 'base_bdevs': base_bdevs}
+
+    return client.call('construct_pvol', params)
+
+
+def destroy_pvol(client, name):
+    """Destroy pooled device
+
+    Args:
+        name: pvol name
+
+    Returns:
+        None
+    """
+    params = {'name': name}
+    return client.call('destroy_pvol', params)
+
+
 def construct_aio_bdev(client, filename, name, block_size=None):
     """Construct a Linux AIO block device.
 
