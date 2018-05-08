@@ -1969,6 +1969,12 @@ spdk_nvme_ctrlr_get_pci_device(struct spdk_nvme_ctrlr *ctrlr)
 	return nvme_ctrlr_proc_get_devhandle(ctrlr);
 }
 
+uint32_t
+spdk_nvme_ctrlr_get_max_xfer_size(const struct spdk_nvme_ctrlr *ctrlr)
+{
+	return ctrlr->max_xfer_size;
+}
+
 void
 spdk_nvme_ctrlr_register_aer_callback(struct spdk_nvme_ctrlr *ctrlr,
 				      spdk_nvme_aer_cb aer_cb_fn,

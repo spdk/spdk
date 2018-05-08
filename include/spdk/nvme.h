@@ -469,6 +469,17 @@ uint32_t spdk_nvme_ctrlr_get_num_ns(struct spdk_nvme_ctrlr *ctrlr);
 struct spdk_pci_device *spdk_nvme_ctrlr_get_pci_device(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
+ * \brief Get the maximum data transfer size of a given NVMe controller.
+ *
+ * \return Maximum data transfer size of the NVMe controller in bytes.
+ *
+ * The I/O command helper functions, such as spdk_nvme_ns_cmd_read(), will split large I/Os
+ * automatically; however, it is up to the user to obey this limit for commands submitted
+ * with the raw command functions, such as spdk_nvme_ctrlr_cmd_io_raw().
+ */
+uint32_t spdk_nvme_ctrlr_get_max_xfer_size(const struct spdk_nvme_ctrlr *ctrlr);
+
+/**
  * \brief Return true if nsid is an active ns for the given NVMe controller.
  *
  * This function is thread safe and can be called at any point while the controller is attached to
