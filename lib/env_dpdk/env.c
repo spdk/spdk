@@ -65,6 +65,10 @@ virt_to_phys(void *vaddr)
 void *
 spdk_malloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint32_t flags)
 {
+	if (flags == 0) {
+		return NULL;
+	}
+
 	void *buf = rte_malloc_socket(NULL, size, align, socket_id);
 	if (buf && phys_addr) {
 		*phys_addr = virt_to_phys(buf);

@@ -94,6 +94,7 @@ struct spdk_env_opts {
  * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY
  * for any socket.
  * \param flags Combination of SPDK_MALLOC flags (\ref SPDK_MALLOC_DMA, \ref SPDK_MALLOC_SHARE).
+ * At least one flag must be specified.
  *
  * \return a pointer to the allocated memory buffer.
  */
