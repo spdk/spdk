@@ -46,6 +46,7 @@ fi
 $valgrind $testdir/include/spdk/histogram_data.h/histogram_ut
 
 $valgrind $testdir/lib/bdev/bdev.c/bdev_ut
+$valgrind $testdir/lib/bdev/bdev_pvol.c/bdev_pvol_ut
 $valgrind $testdir/lib/bdev/part.c/part_ut
 $valgrind $testdir/lib/bdev/scsi_nvme.c/scsi_nvme_ut
 $valgrind $testdir/lib/bdev/gpt/gpt.c/gpt_ut
