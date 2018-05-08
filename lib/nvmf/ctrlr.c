@@ -470,6 +470,8 @@ spdk_nvmf_ctrlr_disconnect(struct spdk_nvmf_qpair *qpair)
 	assert(admin_qpair != NULL);
 	assert(admin_qpair->group != NULL);
 	assert(admin_qpair->group->thread != NULL);
+
+	qpair->is_destroying = true;
 	spdk_thread_send_msg(admin_qpair->group->thread, ctrlr_delete_qpair, qpair);
 }
 
