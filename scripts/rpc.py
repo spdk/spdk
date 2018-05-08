@@ -622,6 +622,35 @@ if __name__ == "__main__":
     p.add_argument('-l', '--lvs-name', help='lvol store name', required=False)
     p.set_defaults(func=get_lvol_stores)
 
+    @call_cmd
+    def get_pvols(args):
+        print_array(rpc.bdev.get_pvols(args.client, args))
+
+    p = subparsers.add_parser('get_pvols', help="""This is used to list all the pvol names based on the input category
+    requested. Category should be one of 'all', 'online', 'configuring' or 'offline'. 'all' means all the pvols whether
+    they are online or configuring or offline. 'online' is the pvol which is registered with bdev layer. 'configuring'
+    is the pvol which does not have full configuration discovered yet. 'offline' is the pvol which is not registered
+    with bdev as of now and it has encountered any error or user has requested to offline the pvol""")
+    p.add_argument('category', help='all or online or configuring or offline')
+    p.set_defaults(func=get_pvols)
+
+    @call_cmd
+    def construct_pvol(args):
+        rpc.bdev.construct_pvol(args.client, args)
+    p = subparsers.add_parser('construct_pvol', help='Construct new pooled volume')
+    p.add_argument('-n', '--name', help='pvol name', required=True)
+    p.add_argument('-s', '--strip-size', help='strip size', type=int, required=True)
+    p.add_argument('-r', '--raid-level', help='raid level, only raid level 0 is supported', type=int, required=True)
+    p.add_argument('-b', '--base-bdevs', help='base bdevs name, whitespace separated list in quotes', required=True)
+    p.set_defaults(func=construct_pvol)
+
+    @call_cmd
+    def destroy_pvol(args):
+        rpc.bdev.destroy_pvol(args.client, args)
+    p = subparsers.add_parser('destroy_pvol', help='Destroy existing pvol')
+    p.add_argument('name', help='pvol name')
+    p.set_defaults(func=destroy_pvol)
+
     # split
     def construct_split_vbdev(args):
         print_dict(rpc.bdev.construct_split_vbdev(args.client, args))
