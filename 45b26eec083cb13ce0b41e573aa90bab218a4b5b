@@ -73,6 +73,23 @@
     },
     {
       "key": {
+        "uuid": "c474840a_2dd94216",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 1702,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-08T06:49:20Z",
+      "side": 1,
+      "message": "Do you have specific reason why spdk_blob_io_touch() is not used? Creating a new function like the following may be clean.\n\nspdk_blob_io_touch(blob, channel, offset, cb_fn, cb_arg)\n{\n  if (_spdk_bs_page_is_allocated(blob, offset)) {\n    cb_fn(cb_arg, 0);\n    return;\n  }\n\n  op \u003d spdk_bs_user_op_alloc(_ch, \u0026cpl, op_type, blob, NULL, 0, offset, 0);\n  _spdk_bs_allocate_and_copy_cluster(blob, _ch, offset, op);\n}",
+      "revId": "45b26eec083cb13ce0b41e573aa90bab218a4b5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2a65b08b_7595579c",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 27
