@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f4eb152a_433c89a1",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-08T21:57:25Z",
+      "side": 1,
+      "message": "We do all declarations at the top of a scope. That means lines 144 and 145 need to go after lines 146 and 147.",
+      "revId": "ce20b9deb14cf8cca0cb028e30c833c657624ad0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "564c1d2b_7d7ac49d",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-08T21:57:25Z",
+      "side": 1,
+      "message": "You don\u0027t need to initialize hello_context to NULL because it is assigned to prior to being accessed.",
+      "revId": "ce20b9deb14cf8cca0cb028e30c833c657624ad0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3119e85a_9a6a81b0",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-08T21:57:25Z",
+      "side": 1,
+      "message": "Both bdev_name and config_file are required parameters, so you should check that they\u0027ve been specified. If they haven\u0027t, call usage() and exit.",
+      "revId": "ce20b9deb14cf8cca0cb028e30c833c657624ad0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ccb38b21_676abe99",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-08T21:57:25Z",
+      "side": 1,
+      "message": "We typically handle error conditions up front and exit early. So instead of if (hello_context !\u003d NULL)..., you\u0027d write:\n\nif (hello_context \u003d\u003d NULL) {\n  error handling\n  return rc;\n}\n\ndo stuff as if hello_context is not NULL",
+      "revId": "ce20b9deb14cf8cca0cb028e30c833c657624ad0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "209e5032_eedb2dc7",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-08T21:57:25Z",
+      "side": 1,
+      "message": "I\u0027m not sure this comment makes sense here. The input parameters have already been parsed and the bdev is stored in \"bdev_name\".",
+      "revId": "ce20b9deb14cf8cca0cb028e30c833c657624ad0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
