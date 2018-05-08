@@ -25,6 +25,40 @@
     },
     {
       "key": {
+        "uuid": "bdeb678a_235a9162",
+        "filename": "lib/bdev/pvol/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-05-08T20:33:19Z",
+      "side": 1,
+      "message": "bdev_pvol --\u003e vbdev_pool",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13e192aa_753b9523",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-05-08T20:33:19Z",
+      "side": 1,
+      "message": "you can remove this first (c) from wherever you are using it",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "165f955d_b4e1f326",
         "filename": "lib/bdev/pvol/bdev_pvol.c",
         "patchSetId": 1
@@ -71,6 +105,40 @@
     },
     {
       "key": {
+        "uuid": "1a9526df_6b526cc8",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-05-08T20:33:19Z",
+      "side": 1,
+      "message": "assume this is temp and you\u0027ll get around to graceful error handling for all error paths",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "542f127b_3606d1bb",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-05-08T20:33:19Z",
+      "side": 1,
+      "message": "I might be wrong but I don\u0027t think you need this hwoever I *do* think you need it for the per IO context that you get with each bdev_io.",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4df78b02_e83ba694",
         "filename": "lib/bdev/pvol/bdev_pvol.c",
         "patchSetId": 1
@@ -94,6 +162,91 @@
     },
     {
       "key": {
+        "uuid": "908bad12_266d33f0",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 729,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-05-08T20:33:19Z",
+      "side": 1,
+      "message": "I had another question about the context structure somwhere but this reminds me of it again.  If you set the ctxt element of the vbdev that you register to the address of the vbdev that\u0027s what you\u0027ll get back here as a parm and elsewhere.  Somewhere I think I saw some CONTAINER_OF macros that you might not need (simplify) if you don\u0027t really need the separate context structure.\n\nI certainly don\u0027t have a complete grasp of everything you\u0027re doing here yet so keep that in mind :)",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "31027782_74d67b51",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1368,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-05-08T20:33:19Z",
+      "side": 1,
+      "message": "I think mostly we use -ENOMEM consistently (and other standard errors) even when doing stuff interlay within modules",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a0ba8e9_0fc7cc27",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1425,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-05-08T20:33:19Z",
+      "side": 1,
+      "message": "I\u0027m not toally following the structure linkeage - specifically what\u0027s the benefit to having the context structure?",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "03138759_57af601a",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1458,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-05-08T20:33:19Z",
+      "side": 1,
+      "message": "you\u0027ll want to use spdk_vbdev_register() here, see the latest passthru example.  I used the bdev version early on and can\u0027t remember exactly when it came back to bite me, not a huge deal but it wasn\u0027t easy to track down for a newbie",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bf0cdba0_384aacc6",
+        "filename": "lib/bdev/pvol/bdev_pvol.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-05-08T20:33:19Z",
+      "side": 1,
+      "message": "you probably only need the one header file for this module, see comment in the other one",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a3ba23d5_384de81e",
         "filename": "lib/bdev/pvol/bdev_pvol.h",
         "patchSetId": 1
@@ -105,6 +258,57 @@
       "writtenOn": "2018-05-08T19:50:36Z",
       "side": 1,
       "message": "Something could be added here.",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8053a96c_8c7ef926",
+        "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-05-08T20:33:19Z",
+      "side": 1,
+      "message": "you can remove \"internal\" from the name and put the header file in /include/spdk_internal instead if its shared between internal SPDK C files but not part of the external interface. If its just used by this module jsut keep it in this dir and remove the internal from the name",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b11fbb15_a051f9ee",
+        "filename": "mk/spdk.modules.mk",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-05-08T20:33:19Z",
+      "side": 1,
+      "message": "bdev_pvol --\u003e vbdev_pvol",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a99088b1_b4e8e5e7",
+        "filename": "test/unit/lib/bdev/bdev_pvol.c/bdev_pvol_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-05-08T20:33:19Z",
+      "side": 1,
+      "message": "check out our UT mock library in lib/ut_mock/\n\nExamples are in a few places (its pretty new) including test/unit/lib/nvme/nvme.c/nvme_ut.c",
       "revId": "9bb45194318175859359aa83c8baf152913b2995",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
