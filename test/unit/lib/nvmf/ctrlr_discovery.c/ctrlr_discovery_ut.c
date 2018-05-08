@@ -208,6 +208,10 @@ test_discovery_log(void)
 	struct spdk_nvmf_discovery_log_page_entry *entry;
 	struct spdk_nvme_transport_id trid = {};
 
+	tgt.opts.max_subsystems = 1024;
+	tgt.subsystems = calloc(tgt.opts.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
+	SPDK_CU_ASSERT_FATAL(tgt.subsystems != NULL);
+
 	/* Add one subsystem and verify that the discovery log contains it */
 	subsystem = spdk_nvmf_subsystem_create(&tgt, "nqn.2016-06.io.spdk:subsystem1",
 					       SPDK_NVMF_SUBTYPE_NVME, 0);
