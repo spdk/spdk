@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ead74722_69198396",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 651,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-05-08T14:54:25Z",
+      "side": 1,
+      "message": "Is there a reason to recreate session for each operation? Session is stateless and can be reused on devices, threads, queue-pairs and operations, so you need only two sessions for each crypto settings -- one to encode and second to decode, and update them in key management routines during initialization and when crypto parameters will change.\n\nIt can simplify lot of thinks and improve performance.",
+      "range": {
+        "startLine": 621,
+        "startChar": 0,
+        "endLine": 651,
+        "endChar": 2
+      },
+      "revId": "7dafcdcec87d15b7ba7ce2c47dc0b322c9f2e37d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
