@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "251895c6_da02cc03",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-05-08T12:09:36Z",
+      "side": 1,
+      "message": "This function definition can be moved at the beginning of this file.\ncheck_qos_work_well can be check_iops_with_qos.",
+      "range": {
+        "startLine": 53,
+        "startChar": 9,
+        "endLine": 53,
+        "endChar": 29
+      },
+      "revId": "196c11f73b1fd38bc926344e9d6bfa791c2e19a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5532b6c8_3f514b58",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-05-08T12:09:36Z",
+      "side": 1,
+      "message": "We can firstly run randread testing.",
+      "range": {
+        "startLine": 54,
+        "startChar": 29,
+        "endLine": 54,
+        "endChar": 35
+      },
+      "revId": "196c11f73b1fd38bc926344e9d6bfa791c2e19a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
