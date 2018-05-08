@@ -1,10 +1,6 @@
 source $SPDK_BUILD_DIR/test/nvmf/common.sh
 source $BASE_DIR/autotest.config
 
-MGMT_TARGET_IP="10.102.17.181"
-MGMT_INITIATOR_IP="10.102.17.180"
-RDMA_TARGET_IP="10.0.0.1"
-RDMA_INITIATOR_IP="10.0.0.2"
 incoming_vm=1
 target_vm=2
 incoming_vm_ctrlr=naa.VhostScsi0.$incoming_vm
@@ -149,8 +145,8 @@ function host_2_create_share()
 	ssh_remote $MGMT_INITIATOR_IP "uname -a"
 	ssh_remote $MGMT_INITIATOR_IP "mkdir -p $share_dir"
 	ssh_remote $MGMT_INITIATOR_IP "mkdir -p $VM_BASE_DIR"
-	ssh_remote $MGMT_INITIATOR_IP "sshfs -o ssh_command=\"ssh -i $SPDK_VHOST_SSH_KEY_FILE\" root@$MGMT_TARGET_IP:$VM_BASE_DIR $VM_BASE_DIR"
-	ssh_remote $MGMT_INITIATOR_IP "sshfs -o ssh_command=\"ssh -i $SPDK_VHOST_SSH_KEY_FILE\" root@$MGMT_TARGET_IP:$share_dir $share_dir"
+	ssh_remote $MGMT_INITIATOR_IP "sshfs -o ssh_command=\"ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ControlMaster=auto -i $SPDK_VHOST_SSH_KEY_FILE\" root@$MGMT_TARGET_IP:$VM_BASE_DIR $VM_BASE_DIR"
+	ssh_remote $MGMT_INITIATOR_IP "sshfs -o ssh_command=\"ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ControlMaster=auto -i $SPDK_VHOST_SSH_KEY_FILE\" root@$MGMT_TARGET_IP:$share_dir $share_dir"
 	ssh_remote $MGMT_INITIATOR_IP "mkdir -p $share_dir/spdk"
 	ssh_remote $MGMT_INITIATOR_IP "tar -zxf $share_dir/spdk.tar.gz -C $share_dir/spdk --strip-components=1"
 	ssh_remote $MGMT_INITIATOR_IP "cd $share_dir/spdk; make clean; ./configure --with-rdma --enable-debug; make -j40"
@@ -158,7 +154,7 @@ function host_2_create_share()
 
 function host_2_start_vhost()
 {
-	ssh_remote $MGMT_INITIATOR_IP "nohup $share_dir/spdk/test/vhost/migration/migration.sh --test-cases=3b --work-dir=$TEST_DIR --os=$share_dir/migration.qcow2 &>$share_dir/output.log &"
+	ssh_remote $MGMT_INITIATOR_IP "nohup $share_dir/spdk/test/vhost/migration/migration.sh --test-cases=3b --work-dir=$TEST_DIR --os=$share_dir/migration.qcow2 --rdma_tgt_ip=$RDMA_TARGET_IP &>$share_dir/output.log &"
 	notice "Waiting for remote to be done with vhost & VM setup..."
 	wait_for_remote
 }
