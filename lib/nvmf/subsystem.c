@@ -253,21 +253,13 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 	}
 
 	/* Find a free subsystem id (sid) */
-	for (sid = 0; sid < tgt->max_sid; sid++) {
+	for (sid = 0; sid < tgt->opts.max_subsystems; sid++) {
 		if (tgt->subsystems[sid] == NULL) {
 			break;
 		}
 	}
-	if (sid == tgt->max_sid) {
-		struct spdk_nvmf_subsystem **subsys_array;
-		/* No free slots. Add more. */
-		tgt->max_sid++;
-		subsys_array = realloc(tgt->subsystems, tgt->max_sid * sizeof(struct spdk_nvmf_subsystem *));
-		if (!subsys_array) {
-			tgt->max_sid--;
-			return NULL;
-		}
-		tgt->subsystems = subsys_array;
+	if (sid >= tgt->opts.max_subsystems) {
+		return NULL;
 	}
 
 	subsystem = calloc(1, sizeof(struct spdk_nvmf_subsystem));
@@ -560,7 +552,7 @@ spdk_nvmf_subsystem_get_first(struct spdk_nvmf_tgt *tgt)
 	struct spdk_nvmf_subsystem	*subsystem;
 	uint32_t sid;
 
-	for (sid = 0; sid < tgt->max_sid; sid++) {
+	for (sid = 0; sid < tgt->opts.max_subsystems; sid++) {
 		subsystem = tgt->subsystems[sid];
 		if (subsystem) {
 			return subsystem;
@@ -582,7 +574,7 @@ spdk_nvmf_subsystem_get_next(struct spdk_nvmf_subsystem *subsystem)
 
 	tgt = subsystem->tgt;
 
-	for (sid = subsystem->id + 1; sid < tgt->max_sid; sid++) {
+	for (sid = subsystem->id + 1; sid < tgt->opts.max_subsystems; sid++) {
 		subsystem = tgt->subsystems[sid];
 		if (subsystem) {
 			return subsystem;

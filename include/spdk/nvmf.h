@@ -66,6 +66,7 @@ struct spdk_nvmf_tgt_opts {
 	uint16_t max_qpairs_per_ctrlr;
 	uint32_t in_capsule_data_size;
 	uint32_t max_io_size;
+	uint32_t max_subsystems;
 };
 /**
  * Initialize the default value of opts.
