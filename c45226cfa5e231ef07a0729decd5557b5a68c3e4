@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fb121838_42691dad",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-08T08:46:07Z",
+      "side": 1,
+      "message": "this was rejected in https://review.gerrithub.io/#/c/spdk/spdk/+/406931/.",
+      "revId": "c45226cfa5e231ef07a0729decd5557b5a68c3e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36b9315e_305ad5d0",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-08T08:46:07Z",
+      "side": 1,
+      "message": "your plan is make construct_nvmf_subsystem RPC callable both on STARTUP and RUNTIME?",
+      "range": {
+        "startLine": 242,
+        "startChar": 44,
+        "endLine": 242,
+        "endChar": 68
+      },
+      "revId": "c45226cfa5e231ef07a0729decd5557b5a68c3e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58a41384_e4b31194",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-08T08:46:07Z",
+      "side": 1,
+      "message": "is this \"state\":\"startup\" new idea?",
+      "revId": "c45226cfa5e231ef07a0729decd5557b5a68c3e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
