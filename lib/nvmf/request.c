@@ -51,6 +51,8 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_capsule_cmd *cap_hdr;
 
+	req->is_processed = false;
+
 	rsp->sqid = 0;
 	rsp->status.p = 0;
 	rsp->cid = req->cmd->nvme_cmd.cid;
@@ -70,6 +72,10 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 
 		sgroup = &req->qpair->group->sgroups[req->qpair->ctrlr->subsys->id];
 		TAILQ_REMOVE(&sgroup->outstanding, req, link);
+	}
+
+	if (spdk_unlikely(req->qpair->is_destroying)) {
+		return 0;
 	}
 
 	if (spdk_nvmf_transport_req_complete(req)) {

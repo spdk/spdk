@@ -134,6 +134,7 @@ struct spdk_nvmf_request {
 	void				*data;
 	union nvmf_h2c_msg		*cmd;
 	union nvmf_c2h_msg		*rsp;
+	bool				is_processed; /* Asynchronously processed by bdev */
 
 	TAILQ_ENTRY(spdk_nvmf_request)	link;
 };
@@ -153,6 +154,7 @@ struct spdk_nvmf_qpair {
 	uint16_t				qid;
 	uint16_t				sq_head;
 	uint16_t				sq_head_max;
+	bool					is_destroying;
 
 	TAILQ_ENTRY(spdk_nvmf_qpair)		link;
 };
