@@ -2,6 +2,75 @@
   "comments": [
     {
       "key": {
+        "uuid": "2b0a58d4_243b7300",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-08T23:51:11Z",
+      "side": 1,
+      "message": "should be SPDK_ERRLOG?",
+      "range": {
+        "startLine": 86,
+        "startChar": 2,
+        "endLine": 86,
+        "endChar": 16
+      },
+      "revId": "ce20b9deb14cf8cca0cb028e30c833c657624ad0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c8488727_8f58d384",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-08T23:51:11Z",
+      "side": 1,
+      "message": "may be (success ? 0 : -1) ?",
+      "range": {
+        "startLine": 94,
+        "startChar": 15,
+        "endLine": 94,
+        "endChar": 16
+      },
+      "revId": "ce20b9deb14cf8cca0cb028e30c833c657624ad0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f224ec9d_5011173f",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-08T23:51:11Z",
+      "side": 1,
+      "message": "should be SPDK_ERRLOG?",
+      "range": {
+        "startLine": 113,
+        "startChar": 2,
+        "endLine": 113,
+        "endChar": 16
+      },
+      "revId": "ce20b9deb14cf8cca0cb028e30c833c657624ad0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f4eb152a_433c89a1",
         "filename": "examples/bdev/hello_world/hello_bdev.c",
         "patchSetId": 9
@@ -19,6 +88,23 @@
     },
     {
       "key": {
+        "uuid": "fdb941b1_14420754",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-08T23:51:11Z",
+      "side": 1,
+      "message": "put_io_channel() and then bdev_close() may be bettter order. io_channel is got by passing bdev_desc.",
+      "revId": "ce20b9deb14cf8cca0cb028e30c833c657624ad0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "564c1d2b_7d7ac49d",
         "filename": "examples/bdev/hello_world/hello_bdev.c",
         "patchSetId": 9
@@ -30,6 +116,63 @@
       "writtenOn": "2018-05-08T21:57:25Z",
       "side": 1,
       "message": "You don\u0027t need to initialize hello_context to NULL because it is assigned to prior to being accessed.",
+      "revId": "ce20b9deb14cf8cca0cb028e30c833c657624ad0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d49a49b_65d5eb89",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-08T23:51:11Z",
+      "side": 1,
+      "message": "As Jim replied before, hello_context can be allocated on the stack like the following? This will remove the following allocation failure.\n\n  struct hello_context_t hello_context \u003d {};\n\nconfig_file and bdev_name will be on the stack if optargs are got by getopt().",
+      "revId": "ce20b9deb14cf8cca0cb028e30c833c657624ad0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e3b9fc03_ec180d77",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-08T23:51:11Z",
+      "side": 1,
+      "message": "The following manner may fit well with other applications. \nc and h are included in spdk_app_parse_args.\n\nstatic void hello_bdev_parse_arg(ch, arg)\n{\n  switch (ch) {\n  case \u0027b\u0027:\n    bdev_name \u003d arg;\n    break;\n  }\n}\n\nstatic void hello_bdev_usage(void)\n{\n  printf(\" -b bdev name\\n\");\n}\n\nmain(argc, argv)\n{\n  if ((rc \u003d spdk_app_parse_args(argc, argv, \u0026opts, \"b:\", hello_bdev_parse_arg, hello_bdev_usage)) !\u003d SPDK_APP_PARSE_ARGS_SUCCESS) {\n    exit(rc);\n  }\n}",
+      "revId": "ce20b9deb14cf8cca0cb028e30c833c657624ad0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7fd9b76e_5508dfd0",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-08T23:51:11Z",
+      "side": 1,
+      "message": "small caps may be natural.",
+      "range": {
+        "startLine": 243,
+        "startChar": 7,
+        "endLine": 243,
+        "endChar": 10
+      },
       "revId": "ce20b9deb14cf8cca0cb028e30c833c657624ad0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
