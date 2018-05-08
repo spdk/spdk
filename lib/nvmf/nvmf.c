@@ -46,12 +46,11 @@
 
 SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 
-#define MAX_SUBSYSTEMS 4
-
 #define SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH 128
 #define SPDK_NVMF_DEFAULT_MAX_QPAIRS_PER_CTRLR 64
 #define SPDK_NVMF_DEFAULT_IN_CAPSULE_DATA_SIZE 4096
 #define SPDK_NVMF_DEFAULT_MAX_IO_SIZE 131072
+#define SPDK_NVMF_DEFAULT_MAX_SUBSYSTEMS 1024
 
 void
 spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts)
@@ -60,6 +59,7 @@ spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts)
 	opts->max_qpairs_per_ctrlr = SPDK_NVMF_DEFAULT_MAX_QPAIRS_PER_CTRLR;
 	opts->in_capsule_data_size = SPDK_NVMF_DEFAULT_IN_CAPSULE_DATA_SIZE;
 	opts->max_io_size = SPDK_NVMF_DEFAULT_MAX_IO_SIZE;
+	opts->max_subsystems = SPDK_NVMF_DEFAULT_MAX_SUBSYSTEMS;
 }
 
 static int
@@ -95,13 +95,13 @@ spdk_nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 		spdk_nvmf_poll_group_add_transport(group, transport);
 	}
 
-	group->num_sgroups = tgt->max_sid;
-	group->sgroups = calloc(group->num_sgroups, sizeof(struct spdk_nvmf_subsystem_poll_group));
+	group->num_sgroups = tgt->opts.max_subsystems;
+	group->sgroups = calloc(tgt->opts.max_subsystems, sizeof(struct spdk_nvmf_subsystem_poll_group));
 	if (!group->sgroups) {
 		return -1;
 	}
 
-	for (sid = 0; sid < group->num_sgroups; sid++) {
+	for (sid = 0; sid < tgt->opts.max_subsystems; sid++) {
 		struct spdk_nvmf_subsystem *subsystem;
 
 		subsystem = tgt->subsystems[sid];
@@ -168,9 +168,13 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 	tgt->discovery_genctr = 0;
 	tgt->discovery_log_page = NULL;
 	tgt->discovery_log_page_size = 0;
-	tgt->subsystems = NULL;
-	tgt->max_sid = 0;
 	TAILQ_INIT(&tgt->transports);
+
+	tgt->subsystems = calloc(tgt->opts.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
+	if (!tgt->subsystems) {
+		free(tgt);
+		return NULL;
+	}
 
 	spdk_io_device_register(tgt,
 				spdk_nvmf_tgt_create_poll_group,
@@ -198,7 +202,7 @@ spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt)
 	}
 
 	if (tgt->subsystems) {
-		for (i = 0; i < tgt->max_sid; i++) {
+		for (i = 0; i < tgt->opts.max_subsystems; i++) {
 			if (tgt->subsystems[i]) {
 				spdk_nvmf_subsystem_destroy(tgt->subsystems[i]);
 			}
@@ -311,7 +315,7 @@ spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *tgt, const char *subnqn)
 		return NULL;
 	}
 
-	for (sid = 0; sid < tgt->max_sid; sid++) {
+	for (sid = 0; sid < tgt->opts.max_subsystems; sid++) {
 		subsystem = tgt->subsystems[sid];
 		if (subsystem == NULL) {
 			continue;
@@ -445,21 +449,7 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 
 	/* Make sure our poll group has memory for this subsystem allocated */
 	if (subsystem->id >= group->num_sgroups) {
-		void *buf;
-
-		buf = realloc(group->sgroups, (subsystem->id + 1) * sizeof(*sgroup));
-		if (!buf) {
-			return -ENOMEM;
-		}
-
-		group->sgroups = buf;
-
-		/* Zero out the newly allocated memory */
-		memset(&group->sgroups[group->num_sgroups],
-		       0,
-		       (subsystem->id + 1 - group->num_sgroups) * sizeof(group->sgroups[0]));
-
-		group->num_sgroups = subsystem->id + 1;
+		return -ENOMEM;
 	}
 
 	sgroup = &group->sgroups[subsystem->id];
@@ -629,10 +619,6 @@ spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 	if (rc) {
 		return rc;
 	}
-
-	/* poll_group_update_subsystem may realloc the sgroups array. We need
-	 * to do a new lookup to get the correct pointer. */
-	sgroup = &group->sgroups[subsystem->id];
 
 	sgroup->state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
 
