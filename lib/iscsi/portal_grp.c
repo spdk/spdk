@@ -137,16 +137,16 @@ spdk_iscsi_portal_create(const char *host, const char *port, const char *cpumask
 	p->group = NULL; /* set at a later time by caller */
 	p->acceptor_poller = NULL;
 
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+	pthread_mutex_lock(&g_iscsi_mutex);
 	tmp = spdk_iscsi_portal_find_by_addr(host, port);
 	if (tmp != NULL) {
-		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+		pthread_mutex_unlock(&g_iscsi_mutex);
 		SPDK_ERRLOG("portal (%s, %s) already exists\n", host, port);
 		goto error_out;
 	}
 
 	TAILQ_INSERT_TAIL(&g_iscsi_portal_head, p, g_tailq);
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	pthread_mutex_unlock(&g_iscsi_mutex);
 
 	return p;
 
@@ -166,9 +166,9 @@ spdk_iscsi_portal_destroy(struct spdk_iscsi_portal *p)
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_portal_destroy\n");
 
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+	pthread_mutex_lock(&g_iscsi_mutex);
 	TAILQ_REMOVE(&g_iscsi_portal_head, p, g_tailq);
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	pthread_mutex_unlock(&g_iscsi_mutex);
 
 	free(p->host);
 	free(p->port);
@@ -376,13 +376,13 @@ spdk_iscsi_portal_grp_register(struct spdk_iscsi_portal_grp *pg)
 
 	assert(pg != NULL);
 
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+	pthread_mutex_lock(&g_iscsi_mutex);
 	tmp = spdk_iscsi_portal_grp_find_by_tag(pg->tag);
 	if (tmp == NULL) {
 		TAILQ_INSERT_TAIL(&g_iscsi_pg_head, pg, tailq);
 		rc = 0;
 	}
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	pthread_mutex_unlock(&g_iscsi_mutex);
 	return rc;
 }
 
@@ -532,15 +532,15 @@ spdk_iscsi_portal_grps_destroy(void)
 	struct spdk_iscsi_portal_grp *pg;
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_portal_grps_destroy\n");
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+	pthread_mutex_lock(&g_iscsi_mutex);
 	while (!TAILQ_EMPTY(&g_iscsi_pg_head)) {
 		pg = TAILQ_FIRST(&g_iscsi_pg_head);
 		TAILQ_REMOVE(&g_iscsi_pg_head, pg, tailq);
-		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+		pthread_mutex_unlock(&g_iscsi_mutex);
 		spdk_iscsi_portal_grp_destroy(pg);
-		pthread_mutex_lock(&g_spdk_iscsi.mutex);
+		pthread_mutex_lock(&g_iscsi_mutex);
 	}
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	pthread_mutex_unlock(&g_iscsi_mutex);
 }
 
 int
@@ -574,11 +574,11 @@ spdk_iscsi_portal_grp_close_all(void)
 	struct spdk_iscsi_portal_grp *pg;
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_portal_grp_close_all\n");
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+	pthread_mutex_lock(&g_iscsi_mutex);
 	TAILQ_FOREACH(pg, &g_iscsi_pg_head, tailq) {
 		spdk_iscsi_portal_grp_close(pg);
 	}
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	pthread_mutex_unlock(&g_iscsi_mutex);
 }
 
 struct spdk_iscsi_portal_grp *
@@ -586,15 +586,15 @@ spdk_iscsi_portal_grp_unregister(int tag)
 {
 	struct spdk_iscsi_portal_grp *pg;
 
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+	pthread_mutex_lock(&g_iscsi_mutex);
 	TAILQ_FOREACH(pg, &g_iscsi_pg_head, tailq) {
 		if (pg->tag == tag) {
 			TAILQ_REMOVE(&g_iscsi_pg_head, pg, tailq);
-			pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+			pthread_mutex_unlock(&g_iscsi_mutex);
 			return pg;
 		}
 	}
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	pthread_mutex_unlock(&g_iscsi_mutex);
 	return NULL;
 }
 

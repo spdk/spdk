@@ -43,6 +43,8 @@ SPDK_LOG_REGISTER_COMPONENT("iscsi", SPDK_LOG_ISCSI)
 #define DMIN32(A,B) ((uint32_t) ((uint32_t)(A) > (uint32_t)(B) ? (uint32_t)(B) : (uint32_t)(A)))
 
 struct spdk_iscsi_globals g_spdk_iscsi;
+pthread_mutex_t g_iscsi_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 static TAILQ_HEAD(, spdk_iscsi_task) g_ut_read_tasks = TAILQ_HEAD_INITIALIZER(g_ut_read_tasks);
 
 int

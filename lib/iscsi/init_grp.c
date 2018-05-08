@@ -451,13 +451,13 @@ spdk_iscsi_init_grp_register(struct spdk_iscsi_init_grp *ig)
 
 	assert(ig != NULL);
 
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+	pthread_mutex_lock(&g_iscsi_mutex);
 	tmp = spdk_iscsi_init_grp_find_by_tag(ig->tag);
 	if (tmp == NULL) {
 		TAILQ_INSERT_TAIL(&g_iscsi_ig_head, ig, tailq);
 		rc = 0;
 	}
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	pthread_mutex_unlock(&g_iscsi_mutex);
 
 	return rc;
 }
@@ -527,10 +527,10 @@ spdk_iscsi_init_grp_add_initiators_from_initiator_list(int tag,
 		      "add initiator to initiator group: tag=%d, #initiators=%d, #masks=%d\n",
 		      tag, num_initiator_names, num_initiator_masks);
 
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+	pthread_mutex_lock(&g_iscsi_mutex);
 	ig = spdk_iscsi_init_grp_find_by_tag(tag);
 	if (!ig) {
-		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+		pthread_mutex_unlock(&g_iscsi_mutex);
 		SPDK_ERRLOG("initiator group (%d) is not found\n", tag);
 		return rc;
 	}
@@ -551,7 +551,7 @@ spdk_iscsi_init_grp_add_initiators_from_initiator_list(int tag,
 	}
 
 error:
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	pthread_mutex_unlock(&g_iscsi_mutex);
 	return rc;
 }
 
@@ -569,10 +569,10 @@ spdk_iscsi_init_grp_delete_initiators_from_initiator_list(int tag,
 		      "delete initiator from initiator group: tag=%d, #initiators=%d, #masks=%d\n",
 		      tag, num_initiator_names, num_initiator_masks);
 
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+	pthread_mutex_lock(&g_iscsi_mutex);
 	ig = spdk_iscsi_init_grp_find_by_tag(tag);
 	if (!ig) {
-		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+		pthread_mutex_unlock(&g_iscsi_mutex);
 		SPDK_ERRLOG("initiator group (%d) is not found\n", tag);
 		return rc;
 	}
@@ -594,7 +594,7 @@ spdk_iscsi_init_grp_delete_initiators_from_initiator_list(int tag,
 	}
 
 error:
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	pthread_mutex_unlock(&g_iscsi_mutex);
 	return rc;
 }
 
@@ -654,12 +654,12 @@ spdk_iscsi_init_grps_destroy(void)
 	struct spdk_iscsi_init_grp *ig, *tmp;
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_init_grp_array_destroy\n");
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+	pthread_mutex_lock(&g_iscsi_mutex);
 	TAILQ_FOREACH_SAFE(ig, &g_iscsi_ig_head, tailq, tmp) {
 		TAILQ_REMOVE(&g_iscsi_ig_head, ig, tailq);
 		spdk_iscsi_init_grp_destroy(ig);
 	}
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	pthread_mutex_unlock(&g_iscsi_mutex);
 }
 
 struct spdk_iscsi_init_grp *
@@ -667,15 +667,15 @@ spdk_iscsi_init_grp_unregister(int tag)
 {
 	struct spdk_iscsi_init_grp *ig;
 
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+	pthread_mutex_lock(&g_iscsi_mutex);
 	TAILQ_FOREACH(ig, &g_iscsi_ig_head, tailq) {
 		if (ig->tag == tag) {
 			TAILQ_REMOVE(&g_iscsi_ig_head, ig, tailq);
-			pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+			pthread_mutex_unlock(&g_iscsi_mutex);
 			return ig;
 		}
 	}
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	pthread_mutex_unlock(&g_iscsi_mutex);
 	return NULL;
 }
 

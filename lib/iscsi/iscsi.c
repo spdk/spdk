@@ -66,9 +66,8 @@
 #define HAVE_ARC4RANDOM 1
 #endif
 
-struct spdk_iscsi_globals g_spdk_iscsi = {
-	.mutex = PTHREAD_MUTEX_INITIALIZER,
-};
+struct spdk_iscsi_globals g_spdk_iscsi;
+pthread_mutex_t g_iscsi_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /* random value generation */
 static void spdk_gen_random(uint8_t *buf, size_t len);
@@ -783,15 +782,15 @@ spdk_iscsi_get_authinfo(struct spdk_iscsi_conn *conn, const char *authuser)
 		ag_tag = -1;
 	}
 	if (ag_tag < 0) {
-		pthread_mutex_lock(&g_spdk_iscsi.mutex);
+		pthread_mutex_lock(&g_iscsi_mutex);
 		ag_tag = g_spdk_iscsi.discovery_auth_group;
-		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+		pthread_mutex_unlock(&g_iscsi_mutex);
 	}
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "ag_tag=%d\n", ag_tag);
 
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+	pthread_mutex_lock(&g_iscsi_mutex);
 	authfile = strdup(g_spdk_iscsi.authfile);
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	pthread_mutex_unlock(&g_iscsi_mutex);
 	if (!authfile) {
 		SPDK_ERRLOG("strdup() failed for authfile\n");
 		return -ENOMEM;
@@ -1477,10 +1476,10 @@ spdk_iscsi_op_login_session_normal(struct spdk_iscsi_conn *conn,
 			 target_short_name);
 	}
 
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+	pthread_mutex_lock(&g_iscsi_mutex);
 	rc = spdk_iscsi_op_login_check_target(conn, rsp_pdu, target_name,
 					      target);
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	pthread_mutex_unlock(&g_iscsi_mutex);
 
 	if (rc < 0) {
 		return rc;
@@ -1777,9 +1776,9 @@ spdk_iscsi_op_login_phase_none(struct spdk_iscsi_conn *conn,
 		rsph->tsih = 0;
 
 		/* force target flags */
-		pthread_mutex_lock(&g_spdk_iscsi.mutex);
+		pthread_mutex_lock(&g_iscsi_mutex);
 		rc = spdk_iscsi_op_login_session_discovery_chap(conn);
-		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+		pthread_mutex_unlock(&g_iscsi_mutex);
 		if (rc < 0) {
 			return rc;
 		}
@@ -4576,7 +4575,7 @@ spdk_create_iscsi_sess(struct spdk_iscsi_conn *conn,
 	}
 
 	/* configuration values */
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
+	pthread_mutex_lock(&g_iscsi_mutex);
 
 	if (target != NULL) {
 		pthread_mutex_lock(&target->mutex);
@@ -4599,7 +4598,7 @@ spdk_create_iscsi_sess(struct spdk_iscsi_conn *conn,
 		pthread_mutex_unlock(&target->mutex);
 	}
 
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+	pthread_mutex_unlock(&g_iscsi_mutex);
 
 	sess->tag = conn->portal->group->tag;
 
