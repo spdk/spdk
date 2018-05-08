@@ -293,9 +293,18 @@ static void
 nvmf_qpair_fini(void *ctx)
 {
 	struct spdk_nvmf_qpair *qpair = ctx;
-	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
-	struct spdk_thread *admin_thread = ctrlr->admin_qpair->group->thread;
+	struct spdk_nvmf_ctrlr *ctrlr;
+	struct spdk_thread *admin_thread;
 
+	/* If there are unfinished async bdev I/Os , we should wait for the completions of I/Os  */
+	if (spdk_unlikely(qpair->async_bdev_io_num > 0)) {
+		spdk_thread_send_msg(qpair->group->thread, nvmf_qpair_fini, qpair);
+		return;
+	}
+
+	assert(qpair->async_bdev_io_num == 0);
+	ctrlr = qpair->ctrlr;
+	admin_thread = ctrlr->admin_qpair->group->thread;
 	spdk_nvmf_transport_qpair_fini(qpair);
 	spdk_thread_send_msg(admin_thread, _ctrlr_destruct_check, ctrlr);
 }
@@ -470,6 +479,8 @@ spdk_nvmf_ctrlr_disconnect(struct spdk_nvmf_qpair *qpair)
 	assert(admin_qpair != NULL);
 	assert(admin_qpair->group != NULL);
 	assert(admin_qpair->group->thread != NULL);
+
+	qpair->is_destroying = true;
 	spdk_thread_send_msg(admin_qpair->group->thread, ctrlr_delete_qpair, qpair);
 }
 
