@@ -31,26 +31,26 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-ifeq ($(CONFIG_VTUNE),y)
-CFLAGS += -I$(VTUNE_SOURCE_DIR)/include -I$(VTUNE_SOURCE_DIR)/sdk/src/ittnotify
-endif
+SPDK_LIB_LIST = log cunit
 
-C_SRCS = bdev.c part.c scsi_nvme.c
-C_SRCS-$(CONFIG_VTUNE) += vtune.c
-LIBNAME = bdev
+CFLAGS += -I$(SPDK_ROOT_DIR)/test
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/bdev
+LIBS += $(SPDK_LIB_LINKER_ARGS)
+LIBS += -lcunit
 
-DIRS-y += error pvol gpt lvol malloc null nvme passthru rpc split
+APP = bdev_pvol_ut
+C_SRCS = bdev_pvol_ut.c
 
-ifeq ($(OS),Linux)
-DIRS-y += aio
-DIRS-$(CONFIG_ISCSI_INITIATOR) += iscsi
-DIRS-$(CONFIG_VIRTIO) += virtio
-DIRS-$(CONFIG_PMDK) += pmem
-endif
+all: $(APP)
 
-DIRS-$(CONFIG_RBD) += rbd
+$(APP): $(OBJS) $(SPDK_LIB_FILES)
+	$(LINK_C)
 
-include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
+clean:
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
