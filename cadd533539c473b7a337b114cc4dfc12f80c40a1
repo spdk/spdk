@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9dbf1970_fe7695da",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 737,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-09T17:35:17Z",
+      "side": 1,
+      "message": "this isn\u0027t specific to this RPC - but should this bdev lookup code go in vbdev_lvol_inflate instead?  or just eliminate vbdev_lvol_inflate completely?  vbdev_lvol_inflate doesn\u0027t really do anything - it just calls spdk_lvol_inflate directly.  I\u0027m not seeing why vbdev_lvol_inflate is needed.",
+      "revId": "cadd533539c473b7a337b114cc4dfc12f80c40a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
