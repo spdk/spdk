@@ -2762,7 +2762,7 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 	pthread_mutex_lock(&bdev->mutex);
 
 	if (write && bdev->claim_module) {
-		SPDK_INFOLOG(SPDK_LOG_BDEV, "Could not open %s - already claimed\n", bdev->name);
+		SPDK_ERRLOG("Could not open %s - already claimed\n", bdev->name);
 		free(desc);
 		pthread_mutex_unlock(&bdev->mutex);
 		return -EPERM;
