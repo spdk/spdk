@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f3acf4e5_cd845529",
+        "filename": "test/vhost/migration/migration-tc3a.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-09T13:29:43Z",
+      "side": 1,
+      "message": "Not related to commit subject. Edit the subject to reflect these changes",
+      "range": {
+        "startLine": 148,
+        "startChar": 61,
+        "endLine": 148,
+        "endChar": 94
+      },
+      "revId": "4d745f11522b7b7a66f522b7df5bb87b979cf56c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
