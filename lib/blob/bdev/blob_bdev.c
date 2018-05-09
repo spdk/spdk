@@ -218,7 +218,8 @@ spdk_bdev_create_bs_dev(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb,
 		return NULL;
 	}
 
-	rc = spdk_bdev_open(bdev, true, remove_cb, remove_ctx, &desc);
+	/* Open as read only. Claim the underlying bdev to promote to write capable. */
+	rc = spdk_bdev_open(bdev, false, remove_cb, remove_ctx, &desc);
 	if (rc != 0) {
 		free(b);
 		return NULL;
