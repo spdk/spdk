@@ -139,6 +139,10 @@ timing_enter e2edp
 $testdir/e2edp/nvme_dp
 timing_exit e2edp
 
+timing_enter err_ejection
+$testdir/err_ejection/err_ejection
+timing_exit err_ejection
+
 timing_enter overhead
 $testdir/overhead/overhead -s 4096 -t 1 -H
 timing_exit overhead
