@@ -819,7 +819,7 @@ nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 		return -ENOMEM;
 	}
 	status.done = false;
-	if (ctrlr->vs.raw >= SPDK_NVME_VERSION(1, 1, 0)) {
+	if (ctrlr->vs.raw >= SPDK_NVME_VERSION(1, 1, 0) && !(ctrlr->quirks & NVME_QUIRK_IDENTIFY_CNS)) {
 		/*
 		 * Iterate through the pages and fetch each chunk of 1024 namespaces until
 		 * there are no more active namespaces

@@ -92,6 +92,11 @@
  */
 #define NVME_QUIRK_READ_ZERO_AFTER_DEALLOCATE 0x20
 
+/*
+ * The controller doesn't handle Identify value others than 0 or 1 correctly.
+ */
+#define NVME_QUIRK_IDENTIFY_CNS 0x40
+
 #define NVME_MAX_ASYNC_EVENTS	(8)
 
 #define NVME_MIN_TIMEOUT_PERIOD		(5)
