@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cfbf47ea_60bf6313",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1272,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-09T17:43:13Z",
+      "side": 1,
+      "message": "Is this function needed?  It does nothing except call spdk_lvol_inflate.\n\nI think this probably applies to other functions in this file.  Probably the bdev\u003d\u003elvol lookup should be happening in this file, not in the RPC file.",
+      "revId": "773aaf65c578d499b376993b6f1d07c259b4681c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
