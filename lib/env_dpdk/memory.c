@@ -498,12 +498,29 @@ spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr)
 	return map_2mb->translation_2mb;
 }
 
+#if RTE_VERSION >= RTE_VERSION_NUM(18, 05, 0, 0)
+static void
+memory_hotplug_cb(enum rte_mem_event event_type,
+		  const void *addr, size_t len, void *arg)
+{
+	if (event_type == RTE_MEM_EVENT_ALLOC) {
+		spdk_mem_register((void *)addr, len);
+	} else if (event_type == RTE_MEM_EVENT_FREE) {
+		spdk_mem_unregister((void *)addr, len);
+	}
+}
+
+static int
+memory_iter_cb(const struct rte_memseg_list *msl,
+	       const struct rte_memseg *ms, size_t len, void *arg)
+{
+	return spdk_mem_register(ms->addr, len);
+}
+#endif
+
 int
 spdk_mem_map_init(void)
 {
-	struct rte_mem_config *mcfg;
-	size_t seg_idx;
-
 	g_mem_reg_map = spdk_mem_map_alloc(0, NULL, NULL);
 	if (g_mem_reg_map == NULL) {
 		DEBUG_PRINT("memory registration map allocation failed\n");
@@ -514,8 +531,14 @@ spdk_mem_map_init(void)
 	 * Walk all DPDK memory segments and register them
 	 * with the master memory map
 	 */
-	mcfg = rte_eal_get_configuration()->mem_config;
+#if RTE_VERSION >= RTE_VERSION_NUM(18, 05, 0, 0)
+	rte_mem_event_callback_register("spdk", memory_hotplug_cb, NULL);
+	rte_memseg_contig_walk(memory_iter_cb, NULL);
+#else
+	struct rte_mem_config *mcfg;
+	size_t seg_idx;
 
+	mcfg = rte_eal_get_configuration()->mem_config;
 	for (seg_idx = 0; seg_idx < RTE_MAX_MEMSEG; seg_idx++) {
 		struct rte_memseg *seg = &mcfg->memseg[seg_idx];
 
@@ -525,5 +548,6 @@ spdk_mem_map_init(void)
 
 		spdk_mem_register(seg->addr, seg->len);
 	}
+#endif
 	return 0;
 }
