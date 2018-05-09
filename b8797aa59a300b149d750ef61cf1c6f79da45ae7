@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "c95c7fba_79d14879",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 503,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-05-09T11:48:05Z",
+      "side": 1,
+      "message": "So there\u0027s hotremove as well! Thanks, I missed that.",
+      "parentUuid": "008c5c22_0f143cbb",
+      "range": {
+        "startLine": 503,
+        "startChar": 37,
+        "endLine": 503,
+        "endChar": 47
+      },
+      "revId": "b8797aa59a300b149d750ef61cf1c6f79da45ae7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "991ce2e6_596ce444",
         "filename": "lib/env_dpdk/memory.c",
         "patchSetId": 1
