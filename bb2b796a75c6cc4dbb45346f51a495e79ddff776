@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d6731224_588fd12a",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-09T19:55:20Z",
+      "side": 1,
+      "message": "Bash isn\u0027t as much retarded. you can use integer arithmetic just by using arithmetic context (( )).",
+      "range": {
+        "startLine": 15,
+        "startChar": 2,
+        "endLine": 16,
+        "endChar": 28
+      },
+      "revId": "bb2b796a75c6cc4dbb45346f51a495e79ddff776",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dcab8fa9_0addd11b",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-09T19:55:20Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 21,
+        "startChar": 2,
+        "endLine": 22,
+        "endChar": 28
+      },
+      "revId": "bb2b796a75c6cc4dbb45346f51a495e79ddff776",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
