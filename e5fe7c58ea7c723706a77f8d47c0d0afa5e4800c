@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "778c1ddf_f6dda69e",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-09T18:25:56Z",
+      "side": 1,
+      "message": "Should we cache the sgroup in the spdk_nvmf_request?  there are 7 pointer chases here to get the sgroup - I could definitely see this impacting performance.\n\nThat would bump spdk_nvmf_request from 32 to 40 bytes.  But its included in spdk_nvmf_rdma_request which is currently 384 bytes - so another 8 bytes isn\u0027t terrible.",
+      "revId": "e5fe7c58ea7c723706a77f8d47c0d0afa5e4800c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
