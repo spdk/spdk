@@ -675,3 +675,112 @@ spdk_iscsi_init_grp_unregister(int tag)
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 	return NULL;
 }
+
+static const char *initiator_group_section = \
+		"\n"
+		"# Users must change the InitiatorGroup section(s) to match the IP\n"
+		"#  addresses and initiator configuration in their environment.\n"
+		"# Netmask can be used to specify a single IP address or a range of IP addresses\n"
+		"#  Netmask 192.168.1.20   <== single IP address\n"
+		"#  Netmask 192.168.1.0/24 <== IP range 192.168.1.*\n";
+
+#define INITIATOR_GROUP_TMPL \
+"[InitiatorGroup%d]\n" \
+"  Comment \"Initiator Group%d\"\n"
+
+#define INITIATOR_TMPL \
+"  InitiatorName "
+
+#define NETMASK_TMPL \
+"  Netmask "
+
+void
+spdk_iscsi_init_grps_config_text(FILE *fp)
+{
+	struct spdk_iscsi_init_grp *ig;
+	struct spdk_iscsi_initiator_name *iname;
+	struct spdk_iscsi_initiator_netmask *imask;
+
+	/* Create initiator group section */
+	fprintf(fp, "%s", initiator_group_section);
+
+	/* Dump initiator groups */
+	TAILQ_FOREACH(ig, &g_spdk_iscsi.ig_head, tailq) {
+		if (NULL == ig) { continue; }
+		fprintf(fp, INITIATOR_GROUP_TMPL, ig->tag, ig->tag);
+
+		/* Dump initiators */
+		fprintf(fp, INITIATOR_TMPL);
+		TAILQ_FOREACH(iname, &ig->initiator_head, tailq) {
+			fprintf(fp, "%s ", iname->name);
+		}
+		fprintf(fp, "\n");
+
+		/* Dump netmasks */
+		fprintf(fp, NETMASK_TMPL);
+		TAILQ_FOREACH(imask, &ig->netmask_head, tailq) {
+			fprintf(fp, "%s ", imask->mask);
+		}
+		fprintf(fp, "\n");
+	}
+}
+
+static void
+spdk_iscsi_init_grp_info_json(struct spdk_iscsi_init_grp *ig,
+			      struct spdk_json_write_ctx *w)
+{
+	struct spdk_iscsi_initiator_name *iname;
+	struct spdk_iscsi_initiator_netmask *imask;
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_int32(w, "tag", ig->tag);
+
+	spdk_json_write_named_array_begin(w, "initiators");
+	TAILQ_FOREACH(iname, &ig->initiator_head, tailq) {
+		spdk_json_write_string(w, iname->name);
+	}
+	spdk_json_write_array_end(w);
+
+	spdk_json_write_named_array_begin(w, "netmasks");
+	TAILQ_FOREACH(imask, &ig->netmask_head, tailq) {
+		spdk_json_write_string(w, imask->mask);
+	}
+	spdk_json_write_array_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
+static void
+spdk_iscsi_init_grp_config_json(struct spdk_iscsi_init_grp *ig,
+				struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "method", "add_initiator_group");
+
+	spdk_json_write_name(w, "params");
+	spdk_iscsi_init_grp_info_json(ig, w);
+
+	spdk_json_write_object_end(w);
+}
+
+void
+spdk_iscsi_init_grps_info_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_iscsi_init_grp *ig;
+
+	TAILQ_FOREACH(ig, &g_spdk_iscsi.ig_head, tailq) {
+		spdk_iscsi_init_grp_info_json(ig, w);
+	}
+}
+
+void
+spdk_iscsi_init_grps_config_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_iscsi_init_grp *ig;
+
+	TAILQ_FOREACH(ig, &g_spdk_iscsi.ig_head, tailq) {
+		spdk_iscsi_init_grp_config_json(ig, w);
+	}
+}
