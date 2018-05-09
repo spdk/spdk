@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a70f9ddb_1a41c43e",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-09T17:14:38Z",
+      "side": 1,
+      "message": "This can go on the stack (Shuhei and I both suggested this in earlier revision) - just like you\u0027ve put the spdk_app_opts on the stack.  Then you can avoid the allocation, NULL checks, free, etc.\n\nThen you can also just directly free hello_context.buff in this function, and remove hello_cleanup() (since you no longer need to free hello_context).",
+      "revId": "82ebe41289d1d7543c7a620f9949de34320b2ae9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
