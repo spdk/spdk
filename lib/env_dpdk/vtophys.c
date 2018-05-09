@@ -214,12 +214,23 @@ static uint64_t
 vtophys_get_paddr_memseg(uint64_t vaddr)
 {
 	uintptr_t paddr;
-	struct rte_mem_config *mcfg;
 	struct rte_memseg *seg;
+
+#if RTE_VERSION >= RTE_VERSION_NUM(18, 05, 0, 0)
+	seg = rte_mem_virt2memseg((void *)(uintptr_t)vaddr, NULL);
+	if (seg != NULL) {
+		paddr = seg->phys_addr;
+		if (paddr == RTE_BAD_IOVA) {
+			return SPDK_VTOPHYS_ERROR;
+		}
+		paddr += (vaddr - (uintptr_t)seg->addr);
+		return paddr;
+	}
+#else
+	struct rte_mem_config *mcfg;
 	uint32_t seg_idx;
 
 	mcfg = rte_eal_get_configuration()->mem_config;
-
 	for (seg_idx = 0; seg_idx < RTE_MAX_MEMSEG; seg_idx++) {
 		seg = &mcfg->memseg[seg_idx];
 		if (seg->addr == NULL) {
@@ -240,6 +251,7 @@ vtophys_get_paddr_memseg(uint64_t vaddr)
 			return paddr;
 		}
 	}
+#endif
 
 	return SPDK_VTOPHYS_ERROR;
 }
