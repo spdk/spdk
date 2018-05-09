@@ -1165,6 +1165,10 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 		}
 
 		bdev->disk.ctxt = bdev;
+        /* TODO: fill the maximum size of single io */
+        /* What should we take into account? */
+        /* io_queue_requests, maximum number of blocks in prp, sgl list */
+        /* 	bdev->disk.max_io = nvme_ctrlr->ctrlr->opts.io_queue_requests; */
 		bdev->disk.fn_table = &nvmelib_fn_table;
 		bdev->disk.module = &nvme_if;
 		rc = spdk_bdev_register(&bdev->disk);
