@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9814ace8_62f8917e",
+        "filename": "lib/nvme/nvme_quirks.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-09T16:24:24Z",
+      "side": 1,
+      "message": "I think this is the QEMU emulated NVMe device; we should probably report this as a bug. We can add the quirk for now, but maybe we should extend the quirks framework to allow matching on specific revisions so that when it is fixed, we don\u0027t apply the quirk anymore.",
+      "revId": "99ae017231c5e42ff10813f334afdf971adcd515",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4fef0e8a_c6f8e04e",
+        "filename": "lib/nvme/nvme_quirks.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-09T16:24:24Z",
+      "side": 1,
+      "message": "Please add a PRINT_QUIRK line here for the new quirk.",
+      "revId": "99ae017231c5e42ff10813f334afdf971adcd515",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
