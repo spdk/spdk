@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa1f904b_5c0375ef",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 4186,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-09T17:28:48Z",
+      "side": 1,
+      "message": "Lines 4186 to 4200 are almost an exact duplicate of 4134-4147.  Could we just do:\n\n_spdk_bs_inflate_blob_touch_next(ctx, 0);\n\ninstead?\n\nYou\u0027ll need to set ctx-\u003ecluster \u003d 0 outside of the for loop.  And then change the for loop in _spdk_bs_inflate_blob_touch_next() to not start with a ++.",
+      "revId": "4f6f778e9cc001db64e37a1f4b47df85cbfdf27a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
