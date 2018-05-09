@@ -1536,6 +1536,12 @@ spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev)
 	return bdev->blockcnt;
 }
 
+uint32_t
+spdk_bdev_get_io_max_num_blocks(struct spdk_bdev *bdev)
+{
+	return bdev->max_io;
+}
+
 uint64_t
 spdk_bdev_get_qos_ios_per_sec(struct spdk_bdev *bdev)
 {

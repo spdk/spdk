@@ -219,6 +219,9 @@ struct spdk_bdev {
 	/** Number of blocks */
 	uint64_t blockcnt;
 
+	/**  Maximum size of single I/O operation in logical blocks */
+	uint32_t max_io;
+
 	/** Number of active channels on this bdev except the QoS bdev channel */
 	uint32_t channel_count;
 

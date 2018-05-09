@@ -546,6 +546,36 @@ num_blocks_test(void)
 }
 
 static void
+max_io(void)
+{
+	struct spdk_bdev bdev;
+	struct spdk_bdev_desc *desc;
+	uint32_t block_size, max_io;
+
+	memset(&bdev, 0, sizeof(bdev));
+	bdev.name = "max_io";
+	bdev.fn_table = &fn_table;
+	bdev.module = &bdev_ut_if;
+
+	spdk_bdev_register(&bdev);
+
+	spdk_bdev_open(&bdev, false, NULL, NULL, &desc);
+
+	block_size = spdk_bdev_get_block_size(&bdev);
+	max_io = spdk_bdev_get_io_max_num_blocks(&bdev);
+
+	/* Positive test for maximum supported i/o size */
+	spdk_bdev_writev(desc, ch, iov, iovcnt, offset, max_io * block_size, cb, cb_arg);
+
+	/* Negative test for maximum supported i/o size */
+	spdk_bdev_writev(desc, ch, iov, iovcnt, offset, max_io * block_size + 1, cb, cb_arg);
+
+	spdk_bdev_close(desc);
+	spdk_bdev_unregister(&bdev, NULL, NULL);
+}
+
+
+static void
 io_valid_test(void)
 {
 	struct spdk_bdev bdev;
@@ -761,6 +791,7 @@ main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "bytes_to_blocks_test", bytes_to_blocks_test) == NULL ||
 		CU_add_test(suite, "num_blocks_test", num_blocks_test) == NULL ||
+		CU_add_test(suite, "max_io", max_io) == NULL ||
 		CU_add_test(suite, "io_valid", io_valid_test) == NULL ||
 		CU_add_test(suite, "open_write", open_write_test) == NULL ||
 		CU_add_test(suite, "alias_add_del", alias_add_del_test) == NULL ||

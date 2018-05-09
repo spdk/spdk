@@ -1237,6 +1237,39 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 		if (rc == 0) {
 			bdev_created++;
 		}
+		bdev->disk.product_name = "NVMe disk";
+
+		bdev->disk.write_cache = 0;
+		if (cdata->vwc.present) {
+			/* Enable if the Volatile Write Cache exists */
+			bdev->disk.write_cache = 1;
+		}
+		bdev->disk.blocklen = spdk_nvme_ns_get_sector_size(ns);
+		bdev->disk.blockcnt = spdk_nvme_ns_get_num_sectors(ns);
+		bdev->disk.optimal_io_boundary = spdk_nvme_ns_get_optimal_io_boundary(ns);
+
+		uuid = spdk_nvme_ns_get_uuid(ns);
+		if (uuid != NULL) {
+			bdev->disk.uuid = *uuid;
+		}
+
+		bdev->disk.ctxt = bdev;
+        /* TODO: fill the maximum size of single io */
+        /* What should we take into account? */
+        /* io_queue_requests, maximum number of blocks in prp, sgl list */
+        /* 	bdev->disk.max_io = nvme_ctrlr->ctrlr->opts.io_queue_requests; */
+		bdev->disk.fn_table = &nvmelib_fn_table;
+		bdev->disk.module = &nvme_if;
+		rc = spdk_bdev_register(&bdev->disk);
+		if (rc) {
+			free(bdev->disk.name);
+			free(bdev);
+			break;
+		}
+
+		TAILQ_INSERT_TAIL(&g_nvme_bdevs, bdev, link);
+
+		bdev_created++;
 	}
 
 	return (bdev_created > 0) ? 0 : -1;
