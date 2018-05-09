@@ -226,6 +226,12 @@ nvme_status_success(const struct spdk_nvme_status *status)
 	return status->sct == SPDK_NVME_SCT_GENERIC && status->sc == SPDK_NVME_SC_SUCCESS;
 }
 
+struct spdk_thread *
+spdk_get_thread(void)
+{
+	return NULL;
+}
+
 void
 spdk_thread_send_msg(const struct spdk_thread *thread, spdk_thread_fn fn, void *ctx)
 {
