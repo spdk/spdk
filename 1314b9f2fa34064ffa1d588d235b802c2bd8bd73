@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "79d8b4c3_9b0731db",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-05-09T06:00:22Z",
+      "side": 1,
+      "message": "Shall we add a check that after disabling QoS, the actual IOPS is higher than the required (20K) here?\n\nMaybe modify the check_qos_works_well to take a parameter. This parameter is the set QoS value like 20. If 0, means no QoS value set?\n\nIn this case, the comparison of 18 \u003c xx \u0026\u0026 xx \u003c 20.1 can become 90% of xx \u003c xx \u0026\u0026 xx \u003c 101% of xx",
+      "range": {
+        "startLine": 65,
+        "startChar": 0,
+        "endLine": 65,
+        "endChar": 26
+      },
+      "revId": "1314b9f2fa34064ffa1d588d235b802c2bd8bd73",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
