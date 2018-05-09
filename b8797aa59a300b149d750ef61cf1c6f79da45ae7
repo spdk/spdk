@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "008c5c22_0f143cbb",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 503,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-09T08:38:00Z",
+      "side": 1,
+      "message": "There should be some check or assert() at least that event_type \u003d\u003d RTE_MEM_EVENT_ALLOC",
+      "range": {
+        "startLine": 503,
+        "startChar": 37,
+        "endLine": 503,
+        "endChar": 47
+      },
+      "revId": "b8797aa59a300b149d750ef61cf1c6f79da45ae7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "991ce2e6_596ce444",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 546,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-09T08:38:00Z",
+      "side": 1,
+      "message": "I would extract this to some compatibility functions under ifdef or additional static spdk_memseg_contig_walk() etc but this is only my opinion :)",
+      "range": {
+        "startLine": 534,
+        "startChar": 0,
+        "endLine": 546,
+        "endChar": 2
+      },
+      "revId": "b8797aa59a300b149d750ef61cf1c6f79da45ae7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
