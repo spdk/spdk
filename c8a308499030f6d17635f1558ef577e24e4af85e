@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e9d3f252_4d3716f7",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 549,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-05-09T07:53:18Z",
+      "side": 1,
+      "message": "Can we change this to _vbdev_lvol_unregister_cb or something similar that is shorter?",
+      "range": {
+        "startLine": 549,
+        "startChar": 0,
+        "endLine": 549,
+        "endChar": 33
+      },
+      "revId": "c8a308499030f6d17635f1558ef577e24e4af85e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e249a94b_b3ee2e84",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 553,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-05-09T07:53:18Z",
+      "side": 1,
+      "message": "Missing pthread_mutex_unlock here.",
+      "revId": "c8a308499030f6d17635f1558ef577e24e4af85e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
