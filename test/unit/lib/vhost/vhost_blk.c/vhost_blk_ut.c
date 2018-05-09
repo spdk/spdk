@@ -174,7 +174,7 @@ main(int argc, char **argv)
 		return CU_get_error();
 	}
 
-	suite = CU_add_suite("vhost_scsi_suite", test_setup, NULL);
+	suite = CU_add_suite("vhost_blk_suite", test_setup, NULL);
 	if (suite == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
