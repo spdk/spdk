@@ -76,6 +76,12 @@ nvme_ctrlr_set_cc(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cc_regist
 					      cc->raw);
 }
 
+uint32_t
+nvme_ctrlr_get_io_qdepth(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return ctrlr->opts.io_queue_requests;
+}
+
 void
 spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t opts_size)
 {

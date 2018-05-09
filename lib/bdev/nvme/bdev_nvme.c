@@ -727,6 +727,7 @@ nvme_ctrlr_create_bdev(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid)
 	bdev->disk.blocklen = spdk_nvme_ns_get_sector_size(ns);
 	bdev->disk.blockcnt = spdk_nvme_ns_get_num_sectors(ns);
 	bdev->disk.optimal_io_boundary = spdk_nvme_ns_get_optimal_io_boundary(ns);
+	bdev->disk.max_io = spdk_nvme_ns_get_maximum_io_size(ns) * nvme_ctrlr_get_io_qdepth(ctrlr);
 
 	uuid = spdk_nvme_ns_get_uuid(ns);
 	if (uuid != NULL) {

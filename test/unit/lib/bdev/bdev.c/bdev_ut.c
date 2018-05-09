@@ -47,6 +47,8 @@ DEFINE_STUB(spdk_conf_section_get_nmval, char *,
 	    (struct spdk_conf_section *sp, const char *key, int idx1, int idx2), NULL);
 DEFINE_STUB(spdk_conf_section_get_intval, int, (struct spdk_conf_section *sp, const char *key), -1);
 
+bool g_success;
+
 static void
 _bdev_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 {
@@ -546,6 +548,57 @@ num_blocks_test(void)
 }
 
 static void
+max_io(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
+//	struct spdk_io_channel *ch;
+	uint32_t blocklen;
+	uint64_t max_io;
+//	uint8_t *buf;
+	int rc;
+	struct spdk_bdev_opts bdev_opts = {
+		.bdev_io_pool_size = 4,
+		.bdev_io_cache_size = 2,
+	};
+
+	rc = spdk_bdev_set_opts(&bdev_opts);
+	CU_ASSERT(rc == 0);
+
+	bdev = allocate_bdev("bdev0");
+	bdev->name = "max_io";
+	bdev->fn_table = &fn_table;
+	bdev->module = &bdev_ut_if;
+	bdev->max_io = 4;
+	bdev->blocklen = 512;
+
+	spdk_bdev_open(bdev, false, NULL, NULL, &desc);
+
+//	ch = spdk_bdev_get_io_channel(desc);
+
+	blocklen = spdk_bdev_get_block_size(bdev);
+	max_io = spdk_bdev_get_io_max_num_blocks(bdev);
+
+	CU_ASSERT(max_io == 4);
+	CU_ASSERT(blocklen != 0);
+
+//	buf = calloc(1, max_io * blocklen + 1);
+	/* Positive test for maximum supported i/o size */
+//	spdk_bdev_write(desc, ch, buf, 0, max_io * blocklen, io_completion_cb, NULL);
+//	CU_ASSERT(g_success == true);
+
+	/* Negative test for maximum supported i/o size */
+//	spdk_bdev_write(desc, ch, buf, 0, max_io * blocklen + 1, io_completion_cb, NULL);
+//	CU_ASSERT(g_success == false);
+
+	spdk_bdev_close(desc);
+	spdk_bdev_unregister(bdev, NULL, NULL);
+
+	free(bdev);
+}
+
+
+static void
 io_valid_test(void)
 {
 	struct spdk_bdev bdev;
@@ -761,6 +814,7 @@ main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "bytes_to_blocks_test", bytes_to_blocks_test) == NULL ||
 		CU_add_test(suite, "num_blocks_test", num_blocks_test) == NULL ||
+		CU_add_test(suite, "max_io", max_io) == NULL ||
 		CU_add_test(suite, "io_valid", io_valid_test) == NULL ||
 		CU_add_test(suite, "open_write", open_write_test) == NULL ||
 		CU_add_test(suite, "alias_add_del", alias_add_del_test) == NULL ||

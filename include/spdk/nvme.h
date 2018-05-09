@@ -1172,6 +1172,21 @@ enum spdk_nvme_dealloc_logical_block_read_value spdk_nvme_ns_get_dealloc_logical
  */
 uint32_t spdk_nvme_ns_get_optimal_io_boundary(struct spdk_nvme_ns *ns);
 
+
+/**
+ * \brief Get the maximum I/O size, in blocks, for the given namespace.
+ *
+ * \return Maximum I/O size for single request.
+ */
+uint32_t spdk_nvme_ns_get_maximum_io_size(struct spdk_nvme_ns *ns);
+
+/**
+ * \brief Get the maximum I/O queue size for given controller.
+ *
+ * \return Maximum I/O queue size for given controller.
+ */
+uint32_t nvme_ctrlr_get_io_qdepth(struct spdk_nvme_ctrlr *ctrlr);
+
 /**
  * Get the UUID for the given namespace.
  *

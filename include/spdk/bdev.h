@@ -330,6 +330,14 @@ uint32_t spdk_bdev_get_block_size(const struct spdk_bdev *bdev);
 uint64_t spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev);
 
 /**
+ * Get maximum size of single I/O operation.
+ *
+ * \param bdev Block device to check.
+ * \return Maximum number of logical blocks in single I/O operation.
+ */
+uint32_t spdk_bdev_get_io_max_num_blocks(struct spdk_bdev *bdev);
+
+/**
  * Get IOs per second of block device for the QoS rate limiting.
  *
  * \param bdev Block device to query.

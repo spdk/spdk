@@ -225,6 +225,9 @@ struct spdk_bdev {
 	/** Number of blocks */
 	uint64_t blockcnt;
 
+	/**  Maximum size of single I/O operation in logical blocks */
+	uint32_t max_io;
+
 	/** write cache enabled, not used at the moment */
 	int write_cache;
 

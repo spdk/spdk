@@ -231,6 +231,12 @@ spdk_nvme_ns_get_optimal_io_boundary(struct spdk_nvme_ns *ns)
 	return ns->sectors_per_stripe;
 }
 
+uint32_t
+spdk_nvme_ns_get_maximum_io_size(struct spdk_nvme_ns *ns)
+{
+	return spdk_max(ns->sectors_per_stripe, ns->sectors_per_max_io);
+}
+
 static const void *
 _spdk_nvme_ns_find_id_desc(const struct spdk_nvme_ns *ns, enum spdk_nvme_nidt type, size_t *length)
 {
