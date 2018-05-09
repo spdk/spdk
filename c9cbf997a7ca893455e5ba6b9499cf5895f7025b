@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "075e3b88_1c185088",
+        "filename": "lib/env_dpdk/vtophys.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-09T17:11:53Z",
+      "side": 1,
+      "message": "If seg does return NULL here - is it valid to go through the rte_mem_config structure still below?",
+      "revId": "c9cbf997a7ca893455e5ba6b9499cf5895f7025b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
