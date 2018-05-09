@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "671efcd2_067b2963",
+        "filename": "examples/bdev/hello_world/Makefile",
+        "patchSetId": 16
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-09T22:40:15Z",
+      "side": 1,
+      "message": "You\u0027ll need to add a new .gitignore file for this app (just a single line containing the name of the app).",
+      "revId": "68791ba7b76be637cbc8b941a4ad2d6cf184cc2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
