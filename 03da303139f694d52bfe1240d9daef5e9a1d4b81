@@ -1,0 +1,418 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "024079e9_00392ebb",
+        "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-09T19:39:07Z",
+      "side": 1,
+      "message": "move to bdev_pvol.h ?",
+      "range": {
+        "startLine": 43,
+        "startChar": 0,
+        "endLine": 47,
+        "endChar": 52
+      },
+      "revId": "03da303139f694d52bfe1240d9daef5e9a1d4b81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b77483cc_a65c61ed",
+        "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-09T19:39:07Z",
+      "side": 1,
+      "message": "I think _SAFE version is not needed here.",
+      "range": {
+        "startLine": 70,
+        "startChar": 1,
+        "endLine": 70,
+        "endChar": 19
+      },
+      "revId": "03da303139f694d52bfe1240d9daef5e9a1d4b81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b0c0b9a_c02c8f37",
+        "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-09T19:39:07Z",
+      "side": 1,
+      "message": "this description should be placed in help of get_pvols RPC command in rpc.py",
+      "range": {
+        "startLine": 162,
+        "startChar": 0,
+        "endLine": 177,
+        "endChar": 3
+      },
+      "revId": "03da303139f694d52bfe1240d9daef5e9a1d4b81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98e92882_13537543",
+        "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-09T19:39:07Z",
+      "side": 1,
+      "message": "I think _SAFE version is not needed here.",
+      "range": {
+        "startLine": 205,
+        "startChar": 2,
+        "endLine": 205,
+        "endChar": 20
+      },
+      "revId": "03da303139f694d52bfe1240d9daef5e9a1d4b81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1498c2bb_da02d985",
+        "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-09T19:39:07Z",
+      "side": 1,
+      "message": "I think _SAFE version is not needed here.",
+      "range": {
+        "startLine": 210,
+        "startChar": 2,
+        "endLine": 210,
+        "endChar": 20
+      },
+      "revId": "03da303139f694d52bfe1240d9daef5e9a1d4b81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f45e61bc_254ec67a",
+        "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-09T19:39:07Z",
+      "side": 1,
+      "message": "I think _SAFE version is not needed here.",
+      "range": {
+        "startLine": 215,
+        "startChar": 2,
+        "endLine": 215,
+        "endChar": 20
+      },
+      "revId": "03da303139f694d52bfe1240d9daef5e9a1d4b81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "343fd9c9_3a35eafc",
+        "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-09T19:39:07Z",
+      "side": 1,
+      "message": "I think _SAFE version is not needed here.",
+      "range": {
+        "startLine": 221,
+        "startChar": 2,
+        "endLine": 221,
+        "endChar": 20
+      },
+      "revId": "03da303139f694d52bfe1240d9daef5e9a1d4b81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e5936f9_5653081f",
+        "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-09T19:39:07Z",
+      "side": 1,
+      "message": "If you start response by using spdk_jsonrpc_begin_result() (it\u0027s pity but) you can\u0027t discad this this so you also can\u0027t use spdk_jsonrpc_send_error_response() after calling spdk_jsonrpc_begin_result(). This mean you need to check domain of all arguments before spdk_jsonrpc_begin_result().",
+      "range": {
+        "startLine": 227,
+        "startChar": 2,
+        "endLine": 227,
+        "endChar": 34
+      },
+      "revId": "03da303139f694d52bfe1240d9daef5e9a1d4b81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef0b8089_957834d1",
+        "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-09T19:39:07Z",
+      "side": 1,
+      "message": "This should be moved to some bdev_pvol.h",
+      "range": {
+        "startLine": 237,
+        "startChar": 8,
+        "endLine": 237,
+        "endChar": 26
+      },
+      "revId": "03da303139f694d52bfe1240d9daef5e9a1d4b81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e80f175a_455a0719",
+        "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-09T19:39:07Z",
+      "side": 1,
+      "message": "I know that this is nitpicking but I have a small glitch in my mind on every \"for (iter \u003d 0...)\" Can I beg for for \"i\" ? :)",
+      "range": {
+        "startLine": 349,
+        "startChar": 32,
+        "endLine": 349,
+        "endChar": 36
+      },
+      "revId": "03da303139f694d52bfe1240d9daef5e9a1d4b81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a61d2cf_15753787",
+        "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-09T19:39:07Z",
+      "side": 1,
+      "message": "This will work but \u0027size_t\u0027 or just \u0027int\u0027 is more natural.",
+      "range": {
+        "startLine": 349,
+        "startChar": 1,
+        "endLine": 349,
+        "endChar": 9
+      },
+      "revId": "03da303139f694d52bfe1240d9daef5e9a1d4b81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "931f2774_f26ed930",
+        "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-09T19:39:07Z",
+      "side": 1,
+      "message": "spdk_strerror(ENOMEM) will give more unified message to user.",
+      "range": {
+        "startLine": 384,
+        "startChar": 7,
+        "endLine": 384,
+        "endChar": 34
+      },
+      "revId": "03da303139f694d52bfe1240d9daef5e9a1d4b81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78b62c86_35a5c659",
+        "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 395,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-09T19:39:07Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 395,
+        "startChar": 7,
+        "endLine": 395,
+        "endChar": 34
+      },
+      "revId": "03da303139f694d52bfe1240d9daef5e9a1d4b81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d28171b_ed72c71b",
+        "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 406,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-09T19:39:07Z",
+      "side": 1,
+      "message": "strdup() need NULL check. Better would be to just steal req.name here as this alread dynamicaly allocated.",
+      "range": {
+        "startLine": 406,
+        "startChar": 1,
+        "endLine": 406,
+        "endChar": 43
+      },
+      "revId": "03da303139f694d52bfe1240d9daef5e9a1d4b81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "678df4f5_f5c9df8a",
+        "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 413,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-09T19:39:07Z",
+      "side": 1,
+      "message": "line 406 ditto",
+      "range": {
+        "startLine": 413,
+        "startChar": 2,
+        "endLine": 413,
+        "endChar": 88
+      },
+      "revId": "03da303139f694d52bfe1240d9daef5e9a1d4b81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ad2e2e8_ad5f4490",
+        "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 423,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-09T19:39:07Z",
+      "side": 1,
+      "message": "As I wrote before, you can\u0027t send error reponse after calling spdk_jsonrpc_begin_result() so all those places need to be corrected.",
+      "range": {
+        "startLine": 423,
+        "startChar": 3,
+        "endLine": 423,
+        "endChar": 35
+      },
+      "revId": "03da303139f694d52bfe1240d9daef5e9a1d4b81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "136d0b2f_ab6b38ca",
+        "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 495,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-09T19:39:07Z",
+      "side": 1,
+      "message": "ju",
+      "range": {
+        "startLine": 495,
+        "startChar": 27,
+        "endLine": 495,
+        "endChar": 47
+      },
+      "revId": "03da303139f694d52bfe1240d9daef5e9a1d4b81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8911b40a_d475504f",
+        "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 519,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-09T19:39:07Z",
+      "side": 1,
+      "message": "Can this be just pconfig or pvol_cfg or just cfg?",
+      "range": {
+        "startLine": 519,
+        "startChar": 50,
+        "endLine": 519,
+        "endChar": 66
+      },
+      "revId": "03da303139f694d52bfe1240d9daef5e9a1d4b81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
