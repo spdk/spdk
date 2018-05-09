@@ -601,17 +601,6 @@ int spdk_pci_ioat_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx);
 int spdk_pci_virtio_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx);
 
 /**
- * Get PCI device from the given address.
- *
- * \param pci_addr A pointer to the PCI address struct.
- *
- * \return a pointer to the PCI device or NULL if no devide is found at the given
- * address.
- */
-struct spdk_pci_device *spdk_pci_get_device(struct spdk_pci_addr *pci_addr)
-__attribute__((deprecated));
-
-/**
  * Get a mapping of the virtual address to the BAR of the PCI device.
  *
  * \param dev PCI device.

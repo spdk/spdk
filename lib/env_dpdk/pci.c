@@ -207,12 +207,6 @@ spdk_pci_enumerate(struct spdk_pci_enum_ctx *ctx,
 	return 0;
 }
 
-struct spdk_pci_device *
-spdk_pci_get_device(struct spdk_pci_addr *pci_addr)
-{
-	return NULL;
-}
-
 int
 spdk_pci_device_map_bar(struct spdk_pci_device *device, uint32_t bar,
 			void **mapped_addr, uint64_t *phys_addr, uint64_t *size)
