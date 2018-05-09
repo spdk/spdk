@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "cf2b7100_2bdc7bd5",
+        "filename": "lib/nvme/nvme_quirks.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1012287
+      },
+      "writtenOn": "2018-05-09T17:37:59Z",
+      "side": 1,
+      "message": "This quirk is same with linux nvme driver as found on 4.17-rc1 source tree and the bug fix wouldn\u0027t be available for a while.",
+      "parentUuid": "9814ace8_62f8917e",
+      "revId": "99ae017231c5e42ff10813f334afdf971adcd515",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4fef0e8a_c6f8e04e",
         "filename": "lib/nvme/nvme_quirks.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2018-05-09T16:24:24Z",
       "side": 1,
       "message": "Please add a PRINT_QUIRK line here for the new quirk.",
+      "revId": "99ae017231c5e42ff10813f334afdf971adcd515",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "99babd91_0e09f116",
+        "filename": "lib/nvme/nvme_quirks.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1012287
+      },
+      "writtenOn": "2018-05-09T17:37:59Z",
+      "side": 1,
+      "message": "Thank you to point out. I revised the patch.",
+      "parentUuid": "4fef0e8a_c6f8e04e",
       "revId": "99ae017231c5e42ff10813f334afdf971adcd515",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
