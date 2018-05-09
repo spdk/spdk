@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "76e6aa18_defa1191",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1543,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-09T11:43:38Z",
+      "side": 1,
+      "message": "Regarding RPC config dump, setting g_spdk_nvmf_tgt_conf params  should be separate RPC command, otherwise we I don\u0027t know how to reliably dump acceptor_poll_rate parameter.",
+      "range": {
+        "startLine": 1543,
+        "startChar": 0,
+        "endLine": 1543,
+        "endChar": 107
+      },
+      "revId": "ae58ecf377387db0d2a7d54709590818352cf82a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
