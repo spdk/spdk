@@ -16,6 +16,24 @@
       "revId": "e5fe7c58ea7c723706a77f8d47c0d0afa5e4800c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c588c7c2_7e555662",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-09T21:45:54Z",
+      "side": 1,
+      "message": "I think so, but I\u0027ll do it in the next patch because there are more places than just here that need to reference the cached value. We historically didn\u0027t cache because sgroups could get reallocated. However, that was causing all sorts of problems and I just inserted a patch before this one that puts an end to that. So now that the memory won\u0027t move, we should definitely do more caching.",
+      "parentUuid": "778c1ddf_f6dda69e",
+      "revId": "e5fe7c58ea7c723706a77f8d47c0d0afa5e4800c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
