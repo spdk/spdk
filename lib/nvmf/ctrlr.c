@@ -489,6 +489,14 @@ spdk_nvmf_ctrlr_get_qpair(struct spdk_nvmf_ctrlr *ctrlr, uint16_t qid)
 static struct spdk_nvmf_request *
 spdk_nvmf_qpair_get_request(struct spdk_nvmf_qpair *qpair, uint16_t cid)
 {
+	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
+
+	if (spdk_nvmf_qpair_is_admin_queue(qpair)) {
+		if (ctrlr->aer_req && ctrlr->aer_req->cmd->nvme_cmd.cid == cid) {
+			return ctrlr->aer_req;
+		}
+	}
+
 	/* TODO: track list of outstanding requests in qpair? */
 	return NULL;
 }
