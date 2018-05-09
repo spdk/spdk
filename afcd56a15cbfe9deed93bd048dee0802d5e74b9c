@@ -19,6 +19,41 @@
     },
     {
       "key": {
+        "uuid": "9ed4cd9c_f195480b",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1014259
+      },
+      "writtenOn": "2018-05-09T20:27:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f1e3080f_1e433db7",
+      "revId": "afcd56a15cbfe9deed93bd048dee0802d5e74b9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13efce51_82149e89",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1014259
+      },
+      "writtenOn": "2018-05-09T20:27:37Z",
+      "side": 1,
+      "message": "Perhaps we can get rid of data ptr and use iov[0] instead in subsequent checkin.",
+      "revId": "afcd56a15cbfe9deed93bd048dee0802d5e74b9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2043915a_c81141bc",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 1
@@ -30,6 +65,24 @@
       "writtenOn": "2018-05-07T22:57:12Z",
       "side": 1,
       "message": "I believe this is a configurable value below, so it shouldn\u0027t also be a #define",
+      "revId": "afcd56a15cbfe9deed93bd048dee0802d5e74b9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "06523e4e_d1edf97d",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1014259
+      },
+      "writtenOn": "2018-05-09T20:27:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2043915a_c81141bc",
       "revId": "afcd56a15cbfe9deed93bd048dee0802d5e74b9c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +106,24 @@
     },
     {
       "key": {
+        "uuid": "ced7e51d_e75b9a6b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1014259
+      },
+      "writtenOn": "2018-05-09T20:27:37Z",
+      "side": 1,
+      "message": "Added a #define for max SGL entries and yes, the changes are much more simpler. This is now gone.",
+      "parentUuid": "ffb7a70b_2a995679",
+      "revId": "afcd56a15cbfe9deed93bd048dee0802d5e74b9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0f691ecb_3343202d",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 1
@@ -64,6 +135,24 @@
       "writtenOn": "2018-05-07T22:57:12Z",
       "side": 1,
       "message": "You can\u0027t allow all 3 of io_unit_size, max_sge, and max_io_size to be configurable because the following must be true:\n\nmax_io_size \u003d\u003d io_unit_size * max_sge;\n\nSo we need to pick which two of these are configured by the user and which one is calculated.",
+      "revId": "afcd56a15cbfe9deed93bd048dee0802d5e74b9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38216cd3_2f113284",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1014259
+      },
+      "writtenOn": "2018-05-09T20:27:37Z",
+      "side": 1,
+      "message": "Removed max_sge.",
+      "parentUuid": "0f691ecb_3343202d",
       "revId": "afcd56a15cbfe9deed93bd048dee0802d5e74b9c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +176,24 @@
     },
     {
       "key": {
+        "uuid": "dd1bcee5_f71163ac",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 353,
+      "author": {
+        "id": 1014259
+      },
+      "writtenOn": "2018-05-09T20:27:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c1e4c1be_9f318850",
+      "revId": "afcd56a15cbfe9deed93bd048dee0802d5e74b9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d6e38619_6d6a24c5",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 1
@@ -98,6 +205,24 @@
       "writtenOn": "2018-05-07T22:57:12Z",
       "side": 1,
       "message": "This index math doesn\u0027t seem right to me. rqpair-\u003esge is an array of size (max_sge * max_queue_depth), so if you want to assign a set of elements of size max_sge that is unique to this request, you need to multiple i by max_sge.",
+      "revId": "afcd56a15cbfe9deed93bd048dee0802d5e74b9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "06b0c5bc_892f899c",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 458,
+      "author": {
+        "id": 1014259
+      },
+      "writtenOn": "2018-05-09T20:27:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d6e38619_6d6a24c5",
       "revId": "afcd56a15cbfe9deed93bd048dee0802d5e74b9c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
