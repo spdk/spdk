@@ -1221,6 +1221,10 @@ nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_trac
 {
 	struct nvme_pcie_qpair		*pqpair = nvme_pcie_qpair(qpair);
 	struct nvme_request		*req;
+	struct spdk_nvme_cpl		error_cpl;
+	struct spdk_nvme_cpl		*cqe = cpl;
+	struct nvme_error_cmd		*cmd, *entry;
+	struct spdk_nvme_ctrlr		*ctrlr = qpair->ctrlr;
 	bool				retry, error, was_active;
 	bool				req_from_current_proc = true;
 
@@ -1228,19 +1232,47 @@ nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_trac
 
 	assert(req != NULL);
 
-	error = spdk_nvme_cpl_is_error(cpl);
-	retry = error && nvme_completion_is_retry(cpl) &&
+	error = spdk_nvme_cpl_is_error(cqe);
+	retry = error && nvme_completion_is_retry(cqe) &&
 		req->retries < spdk_nvme_retry_count;
 
 	if (error && print_on_error) {
 		nvme_qpair_print_command(qpair, &req->cmd);
-		nvme_qpair_print_completion(qpair, cpl);
+		nvme_qpair_print_completion(qpair, cqe);
 	}
 
-	was_active = pqpair->tr[cpl->cid].active;
-	pqpair->tr[cpl->cid].active = false;
+	/* error ejection at completion path,
+	 * only eject for successful completed commands
+	 */
+	if (spdk_unlikely(!TAILQ_EMPTY(&ctrlr->err_head) && !error && !retry)) {
+		TAILQ_FOREACH_SAFE(cmd, &ctrlr->err_head, link, entry) {
 
-	assert(cpl->cid == req->cmd.cid);
+			if (cmd->isSubmitError) {
+				continue;
+			}
+
+			error_cpl = *cpl;
+			error_cpl.status.sct = cmd->status.sct;
+			error_cpl.status.sc = cmd->status.sc;
+
+			if ((nvme_qpair_is_admin_queue(qpair) &&
+			     cmd->opc == req->cmd.opc && cmd->isAdmin) ||
+			    (!nvme_qpair_is_admin_queue(qpair) &&
+			     cmd->opc == req->cmd.opc && !cmd->isAdmin)) {
+
+				cqe = &error_cpl;
+				if (print_on_error) {
+					nvme_qpair_print_command(qpair, &req->cmd);
+					nvme_qpair_print_completion(qpair, cqe);
+				}
+			}
+		}
+	}
+
+	was_active = pqpair->tr[cqe->cid].active;
+	pqpair->tr[cqe->cid].active = false;
+
+	assert(cqe->cid == req->cmd.cid);
 
 	if (retry) {
 		req->retries++;
@@ -1250,10 +1282,10 @@ nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_trac
 			/* Only check admin requests from different processes. */
 			if (nvme_qpair_is_admin_queue(qpair) && req->pid != getpid()) {
 				req_from_current_proc = false;
-				nvme_pcie_qpair_insert_pending_admin_request(qpair, req, cpl);
+				nvme_pcie_qpair_insert_pending_admin_request(qpair, req, cqe);
 			} else {
 				if (req->cb_fn) {
-					req->cb_fn(req->cb_arg, cpl);
+					req->cb_fn(req->cb_arg, cqe);
 				}
 			}
 		}
@@ -1942,6 +1974,7 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 	void			*md_payload;
 	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
+	struct nvme_error_cmd	*cmd, *entry;
 
 	nvme_pcie_qpair_check_enabled(qpair);
 
@@ -1999,6 +2032,29 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 
 	if (rc < 0) {
 		goto exit;
+	}
+
+	/* error ejection at submission path */
+	if (spdk_unlikely(!TAILQ_EMPTY(&ctrlr->err_head))) {
+		TAILQ_FOREACH_SAFE(cmd, &ctrlr->err_head, link, entry) {
+			if (!cmd->isSubmitError) {
+				continue;
+			}
+
+			if ((nvme_qpair_is_admin_queue(qpair) &&
+			     cmd->opc == req->cmd.opc && cmd->isAdmin) ||
+			    (!nvme_qpair_is_admin_queue(qpair) &&
+			     cmd->opc == req->cmd.opc && !cmd->isAdmin)) {
+
+				tr->active = true;
+				nvme_pcie_qpair_manual_complete_tracker(qpair, tr,
+									cmd->status.sct,
+									cmd->status.sc,
+									1,
+									true);
+				goto exit;
+			}
+		}
 	}
 
 	nvme_pcie_qpair_submit_tracker(qpair, tr);
