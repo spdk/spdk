@@ -1267,6 +1267,7 @@ spdk_vhost_nvme_dev_construct(const char *name, const char *cpumask, uint32_t nu
 	}
 
 	if (num_io_queues < 1 || num_io_queues > MAX_IO_QUEUES) {
+		spdk_dma_free(dev);
 		return -EINVAL;
 	}
 
