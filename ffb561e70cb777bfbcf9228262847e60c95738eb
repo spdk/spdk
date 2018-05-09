@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "48165e77_14bb94c4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-05-09T08:33:07Z",
+      "side": 1,
+      "message": "No. spdk_blob_op_complete and _spdk_blob_freeze_io_cb has different typedefs.",
+      "parentUuid": "94449579_bc49356b",
+      "range": {
+        "startLine": 251,
+        "startChar": 0,
+        "endLine": 261,
+        "endChar": 22
+      },
+      "revId": "ffb561e70cb777bfbcf9228262847e60c95738eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3af01afc_cb3656c3",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 16
@@ -45,6 +69,30 @@
       "revId": "ffb561e70cb777bfbcf9228262847e60c95738eb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5313faf6_cf6cf430",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-05-09T08:33:07Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "3af01afc_cb3656c3",
+      "range": {
+        "startLine": 285,
+        "startChar": 4,
+        "endLine": 285,
+        "endChar": 26
+      },
+      "revId": "ffb561e70cb777bfbcf9228262847e60c95738eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "b1324213_cdd95ad0",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 311,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-05-09T08:33:07Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "06eaa926_80c3b4c3",
+      "range": {
+        "startLine": 311,
+        "startChar": 18,
+        "endLine": 311,
+        "endChar": 20
+      },
+      "revId": "ffb561e70cb777bfbcf9228262847e60c95738eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c7c17c68_c7d471f7",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 16
@@ -82,6 +154,30 @@
       "writtenOn": "2018-05-08T14:34:35Z",
       "side": 1,
       "message": "I think this should be switched - blob-\u003efrozen_io \u003d false should be done at the end (in callback).",
+      "range": {
+        "startLine": 311,
+        "startChar": 0,
+        "endLine": 313,
+        "endChar": 76
+      },
+      "revId": "ffb561e70cb777bfbcf9228262847e60c95738eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7af235ea_fb5422c7",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-05-09T08:33:07Z",
+      "side": 1,
+      "message": "The whole point of running spdk_for_each_thread is that all threads acknowledge that frozen_io \u003d\u003d false",
+      "parentUuid": "c7c17c68_c7d471f7",
       "range": {
         "startLine": 311,
         "startChar": 0,
