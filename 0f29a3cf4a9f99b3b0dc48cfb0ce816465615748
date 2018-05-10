@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b371f404_e266b861",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 525,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-10T14:17:43Z",
+      "side": 1,
+      "message": "Those two parameter should be in reverse order. I will correct this soon.",
+      "range": {
+        "startLine": 525,
+        "startChar": 49,
+        "endLine": 525,
+        "endChar": 83
+      },
+      "revId": "0f29a3cf4a9f99b3b0dc48cfb0ce816465615748",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
