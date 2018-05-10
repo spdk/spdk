@@ -63,7 +63,7 @@ bool g_bdev_alias_already_exists = false;
 bool g_lvs_with_name_already_exists = false;
 
 void
-spdk_lvol_inflate(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
+spdk_lvol_inflate(struct spdk_lvol *lvol, bool thin, spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
 	cb_fn(cb_arg, g_inflate_rc);
 }
@@ -1489,11 +1489,11 @@ ut_lvol_inflate(void)
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 
 	g_inflate_rc = -1;
-	vbdev_lvol_inflate(g_lvol, vbdev_lvol_inflate_complete, NULL);
+	vbdev_lvol_inflate(g_lvol, false, vbdev_lvol_inflate_complete, NULL);
 	CU_ASSERT(g_lvolerrno != 0);
 
 	g_inflate_rc = 0;
-	vbdev_lvol_inflate(g_lvol, vbdev_lvol_inflate_complete, NULL);
+	vbdev_lvol_inflate(g_lvol, false, vbdev_lvol_inflate_complete, NULL);
 	CU_ASSERT(g_lvolerrno == 0);
 
 	/* Unload lvol store */
