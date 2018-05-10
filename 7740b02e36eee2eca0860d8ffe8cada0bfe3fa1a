@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "28048f17_6f80d569",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-05-10T10:22:40Z",
+      "side": 1,
+      "message": "There will be concurrency issue of this statement, I think that we do not need this. Since qpair of same subsystem can be scheduled in different cores.",
+      "range": {
+        "startLine": 72,
+        "startChar": 2,
+        "endLine": 72,
+        "endChar": 48
+      },
+      "revId": "7740b02e36eee2eca0860d8ffe8cada0bfe3fa1a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
