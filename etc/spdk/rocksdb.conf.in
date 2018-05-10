@@ -17,6 +17,6 @@
   #ReactorMask 0x1
 
 [Ioat]
-  Disable Yes
+  Enable No
 
 # [Nvme] section will get appended here by scripts/gen_nvme.sh.

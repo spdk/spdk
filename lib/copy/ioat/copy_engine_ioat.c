@@ -45,7 +45,7 @@
 
 #define IOAT_MAX_CHANNELS		64
 
-static bool g_ioat_disable = false;
+static bool g_ioat_enable = false;
 
 struct ioat_probe_ctx {
 	int num_whitelist_devices;
@@ -295,9 +295,9 @@ copy_engine_ioat_init(void)
 	int i;
 
 	if (sp != NULL) {
-		if (spdk_conf_section_get_boolval(sp, "Disable", false)) {
-			g_ioat_disable = true;
-			/* Disable Ioat */
+		if (spdk_conf_section_get_boolval(sp, "Enable", false)) {
+			g_ioat_enable = true;
+			/* Enable Ioat */
 		}
 
 		/* Init the whitelist */
@@ -316,7 +316,7 @@ copy_engine_ioat_init(void)
 		}
 	}
 
-	if (g_ioat_disable) {
+	if (!g_ioat_enable) {
 		return 0;
 	}
 
@@ -338,8 +338,8 @@ copy_engine_ioat_init(void)
 "  # Users may use the whitelist to initialize specified devices, IDS\n" \
 "  #  uses BUS:DEVICE.FUNCTION to identify each Ioat channel.\n"
 
-#define COPY_ENGINE_IOAT_DISABLE_TMPL \
-"  Disable %s\n"
+#define COPY_ENGINE_IOAT_ENABLE_TMPL \
+"  Enable %s\n"
 
 #define COPY_ENGINE_IOAT_WHITELIST_TMPL \
 "  Whitelist %.4" PRIx16 ":%.2" PRIx8 ":%.2" PRIx8 ".%" PRIx8 "\n"
@@ -351,7 +351,7 @@ copy_engine_ioat_config_text(FILE *fp)
 	struct spdk_pci_addr *dev;
 
 	fprintf(fp, COPY_ENGINE_IOAT_HEADER_TMPL);
-	fprintf(fp, COPY_ENGINE_IOAT_DISABLE_TMPL, g_ioat_disable ? "Yes" : "No");
+	fprintf(fp, COPY_ENGINE_IOAT_ENABLE_TMPL, g_ioat_enable ? "Yes" : "No");
 
 	for (i = 0; i < g_probe_ctx.num_whitelist_devices; i++) {
 		dev = &g_probe_ctx.whitelist[i];
@@ -364,8 +364,8 @@ static void
 copy_engine_ioat_dump_info_json(struct spdk_json_write_ctx *w)
 {
 	spdk_json_write_named_object_begin(w, "ioat");
-	spdk_json_write_named_bool(w, "enumerate", !g_ioat_disable);
-	if (!g_ioat_disable) {
+	spdk_json_write_named_bool(w, "enumerate", g_ioat_enable);
+	if (g_ioat_enable) {
 		spdk_json_write_named_uint32(w, "num_devices", g_num_devices);
 		spdk_json_write_named_uint32(w, "num_alloc_devices", g_num_alloc_devices);
 	}
