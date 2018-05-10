@@ -32,6 +32,17 @@ function load_nvme() {
 	rm nvme_config.json
 }
 
+function upload_vhost() {
+	$rpc_py construct_split_vbdev Nvme0n1 8
+	$rpc_py construct_vhost_scsi_controller sample1
+	$rpc_py add_vhost_scsi_lun sample1 0 Nvme0n1p3
+	$rpc_py add_vhost_scsi_lun sample1 1 Nvme0n1p4
+	$rpc_py set_vhost_controller_coalescing sample1 1 100
+	$rpc_py construct_vhost_blk_controller sample2 Nvme0n1p5
+	$rpc_py construct_vhost_nvme_controller sample3 16
+	$rpc_py add_vhost_nvme_ns sample3 Nvme0n1p6
+}
+
 function kill_targets() {
 	killprocess $spdk_tgt_pid
 }
