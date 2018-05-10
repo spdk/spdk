@@ -340,7 +340,9 @@ struct spdk_bs_super_block {
 	uint32_t	used_blobid_mask_start; /* Offset from beginning of disk, in pages */
 	uint32_t	used_blobid_mask_len; /* Count, in pages */
 
-	uint8_t		reserved[4012];
+	uint64_t        size; /* size of blobstore in bytes */
+
+	uint8_t         reserved[4004];
 	uint32_t	crc;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_bs_super_block) == 0x1000, "Invalid super block size");
