@@ -679,6 +679,7 @@ SPDK_RPC_REGISTER("rename_lvol_bdev", spdk_rpc_rename_lvol_bdev, SPDK_RPC_RUNTIM
 
 struct rpc_inflate_lvol_bdev {
 	char *name;
+	bool thin;
 };
 
 static void
@@ -689,6 +690,7 @@ free_rpc_inflate_lvol_bdev(struct rpc_inflate_lvol_bdev *req)
 
 static const struct spdk_json_object_decoder rpc_inflate_lvol_bdev_decoders[] = {
 	{"name", offsetof(struct rpc_inflate_lvol_bdev, name), spdk_json_decode_string},
+	{"thin", offsetof(struct rpc_inflate_lvol_bdev, thin), spdk_json_decode_bool, true},
 };
 
 static void
@@ -748,7 +750,7 @@ spdk_rpc_inflate_lvol_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	spdk_lvol_inflate(lvol, _spdk_rpc_inflate_lvol_bdev_cb, request);
+	spdk_lvol_inflate(lvol, req.thin, _spdk_rpc_inflate_lvol_bdev_cb, request);
 
 	free_rpc_inflate_lvol_bdev(&req);
 	return;
