@@ -379,7 +379,7 @@ struct rpc_lun {
 
 static const struct spdk_json_object_decoder rpc_lun_decoders[] = {
 	{"bdev_name", offsetof(struct rpc_lun, bdev_name), spdk_json_decode_string},
-	{"lun_id", offsetof(struct rpc_lun, lun_id), spdk_json_decode_int32},
+	{"id", offsetof(struct rpc_lun, lun_id), spdk_json_decode_int32},
 };
 
 static int
