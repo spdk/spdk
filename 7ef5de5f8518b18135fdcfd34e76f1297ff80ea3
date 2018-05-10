@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "55ff37ea_8db7dc79",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-05-10T02:29:48Z",
+      "side": 1,
+      "message": "this should go into the previous patch.",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 56,
+        "endChar": 1
+      },
+      "revId": "7ef5de5f8518b18135fdcfd34e76f1297ff80ea3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
