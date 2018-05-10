@@ -3715,6 +3715,8 @@ struct spdk_clone_snapshot_ctx {
 
 	/* Current cluster for inflate operation */
 	uint64_t cluster;
+	/* Keep clone thin when inflated */
+	bool thin;
 
 	struct {
 		spdk_blob_id id;
@@ -4091,16 +4093,11 @@ static void
 _spdk_bs_inflate_blob_sync(void *cb_arg, int bserrno)
 {
 	struct spdk_clone_snapshot_ctx *ctx = (struct spdk_clone_snapshot_ctx *)cb_arg;
-	struct spdk_blob *_blob = ctx->original.blob;
 
 	if (bserrno != 0) {
 		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, bserrno);
 		return;
 	}
-
-	/* Destroy back_bs_dev */
-	_blob->back_bs_dev->destroy(_blob->back_bs_dev);
-	_blob->back_bs_dev = NULL;
 
 	_spdk_bs_clone_snapshot_origblob_cleanup(ctx, 0);
 }
@@ -4110,21 +4107,60 @@ _spdk_bs_inflate_blob_done(void *cb_arg, int bserrno)
 {
 	struct spdk_clone_snapshot_ctx *ctx = (struct spdk_clone_snapshot_ctx *)cb_arg;
 	struct spdk_blob *_blob = ctx->original.blob;
+	struct spdk_bs_dev *back_bs_dev;
+	struct spdk_blob *_parent, *_grandpa;
 
 	if (bserrno != 0) {
 		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, bserrno);
 		return;
 	}
 
+	back_bs_dev = _blob->back_bs_dev;
+
 	_spdk_bs_blob_list_remove(_blob);
+	if (!ctx->thin) {
+		_spdk_blob_remove_xattr(_blob, BLOB_SNAPSHOT, true);
+		_blob->invalid_flags = _blob->invalid_flags & ~SPDK_BLOB_THIN_PROV;
+		_blob->back_bs_dev = NULL;
+	} else {
+		_parent = ((struct spdk_blob_bs_dev *)(_blob->back_bs_dev))->blob;
+		if (_parent->parent_id != SPDK_BLOBID_INVALID) {
+			_grandpa = ((struct spdk_blob_bs_dev *)(_parent->back_bs_dev))->blob;
+			_blob->back_bs_dev = spdk_bs_create_blob_bs_dev(_grandpa);
+			_spdk_blob_set_xattr(_blob, BLOB_SNAPSHOT, &_grandpa->id,
+					sizeof(spdk_blob_id), true);
+			_spdk_bs_blob_list_add(_blob);
+		} else {
+			_spdk_blob_remove_xattr(_blob, BLOB_SNAPSHOT, true);
+			_blob->back_bs_dev = NULL;
+		}
+	}
+	back_bs_dev->destroy(back_bs_dev);
 
-	_spdk_blob_remove_xattr(_blob, BLOB_SNAPSHOT, true);
-
-	/* Unset thin provision */
-	_blob->invalid_flags = _blob->invalid_flags & ~SPDK_BLOB_THIN_PROV;
 	_blob->state = SPDK_BLOB_STATE_DIRTY;
-
 	spdk_blob_sync_md(_blob, _spdk_bs_inflate_blob_sync, ctx);
+}
+
+/* Check if cluster needs allocation */
+static inline bool
+_spdk_bs_cluster_needs_allocation(struct spdk_blob *blob, uint64_t cluster, bool thin)
+{
+	struct spdk_blob_bs_dev *b;
+
+	assert(blob != NULL);
+
+	if (blob->active.clusters[cluster] != 0) {
+		/* Cluster is already allocated */
+		return false;
+	}
+
+	if (blob->parent_id == SPDK_BLOBID_INVALID) {
+		/* Blob have no parent blob */
+		return thin;
+	}
+
+	b = (struct spdk_blob_bs_dev *)blob->back_bs_dev;
+	return (!thin || b->blob->active.clusters[cluster] != 0);
 }
 
 static void
@@ -4140,7 +4176,7 @@ _spdk_bs_inflate_blob_touch_next(void *cb_arg, int bserrno)
 	}
 
 	for (; ctx->cluster < _blob->active.num_clusters; ctx->cluster++) {
-		if (_blob->active.clusters[ctx->cluster] == 0) {
+		if (_spdk_bs_cluster_needs_allocation(_blob, ctx->cluster, ctx->thin)) {
 			break;
 		}
 	}
@@ -4183,7 +4219,7 @@ _spdk_bs_inflate_blob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrn
 	 */
 	lfc = 0;
 	for (i = 0; i < _blob->active.num_clusters; i++) {
-		if (_blob->active.clusters[i] == 0) {
+		if (_spdk_bs_cluster_needs_allocation(_blob, i, ctx->thin)) {
 			lfc = spdk_bit_array_find_first_clear(_blob->bs->used_clusters, lfc);
 			if (lfc >= _blob->bs->total_clusters) {
 				/* No more free clusters. Cannot satisfy the request */
@@ -4198,8 +4234,9 @@ _spdk_bs_inflate_blob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrn
 	_spdk_bs_inflate_blob_touch_next(ctx, 0);
 }
 
-void spdk_bs_inflate_blob(struct spdk_blob_store *bs, struct spdk_io_channel *channel,
-			  spdk_blob_id blobid, spdk_blob_op_complete cb_fn, void *cb_arg)
+void
+spdk_bs_inflate_blob(struct spdk_blob_store *bs, struct spdk_io_channel *channel,
+		     spdk_blob_id blobid, bool thin, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_clone_snapshot_ctx *ctx = calloc(1, sizeof(*ctx));
 
@@ -4213,10 +4250,10 @@ void spdk_bs_inflate_blob(struct spdk_blob_store *bs, struct spdk_io_channel *ch
 	ctx->bserrno = 0;
 	ctx->original.id = blobid;
 	ctx->channel = channel;
+	ctx->thin = thin;
 
 	spdk_bs_open_blob(bs, ctx->original.id, _spdk_bs_inflate_blob_open_cpl, ctx);
 }
-
 /* END spdk_bs_inflate_blob */
 
 /* START spdk_blob_resize */
