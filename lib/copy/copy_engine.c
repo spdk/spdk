@@ -39,12 +39,15 @@
 #include "spdk/event.h"
 #include "spdk/log.h"
 #include "spdk/io_channel.h"
+#include "spdk/json.h"
 
 static size_t g_max_copy_module_size = 0;
 
 static struct spdk_copy_engine *hw_copy_engine = NULL;
 /* Memcpy engine always exist */
 static struct spdk_copy_engine *mem_copy_engine = NULL;
+
+static uint32_t g_num_memcpy_devices = 0;
 
 TAILQ_HEAD(, spdk_copy_module_if) spdk_copy_module_list =
 	TAILQ_HEAD_INITIALIZER(spdk_copy_module_list);
@@ -141,26 +144,9 @@ static struct spdk_copy_engine memcpy_copy_engine = {
 	.get_io_channel	= mem_get_io_channel,
 };
 
-static int
-memcpy_create_cb(void *io_device, void *ctx_buf)
-{
-	return 0;
-}
-
-static void
-memcpy_destroy_cb(void *io_device, void *ctx_buf)
-{
-}
-
 static struct spdk_io_channel *mem_get_io_channel(void)
 {
 	return spdk_get_io_channel(&memcpy_copy_engine);
-}
-
-static size_t
-copy_engine_mem_get_ctx_size(void)
-{
-	return sizeof(struct spdk_copy_task);
 }
 
 size_t
@@ -208,15 +194,6 @@ struct spdk_io_channel *
 spdk_copy_engine_get_io_channel(void)
 {
 	return spdk_get_io_channel(&spdk_copy_module_list);
-}
-
-static int
-copy_engine_mem_init(void)
-{
-	spdk_memcpy_register(&memcpy_copy_engine);
-	spdk_io_device_register(&memcpy_copy_engine, memcpy_create_cb, memcpy_destroy_cb, 0);
-
-	return 0;
 }
 
 static void
@@ -297,4 +274,53 @@ spdk_copy_engine_config_text(FILE *fp)
 	}
 }
 
-SPDK_COPY_MODULE_REGISTER(copy_engine_mem_init, NULL, NULL, copy_engine_mem_get_ctx_size)
+void
+spdk_copy_engine_dump_info_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_copy_module_if *copy_engine_module;
+
+	TAILQ_FOREACH(copy_engine_module, &spdk_copy_module_list, tailq) {
+		if (copy_engine_module->dump_info_json) {
+			copy_engine_module->dump_info_json(w);
+		}
+	}
+}
+
+static int
+memcpy_create_cb(void *io_device, void *ctx_buf)
+{
+	g_num_memcpy_devices++;
+	return 0;
+}
+
+static void
+memcpy_destroy_cb(void *io_device, void *ctx_buf)
+{
+	g_num_memcpy_devices--;
+}
+
+static size_t
+copy_engine_mem_get_ctx_size(void)
+{
+	return sizeof(struct spdk_copy_task);
+}
+
+static int
+copy_engine_mem_init(void)
+{
+	spdk_memcpy_register(&memcpy_copy_engine);
+	spdk_io_device_register(&memcpy_copy_engine, memcpy_create_cb, memcpy_destroy_cb, 0);
+
+	return 0;
+}
+
+static void
+copy_engine_mem_dump_info_json(struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_named_object_begin(w, "memcpy");
+	spdk_json_write_named_uint32(w, "num_devices", g_num_memcpy_devices);
+	spdk_json_write_object_end(w);
+}
+
+SPDK_COPY_MODULE_REGISTER(copy_engine_mem_init, NULL, NULL, copy_engine_mem_get_ctx_size,
+			  copy_engine_mem_dump_info_json)

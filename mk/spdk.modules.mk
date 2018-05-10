@@ -75,7 +75,7 @@ endif
 NET_MODULES_LIST += net_vpp
 endif
 
-COPY_MODULES_LIST = copy_ioat ioat
+COPY_MODULES_LIST = copy copy_ioat ioat
 
 BLOCKDEV_MODULES_LINKER_ARGS = -Wl,--whole-archive \
 			       $(BLOCKDEV_MODULES_LIST:%=-lspdk_%) \
