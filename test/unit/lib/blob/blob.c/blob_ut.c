@@ -1864,6 +1864,7 @@ bs_load(void)
 
 	super_block = (struct spdk_bs_super_block *)g_dev_buffer;
 	CU_ASSERT(super_block->clean == 1);
+	CU_ASSERT(super_block->size == dev->blockcnt * dev->blocklen);
 
 	spdk_bs_open_blob(g_bs, blobid, blob_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -1896,6 +1897,48 @@ bs_load(void)
 	spdk_bs_unload(g_bs, bs_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	g_bs = NULL;
+
+	/* Load should fail: bdev size < saved size */
+	dev = init_dev();
+	dev->blockcnt /= 2;
+
+	spdk_bs_opts_init(&opts);
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
+
+	CU_ASSERT(g_bserrno == -EILSEQ);
+
+	/* Load should succeed: bdev size > saved size */
+	dev = init_dev();
+	dev->blockcnt *= 4;
+
+	spdk_bs_opts_init(&opts);
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
+
+	CU_ASSERT(g_bserrno == 0);
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+
+
+	/* Test compatibility mode */
+
+	dev = init_dev();
+	super_block->size = 0;
+	super_block->crc = _spdk_blob_md_page_calc_crc(super_block);
+
+	spdk_bs_opts_init(&opts);
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	/* Blobstore should update number of blocks in super_block */
+	CU_ASSERT(super_block->size == dev->blockcnt * dev->blocklen);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+
 }
 
 static void

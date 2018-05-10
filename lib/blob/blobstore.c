@@ -2661,7 +2661,7 @@ _spdk_bs_load_used_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 }
 
 static void
-_spdk_bs_load_read_used_pages(spdk_bs_sequence_t *seq, void *cb_arg)
+_spdk_bs_load_read_used_pages(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_load_ctx	*ctx = cb_arg;
 	uint64_t lba, lba_count, mask_size;
@@ -2917,6 +2917,7 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	struct spdk_bs_load_ctx *ctx = cb_arg;
 	uint32_t	crc;
 	static const char zeros[SPDK_BLOBSTORE_TYPE_LENGTH];
+	spdk_bs_sequence_cpl update_super_cb = NULL;
 
 	if (ctx->super->version > SPDK_BS_VERSION ||
 	    ctx->super->version < SPDK_BS_INITIAL_VERSION) {
@@ -2948,10 +2949,30 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		return;
 	}
 
+	if (ctx->super->size == 0) {
+		/* Update number of blocks for blobstore */
+		ctx->super->size = ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen;
+		update_super_cb = _spdk_bs_load_read_used_pages;
+	} else if (ctx->super->size > ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen) {
+		SPDK_NOTICELOG("Size mismatch, dev size: %lu, blobstore size: %lu\n",
+			       ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen, ctx->super->size);
+		_spdk_bs_load_ctx_fail(seq, ctx, -EILSEQ);
+		return;
+	}
+
+	if (ctx->super->used_blobid_mask_len == 0) {
+		/*
+		 * Metadata is clean, but this is an old metadata format without
+		 *  a blobid mask.  Clear the clean bit and then build the masks
+		 *  using _spdk_bs_recover.
+		 */
+		update_super_cb = _spdk_bs_recover;
+	}
+
 	/* Parse the super block */
 	ctx->bs->clean = 1;
 	ctx->bs->cluster_sz = ctx->super->cluster_size;
-	ctx->bs->total_clusters = ctx->bs->dev->blockcnt / (ctx->bs->cluster_sz / ctx->bs->dev->blocklen);
+	ctx->bs->total_clusters = ctx->super->size / ctx->bs->cluster_sz;
 	ctx->bs->pages_per_cluster = ctx->bs->cluster_sz / SPDK_BS_PAGE_SIZE;
 	ctx->bs->md_start = ctx->super->md_start;
 	ctx->bs->md_len = ctx->super->md_len;
@@ -2962,17 +2983,12 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 
 	if (ctx->super->clean == 0) {
 		_spdk_bs_recover(seq, ctx, 0);
-	} else if (ctx->super->used_blobid_mask_len == 0) {
-		/*
-		 * Metadata is clean, but this is an old metadata format without
-		 *  a blobid mask.  Clear the clean bit and then build the masks
-		 *  using _spdk_bs_recover.
-		 */
+	} else if (update_super_cb) {
 		ctx->super->clean = 0;
 		ctx->bs->clean = 0;
-		_spdk_bs_write_super(seq, ctx->bs, ctx->super, _spdk_bs_recover, ctx);
+		_spdk_bs_write_super(seq, ctx->bs, ctx->super, update_super_cb, ctx);
 	} else {
-		_spdk_bs_load_read_used_pages(seq, ctx);
+		_spdk_bs_load_read_used_pages(seq, ctx, 0);
 	}
 }
 
@@ -3223,6 +3239,8 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	num_md_pages += bs->md_len;
 
 	num_md_lba = _spdk_bs_page_to_lba(bs, num_md_pages);
+
+	ctx->super->size = dev->blockcnt * dev->blocklen;
 
 	ctx->super->crc = _spdk_blob_md_page_calc_crc(ctx->super);
 
