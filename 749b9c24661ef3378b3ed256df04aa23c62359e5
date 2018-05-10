@@ -2,6 +2,74 @@
   "comments": [
     {
       "key": {
+        "uuid": "32523764_e8dcf423",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1447,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-10T18:31:54Z",
+      "side": 1,
+      "message": "extra newline should be removed (this is a nit but since you already need to make other changes below you should remove these too)",
+      "revId": "749b9c24661ef3378b3ed256df04aa23c62359e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ddd74d13_10d53d0c",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1471,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-10T18:31:54Z",
+      "side": 1,
+      "message": "extra newline should be removed",
+      "revId": "749b9c24661ef3378b3ed256df04aa23c62359e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d635ae78_40b7aec2",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1533,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-10T18:31:54Z",
+      "side": 1,
+      "message": "payload_pattern !\u003d NULL",
+      "revId": "749b9c24661ef3378b3ed256df04aa23c62359e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9801b90c_6fc20454",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1535,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-10T18:31:54Z",
+      "side": 1,
+      "message": "can you use the spdk_mem_all_zero function instead?",
+      "revId": "749b9c24661ef3378b3ed256df04aa23c62359e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a2ef7663_fb8d3e52",
         "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
         "patchSetId": 1
@@ -13,6 +81,30 @@
       "writtenOn": "2018-05-09T07:46:44Z",
       "side": 1,
       "message": "This comment may not be correct?",
+      "range": {
+        "startLine": 1580,
+        "startChar": 21,
+        "endLine": 1580,
+        "endChar": 58
+      },
+      "revId": "749b9c24661ef3378b3ed256df04aa23c62359e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f75cdab5_aa61acc1",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1580,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-10T18:31:54Z",
+      "side": 1,
+      "message": "Agreed.  Doesn\u0027t line 1576 write to the last page?",
+      "parentUuid": "a2ef7663_fb8d3e52",
       "range": {
         "startLine": 1580,
         "startChar": 21,
