@@ -32,6 +32,33 @@ function load_nvme() {
 	rm nvme_config.json
 }
 
+function upload_vhost() {
+	$rpc_py construct_split_vbdev Nvme0n1 8
+	$rpc_py construct_vhost_scsi_controller sample1
+	$rpc_py add_vhost_scsi_lun sample1 0 Nvme0n1p3
+	$rpc_py add_vhost_scsi_lun sample1 1 Nvme0n1p4
+	$rpc_py set_vhost_controller_coalescing sample1 1 100
+	$rpc_py construct_vhost_blk_controller sample2 Nvme0n1p5
+	$rpc_py construct_vhost_nvme_controller sample3 16
+	$rpc_py add_vhost_nvme_ns sample3 Nvme0n1p6
+}
+
+function clean_vhost() {
+	$rpc_py remove_vhost_controller sample3
+	$rpc_py remove_vhost_controller sample2
+	$rpc_py remove_vhost_scsi_target sample1 1
+	$rpc_py remove_vhost_scsi_target sample1 0
+	$rpc_py remove_vhost_controller sample1
+}
+
+function run_initiator() {
+	cp $JSON_DIR/virtio.conf.base $JSON_DIR/vhost.conf.in
+	$SPDK_BUILD_DIR/app/spdk_tgt/spdk_tgt -m 0x2 -p 0 -g -c $JSON_DIR/vhost.conf.in -s 1024 -r /var/tmp/virtio.sock &
+	virtio_pid=$!
+	waitforlisten $virtio_pid /var/tmp/virtio.sock
+	rm $JSON_DIR/vhost.conf.in
+}
+
 function kill_targets() {
 	killprocess $spdk_tgt_pid
 }
