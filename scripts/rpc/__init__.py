@@ -74,6 +74,6 @@ def load_config(client, args):
 
 
 def clear_config(client, args):
-    for subsystem_item in client.call('get_subsystems'):
+    for subsystem_item in reversed(client.call('get_subsystems')):
         args.subsystem = subsystem_item['subsystem']
         subsystem.clear_subsystem(client, args)

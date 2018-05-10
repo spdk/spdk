@@ -139,4 +139,13 @@ def construct_virtio_pci_blk_bdev(client, args):
 
 
 def clear_vhost_subsystem(args, vhost_config):
-    pass
+    for vhost in reversed(vhost_config):
+        if 'method' in vhost:
+            method = vhost['method']
+            if method in ['add_vhost_scsi_lun']:
+                args.client.call("remove_vhost_scsi_target",
+                                 {"ctrlr": vhost['params']['ctrlr'],
+                                  "scsi_target_num": vhost['params']['scsi_target_num']})
+            elif method in ['construct_vhost_scsi_controller', 'construct_vhost_blk_controller',
+                'construct_vhost_nvme_controller']:
+                args.client.call("remove_vhost_controller", {'ctrlr': vhost['params']['ctrlr']})

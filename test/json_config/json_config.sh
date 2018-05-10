@@ -40,7 +40,6 @@ function test_json_config() {
 	$rpc_py get_bdevs | jq '.|sort_by(.name)' > $base_bdevs
 	$rpc_py save_config -f $base_json_config
 	$rpc_py clear_config
-	$rpc_py get_bdevs
 	$rpc_py load_config --filename $base_json_config
 	$rpc_py get_bdevs | jq '.|sort_by(.name)' > $last_bdevs
 	$rpc_py save_config -f $last_json_config
@@ -51,8 +50,8 @@ function test_json_config() {
 }
 
 function create_bdev_subsystem_config() {
-        $rpc_py construct_split_vbdev Nvme0n1 3
-        $rpc_py construct_split_vbdev Nvme1n1 2
+        #$rpc_py construct_split_vbdev Nvme0n1 3
+        $rpc_py construct_split_vbdev Nvme1n1 8
 	$rpc_py construct_null_bdev Null0 32 512
 	$rpc_py construct_malloc_bdev 128 512 --name Malloc0
 	$rpc_py construct_malloc_bdev 64 4096 --name Malloc1
@@ -60,7 +59,7 @@ function create_bdev_subsystem_config() {
 	$rpc_py construct_error_bdev Malloc2
         dd if=/dev/zero of=/tmp/sample_aio bs=2048 count=5000
 	$rpc_py construct_aio_bdev /tmp/sample_aio aio_disk 1024
-	$rpc_py construct_lvol_store -c 1048576 Nvme0n1p2 lvs_test
+	$rpc_py construct_lvol_store -c 1048576 Nvme0n1 lvs_test
 	$rpc_py construct_lvol_bdev -l lvs_test lvol0 32
 	$rpc_py construct_lvol_bdev -l lvs_test -t lvol1 32
 	$rpc_py snapshot_lvol_bdev lvs_test/lvol0 snapshot0
@@ -87,21 +86,39 @@ function clean_bdev_subsystem_config() {
 }
 
 function pre_initiator_config() {
-	$rpc_py construct_vhost_scsi_controller naa.Nvme0n1p0.0
-	$rpc_py construct_vhost_scsi_controller naa.Nvme1n1p0.1
-	$rpc_py add_vhost_scsi_lun naa.Nvme0n1p0.0 0 Nvme0n1p0
-	$rpc_py add_vhost_scsi_lun naa.Nvme1n1p0.1 0 Nvme1n1p0
-	$rpc_py construct_vhost_blk_controller naa.Nvme0n1p1.0 Nvme0n1p1
-	$rpc_py construct_vhost_blk_controller naa.Nvme1n1p1.1 Nvme1n1p1
+	$rpc_py construct_vhost_scsi_controller naa.Nvme1n1p0.0
+	$rpc_py construct_vhost_scsi_controller naa.Nvme1n1p1.1
+	$rpc_py add_vhost_scsi_lun naa.Nvme1n1p0.0 0 Nvme1n1p0
+	$rpc_py add_vhost_scsi_lun naa.Nvme1n1p1.1 0 Nvme1n1p1
+	$rpc_py construct_vhost_blk_controller naa.Nvme1n1p2.0 Nvme1n1p2
+	$rpc_py construct_vhost_blk_controller naa.Nvme1n1p3.1 Nvme1n1p3
 }
 
 function upload_initiator() {
-	$rpc_py construct_virtio_user_scsi_bdev $JSON_DIR/naa.Nvme0n1p0.0 Nvme0n1p0
-	$rpc_py construct_virtio_user_blk_bdev $JSON_DIR/naa.Nvme0n1p1.0 Nvme0n1p1
+	$rpc_py construct_virtio_user_scsi_bdev $JSON_DIR/naa.Nvme1n1p0.0 Nvme1n1p0
+	$rpc_py construct_virtio_user_blk_bdev $JSON_DIR/naa.Nvme1n1p2.0 Nvme1n1p2
 }
 
 function clean_upload_initiator() {
 	$rpc_py clear_config
+}
+
+function upload_vhost() {
+	$rpc_py construct_vhost_scsi_controller sample1
+	$rpc_py add_vhost_scsi_lun sample1 0 Nvme1n1p3
+	$rpc_py add_vhost_scsi_lun sample1 1 Nvme1n1p4
+	$rpc_py set_vhost_controller_coalescing sample1 1 100
+	$rpc_py construct_vhost_blk_controller sample2 Nvme1n1p5
+	$rpc_py construct_vhost_nvme_controller sample3 16
+	$rpc_py add_vhost_nvme_ns sample3 Nvme1n1p6
+}
+
+function clean_vhost() {
+	$rpc_py remove_vhost_controller sample3
+	$rpc_py remove_vhost_controller sample2
+	$rpc_py remove_vhost_scsi_target sample1 1
+	$rpc_py remove_vhost_scsi_target sample1 0
+	$rpc_py remove_vhost_controller sample1
 }
 
 function test_subsystems() {
@@ -110,7 +127,9 @@ function test_subsystems() {
 	rpc_py="$spdk_rpc_py"
 	create_bdev_subsystem_config
 	test_json_config
-	#clean_bdev_subsystem_config
+        upload_vhost
+        test_json_config
+        clean_vhost
         pre_initiator_config
 	run_initiator
 	rpc_py="$initiator_rpc_py"
