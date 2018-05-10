@@ -2921,7 +2921,8 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		ctx->super->clean = 0;
 		_spdk_bs_write_super(seq, ctx->bs, ctx->super, _spdk_bs_recover, ctx);
 	} else {
-		ctx->super->clean = 0;
+		/* TODO: do not write dirty bit */
+		ctx->super->clean = 1;
 		_spdk_bs_write_super(seq, ctx->bs, ctx->super, _spdk_bs_load_write_super_cpl, ctx);
 	}
 }
@@ -4332,6 +4333,7 @@ _spdk_blob_sync_md(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb
 		return;
 	}
 
+
 	_spdk_blob_persist(seq, blob, _spdk_blob_sync_md_cpl, blob);
 }
 
@@ -4348,7 +4350,31 @@ spdk_blob_sync_md(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb_
 		return;
 	}
 
-	_spdk_blob_sync_md(blob, cb_fn, cb_arg);
+
+
+	/* TODO: */
+	if (blob->bs->firt_md_write) {
+		struct spdk_bs_cpl	cpl;
+		spdk_bs_sequence_t	*seq;
+
+		cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
+		cpl.u.blob_basic.cb_fn = cb_fn;
+		cpl.u.blob_basic.cb_arg = cb_arg;
+
+		seq = spdk_bs_sequence_start(blob->bs->md_channel, &cpl);
+		if (!seq) {
+			cb_fn(cb_arg, -ENOMEM);
+			return;
+		}
+
+		struct spdk_bs_super_block	*super;
+		super = blob->bs->super_blob
+			/* Write dirty bit */
+			ctx->super->clean = 0;
+		_spdk_bs_write_super(seq, blob->bs, ctx->super, _spdk_blob_sync_md, cpl);
+	} else {
+		_spdk_blob_sync_md(blob, cb_fn, cb_arg);
+	}
 }
 
 /* END spdk_blob_sync_md */

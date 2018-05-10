@@ -4031,6 +4031,75 @@ blob_relations(void)
 	g_bs = NULL;
 }
 
+static void
+blob_dirty_bit(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_bs_dev *dev;
+	struct spdk_blob *blob;
+	struct spdk_bs_opts opts;
+	spdk_blob_id blobid;
+	int rc;
+
+	dev = init_dev();
+	spdk_bs_opts_init(&opts);
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
+
+	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	spdk_bs_create_blob(bs, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+	g_blob = NULL;
+	g_blobid = 0;
+
+	/* Load an existing blob store */
+	dev = init_dev();
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	/* TODO: Check dirty flag (== 1) */
+
+	spdk_bs_open_blob(g_bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+
+	/* TODO: Set some metadata */
+
+	spdk_blob_sync_md(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	/* TODO: Check dirty flag (== 0) */
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	/* TODO: Check dirty flag (== 1) */
+
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -4090,7 +4159,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "bs_load_iter", bs_load_iter) == NULL ||
 		CU_add_test(suite, "blob_snapshot_rw", blob_snapshot_rw) == NULL ||
 		CU_add_test(suite, "blob_snapshot_rw_iov", blob_snapshot_rw_iov) == NULL ||
-		CU_add_test(suite, "blob_relations", blob_relations) == NULL
+		CU_add_test(suite, "blob_relations", blob_relations) == NULL ||
+		CU_add_test(suite, "blob_dirty_bit", blob_dirty_bit) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
