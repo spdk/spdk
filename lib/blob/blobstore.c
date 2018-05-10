@@ -2904,6 +2904,15 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		return;
 	}
 
+	if (ctx->super->size == 0 || ctx->super->size > ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen) {
+		/* Update number of blocks for blobstore */
+		ctx->super->size = ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen;
+	} else if (ctx->super->size < ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen) {
+		SPDK_ERRLOG("Cannot load trimmed blobstore\n");
+		_spdk_bs_load_ctx_fail(seq, ctx, -EILSEQ);
+		return;
+	}
+
 	/* Parse the super block */
 	ctx->bs->cluster_sz = ctx->super->cluster_size;
 	ctx->bs->total_clusters = ctx->bs->dev->blockcnt / (ctx->bs->cluster_sz / ctx->bs->dev->blocklen);
@@ -3176,6 +3185,8 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	num_md_pages += bs->md_len;
 
 	num_md_lba = _spdk_bs_page_to_lba(bs, num_md_pages);
+
+	ctx->super->size = dev->blockcnt * dev->blocklen;
 
 	ctx->super->crc = _spdk_blob_md_page_calc_crc(ctx->super);
 
