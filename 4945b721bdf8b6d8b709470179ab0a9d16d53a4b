@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8c2f57ca_888aa126",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-10T09:20:58Z",
+      "side": 1,
+      "message": "Looks good but I wish we can do like the following:\n\nfor bdev in reversed(bdev_config):\n    bdev_name_key \u003d get_bdev_name_key(bdev)\n    bdev_name \u003d get_bdev_name(bdev)\n    destroy_method \u003d get_bdev_destroy_method(bdev)\n    args.client.call(destroy_method, {bdev_name_key: bdev_name})",
+      "revId": "4945b721bdf8b6d8b709470179ab0a9d16d53a4b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
