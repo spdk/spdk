@@ -1070,6 +1070,14 @@ if __name__ == "__main__":
     p.add_argument('name', help='Name for the bdev')
     p.set_defaults(func=construct_virtio_pci_blk_bdev)
 
+    # copy
+    @call_cmd
+    def get_copy_engines(args):
+        print_dict(rpc.copy.get_copy_engines(args.client))
+
+    p = subparsers.add_parser('get_copy_engines', help='Display state of copy engines.')
+    p.set_defaults(func=get_copy_engines)
+
     args = parser.parse_args()
 
     try:

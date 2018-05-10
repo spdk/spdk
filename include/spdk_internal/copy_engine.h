@@ -39,6 +39,8 @@
 #include "spdk/copy_engine.h"
 #include "spdk/queue.h"
 
+struct spdk_json_write_ctx;
+
 struct spdk_copy_task {
 	spdk_copy_completion_cb	cb;
 	uint8_t			offload_ctx[0];
@@ -74,18 +76,26 @@ struct spdk_copy_module_if {
 	void	(*config_text)(FILE *fp);
 
 	size_t	(*get_ctx_size)(void);
+
+	/** Function called to return a JSON stream representing the
+	 *   module's state information.
+	 */
+	void	(*dump_info_json)(struct spdk_json_write_ctx *w);
+
 	TAILQ_ENTRY(spdk_copy_module_if)	tailq;
 };
 
 void spdk_copy_engine_register(struct spdk_copy_engine *copy_engine);
 void spdk_copy_module_list_add(struct spdk_copy_module_if *copy_module);
+void spdk_copy_engine_dump_info_json(struct spdk_json_write_ctx *w);
 
-#define SPDK_COPY_MODULE_REGISTER(init_fn, fini_fn, config_fn, ctx_size_fn)				\
+#define SPDK_COPY_MODULE_REGISTER(init_fn, fini_fn, config_fn, ctx_size_fn, json_info_fn)		\
 	static struct spdk_copy_module_if init_fn ## _if = {						\
 	.module_init	= init_fn,									\
 	.module_fini	= fini_fn,									\
 	.config_text	= config_fn,									\
 	.get_ctx_size	= ctx_size_fn,									\
+	.dump_info_json	= json_info_fn,									\
 	};												\
 	__attribute__((constructor)) static void init_fn ## _init(void)					\
 	{												\

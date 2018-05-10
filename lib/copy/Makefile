@@ -35,7 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 LIBNAME = copy
-C_SRCS = copy_engine.c
+C_SRCS = copy_engine.c copy_engine_rpc.c
 
 DIRS-y = ioat
 
