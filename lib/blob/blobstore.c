@@ -4153,6 +4153,10 @@ struct spdk_clone_snapshot_ctx {
 	/* Current cluster for inflate operation */
 	uint64_t cluster;
 
+	/* For inflation force allocation of all unallocated clusters and remove
+	 * thin-provisioning. Otherwise only decouple parent and keep clone thin. */
+	bool allocate_all;
+
 	struct {
 		spdk_blob_id id;
 		struct spdk_blob *blob;
@@ -4581,7 +4585,7 @@ void spdk_bs_create_clone(struct spdk_blob_store *bs, spdk_blob_id blobid,
 /* START spdk_bs_inflate_blob */
 
 static void
-_spdk_bs_inflate_blob_sync(void *cb_arg, int bserrno)
+_spdk_bs_inflate_blob_set_parent_cpl(void *cb_arg, struct spdk_blob *_parent, int bserrno)
 {
 	struct spdk_clone_snapshot_ctx *ctx = (struct spdk_clone_snapshot_ctx *)cb_arg;
 	struct spdk_blob *_blob = ctx->original.blob;
@@ -4591,11 +4595,18 @@ _spdk_bs_inflate_blob_sync(void *cb_arg, int bserrno)
 		return;
 	}
 
-	/* Destroy back_bs_dev */
-	_blob->back_bs_dev->destroy(_blob->back_bs_dev);
-	_blob->back_bs_dev = NULL;
+	assert(_parent != NULL);
 
-	_spdk_bs_clone_snapshot_origblob_cleanup(ctx, 0);
+	_spdk_bs_blob_list_remove(_blob);
+	_blob->parent_id = _parent->id;
+	_spdk_blob_set_xattr(_blob, BLOB_SNAPSHOT, &_blob->parent_id,
+			     sizeof(spdk_blob_id), true);
+
+	_blob->back_bs_dev->destroy(_blob->back_bs_dev);
+	_blob->back_bs_dev = spdk_bs_create_blob_bs_dev(_parent);
+	_spdk_bs_blob_list_add(_blob);
+
+	spdk_blob_sync_md(_blob, _spdk_bs_clone_snapshot_origblob_cleanup, ctx);
 }
 
 static void
@@ -4603,21 +4614,61 @@ _spdk_bs_inflate_blob_done(void *cb_arg, int bserrno)
 {
 	struct spdk_clone_snapshot_ctx *ctx = (struct spdk_clone_snapshot_ctx *)cb_arg;
 	struct spdk_blob *_blob = ctx->original.blob;
+	struct spdk_blob *_parent;
 
 	if (bserrno != 0) {
 		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, bserrno);
 		return;
 	}
 
-	_spdk_bs_blob_list_remove(_blob);
+	if (ctx->allocate_all) {
+		/* remove thin provisioning */
+		_spdk_bs_blob_list_remove(_blob);
+		_spdk_blob_remove_xattr(_blob, BLOB_SNAPSHOT, true);
+		_blob->invalid_flags = _blob->invalid_flags & ~SPDK_BLOB_THIN_PROV;
+		_blob->back_bs_dev->destroy(_blob->back_bs_dev);
+		_blob->back_bs_dev = NULL;
+		_blob->parent_id = SPDK_BLOBID_INVALID;
+	} else {
+		_parent = ((struct spdk_blob_bs_dev *)(_blob->back_bs_dev))->blob;
+		if (_parent->parent_id != SPDK_BLOBID_INVALID) {
+			/* We must change the parent of the inflated blob */
+			spdk_bs_open_blob(_blob->bs, _parent->parent_id,
+					  _spdk_bs_inflate_blob_set_parent_cpl, ctx);
+			return;
+		}
 
-	_spdk_blob_remove_xattr(_blob, BLOB_SNAPSHOT, true);
+		_spdk_bs_blob_list_remove(_blob);
+		_spdk_blob_remove_xattr(_blob, BLOB_SNAPSHOT, true);
+		_blob->parent_id = SPDK_BLOBID_INVALID;
+		_blob->back_bs_dev->destroy(_blob->back_bs_dev);
+		_blob->back_bs_dev = spdk_bs_create_zeroes_dev();
+	}
 
-	/* Unset thin provision */
-	_blob->invalid_flags = _blob->invalid_flags & ~SPDK_BLOB_THIN_PROV;
 	_blob->state = SPDK_BLOB_STATE_DIRTY;
+	spdk_blob_sync_md(_blob, _spdk_bs_clone_snapshot_origblob_cleanup, ctx);
+}
 
-	spdk_blob_sync_md(_blob, _spdk_bs_inflate_blob_sync, ctx);
+/* Check if cluster needs allocation */
+static inline bool
+_spdk_bs_cluster_needs_allocation(struct spdk_blob *blob, uint64_t cluster, bool allocate_all)
+{
+	struct spdk_blob_bs_dev *b;
+
+	assert(blob != NULL);
+
+	if (blob->active.clusters[cluster] != 0) {
+		/* Cluster is already allocated */
+		return false;
+	}
+
+	if (blob->parent_id == SPDK_BLOBID_INVALID) {
+		/* Blob have no parent blob */
+		return allocate_all;
+	}
+
+	b = (struct spdk_blob_bs_dev *)blob->back_bs_dev;
+	return (allocate_all || b->blob->active.clusters[cluster] != 0);
 }
 
 static void
@@ -4633,7 +4684,7 @@ _spdk_bs_inflate_blob_touch_next(void *cb_arg, int bserrno)
 	}
 
 	for (; ctx->cluster < _blob->active.num_clusters; ctx->cluster++) {
-		if (_blob->active.clusters[ctx->cluster] == 0) {
+		if (_spdk_bs_cluster_needs_allocation(_blob, ctx->cluster, ctx->allocate_all)) {
 			break;
 		}
 	}
@@ -4665,6 +4716,13 @@ _spdk_bs_inflate_blob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrn
 	}
 	ctx->original.blob = _blob;
 
+	if (!ctx->allocate_all && _blob->parent_id == SPDK_BLOBID_INVALID) {
+		/* This blob have no parent, so we cannot decouple it. */
+		SPDK_ERRLOG("Cannot decouple parent of blob with no parent.\n");
+		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, -EINVAL);
+		return;
+	}
+
 	if (spdk_blob_is_thin_provisioned(_blob) == false) {
 		/* This is not thin provisioned blob. No need to inflate. */
 		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, 0);
@@ -4676,7 +4734,7 @@ _spdk_bs_inflate_blob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrn
 	 */
 	lfc = 0;
 	for (i = 0; i < _blob->active.num_clusters; i++) {
-		if (_blob->active.clusters[i] == 0) {
+		if (_spdk_bs_cluster_needs_allocation(_blob, i, ctx->allocate_all)) {
 			lfc = spdk_bit_array_find_first_clear(_blob->bs->used_clusters, lfc);
 			if (lfc >= _blob->bs->total_clusters) {
 				/* No more free clusters. Cannot satisfy the request */
@@ -4691,8 +4749,9 @@ _spdk_bs_inflate_blob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrn
 	_spdk_bs_inflate_blob_touch_next(ctx, 0);
 }
 
-void spdk_bs_inflate_blob(struct spdk_blob_store *bs, struct spdk_io_channel *channel,
-			  spdk_blob_id blobid, spdk_blob_op_complete cb_fn, void *cb_arg)
+static void
+_spdk_bs_inflate_blob(struct spdk_blob_store *bs, struct spdk_io_channel *channel,
+		      spdk_blob_id blobid, bool allocate_all, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_clone_snapshot_ctx *ctx = calloc(1, sizeof(*ctx));
 
@@ -4706,10 +4765,24 @@ void spdk_bs_inflate_blob(struct spdk_blob_store *bs, struct spdk_io_channel *ch
 	ctx->bserrno = 0;
 	ctx->original.id = blobid;
 	ctx->channel = channel;
+	ctx->allocate_all = allocate_all;
 
 	spdk_bs_open_blob(bs, ctx->original.id, _spdk_bs_inflate_blob_open_cpl, ctx);
 }
 
+void
+spdk_bs_inflate_blob(struct spdk_blob_store *bs, struct spdk_io_channel *channel,
+		     spdk_blob_id blobid, spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	_spdk_bs_inflate_blob(bs, channel, blobid, true, cb_fn, cb_arg);
+}
+
+void
+spdk_bs_blob_decouple_parent(struct spdk_blob_store *bs, struct spdk_io_channel *channel,
+			     spdk_blob_id blobid, spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	_spdk_bs_inflate_blob(bs, channel, blobid, false, cb_fn, cb_arg);
+}
 /* END spdk_bs_inflate_blob */
 
 /* START spdk_blob_resize */

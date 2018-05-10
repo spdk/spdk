@@ -867,7 +867,7 @@ blob_clone(void)
 }
 
 static void
-blob_inflate(void)
+_blob_inflate(bool decouple_parent)
 {
 	struct spdk_blob_store *bs;
 	struct spdk_bs_dev *dev;
@@ -891,6 +891,7 @@ blob_inflate(void)
 
 	spdk_blob_opts_init(&opts);
 	opts.num_clusters = 10;
+	opts.thin_provision = true;
 
 	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -903,9 +904,19 @@ blob_inflate(void)
 	blob = g_blob;
 
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10)
-	CU_ASSERT(spdk_blob_is_thin_provisioned(blob) == false);
+	CU_ASSERT(spdk_blob_is_thin_provisioned(blob) == true);
 
-	/* Create snapshot */
+	/* 1) Blob with no parent */
+	if (decouple_parent) {
+		/* Decouple parent of blob with no parent (should fail) */
+		spdk_bs_blob_decouple_parent(bs, channel, blobid, blob_op_complete, NULL);
+		CU_ASSERT(g_bserrno != 0);
+	} else {
+		/* Inflate of thin blob with no parent should made it thick */
+		spdk_bs_inflate_blob(bs, channel, blobid, blob_op_complete, NULL);
+		CU_ASSERT(g_bserrno == 0);
+		CU_ASSERT(spdk_blob_is_thin_provisioned(blob) == false);
+	}
 
 	spdk_bs_create_snapshot(bs, blobid, NULL, blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -928,19 +939,27 @@ blob_inflate(void)
 
 	free_clusters = spdk_bs_free_cluster_count(bs);
 
-	/* Inflate blob */
-	spdk_bs_inflate_blob(bs, channel, blobid, blob_op_complete, NULL);
-	CU_ASSERT(g_bserrno == 0);
-
-	/* All 10 clusters should be allocated from blob store */
-	CU_ASSERT(spdk_bs_free_cluster_count(bs) == free_clusters - 10);
+	/* 2) Blob with parent */
+	if (!decouple_parent) {
+		/* Do full blob inflation */
+		spdk_bs_inflate_blob(bs, channel, blobid, blob_op_complete, NULL);
+		CU_ASSERT(g_bserrno == 0);
+		/* all 10 clusters should be allocated */
+		CU_ASSERT(spdk_bs_free_cluster_count(bs) == free_clusters - 10);
+	} else {
+		/* Decouple parent of blob */
+		spdk_bs_blob_decouple_parent(bs, channel, blobid, blob_op_complete, NULL);
+		CU_ASSERT(g_bserrno == 0);
+		/* when only parent is removed, none of the clusters should be allocated */
+		CU_ASSERT(spdk_bs_free_cluster_count(bs) == free_clusters);
+	}
 
 	/* Now, it should be possible to delete snapshot */
 	spdk_bs_delete_blob(bs, snapshotid, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10)
-	CU_ASSERT(spdk_blob_is_thin_provisioned(blob) == false);
+	CU_ASSERT(spdk_blob_is_thin_provisioned(blob) == decouple_parent);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -950,6 +969,13 @@ blob_inflate(void)
 	g_bs = NULL;
 
 	spdk_bs_free_io_channel(channel);
+}
+
+static void
+blob_inflate(void)
+{
+	_blob_inflate(false);
+	_blob_inflate(true);
 }
 
 static void
@@ -3913,16 +3939,49 @@ blob_snapshot_rw_iov(void)
 	g_blobid = 0;
 }
 
+/**
+ * Inflate / decouple parent rw unit tests.
+ *
+ * --------------
+ * original blob:         0         1         2         3         4
+ *                   ,---------+---------+---------+---------+---------.
+ *         snapshot  |xxxxxxxxx|xxxxxxxxx|xxxxxxxxx|xxxxxxxxx|    -    |
+ *                   +---------+---------+---------+---------+---------+
+ *         snapshot2 |    -    |yyyyyyyyy|    -    |yyyyyyyyy|    -    |
+ *                   +---------+---------+---------+---------+---------+
+ *         blob      |    -    |zzzzzzzzz|    -    |    -    |    -    |
+ *                   '---------+---------+---------+---------+---------'
+ *                   .         .         .         .         .         .
+ * --------          .         .         .         .         .         .
+ * inflate:          .         .         .         .         .         .
+ *                   ,---------+---------+---------+---------+---------.
+ *         blob      |xxxxxxxxx|zzzzzzzzz|xxxxxxxxx|yyyyyyyyy|000000000|
+ *                   '---------+---------+---------+---------+---------'
+ *
+ *         NOTE: needs to allocate 4 clusters, thin provisioning removed, dependency
+ *               on snapshot2 and snapshot removed .         .         .
+ *                   .         .         .         .         .         .
+ * ----------------  .         .         .         .         .         .
+ * decouple parent:  .         .         .         .         .         .
+ *                   ,---------+---------+---------+---------+---------.
+ *         snapshot  |xxxxxxxxx|xxxxxxxxx|xxxxxxxxx|xxxxxxxxx|    -    |
+ *                   +---------+---------+---------+---------+---------+
+ *         blob      |    -    |zzzzzzzzz|    -    |yyyyyyyyy|    -    |
+ *                   '---------+---------+---------+---------+---------'
+ *
+ *         NOTE: needs to allocate 1 cluster, 3 clusters unallocated, dependency
+ *               on snapshot2 removed and on snapshot still exists. Snapshot2
+ *               should remain a clone of snapshot.
+ */
 static void
-blob_inflate_rw(void)
+_blob_inflate_rw(bool decouple_parent)
 {
-	static uint8_t *zero;
 	struct spdk_blob_store *bs;
 	struct spdk_bs_dev *dev;
-	struct spdk_blob *blob, *snapshot;
+	struct spdk_blob *blob, *snapshot, *snapshot2;
 	struct spdk_io_channel *channel;
 	struct spdk_blob_opts opts;
-	spdk_blob_id blobid, snapshotid;
+	spdk_blob_id blobid, snapshotid, snapshot2id;
 	uint64_t free_clusters;
 	uint64_t cluster_size;
 
@@ -3935,6 +3994,8 @@ blob_inflate_rw(void)
 	uint64_t pages_per_payload;
 
 	int i;
+	spdk_blob_id ids[2];
+	size_t count;
 
 	dev = init_dev();
 
@@ -3959,9 +4020,6 @@ blob_inflate_rw(void)
 	payload_clone = malloc(payload_size);
 	SPDK_CU_ASSERT_FATAL(payload_clone != NULL);
 
-	zero = calloc(1, payload_size);
-	SPDK_CU_ASSERT_FATAL(zero != NULL);
-
 	channel = spdk_bs_alloc_io_channel(bs);
 	SPDK_CU_ASSERT_FATAL(channel != NULL);
 
@@ -3983,20 +4041,22 @@ blob_inflate_rw(void)
 
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 5);
 
-	/* Initial read should return zeroed payload */
+	/* 1) Initial read should return zeroed payload */
 	memset(payload_read, 0xFF, payload_size);
-	spdk_blob_io_read(blob, channel, payload_read, 0, pages_per_payload, blob_op_complete, NULL);
+	spdk_blob_io_read(blob, channel, payload_read, 0, pages_per_payload,
+			  blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
-	CU_ASSERT(memcmp(zero, payload_read, payload_size) == 0);
+	CU_ASSERT(spdk_mem_all_zero(payload_read, payload_size));
 
-	/* Fill whole blob with a pattern */
-	memset(payload_write, 0xE5, payload_size);
-	spdk_blob_io_write(blob, channel, payload_write, 0, pages_per_payload,
-			   blob_op_complete, NULL);
+	/* Fill whole blob with a pattern, except last cluster (to be sure it
+	 * isn't allocated) */
+	memset(payload_write, 0xE5, payload_size - cluster_size);
+	spdk_blob_io_write(blob, channel, payload_write, 0, pages_per_payload -
+			   pages_per_cluster, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(free_clusters != spdk_bs_free_cluster_count(bs));
 
-	/* Create snapshot from blob */
+	/* 2) Create snapshot from blob (first level) */
 	spdk_bs_create_snapshot(bs, blobid, NULL, blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
@@ -4013,12 +4073,16 @@ blob_inflate_rw(void)
 
 	/* Write every second cluster with a pattern.
 	 *
+	 * Last cluster shouldn't be written, to be sure that snapshot nor clone
+	 * doesn't allocate it.
+	 *
 	 * payload_clone stores expected result on "blob" read at the time and
 	 * is used only to check data consistency on clone before and after
 	 * inflation. Initially we fill it with a backing snapshots pattern
 	 * used before.
 	 */
-	memset(payload_clone, 0xE5, payload_size);
+	memset(payload_clone, 0xE5, payload_size - cluster_size);
+	memset(payload_clone + payload_size - cluster_size, 0x00, cluster_size);
 	memset(payload_write, 0xAA, payload_size);
 	for (i = 1; i < 5; i += 2) {
 		spdk_blob_io_write(blob, channel, payload_write, i * pages_per_cluster,
@@ -4038,20 +4102,124 @@ blob_inflate_rw(void)
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(memcmp(payload_clone, payload_read, payload_size) == 0);
 
+	/* 3) Create second levels snapshot from blob */
+	spdk_bs_create_snapshot(bs, blobid, NULL, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	snapshot2id = g_blobid;
+
+	spdk_bs_open_blob(bs, snapshot2id, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	snapshot2 = g_blob;
+	CU_ASSERT(snapshot2->data_ro == true)
+	CU_ASSERT(snapshot2->md_ro == true)
+
+	CU_ASSERT(spdk_blob_get_num_clusters(snapshot2) == 5)
+
+	CU_ASSERT(snapshot2->parent_id == snapshotid);
+
+	/* Write one cluster on the top level blob. This cluster (1) covers
+	 * already allocated cluster in the snapshot2, so shouldn't be inflated
+	 * at all */
+	spdk_blob_io_write(blob, channel, payload_write, pages_per_cluster,
+			   pages_per_cluster, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Update expected result */
+	memcpy(payload_clone + cluster_size, payload_write, cluster_size);
+
+	/* Check data consistency on clone */
+	memset(payload_read, 0xFF, payload_size);
+	spdk_blob_io_read(blob, channel, payload_read, 0, pages_per_payload,
+			  blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(memcmp(payload_clone, payload_read, payload_size) == 0);
+
+
 	/* Close all blobs */
 	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_blob_close(snapshot2, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
 	spdk_blob_close(snapshot, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
-	/* Inflate blob */
-	spdk_bs_inflate_blob(bs, channel, blobid, blob_op_complete, NULL);
+	/* Check snapshot-clone relations */
+	count = 2;
+	CU_ASSERT(spdk_blob_get_clones(bs, snapshotid, ids, &count) == 0);
+	CU_ASSERT(count == 1);
+	CU_ASSERT(ids[0] == snapshot2id);
+
+	count = 2;
+	CU_ASSERT(spdk_blob_get_clones(bs, snapshot2id, ids, &count) == 0);
+	CU_ASSERT(count == 1);
+	CU_ASSERT(ids[0] == blobid);
+
+	CU_ASSERT(spdk_blob_get_parent_snapshot(bs, blobid) == snapshot2id);
+
+	free_clusters = spdk_bs_free_cluster_count(bs);
+	if (!decouple_parent) {
+		/* Do full blob inflation */
+		spdk_bs_inflate_blob(bs, channel, blobid, blob_op_complete, NULL);
+		CU_ASSERT(g_bserrno == 0);
+
+		/* All clusters should be inflated (except one already allocated
+		 * in a top level blob) */
+		CU_ASSERT(spdk_bs_free_cluster_count(bs) == free_clusters - 4);
+
+		/* Check if relation tree updated correctly */
+		count = 2;
+		CU_ASSERT(spdk_blob_get_clones(bs, snapshotid, ids, &count) == 0);
+
+		/* snapshotid have one clone */
+		CU_ASSERT(count == 1);
+		CU_ASSERT(ids[0] == snapshot2id);
+
+		/* snapshot2id have no clones */
+		count = 2;
+		CU_ASSERT(spdk_blob_get_clones(bs, snapshot2id, ids, &count) == 0);
+		CU_ASSERT(count == 0);
+
+		CU_ASSERT(spdk_blob_get_parent_snapshot(bs, blobid) == SPDK_BLOBID_INVALID);
+	} else {
+		/* Decouple parent of blob */
+		spdk_bs_blob_decouple_parent(bs, channel, blobid, blob_op_complete, NULL);
+		CU_ASSERT(g_bserrno == 0);
+
+		/* Only one cluster from a parent should be inflated (second one
+		 * is covered by a cluster written on a top level blob, and
+		 * already allocated) */
+		CU_ASSERT(spdk_bs_free_cluster_count(bs) == free_clusters - 1);
+
+		/* Check if relation tree updated correctly */
+		count = 2;
+		CU_ASSERT(spdk_blob_get_clones(bs, snapshotid, ids, &count) == 0);
+
+		/* snapshotid have two clones now */
+		CU_ASSERT(count == 2);
+		CU_ASSERT(ids[0] == blobid || ids[1] == blobid);
+		CU_ASSERT(ids[0] == snapshot2id || ids[1] == snapshot2id);
+
+		/* snapshot2id have no clones */
+		count = 2;
+		CU_ASSERT(spdk_blob_get_clones(bs, snapshot2id, ids, &count) == 0);
+		CU_ASSERT(count == 0);
+
+		CU_ASSERT(spdk_blob_get_parent_snapshot(bs, blobid) == snapshotid);
+	}
+
+	/* Try to delete snapshot2 (should pass) */
+	spdk_bs_delete_blob(bs, snapshot2id, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
-	/* Try to delete snapshot (should pass) */
+	/* Try to delete base snapshot (for decouple_parent should fail while
+	 * dependency still exists) */
 	spdk_bs_delete_blob(bs, snapshotid, blob_op_complete, NULL);
-	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(decouple_parent || g_bserrno == 0);
+	CU_ASSERT(!decouple_parent || g_bserrno != 0);
 
 	/* Reopen blob after snapshot deletion */
 	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
@@ -4063,7 +4231,8 @@ blob_inflate_rw(void)
 
 	/* Check data consistency on inflated blob */
 	memset(payload_read, 0xFF, payload_size);
-	spdk_blob_io_read(blob, channel, payload_read, 0, pages_per_payload, blob_op_complete, NULL);
+	spdk_blob_io_read(blob, channel, payload_read, 0, pages_per_payload,
+			  blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(memcmp(payload_clone, payload_read, payload_size) == 0);
 
@@ -4082,7 +4251,13 @@ blob_inflate_rw(void)
 	free(payload_read);
 	free(payload_write);
 	free(payload_clone);
-	free(zero);
+}
+
+static void
+blob_inflate_rw(void)
+{
+	_blob_inflate_rw(false);
+	_blob_inflate_rw(true);
 }
 
 /**
@@ -4472,8 +4647,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "bs_load_iter", bs_load_iter) == NULL ||
 		CU_add_test(suite, "blob_snapshot_rw", blob_snapshot_rw) == NULL ||
 		CU_add_test(suite, "blob_snapshot_rw_iov", blob_snapshot_rw_iov) == NULL ||
-		CU_add_test(suite, "blob_inflate_rw", blob_inflate_rw) == NULL ||
 		CU_add_test(suite, "blob_relations", blob_relations) == NULL ||
+		CU_add_test(suite, "blob_inflate_rw", blob_inflate_rw) == NULL ||
 		CU_add_test(suite, "blob_snapshot_freeze_io", blob_snapshot_freeze_io) == NULL
 	) {
 		CU_cleanup_registry();
