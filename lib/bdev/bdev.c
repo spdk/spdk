@@ -714,25 +714,23 @@ spdk_bdev_module_finish_iter(void *arg)
 		bdev_module = TAILQ_NEXT(g_resume_bdev_module, tailq);
 	}
 
-	while (bdev_module) {
-		if (bdev_module->async_fini) {
-			/* Save our place so we can resume later. We must
-			 * save the variable here, before calling module_fini()
-			 * below, because in some cases the module may immediately
-			 * call spdk_bdev_module_finish_done() and re-enter
-			 * this function to continue iterating. */
-			g_resume_bdev_module = bdev_module;
-		}
+	if (bdev_module) {
+		/* Save our place so we can resume later. We must
+		 * save the variable here, before calling module_fini()
+		 * below, because in some cases the module may immediately
+		 * call spdk_bdev_module_finish_done() and re-enter
+		 * this function to continue iterating. */
+		g_resume_bdev_module = bdev_module;
 
 		if (bdev_module->module_fini) {
 			bdev_module->module_fini();
 		}
 
-		if (bdev_module->async_fini) {
-			return;
+		if (!bdev_module->async_fini) {
+			spdk_bdev_module_finish_done();
 		}
 
-		bdev_module = TAILQ_NEXT(bdev_module, tailq);
+		return;
 	}
 
 	g_resume_bdev_module = NULL;
