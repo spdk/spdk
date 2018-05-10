@@ -1440,7 +1440,7 @@ _spdk_lvol_inflate_cb(void *cb_arg, int lvolerrno)
 }
 
 void
-spdk_lvol_inflate(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
+spdk_lvol_inflate(struct spdk_lvol *lvol, bool thin, spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvol_req *req;
 	struct spdk_blob *blob = lvol->blob;
@@ -1471,6 +1471,6 @@ spdk_lvol_inflate(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_
 		return;
 	}
 
-	spdk_bs_inflate_blob(lvol->lvol_store->blobstore, req->channel, blob_id, _spdk_lvol_inflate_cb,
-			     req);
+	spdk_bs_inflate_blob(lvol->lvol_store->blobstore, req->channel, blob_id, thin,
+			     _spdk_lvol_inflate_cb, req);
 }

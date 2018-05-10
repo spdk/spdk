@@ -95,7 +95,7 @@ struct lvol_ut_bs_dev {
 };
 
 void spdk_bs_inflate_blob(struct spdk_blob_store *bs, struct spdk_io_channel *channel,
-			  spdk_blob_id blobid, spdk_blob_op_complete cb_fn, void *cb_arg)
+			  spdk_blob_id blobid, bool thin, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	cb_fn(cb_arg, g_inflate_rc);
 }
@@ -1972,11 +1972,11 @@ lvol_inflate(void)
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 
 	g_inflate_rc = -1;
-	spdk_lvol_inflate(g_lvol, lvol_op_complete, NULL);
+	spdk_lvol_inflate(g_lvol, false, lvol_op_complete, NULL);
 	CU_ASSERT(g_lvolerrno != 0);
 
 	g_inflate_rc = 0;
-	spdk_lvol_inflate(g_lvol, lvol_op_complete, NULL);
+	spdk_lvol_inflate(g_lvol, false, lvol_op_complete, NULL);
 	CU_ASSERT(g_lvolerrno == 0);
 
 	spdk_lvol_close(g_lvol, close_cb, NULL);

@@ -805,8 +805,8 @@ blob_clone(void)
 
 }
 
-static void
-blob_inflate(void)
+static int
+_blob_inflate(bool thin)
 {
 	struct spdk_blob_store *bs;
 	struct spdk_bs_dev *dev;
@@ -830,6 +830,7 @@ blob_inflate(void)
 
 	spdk_blob_opts_init(&opts);
 	opts.num_clusters = 10;
+	opts.thin_provision = true;
 
 	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -842,7 +843,7 @@ blob_inflate(void)
 	blob = g_blob;
 
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10)
-	CU_ASSERT(spdk_blob_is_thin_provisioned(blob) == false);
+	CU_ASSERT(spdk_blob_is_thin_provisioned(blob) == true);
 
 	/* Create snapshot */
 
@@ -868,18 +869,20 @@ blob_inflate(void)
 	free_clusters = spdk_bs_free_cluster_count(bs);
 
 	/* Inflate blob */
-	spdk_bs_inflate_blob(bs, channel, blobid, blob_op_complete, NULL);
+	spdk_bs_inflate_blob(bs, channel, blobid, thin, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
-	/* All 10 clusters should be allocated from blob store */
-	CU_ASSERT(spdk_bs_free_cluster_count(bs) == free_clusters - 10);
+	/* for thin inflation none of the clusters should be allocated */
+	CU_ASSERT(!thin || spdk_bs_free_cluster_count(bs) == free_clusters);
+	/* for non-thin inflation all 10 clusters should be allocated */
+	CU_ASSERT(thin || spdk_bs_free_cluster_count(bs) == free_clusters - 10);
 
 	/* Now, it should be possible to delete snapshot */
 	spdk_bs_delete_blob(bs, snapshotid, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10)
-	CU_ASSERT(spdk_blob_is_thin_provisioned(blob) == false);
+	CU_ASSERT(spdk_blob_is_thin_provisioned(blob) == thin);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -889,6 +892,15 @@ blob_inflate(void)
 	g_bs = NULL;
 
 	spdk_bs_free_io_channel(channel);
+
+	return 0;
+}
+
+static void
+blob_inflate(void)
+{
+	CU_ASSERT(_blob_inflate(false) == 0);
+	CU_ASSERT(_blob_inflate(true) == 0);
 }
 
 static void
@@ -3848,10 +3860,9 @@ blob_snapshot_rw_iov(void)
 	g_blobid = 0;
 }
 
-static void
-blob_inflate_rw(void)
+static int
+_blob_inflate_rw(bool thin)
 {
-	static uint8_t *zero;
 	struct spdk_blob_store *bs;
 	struct spdk_bs_dev *dev;
 	struct spdk_blob *blob, *snapshot;
@@ -3894,9 +3905,6 @@ blob_inflate_rw(void)
 	payload_clone = malloc(payload_size);
 	SPDK_CU_ASSERT_FATAL(payload_clone != NULL);
 
-	zero = calloc(1, payload_size);
-	SPDK_CU_ASSERT_FATAL(zero != NULL);
-
 	channel = spdk_bs_alloc_io_channel(bs);
 	SPDK_CU_ASSERT_FATAL(channel != NULL);
 
@@ -3922,11 +3930,12 @@ blob_inflate_rw(void)
 	memset(payload_read, 0xFF, payload_size);
 	spdk_blob_io_read(blob, channel, payload_read, 0, pages_per_payload, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
-	CU_ASSERT(memcmp(zero, payload_read, payload_size) == 0);
+	CU_ASSERT(spdk_mem_all_zero(payload_read, payload_size));
 
-	/* Fill whole blob with a pattern */
-	memset(payload_write, 0xE5, payload_size);
-	spdk_blob_io_write(blob, channel, payload_write, 0, pages_per_payload,
+	/* Fill whole blob with a pattern, except last cluster (to be sure it
+	 * isn't allocated) */
+	memset(payload_write, 0xE5, payload_size - cluster_size);
+	spdk_blob_io_write(blob, channel, payload_write, 0, pages_per_payload - pages_per_cluster,
 			   blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(free_clusters != spdk_bs_free_cluster_count(bs));
@@ -3948,12 +3957,17 @@ blob_inflate_rw(void)
 
 	/* Write every second cluster with a pattern.
 	 *
+	 * Last cluster shouldn't be written, to be sure that snapshot nor clone
+	 * doesn't allocate it (it also shouldn't be allocated in thin inflated
+	 * clone).
+	 *
 	 * payload_clone stores expected result on "blob" read at the time and
 	 * is used only to check data consistency on clone before and after
 	 * inflation. Initially we fill it with a backing snapshots pattern
 	 * used before.
 	 */
-	memset(payload_clone, 0xE5, payload_size);
+	memset(payload_clone, 0xE5, payload_size - cluster_size);
+	memset(payload_clone + payload_size - cluster_size, 0x00, cluster_size);
 	memset(payload_write, 0xAA, payload_size);
 	for (i = 1; i < 5; i += 2) {
 		spdk_blob_io_write(blob, channel, payload_write, i * pages_per_cluster,
@@ -3981,7 +3995,7 @@ blob_inflate_rw(void)
 	CU_ASSERT(g_bserrno == 0);
 
 	/* Inflate blob */
-	spdk_bs_inflate_blob(bs, channel, blobid, blob_op_complete, NULL);
+	spdk_bs_inflate_blob(bs, channel, blobid, thin, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
 	/* Try to delete snapshot (should pass) */
@@ -4017,7 +4031,15 @@ blob_inflate_rw(void)
 	free(payload_read);
 	free(payload_write);
 	free(payload_clone);
-	free(zero);
+
+	return 0;
+}
+
+static void
+blob_inflate_rw(void)
+{
+	CU_ASSERT(_blob_inflate_rw(false) == 0);
+	CU_ASSERT(_blob_inflate_rw(true) == 0);
 }
 
 /**
