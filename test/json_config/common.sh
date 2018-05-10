@@ -35,6 +35,24 @@ function load_nvme() {
 	rm nvme_config.json
 }
 
+function upload_vhost() {
+        $rpc_py construct_vhost_scsi_controller sample1
+        $rpc_py add_vhost_scsi_lun sample1 0 Nvme1n1p3
+        $rpc_py add_vhost_scsi_lun sample1 1 Nvme1n1p4
+        $rpc_py set_vhost_controller_coalescing sample1 1 100
+        $rpc_py construct_vhost_blk_controller sample2 Nvme1n1p5
+        $rpc_py construct_vhost_nvme_controller sample3 16
+        $rpc_py add_vhost_nvme_ns sample3 Nvme1n1p6
+}
+
+function clean_vhost() {
+        $rpc_py remove_vhost_controller sample3
+        $rpc_py remove_vhost_controller sample2
+        $rpc_py remove_vhost_scsi_target sample1 1
+        $rpc_py remove_vhost_scsi_target sample1 0
+        $rpc_py remove_vhost_controller sample1
+}
+
 function run_initiator() {
         cp $JSON_DIR/virtio.conf.base $JSON_DIR/vhost.conf.in
         $SPDK_BUILD_DIR/app/spdk_tgt/spdk_tgt -m 0x2 -p 0 -g -c $JSON_DIR/vhost.conf.in -s 1024 -r /var/tmp/virtio.sock &
@@ -86,7 +104,7 @@ function clean_after_test_json_config() {
 }
 
 function create_bdev_subsystem_config() {
-	$rpc_py construct_split_vbdev Nvme1n1 2
+	$rpc_py construct_split_vbdev Nvme1n1 8
 	$rpc_py construct_null_bdev Null0 32 512
 	$rpc_py construct_malloc_bdev 128 512 --name Malloc0
 	$rpc_py construct_malloc_bdev 64 4096 --name Malloc1
