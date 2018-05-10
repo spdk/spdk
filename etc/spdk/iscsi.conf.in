@@ -136,7 +136,7 @@
 # Users may use the whitelist to initialize specified devices, IDS
 #  uses BUS:DEVICE.FUNCTION to identify each Ioat channel.
 [Ioat]
-  Disable Yes
+  Enable No
   Whitelist 00:04.0
   Whitelist 00:04.1
 

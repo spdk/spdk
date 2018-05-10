@@ -19,7 +19,7 @@
   AIO /tmp/aiofile AIO1 2048
 
 [Ioat]
-  Disable Yes
+  Enable No
 
 [QoS]
   # QoS section defines limitation on performance
