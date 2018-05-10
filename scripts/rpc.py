@@ -705,6 +705,15 @@ if __name__ == "__main__":
     p.set_defaults(func=inflate_lvol_bdev)
 
     @call_cmd
+    def decouple_parent_lvol_bdev(args):
+        rpc.lvol.decouple_parent_lvol_bdev(args.client,
+                                   name=args.name)
+
+    p = subparsers.add_parser('decouple_parent_lvol_bdev', help='Decouple parent of lvol')
+    p.add_argument('name', help='lvol bdev name')
+    p.set_defaults(func=inflate_lvol_bdev)
+
+    @call_cmd
     def resize_lvol_bdev(args):
         rpc.lvol.resize_lvol_bdev(args.client,
                                   name=args.name,

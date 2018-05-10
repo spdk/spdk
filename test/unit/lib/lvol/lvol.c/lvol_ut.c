@@ -100,6 +100,12 @@ void spdk_bs_inflate_blob(struct spdk_blob_store *bs, struct spdk_io_channel *ch
 	cb_fn(cb_arg, g_inflate_rc);
 }
 
+void spdk_bs_blob_decouple_parent(struct spdk_blob_store *bs, struct spdk_io_channel *channel,
+				  spdk_blob_id blobid, spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	cb_fn(cb_arg, g_inflate_rc);
+}
+
 void
 spdk_bs_iter_next(struct spdk_blob_store *bs, struct spdk_blob *b,
 		  spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
@@ -2000,6 +2006,59 @@ lvol_inflate(void)
 	spdk_free_thread();
 }
 
+static void
+lvol_decouple_parent(void)
+{
+	struct lvol_ut_bs_dev dev;
+	struct spdk_lvs_opts opts;
+	int rc = 0;
+
+	init_dev(&dev);
+
+	spdk_allocate_thread(_lvol_send_msg, NULL, NULL, NULL, NULL);
+
+	spdk_lvs_opts_init(&opts);
+	snprintf(opts.name, sizeof(opts.name), "lvs");
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+
+	spdk_lvol_create(g_lvol_store, "lvol", 10, false, lvol_op_with_handle_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
+
+	g_inflate_rc = -1;
+	spdk_lvol_decouple_parent(g_lvol, lvol_op_complete, NULL);
+	CU_ASSERT(g_lvolerrno != 0);
+
+	g_inflate_rc = 0;
+	spdk_lvol_decouple_parent(g_lvol, lvol_op_complete, NULL);
+	CU_ASSERT(g_lvolerrno == 0);
+
+	spdk_lvol_close(g_lvol, close_cb, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	spdk_lvol_destroy(g_lvol, destroy_cb, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	g_lvol_store = NULL;
+
+	free_dev(&dev);
+
+	/* Make sure that all references to the io_channel was closed after
+	 * inflate call
+	 */
+	CU_ASSERT(g_io_channel == NULL);
+
+	spdk_free_thread();
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -2042,7 +2101,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "lvol_create_thin_provisioned", lvol_create_thin_provisioned) == NULL ||
 		CU_add_test(suite, "lvol_rename", lvol_rename) == NULL ||
 		CU_add_test(suite, "lvs_rename", lvs_rename) == NULL ||
-		CU_add_test(suite, "lvol_inflate", lvol_inflate) == NULL
+		CU_add_test(suite, "lvol_inflate", lvol_inflate) == NULL ||
+		CU_add_test(suite, "lvol_decouple_parent", lvol_decouple_parent) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

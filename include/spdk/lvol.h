@@ -260,6 +260,15 @@ void spdk_lvol_open(struct spdk_lvol *lvol, spdk_lvol_op_with_handle_complete cb
  */
 void spdk_lvol_inflate(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg);
 
+/**
+ * Decouple parent of lvol
+ *
+ * \param lvol Handle to lvol
+ * \param cb_fn Completion callback
+ * \param cb_arg Completion callback custom arguments
+ */
+void spdk_lvol_decouple_parent(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg);
+
 #ifdef __cplusplus
 }
 #endif
