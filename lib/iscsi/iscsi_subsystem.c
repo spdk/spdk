@@ -47,6 +47,8 @@
 #include "spdk_internal/event.h"
 #include "spdk_internal/log.h"
 
+struct spdk_iscsi_opts *g_spdk_iscsi_opts = NULL;
+
 static spdk_iscsi_init_cb g_init_cb_fn = NULL;
 static void *g_init_cb_arg = NULL;
 
@@ -375,7 +377,7 @@ spdk_iscsi_log_globals(void)
 		      spdk_iscsi_conn_get_min_per_core());
 }
 
-static void
+void
 spdk_iscsi_opts_init(struct spdk_iscsi_opts *opts)
 {
 	opts->MaxSessions = DEFAULT_MAX_SESSIONS;
@@ -397,11 +399,14 @@ spdk_iscsi_opts_init(struct spdk_iscsi_opts *opts)
 	opts->min_connections_per_core = DEFAULT_CONNECTIONS_PER_LCORE;
 }
 
-static void
-spdk_iscsi_opts_free(struct spdk_iscsi_opts *opts)
+void
+spdk_iscsi_opts_free(struct spdk_iscsi_opts **popts)
 {
+	struct spdk_iscsi_opts *opts = *popts;
+
 	free(opts->authfile);
 	free(opts->nodebase);
+	*popts = NULL;
 }
 
 static int
@@ -611,6 +616,36 @@ spdk_iscsi_opts_verify(struct spdk_iscsi_opts *opts)
 	return 0;
 }
 
+static struct spdk_iscsi_opts *
+spdk_iscsi_parse_options(void)
+{
+	struct spdk_iscsi_opts *opts;
+	struct spdk_conf_section *sp;
+	int rc;
+
+	opts = malloc(sizeof(*opts));
+	if (!opts) {
+		SPDK_ERRLOG("malloc() failed for iscsi options\n");
+		return NULL;
+	}
+
+	spdk_iscsi_opts_init(opts);
+
+	/* Process parameters */
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_read_config_file_parmas\n");
+	sp = spdk_conf_find_section(NULL, "iSCSI");
+	if (sp != NULL) {
+		rc = spdk_iscsi_read_config_file_params(sp, opts);
+		if (rc != 0) {
+			free(opts);
+			SPDK_ERRLOG("spdk_iscsi_read_config_file_params() failed\n");
+			return NULL;
+		}
+	}
+
+	return opts;
+}
+
 static int
 spdk_iscsi_set_global_params(struct spdk_iscsi_opts *opts)
 {
@@ -659,25 +694,18 @@ spdk_iscsi_set_global_params(struct spdk_iscsi_opts *opts)
 static int
 spdk_iscsi_initialize_global_params(void)
 {
-	struct spdk_conf_section *sp;
-	struct spdk_iscsi_opts opts;
 	int rc;
 
-	spdk_iscsi_opts_init(&opts);
-
-	/* Process parameters */
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_read_config_file_parmas\n");
-	sp = spdk_conf_find_section(NULL, "iSCSI");
-	if (sp != NULL) {
-		rc = spdk_iscsi_read_config_file_params(sp, &opts);
-		if (rc != 0) {
-			SPDK_ERRLOG("spdk_iscsi_read_config_file_params() failed\n");
-			return rc;
+	if (!g_spdk_iscsi_opts) {
+		g_spdk_iscsi_opts = spdk_iscsi_parse_options();
+		if (!g_spdk_iscsi_opts) {
+			SPDK_ERRLOG("spdk_iscsi_parse_options() failed\n");
+			return -1;
 		}
 	}
 
-	rc = spdk_iscsi_set_global_params(&opts);
-	spdk_iscsi_opts_free(&opts);
+	rc = spdk_iscsi_set_global_params(g_spdk_iscsi_opts);
+	spdk_iscsi_opts_free(&g_spdk_iscsi_opts);
 	if (rc != 0) {
 		SPDK_ERRLOG("spdk_iscsi_set_global_params() failed\n");
 	}
