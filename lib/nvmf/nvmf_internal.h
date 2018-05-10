@@ -92,7 +92,6 @@ struct spdk_nvmf_subsystem_poll_group {
 	enum spdk_nvmf_subsystem_state state;
 
 	TAILQ_HEAD(, spdk_nvmf_request)	queued;
-	TAILQ_HEAD(, spdk_nvmf_request)	outstanding;
 };
 
 struct spdk_nvmf_poll_group {
