@@ -1903,12 +1903,17 @@ bs_load(void)
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 
 	super_block = (struct spdk_bs_super_block *)g_dev_buffer;
-	CU_ASSERT(super_block->clean == 0);
+	/* Do not touch dirty bit until first metadata sync */
+	CU_ASSERT(super_block->clean == 1);
 
 	spdk_bs_open_blob(g_bs, blobid, blob_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blob != NULL);
 	blob = g_blob;
+
+	/* Verify that blobstore is marked dirty after first metadata sync */
+	spdk_blob_sync_md(blob, blob_op_complete, NULL);
+	CU_ASSERT(super_block->clean == 1);
 
 	/* Get the xattrs */
 	value = NULL;
