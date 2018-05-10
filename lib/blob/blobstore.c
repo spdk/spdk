@@ -2926,8 +2926,9 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		ctx->super->clean = 0;
 		_spdk_bs_write_super(seq, ctx->bs, ctx->super, _spdk_bs_recover, ctx);
 	} else {
-		ctx->super->clean = 0;
-		_spdk_bs_write_super(seq, ctx->bs, ctx->super, _spdk_bs_load_write_super_cpl, ctx);
+		/* Do not write dirty bit during blobstore load */
+		ctx->bs->clean = 1;
+		_spdk_bs_load_write_super_cpl(seq, ctx, 0);
 	}
 }
 
@@ -4463,6 +4464,75 @@ _spdk_blob_sync_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	spdk_bs_sequence_finish(seq, bserrno);
 }
 
+struct spdk_bs_write_dirty_ctx {
+	struct spdk_blob *blob;
+	struct spdk_bs_super_block	*super;
+};
+
+
+static void
+_spdk_bs_dirty_write_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_bs_write_dirty_ctx *ctx = (struct spdk_bs_write_dirty_ctx *)cb_arg;
+
+	ctx->blob->bs->clean = 0;
+
+	_spdk_blob_persist(seq, ctx->blob, _spdk_blob_sync_md_cpl, ctx->blob);
+
+	free(ctx->super);
+	free(ctx);
+}
+
+static void
+_spdk_bs_dirty_read_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_bs_write_dirty_ctx *ctx = (struct spdk_bs_write_dirty_ctx *)cb_arg;
+
+	ctx->super->clean = 0;
+
+	_spdk_bs_write_super(seq, ctx->blob->bs, ctx->super, _spdk_bs_dirty_write_cpl, ctx);
+}
+
+
+static void
+_spdk_blob_sync_md_dirty(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_bs_write_dirty_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	ctx->super = spdk_dma_zmalloc(sizeof(*ctx->super), 0x1000, NULL);
+	if (!ctx->super) {
+		free(ctx);
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	struct spdk_bs_cpl	cpl;
+	spdk_bs_sequence_t	*seq;
+
+	cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
+	cpl.u.blob_basic.cb_fn = cb_fn;
+	cpl.u.blob_basic.cb_arg = cb_arg;
+
+	seq = spdk_bs_sequence_start(blob->bs->md_channel, &cpl);
+	if (!seq) {
+		free(ctx->super);
+		free(ctx);
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	/* Read super block */
+	spdk_bs_sequence_read_dev(seq, ctx->super, _spdk_bs_page_to_lba(blob->bs, 0),
+				  _spdk_bs_byte_to_lba(blob->bs, sizeof(*ctx->super)),
+				  _spdk_bs_dirty_read_cpl, ctx);
+}
+
 static void
 _spdk_blob_sync_md(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
@@ -4478,7 +4548,6 @@ _spdk_blob_sync_md(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb
 		cb_fn(cb_arg, -ENOMEM);
 		return;
 	}
-
 	_spdk_blob_persist(seq, blob, _spdk_blob_sync_md_cpl, blob);
 }
 
@@ -4494,8 +4563,11 @@ spdk_blob_sync_md(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb_
 		cb_fn(cb_arg, 0);
 		return;
 	}
-
-	_spdk_blob_sync_md(blob, cb_fn, cb_arg);
+	if (blob->bs->clean) {
+		_spdk_blob_sync_md_dirty(blob, cb_fn, cb_arg);
+	} else {
+		_spdk_blob_sync_md(blob, cb_fn, cb_arg);
+	}
 }
 
 /* END spdk_blob_sync_md */
