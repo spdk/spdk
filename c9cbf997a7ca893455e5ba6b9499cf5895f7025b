@@ -16,6 +16,24 @@
       "revId": "c9cbf997a7ca893455e5ba6b9499cf5895f7025b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e751032d_ca4f2591",
+        "filename": "lib/env_dpdk/vtophys.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-05-10T01:03:22Z",
+      "side": 1,
+      "message": "rte_mem_config is a part of other #if block. If seg is NULL, we will always return SPDK_VTOPHYS_ERROR (line #256).",
+      "parentUuid": "075e3b88_1c185088",
+      "revId": "c9cbf997a7ca893455e5ba6b9499cf5895f7025b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
