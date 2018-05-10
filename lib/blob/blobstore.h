@@ -180,6 +180,8 @@ struct spdk_blob_store {
 
 	TAILQ_HEAD(, spdk_blob)		blobs;
 	TAILQ_HEAD(, spdk_blob_list)	snapshots;
+
+	bool                            clean;
 };
 
 struct spdk_bs_channel {
