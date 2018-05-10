@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "20eba4c4_99aadf81",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-10T10:02:55Z",
+      "side": 1,
+      "message": "Do we have any strong need to have those options be dynamicaly allocated. If you make those staticly allocated, you can drop checks in RPC for multiple invocations. I know that I asked you to make those checks in earlier version but this was because you did not free previouse malloc\u0027ed options.",
+      "range": {
+        "startLine": 46,
+        "startChar": 0,
+        "endLine": 47,
+        "endChar": 55
+      },
+      "revId": "2b240e255ab3539911e11cd2d90cb190301bacd2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
