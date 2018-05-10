@@ -97,6 +97,30 @@
     },
     {
       "key": {
+        "uuid": "f276415c_dfdc1b47",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-10T10:38:38Z",
+      "side": 1,
+      "message": "It is my personal preference to see MIN and MAX IOSP limits rather than using some hardcoded magic 90% and 101% borders. If someone launch this test witch different device or configuration that have different accepted MIN/MAX range (eg 89% and 102%) what then?",
+      "parentUuid": "896cd351_9964e8c2",
+      "range": {
+        "startLine": 15,
+        "startChar": 2,
+        "endLine": 16,
+        "endChar": 28
+      },
+      "revId": "bb2b796a75c6cc4dbb45346f51a495e79ddff776",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dcab8fa9_0addd11b",
         "filename": "test/iscsi_tgt/qos/qos.sh",
         "patchSetId": 4
