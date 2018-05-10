@@ -14,7 +14,7 @@ def construct_target_node(client, args):
     luns = []
     for u in args.bdev_name_id_pairs.strip().split(" "):
         bdev_name, lun_id = u.split(":")
-        luns.append({"bdev_name": bdev_name, "lun_id": int(lun_id)})
+        luns.append({"bdev_name": bdev_name, "id": int(lun_id)})
 
     pg_ig_maps = []
     for u in args.pg_ig_mappings.strip().split(" "):
