@@ -953,6 +953,8 @@ _spdk_blob_load(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 struct spdk_blob_persist_ctx {
 	struct spdk_blob		*blob;
 
+	struct spdk_bs_super_block	*super;
+
 	struct spdk_blob_md_page	*pages;
 
 	uint64_t			idx;
@@ -1340,6 +1342,34 @@ _spdk_blob_persist_start(struct spdk_blob_persist_ctx *ctx)
 	_spdk_blob_persist_write_page_chain(seq, ctx, 0);
 }
 
+static void
+_spdk_blob_persist_dirty_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_blob_persist_ctx *ctx = cb_arg;
+
+	ctx->blob->bs->clean = 0;
+
+	spdk_dma_free(ctx->super);
+
+	_spdk_blob_persist_start(ctx);
+}
+
+static void
+_spdk_bs_write_super(spdk_bs_sequence_t *seq, struct spdk_blob_store *bs,
+		     struct spdk_bs_super_block *super, spdk_bs_sequence_cpl cb_fn, void *cb_arg);
+
+
+static void
+_spdk_blob_persist_dirty(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_blob_persist_ctx *ctx = cb_arg;
+
+	ctx->super->clean = 0;
+
+	_spdk_bs_write_super(seq, ctx->blob->bs, ctx->super, _spdk_blob_persist_dirty_cpl, ctx);
+}
+
+
 /* Write a blob to disk */
 static void
 _spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
@@ -1364,7 +1394,20 @@ _spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
 
-	_spdk_blob_persist_start(ctx);
+	if (blob->bs->clean) {
+		ctx->super = spdk_dma_zmalloc(sizeof(*ctx->super), 0x1000, NULL);
+		if (!ctx->super) {
+			cb_fn(seq, cb_arg, -ENOMEM);
+			free(ctx);
+			return;
+		}
+
+		spdk_bs_sequence_read_dev(seq, ctx->super, _spdk_bs_page_to_lba(blob->bs, 0),
+					  _spdk_bs_byte_to_lba(blob->bs, sizeof(*ctx->super)),
+					  _spdk_blob_persist_dirty, ctx);
+	} else {
+		_spdk_blob_persist_start(ctx);
+	}
 }
 
 struct spdk_blob_copy_cluster_ctx {
@@ -2926,7 +2969,8 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		ctx->super->clean = 0;
 		_spdk_bs_write_super(seq, ctx->bs, ctx->super, _spdk_bs_recover, ctx);
 	} else {
-		ctx->super->clean = 0;
+		/* Do not write dirty bit during blobstore load */
+		ctx->bs->clean = 1;
 		_spdk_bs_write_super(seq, ctx->bs, ctx->super, _spdk_bs_load_write_super_cpl, ctx);
 	}
 }
