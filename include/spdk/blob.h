@@ -468,17 +468,23 @@ void spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 			 spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /**
- * Allocate all unallocated clusters in this blob and copy data from backing blob.
+ * Allocate clusters in this blob and copy data from backing blob.
+ *
  * This call removes dependency on backing blob.
+ *
+ * When thin parameter is set to false all clusters are allocated and
+ * thin-provisioning flag is removed. Elsewhere only used clusters are copied
+ * to remove dependency.
  *
  * \param bs blobstore.
  * \param channel IO channel used to inflate blob.
  * \param blobid The id of the blob to inflate.
+ * \param thin Allocate and copy only used clusters.
  * \param cb_fn Called when the operation is complete.
  * \param cb_arg Argument passed to function cb_fn.
  */
 void spdk_bs_inflate_blob(struct spdk_blob_store *bs, struct spdk_io_channel *channel,
-			  spdk_blob_id blobid, spdk_blob_op_complete cb_fn, void *cb_arg);
+			  spdk_blob_id blobid, bool thin, spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /**
  * Open a blob from the given blobstore.

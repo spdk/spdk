@@ -1269,7 +1269,7 @@ _vbdev_lvol_inflate_cb(void *cb_arg, int lvolerrno)
 }
 
 void
-vbdev_lvol_inflate(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
+vbdev_lvol_inflate(struct spdk_lvol *lvol, bool thin, spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvol_req *req;
 
@@ -1288,7 +1288,7 @@ vbdev_lvol_inflate(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 
-	spdk_lvol_inflate(lvol, _vbdev_lvol_inflate_cb, req);
+	spdk_lvol_inflate(lvol, thin, _vbdev_lvol_inflate_cb, req);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("vbdev_lvol", SPDK_LOG_VBDEV_LVOL);
