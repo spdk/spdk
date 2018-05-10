@@ -351,8 +351,8 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
            "target name value is {}, expected {}".format(name, nodebase + ":" + rpc_param['target_name']))
     verify(jsonvalues[0]['alias_name'] == rpc_param['alias_name'], 1,
            "target alias_name value is {}, expected {}".format(jsonvalues[0]['alias_name'], rpc_param['alias_name']))
-    verify(jsonvalues[0]['luns'][0]['id'] == 0, 1,
-           "lun id value is {}, expected 0".format(jsonvalues[0]['luns'][0]['id']))
+    verify(jsonvalues[0]['luns'][0]['lun_id'] == 0, 1,
+           "lun id value is {}, expected 0".format(jsonvalues[0]['luns'][0]['lun_id']))
     verify(jsonvalues[0]['pg_ig_maps'][0]['ig_tag'] == int(initiator_tag), 1,
            "initiator group tag value is {}, expected {}".format(jsonvalues[0]['pg_ig_maps'][0]['ig_tag'], initiator_tag))
     verify(jsonvalues[0]['queue_depth'] == rpc_param['queue_depth'], 1,
@@ -377,8 +377,8 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
     jsonvalues = json.loads(output)
     verify(jsonvalues[0]['luns'][1]['bdev_name'] == "Malloc" + str(rpc_param['lun_total']), 1,
            "bdev_name value is {}, expected Malloc{}".format(jsonvalues[0]['luns'][0]['bdev_name'], str(rpc_param['lun_total'])))
-    verify(jsonvalues[0]['luns'][1]['id'] == 1, 1,
-           "lun id value is {}, expected 1".format(jsonvalues[0]['luns'][1]['id']))
+    verify(jsonvalues[0]['luns'][1]['lun_id'] == 1, 1,
+           "lun id value is {}, expected 1".format(jsonvalues[0]['luns'][1]['lun_id']))
 
     rpc.delete_target_node(name)
     output = rpc.get_target_nodes()
