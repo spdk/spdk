@@ -134,6 +134,18 @@ def inflate_lvol_bdev(client, name):
     return client.call('inflate_lvol_bdev', params)
 
 
+def decouple_parent_lvol_bdev(client, name):
+    """Decouple parent of a logical volume.
+
+    Args:
+        name: name of logical volume to decouple parent
+    """
+    params = {
+        'name': name,
+    }
+    return client.call('decouple_parent_lvol_bdev', params)
+
+
 def destroy_lvol_store(client, uuid=None, lvs_name=None):
     """Destroy a logical volume store.
 

@@ -522,8 +522,10 @@ void spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 			 spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /**
- * Allocate all unallocated clusters in this blob and copy data from backing blob.
- * This call removes dependency on backing blob.
+ * Allocate clusters in this blob and copy data from backing blob.
+ *
+ * This call removes dependency on backing blob allowing to delete backing
+ * blog (e.g. snapshot) without loss of consistency.
  *
  * \param bs blobstore.
  * \param channel IO channel used to inflate blob.
@@ -533,6 +535,21 @@ void spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
  */
 void spdk_bs_inflate_blob(struct spdk_blob_store *bs, struct spdk_io_channel *channel,
 			  spdk_blob_id blobid, spdk_blob_op_complete cb_fn, void *cb_arg);
+
+/**
+ * Remove dependency on parent blob.
+ *
+ * This call removes dependency on parent blog (e.g. snapshot) without loss
+ * of consistency.
+ *
+ * \param bs blobstore.
+ * \param channel IO channel used to inflate blob.
+ * \param blobid The id of the blob.
+ * \param cb_fn Called when the operation is complete.
+ * \param cb_arg Argument passed to function cb_fn.
+ */
+void spdk_bs_blob_decouple_parent(struct spdk_blob_store *bs, struct spdk_io_channel *channel,
+				  spdk_blob_id blobid, spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /**
  * Open a blob from the given blobstore.
