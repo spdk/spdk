@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "4323867b_f5b869d2",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-10T05:17:07Z",
+      "side": 1,
+      "message": "agree with Darek\u0027s comment\n\nI think spdk_scsi_dev_notify_lun_removal might be a better name",
+      "revId": "7ef5de5f8518b18135fdcfd34e76f1297ff80ea3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f30f0cc_96310ae9",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-10T05:17:07Z",
+      "side": 1,
+      "message": "what happens if there are multiple open descriptors, and the first one returns false?  then the others will not get the remove_cb called",
+      "revId": "7ef5de5f8518b18135fdcfd34e76f1297ff80ea3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "55ff37ea_8db7dc79",
         "filename": "lib/scsi/dev.c",
         "patchSetId": 27
@@ -22,6 +56,23 @@
       "revId": "7ef5de5f8518b18135fdcfd34e76f1297ff80ea3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1b865a0a_3df6adca",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-10T05:17:07Z",
+      "side": 1,
+      "message": "i think we should just be telling the upper layer that the lun is removed - don\u0027t ask the upper layer if it can be removed\n\nthis function is a poller - meaning it will be called over and over again until all tasks for the LUN are completed - I think we should be doing the notification when we first get the hotplug callback from the bdev layer.  Let the upper layer (iSCSI) do whatever clean up it needs to do, including making sure that no more I/O will be sent to this LUN.  Then the existing code here will make sure the LUN structures do not get removed until the remaining tasks are completed.",
+      "revId": "7ef5de5f8518b18135fdcfd34e76f1297ff80ea3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
