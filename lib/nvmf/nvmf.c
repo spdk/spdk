@@ -383,6 +383,7 @@ spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 	int rc = -1;
 	struct spdk_nvmf_transport_poll_group *tgroup;
 
+	TAILQ_INIT(&qpair->outstanding);
 	qpair->group = group;
 
 	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
@@ -549,7 +550,6 @@ spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
 	sgroup = &group->sgroups[subsystem->id];
 	sgroup->state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
 	TAILQ_INIT(&sgroup->queued);
-	TAILQ_INIT(&sgroup->outstanding);
 
 	return 0;
 }
