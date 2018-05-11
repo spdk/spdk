@@ -45,6 +45,19 @@ SPDK_LOG_REGISTER_COMPONENT("iscsi", SPDK_LOG_ISCSI)
 struct spdk_iscsi_globals g_spdk_iscsi;
 static TAILQ_HEAD(, spdk_iscsi_task) g_ut_read_tasks = TAILQ_HEAD_INITIALIZER(g_ut_read_tasks);
 
+void
+spdk_scsi_dev_close(struct spdk_scsi_desc *desc)
+{
+	return;
+}
+
+int
+spdk_scsi_dev_open(struct spdk_scsi_dev *dev, spdk_scsi_remove_cb_t remove_cb,
+		   void *remove_ctx, struct spdk_scsi_desc **_desc)
+{
+	return 0;
+}
+
 int
 spdk_app_get_shm_id(void)
 {
