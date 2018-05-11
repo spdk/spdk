@@ -5,13 +5,14 @@ import argparse
 
 def delete_unneeded_params(config, method_list, in_list=True):
     to_delete = []
-    for config_i in range(0, len(config)):
-        if in_list:
-            if config[config_i]['method'] in method_list:
-                to_delete.append(config_i)
-        else:
-            if config[config_i]['method'] not in method_list:
-                to_delete.append(config_i)
+    if config:
+        for config_i in range(0, len(config)):
+            if in_list:
+                if config[config_i]['method'] in method_list:
+                    to_delete.append(config_i)
+            else:
+                if config[config_i]['method'] not in method_list:
+                   to_delete.append(config_i)
 
     return to_delete
 
