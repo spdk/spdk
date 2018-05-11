@@ -1,0 +1,153 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "95d3ecb5_ac2dbf96",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-11T13:00:00Z",
+      "side": 1,
+      "message": "why only _vbdev_lvs_remove_empty_cb so and not also_vbdev_lvs_unregister_empty_cb ?",
+      "range": {
+        "startLine": 396,
+        "startChar": 37,
+        "endLine": 396,
+        "endChar": 41
+      },
+      "revId": "233bc33327a414ec213114bab330bf0f97648064",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "70975693_1c8a365c",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 548,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-11T13:00:00Z",
+      "side": 1,
+      "message": "unrelated change.",
+      "revId": "233bc33327a414ec213114bab330bf0f97648064",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "95280d5e_f7fcf216",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 583,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-11T13:00:00Z",
+      "side": 1,
+      "message": "pthread_mutex_trylock() might fail with other error code than EBUSY.",
+      "range": {
+        "startLine": 583,
+        "startChar": 16,
+        "endLine": 583,
+        "endChar": 22
+      },
+      "revId": "233bc33327a414ec213114bab330bf0f97648064",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d0a091a_d095ef2b",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 612,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-11T13:00:00Z",
+      "side": 1,
+      "message": "I think you forgot about\n\n...\n   pthread_mutex_unlock(\u0026lvol-\u003emutex);\n   cb_fn(cb_arg, -ENOMEM);\n   free(ctx);\n   return;\n}",
+      "range": {
+        "startLine": 612,
+        "startChar": 2,
+        "endLine": 612,
+        "endChar": 49
+      },
+      "revId": "233bc33327a414ec213114bab330bf0f97648064",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6850d473_4cb1f420",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 913,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-11T13:00:00Z",
+      "side": 1,
+      "message": "redundant brackets",
+      "range": {
+        "startLine": 913,
+        "startChar": 8,
+        "endLine": 913,
+        "endChar": 20
+      },
+      "revId": "233bc33327a414ec213114bab330bf0f97648064",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "25fb9dd4_11f5eb1d",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 1107,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-11T13:00:00Z",
+      "side": 1,
+      "message": "1. There could emty line after \u0027}\u0027\n2. can\u0027t find pthread_mutex_destroy().",
+      "range": {
+        "startLine": 1107,
+        "startChar": 6,
+        "endLine": 1107,
+        "endChar": 24
+      },
+      "revId": "233bc33327a414ec213114bab330bf0f97648064",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1dd0c2d7_6160f9aa",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-11T13:00:00Z",
+      "side": 1,
+      "message": "unrelated change",
+      "revId": "233bc33327a414ec213114bab330bf0f97648064",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
