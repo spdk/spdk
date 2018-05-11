@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c369c1c5_337a6b80",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-11T17:09:52Z",
+      "side": 1,
+      "message": "Align outstanding with the other data members.",
+      "revId": "5e56fdc21d19a3bed5d6ef5b78a5954882f8b7b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
