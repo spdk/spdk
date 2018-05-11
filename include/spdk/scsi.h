@@ -47,6 +47,10 @@
 extern "C" {
 #endif
 
+typedef bool (*spdk_scsi_remove_cb_t)(void *remove_ctx, int lun_id);
+
+struct spdk_scsi_desc;
+
 /* Defines for SPDK tracing framework */
 #define OWNER_SCSI_DEV				0x10
 #define OBJECT_SCSI_TASK			0x10
@@ -190,6 +194,20 @@ struct spdk_scsi_dev *spdk_scsi_dev_construct(const char *name,
 		uint8_t protocol_id,
 		void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
 		void *hotremove_ctx);
+
+/**
+ * Open a scsi device for I/O operations.
+ *
+ * \param scsi device to open.
+ * \param remove_cb callback function for hot remove the lun.
+ * \param remove_ctx param for hot removal callback function.
+ * \param desc output parameter for the descriptor when operation is successful
+ * \return 0 if operation is successful, suitable errno value otherwise
+ */
+int spdk_scsi_dev_open(struct spdk_scsi_dev *dev, spdk_scsi_remove_cb_t remove_cb,
+		       void *remove_ctx, struct spdk_scsi_desc **desc);
+
+void spdk_scsi_dev_close(struct spdk_scsi_desc *desc);
 
 void spdk_scsi_dev_delete_lun(struct spdk_scsi_dev *dev, struct spdk_scsi_lun *lun);
 int spdk_scsi_dev_add_lun(struct spdk_scsi_dev *dev, const char *bdev_name, int lun_id,

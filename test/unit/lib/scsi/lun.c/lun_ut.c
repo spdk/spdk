@@ -53,6 +53,12 @@ static bool g_lun_execute_fail = false;
 static int g_lun_execute_status = SPDK_SCSI_TASK_PENDING;
 static uint32_t g_task_count = 0;
 
+bool
+spdk_scsi_dev_lun_removable(struct spdk_scsi_dev *scsi_dev, int id)
+{
+	return true;
+}
+
 struct spdk_poller *
 spdk_poller_register(spdk_poller_fn fn,
 		     void *arg,
