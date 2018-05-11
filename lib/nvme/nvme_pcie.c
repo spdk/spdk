@@ -1079,7 +1079,6 @@ nvme_pcie_qpair_insert_pending_admin_request(struct spdk_nvme_qpair *qpair,
 	struct spdk_nvme_ctrlr		*ctrlr = qpair->ctrlr;
 	struct nvme_request		*active_req = req;
 	struct spdk_nvme_ctrlr_process	*active_proc;
-	bool				pending_on_proc = false;
 
 	/*
 	 * The admin request is from another process. Move to the per
@@ -1088,19 +1087,13 @@ nvme_pcie_qpair_insert_pending_admin_request(struct spdk_nvme_qpair *qpair,
 	assert(nvme_qpair_is_admin_queue(qpair));
 	assert(active_req->pid != getpid());
 
-	TAILQ_FOREACH(active_proc, &ctrlr->active_procs, tailq) {
-		if (active_proc->pid == active_req->pid) {
-			/* Saved the original completion information */
-			memcpy(&active_req->cpl, cpl, sizeof(*cpl));
-			STAILQ_INSERT_TAIL(&active_proc->active_reqs, active_req, stailq);
-			pending_on_proc = true;
-
-			break;
-		}
-	}
-
-	if (pending_on_proc == false) {
-		SPDK_ERRLOG("The owning process (pid %d) is not found. Drop the request.\n",
+	active_proc = spdk_nvme_ctrlr_get_process(ctrlr, active_req->pid);
+	if (active_proc) {
+		/* Save the original completion information */
+		memcpy(&active_req->cpl, cpl, sizeof(*cpl));
+		STAILQ_INSERT_TAIL(&active_proc->active_reqs, active_req, stailq);
+	} else {
+		SPDK_ERRLOG("The owning process (pid %d) is not found. Dropping the request.\n",
 			    active_req->pid);
 
 		nvme_free_request(active_req);
@@ -1115,7 +1108,6 @@ nvme_pcie_qpair_complete_pending_admin_request(struct spdk_nvme_qpair *qpair)
 {
 	struct spdk_nvme_ctrlr		*ctrlr = qpair->ctrlr;
 	struct nvme_request		*req, *tmp_req;
-	bool				proc_found = false;
 	pid_t				pid = getpid();
 	struct spdk_nvme_ctrlr_process	*proc;
 
@@ -1125,17 +1117,11 @@ nvme_pcie_qpair_complete_pending_admin_request(struct spdk_nvme_qpair *qpair)
 	 */
 	assert(nvme_qpair_is_admin_queue(qpair));
 
-	TAILQ_FOREACH(proc, &ctrlr->active_procs, tailq) {
-		if (proc->pid == pid) {
-			proc_found = true;
-
-			break;
-		}
-	}
-
-	if (proc_found == false) {
+	proc = spdk_nvme_ctrlr_get_current_process(ctrlr);
+	if (!proc) {
 		SPDK_ERRLOG("the active process (pid %d) is not found for this controller.\n", pid);
-		assert(proc_found);
+		assert(proc);
+		return;
 	}
 
 	STAILQ_FOREACH_SAFE(req, &proc->active_reqs, stailq, tmp_req) {

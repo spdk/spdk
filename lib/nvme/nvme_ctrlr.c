@@ -146,15 +146,11 @@ nvme_ctrlr_proc_add_io_qpair(struct spdk_nvme_qpair *qpair)
 {
 	struct spdk_nvme_ctrlr_process	*active_proc;
 	struct spdk_nvme_ctrlr		*ctrlr = qpair->ctrlr;
-	pid_t				pid = getpid();
 
-	TAILQ_FOREACH(active_proc, &ctrlr->active_procs, tailq) {
-		if (active_proc->pid == pid) {
-			TAILQ_INSERT_TAIL(&active_proc->allocated_io_qpairs, qpair,
-					  per_process_tailq);
-			qpair->active_proc = active_proc;
-			break;
-		}
+	active_proc = spdk_nvme_ctrlr_get_current_process(ctrlr);
+	if (active_proc) {
+		TAILQ_INSERT_TAIL(&active_proc->allocated_io_qpairs, qpair, per_process_tailq);
+		qpair->active_proc = active_proc;
 	}
 }
 
@@ -168,17 +164,9 @@ nvme_ctrlr_proc_remove_io_qpair(struct spdk_nvme_qpair *qpair)
 	struct spdk_nvme_ctrlr_process	*active_proc;
 	struct spdk_nvme_ctrlr		*ctrlr = qpair->ctrlr;
 	struct spdk_nvme_qpair          *active_qpair, *tmp_qpair;
-	pid_t				pid = getpid();
-	bool				proc_found = false;
 
-	TAILQ_FOREACH(active_proc, &ctrlr->active_procs, tailq) {
-		if (active_proc->pid == pid) {
-			proc_found = true;
-			break;
-		}
-	}
-
-	if (proc_found == false) {
+	active_proc = spdk_nvme_ctrlr_get_current_process(ctrlr);
+	if (!active_proc) {
 		return;
 	}
 
@@ -1262,6 +1250,26 @@ nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
+struct spdk_nvme_ctrlr_process *
+spdk_nvme_ctrlr_get_process(struct spdk_nvme_ctrlr *ctrlr, pid_t pid)
+{
+	struct spdk_nvme_ctrlr_process	*active_proc;
+
+	TAILQ_FOREACH(active_proc, &ctrlr->active_procs, tailq) {
+		if (active_proc->pid == pid) {
+			return active_proc;
+		}
+	}
+
+	return NULL;
+}
+
+struct spdk_nvme_ctrlr_process *
+spdk_nvme_ctrlr_get_current_process(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return spdk_nvme_ctrlr_get_process(ctrlr, getpid());
+}
+
 /**
  * This function will be called when a process is using the controller.
  *  1. For the primary process, it is called when constructing the controller.
@@ -1271,14 +1279,12 @@ nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
 int
 nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 {
-	struct spdk_nvme_ctrlr_process	*ctrlr_proc, *active_proc;
+	struct spdk_nvme_ctrlr_process	*ctrlr_proc;
 	pid_t				pid = getpid();
 
 	/* Check whether the process is already added or not */
-	TAILQ_FOREACH(active_proc, &ctrlr->active_procs, tailq) {
-		if (active_proc->pid == pid) {
-			return 0;
-		}
+	if (spdk_nvme_ctrlr_get_process(ctrlr, pid)) {
+		return 0;
 	}
 
 	/* Initialize the per process properties for this ctrlr */
@@ -1411,17 +1417,14 @@ void
 nvme_ctrlr_proc_get_ref(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct spdk_nvme_ctrlr_process	*active_proc;
-	pid_t				pid = getpid();
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
 	nvme_ctrlr_remove_inactive_proc(ctrlr);
 
-	TAILQ_FOREACH(active_proc, &ctrlr->active_procs, tailq) {
-		if (active_proc->pid == pid) {
-			active_proc->ref++;
-			break;
-		}
+	active_proc = spdk_nvme_ctrlr_get_current_process(ctrlr);
+	if (active_proc) {
+		active_proc->ref++;
 	}
 
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
@@ -1430,28 +1433,24 @@ nvme_ctrlr_proc_get_ref(struct spdk_nvme_ctrlr *ctrlr)
 void
 nvme_ctrlr_proc_put_ref(struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct spdk_nvme_ctrlr_process	*active_proc, *tmp;
-	pid_t				pid = getpid();
+	struct spdk_nvme_ctrlr_process	*active_proc;
 	int				proc_count;
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
 	proc_count = nvme_ctrlr_remove_inactive_proc(ctrlr);
 
-	TAILQ_FOREACH_SAFE(active_proc, &ctrlr->active_procs, tailq, tmp) {
-		if (active_proc->pid == pid) {
-			active_proc->ref--;
-			assert(active_proc->ref >= 0);
+	active_proc = spdk_nvme_ctrlr_get_current_process(ctrlr);
+	if (active_proc) {
+		active_proc->ref--;
+		assert(active_proc->ref >= 0);
 
-			/*
-			 * The last active process will be removed at the end of
-			 * the destruction of the controller.
-			 */
-			if (active_proc->ref == 0 && proc_count != 1) {
-				nvme_ctrlr_remove_process(ctrlr, active_proc);
-			}
-
-			break;
+		/*
+		 * The last active process will be removed at the end of
+		 * the destruction of the controller.
+		 */
+		if (active_proc->ref == 0 && proc_count != 1) {
+			nvme_ctrlr_remove_process(ctrlr, active_proc);
 		}
 	}
 
@@ -1484,16 +1483,13 @@ struct spdk_pci_device *
 nvme_ctrlr_proc_get_devhandle(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct spdk_nvme_ctrlr_process	*active_proc;
-	pid_t				pid = getpid();
 	struct spdk_pci_device		*devhandle = NULL;
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
-	TAILQ_FOREACH(active_proc, &ctrlr->active_procs, tailq) {
-		if (active_proc->pid == pid) {
-			devhandle = active_proc->devhandle;
-			break;
-		}
+	active_proc = spdk_nvme_ctrlr_get_current_process(ctrlr);
+	if (active_proc) {
+		devhandle = active_proc->devhandle;
 	}
 
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
@@ -1988,20 +1984,14 @@ void
 spdk_nvme_ctrlr_register_timeout_callback(struct spdk_nvme_ctrlr *ctrlr,
 		uint32_t nvme_timeout, spdk_nvme_timeout_cb cb_fn, void *cb_arg)
 {
-	struct spdk_nvme_ctrlr_process	*active_proc = NULL;
-	pid_t				pid = getpid();
+	struct spdk_nvme_ctrlr_process	*active_proc;
 
-	TAILQ_FOREACH(active_proc, &ctrlr->active_procs, tailq) {
-		if (active_proc->pid == pid) {
-			break;
-		}
+	active_proc = spdk_nvme_ctrlr_get_current_process(ctrlr);
+	if (active_proc) {
+		active_proc->timeout_ticks = nvme_timeout * spdk_get_ticks_hz();
+		active_proc->timeout_cb_fn = cb_fn;
+		active_proc->timeout_cb_arg = cb_arg;
 	}
-
-	assert(active_proc != NULL);
-
-	active_proc->timeout_ticks = nvme_timeout * spdk_get_ticks_hz();
-	active_proc->timeout_cb_fn = cb_fn;
-	active_proc->timeout_cb_arg = cb_arg;
 }
 
 bool
