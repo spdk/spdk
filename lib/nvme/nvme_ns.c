@@ -124,7 +124,8 @@ int nvme_ns_identify_update(struct spdk_nvme_ns *ns)
 	}
 
 	memset(ns->id_desc_list, 0, sizeof(ns->id_desc_list));
-	if (ns->ctrlr->vs.raw >= SPDK_NVME_VERSION(1, 3, 0)) {
+	if (ns->ctrlr->vs.raw >= SPDK_NVME_VERSION(1, 3, 0) &&
+	    !(ns->ctrlr->quirks & NVME_QUIRK_IDENTIFY_CNS)) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Attempting to retrieve NS ID Descriptor List\n");
 		status.done = false;
 		rc = nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS_ID_DESCRIPTOR_LIST, 0, ns->id,
