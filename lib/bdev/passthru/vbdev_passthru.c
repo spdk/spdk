@@ -446,7 +446,7 @@ static const struct spdk_bdev_fn_table vbdev_passthru_fn_table = {
 
 /* Called when the underlying base bdev goes away. */
 static void
-vbdev_passthru_examine_hotremove_cb(void *ctx)
+vbdev_passthru_base_bdev_hotremove_cb(void *ctx)
 {
 	struct vbdev_passthru *pt_node, *tmp;
 	struct spdk_bdev *bdev_find = ctx;
@@ -512,7 +512,7 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 					sizeof(struct pt_io_channel));
 		SPDK_NOTICELOG("io_device created at: 0x%p\n", pt_node);
 
-		rc = spdk_bdev_open(bdev, true, vbdev_passthru_examine_hotremove_cb,
+		rc = spdk_bdev_open(bdev, true, vbdev_passthru_base_bdev_hotremove_cb,
 				    bdev, &pt_node->base_desc);
 		if (rc) {
 			SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(bdev));
