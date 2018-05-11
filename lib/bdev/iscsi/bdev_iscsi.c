@@ -53,7 +53,9 @@
 
 struct bdev_iscsi_lun;
 
-#define BDEV_ISCSI_CONNECTION_POLL_US 500
+#define BDEV_ISCSI_CONNECTION_POLL_US 500 /* 0.5 ms */
+#define BDEV_ISCSI_NO_MASTER_CH_POLL_US 10000 /* 10ms */
+
 #define DEFAULT_INITIATOR_NAME "iqn.2016-06.io.spdk:init"
 
 static int bdev_iscsi_initialize(void);
@@ -80,6 +82,8 @@ struct bdev_iscsi_lun {
 	uint32_t			ch_count;
 	struct bdev_iscsi_io_channel	*master_ch;
 	struct spdk_thread		*master_td;
+	struct spdk_poller		*no_master_ch_poller;
+	struct spdk_thread		*no_master_ch_poller_td;
 	TAILQ_ENTRY(bdev_iscsi_lun)	link;
 };
 
@@ -284,21 +288,29 @@ bdev_iscsi_writev(struct bdev_iscsi_lun *lun, struct bdev_iscsi_io *iscsi_io,
 #endif
 }
 
+static void
+bdev_iscsi_destruct_cb(void *ctx)
+{
+	struct bdev_iscsi_lun *lun = ctx;
+
+	spdk_poller_unregister(&lun->no_master_ch_poller);
+	bdev_iscsi_lun_cleanup(lun);
+	spdk_bdev_destruct_done(&lun->bdev, 0);
+}
+
 static int
 bdev_iscsi_destruct(void *ctx)
 {
 	struct bdev_iscsi_lun *lun = ctx;
-	int rc = 0;
 
-	TAILQ_REMOVE(&g_iscsi_lun_head, lun, link);
-	return rc;
+	assert(lun->no_master_ch_poller_td);
+	spdk_thread_send_msg(lun->no_master_ch_poller_td, bdev_iscsi_destruct_cb, lun);
+	return 1;
 }
 
 static int
-bdev_iscsi_poll(void *arg)
+bdev_iscsi_poll_lun(struct bdev_iscsi_lun *lun)
 {
-	struct bdev_iscsi_io_channel *ch = arg;
-	struct bdev_iscsi_lun *lun = ch->lun;
 	struct pollfd pfd = {};
 
 	pfd.fd = iscsi_get_fd(lun->context);
@@ -316,6 +328,32 @@ bdev_iscsi_poll(void *arg)
 	}
 
 	return 0;
+}
+
+static int
+bdev_iscsi_no_master_ch_poll(void *arg)
+{
+	struct bdev_iscsi_lun *lun = arg;
+	int rc = 0;
+
+	if (pthread_mutex_trylock(&lun->mutex)) {
+		/* Don't care about the error code here. */
+		return -1;
+	}
+
+	if (lun->ch_count == 0) {
+		rc = bdev_iscsi_poll_lun(arg);
+	}
+
+	pthread_mutex_unlock(&lun->mutex);
+	return rc;
+}
+
+static int
+bdev_iscsi_poll(void *arg)
+{
+	struct bdev_iscsi_io_channel *ch = arg;
+	return bdev_iscsi_poll_lun(ch->lun);
 }
 
 static void bdev_iscsi_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
@@ -413,6 +451,8 @@ bdev_iscsi_destroy_cb(void *io_device, void *ctx_buf)
 	if (lun->ch_count == 0) {
 		assert(lun->master_ch != NULL);
 		assert(lun->master_td != NULL);
+		assert(lun->master_td == spdk_get_thread());
+
 		lun->master_ch = NULL;
 		lun->master_td = NULL;
 		spdk_poller_unregister(&io_channel->poller);
@@ -508,6 +548,10 @@ create_iscsi_lun(struct iscsi_context *context, char *url, char *initiator_iqn, 
 		spdk_io_device_unregister(lun, NULL);
 		goto error_return;
 	}
+
+	lun->no_master_ch_poller_td = spdk_get_thread();
+	lun->no_master_ch_poller = spdk_poller_register(bdev_iscsi_no_master_ch_poll, lun,
+				   BDEV_ISCSI_NO_MASTER_CH_POLL_US);
 
 	TAILQ_INSERT_TAIL(&g_iscsi_lun_head, lun, link);
 	*bdev = &lun->bdev;
@@ -690,6 +734,7 @@ bdev_iscsi_initialize_cb(void *cb_arg, struct spdk_bdev *bdev, int status)
 {
 	if (TAILQ_EMPTY(&g_iscsi_conn_req)) {
 		spdk_bdev_module_init_done(&g_iscsi_bdev_module);
+		SPDK_ERRLOG("bdev iscsi init done\n");
 	}
 }
 
