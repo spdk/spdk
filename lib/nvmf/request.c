@@ -66,10 +66,7 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 			  cap_hdr->fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT)) {
 		/* CONNECT commands don't actually get placed on the outstanding list. */
 	} else {
-		struct spdk_nvmf_subsystem_poll_group *sgroup;
-
-		sgroup = &req->qpair->group->sgroups[req->qpair->ctrlr->subsys->id];
-		TAILQ_REMOVE(&sgroup->outstanding, req, link);
+		TAILQ_REMOVE(&req->qpair->outstanding, req, link);
 	}
 
 	if (spdk_nvmf_transport_req_complete(req)) {
@@ -140,9 +137,10 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 			return;
 		}
 
-		/* Place the request on the outstanding list so we can keep track of it */
-		TAILQ_INSERT_TAIL(&sgroup->outstanding, req, link);
 	}
+
+	/* Place the request on the outstanding list so we can keep track of it */
+	TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
 
 	if (spdk_unlikely(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC)) {
 		status = spdk_nvmf_ctrlr_process_fabrics_cmd(req);
