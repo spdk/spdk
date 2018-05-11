@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "256e0ff5_12938995",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-11T13:18:43Z",
+      "side": 1,
+      "message": "Did the world just blow up because you didn\u0027t addressed second part of my comment https://review.gerrithub.io/#/c/spdk/spdk/+/399366/15/lib/blob/blobstore.c@283 ?",
+      "range": {
+        "startLine": 289,
+        "startChar": 2,
+        "endLine": 289,
+        "endChar": 30
+      },
+      "revId": "4786f6da85701d2ba8bbb36771169c1cdb4c9cf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dcc8fee4_72efb1a1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2034,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-11T13:18:43Z",
+      "side": 1,
+      "message": "can you move line line 2037 here? Thx.",
+      "range": {
+        "startLine": 2033,
+        "startChar": 3,
+        "endLine": 2034,
+        "endChar": 4
+      },
+      "revId": "4786f6da85701d2ba8bbb36771169c1cdb4c9cf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38e77724_ed2341e2",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 3877,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-11T13:18:43Z",
+      "side": 1,
+      "message": "empty line needed",
+      "range": {
+        "startLine": 3876,
+        "startChar": 1,
+        "endLine": 3877,
+        "endChar": 20
+      },
+      "revId": "4786f6da85701d2ba8bbb36771169c1cdb4c9cf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
