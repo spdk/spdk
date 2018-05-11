@@ -42,6 +42,8 @@
 #include "spdk_internal/event.h"
 #include "spdk_internal/log.h"
 
+struct spdk_json_write_ctx;
+
 #define ACCEPT_TIMEOUT_US	10000 /* 10ms */
 
 struct spdk_nvmf_tgt_conf {
@@ -54,5 +56,6 @@ extern struct spdk_nvmf_tgt_conf *g_spdk_nvmf_tgt_conf;
 extern struct spdk_nvmf_tgt *g_spdk_nvmf_tgt;
 
 int spdk_nvmf_parse_conf(void);
+void spdk_nvmf_tgt_config_json(struct spdk_json_write_ctx *w);
 
 #endif

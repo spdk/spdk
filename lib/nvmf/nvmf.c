@@ -192,6 +192,22 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 }
 
 void
+spdk_nvmf_tgt_option_json(struct spdk_nvmf_tgt *tgt, struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "method", "set_nvmf_target_options");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_uint32(w, "max_queue_depth", tgt->opts.max_queue_depth);
+	spdk_json_write_named_uint32(w, "in_capsule_data_size", tgt->opts.in_capsule_data_size);
+	spdk_json_write_named_uint32(w, "max_io_size", tgt->opts.max_io_size);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
+void
 spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt)
 {
 	struct spdk_nvmf_transport *transport, *transport_tmp;

@@ -60,6 +60,7 @@ struct spdk_nvmf_request;
 struct spdk_nvmf_host;
 struct spdk_nvmf_listener;
 struct spdk_nvmf_poll_group;
+struct spdk_json_write_ctx;
 
 struct spdk_nvmf_tgt_opts {
 	uint16_t max_queue_depth;
@@ -112,6 +113,15 @@ void spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 			  struct spdk_nvme_transport_id *trid,
 			  spdk_nvmf_tgt_listen_done_fn cb_fn,
 			  void *cb_arg);
+
+/**
+ * Write option of NVMe-oF target to the JSON write context.
+ *
+ * \param tgt The target to get option.
+ * \param w JSON write context.
+ */
+void spdk_nvmf_tgt_option_json(struct spdk_nvmf_tgt *tgt,
+			       struct spdk_json_write_ctx *w);
 
 typedef void (*new_qpair_fn)(struct spdk_nvmf_qpair *qpair);
 
