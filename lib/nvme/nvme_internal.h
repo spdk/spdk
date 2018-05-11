@@ -375,6 +375,9 @@ struct spdk_nvme_ctrlr_process {
 	/** Allocated IO qpairs */
 	TAILQ_HEAD(, spdk_nvme_qpair)			allocated_io_qpairs;
 
+	spdk_nvme_aer_cb				aer_cb_fn;
+	void						*aer_cb_arg;
+
 	/**
 	 * A function pointer to timeout callback function
 	 */
@@ -437,8 +440,6 @@ struct spdk_nvme_ctrlr {
 
 	uint32_t			num_aers;
 	struct nvme_async_event_request	aer[NVME_MAX_ASYNC_EVENTS];
-	spdk_nvme_aer_cb		aer_cb_fn;
-	void				*aer_cb_arg;
 
 	/** guards access to the controller itself, including admin queues */
 	pthread_mutex_t			ctrlr_lock;
