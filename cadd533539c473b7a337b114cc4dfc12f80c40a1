@@ -16,6 +16,24 @@
       "revId": "cadd533539c473b7a337b114cc4dfc12f80c40a1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d8ce86f_d474ea22",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 737,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-05-11T15:45:07Z",
+      "side": 1,
+      "message": "I have removed it.",
+      "parentUuid": "9dbf1970_fe7695da",
+      "revId": "cadd533539c473b7a337b114cc4dfc12f80c40a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
