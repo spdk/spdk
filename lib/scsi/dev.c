@@ -36,6 +36,25 @@
 
 static struct spdk_scsi_dev g_devs[SPDK_SCSI_MAX_DEVS];
 
+bool
+spdk_scsi_dev_lun_removable(struct spdk_scsi_dev *scsi_dev, int id)
+{
+	struct spdk_scsi_desc *desc;
+
+	pthread_mutex_lock(&scsi_dev->mutex);
+	TAILQ_FOREACH(desc, &scsi_dev->open_descs, link) {
+		if (desc->remove_cb) {
+			if (desc->remove_cb(desc->remove_ctx, id) == false) {
+				pthread_mutex_unlock(&scsi_dev->mutex);
+				return false;
+			}
+		}
+	}
+
+	pthread_mutex_unlock(&scsi_dev->mutex);
+	return true;
+}
+
 struct spdk_scsi_dev *
 spdk_scsi_dev_get_list(void)
 {
@@ -54,6 +73,8 @@ allocate_dev(void)
 			memset(dev, 0, sizeof(*dev));
 			dev->id = i;
 			dev->is_allocated = 1;
+			TAILQ_INIT(&dev->open_descs);
+			pthread_mutex_init(&dev->mutex, NULL);
 			return dev;
 		}
 	}
@@ -66,8 +87,10 @@ free_dev(struct spdk_scsi_dev *dev)
 {
 	assert(dev->is_allocated == 1);
 	assert(dev->removed == true);
+	assert(TAILQ_EMPTY(&dev->open_descs));
 
 	dev->is_allocated = 0;
+	pthread_mutex_destroy(&dev->mutex);
 }
 
 void
@@ -177,6 +200,45 @@ spdk_scsi_dev_delete_lun(struct spdk_scsi_dev *dev,
  * Remove it when astyle is fixed.
  */
 typedef struct spdk_scsi_dev _spdk_scsi_dev;
+
+void
+spdk_scsi_dev_close(struct spdk_scsi_desc *desc)
+{
+	struct spdk_scsi_dev *scsi_dev = desc->scsi_dev;
+
+	pthread_mutex_lock(&scsi_dev->mutex);
+
+	TAILQ_REMOVE(&scsi_dev->open_descs, desc, link);
+	free(desc);
+
+	pthread_mutex_unlock(&scsi_dev->mutex);
+}
+
+int
+spdk_scsi_dev_open(struct spdk_scsi_dev *dev, spdk_scsi_remove_cb_t remove_cb,
+		   void *remove_ctx, struct spdk_scsi_desc **_desc)
+{
+	struct spdk_scsi_desc *desc;
+
+	desc = calloc(1, sizeof(*desc));
+	if (desc == NULL) {
+		SPDK_ERRLOG("Failed to allocate memory for scsi descriptor\n");
+		return -ENOMEM;
+	}
+
+	pthread_mutex_lock(&dev->mutex);
+
+	TAILQ_INSERT_TAIL(&dev->open_descs, desc, link);
+
+	desc->scsi_dev = dev;
+	desc->remove_cb = remove_cb;
+	desc->remove_ctx = remove_ctx;
+	*_desc = desc;
+
+	pthread_mutex_unlock(&dev->mutex);
+
+	return 0;
+}
 
 _spdk_scsi_dev *
 spdk_scsi_dev_construct(const char *name, const char *bdev_name_list[],

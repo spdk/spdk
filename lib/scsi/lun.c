@@ -181,10 +181,20 @@ spdk_scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *tas
 	}
 }
 
+static bool
+spdk_scsi_lun_removable(struct spdk_scsi_dev *scsi_dev, int id)
+{
+	return spdk_scsi_dev_lun_removable(scsi_dev, id);
+}
+
 static int
 spdk_scsi_lun_hotplug(void *arg)
 {
 	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)arg;
+
+	if (spdk_scsi_lun_removable(lun->dev, lun->id) == false) {
+		return -1;
+	}
 
 	if (!spdk_scsi_lun_has_pending_tasks(lun)) {
 		spdk_scsi_lun_free_io_channel(lun);
@@ -194,6 +204,7 @@ spdk_scsi_lun_hotplug(void *arg)
 
 		spdk_scsi_dev_delete_lun(lun->dev, lun);
 		free(lun);
+		return 0;
 	}
 
 	return -1;
