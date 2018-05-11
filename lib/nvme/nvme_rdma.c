@@ -1407,6 +1407,12 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transpo
 		return NULL;
 	}
 
+	if (nvme_ctrlr_add_process(&rctrlr->ctrlr, 0) != 0) {
+		SPDK_ERRLOG("nvme_ctrlr_add_process() failed\n");
+		nvme_ctrlr_destruct(&rctrlr->ctrlr);
+		return NULL;
+	}
+
 	nvme_ctrlr_init_cap(&rctrlr->ctrlr, &cap, &vs);
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "succesully initialized the nvmf ctrlr\n");
