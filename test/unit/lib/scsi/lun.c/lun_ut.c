@@ -40,6 +40,8 @@
 
 #include "spdk_internal/mock.h"
 
+#include "common/lib/ut_multithread.c"
+
 /* Unit test bdev mockup */
 struct spdk_bdev {
 	int x;
@@ -53,22 +55,10 @@ static bool g_lun_execute_fail = false;
 static int g_lun_execute_status = SPDK_SCSI_TASK_PENDING;
 static uint32_t g_task_count = 0;
 
-struct spdk_poller *
-spdk_poller_register(spdk_poller_fn fn,
-		     void *arg,
-		     uint64_t period_microseconds)
+bool
+spdk_scsi_dev_lun_removable(struct spdk_scsi_dev *scsi_dev, int id)
 {
-	return NULL;
-}
-
-void
-spdk_poller_unregister(struct spdk_poller **ppoller)
-{
-}
-
-void
-spdk_thread_send_msg(const struct spdk_thread *thread, spdk_thread_fn fn, void *ctx)
-{
+	return true;
 }
 
 void spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
@@ -191,14 +181,6 @@ spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc)
 {
 	return NULL;
 }
-
-void
-spdk_put_io_channel(struct spdk_io_channel *ch)
-{
-}
-
-DEFINE_STUB(spdk_io_channel_get_thread, struct spdk_thread *, (struct spdk_io_channel *ch), NULL)
-DEFINE_STUB(spdk_get_thread, struct spdk_thread *, (void), NULL)
 
 static _spdk_scsi_lun *
 lun_construct(void)
