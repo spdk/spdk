@@ -97,8 +97,10 @@ def clear_iscsi_subsystem(args, iscsi_config):
     pass
 
 
-def clear_nbd_subsystem(args, scsi_config):
-    pass
+def clear_nbd_subsystem(args, nbd_config):
+    for nbd in nbd_config:
+        return args.client.call("stop_nbd_disk", params={"nbd_device":
+                                                         nbd['params']['nbd_device']})
 
 
 def clear_net_framework_subsystem(args, net_framework_config):
