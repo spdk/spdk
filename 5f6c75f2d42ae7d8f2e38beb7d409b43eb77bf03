@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "38bedd71_e4374ff7",
+        "filename": "scripts/fio.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-11T22:10:46Z",
+      "side": 1,
+      "message": "The function returns True or False, so !\u003d 0 doesn\u0027t seem quite right.\n\nMaybe you could swap the meaning of the return value as well so that True means success, so this would read more naturally:\n\n   if not set_device_parameter(...):\n       set_device_parameter(...)",
+      "range": {
+        "startLine": 131,
+        "startChar": 77,
+        "endLine": 131,
+        "endChar": 83
+      },
+      "revId": "5f6c75f2d42ae7d8f2e38beb7d409b43eb77bf03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
