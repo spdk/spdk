@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f7ac4416_0d08bd02",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1447,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-05-11T11:51:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "32523764_e8dcf423",
+      "revId": "749b9c24661ef3378b3ed256df04aa23c62359e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ddd74d13_10d53d0c",
         "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2018-05-10T18:31:54Z",
       "side": 1,
       "message": "extra newline should be removed",
+      "revId": "749b9c24661ef3378b3ed256df04aa23c62359e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27d8fe04_1045d39b",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1471,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-05-11T11:51:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ddd74d13_10d53d0c",
       "revId": "749b9c24661ef3378b3ed256df04aa23c62359e5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "8d851e85_1297af93",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1533,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-05-11T11:51:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d635ae78_40b7aec2",
+      "revId": "749b9c24661ef3378b3ed256df04aa23c62359e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9801b90c_6fc20454",
         "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
         "patchSetId": 1
@@ -64,6 +118,24 @@
       "writtenOn": "2018-05-10T18:31:54Z",
       "side": 1,
       "message": "can you use the spdk_mem_all_zero function instead?",
+      "revId": "749b9c24661ef3378b3ed256df04aa23c62359e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e1d2dc85_661aaea4",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1535,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-05-11T11:51:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9801b90c_6fc20454",
       "revId": "749b9c24661ef3378b3ed256df04aa23c62359e5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -105,6 +177,30 @@
       "side": 1,
       "message": "Agreed.  Doesn\u0027t line 1576 write to the last page?",
       "parentUuid": "a2ef7663_fb8d3e52",
+      "range": {
+        "startLine": 1580,
+        "startChar": 21,
+        "endLine": 1580,
+        "endChar": 58
+      },
+      "revId": "749b9c24661ef3378b3ed256df04aa23c62359e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42d1a0eb_3cd4b465",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1580,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-05-11T11:51:44Z",
+      "side": 1,
+      "message": "Yes, you\u0027re right. I missed to update comment after modification.",
+      "parentUuid": "f75cdab5_aa61acc1",
       "range": {
         "startLine": 1580,
         "startChar": 21,
