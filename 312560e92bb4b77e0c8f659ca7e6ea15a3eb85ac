@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "19b82373_c0ab56e4",
+        "filename": "include/spdk_internal/event.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-11T14:22:11Z",
+      "side": 1,
+      "message": "Patch itself look good but before +/-1, do we really need another explicit callback type here? Why we can\u0027t reuse existing ones? We already have RPC states so user will know which RPC methods he can use and which he can\u0027t.",
+      "range": {
+        "startLine": 76,
+        "startChar": 0,
+        "endLine": 76,
+        "endChar": 86
+      },
+      "revId": "312560e92bb4b77e0c8f659ca7e6ea15a3eb85ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
