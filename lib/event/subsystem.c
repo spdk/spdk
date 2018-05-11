@@ -254,3 +254,15 @@ spdk_subsystem_config_json(struct spdk_json_write_ctx *w, struct spdk_subsystem 
 		spdk_event_call(done_ev);
 	}
 }
+
+void
+spdk_subsystem_option_json(struct spdk_json_write_ctx *w, struct spdk_subsystem *subsystem,
+			   struct spdk_event *done_ev)
+{
+	if (subsystem && subsystem->write_option_json) {
+		subsystem->write_option_json(w, done_ev);
+	} else {
+		spdk_json_write_null(w);
+		spdk_event_call(done_ev);
+	}
+}

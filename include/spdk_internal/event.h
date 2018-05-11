@@ -66,6 +66,14 @@ struct spdk_subsystem {
 	 * \param done_ev Done event to be called when writing is done.
 	 */
 	void (*write_config_json)(struct spdk_json_write_ctx *w, struct spdk_event *done_ev);
+
+	/**
+	 * Write JSON option handler.
+	 *
+	 * \param w JSON write context
+	 * \param done_ev Done event to be called when writing is done.
+	 */
+	void (*write_option_json)(struct spdk_json_write_ctx *w, struct spdk_event *done_ev);
 	TAILQ_ENTRY(spdk_subsystem) tailq;
 };
 
@@ -103,6 +111,18 @@ void spdk_subsystem_config(FILE *fp);
  * \param done_ev event to be called when writing is done
  */
 void spdk_subsystem_config_json(struct spdk_json_write_ctx *w, struct spdk_subsystem *subsystem,
+				struct spdk_event *done_ev);
+
+/**
+ * Save pointed \c subsystem option to the JSON write context \c w. In case of error
+ * \c null is written to the JSON context. Writing might be done in async way so caller
+ * need to pass event that subsystem will call when it finish writing option.
+ *
+ * \param w JSON write context
+ * \param subsystem the subsystem to query
+ * \param done_ev event to be called when writing is done
+ */
+void spdk_subsystem_option_json(struct spdk_json_write_ctx *w, struct spdk_subsystem *subsystem,
 				struct spdk_event *done_ev);
 
 void spdk_rpc_initialize(const char *listen_addr);
