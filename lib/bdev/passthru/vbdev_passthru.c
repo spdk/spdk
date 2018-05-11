@@ -410,8 +410,7 @@ vbdev_passthru_get_spdk_running_config(FILE *fp)
 
 	fprintf(fp, "\n[Passthru]\n");
 	TAILQ_FOREACH(names, &g_bdev_names, link) {
-		fprintf(fp, "  PT %s %s ", names->bdev_name, names->vbdev_name);
-		fprintf(fp, "\n");
+		fprintf(fp, "  PT %s %s\n", names->bdev_name, names->vbdev_name);
 	}
 	fprintf(fp, "\n");
 }
