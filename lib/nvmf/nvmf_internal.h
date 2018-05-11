@@ -92,7 +92,6 @@ struct spdk_nvmf_subsystem_poll_group {
 	enum spdk_nvmf_subsystem_state state;
 
 	TAILQ_HEAD(, spdk_nvmf_request)	queued;
-	TAILQ_HEAD(, spdk_nvmf_request)	outstanding;
 };
 
 struct spdk_nvmf_poll_group {
@@ -154,6 +153,7 @@ struct spdk_nvmf_qpair {
 	uint16_t				sq_head;
 	uint16_t				sq_head_max;
 
+	TAILQ_HEAD(, spdk_nvmf_request)		outstanding;
 	TAILQ_ENTRY(spdk_nvmf_qpair)		link;
 };
 
