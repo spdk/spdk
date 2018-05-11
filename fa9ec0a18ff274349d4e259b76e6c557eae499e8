@@ -139,6 +139,30 @@
     },
     {
       "key": {
+        "uuid": "0770f371_be028e5e",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-11T23:55:07Z",
+      "side": 1,
+      "message": "Agreed.  Changpeng - I would expect you to know how SPDK formats variable names.  :-)",
+      "parentUuid": "f672ffa4_d7014236",
+      "range": {
+        "startLine": 164,
+        "startChar": 9,
+        "endLine": 164,
+        "endChar": 16
+      },
+      "revId": "fa9ec0a18ff274349d4e259b76e6c557eae499e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "47caea6a_0669531f",
         "filename": "lib/nvme/nvme_pcie.c",
         "patchSetId": 2
