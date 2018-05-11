@@ -206,6 +206,7 @@ fi
 if [ $SPDK_TEST_JSON -eq 1 ]; then
 	run_test ./test/bdev/bdevjson/json_config.sh
 	run_test ./test/vhost/initiator/json_config.sh
+	run_test ./test/bdev/bdevjson/nbd_json_config.sh
 fi
 
 timing_enter cleanup
