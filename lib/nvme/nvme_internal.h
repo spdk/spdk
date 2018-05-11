@@ -576,6 +576,9 @@ int	nvme_ctrlr_cmd_fw_image_download(struct spdk_nvme_ctrlr *ctrlr,
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 void	nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl);
 
+struct spdk_nvme_ctrlr_process *spdk_nvme_ctrlr_get_process(struct spdk_nvme_ctrlr *ctrlr,
+		pid_t pid);
+struct spdk_nvme_ctrlr_process *spdk_nvme_ctrlr_get_current_process(struct spdk_nvme_ctrlr *ctrlr);
 int	nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle);
 void	nvme_ctrlr_free_processes(struct spdk_nvme_ctrlr *ctrlr);
 struct spdk_pci_device *nvme_ctrlr_proc_get_devhandle(struct spdk_nvme_ctrlr *ctrlr);
