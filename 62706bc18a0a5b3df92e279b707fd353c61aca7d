@@ -19,6 +19,75 @@
     },
     {
       "key": {
+        "uuid": "9e691b52_76eeeae7",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-11T21:57:30Z",
+      "side": 1,
+      "message": "Also the name should be SPDK_NVMF_MAX_SGL_ENTRIES (note NVME-\u003eNVMF SGE-\u003eSGL)",
+      "parentUuid": "846945e1_4779c895",
+      "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "904e7e6c_04287eb6",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-11T21:57:30Z",
+      "side": 1,
+      "message": "Drop data?",
+      "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9fa7c06b_3e41d24e",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-11T21:57:30Z",
+      "side": 1,
+      "message": "This isn\u0027t used anymore.",
+      "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab2a44bc_8872e0e9",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-11T21:57:30Z",
+      "side": 1,
+      "message": "the spacing between struct and the typename should remain as a space, not a tab. I don\u0027t know why the rsp struct above has tabs in it.",
+      "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "44c8d043_c55e0a4c",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 2
@@ -104,6 +173,57 @@
         "endLine": 919,
         "endChar": 51
       },
+      "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a9b4efd_ca740757",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 928,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-11T21:57:30Z",
+      "side": 1,
+      "message": "You don\u0027t need this if buff check if you take my advice on line 937.",
+      "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a407a677_6f93d9ce",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 937,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-11T21:57:30Z",
+      "side": 1,
+      "message": "The only way this executes is if you break on line 911. I\u0027d just put the error handling right there and return. Or make it a separate function that is called on line 911 and then returns.",
+      "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "228d520b_bb446112",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1066,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-11T21:57:30Z",
+      "side": 1,
+      "message": "Unrelated change",
       "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
