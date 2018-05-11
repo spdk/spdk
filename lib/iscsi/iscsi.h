@@ -359,9 +359,11 @@ void spdk_iscsi_fini(spdk_iscsi_fini_cb cb_fn, void *cb_arg);
 void spdk_shutdown_iscsi_conns_done(void);
 void spdk_iscsi_config_text(FILE *fp);
 void spdk_iscsi_config_json(struct spdk_json_write_ctx *w);
+void spdk_iscsi_option_json(struct spdk_json_write_ctx *w);
 
 void spdk_iscsi_opts_init(struct spdk_iscsi_opts *opts);
 void spdk_iscsi_opts_free(struct spdk_iscsi_opts **opts);
+void spdk_iscsi_opts_json(struct spdk_json_write_ctx *w);
 
 void spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn);
 void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
