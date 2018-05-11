@@ -1,0 +1,152 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "846945e1_4779c895",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-11T21:05:10Z",
+      "side": 1,
+      "message": "This file (nvme_spec.h) is for definitions directly from the spec, not SPDK implementation-specific limits.  I think this should go in lib/nvmf/nvmf_internal.h instead.",
+      "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "44c8d043_c55e0a4c",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 876,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-11T21:05:10Z",
+      "side": 1,
+      "message": "Please line these up.",
+      "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "adc3ba70_d75af164",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 900,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-11T21:05:10Z",
+      "side": 1,
+      "message": "This math looks odd to me; can this be simplified to just round up instead of down?\n\nSomething like:\n\n    sge_count \u003d (rdma_req-\u003elength + rtransport-\u003eio_unit_size - 1) / rtransport-\u003eio_unit_size;",
+      "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "559d5e13_9f93a7cc",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 904,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-11T21:05:10Z",
+      "side": 1,
+      "message": "I think this check needs to be done on the final SGL entry, not just if the whole request is less than the IO unit size. We could have a final SGL entry that does not require the full io_unit_size even if there is more than one entry.",
+      "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "854954e2_1ae04cc6",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 908,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-11T21:05:10Z",
+      "side": 1,
+      "message": "We probably need to check first that sge_count is less than or equal to the size of the array (SPDK_NVME_MAX_SGE_ENTRIES) and fail the request if it isn\u0027t.",
+      "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f645a1ef_25a7b5d8",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 919,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-11T21:05:10Z",
+      "side": 1,
+      "message": "As mentioned in the comment above, the last entry might not need the full IO unit size, so we need to account for that here (or in a special-case adjustment after the loop).",
+      "range": {
+        "startLine": 919,
+        "startChar": 41,
+        "endLine": 919,
+        "endChar": 51
+      },
+      "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10414979_d7f8b36c",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1147,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-11T21:05:10Z",
+      "side": 1,
+      "message": "Please declare variables at the top of the scope (we don\u0027t use the C99-style variable declarations in loops elsewhere in SPDK).",
+      "range": {
+        "startLine": 1147,
+        "startChar": 9,
+        "endLine": 1147,
+        "endChar": 19
+      },
+      "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec640741_61197e4a",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1209,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-11T21:05:10Z",
+      "side": 1,
+      "message": "Maybe we can just clamp the IO unit size to the largest acceptable one here instead of bailing out entirely.",
+      "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

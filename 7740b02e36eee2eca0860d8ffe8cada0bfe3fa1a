@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2dd2a653_1f82d626",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-11T21:05:10Z",
+      "side": 0,
+      "message": "Some unrelated whitespace changes here and below - please proofread the diff before uploading to make the review easier.",
+      "revId": "7740b02e36eee2eca0860d8ffe8cada0bfe3fa1a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
