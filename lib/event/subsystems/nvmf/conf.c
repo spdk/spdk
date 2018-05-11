@@ -105,6 +105,21 @@ spdk_nvmf_read_config_file_tgt_conf(struct spdk_conf_section *sp,
 	}
 }
 
+void
+spdk_nvmf_tgt_config_json(struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "method", "set_nvmf_target_config");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_uint32(w, "acceptor_poll_rate",
+				     g_spdk_nvmf_tgt_conf->acceptor_poll_rate);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
 static struct spdk_nvmf_tgt_opts *
 spdk_nvmf_parse_tgt_opts(void)
 {
