@@ -1,0 +1,175 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d2fdc57a_9dfaedb1",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1555,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-11T23:46:40Z",
+      "side": 1,
+      "message": "This description could use a little work.\n\nMaybe something like \"Inject an error for the next request with a given opcode\" (assuming that\u0027s what it actually does).",
+      "revId": "fa9ec0a18ff274349d4e259b76e6c557eae499e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f02e17e_3a522e04",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1567,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-11T23:46:40Z",
+      "side": 1,
+      "message": "multi-times -\u003e multiple times",
+      "range": {
+        "startLine": 1567,
+        "startChar": 30,
+        "endLine": 1567,
+        "endChar": 41
+      },
+      "revId": "fa9ec0a18ff274349d4e259b76e6c557eae499e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c1af0fa_5cc9e91e",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1573,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-11T23:46:40Z",
+      "side": 1,
+      "message": "Please fix formatting (declarations should not split return type and function name).",
+      "revId": "fa9ec0a18ff274349d4e259b76e6c557eae499e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2427084e_9da9c8b8",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1574,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-11T23:46:40Z",
+      "side": 1,
+      "message": "All of the \"ejection\" instances should be replaced with \"injection\".",
+      "range": {
+        "startLine": 1574,
+        "startChar": 30,
+        "endLine": 1574,
+        "endChar": 38
+      },
+      "revId": "fa9ec0a18ff274349d4e259b76e6c557eae499e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "01946ea2_03e60d9e",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1577,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-11T23:46:40Z",
+      "side": 1,
+      "message": "I think opc, sct, and sc can all be uint8_t (or better yet, make them use the enums defined in nvme_spec.h).",
+      "revId": "fa9ec0a18ff274349d4e259b76e6c557eae499e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0545b06_804519f2",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1589,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-11T23:46:40Z",
+      "side": 1,
+      "message": "Fix formatting here too, and same notes about types as above.",
+      "revId": "fa9ec0a18ff274349d4e259b76e6c557eae499e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f672ffa4_d7014236",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-11T23:46:40Z",
+      "side": 1,
+      "message": "Please use lowercase_with_underscores for names like we do everywhere else in SPDK.",
+      "range": {
+        "startLine": 164,
+        "startChar": 9,
+        "endLine": 164,
+        "endChar": 16
+      },
+      "revId": "fa9ec0a18ff274349d4e259b76e6c557eae499e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47caea6a_0669531f",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1263,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-11T23:46:40Z",
+      "side": 1,
+      "message": "Can we drop the extra cqe variable and just make this `cpl \u003d \u0026error_cpl`? Then we wouldn\u0027t have to change all of the other uses of cpl.",
+      "revId": "fa9ec0a18ff274349d4e259b76e6c557eae499e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "23a0b4fb_c3e9c220",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2046,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-11T23:46:40Z",
+      "side": 1,
+      "message": "This whole mess can probably be simplified to:\n\n   if (nvme_qpair_is_admin_queue(qpair) \u003d\u003d cmd-\u003eis_admin) \u0026\u0026\n       req-\u003ecmd.opc \u003d\u003d cmd-\u003eopc) {",
+      "revId": "fa9ec0a18ff274349d4e259b76e6c557eae499e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
