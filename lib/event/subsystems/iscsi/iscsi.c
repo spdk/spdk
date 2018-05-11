@@ -69,12 +69,21 @@ spdk_iscsi_subsystem_config_json(struct spdk_json_write_ctx *w,
 	spdk_event_call(done_ev);
 }
 
+static void
+spdk_iscsi_subsystem_option_json(struct spdk_json_write_ctx *w,
+				 struct spdk_event *done_ev)
+{
+	spdk_iscsi_option_json(w);
+	spdk_event_call(done_ev);
+}
+
 static struct spdk_subsystem g_spdk_subsystem_iscsi = {
 	.name = "iscsi",
 	.init = spdk_iscsi_subsystem_init,
 	.fini = spdk_iscsi_subsystem_fini,
 	.config = spdk_iscsi_config_text,
 	.write_config_json = spdk_iscsi_subsystem_config_json,
+	.write_option_json = spdk_iscsi_subsystem_option_json,
 };
 
 SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_iscsi);

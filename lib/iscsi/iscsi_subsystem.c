@@ -409,6 +409,51 @@ spdk_iscsi_opts_free(struct spdk_iscsi_opts **popts)
 	*popts = NULL;
 }
 
+void
+spdk_iscsi_opts_json(struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "auth_file", g_spdk_iscsi.authfile);
+
+	spdk_json_write_named_string(w, "node_base", g_spdk_iscsi.nodebase);
+
+	spdk_json_write_named_uint32(w, "max_sessions", g_spdk_iscsi.MaxSessions);
+
+	spdk_json_write_named_uint32(w, "max_connections_per_session",
+				     g_spdk_iscsi.MaxConnectionsPerSession);
+
+	spdk_json_write_named_uint32(w, "max_queue_depth", g_spdk_iscsi.MaxQueueDepth);
+
+	spdk_json_write_named_uint32(w, "default_time2wait", g_spdk_iscsi.DefaultTime2Wait);
+
+	spdk_json_write_named_uint32(w, "default_time2retain", g_spdk_iscsi.DefaultTime2Retain);
+
+	spdk_json_write_named_bool(w, "immediate_data", g_spdk_iscsi.ImmediateData);
+
+	spdk_json_write_named_bool(w, "allow_duplicated_isid", g_spdk_iscsi.AllowDuplicateIsid);
+
+	spdk_json_write_named_uint32(w, "error_recovery_level", g_spdk_iscsi.ErrorRecoveryLevel);
+
+	spdk_json_write_named_uint32(w, "timeout", g_spdk_iscsi.timeout);
+
+	spdk_json_write_named_int32(w, "nop_in_interval", g_spdk_iscsi.nopininterval);
+
+	spdk_json_write_named_bool(w, "no_discovery_auth", g_spdk_iscsi.no_discovery_auth);
+
+	spdk_json_write_named_bool(w, "req_discovery_auth", g_spdk_iscsi.req_discovery_auth);
+
+	spdk_json_write_named_bool(w, "req_discovery_auth_mutual",
+				   g_spdk_iscsi.req_discovery_auth_mutual);
+
+	spdk_json_write_named_int32(w, "discovery_auth_group", g_spdk_iscsi.discovery_auth_group);
+
+	spdk_json_write_named_int32(w, "min_connections_per_core",
+				    spdk_iscsi_conn_get_min_per_core());
+
+	spdk_json_write_object_end(w);
+}
+
 static int
 spdk_iscsi_read_config_file_params(struct spdk_conf_section *sp,
 				   struct spdk_iscsi_opts *opts)
@@ -954,6 +999,23 @@ spdk_iscsi_config_json(struct spdk_json_write_ctx *w)
 	spdk_iscsi_portal_grps_config_json(w);
 	spdk_iscsi_init_grps_config_json(w);
 	spdk_iscsi_tgt_nodes_config_json(w);
+	spdk_json_write_array_end(w);
+}
+
+void
+spdk_iscsi_option_json(struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_array_begin(w);
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "method", "set_iscsi_options");
+
+	spdk_json_write_name(w, "params");
+	spdk_iscsi_opts_json(w);
+
+	spdk_json_write_object_end(w);
+
 	spdk_json_write_array_end(w);
 }
 
