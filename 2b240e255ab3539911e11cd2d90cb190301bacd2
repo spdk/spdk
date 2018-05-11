@@ -22,6 +22,30 @@
       "revId": "2b240e255ab3539911e11cd2d90cb190301bacd2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8184899_f3c3f5c7",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-11T06:06:55Z",
+      "side": 1,
+      "message": "If statically allocated, we can drop the check in RPC. \n\nHowever we have to add 2 flags opts_initialized and conf_initialized for opts and conf respectively.\nThe purpose is to add skip in spdk_nvmf_parse_nvmf_tgt().\n\nBen removed the qos_initialized flag from bdev qos and instead introduced dynamic allocation of qos structure.\n\nAdditionally currently opts is on the stack and freed automatically after being used. Hence we can keep the similar behavior if we free opts explicitly after being used.\n\nYour suggestion to use dynamic allocation is reasonable  for me.",
+      "parentUuid": "20eba4c4_99aadf81",
+      "range": {
+        "startLine": 46,
+        "startChar": 0,
+        "endLine": 47,
+        "endChar": 55
+      },
+      "revId": "2b240e255ab3539911e11cd2d90cb190301bacd2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
