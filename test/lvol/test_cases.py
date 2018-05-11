@@ -176,7 +176,7 @@ class TestCases(object):
         try:
             process = subprocess.check_output(cmp_cmd, stderr=subprocess.STDOUT, shell=True)
             rv = 0
-        except subprocess.CalledProcessError, ex:
+        except subprocess.CalledProcessError as ex:
             rv = 1
         except Exception as e:
             print("ERROR: Cmp ended with unexpected exception.")
@@ -204,7 +204,7 @@ class TestCases(object):
                     for count in range(30):
                         sleep(1)
                         kill(pid, 0)
-                except OSError, err:
+                except OSError as err:
                     if err.errno == ESRCH:
                         pass
                     else:
