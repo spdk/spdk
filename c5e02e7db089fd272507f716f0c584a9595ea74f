@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6548adcf_be5daaf3",
+        "filename": "app/spdk_tgt/spdk_tgt.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-11T18:17:52Z",
+      "side": 1,
+      "message": "Isn\u0027t this backwards? I think S: should only be added if vhost is enabled, but this is only adding it if vhost is disabled.",
+      "revId": "c5e02e7db089fd272507f716f0c584a9595ea74f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
