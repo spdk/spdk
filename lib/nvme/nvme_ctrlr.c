@@ -1986,12 +1986,16 @@ spdk_nvme_ctrlr_register_timeout_callback(struct spdk_nvme_ctrlr *ctrlr,
 {
 	struct spdk_nvme_ctrlr_process	*active_proc;
 
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+
 	active_proc = spdk_nvme_ctrlr_get_current_process(ctrlr);
 	if (active_proc) {
 		active_proc->timeout_ticks = nvme_timeout * spdk_get_ticks_hz();
 		active_proc->timeout_cb_fn = cb_fn;
 		active_proc->timeout_cb_arg = cb_arg;
 	}
+
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 }
 
 bool
