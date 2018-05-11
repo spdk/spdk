@@ -75,6 +75,26 @@ if __name__ == "__main__":
     p.add_argument('-f', '--filename', help="""JSON Configuration file.""")
     p.set_defaults(func=load_config)
 
+    @call_cmd
+    def save_option(args):
+        rpc.save_option(args.client, args)
+
+    p = subparsers.add_parser('save_option', help="""Write current option of SPDK subsystems and targets.
+    If no filename is given write option to stdout.""")
+    p.add_argument('-f', '--filename', help="""File where to save JSON option to.""")
+    p.add_argument('-i', '--indent', help="""Indent level. Value less than 0 mean compact mode. If filename is not given default
+    indent level is 2. If writing to file of filename is '-' then default is compact mode.""", type=int, default=2)
+    p.set_defaults(func=save_option)
+
+    @call_cmd
+    def load_option(args):
+        rpc.load_option(args.client, args)
+
+    p = subparsers.add_parser('load_option', help="""Load option of SPDK subsystems and tagets using JSON RPC. If no file is
+    provided or file is '-' read option from stdin. This must be used before start_subsystem_init""")
+    p.add_argument('-f', '--filename', help="""JSON option file.""")
+    p.set_defaults(func=load_option)
+
     # app
     @call_cmd
     def kill_instance(args):
