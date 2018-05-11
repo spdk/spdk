@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d190c4ff_6baa25a0",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-11T17:36:50Z",
+      "side": 1,
+      "message": "Instead of sending an event to \"poll\" for all I/O complete, just check for qpair-\u003eoutstanding being empty (qpair-\u003eis_destroying \u003d\u003d true) in spdk_nvmf_request_complete.",
+      "revId": "56c1cb88839a89f9bd186552627c5bb2cac56f7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2eaeb656_3df7deb4",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-11T17:36:50Z",
+      "side": 1,
+      "message": "You shouldn\u0027t need this flag anymore - you can use the list of outstanding I/O in the spdk_nvmf_qpair struct.",
+      "revId": "56c1cb88839a89f9bd186552627c5bb2cac56f7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c319c4fe_1c380d2a",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-11T17:36:50Z",
+      "side": 1,
+      "message": "You don\u0027t need this counter - you can just use TAILQ_EMPTY(\u0026qpair-\u003eoutstanding)",
+      "revId": "56c1cb88839a89f9bd186552627c5bb2cac56f7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a74a7861_9708ff13",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 328,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-11T17:36:50Z",
+      "side": 1,
+      "message": "Now that you are waiting for all I/O to complete before the qpair is destroyed, this loop will never actually do anything. I don\u0027t want each transport to have to deal with this case anyway, so I\u0027d just remove the changes to this file.",
+      "revId": "56c1cb88839a89f9bd186552627c5bb2cac56f7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f893184_635c3ec8",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-11T17:36:50Z",
+      "side": 1,
+      "message": "I think here you can also check if req-\u003eqpair-\u003eoutstanding is empty. If it is, call nvmf_qpair_fini.\n\nAlso, I think the transport code needs to handle the case where it goes to send a request completion, but the network connection went down. Even with this check, it can still occur if the connection drops right before it tries to send the completion.",
+      "revId": "56c1cb88839a89f9bd186552627c5bb2cac56f7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
