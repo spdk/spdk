@@ -1136,6 +1136,7 @@ nvme_ctrlr_async_event_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct nvme_async_event_request	*aer = arg;
 	struct spdk_nvme_ctrlr		*ctrlr = aer->ctrlr;
+	struct spdk_nvme_ctrlr_process	*active_proc;
 
 	if (cpl->status.sc == SPDK_NVME_SC_ABORTED_SQ_DELETION) {
 		/*
@@ -1147,8 +1148,9 @@ nvme_ctrlr_async_event_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 		return;
 	}
 
-	if (ctrlr->aer_cb_fn != NULL) {
-		ctrlr->aer_cb_fn(ctrlr->aer_cb_arg, cpl);
+	active_proc = spdk_nvme_ctrlr_get_current_process(ctrlr);
+	if (active_proc && active_proc->aer_cb_fn) {
+		active_proc->aer_cb_fn(active_proc->aer_cb_arg, cpl);
 	}
 
 	/*
@@ -1976,8 +1978,17 @@ spdk_nvme_ctrlr_register_aer_callback(struct spdk_nvme_ctrlr *ctrlr,
 				      spdk_nvme_aer_cb aer_cb_fn,
 				      void *aer_cb_arg)
 {
-	ctrlr->aer_cb_fn = aer_cb_fn;
-	ctrlr->aer_cb_arg = aer_cb_arg;
+	struct spdk_nvme_ctrlr_process *active_proc;
+
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+
+	active_proc = spdk_nvme_ctrlr_get_current_process(ctrlr);
+	if (active_proc) {
+		active_proc->aer_cb_fn = aer_cb_fn;
+		active_proc->aer_cb_arg = aer_cb_arg;
+	}
+
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 }
 
 void
