@@ -98,11 +98,19 @@ def create_fio_config(size, q_depth, devices, test, run_time, verify):
 
 
 def set_device_parameter(devices, filename_template, value):
+    valid_value = True
+
     for dev in devices:
         filename = filename_template % dev
         f = open(filename, 'r+b')
-        f.write(value.encode())
-        f.close()
+        try:
+            f.write(value.encode())
+            f.close()
+        except OSError:
+            valid_value = False
+            continue
+
+    return valid_value
 
 
 def configure_devices(devices):
@@ -120,7 +128,8 @@ def configure_devices(devices):
         print("Could not set block device queue depths.")
     else:
         print("Requested queue_depth {} but only {} is supported.".format(str(requested_qd), str(qd)))
-    set_device_parameter(devices, "/sys/block/%s/queue/scheduler", "noop")
+    if not set_device_parameter(devices, "/sys/block/%s/queue/scheduler", "noop"):
+        set_device_parameter(devices, "/sys/block/%s/queue/scheduler", "none")
 
 
 if __name__ == "__main__":
