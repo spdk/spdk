@@ -37,6 +37,41 @@
     },
     {
       "key": {
+        "uuid": "3eadcf91_fab11284",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1014259
+      },
+      "writtenOn": "2018-05-12T00:58:46Z",
+      "side": 1,
+      "message": "Will move to nvmf_internal and rename as suggested.",
+      "parentUuid": "9e691b52_76eeeae7",
+      "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0f192002_483288a4",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1014259
+      },
+      "writtenOn": "2018-05-12T00:58:46Z",
+      "side": 1,
+      "message": "Looks like a new line here as well. Will take care of this as well.",
+      "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "904e7e6c_04287eb6",
         "filename": "lib/nvmf/nvmf_internal.h",
         "patchSetId": 2
@@ -48,6 +83,24 @@
       "writtenOn": "2018-05-11T21:57:30Z",
       "side": 1,
       "message": "Drop data?",
+      "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e258177b_2532a7fd",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1014259
+      },
+      "writtenOn": "2018-05-12T00:58:46Z",
+      "side": 1,
+      "message": "Hi Ben, I tried but saw there are quite a few places where data ptr is getting used and some of the places are new to me. I wanted understand and make sure there is no regression if get rid of dataptr. I was hoping round-2 cleanup.",
+      "parentUuid": "904e7e6c_04287eb6",
       "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -71,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "73435308_8a211744",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1014259
+      },
+      "writtenOn": "2018-05-12T00:58:46Z",
+      "side": 1,
+      "message": "I missed this. Will fix.",
+      "parentUuid": "9fa7c06b_3e41d24e",
+      "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ab2a44bc_8872e0e9",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 2
@@ -88,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "6f216840_5de62286",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1014259
+      },
+      "writtenOn": "2018-05-12T00:58:46Z",
+      "side": 1,
+      "message": "I can take care of rsp as well.",
+      "parentUuid": "ab2a44bc_8872e0e9",
+      "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "44c8d043_c55e0a4c",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 2
@@ -99,6 +188,41 @@
       "writtenOn": "2018-05-11T21:05:10Z",
       "side": 1,
       "message": "Please line these up.",
+      "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f73eb29d_e341c63f",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 876,
+      "author": {
+        "id": 1014259
+      },
+      "writtenOn": "2018-05-12T00:58:46Z",
+      "side": 1,
+      "message": "Will do",
+      "parentUuid": "44c8d043_c55e0a4c",
+      "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1dbe762_d6f6ecc8",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 896,
+      "author": {
+        "id": 1014259
+      },
+      "writtenOn": "2018-05-12T00:58:46Z",
+      "side": 1,
+      "message": "I will take another stab at the code below and simplify as much as possible so all below comments are addressed.",
       "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -133,6 +257,24 @@
       "writtenOn": "2018-05-11T21:05:10Z",
       "side": 1,
       "message": "I think this check needs to be done on the final SGL entry, not just if the whole request is less than the IO unit size. We could have a final SGL entry that does not require the full io_unit_size even if there is more than one entry.",
+      "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e40dc292_6f23d1b6",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 904,
+      "author": {
+        "id": 1014259
+      },
+      "writtenOn": "2018-05-12T00:58:46Z",
+      "side": 1,
+      "message": "Good catch.",
+      "parentUuid": "559d5e13_9f93a7cc",
       "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -230,6 +372,24 @@
     },
     {
       "key": {
+        "uuid": "4a06e780_de7d5bb3",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1066,
+      "author": {
+        "id": 1014259
+      },
+      "writtenOn": "2018-05-12T00:58:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "228d520b_bb446112",
+      "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "10414979_d7f8b36c",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 2
@@ -253,6 +413,30 @@
     },
     {
       "key": {
+        "uuid": "28096a6c_8e8b5cc5",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1147,
+      "author": {
+        "id": 1014259
+      },
+      "writtenOn": "2018-05-12T00:58:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "10414979_d7f8b36c",
+      "range": {
+        "startLine": 1147,
+        "startChar": 9,
+        "endLine": 1147,
+        "endChar": 19
+      },
+      "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ec640741_61197e4a",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 2
@@ -264,6 +448,24 @@
       "writtenOn": "2018-05-11T21:05:10Z",
       "side": 1,
       "message": "Maybe we can just clamp the IO unit size to the largest acceptable one here instead of bailing out entirely.",
+      "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6fa8c37e_91a5084b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1209,
+      "author": {
+        "id": 1014259
+      },
+      "writtenOn": "2018-05-12T00:58:46Z",
+      "side": 1,
+      "message": "I don\u0027t have an opinion here. I\u0027m okay either way. Would you prefer I reset it to max?",
+      "parentUuid": "ec640741_61197e4a",
       "revId": "62706bc18a0a5b3df92e279b707fd353c61aca7d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
