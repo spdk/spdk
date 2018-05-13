@@ -29,7 +29,8 @@ def get_rpc_methods(client, args):
 
 def save_config(client, args):
     config = {
-        'subsystems': []
+        'subsystems': [],
+        'startup': args.startup
     }
 
     for elem in client.call('get_subsystems'):
@@ -37,6 +38,8 @@ def save_config(client, args):
             'subsystem': elem['subsystem'],
             'config': client.call('get_subsystem_config', {"name": elem['subsystem']})
         }
+        if args.startup:
+            cfg['option'] = client.call('get_subsystem_option', {"name": elem['subsystem']})
         config['subsystems'].append(cfg)
 
     indent = args.indent
@@ -62,12 +65,24 @@ def load_config(client, args):
         with open(args.filename, 'r') as file:
             config = json.load(file)
 
+    if config['startup']:
+        for subsystem in config['subsystems']:
+            name = subsystem['subsystem']
+            option = subsystem['option']
+            if not option:
+                continue
+            for elem in option:
+                if not elem or 'method' not in elem:
+                    continue
+                client.call(elem['method'], elem['params'])
+        client.call('start_subsystem_init')
+
     for subsystem in config['subsystems']:
         name = subsystem['subsystem']
-        config = subsystem['config']
-        if not config:
+        cfg = subsystem['config']
+        if not cfg:
             continue
-        for elem in subsystem['config']:
+        for elem in cfg:
             if not elem or 'method' not in elem:
                 continue
             client.call(elem['method'], elem['params'])

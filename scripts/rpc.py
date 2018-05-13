@@ -64,6 +64,7 @@ if __name__ == "__main__":
     p.add_argument('-f', '--filename', help="""File where to save JSON configuration to.""")
     p.add_argument('-i', '--indent', help="""Indent level. Value less than 0 mean compact mode. If filename is not given default
     indent level is 2. If writing to file of filename is '-' then default is compact mode.""", type=int, default=2)
+    p.add_argument('-s', '--startup', help='Saved configuration can be used at SPDK startup.', action='store_true')
     p.set_defaults(func=save_config)
 
     @call_cmd
