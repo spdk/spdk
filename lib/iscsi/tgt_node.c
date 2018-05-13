@@ -1464,7 +1464,7 @@ spdk_iscsi_tgt_node_info_json(struct spdk_iscsi_tgt_node *target,
 		if (lun) {
 			spdk_json_write_object_begin(w);
 			spdk_json_write_named_string(w, "bdev_name", spdk_scsi_lun_get_bdev_name(lun));
-			spdk_json_write_named_int32(w, "id", spdk_scsi_lun_get_id(lun));
+			spdk_json_write_named_int32(w, "lun_id", spdk_scsi_lun_get_id(lun));
 			spdk_json_write_object_end(w);
 		}
 	}
