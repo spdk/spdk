@@ -16,6 +16,24 @@
       "revId": "a6c82836df2db618f21b33b19374bed357bd3002",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1075cc3f_c7343ad8",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 382,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-13T23:06:36Z",
+      "side": 1,
+      "message": "Thank you, my reactive fix was wrong. I\u0027ll do as you suggest.",
+      "parentUuid": "ab096d47_546bf664",
+      "revId": "a6c82836df2db618f21b33b19374bed357bd3002",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
