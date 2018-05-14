@@ -1,9 +1,9 @@
-
 #!/usr/bin/env bash
 set -ex
 JSON_DIR=$(readlink -f $(dirname $0))
 SPDK_BUILD_DIR=$JSON_DIR/../../
 . $JSON_DIR/../common/autotest_common.sh
+. $JSON_DIR/../iscsi_tgt/common.sh
 
 spdk_rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py -s /var/tmp/spdk.sock"
 initiator_rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py -s /var/tmp/virtio.sock"
@@ -13,6 +13,12 @@ base_bdevs=$JSON_DIR/bdevs_base.txt
 last_bdevs=$JSON_DIR/bdevs_last.txt
 base_nbd=$JSON_DIR/nbd_base.txt
 last_nbd=$JSON_DIR/nbd_last.txt
+base_connections=$JSON_DIR/connections_base.txt
+last_connections=$JSON_DIR/connections_last.txt
+base_iscsi=$JSON_DIR/iscsi_base.txt
+last_iscsi=$JSON_DIR/iscsi_last.txt
+base_scsi=$JSON_DIR/scsi_base.txt
+last_scsi=$JSON_DIR/scsi_last.txt
 
 function run_spdk_tgt() {
 	cp $JSON_DIR/vhost.conf.base $JSON_DIR/vhost.conf
@@ -39,20 +45,33 @@ function run_initiator() {
 }
 
 function test_json_config() {
+	$rpc_py get_iscsi_connections  > $base_connections
+	$rpc_py get_iscsi_global_params > $base_iscsi
+	$rpc_py get_scsi_devices > $base_scsi
 	$rpc_py get_bdevs | jq '.|sort_by(.name)' > $base_bdevs
 	$rpc_py save_config -f $base_json_config
 	$rpc_py get_nbd_disks > $base_nbd
 	$rpc_py clear_config
+	sleep 2
 	$rpc_py load_config --filename $base_json_config
+	$rpc_py get_iscsi_connections  > $last_connections
+	$rpc_py get_iscsi_global_params > $last_iscsi
+	$rpc_py get_scsi_devices > $last_scsi
 	$rpc_py get_bdevs | jq '.|sort_by(.name)' > $last_bdevs
 	$rpc_py save_config -f $last_json_config
 	$rpc_py get_nbd_disks > $last_nbd
 	diff $base_json_config $last_json_config
 	diff $base_bdevs $last_bdevs
 	diff $base_nbd $last_nbd
+	diff $base_connections $last_connections
+	diff $base_iscsi $last_iscsi
+	diff $base_scsi $last_scsi
 	rm $last_bdevs $base_bdevs || true
 	rm $last_json_config $base_json_config || true
 	rm $last_nbd $base_nbd || true
+	rm $base_connections $last_connections || true
+	rm $base_iscsi $last_iscsi || true
+	rm $base_scsi $last_scsi || true
 }
 
 function create_bdev_subsystem_config() {
@@ -135,6 +154,23 @@ function clean_nbd() {
 	$rpc_py stop_nbd_disk /dev/nbd0
 }
 
+function upload_iscsi() {
+	TARGET_IP=127.0.0.1
+	$rpc_py add_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
+	$rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $TARGET_IP/16
+	$rpc_py add_initiators_to_initiator_group -n "SAMPLE" -m $NETMASK $INITIATOR_TAG
+	$rpc_py construct_target_node Target3 Target3_alias 'Ceph00:0' $PORTAL_TAG:$INITIATOR_TAG 64 -d
+	$rpc_py target_node_add_lun iqn.2016-06.io.spdk:Target3 Ceph0 -i 1
+	#$rpc_py add_pg_ig_maps iqn.2016-06.io.spdk:Target3 $PORTAL_TAG:$INITIATOR_TAG
+}
+
+function clean_iscsi() {
+	$rpc_py	delete_target_node iqn.2016-06.io.spdk:Target3
+	$rpc_py delete_initiators_from_initiator_group -n "SAMPLE" -m $NETMASK $INITIATOR_TAG
+	$rpc_py delete_initiator_group $INITIATOR_TAG
+	$rpc_py delete_portal_group $PORTAL_TAG
+}
+
 function test_subsystems() {
 	run_spdk_tgt
 	rootdir=$(readlink -f $JSON_DIR/../..)
@@ -147,6 +183,9 @@ function test_subsystems() {
 	upload_nbd
 	test_json_config
 	clean_nbd
+	upload_iscsi
+	test_json_config
+	clean_iscsi
 	pre_initiator_config
 	run_initiator
 	rpc_py="$initiator_rpc_py"
