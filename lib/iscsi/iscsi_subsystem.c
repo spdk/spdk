@@ -47,6 +47,8 @@
 #include "spdk_internal/event.h"
 #include "spdk_internal/log.h"
 
+struct spdk_iscsi_opts *g_spdk_iscsi_opts = NULL;
+
 static spdk_iscsi_init_cb g_init_cb_fn = NULL;
 static void *g_init_cb_arg = NULL;
 
@@ -397,11 +399,78 @@ spdk_iscsi_opts_init(struct spdk_iscsi_opts *opts)
 	opts->min_connections_per_core = DEFAULT_CONNECTIONS_PER_LCORE;
 }
 
-static void
+struct spdk_iscsi_opts *
+spdk_iscsi_opts_alloc(void)
+{
+	struct spdk_iscsi_opts *opts;
+
+	opts = calloc(1, sizeof(*opts));
+	if (!opts) {
+		SPDK_ERRLOG("calloc() failed for iscsi options\n");
+		return NULL;
+	}
+
+	spdk_iscsi_opts_init(opts);
+
+	return opts;
+}
+
+void
 spdk_iscsi_opts_free(struct spdk_iscsi_opts *opts)
 {
 	free(opts->authfile);
 	free(opts->nodebase);
+	free(opts);
+}
+
+/* Deep copy of spdk_iscsi_opts */
+struct spdk_iscsi_opts *
+spdk_iscsi_opts_copy(struct spdk_iscsi_opts *src)
+{
+	struct spdk_iscsi_opts *dst;
+
+	dst = calloc(1, sizeof(*dst));
+	if (!dst) {
+		SPDK_ERRLOG("calloc() failed for iscsi options\n");
+		return NULL;
+	}
+
+	if (src->authfile) {
+		dst->authfile = strdup(src->authfile);
+		if (!dst->authfile) {
+			free(dst);
+			SPDK_ERRLOG("failed to strdup for auth file %s\n", src->authfile);
+			return NULL;
+		}
+	}
+
+	if (src->nodebase) {
+		dst->nodebase = strdup(src->nodebase);
+		if (!dst->nodebase) {
+			free(dst->authfile);
+			free(dst);
+			SPDK_ERRLOG("failed to strdup for nodebase %s\n", src->nodebase);
+			return NULL;
+		}
+	}
+
+	dst->MaxSessions = src->MaxSessions;
+	dst->MaxConnectionsPerSession = src->MaxConnectionsPerSession;
+	dst->MaxQueueDepth = src->MaxQueueDepth;
+	dst->DefaultTime2Wait = src->DefaultTime2Wait;
+	dst->DefaultTime2Retain = src->DefaultTime2Retain;
+	dst->ImmediateData = src->ImmediateData;
+	dst->AllowDuplicateIsid = src->AllowDuplicateIsid;
+	dst->ErrorRecoveryLevel = src->ErrorRecoveryLevel;
+	dst->timeout = src->timeout;
+	dst->nopininterval = src->nopininterval;
+	dst->no_discovery_auth = src->no_discovery_auth;
+	dst->req_discovery_auth = src->req_discovery_auth;
+	dst->req_discovery_auth_mutual = src->req_discovery_auth;
+	dst->discovery_auth_group = src->discovery_auth_group;
+	dst->min_connections_per_core = src->min_connections_per_core;
+
+	return dst;
 }
 
 static int
@@ -612,6 +681,36 @@ spdk_iscsi_opts_verify(struct spdk_iscsi_opts *opts)
 }
 
 static int
+spdk_iscsi_parse_options(struct spdk_iscsi_opts **popts)
+{
+	struct spdk_iscsi_opts *opts;
+	struct spdk_conf_section *sp;
+	int rc;
+
+	opts = spdk_iscsi_opts_alloc();
+	if (!opts) {
+		SPDK_ERRLOG("spdk_iscsi_opts_alloc_failed() failed\n");
+		return -ENOMEM;
+	}
+
+	/* Process parameters */
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_read_config_file_parmas\n");
+	sp = spdk_conf_find_section(NULL, "iSCSI");
+	if (sp != NULL) {
+		rc = spdk_iscsi_read_config_file_params(sp, opts);
+		if (rc != 0) {
+			free(opts);
+			SPDK_ERRLOG("spdk_iscsi_read_config_file_params() failed\n");
+			return rc;
+		}
+	}
+
+	*popts = opts;
+
+	return 0;
+}
+
+static int
 spdk_iscsi_set_global_params(struct spdk_iscsi_opts *opts)
 {
 	int rc;
@@ -659,28 +758,23 @@ spdk_iscsi_set_global_params(struct spdk_iscsi_opts *opts)
 static int
 spdk_iscsi_initialize_global_params(void)
 {
-	struct spdk_conf_section *sp;
-	struct spdk_iscsi_opts opts;
 	int rc;
 
-	spdk_iscsi_opts_init(&opts);
-
-	/* Process parameters */
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_read_config_file_parmas\n");
-	sp = spdk_conf_find_section(NULL, "iSCSI");
-	if (sp != NULL) {
-		rc = spdk_iscsi_read_config_file_params(sp, &opts);
+	if (!g_spdk_iscsi_opts) {
+		rc = spdk_iscsi_parse_options(&g_spdk_iscsi_opts);
 		if (rc != 0) {
-			SPDK_ERRLOG("spdk_iscsi_read_config_file_params() failed\n");
+			SPDK_ERRLOG("spdk_iscsi_parse_options() failed\n");
 			return rc;
 		}
 	}
 
-	rc = spdk_iscsi_set_global_params(&opts);
-	spdk_iscsi_opts_free(&opts);
+	rc = spdk_iscsi_set_global_params(g_spdk_iscsi_opts);
 	if (rc != 0) {
 		SPDK_ERRLOG("spdk_iscsi_set_global_params() failed\n");
 	}
+
+	spdk_iscsi_opts_free(g_spdk_iscsi_opts);
+	g_spdk_iscsi_opts = NULL;
 
 	return rc;
 }
