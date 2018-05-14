@@ -324,10 +324,25 @@ spdk_nvmf_subsystem_init(void)
 	nvmf_tgt_advance_state();
 }
 
+static void
+spdk_nvmf_subsystem_option_json(struct spdk_json_write_ctx *w,
+				struct spdk_event *done_ev)
+{
+	spdk_json_write_array_begin(w);
+
+	spdk_nvmf_tgt_option_json(g_spdk_nvmf_tgt, w);
+	spdk_nvmf_tgt_config_json(w);
+
+	spdk_json_write_array_end(w);
+
+	spdk_event_call(done_ev);
+}
+
 static struct spdk_subsystem g_spdk_subsystem_nvmf = {
 	.name = "nvmf",
 	.init = spdk_nvmf_subsystem_init,
 	.fini = spdk_nvmf_subsystem_fini,
+	.write_option_json = spdk_nvmf_subsystem_option_json,
 };
 
 SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_nvmf)
