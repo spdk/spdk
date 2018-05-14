@@ -107,6 +107,8 @@ static const double g_latency_cutoffs[] = {
 struct ns_worker_ctx {
 	struct ns_entry		*entry;
 	uint64_t		io_completed;
+	uint64_t		prev_io_completed;
+	double			ema_io_per_second;
 	uint64_t		total_tsc;
 	uint64_t		min_tsc;
 	uint64_t		max_tsc;
@@ -162,6 +164,7 @@ static struct ns_entry *g_namespaces = NULL;
 static int g_num_namespaces = 0;
 static struct worker_thread *g_workers = NULL;
 static int g_num_workers = 0;
+static struct worker_thread *g_master_worker = NULL;
 
 static uint64_t g_tsc_rate;
 
@@ -175,6 +178,8 @@ static int g_rw_percentage;
 static int g_is_random;
 static int g_queue_depth;
 static int g_time_in_sec;
+static int g_period_in_sec;
+static int g_ema_period;
 static uint32_t g_max_completions;
 static int g_dpdk_mem;
 static int g_shm_id = -1;
@@ -195,6 +200,9 @@ static int g_aio_optind; /* Index of first AIO filename in argv */
 
 static void
 task_complete(struct perf_task *task);
+
+static void
+print_performance_real_time(void);
 
 static void
 register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
@@ -840,7 +848,7 @@ cleanup_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 static int
 work_fn(void *arg)
 {
-	uint64_t tsc_end;
+	uint64_t tsc, tsc_end, tsc_next_real_time_stats = 0;
 	struct worker_thread *worker = (struct worker_thread *)arg;
 	struct ns_worker_ctx *ns_ctx = NULL;
 
@@ -856,7 +864,11 @@ work_fn(void *arg)
 		ns_ctx = ns_ctx->next;
 	}
 
-	tsc_end = spdk_get_ticks() + g_time_in_sec * g_tsc_rate;
+	tsc = spdk_get_ticks();
+	tsc_end = tsc + g_time_in_sec * g_tsc_rate;
+	if (worker == g_master_worker && g_period_in_sec != 0) {
+		tsc_next_real_time_stats = tsc + g_period_in_sec * g_tsc_rate;
+	}
 
 	/* Submit initial I/O for each namespace. */
 	ns_ctx = worker->ns_ctx;
@@ -877,8 +889,15 @@ work_fn(void *arg)
 			ns_ctx = ns_ctx->next;
 		}
 
-		if (spdk_get_ticks() > tsc_end) {
+		tsc = spdk_get_ticks();
+		if (tsc > tsc_end) {
 			break;
+		}
+		if (worker == g_master_worker && g_period_in_sec != 0) {
+			if (tsc > tsc_next_real_time_stats) {
+				print_performance_real_time();
+				tsc_next_real_time_stats += g_period_in_sec * g_tsc_rate;
+			}
 		}
 	}
 
@@ -931,6 +950,11 @@ static void usage(char *program_name)
 	printf("\t[-m max completions per poll]\n");
 	printf("\t\t(default: 0 - unlimited)\n");
 	printf("\t[-i shared memory group ID]\n");
+	printf("\t[-P Number of moving average period]\n");
+	printf("\t\t(If set to n, show weighted mean of the previous n IOPS in real time)\n");
+	printf("\t\t(Formula: M = 2 / (n + 1), EMA[i+1] = IO/s * M + (1 - M) * EMA[i]\n");
+	printf("\t\t(only valid with -S)\n");
+	printf("\t[-S Show performance in real time in seconds]\n");
 }
 
 static void
@@ -966,6 +990,64 @@ print_bucket(void *ctx, uint64_t start, uint64_t end, uint64_t count,
 	       (double)start * 1000 * 1000 / g_tsc_rate,
 	       (double)end * 1000 * 1000 / g_tsc_rate,
 	       so_far_pct, count);
+}
+
+static double
+get_ema_io_per_second(struct ns_worker_ctx *ns_ctx)
+{
+	double io_completed, io_per_second;
+
+	io_completed = ns_ctx->io_completed;
+	io_per_second = (double)(io_completed - ns_ctx->prev_io_completed) / g_period_in_sec;
+	ns_ctx->prev_io_completed = io_completed;
+
+	ns_ctx->ema_io_per_second += (io_per_second - ns_ctx->ema_io_per_second) * 2 / (g_ema_period + 1);
+
+	return ns_ctx->ema_io_per_second;
+}
+
+static void
+print_performance_real_time(void)
+{
+	double io_per_second, mb_per_second;
+	double total_io_per_second, total_mb_per_second;
+	struct worker_thread *worker;
+	struct ns_worker_ctx *ns_ctx;
+	int ns_count;
+
+	total_io_per_second = 0;
+	total_mb_per_second = 0;
+	ns_count = 0;
+
+	printf("========================================================\n");
+	printf("%-55s: %10s %10s\n",
+	       "Device Information", "IOPS", "MB/s");
+
+	worker = g_workers;
+	while (worker) {
+		ns_ctx = worker->ns_ctx;
+		while (ns_ctx) {
+			if (ns_ctx ->io_completed != 0) {
+				io_per_second = get_ema_io_per_second(ns_ctx);
+				mb_per_second = io_per_second * g_io_size_bytes / (1024 * 1024);
+				printf("%-43.43s from core %u: %10.2f %10.2f\n",
+				       ns_ctx->entry->name, worker->lcore,
+				       io_per_second, mb_per_second);
+				total_io_per_second += io_per_second;
+				total_mb_per_second += mb_per_second;
+				ns_count++;
+			}
+			ns_ctx = ns_ctx->next;
+		}
+		worker = worker->next;
+	}
+
+	if (ns_count != 0) {
+		printf("========================================================\n");
+		printf("%-55s: %10.2f %10.2f\n",
+		       "Total", total_io_per_second, total_mb_per_second);
+		printf("\n");
+	}
 }
 
 static void
@@ -1240,7 +1322,7 @@ parse_args(int argc, char **argv)
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:d:e:i:lm:q:r:s:t:w:DLM:")) != -1) {
+	while ((op = getopt(argc, argv, "c:d:e:i:lm:q:r:s:t:w:DLM:P:S:")) != -1) {
 		switch (op) {
 		case 'c':
 			g_core_mask = optarg;
@@ -1291,6 +1373,12 @@ parse_args(int argc, char **argv)
 			g_rw_percentage = atoi(optarg);
 			mix_specified = true;
 			break;
+		case 'P':
+			g_ema_period = atoi(optarg);
+			break;
+		case 'S':
+			g_period_in_sec = atoi(optarg);
+			break;
 		default:
 			usage(argv[0]);
 			return 1;
@@ -1310,6 +1398,11 @@ parse_args(int argc, char **argv)
 		return 1;
 	}
 	if (!g_time_in_sec) {
+		usage(argv[0]);
+		return 1;
+	}
+	if ((g_period_in_sec != 0 && g_ema_period == 0) ||
+	    (g_period_in_sec == 0 && g_ema_period != 0)) {
 		usage(argv[0]);
 		return 1;
 	}
@@ -1666,6 +1759,7 @@ int main(int argc, char **argv)
 	}
 
 	assert(master_worker != NULL);
+	g_master_worker = master_worker;
 	rc = work_fn(master_worker);
 
 	spdk_env_thread_wait_all();
