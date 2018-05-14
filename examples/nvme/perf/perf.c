@@ -698,17 +698,23 @@ task_complete(struct perf_task *task)
 	ns_ctx = task->ns_ctx;
 	entry = ns_ctx->entry;
 	ns_ctx->current_queue_depth--;
-	ns_ctx->io_completed++;
-	tsc_diff = spdk_get_ticks() - task->submit_tsc;
-	ns_ctx->total_tsc += tsc_diff;
-	if (ns_ctx->min_tsc > tsc_diff) {
-		ns_ctx->min_tsc = tsc_diff;
-	}
-	if (ns_ctx->max_tsc < tsc_diff) {
-		ns_ctx->max_tsc = tsc_diff;
-	}
-	if (g_latency_sw_tracking_level > 0) {
-		spdk_histogram_data_tally(ns_ctx->histogram, tsc_diff);
+	/* is_draining indicates when time has expired for the test run
+	 * and hence stats counting must be terminated immediately.
+	 * Otherwise large error may be observed expecially for random write.
+	 */
+	if (!ns_ctx->is_draining) {
+		ns_ctx->io_completed++;
+		tsc_diff = spdk_get_ticks() - task->submit_tsc;
+		ns_ctx->total_tsc += tsc_diff;
+		if (ns_ctx->min_tsc > tsc_diff) {
+			ns_ctx->min_tsc = tsc_diff;
+		}
+		if (ns_ctx->max_tsc < tsc_diff) {
+			ns_ctx->max_tsc = tsc_diff;
+		}
+		if (g_latency_sw_tracking_level > 0) {
+			spdk_histogram_data_tally(ns_ctx->histogram, tsc_diff);
+		}
 	}
 
 	/* add application level verification for end-to-end data protection */
