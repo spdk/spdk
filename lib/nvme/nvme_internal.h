@@ -383,6 +383,7 @@ struct spdk_nvme_ctrlr_process {
 	uint64_t			timeout_ticks;
 };
 
+
 /*
  * One of these per allocated PCI device.
  */
@@ -484,6 +485,11 @@ struct spdk_nvme_ctrlr {
 
 	STAILQ_HEAD(, nvme_request)	queued_aborts;
 	uint32_t			outstanding_aborts;
+
+	/**
+	* Pre-registered InfiniBand Verbs protection domain and memory region
+	*/
+	struct spdk_nvme_hooks *ctrlr_hook;
 };
 
 struct nvme_driver {

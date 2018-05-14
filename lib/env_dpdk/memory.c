@@ -239,7 +239,7 @@ spdk_mem_register(void *vaddr, size_t len)
 		uint64_t ref_count;
 
 		/* In g_mem_reg_map, the "translation" is the reference count */
-		ref_count = spdk_mem_map_translate(g_mem_reg_map, (uint64_t)vaddr);
+		ref_count = spdk_mem_map_translate(g_mem_reg_map, (uint64_t)vaddr, VALUE_2MB);
 		spdk_mem_map_set_translation(g_mem_reg_map, (uint64_t)vaddr, VALUE_2MB, ref_count + 1);
 
 		if (ref_count > 0) {
@@ -302,7 +302,7 @@ spdk_mem_unregister(void *vaddr, size_t len)
 	seg_vaddr = vaddr;
 	seg_len = len;
 	while (seg_len > 0) {
-		ref_count = spdk_mem_map_translate(g_mem_reg_map, (uint64_t)seg_vaddr);
+		ref_count = spdk_mem_map_translate(g_mem_reg_map, (uint64_t)seg_vaddr, VALUE_2MB);
 		if (ref_count == 0) {
 			pthread_mutex_unlock(&g_spdk_mem_map_mutex);
 			return -EINVAL;
@@ -315,7 +315,7 @@ spdk_mem_unregister(void *vaddr, size_t len)
 	seg_len = 0;
 	while (len > 0) {
 		/* In g_mem_reg_map, the "translation" is the reference count */
-		ref_count = spdk_mem_map_translate(g_mem_reg_map, (uint64_t)vaddr);
+		ref_count = spdk_mem_map_translate(g_mem_reg_map, (uint64_t)vaddr, VALUE_2MB);
 		spdk_mem_map_set_translation(g_mem_reg_map, (uint64_t)vaddr, VALUE_2MB, ref_count - 1);
 
 		if (ref_count > 1) {
@@ -471,7 +471,7 @@ spdk_mem_map_clear_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_
 }
 
 uint64_t
-spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr)
+spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, uint64_t size)
 {
 	const struct map_1gb *map_1gb;
 	const struct map_2mb *map_2mb;

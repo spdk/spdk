@@ -1551,6 +1551,39 @@ int spdk_nvme_ns_cmd_compare_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_q
 				     void *cb_arg, uint32_t io_flags,
 				     uint16_t apptag_mask, uint16_t apptag);
 
+struct ibv_context;
+struct ibv_pd;
+struct ibv_mr;
+
+/**
+ * Global hook functions.
+ */
+struct spdk_nvme_global_hooks {
+	/**
+	 * Opaque user context passed to all hook functions.
+	 */
+	void *hook_ctx;
+
+	/**
+	 * Get a InfiniBand Verbs protection domain when connecting to an RDMA NVMe-oF target.
+	 */
+	struct ibv_pd *(*get_ibv_pd)(void *hook_ctx, struct ibv_context *verbs,
+				     const struct spdk_nvme_transport_id *trid);
+
+	/**
+	 * Get an InfiniBand Verbs memory region for a buffer.
+	 */
+	struct ibv_mr *(*get_ibv_mr)(void *hook_ctx, void *buf, size_t size);
+};
+
+/**
+ * \brief Initializing ctrlr_hook
+ *
+ * \param hooks User provided hook for initializing ctrlr_hook of ctrlr.
+ *
+ */
+void spdk_nvme_ctrlr_init_hook(struct spdk_nvme_ctrlr *ctrlr, void *hooks);
+
 #ifdef __cplusplus
 }
 #endif
