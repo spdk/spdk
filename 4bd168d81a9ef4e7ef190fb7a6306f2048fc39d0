@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "e0a7b8d9_75aaf777",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 45
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-14T09:22:51Z",
+      "side": 1,
+      "message": "Hi Dariusz, you proposal is like the following?\nThis is like a sentinel value and looks fine. Please correct me if I\u0027m wrong.\n\nget_bdevs_iostat_cb(bdev, stat, ctx, rc)\n{\n  (snip)\n\n  if (--ctx-\u003ebdev_count \u003d\u003d 0) {\n    json_write_array_end(ctx-\u003ew);\n    jsonrpc_end_result(ctx-\u003erequest, get_bdevs_iostat_cb, ctx);\n    free(ctx);\n  }\n}\n\nget_bdevs_iostat(request, params)\n{\n  ctx \u003d calloc();\n  ctx-\u003ebdev_count++;\n\n  for_each_bdev() {\n    ctx-\u003ebdev_count++;\n    bdev_get_device_stat(bdev, ctx);\n  }\n\n  if (--ctx-\u003ebdev_count \u003d\u003d 0) {\n    json_write_array_end(ctx-\u003ew);\n    jsonrpc_end_result(ctx-\u003erequest, get_bdevs_iostat_cb, ctx);\n    free(ctx);\n  }\n}",
+      "parentUuid": "d14eb531_b165a8ce",
+      "revId": "4bd168d81a9ef4e7ef190fb7a6306f2048fc39d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "19a8a2b8_67c3e00e",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 45
