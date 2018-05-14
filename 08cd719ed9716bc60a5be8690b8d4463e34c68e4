@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c52aca22_9d3fad4a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-14T15:14:15Z",
+      "side": 1,
+      "message": "Don\u0027t think you want to create IO channel on each thread. Use spdk_io_channel_get_thread() to compare with current thread.",
+      "range": {
+        "startLine": 276,
+        "startChar": 31,
+        "endLine": 276,
+        "endChar": 50
+      },
+      "revId": "08cd719ed9716bc60a5be8690b8d4463e34c68e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c597e086_224f456f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-14T15:14:15Z",
+      "side": 1,
+      "message": "lock()\n FOR_EACH_TAILQ_SAFE (queue_io) {\n  if (IO channel thread \u003d\u003d current thread) {\n       REMOVE IO from queued_io;\n       INSERT int local_queue;\n   }\n }\nunlock()\n \n FOR_EACH_TAILQ_SAFE (local_queue) {\n   REMOVE IO from local_queue;\n   spdk_bs_user_op_execute(IO)\n }",
+      "range": {
+        "startLine": 282,
+        "startChar": 0,
+        "endLine": 289,
+        "endChar": 2
+      },
+      "revId": "08cd719ed9716bc60a5be8690b8d4463e34c68e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91cb7c72_a5098973",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 316,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-14T15:14:15Z",
+      "side": 1,
+      "message": "new line",
+      "revId": "08cd719ed9716bc60a5be8690b8d4463e34c68e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
