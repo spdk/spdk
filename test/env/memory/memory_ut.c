@@ -115,7 +115,7 @@ test_mem_map_translation(void)
 	SPDK_CU_ASSERT_FATAL(map != NULL);
 
 	/* Try to get translation for address with no translation */
-	addr = spdk_mem_map_translate(map, 10);
+	addr = spdk_mem_map_translate(map, 10, VALUE_2MB);
 	CU_ASSERT(addr == default_translation);
 
 	/* Set translation for region of non-2MB multiple size */
@@ -139,15 +139,15 @@ test_mem_map_translation(void)
 	CU_ASSERT(rc == 0);
 
 	/* Get translation for first page */
-	addr = spdk_mem_map_translate(map, 0);
+	addr = spdk_mem_map_translate(map, 0, VALUE_2MB);
 	CU_ASSERT(addr == 0);
 
 	/* Verify translation for 2nd page is the default */
-	addr = spdk_mem_map_translate(map, VALUE_2MB);
+	addr = spdk_mem_map_translate(map, VALUE_2MB, VALUE_2MB);
 	CU_ASSERT(addr == default_translation);
 
 	/* Get translation for third page */
-	addr = spdk_mem_map_translate(map, 2 * VALUE_2MB);
+	addr = spdk_mem_map_translate(map, 2 * VALUE_2MB, VALUE_2MB);
 	/*
 	 * Note that addr should be 0, not 4MB. When we set the
 	 * translation above, we said the whole 6MB region
@@ -160,7 +160,7 @@ test_mem_map_translation(void)
 	CU_ASSERT(rc == 0);
 
 	/* Get translation for the first page */
-	addr = spdk_mem_map_translate(map, 0);
+	addr = spdk_mem_map_translate(map, 0, VALUE_2MB);
 	CU_ASSERT(addr == default_translation);
 
 	/* Clear translation for the third page */
@@ -168,7 +168,7 @@ test_mem_map_translation(void)
 	CU_ASSERT(rc == 0);
 
 	/* Get translation for the third page */
-	addr = spdk_mem_map_translate(map, 2 * VALUE_2MB);
+	addr = spdk_mem_map_translate(map, 2 * VALUE_2MB, VALUE_2MB);
 	CU_ASSERT(addr == default_translation);
 
 	spdk_mem_map_free(&map);

@@ -1551,6 +1551,14 @@ int spdk_nvme_ns_cmd_compare_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_q
 				     void *cb_arg, uint32_t io_flags,
 				     uint16_t apptag_mask, uint16_t apptag);
 
+/**
+ * \brief Initializing ctrlr_hook
+ *
+ * \param hooks User provided hook for initializing ctrlr_hook of ctrlr.
+ *
+ */
+void nvme_ctrlr_init_hook(struct spdk_nvme_ctrlr *ctrlr, void *hooks);
+
 #ifdef __cplusplus
 }
 #endif

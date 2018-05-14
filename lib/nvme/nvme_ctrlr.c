@@ -2272,3 +2272,9 @@ spdk_nvme_ctrlr_free_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, void *buf, siz
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
 }
+
+void
+nvme_ctrlr_init_hook(struct spdk_nvme_ctrlr *ctrlr, void *hooks)
+{
+	ctrlr->ctrlr_hook = hooks;
+}
