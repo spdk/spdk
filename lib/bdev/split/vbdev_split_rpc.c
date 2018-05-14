@@ -130,13 +130,11 @@ spdk_rpc_destruct_split(struct spdk_jsonrpc_request *request,
 
 	w = spdk_jsonrpc_begin_result(request);
 	if (w == NULL) {
-		return;
+		goto out;
 	}
 
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
-	return;
-
 out:
 	free(req.base_bdev);
 }
