@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4ac1db78_edbfe043",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-14T14:54:11Z",
+      "side": 1,
+      "message": "This should not be needed here as SPDK should dump it if \u0027-w\u0027 was passed during startup.\n\nI didn\u0027t found easy way to that other than hacking app.c file. I will try this tommorow.",
+      "range": {
+        "startLine": 87,
+        "startChar": 6,
+        "endLine": 89,
+        "endChar": 32
+      },
+      "revId": "d9b990dbfa260821107c21b8573acdd5f74eb91f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
