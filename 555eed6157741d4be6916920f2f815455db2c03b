@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "67a93f0a_2af376b5",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-14T23:18:59Z",
+      "side": 1,
+      "message": "Clear configuration of (all) SPDK subsystems and targets ?",
+      "range": {
+        "startLine": 82,
+        "startChar": 54,
+        "endLine": 82,
+        "endChar": 88
+      },
+      "revId": "555eed6157741d4be6916920f2f815455db2c03b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22edeef1_4e4c6f75",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-14T23:18:59Z",
+      "side": 1,
+      "message": "Clear configuration of the SPDK subsystem ?",
+      "range": {
+        "startLine": 89,
+        "startChar": 57,
+        "endLine": 89,
+        "endChar": 78
+      },
+      "revId": "555eed6157741d4be6916920f2f815455db2c03b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9af1cd88_00a630ce",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-14T23:18:59Z",
+      "side": 1,
+      "message": "single quote? Either one is ok, but this is simple and single quote is used in other similar cases.",
+      "range": {
+        "startLine": 162,
+        "startChar": 46,
+        "endLine": 162,
+        "endChar": 47
+      },
+      "revId": "555eed6157741d4be6916920f2f815455db2c03b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98a72f1f_0005951e",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-14T23:18:59Z",
+      "side": 1,
+      "message": "\u003d\u003d ?",
+      "range": {
+        "startLine": 162,
+        "startChar": 43,
+        "endLine": 162,
+        "endChar": 45
+      },
+      "revId": "555eed6157741d4be6916920f2f815455db2c03b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f87d5e51_0c6cd279",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-14T23:18:59Z",
+      "side": 1,
+      "message": "this is not used anywhere",
+      "range": {
+        "startLine": 174,
+        "startChar": 12,
+        "endLine": 174,
+        "endChar": 31
+      },
+      "revId": "555eed6157741d4be6916920f2f815455db2c03b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c5ea5701_7f7b414b",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-14T23:18:59Z",
+      "side": 1,
+      "message": "construct_method can be used.",
+      "range": {
+        "startLine": 199,
+        "startChar": 11,
+        "endLine": 199,
+        "endChar": 25
+      },
+      "revId": "555eed6157741d4be6916920f2f815455db2c03b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "afada426_98f6c981",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-14T23:18:59Z",
+      "side": 1,
+      "message": "construct_method can be used.",
+      "range": {
+        "startLine": 200,
+        "startChar": 40,
+        "endLine": 200,
+        "endChar": 54
+      },
+      "revId": "555eed6157741d4be6916920f2f815455db2c03b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "035b1f72_3c7acd06",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-14T23:18:59Z",
+      "side": 1,
+      "message": "this should be indented by 4 spaces to the right.",
+      "range": {
+        "startLine": 201,
+        "startChar": 0,
+        "endLine": 205,
+        "endChar": 55
+      },
+      "revId": "555eed6157741d4be6916920f2f815455db2c03b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "019573c0_1c1ef973",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-14T23:18:59Z",
+      "side": 1,
+      "message": "can you move this to the line 213? The following logical structure may be more visible. The line 170 is duplicated.\n\nfor bdev in bdev_config\n    if delete_subbdevs():\n        continue;\n    delete_bdev()",
+      "range": {
+        "startLine": 215,
+        "startChar": 8,
+        "endLine": 216,
+        "endChar": 20
+      },
+      "revId": "555eed6157741d4be6916920f2f815455db2c03b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
