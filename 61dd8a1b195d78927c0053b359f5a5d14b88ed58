@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e6e3398a_b3f80d02",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-14T23:54:52Z",
+      "side": 1,
+      "message": "dump_nvmf_subsystem() in lib/event/subsystems/nvmf/nvmf_rpc.c has duplicated parts. unification between them is possible?",
+      "revId": "61dd8a1b195d78927c0053b359f5a5d14b88ed58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
