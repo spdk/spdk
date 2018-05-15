@@ -47,6 +47,13 @@
 
 #define MAX_DISCOVERY_LOG_ENTRIES	((uint64_t)1000)
 
+#define SHOW_OCSSD_CHKINFO_ENTRIES	8
+#define SHOW_OCSSD_CHKINFO_SLBA		0
+
+#define u64_mask  ((uint64_t)-1)
+#define u64_left_mask_gen(left_bits) \
+	(u64_mask ^ ((u64_mask >> (left_bits)) << (left_bits)))
+
 static int outstanding_commands;
 
 struct feature {
@@ -75,6 +82,8 @@ static size_t g_discovery_page_size;
 static uint64_t g_discovery_page_numrec;
 
 static struct spdk_ocssd_geometry_data geometry_data;
+
+static struct spdk_ocssd_chunk_information g_ocssd_chunkinfo_page[SHOW_OCSSD_CHKINFO_ENTRIES];
 
 static bool g_hex_dump = false;
 
@@ -409,6 +418,95 @@ get_discovery_log_page(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
+static uint64_t
+ocssd_get_lba_chk_index(uint64_t slba,
+			struct spdk_ocssd_geometry_data *geo)
+{
+	uint64_t lbk_mask, chk_mask, pu_mask, grp_mask;
+	uint64_t grp_idx, pu_idx, chk_idx;
+	struct spdk_ocssd_dev_lba_fmt lbaf = geo->lbaf;
+
+	/* generate left bit mask */
+	lbk_mask = u64_left_mask_gen(lbaf.lbk_len);
+	chk_mask = u64_left_mask_gen(lbaf.lbk_len + lbaf.chk_len);
+	pu_mask = u64_left_mask_gen(lbaf.lbk_len + lbaf.chk_len + lbaf.pu_len);
+	grp_mask = u64_left_mask_gen(lbaf.lbk_len + lbaf.chk_len + lbaf.pu_len +
+				     lbaf.grp_len);
+	/* generate bit mask */
+	grp_mask ^= pu_mask;
+	pu_mask ^= chk_mask;
+	chk_mask ^= lbk_mask;
+
+	/* get number of each categories */
+	grp_idx = (slba & grp_mask) >> (lbaf.lbk_len + lbaf.chk_len + lbaf.pu_len);
+	pu_idx = grp_idx * geo->num_pu + ((slba & pu_mask) >> (lbaf.lbk_len + lbaf.chk_len));
+	chk_idx = pu_idx * geo->num_chk + ((slba & chk_mask) >> lbaf.lbk_len);
+
+	return chk_idx;
+}
+
+static int
+get_ocssd_chunkinfo_log_page(struct spdk_nvme_ns *ns,
+			     struct spdk_ocssd_geometry_data *geo,
+			     struct spdk_ocssd_chunk_information *chinfo,
+			     uint64_t slba, uint32_t nchks,
+			     spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	struct spdk_nvme_ctrlr *ctrlr = spdk_nvme_ns_get_ctrlr(ns);
+	int nsid = spdk_nvme_ns_get_id(ns);
+	int n_cmds;
+	uint64_t offset_start, offset_iter;
+	uint32_t payload_size;
+	int left_len;
+	int rc;
+
+	/* Retrieve up to 4 KB at a time */
+	left_len = nchks * sizeof(struct spdk_ocssd_chunk_information);
+	offset_start = ocssd_get_lba_chk_index(slba, geo) * sizeof(struct spdk_ocssd_chunk_information);
+	offset_iter = 0;
+	n_cmds = 0;
+
+	while (left_len) {
+		/* Retrieve up to 4 KB at a time */
+		payload_size = spdk_min(left_len, 4096);
+
+		rc = spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_OCSSD_LOG_CHUNK_INFO,
+						      nsid, (char *)chinfo + offset_iter,
+						      payload_size, offset_start + offset_iter,
+						      cb_fn, cb_arg);
+
+		if (rc) {
+			printf("Getting chunk info failed(%d) at iteration %d\n", rc, n_cmds);
+			return n_cmds;
+		}
+
+		offset_iter += payload_size;
+		left_len -= payload_size;
+		n_cmds++;
+	}
+
+	return n_cmds;
+}
+
+static void
+get_ocssd_chunkinfo(struct spdk_nvme_ns *ns, struct spdk_ocssd_geometry_data *geometry_data,
+		    struct spdk_ocssd_chunk_information *g_ocssd_chunkinfo_page)
+{
+	struct spdk_nvme_ctrlr *ctrlr = spdk_nvme_ns_get_ctrlr(ns);
+
+	outstanding_commands =
+		get_ocssd_chunkinfo_log_page(ns, geometry_data, g_ocssd_chunkinfo_page,
+					     SHOW_OCSSD_CHKINFO_SLBA, SHOW_OCSSD_CHKINFO_ENTRIES,
+					     get_log_page_completion, NULL);
+
+	if (!outstanding_commands) {
+		exit(1);
+	}
+
+	while (outstanding_commands) {
+		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
+	}
+}
 
 static void
 get_log_pages(struct spdk_nvme_ctrlr *ctrlr)
@@ -567,6 +665,26 @@ print_ascii_string(const void *buf, size_t size)
 }
 
 static void
+print_ocssd_chunk_info(struct spdk_ocssd_chunk_information *chk_info, int chk_num)
+{
+	int i;
+
+	printf("OCSSD Chunk Info Glance\n");
+	printf("======================\n");
+
+	for (i = 0; i < chk_num; i++) {
+		printf("------------\n");
+		printf("Chunk index:                    %d\n", i);
+		printf("Chunk state:                    0x%x\n", *(uint8_t *) & (chk_info[i].cs));
+		printf("Chunk type:                     0x%x\n", *(uint8_t *) & (chk_info[i].ct));
+		printf("Wear-level Index:               %d\n", chk_info[i].wli);
+		printf("Starting LBA:                   %ld\n", chk_info[i].slba);
+		printf("Number of blocks in chunk:      %ld\n", chk_info[i].cnlb);
+		printf("Write Pointer:                  %ld\n", chk_info[i].wp);
+	}
+}
+
+static void
 print_ocssd_geometry(struct spdk_ocssd_geometry_data *geometry_data)
 {
 	printf("Namespace OCSSD Geometry\n");
@@ -703,6 +821,8 @@ print_namespace(struct spdk_nvme_ns *ns)
 	if (spdk_nvme_ctrlr_is_ocssd_supported(spdk_nvme_ns_get_ctrlr(ns))) {
 		get_ocssd_geometry(ns, &geometry_data);
 		print_ocssd_geometry(&geometry_data);
+		get_ocssd_chunkinfo(ns, &geometry_data, g_ocssd_chunkinfo_page);
+		print_ocssd_chunk_info(g_ocssd_chunkinfo_page, SHOW_OCSSD_CHKINFO_ENTRIES);
 	}
 }
 
