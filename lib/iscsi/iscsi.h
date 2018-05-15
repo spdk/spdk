@@ -361,6 +361,7 @@ void spdk_iscsi_config_text(FILE *fp);
 void spdk_iscsi_config_json(struct spdk_json_write_ctx *w);
 
 void spdk_iscsi_opts_init(struct spdk_iscsi_opts *opts);
+void spdk_iscsi_opts_info_json(struct spdk_json_write_ctx *w);
 
 void spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn);
 void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
