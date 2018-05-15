@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d3f622ff_8b14c1f6",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 403,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-15T10:45:00Z",
+      "side": 1,
+      "message": "can this be just struct spdk_iscsi_opts *opt ? Caller will have to manage clearing it\u0027s pointer variable but this will be more similar to standard libc free().",
+      "range": {
+        "startLine": 403,
+        "startChar": 21,
+        "endLine": 403,
+        "endChar": 51
+      },
+      "revId": "02eba942c6c7a78c611e0939414cdb28c1913393",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "420e0cb2_0ab520aa",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 620,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-15T10:45:00Z",
+      "side": 1,
+      "message": "Can this be changed to \n\n  int\n  spdk_iscsi_parse_options(struct spdk_iscsi_opts *opts)\n\n? This way you can return proper error code.",
+      "range": {
+        "startLine": 619,
+        "startChar": 0,
+        "endLine": 620,
+        "endChar": 30
+      },
+      "revId": "02eba942c6c7a78c611e0939414cdb28c1913393",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "249a634b_bb0ca383",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 703,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-15T10:45:00Z",
+      "side": 1,
+      "message": "error should be returned here.",
+      "range": {
+        "startLine": 703,
+        "startChar": 10,
+        "endLine": 703,
+        "endChar": 12
+      },
+      "revId": "02eba942c6c7a78c611e0939414cdb28c1913393",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
