@@ -1233,6 +1233,7 @@ nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_trac
 		req->retries < spdk_nvme_retry_count;
 
 	if (error && print_on_error) {
+		SPDK_NOTICELOG("complete\n");
 		nvme_qpair_print_command(qpair, &req->cmd);
 		nvme_qpair_print_completion(qpair, cpl);
 	}
