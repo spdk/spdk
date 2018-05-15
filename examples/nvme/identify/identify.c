@@ -208,6 +208,24 @@ get_features(struct spdk_nvme_ctrlr *ctrlr)
 	}
 }
 
+static void
+get_lnvm_feature(struct spdk_nvme_ctrlr *ctrlr)
+{
+	uint8_t feature_to_get = SPDK_LNVM_FEAT_MEDIA_FEEDBACK;
+
+	/* Submit one GET FEATURES commands and wait for them to complete */
+	outstanding_commands = 0;
+	if (get_feature(ctrlr, feature_to_get) == 0) {
+		outstanding_commands++;
+	} else {
+		printf("get_feature(0x%02X) failed to submit command\n", feature_to_get);
+	}
+
+	while (outstanding_commands) {
+		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
+	}
+}
+
 static int
 get_error_log_page(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -1241,6 +1259,19 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 		printf("Number of I/O Submission Queues:      %u\n", (result & 0xFFFF) + 1);
 		printf("Number of I/O Completion Queues:      %u\n", (result & 0xFFFF0000 >> 16) + 1);
 		printf("\n");
+	}
+
+	if (spdk_nvme_ctrlr_is_lightnvm_supported(ctrlr)) {
+		get_lnvm_feature(ctrlr);
+		if (features[SPDK_LNVM_FEAT_MEDIA_FEEDBACK].valid) {
+			uint32_t result = features[SPDK_LNVM_FEAT_MEDIA_FEEDBACK].result;
+
+			printf("LightNVM Media Feedback\n");
+			printf("=======================\n");
+			printf("High ECC status:                %u\n", (result & 0x1));
+			printf("Vector High ECC status:         %u\n", (result & 0x2));
+			printf("\n");
+		}
 	}
 
 	if (cdata->hctma.bits.supported) {
