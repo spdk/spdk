@@ -809,6 +809,7 @@ INPUT                  = ../include/spdk \
                          userspace.md \
                          vagrant.md \
                          vhost.md \
+                         vhost_processing.md \
                          virtio.md
 
 # This tag can be used to specify the character encoding of the source files
