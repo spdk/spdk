@@ -365,6 +365,7 @@ nvme_qpair_manual_complete_request(struct spdk_nvme_qpair *qpair,
 	error = spdk_nvme_cpl_is_error(&cpl);
 
 	if (error && print_on_error) {
+		SPDK_NOTICELOG("Command completed manually:\n");
 		nvme_qpair_print_command(qpair, &req->cmd);
 		nvme_qpair_print_completion(qpair, &cpl);
 	}
