@@ -4,6 +4,7 @@ JSON_DIR=$(readlink -f $(dirname $0))
 SPDK_BUILD_DIR=$JSON_DIR/../../
 . $JSON_DIR/../common/autotest_common.sh
 . $JSON_DIR/../iscsi_tgt/common.sh
+. $JSON_DIR/../nvmf/common.sh
 
 spdk_rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py -s /var/tmp/spdk.sock"
 initiator_rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py -s /var/tmp/virtio.sock"
@@ -19,6 +20,8 @@ base_iscsi=$JSON_DIR/iscsi_base.txt
 last_iscsi=$JSON_DIR/iscsi_last.txt
 base_scsi=$JSON_DIR/scsi_base.txt
 last_scsi=$JSON_DIR/scsi_last.txt
+base_nvmf_subsystems=$JSON_DIR/nvmf_subsystems_base.txt
+last_nvmf_subsystems=$JSON_DIR/nvmf_susbsytems_last.txt
 
 function run_spdk_tgt() {
 	cp $JSON_DIR/vhost.conf.base $JSON_DIR/vhost.conf
@@ -51,6 +54,7 @@ function test_json_config() {
 	$rpc_py get_bdevs | jq '.|sort_by(.name)' > $base_bdevs
 	$rpc_py save_config -f $base_json_config
 	$rpc_py get_nbd_disks > $base_nbd
+	$rpc_py get_nvmf_subsystems > $base_nvmf_subsystems
 	$rpc_py clear_config
 	sleep 2
 	$rpc_py load_config --filename $base_json_config
@@ -60,18 +64,21 @@ function test_json_config() {
 	$rpc_py get_bdevs | jq '.|sort_by(.name)' > $last_bdevs
 	$rpc_py save_config -f $last_json_config
 	$rpc_py get_nbd_disks > $last_nbd
+	$rpc_py get_nvmf_subsystems > $last_nvmf_subsystems
 	diff $base_json_config $last_json_config
 	diff $base_bdevs $last_bdevs
 	diff $base_nbd $last_nbd
 	diff $base_connections $last_connections
 	diff $base_iscsi $last_iscsi
 	diff $base_scsi $last_scsi
+	diff $base_nvmf_subsystems $last_nvmf_subsystems
 	rm $last_bdevs $base_bdevs || true
 	rm $last_json_config $base_json_config || true
 	rm $last_nbd $base_nbd || true
 	rm $base_connections $last_connections || true
 	rm $base_iscsi $last_iscsi || true
 	rm $base_scsi $last_scsi || true
+	rm $base_nvmf_subsystems $last_nvmf_subsystems || true
 }
 
 function create_bdev_subsystem_config() {
@@ -91,8 +98,8 @@ function create_bdev_subsystem_config() {
 	$rpc_py clone_lvol_bdev lvs_test/snapshot0 clone0
 	$rpc_py create_pmem_pool /tmp/pool_file1 32 512
 	$rpc_py construct_pmem_bdev -n pmem1 /tmp/pool_file1
-	rbd_setup 127.0.0.1
-	$rpc_py construct_rbd_bdev $RBD_POOL $RBD_NAME 4096
+	#rbd_setup 127.0.0.1
+	#$rpc_py construct_rbd_bdev $RBD_POOL $RBD_NAME 4096
 }
 
 function clean_bdev_subsystem_config() {
@@ -107,7 +114,7 @@ function clean_bdev_subsystem_config() {
 	if [ -f /tmp/sample_aoi ]; then
 		rm /tmp/sample_aio
 	fi
-	rbd_cleanup
+	#rbd_cleanup
 }
 
 function pre_initiator_config() {
@@ -171,27 +178,50 @@ function clean_iscsi() {
 	$rpc_py delete_portal_group $PORTAL_TAG
 }
 
+function upload_nvmf() {
+	rdma_device_init
+	MALLOC_BDEV_SIZE=64
+	MALLOC_BLOCK_SIZE=512
+	RDMA_IP_LIST=$(get_available_rdma_ips)
+	NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
+	if [ -z $NVMF_FIRST_TARGET_IP ]; then
+		echo "no NIC for nvmf test"
+		return
+	fi
+	bdevs="$bdevs $($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE --name Malloc3)"
+	bdevs="$bdevs $($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE --name Malloc4)"
+	$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 '' '' -a -s SPDK00000000000001 -n "$bdevs"
+	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t RDMA -a $NVMF_FIRST_TARGET_IP -s "$NVMF_PORT"
+}
+
+function clean_nvmf() {
+	echo ""
+}
+
 function test_subsystems() {
 	run_spdk_tgt
 	rootdir=$(readlink -f $JSON_DIR/../..)
 	rpc_py="$spdk_rpc_py"
 	create_bdev_subsystem_config
 	test_json_config
-        upload_vhost
+        #upload_vhost
+        #test_json_config
+        #clean_vhost
+	#upload_nbd
+	#test_json_config
+	#clean_nbd
+	#upload_iscsi
+	#test_json_config
+	#clean_iscsi
+	upload_nvmf
         test_json_config
-        clean_vhost
-	upload_nbd
-	test_json_config
-	clean_nbd
-	upload_iscsi
-	test_json_config
-	clean_iscsi
-	pre_initiator_config
-	run_initiator
-	rpc_py="$initiator_rpc_py"
-	upload_initiator
-	test_json_config
-	clean_upload_initiator
+        clean_nvmf
+	#pre_initiator_config
+	#run_initiator
+	#rpc_py="$initiator_rpc_py"
+	#upload_initiator
+	#test_json_config
+	#clean_upload_initiator
 	rpc_py="$spdk_rpc_py"
 	clean_bdev_subsystem_config
 	if [ ! -z $virtio_pid ]; then
