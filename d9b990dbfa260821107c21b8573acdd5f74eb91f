@@ -22,6 +22,30 @@
       "revId": "d9b990dbfa260821107c21b8573acdd5f74eb91f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "43d1806e_4d5539b1",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-15T00:08:48Z",
+      "side": 1,
+      "message": "\"SPDK should dump it if \u0027-w\u0027 was passed during startup\" sounds reasonable. Yes, the variable g_delay_subsystem_init has that setting. If I find any idea today, I will update to you.",
+      "parentUuid": "4ac1db78_edbfe043",
+      "range": {
+        "startLine": 87,
+        "startChar": 6,
+        "endLine": 89,
+        "endChar": 32
+      },
+      "revId": "d9b990dbfa260821107c21b8573acdd5f74eb91f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
