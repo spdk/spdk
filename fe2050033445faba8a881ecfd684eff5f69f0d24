@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab255373_cb0f057b",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-15T10:33:20Z",
+      "side": 1,
+      "message": "We want to enable asan by default on testpool and this will add additional place where it will complain about memory leak when target exit. So this need to be freed at exit.",
+      "range": {
+        "startLine": 47,
+        "startChar": 27,
+        "endLine": 47,
+        "endChar": 47
+      },
+      "revId": "fe2050033445faba8a881ecfd684eff5f69f0d24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
