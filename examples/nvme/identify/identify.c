@@ -36,6 +36,7 @@
 #include "spdk/endian.h"
 #include "spdk/log.h"
 #include "spdk/nvme.h"
+#include "spdk/nvme_lnvm.h"
 #include "spdk/env.h"
 #include "spdk/nvme_intel.h"
 #include "spdk/nvmf_spec.h"
@@ -72,6 +73,8 @@ static struct spdk_nvme_intel_marketing_description_page intel_md_page;
 static struct spdk_nvmf_discovery_log_page *g_discovery_page;
 static size_t g_discovery_page_size;
 static uint64_t g_discovery_page_numrec;
+
+static struct spdk_nvme_lnvm_geometry_data geometry_data;
 
 static bool g_hex_dump = false;
 
@@ -153,6 +156,15 @@ get_log_page_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 {
 	if (spdk_nvme_cpl_is_error(cpl)) {
 		printf("get log page failed\n");
+	}
+	outstanding_commands--;
+}
+
+static void
+get_lnvm_geometry_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
+{
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		printf("get lnvm geometry failed\n");
 	}
 	outstanding_commands--;
 }
@@ -448,6 +460,28 @@ get_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 	}
 }
 
+static int
+get_lnvm_geometry(struct spdk_nvme_ns *ns)
+{
+	struct spdk_nvme_ctrlr *ctrlr = spdk_nvme_ns_get_ctrlr(ns);
+	int nsid = spdk_nvme_ns_get_id(ns);
+	outstanding_commands = 0;
+
+	if (spdk_nvme_lnvm_cmd_geometry(ctrlr, nsid, &geometry_data,
+					sizeof(geometry_data), get_lnvm_geometry_completion, NULL)) {
+		printf("Get LightNVM geometry failed\n");
+		return 1;
+	} else {
+		outstanding_commands++;
+	}
+
+	while (outstanding_commands) {
+		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
+	}
+
+	return 0;
+}
+
 static void
 print_hex_be(const void *v, size_t size)
 {
@@ -514,6 +548,45 @@ print_ascii_string(const void *buf, size_t size)
 		}
 		str++;
 	}
+}
+
+static void
+print_lnvm_geometry(struct spdk_nvme_ns *ns)
+{
+	printf("Namespace LNVM Geometry\n");
+	printf("=======================\n");
+
+	if (geometry_data.mjr < 2) {
+		printf("Open-Channel Spec version is less than 2.0\n");
+		printf("OC version:		maj:%d\n", geometry_data.mjr);
+		return;
+	}
+
+	printf("OC version:			maj:%d min:%d\n", geometry_data.mjr, geometry_data.mnr);
+	printf("LBA format:\n");
+	printf("  Group bits:			%d\n", geometry_data.lbaf.grp_bit_len);
+	printf("  PU bits:			%d\n", geometry_data.lbaf.pu_bit_len);
+	printf("  Chunk bits:			%d\n", geometry_data.lbaf.chk_bit_len);
+	printf("  Logical block bits:		%d\n", geometry_data.lbaf.lbk_bit_len);
+
+	printf("Media and Controller Capabilities:\n");
+	printf("  Namespace supports Vector Chunk Copy:			%s\n",
+	       geometry_data.mccap.vec_chk_cpy ? "Supported" : "Not Supported");
+	printf("  Namespace supports multiple resets a free chunk:	%s\n",
+	       geometry_data.mccap.multi_reset ? "Supported" : "Not Supported");
+
+	printf("Wear-level Index Delta Threshold:			%d\n", geometry_data.wit);
+	printf("Groups (channels):		%d\n", geometry_data.num_grp);
+	printf("PUs (LUNs) per group:		%d\n", geometry_data.num_pu);
+	printf("Chunks per LUN:			%d\n", geometry_data.num_chk);
+	printf("Logical blks per chunk:		%d\n", geometry_data.clba);
+	printf("MIN write size:			%d\n", geometry_data.ws_min);
+	printf("OPT write size:			%d\n", geometry_data.ws_opt);
+	printf("Cache min write size:		%d\n", geometry_data.mw_cunits);
+	printf("Max open chunks:		%d\n", geometry_data.maxoc);
+	printf("Max open chunks per PU:		%d\n", geometry_data.maxocpu);
+	printf("\n");
+
 }
 
 static void
@@ -611,6 +684,13 @@ print_namespace(struct spdk_nvme_ns *ns)
 		printf("LBA Format #%02d: Data Size: %5d  Metadata Size: %5d\n",
 		       i, 1 << nsdata->lbaf[i].lbads, nsdata->lbaf[i].ms);
 	printf("\n");
+
+	if (spdk_nvme_ctrlr_support_lnvm(spdk_nvme_ns_get_ctrlr(ns))) {
+		if (!get_lnvm_geometry(ns)) {
+			print_lnvm_geometry(ns);
+		}
+	}
+
 }
 
 static const char *
