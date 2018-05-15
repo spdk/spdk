@@ -34,6 +34,27 @@
 #include "spdk/nvme_ocssd.h"
 #include "nvme_internal.h"
 
+bool
+spdk_nvme_ctrlr_is_ocssd_supported(struct spdk_nvme_ctrlr *ctrlr)
+{
+	if (ctrlr->quirks & NVME_QUIRK_OCSSD) {
+		// TODO: There isn't a standardized way to identify Open-Channel SSD
+		// different verdors may have different conditions.
+
+		/*
+		 * Current QEMU OpenChannel Device needs to check nsdata->vs[0].
+		 * Here check nsdata->vs[0] of the first namespace.
+		 */
+		if (ctrlr->cdata.vid == SPDK_PCI_VID_CNEXLABS) {
+			if (ctrlr->num_ns && ctrlr->nsdata[0].vendor_specific[0] == 0x1) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+
 int
 spdk_nvme_ocssd_ctrlr_cmd_geometry(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 				   void *payload, uint32_t payload_size,
