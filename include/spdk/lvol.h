@@ -61,13 +61,15 @@ struct spdk_lvs_opts {
 };
 
 /**
- * \brief Initialize an spdk_lvs_opts structure to the defaults.
- * \param opts
+ * Initialize an spdk_lvs_opts structure to the defaults.
+ *
+ * \param opts Pointer to the spdk_lvs_opts structure to initialize.
  */
 void spdk_lvs_opts_init(struct spdk_lvs_opts *opts);
 
 /**
- * \brief Callback definition for lvolstore operations, including handle to lvs
+ * Callback definition for lvolstore operations, including handle to lvs.
+ *
  * \param cb_arg Custom arguments
  * \param lvol_store Handle to lvol_store or NULL when lvserrno is set
  * \param lvserrno Error
@@ -76,7 +78,8 @@ typedef void (*spdk_lvs_op_with_handle_complete)(void *cb_arg, struct spdk_lvol_
 		int lvserrno);
 
 /**
- * \brief Callback definition for lvolstore operations without handle
+ * Callback definition for lvolstore operations without handle.
+ *
  * \param cb_arg Custom arguments
  * \param lvserrno Error
  */
@@ -84,7 +87,8 @@ typedef void (*spdk_lvs_op_complete)(void *cb_arg, int lvserrno);
 
 
 /**
- * \brief Callback definition for lvol operations with handle to lvol
+ * Callback definition for lvol operations with handle to lvol.
+ *
  * \param cb_arg Custom arguments
  * \param lvol Handle to lvol or NULL when lvserrno is set
  * \param lvolerrno Error
@@ -93,131 +97,158 @@ typedef void (*spdk_lvol_op_with_handle_complete)(void *cb_arg, struct spdk_lvol
 		int lvolerrno);
 
 /**
- * \brief Callback definition for lvol operations without handle to lvol
+ * Callback definition for lvol operations without handle to lvol.
+ *
  * \param cb_arg Custom arguments
  * \param lvolerrno Error
  */
 typedef void (*spdk_lvol_op_complete)(void *cb_arg, int lvolerrno);
 
 /**
- * \brief Initialize lvolstore on given bs_bdev.
+ * Initialize lvolstore on given bs_bdev.
  *
- * bs_dev can be created on bdev by using spdk_bdev_create_bs_dev()
- * Refer to blobstore documention for more details.
+ * \param bs_dev This is created on the given bdev by using spdk_bdev_create_bs_dev()
+ * beforehand.
+ * \param o Options for lvolstore.
+ * \param cb_fn Completion callback.
+ * \param cb_arg Completion callback custom arguments.
  *
- * \param o Options for lvolstore
- * \param cb_fn Completion callback
- * \param cb_arg Completion callback custom arguments
- * \return error
+ * \return 0 on success, negative errno on failure.
  */
 int spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 		  spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg);
 
 /**
- * \brief Renames given lvolstore.
+ * Rename the given lvolstore.
  *
- * \param lvs Pointer to lvolstore
- * \param new_name New name of lvs
- * \param cb_fn Completion callback
- * \param cb_arg Completion callback custom arguments
+ * \param lvs Pointer to lvolstore.
+ * \param new_name New name of lvs.
+ * \param cb_fn Completion callback.
+ * \param cb_arg Completion callback custom arguments.
  */
 void spdk_lvs_rename(struct spdk_lvol_store *lvs, const char *new_name,
 		     spdk_lvs_op_complete cb_fn, void *cb_arg);
 
 /**
- * \brief Unloads lvolstore
+ * Unload lvolstore.
  *
  * All lvols have to be closed beforehand, when doing unload.
  *
- * \param lvol_store Handle to lvolstore
- * \param cb_fn Completion callback
- * \param cb_arg Completion callback custom arguments
- * \return error
+ * \param lvol_store Handle to lvolstore.
+ * \param cb_fn Completion callback.
+ * \param cb_arg Completion callback custom arguments.
+ *
+ * \return 0 on success, negative errno on failure.
  */
 int spdk_lvs_unload(struct spdk_lvol_store *lvol_store,
 		    spdk_lvs_op_complete cb_fn, void *cb_arg);
+
 /**
- * \brief Destroy lvolstore
+ * Destroy lvolstore.
  *
  * All lvols have to be closed beforehand, when doing destroy.
  *
- * \param lvol_store Handle to lvolstore
- * \param cb_fn Completion callback
- * \param cb_arg Completion callback custom arguments
- * \return error
+ * \param lvol_store Handle to lvolstore.
+ * \param cb_fn Completion callback.
+ * \param cb_arg Completion callback custom arguments.
+ *
+ * \return 0 on success, negative errno on failure.
  */
 int spdk_lvs_destroy(struct spdk_lvol_store *lvol_store,
 		     spdk_lvs_op_complete cb_fn, void *cb_arg);
 
 /**
- * \brief Create lvol on given lvolstore with specified size
- * \param lvs Handle to lvolstore
- * \param name Name of lvol
- * \param sz size of lvol in bytes
- * \param thin_provisioned Enables thin provisioning
- * \param cb_fn Completion callback
- * \param cb_arg Completion callback custom arguments
- * \return error
+ * Create lvol on given lvolstore with specified size.
+ *
+ * \param lvs Handle to lvolstore.
+ * \param name Name of lvol.
+ * \param sz size of lvol in bytes.
+ * \param thin_provisioned Enables thin provisioning.
+ * \param cb_fn Completion callback.
+ * \param cb_arg Completion callback custom arguments.
+ *
+ * \return 0 on success, negative errno on failure.
  */
 int spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 		     bool thin_provisioned, spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
 /**
- * \brief Create snapshot of given lvol
- * \param lvol Handle to lvol
- * \param snapshot_name Name of created snapshot
- * \param cb_fn Completion callback
- * \param cb_arg Completion callback custom arguments
+ * Create snapshot of given lvol.
+ *
+ * \param lvol Handle to lvol.
+ * \param snapshot_name Name of created snapshot.
+ * \param cb_fn Completion callback.
+ * \param cb_arg Completion callback custom arguments.
  */
 void spdk_lvol_create_snapshot(struct spdk_lvol *lvol, const char *snapshot_name,
 			       spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
 
 /**
- * \brief Create clone of given snapshot
- * \param lvol Handle to lvol snapshot
- * \param clone_name Name of created clone
- * \param cb_fn Completion callback
- * \param cb_arg Completion callback custom arguments
+ * Create clone of given snapshot.
+ *
+ * \param lvol Handle to lvol snapshot.
+ * \param clone_name Name of created clone.
+ * \param cb_fn Completion callback.
+ * \param cb_arg Completion callback custom arguments.
  */
 void spdk_lvol_create_clone(struct spdk_lvol *lvol, const char *clone_name,
 			    spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
 
-
 /**
- * \brief Renames lvol with new_name.
- * \param lvol Handle to lvol
- * \param new_name new name for lvol
- * \param cb_fn Completion callback
- * \param cb_arg Completion callback custom arguments
+ * Rename lvol with new_name.
+ *
+ * \param lvol Handle to lvol.
+ * \param new_name new name for lvol.
+ * \param cb_fn Completion callback.
+ * \param cb_arg Completion callback custom arguments.
  */
 void
 spdk_lvol_rename(struct spdk_lvol *lvol, const char *new_name,
 		 spdk_lvol_op_complete cb_fn, void *cb_arg);
 
 /**
- * \brief Closes lvol and removes information about lvol from its lvolstore.
- * \param lvol Handle to lvol
- * \param cb_fn Completion callback
- * \param cb_arg Completion callback custom arguments
+ * Close lvol and remove information about lvol from its lvolstore.
+ *
+ * \param lvol Handle to lvol.
+ * \param cb_fn Completion callback.
+ * \param cb_arg Completion callback custom arguments.
  */
 void spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg);
 
 /**
- * \brief Closes lvol, but information is kept on lvolstore.
- * \param lvol Handle to lvol
- * \param cb_fn Completion callback
- * \param cb_arg Completion callback custom arguments
+ * Close lvol, but information is kept on lvolstore.
+ *
+ * \param lvol Handle to lvol.
+ * \param cb_fn Completion callback.
+ * \param cb_arg Completion callback custom arguments.
  */
 void spdk_lvol_close(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg);
 
 /**
- * \brief Return IO channel of bdev associated with specified lvol.
- * \param lvol Handle to lvol
- * \return IO channel
+ * Get I/O channel of bdev associated with specified lvol.
+ *
+ * \param lvol Handle to lvol.
+ *
+ * \return a pointer to the I/O channel.
  */
 struct spdk_io_channel *spdk_lvol_get_io_channel(struct spdk_lvol *lvol);
 
+/**
+ * Load lvolstore from the given blobstore device.
+ *
+ * \param bs_dev Pointer to the blobstore device.
+ * \param cb_fn Completion callback.
+ * \param cb_arg Completion callback custom arguments.
+ */
 void spdk_lvs_load(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn,
 		   void *cb_arg);
+
+/**
+ * Open a lvol.
+ *
+ * \param lvol Handle to lvol.
+ * \param cb_fn Completion callback.
+ * \param cb_arg Completion callback custom arguments.
+ */
 void spdk_lvol_open(struct spdk_lvol *lvol, spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
 
 #ifdef __cplusplus
