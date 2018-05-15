@@ -46,6 +46,54 @@
       "revId": "d9b990dbfa260821107c21b8573acdd5f74eb91f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "735912b7_9e0d8d97",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-15T10:00:01Z",
+      "side": 1,
+      "message": "I didn\u0027t found any logical way to dump \u0027start_subsystem_init\u0027 method. Can we merge this as is?",
+      "parentUuid": "43d1806e_4d5539b1",
+      "range": {
+        "startLine": 87,
+        "startChar": 6,
+        "endLine": 89,
+        "endChar": 32
+      },
+      "revId": "d9b990dbfa260821107c21b8573acdd5f74eb91f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "11c7b9b7_26fa3f91",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-15T10:00:01Z",
+      "side": 1,
+      "message": "I did not found any logical way to dump \u0027start_subsystem_init\u0027 to config file. If you have any idea pls post it but if not can we merge this as is?",
+      "parentUuid": "43d1806e_4d5539b1",
+      "range": {
+        "startLine": 87,
+        "startChar": 6,
+        "endLine": 89,
+        "endChar": 32
+      },
+      "revId": "d9b990dbfa260821107c21b8573acdd5f74eb91f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
