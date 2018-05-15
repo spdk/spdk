@@ -16,6 +16,24 @@
       "revId": "61dd8a1b195d78927c0053b359f5a5d14b88ed58",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a90682c1_0b1ce33f",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-15T07:26:08Z",
+      "side": 1,
+      "message": "I found too that those names are clashing. The \"subsystem\" in lib/event/subsystems/nvmf/nvmf_rpc.c is for SPDK subsystem. \"Sybsystem\" here is for nvmf subsystem.",
+      "parentUuid": "e6e3398a_b3f80d02",
+      "revId": "61dd8a1b195d78927c0053b359f5a5d14b88ed58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
