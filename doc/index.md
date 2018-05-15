@@ -14,6 +14,7 @@
 - @ref memory
 - @ref concurrency
 - @ref ssd_internals
+- @ref vhost_processing
 - @ref porting
 
 # User Guides {#user_guides}
