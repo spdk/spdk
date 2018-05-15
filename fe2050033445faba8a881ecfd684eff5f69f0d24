@@ -22,6 +22,30 @@
       "revId": "fe2050033445faba8a881ecfd684eff5f69f0d24",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8b34fa8_8a1e754d",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-15T23:33:29Z",
+      "side": 1,
+      "message": "I added free(g_spdk_nvmf_tgt_conf) to just below of destroy nvmf_tgt in nvmf_tgt.c.",
+      "parentUuid": "ab255373_cb0f057b",
+      "range": {
+        "startLine": 47,
+        "startChar": 27,
+        "endLine": 47,
+        "endChar": 47
+      },
+      "revId": "fe2050033445faba8a881ecfd684eff5f69f0d24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
