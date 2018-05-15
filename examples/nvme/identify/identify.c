@@ -183,19 +183,25 @@ get_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t fid)
 static void
 get_features(struct spdk_nvme_ctrlr *ctrlr)
 {
-	size_t i;
-
 	uint8_t features_to_get[] = {
 		SPDK_NVME_FEAT_ARBITRATION,
 		SPDK_NVME_FEAT_POWER_MANAGEMENT,
 		SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD,
 		SPDK_NVME_FEAT_ERROR_RECOVERY,
 		SPDK_NVME_FEAT_NUMBER_OF_QUEUES,
+		SPDK_OCSSD_FEAT_MEDIA_FEEDBACK,
 	};
+	size_t oc_count = 1;
+	size_t count = SPDK_COUNTOF(features_to_get);
+	size_t i;
+
+	if (!spdk_nvme_ctrlr_is_ocssd_supported(ctrlr)) {
+		count -= oc_count;
+	}
 
 	/* Submit several GET FEATURES commands and wait for them to complete */
 	outstanding_commands = 0;
-	for (i = 0; i < SPDK_COUNTOF(features_to_get); i++) {
+	for (i = 0; i < count; i++) {
 		if (get_feature(ctrlr, features_to_get[i]) == 0) {
 			outstanding_commands++;
 		} else {
@@ -1238,6 +1244,16 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 		printf("================\n");
 		printf("Number of I/O Submission Queues:      %u\n", (result & 0xFFFF) + 1);
 		printf("Number of I/O Completion Queues:      %u\n", (result & 0xFFFF0000 >> 16) + 1);
+		printf("\n");
+	}
+
+	if (features[SPDK_OCSSD_FEAT_MEDIA_FEEDBACK].valid) {
+		uint32_t result = features[SPDK_OCSSD_FEAT_MEDIA_FEEDBACK].result;
+
+		printf("OCSSD Media Feedback\n");
+		printf("=======================\n");
+		printf("High ECC status:                %u\n", (result & 0x1));
+		printf("Vector High ECC status:         %u\n", (result & 0x2));
 		printf("\n");
 	}
 
