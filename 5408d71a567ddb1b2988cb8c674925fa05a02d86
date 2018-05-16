@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c324a275_dd555c74",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-16T14:44:31Z",
+      "side": 1,
+      "message": "empty line",
+      "revId": "5408d71a567ddb1b2988cb8c674925fa05a02d86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca53665e_0cbf31e0",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-16T14:44:31Z",
+      "side": 1,
+      "message": "empty line",
+      "revId": "5408d71a567ddb1b2988cb8c674925fa05a02d86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d2f4fea5_833e4dcf",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-16T14:44:31Z",
+      "side": 1,
+      "message": "empty line",
+      "revId": "5408d71a567ddb1b2988cb8c674925fa05a02d86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b413687_945b8af9",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-16T14:44:31Z",
+      "side": 1,
+      "message": "empty line",
+      "revId": "5408d71a567ddb1b2988cb8c674925fa05a02d86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
