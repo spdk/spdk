@@ -483,13 +483,15 @@ parse_line(struct spdk_conf *cp, char *lp)
 		if (sp == NULL) {
 			sp = allocate_cf_section();
 			append_cf_section(cp, sp);
+
+			sp->name = strdup(key);
+			if (sp->name == NULL) {
+				SPDK_ERRLOG("cannot duplicate %s to sp->name\n", key);
+				return -1;
+			}
 		}
 		cp->current_section = sp;
-		sp->name = strdup(key);
-		if (sp->name == NULL) {
-			SPDK_ERRLOG("cannot duplicate %s to sp->name\n", key);
-			return -1;
-		}
+
 
 		sp->num = num;
 	} else {
