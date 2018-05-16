@@ -121,6 +121,7 @@ function spdk_vhost_run()
 				assert_number "$vhost_num"
 				;;
 			--conf-path=*) local vhost_conf_path="${param#*=}" ;;
+			--json-path=*) local vhost_json_path="${param#*=}" ;;
 			--memory=*) local memory=${param#*=} ;;
 			*)
 				error "Invalid parameter '$param'"
@@ -130,16 +131,13 @@ function spdk_vhost_run()
 	done
 
 	local vhost_dir="$(get_vhost_dir $vhost_num)"
-	if [[ -z "$vhost_conf_path" ]]; then
-		error "Missing mandatory parameter '--conf-path'"
-		return 1
-	fi
 	local vhost_app="$SPDK_BUILD_DIR/app/vhost/vhost"
 	local vhost_log_file="$vhost_dir/vhost.log"
 	local vhost_pid_file="$vhost_dir/vhost.pid"
 	local vhost_socket="$vhost_dir/usvhost"
 	local vhost_conf_template="$vhost_conf_path/vhost.conf.in"
 	local vhost_conf_file="$vhost_conf_path/vhost.conf"
+	local vhost_json_conf_file="$vhost_json_path/vhost.json"
 	notice "starting vhost app in background"
 	[[ -r "$vhost_pid_file" ]] && spdk_vhost_kill $vhost_num
 	[[ -d $vhost_dir ]] && rm -f $vhost_dir/*
@@ -161,13 +159,17 @@ function spdk_vhost_run()
 		return 1
 	fi
 
-	cp $vhost_conf_template $vhost_conf_file
-	$SPDK_BUILD_DIR/scripts/gen_nvme.sh >> $vhost_conf_file
-
-	local cmd="$vhost_app -m $reactor_mask -p $master_core -c $vhost_conf_file -s $memory -r $vhost_dir/rpc.sock"
+	local cmd="$vhost_app -m $reactor_mask -p $master_core -s $memory -r $vhost_dir/rpc.sock"
+	if [[ -n "$vhost_conf_path" ]]; then
+		cp $vhost_conf_template $vhost_conf_file
+		$SPDK_BUILD_DIR/scripts/gen_nvme.sh >> $vhost_conf_file
+		 cmd="$vhost_app -m $reactor_mask -p $master_core -c $vhost_conf_file -s $memory -r $vhost_dir/rpc.sock"
+	else
+		touch $vhost_json_conf_file
+		$SPDK_BUILD_DIR/scripts/gen_nvme.sh "$vhost_json_path/conf.json.in" >> $vhost_json_conf_file
+	fi
 
 	notice "Loging to:   $vhost_log_file"
-	notice "Config file: $vhost_conf_file"
 	notice "Socket:      $vhost_socket"
 	notice "Command:     $cmd"
 
@@ -178,10 +180,16 @@ function spdk_vhost_run()
 
 	notice "waiting for app to run..."
 	waitforlisten "$vhost_pid" "$vhost_dir/rpc.sock"
+	if [[ -n "$vhost_conf_path" ]]; then
+		rm $vhost_conf_file
+	elif [[ -n "$vhost_json_path" ]]; then
+		$SPDK_BUILD_DIR/scripts/rpc.py -s $vhost_dir/rpc.sock load_config --filename "$vhost_json_conf_file"
+		rm $vhost_json_conf_file
+	fi
+
 	notice "vhost started - pid=$vhost_pid"
 	timing_exit vhost_start
 
-	rm $vhost_conf_file
 }
 
 function spdk_vhost_kill()
