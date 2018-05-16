@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "1c1c5b87_500b78a2",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 537,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-16T12:54:19Z",
+      "side": 1,
+      "message": "eee, this ENOMEM should be for readcap16 :) Will fix.",
+      "parentUuid": "83e47fd7_1590e6f3",
+      "range": {
+        "startLine": 537,
+        "startChar": 2,
+        "endLine": 537,
+        "endChar": 19
+      },
+      "revId": "45957be9977fc902855b45f539848f8a6521357a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c2398756_bd62f897",
         "filename": "lib/bdev/iscsi/bdev_iscsi.h",
         "patchSetId": 20
