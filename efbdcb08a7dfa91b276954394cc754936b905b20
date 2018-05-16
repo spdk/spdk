@@ -68,6 +68,30 @@
       "revId": "efbdcb08a7dfa91b276954394cc754936b905b20",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "89120799_a8c6cb5a",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 25
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-05-16T09:30:34Z",
+      "side": 1,
+      "message": "It could be fine to do this, but If I move this rpc call to delete_subbdevs I will have to call this rpc too many times.",
+      "parentUuid": "3f6ed4f7_fc9d6b64",
+      "range": {
+        "startLine": 210,
+        "startChar": 4,
+        "endLine": 210,
+        "endChar": 13
+      },
+      "revId": "efbdcb08a7dfa91b276954394cc754936b905b20",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
