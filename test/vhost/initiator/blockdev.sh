@@ -86,7 +86,7 @@ function create_bdev_config()
 }
 
 timing_enter spdk_vhost_run
-spdk_vhost_run --conf-path=$BASE_DIR
+spdk_vhost_run --json-path=$BASE_DIR
 timing_exit spdk_vhost_run
 
 timing_enter create_bdev_config

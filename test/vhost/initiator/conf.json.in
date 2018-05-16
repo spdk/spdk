@@ -1,0 +1,41 @@
+{
+  "subsystems": [
+    {
+      "subsystem": "copy",
+      "config": null
+    },
+    {
+      "subsystem": "interface",
+      "config": null
+    },
+    {
+      "subsystem": "net_framework",
+      "config": null
+    },
+    {
+      "subsystem": "bdev",
+      "config": [
+      {
+          "params": {
+            "base_bdev": "Nvme0n1",
+            "split_size_mb": 0,
+            "split_count": 6
+          },
+          "method": "construct_split_vbdev"
+        }
+      ]
+    },
+    {
+      "subsystem": "nbd",
+      "config": []
+    },
+    {
+      "subsystem": "scsi",
+      "config": null
+    },
+    {
+      "subsystem": "vhost",
+      "config": []
+    }
+  ]
+}
