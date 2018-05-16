@@ -643,6 +643,10 @@ create_iscsi_disk(const char *bdev_name, const char *url, const char *initiator_
 	rc = rc ? rc : iscsi_set_targetname(req->context, iscsi_url->target);
 	rc = rc ? rc : iscsi_full_connect_async(req->context, iscsi_url->portal, iscsi_url->lun,
 						iscsi_connect_cb, req);
+	if (rc == 0 && iscsi_url->user[0] != '\0') {
+		rc = iscsi_set_initiator_username_pwd(req->context, iscsi_url->user, iscsi_url->passwd);
+	}
+
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to connect provided URL=%s: %s\n", url, iscsi_get_error(req->context));
 		goto err;
