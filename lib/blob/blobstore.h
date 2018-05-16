@@ -192,6 +192,8 @@ struct spdk_bs_channel {
 	struct spdk_io_channel		*dev_channel;
 
 	TAILQ_HEAD(, spdk_bs_request_set) need_cluster_alloc;
+	TAILQ_HEAD(, spdk_bs_request_set) queued_io;
+	bool				frozen_io;
 };
 
 /** operation type */
