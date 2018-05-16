@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "37cc350d_5c373c8b",
+        "filename": "lib/bdev/agg/vbdev_agg.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-16T13:17:18Z",
+      "side": 1,
+      "message": "vbdev_stripe or vbdev_raid0 may be fit with others because Ziye has proposed vbdev_raid1 already (https://review.gerrithub.io/#/c/spdk/spdk/+/385341/). And I\u0027m working on vbdev_linear (concatenate small vbdevs sequentially).\n\nThese will use the common on disk metadata mechanism. agg may conflict others. How do you think?",
+      "range": {
+        "startLine": 49,
+        "startChar": 17,
+        "endLine": 49,
+        "endChar": 20
+      },
+      "revId": "b66c6b7cefa5cc3070a70af6f5690966c4f2b094",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a9bdeac6_f5beb27b",
+        "filename": "lib/bdev/agg/vbdev_agg.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-16T13:17:18Z",
+      "side": 1,
+      "message": "please set * adjacent to the variable, like int *a;",
+      "range": {
+        "startLine": 70,
+        "startChar": 16,
+        "endLine": 70,
+        "endChar": 17
+      },
+      "revId": "b66c6b7cefa5cc3070a70af6f5690966c4f2b094",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ae57fa5d_5639faf5",
+        "filename": "lib/bdev/agg/vbdev_agg.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-16T13:17:18Z",
+      "side": 1,
+      "message": "please order the structure which looks the owner of the method first, like (agg_disk, offset_blocks)",
+      "range": {
+        "startLine": 96,
+        "startChar": 6,
+        "endLine": 96,
+        "endChar": 31
+      },
+      "revId": "b66c6b7cefa5cc3070a70af6f5690966c4f2b094",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3193300e_d3f8fbb9",
+        "filename": "lib/bdev/agg/vbdev_agg.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-16T13:17:18Z",
+      "side": 1,
+      "message": "agg_chunk_blocks is used in many places, so please cache this to agg_disk.",
+      "range": {
+        "startLine": 98,
+        "startChar": 10,
+        "endLine": 98,
+        "endChar": 26
+      },
+      "revId": "b66c6b7cefa5cc3070a70af6f5690966c4f2b094",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91c0062e_579b2578",
+        "filename": "lib/bdev/agg/vbdev_agg.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-16T13:17:18Z",
+      "side": 1,
+      "message": "just \"(offset_blocks % agg_chunk_blocks) \u003d\u003d 0\" may be OK?",
+      "range": {
+        "startLine": 125,
+        "startChar": 8,
+        "endLine": 125,
+        "endChar": 79
+      },
+      "revId": "b66c6b7cefa5cc3070a70af6f5690966c4f2b094",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d3946d6_66b77879",
+        "filename": "lib/bdev/agg/vbdev_agg.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-16T13:17:18Z",
+      "side": 1,
+      "message": "this function is a little complex but if we count num_outstanding one by one, this function may not be so critical.",
+      "range": {
+        "startLine": 129,
+        "startChar": 0,
+        "endLine": 129,
+        "endChar": 14
+      },
+      "revId": "b66c6b7cefa5cc3070a70af6f5690966c4f2b094",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9b7998b_2cff7642",
+        "filename": "lib/bdev/agg/vbdev_agg.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-16T13:17:18Z",
+      "side": 1,
+      "message": "When this is called, other chunks may still be running.\nHence the one like the following  may be necessary \n\n__agg_task_done(bdev_io, success, task)\n{\n  if (!success)\n    task-\u003estatus \u003d FAILED;\n\n  if (—task-\u003enum_outstanding \u003d\u003d 0) {\n    bdev_io_complete(task-\u003ebdev_io, task-\u003estatus);\n    free(task);\n  }\n  bdev_free_io(bdev_io);\n}\n\nagg_read()\n{\n  task-\u003estatus \u003d SUCCESS;\n  task-\u003enum_outstanding \u003d 1;\n  while () {\n    task-\u003enum_outstanding++;\n    rc \u003d bdev_read_blocks(task);\n    if (rc \u003c 0) {\n      task-\u003enum_outstanding—;\n      task-\u003estatus \u003d FAILED;\n      break;\n    }\n  }\n\n  if (—task-\u003enum_outstanding \u003d\u003d 0)\n    bdev_io_complete(bdev_io, task-\u003estatus);\n}",
+      "range": {
+        "startLine": 214,
+        "startChar": 1,
+        "endLine": 214,
+        "endChar": 22
+      },
+      "revId": "b66c6b7cefa5cc3070a70af6f5690966c4f2b094",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
