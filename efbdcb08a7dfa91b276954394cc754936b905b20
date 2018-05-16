@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c22a04cb_5964b02e",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 25
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-16T00:26:23Z",
+      "side": 1,
+      "message": "this can be got in the function.",
+      "range": {
+        "startLine": 168,
+        "startChar": 32,
+        "endLine": 168,
+        "endChar": 41
+      },
+      "revId": "efbdcb08a7dfa91b276954394cc754936b905b20",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8063e82b_69bebb4a",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 25
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-16T00:26:23Z",
+      "side": 1,
+      "message": "delete_map is OK but destroy_method_map is a little more meaningful?",
+      "range": {
+        "startLine": 183,
+        "startChar": 4,
+        "endLine": 183,
+        "endChar": 14
+      },
+      "revId": "efbdcb08a7dfa91b276954394cc754936b905b20",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f6ed4f7_fc9d6b64",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 25
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-16T00:26:23Z",
+      "side": 1,
+      "message": "This is a nitpicking too but rpc_bdevs is used only in delete_subbdevs function.\n\nWill you move this operation into the delete_subbdevs?",
+      "range": {
+        "startLine": 210,
+        "startChar": 4,
+        "endLine": 210,
+        "endChar": 13
+      },
+      "revId": "efbdcb08a7dfa91b276954394cc754936b905b20",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
