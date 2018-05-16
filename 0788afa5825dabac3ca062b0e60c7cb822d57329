@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5290ec10_1dfdce89",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 39
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-16T14:22:38Z",
+      "side": 1,
+      "message": "Please check if config is clean after clear_cofnig.",
+      "range": {
+        "startLine": 32,
+        "startChar": 1,
+        "endLine": 32,
+        "endChar": 21
+      },
+      "revId": "0788afa5825dabac3ca062b0e60c7cb822d57329",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e318b09_c01bd428",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 39
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-16T14:22:38Z",
+      "side": 1,
+      "message": "\"|| true\" should only be used in error handler not in normal path so rm can fail.",
+      "range": {
+        "startLine": 38,
+        "startChar": 28,
+        "endLine": 38,
+        "endChar": 35
+      },
+      "revId": "0788afa5825dabac3ca062b0e60c7cb822d57329",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
