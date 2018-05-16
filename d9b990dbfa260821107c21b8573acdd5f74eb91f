@@ -94,6 +94,30 @@
       "revId": "d9b990dbfa260821107c21b8573acdd5f74eb91f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "43606a19_fbbb80f7",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-16T00:08:49Z",
+      "side": 1,
+      "message": "This patch confirmed to be worked and is sufficiently logical for now. I think we can merge this as is.",
+      "parentUuid": "735912b7_9e0d8d97",
+      "range": {
+        "startLine": 87,
+        "startChar": 6,
+        "endLine": 89,
+        "endChar": 32
+      },
+      "revId": "d9b990dbfa260821107c21b8573acdd5f74eb91f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
