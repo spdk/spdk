@@ -25,9 +25,7 @@ def call_cmd(func):
     return rpc_cmd
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description='SPDK RPC command line interface')
+def build_parsers(parser):
     parser.add_argument('-s', dest='server_addr',
                         help='RPC server address', default='/var/tmp/spdk.sock')
     parser.add_argument('-p', dest='port',
@@ -1025,7 +1023,13 @@ if __name__ == "__main__":
     domain.bus.device.function format""")
     p.add_argument('name', help='Name for the bdev')
     p.set_defaults(func=construct_virtio_pci_blk_bdev)
+    return subparsers
 
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description='SPDK RPC command line interface')
+
+    build_parser(parser)
     args = parser.parse_args()
 
     try:
