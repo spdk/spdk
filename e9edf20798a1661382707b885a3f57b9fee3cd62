@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "06d881bb_cf4ef492",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 4412,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-16T14:45:31Z",
+      "side": 1,
+      "message": "empty line",
+      "revId": "e9edf20798a1661382707b885a3f57b9fee3cd62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
