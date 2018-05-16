@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "53a92255_2170906e",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 45
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-05-16T14:21:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "facd717c_759a8712",
+      "revId": "4bd168d81a9ef4e7ef190fb7a6306f2048fc39d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a1c53d63_9a600c83",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 45
@@ -72,6 +90,42 @@
     },
     {
       "key": {
+        "uuid": "463b2b30_a1acbecb",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 45
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-05-16T14:21:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e0a7b8d9_75aaf777",
+      "revId": "4bd168d81a9ef4e7ef190fb7a6306f2048fc39d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c64db52b_84579823",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 45
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-05-16T14:21:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d14eb531_b165a8ce",
+      "revId": "4bd168d81a9ef4e7ef190fb7a6306f2048fc39d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "19a8a2b8_67c3e00e",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 45
@@ -89,6 +143,24 @@
     },
     {
       "key": {
+        "uuid": "8c7d818a_0e395294",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 45
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-05-16T14:21:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "19a8a2b8_67c3e00e",
+      "revId": "4bd168d81a9ef4e7ef190fb7a6306f2048fc39d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7a71df31_5d9568e2",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 45
@@ -100,6 +172,24 @@
       "writtenOn": "2018-05-02T16:42:09Z",
       "side": 1,
       "message": "req.name can be NULL if it isn\u0027t provided (according to the documentation you wrote). That shouldn\u0027t make the code jump to the invalid section, but rather continue on and show all bdevs.",
+      "revId": "4bd168d81a9ef4e7ef190fb7a6306f2048fc39d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3e3c7f8_f2f491ab",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 45
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-05-16T14:21:56Z",
+      "side": 1,
+      "message": "Hi Ben,\n\nIf we use parameter \u0027-b\u0027 or \u0027--name\u0027, we must provide bdev name.  Hence the name here is NULL, we need to jump to the invalid section. \n\nIf we not use \u0027-b\u0027 or \u0027--name\u0027, it will show all the bdevs.\n\nThis refers to the function \"spdk_rpc_get_bdevs()\"\n\nThanks\nYanbo",
+      "parentUuid": "7a71df31_5d9568e2",
       "revId": "4bd168d81a9ef4e7ef190fb7a6306f2048fc39d0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
