@@ -90,3 +90,16 @@ def load_config(client, args):
 
         if subsystems and not allowed_found:
             raise JSONRPCException("Some config left but did not found any allowed method to execute")
+
+
+def load_subsystem_config(client, args):
+    if not args.filename or args.filename == '-':
+        config = json.load(sys.stdin)
+    else:
+        with open(args.filename, 'r') as file:
+            config = json.load(file)
+
+    for elem in config['config']:
+        if not elem or 'method' not in elem:
+            continue
+        client.call(elem['method'], elem['params'])
