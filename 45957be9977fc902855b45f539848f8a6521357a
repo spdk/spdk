@@ -1,0 +1,130 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "83e47fd7_1590e6f3",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 537,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-16T01:17:48Z",
+      "side": 1,
+      "message": "why set -ENOMEM to status when succeed?",
+      "range": {
+        "startLine": 537,
+        "startChar": 2,
+        "endLine": 537,
+        "endChar": 19
+      },
+      "revId": "45957be9977fc902855b45f539848f8a6521357a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c2398756_bd62f897",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-16T01:17:48Z",
+      "side": 1,
+      "message": "password",
+      "range": {
+        "startLine": 51,
+        "startChar": 48,
+        "endLine": 51,
+        "endChar": 55
+      },
+      "revId": "45957be9977fc902855b45f539848f8a6521357a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c0e86d88_7ff761f5",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-16T01:17:48Z",
+      "side": 1,
+      "message": "duplicated",
+      "range": {
+        "startLine": 52,
+        "startChar": 21,
+        "endLine": 52,
+        "endChar": 23
+      },
+      "revId": "45957be9977fc902855b45f539848f8a6521357a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21c1682c_d16dc33d",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-16T01:17:48Z",
+      "side": 1,
+      "message": "success",
+      "range": {
+        "startLine": 61,
+        "startChar": 16,
+        "endLine": 61,
+        "endChar": 22
+      },
+      "revId": "45957be9977fc902855b45f539848f8a6521357a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7f59a74_04773293",
+        "filename": "lib/bdev/iscsi/bdev_iscsi_rpc.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-16T01:17:48Z",
+      "side": 1,
+      "message": "this is duplicated with create_iscsi_disk() when failed.",
+      "revId": "45957be9977fc902855b45f539848f8a6521357a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "441fe5f5_1d501d35",
+        "filename": "lib/bdev/iscsi/bdev_iscsi_rpc.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-16T01:17:48Z",
+      "side": 1,
+      "message": "this empty line can be removed.",
+      "revId": "45957be9977fc902855b45f539848f8a6521357a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
