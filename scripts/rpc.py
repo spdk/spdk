@@ -75,6 +75,15 @@ if __name__ == "__main__":
     p.add_argument('--filename', help="""JSON Configuration file.""")
     p.set_defaults(func=load_config)
 
+    @call_cmd
+    def load_subsystem_config(args):
+        rpc.load_subsystem_config(args.client, args)
+
+    p = subparsers.add_parser('load_subsystem_config', help="""Configure SPDK subsystem using JSON RPC. If no file is
+    provided or file is '-' read configuration from stdin.""")
+    p.add_argument('--filename', help="""JSON Configuration file.""")
+    p.set_defaults(func=load_subsystem_config)
+
     # app
     @call_cmd
     def kill_instance(args):
