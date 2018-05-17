@@ -34,6 +34,7 @@
 #ifndef __NVME_INTERNAL_H__
 #define __NVME_INTERNAL_H__
 
+#include "spdk/likely.h"
 #include "spdk/stdinc.h"
 
 #include "spdk/nvme.h"
@@ -186,6 +187,15 @@ nvme_payload_type(const struct nvme_payload *payload) {
 	return payload->reset_sgl_fn ? NVME_PAYLOAD_TYPE_SGL : NVME_PAYLOAD_TYPE_CONTIG;
 }
 
+struct nvme_error_cmd {
+	bool				do_not_submit;
+	uint64_t			timeout_tsc;
+	uint32_t			err_count;
+	uint8_t				opc;
+	struct spdk_nvme_status		status;
+	TAILQ_ENTRY(nvme_error_cmd)	link;
+};
+
 struct nvme_request {
 	struct spdk_nvme_cmd		cmd;
 
@@ -205,6 +215,13 @@ struct nvme_request {
 	uint32_t			md_offset;
 
 	uint32_t			payload_size;
+
+	/**
+	 * Timeout ticks for error injection requests, can be extended in future
+	 * to support request level timeout feature.
+	 */
+	uint64_t			timeout_tsc;
+	uint64_t			submit_tsc;
 
 	/**
 	 * Data payload for this request's command.
@@ -285,6 +302,10 @@ struct nvme_async_event_request {
 struct spdk_nvme_qpair {
 	STAILQ_HEAD(, nvme_request)	free_req;
 	STAILQ_HEAD(, nvme_request)	queued_req;
+	/** Commands opcode in this list will return error */
+	TAILQ_HEAD(, nvme_error_cmd)	err_cmd_head;
+	/** Requests in this list will return error */
+	STAILQ_HEAD(, nvme_request)	err_req_head;
 
 	enum spdk_nvme_transport_type	trtype;
 
@@ -710,6 +731,33 @@ struct nvme_request *nvme_allocate_request_user_copy(struct spdk_nvme_qpair *qpa
 static inline void
 nvme_complete_request(struct nvme_request *req, struct spdk_nvme_cpl *cpl)
 {
+	struct spdk_nvme_qpair          *qpair = req->qpair;
+	struct spdk_nvme_cpl            err_cpl;
+	struct nvme_error_cmd           *cmd;
+
+	/* error injection at completion path,
+	 * only inject for successful completed commands
+	 */
+	if (spdk_unlikely(!TAILQ_EMPTY(&qpair->err_cmd_head) &&
+			  !spdk_nvme_cpl_is_error(cpl))) {
+		TAILQ_FOREACH(cmd, &qpair->err_cmd_head, link) {
+
+			if (cmd->do_not_submit) {
+				continue;
+			}
+
+			if ((cmd->opc == req->cmd.opc) && cmd->err_count) {
+
+				err_cpl = *cpl;
+				err_cpl.status.sct = cmd->status.sct;
+				err_cpl.status.sc = cmd->status.sc;
+
+				cpl = &err_cpl;
+				cmd->err_count--;
+			}
+		}
+	}
+
 	if (req->cb_fn) {
 		req->cb_fn(req->cb_arg, cpl);
 	}
