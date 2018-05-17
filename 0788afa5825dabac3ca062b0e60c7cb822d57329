@@ -45,6 +45,93 @@
       "revId": "0788afa5825dabac3ca062b0e60c7cb822d57329",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e907670_705115fe",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 39
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-17T07:12:13Z",
+      "side": 1,
+      "message": "Also  I think that \"rm\" should be done in some separate cleanup function (clean_bdev_subsystem_config maybe?) for better separation",
+      "parentUuid": "3e318b09_c01bd428",
+      "range": {
+        "startLine": 38,
+        "startChar": 28,
+        "endLine": 38,
+        "endChar": 35
+      },
+      "revId": "0788afa5825dabac3ca062b0e60c7cb822d57329",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5110d04f_284426c5",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 39
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-17T07:12:13Z",
+      "side": 1,
+      "message": "Whoa... why? Is that to skip this known bug we encountered earlier? If so - this has to have some TODO comment so that we don\u0027t forget to remove this line in future. If we don\u0027t have a trello card for this issue then I\u0027d suggest creating one just to remind yourself to check from time to time if bug has been dealt with.",
+      "range": {
+        "startLine": 78,
+        "startChar": 1,
+        "endLine": 78,
+        "endChar": 47
+      },
+      "revId": "0788afa5825dabac3ca062b0e60c7cb822d57329",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "06ec1b65_9e398b10",
+        "filename": "test/json_config/vhost.conf.base",
+        "patchSetId": 39
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-17T07:12:13Z",
+      "side": 1,
+      "message": "We use spdk_tgt app here, so file should be renamed at least for consistency",
+      "revId": "0788afa5825dabac3ca062b0e60c7cb822d57329",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "75ae9753_7d7be444",
+        "filename": "test/json_config/vhost.conf.base",
+        "patchSetId": 39
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-17T07:12:13Z",
+      "side": 1,
+      "message": "No iSCSI tested in this commit, unrelated. Can remove.",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 15,
+        "endChar": 22
+      },
+      "revId": "0788afa5825dabac3ca062b0e60c7cb822d57329",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
