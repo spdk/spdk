@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "573fb8c1_d4a19e3e",
+        "filename": "test/vhost/migration/migration-tc3a.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-17T19:34:27Z",
+      "side": 1,
+      "message": "Is this slash before the -o intentional?",
+      "range": {
+        "startLine": 165,
+        "startChar": 41,
+        "endLine": 165,
+        "endChar": 42
+      },
+      "revId": "a0d3bac25474a6677c159dc44731ff22d42e568a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d5851ea_9d590dce",
+        "filename": "test/vhost/migration/migration.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-17T19:34:27Z",
+      "side": 1,
+      "message": "Can these use dashes instead of underscores for consistency?",
+      "range": {
+        "startLine": 29,
+        "startChar": 13,
+        "endLine": 29,
+        "endChar": 24
+      },
+      "revId": "a0d3bac25474a6677c159dc44731ff22d42e568a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
