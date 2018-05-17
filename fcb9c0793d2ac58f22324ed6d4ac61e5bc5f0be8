@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "534d264f_bb5f1bba",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1236,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-17T17:52:16Z",
+      "side": 1,
+      "message": "Maybe these can be cleaned up somewhat and made into SPDK_DEBUGLOG() if that is useful for future debugging.",
+      "revId": "fcb9c0793d2ac58f22324ed6d4ac61e5bc5f0be8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
