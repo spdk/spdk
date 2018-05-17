@@ -2128,11 +2128,7 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		g_thread_mmio_ctrlr = NULL;
 	}
 
-	/* We don't want to expose the admin queue to the user,
-	 * so when we're timing out admin commands set the
-	 * qpair to NULL.
-	 */
-	if (!nvme_qpair_is_admin_queue(qpair) && spdk_unlikely(qpair->active_proc->timeout_cb_fn != NULL) &&
+	if (spdk_unlikely(qpair->active_proc->timeout_cb_fn != NULL) &&
 	    qpair->ctrlr->state == NVME_CTRLR_STATE_READY) {
 		/*
 		 * User registered for timeout callback
