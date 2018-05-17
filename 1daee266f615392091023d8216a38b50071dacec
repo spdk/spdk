@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0cd56b02_e5e06952",
+        "filename": "lib/bdev/agg/vbdev_agg.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1012579
+      },
+      "writtenOn": "2018-05-17T04:49:19Z",
+      "side": 1,
+      "message": "Question:\nWill there be a race condition on this variable (num_outstanding)? Two cases I may think of: the calling thread is incrementing it while the cb thread is decrementing it, and two cb thread may be decrementing it at the same time.\n\nIf there is a race condition, what is a common solution for it?\nI know SPDK prefers lockless I/O. So I am not sure if mutex or semaphore is a good idea or not.",
+      "range": {
+        "startLine": 137,
+        "startChar": 7,
+        "endLine": 137,
+        "endChar": 28
+      },
+      "revId": "1daee266f615392091023d8216a38b50071dacec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
