@@ -1616,6 +1616,54 @@ int spdk_nvme_ns_cmd_compare_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_q
 				     void *cb_arg, uint32_t io_flags,
 				     uint16_t apptag_mask, uint16_t apptag);
 
+/**
+ * \brief Inject an error for the next request with a given opcode.
+ *
+ * \param ctrlr NVMe controller.
+ * \param qpair I/O queue pair to add the error command,
+ *              NULL for Admin queue pair.
+ * \param opc Opcode for Admin or I/O commands.
+ * \param do_not_submit True if matching requests should not be submitted
+ *                      to the controller, but instead completed manually
+ *                      after timeout_in_us has expired.  False if matching
+ *                      requests should be submitted to the controller and
+ *                      have their completion status modified after the
+ *                      controller completes the request.
+ * \param timeout_in_us Wait specified microseconds when do_not_submit is true.
+ * \param err_count Number of matching requests to inject errors.
+ * \param sct Status code type.
+ * \param sc Status code.
+ *
+ * \return 0 if successfully enabled, ENOMEM if an error command
+ *	     structure cannot be allocated.
+ *
+ * The function can be called multiple times to inject errors for different
+ * commands.  If the opcode matches an existing entry, the existing entry
+ * will be updated with the values specified.
+ */
+int spdk_nvme_qpair_add_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
+		struct spdk_nvme_qpair *qpair,
+		uint8_t opc,
+		bool do_not_submit,
+		uint64_t timeout_in_us,
+		uint32_t err_count,
+		uint8_t sct, uint8_t sc);
+
+/**
+ * \brief Clear the specified NVMe command with error status.
+ *
+ * \param ctrlr NVMe controller.
+ * \param qpair I/O queue pair to remove the error command,
+ * \            NULL for Admin queue pair.
+ * \param opc Opcode for Admin or I/O commands.
+ *
+ * The function will remove specified command in the error list.
+ */
+void spdk_nvme_qpair_remove_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
+		struct spdk_nvme_qpair *qpair,
+		uint8_t opc);
+
+
 #ifdef __cplusplus
 }
 #endif
