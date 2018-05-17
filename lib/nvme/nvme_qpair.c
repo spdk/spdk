@@ -347,10 +347,7 @@ nvme_qpair_manual_complete_request(struct spdk_nvme_qpair *qpair,
 		nvme_qpair_print_completion(qpair, &cpl);
 	}
 
-	if (req->cb_fn) {
-		req->cb_fn(req->cb_arg, &cpl);
-	}
-
+	nvme_complete_request(req, &cpl);
 	nvme_free_request(req);
 }
 
@@ -449,6 +446,14 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 	}
 
 	return nvme_transport_qpair_submit_request(qpair, req);
+}
+
+void
+nvme_complete_request(struct nvme_request *req, struct spdk_nvme_cpl *cpl)
+{
+	if (req->cb_fn) {
+		req->cb_fn(req->cb_arg, cpl);
+	}
 }
 
 static void

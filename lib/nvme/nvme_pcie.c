@@ -1143,10 +1143,7 @@ nvme_pcie_qpair_complete_pending_admin_request(struct spdk_nvme_qpair *qpair)
 
 		assert(req->pid == pid);
 
-		if (req->cb_fn) {
-			req->cb_fn(req->cb_arg, &req->cpl);
-		}
-
+		nvme_complete_request(req, &req->cpl);
 		nvme_free_request(req);
 	}
 }
@@ -1252,9 +1249,7 @@ nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_trac
 				req_from_current_proc = false;
 				nvme_pcie_qpair_insert_pending_admin_request(qpair, req, cpl);
 			} else {
-				if (req->cb_fn) {
-					req->cb_fn(req->cb_arg, cpl);
-				}
+				nvme_complete_request(req, cpl);
 			}
 		}
 

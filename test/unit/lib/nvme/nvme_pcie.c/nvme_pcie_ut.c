@@ -284,6 +284,12 @@ nvme_qpair_enable(struct spdk_nvme_qpair *qpair)
 	abort();
 }
 
+void
+nvme_complete_request(struct nvme_request *req, struct spdk_nvme_cpl *cpl)
+{
+	abort();
+}
+
 struct spdk_nvme_ctrlr *
 spdk_nvme_get_ctrlr_by_trid_unsafe(const struct spdk_nvme_transport_id *trid)
 {
