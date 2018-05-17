@@ -22,6 +22,30 @@
       "revId": "1daee266f615392091023d8216a38b50071dacec",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c4f0cbd_806d5633",
+        "filename": "lib/bdev/agg/vbdev_agg.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-17T09:25:17Z",
+      "side": 1,
+      "message": "Other experts can provide better explanation.\n\nAs Ben says in https://github.com/spdk/spdk/blob/master/doc/concurrency.md, consolidating update of num_outstanding in a cpu by using message mechanism may be a common solution in SPDK open source.\n\nUse case of spdk_thread_send_msg, spdk_for_each_channel(), or spdk_for_each_thread() in lib/util/io_channel.c may provide some hint.",
+      "parentUuid": "0cd56b02_e5e06952",
+      "range": {
+        "startLine": 137,
+        "startChar": 7,
+        "endLine": 137,
+        "endChar": 28
+      },
+      "revId": "1daee266f615392091023d8216a38b50071dacec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
