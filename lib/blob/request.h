@@ -196,6 +196,16 @@ void spdk_bs_batch_read_dev(spdk_bs_batch_t *batch, void *payload,
 void spdk_bs_batch_write_dev(spdk_bs_batch_t *batch, void *payload,
 			     uint64_t lba, uint32_t lba_count);
 
+void spdk_bs_batch_readv_bs_dev(spdk_bs_batch_t *batch, struct spdk_bs_dev *bs_dev,
+				struct iovec *iov, int iovcnt,
+				uint64_t lba, uint32_t lba_count);
+
+void spdk_bs_batch_readv_dev(spdk_bs_batch_t *batch, struct iovec *iov, int iovcnt,
+			     uint64_t lba, uint32_t lba_count);
+
+void spdk_bs_batch_writev_dev(spdk_bs_batch_t *batch, struct iovec *iov, int iovcnt,
+			      uint64_t lba, uint32_t lba_count);
+
 void spdk_bs_batch_unmap_dev(spdk_bs_batch_t *batch,
 			     uint64_t lba, uint32_t lba_count);
 

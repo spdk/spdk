@@ -1760,13 +1760,6 @@ struct rw_iov_ctx {
 };
 
 static void
-_spdk_rw_iov_done(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
-{
-	assert(cb_arg == NULL);
-	spdk_bs_sequence_finish(seq, bserrno);
-}
-
-static void
 _spdk_rw_iov_split_next(void *cb_arg, int bserrno)
 {
 	struct rw_iov_ctx *ctx = cb_arg;
@@ -1837,12 +1830,71 @@ _spdk_rw_iov_split_next(void *cb_arg, int bserrno)
 }
 
 static void
+_spdk_blob_request_submit_rw_iov_single(struct spdk_blob *blob, struct spdk_io_channel *_channel,
+					struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
+					spdk_blob_op_complete cb_fn, void *cb_arg, bool read)
+{
+	struct spdk_bs_cpl cpl;
+	uint32_t lba_count;
+	uint64_t lba;
+
+	_spdk_blob_calculate_lba_and_lba_count(blob, offset, length, &lba, &lba_count);
+
+	cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
+	cpl.u.blob_basic.cb_fn = cb_fn;
+	cpl.u.blob_basic.cb_arg = cb_arg;
+
+	if (read) {
+		spdk_bs_batch_t *batch;
+
+		batch = spdk_bs_batch_open(_channel, &cpl);
+		if (!batch) {
+			cb_fn(cb_arg, -ENOMEM);
+			return;
+		}
+
+		if (_spdk_bs_page_is_allocated(blob, offset)) {
+			spdk_bs_batch_readv_dev(batch, iov, iovcnt, lba, lba_count);
+		} else {
+			spdk_bs_batch_readv_bs_dev(batch, blob->back_bs_dev, iov, iovcnt, lba,
+						   lba_count);
+		}
+
+		spdk_bs_batch_close(batch);
+	} else {
+		if (_spdk_bs_page_is_allocated(blob, offset)) {
+			spdk_bs_batch_t *batch;
+
+			batch = spdk_bs_batch_open(_channel, &cpl);
+			if (!batch) {
+				cb_fn(cb_arg, -ENOMEM);
+				return;
+			}
+
+			spdk_bs_batch_writev_dev(batch, iov, iovcnt, lba, lba_count);
+
+			spdk_bs_batch_close(batch);
+		} else {
+			/* Queue this operation and allocate the cluster */
+			spdk_bs_user_op_t *op;
+
+			op = spdk_bs_user_op_alloc(_channel, &cpl, SPDK_BLOB_WRITEV, blob, iov,
+						   iovcnt, offset, length);
+			if (!op) {
+				cb_fn(cb_arg, -ENOMEM);
+				return;
+			}
+
+			_spdk_bs_allocate_and_copy_cluster(blob, _channel, offset, op);
+		}
+	}
+}
+
+static void
 _spdk_blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel *_channel,
 				 struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
 				 spdk_blob_op_complete cb_fn, void *cb_arg, bool read)
 {
-	struct spdk_bs_cpl	cpl;
-
 	assert(blob != NULL);
 
 	if (!read && blob->data_ro) {
@@ -1860,69 +1912,9 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel 
 		return;
 	}
 
-	/*
-	 * For now, we implement readv/writev using a sequence (instead of a batch) to account for having
-	 *  to split a request that spans a cluster boundary.  For I/O that do not span a cluster boundary,
-	 *  there will be no noticeable difference compared to using a batch.  For I/O that do span a cluster
-	 *  boundary, the target LBAs (after blob offset to LBA translation) may not be contiguous, so we need
-	 *  to allocate a separate iov array and split the I/O such that none of the resulting
-	 *  smaller I/O cross a cluster boundary.  These smaller I/O will be issued in sequence (not in parallel)
-	 *  but since this case happens very infrequently, any performance impact will be negligible.
-	 *
-	 * This could be optimized in the future to allocate a big enough iov array to account for all of the iovs
-	 *  for all of the smaller I/Os, pre-build all of the iov arrays for the smaller I/Os, then issue them
-	 *  in a batch.  That would also require creating an intermediate spdk_bs_cpl that would get called
-	 *  when the batch was completed, to allow for freeing the memory for the iov arrays.
-	 */
 	if (spdk_likely(length <= _spdk_bs_num_pages_to_cluster_boundary(blob, offset))) {
-		uint32_t lba_count;
-		uint64_t lba;
-
-		_spdk_blob_calculate_lba_and_lba_count(blob, offset, length, &lba, &lba_count);
-
-		cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
-		cpl.u.blob_basic.cb_fn = cb_fn;
-		cpl.u.blob_basic.cb_arg = cb_arg;
-
-		if (read) {
-			spdk_bs_sequence_t *seq;
-
-			seq = spdk_bs_sequence_start(_channel, &cpl);
-			if (!seq) {
-				cb_fn(cb_arg, -ENOMEM);
-				return;
-			}
-
-			if (_spdk_bs_page_is_allocated(blob, offset)) {
-				spdk_bs_sequence_readv_dev(seq, iov, iovcnt, lba, lba_count, _spdk_rw_iov_done, NULL);
-			} else {
-				spdk_bs_sequence_readv_bs_dev(seq, blob->back_bs_dev, iov, iovcnt, lba, lba_count,
-							      _spdk_rw_iov_done, NULL);
-			}
-		} else {
-			if (_spdk_bs_page_is_allocated(blob, offset)) {
-				spdk_bs_sequence_t *seq;
-
-				seq = spdk_bs_sequence_start(_channel, &cpl);
-				if (!seq) {
-					cb_fn(cb_arg, -ENOMEM);
-					return;
-				}
-
-				spdk_bs_sequence_writev_dev(seq, iov, iovcnt, lba, lba_count, _spdk_rw_iov_done, NULL);
-			} else {
-				/* Queue this operation and allocate the cluster */
-				spdk_bs_user_op_t *op;
-
-				op = spdk_bs_user_op_alloc(_channel, &cpl, SPDK_BLOB_WRITEV, blob, iov, iovcnt, offset, length);
-				if (!op) {
-					cb_fn(cb_arg, -ENOMEM);
-					return;
-				}
-
-				_spdk_bs_allocate_and_copy_cluster(blob, _channel, offset, op);
-			}
-		}
+		_spdk_blob_request_submit_rw_iov_single(blob, _channel, iov, iovcnt, offset, length,
+							cb_fn, cb_arg, read);
 	} else {
 		struct rw_iov_ctx *ctx;
 
