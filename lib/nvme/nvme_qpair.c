@@ -31,6 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "spdk/likely.h"
 #include "nvme_internal.h"
 
 static void nvme_qpair_fail(struct spdk_nvme_qpair *qpair);
@@ -395,6 +396,7 @@ nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 
 	STAILQ_INIT(&qpair->free_req);
 	STAILQ_INIT(&qpair->queued_req);
+	TAILQ_INIT(&qpair->err_head);
 
 	req_size_padded = (sizeof(struct nvme_request) + 63) & ~(size_t)63;
 
@@ -415,7 +417,14 @@ nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 void
 nvme_qpair_deinit(struct spdk_nvme_qpair *qpair)
 {
+	struct nvme_error_cmd *cmd, *entry;
+
 	spdk_dma_free(qpair->req_buf);
+
+	TAILQ_FOREACH_SAFE(cmd, &qpair->err_head, link, entry) {
+		TAILQ_REMOVE(&qpair->err_head, cmd, link);
+		spdk_dma_free(cmd);
+	}
 }
 
 int
@@ -423,6 +432,7 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 {
 	int			rc = 0;
 	struct nvme_request	*child_req, *tmp;
+	struct nvme_error_cmd	*cmd, *entry;
 	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
 	bool			child_req_failed = false;
 
@@ -451,12 +461,59 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 		return rc;
 	}
 
+	/* error injection at submission path */
+	if (spdk_unlikely(!TAILQ_EMPTY(&qpair->err_head))) {
+		TAILQ_FOREACH_SAFE(cmd, &qpair->err_head, link, entry) {
+			if (!cmd->error_on_submission) {
+				continue;
+			}
+
+			if ((cmd->opc == req->cmd.opc) && cmd->error_num) {
+				nvme_qpair_manual_complete_request(qpair, req,
+								   cmd->status.sct,
+								   cmd->status.sc,
+								   true);
+				cmd->error_num--;
+				return 0;
+			}
+		}
+	}
+
 	return nvme_transport_qpair_submit_request(qpair, req);
 }
 
 void
 nvme_complete_request(struct nvme_request *req, struct spdk_nvme_cpl *cpl)
 {
+	struct spdk_nvme_qpair          *qpair = req->qpair;
+	struct spdk_nvme_cpl            error_cpl;
+	struct nvme_error_cmd           *cmd, *entry;
+
+	/* error injection at completion path,
+	 * only inject for successful completed commands
+	 */
+	if (spdk_unlikely(!TAILQ_EMPTY(&qpair->err_head) &&
+			  !spdk_nvme_cpl_is_error(cpl))) {
+		TAILQ_FOREACH_SAFE(cmd, &qpair->err_head, link, entry) {
+
+			if (cmd->error_on_submission) {
+				continue;
+			}
+
+			if ((cmd->opc == req->cmd.opc) && cmd->error_num) {
+
+				error_cpl = *cpl;
+				error_cpl.status.sct = cmd->status.sct;
+				error_cpl.status.sc = cmd->status.sc;
+
+				cpl = &error_cpl;
+				nvme_qpair_print_command(qpair, &req->cmd);
+				nvme_qpair_print_completion(qpair, cpl);
+				cmd->error_num--;
+			}
+		}
+	}
+
 	if (req->cb_fn) {
 		req->cb_fn(req->cb_arg, cpl);
 	}
@@ -507,4 +564,64 @@ nvme_qpair_fail(struct spdk_nvme_qpair *qpair)
 	}
 
 	nvme_transport_qpair_fail(qpair);
+}
+
+int
+spdk_nvme_qpair_add_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
+					struct spdk_nvme_qpair *qpair,
+					uint8_t opc, bool error_on_submission,
+					uint32_t error_num,
+					uint8_t sct, uint8_t sc)
+{
+	struct nvme_error_cmd *cmd, *entry;
+
+	if (qpair == NULL) {
+		qpair = ctrlr->adminq;
+	}
+
+	TAILQ_FOREACH_SAFE(cmd, &qpair->err_head, link, entry) {
+		if (cmd->opc == opc) {
+			cmd->error_on_submission = error_on_submission;
+			cmd->error_num = error_num;
+			cmd->status.sct = sct;
+			cmd->status.sc = sc;
+			return 0;
+		}
+	}
+
+	cmd = spdk_dma_zmalloc(sizeof(*cmd), 64, NULL);
+	if (!cmd) {
+		return -ENOMEM;
+	}
+
+	cmd->error_on_submission = error_on_submission;
+	cmd->error_num = error_num;
+	cmd->opc = opc;
+	cmd->status.sct = sct;
+	cmd->status.sc = sc;
+	TAILQ_INSERT_TAIL(&qpair->err_head, cmd, link);
+
+	return 0;
+}
+
+void
+spdk_nvme_qpair_remove_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
+		struct spdk_nvme_qpair *qpair,
+		uint8_t opc)
+{
+	struct nvme_error_cmd *cmd, *entry;
+
+	if (qpair == NULL) {
+		qpair = ctrlr->adminq;
+	}
+
+	TAILQ_FOREACH_SAFE(cmd, &qpair->err_head, link, entry) {
+		if (cmd->opc == opc) {
+			TAILQ_REMOVE(&qpair->err_head, cmd, link);
+			spdk_dma_free(cmd);
+			return;
+		}
+	}
+
+	return;
 }
