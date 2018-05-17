@@ -67,6 +67,24 @@
       "revId": "a67440d66810e7a0edfe3e3eef1cd9f614fdaa56",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "90e89079_b97a268e",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-17T18:12:00Z",
+      "side": 1,
+      "message": "Actually, based on a quick glance at the code, I think we should be able to handle a changing block size as long as the total size in bytes is OK.\n\nMaybe this should store the size of the blobstore in bytes (blockcnt * blocklen) and just verify that?  We would need to check that this actually works correctly.\n\nWe probably should also verify cluster_size \u003e\u003d blocklen at runtime, but that\u0027s somewhat unrelated to this change.",
+      "parentUuid": "274cb669_82decf46",
+      "revId": "a67440d66810e7a0edfe3e3eef1cd9f614fdaa56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
