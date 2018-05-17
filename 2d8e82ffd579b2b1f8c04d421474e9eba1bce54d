@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aa660f98_e2a7e92c",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-17T17:28:56Z",
+      "side": 1,
+      "message": "I think this is just UINT64_MAX, which might be clearer.",
+      "range": {
+        "startLine": 53,
+        "startChar": 18,
+        "endLine": 53,
+        "endChar": 32
+      },
+      "revId": "2d8e82ffd579b2b1f8c04d421474e9eba1bce54d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a893e78f_c6b71f80",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 458,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-17T17:28:56Z",
+      "side": 1,
+      "message": "Should this function return uint64_t, or is it guaranteed that the result will fit in int?",
+      "range": {
+        "startLine": 458,
+        "startChar": 8,
+        "endLine": 458,
+        "endChar": 13
+      },
+      "revId": "2d8e82ffd579b2b1f8c04d421474e9eba1bce54d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
