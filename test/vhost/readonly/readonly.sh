@@ -120,7 +120,7 @@ function blk_ro_tc1()
 	vm_shutdown_all
 }
 
-spdk_vhost_run --conf-path=$READONLY_BASE_DIR
+spdk_vhost_run
 if [[ -z $x ]]; then
 	set +x
 fi
