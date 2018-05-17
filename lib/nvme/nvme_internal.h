@@ -34,6 +34,7 @@
 #ifndef __NVME_INTERNAL_H__
 #define __NVME_INTERNAL_H__
 
+#include "spdk/likely.h"
 #include "spdk/stdinc.h"
 
 #include "spdk/nvme.h"
@@ -186,6 +187,14 @@ nvme_payload_type(const struct nvme_payload *payload) {
 	return payload->reset_sgl_fn ? NVME_PAYLOAD_TYPE_SGL : NVME_PAYLOAD_TYPE_CONTIG;
 }
 
+struct nvme_error_cmd {
+	bool				error_on_submission;
+	uint32_t			error_count;
+	uint8_t				opc;
+	struct spdk_nvme_status		status;
+	TAILQ_ENTRY(nvme_error_cmd)	link;
+};
+
 struct nvme_request {
 	struct spdk_nvme_cmd		cmd;
 
@@ -285,6 +294,8 @@ struct nvme_async_event_request {
 struct spdk_nvme_qpair {
 	STAILQ_HEAD(, nvme_request)	free_req;
 	STAILQ_HEAD(, nvme_request)	queued_req;
+	/** Commands opcode in this list will return error */
+	TAILQ_HEAD(, nvme_error_cmd)	err_head;
 
 	enum spdk_nvme_transport_type	trtype;
 
@@ -710,6 +721,33 @@ struct nvme_request *nvme_allocate_request_user_copy(struct spdk_nvme_qpair *qpa
 static inline void
 nvme_complete_request(struct nvme_request *req, struct spdk_nvme_cpl *cpl)
 {
+	struct spdk_nvme_qpair          *qpair = req->qpair;
+	struct spdk_nvme_cpl            error_cpl;
+	struct nvme_error_cmd           *cmd;
+
+	/* error injection at completion path,
+	 * only inject for successful completed commands
+	 */
+	if (spdk_unlikely(!TAILQ_EMPTY(&qpair->err_head) &&
+			  !spdk_nvme_cpl_is_error(cpl))) {
+		TAILQ_FOREACH(cmd, &qpair->err_head, link) {
+
+			if (cmd->error_on_submission) {
+				continue;
+			}
+
+			if ((cmd->opc == req->cmd.opc) && cmd->error_count) {
+
+				error_cpl = *cpl;
+				error_cpl.status.sct = cmd->status.sct;
+				error_cpl.status.sc = cmd->status.sc;
+
+				cpl = &error_cpl;
+				cmd->error_count--;
+			}
+		}
+	}
+
 	if (req->cb_fn) {
 		req->cb_fn(req->cb_arg, cpl);
 	}
