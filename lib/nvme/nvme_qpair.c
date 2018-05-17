@@ -467,6 +467,14 @@ _nvme_io_qpair_enable(struct spdk_nvme_qpair *qpair)
 }
 
 void
+nvme_complete_request(struct nvme_request *req, struct spdk_nvme_cpl *cpl)
+{
+	if (req->cb_fn) {
+		req->cb_fn(req->cb_arg, cpl);
+	}
+}
+
+void
 nvme_qpair_enable(struct spdk_nvme_qpair *qpair)
 {
 	if (nvme_qpair_is_io_queue(qpair)) {
