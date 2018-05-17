@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8b66d306_3a5a3c15",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-17T07:18:00Z",
+      "side": 1,
+      "message": "as in previous commit - since we run spdk_tgt then we could rename this config file appropriately",
+      "range": {
+        "startLine": 33,
+        "startChar": 64,
+        "endLine": 33,
+        "endChar": 77
+      },
+      "revId": "d91bf98ed712469901df61629764167926b58f0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d20fc8c3_972e1c02",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-17T07:18:00Z",
+      "side": 1,
+      "message": "I think rm should be done in some cleanup function and in error handler",
+      "range": {
+        "startLine": 36,
+        "startChar": 1,
+        "endLine": 36,
+        "endChar": 27
+      },
+      "revId": "d91bf98ed712469901df61629764167926b58f0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15011f36_94e088e8",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-17T07:18:00Z",
+      "side": 1,
+      "message": "This doesn\u0027t do anything. Remove?",
+      "range": {
+        "startLine": 43,
+        "startChar": 0,
+        "endLine": 43,
+        "endChar": 18
+      },
+      "revId": "d91bf98ed712469901df61629764167926b58f0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f0d9e4cc_1ec04d96",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-17T07:18:00Z",
+      "side": 1,
+      "message": "tabs/spaces",
+      "range": {
+        "startLine": 54,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 8
+      },
+      "revId": "d91bf98ed712469901df61629764167926b58f0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0fb3881c_917aea3c",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-17T07:18:00Z",
+      "side": 1,
+      "message": "Why is it commented?",
+      "range": {
+        "startLine": 113,
+        "startChar": 2,
+        "endLine": 113,
+        "endChar": 29
+      },
+      "revId": "d91bf98ed712469901df61629764167926b58f0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7054f7fa_d1005c23",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-17T07:18:00Z",
+      "side": 1,
+      "message": "tabs/spaces",
+      "range": {
+        "startLine": 114,
+        "startChar": 0,
+        "endLine": 114,
+        "endChar": 8
+      },
+      "revId": "d91bf98ed712469901df61629764167926b58f0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d6a2bcc7_539d22bb",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-17T07:18:00Z",
+      "side": 1,
+      "message": "Please try to separate script with empty lines for better readability.\nFOr example - you could separate lines which are part of bdev testse and lines which are part of virtio tests",
+      "range": {
+        "startLine": 115,
+        "startChar": 1,
+        "endLine": 119,
+        "endChar": 23
+      },
+      "revId": "d91bf98ed712469901df61629764167926b58f0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
