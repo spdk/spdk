@@ -78,3 +78,204 @@ spdk_nvme_lnvm_cmd_geometry(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 
 	return nvme_ctrlr_submit_admin_request(ctrlr, req);
 }
+
+int
+spdk_nvme_ns_lnvm_cmd_vector_reset(struct spdk_nvme_ns *ns,
+				   struct spdk_nvme_qpair *qpair,
+				   void *metadata, uint64_t *lbal, uint32_t nlb,
+				   spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	struct nvme_request	*req;
+	struct spdk_nvme_cmd	*cmd;
+	struct nvme_payload	payload;
+
+	if (nlb == 0 || nlb > 64) {
+		return -EINVAL;
+	}
+
+	payload.type = NVME_PAYLOAD_TYPE_CONTIG;
+	payload.u.contig = NULL;
+	payload.md = metadata;
+
+	req = nvme_allocate_request(qpair, &payload, 0, cb_fn, cb_arg);
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_NVME_OPC_VECTOR_RESET;
+	cmd->nsid = ns->id;
+	/*  This is a 0's based value */
+	cmd->cdw12 = nlb - 1;
+	if (nlb == 1) {
+		*(uint64_t *)&cmd->cdw10 = (uint64_t)lbal[0];
+	} else {
+		*(uint64_t *)&cmd->cdw10 = spdk_vtophys(lbal);
+	}
+
+	return nvme_qpair_submit_request(qpair, req);
+}
+
+// TODO: add sgl type rw for vector io
+
+static int
+_nvme_ns_lnvm_cmd_vector_rw_with_md(struct spdk_nvme_ns *ns,
+				    struct spdk_nvme_qpair *qpair,
+				    void *buffer, void *metadata,
+				    uint64_t *lbal, uint32_t nlb,
+				    spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+				    uint32_t opc, uint32_t io_flags)
+{
+	struct nvme_request	*req;
+	struct spdk_nvme_cmd	*cmd;
+	struct nvme_payload	payload;
+	uint32_t		sector_size;
+
+	if (nlb == 0 || nlb > 64) {
+		/* The maximum number of logical bloacks is 64 */
+		return -EINVAL;
+	}
+	if (io_flags & 0xFFFF) {
+		/* The bottom 16 bits must be empty */
+		return -EINVAL;
+	}
+
+	// TODO: check ns->flags & SPDK_NVME_NS_DPS_PI_SUPPORTED
+	/*
+	 * There is no PI information specially for lnvm in Open-Channel
+	 * Spec 2.0. From the definitions of vector commands in OC2.0
+	 * and PI in NVMe1.3, it's hard to set PI for vector commands.
+	 */
+
+	/* payload setting */
+	payload.type = NVME_PAYLOAD_TYPE_CONTIG;
+	payload.u.contig = buffer;
+	payload.md = metadata;
+
+	/* request setting */
+	sector_size = ns->extended_lba_size;
+
+	req = nvme_allocate_request(qpair, &payload, sector_size * nlb, cb_fn, cb_arg);
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+	req->payload_offset = 0;
+	req->md_offset = 0;
+
+	/* cmd setting */
+	cmd = &req->cmd;
+	cmd->opc = opc;
+	cmd->nsid = ns->id;
+	/*  This is a 0's based value */
+	cmd->cdw12 = nlb - 1;
+	cmd->cdw12 |= io_flags;
+	if (nlb == 1) {
+		*(uint64_t *)&cmd->cdw10 = (uint64_t)lbal[0];
+	} else {
+		*(uint64_t *)&cmd->cdw10 = spdk_vtophys(lbal);
+	}
+
+	return nvme_qpair_submit_request(qpair, req);
+}
+
+int
+spdk_nvme_ns_lnvm_cmd_vector_write_with_md(struct spdk_nvme_ns *ns,
+		struct spdk_nvme_qpair *qpair,
+		void *buffer, void *metadata,
+		uint64_t *lbal, uint32_t nlb,
+		spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+		uint32_t io_flags)
+{
+	return _nvme_ns_lnvm_cmd_vector_rw_with_md(ns, qpair, buffer, metadata,
+			lbal, nlb, cb_fn, cb_arg, SPDK_NVME_OPC_VECTOR_WRITE, io_flags);
+}
+
+int
+spdk_nvme_ns_lnvm_cmd_vector_read_with_md(struct spdk_nvme_ns *ns,
+		struct spdk_nvme_qpair *qpair,
+		void *buffer, void *metadata,
+		uint64_t *lbal, uint32_t nlb,
+		spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+		uint32_t io_flags)
+{
+	return _nvme_ns_lnvm_cmd_vector_rw_with_md(ns, qpair, buffer, metadata,
+			lbal, nlb, cb_fn, cb_arg, SPDK_NVME_OPC_VECTOR_READ, io_flags);
+}
+
+int
+spdk_nvme_ns_lnvm_cmd_vector_write(struct spdk_nvme_ns *ns,
+				   struct spdk_nvme_qpair *qpair,
+				   void *buffer,
+				   uint64_t *lbal, uint32_t nlb,
+				   spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+				   uint32_t io_flags)
+{
+	return spdk_nvme_ns_lnvm_cmd_vector_write_with_md(ns, qpair, buffer, NULL,
+			lbal, nlb,
+			cb_fn, cb_arg,
+			io_flags);
+}
+
+int
+spdk_nvme_ns_lnvm_cmd_vector_read(struct spdk_nvme_ns *ns,
+				  struct spdk_nvme_qpair *qpair,
+				  void *buffer,
+				  uint64_t *lbal, uint32_t nlb,
+				  spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+				  uint32_t io_flags)
+{
+	return spdk_nvme_ns_lnvm_cmd_vector_read_with_md(ns, qpair, buffer, NULL,
+			lbal, nlb,
+			cb_fn, cb_arg,
+			io_flags);
+}
+
+int
+spdk_nvme_ns_lnvm_cmd_vector_copy(struct spdk_nvme_ns *ns,
+				  struct spdk_nvme_qpair *qpair,
+				  uint64_t *dlbal, uint64_t *slbal, uint32_t nlb,
+				  spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+				  uint32_t io_flags)
+{
+	struct nvme_request	*req;
+	struct spdk_nvme_cmd	*cmd;
+	struct nvme_payload	payload;
+
+	if (nlb == 0 || nlb > 64) {
+		return -EINVAL;
+	}
+	if (io_flags & 0xFFFF) {
+		/* The bottom 16 bits must be empty */
+		return -EINVAL;
+	}
+
+	/* payload setting */
+	payload.type = NVME_PAYLOAD_TYPE_CONTIG;
+	payload.u.contig = NULL;
+	payload.md = NULL;
+
+	/* request setting */
+	req = nvme_allocate_request(qpair, &payload, 0, cb_fn, cb_arg);
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+	req->payload_offset = 0;
+	req->md_offset = 0;
+
+	/* cmd setting */
+	cmd = &req->cmd;
+	cmd->opc = SPDK_NVME_OPC_VECTOR_COPY;
+	cmd->nsid = ns->id;
+	/*  This is a 0's based value */
+	cmd->cdw12 = nlb - 1;
+	cmd->cdw12 |= io_flags;
+	if (nlb == 1) {
+		*(uint64_t *)&cmd->cdw10 = (uint64_t)slbal[0];
+		*(uint64_t *)&cmd->cdw14 = (uint64_t)dlbal[0];
+	} else {
+		*(uint64_t *)&cmd->cdw10 = spdk_vtophys(slbal);
+		*(uint64_t *)&cmd->cdw14 = spdk_vtophys(slbal);
+	}
+
+	return nvme_qpair_submit_request(qpair, req);
+}
