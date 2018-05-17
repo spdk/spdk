@@ -294,6 +294,14 @@ nvme_allocate_request_user_copy(struct spdk_nvme_qpair *qpair, void *buffer, uin
 }
 
 void
+nvme_complete_request(struct nvme_request *req, struct spdk_nvme_cpl *cpl)
+{
+	if (req->cb_fn) {
+		req->cb_fn(req->cb_arg, cpl);
+	}
+}
+
+void
 nvme_free_request(struct nvme_request *req)
 {
 	return;
