@@ -2,6 +2,46 @@
   "comments": [
     {
       "key": {
+        "uuid": "6a8c78e3_f2e9c0ee",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-17T18:22:31Z",
+      "side": 1,
+      "message": "This name may be slightly confusing since it is exactly the same as the name of the struct (this is OK in C, but might be confusing for readers).  Maybe spdk_nvmf_tgt_get_opts() would be clearer.",
+      "range": {
+        "startLine": 84,
+        "startChar": 33,
+        "endLine": 84,
+        "endChar": 51
+      },
+      "revId": "61dd8a1b195d78927c0053b359f5a5d14b88ed58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bfaf2bf7_7ab4a5c6",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-17T18:22:31Z",
+      "side": 1,
+      "message": "This comment block looks like a copy-paste mistake.",
+      "revId": "61dd8a1b195d78927c0053b359f5a5d14b88ed58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e6e3398a_b3f80d02",
         "filename": "lib/nvmf/nvmf.c",
         "patchSetId": 9
