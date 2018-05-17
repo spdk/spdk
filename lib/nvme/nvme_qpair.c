@@ -31,6 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "spdk/likely.h"
 #include "nvme_internal.h"
 
 static void nvme_qpair_fail(struct spdk_nvme_qpair *qpair);
@@ -417,6 +418,7 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 {
 	int			rc = 0;
 	struct nvme_request	*child_req, *tmp;
+	struct nvme_error_cmd	*cmd, *entry;
 	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
 	bool			child_req_failed = false;
 
@@ -445,12 +447,62 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 		return rc;
 	}
 
+	/* error injection at submission path */
+	if (spdk_unlikely(!TAILQ_EMPTY(&ctrlr->err_head))) {
+		TAILQ_FOREACH_SAFE(cmd, &ctrlr->err_head, link, entry) {
+			if (!cmd->is_submit_error) {
+				continue;
+			}
+
+			if ((nvme_qpair_is_admin_queue(qpair) == cmd->is_admin) &&
+			    (cmd->opc == req->cmd.opc)) {
+				nvme_qpair_manual_complete_request(qpair, req,
+								   cmd->status.sct,
+								   cmd->status.sc,
+								   true);
+				return 0;
+			}
+		}
+	}
+
 	return nvme_transport_qpair_submit_request(qpair, req);
 }
 
 void
 nvme_complete_request(struct nvme_request *req, struct spdk_nvme_cpl *cpl)
 {
+	struct spdk_nvme_qpair          *qpair = req->qpair;
+	struct spdk_nvme_ctrlr          *ctrlr = qpair->ctrlr;
+	bool                            error;
+	struct spdk_nvme_cpl            error_cpl;
+	struct nvme_error_cmd           *cmd, *entry;
+
+	error = spdk_nvme_cpl_is_error(cpl);
+
+	/* error injection at completion path,
+	 * only inject for successful completed commands
+	 */
+	if (spdk_unlikely(!TAILQ_EMPTY(&ctrlr->err_head) && !error)) {
+		TAILQ_FOREACH_SAFE(cmd, &ctrlr->err_head, link, entry) {
+
+			if (cmd->is_submit_error) {
+				continue;
+			}
+
+			if ((nvme_qpair_is_admin_queue(qpair) == cmd->is_admin) &&
+			    (cmd->opc == req->cmd.opc)) {
+
+				error_cpl = *cpl;
+				error_cpl.status.sct = cmd->status.sct;
+				error_cpl.status.sc = cmd->status.sc;
+
+				cpl = &error_cpl;
+				nvme_qpair_print_command(qpair, &req->cmd);
+				nvme_qpair_print_completion(qpair, cpl);
+			}
+		}
+	}
+
 	if (req->cb_fn) {
 		req->cb_fn(req->cb_arg, cpl);
 	}
