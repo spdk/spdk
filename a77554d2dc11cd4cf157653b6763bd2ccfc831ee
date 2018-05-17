@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "71b94a27_87b49abc",
+        "filename": "include/spdk/nvme_lnvm.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-17T17:25:44Z",
+      "side": 1,
+      "message": "Maybe we could call this spdk_nvme_ctrlr_is_lightnvm_supported() or something similar to mirror existing functions like spdk_nvme_ctrlr_is_log_page_supported().",
+      "range": {
+        "startLine": 52,
+        "startChar": 5,
+        "endLine": 52,
+        "endChar": 33
+      },
+      "revId": "a77554d2dc11cd4cf157653b6763bd2ccfc831ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b19b598_84ad2a9a",
+        "filename": "include/spdk/nvme_lnvm.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-17T17:25:44Z",
+      "side": 1,
+      "message": "Since these functions are implemented in the NVMe library, I\u0027d prefer to just put their declarations in the main include/spdk/nvme.h rather than adding a new header (unless there\u0027s a good reason to keep them separate).",
+      "revId": "a77554d2dc11cd4cf157653b6763bd2ccfc831ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
