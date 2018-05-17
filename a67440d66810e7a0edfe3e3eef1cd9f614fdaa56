@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f2e7e32e_6cec2e08",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2904,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-17T17:50:32Z",
+      "side": 1,
+      "message": "Is this the right place to modify the superblock? (Will the new superblock get written automatically somewhere, or do we need to set clean \u003d 0?)",
+      "revId": "a67440d66810e7a0edfe3e3eef1cd9f614fdaa56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4403ac53_fdcadd52",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2905,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-17T17:50:32Z",
+      "side": 1,
+      "message": "I think we should allow the disk\u0027s blockcnt to be larger than the size stored in the superblock (i.e. make this check ctx-\u003esuper-\u003eblockcnt \u003e ctx-\u003edev-\u003eblockcnt); disk smaller than indicated in superblock should still be an error as you implemented here.",
+      "revId": "a67440d66810e7a0edfe3e3eef1cd9f614fdaa56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c562ee6e_70c9cad6",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2906,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-17T17:50:32Z",
+      "side": 1,
+      "message": "Please add a log here so we know what went wrong.",
+      "revId": "a67440d66810e7a0edfe3e3eef1cd9f614fdaa56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "274cb669_82decf46",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-17T17:50:32Z",
+      "side": 1,
+      "message": "blockcnt should probably be uint64_t.\n\nWe might also want to store blocklen and verify that it did not change (which could happen if the user copied the blobstore to a disk with a different block size).",
+      "revId": "a67440d66810e7a0edfe3e3eef1cd9f614fdaa56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
