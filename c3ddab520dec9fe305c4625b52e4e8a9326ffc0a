@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a3ca3f07_4dce1a41",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 4384,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-05-17T12:54:06Z",
+      "side": 1,
+      "message": "Please add error log for case, when rc is !\u003d 0.",
+      "range": {
+        "startLine": 4384,
+        "startChar": 2,
+        "endLine": 4384,
+        "endChar": 15
+      },
+      "revId": "c3ddab520dec9fe305c4625b52e4e8a9326ffc0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
