@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5aca8baa_ba9c7717",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 561,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-17T17:23:23Z",
+      "side": 1,
+      "message": "Please use spaces instead of tabs in the output strings to match the rest of identify.",
+      "range": {
+        "startLine": 561,
+        "startChar": 21,
+        "endLine": 561,
+        "endChar": 22
+      },
+      "revId": "2c667618f1071335438a79b3ba3d099a62a7f862",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
