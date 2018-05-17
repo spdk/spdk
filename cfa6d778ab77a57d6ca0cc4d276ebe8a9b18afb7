@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7389ae88_376cbbc5",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1450,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-17T23:32:36Z",
+      "side": 1,
+      "message": "Is this right?  If I specify -n 2, and have two namespaces and specify two cores:\n\ng_num_workers \u003d 2\ng_nr_io_queues \u003d 2\nnr_io_queues \u003d 1\n\nBut associated_workers_with_ns will assign one NS to each worker.  Won\u0027t this just end up with 1 queue per ns?",
+      "revId": "cfa6d778ab77a57d6ca0cc4d276ebe8a9b18afb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
