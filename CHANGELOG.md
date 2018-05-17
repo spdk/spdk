@@ -2,6 +2,12 @@
 
 ## v18.07: (Upcoming Release)
 
+### NVMe Driver
+
+New API function spdk_nvme_qpair_set_cmd_error_injection() and
+spdk_nvme_qpair_remove_cmd_error_injection() have been added for NVMe error emulation,
+users can set specified command with specified error status for error emulation.
+
 ### Bdev
 
 The spdk_bdev_get_io_stat() function now returns cumulative totals instead of resetting
