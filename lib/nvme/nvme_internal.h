@@ -160,6 +160,14 @@ struct __attribute__((packed)) nvme_payload {
 	uint8_t type;
 };
 
+struct nvme_error_cmd {
+	bool				is_admin;
+	bool				is_submit_error;
+	uint8_t				opc;
+	struct spdk_nvme_status		status;
+	TAILQ_ENTRY(nvme_error_cmd)	link;
+};
+
 struct nvme_request {
 	struct spdk_nvme_cmd		cmd;
 
@@ -484,6 +492,9 @@ struct spdk_nvme_ctrlr {
 
 	STAILQ_HEAD(, nvme_request)	queued_aborts;
 	uint32_t			outstanding_aborts;
+
+	/** Commands opcode in this list will return error */
+	TAILQ_HEAD(, nvme_error_cmd)	err_head;
 };
 
 struct nvme_driver {

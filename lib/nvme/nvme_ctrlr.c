@@ -1742,6 +1742,7 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 	TAILQ_INIT(&ctrlr->active_io_qpairs);
 	STAILQ_INIT(&ctrlr->queued_aborts);
 	ctrlr->outstanding_aborts = 0;
+	TAILQ_INIT(&ctrlr->err_head);
 
 	rc = nvme_robust_mutex_init_recursive_shared(&ctrlr->ctrlr_lock);
 	if (rc != 0) {
@@ -1782,10 +1783,15 @@ void
 nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct spdk_nvme_qpair *qpair, *tmp;
+	struct nvme_error_cmd *cmd, *entry;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "Prepare to destruct SSD: %s\n", ctrlr->trid.traddr);
 	TAILQ_FOREACH_SAFE(qpair, &ctrlr->active_io_qpairs, tailq, tmp) {
 		spdk_nvme_ctrlr_free_io_qpair(qpair);
+	}
+	TAILQ_FOREACH_SAFE(cmd, &ctrlr->err_head, link, entry) {
+		TAILQ_REMOVE(&ctrlr->err_head, cmd, link);
+		spdk_dma_free(cmd);
 	}
 
 	nvme_ctrlr_free_doorbell_buffer(ctrlr);
@@ -2271,4 +2277,53 @@ spdk_nvme_ctrlr_free_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, void *buf, siz
 		nvme_transport_ctrlr_free_cmb_io_buffer(ctrlr, buf, size);
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
+}
+
+int
+spdk_nvme_ctrlr_set_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
+					uint8_t opc, bool is_admin,
+					bool is_submit_error,
+					uint8_t sct, uint8_t sc)
+{
+	struct nvme_error_cmd *cmd, *entry;
+
+	TAILQ_FOREACH_SAFE(cmd, &ctrlr->err_head, link, entry) {
+		if (cmd->is_admin == is_admin && cmd->opc == opc) {
+			cmd->is_submit_error = is_submit_error;
+			cmd->status.sct = sct;
+			cmd->status.sc = sc;
+			return 0;
+		}
+	}
+
+	cmd = spdk_dma_zmalloc(sizeof(*cmd), 64, NULL);
+	if (!cmd) {
+		return -ENOMEM;
+	}
+
+	cmd->is_admin = is_admin;
+	cmd->is_submit_error = is_submit_error;
+	cmd->opc = opc;
+	cmd->status.sct = sct;
+	cmd->status.sc = sc;
+	TAILQ_INSERT_TAIL(&ctrlr->err_head, cmd, link);
+
+	return 0;
+}
+
+void
+spdk_nvme_ctrlr_remove_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
+		uint8_t opc, bool is_admin)
+{
+	struct nvme_error_cmd *cmd, *entry;
+
+	TAILQ_FOREACH_SAFE(cmd, &ctrlr->err_head, link, entry) {
+		if (cmd->is_admin == is_admin && cmd->opc == opc) {
+			TAILQ_REMOVE(&ctrlr->err_head, cmd, link);
+			spdk_dma_free(cmd);
+			return;
+		}
+	}
+
+	return;
 }
