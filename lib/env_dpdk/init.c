@@ -50,6 +50,8 @@
 static char **eal_cmdline;
 static int eal_cmdline_argcount;
 
+RTE_DECLARE_PER_LCORE(unsigned, _lcore_id);
+
 static char *
 _sprintf_alloc(const char *format, ...)
 {
@@ -367,4 +369,9 @@ int spdk_env_init(const struct spdk_env_opts *opts)
 	}
 
 	return 0;
+}
+
+void spdk_env_set_lcore_for_thread(uint32_t lcore)
+{
+	RTE_PER_LCORE(_lcore_id) = lcore;
 }

@@ -32,6 +32,7 @@
  */
 
 #include "spdk/stdinc.h"
+#include "spdk/conf.h"
 
 #include "spdk_cunit.h"
 
@@ -51,6 +52,18 @@ DEFINE_STUB(spdk_nvme_ctrlr_get_current_process,
 	    struct spdk_nvme_ctrlr_process *,
 	    (struct spdk_nvme_ctrlr *ctrlr),
 	    NULL);
+
+struct spdk_conf_section *
+spdk_conf_find_section(struct spdk_conf *cp, const char *name)
+{
+	return NULL;
+}
+
+int
+spdk_conf_section_get_intval(struct spdk_conf_section *sp, const char *key)
+{
+	return 0;
+}
 
 struct spdk_trace_flag SPDK_LOG_NVME = {
 	.name = "nvme",

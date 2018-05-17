@@ -122,6 +122,9 @@ struct spdk_thread *spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 		void *thread_ctx,
 		const char *name);
 
+void
+spdk_set_thread_id(struct spdk_thread *thread, uint32_t id);
+
 /**
  * Release any resources related to the calling thread for I/O channel allocation.
  *

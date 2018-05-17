@@ -163,7 +163,7 @@ static int spdk_iscsi_initialize_pdu_pool(void)
 	iscsi->pdu_immediate_data_pool = spdk_mempool_create_ctor("PDU_immediate_data_Pool",
 					 IMMEDIATE_DATA_POOL_SIZE(iscsi),
 					 imm_mobj_size, 0,
-					 spdk_env_get_socket_id(spdk_env_get_current_core()),
+					 0,
 					 spdk_mobj_ctor, NULL);
 	if (!iscsi->pdu_immediate_data_pool) {
 		SPDK_ERRLOG("create PDU 8k pool failed\n");
@@ -173,7 +173,7 @@ static int spdk_iscsi_initialize_pdu_pool(void)
 	iscsi->pdu_data_out_pool = spdk_mempool_create_ctor("PDU_data_out_Pool",
 				   DATA_OUT_POOL_SIZE(iscsi),
 				   dout_mobj_size, 256,
-				   spdk_env_get_socket_id(spdk_env_get_current_core()),
+				   0,
 				   spdk_mobj_ctor, NULL);
 	if (!iscsi->pdu_data_out_pool) {
 		SPDK_ERRLOG("create PDU 64k pool failed\n");
@@ -741,7 +741,7 @@ iscsi_create_poll_group(void *ctx)
 	struct spdk_iscsi_poll_group *pg;
 
 	assert(g_spdk_iscsi.poll_group != NULL);
-	pg = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
+	pg = &g_spdk_iscsi.poll_group[spdk_env_get_current_core() - spdk_env_get_first_reactor_id()];
 	pg->core = spdk_env_get_current_core();
 
 	STAILQ_INIT(&pg->connections);
@@ -759,7 +759,7 @@ iscsi_unregister_poll_group(void *ctx)
 	struct spdk_iscsi_poll_group *pg;
 
 	assert(g_spdk_iscsi.poll_group != NULL);
-	pg = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
+	pg = &g_spdk_iscsi.poll_group[spdk_env_get_current_core() - spdk_env_get_first_reactor_id()];
 	assert(pg->poller != NULL);
 	assert(pg->sock_group != NULL);
 
@@ -771,7 +771,7 @@ iscsi_unregister_poll_group(void *ctx)
 static void
 spdk_initialize_iscsi_poll_group(spdk_thread_fn cpl)
 {
-	size_t g_num_poll_groups = spdk_env_get_last_core() + 1;
+	size_t g_num_poll_groups = spdk_env_get_num_of_reactors();
 
 	g_spdk_iscsi.poll_group = calloc(g_num_poll_groups, sizeof(struct spdk_iscsi_poll_group));
 	if (!g_spdk_iscsi.poll_group) {

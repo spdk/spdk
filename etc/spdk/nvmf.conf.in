@@ -26,6 +26,18 @@
   #PciWhitelist 0000:03:00.0
   #PciWhitelist 0000:04:00.0
 
+  #The NumReactors sets up the number of reactors that would be used
+  #in the system. This does NOT have to be the same as the number of
+  #lcores/threads in the system although in most cases it may be the
+  #same. The NumReactors value shows the maximum scaling/cores/threads
+  #that the system will achieve. Under low loads, a single thread
+  #may work all these reactors in a round robin fashion. As the NVMeoF
+  #load increases, more threads could be fired that take up additional
+  #cores and start working on more reactors in parallel.
+  #If this is set, one can assume that we need a dynamic threading
+  #model that does NOT tie a reactor to a lcore in a 1-1 fashion.
+NumReactors 10
+
 # Users may change this section to create a different number or size of
 #  malloc LUNs.
 # This will generate 8 LUNs with a malloc-allocated backend.

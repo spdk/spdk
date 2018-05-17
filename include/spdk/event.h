@@ -255,6 +255,21 @@ void spdk_reactor_enable_context_switch_monitor(bool enabled);
  */
 bool spdk_reactor_context_switch_monitor_enabled(void);
 
+uint32_t spdk_env_get_num_of_reactors(void);
+uint32_t spdk_env_get_first_reactor_id(void);
+uint32_t spdk_env_get_last_reactor_id(void);
+uint32_t spdk_env_get_next_reactor_id(uint32_t reactor_id);
+
+/* TODO: Hack. Start after RTE_MAXLCORE */
+/* #define SPDK_ENV_FIRST_REACTORID RTE_MAXLCORE + 1 */
+#define SPDK_ENV_FIRST_REACTORID 129
+
+#define SPDK_ENV_FOREACH_REACTOR(i)		\
+	for (i = SPDK_ENV_FIRST_REACTORID; \
+	     i < spdk_env_get_num_of_reactors() + SPDK_ENV_FIRST_REACTORID;	\
+	     i++)
+
+
 #ifdef __cplusplus
 }
 #endif

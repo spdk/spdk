@@ -520,3 +520,8 @@ int main(int argc, char **argv)
 	free(g_dev_buffer);
 	return num_failures;
 }
+uint32_t
+spdk_env_get_current_core(void)
+{
+	return 0;
+}

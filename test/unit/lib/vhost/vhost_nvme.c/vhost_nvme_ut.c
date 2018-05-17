@@ -74,6 +74,12 @@ DEFINE_STUB_V(spdk_bdev_io_get_nvme_status, (const struct spdk_bdev_io *bdev_io,
 DEFINE_STUB(spdk_conf_section_get_nval, char *,
 	    (struct spdk_conf_section *sp, const char *key, int idx), NULL);
 
+struct spdk_conf_section *
+spdk_conf_find_section(struct spdk_conf *cp, const char *name)
+{
+	return NULL;
+}
+
 SPDK_LOG_REGISTER_COMPONENT("vhost", SPDK_LOG_VHOST)
 
 static void

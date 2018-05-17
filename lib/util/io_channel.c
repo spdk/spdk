@@ -35,6 +35,8 @@
 
 #include "spdk/io_channel.h"
 #include "spdk/log.h"
+#include "spdk/env.h"
+#include "spdk/event.h"
 
 #ifdef __linux__
 #include <sys/prctl.h>
@@ -64,7 +66,7 @@ struct io_device {
 static TAILQ_HEAD(, io_device) g_io_devices = TAILQ_HEAD_INITIALIZER(g_io_devices);
 
 struct spdk_thread {
-	pthread_t thread_id;
+	uint32_t thread_id;
 	spdk_thread_pass_msg msg_fn;
 	spdk_start_poller start_poller_fn;
 	spdk_stop_poller stop_poller_fn;
@@ -79,10 +81,14 @@ static TAILQ_HEAD(, spdk_thread) g_threads = TAILQ_HEAD_INITIALIZER(g_threads);
 static struct spdk_thread *
 _get_thread(void)
 {
-	pthread_t thread_id;
+	uint32_t thread_id;
 	struct spdk_thread *thread;
 
-	thread_id = pthread_self();
+	thread_id = spdk_env_get_current_core();
+
+	if ((thread_id < spdk_env_get_first_reactor_id()) || (thread_id > spdk_env_get_last_reactor_id())) {
+		thread_id = pthread_self();
+	}
 
 	thread = NULL;
 	TAILQ_FOREACH(thread, &g_threads, tailq) {
@@ -106,6 +112,35 @@ _set_thread_name(const char *thread_name)
 #endif
 }
 
+uint32_t
+spdk_env_get_first_reactor_id(void)
+{
+	return SPDK_ENV_FIRST_REACTORID;
+}
+
+uint32_t
+spdk_env_get_last_reactor_id(void)
+{
+	return spdk_env_get_num_of_reactors() + SPDK_ENV_FIRST_REACTORID;
+}
+
+uint32_t
+spdk_env_get_num_of_reactors(void)
+{
+	/* Test with various values */
+	return 100;
+}
+
+uint32_t
+spdk_env_get_next_reactor_id(uint32_t reactor_id)
+{
+	if ((reactor_id + 1) == spdk_env_get_last_reactor_id()) {
+		return SPDK_ENV_FIRST_REACTORID;
+	} else {
+		return reactor_id + 1;
+	}
+}
+
 struct spdk_thread *
 spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 		     spdk_start_poller start_poller_fn,
@@ -113,12 +148,13 @@ spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 		     void *thread_ctx, const char *name)
 {
 	struct spdk_thread *thread;
+	uint32_t thread_id;
 
 	pthread_mutex_lock(&g_devlist_mutex);
 
 	thread = _get_thread();
 	if (thread) {
-		SPDK_ERRLOG("Double allocated SPDK thread\n");
+		SPDK_ERRLOG("Double allocated SPDK thread. Thread-id:%u\n", thread->thread_id);
 		pthread_mutex_unlock(&g_devlist_mutex);
 		return NULL;
 	}
@@ -130,7 +166,18 @@ spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 		return NULL;
 	}
 
-	thread->thread_id = pthread_self();
+	thread_id = spdk_env_get_current_core();
+	if ((thread_id < spdk_env_get_first_reactor_id()) || (thread_id > spdk_env_get_last_reactor_id())) {
+		/* SPDK allocate thread called from OUTSIDE the reactor framework.
+		 * This is not a DPDK thread calling it.
+		 */
+		thread->thread_id = pthread_self();
+	} else {
+		/* This is a DPDK thread calling into this function.
+		 * The lcore has been set to a reactor id.
+		 */
+		thread->thread_id = spdk_env_get_current_core();
+	}
 	thread->msg_fn = msg_fn;
 	thread->start_poller_fn = start_poller_fn;
 	thread->stop_poller_fn = stop_poller_fn;
@@ -156,7 +203,7 @@ spdk_free_thread(void)
 
 	thread = _get_thread();
 	if (!thread) {
-		SPDK_ERRLOG("No thread allocated\n");
+		SPDK_ERRLOG("No thread allocated.\n");
 		pthread_mutex_unlock(&g_devlist_mutex);
 		return;
 	}
@@ -177,7 +224,7 @@ spdk_get_thread(void)
 
 	thread = _get_thread();
 	if (!thread) {
-		SPDK_ERRLOG("No thread allocated\n");
+		SPDK_ERRLOG("No thread allocated.\n");
 	}
 
 	pthread_mutex_unlock(&g_devlist_mutex);
@@ -295,6 +342,12 @@ spdk_for_each_thread(spdk_thread_fn fn, void *ctx, spdk_thread_fn cpl)
 	pthread_mutex_unlock(&g_devlist_mutex);
 
 	spdk_thread_send_msg(ct->cur_thread, spdk_on_thread, ct);
+}
+
+void
+spdk_set_thread_id(struct spdk_thread *thread, uint32_t id)
+{
+	thread->thread_id = id;
 }
 
 void

@@ -522,6 +522,12 @@ alias_add_del_test(void)
 	free(bdev[1]);
 }
 
+uint32_t
+spdk_env_get_current_core(void)
+{
+	return 0;
+}
+
 int
 main(int argc, char **argv)
 {
