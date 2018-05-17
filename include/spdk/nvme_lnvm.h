@@ -55,6 +55,45 @@ int spdk_lnvm_cmd_geometry(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 			   void *payload, uint32_t payload_size,
 			   spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
+int spdk_nvme_ns_lnvm_cmd_vector_reset(struct spdk_nvme_ns *ns,
+				       struct spdk_nvme_qpair *qpair,
+				       void *metadata, uint64_t *lbal, uint32_t nlb,
+				       spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+
+int spdk_nvme_ns_lnvm_cmd_vector_copy(struct spdk_nvme_ns *ns,
+				      struct spdk_nvme_qpair *qpair,
+				      uint64_t *dlbal, uint64_t *slbal, uint32_t nlb,
+				      spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+				      uint32_t io_flags);
+
+int spdk_nvme_ns_lnvm_cmd_vector_write_with_md(struct spdk_nvme_ns *ns,
+		struct spdk_nvme_qpair *qpair,
+		void *buffer, void *metadata,
+		uint64_t *lbal, uint32_t nlb,
+		spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+		uint32_t io_flags);
+
+int spdk_nvme_ns_lnvm_cmd_vector_read_with_md(struct spdk_nvme_ns *ns,
+		struct spdk_nvme_qpair *qpair,
+		void *buffer, void *metadata,
+		uint64_t *lbal, uint32_t nlb,
+		spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+		uint32_t io_flags);
+
+int spdk_nvme_ns_lnvm_cmd_vector_write(struct spdk_nvme_ns *ns,
+				       struct spdk_nvme_qpair *qpair,
+				       void *buffer,
+				       uint64_t *lbal, uint32_t nlb,
+				       spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+				       uint32_t io_flags);
+
+int spdk_nvme_ns_lnvm_cmd_vector_read(struct spdk_nvme_ns *ns,
+				      struct spdk_nvme_qpair *qpair,
+				      void *buffer,
+				      uint64_t *lbal, uint32_t nlb,
+				      spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+				      uint32_t io_flags);
+
 #ifdef __cplusplus
 }
 #endif
