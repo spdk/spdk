@@ -1560,6 +1560,52 @@ int spdk_nvme_ns_cmd_compare_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_q
 				     void *cb_arg, uint32_t io_flags,
 				     uint16_t apptag_mask, uint16_t apptag);
 
+/**
+ * \brief Inject an error for the next request with a given opcode.
+ *
+ * \param ctrlr NVMe controller.
+ * \param qpair I/O queue pair to add the error command,
+ *              NULL for Admin queue pair.
+ * \param opc Opcode for Admin or I/O commands.
+ * \param do_not_submit True for submission error path.
+ * \param timeout Wait specified microseconds when do_not_submit is true.
+ * \param err_count Number of error commands to return.
+ * \param sct Status code type.
+ * \param sc Status code.
+ *
+ * \return 0 if successfully enabled, ENOMEM if an error command
+ *	     structure cannot be allocated.
+ *
+ * The function can be called multiple times to inject errors for different
+ * commands, if opcode is same with next call of this function, it will take
+ * effect immediately. If `do_not_submit` is enabled, for commands which can
+ * match with registered opcode will be ended with specified error status(if
+ * the request has elapsed longer than timeout parameter), otherwise,
+ * commands will be ended with error status at the completion path.
+ */
+int spdk_nvme_qpair_add_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
+		struct spdk_nvme_qpair *qpair,
+		uint8_t opc,
+		bool do_not_submit,
+		uint64_t timeout,
+		uint32_t err_count,
+		uint8_t sct, uint8_t sc);
+
+/**
+ * \brief Clear the specified NVMe command with error status.
+ *
+ * \param ctrlr NVMe controller.
+ * \param qpair I/O queue pair to remove the error command,
+ * \            NULL for Admin queue pair.
+ * \param opc Opcode for Admin or I/O commands.
+ *
+ * The function will remove specified command in the error list.
+ */
+void spdk_nvme_qpair_remove_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
+		struct spdk_nvme_qpair *qpair,
+		uint8_t opc);
+
+
 #ifdef __cplusplus
 }
 #endif
