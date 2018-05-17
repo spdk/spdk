@@ -94,8 +94,8 @@ static void
 spdk_nvmf_subsystem_fini(void)
 {
 	/* Always let the first core to handle the case */
-	if (spdk_env_get_current_core() != spdk_env_get_first_core()) {
-		spdk_event_call(spdk_event_allocate(spdk_env_get_first_core(),
+	if (spdk_env_get_current_core() != spdk_env_get_first_reactor_id()) {
+		spdk_event_call(spdk_event_allocate(spdk_env_get_first_reactor_id(),
 						    _spdk_nvmf_shutdown_cb, NULL, NULL));
 	} else {
 		_spdk_nvmf_shutdown_cb(NULL, NULL);
@@ -119,12 +119,9 @@ new_qpair(struct spdk_nvmf_qpair *qpair)
 	uint32_t core;
 
 	core = g_tgt_core;
-	g_tgt_core = spdk_env_get_next_core(core);
-	if (g_tgt_core == UINT32_MAX) {
-		g_tgt_core = spdk_env_get_first_core();
-	}
+	g_tgt_core = spdk_env_get_next_reactor_id(core);
 
-	pg = &g_poll_groups[core];
+	pg = &g_poll_groups[core - spdk_env_get_first_reactor_id()];
 	assert(pg != NULL);
 
 	event = spdk_event_allocate(core, nvmf_tgt_poll_group_add, qpair, pg);
@@ -153,7 +150,7 @@ nvmf_tgt_destroy_poll_group(void *ctx)
 {
 	struct nvmf_tgt_poll_group *pg;
 
-	pg = &g_poll_groups[spdk_env_get_current_core()];
+	pg = &g_poll_groups[spdk_env_get_current_core() - spdk_env_get_first_reactor_id()];
 	assert(pg != NULL);
 
 	spdk_nvmf_poll_group_destroy(pg->group);
@@ -175,7 +172,7 @@ nvmf_tgt_create_poll_group(void *ctx)
 {
 	struct nvmf_tgt_poll_group *pg;
 
-	pg = &g_poll_groups[spdk_env_get_current_core()];
+	pg = &g_poll_groups[spdk_env_get_current_core() - spdk_env_get_first_reactor_id()];
 	assert(pg != NULL);
 
 	pg->group = spdk_nvmf_poll_group_create(g_spdk_nvmf_tgt);
@@ -230,7 +227,7 @@ nvmf_tgt_advance_state(void)
 			g_tgt_state = NVMF_TGT_INIT_PARSE_CONFIG;
 
 			/* Find the maximum core number */
-			g_num_poll_groups = spdk_env_get_last_core() + 1;
+			g_num_poll_groups = spdk_env_get_num_of_reactors();
 			assert(g_num_poll_groups > 0);
 
 			g_poll_groups = calloc(g_num_poll_groups, sizeof(*g_poll_groups));
@@ -240,7 +237,7 @@ nvmf_tgt_advance_state(void)
 				break;
 			}
 
-			g_tgt_core = spdk_env_get_first_core();
+			g_tgt_core = spdk_env_get_first_reactor_id();
 			break;
 		}
 		case NVMF_TGT_INIT_PARSE_CONFIG:

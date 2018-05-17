@@ -1272,3 +1272,9 @@ main(int argc, char **argv)
 	CU_cleanup_registry();
 	return num_failures;
 }
+
+uint32_t
+spdk_env_get_current_core(void)
+{
+	return pthread_self();
+}

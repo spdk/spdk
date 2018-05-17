@@ -63,12 +63,14 @@ static struct spdk_event *g_shutdown_event = NULL;
 static int g_init_lcore;
 static bool g_delay_subsystem_init = false;
 static bool g_shutdown_sig_received = false;
+static int g_num_of_reactors;
 
 int
 spdk_app_get_shm_id(void)
 {
 	return g_spdk_app.shm_id;
 }
+
 
 /* Global section */
 #define GLOBAL_CONFIG_TMPL \
@@ -355,6 +357,13 @@ spdk_app_read_config_file_global_params(struct spdk_app_opts *opts)
 		}
 	}
 
+	/* Keep the number of reactors the same as the number of lcores */
+	/* TODO: Hack and more hacks. Clean up needed to move from char to int */
+	/* Have to get the number of reactors from the config file. Hardcoded in the
+	 * utility directory for now.
+	 */
+	g_num_of_reactors = spdk_env_get_num_of_reactors();
+
 	if (!opts->no_pci && sp) {
 		opts->no_pci = spdk_conf_section_get_boolval(sp, "NoPci", false);
 	}
@@ -519,6 +528,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	}
 
 	SPDK_NOTICELOG("Total cores available: %d\n", spdk_env_get_core_count());
+	SPDK_NOTICELOG("g_num_of_reactors: %d\n", g_num_of_reactors);
 
 	/*
 	 * If mask not specified on command line or in configuration file,
@@ -529,6 +539,10 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		SPDK_ERRLOG("Invalid reactor mask.\n");
 		goto app_start_log_close_err;
 	}
+
+	/* Yet another hack. Add the reactor-id offset here. Since this is done on the master thread
+	 * before the reactors are spun up. */
+	spdk_env_set_lcore_for_thread(spdk_env_get_first_reactor_id());
 
 	/*
 	 * Note the call to spdk_app_setup_trace() is located here
@@ -552,9 +566,11 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	g_spdk_app.rc = 0;
 	g_init_lcore = spdk_env_get_current_core();
 	g_delay_subsystem_init = opts->delay_subsystem_init;
-	g_app_start_event = spdk_event_allocate(g_init_lcore, start_fn, arg1, arg2);
+	g_app_start_event = spdk_event_allocate(g_init_lcore, start_fn,
+						arg1, arg2);
 
-	rpc_start_event = spdk_event_allocate(g_init_lcore, spdk_app_start_rpc,
+	rpc_start_event = spdk_event_allocate(g_init_lcore,
+					      spdk_app_start_rpc,
 					      (void *)opts->rpc_addr, NULL);
 
 	if (!g_delay_subsystem_init) {
@@ -564,7 +580,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	}
 
 	/* This blocks until spdk_app_stop is called */
-	spdk_reactors_start();
+	spdk_threads_start();
 
 	return g_spdk_app.rc;
 

@@ -1978,3 +1978,8 @@ int main(int argc, char **argv)
 
 	return num_failures;
 }
+uint32_t
+spdk_env_get_current_core(void)
+{
+	return 0;
+}

@@ -404,3 +404,9 @@ int main(int argc, char **argv)
 	pthread_join(spdk_tid, NULL);
 	return num_failures;
 }
+
+uint32_t
+spdk_env_get_current_core(void)
+{
+	return pthread_self();
+}

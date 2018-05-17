@@ -78,6 +78,10 @@ spdk_app_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 DEFINE_STUB(spdk_env_get_first_core, uint32_t, (void), 0);
 DEFINE_STUB(spdk_env_get_next_core, uint32_t, (uint32_t prev_core), 0);
 DEFINE_STUB(spdk_env_get_last_core, uint32_t, (void), 0);
+DEFINE_STUB(spdk_env_get_first_reactor_id, uint32_t, (void), 0);
+DEFINE_STUB(spdk_env_get_next_reactor_id, uint32_t, (uint32_t prev_core), 0);
+DEFINE_STUB(spdk_env_get_last_reactor_id, uint32_t, (void), 0);
+DEFINE_STUB(spdk_env_get_num_of_reactors, uint32_t, (void), 1);
 DEFINE_STUB_V(spdk_app_stop, (int rc));
 DEFINE_STUB_V(spdk_event_call, (struct spdk_event *event));
 DEFINE_STUB(spdk_poller_register, struct spdk_poller *, (spdk_poller_fn fn, void *arg,

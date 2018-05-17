@@ -399,6 +399,8 @@ uint32_t spdk_env_get_core_count(void);
  */
 uint32_t spdk_env_get_current_core(void);
 
+uint32_t spdk_env_get_first_reactor_id(void);
+
 /**
  * Get the index of the first dedicated CPU core for this application.
  *
@@ -491,6 +493,7 @@ struct spdk_ring;
 enum spdk_ring_type {
 	SPDK_RING_TYPE_SP_SC,		/* Single-producer, single-consumer */
 	SPDK_RING_TYPE_MP_SC,		/* Multi-producer, single-consumer */
+	SPDK_RING_TYPE_MP_MC,       /* Multi-producer, Multi-consumer */
 };
 
 /**
@@ -1036,6 +1039,11 @@ int spdk_mem_register(void *vaddr, size_t len);
  * \return 0 on success, negative errno on failure.
  */
 int spdk_mem_unregister(void *vaddr, size_t len);
+
+
+uint32_t spdk_env_get_current_core(void);
+
+void spdk_env_set_lcore_for_thread(uint32_t lcore);
 
 #ifdef __cplusplus
 }

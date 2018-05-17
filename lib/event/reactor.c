@@ -41,6 +41,7 @@
 #include "spdk/io_channel.h"
 #include "spdk/env.h"
 #include "spdk/util.h"
+#include "spdk/event.h"
 
 #define SPDK_MAX_SOCKET		64
 
@@ -62,7 +63,7 @@ enum spdk_poller_state {
 
 struct spdk_poller {
 	TAILQ_ENTRY(spdk_poller)	tailq;
-	uint32_t			lcore;
+	uint32_t			reactor_id; /* The reactor polling queue on which this poller runs */
 
 	/* Current state of the poller; should only be accessed from the poller's thread. */
 	enum spdk_poller_state		state;
@@ -83,7 +84,7 @@ enum spdk_reactor_state {
 
 struct spdk_reactor {
 	/* Logical core number for this reactor. */
-	uint32_t					lcore;
+	uint32_t					reactor_id; /* An unique id for the reactor. */
 
 	/* Socket ID for this reactor. */
 	uint32_t					socket_id;
@@ -113,15 +114,18 @@ struct spdk_reactor {
 	struct spdk_mempool				*event_mempool;
 
 	uint64_t					max_delay_us;
+
 } __attribute__((aligned(64)));
 
 static struct spdk_reactor *g_reactors;
+
+static struct spdk_ring *g_reactor_poll_ring;
 
 static enum spdk_reactor_state	g_reactor_state = SPDK_REACTOR_STATE_INVALID;
 
 static bool g_context_switch_monitor_enabled = true;
 
-static void spdk_reactor_construct(struct spdk_reactor *w, uint32_t lcore,
+static void spdk_reactor_construct(struct spdk_reactor *w, uint32_t reactor_id,
 				   uint64_t max_delay_us);
 
 static struct spdk_mempool *g_spdk_event_mempool[SPDK_MAX_SOCKET];
@@ -129,18 +133,22 @@ static struct spdk_mempool *g_spdk_event_mempool[SPDK_MAX_SOCKET];
 static struct spdk_cpuset *g_spdk_app_core_mask;
 
 static struct spdk_reactor *
-spdk_reactor_get(uint32_t lcore)
+spdk_reactor_get(uint32_t reactor_id)
 {
 	struct spdk_reactor *reactor;
-	reactor = spdk_likely(g_reactors) ? &g_reactors[lcore] : NULL;
+	if (reactor_id >= SPDK_ENV_FIRST_REACTORID) {
+		reactor = spdk_likely(g_reactors) ? &g_reactors[reactor_id - SPDK_ENV_FIRST_REACTORID] : NULL;
+	} else {
+		reactor = spdk_likely(g_reactors) ? &g_reactors[reactor_id] : NULL;
+	}
 	return reactor;
 }
 
 struct spdk_event *
-spdk_event_allocate(uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2)
+spdk_event_allocate(uint32_t reactor_id, spdk_event_fn fn, void *arg1, void *arg2)
 {
 	struct spdk_event *event = NULL;
-	struct spdk_reactor *reactor = spdk_reactor_get(lcore);
+	struct spdk_reactor *reactor = spdk_reactor_get(reactor_id);
 
 	if (!reactor) {
 		assert(false);
@@ -153,7 +161,7 @@ spdk_event_allocate(uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2)
 		return NULL;
 	}
 
-	event->lcore = lcore;
+	event->lcore = reactor_id;
 	event->fn = fn;
 	event->arg1 = arg1;
 	event->arg2 = arg2;
@@ -224,7 +232,7 @@ _spdk_reactor_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 
 	reactor = thread_ctx;
 
-	event = spdk_event_allocate(reactor->lcore, _spdk_reactor_msg_passed, fn, ctx);
+	event = spdk_event_allocate(reactor->reactor_id, _spdk_reactor_msg_passed, fn, ctx);
 
 	spdk_event_call(event);
 }
@@ -271,7 +279,7 @@ _spdk_reactor_start_poller(void *thread_ctx,
 		return NULL;
 	}
 
-	poller->lcore = reactor->lcore;
+	poller->reactor_id = reactor->reactor_id;
 	poller->state = SPDK_POLLER_STATE_WAITING;
 	poller->fn = fn;
 	poller->arg = arg;
@@ -302,7 +310,7 @@ _spdk_reactor_stop_poller(struct spdk_poller *poller, void *thread_ctx)
 
 	reactor = thread_ctx;
 
-	assert(poller->lcore == spdk_env_get_current_core());
+	assert(poller->reactor_id == spdk_env_get_current_core());
 
 	if (poller->state == SPDK_POLLER_STATE_RUNNING) {
 		/*
@@ -335,7 +343,7 @@ get_rusage(void *arg)
 	if (rusage.ru_nvcsw != reactor->rusage.ru_nvcsw || rusage.ru_nivcsw != reactor->rusage.ru_nivcsw) {
 		SPDK_INFOLOG(SPDK_LOG_REACTOR,
 			     "Reactor %d: %ld voluntary context switches and %ld involuntary context switches in the last second.\n",
-			     reactor->lcore, rusage.ru_nvcsw - reactor->rusage.ru_nvcsw,
+			     reactor->reactor_id, rusage.ru_nvcsw - reactor->rusage.ru_nvcsw,
 			     rusage.ru_nivcsw - reactor->rusage.ru_nivcsw);
 	}
 	reactor->rusage = rusage;
@@ -387,7 +395,7 @@ spdk_reactor_enable_context_switch_monitor(bool enable)
 {
 	struct spdk_reactor *reactor;
 	spdk_event_fn fn;
-	uint32_t core;
+	uint32_t reactor_id;
 
 	if (enable != g_context_switch_monitor_enabled) {
 		g_context_switch_monitor_enabled = enable;
@@ -396,18 +404,20 @@ spdk_reactor_enable_context_switch_monitor(bool enable)
 		} else {
 			fn = _spdk_reactor_context_switch_monitor_stop;
 		}
-		SPDK_ENV_FOREACH_CORE(core) {
-			reactor = spdk_reactor_get(core);
-			spdk_event_call(spdk_event_allocate(core, fn, reactor, NULL));
+		SPDK_ENV_FOREACH_REACTOR(reactor_id) {
+			reactor = spdk_reactor_get(reactor_id);
+			spdk_event_call(spdk_event_allocate(reactor->reactor_id, fn, reactor, NULL));
 		}
 	}
 }
+
 
 bool
 spdk_reactor_context_switch_monitor_enabled(void)
 {
 	return g_context_switch_monitor_enabled;
 }
+
 
 /**
  *
@@ -433,6 +443,7 @@ spdk_reactor_context_switch_monitor_enabled(void)
 static int
 _spdk_reactor_run(void *arg)
 {
+#define SPDK_MAX_REACTOR_RUN_US 1000
 	struct spdk_reactor	*reactor = arg;
 	struct spdk_poller	*poller;
 	uint32_t		event_count;
@@ -440,25 +451,19 @@ _spdk_reactor_run(void *arg)
 	uint64_t		spin_cycles, sleep_cycles;
 	uint32_t		sleep_us;
 	uint32_t		timer_poll_count;
-	char			thread_name[32];
+	uint64_t        max_cycles, now_cycles;
 
-	snprintf(thread_name, sizeof(thread_name), "reactor_%u", reactor->lcore);
-	if (spdk_allocate_thread(_spdk_reactor_send_msg,
-				 _spdk_reactor_start_poller,
-				 _spdk_reactor_stop_poller,
-				 reactor, thread_name) == NULL) {
-		return -1;
-	}
-	SPDK_NOTICELOG("Reactor started on core %u on socket %u\n", reactor->lcore,
-		       reactor->socket_id);
 
 	spin_cycles = SPDK_REACTOR_SPIN_TIME_USEC * spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
 	sleep_cycles = reactor->max_delay_us * spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
+	/* Crude way to show round robin between reactors */
+	max_cycles = SPDK_MAX_REACTOR_RUN_US * spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
 	idle_started = 0;
 	timer_poll_count = 0;
 	if (g_context_switch_monitor_enabled) {
 		_spdk_reactor_context_switch_monitor_start(reactor, NULL);
 	}
+	now_cycles = spdk_get_ticks();
 	while (1) {
 		bool took_action = false;
 
@@ -544,18 +549,52 @@ _spdk_reactor_run(void *arg)
 		if (g_reactor_state != SPDK_REACTOR_STATE_RUNNING) {
 			break;
 		}
-	}
 
+		if (spdk_get_ticks() > now_cycles + max_cycles) {
+			break;
+		}
+	}
+	return 0;
+}
+
+static int
+_spdk_reactor_poll(void *arg)
+{
+	/* Go through the reactor ring, pick one up, work on it. */
+	/* App customization in this area... */
+	struct spdk_reactor	*reactor = NULL;
+	int count;
+
+	while (1) {
+		count = spdk_ring_dequeue(g_reactor_poll_ring, (void **)&reactor, 1);
+
+		if (count) {
+			/* OVERLOAD the lcore of the thread at this point with the reactor-id.
+			 * That is the lcore or the unit of execution for this thread at this point.
+			 */
+			spdk_env_set_lcore_for_thread(reactor->reactor_id);
+
+			_spdk_reactor_run(reactor);
+
+			/* Check if we need to stop the threads */
+			if (g_reactor_state != SPDK_REACTOR_STATE_RUNNING) {
+				break;
+			}
+
+			/* Done with this reactor. Move to next one */
+			(void)spdk_ring_enqueue(g_reactor_poll_ring, (void **)&reactor, 1);
+		}
+	}
 	_spdk_reactor_context_switch_monitor_stop(reactor, NULL);
 	spdk_free_thread();
 	return 0;
 }
 
 static void
-spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore, uint64_t max_delay_us)
+spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t reactor_id, uint64_t max_delay_us)
 {
-	reactor->lcore = lcore;
-	reactor->socket_id = spdk_env_get_socket_id(lcore);
+	reactor->reactor_id = reactor_id;
+	reactor->socket_id = 0;
 	assert(reactor->socket_id < SPDK_MAX_SOCKET);
 	reactor->max_delay_us = max_delay_us;
 
@@ -615,22 +654,20 @@ spdk_reactor_get_socket_mask(void)
 }
 
 void
-spdk_reactors_start(void)
+spdk_threads_start(void)
 {
-	struct spdk_reactor *reactor;
 	uint32_t i, current_core;
 	int rc;
 
 	g_reactor_state = SPDK_REACTOR_STATE_RUNNING;
 	g_spdk_app_core_mask = spdk_cpuset_alloc();
 
-	current_core = spdk_env_get_current_core();
+	current_core = 0;
 	SPDK_ENV_FOREACH_CORE(i) {
 		if (i != current_core) {
-			reactor = spdk_reactor_get(i);
-			rc = spdk_env_thread_launch_pinned(reactor->lcore, _spdk_reactor_run, reactor);
+			rc = spdk_env_thread_launch_pinned(i, _spdk_reactor_poll, NULL);
 			if (rc < 0) {
-				SPDK_ERRLOG("Unable to start reactor thread on core %u\n", reactor->lcore);
+				SPDK_ERRLOG("Unable to start reactor thread on core %u\n", i);
 				assert(false);
 				return;
 			}
@@ -638,9 +675,8 @@ spdk_reactors_start(void)
 		spdk_cpuset_set_cpu(g_spdk_app_core_mask, i, true);
 	}
 
-	/* Start the master reactor */
-	reactor = spdk_reactor_get(current_core);
-	_spdk_reactor_run(reactor);
+	/* Start the master thread */
+	_spdk_reactor_poll(NULL);
 
 	spdk_env_thread_wait_all();
 
@@ -659,11 +695,14 @@ int
 spdk_reactors_init(unsigned int max_delay_us)
 {
 	int rc;
-	uint32_t i, j, last_core;
+	uint32_t i, j;
 	struct spdk_reactor *reactor;
 	uint64_t socket_mask = 0x0;
 	uint8_t socket_count = 0;
 	char mempool_name[32];
+	uint32_t poweroftwo = 1;
+	struct spdk_thread *thread = NULL;
+	char			thread_name[32];
 
 	socket_mask = spdk_reactor_get_socket_mask();
 	SPDK_NOTICELOG("Occupied cpu socket mask is 0x%lx\n", socket_mask);
@@ -718,12 +757,11 @@ spdk_reactors_init(unsigned int max_delay_us)
 	}
 
 	/* struct spdk_reactor must be aligned on 64 byte boundary */
-	last_core = spdk_env_get_last_core();
 	rc = posix_memalign((void **)&g_reactors, 64,
-			    (last_core + 1) * sizeof(struct spdk_reactor));
+			    spdk_env_get_num_of_reactors() * sizeof(struct spdk_reactor));
 	if (rc != 0) {
 		SPDK_ERRLOG("Could not allocate array size=%u for g_reactors\n",
-			    last_core + 1);
+			    spdk_env_get_num_of_reactors());
 		for (i = 0; i < SPDK_MAX_SOCKET; i++) {
 			if (g_spdk_event_mempool[i] != NULL) {
 				spdk_mempool_free(g_spdk_event_mempool[i]);
@@ -732,11 +770,32 @@ spdk_reactors_init(unsigned int max_delay_us)
 		return -1;
 	}
 
-	memset(g_reactors, 0, (last_core + 1) * sizeof(struct spdk_reactor));
+	memset(g_reactors, 0, spdk_env_get_num_of_reactors() * sizeof(struct spdk_reactor));
 
-	SPDK_ENV_FOREACH_CORE(i) {
+	/* Create a poll ring to store the reactors. The threads will dequeue a
+	 * reactor from the ring and work on it. They will enqueue the reactor
+	 * back on the ring after the work is done.
+	 */
+	while (poweroftwo <= spdk_env_get_num_of_reactors()) {
+		poweroftwo *= 2;
+	}
+
+	g_reactor_poll_ring = spdk_ring_create(SPDK_RING_TYPE_MP_MC, poweroftwo, SPDK_ENV_SOCKET_ID_ANY);
+
+
+	SPDK_ENV_FOREACH_REACTOR(i) {
 		reactor = spdk_reactor_get(i);
 		spdk_reactor_construct(reactor, i, max_delay_us);
+		snprintf(thread_name, sizeof(thread_name), "reactor_%u", reactor->reactor_id);
+		if ((thread = spdk_allocate_thread(_spdk_reactor_send_msg,
+						   _spdk_reactor_start_poller,
+						   _spdk_reactor_stop_poller,
+						   reactor, thread_name)) == NULL) {
+			return -1;
+		}
+		spdk_set_thread_id(thread, reactor->reactor_id);
+
+		(void)spdk_ring_enqueue(g_reactor_poll_ring, (void **)&reactor, 1);
 	}
 
 	g_reactor_state = SPDK_REACTOR_STATE_INITIALIZED;
@@ -750,12 +809,16 @@ spdk_reactors_fini(void)
 	uint32_t i;
 	struct spdk_reactor *reactor;
 
-	SPDK_ENV_FOREACH_CORE(i) {
+	SPDK_ENV_FOREACH_REACTOR(i) {
 		reactor = spdk_reactor_get(i);
-		if (spdk_likely(reactor != NULL) && reactor->events != NULL) {
-			spdk_ring_free(reactor->events);
+		if (reactor) {
+			(void)spdk_ring_dequeue(g_reactor_poll_ring, (void **)&reactor, 1);
+			if (spdk_likely(reactor != NULL) && reactor->events != NULL) {
+				spdk_ring_free(reactor->events);
+			}
 		}
 	}
+	spdk_ring_free(g_reactor_poll_ring);
 
 	for (i = 0; i < SPDK_MAX_SOCKET; i++) {
 		if (g_spdk_event_mempool[i] != NULL) {
