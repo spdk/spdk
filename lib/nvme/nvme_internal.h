@@ -626,6 +626,7 @@ struct nvme_request *nvme_allocate_request_contig(struct spdk_nvme_qpair *qpair,
 struct nvme_request *nvme_allocate_request_user_copy(struct spdk_nvme_qpair *qpair,
 		void *buffer, uint32_t payload_size,
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg, bool host_to_controller);
+void	nvme_complete_request(struct nvme_request *req, struct spdk_nvme_cpl *cpl);
 void	nvme_free_request(struct nvme_request *req);
 void	nvme_request_remove_child(struct nvme_request *parent, struct nvme_request *child);
 uint64_t nvme_get_quirks(const struct spdk_pci_id *id);
