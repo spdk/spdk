@@ -2,6 +2,12 @@
 
 ## v18.07: (Upcoming Release)
 
+### NVMe Driver
+
+New API function spdk_nvme_ctrlr_set_cmd_error_injection() and
+spdk_nvme_ctrlr_remove_cmd_error_injection() have been added for NVMe error emulation,
+users can set specified command with specified error status for error emulation.
+
 ### git pre-commit and pre-push hooks
 
 The pre-commit hook will run `scripts/check_format.sh` and verify there are no formating

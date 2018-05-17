@@ -1551,6 +1551,43 @@ int spdk_nvme_ns_cmd_compare_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_q
 				     void *cb_arg, uint32_t io_flags,
 				     uint16_t apptag_mask, uint16_t apptag);
 
+/**
+ * \brief Inject an error for the next request with a given opcode.
+ *
+ * \param ctrlr NVMe controller to which the command was submitted.
+ * \param opc Opcode for Admin or IO commands.
+ * \param is_admin Ture for Admin commands.
+ * \param is_submit_error True for submission error path.
+ * \param sct Status code type.
+ * \param sc Status code.
+ *
+ * \return 0 if successfully enabled, ENOMEM if an error command
+ *	     structure cannot be allocated.
+ *
+ * The function can be called multiple times to insert different commands
+ * into the list, if submit_error is enabled, for those commands which
+ * have same opcode will be returned at the submission path with specified
+ * error status, otherwise, commands will be returned with error status
+ * at the completion path.
+ */
+int spdk_nvme_ctrlr_set_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
+		uint8_t opc, bool is_admin,
+		bool is_submit_error,
+		uint8_t sct, uint8_t sc);
+
+/**
+ * \brief Clear the specified NVMe command with error status.
+ *
+ * \param ctrlr NVMe controller to which the command was submitted.
+ * \param opc Opcode for Admin or IO commands.
+ * \param is_admin Ture for Admin commands.
+ *
+ * The function will remove specified command in the error list.
+ */
+void spdk_nvme_ctrlr_remove_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
+		uint8_t opc, bool is_admin);
+
+
 #ifdef __cplusplus
 }
 #endif
