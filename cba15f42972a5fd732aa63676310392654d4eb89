@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4af52579_00c09c5a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-05-17T12:50:38Z",
+      "side": 1,
+      "message": "when it",
+      "range": {
+        "startLine": 9,
+        "startChar": 47,
+        "endLine": 9,
+        "endChar": 53
+      },
+      "revId": "cba15f42972a5fd732aa63676310392654d4eb89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "18306c7b_6c2b077c",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-05-17T12:50:38Z",
+      "side": 1,
+      "message": "Alignment.",
+      "range": {
+        "startLine": 343,
+        "startChar": 8,
+        "endLine": 343,
+        "endChar": 10
+      },
+      "revId": "cba15f42972a5fd732aa63676310392654d4eb89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
