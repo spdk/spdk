@@ -2,6 +2,12 @@
 
 ## v18.07: (Upcoming Release)
 
+### NVMe Driver
+
+New API function spdk_nvme_qpair_add_cmd_error_injection() and
+spdk_nvme_qpair_remove_cmd_error_injection() have been added for NVMe error emulation,
+users can set specified command with specified error status for error emulation.
+
 ### RPC
 
 The `start_nbd_disk` RPC method now returns the path to the kernel NBD device node
