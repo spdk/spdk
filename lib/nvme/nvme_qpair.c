@@ -354,15 +354,32 @@ nvme_qpair_manual_complete_request(struct spdk_nvme_qpair *qpair,
 int32_t
 spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
-	int32_t ret;
+	int32_t ret = 0;
+	struct nvme_request *req;
+	uint64_t time_tsc;
 
 	if (qpair->ctrlr->is_failed) {
 		nvme_qpair_fail(qpair);
 		return 0;
 	}
 
+	/* error injection for those queued error requests */
+	if (spdk_unlikely(!STAILQ_EMPTY(&qpair->err_req_head))) {
+		req = STAILQ_FIRST(&qpair->err_req_head);
+		STAILQ_REMOVE_HEAD(&qpair->err_req_head, stailq);
+		time_tsc = spdk_get_ticks();
+		if (time_tsc - req->last_poll_tsc > req->timeout_tsc) {
+			nvme_qpair_manual_complete_request(qpair, req,
+							   req->cpl.status.sct,
+							   req->cpl.status.sc, true);
+			ret++;
+		} else {
+			STAILQ_INSERT_TAIL(&qpair->err_req_head, req, stailq);
+		}
+	}
+
 	qpair->in_completion_context = 1;
-	ret = nvme_transport_qpair_process_completions(qpair, max_completions);
+	ret += nvme_transport_qpair_process_completions(qpair, max_completions);
 	qpair->in_completion_context = 0;
 	if (qpair->delete_after_completion_context) {
 		/*
@@ -395,6 +412,8 @@ nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 
 	STAILQ_INIT(&qpair->free_req);
 	STAILQ_INIT(&qpair->queued_req);
+	TAILQ_INIT(&qpair->err_cmd_head);
+	STAILQ_INIT(&qpair->err_req_head);
 
 	req_size_padded = (sizeof(struct nvme_request) + 63) & ~(size_t)63;
 
@@ -415,6 +434,22 @@ nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 void
 nvme_qpair_deinit(struct spdk_nvme_qpair *qpair)
 {
+	struct nvme_request *req;
+	struct nvme_error_cmd *cmd, *entry;
+
+	while (!STAILQ_EMPTY(&qpair->err_req_head)) {
+		req = STAILQ_FIRST(&qpair->err_req_head);
+		STAILQ_REMOVE_HEAD(&qpair->err_req_head, stailq);
+		nvme_qpair_manual_complete_request(qpair, req,
+						   req->cpl.status.sct,
+						   req->cpl.status.sc, true);
+	}
+
+	TAILQ_FOREACH_SAFE(cmd, &qpair->err_cmd_head, link, entry) {
+		TAILQ_REMOVE(&qpair->err_cmd_head, cmd, link);
+		spdk_dma_free(cmd);
+	}
+
 	spdk_dma_free(qpair->req_buf);
 }
 
@@ -423,6 +458,7 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 {
 	int			rc = 0;
 	struct nvme_request	*child_req, *tmp;
+	struct nvme_error_cmd	*cmd;
 	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
 	bool			child_req_failed = false;
 
@@ -449,6 +485,26 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 		}
 
 		return rc;
+	}
+
+	/* queue those requests which matches with opcode in err_cmd list */
+	if (spdk_unlikely(!TAILQ_EMPTY(&qpair->err_cmd_head))) {
+		TAILQ_FOREACH(cmd, &qpair->err_cmd_head, link) {
+			if (!cmd->do_not_submit) {
+				continue;
+			}
+
+			if ((cmd->opc == req->cmd.opc) && cmd->err_count) {
+				/* add to error request list and set cpl */
+				req->timeout_tsc = cmd->timeout_tsc;
+				req->last_poll_tsc = spdk_get_ticks();
+				req->cpl.status.sct = cmd->status.sct;
+				req->cpl.status.sc = cmd->status.sc;
+				STAILQ_INSERT_TAIL(&qpair->err_req_head, req, stailq);
+				cmd->err_count--;
+				return 0;
+			}
+		}
 	}
 
 	return nvme_transport_qpair_submit_request(qpair, req);
@@ -482,6 +538,16 @@ nvme_qpair_enable(struct spdk_nvme_qpair *qpair)
 void
 nvme_qpair_disable(struct spdk_nvme_qpair *qpair)
 {
+	struct nvme_request		*req;
+
+	while (!STAILQ_EMPTY(&qpair->err_req_head)) {
+		req = STAILQ_FIRST(&qpair->err_req_head);
+		STAILQ_REMOVE_HEAD(&qpair->err_req_head, stailq);
+		nvme_qpair_manual_complete_request(qpair, req,
+						   req->cpl.status.sct,
+						   req->cpl.status.sc, true);
+	}
+
 	nvme_transport_qpair_disable(qpair);
 }
 
@@ -499,4 +565,67 @@ nvme_qpair_fail(struct spdk_nvme_qpair *qpair)
 	}
 
 	nvme_transport_qpair_fail(qpair);
+}
+
+int
+spdk_nvme_qpair_add_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
+					struct spdk_nvme_qpair *qpair,
+					uint8_t opc, bool do_not_submit,
+					uint64_t timeout,
+					uint32_t err_count,
+					uint8_t sct, uint8_t sc)
+{
+	struct nvme_error_cmd *cmd, *entry;
+
+	if (qpair == NULL) {
+		qpair = ctrlr->adminq;
+	}
+
+	TAILQ_FOREACH_SAFE(cmd, &qpair->err_cmd_head, link, entry) {
+		if (cmd->opc == opc) {
+			cmd->do_not_submit = do_not_submit;
+			cmd->err_count = err_count;
+			cmd->timeout_tsc = timeout / 1000 * spdk_get_ticks_hz();
+			cmd->status.sct = sct;
+			cmd->status.sc = sc;
+			return 0;
+		}
+	}
+
+	cmd = spdk_dma_zmalloc(sizeof(*cmd), 64, NULL);
+	if (!cmd) {
+		return -ENOMEM;
+	}
+
+	cmd->do_not_submit = do_not_submit;
+	cmd->err_count = err_count;
+	cmd->timeout_tsc = timeout / 1000 * spdk_get_ticks_hz();
+	cmd->opc = opc;
+	cmd->status.sct = sct;
+	cmd->status.sc = sc;
+	TAILQ_INSERT_TAIL(&qpair->err_cmd_head, cmd, link);
+
+	return 0;
+}
+
+void
+spdk_nvme_qpair_remove_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
+		struct spdk_nvme_qpair *qpair,
+		uint8_t opc)
+{
+	struct nvme_error_cmd *cmd, *entry;
+
+	if (qpair == NULL) {
+		qpair = ctrlr->adminq;
+	}
+
+	TAILQ_FOREACH_SAFE(cmd, &qpair->err_cmd_head, link, entry) {
+		if (cmd->opc == opc) {
+			TAILQ_REMOVE(&qpair->err_cmd_head, cmd, link);
+			spdk_dma_free(cmd);
+			return;
+		}
+	}
+
+	return;
 }
