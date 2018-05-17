@@ -46,6 +46,30 @@
       "revId": "1daee266f615392091023d8216a38b50071dacec",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "72e188fb_9353f26d",
+        "filename": "lib/bdev/agg/vbdev_agg.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-17T10:58:55Z",
+      "side": 1,
+      "message": "For this case, task struct is per caller and hence by consolidating done call on the same core, no race will occur. We can control the core on which done is called",
+      "parentUuid": "7c4f0cbd_806d5633",
+      "range": {
+        "startLine": 137,
+        "startChar": 7,
+        "endLine": 137,
+        "endChar": 28
+      },
+      "revId": "1daee266f615392091023d8216a38b50071dacec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
