@@ -10,7 +10,7 @@ if [ -s /etc/redhat-release ]; then
 		yum --enablerepo=extras install -y epel-release
 	fi
 	yum install -y gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
-		git astyle-devel python-pep8 lcov python clang-analyzer libuuid-devel \
+		git astyle python-pep8 lcov python clang-analyzer libuuid-devel \
 		sg3_utils libiscsi-devel
 	# Additional dependencies for NVMe over Fabrics
 	yum install -y libibverbs-devel librdmacm-devel
