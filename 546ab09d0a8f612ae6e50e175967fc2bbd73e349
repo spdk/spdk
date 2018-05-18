@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "99785356_9f248170",
+        "filename": "scripts/gen_nvme.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-18T07:50:26Z",
+      "side": 1,
+      "message": "Uhm... why do we have if/else here? Shoudlnt we change to json config in all the tests which rely on gen_nvme.sh?",
+      "range": {
+        "startLine": 15,
+        "startChar": 1,
+        "endLine": 15,
+        "endChar": 21
+      },
+      "revId": "546ab09d0a8f612ae6e50e175967fc2bbd73e349",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d019eeab_f878988a",
+        "filename": "scripts/gen_nvme.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-18T07:50:26Z",
+      "side": 1,
+      "message": "this line is way too long and could use some comment describing what is actually going on here",
+      "revId": "546ab09d0a8f612ae6e50e175967fc2bbd73e349",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "359cb4f7_e71e62c8",
+        "filename": "scripts/gen_nvme.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-18T07:50:26Z",
+      "side": 1,
+      "message": "tabs/spaces",
+      "range": {
+        "startLine": 20,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 4
+      },
+      "revId": "546ab09d0a8f612ae6e50e175967fc2bbd73e349",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
