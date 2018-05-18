@@ -119,7 +119,7 @@ free_rpc_get_bdevs(struct rpc_get_bdevs *r)
 }
 
 static const struct spdk_json_object_decoder rpc_get_bdevs_decoders[] = {
-	{"name", offsetof(struct rpc_get_bdevs, name), spdk_json_decode_string},
+	{"name", offsetof(struct rpc_get_bdevs, name), spdk_json_decode_string, true},
 };
 
 static void
@@ -130,28 +130,22 @@ spdk_rpc_get_bdevs(struct spdk_jsonrpc_request *request,
 	struct spdk_json_write_ctx *w;
 	struct spdk_bdev *bdev = NULL;
 
-	if (params != NULL) {
-		if (spdk_json_decode_object(params, rpc_get_bdevs_decoders,
-					    SPDK_COUNTOF(rpc_get_bdevs_decoders),
-					    &req)) {
-			SPDK_ERRLOG("spdk_json_decode_object failed\n");
+	if (params && spdk_json_decode_object(params, rpc_get_bdevs_decoders,
+					      SPDK_COUNTOF(rpc_get_bdevs_decoders),
+					      &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		goto invalid;
+	}
+
+	if (req.name) {
+		bdev = spdk_bdev_get_by_name(req.name);
+		if (bdev == NULL) {
+			SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
 			goto invalid;
-		} else {
-			if (req.name == NULL) {
-				SPDK_ERRLOG("missing name param\n");
-				goto invalid;
-			}
-
-			bdev = spdk_bdev_get_by_name(req.name);
-			if (bdev == NULL) {
-				SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
-				goto invalid;
-			}
-
-			free_rpc_get_bdevs(&req);
 		}
 	}
 
+	free_rpc_get_bdevs(&req);
 	w = spdk_jsonrpc_begin_result(request);
 	if (w == NULL) {
 		return;
@@ -191,7 +185,7 @@ free_rpc_get_bdevs_config(struct rpc_get_bdevs_config *r)
 }
 
 static const struct spdk_json_object_decoder rpc_dump_bdevs_config_decoders[] = {
-	{"name", offsetof(struct rpc_get_bdevs_config, name), spdk_json_decode_string},
+	{"name", offsetof(struct rpc_get_bdevs_config, name), spdk_json_decode_string, true},
 };
 
 static void
