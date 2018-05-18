@@ -101,11 +101,11 @@ function migration_tc2_configure_vhost()
 	waitforlisten "$nvmf_tgt_pid" "$nvmf_dir/rpc.sock"
 	timing_exit start_nvmf_tgt
 
-	spdk_vhost_run --conf-path=$BASE_DIR --memory=512 --vhost-num=0
+	spdk_vhost_run --json-path=$BASE_DIR --memory=512 --vhost-num=0
 	# Those are global intentionaly
 	vhost_1_reactor_mask=0x2
 	vhost_1_master_core=1
-	spdk_vhost_run --conf-path=$BASE_DIR --memory=512 --vhost-num=1
+	spdk_vhost_run --json-path=$BASE_DIR --memory=512 --vhost-num=1
 
 	local rdma_ip_list=$(get_available_rdma_ips)
 	local nvmf_target_ip=$(echo "$rdma_ip_list" | head -n 1)
