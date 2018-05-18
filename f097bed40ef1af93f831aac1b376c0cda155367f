@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "25d44c1f_fffb00d1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2907,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-18T22:51:15Z",
+      "side": 1,
+      "message": "I\u0027m not sure if we want to actually expand the stored size in this case; this would mean that resizing the underlying device small -\u003e large -\u003e small would break the blobstore (it would fail to load when resized back to the original size).",
+      "range": {
+        "startLine": 2907,
+        "startChar": 30,
+        "endLine": 2907,
+        "endChar": 96
+      },
+      "revId": "f097bed40ef1af93f831aac1b376c0cda155367f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
