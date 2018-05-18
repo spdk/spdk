@@ -82,7 +82,7 @@ if [[ $test_type =~ "spdk_vhost" ]]; then
 	notice ""
 	notice "running SPDK"
 	notice ""
-	spdk_vhost_run --conf-path=$AUTOTEST_BASE_DIR
+	spdk_vhost_run --json-path=$AUTOTEST_BASE_DIR
 	notice ""
 fi
 

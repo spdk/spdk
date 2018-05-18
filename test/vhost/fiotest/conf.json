@@ -1,0 +1,80 @@
+{
+  "subsystems": [
+    {
+      "subsystem": "copy",
+      "config": null
+    },
+    {
+      "subsystem": "interface",
+      "config": null
+    },
+    {
+      "subsystem": "net_framework",
+      "config": null
+    },
+    {
+      "subsystem": "bdev",
+      "config": [
+        {
+          "params": {
+            "base_bdev": "Nvme0n1",
+            "split_size_mb": 0,
+            "split_count": 4
+          },
+          "method": "construct_split_vbdev"
+        },
+        {
+          "params": {
+            "block_size": 4096,
+            "num_blocks": 32768
+          },
+          "method": "construct_malloc_bdev"
+        },
+        {
+          "params": {
+            "block_size": 4096,
+            "num_blocks": 32768
+          },
+          "method": "construct_malloc_bdev"
+        }
+      ]
+    },
+    {
+      "subsystem": "nbd",
+      "config": []
+    },
+    {
+      "subsystem": "scsi",
+      "config": null
+    },
+    {
+      "subsystem": "vhost",
+      "config": [
+        {
+          "params": {
+            "cpumask": "0x1",
+            "ctrlr": "vhost.0"
+          },
+          "method": "construct_vhost_scsi_controller"
+        },
+        {
+          "params": {
+            "scsi_target_num": 0,
+            "bdev_name": "Malloc0",
+            "ctrlr": "vhost.0"
+          },
+          "method": "add_vhost_scsi_lun"
+        },
+        {
+          "params": {
+            "dev_name": "Malloc1",
+            "readonly": true,
+            "ctrlr": "vhost.1",
+            "cpumask": "0x1"
+          },
+          "method": "construct_vhost_blk_controller"
+        }
+      ]
+    }
+  ]
+}
