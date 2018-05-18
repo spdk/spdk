@@ -57,7 +57,7 @@ function migration_tc1()
 	local job_file="$MIGRATION_DIR/migration-tc1.job"
 
 	# Run vhost
-	spdk_vhost_run --conf-path=$MIGRATION_DIR
+	spdk_vhost_run
 	migration_tc1_configure_vhost
 
 	notice "Setting up VMs"
