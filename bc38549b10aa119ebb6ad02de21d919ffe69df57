@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f763c3f6_72b5b68d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1876,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-18T01:56:49Z",
+      "side": 0,
+      "message": "This comment is obsolute? Notice like your feedback should be added instead?",
+      "range": {
+        "startLine": 1872,
+        "startChar": 0,
+        "endLine": 1876,
+        "endChar": 4
+      },
+      "revId": "bc38549b10aa119ebb6ad02de21d919ffe69df57",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
