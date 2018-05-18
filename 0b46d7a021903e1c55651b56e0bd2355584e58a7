@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "42391ada_f56a3800",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-18T07:39:12Z",
+      "side": 1,
+      "message": "Commented - remove?",
+      "range": {
+        "startLine": 108,
+        "startChar": 0,
+        "endLine": 111,
+        "endChar": 75
+      },
+      "revId": "0b46d7a021903e1c55651b56e0bd2355584e58a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
