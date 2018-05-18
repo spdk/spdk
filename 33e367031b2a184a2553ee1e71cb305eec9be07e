@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "44991094_c8f2497f",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-05-18T19:33:34Z",
+      "side": 1,
+      "message": "The JSON change fixes the \"spdk_json_decode_object failed\" error, but now I run into this \"missing name param\" branch. If req.name is NULL, the code needs to skip searching by name.",
+      "revId": "33e367031b2a184a2553ee1e71cb305eec9be07e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
