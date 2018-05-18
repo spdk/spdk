@@ -42,6 +42,29 @@
     },
     {
       "key": {
+        "uuid": "e5597160_24ed6ac9",
+        "filename": "scripts/gen_nvme.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-18T11:23:12Z",
+      "side": 1,
+      "message": "Instead of filtering file please just echo bdev subsystem config.\n\nAnother task is adding \"load_subsystem_config\" action to scripts/rpc.py that you can use to load this config.\n\n\nAslo, can check eg if \"$1\" \u003d\u003d \"json\" to switch to json config print.",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 18,
+        "endChar": 5
+      },
+      "revId": "546ab09d0a8f612ae6e50e175967fc2bbd73e349",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "359cb4f7_e71e62c8",
         "filename": "scripts/gen_nvme.sh",
         "patchSetId": 2
@@ -58,6 +81,29 @@
         "startChar": 0,
         "endLine": 20,
         "endChar": 4
+      },
+      "revId": "546ab09d0a8f612ae6e50e175967fc2bbd73e349",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bfbacbad_1094df30",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-18T11:23:12Z",
+      "side": 1,
+      "message": "I think both config and json cofniguration can be allowed at the same time or you should at least check if \u0027--json-path\u0027 was given like in line 185",
+      "range": {
+        "startLine": 167,
+        "startChar": 1,
+        "endLine": 167,
+        "endChar": 5
       },
       "revId": "546ab09d0a8f612ae6e50e175967fc2bbd73e349",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
