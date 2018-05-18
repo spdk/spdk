@@ -121,7 +121,7 @@ trap 'error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
 vm_kill_all
 
 notice "running SPDK vhost"
-spdk_vhost_run --conf-path=$LVOL_TEST_DIR
+spdk_vhost_run --json-path=$LVOL_TEST_DIR
 notice "..."
 
 trap 'clean_lvol_cfg; error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
