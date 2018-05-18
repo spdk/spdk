@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "af021ceb_036f89de",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-05-18T17:18:01Z",
+      "side": 1,
+      "message": "The whole block section can be removed now, just put \"TAILQ_REMOVE(\u0026req-\u003eqpair-\u003eoutstanding, req, link);\" is ok.",
+      "revId": "18efd3e183a5cc2467513295bd6f16465d070b29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
