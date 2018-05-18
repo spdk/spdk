@@ -365,7 +365,7 @@ function start_stub() {
 		sleep 1s
 	done
 	# dump process memory map contents to help debug random ASLR failures
-	pmap -pX $stubpid
+	pmap -pX $stubpid || pmap -x $stubpid || true
 	echo done.
 }
 
