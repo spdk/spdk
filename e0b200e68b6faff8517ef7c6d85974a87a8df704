@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3f5ca558_088c51e0",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 40
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-18T07:33:37Z",
+      "side": 1,
+      "message": "Commented?",
+      "range": {
+        "startLine": 68,
+        "startChar": 1,
+        "endLine": 69,
+        "endChar": 53
+      },
+      "revId": "e0b200e68b6faff8517ef7c6d85974a87a8df704",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "abc1bea5_0e8992c3",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 40
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-18T07:33:37Z",
+      "side": 1,
+      "message": "You can remove these lines and use function clean_after_test_json_config instead",
+      "range": {
+        "startLine": 103,
+        "startChar": 1,
+        "endLine": 105,
+        "endChar": 23
+      },
+      "revId": "e0b200e68b6faff8517ef7c6d85974a87a8df704",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
