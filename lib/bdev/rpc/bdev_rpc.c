@@ -44,6 +44,7 @@ spdk_rpc_dump_bdev_info(struct spdk_json_write_ctx *w,
 {
 	struct spdk_bdev_alias *tmp;
 	uint64_t num_sectors;
+	uint64_t size_mb;
 
 	spdk_json_write_object_begin(w);
 
@@ -72,6 +73,11 @@ spdk_rpc_dump_bdev_info(struct spdk_json_write_ctx *w,
 		      / SPDK_BDEV_SECTOR_SIZE;
 	spdk_json_write_name(w, "num_sectors");
 	spdk_json_write_uint64(w, num_sectors);
+
+	size_mb = (spdk_bdev_get_block_size(bdev) * spdk_bdev_get_num_blocks(bdev))
+		  / (1024 * 1024);
+	spdk_json_write_name(w, "size_mb");
+	spdk_json_write_uint64(w, size_mb);
 
 	if (!spdk_mem_all_zero(&bdev->uuid, sizeof(bdev->uuid))) {
 		char uuid_str[SPDK_UUID_STRING_LEN];
