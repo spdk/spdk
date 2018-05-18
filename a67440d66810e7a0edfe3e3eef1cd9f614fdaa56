@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1efc8241_28d978ff",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2904,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-05-18T07:19:25Z",
+      "side": 1,
+      "message": "Yes, superblock is written in line 2933. We don\u0027t have to set super-\u003eclean to 0 to write superblock. It is written anyway.",
+      "parentUuid": "f2e7e32e_6cec2e08",
+      "revId": "a67440d66810e7a0edfe3e3eef1cd9f614fdaa56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4403ac53_fdcadd52",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 6
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "2d420606_cf61466f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2905,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-05-18T07:19:25Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "4403ac53_fdcadd52",
+      "revId": "a67440d66810e7a0edfe3e3eef1cd9f614fdaa56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c562ee6e_70c9cad6",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 6
@@ -47,6 +83,24 @@
       "writtenOn": "2018-05-17T17:50:32Z",
       "side": 1,
       "message": "Please add a log here so we know what went wrong.",
+      "revId": "a67440d66810e7a0edfe3e3eef1cd9f614fdaa56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a13bd1a_138db2b6",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2906,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-05-18T07:19:25Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "c562ee6e_70c9cad6",
       "revId": "a67440d66810e7a0edfe3e3eef1cd9f614fdaa56",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -82,6 +136,24 @@
       "side": 1,
       "message": "Actually, based on a quick glance at the code, I think we should be able to handle a changing block size as long as the total size in bytes is OK.\n\nMaybe this should store the size of the blobstore in bytes (blockcnt * blocklen) and just verify that?  We would need to check that this actually works correctly.\n\nWe probably should also verify cluster_size \u003e\u003d blocklen at runtime, but that\u0027s somewhat unrelated to this change.",
       "parentUuid": "274cb669_82decf46",
+      "revId": "a67440d66810e7a0edfe3e3eef1cd9f614fdaa56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36cc708f_4bec55fa",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-05-18T07:19:25Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "90e89079_b97a268e",
       "revId": "a67440d66810e7a0edfe3e3eef1cd9f614fdaa56",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
