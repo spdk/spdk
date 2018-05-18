@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "73c81e9a_583977ee",
+        "filename": "include/spdk/nvme_lnvm.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-05-18T06:01:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "71b94a27_87b49abc",
+      "range": {
+        "startLine": 52,
+        "startChar": 5,
+        "endLine": 52,
+        "endChar": 33
+      },
+      "revId": "a77554d2dc11cd4cf157653b6763bd2ccfc831ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2b19b598_84ad2a9a",
         "filename": "include/spdk/nvme_lnvm.h",
         "patchSetId": 1
@@ -36,6 +60,24 @@
       "writtenOn": "2018-05-17T17:25:44Z",
       "side": 1,
       "message": "Since these functions are implemented in the NVMe library, I\u0027d prefer to just put their declarations in the main include/spdk/nvme.h rather than adding a new header (unless there\u0027s a good reason to keep them separate).",
+      "revId": "a77554d2dc11cd4cf157653b6763bd2ccfc831ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8c64a07_b84aeac6",
+        "filename": "include/spdk/nvme_lnvm.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-05-18T06:01:26Z",
+      "side": 1,
+      "message": "Hi, Daniel, \nit is probably that we will also add vector io_command API for open-channel spec.\nAnd as I can see, some more facility funcs specific for lnvm are required in the future when we want to add up layer building blocks.\n\nso just think if we keep a separate header for these funcs,nvme developers will not get confused on them.",
+      "parentUuid": "2b19b598_84ad2a9a",
       "revId": "a77554d2dc11cd4cf157653b6763bd2ccfc831ee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
