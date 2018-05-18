@@ -34,7 +34,7 @@ function host_2_start_vhost()
 
 	notice "Starting vhost 1 instance on remote server"
 	trap 'host_2_cleanup_vhost; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR EXIT
-	spdk_vhost_run --conf-path=$MIGRATION_DIR --vhost-num=1
+	spdk_vhost_run --vhost-num=1
 
 	$rpc construct_nvme_bdev -b Nvme0 -t rdma -f ipv4 -a $RDMA_TARGET_IP -s 4420 -n "nqn.2018-02.io.spdk:cnode1"
 	$rpc construct_vhost_scsi_controller $target_vm_ctrl
