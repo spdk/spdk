@@ -59,6 +59,30 @@
     },
     {
       "key": {
+        "uuid": "f4251c90_93528fc0",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2977,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-05-18T13:17:17Z",
+      "side": 1,
+      "message": "No, but patch https://review.gerrithub.io/c/spdk/spdk/+/410896 will depend on writing updated superblock.",
+      "parentUuid": "81d303ff_d65f532e",
+      "range": {
+        "startLine": 2973,
+        "startChar": 0,
+        "endLine": 2977,
+        "endChar": 2
+      },
+      "revId": "ba68e93b3e9761a16b66f1917753f97ae04c01d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "38ee4b0e_da5740ae",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 7
