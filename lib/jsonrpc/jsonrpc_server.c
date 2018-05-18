@@ -71,8 +71,8 @@ parse_single_request(struct spdk_jsonrpc_request *request, struct spdk_json_val 
 		goto done;
 	}
 
-	if (!req.version || req.version->type != SPDK_JSON_VAL_STRING ||
-	    !spdk_json_strequal(req.version, "2.0")) {
+	if (req.version && (req.version->type != SPDK_JSON_VAL_STRING ||
+			    !spdk_json_strequal(req.version, "2.0"))) {
 		invalid = true;
 	}
 
