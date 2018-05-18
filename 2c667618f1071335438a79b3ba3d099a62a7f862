@@ -22,6 +22,30 @@
       "revId": "2c667618f1071335438a79b3ba3d099a62a7f862",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6176708b_320cf6b0",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 561,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-05-18T06:01:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5aca8baa_ba9c7717",
+      "range": {
+        "startLine": 561,
+        "startChar": 21,
+        "endLine": 561,
+        "endChar": 22
+      },
+      "revId": "2c667618f1071335438a79b3ba3d099a62a7f862",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
