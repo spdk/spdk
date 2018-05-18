@@ -544,7 +544,7 @@ if __name__ == "__main__":
     p.add_argument('-l', '--lvs-name', help='lvol store name', required=False)
     p.add_argument('-t', '--thin-provision', action='store_true', help='create lvol bdev as thin provisioned')
     p.add_argument('lvol_name', help='name for this lvol')
-    p.add_argument('size', help='size in MiB for this bdev', type=int)
+    p.add_argument('size', help='size in byte for this bdev', type=int)
     p.set_defaults(func=construct_lvol_bdev)
 
     @call_cmd
