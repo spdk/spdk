@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "549d90fe_4b2441ef",
+        "filename": "test/iscsi_tgt/qos/iscsi.conf.in",
+        "patchSetId": 4
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-05-18T17:06:45Z",
+      "side": 1,
+      "message": "Maybe the whole test doesn\u0027t need a configuration file.",
+      "revId": "bb2b796a75c6cc4dbb45346f51a495e79ddff776",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e6801f4_d062576f",
+        "filename": "test/iscsi_tgt/qos/iscsi.conf.in",
+        "patchSetId": 4
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-05-18T17:06:45Z",
+      "side": 1,
+      "message": "No need for this section, as you are using Malloc backend.",
+      "revId": "bb2b796a75c6cc4dbb45346f51a495e79ddff776",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d6731224_588fd12a",
         "filename": "test/iscsi_tgt/qos/qos.sh",
         "patchSetId": 4
