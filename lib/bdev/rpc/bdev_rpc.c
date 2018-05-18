@@ -119,7 +119,7 @@ free_rpc_get_bdevs(struct rpc_get_bdevs *r)
 }
 
 static const struct spdk_json_object_decoder rpc_get_bdevs_decoders[] = {
-	{"name", offsetof(struct rpc_get_bdevs, name), spdk_json_decode_string},
+	{"name", offsetof(struct rpc_get_bdevs, name), spdk_json_decode_string, true},
 };
 
 static void
