@@ -126,6 +126,24 @@
     },
     {
       "key": {
+        "uuid": "6c450044_60b93632",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 45
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-05-18T02:56:20Z",
+      "side": 1,
+      "message": "@Shuhei\nYes, exactly.",
+      "parentUuid": "c64db52b_84579823",
+      "revId": "4bd168d81a9ef4e7ef190fb7a6306f2048fc39d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "19a8a2b8_67c3e00e",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 45
