@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2fc423be_cdab23b0",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1355,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-05-18T12:02:24Z",
+      "side": 1,
+      "message": "Unnecessary line.",
+      "revId": "ba68e93b3e9761a16b66f1917753f97ae04c01d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cbf278d4_bddf8bc3",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1371,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-05-18T12:02:24Z",
+      "side": 1,
+      "message": "Unnecessary line.",
+      "revId": "ba68e93b3e9761a16b66f1917753f97ae04c01d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "81d303ff_d65f532e",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2977,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-05-18T12:02:24Z",
+      "side": 1,
+      "message": "Do we need that at all with current implementation? Does anything change in super block here so that we need to write it?",
+      "range": {
+        "startLine": 2973,
+        "startChar": 0,
+        "endLine": 2977,
+        "endChar": 2
+      },
+      "revId": "ba68e93b3e9761a16b66f1917753f97ae04c01d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "38ee4b0e_da5740ae",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-05-18T12:02:24Z",
+      "side": 1,
+      "message": "Alignment.",
+      "range": {
+        "startLine": 184,
+        "startChar": 5,
+        "endLine": 184,
+        "endChar": 30
+      },
+      "revId": "ba68e93b3e9761a16b66f1917753f97ae04c01d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
