@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3e7b13c0_ea16b972",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1404,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-18T11:35:40Z",
+      "side": 1,
+      "message": "Two new lines.",
+      "revId": "6556dd570ae66aa5f7c19404d8a9428b01903301",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de696a5c_6c79e091",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1170,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-18T11:35:40Z",
+      "side": 1,
+      "message": "Something like here? https://review.gerrithub.io/#/c/spdk/spdk/+/408850/11/lib/nvme/nvme_ns_cmd.c@522",
+      "range": {
+        "startLine": 1169,
+        "startChar": 11,
+        "endLine": 1170,
+        "endChar": 71
+      },
+      "revId": "6556dd570ae66aa5f7c19404d8a9428b01903301",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c14ee03_c5308f9a",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 455,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-18T11:35:40Z",
+      "side": 1,
+      "message": "Multiplication don\u0027t need ( ) here",
+      "range": {
+        "startLine": 455,
+        "startChar": 49,
+        "endLine": 455,
+        "endChar": 70
+      },
+      "revId": "6556dd570ae66aa5f7c19404d8a9428b01903301",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
