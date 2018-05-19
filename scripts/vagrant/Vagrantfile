@@ -4,22 +4,38 @@
 Vagrant.configure(2) do |config|
 
   # Pick the right distro and bootstrap, default is ubuntu1604
-  distro = ( ENV['SPDK_VAGRANT_DISTRO'] || "ubuntu1604")
-  if distro == 'centos7'
-    config.vm.box = "puppetlabs/centos-7.2-64-nocm"
-    config.ssh.insert_key = false
-    # Puppetlabs does not provide libvirt Box so we will use official one
-    config.vm.provider :libvirt do |libvirt|
-       config.vm.box = "centos/7"
-    end if Vagrant.has_plugin?('vagrant-libvirt')
-  else
+  distro = ( ENV['SPDK_VAGRANT_DISTRO'] || "fedora26")
+  case distro
+  when "centos7"
+	  config.vm.box = "puppetlabs/centos-7.2-64-nocm"
+	  config.ssh.insert_key = false
+	  # Puppetlabs does not provide libvirt Box so we will use official one
+	  config.vm.provider :libvirt do |libvirt|
+		  config.vm.box = "centos/7"
+	  end if Vagrant.has_plugin?('vagrant-libvirt')
+  when "unbuntu16"
+    # See: https://app.vagrantup.com/puppetlabs/boxes/ubuntu-16.04-64-nocm
     config.vm.box = "puppetlabs/ubuntu-16.04-64-nocm"
+    config.vm.box_version = "1.0.0"
+  when "unbuntu18"
+    # See: https://app.vagrantup.com/bento/boxes/ubuntu-18.04
+    config.vm.box = "bento/ubuntu-18.04"
+    config.vm.box_version = "201803.24.0"
+  when "fedora26"
+    #See: https://app.vagrantup.com/generic/boxes/fedora2
+    config.vm.box = "generic/fedora26"
+  when "fedora27"
+    #See: https://app.vagrantup.com/generic/boxes/fedora27
+    config.vm.box = "generic/fedora27"
+  when "freebsd11"
+    #See: https://app.vagrantup.com/generic/boxes/freebsd11
+    config.vm.box = "generic/freebsd11"
+  else
+    "Invalid argument #{distro}"
+    abort("Invalid argument!")
   end
-  config.vm.box_check_update = false
 
-  config.vm.provision :shell, :path => File.join(File.dirname(__FILE__),"update.sh")
-  config.vm.provision :shell, :path => File.join(File.dirname(__FILE__),"build.sh")
-  config.vm.provision :shell, inline: "/spdk/scripts/setup.sh", run: "always"
+  config.vm.box_check_update = false
 
   # Copy in the .gitconfig if it exists
   if File.file?(File.expand_path("~/.gitconfig"))
@@ -46,8 +62,8 @@ Vagrant.configure(2) do |config|
 
   vmcpu=(ENV['SPDK_VAGRANT_VMCPU'] || 2)
   vmram=(ENV['SPDK_VAGRANT_VMRAM'] || 4096)
+  spdk_dir=(ENV['SPDK_DIR'] || "none")
 
-  config.ssh.forward_agent = true
   config.ssh.forward_x11 = true
 
   config.vm.provider "virtualbox" do |vb|
@@ -55,9 +71,11 @@ Vagrant.configure(2) do |config|
       vb.memory = "#{vmram}"
       vb.cpus = "#{vmcpu}"
 
-      # rsync the vpp directory if provision hasn't happened yet
-      unless File.exist? (".vagrant/machines/default/virtualbox/action_provision")
-        config.vm.synced_folder "../../", "/spdk", type: "rsync", rsync__auto: false
+      # rsync the spdk directory if provision hasn't happened yet
+      if spdk_dir != "none"
+         unless File.exist? (".vagrant/machines/default/virtualbox/action_provision")
+           config.vm.synced_folder "#{spdk_dir}", "/home/vagrant/spdk_repo/spdk", type: "rsync", rsync__auto: false
+         end
       end
 
       nvme_disk = 'nvme.vdi'
@@ -97,10 +115,11 @@ Vagrant.configure(2) do |config|
       # libvirt.storage_pool_name = "vm"
 
       # rsync the vpp directory if provision hasn't happened yet
-      unless File.exist? (".vagrant/machines/default/libvirt/action_provision")
-        config.vm.synced_folder "../../", "/spdk", type: "rsync"
+      if spdk_dir != "none"
+        unless File.exist? (".vagrant/machines/default/libvirt/action_provision")
+           config.vm.synced_folder "#{spdk_dir}", "/home/vagrant/spdk_repo/spdk", type: "rsync"
+        end
       end
-
    end
 
 end

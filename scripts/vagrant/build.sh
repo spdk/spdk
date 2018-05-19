@@ -1,7 +1,8 @@
 #!/bin/bash
+echo "Enter $0"
 
-SPDK_DIR=/spdk
-
+SPDK_DIR=/home/vagrant/spdk_repo/spdk
+SYSTEM=`uname -s`
 SUDOCMD="sudo -H -u vagrant"
 echo 0:$0
 echo 1:$1
@@ -34,6 +35,8 @@ echo DISTRIB_DESCRIPTION: $DISTRIB_DESCRIPTION
 
 cd $SPDK_DIR
 ./scripts/pkgdep.sh
-$SUDOCMD ./configure --enable-debug
-$SUDOCMD make clean
-$SUDOCMD make -j2
+#$SUDOCMD ./configure --enable-debug --enable-werro
+#$SUDOCMD make clean
+#$SUDOCMD make -j2
+
+echo "Leave $0"

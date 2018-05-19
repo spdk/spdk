@@ -108,7 +108,7 @@ timing_exit make_install
 timing_enter doxygen
 if [ $SPDK_BUILD_DOC -eq 1 ] && hash doxygen; then
 	(cd "$rootdir"/doc; $MAKE $MAKEFLAGS) &> "$out"/doxygen.log
-	if hash pdflatex; then
+	if hash pdflatex 2>/dev/null; then
 		(cd "$rootdir"/doc/output/latex && $MAKE $MAKEFLAGS) &>> "$out"/doxygen.log
 	fi
 	mkdir -p "$out"/doc

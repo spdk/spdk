@@ -1,4 +1,5 @@
 #!/bin/bash
+echo "Enter $0"
 
 # Make sure that we get the hugepages we need on provision boot
 # Note: The package install should take care of this at the end
@@ -42,3 +43,5 @@ elif [ $DISTRIB_ID == "CentOS" ]; then
     yum check-update
     yum update -y
 fi
+
+echo "Leave $0"

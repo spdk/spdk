@@ -124,8 +124,8 @@ if [ -d /usr/src/fio ]; then
 	config_params+=' --with-fio=/usr/src/fio'
 fi
 
-if [ -d /home/sys_sgsw/vtune_codes ]; then
-	config_params+=' --with-vtune=/home/sys_sgsw/vtune_codes'
+if [ -d /home/${USER}/vtune_codes ]; then
+	config_params+=' --with-vtune=/home/${USER}/vtune_codes'
 fi
 
 if [ -d /usr/include/rbd ] &&  [ -d /usr/include/rados ]; then
