@@ -45,6 +45,7 @@ for param in "$@"; do
 done
 
 . $(readlink -e "$(dirname $0)/../common/common.sh") || exit 1
+MIGRATION_DIR=$(readlink -f $(dirname $0))
 
 [[ ! -z "$test_cases" ]] || fail "Need '--test-cases=' parameter"
 
@@ -131,7 +132,7 @@ for test_case in ${test_cases//,/ }; do
 	notice "==============================="
 
 	timing_enter migration-tc${test_case}
-	source $BASE_DIR/migration-tc${test_case}.sh
+	source $MIGRATION_DIR/migration-tc${test_case}.sh
 	timing_exit migration-tc${test_case}
 done
 
