@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -e
-BASE_DIR=$(readlink -f $(dirname $0))
-[[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $BASE_DIR/../common && pwd)"
-[[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $BASE_DIR/../../../../ && pwd)"
+AUTOTEST_BASE_DIR=$(readlink -f $(dirname $0))
+[[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $AUTOTEST_BASE_DIR/../common && pwd)"
+[[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $AUTOTEST_BASE_DIR/../../../../ && pwd)"
 
 dry_run=false
 no_shutdown=false
@@ -82,7 +82,7 @@ if [[ $test_type =~ "spdk_vhost" ]]; then
 	notice ""
 	notice "running SPDK"
 	notice ""
-	spdk_vhost_run --conf-path=$BASE_DIR
+	spdk_vhost_run --conf-path=$AUTOTEST_BASE_DIR
 	notice ""
 fi
 
