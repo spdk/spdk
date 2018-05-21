@@ -31,7 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/stdinc.h"
+#include "copy_engine_ioat.h"
 
 #include "spdk_internal/copy_engine.h"
 #include "spdk_internal/log.h"
@@ -41,8 +41,6 @@
 #include "spdk/event.h"
 #include "spdk/io_channel.h"
 #include "spdk/ioat.h"
-
-#define IOAT_MAX_CHANNELS		64
 
 static bool g_ioat_enable = false;
 
@@ -279,15 +277,79 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_ioat_chan *
 }
 
 static int
+copy_engine_ioat_add_whitelist_device(const char *pci_bdf)
+{
+	if (pci_bdf == NULL) {
+		return -1;
+	}
+
+	if (g_probe_ctx.num_whitelist_devices >= IOAT_MAX_CHANNELS) {
+		SPDK_ERRLOG("Ioat whitelist is full (max size is %d)\n",
+			    IOAT_MAX_CHANNELS);
+		return -1;
+	}
+
+	if (spdk_pci_addr_parse(&g_probe_ctx.whitelist[g_probe_ctx.num_whitelist_devices],
+				pci_bdf) < 0) {
+		SPDK_ERRLOG("Invalid address %s\n", pci_bdf);
+		return -1;
+	}
+	g_probe_ctx.num_whitelist_devices++;
+
+	return 0;
+}
+
+int
+copy_engine_ioat_add_whitelist_devices(const char *pci_bdfs[], size_t num_pci_bdfs)
+{
+	size_t i;
+
+	if (g_ioat_enable) {
+		SPDK_ERRLOG("Ioat copy engine is scanned already\n");
+		return -1;
+	}
+
+	for (i = 0; i < num_pci_bdfs; i++) {
+		if (copy_engine_ioat_add_whitelist_device(pci_bdfs[i]) < 0) {
+			return -1;
+		}
+	}
+	return 0;
+}
+
+int
+copy_engine_ioat_scan(void)
+{
+	if (spdk_ioat_probe(&g_probe_ctx, probe_cb, attach_cb) != 0) {
+		SPDK_ERRLOG("spdk_ioat_probe() failed\n");
+		return -1;
+	}
+
+	if (g_ioat_enable) {
+		SPDK_ERRLOG("Ioat copy engine is scanned already\n");
+		return -1;
+	}
+
+	g_ioat_enable = true;
+
+	SPDK_INFOLOG(SPDK_LOG_COPY_IOAT, "Enable ioat copy engine offload\n");
+	spdk_copy_engine_register(&ioat_copy_engine);
+	spdk_io_device_register(&ioat_copy_engine, ioat_create_cb, ioat_destroy_cb,
+				sizeof(struct ioat_io_channel));
+	return 0;
+}
+
+static int
 copy_engine_ioat_init(void)
 {
 	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Ioat");
 	const char *pci_bdf;
 	int i;
+	bool enable = false;
 
 	if (sp != NULL) {
 		if (spdk_conf_section_get_boolval(sp, "Enable", false)) {
-			g_ioat_enable = true;
+			enable = true;
 			/* Enable Ioat */
 		}
 
@@ -297,30 +359,17 @@ copy_engine_ioat_init(void)
 			if (!pci_bdf) {
 				break;
 			}
-
-			if (spdk_pci_addr_parse(&g_probe_ctx.whitelist[g_probe_ctx.num_whitelist_devices],
-						pci_bdf) < 0) {
-				SPDK_ERRLOG("Invalid Ioat Whitelist address %s\n", pci_bdf);
+			if (copy_engine_ioat_add_whitelist_device(pci_bdf) < 0) {
 				return -1;
 			}
-			g_probe_ctx.num_whitelist_devices++;
 		}
 	}
 
-	if (!g_ioat_enable) {
+	if (!enable) {
 		return 0;
 	}
 
-	if (spdk_ioat_probe(&g_probe_ctx, probe_cb, attach_cb) != 0) {
-		SPDK_ERRLOG("spdk_ioat_probe() failed\n");
-		return -1;
-	}
-
-	SPDK_INFOLOG(SPDK_LOG_COPY_IOAT, "Ioat Copy Engine Offload Enabled\n");
-	spdk_copy_engine_register(&ioat_copy_engine);
-	spdk_io_device_register(&ioat_copy_engine, ioat_create_cb, ioat_destroy_cb,
-				sizeof(struct ioat_io_channel));
-	return 0;
+	return copy_engine_ioat_scan();
 }
 
 #define COPY_ENGINE_IOAT_HEADER_TMPL \
