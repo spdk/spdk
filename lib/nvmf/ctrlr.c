@@ -191,14 +191,6 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	return ctrlr;
 }
 
-static void ctrlr_destruct(void *ctx)
-{
-	struct spdk_nvmf_ctrlr *ctrlr = ctx;
-
-	spdk_nvmf_subsystem_remove_ctrlr(ctrlr->subsys, ctrlr);
-	free(ctrlr);
-}
-
 void
 spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 {
@@ -210,7 +202,9 @@ spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 		spdk_nvmf_transport_qpair_fini(qpair);
 	}
 
-	ctrlr_destruct(ctrlr);
+	spdk_nvmf_subsystem_remove_ctrlr(ctrlr->subsys, ctrlr);
+
+	free(ctrlr);
 }
 
 static void
@@ -272,50 +266,6 @@ spdk_nvmf_ctrlr_add_io_qpair(void *ctx)
 
 end:
 	spdk_thread_send_msg(qpair->group->thread, _spdk_nvmf_request_complete, req);
-}
-
-static void
-_ctrlr_destruct_check(void *ctx)
-{
-	struct spdk_nvmf_ctrlr *ctrlr = ctx;
-
-	assert(ctrlr != NULL);
-	assert(ctrlr->num_qpairs > 0);
-	ctrlr->num_qpairs--;
-	if (ctrlr->num_qpairs == 0) {
-		assert(ctrlr->subsys != NULL);
-		assert(ctrlr->subsys->thread != NULL);
-		spdk_thread_send_msg(ctrlr->subsys->thread, ctrlr_destruct, ctrlr);
-	}
-}
-
-static void
-nvmf_qpair_fini(void *ctx)
-{
-	struct spdk_nvmf_qpair *qpair = ctx;
-	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
-	struct spdk_thread *admin_thread = ctrlr->admin_qpair->group->thread;
-
-	spdk_nvmf_transport_qpair_fini(qpair);
-	spdk_thread_send_msg(admin_thread, _ctrlr_destruct_check, ctrlr);
-}
-
-static void
-ctrlr_delete_qpair(void *ctx)
-{
-	struct spdk_nvmf_qpair *qpair = ctx;
-	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
-
-	assert(ctrlr != NULL);
-	assert(ctrlr->num_qpairs > 0);
-	/* Defer the admin qpair deletion since there are still io qpairs */
-	if ((ctrlr->num_qpairs > 1) && (qpair == ctrlr->admin_qpair)) {
-		spdk_thread_send_msg(qpair->group->thread, ctrlr_delete_qpair, qpair);
-		return;
-	}
-
-	TAILQ_REMOVE(&ctrlr->qpairs, qpair, link);
-	spdk_thread_send_msg(qpair->group->thread, nvmf_qpair_fini, qpair);
 }
 
 static void
@@ -461,16 +411,64 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 	}
 }
 
+static void
+_spdk_nvmf_ctrlr_free(void *ctx)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = ctx;
+
+	spdk_nvmf_subsystem_remove_ctrlr(ctrlr->subsys, ctrlr);
+
+	free(ctrlr);
+}
+
+static void
+_spdk_nvmf_qpair_destroy(void *ctx)
+{
+	struct spdk_nvmf_qpair *qpair = ctx;
+
+	spdk_nvmf_transport_qpair_fini(qpair);
+}
+
+static void
+_spdk_nvmf_ctrlr_remove_qpair(void *ctx)
+{
+	struct spdk_nvmf_qpair *qpair = ctx;
+	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
+
+	assert(ctrlr != NULL);
+	assert(ctrlr->num_qpairs > 0);
+
+	TAILQ_REMOVE(&ctrlr->qpairs, qpair, link);
+	ctrlr->num_qpairs--;
+
+	/* Send a message to the thread that owns the qpair and destroy it. */
+	qpair->ctrlr = NULL;
+	spdk_thread_send_msg(qpair->group->thread, _spdk_nvmf_qpair_destroy, qpair);
+
+	if (ctrlr->num_qpairs == 0) {
+		/* If this was the last queue pair on the controller, also send a message
+		 * to the subsystem to remove the controller. */
+		spdk_thread_send_msg(ctrlr->subsys->thread, _spdk_nvmf_ctrlr_free, ctrlr);
+	}
+}
+
 void
 spdk_nvmf_ctrlr_disconnect(struct spdk_nvmf_qpair *qpair)
 {
-	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
-	struct spdk_nvmf_qpair *admin_qpair = ctrlr->admin_qpair;
+	struct spdk_nvmf_ctrlr *ctrlr;
 
-	assert(admin_qpair != NULL);
-	assert(admin_qpair->group != NULL);
-	assert(admin_qpair->group->thread != NULL);
-	spdk_thread_send_msg(admin_qpair->group->thread, ctrlr_delete_qpair, qpair);
+	ctrlr = qpair->ctrlr;
+
+	if (ctrlr == NULL) {
+		/* This qpair was never added to a controller. Skip a step
+		 * and destroy it immediately. */
+		spdk_thread_send_msg(qpair->group->thread, _spdk_nvmf_qpair_destroy, qpair);
+		return;
+	}
+
+	/* Send a message to the controller thread to remove the qpair from its internal
+	 * list. */
+	spdk_thread_send_msg(ctrlr->admin_qpair->group->thread, _spdk_nvmf_ctrlr_remove_qpair, qpair);
 }
 
 struct spdk_nvmf_qpair *
