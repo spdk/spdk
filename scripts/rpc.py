@@ -1037,6 +1037,13 @@ if __name__ == "__main__":
     format or dom.bus.dev.func format""", required=False)
     p.set_defaults(func=scan_copy_engine_ioat)
 
+    @call_cmd
+    def get_copy_engine_ioat(args):
+        print_dict(rpc.copy.get_copy_engine_ioat(args.client))
+
+    p = subparsers.add_parser('get_copy_engine_ioat', help='Display config and state of IOATs for copy engine.')
+    p.set_defaults(func=get_copy_engine_ioat)
+
     args = parser.parse_args()
 
     try:

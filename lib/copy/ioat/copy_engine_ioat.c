@@ -41,6 +41,7 @@
 #include "spdk/event.h"
 #include "spdk/io_channel.h"
 #include "spdk/ioat.h"
+#include "spdk/json.h"
 
 static bool g_ioat_enable = false;
 
@@ -60,6 +61,8 @@ struct ioat_device {
 
 static TAILQ_HEAD(, ioat_device) g_devices = TAILQ_HEAD_INITIALIZER(g_devices);
 static pthread_mutex_t g_ioat_mutex = PTHREAD_MUTEX_INITIALIZER;
+static uint32_t g_num_devices = 0;
+static uint32_t g_num_alloc_devices = 0;
 
 struct ioat_io_channel {
 	struct spdk_ioat_chan	*ioat_ch;
@@ -105,6 +108,7 @@ ioat_free_device(struct ioat_device *dev)
 {
 	pthread_mutex_lock(&g_ioat_mutex);
 	dev->is_allocated = false;
+	g_num_alloc_devices--;
 	pthread_mutex_unlock(&g_ioat_mutex);
 }
 
@@ -134,6 +138,7 @@ copy_engine_ioat_exit(void *ctx)
 	while (!TAILQ_EMPTY(&g_devices)) {
 		dev = TAILQ_FIRST(&g_devices);
 		TAILQ_REMOVE(&g_devices, dev, tailq);
+		g_num_devices--;
 		spdk_ioat_detach(dev->ioat);
 		ioat_free_device(dev);
 		spdk_dma_free(dev);
@@ -274,6 +279,7 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_ioat_chan *
 
 	dev->ioat = ioat;
 	TAILQ_INSERT_TAIL(&g_devices, dev, tailq);
+	g_num_devices++;
 }
 
 static int
@@ -404,6 +410,29 @@ copy_engine_ioat_config_text(FILE *fp)
 		fprintf(fp, COPY_ENGINE_IOAT_WHITELIST_TMPL,
 			dev->domain, dev->bus, dev->dev, dev->func);
 	}
+}
+
+void
+copy_engine_ioat_dump_info_json(struct spdk_json_write_ctx *w)
+{
+	int i;
+	char addr[32];
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_bool(w, "enabled", g_ioat_enable);
+
+	spdk_json_write_named_array_begin(w, "whitelist");
+	for (i = 0; i < g_probe_ctx.num_whitelist_devices; i++) {
+		spdk_pci_addr_fmt(addr, sizeof(addr), &g_probe_ctx.whitelist[i]);
+		spdk_json_write_string(w, addr);
+	}
+	spdk_json_write_array_end(w);
+
+	if (g_ioat_enable) {
+		spdk_json_write_named_uint32(w, "num_devices", g_num_devices);
+		spdk_json_write_named_uint32(w, "num_alloc_devices", g_num_alloc_devices);
+	}
+	spdk_json_write_object_end(w);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("copy_ioat", SPDK_LOG_COPY_IOAT)

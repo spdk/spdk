@@ -38,7 +38,10 @@
 
 #define IOAT_MAX_CHANNELS	64
 
+struct spdk_json_write_ctx;
+
 int copy_engine_ioat_add_whitelist_devices(const char *pci_bdfs[], size_t num_pci_bdfs);
 int copy_engine_ioat_scan(void);
+void copy_engine_ioat_dump_info_json(struct spdk_json_write_ctx *w);
 
 #endif /* SPDK_COPY_ENGINE_IOAT_H */

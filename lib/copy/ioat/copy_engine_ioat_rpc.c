@@ -122,3 +122,26 @@ spdk_rpc_scan_copy_engine_ioat(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("scan_copy_engine_ioat", spdk_rpc_scan_copy_engine_ioat, SPDK_RPC_RUNTIME)
+
+static void
+spdk_rpc_get_copy_engine_ioat(struct spdk_jsonrpc_request *request,
+			      const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "get_copy_engine_ioats requires no parameters");
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	copy_engine_ioat_dump_info_json(w);
+
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("get_copy_engine_ioat", spdk_rpc_get_copy_engine_ioat, SPDK_RPC_RUNTIME)
