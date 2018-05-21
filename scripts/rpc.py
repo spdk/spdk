@@ -135,7 +135,7 @@ if __name__ == "__main__":
                               help='Add a bdev with aio backend')
     p.add_argument('filename', help='Path to device or file (ex: /dev/sda)')
     p.add_argument('name', help='Block device name')
-    p.add_argument('block_size', help='Block size for this bdev', type=int, default=argparse.SUPPRESS)
+    p.add_argument('block_size', help='Block size for this bdev', type=int, nargs='?', default=0)
     p.set_defaults(func=construct_aio_bdev)
 
     @call_cmd
