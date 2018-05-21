@@ -132,7 +132,7 @@ function linux_hugetlbfs_mounts() {
 
 function get_nvme_name_from_bdf {
 	set +e
-	nvme_devs=`lsblk -d --output NAME | grep "^nvme"`
+	nvme_devs=`lsblk -d -a --output NAME | grep "^nvme"`
 	set -e
 	for dev in $nvme_devs; do
 		link_name=$(readlink /sys/block/$dev/device/device) || true
@@ -176,11 +176,13 @@ function configure_linux_pci {
 			echo "Skipping un-whitelisted NVMe controller $blkname ($bdf)"
 			continue
 		fi
-		if [ "$blkname" != "" ]; then
-			mountpoints=$(lsblk /dev/$blkname --output MOUNTPOINT -n | wc -w)
-		else
-			mountpoints="0"
+		if [ -z $blkname ]; then
+			echo "Skipping NVMe controller ($bdf) with empty name"
+			continue
 		fi
+
+		mountpoints=$(lsblk /dev/$blkname --output MOUNTPOINT -n | wc -w)
+
 		if [ "$mountpoints" = "0" ]; then
 			linux_bind_driver "$bdf" "$driver_name"
 		else
