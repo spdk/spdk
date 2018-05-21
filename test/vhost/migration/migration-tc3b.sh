@@ -2,7 +2,7 @@
 # as we are usin non-interactive session to connect to remote.
 # Without -m it would be not possible to suspend the process.
 set -m
-source $BASE_DIR/autotest.config
+source $MIGRATION_DIR/autotest.config
 
 RDMA_TARGET_IP="10.0.0.1"
 incoming_vm=1
@@ -34,7 +34,7 @@ function host_2_start_vhost()
 
 	notice "Starting vhost 1 instance on remote server"
 	trap 'host_2_cleanup_vhost; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR EXIT
-	spdk_vhost_run --conf-path=$BASE_DIR --vhost-num=1
+	spdk_vhost_run --conf-path=$MIGRATION_DIR --vhost-num=1
 
 	$rpc construct_nvme_bdev -b Nvme0 -t rdma -f ipv4 -a $RDMA_TARGET_IP -s 4420 -n "nqn.2018-02.io.spdk:cnode1"
 	$rpc construct_vhost_scsi_controller $target_vm_ctrl

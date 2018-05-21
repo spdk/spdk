@@ -54,10 +54,10 @@ function migration_tc1()
 	# Use 2 VMs:
 	# incoming VM - the one we want to migrate
 	# targe VM - the one which will accept migration
-	local job_file="$BASE_DIR/migration-tc1.job"
+	local job_file="$MIGRATION_DIR/migration-tc1.job"
 
 	# Run vhost
-	spdk_vhost_run --conf-path=$BASE_DIR
+	spdk_vhost_run --conf-path=$MIGRATION_DIR
 	migration_tc1_configure_vhost
 
 	notice "Setting up VMs"
