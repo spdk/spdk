@@ -78,7 +78,8 @@ if __name__ == "__main__":
     # app
     @call_cmd
     def kill_instance(args):
-        rpc.app.kill_instance(args.client, args)
+        rpc.app.kill_instance(args.client,
+                              sig_name=args.sig_name)
 
     p = subparsers.add_parser('kill_instance', help='Send signal to instance')
     p.add_argument('sig_name', help='signal will be sent to server.')
@@ -86,7 +87,13 @@ if __name__ == "__main__":
 
     @call_cmd
     def context_switch_monitor(args):
-        print_dict(rpc.app.context_switch_monitor(args.client, args))
+        enabled = None
+        if args.enable:
+            enabled = True
+        if args.disable:
+            enabled = False
+        print_dict(rpc.app.context_switch_monitor(args.client,
+                                                  enabled=enabled))
 
     p = subparsers.add_parser('context_switch_monitor', help='Control whether the context switch monitor is enabled')
     p.add_argument('-e', '--enable', action='store_true', help='Enable context switch monitoring')
