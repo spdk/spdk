@@ -104,6 +104,10 @@ _spdk_nvmf_ctrlr_add_admin_qpair(void *ctx)
 
 	ctrlr->admin_qpair = qpair;
 	ctrlr_add_qpair_and_update_rsp(qpair, ctrlr, rsp);
+
+	assert(ctrlr->state == SPDK_NVMF_CTRLR_ACTIVATING);
+	ctrlr->state = SPDK_NVMF_CTRLR_ACTIVE;
+
 	spdk_nvmf_request_complete(req);
 }
 
@@ -143,6 +147,8 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		SPDK_ERRLOG("Memory allocation failed\n");
 		return NULL;
 	}
+
+	ctrlr->state = SPDK_NVMF_CTRLR_ACTIVATING;
 
 	req->qpair->ctrlr = ctrlr;
 	TAILQ_INIT(&ctrlr->qpairs);
@@ -191,17 +197,26 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	return ctrlr;
 }
 
-static void ctrlr_destruct(void *ctx)
+static void
+ctrlr_destruct(void *ctx)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = ctx;
 
 	spdk_nvmf_subsystem_remove_ctrlr(ctrlr->subsys, ctrlr);
+
+	assert(ctrlr->state == SPDK_NVMF_CTRLR_DEACTIVATING);
+	ctrlr->state = SPDK_NVMF_CTRLR_INACTIVE;
+
 	free(ctrlr);
 }
 
+/* Public */
 void
 spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 {
+	assert(ctrlr->state == SPDK_NVMF_CTRLR_ACTIVE);
+	ctrlr->state = SPDK_NVMF_CTRLR_DEACTIVATING;
+
 	while (!TAILQ_EMPTY(&ctrlr->qpairs)) {
 		struct spdk_nvmf_qpair *qpair = TAILQ_FIRST(&ctrlr->qpairs);
 
@@ -226,6 +241,12 @@ spdk_nvmf_ctrlr_add_io_qpair(void *ctx)
 	  * For error case, the value should be NULL. So set it to NULL at first.
 	  */
 	qpair->ctrlr = NULL;
+
+	if (ctrlr->state != SPDK_NVMF_CTRLR_ACTIVE) {
+		/* New connections only allowed in the active state */
+		SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
+		goto end;
+	}
 
 	if (ctrlr->subsys->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
 		SPDK_ERRLOG("I/O connect not allowed on discovery controller\n");
@@ -308,10 +329,9 @@ ctrlr_delete_qpair(void *ctx)
 
 	assert(ctrlr != NULL);
 	assert(ctrlr->num_qpairs > 0);
-	/* Defer the admin qpair deletion since there are still io qpairs */
-	if ((ctrlr->num_qpairs > 1) && (qpair == ctrlr->admin_qpair)) {
-		spdk_thread_send_msg(qpair->group->thread, ctrlr_delete_qpair, qpair);
-		return;
+
+	if (qpair == ctrlr->admin_qpair) {
+		ctrlr->state = SPDK_NVMF_CTRLR_DEACTIVATING;
 	}
 
 	TAILQ_REMOVE(&ctrlr->qpairs, qpair, link);
@@ -473,6 +493,7 @@ spdk_nvmf_ctrlr_disconnect(struct spdk_nvmf_qpair *qpair)
 	spdk_thread_send_msg(admin_qpair->group->thread, ctrlr_delete_qpair, qpair);
 }
 
+/* Public */
 struct spdk_nvmf_qpair *
 spdk_nvmf_ctrlr_get_qpair(struct spdk_nvmf_ctrlr *ctrlr, uint16_t qid)
 {
@@ -1587,6 +1608,13 @@ spdk_nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
+	if (ctrlr->state != SPDK_NVMF_CTRLR_ACTIVE) {
+		SPDK_ERRLOG("Admin command sent to disabled controller\n");
+		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
 	if (ctrlr->vcprop.cc.bits.en != 1) {
 		SPDK_ERRLOG("Admin command sent to disabled controller\n");
 		response->status.sct = SPDK_NVME_SCT_GENERIC;
@@ -1651,18 +1679,24 @@ spdk_nvmf_ctrlr_process_fabrics_cmd(struct spdk_nvmf_request *req)
 
 	cap_hdr = &req->cmd->nvmf_cmd;
 
-	if (qpair->ctrlr == NULL) {
-		/* No ctrlr established yet; the only valid command is Connect */
-		if (cap_hdr->fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT) {
-			return spdk_nvmf_ctrlr_connect(req);
-		} else {
-			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Got fctype 0x%x, expected Connect\n",
-				      cap_hdr->fctype);
+	if (cap_hdr->fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT) {
+		if (qpair->ctrlr != NULL) {
+			/* Double connect */
 			req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
-	} else if (spdk_nvmf_qpair_is_admin_queue(qpair)) {
+
+		return spdk_nvmf_ctrlr_connect(req);
+	}
+
+	if (qpair->ctrlr->state != SPDK_NVMF_CTRLR_ACTIVE) {
+		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	if (spdk_nvmf_qpair_is_admin_queue(qpair)) {
 		/*
 		 * Controller session is established, and this is an admin queue.
 		 * Disallow Connect and allow other fabrics commands.

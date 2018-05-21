@@ -202,18 +202,21 @@ test_get_log_page(void)
 static void
 test_process_fabrics_cmd(void)
 {
+	struct spdk_nvmf_ctrlr ctrlr = {};
 	struct	spdk_nvmf_request req = {};
 	int	ret;
 	struct	spdk_nvmf_qpair req_qpair = {};
 	union	nvmf_h2c_msg  req_cmd = {};
 	union	nvmf_c2h_msg   req_rsp = {};
 
+	ctrlr.state = SPDK_NVMF_CTRLR_INACTIVE;
+	req_qpair.ctrlr = &ctrlr;
+
 	req.qpair = &req_qpair;
 	req.cmd  = &req_cmd;
 	req.rsp  = &req_rsp;
-	req.qpair->ctrlr = NULL;
 
-	/* No ctrlr and invalid command check */
+	/* Controller not active check */
 	req.cmd->nvmf_cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_PROPERTY_GET;
 	ret = spdk_nvmf_ctrlr_process_fabrics_cmd(&req);
 	CU_ASSERT_EQUAL(req.rsp->nvme_cpl.status.sc, SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR);
@@ -264,6 +267,7 @@ test_connect(void)
 	ctrlr.vcprop.cc.bits.iosqes = 6;
 	ctrlr.vcprop.cc.bits.iocqes = 4;
 	ctrlr.max_qpairs_allowed = 3;
+	ctrlr.state = SPDK_NVMF_CTRLR_ACTIVE;
 
 	memset(&admin_qpair, 0, sizeof(admin_qpair));
 	TAILQ_INSERT_TAIL(&ctrlr.qpairs, &admin_qpair, link);
@@ -559,6 +563,7 @@ test_get_ns_id_desc_list(void)
 	memset(&ctrlr, 0, sizeof(ctrlr));
 	ctrlr.subsys = &subsystem;
 	ctrlr.vcprop.cc.bits.en = 1;
+	ctrlr.state = SPDK_NVMF_CTRLR_ACTIVE;
 
 	memset(&req, 0, sizeof(req));
 	req.qpair = &qpair;

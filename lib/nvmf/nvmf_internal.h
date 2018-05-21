@@ -55,6 +55,13 @@ enum spdk_nvmf_subsystem_state {
 	SPDK_NVMF_SUBSYSTEM_DEACTIVATING,
 };
 
+enum spdk_nvmf_ctrlr_state {
+	SPDK_NVMF_CTRLR_INACTIVE = 0,
+	SPDK_NVMF_CTRLR_ACTIVATING,
+	SPDK_NVMF_CTRLR_ACTIVE,
+	SPDK_NVMF_CTRLR_DEACTIVATING,
+};
+
 struct spdk_nvmf_tgt {
 	struct spdk_nvmf_tgt_opts		opts;
 
@@ -174,6 +181,7 @@ struct spdk_nvmf_ctrlr_feat {
  */
 struct spdk_nvmf_ctrlr {
 	uint16_t			cntlid;
+	enum spdk_nvmf_ctrlr_state	state;
 	struct spdk_nvmf_subsystem	*subsys;
 
 	struct {
