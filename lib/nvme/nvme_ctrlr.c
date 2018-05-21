@@ -2272,3 +2272,9 @@ spdk_nvme_ctrlr_free_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, void *buf, siz
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
 }
+
+bool
+spdk_nvme_ctrlr_supports_oc_commands(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return ctrlr->cdata.oncs.oc_command_set;
+}

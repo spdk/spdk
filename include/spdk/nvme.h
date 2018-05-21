@@ -46,6 +46,7 @@ extern "C" {
 
 #include "spdk/env.h"
 #include "spdk/nvme_spec.h"
+#include "spdk/lnvm_spec.h"
 #include "spdk/nvmf_spec.h"
 
 #define SPDK_NVME_DEFAULT_RETRY_COUNT	(4)
@@ -842,6 +843,33 @@ int spdk_nvme_ctrlr_cmd_set_feature(struct spdk_nvme_ctrlr *ctrlr,
 				    spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
 /**
+ * \brief Set specific feature for the given NVMe controller and namespace ID.
+ *
+ * \param ctrlr NVMe controller to manipulate.
+ * \param feature The feature identifier.
+ * \param cdw11 as defined by the specification for this command.
+ * \param cdw12 as defined by the specification for this command.
+ * \param payload The pointer to the payload buffer.
+ * \param payload_size The size of payload buffer.
+ * \param cb_fn Callback function to invoke when the feature has been set.
+ * \param cb_arg Argument to pass to the callback function.
+ * \param ns_is The namespace identifier, this may be a namespace identifier or SPDK_NVME_GLOBAL_NS_TAG.
+ *
+ * \return 0 if successfully submitted, ENOMEM if resources could not be allocated for this request
+ *
+ * This function is thread safe and can be called at any point while the controller is attached to
+ *  the SPDK NVMe driver.
+ *
+ * Call \ref spdk_nvme_ctrlr_process_admin_completions() to poll for completion
+ * of commands submitted through this function.
+ *
+ * \sa spdk_nvme_ctrlr_cmd_get_feature_ns()
+ */
+int spdk_nvme_ctrlr_cmd_set_feature_ns(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
+				       uint32_t cdw11, uint32_t cdw12, void *payload, uint32_t payload_size,
+				       spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t ns_id);
+
+/**
  * \brief Get specific feature from given NVMe controller.
  *
  * \param ctrlr NVMe controller to query.
@@ -866,6 +894,48 @@ int spdk_nvme_ctrlr_cmd_get_feature(struct spdk_nvme_ctrlr *ctrlr,
 				    uint8_t feature, uint32_t cdw11,
 				    void *payload, uint32_t payload_size,
 				    spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+
+/**
+ * \brief Get specific feature from given NVMe controller.
+ *
+ * \param ctrlr NVMe controller to query.
+ * \param feature The feature identifier.
+ * \param cdw11 as defined by the specification for this command.
+ * \param payload The pointer to the payload buffer.
+ * \param payload_size The size of payload buffer.
+ * \param cb_fn Callback function to invoke when the feature has been retrieved.
+ * \param cb_arg Argument to pass to the callback function.
+ *
+ * \return 0 if successfully submitted, ENOMEM if resources could not be allocated for this request
+ *
+ * This function is thread safe and can be called at any point while the controller is attached to
+ *  the SPDK NVMe driver.
+ *
+ * Call \ref spdk_nvme_ctrlr_process_admin_completions() to poll for completion
+ * of commands submitted through this function.
+ *
+ * \sa spdk_nvme_ctrlr_cmd_set_feature_ns()
+ */
+int spdk_nvme_ctrlr_cmd_get_feature_ns(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
+				       uint32_t cdw11, void *payload, uint32_t payload_size,
+				       spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t ns_id);
+
+/**
+ * \brief Identify geometry of the given namespace.
+ * \param ctrlr NVMe controller to query.
+ * \param nsid Id of the given namesapce.
+ * \param payload The pointer to the payload buffer.
+ * \param payload_size The size of payload buffer. Shall be multiple of 4K.
+ * \param cb_fn Callback function to invoke when the feature has been retrieved.
+ * \param cb_arg Argument to pass to the callback function.
+ *
+ * \return 0 if successfully submitted, ENOMEM if resources could not be allocated for this request,
+ * EINVAL if wrong payload size.
+ *
+ */
+int spdk_nvme_ctrlr_cmd_lnvm_geometry(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
+				      void *payload, uint32_t payload_size,
+				      spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
 /**
  * \brief Attach the specified namespace to controllers.
@@ -962,6 +1032,14 @@ int spdk_nvme_ctrlr_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 int spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, uint32_t size,
 				    int slot, enum spdk_nvme_fw_commit_action commit_action,
 				    struct spdk_nvme_status *completion_status);
+
+/**
+ * @brief Returns whether the controller supports Open Channel 2.0 commands.
+ *
+ * This function is thread safe and can be called at any point while the controller is attached to
+ *  the SPDK NVMe driver.
+ */
+bool spdk_nvme_ctrlr_supports_oc_commands(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
  * \brief Allocate an I/O buffer from the controller memory buffer (Experimental).

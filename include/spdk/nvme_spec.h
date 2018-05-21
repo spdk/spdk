@@ -1161,7 +1161,8 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 		uint16_t	set_features_save: 1;
 		uint16_t	reservations: 1;
 		uint16_t	timestamp: 1;
-		uint16_t	reserved: 9;
+		uint16_t	reserved: 8;
+		uint16_t	oc_command_set: 1;
 	} oncs;
 
 	/** fused operation support */

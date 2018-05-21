@@ -184,6 +184,25 @@ struct nvme_request {
 	uint32_t			payload_offset;
 	uint32_t			md_offset;
 
+	/**
+	 * Virtual memory address of a single physically contiguous LBA list buffer.
+	 * Used for vector commands introduced in Open Channel 2.0 spec.
+	 */
+	void				*lbal;
+
+	/**
+	 * Virtual memory address of a single physically contiguous LBA list buffer.
+	 * Used for vector commands introduced in Open Channel 2.0 spec.
+	 * Defines destination sectors for processing.
+	 */
+	void				*dlbal;
+
+	/**
+	 * Needed to distinguish when an Open Channel 2.0 vector command contains
+	 * only a single LBA address.
+	 */
+	uint8_t				lbal_size;
+
 	spdk_nvme_cmd_cb		cb_fn;
 	void				*cb_arg;
 	STAILQ_ENTRY(nvme_request)	stailq;
