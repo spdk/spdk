@@ -36,6 +36,8 @@
 
 #include "nvme/nvme_ctrlr_cmd.c"
 
+#include "spdk/lnvm_spec.h"
+
 #define CTRLR_CDATA_ELPE   5
 
 struct nvme_request g_req;
@@ -45,6 +47,7 @@ uint32_t health_log_nsid = 1;
 uint8_t feature = 1;
 uint32_t feature_cdw11 = 1;
 uint32_t feature_cdw12 = 1;
+uint32_t feature_ns = 2;
 uint8_t get_feature = 1;
 uint32_t get_feature_cdw11 = 1;
 uint32_t fw_img_size = 1024;
@@ -99,6 +102,7 @@ static void verify_set_feature_cmd(struct nvme_request *req)
 	CU_ASSERT(req->cmd.cdw10 == feature);
 	CU_ASSERT(req->cmd.cdw11 == feature_cdw11);
 	CU_ASSERT(req->cmd.cdw12 == feature_cdw12);
+	CU_ASSERT(req->cmd.nsid == 0);
 }
 
 static void verify_get_feature_cmd(struct nvme_request *req)
@@ -106,6 +110,24 @@ static void verify_get_feature_cmd(struct nvme_request *req)
 	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_GET_FEATURES);
 	CU_ASSERT(req->cmd.cdw10 == get_feature);
 	CU_ASSERT(req->cmd.cdw11 == get_feature_cdw11);
+	CU_ASSERT(req->cmd.nsid == 0);
+}
+
+static void verify_set_feature_ns_cmd(struct nvme_request *req)
+{
+	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_SET_FEATURES);
+	CU_ASSERT(req->cmd.cdw10 == feature);
+	CU_ASSERT(req->cmd.cdw11 == feature_cdw11);
+	CU_ASSERT(req->cmd.cdw12 == feature_cdw12);
+	CU_ASSERT(req->cmd.nsid == feature_ns);
+}
+
+static void verify_get_feature_ns_cmd(struct nvme_request *req)
+{
+	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_GET_FEATURES);
+	CU_ASSERT(req->cmd.cdw10 == get_feature);
+	CU_ASSERT(req->cmd.cdw11 == get_feature_cdw11);
+	CU_ASSERT(req->cmd.nsid == feature_ns);
 }
 
 static void verify_abort_cmd(struct nvme_request *req)
@@ -243,6 +265,12 @@ static void verify_fw_image_download(struct nvme_request *req)
 	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_FIRMWARE_IMAGE_DOWNLOAD);
 	CU_ASSERT(req->cmd.cdw10 == (fw_img_size >> 2) - 1);
 	CU_ASSERT(req->cmd.cdw11 == fw_img_offset >> 2);
+}
+
+static void verify_lnvm_geometry(struct nvme_request *req)
+{
+	CU_ASSERT(req->cmd.opc == SPDK_LNVM_OPC_GEOMETRY);
+	CU_ASSERT(req->cmd.nsid == namespace_management_nsid);
 }
 
 struct nvme_request *
@@ -470,6 +498,28 @@ test_get_feature_cmd(void)
 }
 
 static void
+test_set_feature_ns_cmd(void)
+{
+	struct spdk_nvme_ctrlr  ctrlr = {};
+
+	verify_fn = verify_set_feature_ns_cmd;
+
+	spdk_nvme_ctrlr_cmd_set_feature_ns(&ctrlr, feature, feature_cdw11, feature_cdw12, NULL, 0, NULL,
+					   NULL, feature_ns);
+}
+
+static void
+test_get_feature_ns_cmd(void)
+{
+	struct spdk_nvme_ctrlr	ctrlr = {};
+
+	verify_fn = verify_get_feature_ns_cmd;
+
+	spdk_nvme_ctrlr_cmd_get_feature_ns(&ctrlr, get_feature, get_feature_cdw11, NULL, 0, NULL, NULL,
+					   feature_ns);
+}
+
+static void
 test_abort_cmd(void)
 {
 	struct spdk_nvme_ctrlr	ctrlr = {};
@@ -591,6 +641,18 @@ test_fw_image_download(void)
 					 NULL, NULL);
 }
 
+static void
+test_lnvm_geometry(void)
+{
+	struct spdk_nvme_ctrlr	ctrlr = {};
+	struct spdk_lnvm_geometry_data geo;
+
+	verify_fn = verify_lnvm_geometry;
+
+	spdk_nvme_ctrlr_cmd_lnvm_geometry(&ctrlr, namespace_management_nsid, &geo,
+					  sizeof(geo), NULL, NULL);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -610,6 +672,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "test ctrlr cmd get_log_pages", test_get_log_pages) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd set_feature", test_set_feature_cmd) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd get_feature", test_get_feature_cmd) == NULL
+		|| CU_add_test(suite, "test ctrlr cmd set_feature_ns", test_set_feature_ns_cmd) == NULL
+		|| CU_add_test(suite, "test ctrlr cmd get_feature_ns", test_get_feature_ns_cmd) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd abort_cmd", test_abort_cmd) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd io_raw_cmd", test_io_raw_cmd) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd io_raw_cmd_with_md", test_io_raw_cmd_with_md) == NULL
@@ -620,6 +684,7 @@ int main(int argc, char **argv)
 		|| CU_add_test(suite, "test ctrlr cmd format_nvme", test_format_nvme) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd fw_commit", test_fw_commit) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd fw_image_download", test_fw_image_download) == NULL
+		|| CU_add_test(suite, "test ctrlr cmd lnvm_geometry", test_lnvm_geometry) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

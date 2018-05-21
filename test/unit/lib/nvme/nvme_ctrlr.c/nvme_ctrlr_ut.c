@@ -1708,6 +1708,16 @@ test_nvme_ctrlr_test_active_ns(void)
 	}
 }
 
+static void
+test_nvme_ctrlr_supports_oc_commands(void)
+{
+	struct spdk_nvme_ctrlr	ctrlr = {};
+	ctrlr.cdata.oncs.oc_command_set = true;
+	CU_ASSERT(spdk_nvme_ctrlr_supports_oc_commands(&ctrlr) == ctrlr.cdata.oncs.oc_command_set);
+	ctrlr.cdata.oncs.oc_command_set = false;
+	CU_ASSERT(spdk_nvme_ctrlr_supports_oc_commands(&ctrlr) == ctrlr.cdata.oncs.oc_command_set);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1758,6 +1768,8 @@ int main(int argc, char **argv)
 #endif
 		|| CU_add_test(suite, "test nvme ctrlr function test_nvme_ctrlr_test_active_ns",
 			       test_nvme_ctrlr_test_active_ns) == NULL
+		|| CU_add_test(suite, "test nvme ctrlr function supports_oc_commands",
+			       test_nvme_ctrlr_supports_oc_commands) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
