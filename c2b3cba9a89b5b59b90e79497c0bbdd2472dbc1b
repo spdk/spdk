@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c3449f99_a9bd7969",
+        "filename": "include/spdk/nvme_lnvm_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-21T18:06:54Z",
+      "side": 1,
+      "message": "These names are in the global namespace, so they need SPDK_ prefixes.  I\u0027m also not really convinced they are necessary, since the plain numbers are clear enough by themselves (1.2 major is 1, 2.0 major is 2).",
+      "revId": "c2b3cba9a89b5b59b90e79497c0bbdd2472dbc1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9cf7f5b6_bd123215",
+        "filename": "include/spdk/nvme_lnvm_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-21T18:06:54Z",
+      "side": 1,
+      "message": "These two fields (csecs and sos) don\u0027t seem to be in the OCSSD 2.0 spec; is there a newer version than the one on the lightnvm website?",
+      "revId": "c2b3cba9a89b5b59b90e79497c0bbdd2472dbc1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a6aaadd_511a714f",
+        "filename": "include/spdk/nvme_lnvm_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-21T18:06:54Z",
+      "side": 1,
+      "message": "I think we should just omit the standard NVMe spec-defined entries entirely (here and everywhere below) rather than having the commented out.",
+      "revId": "c2b3cba9a89b5b59b90e79497c0bbdd2472dbc1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8f52f830_b41867b6",
+        "filename": "include/spdk/nvme_lnvm_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-21T18:06:54Z",
+      "side": 1,
+      "message": "I think we should probably put _LNVM_ in the name so that these can be distinguished from the standard NVMe status codes.",
+      "revId": "c2b3cba9a89b5b59b90e79497c0bbdd2472dbc1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
