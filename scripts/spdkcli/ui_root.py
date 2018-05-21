@@ -1,7 +1,6 @@
 from .ui_node import UINode, UIBdevs, UILvolStores
 import rpc.client
 import rpc
-from argparse import Namespace as an
 
 
 class UIRoot(UINode):
@@ -26,7 +25,7 @@ class UIRoot(UINode):
         return " ".join(a)
 
     def get_bdevs(self, bdev_type):
-        self.current_bdevs = rpc.bdev.get_bdevs(self.client, an(name=""))
+        self.current_bdevs = rpc.bdev.get_bdevs(self.client)
         # Following replace needs to be done in order for some of the bdev
         # listings to work.
         # For example logical volumes: listing in menu is "Logical_Volume"
@@ -38,14 +37,14 @@ class UIRoot(UINode):
             yield test
 
     def delete_bdev(self, name):
-        rpc.bdev.delete_bdev(self.client, an(bdev_name=name))
+        rpc.bdev.delete_bdev(self.client, bdev_name=name)
 
     def create_malloc_bdev(self, **kwargs):
-        response = rpc.bdev.construct_malloc_bdev(self.client, an(**kwargs))
+        response = rpc.bdev.construct_malloc_bdev(self.client, **kwargs)
         return self.print_array(response)
 
     def create_aio_bdev(self, **kwargs):
-        response = rpc.bdev.construct_aio_bdev(self.client, an(**kwargs))
+        response = rpc.bdev.construct_aio_bdev(self.client, **kwargs)
         return self.print_array(response)
 
     def create_lvol_bdev(self, **kwargs):
@@ -53,7 +52,7 @@ class UIRoot(UINode):
         return self.print_array(response)
 
     def create_nvme_bdev(self, **kwargs):
-        response = rpc.bdev.construct_nvme_bdev(self.client, an(**kwargs))
+        response = rpc.bdev.construct_nvme_bdev(self.client, **kwargs)
         return self.print_array(response)
 
     def get_lvol_stores(self):

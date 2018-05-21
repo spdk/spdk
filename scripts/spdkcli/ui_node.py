@@ -155,7 +155,7 @@ class UIMallocBdev(UIBdev):
         size = self.ui_eval_param(size, "number", None)
         block_size = self.ui_eval_param(block_size, "number", None)
 
-        ret_name = self.get_root().create_malloc_bdev(total_size=size,
+        ret_name = self.get_root().create_malloc_bdev(num_blocks=size * 1024 * 1024 // block_size,
                                                       block_size=block_size,
                                                       name=name, uuid=uuid)
         self.shell.log.info(ret_name)
