@@ -4,9 +4,9 @@ set -e
 rootdir=$(readlink -f $(dirname $0))/../../..
 source "$rootdir/scripts/common.sh"
 
-BASE_DIR=$(readlink -f $(dirname $0))
-[[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $BASE_DIR/../../../../ && pwd)"
-[[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $BASE_DIR/../common && pwd)"
+LVOL_TEST_DIR=$(readlink -f $(dirname $0))
+[[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $LVOL_TEST_DIR/../../../../ && pwd)"
+[[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $LVOL_TEST_DIR/../common && pwd)"
 
 . $COMMON_DIR/common.sh
 rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
@@ -113,7 +113,7 @@ fi
 
 if $distribute_cores; then
     # FIXME: this need to be handled entirely in common.sh
-    source $BASE_DIR/autotest.config
+    source $LVOL_TEST_DIR/autotest.config
 fi
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
@@ -121,7 +121,7 @@ trap 'error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
 vm_kill_all
 
 notice "running SPDK vhost"
-spdk_vhost_run --conf-path=$BASE_DIR
+spdk_vhost_run --conf-path=$LVOL_TEST_DIR
 notice "..."
 
 trap 'clean_lvol_cfg; error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
