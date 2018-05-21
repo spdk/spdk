@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "08f19602_41cf9e16",
+        "filename": "lib/nvme/nvme_lnvm.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-21T23:27:39Z",
+      "side": 1,
+      "message": "Maybe we should check that ctrlr-\u003ecdata-\u003evid is the vendor ID of the QEMU emulated device as well, since we are looking at vendor-specific fields.\n\n(It doesn\u0027t matter in practice right now, since this is the only device with the LIGHTNVM quirk, but it would be helpful for future readers of this code if nothing else.)",
+      "revId": "65512225c82dfb61007dbb6961cfd89ec4d270e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
