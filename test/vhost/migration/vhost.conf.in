@@ -2,4 +2,4 @@
   NoPci Yes
 
 [Ioat]
-  Disable Yes
+  Enable No
