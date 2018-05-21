@@ -3,7 +3,7 @@ set -e
 : ${SPDK_VHOST_VERBOSE=false}
 : ${QEMU_PREFIX="/usr/local/qemu/spdk-2.12-pre"}
 
-BASE_DIR=$(readlink -f $(dirname $0))
+BASE_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
 
 # Default running dir -> spdk/..
 [[ -z "$TEST_DIR" ]] && TEST_DIR=$BASE_DIR/../../../../
