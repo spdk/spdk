@@ -835,6 +835,8 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	       cdata->oaes.ns_attribute_notices ? "Supported" : "Not Supported");
 	printf("  Firmware Activation Notices:         %s\n",
 	       cdata->oaes.fw_activation_notices ? "Supported" : "Not Supported");
+	printf("  Telemetry Log Notices:               %s\n",
+	       cdata->oaes.telemetry_log_notice ? "Supported" : "Not Supported");
 
 	printf("128-bit Host Identifier:               %s\n",
 	       cdata->ctratt.host_id_exhid_supported ? "Supported" : "Not Supported");

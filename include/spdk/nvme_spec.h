@@ -928,7 +928,10 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 		/** Supports sending Firmware Activation Notices. */
 		uint32_t	fw_activation_notices : 1;
 
-		uint32_t	reserved2 : 22;
+		/** Supports sending Telemetry Log Notices. */
+		uint32_t	telemetry_log_notice : 1;
+
+		uint32_t	reserved2 : 21;
 	} oaes;
 
 	/** controller attributes */
