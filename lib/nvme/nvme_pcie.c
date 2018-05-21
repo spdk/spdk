@@ -1694,6 +1694,39 @@ nvme_pcie_fail_request_bad_vtophys(struct spdk_nvme_qpair *qpair, struct nvme_tr
 						1 /* do not retry */, true);
 }
 
+static int
+nvme_pcie_qpair_build_null_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req,
+				   struct nvme_tracker *tr)
+{
+	if (req->lbal_size) {
+		if (req->lbal) {
+			if (req->lbal_size == 1) {
+				*(uint64_t *)&tr->req->cmd.cdw10 = ((uint64_t *)req->lbal)[0];
+			} else {
+				*(uint64_t *)&tr->req->cmd.cdw10 = spdk_vtophys(req->lbal);
+				if (*(uint64_t *)&tr->req->cmd.cdw10 == SPDK_VTOPHYS_ERROR) {
+					nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+					return -1;
+				}
+			}
+		}
+
+		if (req->dlbal) {
+			if (req->lbal_size == 1) {
+				*(uint64_t *)&tr->req->cmd.cdw14 = ((uint64_t *)req->dlbal)[0];
+			} else {
+				*(uint64_t *)&tr->req->cmd.cdw14 = spdk_vtophys(req->dlbal);
+				if (*(uint64_t *)&tr->req->cmd.cdw14 == SPDK_VTOPHYS_ERROR) {
+					nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+					return -1;
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+
 /*
  * Append PRP list entries to describe a virtually contiguous buffer starting at virt_addr of len bytes.
  *
@@ -1780,6 +1813,11 @@ nvme_pcie_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_
 {
 	uint32_t prp_index = 0;
 	int rc;
+
+	rc = nvme_pcie_qpair_build_null_request(qpair, req, tr);
+	if (rc) {
+		return rc;
+	}
 
 	rc = nvme_pcie_prp_list_append(tr, &prp_index, req->payload.u.contig + req->payload_offset,
 				       req->payload_size, qpair->ctrlr->page_size);
@@ -1981,8 +2019,7 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 	}
 
 	if (req->payload_size == 0) {
-		/* Null payload - leave PRP fields zeroed */
-		rc = 0;
+		rc = nvme_pcie_qpair_build_null_request(qpair, req, tr);
 	} else if (req->payload.type == NVME_PAYLOAD_TYPE_CONTIG) {
 		rc = nvme_pcie_qpair_build_contig_request(qpair, req, tr);
 	} else if (req->payload.type == NVME_PAYLOAD_TYPE_SGL) {
