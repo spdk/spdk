@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b8153dbc_a3136a5c",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-05-21T06:42:13Z",
+      "side": 1,
+      "message": "For this, could we have separate patch.",
+      "range": {
+        "startLine": 54,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 41
+      },
+      "revId": "222bf7c7979f4f0351215a181cb4f6e907fc5e37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6273acf9_3d524c74",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-05-21T06:42:13Z",
+      "side": 1,
+      "message": "Can we still do the call callback all here.",
+      "range": {
+        "startLine": 107,
+        "startChar": 0,
+        "endLine": 110,
+        "endChar": 1
+      },
+      "revId": "222bf7c7979f4f0351215a181cb4f6e907fc5e37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c29d0b8_00fe49d2",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 522,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-05-21T06:42:13Z",
+      "side": 1,
+      "message": "Refactor bdev_iscsi_remove_conn_req and put the call back inside this function.",
+      "range": {
+        "startLine": 521,
+        "startChar": 1,
+        "endLine": 522,
+        "endChar": 18
+      },
+      "revId": "222bf7c7979f4f0351215a181cb4f6e907fc5e37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "589454d3_cb50d0fd",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 547,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-05-21T06:42:13Z",
+      "side": 1,
+      "message": "Same with the previous comments.",
+      "range": {
+        "startLine": 545,
+        "startChar": 1,
+        "endLine": 547,
+        "endChar": 31
+      },
+      "revId": "222bf7c7979f4f0351215a181cb4f6e907fc5e37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ed0563e_aed1f63b",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 578,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-05-21T06:42:13Z",
+      "side": 1,
+      "message": "Not need to provide the dummy function. we can check the create_cb in the req structure.",
+      "range": {
+        "startLine": 575,
+        "startChar": 0,
+        "endLine": 578,
+        "endChar": 1
+      },
+      "revId": "222bf7c7979f4f0351215a181cb4f6e907fc5e37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a5c78150_203bfd81",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 608,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-05-21T06:42:13Z",
+      "side": 1,
+      "message": "No need to provide the dummy cb.",
+      "range": {
+        "startLine": 608,
+        "startChar": 0,
+        "endLine": 608,
+        "endChar": 61
+      },
+      "revId": "222bf7c7979f4f0351215a181cb4f6e907fc5e37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4116bb4_5a5943f1",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-05-21T06:42:13Z",
+      "side": 1,
+      "message": "For adding the timer poller feature, should be another patch.",
+      "range": {
+        "startLine": 629,
+        "startChar": 1,
+        "endLine": 631,
+        "endChar": 2
+      },
+      "revId": "222bf7c7979f4f0351215a181cb4f6e907fc5e37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b6d4e4bc_464ee718",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 695,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-05-21T06:42:13Z",
+      "side": 1,
+      "message": "For removing bdev_iscsi_set_module_init, I think that currently we do not need to put it in this way. The original consideration sounds right.",
+      "range": {
+        "startLine": 694,
+        "startChar": 0,
+        "endLine": 695,
+        "endChar": 51
+      },
+      "revId": "222bf7c7979f4f0351215a181cb4f6e907fc5e37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
