@@ -1439,6 +1439,12 @@ spdk_nvmf_rdma_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn)
 			SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Acceptor Event: %s\n", CM_EVENT_STR[event->event]);
 
 			switch (event->event) {
+			case RDMA_CM_EVENT_ADDR_RESOLVED:
+			case RDMA_CM_EVENT_ADDR_ERROR:
+			case RDMA_CM_EVENT_ROUTE_RESOLVED:
+			case RDMA_CM_EVENT_ROUTE_ERROR:
+				/* No action required. The target never attempts to resolve routes. */
+				break;
 			case RDMA_CM_EVENT_CONNECT_REQUEST:
 				rc = nvmf_rdma_connect(transport, event, cb_fn);
 				if (rc < 0) {
@@ -1446,18 +1452,37 @@ spdk_nvmf_rdma_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn)
 					break;
 				}
 				break;
-			case RDMA_CM_EVENT_ESTABLISHED:
+			case RDMA_CM_EVENT_CONNECT_RESPONSE:
+				/* The target never initiates a new connection. So this will not occur. */
 				break;
-			case RDMA_CM_EVENT_ADDR_CHANGE:
+			case RDMA_CM_EVENT_CONNECT_ERROR:
+				/* Can this happen? The docs say it can, but not sure what causes it. */
+				break;
+			case RDMA_CM_EVENT_UNREACHABLE:
+			case RDMA_CM_EVENT_REJECTED:
+				/* These only occur on the client side. */
+				break;
+			case RDMA_CM_EVENT_ESTABLISHED:
+				/* TODO: Should we be waiting for this event anywhere? */
+				break;
 			case RDMA_CM_EVENT_DISCONNECTED:
 			case RDMA_CM_EVENT_DEVICE_REMOVAL:
-			case RDMA_CM_EVENT_TIMEWAIT_EXIT:
 				rc = nvmf_rdma_disconnect(event);
 				if (rc < 0) {
 					SPDK_ERRLOG("Unable to process disconnect event. rc: %d\n", rc);
 					break;
 				}
 				continue;
+			case RDMA_CM_EVENT_MULTICAST_JOIN:
+			case RDMA_CM_EVENT_MULTICAST_ERROR:
+				/* Multicast is not used */
+				break;
+			case RDMA_CM_EVENT_ADDR_CHANGE:
+				/* Not utilizing this event */
+				break;
+			case RDMA_CM_EVENT_TIMEWAIT_EXIT:
+				/* For now, do nothing. The target never re-uses queue pairs. */
+				break;
 			default:
 				SPDK_ERRLOG("Unexpected Acceptor Event [%d]\n", event->event);
 				break;
