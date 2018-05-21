@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0702089a_8854b440",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 932,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-05-21T16:47:35Z",
+      "side": 1,
+      "message": "NVMe 1.3b specification didn\u0027t include this field, so is this bit approved but doesn\u0027t publish yet?",
+      "revId": "785c4b355c786db86f44926eb396e6cbdd0de7a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
