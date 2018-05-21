@@ -103,7 +103,12 @@ if __name__ == "__main__":
     # bdev
     @call_cmd
     def construct_malloc_bdev(args):
-        print_array(rpc.bdev.construct_malloc_bdev(args.client, args))
+        num_blocks = (args.total_size * 1024 * 1024) // args.block_size
+        print_array(rpc.bdev.construct_malloc_bdev(args.client,
+                                                   num_blocks=num_blocks,
+                                                   block_size=args.block_size,
+                                                   name=args.name,
+                                                   uuid=args.uuid))
 
     p = subparsers.add_parser('construct_malloc_bdev',
                               help='Add a bdev with malloc backend')
@@ -116,7 +121,12 @@ if __name__ == "__main__":
 
     @call_cmd
     def construct_null_bdev(args):
-        print_array(rpc.bdev.construct_null_bdev(args.client, args))
+        num_blocks = (args.total_size * 1024 * 1024) // args.block_size
+        print_array(rpc.bdev.construct_null_bdev(args.client,
+                                                 num_blocks=num_blocks,
+                                                 block_size=args.block_size,
+                                                 name=args.name,
+                                                 uuid=args.uuid))
 
     p = subparsers.add_parser('construct_null_bdev',
                               help='Add a bdev with null backend')
@@ -129,7 +139,10 @@ if __name__ == "__main__":
 
     @call_cmd
     def construct_aio_bdev(args):
-        print_array(rpc.bdev.construct_aio_bdev(args.client, args))
+        print_array(rpc.bdev.construct_aio_bdev(args.client,
+                                                filename=args.filename,
+                                                name=args.name,
+                                                block_size=args.block_size))
 
     p = subparsers.add_parser('construct_aio_bdev',
                               help='Add a bdev with aio backend')
@@ -140,7 +153,13 @@ if __name__ == "__main__":
 
     @call_cmd
     def construct_nvme_bdev(args):
-        print_array(rpc.bdev.construct_nvme_bdev(args.client, args))
+        print_array(rpc.bdev.construct_nvme_bdev(args.client,
+                                                 name=args.name,
+                                                 trtype=args.trtype,
+                                                 traddr=args.traddr,
+                                                 adrfam=args.adrfam,
+                                                 trsvcid=args.trsvcid,
+                                                 subnqn=args.subnqn))
 
     p = subparsers.add_parser('construct_nvme_bdev',
                               help='Add bdev with nvme backend')
@@ -158,7 +177,11 @@ if __name__ == "__main__":
 
     @call_cmd
     def construct_rbd_bdev(args):
-        print_array(rpc.bdev.construct_rbd_bdev(args.client, args))
+        print_array(rpc.bdev.construct_rbd_bdev(args.client,
+                                                name=args.name,
+                                                pool_name=args.pool_name,
+                                                rbd_name=args.rbd_name,
+                                                block_size=args.block_size))
 
     p = subparsers.add_parser('construct_rbd_bdev',
                               help='Add a bdev with ceph rbd backend')
@@ -170,7 +193,8 @@ if __name__ == "__main__":
 
     @call_cmd
     def construct_error_bdev(args):
-        rpc.bdev.construct_error_bdev(args.client, args)
+        rpc.bdev.construct_error_bdev(args.client,
+                                      base_name=args.base_name)
 
     p = subparsers.add_parser('construct_error_bdev',
                               help='Add bdev with error injection backend')
@@ -179,7 +203,9 @@ if __name__ == "__main__":
 
     @call_cmd
     def construct_pmem_bdev(args):
-        print_array(rpc.bdev.construct_pmem_bdev(args.client, args))
+        print_array(rpc.bdev.construct_pmem_bdev(args.client,
+                                                 pmem_file=args.pmem_file,
+                                                 name=args.name))
 
     p = subparsers.add_parser('construct_pmem_bdev', help='Add a bdev with pmem backend')
     p.add_argument('pmem_file', help='Path to pmemblk pool file')
@@ -188,7 +214,9 @@ if __name__ == "__main__":
 
     @call_cmd
     def construct_passthru_bdev(args):
-        print_array(rpc.bdev.construct_passthru_bdev(args.client, args))
+        print_array(rpc.bdev.construct_passthru_bdev(args.client,
+                                                     base_bdev_name=args.base_bdev_name,
+                                                     passthru_bdev_name=args.passthru_bdev_name))
 
     p = subparsers.add_parser('construct_passthru_bdev',
                               help='Add a pass through bdev on existing bdev')
@@ -198,7 +226,8 @@ if __name__ == "__main__":
 
     @call_cmd
     def get_bdevs(args):
-        print_dict(rpc.bdev.get_bdevs(args.client, args))
+        print_dict(rpc.bdev.get_bdevs(args.client,
+                                      name=args.name))
 
     p = subparsers.add_parser(
         'get_bdevs', help='Display current blockdev list or required blockdev')
@@ -207,7 +236,8 @@ if __name__ == "__main__":
 
     @call_cmd
     def get_bdevs_config(args):
-        print_dict(rpc.bdev.get_bdevs_config(args.client, args))
+        print_dict(rpc.bdev.get_bdevs_config(args.client,
+                                             name=args.name))
 
     p = subparsers.add_parser(
         'get_bdevs_config', help='Display current (live) blockdev configuration list or required blockdev')
@@ -216,7 +246,8 @@ if __name__ == "__main__":
 
     @call_cmd
     def get_bdevs_iostat(args):
-        print_dict(rpc.bdev.get_bdevs_iostat(args.client, args))
+        print_dict(rpc.bdev.get_bdevs_iostat(args.client,
+                                             name=args.name))
 
     p = subparsers.add_parser(
         'get_bdevs_iostat', help='Display current I/O statistics of all the blockdevs or required blockdev.')
@@ -225,7 +256,8 @@ if __name__ == "__main__":
 
     @call_cmd
     def delete_bdev(args):
-        rpc.bdev.delete_bdev(args.client, args)
+        rpc.bdev.delete_bdev(args.client,
+                             bdev_name=args.bdev_name)
 
     p = subparsers.add_parser('delete_bdev', help='Delete a blockdev')
     p.add_argument(
@@ -234,7 +266,9 @@ if __name__ == "__main__":
 
     @call_cmd
     def set_bdev_qos_limit_iops(args):
-        rpc.bdev.set_bdev_qos_limit_iops(args.client, args)
+        rpc.bdev.set_bdev_qos_limit_iops(args.client,
+                                         name=args.name,
+                                         ios_per_sec=args.ios_per_sec)
 
     p = subparsers.add_parser('set_bdev_qos_limit_iops', help='Set QoS IOPS limit on a blockdev')
     p.add_argument('name', help='Blockdev name to set QoS. Example: Malloc0')
@@ -244,7 +278,11 @@ if __name__ == "__main__":
 
     @call_cmd
     def bdev_inject_error(args):
-        rpc.bdev.bdev_inject_error(args.client, args)
+        rpc.bdev.bdev_inject_error(args.client,
+                                   name=args.name,
+                                   io_type=args.io_type,
+                                   error_type=args.error_type,
+                                   num=args.num)
 
     p = subparsers.add_parser('bdev_inject_error', help='bdev inject error')
     p.add_argument('name', help="""the name of the error injection bdev""")
@@ -256,7 +294,9 @@ if __name__ == "__main__":
 
     @call_cmd
     def apply_firmware(args):
-        print_dict(rpc.bdev.apply_firmware(args.client, args))
+        print_dict(rpc.bdev.apply_firmware(args.client,
+                                           bdev_name=args.bdev_name,
+                                           filename=args.filename))
 
     p = subparsers.add_parser('apply_firmware', help='Download and commit firmware to NVMe device')
     p.add_argument('filename', help='filename of the firmware to download')
@@ -649,7 +689,10 @@ if __name__ == "__main__":
 
     # split
     def construct_split_vbdev(args):
-        print_dict(rpc.bdev.construct_split_vbdev(args.client, args))
+        print_dict(rpc.bdev.construct_split_vbdev(args.client,
+                                                  base_bdev=args.base_bdev,
+                                                  split_count=args.split_count,
+                                                  split_size_mb=args.split_size_mb))
 
     p = subparsers.add_parser('construct_split_vbdev', help="""Add given disk name to split config. If bdev with base_name
     name exist the split bdevs will be created right away, if not split bdevs will be created when base bdev became
@@ -661,7 +704,8 @@ if __name__ == "__main__":
     p.set_defaults(func=construct_split_vbdev)
 
     def destruct_split_vbdev(args):
-        rpc.destruct_split_vbdev(args.client, args)
+        rpc.destruct_split_vbdev(args.client,
+                                 base_bdev=args.base_bdev)
 
     p = subparsers.add_parser('destruct_split_vbdev', help="""Delete split config with all created splits.""")
     p.add_argument('base_bdev', help='base bdev name')
