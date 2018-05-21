@@ -38,6 +38,7 @@
 #include "spdk/nvme.h"
 #include "spdk/env.h"
 #include "spdk/nvme_intel.h"
+#include "spdk/lnvm_spec.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/pci_ids.h"
 #include "spdk/string.h"
@@ -456,6 +457,66 @@ print_hex_be(const void *v, size_t size)
 	while (size--) {
 		printf("%02X", *buf++);
 	}
+}
+
+static void
+dev_geometry_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
+{
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		printf("LNVM identify device failed\n");
+	}
+	outstanding_commands--;
+}
+
+static void
+print_geometry(struct spdk_nvme_ctrlr *ctrlr, int ns)
+{
+	if (!spdk_nvme_ctrlr_supports_oc_commands(ctrlr)) {
+		printf("Open Channel 2.0 commands not supported.\n");
+		return;
+	}
+
+	printf("Open Channel 2.0 Geometry for namespace %02d\n", ns);
+	printf("==========================================\n");
+
+	const unsigned int payload_size = 4096;
+	void *payload = calloc(1, payload_size);
+	if (payload == NULL) {
+		printf("Payload allocation failed!\n");
+		exit(1);
+	}
+
+	if (spdk_nvme_ctrlr_cmd_lnvm_geometry(ctrlr, ns, payload,
+					      payload_size,
+					      dev_geometry_completion, NULL)) {
+		printf("spdk_nvme_ctrlr_cmd_lnvm_geometry() failed\n");
+		free(payload);
+		exit(1);
+	}
+	outstanding_commands = 1;
+
+	while (outstanding_commands) {
+		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
+	}
+
+	struct spdk_lnvm_geometry_data *geo_data = (struct spdk_lnvm_geometry_data *) payload;
+
+	printf("OC 2.0 version:          maj:%d min:%d\n", geo_data->mjr, geo_data->mnr);
+	printf("Groups (channels):       %d\n", geo_data->num_grp);
+	printf("PUs (LUNs) per group:    %d\n", geo_data->num_pu);
+	printf("Chunks per LUN:          %d\n", geo_data->num_chk);
+	printf("Log. blks per chunk:     %d\n", geo_data->clba);
+	printf("MIN write size:          %d\n", geo_data->ws_min);
+	printf("OPT write size:          %d\n", geo_data->ws_opt);
+	printf("\n");
+
+	printf("LBA format:\n");
+	printf("  Group bits:            %d\n", geo_data->lbaf.grp_len);
+	printf("  PU bits:               %d\n", geo_data->lbaf.pu_len);
+	printf("  Chunk bits:            %d\n", geo_data->lbaf.chk_len);
+	printf("  Log. block bits:       %d\n", geo_data->lbaf.lbk_len);
+
+	free(payload);
 }
 
 static void
@@ -1343,6 +1404,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
 	     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid)) {
 		print_namespace(spdk_nvme_ctrlr_get_ns(ctrlr, nsid));
+		print_geometry(ctrlr, nsid);
 	}
 
 	if (g_discovery_page) {
