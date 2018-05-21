@@ -1629,6 +1629,142 @@ int spdk_nvme_ns_cmd_compare_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_q
 				     void *cb_arg, uint32_t io_flags,
 				     uint16_t apptag_mask, uint16_t apptag);
 
+/**
+ * \brief Submits a vector reset command to the specified NVMe namespace.
+ *
+ * \param ns NVMe namespace to submit the command
+ * \param qpair I/O queue pair to submit the request
+ * \param lba_arr an array of LBAs of sectors for processing
+ * \param arr_size number of LBAs stored in lba_arr
+ * \param cb_fn callback function to invoke when the I/O is completed
+ * \param cb_arg argument to pass to the callback function
+ *
+ * \return 0 if successfully submitted, ENOMEM if an nvme_request
+ *	     structure cannot be allocated for the I/O request
+ */
+int spdk_nvme_ns_cmd_lnvm_vector_reset(struct spdk_nvme_ns *ns,
+				       struct spdk_nvme_qpair *qpair,
+				       void *lba_arr, uint32_t arr_size,
+				       spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+
+/**
+ * \brief Submits a vector write command to the specified NVMe namespace.
+ *
+ * \param ns NVMe namespace to submit the command
+ * \param qpair I/O queue pair to submit the request
+ * \param buffer virtual address pointer to the data payload
+ * \param lba_arr an array of LBAs of sectors for processing
+ * \param arr_size number of LBAs stored in lba_arr
+ * \param cb_fn callback function to invoke when the I/O is completed
+ * \param cb_arg argument to pass to the callback function
+ * \param io_flags set flags, defined by the SPDK_LNVM_IO_FLAGS_* entries
+ * in spdk/lnvm_spec.h, for this I/O.
+ *
+ * \return 0 if successfully submitted, ENOMEM if an nvme_request
+ *	     structure cannot be allocated for the I/O request
+ */
+int spdk_nvme_ns_cmd_lnvm_vector_write(struct spdk_nvme_ns *ns,
+				       struct spdk_nvme_qpair *qpair,
+				       void *buffer,
+				       void *lba_arr, uint32_t arr_size,
+				       spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+				       uint32_t io_flags);
+
+/**
+ * \brief Submits a vector write command to the specified NVMe namespace.
+ *
+ * \param ns NVMe namespace to submit the command
+ * \param qpair I/O queue pair to submit the request
+ * \param buffer virtual address pointer to the data payload
+ * \param metadata virtual address pointer to the metadata payload, the length
+ *	           of metadata is specified by spdk_nvme_ns_get_md_size()*
+ * \param lba_arr an array of LBAs of sectors for processing
+ * \param arr_size number of LBAs stored in lba_arr
+ * \param cb_fn callback function to invoke when the I/O is completed
+ * \param cb_arg argument to pass to the callback function
+ * \param io_flags set flags, defined by the SPDK_LNVM_IO_FLAGS_* entries
+ * in spdk/lnvm_spec.h, for this I/O.
+ *
+ * \return 0 if successfully submitted, ENOMEM if an nvme_request
+ *	     structure cannot be allocated for the I/O request
+ */
+int spdk_nvme_ns_cmd_lnvm_vector_write_with_md(struct spdk_nvme_ns *ns,
+		struct spdk_nvme_qpair *qpair,
+		void *buffer, void *metadata,
+		void *lba_arr, uint32_t arr_size,
+		spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+		uint32_t io_flags);
+
+/**
+ * \brief Submits a vector read command to the specified NVMe namespace.
+ *
+ * \param ns NVMe namespace to submit the command
+ * \param qpair I/O queue pair to submit the request
+ * \param buffer virtual address pointer to the data payload
+ * \param lba_arr an array of LBAs of sectors for processing
+ * \param arr_size number of LBAs stored in lba_arr
+ * \param cb_fn callback function to invoke when the I/O is completed
+ * \param cb_arg argument to pass to the callback function
+ * \param io_flags set flags, defined by the SPDK_LNVM_IO_FLAGS_* entries
+ * in spdk/lnvm_spec.h, for this I/O.
+ *
+ * \return 0 if successfully submitted, ENOMEM if an nvme_request
+ *	     structure cannot be allocated for the I/O request
+ */
+int spdk_nvme_ns_cmd_lnvm_vector_read(struct spdk_nvme_ns *ns,
+				      struct spdk_nvme_qpair *qpair,
+				      void *buffer,
+				      void *lba_arr, uint32_t arr_size,
+				      spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+				      uint32_t io_flags);
+
+/**
+ * \brief Submits a vector read command to the specified NVMe namespace.
+ *
+ * \param ns NVMe namespace to submit the command
+ * \param qpair I/O queue pair to submit the request
+ * \param buffer virtual address pointer to the data payload
+ * \param metadata virtual address pointer to the metadata payload, the length
+ *	           of metadata is specified by spdk_nvme_ns_get_md_size()*
+ * \param lba_arr an array of LBAs of sectors for processing
+ * \param arr_size number of LBAs stored in lba_arr
+ * \param cb_fn callback function to invoke when the I/O is completed
+ * \param cb_arg argument to pass to the callback function
+ * \param io_flags set flags, defined by the SPDK_LNVM_IO_FLAGS_* entries
+ * in spdk/lnvm_spec.h, for this I/O.
+ *
+ * \return 0 if successfully submitted, ENOMEM if an nvme_request
+ *	     structure cannot be allocated for the I/O request
+ */
+int spdk_nvme_ns_cmd_lnvm_vector_read_with_md(struct spdk_nvme_ns *ns,
+		struct spdk_nvme_qpair *qpair,
+		void *buffer, void *metadata,
+		void *lba_arr, uint32_t arr_size,
+		spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+		uint32_t io_flags);
+
+/**
+ * \brief Submits a vector copy command to the specified NVMe namespace.
+ *
+ * \param ns NVMe namespace to submit the command
+ * \param qpair I/O queue pair to submit the request
+ * \param dst_lba_arr an array of LBAs of source sectors for processing
+ * \param src_lba_arr an array of LBAs of destination sectors for processing
+ * \param arr_size number of LBAs stored in lba_arr
+ * \param cb_fn callback function to invoke when the I/O is completed
+ * \param cb_arg argument to pass to the callback function
+ * \param io_flags set flags, defined by the SPDK_LNVM_IO_FLAGS_* entries
+ * in spdk/lnvm_spec.h, for this I/O.
+ *
+ * \return 0 if successfully submitted, ENOMEM if an nvme_request
+ *	     structure cannot be allocated for the I/O request
+ */
+int spdk_nvme_ns_cmd_lnvm_vector_copy(struct spdk_nvme_ns *ns,
+				      struct spdk_nvme_qpair *qpair,
+				      void *dst_lba_arr, void *src_lba_arr, uint32_t arr_size,
+				      spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+				      uint32_t io_flags);
+
 #ifdef __cplusplus
 }
 #endif

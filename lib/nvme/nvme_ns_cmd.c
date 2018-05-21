@@ -922,3 +922,185 @@ spdk_nvme_ns_cmd_reservation_report(struct spdk_nvme_ns *ns,
 
 	return nvme_qpair_submit_request(qpair, req);
 }
+
+int
+spdk_nvme_ns_cmd_lnvm_vector_reset(struct spdk_nvme_ns *ns,
+				   struct spdk_nvme_qpair *qpair,
+				   void *lba_arr, uint32_t arr_size,
+				   spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	struct nvme_request	*req;
+	struct spdk_nvme_cmd	*cmd;
+
+	if (!lba_arr || (arr_size == 0) || (arr_size > 64)) {
+		return -EINVAL;
+	}
+
+	req = nvme_allocate_request_null(qpair, cb_fn, cb_arg);
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+
+	req->lbal = lba_arr;
+	req->lbal_size = arr_size;
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_LNVM_OPC_VECTOR_RESET;
+	cmd->nsid = ns->id;
+	cmd->cdw12 = arr_size - 1;
+
+	return nvme_qpair_submit_request(qpair, req);
+}
+
+int
+spdk_nvme_ns_cmd_lnvm_vector_write_with_md(struct spdk_nvme_ns *ns,
+		struct spdk_nvme_qpair *qpair,
+		void *buffer, void *metadata,
+		void *lba_arr, uint32_t arr_size,
+		spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+		uint32_t io_flags)
+{
+	struct nvme_request	*req;
+	struct spdk_nvme_cmd	*cmd;
+	struct nvme_payload	payload;
+	uint32_t valid_flags = SPDK_LNVM_IO_FLAGS_LIMITED_RETRY;
+
+	if (io_flags & ~valid_flags) {
+		return -EINVAL;
+	}
+
+	if (!buffer || !lba_arr || (arr_size == 0) || (arr_size > 64)) {
+		return -EINVAL;
+	}
+
+	payload.type = NVME_PAYLOAD_TYPE_CONTIG;
+	payload.u.contig = buffer;
+	payload.md = metadata;
+
+	req = nvme_allocate_request(qpair, &payload, arr_size * PAGE_SIZE, cb_fn, cb_arg);
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+
+	req->lbal = lba_arr;
+	req->lbal_size = arr_size;
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_LNVM_OPC_VECTOR_WRITE;
+	cmd->nsid = ns->id;
+	cmd->cdw12 = arr_size - 1;
+	cmd->cdw12 |= io_flags;
+
+	return nvme_qpair_submit_request(qpair, req);
+}
+
+int
+spdk_nvme_ns_cmd_lnvm_vector_write(struct spdk_nvme_ns *ns,
+				   struct spdk_nvme_qpair *qpair,
+				   void *buffer,
+				   void *lba_arr, uint32_t arr_size,
+				   spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+				   uint32_t io_flags)
+{
+	return spdk_nvme_ns_cmd_lnvm_vector_write_with_md(
+		       ns, qpair, buffer, NULL,
+		       lba_arr, arr_size, cb_fn,
+		       cb_arg, io_flags);
+}
+
+int
+spdk_nvme_ns_cmd_lnvm_vector_read_with_md(struct spdk_nvme_ns *ns,
+		struct spdk_nvme_qpair *qpair,
+		void *buffer, void *metadata,
+		void *lba_arr, uint32_t arr_size,
+		spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+		uint32_t io_flags)
+{
+	struct nvme_request	*req;
+	struct spdk_nvme_cmd	*cmd;
+	struct nvme_payload	payload;
+	uint32_t valid_flags = SPDK_LNVM_IO_FLAGS_LIMITED_RETRY;
+
+	if (io_flags & ~valid_flags) {
+		return -EINVAL;
+	}
+
+	if (!buffer || !lba_arr || (arr_size == 0) || (arr_size > 64)) {
+		return -EINVAL;
+	}
+
+	payload.type = NVME_PAYLOAD_TYPE_CONTIG;
+	payload.u.contig = buffer;
+	payload.md = metadata;
+
+	req = nvme_allocate_request(qpair, &payload, arr_size * PAGE_SIZE, cb_fn, cb_arg);
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+
+	req->lbal = lba_arr;
+	req->lbal_size = arr_size;
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_LNVM_OPC_VECTOR_READ;
+	cmd->nsid = ns->id;
+	cmd->cdw12 = arr_size - 1;
+	cmd->cdw12 |= io_flags;
+
+	return nvme_qpair_submit_request(qpair, req);
+}
+
+int
+spdk_nvme_ns_cmd_lnvm_vector_read(struct spdk_nvme_ns *ns,
+				  struct spdk_nvme_qpair *qpair,
+				  void *buffer,
+				  void *lba_arr, uint32_t arr_size,
+				  spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+				  uint32_t io_flags)
+{
+	return spdk_nvme_ns_cmd_lnvm_vector_read_with_md(
+		       ns, qpair, buffer, NULL,
+		       lba_arr, arr_size, cb_fn,
+		       cb_arg, io_flags);
+}
+
+int
+spdk_nvme_ns_cmd_lnvm_vector_copy(struct spdk_nvme_ns *ns,
+				  struct spdk_nvme_qpair *qpair,
+				  void *dst_lba_arr,
+				  void *src_lba_arr,
+				  uint32_t arr_size,
+				  spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+				  uint32_t io_flags)
+{
+	struct nvme_request	*req;
+	struct spdk_nvme_cmd	*cmd;
+
+	uint32_t valid_flags = SPDK_LNVM_IO_FLAGS_LIMITED_RETRY;
+
+	if (io_flags & ~valid_flags) {
+		return -EINVAL;
+	}
+
+	if (!dst_lba_arr || !src_lba_arr || (arr_size == 0) || (arr_size > 64)) {
+		return -EINVAL;
+	}
+
+	req = nvme_allocate_request_null(qpair, cb_fn, cb_arg);
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+
+	req->lbal = src_lba_arr;
+	req->dlbal = dst_lba_arr;
+	req->lbal_size = arr_size;
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_LNVM_OPC_VECTOR_COPY;
+	cmd->nsid = ns->id;
+
+	cmd->cdw12 = arr_size - 1;
+	cmd->cdw12 |= io_flags;
+
+	return nvme_qpair_submit_request(qpair, req);
+}
