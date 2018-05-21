@@ -13,6 +13,11 @@ Results are recorded in the `make.log` file.
 To enable type: 'git config core.hooksPath .githooks'. To override after configuration use
 the `git --no-verify` flag.
 
+### Open-Channell SSD
+
+A new Open-Channell SSD functionality added in NVMe device controller.
+The API, payload structs and opcodes are defined base on Open-Channel specification (rev. 2.0).
+
 ## v18.04: Logical Volume Snapshot/Clone, iSCSI Initiator, Bdev QoS, VPP Userspace TCP/IP
 
 ### vhost

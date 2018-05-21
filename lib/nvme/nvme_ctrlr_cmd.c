@@ -290,6 +290,14 @@ spdk_nvme_ctrlr_cmd_set_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
 				uint32_t cdw11, uint32_t cdw12, void *payload, uint32_t payload_size,
 				spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
+	return spdk_nvme_ctrlr_cmd_set_feature_ns(ctrlr, feature, cdw11, cdw12, payload,
+			payload_size, cb_fn, cb_arg, 0);
+}
+
+int spdk_nvme_ctrlr_cmd_set_feature_ns(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
+				       uint32_t cdw11, uint32_t cdw12, void *payload, uint32_t payload_size,
+				       spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t ns_id)
+{
 	struct nvme_request *req;
 	struct spdk_nvme_cmd *cmd;
 	int rc;
@@ -307,6 +315,7 @@ spdk_nvme_ctrlr_cmd_set_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
 	cmd->cdw10 = feature;
 	cmd->cdw11 = cdw11;
 	cmd->cdw12 = cdw12;
+	cmd->nsid = ns_id;
 
 	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
@@ -318,6 +327,15 @@ int
 spdk_nvme_ctrlr_cmd_get_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
 				uint32_t cdw11, void *payload, uint32_t payload_size,
 				spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	return spdk_nvme_ctrlr_cmd_get_feature_ns(ctrlr, feature, cdw11, payload,
+			payload_size, cb_fn, cb_arg, 0);
+}
+
+int
+spdk_nvme_ctrlr_cmd_get_feature_ns(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
+				   uint32_t cdw11, void *payload, uint32_t payload_size,
+				   spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t ns_id)
 {
 	struct nvme_request *req;
 	struct spdk_nvme_cmd *cmd;
@@ -335,11 +353,37 @@ spdk_nvme_ctrlr_cmd_get_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
 	cmd->opc = SPDK_NVME_OPC_GET_FEATURES;
 	cmd->cdw10 = feature;
 	cmd->cdw11 = cdw11;
+	cmd->nsid = ns_id;
 
 	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	return rc;
+}
+
+int
+spdk_nvme_ctrlr_cmd_lnvm_geometry(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
+				  void *payload, uint32_t payload_size,
+				  spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	struct nvme_request *req;
+	struct spdk_nvme_cmd *cmd;
+
+	if (!payload || (payload_size == 0) || (payload_size % 4096 != 0)) {
+		return -EINVAL;
+	}
+
+	req = nvme_allocate_request_user_copy(ctrlr->adminq,
+					      payload, payload_size, cb_fn, cb_arg, false);
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_LNVM_OPC_GEOMETRY;
+	cmd->nsid = nsid;
+
+	return nvme_ctrlr_submit_admin_request(ctrlr, req);
 }
 
 int
