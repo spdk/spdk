@@ -1121,6 +1121,127 @@ test_nvme_ns_cmd_write_with_md(void)
 }
 
 static void
+test_nvme_ns_cmd_lnvm_vector_reset(void)
+{
+	const uint32_t	max_xfer_size = 0x10000;
+	const uint32_t	sector_size = 0x1000;
+	const uint32_t	vector_size = 0x10;
+
+	struct spdk_nvme_ns	ns;
+	struct spdk_nvme_ctrlr	ctrlr;
+	struct spdk_nvme_qpair	qpair;
+
+	int rc = 0;
+
+	prepare_for_test(&ns, &ctrlr, &qpair, sector_size, 0, max_xfer_size, 0, false);
+	uint64_t lba_arr[vector_size];
+	spdk_nvme_ns_cmd_lnvm_vector_reset(&ns, &qpair, lba_arr, vector_size,
+					   NULL, NULL);
+
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_request != NULL);
+	SPDK_CU_ASSERT_FATAL(g_request->num_children == 0);
+
+	CU_ASSERT(g_request->lbal == lba_arr);
+	CU_ASSERT(g_request->lbal_size == vector_size);
+	CU_ASSERT(g_request->cmd.opc == SPDK_LNVM_OPC_VECTOR_RESET);
+	CU_ASSERT(g_request->cmd.nsid == ns.id);
+	CU_ASSERT(g_request->cmd.cdw12 == vector_size - 1);
+
+	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
+}
+
+static void
+test_nvme_ns_cmd_lnvm_vector_write_with_md(void)
+{
+	const uint32_t	max_xfer_size = 0x10000;
+	const uint32_t	sector_size = 0x1000;
+	const uint32_t	md_size = 0x80;
+	const uint32_t	vector_size = 0x10;
+
+	struct spdk_nvme_ns	ns;
+	struct spdk_nvme_ctrlr	ctrlr;
+	struct spdk_nvme_qpair	qpair;
+
+	int rc = 0;
+
+	char *buffer = malloc(sector_size * vector_size);
+	char *metadata = malloc(md_size * vector_size);
+	uint64_t lba_arr[vector_size];
+
+	SPDK_CU_ASSERT_FATAL(buffer != NULL);
+	SPDK_CU_ASSERT_FATAL(metadata != NULL);
+
+	prepare_for_test(&ns, &ctrlr, &qpair, sector_size, md_size, max_xfer_size, 0, false);
+	spdk_nvme_ns_cmd_lnvm_vector_write_with_md(&ns, &qpair, buffer, metadata,
+			lba_arr, vector_size,
+			NULL, NULL, 0);
+
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_request != NULL);
+	SPDK_CU_ASSERT_FATAL(g_request->num_children == 0);
+
+	CU_ASSERT(g_request->payload.md == metadata);
+	CU_ASSERT(g_request->payload_size == max_xfer_size);
+	CU_ASSERT(g_request->payload.type == NVME_PAYLOAD_TYPE_CONTIG);
+	CU_ASSERT(g_request->payload.u.contig == buffer);
+	CU_ASSERT(g_request->lbal == lba_arr);
+	CU_ASSERT(g_request->lbal_size == vector_size);
+	CU_ASSERT(g_request->cmd.opc == SPDK_LNVM_OPC_VECTOR_WRITE);
+	CU_ASSERT(g_request->cmd.nsid == ns.id);
+	CU_ASSERT(g_request->cmd.cdw12 == vector_size - 1);
+
+	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
+
+	free(buffer);
+	free(metadata);
+}
+
+static void
+test_nvme_ns_cmd_lnvm_vector_write(void)
+{
+	const uint32_t	max_xfer_size = 0x10000;
+	const uint32_t	sector_size = 0x1000;
+	const uint32_t	vector_size = 0x10;
+
+	struct spdk_nvme_ns	ns;
+	struct spdk_nvme_ctrlr	ctrlr;
+	struct spdk_nvme_qpair	qpair;
+
+	int rc = 0;
+
+	char *buffer = malloc(sector_size * vector_size);
+	uint64_t lba_arr[vector_size];
+
+	SPDK_CU_ASSERT_FATAL(buffer != NULL);
+
+	prepare_for_test(&ns, &ctrlr, &qpair, sector_size, 0, max_xfer_size, 0, false);
+	spdk_nvme_ns_cmd_lnvm_vector_write(&ns, &qpair, buffer,
+					   lba_arr, vector_size,
+					   NULL, NULL, 0);
+
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_request != NULL);
+	SPDK_CU_ASSERT_FATAL(g_request->num_children == 0);
+
+	CU_ASSERT(g_request->payload_size == max_xfer_size);
+	CU_ASSERT(g_request->payload.type == NVME_PAYLOAD_TYPE_CONTIG);
+	CU_ASSERT(g_request->payload.u.contig == buffer);
+	CU_ASSERT(g_request->lbal == lba_arr);
+	CU_ASSERT(g_request->lbal_size == vector_size);
+	CU_ASSERT(g_request->cmd.opc == SPDK_LNVM_OPC_VECTOR_WRITE);
+	CU_ASSERT(g_request->cmd.nsid == ns.id);
+	CU_ASSERT(g_request->cmd.cdw12 == vector_size - 1);
+
+	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
+
+	free(buffer);
+}
+
+static void
 test_nvme_ns_cmd_read_with_md(void)
 {
 	struct spdk_nvme_ns             ns;
@@ -1163,6 +1284,128 @@ test_nvme_ns_cmd_read_with_md(void)
 	cleanup_after_test(&qpair);
 	free(buffer);
 	free(metadata);
+}
+
+static void
+test_nvme_ns_cmd_lnvm_vector_read_with_md(void)
+{
+	const uint32_t	max_xfer_size = 0x10000;
+	const uint32_t	sector_size = 0x1000;
+	const uint32_t	md_size = 0x80;
+	const uint32_t	vector_size = 0x10;
+
+	struct spdk_nvme_ns	ns;
+	struct spdk_nvme_ctrlr	ctrlr;
+	struct spdk_nvme_qpair	qpair;
+
+	int rc = 0;
+
+	char *buffer = malloc(sector_size * vector_size);
+	char *metadata = malloc(md_size * vector_size);
+	uint64_t lba_arr[vector_size];
+
+	SPDK_CU_ASSERT_FATAL(buffer != NULL);
+	SPDK_CU_ASSERT_FATAL(metadata != NULL);
+
+	prepare_for_test(&ns, &ctrlr, &qpair, sector_size, md_size, max_xfer_size, 0, false);
+	rc = spdk_nvme_ns_cmd_lnvm_vector_read_with_md(&ns, &qpair, buffer, metadata,
+			lba_arr, vector_size,
+			NULL, NULL, 0);
+
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_request != NULL);
+	SPDK_CU_ASSERT_FATAL(g_request->num_children == 0);
+
+	CU_ASSERT(g_request->payload.md == metadata);
+	CU_ASSERT(g_request->payload_size == max_xfer_size);
+	CU_ASSERT(g_request->payload.type == NVME_PAYLOAD_TYPE_CONTIG);
+	CU_ASSERT(g_request->payload.u.contig == buffer);
+	CU_ASSERT(g_request->lbal == lba_arr);
+	CU_ASSERT(g_request->lbal_size == vector_size);
+	CU_ASSERT(g_request->cmd.opc == SPDK_LNVM_OPC_VECTOR_READ);
+	CU_ASSERT(g_request->cmd.nsid == ns.id);
+	CU_ASSERT(g_request->cmd.cdw12 == vector_size - 1);
+
+	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
+
+	free(buffer);
+	free(metadata);
+}
+
+static void
+test_nvme_ns_cmd_lnvm_vector_read(void)
+{
+	const uint32_t	max_xfer_size = 0x10000;
+	const uint32_t	sector_size = 0x1000;
+	const uint32_t	vector_size = 0x10;
+
+	struct spdk_nvme_ns	ns;
+	struct spdk_nvme_ctrlr	ctrlr;
+	struct spdk_nvme_qpair	qpair;
+
+	int rc = 0;
+
+	char *buffer = malloc(sector_size * vector_size);
+	uint64_t lba_arr[vector_size];
+
+	SPDK_CU_ASSERT_FATAL(buffer != NULL);
+
+	prepare_for_test(&ns, &ctrlr, &qpair, sector_size, 0, max_xfer_size, 0, false);
+	rc = spdk_nvme_ns_cmd_lnvm_vector_read(&ns, &qpair, buffer, lba_arr, vector_size,
+					       NULL, NULL, 0);
+
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_request != NULL);
+	SPDK_CU_ASSERT_FATAL(g_request->num_children == 0);
+
+	CU_ASSERT(g_request->payload_size == max_xfer_size);
+	CU_ASSERT(g_request->payload.type == NVME_PAYLOAD_TYPE_CONTIG);
+	CU_ASSERT(g_request->payload.u.contig == buffer);
+	CU_ASSERT(g_request->lbal == lba_arr);
+	CU_ASSERT(g_request->lbal_size == vector_size);
+	CU_ASSERT(g_request->cmd.opc == SPDK_LNVM_OPC_VECTOR_READ);
+	CU_ASSERT(g_request->cmd.nsid == ns.id);
+	CU_ASSERT(g_request->cmd.cdw12 == vector_size - 1);
+
+	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
+	free(buffer);
+}
+
+static void
+test_nvme_ns_cmd_lnvm_vector_copy(void)
+{
+	const uint32_t	max_xfer_size = 0x10000;
+	const uint32_t	sector_size = 0x1000;
+	const uint32_t	vector_size = 0x10;
+
+	struct spdk_nvme_ns	ns;
+	struct spdk_nvme_ctrlr	ctrlr;
+	struct spdk_nvme_qpair	qpair;
+
+	int rc = 0;
+
+	uint64_t src_lba_arr[vector_size];
+	uint64_t dst_lba_arr[vector_size];
+
+	prepare_for_test(&ns, &ctrlr, &qpair, sector_size, 0, max_xfer_size, 0, false);
+	spdk_nvme_ns_cmd_lnvm_vector_copy(&ns, &qpair,
+					  dst_lba_arr, src_lba_arr, vector_size,
+					  NULL, NULL, 0);
+
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_request != NULL);
+	SPDK_CU_ASSERT_FATAL(g_request->num_children == 0);
+	CU_ASSERT(g_request->lbal == src_lba_arr);
+	CU_ASSERT(g_request->dlbal == dst_lba_arr);
+	CU_ASSERT(g_request->lbal_size == vector_size);
+	CU_ASSERT(g_request->cmd.opc == SPDK_LNVM_OPC_VECTOR_COPY);
+	CU_ASSERT(g_request->cmd.nsid == ns.id);
+	CU_ASSERT(g_request->cmd.cdw12 == vector_size - 1);
+
+	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
 }
 
 static void
@@ -1421,6 +1664,14 @@ int main(int argc, char **argv)
 		|| CU_add_test(suite, "nvme_ns_cmd_write_with_md", test_nvme_ns_cmd_write_with_md) == NULL
 		|| CU_add_test(suite, "nvme_ns_cmd_comparev", test_nvme_ns_cmd_comparev) == NULL
 		|| CU_add_test(suite, "nvme_ns_cmd_compare_with_md", test_nvme_ns_cmd_compare_with_md) == NULL
+		|| CU_add_test(suite, "nvme_ns_cmd_lnvm_vector_read", test_nvme_ns_cmd_lnvm_vector_read) == NULL
+		|| CU_add_test(suite, "nvme_ns_cmd_lnvm_vector_read_with_md",
+			       test_nvme_ns_cmd_lnvm_vector_read_with_md) == NULL
+		|| CU_add_test(suite, "nvme_ns_cmd_lnvm_vector_write", test_nvme_ns_cmd_lnvm_vector_write) == NULL
+		|| CU_add_test(suite, "nvme_ns_cmd_lnvm_vector_write_with_md",
+			       test_nvme_ns_cmd_lnvm_vector_write_with_md) == NULL
+		|| CU_add_test(suite, "nvme_ns_cmd_lnvm_vector_reset", test_nvme_ns_cmd_lnvm_vector_reset) == NULL
+		|| CU_add_test(suite, "nvme_ns_cmd_lnvm_vector_copy", test_nvme_ns_cmd_lnvm_vector_copy) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
