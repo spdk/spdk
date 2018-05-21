@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "394686b5_1c5598a6",
+        "filename": "doc/vhost_processing.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-21T17:03:00Z",
+      "side": 1,
+      "message": "an overall high level insight into -\u003e a high level overview of",
+      "revId": "43903176a419a925a21c1feceb04fe97f63fdd4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed1828aa_694334e8",
+        "filename": "doc/vhost_processing.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-21T17:03:00Z",
+      "side": 1,
+      "message": "Is the correct term \"vhost\", \"Vhost\", or \"VHOST\"? We should get it right and then make sure it is correct everywhere. I would assume \"vhost\" is most likely to be correct.",
+      "revId": "43903176a419a925a21c1feceb04fe97f63fdd4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4858739_04bcc61f",
+        "filename": "doc/vhost_processing.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-21T17:03:00Z",
+      "side": 1,
+      "message": "Is vhost the protocol? I thought vhost was the implementation and virtio was the protocol?",
+      "revId": "43903176a419a925a21c1feceb04fe97f63fdd4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
