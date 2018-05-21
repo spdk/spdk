@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1fde4871_b72128a3",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-21T16:50:36Z",
+      "side": 1,
+      "message": "Typo: \"Channell\" -\u003e \"Channel\" (and another one below)",
+      "range": {
+        "startLine": 16,
+        "startChar": 9,
+        "endLine": 16,
+        "endChar": 17
+      },
+      "revId": "1b9f67eefd0373ca73c301cdc749b3b66955ab25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "031c6c3a_711f0c26",
+        "filename": "include/spdk/lnvm_spec.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-21T16:50:36Z",
+      "side": 1,
+      "message": "This file seems to duplicate https://review.gerrithub.io/#/c/spdk/spdk/+/411589/ - please coordinate with Xiadong, choose one of the patches, and rebase the rest on that.",
+      "revId": "1b9f67eefd0373ca73c301cdc749b3b66955ab25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec6f036c_cb7777c2",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1042,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-21T16:50:36Z",
+      "side": 1,
+      "message": "We should be consistent with whether these are called \"oc\" for OpenChannel or \"lnvm\" for LightNVM.",
+      "range": {
+        "startLine": 1042,
+        "startChar": 30,
+        "endLine": 1042,
+        "endChar": 32
+      },
+      "revId": "1b9f67eefd0373ca73c301cdc749b3b66955ab25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
