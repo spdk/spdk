@@ -81,6 +81,24 @@
       "revId": "a77554d2dc11cd4cf157653b6763bd2ccfc831ee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8910d9a3_76df550d",
+        "filename": "include/spdk/nvme_lnvm.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-21T23:22:35Z",
+      "side": 1,
+      "message": "OK, let\u0027s keep them separate for now.",
+      "parentUuid": "b8c64a07_b84aeac6",
+      "revId": "a77554d2dc11cd4cf157653b6763bd2ccfc831ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
