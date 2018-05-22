@@ -404,14 +404,8 @@ virtio_blk_dev_init(struct virtio_blk_dev *bvdev, uint16_t max_queues)
 
 	/* bdev is tied with the virtio device; we can reuse the name */
 	bdev->name = vdev->name;
-	if (bdev->name == NULL) {
-		SPDK_ERRLOG("Couldn't alloc memory for the bdev name.\n");
-		return -ENOMEM;
-	}
-
 	rc = virtio_dev_start(vdev, max_queues, 0);
 	if (rc != 0) {
-		free(bdev->name);
 		return rc;
 	}
 
@@ -433,7 +427,6 @@ virtio_blk_dev_init(struct virtio_blk_dev *bvdev, uint16_t max_queues)
 		SPDK_ERRLOG("Failed to register bdev name=%s\n", bdev->name);
 		spdk_io_device_unregister(bvdev, NULL);
 		virtio_dev_stop(vdev);
-		free(bdev->name);
 		return rc;
 	}
 
