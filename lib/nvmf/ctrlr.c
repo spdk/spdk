@@ -426,6 +426,9 @@ _spdk_nvmf_qpair_destroy(void *ctx)
 {
 	struct spdk_nvmf_qpair *qpair = ctx;
 
+	assert(qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING);
+	qpair->state = SPDK_NVMF_QPAIR_INACTIVE;
+
 	spdk_nvmf_transport_qpair_fini(qpair);
 }
 
@@ -452,23 +455,34 @@ _spdk_nvmf_ctrlr_remove_qpair(void *ctx)
 	}
 }
 
-void
-spdk_nvmf_ctrlr_disconnect(struct spdk_nvmf_qpair *qpair)
+static void
+_spdk_nvmf_qpair_deactivate(void *ctx)
 {
+	struct spdk_nvmf_qpair *qpair = ctx;
 	struct spdk_nvmf_ctrlr *ctrlr;
+
+	assert(qpair->state == SPDK_NVMF_QPAIR_ACTIVE);
+	qpair->state = SPDK_NVMF_QPAIR_DEACTIVATING;
 
 	ctrlr = qpair->ctrlr;
 
 	if (ctrlr == NULL) {
 		/* This qpair was never added to a controller. Skip a step
 		 * and destroy it immediately. */
-		spdk_thread_send_msg(qpair->group->thread, _spdk_nvmf_qpair_destroy, qpair);
+		_spdk_nvmf_qpair_destroy(qpair);
 		return;
 	}
 
 	/* Send a message to the controller thread to remove the qpair from its internal
 	 * list. */
 	spdk_thread_send_msg(ctrlr->admin_qpair->group->thread, _spdk_nvmf_ctrlr_remove_qpair, qpair);
+}
+
+void
+spdk_nvmf_ctrlr_disconnect(struct spdk_nvmf_qpair *qpair)
+{
+	/* Send a message to the thread that owns this qpair */
+	spdk_thread_send_msg(qpair->group->thread, _spdk_nvmf_qpair_deactivate, qpair);
 }
 
 struct spdk_nvmf_qpair *
