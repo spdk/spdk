@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b015ff50_b31517b6",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-05-22T02:05:06Z",
+      "side": 1,
+      "message": "May use a variable to store this result.",
+      "range": {
+        "startLine": 222,
+        "startChar": 17,
+        "endLine": 222,
+        "endChar": 46
+      },
+      "revId": "a00d3e746bd3bab3840ed148da7d288a43f89fd2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
