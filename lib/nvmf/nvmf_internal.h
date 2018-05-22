@@ -69,6 +69,8 @@ enum spdk_nvmf_qpair_state {
 	SPDK_NVMF_QPAIR_DEACTIVATING,
 };
 
+typedef void (*spdk_nvmf_state_change_done)(void *cb_arg, int status);
+
 struct spdk_nvmf_tgt {
 	struct spdk_nvmf_tgt_opts		opts;
 
@@ -160,6 +162,8 @@ struct spdk_nvmf_ns {
 
 struct spdk_nvmf_qpair {
 	enum spdk_nvmf_qpair_state		state;
+	spdk_nvmf_state_change_done		state_cb;
+	void					*state_cb_arg;
 
 	struct spdk_nvmf_transport		*transport;
 	struct spdk_nvmf_ctrlr			*ctrlr;

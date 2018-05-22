@@ -483,26 +483,39 @@ _spdk_nvmf_ctrlr_remove_qpair(void *ctx)
 }
 
 static void
+_spdk_nvmf_qpair_quiesced(void *cb_arg, int status)
+{
+	struct spdk_nvmf_qpair *qpair = cb_arg;
+
+	/* Send a message to the controller thread to remove the qpair from its internal
+	 * list. */
+	spdk_thread_send_msg(qpair->ctrlr->admin_qpair->group->thread, _spdk_nvmf_ctrlr_remove_qpair,
+			     qpair);
+}
+
+static void
 _spdk_nvmf_qpair_deactivate(void *ctx)
 {
 	struct spdk_nvmf_qpair *qpair = ctx;
-	struct spdk_nvmf_ctrlr *ctrlr;
 
 	assert(qpair->state == SPDK_NVMF_QPAIR_ACTIVE);
 	qpair->state = SPDK_NVMF_QPAIR_DEACTIVATING;
 
-	ctrlr = qpair->ctrlr;
-
-	if (ctrlr == NULL) {
+	if (qpair->ctrlr == NULL) {
 		/* This qpair was never added to a controller. Skip a step
 		 * and destroy it immediately. */
 		_spdk_nvmf_qpair_destroy(qpair);
 		return;
 	}
 
-	/* Send a message to the controller thread to remove the qpair from its internal
-	 * list. */
-	spdk_thread_send_msg(ctrlr->admin_qpair->group->thread, _spdk_nvmf_ctrlr_remove_qpair, qpair);
+	/* Check for outstanding I/O */
+	if (!TAILQ_EMPTY(&qpair->outstanding)) {
+		qpair->state_cb = _spdk_nvmf_qpair_quiesced;
+		qpair->state_cb_arg = qpair;
+		return;
+	}
+
+	_spdk_nvmf_qpair_quiesced(qpair, 0);
 }
 
 void
