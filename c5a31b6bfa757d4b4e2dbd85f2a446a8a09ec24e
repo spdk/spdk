@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d8716290_6dceaff9",
+        "filename": "lib/nvme/nvme_lnvm.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-22T23:04:08Z",
+      "side": 1,
+      "message": "This isn\u0027t a ding against the code you wrote, since you\u0027re just following the spec. But specifying a list of chunks for vectored I/O doesn\u0027t have any real world use case, as it is defined in the current specification. Chunks are large - megabytes most likely. You aren\u0027t going to want to move full chunks around very often. If you\u0027re implementing a garbage collector, you definitely do want to be able to move a collection of logical blocks, scattered across a set of chunks, to a new single chunk. But that isn\u0027t possible with this definition.\n\nAlso, using the first lba in the chunk as the chunk identifier is also confusing (again, that\u0027s in the spec - not your fault). The spec should just drop logical blocks entirely and let users write in group-\u003ePU-\u003echunk-\u003eoffset in \"block\" units, but not mux together the concepts of a logical block and the physical block-sized piece of NAND that\u0027s being written. Maybe they\u0027re doing this because drives have accelerated paths to discovering \"LBA\" metadata written along with each block or something, but there has to be a better way to abstract that out.",
+      "revId": "c5a31b6bfa757d4b4e2dbd85f2a446a8a09ec24e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
