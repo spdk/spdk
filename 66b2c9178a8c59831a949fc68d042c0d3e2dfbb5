@@ -16,6 +16,24 @@
       "revId": "66b2c9178a8c59831a949fc68d042c0d3e2dfbb5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "89e585a1_afc18b49",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1636,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-22T23:47:00Z",
+      "side": 1,
+      "message": "Depending on how efficient we want this to be, we could also just allocate a DMA buffer internally and copy the LBAs provided by the user (similar to nvme_allocate_request_user_copy() as used in admin commands).",
+      "parentUuid": "e2e697cb_a6e5bf3b",
+      "revId": "66b2c9178a8c59831a949fc68d042c0d3e2dfbb5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
