@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d007b036_4b87e754",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-22T22:31:28Z",
+      "side": 1,
+      "message": "$blkname should probably still be quoted here.",
+      "range": {
+        "startLine": 179,
+        "startChar": 10,
+        "endLine": 179,
+        "endChar": 18
+      },
+      "revId": "553c607f513c9bbd3e677f9a6b3e753777d5bab3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
