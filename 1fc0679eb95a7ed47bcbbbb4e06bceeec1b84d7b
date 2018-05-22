@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "687479e9_9cf7581b",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-22T21:45:03Z",
+      "side": 1,
+      "message": "I followed the pattern from weighted round robin.",
+      "parentUuid": "b9e75d66_7fb192cd",
+      "revId": "1fc0679eb95a7ed47bcbbbb4e06bceeec1b84d7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "20dfc31f_2e8f339f",
         "filename": "include/spdk/nvme_spec.h",
         "patchSetId": 1
@@ -47,6 +65,24 @@
       "writtenOn": "2018-05-22T21:07:24Z",
       "side": 1,
       "message": "This looks sort of backwards to me personally (I\u0027d write it css \u0026 CAP_CSS_NVM), but I suppose it\u0027s no big deal if you prefer this way.",
+      "revId": "1fc0679eb95a7ed47bcbbbb4e06bceeec1b84d7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3339df85_e053f74c",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 562,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-22T21:45:03Z",
+      "side": 1,
+      "message": "I am following the pattern from weighted round robin below.",
+      "parentUuid": "0cf6f8ff_f6853e69",
       "revId": "1fc0679eb95a7ed47bcbbbb4e06bceeec1b84d7b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
