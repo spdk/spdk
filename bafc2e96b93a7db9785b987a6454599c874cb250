@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ddd02180_16b67e5a",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 474,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-22T22:05:51Z",
+      "side": 1,
+      "message": "This could probably use sizeof() on the actual type of the structure.\n\nAlso, since this is just an example tool, not inside the library code, we can put the geometry data in a global rather than allocating it here if that simplifies the code (see the features and log pages at the top of the file for examples).",
+      "range": {
+        "startLine": 474,
+        "startChar": 35,
+        "endLine": 474,
+        "endChar": 39
+      },
+      "revId": "bafc2e96b93a7db9785b987a6454599c874cb250",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db2e1746_193dc447",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 504,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-22T22:05:51Z",
+      "side": 1,
+      "message": "Minor stylistic nitpick: we generally declare variables at the top of the scope.",
+      "revId": "bafc2e96b93a7db9785b987a6454599c874cb250",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a999e01_cdda67a2",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 522,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-22T22:05:51Z",
+      "side": 1,
+      "message": "I think this probably could use a trailing printf(\"\\n\"); at the end so that it\u0027s separated from the next namespace with a blank line.",
+      "revId": "bafc2e96b93a7db9785b987a6454599c874cb250",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
