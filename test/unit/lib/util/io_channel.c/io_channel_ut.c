@@ -32,6 +32,7 @@
  */
 
 #include "spdk/stdinc.h"
+#include "spdk/conf.h"
 
 #include "spdk_cunit.h"
 
@@ -446,4 +447,16 @@ uint32_t
 spdk_env_get_current_core(void)
 {
 	return pthread_self();
+}
+
+struct spdk_conf_section *
+spdk_conf_find_section(struct spdk_conf *cp, const char *name)
+{
+	return NULL;
+}
+
+int
+spdk_conf_section_get_intval(struct spdk_conf_section *sp, const char *key)
+{
+	return 0;
 }

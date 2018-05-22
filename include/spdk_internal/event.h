@@ -40,7 +40,7 @@
 #include "spdk/json.h"
 
 struct spdk_event {
-	uint32_t		lcore; /* Same as reactor_id. This is actually the destination of the event which is a reactor */
+	uint32_t		lcore;
 	spdk_event_fn		fn;
 	void			*arg1;
 	void			*arg2;
@@ -49,7 +49,7 @@ struct spdk_event {
 int spdk_reactors_init(unsigned int max_delay_us);
 void spdk_reactors_fini(void);
 
-void spdk_threads_start(void);
+void spdk_reactors_start(void);
 void spdk_reactors_stop(void *arg1, void *arg2);
 
 struct spdk_subsystem {

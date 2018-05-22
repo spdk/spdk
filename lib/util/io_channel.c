@@ -37,6 +37,7 @@
 #include "spdk/log.h"
 #include "spdk/env.h"
 #include "spdk/event.h"
+#include "spdk/conf.h"
 
 #ifdef __linux__
 #include <sys/prctl.h>
@@ -66,7 +67,7 @@ struct io_device {
 static TAILQ_HEAD(, io_device) g_io_devices = TAILQ_HEAD_INITIALIZER(g_io_devices);
 
 struct spdk_thread {
-	uint32_t thread_id;
+	pthread_t thread_id;
 	spdk_thread_pass_msg msg_fn;
 	spdk_start_poller start_poller_fn;
 	spdk_stop_poller stop_poller_fn;
@@ -81,12 +82,12 @@ static TAILQ_HEAD(, spdk_thread) g_threads = TAILQ_HEAD_INITIALIZER(g_threads);
 static struct spdk_thread *
 _get_thread(void)
 {
-	uint32_t thread_id;
+	pthread_t thread_id;
 	struct spdk_thread *thread;
 
-	thread_id = spdk_env_get_current_core();
-
-	if ((thread_id < spdk_env_get_first_reactor_id()) || (thread_id > spdk_env_get_last_reactor_id())) {
+	if (spdk_env_get_num_of_reactors()) {
+		thread_id = spdk_env_get_current_core();
+	} else {
 		thread_id = pthread_self();
 	}
 
@@ -127,8 +128,24 @@ spdk_env_get_last_reactor_id(void)
 uint32_t
 spdk_env_get_num_of_reactors(void)
 {
-	/* Test with various values */
-	return 100;
+	static int32_t num_of_reactors = 0;
+	struct spdk_conf_section *sp = NULL;
+	static int sp_test = 0;
+
+	if (!sp && !sp_test) {
+		sp = spdk_conf_find_section(NULL, "Global");
+		sp_test = 1;
+	}
+
+	if (!num_of_reactors && sp) {
+		num_of_reactors = spdk_conf_section_get_intval(sp, "NumberOfReactors");
+	}
+
+	if (num_of_reactors <= 0) {
+		return 0;
+	} else {
+		return  num_of_reactors;
+	}
 }
 
 uint32_t
@@ -148,13 +165,12 @@ spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 		     void *thread_ctx, const char *name)
 {
 	struct spdk_thread *thread;
-	uint32_t thread_id;
 
 	pthread_mutex_lock(&g_devlist_mutex);
 
 	thread = _get_thread();
 	if (thread) {
-		SPDK_ERRLOG("Double allocated SPDK thread. Thread-id:%u\n", thread->thread_id);
+		SPDK_ERRLOG("Double allocated SPDK thread\n");
 		pthread_mutex_unlock(&g_devlist_mutex);
 		return NULL;
 	}
@@ -166,15 +182,11 @@ spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 		return NULL;
 	}
 
-	thread_id = spdk_env_get_current_core();
-	if ((thread_id < spdk_env_get_first_reactor_id()) || (thread_id > spdk_env_get_last_reactor_id())) {
-		/* SPDK allocate thread called from OUTSIDE the reactor framework.
-		 * This is not a DPDK thread calling it.
-		 */
+	if (!spdk_env_get_num_of_reactors()) {
 		thread->thread_id = pthread_self();
 	} else {
-		/* This is a DPDK thread calling into this function.
-		 * The lcore has been set to a reactor id.
+		/*
+		 * Dynamic threading. Set the thread_id to the reactor-id
 		 */
 		thread->thread_id = spdk_env_get_current_core();
 	}
@@ -203,7 +215,7 @@ spdk_free_thread(void)
 
 	thread = _get_thread();
 	if (!thread) {
-		SPDK_ERRLOG("No thread allocated.\n");
+		SPDK_ERRLOG("No thread allocated\n");
 		pthread_mutex_unlock(&g_devlist_mutex);
 		return;
 	}
@@ -224,7 +236,7 @@ spdk_get_thread(void)
 
 	thread = _get_thread();
 	if (!thread) {
-		SPDK_ERRLOG("No thread allocated.\n");
+		SPDK_ERRLOG("No thread allocated\n");
 	}
 
 	pthread_mutex_unlock(&g_devlist_mutex);

@@ -399,7 +399,6 @@ uint32_t spdk_env_get_core_count(void);
  */
 uint32_t spdk_env_get_current_core(void);
 
-uint32_t spdk_env_get_first_reactor_id(void);
 
 /**
  * Get the index of the first dedicated CPU core for this application.

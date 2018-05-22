@@ -36,6 +36,7 @@
 #include "spdk_cunit.h"
 #include "spdk/blob.h"
 #include "spdk/string.h"
+#include "spdk/conf.h"
 
 #include "common/lib/test_env.c"
 #include "../bs_dev_common.c"
@@ -4369,6 +4370,18 @@ int main(int argc, char **argv)
 
 uint32_t
 spdk_env_get_current_core(void)
+{
+	return 0;
+}
+
+struct spdk_conf_section *
+spdk_conf_find_section(struct spdk_conf *cp, const char *name)
+{
+	return NULL;
+}
+
+int
+spdk_conf_section_get_intval(struct spdk_conf_section *sp, const char *key)
 {
 	return 0;
 }

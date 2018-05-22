@@ -32,6 +32,7 @@
  */
 
 #include "spdk/stdinc.h"
+#include "spdk/conf.h"
 
 #include "spdk_cunit.h"
 
@@ -293,4 +294,16 @@ int main(int argc, char **argv)
 	num_failures = CU_get_number_of_failures();
 	CU_cleanup_registry();
 	return num_failures;
+}
+
+struct spdk_conf_section *
+spdk_conf_find_section(struct spdk_conf *cp, const char *name)
+{
+	return NULL;
+}
+
+int
+spdk_conf_section_get_intval(struct spdk_conf_section *sp, const char *key)
+{
+	return 0;
 }

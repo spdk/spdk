@@ -146,7 +146,7 @@ int spdk_initialize_iscsi_conns(void)
 		g_conns_array[i].id = i;
 	}
 
-	last_core = spdk_env_get_num_of_reactors();
+	last_core = spdk_env_get_last_core();
 	g_num_connections = calloc(last_core + 1, sizeof(uint32_t));
 	if (!g_num_connections) {
 		SPDK_ERRLOG("Could not allocate array size=%u for g_num_connections\n",
@@ -174,8 +174,7 @@ err:
 static void
 spdk_iscsi_poll_group_add_conn_sock(struct spdk_iscsi_conn *conn)
 {
-	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi.poll_group[spdk_env_get_current_core() -
-						    spdk_env_get_first_reactor_id()];
+	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
 	int rc;
 
 	rc = spdk_sock_group_add_sock(poll_group->sock_group, conn->sock, spdk_iscsi_conn_sock_cb, conn);
@@ -187,8 +186,7 @@ spdk_iscsi_poll_group_add_conn_sock(struct spdk_iscsi_conn *conn)
 static void
 spdk_iscsi_poll_group_remove_conn_sock(struct spdk_iscsi_conn *conn)
 {
-	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi.poll_group[spdk_env_get_current_core() -
-						    spdk_env_get_first_reactor_id()];
+	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
 	int rc;
 
 	rc = spdk_sock_group_remove_sock(poll_group->sock_group, conn->sock);
@@ -200,8 +198,7 @@ spdk_iscsi_poll_group_remove_conn_sock(struct spdk_iscsi_conn *conn)
 static void
 spdk_iscsi_poll_group_add_conn(struct spdk_iscsi_conn *conn)
 {
-	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi.poll_group[spdk_env_get_current_core() -
-						    spdk_env_get_first_reactor_id()];
+	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
 
 	STAILQ_INSERT_TAIL(&poll_group->connections, conn, link);
 	spdk_iscsi_poll_group_add_conn_sock(conn);
@@ -210,8 +207,7 @@ spdk_iscsi_poll_group_add_conn(struct spdk_iscsi_conn *conn)
 static void
 spdk_iscsi_poll_group_remove_conn(struct spdk_iscsi_conn *conn)
 {
-	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi.poll_group[spdk_env_get_current_core() -
-						    spdk_env_get_first_reactor_id()];
+	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
 
 	STAILQ_REMOVE(&poll_group->connections, conn, spdk_iscsi_conn, link);
 }
@@ -330,7 +326,7 @@ error_return:
 	conn->pending_activate_event = false;
 
 	conn->lcore = spdk_env_get_current_core();
-	__sync_fetch_and_add(&g_num_connections[conn->lcore - spdk_env_get_first_reactor_id()], 1);
+	__sync_fetch_and_add(&g_num_connections[conn->lcore], 1);
 
 	spdk_iscsi_poll_group_add_conn(conn);
 	return 0;
@@ -620,8 +616,7 @@ spdk_iscsi_conn_stop(struct spdk_iscsi_conn *conn)
 		spdk_scsi_dev_free_io_channels(conn->dev);
 	}
 
-	__sync_fetch_and_sub(&g_num_connections[spdk_env_get_current_core() -
-									    spdk_env_get_first_reactor_id()], 1);
+	__sync_fetch_and_sub(&g_num_connections[spdk_env_get_current_core()], 1);
 	spdk_iscsi_poll_group_remove_conn(conn);
 }
 
@@ -1228,7 +1223,7 @@ spdk_iscsi_conn_migration(struct spdk_iscsi_conn *conn)
 	spdk_iscsi_poll_group_remove_conn_sock(conn);
 	spdk_iscsi_conn_stop(conn);
 
-	__sync_fetch_and_add(&g_num_connections[lcore - spdk_env_get_first_reactor_id()], 1);
+	__sync_fetch_and_add(&g_num_connections[lcore], 1);
 	conn->last_nopin = spdk_get_ticks();
 	event = spdk_event_allocate(lcore, spdk_iscsi_conn_full_feature_migrate,
 				    conn, NULL);
@@ -1254,15 +1249,15 @@ spdk_iscsi_conn_allocate_reactor(const struct spdk_cpuset *cpumask)
 	int32_t num_pollers, min_pollers;
 
 	min_pollers = INT_MAX;
-	selected_core = spdk_env_get_first_reactor_id();
+	selected_core = spdk_env_get_first_core();
 
-	SPDK_ENV_FOREACH_REACTOR(i) {
+	SPDK_ENV_FOREACH_CORE(i) {
 		if (!spdk_cpuset_get_cpu(cpumask, i)) {
 			continue;
 		}
 
 		/* This core is running. Check how many pollers it already has. */
-		num_pollers = g_num_connections[i - spdk_env_get_first_reactor_id()];
+		num_pollers = g_num_connections[i];
 
 		if ((num_pollers > 0) && (num_pollers < g_connections_per_lcore)) {
 			/* Fewer than the maximum connections per core,

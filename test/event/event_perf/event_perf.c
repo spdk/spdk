@@ -62,7 +62,10 @@ submit_new_event(void *arg1, void *arg2)
 	}
 
 	if (next_lcore == UINT32_MAX) {
-		next_lcore = spdk_env_get_next_reactor_id(spdk_env_get_current_core());
+		next_lcore = spdk_env_get_next_core(spdk_env_get_current_core());
+		if (next_lcore == UINT32_MAX) {
+			next_lcore = spdk_env_get_first_core();
+		}
 	}
 
 	call_count[next_lcore]++;
@@ -85,7 +88,7 @@ event_perf_start(void *arg1, void *arg2)
 {
 	uint32_t i;
 
-	call_count = calloc(spdk_env_get_num_of_reactors() + 1, sizeof(*call_count));
+	call_count = calloc(spdk_env_get_last_core() + 1, sizeof(*call_count));
 	if (call_count == NULL) {
 		fprintf(stderr, "call_count allocation failed\n");
 		spdk_app_stop(1);
@@ -99,7 +102,7 @@ event_perf_start(void *arg1, void *arg2)
 	printf("Running I/O for %d seconds...", g_time_in_sec);
 	fflush(stdout);
 
-	SPDK_ENV_FOREACH_REACTOR(i) {
+	SPDK_ENV_FOREACH_CORE(i) {
 		spdk_event_call(spdk_event_allocate(i, event_work_fn,
 						    NULL, NULL));
 	}

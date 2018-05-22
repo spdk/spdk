@@ -36,7 +36,7 @@
   #cores and start working on more reactors in parallel.
   #If this is set, one can assume that we need a dynamic threading
   #model that does NOT tie a reactor to a lcore in a 1-1 fashion.
-NumReactors 10
+NumberOfReactors 100
 
 # Users may change this section to create a different number or size of
 #  malloc LUNs.

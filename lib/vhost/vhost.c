@@ -555,7 +555,7 @@ spdk_vhost_dev_mem_unregister(struct spdk_vhost_dev *vdev)
 static void
 spdk_vhost_free_reactor(uint32_t lcore)
 {
-	g_num_ctrlrs[lcore - spdk_env_get_first_reactor_id()]--;
+	g_num_ctrlrs[lcore]--;
 }
 
 struct spdk_vhost_dev *
@@ -807,20 +807,20 @@ spdk_vhost_allocate_reactor(struct spdk_cpuset *cpumask)
 	uint32_t min_ctrlrs;
 
 	min_ctrlrs = INT_MAX;
-	selected_core = spdk_env_get_first_reactor_id();
+	selected_core = spdk_env_get_first_core();
 
-	SPDK_ENV_FOREACH_REACTOR(i) {
+	SPDK_ENV_FOREACH_CORE(i) {
 		if (!spdk_cpuset_get_cpu(cpumask, i)) {
 			continue;
 		}
 
-		if (g_num_ctrlrs[i - spdk_env_get_first_reactor_id()] < min_ctrlrs) {
+		if (g_num_ctrlrs[i] < min_ctrlrs) {
 			selected_core = i;
-			min_ctrlrs = g_num_ctrlrs[i - spdk_env_get_first_reactor_id()];
+			min_ctrlrs = g_num_ctrlrs[i];
 		}
 	}
 
-	g_num_ctrlrs[selected_core - spdk_env_get_first_reactor_id()]++;
+	g_num_ctrlrs[selected_core]++;
 	return selected_core;
 }
 
@@ -1303,7 +1303,7 @@ spdk_vhost_init(void)
 	uint32_t last_core;
 	int ret;
 
-	last_core = spdk_env_get_num_of_reactors();
+	last_core = spdk_env_get_last_core();
 	g_num_ctrlrs = calloc(last_core + 1, sizeof(uint32_t));
 	if (!g_num_ctrlrs) {
 		SPDK_ERRLOG("Could not allocate array size=%u for g_num_ctrlrs\n",
