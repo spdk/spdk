@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0ed67729_ef5e02c0",
+        "filename": "include/spdk/nvme_lnvm_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-05-22T08:18:42Z",
+      "side": 1,
+      "message": "These numbers are self-explanatory. removed them.",
+      "parentUuid": "c3449f99_a9bd7969",
+      "revId": "c2b3cba9a89b5b59b90e79497c0bbdd2472dbc1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9cf7f5b6_bd123215",
         "filename": "include/spdk/nvme_lnvm_spec.h",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2018-05-21T18:06:54Z",
       "side": 1,
       "message": "These two fields (csecs and sos) don\u0027t seem to be in the OCSSD 2.0 spec; is there a newer version than the one on the lightnvm website?",
+      "revId": "c2b3cba9a89b5b59b90e79497c0bbdd2472dbc1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28e4c190_943aa193",
+        "filename": "include/spdk/nvme_lnvm_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-05-22T08:18:42Z",
+      "side": 1,
+      "message": "actually, they are the stale elements in stale OC Spec 1.3,  they should be removed.",
+      "parentUuid": "9cf7f5b6_bd123215",
       "revId": "c2b3cba9a89b5b59b90e79497c0bbdd2472dbc1b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "663fccd1_20e8f82d",
+        "filename": "include/spdk/nvme_lnvm_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-05-22T08:18:42Z",
+      "side": 1,
+      "message": "have thought to defined them entirely inside this spec header file. But based on some additional considerations,\n\n*. Repeated name definitions probably also need repeated functions.\n*. There are also some NVMe1.3\u0027s commands OC2.0 supports, but not listed in its spec, like identify, format.\n*. Other structs of NVMe will also be reused.\n\nso just commented them here and there, hope they\u0027ll remind users what OC2.0 should have. And also shows the characteristic of Open-Channel that it\u0027s an insert of NVMe.",
+      "parentUuid": "1a6aaadd_511a714f",
+      "revId": "c2b3cba9a89b5b59b90e79497c0bbdd2472dbc1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8f52f830_b41867b6",
         "filename": "include/spdk/nvme_lnvm_spec.h",
         "patchSetId": 2
@@ -64,6 +118,24 @@
       "writtenOn": "2018-05-21T18:06:54Z",
       "side": 1,
       "message": "I think we should probably put _LNVM_ in the name so that these can be distinguished from the standard NVMe status codes.",
+      "revId": "c2b3cba9a89b5b59b90e79497c0bbdd2472dbc1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6fedf009_aa8e9780",
+        "filename": "include/spdk/nvme_lnvm_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-05-22T08:18:42Z",
+      "side": 1,
+      "message": "Done.\nin case of too lone name size, also removed _nvme.",
+      "parentUuid": "8f52f830_b41867b6",
       "revId": "c2b3cba9a89b5b59b90e79497c0bbdd2472dbc1b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
