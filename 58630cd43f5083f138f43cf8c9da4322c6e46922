@@ -69,6 +69,24 @@
       "revId": "58630cd43f5083f138f43cf8c9da4322c6e46922",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "261a1a7b_7387a56a",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 482,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-05-22T13:37:40Z",
+      "side": 1,
+      "message": "Double check spdk_lnvm_geometry_data size. Comment above can be applied, struct size is 4096. I think that I would align to Xiaodong implementation from patch https://review.gerrithub.io/c/spdk/spdk/+/411593 anyway.",
+      "parentUuid": "fbfebb04_ed8fce02",
+      "revId": "58630cd43f5083f138f43cf8c9da4322c6e46922",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
