@@ -16,6 +16,24 @@
       "revId": "65512225c82dfb61007dbb6961cfd89ec4d270e9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35bbac68_53e3238e",
+        "filename": "lib/nvme/nvme_lnvm.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-05-22T08:43:45Z",
+      "side": 1,
+      "message": "yes, adding vid checking right now.",
+      "parentUuid": "08f19602_41cf9e16",
+      "revId": "65512225c82dfb61007dbb6961cfd89ec4d270e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
