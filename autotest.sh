@@ -56,14 +56,17 @@ if [ $(uname -s) = Linux ]; then
 	# Load the kernel driver
 	./scripts/setup.sh reset
 
-	# Let the kernel discover any filesystems or partitions
-	sleep 10
+	# Skip OCSSD test env, OCSSD device couldn't be written directly
+	if [ $SPDK_TEST_OCSSD -ne 1 ]; then
+		# Let the kernel discover any filesystems or partitions
+		sleep 10
 
-	# Delete all partitions on NVMe devices
-	devs=`lsblk -l -o NAME | grep nvme | grep -v p` || true
-	for dev in $devs; do
-		parted -s /dev/$dev mklabel msdos
-	done
+		# Delete all partitions on NVMe devices
+		devs=`lsblk -l -o NAME | grep nvme | grep -v p` || true
+		for dev in $devs; do
+			parted -s /dev/$dev mklabel msdos
+		done
+	fi
 
 	# Load RAM disk driver if available
 	modprobe brd || true
