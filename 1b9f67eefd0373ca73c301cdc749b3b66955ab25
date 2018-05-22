@@ -65,6 +65,29 @@
     },
     {
       "key": {
+        "uuid": "a4f70db6_506ff419",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1042,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-05-22T10:59:36Z",
+      "side": 1,
+      "message": "OpenChannel and LightNVM have a similar meaning. For acronym, oc is too general to associate with Open-Channel. but lnvm should be the only acronym from LightNVM. Also lnvm is consistent with other function nams.\nLet\u0027s keep use _lnvm_ instead of _oc_",
+      "range": {
+        "startLine": 1042,
+        "startChar": 5,
+        "endLine": 1042,
+        "endChar": 41
+      },
+      "revId": "1b9f67eefd0373ca73c301cdc749b3b66955ab25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "de4679f3_88a9d26e",
         "filename": "lib/nvme/nvme_ctrlr_cmd.c",
         "patchSetId": 1
