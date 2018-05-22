@@ -102,6 +102,29 @@
       "revId": "1b9f67eefd0373ca73c301cdc749b3b66955ab25",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a49d3bf7_20ac8795",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-05-22T11:04:04Z",
+      "side": 1,
+      "message": "Hi, Jakub.\nFor spdk main stream, it\u0027s better to keep original nvme struct intact from OCSSD characteristic.",
+      "range": {
+        "startLine": 187,
+        "startChar": 0,
+        "endLine": 204,
+        "endChar": 22
+      },
+      "revId": "1b9f67eefd0373ca73c301cdc749b3b66955ab25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
