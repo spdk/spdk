@@ -134,6 +134,10 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 	if (FIELD_OK(src_svcid)) {
 		memset(opts->src_svcid, 0, sizeof(opts->src_svcid));
 	}
+
+	if (FIELD_OK(command_set)) {
+		opts->command_set = SPDK_NVME_CC_CSS_NVM;
+	}
 #undef FIELD_OK
 }
 
@@ -552,6 +556,20 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 
 	/* Page size is 2 ^ (12 + mps). */
 	cc.bits.mps = spdk_u32log2(ctrlr->page_size) - 12;
+
+	if (ctrlr->cap.bits.css == 0) {
+		SPDK_INFOLOG(SPDK_LOG_NVME,
+			     "Drive reports no command sets supported. Assuming NVM is supported.\n");
+		ctrlr->cap.bits.css = SPDK_NVME_CAP_CSS_NVM;
+	}
+
+	if (!(ctrlr->cap.bits.css & (1u << ctrlr->opts.command_set))) {
+		SPDK_DEBUGLOG(SPDK_LOG_NVME, "Requested I/O command set %u but supported mask is 0x%x\n",
+			      ctrlr->opts.command_set, ctrlr->cap.bits.css);
+		return -EINVAL;
+	}
+
+	cc.bits.css = ctrlr->opts.command_set;
 
 	switch (ctrlr->opts.arb_mechanism) {
 	case SPDK_NVME_CC_AMS_RR:

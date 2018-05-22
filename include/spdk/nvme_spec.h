@@ -96,9 +96,7 @@ union spdk_nvme_cap_register {
 		uint32_t nssrs		: 1;
 
 		/** command sets supported */
-		uint32_t css_nvm	: 1;
-
-		uint32_t css_reserved	: 7;
+		uint32_t css		: 8;
 
 		/** boot partition support */
 		uint32_t bps		: 1;
@@ -115,6 +113,17 @@ union spdk_nvme_cap_register {
 	} bits;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cap_register) == 8, "Incorrect size");
+
+/**
+ * I/O Command Set Selected
+ *
+ * Only a single command set is defined as of NVMe 1.3 (NVM).
+ */
+enum spdk_nvme_cc_css {
+	SPDK_NVME_CC_CSS_NVM		= 0x0,	/**< NVM command set */
+};
+
+#define SPDK_NVME_CAP_CSS_NVM (1u << SPDK_NVME_CC_CSS_NVM) /**< NVM command set supported */
 
 union spdk_nvme_cc_register {
 	uint32_t	raw;
@@ -1864,6 +1873,7 @@ enum spdk_nvme_async_event_info_notice {
  * Asynchronous Event Information for NVM Command Set Specific Status
  */
 enum spdk_nvme_async_event_info_nvm_command_set {
+
 	/* Reservation Log Page Avaiable */
 	SPDK_NVME_ASYNC_EVENT_RESERVATION_LOG_AVAIL	= 0x0,
 	/* Sanitize Operation Completed */
