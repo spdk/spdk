@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e2e697cb_a6e5bf3b",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1636,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-22T23:24:13Z",
+      "side": 1,
+      "message": "These lba arrays end up getting DMA\u0027d to the device, so they need to be allocated by spdk_dma_malloc. The comments should say that.\n\nThat\u0027s aside from the fact that doing vectored I/O only at chunk granularity is mostly useless (except for reset). The valuable operations are all gathering data at sub-chunk granularity into a new chunk. But that\u0027s a spec issue - not a problem with what you\u0027ve done here.",
+      "revId": "66b2c9178a8c59831a949fc68d042c0d3e2dfbb5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
