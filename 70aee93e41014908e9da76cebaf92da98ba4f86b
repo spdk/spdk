@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5e15e8cd_01821457",
+        "filename": "scripts/gen_nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-22T00:27:21Z",
+      "side": 1,
+      "message": "Please use !\u003d rather than ! ... \u003d\u003d",
+      "revId": "70aee93e41014908e9da76cebaf92da98ba4f86b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fcef57c8_dc388fb1",
+        "filename": "scripts/gen_nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-22T00:27:21Z",
+      "side": 1,
+      "message": "We are using bash, but it would be nice to avoid bash-specific features where they aren\u0027t required (just for consistency and ease of reading); for example, this is equivalent to:\n\n   if [ \"$1\" \u003d \"--json\" ]; then\n\n(This also fixes quoting of $1, which we should do regardless of the bash-ism fix.)",
+      "revId": "70aee93e41014908e9da76cebaf92da98ba4f86b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "df4b1f6c_16ecfdd5",
+        "filename": "scripts/gen_nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-22T00:27:21Z",
+      "side": 1,
+      "message": "Most of these echo commands could be greatly simplified by using single quotes for the outer string instead:\n\n    echo \u0027\"subsystem\": \"bdev\"\u0027",
+      "range": {
+        "startLine": 17,
+        "startChar": 7,
+        "endLine": 17,
+        "endChar": 33
+      },
+      "revId": "70aee93e41014908e9da76cebaf92da98ba4f86b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "837a782b_dea5d34e",
+        "filename": "scripts/gen_nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-22T00:27:21Z",
+      "side": 1,
+      "message": "Please fix indentation (we generally use tabs elsewhere, so since you\u0027re pretty much rewriting the whole file, just go ahead and replace the few remaining spaces with tabs).",
+      "revId": "70aee93e41014908e9da76cebaf92da98ba4f86b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
