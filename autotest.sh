@@ -119,6 +119,10 @@ if [ $SPDK_TEST_NVME -eq 1 ]; then
 	fi
 fi
 
+if [ $SPDK_TEST_OCSSD -eq 1 ]; then
+	run_test test/nvme/ocssd.sh
+fi
+
 run_test test/env/env.sh
 
 if [ $SPDK_TEST_IOAT -eq 1 ]; then
