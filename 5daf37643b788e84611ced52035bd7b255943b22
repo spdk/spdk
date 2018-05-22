@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c886880e_0b72f4ba",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-22T20:52:49Z",
+      "side": 0,
+      "message": "This send_msg seems to be just totally removed - is it still needed?",
+      "revId": "5daf37643b788e84611ced52035bd7b255943b22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b363bd35_dc297565",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1659,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-22T20:52:49Z",
+      "side": 0,
+      "message": "This case seems to be lost - if the first command is not Connect, we should bail out (currently, this will crash below when we try to dereference qpair-\u003ectrlr).",
+      "revId": "5daf37643b788e84611ced52035bd7b255943b22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
