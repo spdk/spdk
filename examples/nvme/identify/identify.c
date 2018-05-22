@@ -823,7 +823,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	       cap.bits.nssrs ? "Supported" : "Not Supported");
 	printf("Command Sets Supported\n");
 	printf("  NVM Command Set:                     %s\n",
-	       cap.bits.css_nvm ? "Supported" : "Not Supported");
+	       cap.bits.css & SPDK_NVME_CAP_CSS_NVM ? "Supported" : "Not Supported");
 	printf("Boot Partition:                        %s\n",
 	       cap.bits.bps ? "Supported" : "Not Supported");
 	printf("Memory Page Size Minimum:              %" PRIu64 " bytes\n",

@@ -144,6 +144,15 @@ struct spdk_nvme_ctrlr_opts {
 	 * Set to all zeroes to specify that no host ID should be provided to the controller.
 	 */
 	uint8_t extended_host_id[16];
+
+	/**
+	 * The I/O command set to select.
+	 *
+	 * If the requested command set is not supported, the controller
+	 * initialization process will not proceed. By default, the NVM
+	 * command set is used.
+	 */
+	enum spdk_nvme_cc_css command_set;
 };
 
 /**
