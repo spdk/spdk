@@ -62,6 +62,13 @@ enum spdk_nvmf_ctrlr_state {
 	SPDK_NVMF_CTRLR_DEACTIVATING,
 };
 
+enum spdk_nvmf_qpair_state {
+	SPDK_NVMF_QPAIR_INACTIVE = 0,
+	SPDK_NVMF_QPAIR_ACTIVATING,
+	SPDK_NVMF_QPAIR_ACTIVE,
+	SPDK_NVMF_QPAIR_DEACTIVATING,
+};
+
 struct spdk_nvmf_tgt {
 	struct spdk_nvmf_tgt_opts		opts;
 
@@ -152,6 +159,8 @@ struct spdk_nvmf_ns {
 };
 
 struct spdk_nvmf_qpair {
+	enum spdk_nvmf_qpair_state		state;
+
 	struct spdk_nvmf_transport		*transport;
 	struct spdk_nvmf_ctrlr			*ctrlr;
 	struct spdk_nvmf_poll_group		*group;

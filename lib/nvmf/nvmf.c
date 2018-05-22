@@ -385,12 +385,19 @@ spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 
 	TAILQ_INIT(&qpair->outstanding);
 	qpair->group = group;
+	qpair->state = SPDK_NVMF_QPAIR_ACTIVATING;
 
 	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
 		if (tgroup->transport == qpair->transport) {
 			rc = spdk_nvmf_transport_poll_group_add(tgroup, qpair);
 			break;
 		}
+	}
+
+	if (rc == 0) {
+		qpair->state = SPDK_NVMF_QPAIR_ACTIVE;
+	} else {
+		qpair->state = SPDK_NVMF_QPAIR_INACTIVE;
 	}
 
 	return rc;
