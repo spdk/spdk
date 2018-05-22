@@ -166,7 +166,7 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	ctrlr->vcprop.cap.bits.ams = 0; /* optional arb mechanisms */
 	ctrlr->vcprop.cap.bits.to = 1; /* ready timeout - 500 msec units */
 	ctrlr->vcprop.cap.bits.dstrd = 0; /* fixed to 0 for NVMe-oF */
-	ctrlr->vcprop.cap.bits.css_nvm = 1; /* NVM command set */
+	ctrlr->vcprop.cap.bits.css = SPDK_NVME_CAP_CSS_NVM; /* NVM command set */
 	ctrlr->vcprop.cap.bits.mpsmin = 0; /* 2 ^ (12 + mpsmin) == 4k */
 	ctrlr->vcprop.cap.bits.mpsmax = 0; /* 2 ^ (12 + mpsmax) == 4k */
 
