@@ -22,6 +22,53 @@
       "revId": "a00d3e746bd3bab3840ed148da7d288a43f89fd2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bfacf54c_3244144c",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-05-22T09:17:13Z",
+      "side": 1,
+      "message": "refactored it, and removed for loop",
+      "parentUuid": "b015ff50_b31517b6",
+      "range": {
+        "startLine": 222,
+        "startChar": 17,
+        "endLine": 222,
+        "endChar": 46
+      },
+      "revId": "a00d3e746bd3bab3840ed148da7d288a43f89fd2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3c270971_31683768",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-05-22T09:17:13Z",
+      "side": 1,
+      "message": "At present, simulated OCSSD will fail at this feature ID, due to lack of implementation inside qemu/nvme.c right now.",
+      "range": {
+        "startLine": 223,
+        "startChar": 40,
+        "endLine": 223,
+        "endChar": 41
+      },
+      "revId": "a00d3e746bd3bab3840ed148da7d288a43f89fd2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
