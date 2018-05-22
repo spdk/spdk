@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "106d01d7_b605a5b6",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1014259
+      },
+      "writtenOn": "2018-05-22T16:31:06Z",
+      "side": 1,
+      "message": "will remove the new line.",
+      "revId": "1cce4c48fa5e5be739de1a22e9c702a16871d582",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c2ca97f_9ff60595",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1014259
+      },
+      "writtenOn": "2018-05-22T16:31:06Z",
+      "side": 1,
+      "message": "Oops, I thought I removed this unused #define. Will remove.",
+      "revId": "1cce4c48fa5e5be739de1a22e9c702a16871d582",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "140f83c3_dbeea0c3",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1068,
+      "author": {
+        "id": 1014259
+      },
+      "writtenOn": "2018-05-22T16:31:06Z",
+      "side": 1,
+      "message": "Missed this.",
+      "revId": "1cce4c48fa5e5be739de1a22e9c702a16871d582",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
