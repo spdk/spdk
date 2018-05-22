@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b6431182_bad0c7c2",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-22T13:17:24Z",
+      "side": 1,
+      "message": "You only change BASE_DIR in vhost/initiator and vhost/lvol.\nWhat about other places? vhost/readonly, vhost/integrity, etc?\nCheck:\n\"grep -nr BASE_DIR ./test/vhost\"\nand look for other places",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 4,
+        "endChar": 42
+      },
+      "revId": "16ebf3662d942ecc37b4a21caa06c14d89730fba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
