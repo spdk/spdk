@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "6745c62f_5768b755",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-05-22T11:58:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1fde4871_b72128a3",
+      "range": {
+        "startLine": 16,
+        "startChar": 9,
+        "endLine": 16,
+        "endChar": 17
+      },
+      "revId": "1b9f67eefd0373ca73c301cdc749b3b66955ab25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "031c6c3a_711f0c26",
         "filename": "include/spdk/lnvm_spec.h",
         "patchSetId": 1
@@ -36,6 +60,24 @@
       "writtenOn": "2018-05-21T16:50:36Z",
       "side": 1,
       "message": "This file seems to duplicate https://review.gerrithub.io/#/c/spdk/spdk/+/411589/ - please coordinate with Xiadong, choose one of the patches, and rebase the rest on that.",
+      "revId": "1b9f67eefd0373ca73c301cdc749b3b66955ab25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fcb23635_eb27743c",
+        "filename": "include/spdk/lnvm_spec.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-05-22T11:58:59Z",
+      "side": 1,
+      "message": "Yep, I will contact Xiadong. Only major difference I see between files is spdk_nvme_lnvm_geometry_data size. I have not found any major issues that would block me on using nvme_lnvm_spec.h instead of this file.",
+      "parentUuid": "031c6c3a_711f0c26",
       "revId": "1b9f67eefd0373ca73c301cdc749b3b66955ab25",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -88,6 +130,54 @@
     },
     {
       "key": {
+        "uuid": "71ca7d35_a53f9721",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1042,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-05-22T11:58:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a4f70db6_506ff419",
+      "range": {
+        "startLine": 1042,
+        "startChar": 5,
+        "endLine": 1042,
+        "endChar": 41
+      },
+      "revId": "1b9f67eefd0373ca73c301cdc749b3b66955ab25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13c013c1_585fa5e5",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1042,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-05-22T11:58:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ec6f036c_cb7777c2",
+      "range": {
+        "startLine": 1042,
+        "startChar": 30,
+        "endLine": 1042,
+        "endChar": 32
+      },
+      "revId": "1b9f67eefd0373ca73c301cdc749b3b66955ab25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "de4679f3_88a9d26e",
         "filename": "lib/nvme/nvme_ctrlr_cmd.c",
         "patchSetId": 1
@@ -105,6 +195,24 @@
     },
     {
       "key": {
+        "uuid": "c5efbd0b_cefa1a4f",
+        "filename": "lib/nvme/nvme_ctrlr_cmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-05-22T11:58:59Z",
+      "side": 1,
+      "message": "OC specification defines nsid to be mandatory for admin commands (please see 2.1 figure 9). The device which I have used for testing expects nsid equal 1 to be set.\nI could remain spdk_nvme_ctrlr_cmd_get_feature and only add new spdk_nvme_ctrlr_cmd_get_feature_ns function, but in my opinion is better to not duplicate the code.",
+      "parentUuid": "de4679f3_88a9d26e",
+      "revId": "1b9f67eefd0373ca73c301cdc749b3b66955ab25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a49d3bf7_20ac8795",
         "filename": "lib/nvme/nvme_internal.h",
         "patchSetId": 1
@@ -116,6 +224,30 @@
       "writtenOn": "2018-05-22T11:04:04Z",
       "side": 1,
       "message": "Hi, Jakub.\nFor spdk main stream, it\u0027s better to keep original nvme struct intact from OCSSD characteristic.",
+      "range": {
+        "startLine": 187,
+        "startChar": 0,
+        "endLine": 204,
+        "endChar": 22
+      },
+      "revId": "1b9f67eefd0373ca73c301cdc749b3b66955ab25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "831087a0_f12742af",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-05-22T11:58:59Z",
+      "side": 1,
+      "message": "ok, I will diff my changes on your current vector commands implementation",
+      "parentUuid": "a49d3bf7_20ac8795",
       "range": {
         "startLine": 187,
         "startChar": 0,
