@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a10b427_2be913fc",
+        "filename": "include/spdk/nvme_lnvm_spec.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-22T22:33:41Z",
+      "side": 1,
+      "message": "As far a I can tell, \"LightNVM\" refers to the effort as a whole by Matias Bjorling. The specification is called \"Open Channel SSD\" so we should name this file \"nvme_ocssd_spec.h\" or something along those lines.",
+      "revId": "6e20e269ca83fa4ebf47d68e95397daf51d339d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
