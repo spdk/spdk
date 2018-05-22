@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "776dc22b_7513879f",
+        "filename": "test/unit/lib/bdev/bdev_pvol.c/Makefile",
+        "patchSetId": 15
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-22T17:16:10Z",
+      "side": 1,
+      "message": "This file and a few other files are still marked executable (100755) - please chmod -x.",
+      "revId": "6d764218bb850b1c47be09db15ae1aa0fd606cf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "24a8552d_331b971e",
+        "filename": "test/unit/lib/bdev/bdev_pvol.c/bdev_pvol_ut.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-22T17:16:10Z",
+      "side": 1,
+      "message": "Unit tests should ideally be reproducible, not be random; can you hard-code some specific numbers here instead?",
+      "range": {
+        "startLine": 95,
+        "startChar": 22,
+        "endLine": 95,
+        "endChar": 28
+      },
+      "revId": "6d764218bb850b1c47be09db15ae1aa0fd606cf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59a884fb_5ca54063",
+        "filename": "test/unit/lib/bdev/bdev_pvol.c/bdev_pvol_ut.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-22T17:16:10Z",
+      "side": 1,
+      "message": "You can use SPDK_COUNTOF() for this and the lines below.",
+      "range": {
+        "startLine": 97,
+        "startChar": 41,
+        "endLine": 97,
+        "endChar": 96
+      },
+      "revId": "6d764218bb850b1c47be09db15ae1aa0fd606cf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
