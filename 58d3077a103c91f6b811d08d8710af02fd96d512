@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "68492c91_c1d92a6e",
+        "filename": "include/spdk/lnvm_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-22T22:14:46Z",
+      "side": 1,
+      "message": "Can we put this file in a separate patch? A patch that just adds the new specification header would help clarify the review comments.",
+      "revId": "58d3077a103c91f6b811d08d8710af02fd96d512",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c281d993_fd4e51b9",
+        "filename": "include/spdk/lnvm_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-22T22:14:46Z",
+      "side": 1,
+      "message": "\"LightNVM\" seems to refer to the wider effort by Matias Bjorling in this space. \"Open Channel\" refers to the device interface specification. I do think this should be named nvme_oc_spec.h or nvme_ocssd_spec.h.",
+      "revId": "58d3077a103c91f6b811d08d8710af02fd96d512",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c37f831e_a821bb93",
+        "filename": "include/spdk/lnvm_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-22T22:14:46Z",
+      "side": 1,
+      "message": "Let\u0027s remove all of these __attribute__((packed)) tags. The data structures will naturally align, and if they don\u0027t the static asserts will catch it.",
+      "revId": "58d3077a103c91f6b811d08d8710af02fd96d512",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "238864ad_ed7a9bb3",
+        "filename": "include/spdk/lnvm_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-22T22:14:46Z",
+      "side": 1,
+      "message": "I believe this must be 4K aligned due to NVMe specification requirements. It doesn\u0027t have anything to do with SPDK/DPDK. I think you should remove the comment.",
+      "revId": "58d3077a103c91f6b811d08d8710af02fd96d512",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8b240ae_03281be0",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1164,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-22T22:14:46Z",
+      "side": 1,
+      "message": "This isn\u0027t in any spec that I\u0027ve seen published anywhere. I understand it may be part of some unpublished specification that you\u0027re coding to. I\u0027m not sure how to handle this right now.\n\nFurther, my opinion is that exposing the OC commands as optional NVM commands is probably the wrong strategy. It should be an entirely separate command set (called \"Physical Page Address Command Set\" in the OC specification, although it doesn\u0027t quite go as far as making it an official command set).",
+      "revId": "58d3077a103c91f6b811d08d8710af02fd96d512",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
