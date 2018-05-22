@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3c0c9f80_21a5478f",
+        "filename": "autotest.sh",
+        "patchSetId": 45
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-22T21:36:33Z",
+      "side": 1,
+      "message": "I\u0027m not sure that we want to make this a separate flag; I\u0027d like to see it integrated into each component (e.g. bdev in this case) if that\u0027s not too much trouble.\n\nIt can still be a separate test script if that is more convenient - maybe test/bdev/json_config/...",
+      "revId": "3d56c827f68e5ebbb8673c8f4ef54ebbffd71b19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
