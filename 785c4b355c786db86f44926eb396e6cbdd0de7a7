@@ -16,6 +16,24 @@
       "revId": "785c4b355c786db86f44926eb396e6cbdd0de7a7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "add3b4a1_91ef8bf5",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 932,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-05-22T11:03:08Z",
+      "side": 1,
+      "message": "Please see 5.21.1.11 and Figure 143 (NVM-Express-1_3b-2018.05.04-ratified.pdf).\nI think that for set/get feature(aec) this should be used instead of LPA bit from Identify command.\nProbably _nvme_ctrlr_configure_aer should be updated, right?",
+      "parentUuid": "0702089a_8854b440",
+      "revId": "785c4b355c786db86f44926eb396e6cbdd0de7a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
