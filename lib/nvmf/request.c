@@ -119,6 +119,13 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 
 	nvmf_trace_command(req->cmd, spdk_nvmf_qpair_is_admin_queue(qpair));
 
+	if (qpair->state != SPDK_NVMF_QPAIR_ACTIVE) {
+		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+		spdk_nvmf_request_complete(req);
+		return;
+	}
+
 	/* Check if the subsystem is paused (if there is a subsystem) */
 	if (qpair->ctrlr) {
 		struct spdk_nvmf_subsystem_poll_group *sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
