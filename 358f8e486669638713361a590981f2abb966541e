@@ -1,0 +1,170 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "59ee9579_70db20e6",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 32
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-23T02:25:50Z",
+      "side": 1,
+      "message": "this space should be removed?",
+      "range": {
+        "startLine": 1,
+        "startChar": 2,
+        "endLine": 1,
+        "endChar": 3
+      },
+      "revId": "358f8e486669638713361a590981f2abb966541e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d99e78f3_9cdd1acc",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 32
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-23T02:25:50Z",
+      "side": 1,
+      "message": "is this necessary?",
+      "range": {
+        "startLine": 7,
+        "startChar": 13,
+        "endLine": 7,
+        "endChar": 19
+      },
+      "revId": "358f8e486669638713361a590981f2abb966541e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4ee81fd_f0b2372e",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 32
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-23T02:25:50Z",
+      "side": 1,
+      "message": "variable \u0027construct_method\u0027 can be used here.",
+      "range": {
+        "startLine": 66,
+        "startChar": 48,
+        "endLine": 66,
+        "endChar": 62
+      },
+      "revId": "358f8e486669638713361a590981f2abb966541e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0286f02_44ccd62e",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 32
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-23T02:25:50Z",
+      "side": 1,
+      "message": "I\u0027m not sure suffix \"_rpc\" is good.\n\nJust inline the line 117-122 into the line 158 is possible?",
+      "revId": "358f8e486669638713361a590981f2abb966541e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b80b4858_17c25e5a",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 32
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-23T02:25:50Z",
+      "side": 1,
+      "message": "same as above.",
+      "revId": "358f8e486669638713361a590981f2abb966541e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e1b55d5_a2d1d74a",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 32
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-23T02:25:50Z",
+      "side": 1,
+      "message": "call_test_cmd may be appropriate?",
+      "range": {
+        "startLine": 131,
+        "startChar": 4,
+        "endLine": 131,
+        "endChar": 12
+      },
+      "revId": "358f8e486669638713361a590981f2abb966541e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d4b675a_de6317c4",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 32
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-23T02:25:50Z",
+      "side": 1,
+      "message": "test_cmd may be appropriate?",
+      "range": {
+        "startLine": 132,
+        "startChar": 8,
+        "endLine": 132,
+        "endChar": 15
+      },
+      "revId": "358f8e486669638713361a590981f2abb966541e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c3a3653_caf34598",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 32
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-23T02:25:50Z",
+      "side": 1,
+      "message": "Should we move the following to a separated file? Do you think developing similar commands dedicated to test is probable?\n(Even if so, I don\u0027t have good idea about naming yet. For example test_cmd.py?)",
+      "revId": "358f8e486669638713361a590981f2abb966541e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
