@@ -16,6 +16,24 @@
       "revId": "c5a31b6bfa757d4b4e2dbd85f2a446a8a09ec24e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a7fb4cfe_d4b8b402",
+        "filename": "lib/nvme/nvme_lnvm.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-05-23T20:46:58Z",
+      "side": 1,
+      "message": "yes, the description for vector I/O in spec has several confusing points.\nFrom the understanding on that part, I think for vector write, it would not write the whole part of each chunk, so the lba may not be the first address of a chunk. it should be different with reset cmd.\n\nyou are right, its real usage case is not clear at all.",
+      "parentUuid": "d8716290_6dceaff9",
+      "revId": "c5a31b6bfa757d4b4e2dbd85f2a446a8a09ec24e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
