@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b7bfa4f5_fd30ab06",
+        "filename": "include/spdk/lnvm_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-05-23T14:20:35Z",
+      "side": 1,
+      "message": "Ok, let me coordinate with Xiaodong.\nI am working on merging my changes with Xiaodong ones and test them on HW and Qemu.",
+      "parentUuid": "68492c91_c1d92a6e",
+      "revId": "58d3077a103c91f6b811d08d8710af02fd96d512",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c281d993_fd4e51b9",
         "filename": "include/spdk/lnvm_spec.h",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2018-05-22T22:14:46Z",
       "side": 1,
       "message": "\"LightNVM\" seems to refer to the wider effort by Matias Bjorling in this space. \"Open Channel\" refers to the device interface specification. I do think this should be named nvme_oc_spec.h or nvme_ocssd_spec.h.",
+      "revId": "58d3077a103c91f6b811d08d8710af02fd96d512",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "72068ee9_fa644a2c",
+        "filename": "include/spdk/lnvm_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-05-23T14:20:35Z",
+      "side": 1,
+      "message": "Ok, let me coordinate with Xiaodong",
+      "parentUuid": "c281d993_fd4e51b9",
       "revId": "58d3077a103c91f6b811d08d8710af02fd96d512",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "4a1b4083_a1eb2243",
+        "filename": "include/spdk/lnvm_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-05-23T14:20:35Z",
+      "side": 1,
+      "message": "Ok",
+      "parentUuid": "c37f831e_a821bb93",
+      "revId": "58d3077a103c91f6b811d08d8710af02fd96d512",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "238864ad_ed7a9bb3",
         "filename": "include/spdk/lnvm_spec.h",
         "patchSetId": 2
@@ -64,6 +118,24 @@
       "writtenOn": "2018-05-22T22:14:46Z",
       "side": 1,
       "message": "I believe this must be 4K aligned due to NVMe specification requirements. It doesn\u0027t have anything to do with SPDK/DPDK. I think you should remove the comment.",
+      "revId": "58d3077a103c91f6b811d08d8710af02fd96d512",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5cc9de61_06ff867f",
+        "filename": "include/spdk/lnvm_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-05-23T14:20:35Z",
+      "side": 1,
+      "message": "Ok",
+      "parentUuid": "238864ad_ed7a9bb3",
       "revId": "58d3077a103c91f6b811d08d8710af02fd96d512",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
