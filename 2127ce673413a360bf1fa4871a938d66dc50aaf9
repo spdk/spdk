@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2e78e49d_80966ecb",
+        "filename": "test/vhost/initiator/conf.json",
+        "patchSetId": 7
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-05-23T16:54:01Z",
+      "side": 1,
+      "message": "Since this config is quite simple why not move to RPC ? Either split as is, or even better - lvol ?",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 25,
+        "endChar": 9
+      },
+      "revId": "2127ce673413a360bf1fa4871a938d66dc50aaf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
