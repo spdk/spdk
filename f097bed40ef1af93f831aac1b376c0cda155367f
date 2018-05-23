@@ -22,6 +22,30 @@
       "revId": "f097bed40ef1af93f831aac1b376c0cda155367f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "01efe2e5_fc933a64",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2907,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-23T18:40:47Z",
+      "side": 1,
+      "message": "I agree - if it is 0, write it out for backward compatibility purposes. But if the disk size is suddenly greater than the blobstore size, leave the blobstore metadata the same. We can add an explicit operation to expand it later on, if necessary.\n\nIs there anywhere in the code that we dynamically ask how big the underlying disk is? We should only do that when we initially provision a blobstore - everywhere else should use this cached size to calculate the number of clusters.",
+      "parentUuid": "25d44c1f_fffb00d1",
+      "range": {
+        "startLine": 2907,
+        "startChar": 30,
+        "endLine": 2907,
+        "endChar": 96
+      },
+      "revId": "f097bed40ef1af93f831aac1b376c0cda155367f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
