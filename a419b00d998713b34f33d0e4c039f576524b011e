@@ -39,6 +39,48 @@
       "revId": "a419b00d998713b34f33d0e4c039f576524b011e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f19c88f_ea9186bc",
+        "filename": "scripts/gen_nvme.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-05-23T09:57:30Z",
+      "side": 1,
+      "message": "thanks, looks much better",
+      "parentUuid": "743bd8ae_fd9b13fb",
+      "revId": "a419b00d998713b34f33d0e4c039f576524b011e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "034cd038_9f3dc68a",
+        "filename": "scripts/gen_nvme.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-05-23T09:57:30Z",
+      "side": 1,
+      "message": "\u003d\u003d is a bash-specific alias for \u003d",
+      "parentUuid": "eb229720_aa79c2ce",
+      "range": {
+        "startLine": 9,
+        "startChar": 10,
+        "endLine": 9,
+        "endChar": 11
+      },
+      "revId": "a419b00d998713b34f33d0e4c039f576524b011e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
