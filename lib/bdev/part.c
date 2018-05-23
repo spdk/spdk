@@ -38,7 +38,7 @@
 #include "spdk/bdev.h"
 #include "spdk/log.h"
 
-#include "spdk_internal/bdev.h"
+#include "spdk/bdev_module.h"
 
 void
 spdk_bdev_part_base_free(struct spdk_bdev_part_base *base)

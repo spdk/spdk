@@ -34,7 +34,7 @@
 #ifndef SPDK_VBDEV_SPLIT_H
 #define SPDK_VBDEV_SPLIT_H
 
-#include "spdk_internal/bdev.h"
+#include "spdk/bdev_module.h"
 
 /**
  * Add given disk name to split config. If bdev with \c base_bdev_name name

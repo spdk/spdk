@@ -35,7 +35,7 @@
 #define SPDK_VBDEV_LVOL_H
 
 #include "spdk/lvol.h"
-#include "spdk_internal/bdev.h"
+#include "spdk/bdev_module.h"
 
 #include "spdk_internal/lvolstore.h"
 

@@ -43,7 +43,7 @@
 #include "spdk/util.h"
 #include "spdk/json.h"
 
-#include "spdk_internal/bdev.h"
+#include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
 #include "spdk_internal/virtio.h"
 

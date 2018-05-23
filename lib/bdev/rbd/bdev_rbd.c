@@ -47,7 +47,7 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 
-#include "spdk_internal/bdev.h"
+#include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
 
 #define SPDK_RBD_QUEUE_DEPTH 128
