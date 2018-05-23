@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "59fa381a_4cf231aa",
+        "filename": "examples/nvme/hello_world/hello_world.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-23T21:54:53Z",
+      "side": 1,
+      "message": "The corresponding free calls also need to be updated - anything allocated with spdk_[z]malloc() should be freed with spdk_free() rather than spdk_dma_free().  (This applies to all of the changes in this patch set, not just this example.)",
+      "revId": "a60117d18596bbe5daa628383621ea91063a9dff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "72863681_62b10638",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 372,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-23T21:54:53Z",
+      "side": 1,
+      "message": "This allocation looks like it could probably be just a regular malloc(), since spdk_nvme_ctrlr_cmd_get_log_page() uses nvme_allocate_request_user_copy() internally (in other words, the user buffer doesn\u0027t need to be DMA-able).\n\nThe simplest fix for now would be to make this SPDK_MALLOC_DMA - it definitely doesn\u0027t need to be shared, since it is just a temporary buffer used within this function.  If you would like to do the full cleanup and replace this with regular malloc() as part of this patch, that would be fine too.",
+      "revId": "a60117d18596bbe5daa628383621ea91063a9dff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
