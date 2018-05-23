@@ -225,7 +225,6 @@ struct spdk_bdev_alias {
 };
 
 typedef TAILQ_HEAD(, spdk_bdev_io) bdev_io_tailq_t;
-typedef STAILQ_HEAD(, spdk_bdev_io) bdev_io_stailq_t;
 
 struct spdk_bdev {
 	/** User context passed in by the backend */
@@ -433,9 +432,6 @@ struct spdk_bdev_io {
 
 	/** Callback for when buf is allocated */
 	spdk_bdev_io_get_buf_cb get_buf_cb;
-
-	/** Entry to the list need_buf of struct spdk_bdev. */
-	STAILQ_ENTRY(spdk_bdev_io) buf_link;
 
 	/** Member used for linking child I/Os together. */
 	TAILQ_ENTRY(spdk_bdev_io) link;
