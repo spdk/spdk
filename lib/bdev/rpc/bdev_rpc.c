@@ -117,21 +117,18 @@ spdk_rpc_get_bdevs_iostat(struct spdk_jsonrpc_request *request,
 					    &req)) {
 			SPDK_ERRLOG("spdk_json_decode_object failed\n");
 			goto invalid;
-		} else {
-			if (req.name == NULL) {
-				SPDK_ERRLOG("missing name param\n");
-				goto invalid;
-			}
+		}
 
+		if (req.name) {
 			bdev = spdk_bdev_get_by_name(req.name);
 			if (bdev == NULL) {
 				SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
 				goto invalid;
 			}
-
-			free_rpc_get_bdevs_iostat(&req);
 		}
 	}
+
+	free_rpc_get_bdevs_iostat(&req);
 
 	ctx = calloc(1, sizeof(struct rpc_get_bdevs_iostat_ctx));
 	if (ctx == NULL) {
