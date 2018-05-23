@@ -153,6 +153,24 @@
     },
     {
       "key": {
+        "uuid": "17802659_7d8e3952",
+        "filename": "lib/bdev/iscsi/bdev_iscsi_rpc.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-23T00:56:22Z",
+      "side": 1,
+      "message": "You are correct.. Both spdk_rpc_construct_iscsi_bdev() and create_iscsi_disk() use the variable named \"req\" but these are completely different. I misunderstood because both are named as \"req\". Thank you for correcting my mistake.",
+      "parentUuid": "08618c0f_02d1e864",
+      "revId": "45957be9977fc902855b45f539848f8a6521357a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "441fe5f5_1d501d35",
         "filename": "lib/bdev/iscsi/bdev_iscsi_rpc.c",
         "patchSetId": 20
