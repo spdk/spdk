@@ -2,6 +2,13 @@
 
 ## v18.07: (Upcoming Release)
 
+### Bdev
+
+The spdk_bdev_get_io_stat() function now returns cumulative totals instead of resetting
+on each call. This allows multiple callers to query I/O statistics without conflicting
+with each other. Existing users will need to adjust their code to record the previous
+I/O statistics to calculate the delta between calls.
+
 ### git pre-commit and pre-push hooks
 
 The pre-commit hook will run `scripts/check_format.sh` and verify there are no formating

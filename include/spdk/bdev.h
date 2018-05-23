@@ -776,8 +776,7 @@ int spdk_bdev_nvme_io_passthru_md(struct spdk_bdev_desc *bdev_desc,
 int spdk_bdev_free_io(struct spdk_bdev_io *bdev_io);
 
 /**
- * Return I/O statistics for this channel. After returning stats, zero out
- * the current state of the statistics.
+ * Return I/O statistics for this channel.
  *
  * \param bdev Block device.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
