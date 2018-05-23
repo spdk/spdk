@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f8e1d743_240099d1",
+        "filename": "include/spdk/copy_engine.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-23T22:06:05Z",
+      "side": 1,
+      "message": "I think ref is actually the copy_req passed to the corresponding spdk_copy_submit() call, not a pointer to the buffer.",
+      "revId": "4d07aa3e1b069860ac3dafe780ace5aaaabfbf53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
