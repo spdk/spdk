@@ -45,7 +45,7 @@
 #include "spdk/io_channel.h"
 #include "spdk/util.h"
 
-#include "spdk_internal/bdev.h"
+#include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
 
 struct spdk_vbdev_split_config {

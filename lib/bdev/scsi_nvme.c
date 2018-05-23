@@ -30,7 +30,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk_internal/bdev.h"
+#include "spdk/bdev_module.h"
 
 #include "spdk/nvme_spec.h"
 

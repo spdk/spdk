@@ -46,7 +46,7 @@
 #include "spdk/likely.h"
 #include "spdk/util.h"
 
-#include "spdk_internal/bdev.h"
+#include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
 
 static void bdev_nvme_get_spdk_running_config(FILE *fp);

@@ -36,7 +36,7 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 
-#include "spdk_internal/bdev.h"
+#include "spdk/bdev_module.h"
 
 struct rpc_get_bdevs_iostat_ctx {
 	int bdev_count;

@@ -38,7 +38,7 @@
 #include "spdk/io_channel.h"
 #include "spdk/log.h"
 #include "spdk/endian.h"
-#include "spdk_internal/bdev.h"
+#include "spdk/bdev_module.h"
 
 struct blob_bdev {
 	struct spdk_bs_dev	bs_dev;

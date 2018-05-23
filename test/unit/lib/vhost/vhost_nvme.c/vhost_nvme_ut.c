@@ -41,7 +41,7 @@
 #include "vhost/vhost_nvme.c"
 #include "unit/lib/vhost/test_vhost.c"
 
-#include "spdk_internal/bdev.h"
+#include "spdk/bdev_module.h"
 #include "spdk/env.h"
 
 
