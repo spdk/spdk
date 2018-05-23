@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "bb5aba3e_408d37dd",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-05-23T14:04:51Z",
+      "side": 1,
+      "message": "Please add some commit message explaining purpose of this change",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 27
+      },
+      "revId": "16ebf3662d942ecc37b4a21caa06c14d89730fba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b6431182_bad0c7c2",
         "filename": "test/vhost/initiator/blockdev.sh",
         "patchSetId": 2
