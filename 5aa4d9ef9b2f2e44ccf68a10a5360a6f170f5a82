@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7edbccc8_c926c3eb",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-23T18:28:10Z",
+      "side": 1,
+      "message": "these changes seem unrelated and could be in a separate patch",
+      "revId": "5aa4d9ef9b2f2e44ccf68a10a5360a6f170f5a82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eed25476_7cc4f130",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 491,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-23T18:28:10Z",
+      "side": 1,
+      "message": "I\u0027m not really following why we don\u0027t strdup() here anymore, yet iscsi_free_lun() still frees lun-\u003ebdev.name.\n\nI think it\u0027s cleaner and more understandable to just do the strdup() here.  Then we don\u0027t have to worry about knowing how to free the buffer later.  I know it sounds weird but it\u0027s possible the name could be allocated using spdk_dma_malloc() in which case we can\u0027t call free() on it.",
+      "revId": "5aa4d9ef9b2f2e44ccf68a10a5360a6f170f5a82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fbcdbae8_91577979",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 532,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-23T18:28:10Z",
+      "side": 1,
+      "message": "this seems unrelated",
+      "revId": "5aa4d9ef9b2f2e44ccf68a10a5360a6f170f5a82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "94016a38_17c4dd32",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 23
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-23T18:28:10Z",
+      "side": 1,
+      "message": "LUN",
+      "revId": "5aa4d9ef9b2f2e44ccf68a10a5360a6f170f5a82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
