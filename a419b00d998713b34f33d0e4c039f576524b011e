@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eb229720_aa79c2ce",
+        "filename": "scripts/gen_nvme.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-23T08:05:25Z",
+      "side": 1,
+      "message": "Should be \"\u003d\u003d\" I think",
+      "range": {
+        "startLine": 9,
+        "startChar": 10,
+        "endLine": 9,
+        "endChar": 11
+      },
+      "revId": "a419b00d998713b34f33d0e4c039f576524b011e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "743bd8ae_fd9b13fb",
+        "filename": "scripts/gen_nvme.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-05-23T08:05:25Z",
+      "side": 1,
+      "message": "I\u0027d refactor the whole thing a little, so that we don\u0027t mix classic and json stuff\na) create 2 functions, something like:\n- create_classic_config\n- create_json_config\nb) do \"if\" only once\nc) call appropriate function\n\ne.g.\nif [ \"$1\" \u003d\u003d \"--json\" ]; then\n   create_json_config $bdfs\nelse\n   create_classic_config $bdfs",
+      "revId": "a419b00d998713b34f33d0e4c039f576524b011e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
