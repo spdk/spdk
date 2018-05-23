@@ -50,6 +50,8 @@
 #include "spdk_internal/log.h"
 #include "spdk/string.h"
 
+#include "bdev_internal.h"
+
 #ifdef SPDK_CONFIG_VTUNE
 #include "ittnotify.h"
 #include "ittnotify_types.h"
@@ -66,6 +68,15 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define SPDK_BDEV_SEC_TO_USEC			1000000ULL
 #define SPDK_BDEV_QOS_MIN_IO_PER_TIMESLICE	1
 #define SPDK_BDEV_QOS_MIN_IOS_PER_SEC		10000
+
+static inline struct spdk_bdev_io_internal *
+internal_io_from_bdev_io(struct spdk_bdev_io *bdev_io)
+{
+	return (struct spdk_bdev_io_internal *)
+	       ((uintptr_t)bdev_io - offsetof(struct spdk_bdev_io_internal, bdev_io));
+}
+
+typedef STAILQ_HEAD(, spdk_bdev_io_internal) internal_io_stailq_t;
 
 struct spdk_bdev_mgr {
 	struct spdk_mempool *bdev_io_pool;
@@ -126,8 +137,8 @@ struct spdk_bdev_qos {
 };
 
 struct spdk_bdev_mgmt_channel {
-	bdev_io_stailq_t need_buf_small;
-	bdev_io_stailq_t need_buf_large;
+	internal_io_stailq_t	need_buf_small;
+	internal_io_stailq_t	need_buf_large;
 
 	/*
 	 * Each thread keeps a cache of bdev_io - this allows
@@ -136,7 +147,7 @@ struct spdk_bdev_mgmt_channel {
 	 *  this, non-DPDK threads fetching from the mempool
 	 *  incur a cmpxchg on get and put.
 	 */
-	bdev_io_stailq_t per_thread_cache;
+	STAILQ_HEAD(, spdk_bdev_io_internal)  per_thread_cache;
 	uint32_t	per_thread_cache_count;
 
 	TAILQ_HEAD(, spdk_bdev_shared_resource) shared_resources;
@@ -337,9 +348,9 @@ static void
 spdk_bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_mempool *pool;
-	struct spdk_bdev_io *tmp;
+	struct spdk_bdev_io_internal *tmp;
 	void *buf;
-	bdev_io_stailq_t *stailq;
+	internal_io_stailq_t *stailq;
 	struct spdk_bdev_mgmt_channel *ch;
 
 	assert(bdev_io->u.bdev.iovcnt == 1);
@@ -360,7 +371,7 @@ spdk_bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 	} else {
 		tmp = STAILQ_FIRST(stailq);
 		STAILQ_REMOVE_HEAD(stailq, buf_link);
-		spdk_bdev_io_set_buf(tmp, buf);
+		spdk_bdev_io_set_buf(&tmp->bdev_io, buf);
 	}
 }
 
@@ -368,7 +379,7 @@ void
 spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, uint64_t len)
 {
 	struct spdk_mempool *pool;
-	bdev_io_stailq_t *stailq;
+	internal_io_stailq_t *stailq;
 	void *buf = NULL;
 	struct spdk_bdev_mgmt_channel *mgmt_ch;
 
@@ -397,7 +408,7 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 	buf = spdk_mempool_get(pool);
 
 	if (!buf) {
-		STAILQ_INSERT_TAIL(stailq, bdev_io, buf_link);
+		STAILQ_INSERT_TAIL(stailq, internal_io_from_bdev_io(bdev_io), buf_link);
 	} else {
 		spdk_bdev_io_set_buf(bdev_io, buf);
 	}
@@ -473,7 +484,7 @@ static void
 spdk_bdev_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 {
 	struct spdk_bdev_mgmt_channel *ch = ctx_buf;
-	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_io_internal *internal_io;
 
 	if (!STAILQ_EMPTY(&ch->need_buf_small) || !STAILQ_EMPTY(&ch->need_buf_large)) {
 		SPDK_ERRLOG("Pending I/O list wasn't empty on mgmt channel free\n");
@@ -484,10 +495,10 @@ spdk_bdev_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 	}
 
 	while (!STAILQ_EMPTY(&ch->per_thread_cache)) {
-		bdev_io = STAILQ_FIRST(&ch->per_thread_cache);
+		internal_io = STAILQ_FIRST(&ch->per_thread_cache);
 		STAILQ_REMOVE_HEAD(&ch->per_thread_cache, buf_link);
 		ch->per_thread_cache_count--;
-		spdk_mempool_put(g_bdev_mgr.bdev_io_pool, (void *)bdev_io);
+		spdk_mempool_put(g_bdev_mgr.bdev_io_pool, (void *)internal_io);
 	}
 
 	assert(ch->per_thread_cache_count == 0);
@@ -602,7 +613,7 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 
 	g_bdev_mgr.bdev_io_pool = spdk_mempool_create(mempool_name,
 				  SPDK_BDEV_IO_POOL_SIZE,
-				  sizeof(struct spdk_bdev_io) +
+				  sizeof(struct spdk_bdev_io_internal) +
 				  spdk_bdev_module_get_max_ctx_size(),
 				  0,
 				  SPDK_ENV_SOCKET_ID_ANY);
@@ -812,41 +823,41 @@ spdk_bdev_finish(spdk_bdev_fini_cb cb_fn, void *cb_arg)
 	_spdk_bdev_finish_unregister_bdevs_iter(NULL, 0);
 }
 
-static struct spdk_bdev_io *
+static struct spdk_bdev_io_internal *
 spdk_bdev_get_io(struct spdk_bdev_channel *channel)
 {
 	struct spdk_bdev_mgmt_channel *ch = channel->shared_resource->mgmt_ch;
-	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_io_internal *internal_io;
 
 	if (ch->per_thread_cache_count > 0) {
-		bdev_io = STAILQ_FIRST(&ch->per_thread_cache);
+		internal_io = STAILQ_FIRST(&ch->per_thread_cache);
 		STAILQ_REMOVE_HEAD(&ch->per_thread_cache, buf_link);
 		ch->per_thread_cache_count--;
 	} else {
-		bdev_io = spdk_mempool_get(g_bdev_mgr.bdev_io_pool);
-		if (!bdev_io) {
+		internal_io = spdk_mempool_get(g_bdev_mgr.bdev_io_pool);
+		if (!internal_io) {
 			SPDK_ERRLOG("Unable to get spdk_bdev_io\n");
 			return NULL;
 		}
 	}
 
-	return bdev_io;
+	return internal_io;
 }
 
 static void
-spdk_bdev_put_io(struct spdk_bdev_io *bdev_io)
+spdk_bdev_put_io(struct spdk_bdev_io_internal *internal_io)
 {
-	struct spdk_bdev_mgmt_channel *ch = bdev_io->ch->shared_resource->mgmt_ch;
+	struct spdk_bdev_mgmt_channel *ch = internal_io->bdev_io.ch->shared_resource->mgmt_ch;
 
-	if (bdev_io->buf != NULL) {
-		spdk_bdev_io_put_buf(bdev_io);
+	if (internal_io->bdev_io.buf != NULL) {
+		spdk_bdev_io_put_buf(&internal_io->bdev_io);
 	}
 
 	if (ch->per_thread_cache_count < SPDK_BDEV_IO_CACHE_SIZE) {
 		ch->per_thread_cache_count++;
-		STAILQ_INSERT_TAIL(&ch->per_thread_cache, bdev_io, buf_link);
+		STAILQ_INSERT_TAIL(&ch->per_thread_cache, internal_io, buf_link);
 	} else {
-		spdk_mempool_put(g_bdev_mgr.bdev_io_pool, (void *)bdev_io);
+		spdk_mempool_put(g_bdev_mgr.bdev_io_pool, (void *)internal_io);
 	}
 }
 
@@ -1159,24 +1170,24 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
  *  linked using the spdk_bdev_io buf_link TAILQ_ENTRY.
  */
 static void
-_spdk_bdev_abort_buf_io(bdev_io_stailq_t *queue, struct spdk_bdev_channel *ch)
+_spdk_bdev_abort_buf_io(internal_io_stailq_t *queue, struct spdk_bdev_channel *ch)
 {
-	bdev_io_stailq_t tmp;
-	struct spdk_bdev_io *bdev_io;
+	internal_io_stailq_t tmp;
+	struct spdk_bdev_io_internal *internal_io;
 
 	STAILQ_INIT(&tmp);
 
 	while (!STAILQ_EMPTY(queue)) {
-		bdev_io = STAILQ_FIRST(queue);
+		internal_io = STAILQ_FIRST(queue);
 		STAILQ_REMOVE_HEAD(queue, buf_link);
-		if (bdev_io->ch == ch) {
-			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		if (internal_io->bdev_io.ch == ch) {
+			spdk_bdev_io_complete(&internal_io->bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		} else {
-			STAILQ_INSERT_TAIL(&tmp, bdev_io, buf_link);
+			STAILQ_INSERT_TAIL(&tmp, internal_io, buf_link);
 		}
 	}
 
-	STAILQ_SWAP(&tmp, queue, spdk_bdev_io);
+	STAILQ_SWAP(&tmp, queue, spdk_bdev_io_internal);
 }
 
 /*
@@ -1491,6 +1502,7 @@ spdk_bdev_read_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		      spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev *bdev = desc->bdev;
+	struct spdk_bdev_io_internal *internal_io;
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 
@@ -1498,11 +1510,13 @@ spdk_bdev_read_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		return -EINVAL;
 	}
 
-	bdev_io = spdk_bdev_get_io(channel);
-	if (!bdev_io) {
+	internal_io = spdk_bdev_get_io(channel);
+	if (!internal_io) {
 		SPDK_ERRLOG("spdk_bdev_io memory allocation failed duing read\n");
 		return -ENOMEM;
 	}
+
+	bdev_io = &internal_io->bdev_io;
 
 	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
@@ -1539,6 +1553,7 @@ int spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 			   spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev *bdev = desc->bdev;
+	struct spdk_bdev_io_internal *internal_io;
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 
@@ -1546,11 +1561,13 @@ int spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 		return -EINVAL;
 	}
 
-	bdev_io = spdk_bdev_get_io(channel);
-	if (!bdev_io) {
+	internal_io = spdk_bdev_get_io(channel);
+	if (!internal_io) {
 		SPDK_ERRLOG("spdk_bdev_io memory allocation failed duing read\n");
 		return -ENOMEM;
 	}
+
+	bdev_io = &internal_io->bdev_io;
 
 	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
@@ -1584,6 +1601,7 @@ spdk_bdev_write_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev *bdev = desc->bdev;
+	struct spdk_bdev_io_internal *internal_io;
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 
@@ -1595,11 +1613,13 @@ spdk_bdev_write_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		return -EINVAL;
 	}
 
-	bdev_io = spdk_bdev_get_io(channel);
-	if (!bdev_io) {
+	internal_io = spdk_bdev_get_io(channel);
+	if (!internal_io) {
 		SPDK_ERRLOG("bdev_io memory allocation failed duing write\n");
 		return -ENOMEM;
 	}
+
+	bdev_io = &internal_io->bdev_io;
 
 	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
@@ -1637,6 +1657,7 @@ spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev *bdev = desc->bdev;
+	struct spdk_bdev_io_internal *internal_io;
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 
@@ -1648,11 +1669,13 @@ spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		return -EINVAL;
 	}
 
-	bdev_io = spdk_bdev_get_io(channel);
-	if (!bdev_io) {
+	internal_io = spdk_bdev_get_io(channel);
+	if (!internal_io) {
 		SPDK_ERRLOG("bdev_io memory allocation failed duing writev\n");
 		return -ENOMEM;
 	}
+
+	bdev_io = &internal_io->bdev_io;
 
 	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
@@ -1686,6 +1709,7 @@ spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channe
 			      spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev *bdev = desc->bdev;
+	struct spdk_bdev_io_internal *internal_io;
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 	uint64_t len;
@@ -1700,12 +1724,14 @@ spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channe
 		return -EINVAL;
 	}
 
-	bdev_io = spdk_bdev_get_io(channel);
+	internal_io = spdk_bdev_get_io(channel);
 
-	if (!bdev_io) {
+	if (!internal_io) {
 		SPDK_ERRLOG("bdev_io memory allocation failed duing write_zeroes\n");
 		return -ENOMEM;
 	}
+
+	bdev_io = &internal_io->bdev_io;
 
 	bdev_io->ch = channel;
 	bdev_io->u.bdev.offset_blocks = offset_blocks;
@@ -1766,6 +1792,7 @@ spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev *bdev = desc->bdev;
+	struct spdk_bdev_io_internal *internal_io;
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 
@@ -1782,11 +1809,13 @@ spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		return -EINVAL;
 	}
 
-	bdev_io = spdk_bdev_get_io(channel);
-	if (!bdev_io) {
+	internal_io = spdk_bdev_get_io(channel);
+	if (!internal_io) {
 		SPDK_ERRLOG("bdev_io memory allocation failed duing unmap\n");
 		return -ENOMEM;
 	}
+
+	bdev_io = &internal_io->bdev_io;
 
 	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_UNMAP;
@@ -1822,6 +1851,7 @@ spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev *bdev = desc->bdev;
+	struct spdk_bdev_io_internal *internal_io;
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 
@@ -1833,11 +1863,13 @@ spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		return -EINVAL;
 	}
 
-	bdev_io = spdk_bdev_get_io(channel);
-	if (!bdev_io) {
+	internal_io = spdk_bdev_get_io(channel);
+	if (!internal_io) {
 		SPDK_ERRLOG("bdev_io memory allocation failed duing flush\n");
 		return -ENOMEM;
 	}
+
+	bdev_io = &internal_io->bdev_io;
 
 	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_FLUSH;
@@ -1937,14 +1969,17 @@ spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev *bdev = desc->bdev;
+	struct spdk_bdev_io_internal *internal_io;
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 
-	bdev_io = spdk_bdev_get_io(channel);
-	if (!bdev_io) {
+	internal_io = spdk_bdev_get_io(channel);
+	if (!internal_io) {
 		SPDK_ERRLOG("bdev_io memory allocation failed duing reset\n");
 		return -ENOMEM;
 	}
+
+	bdev_io = &internal_io->bdev_io;
 
 	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_RESET;
@@ -2028,6 +2063,7 @@ spdk_bdev_nvme_admin_passthru(struct spdk_bdev_desc *desc, struct spdk_io_channe
 			      spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev *bdev = desc->bdev;
+	struct spdk_bdev_io_internal *internal_io;
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 
@@ -2035,11 +2071,13 @@ spdk_bdev_nvme_admin_passthru(struct spdk_bdev_desc *desc, struct spdk_io_channe
 		return -EBADF;
 	}
 
-	bdev_io = spdk_bdev_get_io(channel);
-	if (!bdev_io) {
+	internal_io = spdk_bdev_get_io(channel);
+	if (!internal_io) {
 		SPDK_ERRLOG("bdev_io memory allocation failed during nvme_admin_passthru\n");
 		return -ENOMEM;
 	}
+
+	bdev_io = &internal_io->bdev_io;
 
 	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_NVME_ADMIN;
@@ -2061,6 +2099,7 @@ spdk_bdev_nvme_io_passthru(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 			   spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev *bdev = desc->bdev;
+	struct spdk_bdev_io_internal *internal_io;
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 
@@ -2073,11 +2112,13 @@ spdk_bdev_nvme_io_passthru(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 		return -EBADF;
 	}
 
-	bdev_io = spdk_bdev_get_io(channel);
-	if (!bdev_io) {
+	internal_io = spdk_bdev_get_io(channel);
+	if (!internal_io) {
 		SPDK_ERRLOG("bdev_io memory allocation failed during nvme_admin_passthru\n");
 		return -ENOMEM;
 	}
+
+	bdev_io = &internal_io->bdev_io;
 
 	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_NVME_IO;
@@ -2099,6 +2140,7 @@ spdk_bdev_nvme_io_passthru_md(struct spdk_bdev_desc *desc, struct spdk_io_channe
 			      spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev *bdev = desc->bdev;
+	struct spdk_bdev_io_internal *internal_io;
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 
@@ -2111,11 +2153,13 @@ spdk_bdev_nvme_io_passthru_md(struct spdk_bdev_desc *desc, struct spdk_io_channe
 		return -EBADF;
 	}
 
-	bdev_io = spdk_bdev_get_io(channel);
-	if (!bdev_io) {
+	internal_io = spdk_bdev_get_io(channel);
+	if (!internal_io) {
 		SPDK_ERRLOG("bdev_io memory allocation failed during nvme_admin_passthru\n");
 		return -ENOMEM;
 	}
+
+	bdev_io = &internal_io->bdev_io;
 
 	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_NVME_IO_MD;
@@ -2145,7 +2189,7 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 		return -1;
 	}
 
-	spdk_bdev_put_io(bdev_io);
+	spdk_bdev_put_io(internal_io_from_bdev_io(bdev_io));
 
 	return 0;
 }
