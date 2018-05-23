@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "612748ad_8e0e2a8c",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-05-23T16:50:14Z",
+      "side": 1,
+      "message": "This was added just because gen_nvme.sh lacks main   \"subsystems\" section ?\nIs there is a reason to have separate call for loading single subsystem rather than whole json config (you could load_config multiple files) ?",
+      "range": {
+        "startLine": 79,
+        "startChar": 8,
+        "endLine": 79,
+        "endChar": 29
+      },
+      "revId": "3c1b9538633938f9ce8db9821f608a8935f2ec0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f846882_6366c3e8",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-05-23T16:50:14Z",
+      "side": 1,
+      "message": "I assume that after whole series with changing vhost tests to json-path is done, config-path will be removed ? (Haven\u0027t seen patch for that in series)",
+      "range": {
+        "startLine": 123,
+        "startChar": 3,
+        "endLine": 123,
+        "endChar": 56
+      },
+      "revId": "3c1b9538633938f9ce8db9821f608a8935f2ec0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fe4dc0fc_490a2430",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-05-23T16:50:14Z",
+      "side": 1,
+      "message": "Having nvme drives available for test shouldn\u0027t depend on config file being provided. At this time if neither conf_path or json_path if supplied, no nvme will be used in a test.\n\nEither gen_nvme for all tests or do it separately in each of tests.",
+      "range": {
+        "startLine": 180,
+        "startChar": 2,
+        "endLine": 180,
+        "endChar": 46
+      },
+      "revId": "3c1b9538633938f9ce8db9821f608a8935f2ec0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
