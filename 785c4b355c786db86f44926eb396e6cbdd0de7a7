@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "42d7c7b8_556a5f6f",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 932,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-05-23T14:20:57Z",
+      "side": 1,
+      "message": "Yep, you are right. I will abandon this change - I have implemented this because I was working on older version of spdk on the beginning, without LPA verification in _nvme_ctrlr_configure_aer.",
+      "parentUuid": "b2afad99_71d90042",
+      "revId": "785c4b355c786db86f44926eb396e6cbdd0de7a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a5db0af6_ed341928",
         "filename": "include/spdk/nvme_spec.h",
         "patchSetId": 1
