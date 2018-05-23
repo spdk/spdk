@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "86b9c59c_9ebf2964",
+        "filename": "test/json_config/clear_config.py",
+        "patchSetId": 32
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-05-23T09:44:14Z",
+      "side": 1,
+      "message": "Imports should be first. This is to avoid pep8 errors.",
+      "parentUuid": "d99e78f3_9cdd1acc",
+      "range": {
+        "startLine": 7,
+        "startChar": 13,
+        "endLine": 7,
+        "endChar": 19
+      },
+      "revId": "358f8e486669638713361a590981f2abb966541e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c4ee81fd_f0b2372e",
         "filename": "test/json_config/clear_config.py",
         "patchSetId": 32
