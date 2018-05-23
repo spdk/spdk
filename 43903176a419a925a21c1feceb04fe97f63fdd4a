@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "876c53f0_a761909f",
+        "filename": "doc/vhost_processing.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-05-23T07:28:18Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "394686b5_1c5598a6",
+      "revId": "43903176a419a925a21c1feceb04fe97f63fdd4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ed1828aa_694334e8",
         "filename": "doc/vhost_processing.md",
         "patchSetId": 2
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "b25e1d3c_ba76d98e",
+        "filename": "doc/vhost_processing.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-05-23T07:28:18Z",
+      "side": 1,
+      "message": "If we\u0027re talking about kernel I\u0027ve only seen \"vhost\", but there is no official specification to check.\nThen there\u0027s \"Vhost-user\" from the Vhost-user specification.\nAnd finally VIRTIO, Virtio and virtio - all of which are used in Virtio 1.0 spec.\n\nBut here we\u0027re not talking about kernel vhost here, it\u0027s more about Vhost family of devices, which consist of both kernel vhost and Vhost-user, so \"Vhost\" seems fine to me. However, I\u0027m not a Vhost-nazi and you can often catch me saying \"vhost\" for things different than the kernel vhost. We all know what it\u0027s about.",
+      "parentUuid": "ed1828aa_694334e8",
+      "revId": "43903176a419a925a21c1feceb04fe97f63fdd4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e4858739_04bcc61f",
         "filename": "doc/vhost_processing.md",
         "patchSetId": 2
@@ -47,6 +83,24 @@
       "writtenOn": "2018-05-21T17:03:00Z",
       "side": 1,
       "message": "Is vhost the protocol? I thought vhost was the implementation and virtio was the protocol?",
+      "revId": "43903176a419a925a21c1feceb04fe97f63fdd4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6dbd5649_a619acf3",
+        "filename": "doc/vhost_processing.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-05-23T07:28:18Z",
+      "side": 1,
+      "message": "In VIRTIO protocol you won\u0027t find anything about vhost ioctls or their message format. First Virtio devices were implemented entirely in QEMU as e.g. virtual PCI devices. There wasn\u0027t anything like vhost at that time. vhost was invented later and it\u0027s a separate thing.\n\nOn the diagram below you can see a separate Virtio transport (between Virtio-SCSI PCI driver and Virtio-SCSI PCI device) and then a Vhost-user transport (between Vhost-SCSI driver and a Unix domain socket (added in v2 of this patch)). They use completely different protocols. If you replaced SPDK vhost on that diagram with the kernel vhost, then QEMU would use the vhost ioctls, which are the vhost protocol.\n\nLastly, vhost and Vhost-user message formats seem similar, but still these are two separate protocols.\n\nRegarding your previous comment - Usually we could say \"vhost\" for anything to make our live easier - we all know it\u0027s not about kernel vhost. But since we\u0027re mentioning the real kernel vhost here, I should only use \"Vhost\" instead of \"vhost\" in this paragraph. Ack, will fix it in v3.",
+      "parentUuid": "e4858739_04bcc61f",
       "revId": "43903176a419a925a21c1feceb04fe97f63fdd4a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
