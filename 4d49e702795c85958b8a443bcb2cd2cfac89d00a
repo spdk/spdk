@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a569c68_8e2da6bb",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2971,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-23T18:36:11Z",
+      "side": 1,
+      "message": "The super block was just read and hasn\u0027t been modified. We only wrote it before to flip the clean bit to 0. Now that we\u0027re not immediately flipping the clean bit, just skip this step entirely and start reading in the masks.",
+      "revId": "4d49e702795c85958b8a443bcb2cd2cfac89d00a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
