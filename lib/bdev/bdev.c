@@ -205,6 +205,7 @@ struct spdk_bdev_channel {
 	uint64_t		start_tsc;
 	uint64_t		interval_tsc;
 	__itt_string_handle	*handle;
+	struct spdk_bdev_io_stat prev_stat;
 #endif
 
 };
@@ -1117,6 +1118,7 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 	}
 
 	memset(&ch->stat, 0, sizeof(ch->stat));
+	ch->stat.ticks_rate = spdk_get_ticks_hz();
 	ch->io_outstanding = 0;
 	TAILQ_INIT(&ch->queued_resets);
 	ch->flags = 0;
@@ -1961,17 +1963,9 @@ void
 spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		      struct spdk_bdev_io_stat *stat)
 {
-#ifdef SPDK_CONFIG_VTUNE
-	SPDK_ERRLOG("Calling spdk_bdev_get_io_stat is not allowed when VTune integration is enabled.\n");
-	memset(stat, 0, sizeof(*stat));
-	return;
-#endif
-
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 
-	channel->stat.ticks_rate = spdk_get_ticks_hz();
 	*stat = channel->stat;
-	memset(&channel->stat, 0, sizeof(channel->stat));
 }
 
 static void
@@ -2233,17 +2227,17 @@ _spdk_bdev_io_complete(void *ctx)
 	if (now_tsc > (bdev_io->ch->start_tsc + bdev_io->ch->interval_tsc)) {
 		uint64_t data[5];
 
-		data[0] = bdev_io->ch->stat.num_read_ops;
-		data[1] = bdev_io->ch->stat.bytes_read;
-		data[2] = bdev_io->ch->stat.num_write_ops;
-		data[3] = bdev_io->ch->stat.bytes_written;
+		data[0] = bdev_io->ch->stat.num_read_ops - bdev_io->ch->prev_stat.num_read_ops;
+		data[1] = bdev_io->ch->stat.bytes_read - bdev_io->ch->prev_stat.bytes_read;
+		data[2] = bdev_io->ch->stat.num_write_ops - bdev_io->ch->prev_stat.num_write_ops;
+		data[3] = bdev_io->ch->stat.bytes_written - bdev_io->ch->prev_stat.bytes_written;
 		data[4] = bdev_io->bdev->fn_table->get_spin_time ?
 			  bdev_io->bdev->fn_table->get_spin_time(bdev_io->ch->channel) : 0;
 
 		__itt_metadata_add(g_bdev_mgr.domain, __itt_null, bdev_io->ch->handle,
 				   __itt_metadata_u64, 5, data);
 
-		memset(&bdev_io->ch->stat, 0, sizeof(bdev_io->ch->stat));
+		bdev_io->ch->prev_stat = bdev_io->ch->stat;
 		bdev_io->ch->start_tsc = now_tsc;
 	}
 #endif
