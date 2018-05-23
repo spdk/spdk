@@ -466,10 +466,18 @@ function configure_freebsd_pci {
 
 function configure_freebsd {
 	configure_freebsd_pci
-	kldunload contigmem.ko || true
-	kenv hw.contigmem.num_buffers=$((HUGEMEM / 256))
-	kenv hw.contigmem.buffer_size=$((256 * 1024 * 1024))
-	kldload contigmem.ko
+	# If contigmem is already loaded but the HUGEMEM specified doesn't match the
+	#  previous value, unload contigmem so that we can reload with the new value.
+	if kldstat -q -m contigmem; then
+		if [ `kenv hw.contigmem.num_buffers` -ne "$((HUGEMEM / 256))" ]; then
+			kldunload contigmem.ko
+		fi
+	fi
+	if ! kldstat -q -m contigmem; then
+		kenv hw.contigmem.num_buffers=$((HUGEMEM / 256))
+		kenv hw.contigmem.buffer_size=$((256 * 1024 * 1024))
+		kldload contigmem.ko
+	fi
 }
 
 function reset_freebsd {
