@@ -22,6 +22,30 @@
       "revId": "16ebf3662d942ecc37b4a21caa06c14d89730fba",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3af477f0_88880f1a",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-05-23T11:38:12Z",
+      "side": 1,
+      "message": "Because in other places BASE_DIR is defined after using \"source common.sh\". Here we were defining BASE_DIR and then changed BASE_DIR using \"source common.sh\"",
+      "parentUuid": "b6431182_bad0c7c2",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 4,
+        "endChar": 42
+      },
+      "revId": "16ebf3662d942ecc37b4a21caa06c14d89730fba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
