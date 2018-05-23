@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fcab8867_9a688f7b",
+        "filename": "doc/Doxyfile",
+        "patchSetId": 2
+      },
+      "lineNbr": 910,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-23T16:11:52Z",
+      "side": 1,
+      "message": "IMAGE_PATH needs to be set to img.",
+      "revId": "a781c138d71db4cbb5e0ff02721fed15048cc958",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
