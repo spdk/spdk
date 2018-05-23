@@ -309,28 +309,73 @@ test_parse_request(void)
 	REQ_PARAMS_MISSING();
 	FREE_REQUEST();
 
-	/* empty array */
-	PARSE_PASS("[]", "");
+	/* empty array - not supported */
+	PARSE_FAIL("[]");
 	REQ_BEGIN_INVALID(SPDK_JSONRPC_ERROR_INVALID_REQUEST);
 	REQ_METHOD_MISSING();
 	REQ_ID_NULL();
 	REQ_PARAMS_MISSING();
 	FREE_REQUEST();
 
-	/* batch - not supported */
+	/* batch - supported */
 	PARSE_PASS(
 		"["
-		"{\"jsonrpc\": \"2.0\", \"method\": \"sum\", \"params\": [1,2,4], \"id\": \"1\"},"
+		"{\"jsonrpc\": \"2.0\", \"method\": \"sum\", \"params\": [1,2,4], \"id\": 1},"
 		"{\"jsonrpc\": \"2.0\", \"method\": \"notify_hello\", \"params\": [7]},"
-		"{\"jsonrpc\": \"2.0\", \"method\": \"subtract\", \"params\": [42,23], \"id\": \"2\"},"
+		"{\"jsonrpc\": \"2.0\", \"method\": \"subtract\", \"params\": [42,23], \"id\": 2},"
 		"{\"foo\": \"boo\"},"
-		"{\"jsonrpc\": \"2.0\", \"method\": \"foo.get\", \"params\": {\"name\": \"myself\"}, \"id\": \"5\"},"
-		"{\"jsonrpc\": \"2.0\", \"method\": \"get_data\", \"id\": \"9\"}"
+		"{\"jsonrpc\": \"2.0\", \"method\": \"foo.get\", \"params\": {\"name\": \"myself\"}, \"id\": 5},"
+		"{\"jsonrpc\": \"2.0\", \"method\": \"get_data\", \"id\": 9}"
 		"]", "");
+
+	REQ_BEGIN_VALID();
+	REQ_METHOD("sum");
+	REQ_ID_NUM("1");
+	REQ_PARAMS_BEGIN();
+	PARAM_ARRAY_BEGIN();
+	PARAM_NUM("1");
+	PARAM_NUM("2");
+	PARAM_NUM("4");
+	PARAM_ARRAY_END();
+	FREE_REQUEST();
+	REQ_BEGIN_VALID();
+	REQ_METHOD("notify_hello");
+	REQ_ID_MISSING();
+	REQ_PARAMS_BEGIN();
+	PARAM_ARRAY_BEGIN();
+	PARAM_NUM("7");
+	PARAM_ARRAY_END();
+	FREE_REQUEST();
+
+	REQ_BEGIN_VALID();
+	REQ_METHOD("subtract");
+	REQ_ID_NUM("2");
+	REQ_PARAMS_BEGIN();
+	PARAM_ARRAY_BEGIN();
+	PARAM_NUM("42");
+	PARAM_NUM("23");
+	PARAM_ARRAY_END();
+	FREE_REQUEST();
 
 	REQ_BEGIN_INVALID(SPDK_JSONRPC_ERROR_INVALID_REQUEST);
 	REQ_METHOD_MISSING();
 	REQ_ID_NULL();
+	REQ_PARAMS_MISSING();
+	FREE_REQUEST();
+
+	REQ_BEGIN_VALID();
+	REQ_METHOD("foo.get");
+	REQ_ID_NUM("5");
+	REQ_PARAMS_BEGIN();
+	PARAM_OBJECT_BEGIN();
+	PARAM_NAME("name");
+	PARAM_STRING("myself");
+	PARAM_OBJECT_END();
+	FREE_REQUEST();
+
+	REQ_BEGIN_VALID();
+	REQ_METHOD("get_data");
+	REQ_ID_NUM("9");
 	REQ_PARAMS_MISSING();
 	FREE_REQUEST();
 
