@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a14e7f3a_0df67599",
+        "filename": "lib/event/subsystems/iscsi/iscsi_rpc.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-23T22:18:14Z",
+      "side": 1,
+      "message": "I see that we call spdk_iscsi_opts_init() just below, but it might be nice to use calloc() here just to be sure everything is zero-initialized.",
+      "range": {
+        "startLine": 77,
+        "startChar": 8,
+        "endLine": 77,
+        "endChar": 14
+      },
+      "revId": "20dcef55283d4983f264bd1c136cf57f66b12926",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1bd7a406_5e8b0471",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 38
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-23T22:18:14Z",
+      "side": 1,
+      "message": "Let\u0027s make all of the long options use dashes rather than underscores for consistency (--nop-timeout rather than --nop_timeout).  A few more instances of this pattern show up below as well.",
+      "range": {
+        "startLine": 257,
+        "startChar": 28,
+        "endLine": 257,
+        "endChar": 39
+      },
+      "revId": "20dcef55283d4983f264bd1c136cf57f66b12926",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8355c24_5ac3114f",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 38
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-23T22:18:14Z",
+      "side": 1,
+      "message": "This help string should be updated to refer to the name with dashes (--no-discovery-auth)",
+      "range": {
+        "startLine": 262,
+        "startChar": 32,
+        "endLine": 262,
+        "endChar": 49
+      },
+      "revId": "20dcef55283d4983f264bd1c136cf57f66b12926",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "892530c6_71730e20",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 38
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-23T22:18:14Z",
+      "side": 1,
+      "message": "I think non-positional arguments are already not required by default; can you check if this still works if you omit the required\u003dFalse from all of them?",
+      "range": {
+        "startLine": 273,
+        "startChar": 116,
+        "endLine": 273,
+        "endChar": 130
+      },
+      "revId": "20dcef55283d4983f264bd1c136cf57f66b12926",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
