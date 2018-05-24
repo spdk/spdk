@@ -16,6 +16,24 @@
       "revId": "5fa74b442411be762e75a0d4991b924f4941bf5a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4fa3ccf_8e383f11",
+        "filename": "lib/event/subsystems/iscsi/iscsi_rpc.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-24T23:32:44Z",
+      "side": 1,
+      "message": "Yes, absolutely. I had lost that point during back and force. Thank you.",
+      "parentUuid": "8f6f2393_49298c8c",
+      "revId": "5fa74b442411be762e75a0d4991b924f4941bf5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
