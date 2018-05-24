@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "55f3ff2b_bba98791",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 48
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-24T22:05:09Z",
+      "side": 1,
+      "message": "Options should default to 1 and be turned off in the config file on individual machines.  However, for this particular case, we can merge this as is and then flip it to 1 once the test machines have been updated to add this flag. (We should also add this flag to vm_setup.sh, which can also be part of the patch that sets this to 1.)",
+      "revId": "2905283dc840611d4476b17db02ff8933031d9eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
