@@ -1,0 +1,124 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d5c5f8bd_693abc01",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 1757,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-24T05:19:03Z",
+      "side": 1,
+      "message": "frozen?",
+      "range": {
+        "startLine": 1757,
+        "startChar": 22,
+        "endLine": 1757,
+        "endChar": 30
+      },
+      "revId": "456aba97fb6a0fc13c0dc9e21043d7ef41821669",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "26bb90e7_b0938bb0",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 648,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-24T05:19:03Z",
+      "side": 1,
+      "message": "payload_read[] is better to be initialized explicitly?",
+      "revId": "456aba97fb6a0fc13c0dc9e21043d7ef41821669",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "116cddda_e75d707f",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 652,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-24T05:19:03Z",
+      "side": 1,
+      "message": "I/O or i/o ? i/o is used below.",
+      "range": {
+        "startLine": 652,
+        "startChar": 16,
+        "endLine": 652,
+        "endChar": 19
+      },
+      "revId": "456aba97fb6a0fc13c0dc9e21043d7ef41821669",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e5d154c_a3640f5f",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 685,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-24T05:19:03Z",
+      "side": 1,
+      "message": "happen",
+      "range": {
+        "startLine": 685,
+        "startChar": 30,
+        "endLine": 685,
+        "endChar": 38
+      },
+      "revId": "456aba97fb6a0fc13c0dc9e21043d7ef41821669",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c8d0e1b7_c7a4cfd1",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 694,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-24T05:19:03Z",
+      "side": 1,
+      "message": "this blob_io_write is postponed?\nIf correct, can we verify it? g_bserrno can be used?",
+      "revId": "456aba97fb6a0fc13c0dc9e21043d7ef41821669",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a767a22c_7993e1d6",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 709,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-24T05:19:03Z",
+      "side": 1,
+      "message": "Verify that I/O read and pended write were completed?",
+      "revId": "456aba97fb6a0fc13c0dc9e21043d7ef41821669",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
