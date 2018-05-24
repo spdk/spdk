@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a9a4f234_2ffd5c46",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-05-24T12:56:24Z",
+      "side": 1,
+      "message": "I think this should be \"set_nvmf_target_options\"",
+      "range": {
+        "startLine": 340,
+        "startChar": 44,
+        "endLine": 340,
+        "endChar": 70
+      },
+      "revId": "78fb550ee9d1aa74ba6bf58f988788daae3ff031",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
