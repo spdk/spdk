@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "495ffa26_bce2141d",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 659,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-24T13:39:08Z",
+      "side": 1,
+      "message": "/* */ is better?",
+      "range": {
+        "startLine": 659,
+        "startChar": 2,
+        "endLine": 659,
+        "endChar": 3
+      },
+      "revId": "c62efdc384bb9ed0fc46599d55ab72e8b401ac98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c06e4e96_9bc544c0",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 667,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-24T13:39:08Z",
+      "side": 1,
+      "message": "duplicated with underneath the invalid label. spdk_jsonrpc_send_error_response() should be called instead?",
+      "range": {
+        "startLine": 667,
+        "startChar": 3,
+        "endLine": 667,
+        "endChar": 42
+      },
+      "revId": "c62efdc384bb9ed0fc46599d55ab72e8b401ac98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4bb2c85_fa637f9f",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 689,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-24T13:39:08Z",
+      "side": 1,
+      "message": "/* */ ?",
+      "range": {
+        "startLine": 689,
+        "startChar": 2,
+        "endLine": 689,
+        "endChar": 3
+      },
+      "revId": "c62efdc384bb9ed0fc46599d55ab72e8b401ac98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b32ef061_e0867230",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 828,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-24T13:39:08Z",
+      "side": 1,
+      "message": "same as above.",
+      "range": {
+        "startLine": 828,
+        "startChar": 3,
+        "endLine": 828,
+        "endChar": 4
+      },
+      "revId": "c62efdc384bb9ed0fc46599d55ab72e8b401ac98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "00a36670_3db6321c",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1097,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-24T13:39:08Z",
+      "side": 1,
+      "message": "return 0 if calloc fails?",
+      "revId": "c62efdc384bb9ed0fc46599d55ab72e8b401ac98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
