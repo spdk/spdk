@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dbd521ec_1482c7f7",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 4385,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-24T05:24:30Z",
+      "side": 1,
+      "message": "add rc\u003d%d ?",
+      "revId": "3afae5a702f219dfc6b3f396c28b222b0246c218",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "abf84fb4_34a74789",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 4405,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-24T05:24:30Z",
+      "side": 1,
+      "message": "this blank line can be removed.",
+      "revId": "3afae5a702f219dfc6b3f396c28b222b0246c218",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
