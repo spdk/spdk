@@ -22,6 +22,30 @@
       "revId": "2127ce673413a360bf1fa4871a938d66dc50aaf9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1396ca99_607a777e",
+        "filename": "test/vhost/initiator/conf.json",
+        "patchSetId": 7
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-05-24T11:06:55Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "2e78e49d_80966ecb",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 25,
+        "endChar": 9
+      },
+      "revId": "2127ce673413a360bf1fa4871a938d66dc50aaf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
