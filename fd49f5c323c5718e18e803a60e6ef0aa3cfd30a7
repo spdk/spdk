@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4adf778c_4b369fec",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 47
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-24T08:46:25Z",
+      "side": 1,
+      "message": "now -f can be used load_config too.",
+      "range": {
+        "startLine": 39,
+        "startChar": 21,
+        "endLine": 39,
+        "endChar": 31
+      },
+      "revId": "fd49f5c323c5718e18e803a60e6ef0aa3cfd30a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aa763b98_13fee3d4",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 47
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-24T08:46:25Z",
+      "side": 1,
+      "message": "Something like the following should be added?\n\nif [ $? -ne 0]; then\n  echo \"two configs are different\n  return 1\nfi",
+      "revId": "fd49f5c323c5718e18e803a60e6ef0aa3cfd30a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "39440843_4513f36d",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 47
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-24T08:46:25Z",
+      "side": 1,
+      "message": "same as above",
+      "revId": "fd49f5c323c5718e18e803a60e6ef0aa3cfd30a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
