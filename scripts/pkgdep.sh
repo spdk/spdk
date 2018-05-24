@@ -41,7 +41,7 @@ elif [ -f /etc/SuSE-release ]; then
 	zypper install -y rdma-core-devel
 	# Additional dependencies for DPDK
 	zypper install -y libnuma-devel
-	# Additional dependencies for building nvml based backends
+	# Additional dependencies for building pmem based backends
 	zypper install -y libpmemblk-devel
 	# Additional dependencies for building docs
 	zypper install -y doxygen mscgen graphviz

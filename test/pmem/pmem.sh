@@ -101,7 +101,7 @@ function pmem_pool_info_tc3()
 	if hash pmempool; then
 		pmempool create -s 32000000 obj $obj_pool_file
 	else
-		echo "Warning: nvml-tools package not found! Creating stub file."
+		echo "Warning: pmempool package not found! Creating stub file."
 		truncate -s "32M" $obj_pool_file
 	fi
 
@@ -392,7 +392,7 @@ function delete_pmem_pool_tc2()
 	if hash pmempool; then
 		pmempool create -s 32000000 obj $obj_pool_file
 	else
-		echo "Warning: nvml-tools package not found! Creating stub file."
+		echo "Warning: pmempool package not found! Creating stub file."
 		truncate -s "32M" $obj_pool_file
 	fi
 
@@ -499,7 +499,7 @@ function construct_pmem_bdev_tc4()
 	if hash pmempool; then
 		pmempool create -s 32000000 obj $obj_pool_file
 	else
-		echo "Warning: nvml-tools package not found! Creating stub file."
+		echo "Warning: pmempool package not found! Creating stub file."
 		truncate -s "32M" $obj_pool_file
 	fi
 
