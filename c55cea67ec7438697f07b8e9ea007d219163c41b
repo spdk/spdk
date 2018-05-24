@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3542bd89_bd921a81",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-24T05:36:04Z",
+      "side": 1,
+      "message": "this blank line is intentional?",
+      "revId": "c55cea67ec7438697f07b8e9ea007d219163c41b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d37f72d1_e2c9e7cc",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-24T05:36:04Z",
+      "side": 1,
+      "message": "this blank line is intentional?",
+      "revId": "c55cea67ec7438697f07b8e9ea007d219163c41b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
