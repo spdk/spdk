@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9e9d90e0_7f50b1e5",
+        "filename": "test/nvme/err_injection/err_injection.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-24T18:29:07Z",
+      "side": 1,
+      "message": "One more \"ejection\" to fix. :)",
+      "range": {
+        "startLine": 197,
+        "startChar": 20,
+        "endLine": 197,
+        "endChar": 28
+      },
+      "revId": "d9a92885e627faf1bb589708b2247b92e4962792",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
