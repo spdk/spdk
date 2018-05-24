@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8f6f2393_49298c8c",
+        "filename": "lib/event/subsystems/iscsi/iscsi_rpc.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-24T16:40:24Z",
+      "side": 1,
+      "message": "Sorry, I missed this on the previous review - the iscsi_opts_decoders has strings, and each string needs to be freed on all paths that exit this function.  Most of the RPC methods have a helper function that frees all strings in the corresponding request structure; we should probably add something like that here.",
+      "revId": "5fa74b442411be762e75a0d4991b924f4941bf5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
