@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "59563c68_6f42527b",
+        "filename": "lib/event/subsystems/iscsi/iscsi_rpc.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-24T00:01:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a14e7f3a_0df67599",
+      "range": {
+        "startLine": 77,
+        "startChar": 8,
+        "endLine": 77,
+        "endChar": 14
+      },
+      "revId": "20dcef55283d4983f264bd1c136cf57f66b12926",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1bd7a406_5e8b0471",
         "filename": "scripts/rpc.py",
         "patchSetId": 38
@@ -71,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "9a90d937_6057161e",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 38
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-24T00:01:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b8355c24_5ac3114f",
+      "range": {
+        "startLine": 262,
+        "startChar": 32,
+        "endLine": 262,
+        "endChar": 49
+      },
+      "revId": "20dcef55283d4983f264bd1c136cf57f66b12926",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "892530c6_71730e20",
         "filename": "scripts/rpc.py",
         "patchSetId": 38
@@ -82,6 +130,30 @@
       "writtenOn": "2018-05-23T22:18:14Z",
       "side": 1,
       "message": "I think non-positional arguments are already not required by default; can you check if this still works if you omit the required\u003dFalse from all of them?",
+      "range": {
+        "startLine": 273,
+        "startChar": 116,
+        "endLine": 273,
+        "endChar": 130
+      },
+      "revId": "20dcef55283d4983f264bd1c136cf57f66b12926",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "20be5720_f5ec49ae",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 38
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-24T00:01:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "892530c6_71730e20",
       "range": {
         "startLine": 273,
         "startChar": 116,
