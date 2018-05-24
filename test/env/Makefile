@@ -34,7 +34,13 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = memory pci vtophys
+ENV_NAME := $(notdir $(CONFIG_ENV))
+
+DIRS-y = vtophys
+
+ifeq ($(ENV_NAME),env_dpdk)
+DIRS-y += memory pci
+endif
 
 .PHONY: all clean $(DIRS-y)
 
