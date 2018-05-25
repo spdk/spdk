@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e5dcefbf_77acefd8",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-25T22:20:28Z",
+      "side": 1,
+      "message": "You should validate that max_io_size is a multiple of io_unit_size here. You have math in other places that relies on that being true.",
+      "revId": "51c89d7f456b6330334fd753f30fe842568ea05b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e26666e8_8280d45a",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1144,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-25T22:20:28Z",
+      "side": 1,
+      "message": "sg_list[i].addr is not pointing to the same memory address that was originally obtained in the call to spdk_mempool_get because the original buffer was aligned to a 4k boundary. So this put is corrupting the mempool. Previously, the code saved both the aligned pointer and the original pointer (data_from_pool). It isn\u0027t pretty, but I think for now you\u0027re going to need to make an array of the original pointers for use here.\n\nWhen the buffers are all obtained from the bdev layer instead, this problem will go away.",
+      "revId": "51c89d7f456b6330334fd753f30fe842568ea05b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
