@@ -1,6 +1,7 @@
 JSON_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
 SPDK_BUILD_DIR=$JSON_DIR/../../
 . $JSON_DIR/../common/autotest_common.sh
+. $JSON_DIR/../nvmf/common.sh
 
 spdk_rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py -s /var/tmp/spdk.sock"
 spdk_clear_config_py="$JSON_DIR/clear_config.py -s /var/tmp/spdk.sock"
@@ -63,9 +64,9 @@ function test_json_config() {
 }
 
 function clean_after_test_json_config() {
-	rm $last_bdevs $base_bdevs
-	rm $last_json_config $base_json_config
-	rm $tmp_config $full_config $skip_params_config
+	rm -f $last_bdevs $base_bdevs
+	rm -f $last_json_config $base_json_config
+	rm -f $tmp_config $full_config $skip_params_config
 }
 
 function create_bdev_subsystem_config() {
@@ -87,6 +88,24 @@ function create_bdev_subsystem_config() {
 	# Uncomment after bug #301 with memory leak will be fixed
 	# rbd_setup 127.0.0.1
 	# $rpc_py construct_rbd_bdev $RBD_POOL $RBD_NAME 4096
+}
+
+function create_nvmf_subsystem_config() {
+	rdma_device_init
+	MALLOC_BDEV_SIZE=64
+	MALLOC_BLOCK_SIZE=512
+	RDMA_IP_LIST=$(get_available_rdma_ips)
+	NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
+	if [ -z $NVMF_FIRST_TARGET_IP ]; then
+		echo "no NIC for nvmf test"
+		return 1
+	fi
+	bdevs="$bdevs $($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
+	bdevs="$bdevs $($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
+	$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 '' '' -a -s SPDK00000000000001 -n "$bdevs"
+	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t RDMA -a $NVMF_FIRST_TARGET_IP -s "$NVMF_PORT"
+	$rpc_py nvmf_subsystem_add_host nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1
+	$rpc_py nvmf_subsystem_allow_any_host nqn.2016-06.io.spdk:cnode1
 }
 
 function clean_bdev_subsystem_config() {
