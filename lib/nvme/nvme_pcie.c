@@ -1516,40 +1516,29 @@ _nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 	struct nvme_completion_poll_status	status;
 	int					rc;
 
-	status.done = false;
 	rc = nvme_pcie_ctrlr_cmd_create_io_cq(ctrlr, qpair, nvme_completion_poll_cb, &status);
 	if (rc != 0) {
 		return rc;
 	}
 
-	while (status.done == false) {
-		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
-	}
-	if (spdk_nvme_cpl_is_error(&status.cpl)) {
+	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
 		SPDK_ERRLOG("nvme_create_io_cq failed!\n");
 		return -1;
 	}
 
-	status.done = false;
 	rc = nvme_pcie_ctrlr_cmd_create_io_sq(qpair->ctrlr, qpair, nvme_completion_poll_cb, &status);
 	if (rc != 0) {
 		return rc;
 	}
 
-	while (status.done == false) {
-		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
-	}
-	if (spdk_nvme_cpl_is_error(&status.cpl)) {
+	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
 		SPDK_ERRLOG("nvme_create_io_sq failed!\n");
 		/* Attempt to delete the completion queue */
-		status.done = false;
 		rc = nvme_pcie_ctrlr_cmd_delete_io_cq(qpair->ctrlr, qpair, nvme_completion_poll_cb, &status);
 		if (rc != 0) {
 			return -1;
 		}
-		while (status.done == false) {
-			spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
-		}
+		spdk_nvme_wait_for_completion(ctrlr->adminq, &status);
 		return -1;
 	}
 
@@ -1625,15 +1614,11 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	}
 
 	/* Delete the I/O submission queue */
-	status.done = false;
 	rc = nvme_pcie_ctrlr_cmd_delete_io_sq(ctrlr, qpair, nvme_completion_poll_cb, &status);
 	if (rc != 0) {
 		return rc;
 	}
-	while (status.done == false) {
-		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
-	}
-	if (spdk_nvme_cpl_is_error(&status.cpl)) {
+	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
 		return -1;
 	}
 
@@ -1646,15 +1631,11 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	}
 
 	/* Delete the completion queue */
-	status.done = false;
 	rc = nvme_pcie_ctrlr_cmd_delete_io_cq(ctrlr, qpair, nvme_completion_poll_cb, &status);
 	if (rc != 0) {
 		return rc;
 	}
-	while (status.done == false) {
-		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
-	}
-	if (spdk_nvme_cpl_is_error(&status.cpl)) {
+	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
 		return -1;
 	}
 

@@ -41,6 +41,11 @@
 
 SPDK_LOG_REGISTER_COMPONENT("nvme", SPDK_LOG_NVME)
 
+DEFINE_STUB(spdk_nvme_wait_for_completion_robust_lock, int,
+	    (struct spdk_nvme_qpair *qpair,
+	     struct nvme_completion_poll_status *status,
+	     pthread_mutex_t *robust_mutex), 0);
+
 int
 nvme_ctrlr_cmd_identify(struct spdk_nvme_ctrlr *ctrlr, uint8_t cns, uint16_t cntid, uint32_t nsid,
 			void *payload, size_t payload_size,

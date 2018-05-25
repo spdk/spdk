@@ -52,6 +52,10 @@ DEFINE_STUB(spdk_nvme_ctrlr_get_current_process,
 	    (struct spdk_nvme_ctrlr *ctrlr),
 	    NULL);
 
+DEFINE_STUB(spdk_nvme_wait_for_completion, int,
+	    (struct spdk_nvme_qpair *qpair,
+	     struct nvme_completion_poll_status *status), 0);
+
 struct spdk_trace_flag SPDK_LOG_NVME = {
 	.name = "nvme",
 	.enabled = false,

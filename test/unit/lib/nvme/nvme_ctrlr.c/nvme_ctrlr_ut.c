@@ -265,6 +265,29 @@ nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 }
 
 int
+spdk_nvme_wait_for_completion_robust_lock(
+	struct spdk_nvme_qpair *qpair,
+	struct nvme_completion_poll_status *status,
+	pthread_mutex_t *robust_mutex)
+{
+	status->done = true;
+	memset(&status->cpl, 0, sizeof(status->cpl));
+	status->cpl.status.sc = 0;
+	if (set_status_cpl == 1) {
+		status->cpl.status.sc = 1;
+	}
+	return spdk_nvme_cpl_is_error(&status->cpl) ? -EIO : 0;
+}
+
+int
+spdk_nvme_wait_for_completion(struct spdk_nvme_qpair *qpair,
+			      struct nvme_completion_poll_status *status)
+{
+	return spdk_nvme_wait_for_completion_robust_lock(qpair, status, NULL);
+}
+
+
+int
 nvme_ctrlr_cmd_set_async_event_config(struct spdk_nvme_ctrlr *ctrlr,
 				      union spdk_nvme_feat_async_event_configuration config, spdk_nvme_cmd_cb cb_fn,
 				      void *cb_arg)
@@ -354,22 +377,13 @@ int
 nvme_ctrlr_cmd_fw_commit(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_fw_commit *fw_commit,
 			 spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
-	struct nvme_completion_poll_status *status;
-	struct spdk_nvme_cpl status_cpl = {};
-	struct spdk_nvme_status cpl_status = {};
-
-	status = cb_arg;
 	CU_ASSERT(fw_commit->ca == SPDK_NVME_FW_COMMIT_REPLACE_IMG);
-	CU_ASSERT(status->done == false);
 	if (fw_commit->fs == 0) {
 		return -1;
 	}
-	status->done = true;
-	status->cpl = status_cpl;
-	status->cpl.status = cpl_status;
-	status->cpl.status.sc = 1;
+	set_status_cpl = 1;
 	if (ctrlr->is_resetting == true) {
-		status->cpl.status.sc = 0;
+		set_status_cpl = 0;
 	}
 	return 0;
 }
@@ -379,25 +393,10 @@ nvme_ctrlr_cmd_fw_image_download(struct spdk_nvme_ctrlr *ctrlr,
 				 uint32_t size, uint32_t offset, void *payload,
 				 spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
-	struct nvme_completion_poll_status *status;
-	struct spdk_nvme_cpl status_cpl = {};
-	struct spdk_nvme_status cpl_status = {};
-	status = cb_arg;
-
 	if ((size != 0 && payload == NULL) || (size == 0 && payload != NULL)) {
 		return -1;
 	}
-	if (set_size > 0) {
-		CU_ASSERT(status->done == false);
-	}
 	CU_ASSERT(offset == 0);
-	status->done = true;
-	status->cpl = status_cpl;
-	status->cpl.status = cpl_status;
-	status->cpl.status.sc = 0;
-	if (set_status_cpl == 1) {
-		status->cpl.status.sc = 1;
-	}
 	return 0;
 }
 
@@ -1623,6 +1622,8 @@ test_spdk_nvme_ctrlr_update_firmware(void)
 	payload = &point_payload;
 	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot, commit_action, &status);
 	CU_ASSERT(ret == 0);
+
+	set_status_cpl = 0;
 }
 
 int

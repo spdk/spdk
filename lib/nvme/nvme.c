@@ -99,6 +99,49 @@ nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	status->done = true;
 }
 
+/**
+ * Poll qpair for completions until a command completes.
+ *
+ * \param qpair queue to poll
+ * \param status completion status
+ * \param robust_mutex optional robust mutex to lock while polling qpair
+ *
+ * \return 0 if command completed without error, negative errno on failure
+ *
+ * The command to wait upon must be submitted with nvme_completion_poll_cb as the callback
+ * and status as the callback argument.
+ */
+int
+spdk_nvme_wait_for_completion_robust_lock(
+	struct spdk_nvme_qpair *qpair,
+	struct nvme_completion_poll_status *status,
+	pthread_mutex_t *robust_mutex)
+{
+	memset(&status->cpl, 0, sizeof(status->cpl));
+	status->done = false;
+
+	while (status->done == false) {
+		if (robust_mutex) {
+			nvme_robust_mutex_lock(robust_mutex);
+		}
+
+		spdk_nvme_qpair_process_completions(qpair, 0);
+
+		if (robust_mutex) {
+			nvme_robust_mutex_unlock(robust_mutex);
+		}
+	}
+
+	return spdk_nvme_cpl_is_error(&status->cpl) ? -EIO : 0;
+}
+
+int
+spdk_nvme_wait_for_completion(struct spdk_nvme_qpair *qpair,
+			      struct nvme_completion_poll_status *status)
+{
+	return spdk_nvme_wait_for_completion_robust_lock(qpair, status, NULL);
+}
+
 struct nvme_request *
 nvme_allocate_request(struct spdk_nvme_qpair *qpair,
 		      const struct nvme_payload *payload, uint32_t payload_size,
