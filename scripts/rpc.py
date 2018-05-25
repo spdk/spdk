@@ -688,6 +688,7 @@ if __name__ == "__main__":
     p.set_defaults(func=get_lvol_stores)
 
     # split
+    @call_cmd
     def construct_split_vbdev(args):
         print_dict(rpc.bdev.construct_split_vbdev(args.client,
                                                   base_bdev=args.base_bdev,
@@ -703,9 +704,10 @@ if __name__ == "__main__":
     exceed the base bdev size.""", type=int)
     p.set_defaults(func=construct_split_vbdev)
 
+    @call_cmd
     def destruct_split_vbdev(args):
-        rpc.destruct_split_vbdev(args.client,
-                                 base_bdev=args.base_bdev)
+        rpc.bdev.destruct_split_vbdev(args.client,
+                                      base_bdev=args.base_bdev)
 
     p = subparsers.add_parser('destruct_split_vbdev', help="""Delete split config with all created splits.""")
     p.add_argument('base_bdev', help='base bdev name')
