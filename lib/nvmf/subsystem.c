@@ -273,12 +273,7 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 	subsystem->id = sid;
 	subsystem->subtype = type;
 	subsystem->max_nsid = num_ns;
-	/*
-	 *  Initially max_nsid and max_allowed_nsid will be same. If max_allowed_nsid is zero nsid range can grow dynamically
-	 *  but if it is more than 1 nsid range cannot be extended beyond max_allowed_nsid
-	 */
 	subsystem->max_allowed_nsid = num_ns;
-	subsystem->num_allocated_nsid = 0;
 	subsystem->next_cntlid = 0;
 	snprintf(subsystem->subnqn, sizeof(subsystem->subnqn), "%s", nqn);
 	TAILQ_INIT(&subsystem->listeners);
@@ -901,7 +896,6 @@ _spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t n
 
 	spdk_bdev_close(ns->desc);
 	free(ns);
-	subsystem->num_allocated_nsid--;
 
 	spdk_nvmf_subsystem_ns_changed(subsystem, nsid);
 
@@ -1006,29 +1000,6 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 		return 0;
 	}
 
-	if (opts.nsid > subsystem->max_nsid ||
-	    (opts.nsid == 0 && subsystem->num_allocated_nsid == subsystem->max_nsid)) {
-		struct spdk_nvmf_ns **new_ns_array;
-		uint32_t new_max_nsid;
-
-		if (opts.nsid > subsystem->max_nsid) {
-			new_max_nsid = opts.nsid;
-		} else {
-			new_max_nsid = subsystem->max_nsid + 1;
-		}
-
-		new_ns_array = realloc(subsystem->ns, sizeof(struct spdk_nvmf_ns *) * new_max_nsid);
-		if (new_ns_array == NULL) {
-			SPDK_ERRLOG("Memory allocation error while resizing namespace array.\n");
-			return 0;
-		}
-
-		memset(new_ns_array + subsystem->max_nsid, 0,
-		       sizeof(struct spdk_nvmf_ns *) * (new_max_nsid - subsystem->max_nsid));
-		subsystem->ns = new_ns_array;
-		subsystem->max_nsid = new_max_nsid;
-	}
-
 	if (opts.nsid == 0) {
 		/* NSID not specified - find a free index */
 		for (i = 0; i < subsystem->max_nsid; i++) {
@@ -1038,8 +1009,18 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 			}
 		}
 		if (opts.nsid == 0) {
-			SPDK_ERRLOG("All available NSIDs in use\n");
-			return 0;
+			/* All of the current slots are full */
+			if (TAILQ_EMPTY(&subsystem->ctrlrs) &&
+			    (subsystem->max_allowed_nsid == 0 ||
+			     subsystem->max_nsid < subsystem->max_allowed_nsid)) {
+				/* No controllers are connected and the subsystem is
+				* not at its maximum NSID limit, so the array
+				* can be expanded. */
+				opts.nsid = subsystem->max_nsid + 1;
+			} else {
+				SPDK_ERRLOG("Can't extend NSID range above MaxNamespaces\n");
+				return 0;
+			}
 		}
 	} else {
 		/* Specific NSID requested */
@@ -1047,6 +1028,21 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 			SPDK_ERRLOG("Requested NSID %" PRIu32 " already in use\n", opts.nsid);
 			return 0;
 		}
+	}
+
+	if (opts.nsid > subsystem->max_nsid) {
+		struct spdk_nvmf_ns **new_ns_array;
+
+		new_ns_array = realloc(subsystem->ns, sizeof(struct spdk_nvmf_ns *) * opts.nsid);
+		if (new_ns_array == NULL) {
+			SPDK_ERRLOG("Memory allocation error while resizing namespace array.\n");
+			return 0;
+		}
+
+		memset(new_ns_array + subsystem->max_nsid, 0,
+		       sizeof(struct spdk_nvmf_ns *) * (opts.nsid - subsystem->max_nsid));
+		subsystem->ns = new_ns_array;
+		subsystem->max_nsid = opts.nsid;
 	}
 
 	ns = calloc(1, sizeof(*ns));
@@ -1071,9 +1067,6 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 		      spdk_nvmf_subsystem_get_nqn(subsystem),
 		      spdk_bdev_get_name(bdev),
 		      opts.nsid);
-
-	subsystem->max_nsid = spdk_max(subsystem->max_nsid, opts.nsid);
-	subsystem->num_allocated_nsid++;
 
 	spdk_nvmf_subsystem_ns_changed(subsystem, opts.nsid);
 

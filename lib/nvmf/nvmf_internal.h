@@ -44,6 +44,7 @@
 #include "spdk/util.h"
 
 #define SPDK_NVMF_DEFAULT_NUM_CTRLRS_PER_LCORE 1
+#define SPDK_NVMF_DEFAULT_MAX_NSID 128
 
 enum spdk_nvmf_subsystem_state {
 	SPDK_NVMF_SUBSYSTEM_INACTIVE = 0,
@@ -218,7 +219,6 @@ struct spdk_nvmf_subsystem {
 	uint32_t				max_nsid;
 	/* This is the maximum allowed nsid to a subsystem */
 	uint32_t				max_allowed_nsid;
-	uint32_t				num_allocated_nsid;
 
 	TAILQ_HEAD(, spdk_nvmf_ctrlr)		ctrlrs;
 

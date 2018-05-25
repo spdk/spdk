@@ -1271,7 +1271,11 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->sqes.max = 6;
 		cdata->cqes.min = 4;
 		cdata->cqes.max = 4;
-		cdata->nn = subsystem->max_nsid;
+		if (subsystem->max_allowed_nsid != 0) {
+			cdata->nn = subsystem->max_allowed_nsid;
+		} else {
+			cdata->nn = subsystem->max_nsid;
+		}
 		cdata->vwc.present = 1;
 
 		cdata->nvmf_specific.ioccsz = sizeof(struct spdk_nvme_cmd) / 16;
