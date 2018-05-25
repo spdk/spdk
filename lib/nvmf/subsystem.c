@@ -1017,6 +1017,11 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 			new_max_nsid = subsystem->max_nsid + 1;
 		}
 
+		if (!TAILQ_EMPTY(&subsystem->ctrlrs)) {
+			SPDK_ERRLOG("Can't extend NSID range with active connections\n");
+			return 0;
+		}
+
 		new_ns_array = realloc(subsystem->ns, sizeof(struct spdk_nvmf_ns *) * new_max_nsid);
 		if (new_ns_array == NULL) {
 			SPDK_ERRLOG("Memory allocation error while resizing namespace array.\n");
