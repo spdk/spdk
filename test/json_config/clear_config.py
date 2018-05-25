@@ -85,8 +85,32 @@ def clear_bdev_subsystem(args, bdev_config):
             args.client.call(destroy_method, {bdev_name_key: bdev_name})
 
 
+def get_nvmf_name(nvmf):
+    if 'params' in nvmf:
+        if 'nqn' in nvmf['params']:
+            return nvmf['params']['nqn']
+
+    return None
+
+
+def get_nvmf_destroy_method(nvmf):
+    destroy_method_map = {'construct_nvmf_subsystem': "delete_nvmf_subsystem",
+                          'set_nvmf_target_config': None,
+                          'set_nvmf_target_options': None
+                          }
+    if 'method' in nvmf:
+        construct_method = nvmf['method']
+        if construct_method in destroy_method_map.keys():
+            return destroy_method_map[construct_method]
+
+    return None
+
+
 def clear_nvmf_subsystem(args, nvmf_config):
-    pass
+    for nvmf in nvmf_config:
+        destroy_method = get_nvmf_destroy_method(nvmf)
+        if destroy_method:
+            args.client.call(destroy_method, {'nqn': get_nvmf_name(nvmf)})
 
 
 def clear_scsi_subsystem(args, scsi_config):
