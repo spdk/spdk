@@ -170,7 +170,7 @@ def construct_split_vbdev(client, base_bdev, split_count, split_size_mb=None):
         'base_bdev': base_bdev,
         'split_count': split_count,
     }
-    if args.split_size_mb:
+    if split_size_mb:
         params['split_size_mb'] = split_size_mb
 
     return client.call('construct_split_vbdev', params)
