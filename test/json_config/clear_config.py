@@ -31,6 +31,14 @@ def get_bdev_name(bdev):
     return bdev_name
 
 
+def get_nvmf_subsystem_name(nvmf):
+    nvmf_name = None
+    if 'nqn' in nvmf['nqn']:
+        nvmf_name = nvmf['nqn']
+
+    return nvmf_name
+
+
 def delete_subbdevs(args, bdev, rpc_bdevs):
     ret_value = False
     bdev_name = get_bdev_name(bdev)
@@ -86,7 +94,12 @@ def clear_bdev_subsystem(args, bdev_config):
 
 
 def clear_nvmf_subsystem(args, nvmf_config):
-    pass
+    rpc_nvmfs = args.client.call("get_nvmf_subsystems")
+    for nvmf_subsystem in rpc_nvmfs:
+        nvmf_name = get_nvmf_subsystem_name(nvmf_subsystem)
+        destroy_method = 'delete_nvmf_subsystem'
+        if destroy_method:
+            args.client.call(destroy_method, {"nqn": nvmf_name})
 
 
 def clear_scsi_subsystem(args, scsi_config):
