@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5ab5dbeb_a465305d",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-25T23:11:26Z",
+      "side": 1,
+      "message": "Maybe we want to rename this to match the \"OCSSD\" naming we are planning on using elsewhere.",
+      "revId": "eccb26cc5a2925311749e3cd0bf40021c8e7d415",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
