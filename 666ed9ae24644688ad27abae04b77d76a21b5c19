@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "88517cb6_e61271f8",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-05-25T21:46:19Z",
+      "side": 1,
+      "message": "I don\u0027t think this should be required anymore, target should be fine to start without any config.",
+      "range": {
+        "startLine": 59,
+        "startChar": 15,
+        "endLine": 59,
+        "endChar": 46
+      },
+      "revId": "666ed9ae24644688ad27abae04b77d76a21b5c19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
