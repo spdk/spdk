@@ -36,8 +36,8 @@
  * Block Device Module Interface
  */
 
-#ifndef SPDK_INTERNAL_BDEV_H
-#define SPDK_INTERNAL_BDEV_H
+#ifndef SPDK_BDEV_MODULE_H
+#define SPDK_BDEV_MODULE_H
 
 #include "spdk/stdinc.h"
 
@@ -648,4 +648,4 @@ void spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spd
  */
 #define SPDK_BDEV_MODULE_REGISTER_FN_NAME_(line) spdk_bdev_module_register_ ## line
 
-#endif /* SPDK_INTERNAL_BDEV_H */
+#endif /* SPDK_BDEV_MODULE_H */
