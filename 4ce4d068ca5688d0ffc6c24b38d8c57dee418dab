@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6d30eda2_02b1027e",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 4151,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-25T23:22:40Z",
+      "side": 1,
+      "message": "I\u0027m not sure this cast is safe. Is it possible for back_bs_dev to be something other than a spdk_blob_bs_dev at this point? (e.g. a zeroes_dev or other backing bs_dev types we may add in the future)\n\nMaybe we need a bs_dev call to check if a range is allocated? (Just throwing out ideas here - the blobstore experts probably have a better idea of how this should work.)",
+      "revId": "4ce4d068ca5688d0ffc6c24b38d8c57dee418dab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f69a81e8_cdd0cefc",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 4155,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-25T23:22:40Z",
+      "side": 1,
+      "message": "I think this comment should say cluster rather than page.",
+      "range": {
+        "startLine": 4155,
+        "startChar": 12,
+        "endLine": 4155,
+        "endChar": 16
+      },
+      "revId": "4ce4d068ca5688d0ffc6c24b38d8c57dee418dab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
