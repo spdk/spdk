@@ -8,6 +8,8 @@ function test_subsystems() {
 	echo "WARNING: Export flag to skip bug in librados"
 	export ASAN_OPTIONS=new_delete_type_mismatch=0
 	run_spdk_tgt
+	$SPDK_BUILD_DIR/scripts/gen_nvme.sh "--json" | $SPDK_BUILD_DIR/scripts/rpc.py\
+		 -s /var/tmp/spdk.sock load_subsystem_config
 	rootdir=$(readlink -f $BDEV_JSON_DIR/../../..)
 
 	rpc_py="$spdk_rpc_py"
