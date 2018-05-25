@@ -83,6 +83,10 @@ DEFINE_STUB_P(nvme_transport_ctrlr_construct, struct spdk_nvme_ctrlr,
 	       const struct spdk_nvme_ctrlr_opts *opts,
 	       void *devhandle), {0})
 
+DEFINE_STUB(spdk_nvme_qpair_process_completions, int32_t,
+	    (struct spdk_nvme_qpair *qpair,
+	     uint32_t max_completions), 0);
+
 static bool ut_destruct_called = false;
 void
 nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)

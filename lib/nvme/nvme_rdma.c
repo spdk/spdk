@@ -621,7 +621,6 @@ nvme_rdma_qpair_fabric_connect(struct nvme_rdma_qpair *rqpair)
 	}
 
 	memset(&cmd, 0, sizeof(cmd));
-	memset(&status, 0, sizeof(struct nvme_completion_poll_status));
 
 	cmd.opcode = SPDK_NVME_OPC_FABRIC;
 	cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_CONNECT;
@@ -651,11 +650,7 @@ nvme_rdma_qpair_fabric_connect(struct nvme_rdma_qpair *rqpair)
 		goto ret;
 	}
 
-	while (status.done == false) {
-		spdk_nvme_qpair_process_completions(&rqpair->qpair, 0);
-	}
-
-	if (spdk_nvme_cpl_is_error(&status.cpl)) {
+	if (spdk_nvme_wait_for_completion(&rqpair->qpair, &status)) {
 		SPDK_ERRLOG("Connect command failed\n");
 		return -1;
 	}
@@ -1006,7 +1001,7 @@ nvme_rdma_fabric_prop_set_cmd(struct spdk_nvme_ctrlr *ctrlr,
 			      uint32_t offset, uint8_t size, uint64_t value)
 {
 	struct spdk_nvmf_fabric_prop_set_cmd cmd = {};
-	struct nvme_completion_poll_status status = {};
+	struct nvme_completion_poll_status status;
 	int rc;
 
 	cmd.opcode = SPDK_NVME_OPC_FABRIC;
@@ -1024,11 +1019,7 @@ nvme_rdma_fabric_prop_set_cmd(struct spdk_nvme_ctrlr *ctrlr,
 		return -1;
 	}
 
-	while (status.done == false) {
-		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
-	}
-
-	if (spdk_nvme_cpl_is_error(&status.cpl)) {
+	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
 		SPDK_ERRLOG("nvme_rdma_fabric_prop_get_cmd failed\n");
 		return -1;
 	}
@@ -1041,7 +1032,7 @@ nvme_rdma_fabric_prop_get_cmd(struct spdk_nvme_ctrlr *ctrlr,
 			      uint32_t offset, uint8_t size, uint64_t *value)
 {
 	struct spdk_nvmf_fabric_prop_set_cmd cmd = {};
-	struct nvme_completion_poll_status status = {};
+	struct nvme_completion_poll_status status;
 	struct spdk_nvmf_fabric_prop_get_rsp *response;
 	int rc;
 
@@ -1059,11 +1050,7 @@ nvme_rdma_fabric_prop_get_cmd(struct spdk_nvme_ctrlr *ctrlr,
 		return -1;
 	}
 
-	while (status.done == false) {
-		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
-	}
-
-	if (spdk_nvme_cpl_is_error(&status.cpl)) {
+	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
 		SPDK_ERRLOG("nvme_rdma_fabric_prop_get_cmd failed\n");
 		return -1;
 	}
@@ -1170,18 +1157,13 @@ nvme_fabrics_get_log_discovery_page(struct spdk_nvme_ctrlr *ctrlr,
 	struct nvme_completion_poll_status status;
 	int rc;
 
-	status.done = false;
 	rc = spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_LOG_DISCOVERY, 0, log_page, size, offset,
 					      nvme_completion_poll_cb, &status);
 	if (rc < 0) {
 		return -1;
 	}
 
-	while (status.done == false) {
-		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
-	}
-
-	if (spdk_nvme_cpl_is_error(&status.cpl)) {
+	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
 		return -1;
 	}
 
@@ -1296,7 +1278,6 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 	}
 
 	/* get the cdata info */
-	status.done = false;
 	rc = nvme_ctrlr_cmd_identify(discovery_ctrlr, SPDK_NVME_IDENTIFY_CTRLR, 0, 0,
 				     &discovery_ctrlr->cdata, sizeof(discovery_ctrlr->cdata),
 				     nvme_completion_poll_cb, &status);
@@ -1305,10 +1286,7 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 		return rc;
 	}
 
-	while (status.done == false) {
-		spdk_nvme_qpair_process_completions(discovery_ctrlr->adminq, 0);
-	}
-	if (spdk_nvme_cpl_is_error(&status.cpl)) {
+	if (spdk_nvme_wait_for_completion(discovery_ctrlr->adminq, &status)) {
 		SPDK_ERRLOG("nvme_identify_controller failed!\n");
 		return -ENXIO;
 	}
