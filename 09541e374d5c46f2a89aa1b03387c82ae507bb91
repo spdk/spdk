@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "455cf254_24e3a8de",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 1756,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-25T23:37:14Z",
+      "side": 1,
+      "message": "I think this flag probably needs to have a local copy on each channel (inside bs_channel) rather than on the blob as a whole to make this thread safe. This would be similar to the NVMe-oF target\u0027s subsystem state vs. sgroup state.  The flag would get set as part of the for_each_channel callback (_spdk_blob_io_sync) to make sure that the thread observes the correct frozen/unfrozen state without any locks.",
+      "revId": "09541e374d5c46f2a89aa1b03387c82ae507bb91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
