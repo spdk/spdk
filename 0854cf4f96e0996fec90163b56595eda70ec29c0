@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8a1c1d6c_47ff8c3d",
+        "filename": "test/bdev/bdevjson/json_config.sh",
+        "patchSetId": 52
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-25T23:25:50Z",
+      "side": 1,
+      "message": "This should probably be applied globally in autotest_common.sh, not just in this test.",
+      "revId": "0854cf4f96e0996fec90163b56595eda70ec29c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
