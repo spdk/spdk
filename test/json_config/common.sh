@@ -1,6 +1,7 @@
 JSON_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
 SPDK_BUILD_DIR=$JSON_DIR/../../
 source $JSON_DIR/../common/autotest_common.sh
+source $JSON_DIR/../nvmf/common.sh
 
 spdk_rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py"
 spdk_clear_config_py="$JSON_DIR/clear_config.py"
@@ -72,9 +73,9 @@ function test_json_config() {
 }
 
 function remove_config_files_after_test_json_config() {
-	rm $last_bdevs $base_bdevs
-	rm $last_json_config $base_json_config
-	rm $tmp_config $full_config $null_json_config
+	rm -f $last_bdevs $base_bdevs
+	rm -f $last_json_config $base_json_config
+	rm -f $tmp_config $full_config $null_json_config
 }
 
 function create_bdev_subsystem_config() {
@@ -93,6 +94,27 @@ function create_bdev_subsystem_config() {
 	$rpc_py construct_lvol_bdev -l lvs_test -t lvol1 32
 	$rpc_py snapshot_lvol_bdev lvs_test/lvol0 snapshot0
 	$rpc_py clone_lvol_bdev lvs_test/snapshot0 clone0
+}
+
+function create_nvmf_subsystem_config() {
+	rdma_device_init
+	RDMA_IP_LIST=$(get_available_rdma_ips)
+	NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
+	if [ -z $NVMF_FIRST_TARGET_IP ]; then
+		echo "Error: no NIC for nvmf test"
+		return 1
+	fi
+
+	bdevs="$($rpc_py construct_malloc_bdev 64 512) "
+	bdevs+="$($rpc_py construct_malloc_bdev 64 512)"
+	$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 '' '' -a -s SPDK00000000000001 -n "$bdevs"
+	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t RDMA -a $NVMF_FIRST_TARGET_IP -s "$NVMF_PORT"
+	$rpc_py nvmf_subsystem_add_host nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1
+	$rpc_py nvmf_subsystem_allow_any_host nqn.2016-06.io.spdk:cnode1
+}
+
+function clear_nvmf_subsystem_config() {
+	$clear_config_py clear_config
 }
 
 function clear_bdev_subsystem_config() {
