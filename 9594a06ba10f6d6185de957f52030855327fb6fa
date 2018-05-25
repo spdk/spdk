@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "07321aa7_6b7ad054",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1846,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-25T22:48:58Z",
+      "side": 1,
+      "message": "How are these events different than the ones provided by rdma_get_cm_event, which we call periodically in spdk_nvmf_rdma_accept()? There does appear to be more events available through this mechanism at first glance, but other than that I assume rdma_get_cm_event is actually built on top of this mechanism.\n\nI also think the right place to poll these events is in spdk_nvmf_rdma_accept(). When connections come in, we don\u0027t know if they are admin or I/O queues until they\u0027ve been placed into a poll group. So admin queues are running on the same threads as the I/O queues and we have to avoid performing expensive operations there as much as possible. The spdk_nvmf_rdma_accept() path is called by the application periodically to accept new connections and can be done from an arbitrary thread that doesn\u0027t otherwise handle connections.",
+      "revId": "9594a06ba10f6d6185de957f52030855327fb6fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
