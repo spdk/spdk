@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9695982b_1206f605",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 690,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-05-26T04:11:38Z",
+      "side": 0,
+      "message": "i guess this shouldn\u0027t be removed. other RPCs still use such headers",
+      "range": {
+        "startLine": 690,
+        "startChar": 4,
+        "endLine": 690,
+        "endChar": 11
+      },
+      "revId": "5a1eb0dcf83e6c0904ebd7f74500f8f8973dc68c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
