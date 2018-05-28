@@ -90,6 +90,11 @@ struct spdk_reactor {
 	/* Poller for get the rusage for the reactor. */
 	struct spdk_poller				*rusage_poller;
 
+	/* Reactor tsc stats */
+	struct spdk_reactor_tsc_stats			tsc_stats;
+
+	uint64_t					tsc_last;
+
 	/* The last known rusage values */
 	struct rusage					rusage;
 
@@ -408,6 +413,41 @@ spdk_reactor_context_switch_monitor_enabled(void)
 	return g_context_switch_monitor_enabled;
 }
 
+static void
+spdk_reactor_add_tsc_stats(void *arg, int rc, uint64_t now)
+{
+	struct spdk_reactor *reactor = arg;
+	struct spdk_reactor_tsc_stats *tsc_stats = &reactor->tsc_stats;
+
+	if (rc == 0) {
+		/* Poller status idle */
+		tsc_stats->idle_tsc += now - reactor->tsc_last;
+	} else if (rc == 1) {
+		/* Poller status busy */
+		tsc_stats->busy_tsc += now - reactor->tsc_last;
+	} else {
+		/* Poller status unknown */
+		tsc_stats->unknown_tsc += now - reactor->tsc_last;
+	}
+
+	reactor->tsc_last = now;
+}
+
+int
+spdk_reactor_get_tsc_stats(struct spdk_reactor_tsc_stats *tsc_stats, uint32_t core)
+{
+	struct spdk_reactor *reactor;
+
+	if (!spdk_cpuset_get_cpu(g_spdk_app_core_mask, core)) {
+		return -1;
+	}
+
+	reactor = spdk_reactor_get(core);
+	*tsc_stats = reactor->tsc_stats;
+
+	return 0;
+}
+
 /**
  *
  * \brief This is the main function of the reactor thread.
@@ -438,6 +478,7 @@ _spdk_reactor_run(void *arg)
 	uint64_t		idle_started, now;
 	uint64_t		spin_cycles, sleep_cycles;
 	uint32_t		sleep_us;
+	int			rc = -1;
 	char			thread_name[32];
 
 	snprintf(thread_name, sizeof(thread_name), "reactor_%u", reactor->lcore);
@@ -456,11 +497,17 @@ _spdk_reactor_run(void *arg)
 	if (g_context_switch_monitor_enabled) {
 		_spdk_reactor_context_switch_monitor_start(reactor, NULL);
 	}
+	now = spdk_get_ticks();
+	reactor->tsc_last = now;
+
 	while (1) {
 		bool took_action = false;
 
 		event_count = _spdk_event_queue_run_batch(reactor);
 		if (event_count > 0) {
+			rc = 1;
+			now = spdk_get_ticks();
+			spdk_reactor_add_tsc_stats(reactor, rc, now);
 			took_action = true;
 		}
 
@@ -468,7 +515,9 @@ _spdk_reactor_run(void *arg)
 		if (poller) {
 			TAILQ_REMOVE(&reactor->active_pollers, poller, tailq);
 			poller->state = SPDK_POLLER_STATE_RUNNING;
-			poller->fn(poller->arg);
+			rc = poller->fn(poller->arg);
+			now = spdk_get_ticks();
+			spdk_reactor_add_tsc_stats(reactor, rc, now);
 			if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
 				free(poller);
 			} else {
@@ -480,17 +529,27 @@ _spdk_reactor_run(void *arg)
 
 		poller = TAILQ_FIRST(&reactor->timer_pollers);
 		if (poller) {
-			now = spdk_get_ticks();
+			if (took_action == false) {
+				now = spdk_get_ticks();
+			}
 
 			if (now >= poller->next_run_tick) {
+				uint64_t tmp_timer_tsc;
+
 				TAILQ_REMOVE(&reactor->timer_pollers, poller, tailq);
 				poller->state = SPDK_POLLER_STATE_RUNNING;
-				poller->fn(poller->arg);
+				rc = poller->fn(poller->arg);
+				/* Save the tsc value from before poller->fn was executed. We want to
+				 * use the current time for idle/busy tsc value accounting, but want to
+				 * use the older time to reinsert to the timer poller below. */
+				tmp_timer_tsc = now;
+				now = spdk_get_ticks();
+				spdk_reactor_add_tsc_stats(reactor, rc, now);
 				if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
 					free(poller);
 				} else {
 					poller->state = SPDK_POLLER_STATE_WAITING;
-					_spdk_poller_insert_timer(reactor, poller, now);
+					_spdk_poller_insert_timer(reactor, poller, tmp_timer_tsc);
 				}
 				took_action = true;
 			}
