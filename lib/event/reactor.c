@@ -459,16 +459,20 @@ _spdk_reactor_run(void *arg)
 	if (g_context_switch_monitor_enabled) {
 		_spdk_reactor_context_switch_monitor_start(reactor, NULL);
 	}
+	now = spdk_get_ticks();
+
 	while (1) {
 		bool took_action = false;
 
 		event_count = _spdk_event_queue_run_batch(reactor);
 		if (event_count > 0) {
+			now = spdk_get_ticks();
 			took_action = true;
 		}
 
 		poller = TAILQ_FIRST(&reactor->active_pollers);
 		if (poller) {
+			now = spdk_get_ticks();
 			TAILQ_REMOVE(&reactor->active_pollers, poller, tailq);
 			poller->state = SPDK_POLLER_STATE_RUNNING;
 			poller->fn(poller->arg);
@@ -484,8 +488,6 @@ _spdk_reactor_run(void *arg)
 		if (timer_poll_count >= SPDK_TIMER_POLL_ITERATIONS) {
 			poller = TAILQ_FIRST(&reactor->timer_pollers);
 			if (poller) {
-				now = spdk_get_ticks();
-
 				if (now >= poller->next_run_tick) {
 					TAILQ_REMOVE(&reactor->timer_pollers, poller, tailq);
 					poller->state = SPDK_POLLER_STATE_RUNNING;
