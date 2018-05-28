@@ -464,11 +464,13 @@ _spdk_reactor_run(void *arg)
 
 		event_count = _spdk_event_queue_run_batch(reactor);
 		if (event_count > 0) {
+			now = spdk_get_ticks();
 			took_action = true;
 		}
 
 		poller = TAILQ_FIRST(&reactor->active_pollers);
 		if (poller) {
+			now = spdk_get_ticks();
 			TAILQ_REMOVE(&reactor->active_pollers, poller, tailq);
 			poller->state = SPDK_POLLER_STATE_RUNNING;
 			poller->fn(poller->arg);
@@ -479,13 +481,13 @@ _spdk_reactor_run(void *arg)
 				TAILQ_INSERT_TAIL(&reactor->active_pollers, poller, tailq);
 			}
 			took_action = true;
+		} else if (event_count == 0 && !poller) {
+			now = spdk_get_ticks();
 		}
 
 		if (timer_poll_count >= SPDK_TIMER_POLL_ITERATIONS) {
 			poller = TAILQ_FIRST(&reactor->timer_pollers);
 			if (poller) {
-				now = spdk_get_ticks();
-
 				if (now >= poller->next_run_tick) {
 					TAILQ_REMOVE(&reactor->timer_pollers, poller, tailq);
 					poller->state = SPDK_POLLER_STATE_RUNNING;
