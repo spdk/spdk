@@ -122,6 +122,12 @@ struct spdk_app_opts {
 	bool			delay_subsystem_init;
 };
 
+struct spdk_reactor_tsc_stats {
+	uint64_t busy_tsc;
+	uint64_t idle_tsc;
+	uint64_t unknown_tsc;
+};
+
 /**
  * Initialize the default value of opts
  *
@@ -269,6 +275,12 @@ void spdk_reactor_enable_context_switch_monitor(bool enabled);
  * \return true if enabled or false otherwise.
  */
 bool spdk_reactor_context_switch_monitor_enabled(void);
+
+/**
+ * Get tsc stats from a given reactor
+ * \param core on which reactor is running
+ */
+struct spdk_reactor_tsc_stats *spdk_reactor_get_tsc_stats(uint32_t core);
 
 #ifdef __cplusplus
 }
