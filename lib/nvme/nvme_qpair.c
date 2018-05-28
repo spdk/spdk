@@ -412,6 +412,14 @@ nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 	return 0;
 }
 
+void
+nvme_qpair_deinit(struct spdk_nvme_qpair *qpair)
+{
+	if (qpair->req_buf) {
+		spdk_dma_free(qpair->req_buf);
+	}
+}
+
 int
 nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
