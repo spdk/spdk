@@ -737,8 +737,14 @@ spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int bytes,
 		if (errno == EAGAIN || errno == EWOULDBLOCK) {
 			return 0;
 		} else {
-			SPDK_ERRLOG("spdk_sock_recv() failed, errno %d: %s\n",
-				    errno, spdk_strerror(errno));
+			/* For connect reset issue, do not output error log */
+			if (errno == ECONNRESET) {
+				SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_sock_recv() failed, errno %d: %s\n",
+					      errno, spdk_strerror(errno));
+			} else {
+				SPDK_ERRLOG("spdk_sock_recv() failed, errno %d: %s\n",
+					    errno, spdk_strerror(errno));
+			}
 		}
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
