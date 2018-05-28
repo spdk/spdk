@@ -115,6 +115,12 @@ nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 	abort();
 }
 
+void
+nvme_qpair_deinit(struct spdk_nvme_qpair *qpair)
+{
+	abort();
+}
+
 int
 spdk_pci_nvme_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx)
 {
