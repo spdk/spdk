@@ -80,6 +80,14 @@ struct spdk_subsystem_depend {
 	TAILQ_ENTRY(spdk_subsystem_depend) tailq;
 };
 
+struct rc_stats {
+	uint64_t busy_tsc;
+	uint64_t idle_tsc;
+	uint64_t unknown_tsc;
+	uint64_t last_tsc;
+	const char *last_rc;
+};
+
 TAILQ_HEAD(spdk_subsystem_depend_list, spdk_subsystem_depend);
 extern struct spdk_subsystem_depend_list g_subsystems_deps;
 

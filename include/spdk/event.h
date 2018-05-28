@@ -255,6 +255,14 @@ void spdk_reactor_enable_context_switch_monitor(bool enabled);
  */
 bool spdk_reactor_context_switch_monitor_enabled(void);
 
+/**
+ * Add return code stats to a given reactor
+ * \param rc return code status
+ * \param now current tsc
+ * \param arg specifies a given reactor
+ */
+void spdk_put_rc_stats(int rc, uint64_t now, void *arg);
+
 #ifdef __cplusplus
 }
 #endif
