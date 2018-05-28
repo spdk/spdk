@@ -610,6 +610,7 @@ int	nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 			struct spdk_nvme_ctrlr *ctrlr,
 			enum spdk_nvme_qprio qprio,
 			uint32_t num_requests);
+void	nvme_qpair_deinit(struct spdk_nvme_qpair *qpair);
 void	nvme_qpair_enable(struct spdk_nvme_qpair *qpair);
 void	nvme_qpair_disable(struct spdk_nvme_qpair *qpair);
 int	nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair,
