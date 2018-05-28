@@ -1335,6 +1335,8 @@ nvme_pcie_qpair_destroy(struct spdk_nvme_qpair *qpair)
 		spdk_dma_free(pqpair->tr);
 	}
 
+	nvme_qpair_deinit(qpair);
+
 	spdk_dma_free(pqpair);
 
 	return 0;
