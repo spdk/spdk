@@ -1218,16 +1218,17 @@ spdk_iscsi_conn_migration(struct spdk_iscsi_conn *conn)
 			lcore = target->lcore;
 		}
 		pthread_mutex_unlock(&target->mutex);
+
+		spdk_iscsi_poll_group_remove_conn_sock(conn);
+		spdk_iscsi_conn_stop(conn);
+
+		__sync_fetch_and_add(&g_num_connections[lcore], 1);
+		conn->last_nopin = spdk_get_ticks();
+		event = spdk_event_allocate(lcore, spdk_iscsi_conn_full_feature_migrate,
+					    conn, NULL);
+		spdk_event_call(event);
 	}
 
-	spdk_iscsi_poll_group_remove_conn_sock(conn);
-	spdk_iscsi_conn_stop(conn);
-
-	__sync_fetch_and_add(&g_num_connections[lcore], 1);
-	conn->last_nopin = spdk_get_ticks();
-	event = spdk_event_allocate(lcore, spdk_iscsi_conn_full_feature_migrate,
-				    conn, NULL);
-	spdk_event_call(event);
 }
 
 void
