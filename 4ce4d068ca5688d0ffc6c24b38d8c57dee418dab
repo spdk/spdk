@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "830f9cfc_ade24fd1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 4151,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-05-28T16:34:39Z",
+      "side": 1,
+      "message": "In line 4147 as well as in 4164, before this cast, I\u0027m checking if blob have a parent, what mean it have a backing blob and is a clone. For zeroes_dev (and non-clones) blob-\u003eparent_id \u003d\u003d SPDK_BLOBID_INVALID.",
+      "parentUuid": "6d30eda2_02b1027e",
+      "revId": "4ce4d068ca5688d0ffc6c24b38d8c57dee418dab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f69a81e8_cdd0cefc",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 13
