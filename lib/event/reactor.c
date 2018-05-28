@@ -464,11 +464,13 @@ _spdk_reactor_run(void *arg)
 
 		event_count = _spdk_event_queue_run_batch(reactor);
 		if (event_count > 0) {
+			now = spdk_get_ticks();
 			took_action = true;
 		}
 
 		poller = TAILQ_FIRST(&reactor->active_pollers);
 		if (poller) {
+			now = spdk_get_ticks();
 			TAILQ_REMOVE(&reactor->active_pollers, poller, tailq);
 			poller->state = SPDK_POLLER_STATE_RUNNING;
 			poller->fn(poller->arg);
