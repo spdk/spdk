@@ -737,8 +737,12 @@ spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int bytes,
 		if (errno == EAGAIN || errno == EWOULDBLOCK) {
 			return 0;
 		} else {
-			SPDK_ERRLOG("spdk_sock_recv() failed, errno %d: %s\n",
-				    errno, spdk_strerror(errno));
+			/* Handling the 104 error case. If we add judgement for the socket, it will
+			not be efficient */
+			if (errno != ECONNRESET) {
+				SPDK_ERRLOG("spdk_sock_recv() failed, errno %d: %s\n",
+					    errno, spdk_strerror(errno));
+			}
 		}
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
