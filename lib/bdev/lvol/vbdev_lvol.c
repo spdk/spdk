@@ -50,7 +50,7 @@ static void vbdev_lvs_examine(struct spdk_bdev *bdev);
 static struct spdk_bdev_module g_lvol_if = {
 	.name = "lvol",
 	.module_init = vbdev_lvs_init,
-	.examine = vbdev_lvs_examine,
+	.examine_disk = vbdev_lvs_examine,
 	.get_ctx_size = vbdev_lvs_get_ctx_size,
 
 };
