@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8ac71778_40e3ba7e",
+        "filename": "lib/iscsi/conn.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-29T13:19:05Z",
+      "side": 1,
+      "message": "\"terminate the current execution of polling\" may be a little nearer to the role?",
+      "range": {
+        "startLine": 163,
+        "startChar": 54,
+        "endLine": 163,
+        "endChar": 92
+      },
+      "revId": "6010e1f210e959b460d2cf9939f370b6187b64e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
