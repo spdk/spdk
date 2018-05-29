@@ -34,7 +34,34 @@
 #ifndef LIB_BDEV_NVME_IOCTL_H
 #define LIB_BDEV_NVME_IOCTL_H
 
+#include "spdk/stdinc.h"
+
+#include "spdk/nvme.h"
+
+struct nvme_ctrlr;
+struct nvme_bdev;
+
+enum ioctl_conn_type_t {
+	IOCTL_CONN_TYPE_CHAR,
+	IOCTL_CONN_TYPE_BLK,
+};
+
+struct spdk_nvme_ioctl_conn {
+	int			connfd;
+	enum ioctl_conn_type_t  type;
+	/*
+	 * nvme_ctrlr or nvme_bdev based on type
+	 */
+	void			*device;
+	void			*epoll_event_dataptr;
+
+	TAILQ_ENTRY(spdk_nvme_ioctl_conn) conn_tailq;
+};
+
 int spdk_nvme_ioctl_init(void);
 void spdk_nvme_ioctl_fini(void);
+
+int spdk_nvme_ctrlr_create_ioctl_sockfd(struct nvme_ctrlr *nvme_ctrlr);
+void spdk_nvme_ctrlr_delete_ioctl_sockfd(struct nvme_ctrlr *nvme_ctrlr);
 
 #endif /* LIB_BDEV_NVME_IOCTL_H */

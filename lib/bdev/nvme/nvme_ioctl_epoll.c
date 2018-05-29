@@ -44,6 +44,10 @@
 #include <linux/fs.h>
 #include <sys/epoll.h>
 
+#define SPDK_IOCTL_DEV_DIR "/var/tmp/spdk/dev/"
+#define SPDK_IOCTL_PCI_DIR "/var/tmp/spdk/pci/"
+
+#define UNSOCK_LISTEN_NUM 8
 #define MAX_EPOLL_EVENT 128
 
 /** Global variables used for managing ioctl connections. */
@@ -79,11 +83,42 @@ spdk_nvme_ioctl_epoll_check(void *ctx)
 	return nfds;
 }
 
+/* Create dir_path if it doesn't exist */
+static int
+nvme_ioctl_prepare_dir(char *dir_path)
+{
+	int rc;
+	struct stat dir_stat;
+
+	rc = stat(dir_path, &dir_stat);
+	/* Check whether dir_path is a dir if it exists */
+	if (rc == 0) {
+		if (S_ISDIR(dir_stat.st_mode)) {
+			return 0;
+		}
+	}
+
+	/* Create dir_path if it doesn't exist */
+	if (rc == -1 && errno == ENOENT) {
+		rc = mkdir(dir_path, 0700);
+		if (rc == 0) {
+			return 0;
+		}
+	}
+
+	SPDK_ERRLOG("Failed to create/check ioctl dir %s, errno %d: %s\n",
+		    dir_path, errno, spdk_strerror(errno));
+	return -1;
+}
+
 int
 spdk_nvme_ioctl_init(void)
 {
-	assert(g_ioctl_epoll_fd == 0);
+	if (nvme_ioctl_prepare_dir(SPDK_IOCTL_DEV_DIR) || nvme_ioctl_prepare_dir(SPDK_IOCTL_PCI_DIR)) {
+		return -1;
+	}
 
+	assert(g_ioctl_epoll_fd == 0);
 	g_ioctl_epoll_fd = epoll_create1(0);
 	if (g_ioctl_epoll_fd < 0) {
 		SPDK_ERRLOG("epoll_create1() failed, errno %d: %s\n", errno, spdk_strerror(errno));
@@ -106,6 +141,166 @@ spdk_nvme_ioctl_fini(void)
 	return;
 }
 
+/*
+ * 1. delete conn_fd from epoll_fd
+ * 2. close conn_fd
+ * 3. remove this ioctl_conn from nvme_ctrlr/nvme_bdev
+ * 4. clear ioctl_conn (check its state, then free resources at proper time)
+ */
+static int
+nvme_ioctl_epoll_delete_conn(struct spdk_nvme_ioctl_conn *ioctl_conn)
+{
+	return 0;
+}
+
+static void
+nvme_ioctl_epoll_char_listen_event(uint32_t epoll_event, void *dev_ptr)
+{
+	int listenfd, connfd;
+	struct nvme_ctrlr *ctrlr;
+
+	ctrlr = (struct nvme_ctrlr *) dev_ptr;
+
+	listenfd = ctrlr->sockfd;
+	connfd = accept(listenfd, NULL, NULL);
+	if (connfd > 0) {
+		SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "%s accepts an ioctl connection.\n", ctrlr->name);
+		// TODO add connection process later
+		close(connfd);
+	} else {
+		SPDK_ERRLOG("%s failed to accept an ioctl connection, errno is %d.\n", ctrlr->name, errno);
+	}
+
+	return;
+}
+
+/*
+ * Return 0, if created successfully.
+ */
+static int
+nvme_ioctl_epoll_add_char_listen(struct nvme_ctrlr *nvme_ctrlr)
+{
+	struct epoll_event event;
+	int rc;
+	struct spdk_nvme_ioctl_event_data *ioctl_data;
+
+	ioctl_data = malloc(sizeof(*ioctl_data));
+	if (!ioctl_data) {
+		SPDK_ERRLOG("Failed to allocate memory for ioctl_data.\n");
+		return -1;
+	}
+
+	ioctl_data->func = nvme_ioctl_epoll_char_listen_event;
+	ioctl_data->dev_ptr = nvme_ctrlr;
+	nvme_ctrlr->epoll_event_dataptr = ioctl_data;
+
+	event.events = EPOLLIN;
+	event.data.ptr = ioctl_data;
+
+	rc = epoll_ctl(g_ioctl_epoll_fd, EPOLL_CTL_ADD, nvme_ctrlr->sockfd, &event);
+	/*  When an error occurs, epoll_ctl() returns -1 and errno is set */
+	return rc;
+}
+
+/*
+ * Return 0, if created successfully.
+ */
+int
+spdk_nvme_ctrlr_create_ioctl_sockfd(struct nvme_ctrlr *nvme_ctrlr)
+{
+	char *socketpath;
+	struct sockaddr_un un;
+	int rc;
+
+	TAILQ_INIT(&nvme_ctrlr->conn_list);
+	/*
+	 * Create socket fd for NVME character device
+	 * ex: /var/tmp/spdk/dev/nvme0 corresponding to /dev/nvme0
+	 */
+	socketpath = spdk_sprintf_alloc("%s/%s", SPDK_IOCTL_DEV_DIR, nvme_ctrlr->name);
+	if (!socketpath) {
+		SPDK_ERRLOG("Failed to allocate memory for socketpath.\n");
+		return -1;
+	}
+	unlink(socketpath);
+
+	memset(&un, 0, sizeof(un));
+	un.sun_family = AF_UNIX;
+	memcpy(un.sun_path, socketpath, spdk_min(sizeof(un.sun_path) - 1, strlen(socketpath) + 1));
+	free(socketpath);
+
+	nvme_ctrlr->sockfd = socket(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0);
+	if (nvme_ctrlr->sockfd <= 0) {
+		SPDK_ERRLOG("Failed to create unix socket, errno is %d\n", errno);
+		return -1;
+	}
+
+	rc = bind(nvme_ctrlr->sockfd, (struct sockaddr *)&un, sizeof(un));
+	if (rc) {
+		SPDK_ERRLOG("Failed to bind sock_fd into epoll\n");
+		close(nvme_ctrlr->sockfd);
+		nvme_ctrlr->sockfd = -1;
+		return -1;
+	}
+
+	listen(nvme_ctrlr->sockfd, UNSOCK_LISTEN_NUM);
+
+	rc = nvme_ioctl_epoll_add_char_listen(nvme_ctrlr);
+	if (rc) {
+		SPDK_ERRLOG("Failed to add listen fd into epoll\n");
+		close(nvme_ctrlr->sockfd);
+		nvme_ctrlr->sockfd = -1;
+		return -1;
+	}
+
+	return 0;
+}
+
+/*
+ * 1. delete sockfd from epoll_fd
+ * 2. close sock_fd
+ * 3. delete ioctl_conn if have
+ * 4. unlink socket path
+ */
+void
+spdk_nvme_ctrlr_delete_ioctl_sockfd(struct nvme_ctrlr *nvme_ctrlr)
+{
+	struct spdk_nvme_ioctl_conn *conn, *conn_tmp;
+	struct epoll_event event;
+	char *socketpath;
+	int rc;
+
+	if (nvme_ctrlr->sockfd <= 0) {
+		return;
+	}
+
+	/*
+	 * The event parameter is ignored but needs to be non-NULL to work around a bug in old
+	 * kernel versions.
+	 */
+	rc = epoll_ctl(g_ioctl_epoll_fd, EPOLL_CTL_DEL, nvme_ctrlr->sockfd, &event);
+	if (rc) {
+		SPDK_ERRLOG("epoll_ctl(EPOLL_CTL_DEL) failed\n");
+	}
+	/* release ioctl_data allocated in add_ioctl_XXX_conn */
+	free(nvme_ctrlr->epoll_event_dataptr);
+
+	if (!TAILQ_EMPTY(&nvme_ctrlr->conn_list)) {
+		TAILQ_FOREACH_SAFE(conn, &nvme_ctrlr->conn_list, conn_tailq, conn_tmp) {
+			nvme_ioctl_epoll_delete_conn(conn);
+		}
+	}
+	close(nvme_ctrlr->sockfd);
+
+	socketpath = spdk_sprintf_alloc("%s/%s", SPDK_IOCTL_DEV_DIR, nvme_ctrlr->name);
+	if (!socketpath) {
+		SPDK_ERRLOG("Failed to allocate memory for socketpath.\n");
+		return;
+	}
+	unlink(socketpath);
+	free(socketpath);
+}
+
 #else /* Not Linux */
 
 int
@@ -116,6 +311,17 @@ spdk_nvme_ioctl_init(void)
 
 void
 spdk_nvme_ioctl_fini(void)
+{
+}
+
+int
+spdk_nvme_ctrlr_create_ioctl_sockfd(struct nvme_ctrlr *nvme_ctrlr)
+{
+	return 0;
+}
+
+void
+spdk_nvme_ctrlr_delete_ioctl_sockfd(struct nvme_ctrlr *nvme_ctrlr)
 {
 }
 
