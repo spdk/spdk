@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b1a68a60_006d144b",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-29T20:28:39Z",
+      "side": 1,
+      "message": "I\u0027m not sure this is a good idea.\n\nI think the behavior we want is:\n- If the user specifies max_namespaces when creating the subsystem, NN \u003d max_namespaces, end of story. (This is the easy case, and it isn\u0027t affected by this default.)\n- If the user did not specify max_namespaces, allow an arbitrary number of namespaces to be added as long as no controllers are currently connected (this may require resizing the ns array, but that\u0027s fine, as long as nothing is connected).  NN is frozen to whatever the current number of namespaces is when the first controller connects and un-frozen once the last controller disconnects.\n\nThe second bullet is the contentious one (and what this DEFAULT_MAX_NSID affects).  I don\u0027t think we want to just report a large NN by default, since this will result in hosts that aren\u0027t very smart about active vs. inactive namespaces trying to query all 128 NSIDs; I think the Linux NVMe-oF host will create /dev/nvmeXnY for Y\u003d1 to 128 in this case, even if only one of those namespaces is actually active.",
+      "revId": "90f16a00065ec0559307c389a4dc081eb660ad1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
