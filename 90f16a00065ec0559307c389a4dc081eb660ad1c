@@ -16,6 +16,24 @@
       "revId": "90f16a00065ec0559307c389a4dc081eb660ad1c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83851251_b10ab7fa",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-05-29T23:49:22Z",
+      "side": 1,
+      "message": "Linux driver will try to get active NS list first, and try to scan sequentially for other case, and if the NS is inactive, we can return the capacity size 0, for 0 sized block device, Linux NVMe driver will not register this block device, so there will not have /dev/nvmeXnY if NS Y is inactive. Of course, we can test the behavior with different version of Linux Distributions.",
+      "parentUuid": "b1a68a60_006d144b",
+      "revId": "90f16a00065ec0559307c389a4dc081eb660ad1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
