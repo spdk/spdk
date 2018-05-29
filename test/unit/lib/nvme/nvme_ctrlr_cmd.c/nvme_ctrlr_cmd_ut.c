@@ -56,6 +56,11 @@ uint16_t abort_sqid = 1;
 uint32_t namespace_management_nsid = 1;
 uint32_t format_nvme_nsid = 1;
 
+uint32_t expected_feature_ns = 2;
+uint32_t expected_feature_cdw10 = SPDK_NVME_FEAT_LBA_RANGE_TYPE;
+uint32_t expected_feature_cdw11 = 1;
+uint32_t expected_feature_cdw12 = 1;
+
 typedef void (*verify_request_fn_t)(struct nvme_request *req);
 verify_request_fn_t verify_fn;
 
@@ -103,11 +108,28 @@ static void verify_set_feature_cmd(struct nvme_request *req)
 	CU_ASSERT(req->cmd.cdw12 == feature_cdw12);
 }
 
+static void verify_set_feature_ns_cmd(struct nvme_request *req)
+{
+	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_SET_FEATURES);
+	CU_ASSERT(req->cmd.cdw10 == expected_feature_cdw10);
+	CU_ASSERT(req->cmd.cdw11 == expected_feature_cdw11);
+	CU_ASSERT(req->cmd.cdw12 == expected_feature_cdw12);
+	CU_ASSERT(req->cmd.nsid == expected_feature_ns);
+}
+
 static void verify_get_feature_cmd(struct nvme_request *req)
 {
 	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_GET_FEATURES);
 	CU_ASSERT(req->cmd.cdw10 == get_feature);
 	CU_ASSERT(req->cmd.cdw11 == get_feature_cdw11);
+}
+
+static void verify_get_feature_ns_cmd(struct nvme_request *req)
+{
+	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_GET_FEATURES);
+	CU_ASSERT(req->cmd.cdw10 == expected_feature_cdw10);
+	CU_ASSERT(req->cmd.cdw11 == expected_feature_cdw11);
+	CU_ASSERT(req->cmd.nsid == expected_feature_ns);
 }
 
 static void verify_abort_cmd(struct nvme_request *req)
@@ -423,6 +445,29 @@ test_set_feature_cmd(void)
 	spdk_nvme_ctrlr_cmd_set_feature(&ctrlr, feature, feature_cdw11, feature_cdw12, NULL, 0, NULL, NULL);
 }
 
+static void
+test_get_feature_ns_cmd(void)
+{
+	DECLARE_AND_CONSTRUCT_CTRLR();
+
+	verify_fn = verify_get_feature_ns_cmd;
+
+	spdk_nvme_ctrlr_cmd_get_feature_ns(&ctrlr, expected_feature_cdw10,
+					   expected_feature_cdw11, NULL, 0,
+					   NULL, NULL, expected_feature_ns);
+}
+
+static void
+test_set_feature_ns_cmd(void)
+{
+	DECLARE_AND_CONSTRUCT_CTRLR();
+
+	verify_fn = verify_set_feature_ns_cmd;
+
+	spdk_nvme_ctrlr_cmd_set_feature_ns(&ctrlr, expected_feature_cdw10,
+					   expected_feature_cdw11, expected_feature_cdw12,
+					   NULL, 0, NULL, NULL, expected_feature_ns);
+}
 
 static void
 test_get_feature_cmd(void)
@@ -574,7 +619,9 @@ int main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "test ctrlr cmd get_log_pages", test_get_log_pages) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd set_feature", test_set_feature_cmd) == NULL
+		|| CU_add_test(suite, "test ctrlr cmd set_feature_ns", test_set_feature_ns_cmd) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd get_feature", test_get_feature_cmd) == NULL
+		|| CU_add_test(suite, "test ctrlr cmd get_feature_ns", test_get_feature_ns_cmd) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd abort_cmd", test_abort_cmd) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd io_raw_cmd", test_io_raw_cmd) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd io_raw_cmd_with_md", test_io_raw_cmd_with_md) == NULL

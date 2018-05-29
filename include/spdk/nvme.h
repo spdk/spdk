@@ -877,6 +877,62 @@ int spdk_nvme_ctrlr_cmd_get_feature(struct spdk_nvme_ctrlr *ctrlr,
 				    spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
 /**
+ * \brief Get specific feature from given NVMe controller.
+ *
+ * \param ctrlr NVMe controller to query.
+ * \param feature The feature identifier.
+ * \param cdw11 as defined by the specification for this command.
+ * \param payload The pointer to the payload buffer.
+ * \param payload_size The size of payload buffer.
+ * \param cb_fn Callback function to invoke when the feature has been retrieved.
+ * \param cb_arg Argument to pass to the callback function.
+ * \param ns_is The namespace identifier.
+ *
+ * \return 0 if successfully submitted, ENOMEM if resources could not be allocated
+ * for this request
+ *
+ * This function is thread safe and can be called at any point while the controller
+ * is attached to the SPDK NVMe driver.
+ *
+ * Call \ref spdk_nvme_ctrlr_process_admin_completions() to poll for completion
+ * of commands submitted through this function.
+ *
+ * \sa spdk_nvme_ctrlr_cmd_set_feature_ns()
+ */
+int spdk_nvme_ctrlr_cmd_get_feature_ns(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
+				       uint32_t cdw11, void *payload, uint32_t payload_size,
+				       spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t ns_id);
+
+/**
+ * \brief Set specific feature for the given NVMe controller and namespace ID.
+ *
+ * \param ctrlr NVMe controller to manipulate.
+ * \param feature The feature identifier.
+ * \param cdw11 as defined by the specification for this command.
+ * \param cdw12 as defined by the specification for this command.
+ * \param payload The pointer to the payload buffer.
+ * \param payload_size The size of payload buffer.
+ * \param cb_fn Callback function to invoke when the feature has been set.
+ * \param cb_arg Argument to pass to the callback function.
+ * \param ns_is The namespace identifier.
+ *
+ * \return 0 if successfully submitted, ENOMEM if resources could not be allocated
+ * for this request.
+ *
+ * This function is thread safe and can be called at any point while the controller
+ * is attached to the SPDK NVMe driver.
+ *
+ * Call \ref spdk_nvme_ctrlr_process_admin_completions() to poll for completion
+ * of commands submitted through this function.
+ *
+ * \sa spdk_nvme_ctrlr_cmd_get_feature_ns()
+ */
+int spdk_nvme_ctrlr_cmd_set_feature_ns(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
+				       uint32_t cdw11, uint32_t cdw12, void *payload,
+				       uint32_t payload_size, spdk_nvme_cmd_cb cb_fn,
+				       void *cb_arg, uint32_t ns_id);
+
+/**
  * \brief Attach the specified namespace to controllers.
  *
  * \param ctrlr NVMe controller to use for command submission.
