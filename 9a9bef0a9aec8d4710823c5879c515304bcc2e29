@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3c0ee38b_c9f18fc5",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 487,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-29T23:43:24Z",
+      "side": 0,
+      "message": "I think we still want to update \u0027now\u0027 in this branch (or somewhere inside the timer poller handling); if no events or non-timer pollers were active for several loops, the value of \u0027now\u0027 could be stale.",
+      "revId": "9a9bef0a9aec8d4710823c5879c515304bcc2e29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
