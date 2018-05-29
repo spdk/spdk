@@ -16,6 +16,24 @@
       "revId": "162756d54eb026690f22e76f70ca02254a533878",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e2718cb3_72bb6cf5",
+        "filename": "test/unit/lib/nvme/nvme_ctrlr_ocssd_cmd.c/nvme_ctrlr_ocssd_cmd_ut",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-05-29T22:34:59Z",
+      "side": 1,
+      "message": "Yes, Fixed",
+      "parentUuid": "cbd8e68f_1348b63d",
+      "revId": "162756d54eb026690f22e76f70ca02254a533878",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
