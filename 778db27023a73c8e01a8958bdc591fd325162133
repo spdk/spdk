@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6f170f94_f7a4fc82",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 1568,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-29T09:35:15Z",
+      "side": 1,
+      "message": "Admin queue is set when NULL is specified?",
+      "range": {
+        "startLine": 1568,
+        "startChar": 16,
+        "endLine": 1568,
+        "endChar": 37
+      },
+      "revId": "778db27023a73c8e01a8958bdc591fd325162133",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ea25432_c4a962e8",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 1569,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-29T09:35:15Z",
+      "side": 1,
+      "message": "I/O ?",
+      "range": {
+        "startLine": 1569,
+        "startChar": 34,
+        "endLine": 1569,
+        "endChar": 36
+      },
+      "revId": "778db27023a73c8e01a8958bdc591fd325162133",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29315325_85f07c4b",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 1578,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-29T09:35:15Z",
+      "side": 1,
+      "message": "to inject errors for different commands?",
+      "range": {
+        "startLine": 1577,
+        "startChar": 45,
+        "endLine": 1578,
+        "endChar": 16
+      },
+      "revId": "778db27023a73c8e01a8958bdc591fd325162133",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b9144970_165c510c",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 1578,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-29T09:35:15Z",
+      "side": 1,
+      "message": "use period (.) and change to the new sentence may be better.",
+      "range": {
+        "startLine": 1578,
+        "startChar": 16,
+        "endLine": 1578,
+        "endChar": 17
+      },
+      "revId": "778db27023a73c8e01a8958bdc591fd325162133",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1305e94d_45459107",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 1579,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-29T09:35:15Z",
+      "side": 1,
+      "message": "something like the following may be clearer?\n\n\"for all commands whose opcode matches with registered ones\"",
+      "range": {
+        "startLine": 1578,
+        "startChar": 46,
+        "endLine": 1579,
+        "endChar": 19
+      },
+      "revId": "778db27023a73c8e01a8958bdc591fd325162133",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6fb70386_9bd7ff9f",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-29T09:35:15Z",
+      "side": 1,
+      "message": "error_on_submission may be clearer?",
+      "range": {
+        "startLine": 164,
+        "startChar": 9,
+        "endLine": 164,
+        "endChar": 24
+      },
+      "revId": "778db27023a73c8e01a8958bdc591fd325162133",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d68e7cd4_afc4812d",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 268,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-29T09:35:15Z",
+      "side": 1,
+      "message": "For example \"Any command whose opcode is in this list\" ?",
+      "range": {
+        "startLine": 268,
+        "startChar": 5,
+        "endLine": 268,
+        "endChar": 33
+      },
+      "revId": "778db27023a73c8e01a8958bdc591fd325162133",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
