@@ -71,6 +71,13 @@ struct nvme_bdev {
 	struct nvme_ctrlr	*nvme_ctrlr;
 	struct spdk_nvme_ns	*ns;
 
+	/* ioctl listen fd */
+	int			sockfd;
+	void			*epoll_event_dataptr;
+	struct spdk_bdev_desc	*bdev_desc;
+	struct spdk_io_channel	*bdev_ch;
+	TAILQ_HEAD(, spdk_nvme_ioctl_conn)	conn_list;
+
 	TAILQ_ENTRY(nvme_bdev)	link;
 };
 
