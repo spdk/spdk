@@ -85,7 +85,11 @@ fi
 timing_exit hello_bdev
 
 timing_enter bounds
-$testdir/bdevio/bdevio -c $testdir/bdev.conf
+if [ $(uname -s) = Linux ]; then
+	$testdir/bdevio/bdevio -s 0 -c $testdir/bdev.conf
+else
+	$testdir/bdevio/bdevio -c $testdir/bdev.conf
+fi
 timing_exit bounds
 
 timing_enter nbd_gpt
@@ -145,8 +149,18 @@ EOL
 $rootdir/scripts/gen_nvme.sh >> $testdir/bdev_gpt.conf
 
 # Run bdevperf with gpt
-$testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w verify -t 5
-$testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w write_zeroes -t 1
+if [ $(uname -s) = Linux ]; then
+	cat > $testdir/bdev_gpt.conf << EOL
+[Malloc]
+  NumberOfLuns 2
+  LunSizeInMB 128
+EOL
+	$testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w verify -t 5 -s 0
+	$testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w write_zeroes -t 1 -s 0
+else
+	$testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w verify -t 5
+	$testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -o 4096 -w write_zeroes -t 1
+fi
 rm -f $testdir/bdev_gpt.conf
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
