@@ -85,7 +85,14 @@ fi
 timing_exit hello_bdev
 
 timing_enter bounds
-$testdir/bdevio/bdevio -c $testdir/bdev.conf
+if [ $(uname -s) = Linux ]; then
+	# Test dynamic memory management. All hugepages will be reserved at runtime
+	PRE_RESERVED_MEM=0
+else
+	# Dynamic memory management is not supported on BSD
+	PRE_RESERVED_MEM=2048
+fi
+$testdir/bdevio/bdevio -s $PRE_RESERVED_MEM -c $testdir/bdev.conf
 timing_exit bounds
 
 timing_enter nbd_gpt
@@ -113,7 +120,7 @@ if [ -d /usr/src/fio ] && [ $SPDK_RUN_ASAN -eq 0 ]; then
 		fio_config_add_job $testdir/bdev.fio $b
 	done
 
-	run_fio --spdk_conf=./test/bdev/bdev.conf
+	run_fio --spdk_conf=./test/bdev/bdev.conf --spdk_mem=$PRE_RESERVED_MEM
 
 	rm -f *.state
 	rm -f $testdir/bdev.fio
