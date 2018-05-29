@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d9d03314_feae5b1d",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-29T15:08:31Z",
+      "side": 1,
+      "message": "OK",
+      "parentUuid": "b8153dbc_a3136a5c",
+      "range": {
+        "startLine": 54,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 41
+      },
+      "revId": "222bf7c7979f4f0351215a181cb4f6e907fc5e37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6273acf9_3d524c74",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 8
@@ -36,6 +60,30 @@
       "writtenOn": "2018-05-21T06:42:13Z",
       "side": 1,
       "message": "Can we still do the call callback all here.",
+      "range": {
+        "startLine": 107,
+        "startChar": 0,
+        "endLine": 110,
+        "endChar": 1
+      },
+      "revId": "222bf7c7979f4f0351215a181cb4f6e907fc5e37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "37a6d0c9_fd46f254",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-29T15:08:31Z",
+      "side": 1,
+      "message": "This is just to free request. Not to call any callback (as we might not to call it like in bdev_iscsi_finish_done())",
+      "parentUuid": "6273acf9_3d524c74",
       "range": {
         "startLine": 107,
         "startChar": 0,
@@ -140,6 +188,30 @@
     },
     {
       "key": {
+        "uuid": "70c69b4d_bdce0b1a",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 608,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-29T15:08:31Z",
+      "side": 1,
+      "message": "For me it look better than doing \n\u003e if (req-\u003ecreate_cb) {\n\u003e     req-\u003ecreate_cb()\n\u003e }\n\nAll the time.",
+      "parentUuid": "a5c78150_203bfd81",
+      "range": {
+        "startLine": 608,
+        "startChar": 0,
+        "endLine": 608,
+        "endChar": 61
+      },
+      "revId": "222bf7c7979f4f0351215a181cb4f6e907fc5e37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d4116bb4_5a5943f1",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 8
@@ -174,6 +246,30 @@
       "writtenOn": "2018-05-21T06:42:13Z",
       "side": 1,
       "message": "For removing bdev_iscsi_set_module_init, I think that currently we do not need to put it in this way. The original consideration sounds right.",
+      "range": {
+        "startLine": 694,
+        "startChar": 0,
+        "endLine": 695,
+        "endChar": 51
+      },
+      "revId": "222bf7c7979f4f0351215a181cb4f6e907fc5e37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8696d50_9c065b3a",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 695,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-05-29T15:08:31Z",
+      "side": 1,
+      "message": "No, this was an error. spdk_bdev_module_init_done() must be called only if we have no configuration at all or we failed on first config. Otherwise we have connection in progress and spdk_bdev_module_init_done() might not be called here.",
+      "parentUuid": "b6d4e4bc_464ee718",
       "range": {
         "startLine": 694,
         "startChar": 0,
