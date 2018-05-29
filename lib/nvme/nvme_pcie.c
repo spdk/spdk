@@ -2059,6 +2059,11 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		spdk_mb();
 #endif
 
+		if (spdk_unlikely(++pqpair->cq_head == pqpair->num_entries)) {
+			pqpair->cq_head = 0;
+			pqpair->phase = !pqpair->phase;
+		}
+
 		tr = &pqpair->tr[cpl->cid];
 		pqpair->sq_head = cpl->sqhd;
 
@@ -2068,11 +2073,6 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 			SPDK_ERRLOG("cpl does not map to outstanding cmd\n");
 			nvme_qpair_print_completion(qpair, cpl);
 			assert(0);
-		}
-
-		if (spdk_unlikely(++pqpair->cq_head == pqpair->num_entries)) {
-			pqpair->cq_head = 0;
-			pqpair->phase = !pqpair->phase;
 		}
 
 		if (++num_completions == max_completions) {
