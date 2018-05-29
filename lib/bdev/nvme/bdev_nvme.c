@@ -52,31 +52,6 @@
 static void bdev_nvme_get_spdk_running_config(FILE *fp);
 static int bdev_nvme_config_json(struct spdk_json_write_ctx *w);
 
-struct nvme_ctrlr {
-	/**
-	 * points to pinned, physically contiguous memory region;
-	 * contains 4KB IDENTIFY structure for controller which is
-	 *  target for CONTROLLER IDENTIFY command during initialization
-	 */
-	struct spdk_nvme_ctrlr		*ctrlr;
-	struct spdk_nvme_transport_id	trid;
-	char				*name;
-	int				ref;
-
-	struct spdk_poller		*adminq_timer_poller;
-
-	/** linked list pointer for device list */
-	TAILQ_ENTRY(nvme_ctrlr)	tailq;
-};
-
-struct nvme_bdev {
-	struct spdk_bdev	disk;
-	struct nvme_ctrlr	*nvme_ctrlr;
-	struct spdk_nvme_ns	*ns;
-
-	TAILQ_ENTRY(nvme_bdev)	link;
-};
-
 struct nvme_io_channel {
 	struct spdk_nvme_qpair	*qpair;
 	struct spdk_poller	*poller;
