@@ -99,6 +99,15 @@ struct spdk_bdev_module {
 	int (*get_ctx_size)(void);
 
 	/**
+	 * First notification that a bdev should be examined by a virtual bdev module.
+	 * Virtual bdev modules may use this to examine newly-added bdevs and automatically
+	 * create their own vbdevs, but no i/o to/from device can be send to bdev at this point.
+	 * Only vbdevs based on config files can be created here.
+	 * Function should return claim status
+	 */
+	int (*config_examine)(struct spdk_bdev *bdev);
+
+	/**
 	 * Notification that a bdev should be examined by a virtual bdev module.
 	 * Virtual bdev modules may use this to examine newly-added bdevs and automatically
 	 * create their own vbdevs.

@@ -2545,14 +2545,22 @@ static void
 spdk_bdev_start(struct spdk_bdev *bdev)
 {
 	struct spdk_bdev_module *module;
+	bool claimed = false;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Inserting bdev %s into list\n", bdev->name);
 	TAILQ_INSERT_TAIL(&g_bdev_mgr.bdevs, bdev, link);
 
 	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, tailq) {
-		if (module->examine) {
-			module->action_in_progress++;
-			module->examine(bdev);
+		if (module->config_examine) {
+			claimed = module->config_examine(bdev);
+		}
+	}
+	if (!claimed) {
+		TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, tailq) {
+			if (module->examine) {
+				module->action_in_progress++;
+				module->examine(bdev);
+			}
 		}
 	}
 }

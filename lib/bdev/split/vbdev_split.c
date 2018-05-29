@@ -71,14 +71,15 @@ static void vbdev_split_del_config(struct spdk_vbdev_split_config *cfg);
 
 static int vbdev_split_init(void);
 static void vbdev_split_fini(void);
-static void vbdev_split_examine(struct spdk_bdev *bdev);
+static int vbdev_split_examine(struct spdk_bdev *bdev);
 static int vbdev_split_config_json(struct spdk_json_write_ctx *w);
 
 static struct spdk_bdev_module split_if = {
 	.name = "split",
 	.module_init = vbdev_split_init,
 	.module_fini = vbdev_split_fini,
-	.examine = vbdev_split_examine,
+	.examine = NULL,
+	.config_examine = vbdev_split_examine,
 	.config_json = vbdev_split_config_json,
 };
 
@@ -403,7 +404,7 @@ vbdev_split_fini(void)
 	vbdev_split_clear_config();
 }
 
-static void
+static int
 vbdev_split_examine(struct spdk_bdev *bdev)
 {
 	struct spdk_vbdev_split_config *cfg = vbdev_split_config_find_by_base_name(bdev->name);
@@ -413,10 +414,10 @@ vbdev_split_examine(struct spdk_bdev *bdev)
 
 		if (vbdev_split_create(cfg)) {
 			SPDK_ERRLOG("could not split bdev %s\n", bdev->name);
+			return 1;
 		}
 	}
-
-	spdk_bdev_module_examine_done(&split_if);
+	return 0;
 }
 
 static int
