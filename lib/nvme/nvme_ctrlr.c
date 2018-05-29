@@ -2038,6 +2038,7 @@ spdk_nvme_ctrlr_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 {
 	struct nvme_completion_poll_status	status;
 	int					res;
+	struct spdk_nvme_ns			*ns;
 
 	res = nvme_ctrlr_cmd_attach_ns(ctrlr, nsid, payload,
 				       nvme_completion_poll_cb, &status);
@@ -2049,7 +2050,13 @@ spdk_nvme_ctrlr_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 		return -ENXIO;
 	}
 
-	return spdk_nvme_ctrlr_reset(ctrlr);
+	res = nvme_ctrlr_identify_active_ns(ctrlr);
+	if (res) {
+		return res;
+	}
+
+	ns = &ctrlr->ns[nsid - 1];
+	return nvme_ns_construct(ns, nsid, ctrlr);
 }
 
 int
@@ -2058,6 +2065,7 @@ spdk_nvme_ctrlr_detach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 {
 	struct nvme_completion_poll_status	status;
 	int					res;
+	struct spdk_nvme_ns			*ns;
 
 	res = nvme_ctrlr_cmd_detach_ns(ctrlr, nsid, payload,
 				       nvme_completion_poll_cb, &status);
@@ -2069,7 +2077,16 @@ spdk_nvme_ctrlr_detach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 		return -ENXIO;
 	}
 
-	return spdk_nvme_ctrlr_reset(ctrlr);
+	res = nvme_ctrlr_identify_active_ns(ctrlr);
+	if (res) {
+		return res;
+	}
+
+	ns = &ctrlr->ns[nsid - 1];
+	/* Inactive NS */
+	nvme_ns_destruct(ns);
+
+	return 0;
 }
 
 uint32_t
@@ -2077,6 +2094,8 @@ spdk_nvme_ctrlr_create_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns_dat
 {
 	struct nvme_completion_poll_status	status;
 	int					res;
+	uint32_t				nsid;
+	struct spdk_nvme_ns			*ns;
 
 	res = nvme_ctrlr_cmd_create_ns(ctrlr, payload, nvme_completion_poll_cb, &status);
 	if (res) {
@@ -2087,13 +2106,16 @@ spdk_nvme_ctrlr_create_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns_dat
 		return 0;
 	}
 
-	res = spdk_nvme_ctrlr_reset(ctrlr);
+	nsid = status.cpl.cdw0;
+	ns = &ctrlr->ns[nsid - 1];
+	/* Inactive NS */
+	res = nvme_ns_construct(ns, nsid, ctrlr);
 	if (res) {
 		return 0;
 	}
 
 	/* Return the namespace ID that was created */
-	return status.cpl.cdw0;
+	return nsid;
 }
 
 int
@@ -2101,6 +2123,7 @@ spdk_nvme_ctrlr_delete_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
 	struct nvme_completion_poll_status	status;
 	int					res;
+	struct spdk_nvme_ns			*ns;
 
 	res = nvme_ctrlr_cmd_delete_ns(ctrlr, nsid, nvme_completion_poll_cb, &status);
 	if (res) {
@@ -2111,7 +2134,15 @@ spdk_nvme_ctrlr_delete_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 		return -ENXIO;
 	}
 
-	return spdk_nvme_ctrlr_reset(ctrlr);
+	res = nvme_ctrlr_identify_active_ns(ctrlr);
+	if (res) {
+		return res;
+	}
+
+	ns = &ctrlr->ns[nsid - 1];
+	nvme_ns_destruct(ns);
+
+	return 0;
 }
 
 int
