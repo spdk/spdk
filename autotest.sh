@@ -93,6 +93,7 @@ fi
 timing_enter lib
 
 if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
+	run_test test/bdev/dynamic_memory_allocation/dynamic_memory.sh
 	run_test test/bdev/blockdev.sh
 fi
 
