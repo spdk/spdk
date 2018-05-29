@@ -52,7 +52,7 @@ capture_val(const struct spdk_json_val *val, void *out)
 }
 
 static const struct spdk_json_object_decoder jsonrpc_request_decoders[] = {
-	{"jsonrpc", offsetof(struct jsonrpc_request, version), capture_val},
+	{"jsonrpc", offsetof(struct jsonrpc_request, version), capture_val, true},
 	{"method", offsetof(struct jsonrpc_request, method), capture_val},
 	{"params", offsetof(struct jsonrpc_request, params), capture_val, true},
 	{"id", offsetof(struct jsonrpc_request, id), capture_val, true},
