@@ -51,6 +51,7 @@
 
 struct bdev_iscsi_lun;
 
+#define BDEV_ISCSI_CONNECTION_POLL_US 500
 #define DEFAULT_INITIATOR_NAME "iqn.2016-06.io.spdk:init"
 
 static int bdev_iscsi_initialize(void);
@@ -619,7 +620,7 @@ create_iscsi_disk(const char *bdev_name, const char *url, const char *initiator_
 	iscsi_destroy_url(iscsi_url);
 	TAILQ_INSERT_TAIL(&g_iscsi_conn_req, req, link);
 	if (!g_conn_poller) {
-		g_conn_poller = spdk_poller_register(iscsi_bdev_conn_poll, NULL, 0);
+		g_conn_poller = spdk_poller_register(iscsi_bdev_conn_poll, NULL, BDEV_ISCSI_CONNECTION_POLL_US);
 	}
 
 	return 0;
