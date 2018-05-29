@@ -117,6 +117,23 @@
     },
     {
       "key": {
+        "uuid": "92b02994_083f6b2d",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-29T13:43:20Z",
+      "side": 1,
+      "message": "adding count which is decremented per injection may be easy to use as well as vbdev_error.",
+      "revId": "778db27023a73c8e01a8958bdc591fd325162133",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6fb70386_9bd7ff9f",
         "filename": "lib/nvme/nvme_internal.h",
         "patchSetId": 6
@@ -160,6 +177,75 @@
       "revId": "778db27023a73c8e01a8958bdc591fd325162133",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29cb607a_3506cac6",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 499,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-29T13:43:20Z",
+      "side": 1,
+      "message": "inlining !spdk_nvme_cpl_is_error(cpl) may reduce the cost.",
+      "range": {
+        "startLine": 499,
+        "startChar": 54,
+        "endLine": 499,
+        "endChar": 59
+      },
+      "revId": "778db27023a73c8e01a8958bdc591fd325162133",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5219f17c_f090bd1d",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 572,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-29T13:43:20Z",
+      "side": 1,
+      "message": "add may be better?",
+      "range": {
+        "startLine": 572,
+        "startChar": 16,
+        "endLine": 572,
+        "endChar": 19
+      },
+      "revId": "778db27023a73c8e01a8958bdc591fd325162133",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8e3502a5_046f8afa",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 592,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-29T13:43:20Z",
+      "side": 1,
+      "message": "I want to know why dma_zmalloc is used here.",
+      "range": {
+        "startLine": 592,
+        "startChar": 7,
+        "endLine": 592,
+        "endChar": 23
+      },
+      "revId": "778db27023a73c8e01a8958bdc591fd325162133",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
