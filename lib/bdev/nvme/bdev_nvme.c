@@ -1174,6 +1174,11 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 
 		TAILQ_INSERT_TAIL(&g_nvme_bdevs, bdev, link);
 
+		rc = spdk_nvme_bdev_create_ioctl_sockfd(bdev, nsid);
+		if (rc) {
+			SPDK_ERRLOG("Failed to create blk dev for nvme bdev.\n");
+		}
+
 		bdev_created++;
 	}
 
