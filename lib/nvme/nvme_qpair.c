@@ -32,6 +32,7 @@
  */
 
 #include "nvme_internal.h"
+#include "spdk/nvme_ocssd_spec.h"
 
 static void nvme_qpair_fail(struct spdk_nvme_qpair *qpair);
 
@@ -67,6 +68,7 @@ static const struct nvme_string admin_opcode[] = {
 	{ SPDK_NVME_OPC_SECURITY_SEND, "SECURITY SEND" },
 	{ SPDK_NVME_OPC_SECURITY_RECEIVE, "SECURITY RECEIVE" },
 	{ SPDK_NVME_OPC_SANITIZE, "SANITIZE" },
+	{ SPDK_OCSSD_OPC_GEOMETRY, "ADMIN COMMAND" },
 	{ 0xFFFF, "ADMIN COMMAND" }
 };
 
