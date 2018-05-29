@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eeef1c7a_d978fa1b",
+        "filename": "lib/env_dpdk/env.mk",
+        "patchSetId": 3
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-29T18:02:42Z",
+      "side": 1,
+      "message": "We could add -DALLOW_EXPERIMENTAL_API instead, which seems to be the DPDK-defined way to switch this off (see lib/librte_compat/rte_compat.h), but this is also fine.",
+      "revId": "5d5abcfe70aa41e71e507b4788a07eb124eaaeff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
