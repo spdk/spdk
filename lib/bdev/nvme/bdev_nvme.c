@@ -232,6 +232,7 @@ bdev_nvme_destruct(void *ctx)
 	free(nvme_disk->disk.name);
 	free(nvme_disk);
 	if (nvme_ctrlr->ref == 0) {
+		spdk_nvme_ctrlr_delete_pci_symlink(nvme_ctrlr);
 		spdk_nvme_ctrlr_delete_ioctl_sockfd(nvme_ctrlr);
 		TAILQ_REMOVE(&g_nvme_ctrlrs, nvme_ctrlr, tailq);
 		pthread_mutex_unlock(&g_bdev_nvme_mutex);
@@ -833,6 +834,13 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	spdk_io_device_register(ctrlr, bdev_nvme_create_cb, bdev_nvme_destroy_cb,
 				sizeof(struct nvme_io_channel));
+
+	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
+		rc = spdk_nvme_ctrlr_create_pci_symlink(nvme_ctrlr);
+		if (rc) {
+			SPDK_ERRLOG("Failed to create PCI symlink to NVMe ctrlr\n");
+		}
+	}
 
 	rc = spdk_nvme_ctrlr_create_ioctl_sockfd(nvme_ctrlr);
 	if (rc) {

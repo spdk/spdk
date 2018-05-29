@@ -61,6 +61,8 @@ struct spdk_nvme_ioctl_conn {
 int spdk_nvme_ioctl_init(void);
 void spdk_nvme_ioctl_fini(void);
 
+int spdk_nvme_ctrlr_create_pci_symlink(struct nvme_ctrlr *nvme_ctrlr);
+void spdk_nvme_ctrlr_delete_pci_symlink(struct nvme_ctrlr *nvme_ctrlr);
 int spdk_nvme_ctrlr_create_ioctl_sockfd(struct nvme_ctrlr *nvme_ctrlr);
 void spdk_nvme_ctrlr_delete_ioctl_sockfd(struct nvme_ctrlr *nvme_ctrlr);
 

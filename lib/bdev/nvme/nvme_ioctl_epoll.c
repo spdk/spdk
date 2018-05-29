@@ -301,6 +301,62 @@ spdk_nvme_ctrlr_delete_ioctl_sockfd(struct nvme_ctrlr *nvme_ctrlr)
 	free(socketpath);
 }
 
+/*
+ * Ctrlr id for this NVMe device is returned by _ctrlr_id
+ * Return 0, if created successfully.
+ */
+int
+spdk_nvme_ctrlr_create_pci_symlink(struct nvme_ctrlr *nvme_ctrlr)
+{
+	char *target, *linkpath;
+	int rc;
+
+	/*
+	 * Create PCI accesses symbol link
+	 * ex: in spdk /var/tmp/spdk/pci/nvme0      ---> /sys/bus/pci/devices/0000:05:00.0
+	 *     in kern /sys/class/nvme/nvme0/device ---> /sys/bus/pci/devices/0000:05:00.0
+	 */
+	target = spdk_sprintf_alloc("/sys/bus/pci/devices/%s", nvme_ctrlr->trid.traddr);
+	if (!target) {
+		SPDK_ERRLOG("Failed to allocate memory for target.\n");
+		return -1;
+	}
+
+	linkpath = spdk_sprintf_alloc("%s/%s", SPDK_IOCTL_PCI_DIR, nvme_ctrlr->name);
+	if (!linkpath) {
+		SPDK_ERRLOG("Failed to allocate memory for linkpath.\n");
+		free(target);
+		return -1;
+	}
+
+	unlink(linkpath);
+	rc = symlink(target, linkpath);
+	if (rc) {
+		SPDK_ERRLOG("Failed to create PCI symlink %s to %s, errno is %d\n", linkpath, target, errno);
+	} else {
+		SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Successfully create PCI symlink %s to %s.\n", linkpath, target);
+	}
+
+	free(target);
+	free(linkpath);
+	return rc;
+}
+
+void
+spdk_nvme_ctrlr_delete_pci_symlink(struct nvme_ctrlr *nvme_ctrlr)
+{
+	char  *linkpath;
+
+	linkpath = spdk_sprintf_alloc("%s/%s", SPDK_IOCTL_PCI_DIR, nvme_ctrlr->name);
+	if (!linkpath) {
+		SPDK_ERRLOG("Failed to allocate memory for linkpath.\n");
+		return;
+	}
+
+	unlink(linkpath);
+	free(linkpath);
+}
+
 #else /* Not Linux */
 
 int
@@ -322,6 +378,17 @@ spdk_nvme_ctrlr_create_ioctl_sockfd(struct nvme_ctrlr *nvme_ctrlr)
 
 void
 spdk_nvme_ctrlr_delete_ioctl_sockfd(struct nvme_ctrlr *nvme_ctrlr)
+{
+}
+
+int
+spdk_nvme_ctrlr_create_pci_symlink(struct nvme_ctrlr *nvme_ctrlr)
+{
+	return 0;
+}
+
+void
+spdk_nvme_ctrlr_delete_pci_symlink(struct nvme_ctrlr *nvme_ctrlr)
 {
 }
 
