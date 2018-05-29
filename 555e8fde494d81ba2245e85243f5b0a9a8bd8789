@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1c5f4e71_f2c96467",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-29T07:16:40Z",
+      "side": 1,
+      "message": "Just \"Event handler function\" may be appropriate.",
+      "range": {
+        "startLine": 55,
+        "startChar": 3,
+        "endLine": 55,
+        "endChar": 40
+      },
+      "revId": "555e8fde494d81ba2245e85243f5b0a9a8bd8789",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a6538fc_3fbbda9d",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-29T07:16:40Z",
+      "side": 1,
+      "message": "\"Callback function for customized shutdown handling of application\" ?",
+      "range": {
+        "startLine": 73,
+        "startChar": 3,
+        "endLine": 73,
+        "endChar": 32
+      },
+      "revId": "555e8fde494d81ba2245e85243f5b0a9a8bd8789",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
