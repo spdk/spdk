@@ -103,6 +103,7 @@ timing_enter lib
 if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
 	run_test suite test/bdev/blockdev.sh
 	if [ $(uname -s) = Linux ]; then
+		run_test suite test/bdev/dynamic_memalloc/dynamic_memory.sh
 		run_test suite test/bdev/bdevjson/json_config.sh
 		if modprobe -n nbd; then
 			run_test suite test/bdev/nbdjson/json_config.sh
