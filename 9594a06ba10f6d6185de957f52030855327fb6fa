@@ -16,6 +16,24 @@
       "revId": "9594a06ba10f6d6185de957f52030855327fb6fa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b5826a82_71a1913f",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1846,
+      "author": {
+        "id": 1013097
+      },
+      "writtenOn": "2018-05-29T13:57:05Z",
+      "side": 1,
+      "message": "\u003e How are these events different than the ones provided by \n\u003e rdma_get_cm_event, which we call periodically in \n\u003e spdk_nvmf_rdma_accept()? \n\nThis patch targets QP-related IB events: circular buffer overrun/underrun, request completion issues. We hit them sometimes when we run filesystem benchmarking tests. The common scenario is things break at IB requests handling level but SPDK is unaware of any errors until an initiator reaches i/o timeout and just closes the connection. The issue, however, is on the target side, and the ib/rdma driver can raise it to SPDK application through these async events.\n\n\u003e I also think the right place to poll these events is in \n\u003e spdk_nvmf_rdma_accept().\n\nWill re-approach it, thanks!",
+      "parentUuid": "07321aa7_6b7ad054",
+      "revId": "9594a06ba10f6d6185de957f52030855327fb6fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
