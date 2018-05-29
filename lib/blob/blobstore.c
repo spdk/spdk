@@ -234,7 +234,7 @@ _spdk_blob_mark_clean(struct spdk_blob *blob)
 		assert(blob->active.clusters);
 		clusters = calloc(blob->active.num_clusters, sizeof(*blob->active.clusters));
 		if (!clusters) {
-			return -1;
+			return -ENOMEM;
 		}
 		memcpy(clusters, blob->active.clusters, blob->active.num_clusters * sizeof(*clusters));
 	}
@@ -244,7 +244,7 @@ _spdk_blob_mark_clean(struct spdk_blob *blob)
 		pages = calloc(blob->active.num_pages, sizeof(*blob->active.pages));
 		if (!pages) {
 			free(clusters);
-			return -1;
+			return -ENOMEM;
 		}
 		memcpy(pages, blob->active.pages, blob->active.num_pages * sizeof(*pages));
 	}
@@ -678,7 +678,7 @@ _spdk_blob_serialize_xattrs(const struct spdk_blob *blob,
 				spdk_dma_free(*pages);
 				*pages = NULL;
 				*page_count = 0;
-				return -1;
+				return rc;
 			}
 		}
 
@@ -2667,7 +2667,7 @@ _spdk_bs_load_replay_md_parse_page(const struct spdk_blob_md_page *page, struct 
 					if (cluster_idx != 0) {
 						spdk_bit_array_set(bs->used_clusters, cluster_idx + j);
 						if (bs->num_free_clusters == 0) {
-							return -1;
+							return -ENOSPC;
 						}
 						bs->num_free_clusters--;
 					}
@@ -2675,7 +2675,7 @@ _spdk_bs_load_replay_md_parse_page(const struct spdk_blob_md_page *page, struct 
 				}
 			}
 			if (cluster_count == 0) {
-				return -1;
+				return -EINVAL;
 			}
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_XATTR) {
 			/* Skip this item */
@@ -2685,7 +2685,7 @@ _spdk_bs_load_replay_md_parse_page(const struct spdk_blob_md_page *page, struct 
 			/* Skip this item */
 		} else {
 			/* Error */
-			return -1;
+			return -EINVAL;
 		}
 		/* Advance to the next descriptor */
 		cur_desc += sizeof(*desc) + desc->length;
@@ -2986,6 +2986,7 @@ spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	if (!ctx->super) {
 		free(ctx);
 		_spdk_bs_free(bs);
+		cb_fn(cb_arg, NULL, -ENOMEM);
 		return;
 	}
 
@@ -3125,6 +3126,7 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	if (!ctx->super) {
 		free(ctx);
 		_spdk_bs_free(bs);
+		cb_fn(cb_arg, NULL, -ENOMEM);
 		return;
 	}
 	memcpy(ctx->super->signature, SPDK_BS_SUPER_BLOCK_SIG,
@@ -4795,7 +4797,7 @@ _spdk_blob_set_xattr(struct spdk_blob *blob, const char *name, const void *value
 
 	xattr = calloc(1, sizeof(*xattr));
 	if (!xattr) {
-		return -1;
+		return -ENOMEM;
 	}
 	xattr->name = strdup(name);
 	xattr->value_len = value_len;
