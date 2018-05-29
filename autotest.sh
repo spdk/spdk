@@ -104,6 +104,7 @@ fi
 
 if [ $SPDK_TEST_JSON -eq 1 ]; then
 	run_test suite test/config_converter/test_converter.sh
+	run_test test/bdev/dynamic_memory_allocation/dynamic_memory.sh
 fi
 
 if [ $SPDK_TEST_EVENT -eq 1 ]; then
