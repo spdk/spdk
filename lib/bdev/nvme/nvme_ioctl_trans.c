@@ -31,43 +31,36 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef LIB_BDEV_NVME_IOCTL_H
-#define LIB_BDEV_NVME_IOCTL_H
-
 #include "spdk/stdinc.h"
+#include "spdk/string.h"
+#include "spdk/util.h"
+#include "bdev_nvme.h"
 
-#include "spdk/nvme.h"
+int
+spdk_nvme_ioctl_conn_recv(struct spdk_nvme_ioctl_conn *ioctl_conn)
+{
+	return 0;
+}
 
-struct nvme_ctrlr;
-struct nvme_bdev;
+int
+spdk_nvme_ioctl_conn_xmit(struct spdk_nvme_ioctl_conn *ioctl_conn)
+{
+	return 0;
+}
 
-enum ioctl_conn_type_t {
-	IOCTL_CONN_TYPE_CHAR,
-	IOCTL_CONN_TYPE_BLK,
-};
+#ifdef __linux__
 
-struct spdk_nvme_ioctl_conn {
-	int			connfd;
-	enum ioctl_conn_type_t  type;
-	/*
-	 * nvme_ctrlr or nvme_bdev based on type
-	 */
-	void			*device;
-	void			*epoll_event_dataptr;
+void
+spdk_nvme_ioctl_conn_free(struct spdk_nvme_ioctl_conn *ioctl_conn)
+{
+	free(ioctl_conn);
+}
 
-	TAILQ_ENTRY(spdk_nvme_ioctl_conn) conn_tailq;
-};
+#else
 
-int spdk_nvme_ioctl_init(void);
-void spdk_nvme_ioctl_fini(void);
+void
+spdk_nvme_ioctl_conn_free(struct spdk_nvme_ioctl_conn *ioctl_conn)
+{
+}
 
-int spdk_nvme_ctrlr_create_pci_symlink(struct nvme_ctrlr *nvme_ctrlr);
-void spdk_nvme_ctrlr_delete_pci_symlink(struct nvme_ctrlr *nvme_ctrlr);
-int spdk_nvme_ctrlr_create_ioctl_sockfd(struct nvme_ctrlr *nvme_ctrlr);
-void spdk_nvme_ctrlr_delete_ioctl_sockfd(struct nvme_ctrlr *nvme_ctrlr);
-
-int spdk_nvme_ioctl_conn_recv(struct spdk_nvme_ioctl_conn *ioctl_conn);
-int spdk_nvme_ioctl_conn_xmit(struct spdk_nvme_ioctl_conn *ioctl_conn);
-void spdk_nvme_ioctl_conn_free(struct spdk_nvme_ioctl_conn *ioctl_conn);
-
-#endif /* LIB_BDEV_NVME_IOCTL_H */
+#endif

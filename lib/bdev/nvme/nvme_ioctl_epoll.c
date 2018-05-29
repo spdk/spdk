@@ -152,7 +152,104 @@ spdk_nvme_ioctl_fini(void)
 static int
 nvme_ioctl_epoll_delete_conn(struct spdk_nvme_ioctl_conn *ioctl_conn)
 {
+	struct epoll_event event;
+	int rc;
+	struct nvme_ctrlr *nvme_ctrlr;
+
+	/*
+	 * The event parameter is ignored but needs to be non-NULL to work around a bug in old
+	 * kernel versions.
+	 */
+	rc = epoll_ctl(g_ioctl_epoll_fd, EPOLL_CTL_DEL, ioctl_conn->connfd, &event);
+	if (rc) {
+		SPDK_ERRLOG("Failed to close an ioctl connection, errno %d: %s\n", errno, spdk_strerror(errno));
+	}
+	/* release ioctl_data allocated in nvme_ioctl_epoll_add_XXX_conn */
+	free(ioctl_conn->epoll_event_dataptr);
+
+	close(ioctl_conn->connfd);
+	if (ioctl_conn->type == IOCTL_CONN_TYPE_CHAR) {
+		nvme_ctrlr = (struct nvme_ctrlr *)ioctl_conn->device;
+		TAILQ_REMOVE(&nvme_ctrlr->conn_list, ioctl_conn, conn_tailq);
+	} else {
+		// TODO add blk type
+	}
+
+	spdk_nvme_ioctl_conn_free(ioctl_conn);
+
 	return 0;
+}
+
+static void
+nvme_ioctl_epoll_conn_event(uint32_t epoll_event, void *dev_ptr)
+{
+	struct spdk_nvme_ioctl_conn *ioctl_conn;
+	int ret = 0;
+
+	ioctl_conn = (struct spdk_nvme_ioctl_conn *)dev_ptr;
+
+	if ((epoll_event & EPOLLERR) || (epoll_event & EPOLLHUP)) {
+		nvme_ioctl_epoll_delete_conn(ioctl_conn);
+		goto exit;
+	}
+
+	if (epoll_event & EPOLLIN) {
+		ret = spdk_nvme_ioctl_conn_recv(ioctl_conn);
+		if (ret) {
+			SPDK_NOTICELOG("Failed to receive ioctl sock data\n");
+			nvme_ioctl_epoll_delete_conn(ioctl_conn);
+			goto exit;
+		}
+	}
+	if (epoll_event & EPOLLOUT) {
+		ret = spdk_nvme_ioctl_conn_xmit(ioctl_conn);
+		if (ret) {
+			SPDK_NOTICELOG("Failed to xmit ioctl sock data\n");
+			nvme_ioctl_epoll_delete_conn(ioctl_conn);
+			goto exit;
+		}
+	}
+
+exit:
+	return;
+}
+
+static int
+nvme_ioctl_epoll_add_char_conn(struct nvme_ctrlr *ctrlr, int connfd)
+{
+	struct epoll_event event;
+	int rc;
+	struct spdk_nvme_ioctl_event_data *ioctl_data;
+	struct spdk_nvme_ioctl_conn *ioctl_conn;
+
+	ioctl_conn = calloc(1, sizeof(*ioctl_conn));
+	if (!ioctl_conn) {
+		SPDK_ERRLOG("Failed to allocate memory for ioctl_conn.\n");
+		return -1;
+	}
+
+	ioctl_data = malloc(sizeof(*ioctl_data));
+	if (!ioctl_data) {
+		SPDK_ERRLOG("Failed to allocate memory for ioctl_data.\n");
+		free(ioctl_conn);
+		return -1;
+	}
+
+	ioctl_conn->connfd = connfd;
+	ioctl_conn->device = (void *)ctrlr;
+	ioctl_conn->type = IOCTL_CONN_TYPE_CHAR;
+	TAILQ_INSERT_TAIL(&ctrlr->conn_list, ioctl_conn, conn_tailq);
+
+	ioctl_data->func = nvme_ioctl_epoll_conn_event;
+	ioctl_data->dev_ptr = ioctl_conn;
+	ioctl_conn->epoll_event_dataptr = ioctl_data;
+
+	event.events = EPOLLIN | EPOLLOUT | EPOLLET;
+	event.data.ptr = ioctl_data;
+
+	rc = epoll_ctl(g_ioctl_epoll_fd, EPOLL_CTL_ADD, connfd, &event);
+
+	return rc;
 }
 
 static void
@@ -160,6 +257,7 @@ nvme_ioctl_epoll_char_listen_event(uint32_t epoll_event, void *dev_ptr)
 {
 	int listenfd, connfd;
 	struct nvme_ctrlr *ctrlr;
+	int rc;
 
 	ctrlr = (struct nvme_ctrlr *) dev_ptr;
 
@@ -167,8 +265,12 @@ nvme_ioctl_epoll_char_listen_event(uint32_t epoll_event, void *dev_ptr)
 	connfd = accept(listenfd, NULL, NULL);
 	if (connfd > 0) {
 		SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "%s accepts an ioctl connection.\n", ctrlr->name);
-		// TODO add connection process later
-		close(connfd);
+		fcntl(connfd, F_SETFL, O_NONBLOCK);
+		rc = nvme_ioctl_epoll_add_char_conn(ctrlr, connfd);
+		if (rc) {
+			SPDK_NOTICELOG("Failed to add conn fd into epoll\n");
+			close(connfd);
+		}
 	} else {
 		SPDK_ERRLOG("%s failed to accept an ioctl connection, errno is %d.\n", ctrlr->name, errno);
 	}
