@@ -960,6 +960,12 @@ bdev_nvme_library_init(void)
 		goto end;
 	}
 
+	rc = spdk_nvme_ioctl_init();
+	if (rc) {
+		rc = -1;
+		goto end;
+	}
+
 	if ((retry_count = spdk_conf_section_get_intval(sp, "RetryCount")) < 0) {
 		if ((retry_count = spdk_conf_section_get_intval(sp, "NvmeRetryCount")) < 0) {
 			retry_count = SPDK_NVME_DEFAULT_RETRY_COUNT;
@@ -1080,6 +1086,8 @@ bdev_nvme_library_fini(void)
 	if (g_nvme_hotplug_enabled) {
 		spdk_poller_unregister(&g_hotplug_poller);
 	}
+
+	spdk_nvme_ioctl_fini();
 }
 
 static int

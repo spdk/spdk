@@ -31,47 +31,10 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPDK_BDEV_NVME_H
-#define SPDK_BDEV_NVME_H
+#ifndef LIB_BDEV_NVME_IOCTL_H
+#define LIB_BDEV_NVME_IOCTL_H
 
-#include "spdk/stdinc.h"
+int spdk_nvme_ioctl_init(void);
+void spdk_nvme_ioctl_fini(void);
 
-#include "spdk/queue.h"
-#include "spdk/nvme.h"
-#include "spdk/bdev_module.h"
-
-#include "nvme_ioctl.h"
-
-#define NVME_MAX_CONTROLLERS 1024
-
-struct nvme_ctrlr {
-	/**
-	 * points to pinned, physically contiguous memory region;
-	 * contains 4KB IDENTIFY structure for controller which is
-	 *  target for CONTROLLER IDENTIFY command during initialization
-	 */
-	struct spdk_nvme_ctrlr		*ctrlr;
-	struct spdk_nvme_transport_id	trid;
-	char				*name;
-	int				ref;
-
-	struct spdk_poller		*adminq_timer_poller;
-
-	/** linked list pointer for device list */
-	TAILQ_ENTRY(nvme_ctrlr)	tailq;
-};
-
-struct nvme_bdev {
-	struct spdk_bdev	disk;
-	struct nvme_ctrlr	*nvme_ctrlr;
-	struct spdk_nvme_ns	*ns;
-
-	TAILQ_ENTRY(nvme_bdev)	link;
-};
-
-int spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
-			  const char *base_name,
-			  const char **names, size_t *count);
-struct spdk_nvme_ctrlr *spdk_bdev_nvme_get_ctrlr(struct spdk_bdev *bdev);
-
-#endif // SPDK_BDEV_NVME_H
+#endif /* LIB_BDEV_NVME_IOCTL_H */
