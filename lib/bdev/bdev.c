@@ -2667,6 +2667,8 @@ _spdk_bdev_qos_config(struct spdk_bdev *bdev)
 static int
 spdk_bdev_init(struct spdk_bdev *bdev)
 {
+	struct spdk_bdev_module *module;
+
 	assert(bdev->module != NULL);
 
 	if (!bdev->name) {
@@ -2688,6 +2690,14 @@ spdk_bdev_init(struct spdk_bdev *bdev)
 	bdev->reset_in_progress = NULL;
 
 	_spdk_bdev_qos_config(bdev);
+
+	/* Examine configuration before initializing I/O */
+	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, tailq) {
+		if (module->examine_config) {
+			module->action_in_progress++;
+			module->examine_config(bdev);
+		}
+	}
 
 	spdk_io_device_register(__bdev_to_io_dev(bdev),
 				spdk_bdev_channel_create, spdk_bdev_channel_destroy,
@@ -2737,10 +2747,12 @@ spdk_bdev_start(struct spdk_bdev *bdev)
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Inserting bdev %s into list\n", bdev->name);
 	TAILQ_INSERT_TAIL(&g_bdev_mgr.bdevs, bdev, link);
 
-	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, tailq) {
-		if (module->examine) {
-			module->action_in_progress++;
-			module->examine(bdev);
+	if (!bdev->claim_module) {
+		TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, tailq) {
+			if (module->examine_disk) {
+				module->action_in_progress++;
+				module->examine_disk(bdev);
+			}
 		}
 	}
 }
@@ -3095,7 +3107,7 @@ spdk_bdev_module_list_add(struct spdk_bdev_module *bdev_module)
 	 *  ready to handle examine callbacks from later modules that will
 	 *  register physical bdevs.
 	 */
-	if (bdev_module->examine != NULL) {
+	if (bdev_module->examine_config != NULL || bdev_module->examine_disk != NULL) {
 		TAILQ_INSERT_HEAD(&g_bdev_mgr.bdev_modules, bdev_module, tailq);
 	} else {
 		TAILQ_INSERT_TAIL(&g_bdev_mgr.bdev_modules, bdev_module, tailq);
