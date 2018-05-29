@@ -55,6 +55,11 @@ struct nvme_ctrlr {
 	char				*name;
 	int				ref;
 
+	/* ioctl listen fd */
+	int				sockfd;
+	void				*epoll_event_dataptr;
+	TAILQ_HEAD(, spdk_nvme_ioctl_conn)	conn_list;
+
 	struct spdk_poller		*adminq_timer_poller;
 
 	/** linked list pointer for device list */
