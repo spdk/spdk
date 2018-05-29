@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bca0cdaf_4bee0a7a",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 418,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-29T08:59:53Z",
+      "side": 1,
+      "message": "It looks that you can use spdk_dma_free() without checking NULL as same as free().",
+      "range": {
+        "startLine": 418,
+        "startChar": 1,
+        "endLine": 418,
+        "endChar": 22
+      },
+      "revId": "73d15c4de833e0152cf1b060ca84d3988ff67f82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
