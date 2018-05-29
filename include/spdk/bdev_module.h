@@ -99,11 +99,19 @@ struct spdk_bdev_module {
 	int (*get_ctx_size)(void);
 
 	/**
-	 * Notification that a bdev should be examined by a virtual bdev module.
+	 * First notification that a bdev should be examined by a virtual bdev module.
 	 * Virtual bdev modules may use this to examine newly-added bdevs and automatically
-	 * create their own vbdevs.
+	 * create their own vbdevs, but no I/O to device can be send to bdev at this point.
+	 * Only vbdevs based on config files can be created here.
 	 */
-	void (*examine)(struct spdk_bdev *bdev);
+	void (*examine_config)(struct spdk_bdev *bdev);
+
+	/**
+	 * Second notification that a bdev should be examined by a virtual bdev module.
+	 * Virtual bdev modules may use this to examine newly-added bdevs and automatically
+	 * create their own vbdevs. This callback may use I/O operations end finish asynchronously.
+	 */
+	void (*examine_disk)(struct spdk_bdev *bdev);
 
 	/**
 	 * Count of bdev inits/examinations in progress. Used by generic bdev
