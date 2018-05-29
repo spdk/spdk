@@ -1277,6 +1277,7 @@ _spdk_blob_persist_start(struct spdk_blob_persist_ctx *ctx)
 	struct spdk_blob_store *bs = blob->bs;
 	uint64_t i;
 	uint32_t page_num;
+	void *tmp;
 	int rc;
 
 	if (blob->active.num_pages == 0) {
@@ -1300,12 +1301,12 @@ _spdk_blob_persist_start(struct spdk_blob_persist_ctx *ctx)
 	assert(blob->active.num_pages >= 1);
 
 	/* Resize the cache of page indices */
-	blob->active.pages = realloc(blob->active.pages,
-				     blob->active.num_pages * sizeof(*blob->active.pages));
-	if (!blob->active.pages) {
+	tmp = realloc(blob->active.pages, blob->active.num_pages * sizeof(*blob->active.pages));
+	if (!tmp) {
 		_spdk_blob_persist_complete(seq, ctx, -ENOMEM);
 		return;
 	}
+	blob->active.pages = tmp;
 
 	/* Assign this metadata to pages. This requires two passes -
 	 * one to verify that there are enough pages and a second
