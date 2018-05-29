@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c82dfb0d_821b5a27",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-05-29T23:01:28Z",
+      "side": 1,
+      "message": "Could we put \n\nif(req-\u003ecreate_cb) {\n    req-\u003ecreate_cb();\n}\nin this function, then you do not need to do this every time in other function. And you can still keep bdev_iscsi_remove_conn_req function.",
+      "range": {
+        "startLine": 105,
+        "startChar": 0,
+        "endLine": 109,
+        "endChar": 1
+      },
+      "revId": "d484814ed1f94abb902ff52712740ba8a3dda8f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15f43e41_e47528e0",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 521,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-05-29T23:01:28Z",
+      "side": 1,
+      "message": "Also here.",
+      "range": {
+        "startLine": 521,
+        "startChar": 1,
+        "endLine": 521,
+        "endChar": 18
+      },
+      "revId": "d484814ed1f94abb902ff52712740ba8a3dda8f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "838d9259_9981a60b",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 545,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-05-29T23:01:28Z",
+      "side": 1,
+      "message": "could we add a if case to judge create_cb?",
+      "range": {
+        "startLine": 545,
+        "startChar": 1,
+        "endLine": 545,
+        "endChar": 18
+      },
+      "revId": "d484814ed1f94abb902ff52712740ba8a3dda8f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6fd9b531_b52d6eac",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 577,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-05-29T23:01:28Z",
+      "side": 1,
+      "message": "could this be removed?",
+      "range": {
+        "startLine": 574,
+        "startChar": 0,
+        "endLine": 577,
+        "endChar": 1
+      },
+      "revId": "d484814ed1f94abb902ff52712740ba8a3dda8f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f385d17_14a15626",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 607,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-05-29T23:01:28Z",
+      "side": 1,
+      "message": "Could this be changed?",
+      "range": {
+        "startLine": 607,
+        "startChar": 1,
+        "endLine": 607,
+        "endChar": 61
+      },
+      "revId": "d484814ed1f94abb902ff52712740ba8a3dda8f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
