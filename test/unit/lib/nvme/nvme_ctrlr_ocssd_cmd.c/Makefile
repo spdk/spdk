@@ -31,11 +31,8 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
-include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 
-C_SRCS = nvme_ctrlr_cmd.c nvme_ctrlr.c nvme_ns_cmd.c nvme_ns.c nvme_pcie.c nvme_qpair.c nvme.c nvme_quirks.c nvme_transport.c nvme_uevent.c nvme_ctrlr_ocssd_cmd.c
-C_SRCS-$(CONFIG_RDMA) += nvme_rdma.c
-LIBNAME = nvme
+TEST_FILE = nvme_ctrlr_ocssd_cmd_ut.c
 
-include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
