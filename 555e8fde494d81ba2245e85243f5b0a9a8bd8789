@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "392c91ed_552c5e92",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-05-29T09:22:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1c5f4e71_f2c96467",
+      "range": {
+        "startLine": 55,
+        "startChar": 3,
+        "endLine": 55,
+        "endChar": 40
+      },
+      "revId": "555e8fde494d81ba2245e85243f5b0a9a8bd8789",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0a6538fc_3fbbda9d",
         "filename": "include/spdk/event.h",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2018-05-29T07:16:40Z",
       "side": 1,
       "message": "\"Callback function for customized shutdown handling of application\" ?",
+      "range": {
+        "startLine": 73,
+        "startChar": 3,
+        "endLine": 73,
+        "endChar": 32
+      },
+      "revId": "555e8fde494d81ba2245e85243f5b0a9a8bd8789",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6818ba78_58ca7625",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-05-29T09:22:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0a6538fc_3fbbda9d",
       "range": {
         "startLine": 73,
         "startChar": 3,
