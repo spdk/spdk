@@ -911,13 +911,18 @@ static void
 spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_bdev *bdev = bdev_io->bdev;
+	struct spdk_thread *thread = spdk_io_channel_get_thread(bdev_io->ch->channel);
 
 	assert(bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING);
 
 	if (bdev_io->ch->flags & BDEV_CH_QOS_ENABLED) {
-		bdev_io->io_submit_ch = bdev_io->ch;
-		bdev_io->ch = bdev->qos->ch;
-		spdk_thread_send_msg(bdev->qos->thread, _spdk_bdev_io_submit, bdev_io);
+		if (thread == bdev->qos->thread) {
+			_spdk_bdev_io_submit(bdev_io);
+		} else {
+			bdev_io->io_submit_ch = bdev_io->ch;
+			bdev_io->ch = bdev->qos->ch;
+			spdk_thread_send_msg(bdev->qos->thread, _spdk_bdev_io_submit, bdev_io);
+		}
 	} else {
 		_spdk_bdev_io_submit(bdev_io);
 	}
