@@ -49,6 +49,9 @@
 #define IOCTL_REQ_MAGIC		0x58444F4E
 #define IOCTL_RESP_MAGIC	0x58464549
 
+/* nvme ioctl uses 'N' as its ioctl magic character */
+#define NVME_IOCTL_MAGIC 'N'
+
 struct nvme_ctrlr;
 struct nvme_bdev;
 
@@ -137,6 +140,11 @@ int spdk_nvme_ioctl_conn_recv(struct spdk_nvme_ioctl_conn *ioctl_conn);
 int spdk_nvme_ioctl_conn_xmit(struct spdk_nvme_ioctl_conn *ioctl_conn);
 void spdk_nvme_ioctl_conn_free(struct spdk_nvme_ioctl_conn *ioctl_conn);
 
+int nvme_ioctl_cmd_recv_check(struct spdk_nvme_ioctl_req *req,
+			      enum ioctl_conn_state_t *_conn_state);
+int nvme_ioctl_cmdbuf_recv_check(struct spdk_nvme_ioctl_req *req,
+				 enum ioctl_conn_state_t *_conn_state,
+				 struct spdk_nvme_ioctl_conn *ioctl_conn);
 int spdk_nvme_ioctl_proc(struct spdk_nvme_ioctl_conn *ioctl_conn);
 
 #endif /* LIB_BDEV_NVME_IOCTL_H */
