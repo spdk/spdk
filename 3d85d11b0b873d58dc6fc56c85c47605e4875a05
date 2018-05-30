@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "81d053c8_eee033a7",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-30T00:03:20Z",
+      "side": 1,
+      "message": "This looks better to me thread-safety-wise, but now I\u0027m wondering if we can possibly freeze more than once simultaneously.  Maybe this should be a counter rather than just a true/false value to allow overlapping freezes?  (This could be unnecessary for some reason that I\u0027m missing, just wondering what the rules should be.)",
+      "revId": "3d85d11b0b873d58dc6fc56c85c47605e4875a05",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
