@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7d3df620_2025bea0",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-30T23:30:17Z",
+      "side": 1,
+      "message": "I have not seen this format in SPDK yet.\n\nChanging to \n\ntypedef void (*spdk_sighandler_t)(int signal);\n\\param signal Signal number.\n\nis allowed?",
+      "revId": "a9b9dea9ed753c4e7a054d79a6e8e7784cc181f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
