@@ -22,6 +22,30 @@
       "revId": "73d15c4de833e0152cf1b060ca84d3988ff67f82",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0cbc414c_51f62f41",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 418,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-05-30T02:06:20Z",
+      "side": 1,
+      "message": "Thanks Shuhei, no need for NULL check.",
+      "parentUuid": "bca0cdaf_4bee0a7a",
+      "range": {
+        "startLine": 418,
+        "startChar": 1,
+        "endLine": 418,
+        "endChar": 22
+      },
+      "revId": "73d15c4de833e0152cf1b060ca84d3988ff67f82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
