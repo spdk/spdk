@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c88370e8_ae97a038",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 495,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-30T17:19:05Z",
+      "side": 1,
+      "message": "Comment from last review wasn\u0027t addressed here.",
+      "revId": "8fd57b8f8a9beeed0e8b8ffe265a60ea6847d225",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7e203f6c_70a82557",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 536,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-30T17:19:05Z",
+      "side": 1,
+      "message": "This still seems unrelated.",
+      "revId": "8fd57b8f8a9beeed0e8b8ffe265a60ea6847d225",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cbc91bfe_8ada1151",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 598,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-30T17:19:05Z",
+      "side": 1,
+      "message": "I\u0027m curious - why do we need to defer freeing of the req like this?",
+      "revId": "8fd57b8f8a9beeed0e8b8ffe265a60ea6847d225",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
