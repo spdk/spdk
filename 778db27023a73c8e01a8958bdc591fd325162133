@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "15f7c6d8_673316f5",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 1568,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-05-30T02:16:24Z",
+      "side": 1,
+      "message": "Yes",
+      "parentUuid": "6f170f94_f7a4fc82",
+      "range": {
+        "startLine": 1568,
+        "startChar": 16,
+        "endLine": 1568,
+        "endChar": 37
+      },
+      "revId": "778db27023a73c8e01a8958bdc591fd325162133",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3ea25432_c4a962e8",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 6
@@ -117,6 +141,30 @@
     },
     {
       "key": {
+        "uuid": "1e5f0ab1_35546c36",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 1579,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-05-30T02:16:24Z",
+      "side": 1,
+      "message": "sounds good, will reword the description.",
+      "parentUuid": "1305e94d_45459107",
+      "range": {
+        "startLine": 1578,
+        "startChar": 46,
+        "endLine": 1579,
+        "endChar": 19
+      },
+      "revId": "778db27023a73c8e01a8958bdc591fd325162133",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "92b02994_083f6b2d",
         "filename": "lib/nvme/nvme_internal.h",
         "patchSetId": 6
@@ -134,6 +182,24 @@
     },
     {
       "key": {
+        "uuid": "00d45c16_bab36e2d",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-05-30T02:16:24Z",
+      "side": 1,
+      "message": "Nice idea.",
+      "parentUuid": "92b02994_083f6b2d",
+      "revId": "778db27023a73c8e01a8958bdc591fd325162133",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6fb70386_9bd7ff9f",
         "filename": "lib/nvme/nvme_internal.h",
         "patchSetId": 6
@@ -145,6 +211,30 @@
       "writtenOn": "2018-05-29T09:35:15Z",
       "side": 1,
       "message": "error_on_submission may be clearer?",
+      "range": {
+        "startLine": 164,
+        "startChar": 9,
+        "endLine": 164,
+        "endChar": 24
+      },
+      "revId": "778db27023a73c8e01a8958bdc591fd325162133",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d9426c7_ab977649",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-05-30T02:16:24Z",
+      "side": 1,
+      "message": "Maybe, I don\u0027t know. :).",
+      "parentUuid": "6fb70386_9bd7ff9f",
       "range": {
         "startLine": 164,
         "startChar": 9,
@@ -180,6 +270,30 @@
     },
     {
       "key": {
+        "uuid": "c541ce0c_4955f495",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 268,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-05-30T02:16:24Z",
+      "side": 1,
+      "message": "The current version only match the opcode.",
+      "parentUuid": "d68e7cd4_afc4812d",
+      "range": {
+        "startLine": 268,
+        "startChar": 5,
+        "endLine": 268,
+        "endChar": 33
+      },
+      "revId": "778db27023a73c8e01a8958bdc591fd325162133",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "29cb607a_3506cac6",
         "filename": "lib/nvme/nvme_qpair.c",
         "patchSetId": 6
@@ -191,6 +305,30 @@
       "writtenOn": "2018-05-29T13:43:20Z",
       "side": 1,
       "message": "inlining !spdk_nvme_cpl_is_error(cpl) may reduce the cost.",
+      "range": {
+        "startLine": 499,
+        "startChar": 54,
+        "endLine": 499,
+        "endChar": 59
+      },
+      "revId": "778db27023a73c8e01a8958bdc591fd325162133",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1d0faf58_c08da58f",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 499,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-05-30T02:16:24Z",
+      "side": 1,
+      "message": "sounds good.",
+      "parentUuid": "29cb607a_3506cac6",
       "range": {
         "startLine": 499,
         "startChar": 54,
@@ -226,6 +364,30 @@
     },
     {
       "key": {
+        "uuid": "358678bd_2d7ec43a",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 572,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-05-30T02:16:24Z",
+      "side": 1,
+      "message": "yeah, add/remove makes more sense.",
+      "parentUuid": "5219f17c_f090bd1d",
+      "range": {
+        "startLine": 572,
+        "startChar": 16,
+        "endLine": 572,
+        "endChar": 19
+      },
+      "revId": "778db27023a73c8e01a8958bdc591fd325162133",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8e3502a5_046f8afa",
         "filename": "lib/nvme/nvme_qpair.c",
         "patchSetId": 6
@@ -237,6 +399,30 @@
       "writtenOn": "2018-05-29T13:43:20Z",
       "side": 1,
       "message": "I want to know why dma_zmalloc is used here.",
+      "range": {
+        "startLine": 592,
+        "startChar": 7,
+        "endLine": 592,
+        "endChar": 23
+      },
+      "revId": "778db27023a73c8e01a8958bdc591fd325162133",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "33ee5608_3d48665f",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 592,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-05-30T02:16:24Z",
+      "side": 1,
+      "message": "No special meaning here, the structure always set the right value later.",
+      "parentUuid": "8e3502a5_046f8afa",
       "range": {
         "startLine": 592,
         "startChar": 7,
