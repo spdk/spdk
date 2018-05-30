@@ -137,4 +137,6 @@ int spdk_nvme_ioctl_conn_recv(struct spdk_nvme_ioctl_conn *ioctl_conn);
 int spdk_nvme_ioctl_conn_xmit(struct spdk_nvme_ioctl_conn *ioctl_conn);
 void spdk_nvme_ioctl_conn_free(struct spdk_nvme_ioctl_conn *ioctl_conn);
 
+int spdk_nvme_ioctl_proc(struct spdk_nvme_ioctl_conn *ioctl_conn);
+
 #endif /* LIB_BDEV_NVME_IOCTL_H */
