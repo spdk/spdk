@@ -319,7 +319,16 @@ spdk_nvme_ioctl_conn_xmit(struct spdk_nvme_ioctl_conn *ioctl_conn)
 static void
 spdk_nvme_ioctl_io_free(struct spdk_nvme_ioctl_conn *ioctl_conn)
 {
-	// TODO: free and reset each pointer element in req/resp
+	struct spdk_nvme_ioctl_resp *resp = &ioctl_conn->resp;
+	struct spdk_nvme_ioctl_req *req = &ioctl_conn->req;
+
+	free(resp->cmd_buf);
+	spdk_dma_free(resp->data);
+	spdk_dma_free(resp->metadata);
+
+	/* clear elements in req and resp */
+	memset(req, 0, sizeof(*req));
+	memset(resp, 0, sizeof(*resp));
 }
 
 void

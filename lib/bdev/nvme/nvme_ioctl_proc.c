@@ -287,10 +287,51 @@ nvme_ioctl_cmdbuf_xmit_check(struct spdk_nvme_ioctl_resp *resp,
 	return 0;
 }
 
+static void
+nvme_ioctl_resp_get_lens(struct spdk_nvme_ioctl_resp *resp, struct spdk_nvme_ioctl_req *req)
+{
+	resp->total_len += IOCTL_HEAD_SIZE + sizeof(int);
+
+	resp->cmd_len = req->cmd_len;
+	enum spdk_nvme_data_transfer xfer = spdk_nvme_cmd_get_data_transfer(resp->ioctl_cmd, resp->cmd_buf);
+	if (xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST || xfer == SPDK_NVME_DATA_BIDIRECTIONAL) {
+		/* xmit data and metadata */
+		resp->data_len = req->data_len;
+		resp->md_len = req->md_len;
+	}
+
+	resp->total_len += resp->cmd_len + resp->data_len + resp->md_len;
+	return;
+}
+
+static void
+nvme_ioctl_construct_resp(struct spdk_nvme_ioctl_conn *ioctl_conn)
+{
+	struct spdk_nvme_ioctl_req *req;
+	struct spdk_nvme_ioctl_resp *resp;
+
+	resp = &ioctl_conn->resp;
+	req = &ioctl_conn->req;
+
+	/* Assign allocated resources from request to response */
+	resp->ioctl_cmd = req->ioctl_cmd;
+	resp->cmd_buf = req->cmd_buf;
+	resp->data = req->data;
+	resp->metadata = req->metadata;
+
+	resp->handle = req->handle;
+	resp->resp_magic = IOCTL_RESP_MAGIC;
+	nvme_ioctl_resp_get_lens(resp, req);
+}
+
 int
 spdk_nvme_ioctl_proc(struct spdk_nvme_ioctl_conn *ioctl_conn)
 {
 	int ret = 0;
+
+	// temp proc: copy req to resp
+	nvme_ioctl_construct_resp(ioctl_conn);
+	ioctl_conn->resp.ioctl_ret = -1;
 
 	ioctl_conn->state = IOCTL_CONN_STATE_XMIT_HEAD;
 	ret = spdk_nvme_ioctl_conn_xmit(ioctl_conn);
