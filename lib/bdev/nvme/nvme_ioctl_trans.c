@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
+#include "spdk_internal/log.h"
 #include "bdev_nvme.h"
 
 #ifdef __linux__
@@ -99,7 +100,20 @@ spdk_nvme_ioctl_recv_internal(struct spdk_nvme_ioctl_conn *ioctl_conn)
 		if (ioctl_conn->offset == IOCTL_HEAD_SIZE) {
 			ioctl_conn->offset = 0;
 
-			ioctl_conn->state = IOCTL_CONN_STATE_RECV_CMD;
+			if (req->req_magic != IOCTL_REQ_MAGIC) {
+				SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Bad request magic 0x%x (0x%x is required).\n",
+					      req->req_magic, IOCTL_REQ_MAGIC);
+				return -EINVAL;
+			}
+
+			ret = nvme_ioctl_cmd_recv_check(req, &ioctl_conn->state);
+			if (ret < 0) {
+				return ret;
+			}
+			if (ioctl_conn->state == IOCTL_CONN_STATE_PROC) {
+				ret = spdk_nvme_ioctl_proc(ioctl_conn);
+				return ret;
+			}
 		}
 	}
 
@@ -115,7 +129,14 @@ spdk_nvme_ioctl_recv_internal(struct spdk_nvme_ioctl_conn *ioctl_conn)
 		if (ioctl_conn->offset == req->cmd_len) {
 			ioctl_conn->offset = 0;
 
-			ioctl_conn->state = IOCTL_CONN_STATE_RECV_DATA;
+			ret = nvme_ioctl_cmdbuf_recv_check(req, &ioctl_conn->state, ioctl_conn);
+			if (ret < 0) {
+				return ret;
+			}
+			if (ioctl_conn->state == IOCTL_CONN_STATE_PROC) {
+				ret = spdk_nvme_ioctl_proc(ioctl_conn);
+				return ret;
+			}
 		}
 	}
 
@@ -131,7 +152,13 @@ spdk_nvme_ioctl_recv_internal(struct spdk_nvme_ioctl_conn *ioctl_conn)
 		if (ioctl_conn->offset == req->data_len) {
 			ioctl_conn->offset = 0;
 
-			ioctl_conn->state = IOCTL_CONN_STATE_RECV_METADATA;
+			if (req->md_len) {
+				ioctl_conn->state = IOCTL_CONN_STATE_RECV_METADATA;
+			} else {
+				ioctl_conn->state = IOCTL_CONN_STATE_PROC;
+				ret = spdk_nvme_ioctl_proc(ioctl_conn);
+				return ret;
+			}
 		}
 	}
 
