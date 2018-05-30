@@ -85,6 +85,10 @@ def clear_bdev_subsystem(args, bdev_config):
             args.client.call(destroy_method, {bdev_name_key: bdev_name})
 
 
+def clear_nvmf_subsystem(args, nvmf_config):
+    pass
+
+
 def clear_scsi_subsystem(args, scsi_config):
     pass
 
