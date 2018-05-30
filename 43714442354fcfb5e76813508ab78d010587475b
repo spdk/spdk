@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "4896cf6e_d7299623",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1082,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-05-30T08:03:22Z",
+      "side": 1,
+      "message": "At this moment, the specified ns-\u003eid may still be 0, API is not applied for this case, ns-\u003eid is valid after nvme_ns_construct function.",
+      "parentUuid": "c884ed39_2542225f",
+      "range": {
+        "startLine": 1082,
+        "startChar": 6,
+        "endLine": 1082,
+        "endChar": 25
+      },
+      "revId": "43714442354fcfb5e76813508ab78d010587475b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5c6eeb6c_6ea5f697",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 2
