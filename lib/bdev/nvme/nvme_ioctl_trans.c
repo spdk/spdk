@@ -218,7 +218,14 @@ spdk_nvme_ioctl_xmit_internal(struct spdk_nvme_ioctl_conn *ioctl_conn)
 		if (ioctl_conn->offset == sizeof(resp->ioctl_ret)) {
 			ioctl_conn->offset = 0;
 
-			ioctl_conn->state = IOCTL_CONN_STATE_XMIT_CMD;
+			ret = nvme_ioctl_cmd_xmit_check(resp, &ioctl_conn->state);
+			if (ret < 0) {
+				return ret;
+			}
+			if (ioctl_conn->state == IOCTL_CONN_STATE_RECV_HEAD) {
+				spdk_nvme_ioctl_io_free(ioctl_conn);
+				return 0;
+			}
 		}
 	}
 
@@ -233,7 +240,14 @@ spdk_nvme_ioctl_xmit_internal(struct spdk_nvme_ioctl_conn *ioctl_conn)
 		if (ioctl_conn->offset == resp->cmd_len) {
 			ioctl_conn->offset = 0;
 
-			ioctl_conn->state = IOCTL_CONN_STATE_XMIT_DATA;
+			ret = nvme_ioctl_cmdbuf_xmit_check(resp, &ioctl_conn->state);
+			if (ret < 0) {
+				return ret;
+			}
+			if (ioctl_conn->state == IOCTL_CONN_STATE_RECV_HEAD) {
+				spdk_nvme_ioctl_io_free(ioctl_conn);
+				return 0;
+			}
 		}
 	}
 
@@ -248,7 +262,13 @@ spdk_nvme_ioctl_xmit_internal(struct spdk_nvme_ioctl_conn *ioctl_conn)
 		if (ioctl_conn->offset == resp->data_len) {
 			ioctl_conn->offset = 0;
 
-			ioctl_conn->state = IOCTL_CONN_STATE_XMIT_METADATA;
+			if (resp->md_len) {
+				ioctl_conn->state = IOCTL_CONN_STATE_XMIT_METADATA;
+			} else {
+				ioctl_conn->state = IOCTL_CONN_STATE_RECV_HEAD;
+				spdk_nvme_ioctl_io_free(ioctl_conn);
+				return 0;
+			}
 		}
 	}
 

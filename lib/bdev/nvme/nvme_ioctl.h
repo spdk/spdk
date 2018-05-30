@@ -145,6 +145,10 @@ int nvme_ioctl_cmd_recv_check(struct spdk_nvme_ioctl_req *req,
 int nvme_ioctl_cmdbuf_recv_check(struct spdk_nvme_ioctl_req *req,
 				 enum ioctl_conn_state_t *_conn_state,
 				 struct spdk_nvme_ioctl_conn *ioctl_conn);
+int nvme_ioctl_cmd_xmit_check(struct spdk_nvme_ioctl_resp *resp,
+			      enum ioctl_conn_state_t *_conn_state);
+int nvme_ioctl_cmdbuf_xmit_check(struct spdk_nvme_ioctl_resp *resp,
+				 enum ioctl_conn_state_t *_conn_state);
 int spdk_nvme_ioctl_proc(struct spdk_nvme_ioctl_conn *ioctl_conn);
 
 #endif /* LIB_BDEV_NVME_IOCTL_H */

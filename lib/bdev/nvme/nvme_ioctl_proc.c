@@ -243,6 +243,51 @@ nvme_ioctl_cmdbuf_recv_check(struct spdk_nvme_ioctl_req *req, enum ioctl_conn_st
 }
 
 int
+nvme_ioctl_cmd_xmit_check(struct spdk_nvme_ioctl_resp *resp, enum ioctl_conn_state_t *_conn_state)
+{
+	/* Stop xmit if ioctl_ret shows error or cmd_len==0 */
+	if ((int)resp->ioctl_ret < 0 || !resp->cmd_len) {
+		*_conn_state = IOCTL_CONN_STATE_RECV_HEAD;
+	} else {
+		*_conn_state = IOCTL_CONN_STATE_XMIT_CMD;
+	}
+
+	return 0;
+}
+
+/*
+ * Only determine next recv state.
+ * When xmit resp, all kinds of lens already have been set.
+ */
+int
+nvme_ioctl_cmdbuf_xmit_check(struct spdk_nvme_ioctl_resp *resp,
+			     enum ioctl_conn_state_t *_conn_state)
+{
+	/* check data transfer direction */
+
+	char ioctl_magic;
+	enum spdk_nvme_data_transfer xfer = SPDK_NVME_DATA_NONE;
+
+	ioctl_magic = _IOC_TYPE(resp->ioctl_cmd);
+	if (ioctl_magic ==  NVME_IOCTL_MAGIC) {
+		xfer = spdk_nvme_cmd_get_data_transfer(resp->ioctl_cmd, resp->cmd_buf);
+	}
+
+	if (xfer != SPDK_NVME_DATA_CONTROLLER_TO_HOST && xfer != SPDK_NVME_DATA_BIDIRECTIONAL) {
+		/* no need to transmit data and metadata */
+		*_conn_state = IOCTL_CONN_STATE_RECV_HEAD;
+	} else if (resp->data_len) {
+		*_conn_state = IOCTL_CONN_STATE_XMIT_DATA;
+	} else if (resp->md_len) {
+		*_conn_state = IOCTL_CONN_STATE_XMIT_METADATA;
+	} else {
+		*_conn_state = IOCTL_CONN_STATE_RECV_HEAD;
+	}
+
+	return 0;
+}
+
+int
 spdk_nvme_ioctl_proc(struct spdk_nvme_ioctl_conn *ioctl_conn)
 {
 	int ret = 0;
@@ -266,6 +311,20 @@ int
 nvme_ioctl_cmdbuf_recv_check(struct spdk_nvme_ioctl_req *req,
 			     enum ioctl_conn_state_t *_conn_state,
 			     struct spdk_nvme_ioctl_conn *ioctl_conn)
+{
+	return 0;
+}
+
+int
+nvme_ioctl_cmd_xmit_check(struct spdk_nvme_ioctl_resp *resp,
+			  enum ioctl_conn_state_t *_conn_state)
+{
+	return 0;
+}
+
+int
+nvme_ioctl_cmdbuf_xmit_check(struct spdk_nvme_ioctl_resp *resp,
+			     enum ioctl_conn_state_t *_conn_state)
 {
 	return 0;
 }
