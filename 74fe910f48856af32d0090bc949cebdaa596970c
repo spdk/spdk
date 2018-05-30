@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "654886c0_db38f5a4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2957,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-30T16:55:58Z",
+      "side": 1,
+      "message": "I don\u0027t think this is correct.  Consider two cases:\n\n1)  on-disk says 100MB, bs-\u003edev says 200MB\n2)  on-disk says 200MB, bs-\u003edev says 100MB\n\nI think #2 should be a failure.  #1 is OK - we\u0027ll only use the first 100MB and just ignore the last 100MB.\n\nBut this code will treat #1 as a failure, and allow #2.",
+      "revId": "74fe910f48856af32d0090bc949cebdaa596970c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be589cb3_d5e046bb",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2978,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-30T16:55:58Z",
+      "side": 1,
+      "message": "This comment should be updated since it\u0027s not just the blobid mask now - it\u0027s the blobstore size too.\n\nDo we need to build the masks again though if we\u0027re only writing the new size?",
+      "revId": "74fe910f48856af32d0090bc949cebdaa596970c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8d18456_30d5c3d8",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1902,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-30T16:55:58Z",
+      "side": 1,
+      "message": "We need multiple test cases - one for when on-disk size is less than the reported blockcnt*blocksize, and one when it is greater than.",
+      "revId": "74fe910f48856af32d0090bc949cebdaa596970c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
