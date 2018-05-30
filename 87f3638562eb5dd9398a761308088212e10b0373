@@ -22,6 +22,30 @@
       "revId": "87f3638562eb5dd9398a761308088212e10b0373",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a364df4_05a869d1",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 749,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-30T00:06:23Z",
+      "side": 1,
+      "message": "I agree, this whole section could be tweaked to remove some nesting and make the flow clearer.  I think the logic is correct as it is, though, so I\u0027m going to merge this; we can do another refactoring patch on top if desired.",
+      "parentUuid": "3c68f993_ed215ca7",
+      "range": {
+        "startLine": 749,
+        "startChar": 2,
+        "endLine": 749,
+        "endChar": 37
+      },
+      "revId": "87f3638562eb5dd9398a761308088212e10b0373",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
