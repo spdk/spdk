@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "573a51ea_df043f5f",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-30T17:34:28Z",
+      "side": 1,
+      "message": "I think the _SAFE is used since the remove_cb could detach the controller and remove it from the list.",
+      "parentUuid": "22059bf1_8a1d9167",
+      "range": {
+        "startLine": 299,
+        "startChar": 14,
+        "endLine": 299,
+        "endChar": 19
+      },
+      "revId": "d8d2cb7dfb8551696d11e2d8c6a8a3e3d4522e82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b7e07d56_7d03c5f2",
         "filename": "lib/nvme/nvme_pcie.c",
         "patchSetId": 2
@@ -36,6 +60,24 @@
       "writtenOn": "2018-05-30T16:48:06Z",
       "side": 1,
       "message": "I\u0027m not sure I understand the logic behind this fix.  Is there something inside this block using the current process pointer without checking it?\n\nThe crash from bug #313 is inside spdk_nvme_ctrlr_get_regs_csts(), which doesn\u0027t seem to use the current process pointer.",
+      "revId": "d8d2cb7dfb8551696d11e2d8c6a8a3e3d4522e82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c713f0cb_dfc1630a",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-30T17:34:28Z",
+      "side": 1,
+      "message": "I agree.  I believe that it fixes your issue, but it\u0027s not clear why.",
+      "parentUuid": "b7e07d56_7d03c5f2",
       "revId": "d8d2cb7dfb8551696d11e2d8c6a8a3e3d4522e82",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
