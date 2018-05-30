@@ -811,7 +811,7 @@ int spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr,
  *              For admin commands, pass NULL for the qpair.
  * \param cid Command ID of the command to abort.
  * \param cb_fn Callback function to invoke when the abort has completed.
- * \param cb_arg Argument to pass to the callback function.\
+ * \param cb_arg Argument to pass to the callback function.
  *
  * \return 0 if successfully submitted, negated errno value otherwise.
  *
