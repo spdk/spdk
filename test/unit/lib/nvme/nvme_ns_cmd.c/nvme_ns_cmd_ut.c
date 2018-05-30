@@ -212,6 +212,7 @@ prepare_for_test(struct spdk_nvme_ns *ns, struct spdk_nvme_ctrlr *ctrlr,
 	ctrlr->flags = 0;
 	ctrlr->min_page_size = 4096;
 	ctrlr->page_size = 4096;
+	memset(&ctrlr->opts, 0, sizeof(ctrlr->opts));
 	memset(ns, 0, sizeof(*ns));
 	ns->ctrlr = ctrlr;
 	ns->sector_size = sector_size;
