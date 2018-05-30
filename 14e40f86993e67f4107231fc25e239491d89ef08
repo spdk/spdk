@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d6608cd0_71bef109",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-05-30T07:15:06Z",
+      "side": 1,
+      "message": "it should be bdev5",
+      "range": {
+        "startLine": 354,
+        "startChar": 55,
+        "endLine": 354,
+        "endChar": 61
+      },
+      "revId": "14e40f86993e67f4107231fc25e239491d89ef08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
