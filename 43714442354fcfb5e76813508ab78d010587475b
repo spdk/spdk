@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0f35b259_af6cca2c",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1071,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-30T07:44:43Z",
+      "side": 1,
+      "message": "this can be removed.",
+      "range": {
+        "startLine": 1071,
+        "startChar": 1,
+        "endLine": 1071,
+        "endChar": 34
+      },
+      "revId": "43714442354fcfb5e76813508ab78d010587475b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c884ed39_2542225f",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1082,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-30T07:44:43Z",
+      "side": 1,
+      "message": "using !spdk_nvme_ns_is_active(ns) is recommended?\nNext uses api with the prefix spdk_nvme_.",
+      "range": {
+        "startLine": 1082,
+        "startChar": 6,
+        "endLine": 1082,
+        "endChar": 25
+      },
+      "revId": "43714442354fcfb5e76813508ab78d010587475b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c6eeb6c_6ea5f697",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1088,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-30T07:44:43Z",
+      "side": 1,
+      "message": "same as above.",
+      "range": {
+        "startLine": 1088,
+        "startChar": 6,
+        "endLine": 1088,
+        "endChar": 18
+      },
+      "revId": "43714442354fcfb5e76813508ab78d010587475b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fd27c575_a0075179",
+        "filename": "lib/nvme/nvme_ns.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-05-30T07:44:43Z",
+      "side": 1,
+      "message": "how about aggregating the line 310-317 into a helper function like nvme_ns_data_clear(spdk_nvme_ns_data *nsdata) ?\nAnd apply it to the line 61-68 too?",
+      "revId": "43714442354fcfb5e76813508ab78d010587475b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
