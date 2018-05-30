@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "506ffe64_519bcfb2",
+        "filename": "test/vhost/migration/vhost.conf.in",
+        "patchSetId": 4
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-30T01:06:05Z",
+      "side": 0,
+      "message": "Do we need the NoPci option? This is currently only available from the config file and the -u command-line option, which I don\u0027t see in the current test scripts.",
+      "revId": "058a591d2757fa0da7b1164b04a842b55ca7b57d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
