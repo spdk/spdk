@@ -72,6 +72,10 @@ To remove previously created bdev user can use `delete_bdev` RPC command.
 Bdev can be deleted at any time and this will be fully handled by any upper
 layers. As an argument user should provide bdev name.
 
+Note, that call is designed for debug purposes only. Interaction with
+some virtual bdevs like lvol might delete bdev, but not remove any data
+from underlying storage.
+
 # NVMe bdev {#bdev_config_nvme}
 
 There are two ways to create block device based on NVMe device in SPDK. First
