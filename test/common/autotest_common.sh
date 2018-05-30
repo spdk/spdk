@@ -123,6 +123,10 @@ if [ -d /usr/include/rbd ] &&  [ -d /usr/include/rados ]; then
 	config_params+=' --with-rbd'
 fi
 
+if [ -f /usr/include/linux/nvme_ioctl.h ]; then
+	config_params+=' --with-nvme-ioctl'
+fi
+
 if [ -d /usr/include/iscsi ]; then
 	libiscsi_version=`grep LIBISCSI_API_VERSION /usr/include/iscsi/iscsi.h | head -1 | awk '{print $3}' | awk -F '(' '{print $2}' | awk -F ')' '{print $1}'`
 	if [ $libiscsi_version -ge 20150621 ]; then

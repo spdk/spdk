@@ -96,5 +96,8 @@ CONFIG_PMDK?=n
 # Build with VPP
 CONFIG_VPP?=n
 
+# Build with NVME_IOCTL
+CONFIG_NVME_IOCTL?=n
+
 # Requires libiscsi development libraries.
 CONFIG_ISCSI_INITIATOR?=n
