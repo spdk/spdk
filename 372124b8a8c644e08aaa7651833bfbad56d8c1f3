@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bb96aea4_2444e318",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-05-30T09:56:14Z",
+      "side": 1,
+      "message": "For normal exit process, this should be fine, what if for Ctrl + C to exit NVMeoF target when I/O is running from initiator ? Some outstanding I/Os maybe not get a chance to enter spdk_nvmf_request_complete.",
+      "revId": "372124b8a8c644e08aaa7651833bfbad56d8c1f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
