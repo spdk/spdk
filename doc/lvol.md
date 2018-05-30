@@ -43,6 +43,12 @@ The write operation is performed as shown in the diagram below:
 User may also create clone of existing snapshot that will be thin provisioned and it will behave in the same way as logical volume from which snapshot is created.
 There is no limit of clones and snapshots that may be created as long as there is enough space on logical volume store. Snapshots are read only. Clones may be created only from snapshots.
 
+## Inflation {#lvol_inflation}
+
+Inflation mechanizm allocates unallocated clusters in the inflated blob and copies data from backing devices (e.g. snapshots or zeroes_dev). As a result of this operation the blob stops being thin provisioned and all dependencies are removed.
+
+![Removing backing blob and bdevs relations using inflate call](lvol_inflate_clone_snapshot.svg)
+
 # Configuring Logical Volumes
 
 There is no static configuration available for logical volumes. All configuration is done trough RPC. Information about logical volumes is kept on block devices.
@@ -113,6 +119,10 @@ rename_lvol_bdev [-h] old_name new_name
     -h, --help  show help
 resize_lvol_bdev [-h] name size
     Resize existing lvol bdev
+    optional arguments:
+    -h, --help  show help
+inflate_lvol_bdev [-h] name
+    Inflate lvol bdev
     optional arguments:
     -h, --help  show help
 ```
