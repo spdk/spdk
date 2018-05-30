@@ -38,8 +38,68 @@
 
 #include "spdk/nvme.h"
 
+/*
+ * Head of ioctl req/resp includes magic, ioctl_cmd, handle and total_len.
+ */
+#define IOCTL_HEAD_SIZE (sizeof(uint32_t) * 4)
+
+/*
+ * These are sent over Unix domain socket in the request/response magic fields.
+ */
+#define IOCTL_REQ_MAGIC		0x58444F4E
+#define IOCTL_RESP_MAGIC	0x58464549
+
 struct nvme_ctrlr;
 struct nvme_bdev;
+
+struct spdk_nvme_ioctl_req {
+	uint32_t	req_magic;
+	uint32_t	ioctl_cmd;
+	uint32_t	handle;
+	uint32_t	total_len;
+
+	char		*cmd_buf;
+	char		*data;
+	char		*metadata;
+	uint32_t	cmd_len;
+	uint32_t	data_len;
+	uint32_t	md_len;
+};
+
+struct spdk_nvme_ioctl_resp {
+	uint32_t	resp_magic;
+	uint32_t	ioctl_cmd;
+	uint32_t	handle;
+	uint32_t	total_len;
+
+	/*
+	 * If ioctl_ret is 0, that means cmd is executed succesfully;
+	 * If (int)ioctl_ret is >0, ioctl_ret represents CQE status;
+	 * If (int)ioctl_ret is <0, ioctl_ret means cmd is not executed due to some error.
+	 */
+	uint32_t	ioctl_ret;
+
+	char		*cmd_buf;
+	char		*data;
+	char		*metadata;
+	uint32_t	cmd_len;
+	uint32_t	data_len;
+	uint32_t	md_len;
+};
+
+enum ioctl_conn_state_t {
+	IOCTL_CONN_STATE_RECV_HEAD,
+	IOCTL_CONN_STATE_RECV_CMD,
+	IOCTL_CONN_STATE_RECV_DATA,
+	IOCTL_CONN_STATE_RECV_METADATA,
+	IOCTL_CONN_STATE_PROC,
+	IOCTL_CONN_STATE_XMIT_HEAD,
+	IOCTL_CONN_STATE_XMIT_RET, // return value of ioctl
+	IOCTL_CONN_STATE_XMIT_CMD,
+	IOCTL_CONN_STATE_XMIT_DATA,
+	IOCTL_CONN_STATE_XMIT_METADATA,
+	IOCTL_CONN_STATE_CLOSE, // indicate ioctl_conn should be closed
+};
 
 enum ioctl_conn_type_t {
 	IOCTL_CONN_TYPE_CHAR,
@@ -54,6 +114,11 @@ struct spdk_nvme_ioctl_conn {
 	 */
 	void			*device;
 	void			*epoll_event_dataptr;
+
+	enum ioctl_conn_state_t		state;
+	uint32_t			offset;
+	struct spdk_nvme_ioctl_req	req;
+	struct spdk_nvme_ioctl_resp	resp;
 
 	TAILQ_ENTRY(spdk_nvme_ioctl_conn) conn_tailq;
 };
