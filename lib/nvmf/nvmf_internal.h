@@ -43,9 +43,6 @@
 #include "spdk/queue.h"
 #include "spdk/util.h"
 
-#define SPDK_NVMF_DEFAULT_NUM_CTRLRS_PER_LCORE 1
-#define SPDK_NVMF_DEFAULT_MAX_NSID 128
-
 enum spdk_nvmf_subsystem_state {
 	SPDK_NVMF_SUBSYSTEM_INACTIVE = 0,
 	SPDK_NVMF_SUBSYSTEM_ACTIVATING,
