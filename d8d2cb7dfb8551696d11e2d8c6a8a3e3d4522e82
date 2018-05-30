@@ -81,6 +81,24 @@
       "revId": "d8d2cb7dfb8551696d11e2d8c6a8a3e3d4522e82",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0c21e0d_171428e5",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-30T17:57:41Z",
+      "side": 1,
+      "message": "Maybe this should be taking the ctrlr lock (in addition to the driver lock, which we already hold); it seems like this could be a race between a process setting up the regs pointer and another process accessing it, although I\u0027m not sure how this could happen, since the regs pointer should already be set up and valid before inserting the controller into the shared_attached_ctrlrs list.  We should also be careful about lock ordering - I don\u0027t know if we ever take driver_lock and  ctrlr_lock simultaneously anywhere else, but if we do, we need to make sure it\u0027s in a consistent order to avoid deadlock.",
+      "parentUuid": "c713f0cb_dfc1630a",
+      "revId": "d8d2cb7dfb8551696d11e2d8c6a8a3e3d4522e82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
