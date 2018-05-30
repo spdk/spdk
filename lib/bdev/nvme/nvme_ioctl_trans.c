@@ -36,7 +36,7 @@
 #include "spdk/util.h"
 #include "bdev_nvme.h"
 
-#ifdef __linux__
+#if defined(__linux__) && defined(SPDK_CONFIG_IOCTL)
 
 static void spdk_nvme_ioctl_io_free(struct spdk_nvme_ioctl_conn *ioctl_conn);
 

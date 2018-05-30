@@ -39,7 +39,8 @@
 #include "spdk_internal/log.h"
 #include "bdev_nvme.h"
 
-#ifdef __linux__ /* Current ioctl utility is Linux-Specific */
+/* Current ioctl utility is Linux-Specific */
+#if defined(__linux__) && defined(SPDK_CONFIG_IOCTL)
 
 #include <linux/fs.h>
 #include <sys/epoll.h>

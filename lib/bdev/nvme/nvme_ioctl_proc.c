@@ -33,7 +33,7 @@
 
 #include "bdev_nvme.h"
 
-#ifdef __linux__
+#if defined(__linux__) && defined(SPDK_CONFIG_IOCTL)
 
 int
 spdk_nvme_ioctl_proc(struct spdk_nvme_ioctl_conn *ioctl_conn)

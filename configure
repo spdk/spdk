@@ -51,6 +51,8 @@ function usage()
 	echo "                           No path required."
 	echo " vtune                     Required to profile I/O under Intel VTune Amplifier XE."
 	echo "                           example: /opt/intel/vtune_amplifier_xe_version"
+	echo " ioctl                     [disabled]"
+	echo "                           No path required."
 	echo ""
 	echo "Environment variables:"
 	echo ""
@@ -207,6 +209,12 @@ for i in "$@"; do
 			VTUNE_SOURCE_DIR=
 			CONFIG_VTUNE=n
 			;;
+		--with-ioctl)
+			CONFIG_IOCTL=y
+			;;
+		--without-ioctl)
+			CONFIG_IOCTL=n
+			;;
 		--)
 			break
 			;;
@@ -329,6 +337,9 @@ if [ -n "$CONFIG_RBD" ]; then
 fi
 if [ -n "$CONFIG_VTUNE" ]; then
 	echo "CONFIG_VTUNE?=$CONFIG_VTUNE" >> CONFIG.local
+fi
+if [ -n "$CONFIG_IOCTL" ]; then
+	echo "CONFIG_IOCTL?=$CONFIG_IOCTL" >> CONFIG.local
 fi
 if [ -n "$VTUNE_SOURCE_DIR" ]; then
 	echo "VTUNE_SOURCE_DIR?=$VTUNE_SOURCE_DIR" >> CONFIG.local
