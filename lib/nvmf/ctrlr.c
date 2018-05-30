@@ -1426,8 +1426,19 @@ invalid_cns:
 static struct spdk_nvmf_request *
 spdk_nvmf_qpair_abort(struct spdk_nvmf_qpair *qpair, uint16_t cid)
 {
+	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
+	struct spdk_nvmf_request *req = NULL;
+
+	if (spdk_nvmf_qpair_is_admin_queue(qpair)) {
+		if (ctrlr->aer_req && ctrlr->aer_req->cmd->nvme_cmd.cid == cid) {
+			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Aborting AER request\n");
+			req = ctrlr->aer_req;
+			ctrlr->aer_req = NULL;
+		}
+	}
+
 	/* TODO: track list of outstanding requests in qpair? */
-	return NULL;
+	return req;
 }
 
 static void
