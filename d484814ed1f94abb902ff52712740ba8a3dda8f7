@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "00969f5b_ffdb10f5",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-05-30T17:13:28Z",
+      "side": 1,
+      "message": "I think this whole function could be removed though in a future patch - just call free(req) directly where this function is currently called.\n\nI also think it would be awkward for a function called \"free_conn_req\" to call the create_cb().  I would not expect a function that frees something to call functions related to it.\n\nBut to Ziye\u0027s point - couldn\u0027t we just require the caller of create_iscsi_disk() to pass a non-NULL callback function?  If they pass NULL, just return error.  I\u0027m guessing all of our use cases will always need a callback function, and if they don\u0027t, that caller can provide its own dummy function.",
+      "parentUuid": "c82dfb0d_821b5a27",
+      "range": {
+        "startLine": 105,
+        "startChar": 0,
+        "endLine": 109,
+        "endChar": 1
+      },
+      "revId": "d484814ed1f94abb902ff52712740ba8a3dda8f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "15f43e41_e47528e0",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 9
