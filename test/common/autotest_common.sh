@@ -12,7 +12,7 @@ ulimit -c unlimited
 : ${RUN_NIGHTLY:=0}
 export RUN_NIGHTLY
 
-: ${RUN_NIGHTLY_FAILING:=0}
+: ${RUN_NIGHTLY_FAILING:=1}
 export RUN_NIGHTLY_FAILING
 
 if [[ ! -z $1 ]]; then
