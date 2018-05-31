@@ -51,9 +51,11 @@ for i in `seq 1 $NVMF_SUBSYS`; do
 	k=$[$i-1]
 	nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode${i}" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
-	for j in `seq 1 10`; do
-		waitforblk "nvme${k}n${j}"
-	done
+	if waitforblk "nvme${k}n1"; then
+		echo "nvme${k}n1 is found"
+	else
+		echo "nvme${k}n1 is not found"
+	fi
 done
 
 $testdir/../fio/nvmf_fio.py 262144 64 read 10
