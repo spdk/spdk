@@ -359,7 +359,7 @@ spdk_bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 		spdk_mempool_put(pool, buf);
 	} else {
 		tmp = STAILQ_FIRST(stailq);
-		STAILQ_REMOVE_HEAD(stailq, buf_link);
+		STAILQ_REMOVE_HEAD(stailq, internal.buf_link);
 		spdk_bdev_io_set_buf(tmp, buf);
 	}
 }
@@ -397,7 +397,7 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 	buf = spdk_mempool_get(pool);
 
 	if (!buf) {
-		STAILQ_INSERT_TAIL(stailq, bdev_io, buf_link);
+		STAILQ_INSERT_TAIL(stailq, bdev_io, internal.buf_link);
 	} else {
 		spdk_bdev_io_set_buf(bdev_io, buf);
 	}
@@ -485,7 +485,7 @@ spdk_bdev_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 
 	while (!STAILQ_EMPTY(&ch->per_thread_cache)) {
 		bdev_io = STAILQ_FIRST(&ch->per_thread_cache);
-		STAILQ_REMOVE_HEAD(&ch->per_thread_cache, buf_link);
+		STAILQ_REMOVE_HEAD(&ch->per_thread_cache, internal.buf_link);
 		ch->per_thread_cache_count--;
 		spdk_mempool_put(g_bdev_mgr.bdev_io_pool, (void *)bdev_io);
 	}
@@ -820,7 +820,7 @@ spdk_bdev_get_io(struct spdk_bdev_channel *channel)
 
 	if (ch->per_thread_cache_count > 0) {
 		bdev_io = STAILQ_FIRST(&ch->per_thread_cache);
-		STAILQ_REMOVE_HEAD(&ch->per_thread_cache, buf_link);
+		STAILQ_REMOVE_HEAD(&ch->per_thread_cache, internal.buf_link);
 		ch->per_thread_cache_count--;
 	} else {
 		bdev_io = spdk_mempool_get(g_bdev_mgr.bdev_io_pool);
@@ -844,7 +844,7 @@ spdk_bdev_put_io(struct spdk_bdev_io *bdev_io)
 
 	if (ch->per_thread_cache_count < SPDK_BDEV_IO_CACHE_SIZE) {
 		ch->per_thread_cache_count++;
-		STAILQ_INSERT_TAIL(&ch->per_thread_cache, bdev_io, buf_link);
+		STAILQ_INSERT_TAIL(&ch->per_thread_cache, bdev_io, internal.buf_link);
 	} else {
 		spdk_mempool_put(g_bdev_mgr.bdev_io_pool, (void *)bdev_io);
 	}
@@ -1161,7 +1161,7 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 
 /*
  * Abort I/O that are waiting on a data buffer.  These types of I/O are
- *  linked using the spdk_bdev_io buf_link TAILQ_ENTRY.
+ *  linked using the spdk_bdev_io internal.buf_link TAILQ_ENTRY.
  */
 static void
 _spdk_bdev_abort_buf_io(bdev_io_stailq_t *queue, struct spdk_bdev_channel *ch)
@@ -1173,11 +1173,11 @@ _spdk_bdev_abort_buf_io(bdev_io_stailq_t *queue, struct spdk_bdev_channel *ch)
 
 	while (!STAILQ_EMPTY(queue)) {
 		bdev_io = STAILQ_FIRST(queue);
-		STAILQ_REMOVE_HEAD(queue, buf_link);
+		STAILQ_REMOVE_HEAD(queue, internal.buf_link);
 		if (bdev_io->ch == ch) {
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		} else {
-			STAILQ_INSERT_TAIL(&tmp, bdev_io, buf_link);
+			STAILQ_INSERT_TAIL(&tmp, bdev_io, internal.buf_link);
 		}
 	}
 
