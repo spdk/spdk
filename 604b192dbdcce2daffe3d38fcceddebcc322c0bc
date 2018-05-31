@@ -1,0 +1,118 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "15d8b165_c0b24266",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1013,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-31T19:51:01Z",
+      "side": 1,
+      "message": "The addition of the size parameter to spdk_mem_map_translate() is probably reasonable, but it should be split into a separate patch.",
+      "revId": "604b192dbdcce2daffe3d38fcceddebcc322c0bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "decf638f_2ad1d9d6",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1576,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-31T19:51:01Z",
+      "side": 1,
+      "message": "Based on the way you are modifying the nvme_rdma.c code, I think this hook should be modified to get_rkey(), which would return rkey directly instead of ibv_mr (along with possibly a corresponding get_lkey() if needed).",
+      "revId": "604b192dbdcce2daffe3d38fcceddebcc322c0bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27dfd036_e6a8604f",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1585,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-31T19:51:01Z",
+      "side": 1,
+      "message": "This function should probably have a pointer to the hooks structure, not just a void *.  Also, this has the problem of when it can actually be called; the hooks need to be provided before we can actually create a spdk_nvme_ctrlr, since we need to do the RDMA-level connect command before the ctrlr exists.",
+      "revId": "604b192dbdcce2daffe3d38fcceddebcc322c0bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "57ba8224_14834fa1",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-31T19:51:01Z",
+      "side": 1,
+      "message": "This probably needs to be hooks-\u003eget_ibv_pd",
+      "range": {
+        "startLine": 238,
+        "startChar": 7,
+        "endLine": 238,
+        "endChar": 23
+      },
+      "revId": "604b192dbdcce2daffe3d38fcceddebcc322c0bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5117664c_446823d6",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 743,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-31T19:51:01Z",
+      "side": 1,
+      "message": "If the ctrlr hooks are present, we don\u0027t need to call this function at all, since it will try to re-register all of the memory with the ibverbs stack.",
+      "revId": "604b192dbdcce2daffe3d38fcceddebcc322c0bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8c802c0_84b9ec02",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 928,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-31T19:51:01Z",
+      "side": 1,
+      "message": "spdk_mem_map_translate() already returns uint64_t, so I don\u0027t think this cast should be needed.\n\nThis whole branch also looks a bit odd; I think if the hooks are specified, we should call a hook function directly and bypass spdk_mem_map_translate() entirely.",
+      "range": {
+        "startLine": 928,
+        "startChar": 33,
+        "endLine": 928,
+        "endChar": 43
+      },
+      "revId": "604b192dbdcce2daffe3d38fcceddebcc322c0bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
