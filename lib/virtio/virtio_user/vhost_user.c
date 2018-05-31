@@ -226,6 +226,14 @@ get_hugepage_file_info(struct hugepage_file_info huges[], int max)
 			SPDK_ERRLOG("Exceed maximum of %d\n", max);
 			goto error;
 		}
+
+		if (idx > 0 &&
+		    strncmp(tmp, huges[idx - 1].path, PATH_MAX) == 0 &&
+		    v_start == huges[idx - 1].addr + huges[idx - 1].size) {
+			huges[idx - 1].size += (v_end - v_start);
+			continue;
+		}
+
 		huges[idx].addr = v_start;
 		huges[idx].size = v_end - v_start;
 		snprintf(huges[idx].path, PATH_MAX, "%s", tmp);
