@@ -772,7 +772,7 @@ spdk_nvmf_rdma_mem_notify(void *cb_ctx, struct spdk_mem_map *map,
 		}
 		break;
 	case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
-		mr = (struct ibv_mr *)spdk_mem_map_translate(map, (uint64_t)vaddr);
+		mr = (struct ibv_mr *)spdk_mem_map_translate(map, (uint64_t)vaddr, size);
 		spdk_mem_map_clear_translation(map, (uint64_t)vaddr, size);
 		if (mr) {
 			ibv_dereg_mr(mr);
@@ -878,7 +878,7 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		rdma_req->data.sgl[0].addr = (uintptr_t)rdma_req->req.data;
 		rdma_req->data.sgl[0].length = sgl->keyed.length;
 		rdma_req->data.sgl[0].lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
-					      (uint64_t)rdma_req->req.data))->lkey;
+					      (uint64_t)rdma_req->req.data, sgl->keyed.length))->lkey;
 		rdma_req->data.wr.wr.rdma.rkey = sgl->keyed.key;
 		rdma_req->data.wr.wr.rdma.remote_addr = sgl->address;
 
