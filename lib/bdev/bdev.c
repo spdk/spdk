@@ -935,10 +935,13 @@ spdk_bdev_get_io(struct spdk_bdev_channel *channel)
 	return bdev_io;
 }
 
-static void
-spdk_bdev_put_io(struct spdk_bdev_io *bdev_io)
+void
+spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_bdev_mgmt_channel *ch = bdev_io->ch->shared_resource->mgmt_ch;
+
+	assert(bdev_io != NULL);
+	assert(bdev_io->status != SPDK_BDEV_IO_STATUS_PENDING);
 
 	if (bdev_io->buf != NULL) {
 		spdk_bdev_io_put_buf(bdev_io);
@@ -2274,25 +2277,6 @@ spdk_bdev_nvme_io_passthru_md(struct spdk_bdev_desc *desc, struct spdk_io_channe
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
 	spdk_bdev_io_submit(bdev_io);
-	return 0;
-}
-
-int
-spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
-{
-	if (!bdev_io) {
-		SPDK_ERRLOG("bdev_io is NULL\n");
-		return -1;
-	}
-
-	if (bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING) {
-		SPDK_ERRLOG("bdev_io is in pending state\n");
-		assert(false);
-		return -1;
-	}
-
-	spdk_bdev_put_io(bdev_io);
-
 	return 0;
 }
 
