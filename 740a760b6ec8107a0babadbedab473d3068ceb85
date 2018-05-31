@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "209cf717_9c5ec173",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-31T22:59:11Z",
+      "side": 1,
+      "message": "I think we also need to zero out payload_offset and md_offset; these are always used by the transports, but only set in the _nvme_ns_cmd_rw() path.",
+      "revId": "740a760b6ec8107a0babadbedab473d3068ceb85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
