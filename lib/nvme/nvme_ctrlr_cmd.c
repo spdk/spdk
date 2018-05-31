@@ -467,6 +467,7 @@ spdk_nvme_ctrlr_cmd_abort_cpl(void *ctx, const struct spdk_nvme_cpl *cpl)
 		rc = nvme_ctrlr_submit_admin_request(ctrlr, next);
 		if (rc < 0) {
 			SPDK_ERRLOG("Failed to submit queued abort.\n");
+			memset(&next->cpl, 0, sizeof(next->cpl));
 			next->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 			next->cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			next->cpl.status.dnr = 1;
