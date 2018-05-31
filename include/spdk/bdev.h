@@ -881,14 +881,13 @@ int spdk_bdev_nvme_io_passthru_md(struct spdk_bdev_desc *bdev_desc,
 				  spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
- * Free an I/O request. This should be called after the callback for the I/O has
- * been called and notifies the bdev layer that memory may now be released.
+ * Free an I/O request. This should only be called after the completion callback
+ * for the I/O has been called and notifies the bdev layer that memory may now
+ * be released.
  *
  * \param bdev_io I/O request.
- *
- * \return -1 on failure, 0 on success.
  */
-int spdk_bdev_free_io(struct spdk_bdev_io *bdev_io);
+void spdk_bdev_free_io(struct spdk_bdev_io *bdev_io);
 
 /**
  * Return I/O statistics for this channel.

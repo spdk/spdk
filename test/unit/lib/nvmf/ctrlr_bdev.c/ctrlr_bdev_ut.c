@@ -164,9 +164,8 @@ spdk_bdev_nvme_io_passthru(struct spdk_bdev_desc *desc,
 	return 0;
 }
 
-int spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
+void spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 {
-	return -1;
 }
 
 const char *spdk_nvmf_subsystem_get_nqn(struct spdk_nvmf_subsystem *subsystem)

@@ -123,11 +123,10 @@ spdk_dma_free(void *buf)
 	free(buf);
 }
 
-int
+void
 spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 {
 	CU_ASSERT(0);
-	return -1;
 }
 
 int
