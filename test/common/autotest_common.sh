@@ -9,7 +9,7 @@ set -e
 PS4=' \t	\$ '
 ulimit -c unlimited
 
-: ${RUN_NIGHTLY:=0}
+: ${RUN_NIGHTLY:=1}
 export RUN_NIGHTLY
 
 : ${RUN_NIGHTLY_FAILING:=0}
@@ -611,3 +611,4 @@ function freebsd_update_contigmem_mod()
 
 set -o errtrace
 trap "trap - ERR; print_backtrace >&2" ERR
+DATE='Thu May 31 05:00:04 MST 2018'
