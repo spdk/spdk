@@ -334,7 +334,7 @@ io_complete(void *ctx, const struct spdk_nvme_cpl *completion)
 
 uint64_t g_complete_tsc_start;
 
-static void
+static uint64_t
 check_io(void)
 {
 	uint64_t end, tsc_complete;
@@ -378,8 +378,10 @@ check_io(void)
 		if (!g_ns->is_draining) {
 			submit_single_io();
 		}
-		g_complete_tsc_start = spdk_get_ticks();
+		end = g_complete_tsc_start = spdk_get_ticks();
 	}
+
+	return end;
 }
 
 static void
@@ -438,7 +440,7 @@ cleanup_ns_worker_ctx(void)
 static int
 work_fn(void)
 {
-	uint64_t tsc_end;
+	uint64_t tsc_end, current;
 
 	/* Allocate a queue pair for each namespace. */
 	if (init_ns_worker_ctx() != 0) {
@@ -458,9 +460,9 @@ work_fn(void)
 		 * I/O will be submitted in the io_complete callback
 		 * to replace each I/O that is completed.
 		 */
-		check_io();
+		current = check_io();
 
-		if (spdk_get_ticks() > tsc_end) {
+		if (current > tsc_end) {
 			break;
 		}
 	}
