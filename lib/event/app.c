@@ -347,6 +347,7 @@ spdk_app_setup_env(struct spdk_app_opts *opts)
 	env_opts.mem_channel = opts->mem_channel;
 	env_opts.master_core = opts->master_core;
 	env_opts.mem_size = opts->mem_size;
+	env_opts.hugepage_single_segments = opts->hugepage_single_segments;
 	env_opts.no_pci = opts->no_pci;
 
 	rc = spdk_env_init(&env_opts);
