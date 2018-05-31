@@ -157,14 +157,18 @@ nvme_allocate_request(struct spdk_nvme_qpair *qpair,
 	STAILQ_REMOVE_HEAD(&qpair->free_req, stailq);
 
 	/*
-	 * Only memset up to (but not including) the children
-	 *  TAILQ_ENTRY.  children, and following members, are
+	 * Only memset/zero fields that need it.  All other fields
+	 *  will be initialized appropriately either later in this
+	 *  function, or before they are needed later in the
+	 *  submission patch.  For example, the children
+	 *  TAILQ_ENTRY and following members are
 	 *  only used as part of I/O splitting so we avoid
 	 *  memsetting them until it is actually needed.
 	 *  They will be initialized in nvme_request_add_child()
 	 *  if the request is split.
 	 */
-	memset(req, 0, offsetof(struct nvme_request, children));
+	memset(req, 0, offsetof(struct nvme_request, payload_size));
+
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 	req->payload = *payload;
