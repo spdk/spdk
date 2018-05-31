@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7d93f1c1_9c3d4567",
+        "filename": "doc/bdev.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-05-31T16:52:10Z",
+      "side": 1,
+      "message": "Will need further changes when all bdevs have their own delete call. For now I think its alright to \u0027single out\u0027 lvol.",
+      "range": {
+        "startLine": 71,
+        "startChar": 0,
+        "endLine": 77,
+        "endChar": 24
+      },
+      "revId": "4abc9bd36469ec84374371ae4e7c18f4d2d0976d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
