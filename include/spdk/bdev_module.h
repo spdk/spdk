@@ -407,14 +407,16 @@ struct spdk_bdev_io {
 	/** Callback for when buf is allocated */
 	spdk_bdev_io_get_buf_cb get_buf_cb;
 
-	/** Entry to the list need_buf of struct spdk_bdev. */
-	STAILQ_ENTRY(spdk_bdev_io) buf_link;
-
 	/** Member used for linking child I/Os together. */
 	TAILQ_ENTRY(spdk_bdev_io) link;
 
 	/** It may be used by modules to put the bdev_io into its own list. */
 	TAILQ_ENTRY(spdk_bdev_io) module_link;
+
+	struct {
+		/** Entry to the list need_buf of struct spdk_bdev. */
+		STAILQ_ENTRY(spdk_bdev_io) buf_link;
+	} internal;
 
 	/**
 	 * Per I/O context for use by the bdev module.
