@@ -50,7 +50,7 @@ extern "C" {
 
 /** Write memory barrier */
 #ifdef __PPC64__
-#define spdk_wmb()	__asm volatile("sync" ::: "memory")
+#define spdk_wmb()	__asm volatile("lwsync" ::: "memory")
 #elif defined(__aarch64__)
 #define spdk_wmb()	__asm volatile("dsb st" ::: "memory")
 #elif defined(__i386__) || defined(__x86_64__)
