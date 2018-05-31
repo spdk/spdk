@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a82fa5ed_037ddf03",
+        "filename": "lib/virtio/virtio_user/vhost_user.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-31T23:39:58Z",
+      "side": 1,
+      "message": "scan-build seems to think this is reading a garbage value - this whole check probably needs to first check that idx is not 0 so we don\u0027t index off the beginning of huges.",
+      "range": {
+        "startLine": 231,
+        "startChar": 17,
+        "endLine": 231,
+        "endChar": 36
+      },
+      "revId": "2d00f0ca396c628d40ec15bc0109309d48da0884",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
