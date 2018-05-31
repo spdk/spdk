@@ -180,11 +180,6 @@ nvme_payload_type(const struct nvme_payload *payload) {
 struct nvme_request {
 	struct spdk_nvme_cmd		cmd;
 
-	/**
-	 * Data payload for this request's command.
-	 */
-	struct nvme_payload		payload;
-
 	uint8_t				retries;
 
 	/**
@@ -192,7 +187,6 @@ struct nvme_request {
 	 *  request which was split into multiple child requests.
 	 */
 	uint16_t			num_children;
-	uint32_t			payload_size;
 
 	/**
 	 * Offset in bytes from the beginning of payload for this request.
@@ -200,6 +194,13 @@ struct nvme_request {
 	 */
 	uint32_t			payload_offset;
 	uint32_t			md_offset;
+
+	uint32_t			payload_size;
+
+	/**
+	 * Data payload for this request's command.
+	 */
+	struct nvme_payload		payload;
 
 	spdk_nvme_cmd_cb		cb_fn;
 	void				*cb_arg;
