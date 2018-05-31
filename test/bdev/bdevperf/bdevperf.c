@@ -291,7 +291,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 			printf("task offset: %lu on target bdev=%s fails\n",
 			       task->offset_blocks, target->name);
 		}
-	} else if (g_verify || g_reset || g_unmap) {
+	} else if (g_verify || g_reset) {
 		spdk_bdev_io_get_iovec(bdev_io, &iovs, &iovcnt);
 		assert(iovcnt == 1);
 		assert(iovs != NULL);
@@ -328,32 +328,6 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 }
 
 static void
-bdevperf_unmap_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
-{
-	struct io_target	*target;
-	struct bdevperf_task	*task = cb_arg;
-	int rc;
-
-	target = task->target;
-
-	/* Set the expected buffer to 0. */
-	memset(task->buf, 0, g_io_size);
-
-	/* Read the data back in */
-	rc = spdk_bdev_read_blocks(target->bdev_desc, target->ch, NULL, task->offset_blocks,
-				   target->io_size_blocks, bdevperf_complete, task);
-	if (rc) {
-		printf("Failed to submit read: %d\n", rc);
-		target->is_draining = true;
-		g_run_failed = true;
-		return;
-	}
-
-	spdk_bdev_free_io(bdev_io);
-
-}
-
-static void
 bdevperf_verify_write_complete(struct spdk_bdev_io *bdev_io, bool success,
 			       void *cb_arg)
 {
@@ -363,25 +337,14 @@ bdevperf_verify_write_complete(struct spdk_bdev_io *bdev_io, bool success,
 
 	target = task->target;
 
-	if (g_unmap) {
-		rc = spdk_bdev_unmap_blocks(target->bdev_desc, target->ch, task->offset_blocks,
-					    target->io_size_blocks, bdevperf_unmap_complete, task);
-		if (rc) {
-			printf("Failed to submit unmap: %d\n", rc);
-			target->is_draining = true;
-			g_run_failed = true;
-			return;
-		}
-	} else {
-		/* Read the data back in */
-		rc = spdk_bdev_read_blocks(target->bdev_desc, target->ch, NULL, task->offset_blocks,
-					   target->io_size_blocks, bdevperf_complete, task);
-		if (rc) {
-			printf("Failed to submit read: %d\n", rc);
-			target->is_draining = true;
-			g_run_failed = true;
-			return;
-		}
+	/* Read the data back in */
+	rc = spdk_bdev_read_blocks(target->bdev_desc, target->ch, NULL, task->offset_blocks,
+				   target->io_size_blocks, bdevperf_complete, task);
+	if (rc) {
+		printf("Failed to submit read: %d\n", rc);
+		target->is_draining = true;
+		g_run_failed = true;
+		return;
 	}
 
 	spdk_bdev_free_io(bdev_io);
@@ -421,7 +384,7 @@ bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
 	}
 
 	task->offset_blocks = offset_in_ios * target->io_size_blocks;
-	if (g_verify || g_reset || g_unmap) {
+	if (g_verify || g_reset) {
 		memset(task->buf, rand_r(&seed) % 256, g_io_size);
 		task->iov.iov_base = task->buf;
 		task->iov.iov_len = g_io_size;
@@ -429,6 +392,15 @@ bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
 					     target->io_size_blocks, bdevperf_verify_write_complete, task);
 		if (rc) {
 			printf("Failed to submit writev: %d\n", rc);
+			target->is_draining = true;
+			g_run_failed = true;
+			return;
+		}
+	} else if (g_unmap) {
+		rc = spdk_bdev_unmap_blocks(desc, ch, task->offset_blocks,
+					    target->io_size_blocks, bdevperf_complete, task);
+		if (rc) {
+			printf("Failed to submit unmap: %d\n", rc);
 			target->is_draining = true;
 			g_run_failed = true;
 			return;
@@ -910,9 +882,12 @@ main(int argc, char **argv)
 		g_rw_percentage = 0;
 	}
 
+	if (!strcmp(workload_type, "unmap")) {
+		g_unmap = true;
+	}
+
 	if (!strcmp(workload_type, "verify") ||
-	    !strcmp(workload_type, "reset") ||
-	    !strcmp(workload_type, "unmap")) {
+	    !strcmp(workload_type, "reset")) {
 		g_rw_percentage = 50;
 		if (g_io_size > SPDK_BDEV_LARGE_BUF_MAX_SIZE) {
 			fprintf(stderr, "Unable to exceed max I/O size of %d for verify. (%d provided).\n",
@@ -926,9 +901,6 @@ main(int argc, char **argv)
 		g_verify = true;
 		if (!strcmp(workload_type, "reset")) {
 			g_reset = true;
-		}
-		if (!strcmp(workload_type, "unmap")) {
-			g_unmap = true;
 		}
 	}
 
