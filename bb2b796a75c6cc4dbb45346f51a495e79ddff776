@@ -179,6 +179,30 @@
     },
     {
       "key": {
+        "uuid": "c7658a68_375c3446",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-05-31T03:06:57Z",
+      "side": 1,
+      "message": "From my perspective, it could be no big difference where the MIN and MAX are calculated. Here Long took the way to get this inside the check_qos_works_well() function and looks like a more centric place to get them instead of letting each caller to calculate and have its own MIN and MAX (although we have different ideas like 90% or 89%). For current QoS work, it looks like enough. If we have other QoS policies implemented later, the MIN and MAX could have different ranges and we can change this function at that moment.\n\nThanks Pawel and Long\u0027s comment.\n\n@Long, could you respond to Changpeng\u0027s comment and have a new version of this patch. Have some automatic testing on the QoS feature is the thing we first want so as to examine this feature in every patch.\n\nThanks for taking the time to raise this patch.",
+      "parentUuid": "75f606de_342e2878",
+      "range": {
+        "startLine": 15,
+        "startChar": 2,
+        "endLine": 16,
+        "endChar": 28
+      },
+      "revId": "bb2b796a75c6cc4dbb45346f51a495e79ddff776",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dcab8fa9_0addd11b",
         "filename": "test/iscsi_tgt/qos/qos.sh",
         "patchSetId": 4
