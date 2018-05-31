@@ -1039,6 +1039,31 @@ int spdk_mem_register(void *vaddr, size_t len);
  */
 int spdk_mem_unregister(void *vaddr, size_t len);
 
+/**
+ * The virtual thread is stored as a TLS value on the DPDK thread when
+ * it is being "executed".
+ *
+ * This returns the pointer to the current virtual thread that is being
+ * worked upon by the DPDK thread.
+ *
+ *
+ * \return spdk_thread* on success, NULL on failure
+ */
+void *spdk_env_get_virt_thread(void);
+
+/**
+ * The virtual thread is stored as a TLS value on the DPDK thread when
+ * it is being "executed".
+ *
+ * This set the pointer of the current virtual thread that is being
+ * worked upon by the DPDK thread.
+ *
+ * \param thread Pointer to a spdk_thread
+ *
+ * \return void
+ */
+void spdk_env_set_virt_thread(void *thread);
+
 #ifdef __cplusplus
 }
 #endif

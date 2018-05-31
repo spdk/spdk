@@ -145,6 +145,18 @@ blob_op_with_handle_complete(void *cb_arg, struct spdk_blob *blb, int bserrno)
 	g_bserrno = bserrno;
 }
 
+void *
+spdk_env_get_virt_thread(void)
+{
+	return NULL;
+}
+
+struct spdk_ring *
+spdk_ring_create(enum spdk_ring_type type, size_t count, int socket_id)
+{
+	return NULL;
+}
+
 static void
 blob_init(void)
 {

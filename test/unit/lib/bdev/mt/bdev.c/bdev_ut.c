@@ -61,6 +61,18 @@ spdk_conf_section_get_nmval(struct spdk_conf_section *sp, const char *key, int i
 	return NULL;
 }
 
+void *
+spdk_env_get_virt_thread(void)
+{
+	return NULL;
+}
+
+struct spdk_ring *
+spdk_ring_create(enum spdk_ring_type type, size_t count, int socket_id)
+{
+	return NULL;
+}
+
 struct ut_bdev {
 	struct spdk_bdev	bdev;
 	void			*io_target;

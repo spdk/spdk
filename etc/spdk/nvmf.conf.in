@@ -26,6 +26,14 @@
   #PciWhitelist 0000:03:00.0
   #PciWhitelist 0000:04:00.0
 
+#This enables the infrastructure for dynamic threading.
+#By default this will be false. This is a temporary configuration
+#item. When the infrastructure completes code review and then
+#get propagated across all the sample apps, this setting will be
+#removed. This will simplify code flows in the app and the libraries
+#after that.
+DynamicThreading true
+
 # Users may change this section to create a different number or size of
 #  malloc LUNs.
 # This will generate 8 LUNs with a malloc-allocated backend.

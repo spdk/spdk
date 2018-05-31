@@ -58,6 +58,18 @@ spdk_event_call(struct spdk_event *event)
 
 }
 
+void *
+spdk_env_get_virt_thread(void)
+{
+	return NULL;
+}
+
+struct spdk_ring *
+spdk_ring_create(enum spdk_ring_type type, size_t count, int socket_id)
+{
+	return NULL;
+}
+
 int
 spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
 	       void *remove_ctx, struct spdk_bdev_desc **desc)

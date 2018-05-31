@@ -259,6 +259,18 @@ spdk_shutdown_iscsi_conns_done(void)
 {
 }
 
+void *
+spdk_env_get_virt_thread(void)
+{
+	return NULL;
+}
+
+struct spdk_ring *
+spdk_ring_create(enum spdk_ring_type type, size_t count, int socket_id)
+{
+	return NULL;
+}
+
 static struct spdk_iscsi_task *
 ut_conn_task_get(struct spdk_iscsi_task *parent)
 {

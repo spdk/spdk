@@ -73,6 +73,33 @@ spdk_event_allocate(uint32_t core, spdk_event_fn fn, void *arg1, void *arg2)
 	return event;
 }
 
+struct spdk_event *
+spdk_thread_event_allocate(struct spdk_thread *thread, spdk_event_fn fn, void *arg1, void *arg2)
+{
+	struct spdk_event *event = calloc(1, sizeof(*event));
+
+	SPDK_CU_ASSERT_FATAL(event != NULL);
+
+	event->lcore = spdk_thread_get_id(thread);
+	event->fn = fn;
+	event->arg1 = arg1;
+	event->arg2 = arg2;
+
+	return event;
+
+}
+void *
+spdk_env_get_virt_thread(void)
+{
+	return NULL;
+}
+
+struct spdk_ring *
+spdk_ring_create(enum spdk_ring_type type, size_t count, int socket_id)
+{
+	return NULL;
+}
+
 void spdk_event_call(struct spdk_event *event)
 {
 	event->fn(event->arg1, event->arg2);
