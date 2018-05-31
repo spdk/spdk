@@ -16,6 +16,24 @@
       "revId": "a9b9dea9ed753c4e7a054d79a6e8e7784cc181f9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e9a83573_e3e12392",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-05-31T01:17:56Z",
+      "side": 1,
+      "message": "Done. Not sure whether other maintainers will agree this change.",
+      "parentUuid": "7d3df620_2025bea0",
+      "revId": "a9b9dea9ed753c4e7a054d79a6e8e7784cc181f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
