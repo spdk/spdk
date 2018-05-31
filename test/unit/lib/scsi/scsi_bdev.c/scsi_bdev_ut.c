@@ -79,11 +79,10 @@ spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_ty
 	return false;
 }
 
-int
+void
 spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 {
 	CU_ASSERT(0);
-	return -1;
 }
 
 const char *

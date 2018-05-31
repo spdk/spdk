@@ -45,7 +45,7 @@
 #include "spdk/env.h"
 
 
-DEFINE_STUB(spdk_bdev_free_io, int, (struct spdk_bdev_io *bdev_io), 0);
+DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *bdev_io));
 DEFINE_STUB(spdk_bdev_readv, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 				   struct iovec *iov, int iovcnt, uint64_t offset, uint64_t nbytes, spdk_bdev_io_completion_cb cb,
 				   void *cb_arg), 0);
