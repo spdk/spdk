@@ -45,6 +45,8 @@
 extern "C" {
 #endif
 
+struct spdk_thread;
+
 #define SPDK_ENV_SOCKET_ID_ANY	(-1)
 #define SPDK_ENV_LCORE_ID_ANY	(UINT32_MAX)
 
@@ -1038,6 +1040,31 @@ int spdk_mem_register(void *vaddr, size_t len);
  * \return 0 on success, negative errno on failure.
  */
 int spdk_mem_unregister(void *vaddr, size_t len);
+
+/**
+ * The virtual thread is stored as a TLS value on the DPDK thread when
+ * it is being "executed".
+ *
+ * This returns the pointer to the current virtual thread that is being
+ * worked upon by the DPDK thread.
+ *
+ *
+ * \return spdk_thread* on success, NULL on failure
+ */
+struct spdk_thread *spdk_env_get_virt_thread(void);
+
+/**
+ * The virtual thread is stored as a TLS value on the DPDK thread when
+ * it is being "executed".
+ *
+ * This set the pointer of the current virtual thread that is being
+ * worked upon by the DPDK thread.
+ *
+ * \param thread Pointer to a spdk_thread
+ *
+ * \return void
+ */
+void spdk_env_set_virt_thread(struct spdk_thread *thread);
 
 #ifdef __cplusplus
 }

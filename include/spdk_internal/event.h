@@ -46,7 +46,8 @@ struct spdk_event {
 	void			*arg2;
 };
 
-int spdk_reactors_init(unsigned int max_delay_us);
+int spdk_reactors_init(unsigned int max_delay_us, bool dynamic_threading);
+int spdk_reactor_allocate_master_thread(void);
 void spdk_reactors_fini(void);
 
 void spdk_reactors_start(void);

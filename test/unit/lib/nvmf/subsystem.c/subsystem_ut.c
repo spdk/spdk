@@ -89,6 +89,18 @@ spdk_nvmf_transport_qpair_is_idle(struct spdk_nvmf_qpair *qpair)
 	return false;
 }
 
+struct spdk_thread *
+spdk_env_get_virt_thread(void)
+{
+	return NULL;
+}
+
+struct spdk_ring *
+spdk_ring_create(enum spdk_ring_type type, size_t count, int socket_id)
+{
+	return NULL;
+}
+
 static struct spdk_nvmf_transport g_transport = {};
 
 struct spdk_nvmf_transport *

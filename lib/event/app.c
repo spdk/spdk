@@ -41,6 +41,7 @@
 #include "spdk/trace.h"
 #include "spdk/string.h"
 #include "spdk/rpc.h"
+#include "spdk/io_channel.h"
 
 #define SPDK_APP_DEFAULT_LOG_LEVEL		SPDK_LOG_NOTICE
 #define SPDK_APP_DEFAULT_LOG_PRINT_LEVEL	SPDK_LOG_INFO
@@ -214,12 +215,19 @@ spdk_app_setup_signal_handlers(struct spdk_app_opts *opts)
 	struct sigaction	sigact;
 	sigset_t		sigmask;
 	int			rc;
+	struct spdk_thread *thread;
 
 	/* Set up custom shutdown handling if the user requested it. */
 	if (opts->shutdown_cb != NULL) {
-		g_shutdown_event = spdk_event_allocate(spdk_env_get_current_core(),
-						       __shutdown_event_cb,
-						       NULL, NULL);
+		if ((thread = spdk_env_get_virt_thread()) != NULL) {
+			g_shutdown_event = spdk_thread_event_allocate(thread,
+					   __shutdown_event_cb,
+					   NULL, NULL);
+		} else {
+			g_shutdown_event = spdk_event_allocate(spdk_env_get_current_core(),
+							       __shutdown_event_cb,
+							       NULL, NULL);
+		}
 	}
 
 	sigemptyset(&sigmask);
@@ -359,6 +367,10 @@ spdk_app_read_config_file_global_params(struct spdk_app_opts *opts)
 		opts->no_pci = spdk_conf_section_get_boolval(sp, "NoPci", false);
 	}
 
+	if (!opts->dynamic_threading && sp) {
+		opts->dynamic_threading = spdk_conf_section_get_boolval(sp, "DynamicThreading", false);
+	}
+
 	if (opts->tpoint_group_mask == NULL) {
 		if (sp != NULL) {
 			opts->tpoint_group_mask = spdk_conf_section_get_val(sp, "TpointGroupMask");
@@ -476,6 +488,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	struct spdk_conf	*config = NULL;
 	int			rc;
 	struct spdk_event	*rpc_start_event;
+	struct spdk_thread *thread;
 
 	if (!opts) {
 		SPDK_ERRLOG("opts should not be NULL\n");
@@ -526,7 +539,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	 *  reactor_mask will be 0x1 which will enable core 0 to run one
 	 *  reactor.
 	 */
-	if ((rc = spdk_reactors_init(opts->max_delay_us)) != 0) {
+	if ((rc = spdk_reactors_init(opts->max_delay_us, opts->dynamic_threading)) != 0) {
 		SPDK_ERRLOG("Invalid reactor mask.\n");
 		goto app_start_log_close_err;
 	}
@@ -542,10 +555,6 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		goto app_start_log_close_err;
 	}
 
-	if ((rc = spdk_app_setup_signal_handlers(opts)) != 0) {
-		goto app_start_trace_cleanup_err;
-	}
-
 	memset(&g_spdk_app, 0, sizeof(g_spdk_app));
 	g_spdk_app.config = config;
 	g_spdk_app.shm_id = opts->shm_id;
@@ -553,10 +562,27 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	g_spdk_app.rc = 0;
 	g_init_lcore = spdk_env_get_current_core();
 	g_delay_subsystem_init = opts->delay_subsystem_init;
-	g_app_start_event = spdk_event_allocate(g_init_lcore, start_fn, arg1, arg2);
+	if (opts->dynamic_threading) {
+		/* Create the base virtual thread (this is the equivalent thread
+		 * for core 0. there is a chicken and egg problem here.
+		 * We need to put in a couple of events into the master reactor
+		 * (or the first virtual thread) before the other threads are started.
+		 */
+		spdk_reactor_allocate_master_thread();
+		thread = spdk_env_get_virt_thread();
+		g_init_lcore = spdk_thread_get_id(thread);
+		g_app_start_event = spdk_thread_event_allocate(thread, start_fn, arg1, arg2);
+		rpc_start_event = spdk_thread_event_allocate(thread, spdk_app_start_rpc,
+				  (void *)opts->rpc_addr, NULL);
+	} else {
+		g_app_start_event = spdk_event_allocate(g_init_lcore, start_fn, arg1, arg2);
+		rpc_start_event = spdk_event_allocate(g_init_lcore, spdk_app_start_rpc,
+						      (void *)opts->rpc_addr, NULL);
+	}
 
-	rpc_start_event = spdk_event_allocate(g_init_lcore, spdk_app_start_rpc,
-					      (void *)opts->rpc_addr, NULL);
+	if ((rc = spdk_app_setup_signal_handlers(opts)) != 0) {
+		goto app_start_trace_cleanup_err;
+	}
 
 	if (!g_delay_subsystem_init) {
 		spdk_subsystem_init(rpc_start_event);
@@ -602,6 +628,9 @@ _spdk_app_stop(void *arg1, void *arg2)
 void
 spdk_app_stop(int rc)
 {
+	struct spdk_thread *thread;
+	struct spdk_event *event;
+
 	if (rc) {
 		SPDK_WARNLOG("spdk_app_stop'd on non-zero\n");
 	}
@@ -610,7 +639,14 @@ spdk_app_stop(int rc)
 	 * We want to run spdk_subsystem_fini() from the same lcore where spdk_subsystem_init()
 	 * was called.
 	 */
-	spdk_event_call(spdk_event_allocate(g_init_lcore, _spdk_app_stop, NULL, NULL));
+	if ((thread = spdk_env_get_virt_thread()) != NULL) {
+		event = spdk_thread_event_allocate(spdk_thread_find_id(g_init_lcore), _spdk_app_stop, NULL,
+						   NULL);
+	} else {
+		event = spdk_event_allocate(g_init_lcore, _spdk_app_stop, NULL, NULL);
+	}
+
+	spdk_event_call(event);
 }
 
 static void
@@ -849,6 +885,7 @@ spdk_rpc_start_subsystem_init(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)
 {
 	struct spdk_event *cb_event;
+	struct spdk_thread *thread;
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -856,8 +893,15 @@ spdk_rpc_start_subsystem_init(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	cb_event = spdk_event_allocate(g_init_lcore, spdk_rpc_start_subsystem_init_cpl,
-				       request, NULL);
+	if ((thread = spdk_env_get_virt_thread()) != NULL) {
+		cb_event = spdk_thread_event_allocate(spdk_thread_find_id(g_init_lcore),
+						      spdk_rpc_start_subsystem_init_cpl,
+						      request, NULL);
+	} else {
+		cb_event = spdk_event_allocate(g_init_lcore, spdk_rpc_start_subsystem_init_cpl,
+					       request, NULL);
+
+	}
 	spdk_subsystem_init(cb_event);
 }
 SPDK_RPC_REGISTER("start_subsystem_init", spdk_rpc_start_subsystem_init, SPDK_RPC_STARTUP)
