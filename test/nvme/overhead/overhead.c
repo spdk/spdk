@@ -585,7 +585,7 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	static uint32_t ctrlr_found = 0;
 
 	if (ctrlr_found == 1) {
-		fprintf(stderr, "only attching to one controller, so skipping\n");
+		fprintf(stderr, "only attaching to one controller, so skipping\n");
 		fprintf(stderr, " controller at PCI address %s\n",
 			trid->traddr);
 		return false;
