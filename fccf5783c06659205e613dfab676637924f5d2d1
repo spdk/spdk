@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "57898af7_52547ffb",
+        "filename": "CONFIG",
+        "patchSetId": 1
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-31T20:13:24Z",
+      "side": 1,
+      "message": "I\u0027m not sure we necessarily need to make this configurable, unless it adds extra dependencies that may not be installed.\n\nIf we do want to make it configurable, the config option should be more specific (at least CONFIG_NVME_IOCTL).",
+      "revId": "fccf5783c06659205e613dfab676637924f5d2d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1fcd16ab_3bd4b973",
+        "filename": "configure",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-05-31T20:13:24Z",
+      "side": 1,
+      "message": "Same thing here - this should be more specific than just \"ioctl\", and there should be a description of what it actually does. (Or just don\u0027t make it configurable at all.)",
+      "revId": "fccf5783c06659205e613dfab676637924f5d2d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
