@@ -12,6 +12,7 @@ from . import nvmf
 from . import pmem
 from . import subsystem
 from . import vhost
+from . import client as rpc_client
 
 
 def start_subsystem_init(client):
@@ -89,7 +90,7 @@ def load_config(client, args):
             allowed_found = True
 
         if subsystems and not allowed_found:
-            raise JSONRPCException("Some config left but did not found any allowed method to execute")
+            raise rpc_client.JSONRPCException("Some config left but did not found any allowed method to execute")
 
 
 def load_subsystem_config(client, args):
