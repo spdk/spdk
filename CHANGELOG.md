@@ -9,6 +9,12 @@ on each call. This allows multiple callers to query I/O statistics without confl
 with each other. Existing users will need to adjust their code to record the previous
 I/O statistics to calculate the delta between calls.
 
+### Env
+
+The spdk_mem_map_translate() function now takes a size parameter to indicate the size of
+the memory region.  This can be used by environment implementations to validate the
+requested translation.
+
 ### git pre-commit and pre-push hooks
 
 The pre-commit hook will run `scripts/check_format.sh` and verify there are no formating
