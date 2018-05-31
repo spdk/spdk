@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5380b66f_1acb8c35",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-31T18:20:13Z",
+      "side": 1,
+      "message": "If the user wants to use OCSSD, they need to include the OCSSD header themselves. I don\u0027t think it should be automatically included in the main public API.",
+      "revId": "38e33919be2b779fab3851f2d749b402225eecf7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51a86b0d_e2fdfc39",
+        "filename": "include/spdk/nvme_ocssd.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-31T18:20:13Z",
+      "side": 1,
+      "message": "spdk_nvme_ctrlr_cmd_get_feature() already exists. The only difference is that there is no ns_id argument in the existing one. However, OCSSD defines one new feature (Media Feedback), and that command doesn\u0027t need an ns_id. Given that, I think this function isn\u0027t necessary and can be deleted.",
+      "revId": "38e33919be2b779fab3851f2d749b402225eecf7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22b17f10_4e595006",
+        "filename": "include/spdk/nvme_ocssd.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-31T18:20:13Z",
+      "side": 1,
+      "message": "Similarly to the get feature comment above, the set feature here does not need the ns_id specified, so the existing spdk_nvme_ctrlr_cmd_set_feature can be used.",
+      "revId": "38e33919be2b779fab3851f2d749b402225eecf7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83e9aa92_6abfee90",
+        "filename": "lib/nvme/nvme_ctrlr_ocssd_cmd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-31T18:20:13Z",
+      "side": 1,
+      "message": "This needs to take the ctrlr_lock",
+      "revId": "38e33919be2b779fab3851f2d749b402225eecf7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b9439b2c_e24fec07",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-31T18:20:13Z",
+      "side": 1,
+      "message": "This is not a standard opcode, so I\u0027d prefer to leave this change out of the patch. That means that the print statement will just show \"ADMIN COMMAND\" instead of \"OCSSD / GEOMETRY\", but I think that\u0027s ok.",
+      "revId": "38e33919be2b779fab3851f2d749b402225eecf7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7916f3a2_dbf47f15",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-05-31T18:20:13Z",
+      "side": 1,
+      "message": "This is not a standard opcode, so I\u0027d prefer to leave this out of the patch. That means the print will just show \"ADMIN COMMAND\" for this OCSSD command, but I think that\u0027s fine.",
+      "revId": "38e33919be2b779fab3851f2d749b402225eecf7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
