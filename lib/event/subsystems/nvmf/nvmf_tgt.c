@@ -73,6 +73,62 @@ static struct spdk_poller *g_acceptor_poller = NULL;
 
 static void nvmf_tgt_advance_state(void);
 
+static struct spdk_thread *g_tgt_thread; /* Round-robin tracking of threads for qpair assignment */
+
+static void nvmf_tgt_poll_group_add(void *arg1, void *arg2);
+
+static void _spdk_nvmf_shutdown_cb(void *arg1, void *arg2);
+
+static void
+_spdk_thread_nvmf_shutdown_cb(void *arg1, void *arg2)
+{
+	/* Still in initialization state, defer shutdown operation */
+	if (g_tgt_state < NVMF_TGT_RUNNING) {
+
+		spdk_event_call(spdk_thread_event_allocate(spdk_env_get_virt_thread(),
+				_spdk_thread_nvmf_shutdown_cb, NULL, NULL));
+		return;
+	} else if (g_tgt_state > NVMF_TGT_RUNNING) {
+		/* Already in Shutdown status, ignore the signal */
+		return;
+	}
+
+	g_tgt_state = NVMF_TGT_FINI_STOP_ACCEPTOR;
+	nvmf_tgt_advance_state();
+}
+
+static void
+spdk_thread_nvmf_subsystem_fini(struct spdk_thread *thread)
+{
+	/* Always let the first core to handle the case */
+	if (thread != spdk_thread_get_first()) {
+		spdk_thread_event_call(thread, spdk_thread_event_allocate(spdk_thread_get_first(),
+				       _spdk_thread_nvmf_shutdown_cb, NULL, NULL));
+	} else {
+		_spdk_thread_nvmf_shutdown_cb(NULL, NULL);
+	}
+}
+
+static void
+new_qpair_virtual_thread(struct spdk_nvmf_qpair *qpair)
+{
+	struct spdk_event *event;
+	struct nvmf_tgt_poll_group *pg;
+	struct spdk_thread *thread;
+
+	thread = g_tgt_thread;
+	g_tgt_thread = spdk_thread_get_next(thread);
+	if (!g_tgt_thread) {
+		g_tgt_thread = spdk_thread_get_first();
+	}
+
+	pg = &g_poll_groups[spdk_thread_get_id(thread)];
+	assert(pg != NULL);
+
+	event = spdk_thread_event_allocate(thread, nvmf_tgt_poll_group_add, qpair, pg);
+	spdk_event_call(event);
+}
+
 static void
 _spdk_nvmf_shutdown_cb(void *arg1, void *arg2)
 {
@@ -93,6 +149,12 @@ _spdk_nvmf_shutdown_cb(void *arg1, void *arg2)
 static void
 spdk_nvmf_subsystem_fini(void)
 {
+	struct spdk_thread *thread;
+
+	if ((thread = spdk_env_get_virt_thread()) != NULL) {
+		return spdk_thread_nvmf_subsystem_fini(thread);
+	}
+
 	/* Always let the first core to handle the case */
 	if (spdk_env_get_current_core() != spdk_env_get_first_core()) {
 		spdk_event_call(spdk_event_allocate(spdk_env_get_first_core(),
@@ -118,6 +180,9 @@ new_qpair(struct spdk_nvmf_qpair *qpair)
 	struct nvmf_tgt_poll_group *pg;
 	uint32_t core;
 
+	if (spdk_env_get_virt_thread() != NULL) {
+		return new_qpair_virtual_thread(qpair);
+	}
 	core = g_tgt_core;
 	g_tgt_core = spdk_env_get_next_core(core);
 	if (g_tgt_core == UINT32_MAX) {
@@ -152,8 +217,13 @@ static void
 nvmf_tgt_destroy_poll_group(void *ctx)
 {
 	struct nvmf_tgt_poll_group *pg;
+	struct spdk_thread *thread;
 
-	pg = &g_poll_groups[spdk_env_get_current_core()];
+	if ((thread = spdk_env_get_virt_thread()) != NULL) {
+		pg = &g_poll_groups[spdk_thread_get_id(thread)];
+	} else {
+		pg = &g_poll_groups[spdk_env_get_current_core()];
+	}
 	assert(pg != NULL);
 
 	spdk_nvmf_poll_group_destroy(pg->group);
@@ -174,8 +244,13 @@ static void
 nvmf_tgt_create_poll_group(void *ctx)
 {
 	struct nvmf_tgt_poll_group *pg;
+	struct spdk_thread *thread;
 
-	pg = &g_poll_groups[spdk_env_get_current_core()];
+	if ((thread = spdk_env_get_virt_thread()) != NULL) {
+		pg = &g_poll_groups[spdk_thread_get_id(thread)];
+	} else {
+		pg = &g_poll_groups[spdk_env_get_current_core()];
+	}
 	assert(pg != NULL);
 
 	pg->group = spdk_nvmf_poll_group_create(g_spdk_nvmf_tgt);
@@ -237,7 +312,12 @@ nvmf_tgt_advance_state(void)
 			g_tgt_state = NVMF_TGT_INIT_PARSE_CONFIG;
 
 			/* Find the maximum core number */
-			g_num_poll_groups = spdk_env_get_last_core() + 1;
+			if (spdk_env_get_virt_thread() != NULL) {
+				g_num_poll_groups = spdk_thread_get_total_num() + 1;
+			} else {
+				g_num_poll_groups = spdk_env_get_last_core() + 1;
+			}
+
 			assert(g_num_poll_groups > 0);
 
 			g_poll_groups = calloc(g_num_poll_groups, sizeof(*g_poll_groups));
@@ -247,6 +327,9 @@ nvmf_tgt_advance_state(void)
 				break;
 			}
 
+			if (spdk_env_get_virt_thread() != NULL) {
+				g_tgt_thread = spdk_thread_get_first();
+			}
 			g_tgt_core = spdk_env_get_first_core();
 			break;
 		}

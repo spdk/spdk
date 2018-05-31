@@ -52,6 +52,12 @@ extern "C" {
 #endif
 
 /**
+ * \brief A thread is a function that is....
+ */
+
+struct spdk_thread;
+
+/**
  * Event handler function.
  *
  * \param arg1 Argument 1.
@@ -120,6 +126,12 @@ struct spdk_app_opts {
 	 * when this flag is enabled.
 	 */
 	bool			delay_subsystem_init;
+	/*
+	 * This is temporary until all the existing apps adapt to
+	 * the dynamic threading model. Today, vhost/iscsi/rocksdb
+	 * have logic that work directly on the lcore.
+	 */
+	bool            dynamic_threading;
 };
 
 /**
@@ -255,6 +267,27 @@ void spdk_app_usage(void);
  */
 struct spdk_event *spdk_event_allocate(uint32_t lcore, spdk_event_fn fn,
 				       void *arg1, void *arg2);
+
+/**
+ * Allocate an event to be passed to spdk_thread_event_call().
+ *
+ * \param thread The spdk virtual thread that the event is destined for.
+ * \param fn Function used to execute event.
+ * \param arg1 Argument passed to function fn.
+ * \param arg2 Argument passed to function fn.
+ *
+ * \return a pointer to the allocated event.
+ */
+struct spdk_event *spdk_thread_event_allocate(struct spdk_thread *thread,
+		spdk_event_fn fn, void *arg1, void *arg2);
+
+/**
+ * Pass the given event to the associated thread and call the function.
+ *
+ * \param thread The spdk virtual thread that the event is destined for.
+ * \param event Event to execute.
+ */
+void spdk_thread_event_call(struct spdk_thread *thread, struct spdk_event *event);
 
 /**
  * Pass the given event to the associated lcore and call the function.

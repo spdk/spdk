@@ -36,6 +36,8 @@
 #include <rte_config.h>
 #include <rte_lcore.h>
 
+RTE_DEFINE_PER_LCORE(void *, _spdk_thread) = NULL;
+
 uint32_t
 spdk_env_get_core_count(void)
 {
@@ -46,6 +48,18 @@ uint32_t
 spdk_env_get_current_core(void)
 {
 	return rte_lcore_id();
+}
+
+inline struct spdk_thread *
+spdk_env_get_virt_thread(void)
+{
+	return RTE_PER_LCORE(_spdk_thread);
+}
+
+inline void
+spdk_env_set_virt_thread(struct spdk_thread *thread)
+{
+	RTE_PER_LCORE(_spdk_thread) = thread;
 }
 
 uint32_t

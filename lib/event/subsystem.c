@@ -37,6 +37,7 @@
 
 #include "spdk_internal/event.h"
 #include "spdk/env.h"
+#include "spdk/thread.h"
 
 struct spdk_subsystem_list g_subsystems = TAILQ_HEAD_INITIALIZER(g_subsystems);
 struct spdk_subsystem_depend_list g_subsystems_deps = TAILQ_HEAD_INITIALIZER(g_subsystems_deps);
@@ -170,17 +171,26 @@ void
 spdk_subsystem_init(struct spdk_event *app_start_event)
 {
 	struct spdk_event *verify_event;
+	struct spdk_thread *thread;
 
 	g_app_start_event = app_start_event;
 
-	verify_event = spdk_event_allocate(spdk_env_get_current_core(), spdk_subsystem_verify, NULL, NULL);
+	if ((thread = spdk_env_get_virt_thread()) != NULL) {
+		verify_event = spdk_thread_event_allocate(thread, spdk_subsystem_verify, NULL, NULL);
+	} else {
+		verify_event = spdk_event_allocate(spdk_env_get_current_core(), spdk_subsystem_verify, NULL, NULL);
+	}
 	spdk_event_call(verify_event);
 }
 
 static void
 _spdk_subsystem_fini_next(void *arg1, void *arg2)
 {
-	assert(g_fini_core == spdk_env_get_current_core());
+	if (spdk_env_get_virt_thread() == NULL) {
+		assert(g_fini_core == spdk_env_get_current_core());
+	} else {
+		assert(g_fini_core == spdk_thread_get_id(spdk_env_get_virt_thread()));
+	}
 
 	if (!g_next_subsystem) {
 		/* If the initialized flag is false, then we've failed to initialize
@@ -212,13 +222,28 @@ _spdk_subsystem_fini_next(void *arg1, void *arg2)
 void
 spdk_subsystem_fini_next(void)
 {
-	if (g_fini_core != spdk_env_get_current_core()) {
-		struct spdk_event *event;
+	struct spdk_thread *thread;
 
-		event = spdk_event_allocate(g_fini_core, _spdk_subsystem_fini_next, NULL, NULL);
-		spdk_event_call(event);
+	/* Uggghhhh... fix this */
+	if ((thread = spdk_env_get_virt_thread()) != NULL) {
+		if (thread != spdk_thread_find_id(g_fini_core)) {
+			struct spdk_event *event;
+
+			event = spdk_thread_event_allocate(spdk_thread_find_id(g_fini_core), _spdk_subsystem_fini_next,
+							   NULL, NULL);
+			spdk_event_call(event);
+		} else {
+			_spdk_subsystem_fini_next(NULL, NULL);
+		}
 	} else {
-		_spdk_subsystem_fini_next(NULL, NULL);
+		if (g_fini_core != spdk_env_get_current_core()) {
+			struct spdk_event *event;
+
+			event = spdk_event_allocate(g_fini_core, _spdk_subsystem_fini_next, NULL, NULL);
+			spdk_event_call(event);
+		} else {
+			_spdk_subsystem_fini_next(NULL, NULL);
+		}
 	}
 }
 
@@ -227,7 +252,11 @@ spdk_subsystem_fini(struct spdk_event *app_stop_event)
 {
 	g_app_stop_event = app_stop_event;
 	g_fini_core = spdk_env_get_current_core();
+	struct spdk_thread *thread;
 
+	if ((thread = spdk_env_get_virt_thread()) != NULL) {
+		g_fini_core = spdk_thread_get_id(thread);
+	}
 	spdk_subsystem_fini_next();
 }
 
