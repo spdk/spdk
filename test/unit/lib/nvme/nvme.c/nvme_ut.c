@@ -540,8 +540,7 @@ test_nvme_user_copy_cmd_complete(void)
 	SPDK_CU_ASSERT_FATAL(req.user_buffer != NULL);
 	memset(req.user_buffer, 0, buff_size);
 	req.payload_size = buff_size;
-	req.payload.type = NVME_PAYLOAD_TYPE_CONTIG;
-	req.payload.u.contig = malloc(buff_size);
+	req.payload = NVME_PAYLOAD_CONTIG(malloc(buff_size), NULL);
 	SPDK_CU_ASSERT_FATAL(req.payload.u.contig != NULL);
 	memcpy(req.payload.u.contig, &test_data, buff_size);
 	req.cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
