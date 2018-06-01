@@ -437,6 +437,8 @@ _spdk_nvmf_qpair_destroy(void *ctx)
 	assert(qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING);
 	qpair->state = SPDK_NVMF_QPAIR_INACTIVE;
 
+	TAILQ_REMOVE(&qpair->group->qpairs, qpair, pg_link);
+
 	spdk_nvmf_transport_qpair_fini(qpair);
 }
 

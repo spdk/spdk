@@ -92,6 +92,7 @@ spdk_nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 	uint32_t sid;
 
 	TAILQ_INIT(&group->tgroups);
+	TAILQ_INIT(&group->qpairs);
 
 	TAILQ_FOREACH(transport, &tgt->transports, link) {
 		spdk_nvmf_poll_group_add_transport(group, transport);
@@ -124,11 +125,16 @@ static void
 spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 {
 	struct spdk_nvmf_poll_group *group = ctx_buf;
+	struct spdk_nvmf_qpair *qpair, *qptmp;
 	struct spdk_nvmf_transport_poll_group *tgroup, *tmp;
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
 	uint32_t sid, nsid;
 
 	spdk_poller_unregister(&group->poller);
+
+	TAILQ_FOREACH_SAFE(qpair, &group->qpairs, pg_link, qptmp) {
+		TAILQ_REMOVE(&group->qpairs, qpair, pg_link);
+	}
 
 	TAILQ_FOREACH_SAFE(tgroup, &group->tgroups, link, tmp) {
 		TAILQ_REMOVE(&group->tgroups, tgroup, link);
@@ -419,6 +425,8 @@ spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 	qpair->group = group;
 	qpair->state = SPDK_NVMF_QPAIR_ACTIVATING;
 
+	TAILQ_INSERT_TAIL(&group->qpairs, qpair, pg_link);
+
 	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
 		if (tgroup->transport == qpair->transport) {
 			rc = spdk_nvmf_transport_poll_group_add(tgroup, qpair);
@@ -441,6 +449,8 @@ spdk_nvmf_poll_group_remove(struct spdk_nvmf_poll_group *group,
 {
 	int rc = -1;
 	struct spdk_nvmf_transport_poll_group *tgroup;
+
+	TAILQ_REMOVE(&group->qpairs, qpair, pg_link);
 
 	qpair->group = NULL;
 
