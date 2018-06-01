@@ -37,6 +37,8 @@
 
 #include "common/lib/test_env.c"
 
+pid_t g_spdk_nvme_pid;
+
 bool trace_flag = false;
 #define SPDK_LOG_NVME trace_flag
 
@@ -45,65 +47,6 @@ bool trace_flag = false;
 struct nvme_driver _g_nvme_driver = {
 	.lock = PTHREAD_MUTEX_INITIALIZER,
 };
-
-struct nvme_request *
-nvme_allocate_request(struct spdk_nvme_qpair *qpair,
-		      const struct nvme_payload *payload, uint32_t payload_size,
-		      spdk_nvme_cmd_cb cb_fn,
-		      void *cb_arg)
-{
-	struct nvme_request *req;
-
-	req = STAILQ_FIRST(&qpair->free_req);
-	if (req == NULL) {
-		return NULL;
-	}
-
-	STAILQ_REMOVE_HEAD(&qpair->free_req, stailq);
-
-	/*
-	 * Only memset up to (but not including) the children
-	 *  TAILQ_ENTRY.  children, and following members, are
-	 *  only used as part of I/O splitting so we avoid
-	 *  memsetting them until it is actually needed.
-	 *  They will be initialized in nvme_request_add_child()
-	 *  if the request is split.
-	 */
-	memset(req, 0, offsetof(struct nvme_request, children));
-	req->cb_fn = cb_fn;
-	req->cb_arg = cb_arg;
-	req->payload = *payload;
-	req->payload_size = payload_size;
-	req->qpair = qpair;
-	req->pid = getpid();
-
-	return req;
-}
-
-struct nvme_request *
-nvme_allocate_request_contig(struct spdk_nvme_qpair *qpair, void *buffer, uint32_t payload_size,
-			     spdk_nvme_cmd_cb cb_fn, void *cb_arg)
-{
-	struct nvme_payload payload;
-
-	payload = NVME_PAYLOAD_CONTIG(buffer, NULL);
-
-	return nvme_allocate_request(qpair, &payload, payload_size, cb_fn, cb_arg);
-}
-
-struct nvme_request *
-nvme_allocate_request_null(struct spdk_nvme_qpair *qpair, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
-{
-	return nvme_allocate_request_contig(qpair, NULL, 0, cb_fn, cb_arg);
-}
-
-void
-nvme_free_request(struct nvme_request *req)
-{
-	SPDK_CU_ASSERT_FATAL(req != NULL);
-	SPDK_CU_ASSERT_FATAL(req->qpair != NULL);
-	STAILQ_INSERT_HEAD(&req->qpair->free_req, req, stailq);
-}
 
 void
 nvme_request_remove_child(struct nvme_request *parent,

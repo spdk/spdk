@@ -37,7 +37,7 @@
 #define SPDK_NVME_DRIVER_NAME "spdk_nvme_driver"
 
 struct nvme_driver	*g_spdk_nvme_driver;
-static pid_t g_spdk_nvme_pid;
+pid_t			g_spdk_nvme_pid;
 
 int32_t			spdk_nvme_retry_count;
 
@@ -142,61 +142,6 @@ spdk_nvme_wait_for_completion(struct spdk_nvme_qpair *qpair,
 	return spdk_nvme_wait_for_completion_robust_lock(qpair, status, NULL);
 }
 
-struct nvme_request *
-nvme_allocate_request(struct spdk_nvme_qpair *qpair,
-		      const struct nvme_payload *payload, uint32_t payload_size,
-		      spdk_nvme_cmd_cb cb_fn, void *cb_arg)
-{
-	struct nvme_request *req;
-
-	req = STAILQ_FIRST(&qpair->free_req);
-	if (req == NULL) {
-		return req;
-	}
-
-	STAILQ_REMOVE_HEAD(&qpair->free_req, stailq);
-
-	/*
-	 * Only memset/zero fields that need it.  All other fields
-	 *  will be initialized appropriately either later in this
-	 *  function, or before they are needed later in the
-	 *  submission patch.  For example, the children
-	 *  TAILQ_ENTRY and following members are
-	 *  only used as part of I/O splitting so we avoid
-	 *  memsetting them until it is actually needed.
-	 *  They will be initialized in nvme_request_add_child()
-	 *  if the request is split.
-	 */
-	memset(req, 0, offsetof(struct nvme_request, payload_size));
-
-	req->cb_fn = cb_fn;
-	req->cb_arg = cb_arg;
-	req->payload = *payload;
-	req->payload_size = payload_size;
-	req->qpair = qpair;
-	req->pid = g_spdk_nvme_pid;
-
-	return req;
-}
-
-struct nvme_request *
-nvme_allocate_request_contig(struct spdk_nvme_qpair *qpair,
-			     void *buffer, uint32_t payload_size,
-			     spdk_nvme_cmd_cb cb_fn, void *cb_arg)
-{
-	struct nvme_payload payload;
-
-	payload = NVME_PAYLOAD_CONTIG(buffer, NULL);
-
-	return nvme_allocate_request(qpair, &payload, payload_size, cb_fn, cb_arg);
-}
-
-struct nvme_request *
-nvme_allocate_request_null(struct spdk_nvme_qpair *qpair, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
-{
-	return nvme_allocate_request_contig(qpair, NULL, 0, cb_fn, cb_arg);
-}
-
 static void
 nvme_user_copy_cmd_complete(void *arg, const struct spdk_nvme_cpl *cpl)
 {
@@ -259,16 +204,6 @@ nvme_allocate_request_user_copy(struct spdk_nvme_qpair *qpair,
 	req->cb_arg = req;
 
 	return req;
-}
-
-void
-nvme_free_request(struct nvme_request *req)
-{
-	assert(req != NULL);
-	assert(req->num_children == 0);
-	assert(req->qpair != NULL);
-
-	STAILQ_INSERT_HEAD(&req->qpair->free_req, req, stailq);
 }
 
 int
