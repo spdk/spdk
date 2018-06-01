@@ -541,8 +541,8 @@ test_nvme_user_copy_cmd_complete(void)
 	memset(req.user_buffer, 0, buff_size);
 	req.payload_size = buff_size;
 	req.payload = NVME_PAYLOAD_CONTIG(malloc(buff_size), NULL);
-	SPDK_CU_ASSERT_FATAL(req.payload.u.contig != NULL);
-	memcpy(req.payload.u.contig, &test_data, buff_size);
+	SPDK_CU_ASSERT_FATAL(req.payload.contig_or_cb_arg != NULL);
+	memcpy(req.payload.contig_or_cb_arg, &test_data, buff_size);
 	req.cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
 	req.pid = getpid();
 
@@ -571,7 +571,7 @@ test_nvme_user_copy_cmd_complete(void)
 
 	/* clean up */
 	free(req.user_buffer);
-	free(req.payload.u.contig);
+	free(req.payload.contig_or_cb_arg);
 
 	/* return spdk_dma_zmalloc/freee to unmocked */
 	MOCK_SET_P(spdk_dma_zmalloc, void *, &ut_spdk_dma_zmalloc);
@@ -607,7 +607,7 @@ test_nvme_allocate_request_null(void)
 	CU_ASSERT(req->pid == getpid());
 	CU_ASSERT(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG);
 	CU_ASSERT(req->payload.md == NULL);
-	CU_ASSERT(req->payload.u.contig == NULL);
+	CU_ASSERT(req->payload.contig_or_cb_arg == NULL);
 }
 
 static void
@@ -701,8 +701,8 @@ test_nvme_allocate_request_user_copy(void)
 	CU_ASSERT(req->user_cb_arg == cb_arg);
 	CU_ASSERT(req->user_buffer == buffer);
 	CU_ASSERT(req->cb_arg == req);
-	CU_ASSERT(memcmp(req->payload.u.contig, buffer, payload_size) == 0);
-	spdk_dma_free(req->payload.u.contig);
+	CU_ASSERT(memcmp(req->payload.contig_or_cb_arg, buffer, payload_size) == 0);
+	spdk_dma_free(req->payload.contig_or_cb_arg);
 
 	/* same thing but additional path coverage, no copy */
 	host_to_controller = false;
@@ -715,8 +715,8 @@ test_nvme_allocate_request_user_copy(void)
 	CU_ASSERT(req->user_cb_arg == cb_arg);
 	CU_ASSERT(req->user_buffer == buffer);
 	CU_ASSERT(req->cb_arg == req);
-	CU_ASSERT(memcmp(req->payload.u.contig, buffer, payload_size) != 0);
-	spdk_dma_free(req->payload.u.contig);
+	CU_ASSERT(memcmp(req->payload.contig_or_cb_arg, buffer, payload_size) != 0);
+	spdk_dma_free(req->payload.contig_or_cb_arg);
 
 	/* good buffer and valid payload size but make spdk_dma_zmalloc fail */
 	/* set the mock pointer to NULL for spdk_dma_zmalloc */
