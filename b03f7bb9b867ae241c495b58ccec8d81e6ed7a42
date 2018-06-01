@@ -22,6 +22,29 @@
       "revId": "b03f7bb9b867ae241c495b58ccec8d81e6ed7a42",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b1800631_3518a517",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-01T18:08:50Z",
+      "side": 1,
+      "message": "I\u0027m not sure if zeroes_dev should be mentioned here, as that\u0027s what every thin provisioned blob has as backing device. Data is not \"copied\" here per se.\n\nProbably the most used operation of inflate is removing the dependencies on other blobs. Secondary would be the cluster allocation for only thin provisioned blobs.\n\n\"Blobs can be inflated to copy data from backing devices (e.g. snapshots) and allocate all remaining clusters. As a result of this operation all dependencies for the blob are removed.\"\n\nLater, when \"thin\" option is added (making it possible to keep the blob as thin). It could be changed to \"... and optionally allocate all remaining clusters ...\".",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 242
+      },
+      "revId": "b03f7bb9b867ae241c495b58ccec8d81e6ed7a42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
