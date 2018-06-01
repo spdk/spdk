@@ -160,6 +160,11 @@ struct __attribute__((packed)) nvme_payload {
 	uint8_t type;
 };
 
+static inline enum nvme_payload_type
+nvme_payload_type(const struct nvme_payload *payload) {
+	return payload->type;
+}
+
 struct nvme_request {
 	struct spdk_nvme_cmd		cmd;
 
