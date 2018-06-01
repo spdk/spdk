@@ -135,50 +135,46 @@ enum spdk_nvme_ctrlr_flags {
 
 /**
  * Descriptor for a request data payload.
- *
- * This struct is arranged so that it fits nicely in struct nvme_request.
  */
-struct __attribute__((packed)) nvme_payload {
-	union {
-		/** Virtual memory address of a single physically contiguous buffer */
-		void *contig;
+struct nvme_payload {
+	/**
+	 * Functions for retrieving physical addresses for scattered payloads.
+	 */
+	spdk_nvme_req_reset_sgl_cb reset_sgl_fn;
+	spdk_nvme_req_next_sge_cb next_sge_fn;
 
-		/**
-		 * Functions for retrieving physical addresses for scattered payloads.
-		 */
-		struct nvme_sgl_args {
-			spdk_nvme_req_reset_sgl_cb reset_sgl_fn;
-			spdk_nvme_req_next_sge_cb next_sge_fn;
-			void *cb_arg;
-		} sgl;
-	} u;
+	/**
+	 * If reset_sgl_fn == NULL, this is a contig payload, and contig_or_cb_arg contains the
+	 * virtual memory address of a single physically contiguous buffer.
+	 *
+	 * If reset_sgl_fn != NULL, this is a SGL payload, and contig_or_cb_arg contains the
+	 * cb_arg that will be passed to the SGL callback functions.
+	 */
+	void *contig_or_cb_arg;
 
 	/** Virtual memory address of a single physically contiguous metadata buffer */
 	void *md;
-
-	/** \ref nvme_payload_type */
-	uint8_t type;
 };
 
 #define NVME_PAYLOAD_CONTIG(contig_, md_) \
 	(struct nvme_payload) { \
-		.u.contig = (contig_), \
+		.reset_sgl_fn = NULL, \
+		.next_sge_fn = NULL, \
+		.contig_or_cb_arg = (contig_), \
 		.md = (md_), \
-		.type = NVME_PAYLOAD_TYPE_CONTIG, \
 	}
 
 #define NVME_PAYLOAD_SGL(reset_sgl_fn_, next_sge_fn_, cb_arg_, md_) \
 	(struct nvme_payload) { \
-		.u.sgl.reset_sgl_fn = (reset_sgl_fn_), \
-		.u.sgl.next_sge_fn = (next_sge_fn_), \
-		.u.sgl.cb_arg = (cb_arg_), \
+		.reset_sgl_fn = (reset_sgl_fn_), \
+		.next_sge_fn = (next_sge_fn_), \
+		.contig_or_cb_arg = (cb_arg_), \
 		.md = (md_), \
-		.type = NVME_PAYLOAD_TYPE_SGL, \
 	}
 
 static inline enum nvme_payload_type
 nvme_payload_type(const struct nvme_payload *payload) {
-	return payload->type;
+	return payload->reset_sgl_fn ? NVME_PAYLOAD_TYPE_SGL : NVME_PAYLOAD_TYPE_CONTIG;
 }
 
 struct nvme_request {

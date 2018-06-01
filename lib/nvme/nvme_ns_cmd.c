@@ -234,7 +234,9 @@ _nvme_ns_cmd_split_request_prp(struct spdk_nvme_ns *ns,
 			       uint32_t io_flags, struct nvme_request *req,
 			       uint16_t apptag_mask, uint16_t apptag)
 {
-	struct nvme_sgl_args *args;
+	spdk_nvme_req_reset_sgl_cb reset_sgl_fn = req->payload.reset_sgl_fn;
+	spdk_nvme_req_next_sge_cb next_sge_fn = req->payload.next_sge_fn;
+	void *sgl_cb_arg = req->payload.contig_or_cb_arg;
 	bool start_valid, end_valid, last_sge, child_equals_parent;
 	uint64_t child_lba = lba;
 	uint32_t req_current_length = 0;
@@ -243,10 +245,8 @@ _nvme_ns_cmd_split_request_prp(struct spdk_nvme_ns *ns,
 	uint32_t page_size = qpair->ctrlr->page_size;
 	uintptr_t address;
 
-	args = &req->payload.u.sgl;
-
-	args->reset_sgl_fn(args->cb_arg, payload_offset);
-	args->next_sge_fn(args->cb_arg, (void **)&address, &sge_length);
+	reset_sgl_fn(sgl_cb_arg, payload_offset);
+	next_sge_fn(sgl_cb_arg, (void **)&address, &sge_length);
 	while (req_current_length < req->payload_size) {
 
 		if (sge_length == 0) {
@@ -289,7 +289,7 @@ _nvme_ns_cmd_split_request_prp(struct spdk_nvme_ns *ns,
 			child_length += sge_length;
 			req_current_length += sge_length;
 			if (req_current_length < req->payload_size) {
-				args->next_sge_fn(args->cb_arg, (void **)&address, &sge_length);
+				next_sge_fn(sgl_cb_arg, (void **)&address, &sge_length);
 			}
 			/*
 			 * If the next SGE is not page aligned, we will need to create a child
@@ -356,7 +356,9 @@ _nvme_ns_cmd_split_request_sgl(struct spdk_nvme_ns *ns,
 			       uint32_t io_flags, struct nvme_request *req,
 			       uint16_t apptag_mask, uint16_t apptag)
 {
-	struct nvme_sgl_args *args;
+	spdk_nvme_req_reset_sgl_cb reset_sgl_fn = req->payload.reset_sgl_fn;
+	spdk_nvme_req_next_sge_cb next_sge_fn = req->payload.next_sge_fn;
+	void *sgl_cb_arg = req->payload.contig_or_cb_arg;
 	uint64_t child_lba = lba;
 	uint32_t req_current_length = 0;
 	uint32_t child_length = 0;
@@ -364,14 +366,13 @@ _nvme_ns_cmd_split_request_sgl(struct spdk_nvme_ns *ns,
 	uint16_t max_sges, num_sges;
 	uintptr_t address;
 
-	args = &req->payload.u.sgl;
 	max_sges = ns->ctrlr->max_sges;
 
-	args->reset_sgl_fn(args->cb_arg, payload_offset);
+	reset_sgl_fn(sgl_cb_arg, payload_offset);
 	num_sges = 0;
 
 	while (req_current_length < req->payload_size) {
-		args->next_sge_fn(args->cb_arg, (void **)&address, &sge_length);
+		next_sge_fn(sgl_cb_arg, (void **)&address, &sge_length);
 
 		if (req_current_length + sge_length > req->payload_size) {
 			sge_length = req->payload_size - req_current_length;
