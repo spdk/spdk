@@ -95,6 +95,7 @@ spdk_nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 	uint32_t sid;
 
 	TAILQ_INIT(&group->tgroups);
+	TAILQ_INIT(&group->qpairs);
 
 	TAILQ_FOREACH(transport, &tgt->transports, link) {
 		spdk_nvmf_poll_group_add_transport(group, transport);
@@ -127,11 +128,16 @@ static void
 spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 {
 	struct spdk_nvmf_poll_group *group = ctx_buf;
+	struct spdk_nvmf_qpair *qpair, *qptmp;
 	struct spdk_nvmf_transport_poll_group *tgroup, *tmp;
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
 	uint32_t sid, nsid;
 
 	spdk_poller_unregister(&group->poller);
+
+	TAILQ_FOREACH_SAFE(qpair, &group->qpairs, link, qptmp) {
+		spdk_nvmf_qpair_disconnect(qpair);
+	}
 
 	TAILQ_FOREACH_SAFE(tgroup, &group->tgroups, link, tmp) {
 		TAILQ_REMOVE(&group->tgroups, tgroup, link);
@@ -555,6 +561,8 @@ spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 	qpair->group = group;
 	qpair->state = SPDK_NVMF_QPAIR_ACTIVATING;
 
+	TAILQ_INSERT_TAIL(&group->qpairs, qpair, link);
+
 	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
 		if (tgroup->transport == qpair->transport) {
 			rc = spdk_nvmf_transport_poll_group_add(tgroup, qpair);
@@ -578,6 +586,8 @@ spdk_nvmf_poll_group_remove(struct spdk_nvmf_poll_group *group,
 	int rc = -1;
 	struct spdk_nvmf_transport_poll_group *tgroup;
 
+	TAILQ_REMOVE(&group->qpairs, qpair, link);
+
 	qpair->group = NULL;
 
 	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
@@ -595,38 +605,35 @@ _spdk_nvmf_ctrlr_free(void *ctx)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = ctx;
 
-	spdk_nvmf_subsystem_remove_ctrlr(ctrlr->subsys, ctrlr);
-
-	free(ctrlr);
+	spdk_nvmf_ctrlr_destruct(ctrlr);
 }
 
 static void
-_spdk_nvmf_qpair_destroy(void *ctx)
+_spdk_nvmf_qpair_destroy(void *ctx, int status)
 {
 	struct spdk_nvmf_qpair *qpair = ctx;
+	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
+	uint16_t qid = qpair->qid;
+
+	spdk_nvmf_poll_group_remove(qpair->group, qpair);
 
 	assert(qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING);
 	qpair->state = SPDK_NVMF_QPAIR_INACTIVE;
 
 	spdk_nvmf_transport_qpair_fini(qpair);
-}
 
-static void
-_spdk_nvmf_ctrlr_remove_qpair(void *ctx)
-{
-	struct spdk_nvmf_qpair *qpair = ctx;
-	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
+	if (!ctrlr) {
+		return;
+	}
 
-	assert(ctrlr != NULL);
+	uint32_t count;
 
-	TAILQ_REMOVE(&ctrlr->qpairs, qpair, link);
-	spdk_bit_array_clear(ctrlr->qpair_mask, qpair->qid);
+	pthread_mutex_lock(&ctrlr->mtx);
+	spdk_bit_array_clear(ctrlr->qpair_mask, qid);
+	count = spdk_bit_array_count_set(ctrlr->qpair_mask);
+	pthread_mutex_unlock(&ctrlr->mtx);
 
-	/* Send a message to the thread that owns the qpair and destroy it. */
-	qpair->ctrlr = NULL;
-	spdk_thread_send_msg(qpair->group->thread, _spdk_nvmf_qpair_destroy, qpair);
-
-	if (spdk_bit_array_count_set(ctrlr->qpair_mask) == 0) {
+	if (count == 0) {
 		/* If this was the last queue pair on the controller, also send a message
 		 * to the subsystem to remove the controller. */
 		spdk_thread_send_msg(ctrlr->subsys->thread, _spdk_nvmf_ctrlr_free, ctrlr);
@@ -634,39 +641,29 @@ _spdk_nvmf_ctrlr_remove_qpair(void *ctx)
 }
 
 static void
-_spdk_nvmf_qpair_quiesced(void *cb_arg, int status)
-{
-	struct spdk_nvmf_qpair *qpair = cb_arg;
-
-	/* Send a message to the controller thread to remove the qpair from its internal
-	 * list. */
-	spdk_thread_send_msg(qpair->ctrlr->admin_qpair->group->thread, _spdk_nvmf_ctrlr_remove_qpair,
-			     qpair);
-}
-
-static void
 _spdk_nvmf_qpair_deactivate(void *ctx)
 {
 	struct spdk_nvmf_qpair *qpair = ctx;
 
-	assert(qpair->state == SPDK_NVMF_QPAIR_ACTIVE);
-	qpair->state = SPDK_NVMF_QPAIR_DEACTIVATING;
-
-	if (qpair->ctrlr == NULL) {
-		/* This qpair was never added to a controller. Skip a step
-		 * and destroy it immediately. */
-		_spdk_nvmf_qpair_destroy(qpair);
+	if (qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING ||
+	    qpair->state == SPDK_NVMF_QPAIR_INACTIVE) {
+		/* This can occur if the connection is killed by the target,
+		 * which results in a notification that the connection
+		 * died. */
 		return;
 	}
 
+	assert(qpair->state == SPDK_NVMF_QPAIR_ACTIVE);
+	qpair->state = SPDK_NVMF_QPAIR_DEACTIVATING;
+
 	/* Check for outstanding I/O */
 	if (!TAILQ_EMPTY(&qpair->outstanding)) {
-		qpair->state_cb = _spdk_nvmf_qpair_quiesced;
+		qpair->state_cb = _spdk_nvmf_qpair_destroy;
 		qpair->state_cb_arg = qpair;
 		return;
 	}
 
-	_spdk_nvmf_qpair_quiesced(qpair, 0);
+	_spdk_nvmf_qpair_destroy(qpair, 0);
 }
 
 void
