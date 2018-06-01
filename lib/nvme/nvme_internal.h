@@ -160,6 +160,22 @@ struct __attribute__((packed)) nvme_payload {
 	uint8_t type;
 };
 
+#define NVME_PAYLOAD_CONTIG(contig_, md_) \
+	(struct nvme_payload) { \
+		.u.contig = (contig_), \
+		.md = (md_), \
+		.type = NVME_PAYLOAD_TYPE_CONTIG, \
+	}
+
+#define NVME_PAYLOAD_SGL(reset_sgl_fn_, next_sge_fn_, cb_arg_, md_) \
+	(struct nvme_payload) { \
+		.u.sgl.reset_sgl_fn = (reset_sgl_fn_), \
+		.u.sgl.next_sge_fn = (next_sge_fn_), \
+		.u.sgl.cb_arg = (cb_arg_), \
+		.md = (md_), \
+		.type = NVME_PAYLOAD_TYPE_SGL, \
+	}
+
 static inline enum nvme_payload_type
 nvme_payload_type(const struct nvme_payload *payload) {
 	return payload->type;

@@ -468,10 +468,7 @@ test_sgl_req(void)
 	uint64_t		i;
 	struct io_request	io_req = {};
 
-	payload.type = NVME_PAYLOAD_TYPE_SGL;
-	payload.u.sgl.reset_sgl_fn = nvme_request_reset_sgl;
-	payload.u.sgl.next_sge_fn = nvme_request_next_sge;
-	payload.u.sgl.cb_arg = &io_req;
+	payload = NVME_PAYLOAD_SGL(nvme_request_reset_sgl, nvme_request_next_sge, &io_req, NULL);
 
 	prepare_submit_request_test(&qpair, &ctrlr);
 	req = nvme_allocate_request(&payload, 0x1000, NULL, &io_req);
@@ -546,10 +543,7 @@ test_hw_sgl_req(void)
 	uint64_t		i;
 	struct io_request	io_req = {};
 
-	payload.type = NVME_PAYLOAD_TYPE_SGL;
-	payload.u.sgl.reset_sgl_fn = nvme_request_reset_sgl;
-	payload.u.sgl.next_sge_fn = nvme_request_next_sge;
-	payload.u.sgl.cb_arg = &io_req;
+	payload = NVME_PAYLOAD_SGL(nvme_request_reset_sgl, nvme_request_next_sge, &io_req, NULL);
 
 	prepare_submit_request_test(&qpair, &ctrlr);
 	req = nvme_allocate_request(&payload, 0x1000, NULL, &io_req);

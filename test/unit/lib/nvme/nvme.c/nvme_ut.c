@@ -525,6 +525,7 @@ test_nvme_user_copy_cmd_complete(void)
 	struct nvme_request req;
 	int test_data = 0xdeadbeef;
 	int buff_size = sizeof(int);
+	void *buff;
 	static struct spdk_nvme_cpl cpl;
 
 	memset(&req, 0, sizeof(req));
@@ -540,10 +541,10 @@ test_nvme_user_copy_cmd_complete(void)
 	SPDK_CU_ASSERT_FATAL(req.user_buffer != NULL);
 	memset(req.user_buffer, 0, buff_size);
 	req.payload_size = buff_size;
-	req.payload.type = NVME_PAYLOAD_TYPE_CONTIG;
-	req.payload.u.contig = malloc(buff_size);
-	SPDK_CU_ASSERT_FATAL(req.payload.u.contig != NULL);
-	memcpy(req.payload.u.contig, &test_data, buff_size);
+	buff = malloc(buff_size);
+	SPDK_CU_ASSERT_FATAL(buff != NULL);
+	req.payload = NVME_PAYLOAD_CONTIG(buff, NULL);
+	memcpy(buff, &test_data, buff_size);
 	req.cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
 	req.pid = getpid();
 
@@ -572,7 +573,7 @@ test_nvme_user_copy_cmd_complete(void)
 
 	/* clean up */
 	free(req.user_buffer);
-	free(req.payload.u.contig);
+	free(buff);
 
 	/* return spdk_dma_zmalloc/freee to unmocked */
 	MOCK_SET_P(spdk_dma_zmalloc, void *, &ut_spdk_dma_zmalloc);
