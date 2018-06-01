@@ -654,7 +654,7 @@ test_nvme_ns_cmd_readv(void)
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
 	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_READ);
-	CU_ASSERT(g_request->payload.type == NVME_PAYLOAD_TYPE_SGL);
+	CU_ASSERT(nvme_payload_type(&g_request->payload) == NVME_PAYLOAD_TYPE_SGL);
 	CU_ASSERT(g_request->payload.u.sgl.reset_sgl_fn == nvme_request_reset_sgl);
 	CU_ASSERT(g_request->payload.u.sgl.next_sge_fn == nvme_request_next_sge);
 	CU_ASSERT(g_request->payload.u.sgl.cb_arg == &sge_length);
@@ -689,7 +689,7 @@ test_nvme_ns_cmd_writev(void)
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
 	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_WRITE);
-	CU_ASSERT(g_request->payload.type == NVME_PAYLOAD_TYPE_SGL);
+	CU_ASSERT(nvme_payload_type(&g_request->payload) == NVME_PAYLOAD_TYPE_SGL);
 	CU_ASSERT(g_request->payload.u.sgl.reset_sgl_fn == nvme_request_reset_sgl);
 	CU_ASSERT(g_request->payload.u.sgl.next_sge_fn == nvme_request_next_sge);
 	CU_ASSERT(g_request->payload.u.sgl.cb_arg == &sge_length);
@@ -724,7 +724,7 @@ test_nvme_ns_cmd_comparev(void)
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
 	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_COMPARE);
-	CU_ASSERT(g_request->payload.type == NVME_PAYLOAD_TYPE_SGL);
+	CU_ASSERT(nvme_payload_type(&g_request->payload) == NVME_PAYLOAD_TYPE_SGL);
 	CU_ASSERT(g_request->payload.u.sgl.reset_sgl_fn == nvme_request_reset_sgl);
 	CU_ASSERT(g_request->payload.u.sgl.next_sge_fn == nvme_request_next_sge);
 	CU_ASSERT(g_request->payload.u.sgl.cb_arg == &sge_length);

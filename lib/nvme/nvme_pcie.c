@@ -1771,7 +1771,7 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 	 * Build scattered payloads.
 	 */
 	assert(req->payload_size != 0);
-	assert(req->payload.type == NVME_PAYLOAD_TYPE_SGL);
+	assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_SGL);
 	assert(req->payload.u.sgl.reset_sgl_fn != NULL);
 	assert(req->payload.u.sgl.next_sge_fn != NULL);
 	req->payload.u.sgl.reset_sgl_fn(req->payload.u.sgl.cb_arg, req->payload_offset);
@@ -1848,7 +1848,7 @@ nvme_pcie_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvm
 	/*
 	 * Build scattered payloads.
 	 */
-	assert(req->payload.type == NVME_PAYLOAD_TYPE_SGL);
+	assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_SGL);
 	assert(req->payload.u.sgl.reset_sgl_fn != NULL);
 	req->payload.u.sgl.reset_sgl_fn(req->payload.u.sgl.cb_arg, req->payload_offset);
 
@@ -1945,9 +1945,9 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 	if (req->payload_size == 0) {
 		/* Null payload - leave PRP fields zeroed */
 		rc = 0;
-	} else if (req->payload.type == NVME_PAYLOAD_TYPE_CONTIG) {
+	} else if (nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG) {
 		rc = nvme_pcie_qpair_build_contig_request(qpair, req, tr);
-	} else if (req->payload.type == NVME_PAYLOAD_TYPE_SGL) {
+	} else if (nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_SGL) {
 		if (ctrlr->flags & SPDK_NVME_CTRLR_SGL_SUPPORTED) {
 			rc = nvme_pcie_qpair_build_hw_sgl_request(qpair, req, tr);
 		} else {
