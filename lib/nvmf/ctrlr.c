@@ -467,6 +467,8 @@ _spdk_nvmf_qpair_quiesced(void *cb_arg, int status)
 {
 	struct spdk_nvmf_qpair *qpair = cb_arg;
 
+	TAILQ_REMOVE(&qpair->group->qpairs, qpair, pg_link);
+
 	/* Send a message to the controller thread to remove the qpair from its internal
 	 * list. */
 	spdk_thread_send_msg(qpair->ctrlr->admin_qpair->group->thread, _spdk_nvmf_ctrlr_remove_qpair,
