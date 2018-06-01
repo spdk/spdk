@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b0d1e91f_429615da",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 476,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-01T16:57:25Z",
+      "side": 1,
+      "message": "\"Otherwise\" seems more appropriate here.",
+      "range": {
+        "startLine": 476,
+        "startChar": 38,
+        "endLine": 476,
+        "endChar": 47
+      },
+      "revId": "6153fb0f77f2e8696ac1564401d0b70f0bbcdfa2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e473d27_e9741e37",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 876,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-01T16:57:25Z",
+      "side": 1,
+      "message": "This change removes check for taking up 10 clusters for \u0027thick inflation\u0027 case. Could those two asserts remain, dependent on the \u0027thin\u0027 variable ?",
+      "range": {
+        "startLine": 876,
+        "startChar": 0,
+        "endLine": 876,
+        "endChar": 69
+      },
+      "revId": "6153fb0f77f2e8696ac1564401d0b70f0bbcdfa2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47c63d60_a7072a80",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 4034,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-06-01T16:57:25Z",
+      "side": 1,
+      "message": "Can the same thing as for blob_inflate() be done here ? Its just a lot of code being copy pasted.",
+      "range": {
+        "startLine": 4034,
+        "startChar": 0,
+        "endLine": 4034,
+        "endChar": 20
+      },
+      "revId": "6153fb0f77f2e8696ac1564401d0b70f0bbcdfa2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
