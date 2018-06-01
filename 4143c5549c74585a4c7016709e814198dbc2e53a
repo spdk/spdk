@@ -34,6 +34,24 @@
       "revId": "4143c5549c74585a4c7016709e814198dbc2e53a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c5345365_0dece7b4",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 959,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-01T23:34:32Z",
+      "side": 1,
+      "message": "Actually, looking at this more closely, we use req-\u003epayload_size for the SGL below.  I think this shouldn\u0027t matter in practice, since length and req-\u003epayload_size will normally be the same.  The only case where they could differ currently is if the SGL callback provides a larger buffer than the whole payload, in which case we do want req-\u003epayload_size, not length.\n\nThis whole function needs to be improved to support multi-element SGLs, but that will have to wait for another patch. :)",
+      "parentUuid": "c01d0882_3153d165",
+      "revId": "4143c5549c74585a4c7016709e814198dbc2e53a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
