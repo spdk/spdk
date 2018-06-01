@@ -66,7 +66,7 @@ $testdir/lib/blobfs/blobfs_sync_ut/blobfs_sync_ut
 
 $valgrind $testdir/lib/event/subsystem.c/subsystem_ut
 
-$valgrind $testdir/lib/net/sock.c/sock_ut
+#$valgrind $testdir/lib/net/sock.c/sock_ut
 
 $valgrind $testdir/lib/nvme/nvme.c/nvme_ut
 $valgrind $testdir/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut

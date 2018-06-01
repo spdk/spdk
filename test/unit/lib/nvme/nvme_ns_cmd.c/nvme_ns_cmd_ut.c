@@ -187,14 +187,6 @@ nvme_transport_ctrlr_scan(const struct spdk_nvme_transport_id *trid,
 	return 0;
 }
 
-void
-nvme_complete_request(struct nvme_request *req, struct spdk_nvme_cpl *cpl)
-{
-	if (req->cb_fn) {
-		req->cb_fn(req->cb_arg, cpl);
-	}
-}
-
 static void
 prepare_for_test(struct spdk_nvme_ns *ns, struct spdk_nvme_ctrlr *ctrlr,
 		 struct spdk_nvme_qpair *qpair,

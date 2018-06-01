@@ -55,6 +55,8 @@
 #include "spdk_internal/assert.h"
 #include "spdk_internal/log.h"
 
+extern pid_t g_spdk_nvme_pid;
+
 /*
  * Some Intel devices support vendor-unique read latency log page even
  * though the log page directory says otherwise.
@@ -638,19 +640,83 @@ int	nvme_ns_construct(struct spdk_nvme_ns *ns, uint32_t id,
 			  struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ns_destruct(struct spdk_nvme_ns *ns);
 
-struct nvme_request *nvme_allocate_request(struct spdk_nvme_qpair *qpair,
-		const struct nvme_payload *payload,
-		uint32_t payload_size, spdk_nvme_cmd_cb cb_fn, void *cb_arg);
-struct nvme_request *nvme_allocate_request_null(struct spdk_nvme_qpair *qpair,
-		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
-struct nvme_request *nvme_allocate_request_contig(struct spdk_nvme_qpair *qpair,
-		void *buffer, uint32_t payload_size,
-		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+static inline struct nvme_request *
+nvme_allocate_request(struct spdk_nvme_qpair *qpair,
+		      const struct nvme_payload *payload, uint32_t payload_size,
+		      spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	struct nvme_request *req;
+
+	req = STAILQ_FIRST(&qpair->free_req);
+	if (req == NULL) {
+		return req;
+	}
+
+	STAILQ_REMOVE_HEAD(&qpair->free_req, stailq);
+
+	/*
+	 * Only memset/zero fields that need it.  All other fields
+	 *  will be initialized appropriately either later in this
+	 *  function, or before they are needed later in the
+	 *  submission patch.  For example, the children
+	 *  TAILQ_ENTRY and following members are
+	 *  only used as part of I/O splitting so we avoid
+	 *  memsetting them until it is actually needed.
+	 *  They will be initialized in nvme_request_add_child()
+	 *  if the request is split.
+	 */
+	memset(req, 0, offsetof(struct nvme_request, payload_size));
+
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+	req->payload = *payload;
+	req->payload_size = payload_size;
+	req->qpair = qpair;
+	req->pid = g_spdk_nvme_pid;
+
+	return req;
+}
+
+static inline struct nvme_request *
+nvme_allocate_request_contig(struct spdk_nvme_qpair *qpair,
+			     void *buffer, uint32_t payload_size,
+			     spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	struct nvme_payload payload;
+
+	payload = NVME_PAYLOAD_CONTIG(buffer, NULL);
+
+	return nvme_allocate_request(qpair, &payload, payload_size, cb_fn, cb_arg);
+}
+
+static inline struct nvme_request *
+nvme_allocate_request_null(struct spdk_nvme_qpair *qpair, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	return nvme_allocate_request_contig(qpair, NULL, 0, cb_fn, cb_arg);
+}
+
 struct nvme_request *nvme_allocate_request_user_copy(struct spdk_nvme_qpair *qpair,
 		void *buffer, uint32_t payload_size,
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg, bool host_to_controller);
-void	nvme_complete_request(struct nvme_request *req, struct spdk_nvme_cpl *cpl);
-void	nvme_free_request(struct nvme_request *req);
+
+static inline void
+nvme_complete_request(struct nvme_request *req, struct spdk_nvme_cpl *cpl)
+{
+	if (req->cb_fn) {
+		req->cb_fn(req->cb_arg, cpl);
+	}
+}
+
+static inline void
+nvme_free_request(struct nvme_request *req)
+{
+	assert(req != NULL);
+	assert(req->num_children == 0);
+	assert(req->qpair != NULL);
+
+	STAILQ_INSERT_HEAD(&req->qpair->free_req, req, stailq);
+}
+
 void	nvme_request_remove_child(struct nvme_request *parent, struct nvme_request *child);
 uint64_t nvme_get_quirks(const struct spdk_pci_id *id);
 
