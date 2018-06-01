@@ -236,6 +236,59 @@ test_errors(void)
 	spdk_bit_array_free(NULL);
 }
 
+static void
+test_count(void)
+{
+	struct spdk_bit_array *ba;
+	uint32_t i;
+
+	/* 0-bit array should have 0 bits set and 0 bits clear */
+	ba = spdk_bit_array_create(0);
+	SPDK_CU_ASSERT_FATAL(ba != NULL);
+	CU_ASSERT(spdk_bit_array_count_set(ba) == 0);
+	CU_ASSERT(spdk_bit_array_count_clear(ba) == 0);
+	spdk_bit_array_free(&ba);
+
+	/* 1-bit array */
+	ba = spdk_bit_array_create(1);
+	SPDK_CU_ASSERT_FATAL(ba != NULL);
+	CU_ASSERT(spdk_bit_array_count_set(ba) == 0);
+	CU_ASSERT(spdk_bit_array_count_clear(ba) == 1);
+	spdk_bit_array_set(ba, 0);
+	CU_ASSERT(spdk_bit_array_count_set(ba) == 1);
+	CU_ASSERT(spdk_bit_array_count_clear(ba) == 0);
+	spdk_bit_array_free(&ba);
+
+	/* 65-bit array */
+	ba = spdk_bit_array_create(65);
+	SPDK_CU_ASSERT_FATAL(ba != NULL);
+	CU_ASSERT(spdk_bit_array_count_set(ba) == 0);
+	CU_ASSERT(spdk_bit_array_count_clear(ba) == 65);
+	spdk_bit_array_set(ba, 0);
+	CU_ASSERT(spdk_bit_array_count_set(ba) == 1);
+	CU_ASSERT(spdk_bit_array_count_clear(ba) == 64);
+	spdk_bit_array_set(ba, 5);
+	CU_ASSERT(spdk_bit_array_count_set(ba) == 2);
+	CU_ASSERT(spdk_bit_array_count_clear(ba) == 63);
+	spdk_bit_array_set(ba, 13);
+	CU_ASSERT(spdk_bit_array_count_set(ba) == 3);
+	CU_ASSERT(spdk_bit_array_count_clear(ba) == 62);
+	spdk_bit_array_clear(ba, 0);
+	CU_ASSERT(spdk_bit_array_count_set(ba) == 2);
+	CU_ASSERT(spdk_bit_array_count_clear(ba) == 63);
+	for (i = 0; i < 65; i++) {
+		spdk_bit_array_set(ba, i);
+	}
+	CU_ASSERT(spdk_bit_array_count_set(ba) == 65);
+	CU_ASSERT(spdk_bit_array_count_clear(ba) == 0);
+	for (i = 0; i < 65; i++) {
+		spdk_bit_array_clear(ba, i);
+		CU_ASSERT(spdk_bit_array_count_set(ba) == 65 - i - 1);
+		CU_ASSERT(spdk_bit_array_count_clear(ba) == i + 1);
+	}
+	spdk_bit_array_free(&ba);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -257,7 +310,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "test_64bit", test_64bit) == NULL ||
 		CU_add_test(suite, "test_find", test_find) == NULL ||
 		CU_add_test(suite, "test_resize", test_resize) == NULL ||
-		CU_add_test(suite, "test_errors", test_errors) == NULL) {
+		CU_add_test(suite, "test_errors", test_errors) == NULL ||
+		CU_add_test(suite, "test_count", test_count) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}

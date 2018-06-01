@@ -155,6 +155,24 @@ uint32_t spdk_bit_array_find_first_set(const struct spdk_bit_array *ba, uint32_t
  */
 uint32_t spdk_bit_array_find_first_clear(const struct spdk_bit_array *ba, uint32_t start_bit_index);
 
+/**
+ * Count the number of set bits in the array.
+ *
+ * \param ba The bit array to search.
+ *
+ * \return the number of bits set in the array.
+ */
+uint32_t spdk_bit_array_count_set(const struct spdk_bit_array *ba);
+
+/**
+ * Count the number of cleared bits in the array.
+ *
+ * \param ba The bit array to search.
+ *
+ * \return the number of bits cleared in the array.
+ */
+uint32_t spdk_bit_array_count_clear(const struct spdk_bit_array *ba);
+
 #ifdef __cplusplus
 }
 #endif
