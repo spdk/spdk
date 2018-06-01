@@ -683,9 +683,11 @@ int main(int argc, char **argv)
 	print_stats();
 
 cleanup:
-	spdk_histogram_data_free(g_ns->submit_histogram);
-	spdk_histogram_data_free(g_ns->complete_histogram);
-	free(g_ns);
+	if (g_ns) {
+		spdk_histogram_data_free(g_ns->submit_histogram);
+		spdk_histogram_data_free(g_ns->complete_histogram);
+		free(g_ns);
+	}
 	if (g_ctrlr) {
 		spdk_nvme_detach(g_ctrlr->ctrlr);
 		free(g_ctrlr);
