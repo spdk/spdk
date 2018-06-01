@@ -43,6 +43,15 @@
 	v.start = buf; \
 	v.len = sizeof(x) - 1
 
+#define NUM_UINT16_PASS(s, i) \
+	NUM_SETUP(s); \
+	CU_ASSERT(spdk_json_number_to_uint16(&v, &u16) == 0); \
+	CU_ASSERT(u16 == i)
+
+#define NUM_UINT16_FAIL(s) \
+	NUM_SETUP(s); \
+	CU_ASSERT(spdk_json_number_to_uint16(&v, &u16) != 0)
+
 #define NUM_INT32_PASS(s, i) \
 	NUM_SETUP(s); \
 	CU_ASSERT(spdk_json_number_to_int32(&v, &i32) == 0); \
@@ -84,6 +93,30 @@ test_strequal(void)
 	v.start = "test\0hello";
 	v.len = sizeof("test\0hello") - 1;
 	CU_ASSERT(spdk_json_strequal(&v, "test") == false);
+}
+
+static void
+test_num_to_uint16(void)
+{
+	struct spdk_json_val v;
+	char buf[100];
+	uint16_t u16 = 0;
+
+	NUM_SETUP("1234");
+	CU_ASSERT(spdk_json_number_to_uint16(&v, &u16) == 0);
+	CU_ASSERT(u16 == 1234);
+
+	NUM_UINT16_PASS("0", 0);
+	NUM_UINT16_PASS("1234", 1234);
+	NUM_UINT16_PASS("1234.00000", 1234);
+	NUM_UINT16_PASS("1.2e1", 12);
+	NUM_UINT16_PASS("12340e-1", 1234);
+
+	NUM_UINT16_FAIL("1.2");
+	NUM_UINT16_FAIL("-1234");
+	NUM_UINT16_FAIL("1.2E0");
+	NUM_UINT16_FAIL("1.234e1");
+	NUM_UINT16_FAIL("12341e-1");
 }
 
 static void
@@ -410,6 +443,95 @@ test_decode_int32(void)
 }
 
 static void
+test_decode_uint16(void)
+{
+	struct spdk_json_val v;
+	uint32_t i;
+
+	/* incorrect type */
+	v.type = SPDK_JSON_VAL_STRING;
+	v.start = "Strin";
+	v.len = 5;
+	CU_ASSERT(spdk_json_decode_uint16(&v, &i) != 0);
+
+	/* invalid value (float) */
+	v.type = SPDK_JSON_VAL_NUMBER;
+	v.start = "123.4";
+	v.len = 5;
+	CU_ASSERT(spdk_json_decode_uint16(&v, &i) != 0);
+
+	/* edge case (0) */
+	v.start = "0";
+	v.len = 1;
+	i = 456;
+	CU_ASSERT(spdk_json_decode_uint16(&v, &i) == 0);
+	CU_ASSERT(i == 0);
+
+	/* invalid value (negative) */
+	v.start = "-1";
+	v.len = 2;
+	CU_ASSERT(spdk_json_decode_uint16(&v, &i) != 0);
+
+	/* edge case (maximum) */
+	v.start = "65535";
+	v.len = 5;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint16(&v, &i) == 0);
+	CU_ASSERT(i == 65535);
+
+	/* invalid value (overflow) */
+	v.start = "65536";
+	v.len = 5;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint16(&v, &i) != 0);
+
+	/* valid exponent */
+	v.start = "66E2";
+	v.len = 4;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint16(&v, &i) == 0);
+	CU_ASSERT(i == 6600);
+
+	/* invalid exponent (overflow) */
+	v.start = "66E3";
+	v.len = 4;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint16(&v, &i) != 0);
+
+	/* invalid exponent (decimal) */
+	v.start = "65.535E2";
+	v.len = 7;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint16(&v, &i) != 0);
+
+	/* valid exponent with decimal */
+	v.start = "65.53E2";
+	v.len = 7;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint16(&v, &i) == 0);
+	CU_ASSERT(i == 6553);
+
+	/* invalid negative exponent */
+	v.start = "40e-2";
+	v.len = 5;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint16(&v, &i) != 0);
+
+	/* invalid negative exponent */
+	v.start = "-40e-1";
+	v.len = 6;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint16(&v, &i) != 0);
+
+	/* valid negative exponent */
+	v.start = "40e-1";
+	v.len = 5;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint16(&v, &i) == 0);
+	CU_ASSERT(i == 4);
+}
+
+static void
 test_decode_uint32(void)
 {
 	struct spdk_json_val v;
@@ -658,11 +780,13 @@ int main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "strequal", test_strequal) == NULL ||
+		CU_add_test(suite, "num_to_uint16", test_num_to_uint16) == NULL ||
 		CU_add_test(suite, "num_to_int32", test_num_to_int32) == NULL ||
 		CU_add_test(suite, "num_to_uint64", test_num_to_uint64) == NULL ||
 		CU_add_test(suite, "decode_object", test_decode_object) == NULL ||
 		CU_add_test(suite, "decode_array", test_decode_array) == NULL ||
 		CU_add_test(suite, "decode_bool", test_decode_bool) == NULL ||
+		CU_add_test(suite, "decode_uint16", test_decode_uint16) == NULL ||
 		CU_add_test(suite, "decode_int32", test_decode_int32) == NULL ||
 		CU_add_test(suite, "decode_uint32", test_decode_uint32) == NULL ||
 		CU_add_test(suite, "decode_uint64", test_decode_uint64) == NULL ||
