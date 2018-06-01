@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "56ba8449_50bb93c9",
+        "filename": "CONFIG",
+        "patchSetId": 1
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-06-01T01:42:56Z",
+      "side": 1,
+      "message": "Let me change it to be CONFIG_NVME_IOCTL.\nYes, there is one extra dependency on nvme_ioctl.h.\n\nElder Fedora versions and Ubuntu versions have nvme.h inside /usr/include/linux/ instead of nvme_ioctl.h.\nnvme_ioctl.h is the updated version of nvme.h, and it is necessary to compile the functions that process nvme ioctl request.",
+      "parentUuid": "57898af7_52547ffb",
+      "revId": "fccf5783c06659205e613dfab676637924f5d2d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1fcd16ab_3bd4b973",
         "filename": "configure",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2018-05-31T20:13:24Z",
       "side": 1,
       "message": "Same thing here - this should be more specific than just \"ioctl\", and there should be a description of what it actually does. (Or just don\u0027t make it configurable at all.)",
+      "revId": "fccf5783c06659205e613dfab676637924f5d2d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd37a5f0_158017ce",
+        "filename": "configure",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-06-01T01:42:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1fcd16ab_3bd4b973",
       "revId": "fccf5783c06659205e613dfab676637924f5d2d1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
