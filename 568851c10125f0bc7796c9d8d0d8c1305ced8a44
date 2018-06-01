@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "592d442d_17e12849",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-01T17:19:54Z",
+      "side": 1,
+      "message": "Would it be clearer to use a union?\n\nunion {\n    struct {\n        void *data;\n    } contig;\n\n    struct {\n        void *cb_arg;\n    } sgl;\n};",
+      "revId": "568851c10125f0bc7796c9d8d0d8c1305ced8a44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
