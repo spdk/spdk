@@ -2,6 +2,57 @@
   "comments": [
     {
       "key": {
+        "uuid": "f158080e_fba5159a",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-01T21:19:39Z",
+      "side": 1,
+      "message": "I don\u0027t think this should accept io_unit_size \u003d\u003d 0.",
+      "revId": "875974bc53f75088f243ef65977443db8309627b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52c07dc8_7b9d880a",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-01T21:19:39Z",
+      "side": 1,
+      "message": "The ctrlr_bdev.c modifications for Read and Write look OK, but it doesn\u0027t look like the iovcnt !\u003d 1 case is handled for any of the other paths that touch data.  Any non-Read/Write command using req-\u003edata is going to be broken if the request is larger than io_unit_size, since the data won\u0027t be contiguous.\n\nThis is probably OK in practice, since other commands will normally be using small buffers (\u003c\u003d 4096 bytes), but it would be good to add some helper functions to fill out the iov-based buffers and get rid of all users of req-\u003edata.",
+      "revId": "875974bc53f75088f243ef65977443db8309627b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "93688548_1149bf35",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-01T21:19:39Z",
+      "side": 1,
+      "message": "I think we need to first check that io_unit_size !\u003d 0 so this doesn\u0027t end up dividing by zero.\n\nWe should also require that io_unit_size is at least 4096 so that the Identify data etc. will fit into a single unit (at least until we add full iov support to the ctrlr.c emulation).",
+      "revId": "875974bc53f75088f243ef65977443db8309627b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bc422924_e3d8cccd",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 7
@@ -19,6 +70,23 @@
         "endLine": 148,
         "endChar": 4
       },
+      "revId": "875974bc53f75088f243ef65977443db8309627b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff0af742_a5db0699",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 351,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-01T21:19:39Z",
+      "side": 1,
+      "message": "Now that this is more than 1, we should probably be clamping it to ibv_device_attr::max_sge - I don\u0027t know if all RNICs are guaranteed to support 16 SGEs.",
       "revId": "875974bc53f75088f243ef65977443db8309627b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
