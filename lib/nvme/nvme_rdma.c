@@ -909,7 +909,7 @@ nvme_rdma_build_contig_request(struct nvme_rdma_qpair *rqpair, struct nvme_reque
 	struct ibv_mr *mr;
 
 	assert(req->payload_size != 0);
-	assert(req->payload.type == NVME_PAYLOAD_TYPE_CONTIG);
+	assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG);
 
 	mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map, (uint64_t)payload);
 	if (mr == NULL) {
@@ -938,7 +938,7 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair, struct nvme_request 
 	uint32_t length;
 
 	assert(req->payload_size != 0);
-	assert(req->payload.type == NVME_PAYLOAD_TYPE_SGL);
+	assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_SGL);
 	assert(req->payload.u.sgl.reset_sgl_fn != NULL);
 	assert(req->payload.u.sgl.next_sge_fn != NULL);
 	req->payload.u.sgl.reset_sgl_fn(req->payload.u.sgl.cb_arg, req->payload_offset);
@@ -980,9 +980,9 @@ nvme_rdma_req_init(struct nvme_rdma_qpair *rqpair, struct nvme_request *req,
 
 	if (req->payload_size == 0) {
 		rc = nvme_rdma_build_null_request(req);
-	} else if (req->payload.type == NVME_PAYLOAD_TYPE_CONTIG) {
+	} else if (nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG) {
 		rc = nvme_rdma_build_contig_request(rqpair, req);
-	} else if (req->payload.type == NVME_PAYLOAD_TYPE_SGL) {
+	} else if (nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_SGL) {
 		rc = nvme_rdma_build_sgl_request(rqpair, req);
 	} else {
 		rc = -1;
