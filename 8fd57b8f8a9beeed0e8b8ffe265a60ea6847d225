@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1ec6d482_439cd3d1",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 495,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-01T07:48:14Z",
+      "side": 1,
+      "message": "Sorry, I forgot to hit \u0027Post\u0027 button on PS 23 ;)\n\nWe already taking over other parameters so this only unify behaviour of this function. Also eliminating another (possible) point of failure.",
+      "parentUuid": "c88370e8_ae97a038",
+      "revId": "8fd57b8f8a9beeed0e8b8ffe265a60ea6847d225",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7e203f6c_70a82557",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 24
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "3fea77d3_fd4321dd",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 536,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-01T07:48:14Z",
+      "side": 1,
+      "message": "This is to properly set status to ENOMEM when unmarshal fail (used in line 545).",
+      "parentUuid": "7e203f6c_70a82557",
+      "revId": "8fd57b8f8a9beeed0e8b8ffe265a60ea6847d225",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cbc91bfe_8ada1151",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 24
@@ -47,6 +83,24 @@
       "writtenOn": "2018-05-30T17:19:05Z",
       "side": 1,
       "message": "I\u0027m curious - why do we need to defer freeing of the req like this?",
+      "revId": "8fd57b8f8a9beeed0e8b8ffe265a60ea6847d225",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "994246a4_06e06cb1",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 598,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-01T07:48:14Z",
+      "side": 1,
+      "message": "I hit an issue when I run bdev_iscsi with asan and failed to connect, then in SPDK_ERRLOG() req was used that was already freed, so this is the reason.",
+      "parentUuid": "cbc91bfe_8ada1151",
       "revId": "8fd57b8f8a9beeed0e8b8ffe265a60ea6847d225",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
