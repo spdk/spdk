@@ -36,6 +36,7 @@
 #include "spdk_cunit.h"
 #include "spdk_internal/mock.h"
 
+#include "common/lib/test_env.c"
 #include "nvmf/ctrlr.c"
 
 SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
@@ -279,10 +280,11 @@ test_connect(void)
 	memset(&ctrlr, 0, sizeof(ctrlr));
 	TAILQ_INIT(&ctrlr.qpairs);
 	ctrlr.subsys = &subsystem;
+	ctrlr.qpair_mask = spdk_bit_array_create(3);
+	SPDK_CU_ASSERT_FATAL(ctrlr.qpair_mask != NULL);
 	ctrlr.vcprop.cc.bits.en = 1;
 	ctrlr.vcprop.cc.bits.iosqes = 6;
 	ctrlr.vcprop.cc.bits.iocqes = 4;
-	ctrlr.max_qpairs_allowed = 3;
 
 	memset(&admin_qpair, 0, sizeof(admin_qpair));
 	TAILQ_INSERT_TAIL(&ctrlr.qpairs, &admin_qpair, link);
@@ -339,6 +341,7 @@ test_connect(void)
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
 	CU_ASSERT(nvme_status_success(&rsp.nvme_cpl.status));
 	CU_ASSERT(qpair.ctrlr != NULL);
+	spdk_bit_array_free(&qpair.ctrlr->qpair_mask);
 	free(qpair.ctrlr);
 	qpair.ctrlr = NULL;
 
@@ -535,6 +538,7 @@ test_connect(void)
 	qpair2.group = &group;
 	qpair2.qid = 1;
 	TAILQ_INSERT_TAIL(&ctrlr.qpairs, &qpair, link);
+	spdk_bit_array_set(ctrlr.qpair_mask, 1);
 	cmd.connect_cmd.qid = 1;
 	rc = spdk_nvmf_ctrlr_connect(&req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
@@ -546,6 +550,8 @@ test_connect(void)
 	/* Clean up globals */
 	MOCK_SET(spdk_nvmf_tgt_find_subsystem, struct spdk_nvmf_subsystem *, NULL);
 	MOCK_SET(spdk_nvmf_poll_group_create, struct spdk_nvmf_poll_group *, NULL);
+
+	spdk_bit_array_free(&ctrlr.qpair_mask);
 }
 
 static void

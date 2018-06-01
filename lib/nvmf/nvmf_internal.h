@@ -197,9 +197,12 @@ struct spdk_nvmf_ctrlr {
 	struct spdk_nvmf_ctrlr_feat feat;
 
 	struct spdk_nvmf_qpair *admin_qpair;
+
 	TAILQ_HEAD(, spdk_nvmf_qpair) qpairs;
-	int num_qpairs;
-	int max_qpairs_allowed;
+
+	struct spdk_bit_array *qpair_mask;
+	uint32_t num_qpairs;
+
 	struct spdk_nvmf_request *aer_req;
 	union spdk_nvme_async_event_completion notice_event;
 	uint8_t hostid[16];
