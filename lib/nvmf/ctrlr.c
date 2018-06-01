@@ -36,6 +36,7 @@
 #include "nvmf_internal.h"
 #include "transport.h"
 
+#include "spdk/bit_array.h"
 #include "spdk/endian.h"
 #include "spdk/io_channel.h"
 #include "spdk/trace.h"
@@ -76,7 +77,7 @@ ctrlr_add_qpair_and_update_rsp(struct spdk_nvmf_qpair *qpair,
 			       struct spdk_nvmf_ctrlr *ctrlr,
 			       struct spdk_nvmf_fabric_connect_rsp *rsp)
 {
-	if (spdk_nvmf_ctrlr_get_qpair(ctrlr, qpair->qid)) {
+	if (qpair->qid >= spdk_bit_array_capacity(ctrlr->qpair_mask)) {
 		SPDK_ERRLOG("Got I/O connect with duplicate QID %u\n", qpair->qid);
 		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		rsp->status.sc = SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER;
@@ -84,16 +85,16 @@ ctrlr_add_qpair_and_update_rsp(struct spdk_nvmf_qpair *qpair,
 	}
 
 	/* check if we would exceed ctrlr connection limit */
-	if (ctrlr->num_qpairs >= ctrlr->max_qpairs_allowed) {
+	if (spdk_bit_array_get(ctrlr->qpair_mask, qpair->qid)) {
 		SPDK_ERRLOG("qpair limit %d\n", ctrlr->num_qpairs);
 		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		rsp->status.sc = SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER;
 		return;
 	}
 
-
 	qpair->ctrlr = ctrlr;
 	ctrlr->num_qpairs++;
+	spdk_bit_array_set(ctrlr->qpair_mask, qpair->qid);
 	TAILQ_INSERT_HEAD(&ctrlr->qpairs, qpair, link);
 
 	rsp->status.sc = SPDK_NVME_SC_SUCCESS;
@@ -164,15 +165,21 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	TAILQ_INIT(&ctrlr->qpairs);
 	ctrlr->num_qpairs = 0;
 	ctrlr->subsys = subsystem;
-	ctrlr->max_qpairs_allowed = tgt->opts.max_qpairs_per_ctrlr;
+
+	ctrlr->qpair_mask = spdk_bit_array_create(tgt->opts.max_qpairs_per_ctrlr);
+	if (!ctrlr->qpair_mask) {
+		SPDK_ERRLOG("Failed to allocate controller qpair mask\n");
+		free(ctrlr);
+		return NULL;
+	}
 
 	ctrlr->feat.keep_alive_timer.bits.kato = connect_cmd->kato;
 	ctrlr->feat.async_event_configuration.bits.ns_attr_notice = 1;
 	ctrlr->feat.volatile_write_cache.bits.wce = 1;
 
 	/* Subtract 1 for admin queue, 1 for 0's based */
-	ctrlr->feat.number_of_queues.bits.ncqr = ctrlr->max_qpairs_allowed - 1 - 1;
-	ctrlr->feat.number_of_queues.bits.nsqr = ctrlr->max_qpairs_allowed - 1 - 1;
+	ctrlr->feat.number_of_queues.bits.ncqr = tgt->opts.max_qpairs_per_ctrlr - 1 - 1;
+	ctrlr->feat.number_of_queues.bits.nsqr = tgt->opts.max_qpairs_per_ctrlr - 1 - 1;
 
 	memcpy(ctrlr->hostid, connect_data->hostid, sizeof(ctrlr->hostid));
 
@@ -215,8 +222,11 @@ spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 
 		TAILQ_REMOVE(&ctrlr->qpairs, qpair, link);
 		ctrlr->num_qpairs--;
+		spdk_bit_array_clear(ctrlr->qpair_mask, qpair->qid);
 		spdk_nvmf_transport_qpair_fini(qpair);
 	}
+
+	spdk_bit_array_free(&ctrlr->qpair_mask);
 
 	spdk_nvmf_subsystem_remove_ctrlr(ctrlr->subsys, ctrlr);
 
@@ -443,6 +453,7 @@ _spdk_nvmf_ctrlr_remove_qpair(void *ctx)
 
 	TAILQ_REMOVE(&ctrlr->qpairs, qpair, link);
 	ctrlr->num_qpairs--;
+	spdk_bit_array_clear(ctrlr->qpair_mask, qpair->qid);
 
 	/* Send a message to the thread that owns the qpair and destroy it. */
 	qpair->ctrlr = NULL;
