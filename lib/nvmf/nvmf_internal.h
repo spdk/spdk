@@ -115,6 +115,9 @@ struct spdk_nvmf_poll_group {
 	/* Array of poll groups indexed by subsystem id (sid) */
 	struct spdk_nvmf_subsystem_poll_group		*sgroups;
 	uint32_t					num_sgroups;
+
+	/* All of the queue pairs that belong to this poll group */
+	TAILQ_HEAD(, spdk_nvmf_qpair)			qpairs;
 };
 
 typedef enum _spdk_nvmf_request_exec_status {
@@ -205,8 +208,9 @@ struct spdk_nvmf_ctrlr {
 
 	struct spdk_nvmf_qpair *admin_qpair;
 
-	TAILQ_HEAD(, spdk_nvmf_qpair) qpairs;
-	struct spdk_bit_array *qpair_mask;
+	/* Mutex to protect the qpair mask */
+	pthread_mutex_t		mtx;
+	struct spdk_bit_array	*qpair_mask;
 
 	struct spdk_nvmf_request *aer_req;
 	union spdk_nvme_async_event_completion notice_event;
