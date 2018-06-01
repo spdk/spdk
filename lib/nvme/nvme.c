@@ -206,10 +206,10 @@ nvme_user_copy_cmd_complete(void *arg, const struct spdk_nvme_cpl *cpl)
 		if (xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST ||
 		    xfer == SPDK_NVME_DATA_BIDIRECTIONAL) {
 			assert(req->pid == getpid());
-			memcpy(req->user_buffer, req->payload.u.contig, req->payload_size);
+			memcpy(req->user_buffer, req->payload.contig_or_cb_arg, req->payload_size);
 		}
 
-		spdk_dma_free(req->payload.u.contig);
+		spdk_dma_free(req->payload.contig_or_cb_arg);
 	}
 
 	/* Call the user's original callback now that the buffer has been copied */
