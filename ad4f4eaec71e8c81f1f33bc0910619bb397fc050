@@ -1,0 +1,250 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8cfe96cc_90421a64",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 1571,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-01T08:56:33Z",
+      "side": 1,
+      "message": "count may be better?",
+      "range": {
+        "startLine": 1571,
+        "startChar": 16,
+        "endLine": 1571,
+        "endChar": 19
+      },
+      "revId": "ad4f4eaec71e8c81f1f33bc0910619bb397fc050",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "24d29882_c22dd044",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 1580,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-01T08:56:33Z",
+      "side": 1,
+      "message": "matches",
+      "range": {
+        "startLine": 1579,
+        "startChar": 69,
+        "endLine": 1580,
+        "endChar": 8
+      },
+      "revId": "ad4f4eaec71e8c81f1f33bc0910619bb397fc050",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dac6281f_984d2471",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 466,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-01T08:56:33Z",
+      "side": 1,
+      "message": "I don\u0027t see REMOVE in the TAILQ_FOREACH loop?",
+      "range": {
+        "startLine": 466,
+        "startChar": 15,
+        "endLine": 466,
+        "endChar": 20
+      },
+      "revId": "ad4f4eaec71e8c81f1f33bc0910619bb397fc050",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3b558f9_4116bf73",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-01T08:56:33Z",
+      "side": 1,
+      "message": "same as above.",
+      "range": {
+        "startLine": 497,
+        "startChar": 15,
+        "endLine": 497,
+        "endChar": 20
+      },
+      "revId": "ad4f4eaec71e8c81f1f33bc0910619bb397fc050",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed2fca67_77b35690",
+        "filename": "test/nvme/err_injection/err_injection.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-01T08:56:33Z",
+      "side": 1,
+      "message": "how about nvme_dev?",
+      "range": {
+        "startLine": 42,
+        "startChar": 7,
+        "endLine": 42,
+        "endChar": 10
+      },
+      "revId": "ad4f4eaec71e8c81f1f33bc0910619bb397fc050",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4084ffa7_392fd901",
+        "filename": "test/nvme/err_injection/err_injection.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-01T08:56:33Z",
+      "side": 1,
+      "message": "check if numdevs is less than MAX_DEVS?",
+      "range": {
+        "startLine": 77,
+        "startChar": 13,
+        "endLine": 77,
+        "endChar": 21
+      },
+      "revId": "ad4f4eaec71e8c81f1f33bc0910619bb397fc050",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0158b8f6_84e0f3f8",
+        "filename": "test/nvme/err_injection/err_injection.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-01T08:56:33Z",
+      "side": 1,
+      "message": "if failed is a counter variable, failed++ should be used instead?",
+      "revId": "ad4f4eaec71e8c81f1f33bc0910619bb397fc050",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3cc3b082_60eb8c7d",
+        "filename": "test/nvme/err_injection/err_injection.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-01T08:56:33Z",
+      "side": 1,
+      "message": "to set these values once before foreach_dev may be enough.",
+      "range": {
+        "startLine": 121,
+        "startChar": 0,
+        "endLine": 123,
+        "endChar": 46
+      },
+      "revId": "ad4f4eaec71e8c81f1f33bc0910619bb397fc050",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "64b08977_d6ae9de7",
+        "filename": "test/nvme/err_injection/err_injection.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-01T08:56:33Z",
+      "side": 1,
+      "message": "print both success/fail like \n\"send Get Features command for dev: success/failure\"\nmay be better?",
+      "revId": "ad4f4eaec71e8c81f1f33bc0910619bb397fc050",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "06a8135a_d52ef077",
+        "filename": "test/nvme/err_injection/err_injection.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-01T08:56:33Z",
+      "side": 1,
+      "message": "Is it OK to return here? Go to the line 181? Outstanding commands may remain to be handled.",
+      "revId": "ad4f4eaec71e8c81f1f33bc0910619bb397fc050",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "050fd9c6_d85e84b9",
+        "filename": "test/nvme/err_injection/err_injection.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-01T08:56:33Z",
+      "side": 1,
+      "message": "Same as above.",
+      "revId": "ad4f4eaec71e8c81f1f33bc0910619bb397fc050",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a26d316_2e722a78",
+        "filename": "test/nvme/err_injection/err_injection.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-01T08:56:33Z",
+      "side": 1,
+      "message": "By get_feature_test() again, \"Admin Get Feature error test, expected successful return\" is possible?",
+      "revId": "ad4f4eaec71e8c81f1f33bc0910619bb397fc050",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
