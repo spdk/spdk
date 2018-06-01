@@ -182,9 +182,7 @@ nvme_allocate_request_contig(struct spdk_nvme_qpair *qpair,
 {
 	struct nvme_payload payload;
 
-	payload.type = NVME_PAYLOAD_TYPE_CONTIG;
-	payload.u.contig = buffer;
-	payload.md = NULL;
+	payload = NVME_PAYLOAD_CONTIG(buffer, NULL);
 
 	return nvme_allocate_request(qpair, &payload, payload_size, cb_fn, cb_arg);
 }
