@@ -39,6 +39,8 @@
 
 #include "nvme/nvme_pcie.c"
 
+pid_t g_spdk_nvme_pid;
+
 DEFINE_STUB(spdk_mem_register, int, (void *vaddr, size_t len), 0);
 DEFINE_STUB(spdk_mem_unregister, int, (void *vaddr, size_t len), 0);
 
@@ -237,12 +239,6 @@ nvme_get_quirks(const struct spdk_pci_id *id)
 	abort();
 }
 
-void
-nvme_free_request(struct nvme_request *req)
-{
-	abort();
-}
-
 bool
 nvme_completion_is_retry(const struct spdk_nvme_cpl *cpl)
 {
@@ -274,12 +270,6 @@ nvme_ctrlr_submit_admin_request(struct spdk_nvme_ctrlr *ctrlr,
 	abort();
 }
 
-struct nvme_request *
-nvme_allocate_request_null(struct spdk_nvme_qpair *qpair, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
-{
-	abort();
-}
-
 void
 nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 {
@@ -294,12 +284,6 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 
 void
 nvme_qpair_enable(struct spdk_nvme_qpair *qpair)
-{
-	abort();
-}
-
-void
-nvme_complete_request(struct nvme_request *req, struct spdk_nvme_cpl *cpl)
 {
 	abort();
 }
