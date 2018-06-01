@@ -324,17 +324,77 @@ nvme_ioctl_construct_resp(struct spdk_nvme_ioctl_conn *ioctl_conn)
 	nvme_ioctl_resp_get_lens(resp, req);
 }
 
+static int
+spdk_nvme_ioctl_proc_done(struct spdk_nvme_ioctl_conn *ioctl_conn, int ioctl_ret)
+{
+	struct spdk_nvme_ioctl_resp *resp;
+	int ret = 0;
+
+	nvme_ioctl_construct_resp(ioctl_conn);
+
+	resp = &ioctl_conn->resp;
+	/*
+	 * resp->ioctl_ret may be already set by previous steps,
+	 * like checking elements of request after receiving them.
+	 */
+	if (!resp->ioctl_ret) {
+		resp->ioctl_ret = ioctl_ret;
+	}
+
+	/* check whether ioctl-conn should stop and release */
+	if (ioctl_conn->state == IOCTL_CONN_STATE_CLOSE) {
+		spdk_nvme_ioctl_conn_free(ioctl_conn);
+	} else {
+		ioctl_conn->state = IOCTL_CONN_STATE_XMIT_HEAD;
+		ret = spdk_nvme_ioctl_conn_xmit(ioctl_conn);
+	}
+
+	return ret;
+}
+
+static int
+spdk_nvme_ioctl_id_proc(struct spdk_nvme_ioctl_conn *ioctl_conn)
+{
+	struct spdk_nvme_ns *ns = NULL;
+	int ret;
+
+	/* ioctl(fd, NVME_IOCTL_ID), return value is id */
+	if (ioctl_conn->type == IOCTL_CONN_TYPE_BLK) {
+		ns = ((struct nvme_bdev *)ioctl_conn->device)->ns;
+		ret = spdk_nvme_ns_get_id(ns);
+	} else {
+		ret = -ENOTBLK;
+	}
+
+	ret = spdk_nvme_ioctl_proc_done(ioctl_conn, ret);
+	return ret;
+}
+
 int
 spdk_nvme_ioctl_proc(struct spdk_nvme_ioctl_conn *ioctl_conn)
 {
+	uint32_t ioctl_cmd;
 	int ret = 0;
 
-	// temp proc: copy req to resp
-	nvme_ioctl_construct_resp(ioctl_conn);
-	ioctl_conn->resp.ioctl_ret = -1;
+	ioctl_cmd = ioctl_conn->req.ioctl_cmd;
 
-	ioctl_conn->state = IOCTL_CONN_STATE_XMIT_HEAD;
-	ret = spdk_nvme_ioctl_conn_xmit(ioctl_conn);
+	switch (ioctl_cmd) {
+	case NVME_IOCTL_ID:
+		ret = spdk_nvme_ioctl_id_proc(ioctl_conn);
+		break;
+	case NVME_IOCTL_ADMIN_CMD:
+	case NVME_IOCTL_IO_CMD:
+	case NVME_IOCTL_SUBMIT_IO:
+	case NVME_IOCTL_RESET:
+	case NVME_IOCTL_SUBSYS_RESET:
+	case NVME_IOCTL_RESCAN:
+		SPDK_NOTICELOG("Unsupported nvme ioctl_cmd %d\n", ioctl_cmd);
+		ret = spdk_nvme_ioctl_proc_done(ioctl_conn, -EINVAL);
+		break;
+	default:
+		SPDK_NOTICELOG("Unknown nvme ioctl_cmd %d\n", ioctl_cmd);
+		ret = spdk_nvme_ioctl_proc_done(ioctl_conn, -EINVAL);
+	}
 
 	return ret;
 }
