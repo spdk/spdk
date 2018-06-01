@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d47b6b23_1722f6c9",
+        "filename": "test/unit/unittest.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-01T21:49:14Z",
+      "side": 1,
+      "message": "This looks unrelated. :)",
+      "revId": "a702f26f834a379df47beea411768e07630e33f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
