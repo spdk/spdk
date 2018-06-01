@@ -20,6 +20,11 @@ Results are recorded in the `make.log` file.
 To enable type: 'git config core.hooksPath .githooks'. To override after configuration use
 the `git --no-verify` flag.
 
+### IOAT
+
+The Disable option in `[Ioat]` section of the configuration file is removed. The Enable
+option is added instead and it is "No" by default.
+
 ## v18.04: Logical Volume Snapshot/Clone, iSCSI Initiator, Bdev QoS, VPP Userspace TCP/IP
 
 ### vhost
