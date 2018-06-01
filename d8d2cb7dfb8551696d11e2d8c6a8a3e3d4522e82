@@ -99,6 +99,24 @@
       "revId": "d8d2cb7dfb8551696d11e2d8c6a8a3e3d4522e82",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef14287a_6ce96008",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-06-01T00:46:43Z",
+      "side": 1,
+      "message": "Actually I think my solution is a workaround. I just know that spdk_nvme_ctrlr_get_regs_csts caused core dump while the ctrlr don\u0027t have current process in its active_procs list. So I add these if to let the function only access the ctrlr which have current process.\n\nHi Daniel,\nYou mean I need to add ctrlr lock codes into this if lines? Or choose ctrlr lock method to fix this issue?\n\nThanks\n\nLiang",
+      "parentUuid": "b0c21e0d_171428e5",
+      "revId": "d8d2cb7dfb8551696d11e2d8c6a8a3e3d4522e82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
