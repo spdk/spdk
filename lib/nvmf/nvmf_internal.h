@@ -110,6 +110,9 @@ struct spdk_nvmf_poll_group {
 	/* Array of poll groups indexed by subsystem id (sid) */
 	struct spdk_nvmf_subsystem_poll_group		*sgroups;
 	uint32_t					num_sgroups;
+
+	/* All of the queue pairs that belong to this poll group */
+	TAILQ_HEAD(, spdk_nvmf_qpair)			qpairs;
 };
 
 typedef enum _spdk_nvmf_request_exec_status {
@@ -166,6 +169,7 @@ struct spdk_nvmf_qpair {
 
 	TAILQ_HEAD(, spdk_nvmf_request)		outstanding;
 	TAILQ_ENTRY(spdk_nvmf_qpair)		link;
+	TAILQ_ENTRY(spdk_nvmf_qpair)		pg_link;
 };
 
 struct spdk_nvmf_ctrlr_feat {
