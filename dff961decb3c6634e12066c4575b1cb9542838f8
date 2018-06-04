@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b93054ea_6e341c57",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-04T20:10:17Z",
+      "side": 1,
+      "message": "i\u0027d prefer this function name say something about \"execute queued IO\" or \"execute frozen IO\" - this name is a bit too generic",
+      "revId": "dff961decb3c6634e12066c4575b1cb9542838f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c4dc35f_89fb93cd",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-04T20:10:17Z",
+      "side": 1,
+      "message": "if multiple blobs are currently frozen, we could have I/O from different blobs in this list\n\ni think we only want to execute the I/O associated with the blob that is now unfrozen",
+      "revId": "dff961decb3c6634e12066c4575b1cb9542838f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bde99603_25083452",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-04T20:10:17Z",
+      "side": 1,
+      "message": "maybe frozen_io should be frozen_refcnt (as a uint32_t, not a bool) instead?  so that multiple threads could freeze a blob for different reasons\n\n-EBUSY is really hard to recover from - it effectively will pass this back all the way to the caller as some kind of error, but it\u0027s not clear how internal or external callers would retry it\n\nthis does the raise the question of how do you keep two threads from resizing at once?  but i think we are saying (or should say) that resize can only be called from the md_thread; so let\u0027s keep that kind of logic separate from this common freezing logic - the resize command could check a resize-specific variable if a resize is already in progress, and do the -EBUSY there instead\n\nsame for snapshotting - we can fail a resize while a snapshot is in progress, or vice versa - but that logic is separate and at a higher level than this core freezing logic",
+      "revId": "dff961decb3c6634e12066c4575b1cb9542838f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fee379c7_e8cb5c0d",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 696,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-04T20:10:17Z",
+      "side": 1,
+      "message": "should test here that:\n\n1) data was not actually written\n2) an operation has been queued for later execution",
+      "revId": "dff961decb3c6634e12066c4575b1cb9542838f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
