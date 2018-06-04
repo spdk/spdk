@@ -56,6 +56,8 @@
 #define NVME_IOCTL_MAGIC 'N'
 #define IOCTL_HEAD_SIZE ( sizeof(uint32_t) * 4 )
 
+const char *user_ioctl_dir = "/var/tmp/spdk";
+
 struct usr_nvme_ioctl_req {
 	uint32_t	req_magic;
 	uint32_t	ioctl_cmd;
@@ -104,6 +106,12 @@ struct blk_ioctl_item {
 	uint32_t	ioctl_cmd;
 	int		arg_type;
 	int		arg_len;
+};
+
+enum ioctl_sock_type {
+	IOCTL_SOCK_NOT	= -1,
+	IOCTL_SOCK_CHAR	= 1,
+	IOCTL_SOCK_BLK	= 2,
 };
 
 enum {
@@ -880,6 +888,139 @@ user_open(const char *path, int oflag)
 
 	return sockfd;
 }
+
+/* Use block ioctl BLKPBSZGET to check sock type */
+static int ioctl_sock_type_check(int sockfd)
+{
+	struct stat sock_stat;
+	int pbsz = 0;
+	int ret;
+	int type;
+	int err = fstat(sockfd, &sock_stat);
+
+	if (err < 0) {
+		type = IOCTL_SOCK_NOT;
+		goto end;
+	}
+	if (!S_ISSOCK(sock_stat.st_mode)) {
+		type = IOCTL_SOCK_NOT;
+		goto end;
+	}
+
+	ret = user_ioctl(sockfd, BLKPBSZGET, &pbsz);
+	if (!ret) {
+		/* nvme blk device will return 0 */
+		type = IOCTL_SOCK_BLK;
+	} else if (ret == -1 && errno == ENOTBLK) {
+		/* nvme char device will return -1 with ENOTBLK */
+		type = IOCTL_SOCK_CHAR;
+	} else {
+		type = IOCTL_SOCK_NOT;
+	}
+
+end:
+	return type;
+}
+
+static int ioctl_sock_path_type_check(const char *path)
+{
+	struct stat stat_buf;
+	int ret;
+	int sockfd;
+
+	ret = stat(path, &stat_buf);
+	if (ret) {
+		syslog(LOG_WARNING, "Failed to stat file %s\n", path);
+		return IOCTL_SOCK_NOT;
+	}
+
+	if (!S_ISSOCK(stat_buf.st_mode)) {
+		return IOCTL_SOCK_NOT;
+	}
+
+	sockfd = user_open(path, 0);
+	if (sockfd > 0) {
+		ret = ioctl_sock_type_check(sockfd);
+		close(sockfd);
+	} else {
+		ret = IOCTL_SOCK_NOT;
+	}
+
+	return ret;
+}
+
+int user_is_nvme(int fd)
+{
+	int ret;
+
+	ret = ioctl_sock_type_check(fd);
+	if (ret == IOCTL_SOCK_BLK || ret == IOCTL_SOCK_CHAR) {
+		return 1;
+	}
+
+	return 0;
+}
+
+int user_is_char(int fd)
+{
+	int ret;
+
+	ret = ioctl_sock_type_check(fd);
+	if (ret == IOCTL_SOCK_CHAR) {
+		return 1;
+	}
+
+	return 0;
+}
+
+int user_is_blk(int fd)
+{
+	int ret;
+
+	ret = ioctl_sock_type_check(fd);
+	if (ret == IOCTL_SOCK_BLK) {
+		return 1;
+	}
+
+	return 0;
+}
+
+int user_is_nvme_path(const char *path)
+{
+	int ret;
+
+	ret = ioctl_sock_path_type_check(path);
+	if (ret == IOCTL_SOCK_BLK || ret == IOCTL_SOCK_CHAR) {
+		return 1;
+	}
+
+	return 0;
+}
+
+int user_is_char_path(const char *path)
+{
+	int ret;
+
+	ret = ioctl_sock_path_type_check(path);
+	if (ret == IOCTL_SOCK_CHAR) {
+		return 1;
+	}
+
+	return 0;
+}
+
+int user_is_blk_path(const char *path)
+{
+	int ret;
+
+	ret = ioctl_sock_path_type_check(path);
+	if (ret == IOCTL_SOCK_BLK) {
+		return 1;
+	}
+
+	return 0;
+}
+
 __attribute__((constructor)) static void user_ioctl_log_open(void)
 {
 	openlog("user_ioctl", LOG_PID, LOG_USER);
