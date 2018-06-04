@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ae7c0347_b87fcf7b",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-06-04T12:33:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5380b66f_1acb8c35",
+      "revId": "38e33919be2b779fab3851f2d749b402225eecf7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "51a86b0d_e2fdfc39",
         "filename": "include/spdk/nvme_ocssd.h",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2018-05-31T18:20:13Z",
       "side": 1,
       "message": "spdk_nvme_ctrlr_cmd_get_feature() already exists. The only difference is that there is no ns_id argument in the existing one. However, OCSSD defines one new feature (Media Feedback), and that command doesn\u0027t need an ns_id. Given that, I think this function isn\u0027t necessary and can be deleted.",
+      "revId": "38e33919be2b779fab3851f2d749b402225eecf7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8a9f5c1_ce8f7514",
+        "filename": "include/spdk/nvme_ocssd.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-06-04T12:33:44Z",
+      "side": 1,
+      "message": "I would like to discuss this change.\nPlease see Figure 9 (Opcodes for Admin Commands) in OCSSD 2.0 spec. It is defined there that Namespace Identifier is used (for Get/Set Features - Media Feedback, Get Log Page - Chunk Information) and I see no changes in that in Denali document too.\nHowever NVMe 1.3 does not specify that ns_id is required for Get/Set features.\n\nWhen I test \"Get/Set Features - Get Log Page - Chunk Information\" with nsid \u003d 0 on HW I am receiving error  \nnvme_qpair_print_completion: *NOTICE*: INVALID NAMESPACE OR FORMAT (00/0b).\n\nI could add more description to function headers to explain why they are needed.",
+      "parentUuid": "51a86b0d_e2fdfc39",
       "revId": "38e33919be2b779fab3851f2d749b402225eecf7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "e054290c_d8042a3a",
+        "filename": "include/spdk/nvme_ocssd.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-06-04T12:33:44Z",
+      "side": 1,
+      "message": "Please see my response above. Unfortunately existing spdk_nvme_ctrlr_cmd_set_feature returns error for Get/Set Features - Media Feedback, Get Log Page - Chunk Information on HW.",
+      "parentUuid": "22b17f10_4e595006",
+      "revId": "38e33919be2b779fab3851f2d749b402225eecf7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "83e9aa92_6abfee90",
         "filename": "lib/nvme/nvme_ctrlr_ocssd_cmd.c",
         "patchSetId": 4
@@ -64,6 +118,24 @@
       "writtenOn": "2018-05-31T18:20:13Z",
       "side": 1,
       "message": "This needs to take the ctrlr_lock",
+      "revId": "38e33919be2b779fab3851f2d749b402225eecf7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a9122760_dc80034d",
+        "filename": "lib/nvme/nvme_ctrlr_ocssd_cmd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-06-04T12:33:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "83e9aa92_6abfee90",
       "revId": "38e33919be2b779fab3851f2d749b402225eecf7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -98,6 +170,24 @@
       "writtenOn": "2018-05-31T18:20:13Z",
       "side": 1,
       "message": "This is not a standard opcode, so I\u0027d prefer to leave this out of the patch. That means the print will just show \"ADMIN COMMAND\" for this OCSSD command, but I think that\u0027s fine.",
+      "revId": "38e33919be2b779fab3851f2d749b402225eecf7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "adfb0e45_5e2c83c1",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-06-04T12:33:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b9439b2c_e24fec07",
       "revId": "38e33919be2b779fab3851f2d749b402225eecf7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
