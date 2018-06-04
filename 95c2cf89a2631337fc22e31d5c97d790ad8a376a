@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e1f8dc58_f5fa5e00",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 470,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-04T23:41:36Z",
+      "side": 1,
+      "message": "I\u0027m not sure about the error_on_submission.  Do we have paths today where someone can submit an I/O and have it completed before the submission call returns?  Usually nvme_qpair_manual_complete() request is done as part of a reset.\n\nOr maybe instead of \"error_on_submission\", it is something like \"do_not_submit\".  If this is set, then the req is put on a new list in the qpair.  When the qpair is polled for completions, it can call manual_complete_request() on any requests in this queue.  It could also put a time limit on do_not_submit() - i.e. how many microseconds to wait until it fails the command.  If the user specifies a very high number, it can be a way to cause resets to happen.",
+      "revId": "95c2cf89a2631337fc22e31d5c97d790ad8a376a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c8c4106_80c767a5",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 545,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-04T23:41:36Z",
+      "side": 1,
+      "message": "should we overwrite an existing entry that has the same opc?\n\nan alternative would be to add another entry in the queue; once the first one is exhausted, it will get removed from the list, and then the new one would get a chance to execute\n\neither way - the API header should specify this behavior if the same OPC is specified",
+      "revId": "95c2cf89a2631337fc22e31d5c97d790ad8a376a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
