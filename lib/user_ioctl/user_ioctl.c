@@ -42,6 +42,10 @@
 #include <linux/nvme_ioctl.h>
 #include "spdk/user_ioctl.h"
 
+#ifndef NVME_IOCTL_RESCAN
+#define NVME_IOCTL_RESCAN	_IO('N', 0x46)
+#endif
+
 /*
  * These are sent over Unix domain socket in the request/response magic fields.
  */
@@ -87,6 +91,225 @@ struct usr_nvme_ioctl_resp {
 	uint32_t	md_len;
 };
 
+
+/**
+ * Data transfer (bits 1:0) of an NVMe opcode.
+ */
+enum usr_nvme_data_transfer {
+	/** Opcode does not transfer data */
+	USR_NVME_DATA_NONE				= 0,
+	/** Opcode transfers data from host to controller (e.g. Write) */
+	USR_NVME_DATA_HOST_TO_CONTROLLER		= 1,
+	/** Opcode transfers data from controller to host (e.g. Read) */
+	USR_NVME_DATA_CONTROLLER_TO_HOST		= 2,
+	/** Opcode transfers data both directions */
+	USR_NVME_DATA_BIDIRECTIONAL			= 3
+};
+
+/**
+ * Extract the Data Transfer bits from an NVMe opcode.
+ *
+ * This determines whether a command requires a data buffer and
+ * which direction (host to controller or controller to host) it is
+ * transferred.
+ */
+static enum usr_nvme_data_transfer
+usr_nvme_cmd_get_data_transfer(uint32_t ioctl_cmd, char *cmd_buf) {
+	uint8_t opc;
+	struct nvme_user_io *io_cmd;
+	struct nvme_passthru_cmd *adm_cmd;
+
+	switch (ioctl_cmd)
+	{
+	case NVME_IOCTL_ADMIN_CMD:
+	case NVME_IOCTL_IO_CMD:
+		adm_cmd = (struct nvme_passthru_cmd *)cmd_buf;
+		opc =  adm_cmd->opcode;
+		break;
+	case NVME_IOCTL_SUBMIT_IO:
+		io_cmd = (struct nvme_user_io *)cmd_buf;
+		opc =  io_cmd->opcode;
+		break;
+	case NVME_IOCTL_RESET:
+		opc =  0;
+		break;
+	default:
+		syslog(LOG_INFO, "data transfer, Not supported ioctl_cmd 0x%x\n", ioctl_cmd);
+		opc = 0;
+	}
+
+	return (enum usr_nvme_data_transfer)(opc & 3);
+}
+
+static inline int
+nvme_ioctl_cmd_size(uint32_t ioctl_cmd)
+{
+	return _IOC_SIZE(ioctl_cmd);
+}
+
+static int
+nvme_ioctl_data_size(uint32_t ioctl_cmd, char *cmd_buf, int lba_dsize)
+{
+	uint32_t ioctl_nr;
+	struct nvme_user_io *io_cmd;
+	struct nvme_passthru_cmd *adm_cmd;
+
+	ioctl_nr = _IOC_NR(ioctl_cmd);
+
+	switch (ioctl_cmd) {
+	case NVME_IOCTL_ADMIN_CMD:
+	case NVME_IOCTL_IO_CMD:
+		adm_cmd = (struct nvme_passthru_cmd *)cmd_buf;
+		return adm_cmd->data_len;
+	case NVME_IOCTL_RESET:
+		return 0;
+	case NVME_IOCTL_SUBMIT_IO:
+		io_cmd = (struct nvme_user_io *)cmd_buf;
+		return (io_cmd->nblocks + 1) * lba_dsize;
+	default:
+		syslog(LOG_INFO, "nvme_ioctl_data_size, Not supported ioctl_nr 0x%x\n", ioctl_nr);
+		return 0;
+	}
+}
+
+static int
+nvme_ioctl_metadata_size(uint32_t ioctl_cmd, char *cmd_buf, int lb_md_size)
+{
+	uint32_t ioctl_nr;
+	struct nvme_user_io *io_cmd;
+	struct nvme_passthru_cmd *adm_cmd;
+
+	ioctl_nr = _IOC_NR(ioctl_cmd);
+
+	switch (ioctl_cmd) {
+	case NVME_IOCTL_ADMIN_CMD:
+	case NVME_IOCTL_IO_CMD:
+		adm_cmd = (struct nvme_passthru_cmd *)cmd_buf;
+		return adm_cmd->metadata_len;
+	case NVME_IOCTL_RESET:
+		return 0;
+	case NVME_IOCTL_SUBMIT_IO:
+		io_cmd = (struct nvme_user_io *)cmd_buf;
+		return (io_cmd->nblocks + 1) * lb_md_size;
+	default:
+		syslog(LOG_INFO, "nvme_ioctl_metadata_size, Not supported ioctl_nr 0x%x\n", ioctl_nr);
+		return 0;
+	}
+}
+
+static int
+usr_nvme_ioctl_io_rr_construct(struct usr_nvme_ioctl_req *req, struct usr_nvme_ioctl_resp *resp,
+			       uint32_t ioctl_cmd, char *cmd_buf, int sockfd)
+{
+	struct nvme_user_io *io_cmd;
+	uint32_t lb_md_size, lba_dsize;
+
+	// TODO: nvme io cmd needs to know lba and metadata size
+	lba_dsize = PAGE_SIZE;
+	lb_md_size = 0;
+
+	if (cmd_buf == NULL) {
+		return 0;
+	}
+	io_cmd = (struct nvme_user_io *) cmd_buf;
+
+	enum usr_nvme_data_transfer xfer = usr_nvme_cmd_get_data_transfer(ioctl_cmd, cmd_buf);
+
+	if (xfer == USR_NVME_DATA_HOST_TO_CONTROLLER || xfer == USR_NVME_DATA_BIDIRECTIONAL) {
+		// nvme_write, nvme_compare
+		req->data_len = nvme_ioctl_data_size(ioctl_cmd, cmd_buf, lba_dsize);
+		req->md_len = nvme_ioctl_metadata_size(ioctl_cmd, cmd_buf, lb_md_size);
+		req->data = (char *)(uintptr_t)io_cmd->addr;
+		req->metadata = (char *)(uintptr_t)io_cmd->metadata;
+	}
+
+	if (xfer == USR_NVME_DATA_CONTROLLER_TO_HOST || xfer == USR_NVME_DATA_BIDIRECTIONAL) {
+		// nvme_read
+		resp->data_len = nvme_ioctl_data_size(ioctl_cmd, cmd_buf, lba_dsize);
+		resp->md_len = nvme_ioctl_metadata_size(ioctl_cmd, cmd_buf, lb_md_size);
+		resp->data = (char *)(uintptr_t)io_cmd->addr;
+		resp->metadata = (char *)(uintptr_t)io_cmd->metadata;
+	}
+
+	return 0;
+}
+
+/* NVME_IOCTL_IO_CMD and NVME_IOCTL_ADMIN_CMD */
+static int
+usr_nvme_ioctl_cmd_rr_construct(struct usr_nvme_ioctl_req *req, struct usr_nvme_ioctl_resp *resp,
+				uint32_t ioctl_cmd, char *cmd_buf)
+{
+	struct nvme_passthru_cmd *adm_cmd;
+
+	if (cmd_buf == NULL) {
+		return 0;
+	}
+	adm_cmd = (struct nvme_passthru_cmd *) cmd_buf;
+	/* check data transfer direction */
+	enum usr_nvme_data_transfer xfer = usr_nvme_cmd_get_data_transfer(ioctl_cmd, cmd_buf);
+
+	if (xfer == USR_NVME_DATA_HOST_TO_CONTROLLER || xfer == USR_NVME_DATA_BIDIRECTIONAL) {
+		req->data_len = nvme_ioctl_data_size(ioctl_cmd, cmd_buf, 0);
+		req->md_len = nvme_ioctl_metadata_size(ioctl_cmd, cmd_buf, 0);
+		req->data = (char *)(uintptr_t)adm_cmd->addr;
+		req->metadata = (char *)(uintptr_t)adm_cmd->metadata;
+	}
+
+	if (xfer == USR_NVME_DATA_CONTROLLER_TO_HOST || xfer == USR_NVME_DATA_BIDIRECTIONAL) {
+		/* no need to transfer data and metadata */
+		resp->data_len = nvme_ioctl_data_size(ioctl_cmd, cmd_buf, 0);
+		resp->md_len = nvme_ioctl_metadata_size(ioctl_cmd, cmd_buf, 0);
+		resp->data = (char *)(uintptr_t)adm_cmd->addr;
+		resp->metadata = (char *)(uintptr_t)adm_cmd->metadata;
+	}
+
+	return 0;
+}
+
+/*
+ * Construct request and response structures for NVMe ioctl
+ */
+static int
+usr_nvme_ioctl_rr_construct(struct usr_nvme_ioctl_req *req, struct usr_nvme_ioctl_resp *resp,
+			    uint32_t ioctl_cmd, char *cmd_buf, int sockfd)
+{
+	int ret = 0;
+	int ioctl_size;
+
+	/* check cmd size */
+	ioctl_size = nvme_ioctl_cmd_size(ioctl_cmd);
+	if (ioctl_size == 0) {
+		/* No need to set elements */
+	} else if (ioctl_size > 0 && cmd_buf != NULL) {
+		req->cmd_len = ioctl_size;
+		req->cmd_buf = cmd_buf;
+		resp->cmd_len = ioctl_size;
+		resp->cmd_buf = calloc(1, ioctl_size);
+	} else {
+		return -EINVAL;
+	}
+
+	switch (ioctl_cmd) {
+	case NVME_IOCTL_ID:
+	case NVME_IOCTL_RESET:
+	case NVME_IOCTL_SUBSYS_RESET:
+	case NVME_IOCTL_RESCAN:
+		break;
+	case NVME_IOCTL_SUBMIT_IO:
+		ret = usr_nvme_ioctl_io_rr_construct(req, resp, ioctl_cmd, cmd_buf, sockfd);
+		break;
+	case NVME_IOCTL_IO_CMD:
+	case NVME_IOCTL_ADMIN_CMD:
+		ret = usr_nvme_ioctl_cmd_rr_construct(req, resp, ioctl_cmd, cmd_buf);
+		break;
+	default:
+		syslog(LOG_INFO, "ioctl_cmd %d is not supported yet\n", ioctl_cmd);
+		return -EINVAL;
+	}
+
+	return ret;
+}
+
 /*
  * Construct request and response structures
  * Return <0 if failed, return -errno
@@ -96,14 +319,57 @@ static int
 usr_ioctl_rr_construct(struct usr_nvme_ioctl_req *req, struct usr_nvme_ioctl_resp *resp,
 		       uint32_t ioctl_cmd, char *cmd_buf, int sockfd)
 {
-	// TODO: Construct request and response structures
-	return 0;
+	int ret = 0;
+	char ioctl_magic;
+
+	memset(req, 0, sizeof(*req));
+	memset(resp, 0, sizeof(*resp));
+
+	req->req_magic = IOCTL_REQ_MAGIC;
+	req->handle = 0;
+
+	ioctl_magic = _IOC_TYPE(ioctl_cmd);
+	req->ioctl_cmd = ioctl_cmd;
+
+	switch (ioctl_magic) {
+	case NVME_IOCTL_MAGIC:
+		ret = usr_nvme_ioctl_rr_construct(req, resp, ioctl_cmd, cmd_buf, sockfd);
+		break;
+	default:
+		syslog(LOG_INFO, "ioctl_cmd %d is not supported yet\n", ioctl_cmd);
+		return -EINVAL;
+	}
+
+	req->total_len += IOCTL_HEAD_SIZE;
+	req->total_len += req->cmd_len;
+	req->total_len += req->data_len;
+	req->total_len += req->md_len;
+
+	return ret;
 }
 
+/*
+ * copy resp->cmd_buf into req->cmd_buf if necessary
+ * free the resource allocated in construct function
+ */
 static void
 usr_ioctl_rr_destruct(uint32_t ioctl_cmd, struct usr_nvme_ioctl_req *req,
 		      struct usr_nvme_ioctl_resp *resp)
 {
+	char ioctl_magic;
+
+	ioctl_magic = _IOC_TYPE(ioctl_cmd);
+	switch (ioctl_magic) {
+	case NVME_IOCTL_MAGIC:
+		/* req->cmd_buf is passed by ioctl caller, in case it is NULL */
+		if (req->cmd_buf) {
+			memcpy(req->cmd_buf, resp->cmd_buf, resp->cmd_len);
+		}
+		free(resp->cmd_buf);
+		break;
+	default:
+		return;
+	}
 }
 
 /*
@@ -258,7 +524,10 @@ _user_ioctl(int sockfd, uint32_t ioctl_cmd, char *cmd_buf)
 	socklen_t addr_len;
 
 	addr_len = sizeof(peer_addr);
-	getpeername(sockfd, (struct sockaddr *)&peer_addr, &addr_len);
+	if (getpeername(sockfd, (struct sockaddr *)&peer_addr, &addr_len)) {
+		syslog(LOG_WARNING, "Failed to get peer name, errno is %d\n", errno);
+		return -1;
+	}
 
 	if ((ioctlfd = socket(PF_UNIX, SOCK_STREAM, 0)) < 0) {
 		syslog(LOG_WARNING, "Failed to create Unix Domain Socket, errno is %d\n", errno);
@@ -268,6 +537,7 @@ _user_ioctl(int sockfd, uint32_t ioctl_cmd, char *cmd_buf)
 	ret = connect(ioctlfd, (struct sockaddr *)&peer_addr, addr_len);
 	if (ret) {
 		syslog(LOG_WARNING, "connect error, errno is %d\n", errno);
+		close(ioctlfd);
 		/* Treat NOENT as NODEV */
 		if (errno == ENOENT) {
 			errno = ENODEV;
@@ -279,21 +549,24 @@ _user_ioctl(int sockfd, uint32_t ioctl_cmd, char *cmd_buf)
 	memset(resp, 0, sizeof(*resp));
 
 	ret = usr_ioctl_rr_construct(req, resp, ioctl_cmd, cmd_buf, ioctlfd);
-	if (ret < 0) {
-		errno = -ret;
-		return -1;
-	} else if (ret > 0) {
-		return ret;
+	if (ret != 0) {
+		if (ret < 0) {
+			errno = -ret;
+			ret = -1;
+		}
+		goto exit;
 	}
 
 	ret = usr_ioctl_xmit(ioctlfd, req);
 	if (ret == 0) {
 		ret = usr_ioctl_recv(ioctlfd, resp, req);
 	}
-	close(ioctlfd);
 
+exit:
 	ioctl_ret = resp->ioctl_ret;
 	usr_ioctl_rr_destruct(ioctl_cmd, req, resp);
+
+	close(ioctlfd);
 
 	/* if no socket or param error, return ioctl_ret */
 	return ret ? ret : ioctl_ret;
