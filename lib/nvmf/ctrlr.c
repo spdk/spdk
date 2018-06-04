@@ -78,7 +78,8 @@ ctrlr_add_qpair_and_update_rsp(struct spdk_nvmf_qpair *qpair,
 			       struct spdk_nvmf_fabric_connect_rsp *rsp)
 {
 	if (qpair->qid >= spdk_bit_array_capacity(ctrlr->qpair_mask)) {
-		SPDK_ERRLOG("qpair limit %d\n", ctrlr->num_qpairs);
+		SPDK_ERRLOG("Requested QID %u but Max QID is %u\n",
+			    qpair->qid, spdk_bit_array_capacity(ctrlr->qpair_mask) - 1);
 		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		rsp->status.sc = SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER;
 		return;
@@ -93,7 +94,6 @@ ctrlr_add_qpair_and_update_rsp(struct spdk_nvmf_qpair *qpair,
 	}
 
 	qpair->ctrlr = ctrlr;
-	ctrlr->num_qpairs++;
 	spdk_bit_array_set(ctrlr->qpair_mask, qpair->qid);
 	TAILQ_INSERT_HEAD(&ctrlr->qpairs, qpair, link);
 
@@ -163,7 +163,6 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 
 	req->qpair->ctrlr = ctrlr;
 	TAILQ_INIT(&ctrlr->qpairs);
-	ctrlr->num_qpairs = 0;
 	ctrlr->subsys = subsystem;
 
 	ctrlr->qpair_mask = spdk_bit_array_create(tgt->opts.max_qpairs_per_ctrlr);
@@ -221,7 +220,6 @@ spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 		struct spdk_nvmf_qpair *qpair = TAILQ_FIRST(&ctrlr->qpairs);
 
 		TAILQ_REMOVE(&ctrlr->qpairs, qpair, link);
-		ctrlr->num_qpairs--;
 		spdk_bit_array_clear(ctrlr->qpair_mask, qpair->qid);
 		spdk_nvmf_transport_qpair_fini(qpair);
 	}
@@ -449,17 +447,15 @@ _spdk_nvmf_ctrlr_remove_qpair(void *ctx)
 	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
 
 	assert(ctrlr != NULL);
-	assert(ctrlr->num_qpairs > 0);
 
 	TAILQ_REMOVE(&ctrlr->qpairs, qpair, link);
-	ctrlr->num_qpairs--;
 	spdk_bit_array_clear(ctrlr->qpair_mask, qpair->qid);
 
 	/* Send a message to the thread that owns the qpair and destroy it. */
 	qpair->ctrlr = NULL;
 	spdk_thread_send_msg(qpair->group->thread, _spdk_nvmf_qpair_destroy, qpair);
 
-	if (ctrlr->num_qpairs == 0) {
+	if (spdk_bit_array_count_set(ctrlr->qpair_mask) == 0) {
 		/* If this was the last queue pair on the controller, also send a message
 		 * to the subsystem to remove the controller. */
 		spdk_thread_send_msg(ctrlr->subsys->thread, _spdk_nvmf_ctrlr_free, ctrlr);
@@ -972,7 +968,7 @@ spdk_nvmf_ctrlr_set_features_number_of_queues(struct spdk_nvmf_request *req)
 		      req->cmd->nvme_cmd.cdw11);
 
 	/* verify that the contoller is ready to process commands */
-	if (ctrlr->num_qpairs > 1) {
+	if (spdk_bit_array_count_set(ctrlr->qpair_mask) > 1) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Queue pairs already active!\n");
 		rsp->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
 	} else {
