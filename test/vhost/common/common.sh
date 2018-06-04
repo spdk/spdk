@@ -123,6 +123,7 @@ function spdk_vhost_run()
 			--conf-path=*) local vhost_conf_path="${param#*=}" ;;
 			--json-path=*) local vhost_json_path="${param#*=}" ;;
 			--memory=*) local memory=${param#*=} ;;
+			--no-pci*) local no_pci="-u" ;;
 			*)
 				error "Invalid parameter '$param'"
 				return 1
@@ -158,11 +159,11 @@ function spdk_vhost_run()
 		return 1
 	fi
 
-	local cmd="$vhost_app -m $reactor_mask -p $master_core -s $memory -r $vhost_dir/rpc.sock"
+	local cmd="$vhost_app -m $reactor_mask -p $master_core -s $memory -r $vhost_dir/rpc.sock $no_pci"
 	if [[ -n "$vhost_conf_path" ]]; then
 		cp $vhost_conf_template $vhost_conf_file
 		$SPDK_BUILD_DIR/scripts/gen_nvme.sh >> $vhost_conf_file
-		cmd="$vhost_app -m $reactor_mask -p $master_core -c $vhost_conf_file -s $memory -r $vhost_dir/rpc.sock"
+		cmd="$vhost_app -m $reactor_mask -p $master_core -c $vhost_conf_file -s $memory -r $vhost_dir/rpc.sock $no_pci"
 	fi
 
 	notice "Loging to:   $vhost_log_file"
@@ -176,7 +177,8 @@ function spdk_vhost_run()
 
 	notice "waiting for app to run..."
 	waitforlisten "$vhost_pid" "$vhost_dir/rpc.sock"
-	if [[ -z "$vhost_conf_path" ]]; then
+	#do not generate nvmes if pci access is disabled
+	if [[ -z "$vhost_conf_path" ]] && [[ -z "$no_pci" ]]; then
 		$SPDK_BUILD_DIR/scripts/gen_nvme.sh "--json" | $SPDK_BUILD_DIR/scripts/rpc.py\
 		 -s $vhost_dir/rpc.sock load_subsystem_config
 	fi
