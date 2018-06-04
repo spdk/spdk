@@ -91,6 +91,58 @@ struct usr_nvme_ioctl_resp {
 	uint32_t	md_len;
 };
 
+#define IOCTL_ITEM(item) .ioctl_name = #  item, .ioctl_cmd = item
+
+struct nvme_ioctl_item {
+	char		*ioctl_name;
+	uint32_t	ioctl_cmd;
+	int		arg_type;
+};
+
+enum {
+	ARG_INVAL = -1,
+	ARG_NONE = 0,
+	ARG_PTR,
+	ARG_VAL,
+};
+
+static const struct nvme_ioctl_item nvme_items[] = {
+	{
+		//#define NVME_IOCTL_ID		_IO('N', 0x40)
+		IOCTL_ITEM(NVME_IOCTL_ID),
+		.arg_type = ARG_NONE,
+	},
+	{
+		//#define NVME_IOCTL_ADMIN_CMD	_IOWR('N', 0x41, struct nvme_admin_cmd)
+		IOCTL_ITEM(NVME_IOCTL_ADMIN_CMD),
+		.arg_type = ARG_PTR,
+	},
+	{
+		//#define NVME_IOCTL_SUBMIT_IO	_IOW('N', 0x42, struct nvme_user_io)
+		IOCTL_ITEM(NVME_IOCTL_SUBMIT_IO),
+		.arg_type = ARG_PTR,
+	},
+	{
+		//#define NVME_IOCTL_IO_CMD	_IOWR('N', 0x43, struct nvme_passthru_cmd)
+		IOCTL_ITEM(NVME_IOCTL_IO_CMD),
+		.arg_type = ARG_PTR,
+	},
+	{
+		//#define NVME_IOCTL_RESET	_IO('N', 0x44)
+		IOCTL_ITEM(NVME_IOCTL_RESET),
+		.arg_type = ARG_NONE,
+	},
+	{
+		//#define NVME_IOCTL_SUBSYS_RESET	_IO('N', 0x45)
+		IOCTL_ITEM(NVME_IOCTL_SUBSYS_RESET),
+		.arg_type = ARG_NONE,
+	},
+	{
+		//#define NVME_IOCTL_RESCAN	_IO('N', 0x46)
+		IOCTL_ITEM(NVME_IOCTL_RESCAN),
+		.arg_type = ARG_NONE,
+	},
+};
 
 /**
  * Data transfer (bits 1:0) of an NVMe opcode.
@@ -557,8 +609,53 @@ _user_ioctl(int sockfd, uint32_t ioctl_cmd, char *cmd_buf)
 int
 user_ioctl(int fd, unsigned long request, ...)
 {
-	// TODO: add extra argument
-	return _user_ioctl(fd, request, NULL);
+	va_list args_ptr;
+	void *ext_arg_ptr;
+	int ext_arg_int;
+	char ioctl_magic;
+	int arg_type = ARG_INVAL;
+	unsigned int i;
+	int ret;
+
+	va_start(args_ptr, request);
+
+	ioctl_magic = _IOC_TYPE(request);
+	switch (ioctl_magic) {
+	case NVME_IOCTL_MAGIC:
+		for (i = 0; i < sizeof(nvme_items) / sizeof(*nvme_items); i++) {
+			if (nvme_items[i].ioctl_cmd == request) {
+				arg_type = nvme_items[i].arg_type;
+				break;
+			}
+		}
+		break;
+	default:
+		break;
+	}
+
+	switch (arg_type) {
+	case ARG_NONE:
+		ret = _user_ioctl(fd, request, NULL);
+		break;
+	case ARG_PTR:
+		/* this is used for param getting ioctl, and their third param is probable a pointer */
+		ext_arg_ptr = va_arg(args_ptr, void *);
+		ret = _user_ioctl(fd, request, (char *)ext_arg_ptr);
+		break;
+	case ARG_VAL:
+		/* this is used for param setting ioctl, and their third param is probable a int value */
+		ext_arg_int = va_arg(args_ptr, int);
+		ret = _user_ioctl(fd, request, (char *)&ext_arg_int);
+		break;
+	case ARG_INVAL:
+	default:
+		errno = EINVAL;
+		ret = -1;
+	}
+
+	va_end(args_ptr);
+
+	return ret;
 }
 
 int
