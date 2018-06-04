@@ -66,6 +66,15 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define SPDK_BDEV_SEC_TO_USEC			1000000ULL
 #define SPDK_BDEV_QOS_MIN_IO_PER_TIMESLICE	1
 #define SPDK_BDEV_QOS_MIN_IOS_PER_SEC		10000
+#define SPDK_BDEV_QOS_MIN_BW_PER_SEC		10000000
+
+enum spdk_bdev_qos_type {
+	SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT = 0,
+	SPDK_BDEV_QOS_RW_BWPS_RATE_LIMIT,
+	SPDK_BDEV_QOS_NUM_TYPES /* Keep last */
+};
+
+static const char *qos_type_str[SPDK_BDEV_QOS_NUM_TYPES] = {"Limit_IOPS", "Limit_BWPS"};
 
 struct spdk_bdev_mgr {
 	struct spdk_mempool *bdev_io_pool;
@@ -103,7 +112,10 @@ static struct spdk_thread	*g_fini_thread = NULL;
 
 struct spdk_bdev_qos {
 	/** Rate limit, in I/O per second */
-	uint64_t rate_limit;
+	uint64_t iops_rate_limit;
+
+	/** Rate limit, in bandwidth bytes per second */
+	uint64_t bw_rate_limit;
 
 	/** The channel that all I/O are funneled through */
 	struct spdk_bdev_channel *ch;
@@ -992,7 +1004,7 @@ spdk_bdev_qos_update_max_ios_per_timeslice(struct spdk_bdev_qos *qos)
 {
 	uint64_t max_ios_per_timeslice = 0;
 
-	max_ios_per_timeslice = qos->rate_limit * SPDK_BDEV_QOS_TIMESLICE_IN_USEC /
+	max_ios_per_timeslice = qos->iops_rate_limit * SPDK_BDEV_QOS_TIMESLICE_IN_USEC /
 				SPDK_BDEV_SEC_TO_USEC;
 	qos->max_ios_per_timeslice = spdk_max(max_ios_per_timeslice,
 					      SPDK_BDEV_QOS_MIN_IO_PER_TIMESLICE);
@@ -1381,15 +1393,15 @@ spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev)
 uint64_t
 spdk_bdev_get_qos_ios_per_sec(struct spdk_bdev *bdev)
 {
-	uint64_t rate_limit = 0;
+	uint64_t iops_rate_limit = 0;
 
 	pthread_mutex_lock(&bdev->mutex);
 	if (bdev->qos) {
-		rate_limit = bdev->qos->rate_limit;
+		iops_rate_limit = bdev->qos->iops_rate_limit;
 	}
 	pthread_mutex_unlock(&bdev->mutex);
 
-	return rate_limit;
+	return iops_rate_limit;
 }
 
 size_t
@@ -2426,54 +2438,94 @@ spdk_bdev_io_get_thread(struct spdk_bdev_io *bdev_io)
 }
 
 static void
+_spdk_bdev_qos_config_type(struct spdk_bdev *bdev, uint64_t qos_set,
+			   enum spdk_bdev_qos_type qos_type)
+{
+	uint64_t	min_qos_set = 0;
+
+	switch (qos_type) {
+	case SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT:
+		min_qos_set = SPDK_BDEV_QOS_MIN_IOS_PER_SEC;
+		break;
+	case SPDK_BDEV_QOS_RW_BWPS_RATE_LIMIT:
+		min_qos_set = SPDK_BDEV_QOS_MIN_BW_PER_SEC;
+		break;
+	default:
+		SPDK_ERRLOG("Unsupported QoS type.\n");
+		return;
+	}
+
+	if (qos_set % min_qos_set) {
+		SPDK_ERRLOG("Assigned QoS %" PRIu64 " on bdev %s is not multiple of %lu\n",
+			    qos_set, bdev->name, min_qos_set);
+		SPDK_ERRLOG("Failed to enable QoS on this bdev %s\n", bdev->name);
+		return;
+	}
+
+	if (!bdev->qos) {
+		bdev->qos = calloc(1, sizeof(*bdev->qos));
+		if (!bdev->qos) {
+			SPDK_ERRLOG("Unable to allocate memory for QoS tracking\n");
+			return;
+		}
+	}
+
+	switch (qos_type) {
+	case SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT:
+		bdev->qos->iops_rate_limit = qos_set;
+		break;
+	case SPDK_BDEV_QOS_RW_BWPS_RATE_LIMIT:
+		bdev->qos->bw_rate_limit = qos_set;
+		break;
+	default:
+		break;
+	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Bdev:%s QoS type:%d set:%lu\n",
+		      bdev->name, qos_type, qos_set);
+
+	return;
+}
+
+static void
 _spdk_bdev_qos_config(struct spdk_bdev *bdev)
 {
 	struct spdk_conf_section	*sp = NULL;
 	const char			*val = NULL;
-	uint64_t			ios_per_sec = 0;
-	int				i = 0;
+	uint64_t			qos_set = 0;
+	int				i = 0, j = 0;
 
 	sp = spdk_conf_find_section(NULL, "QoS");
 	if (!sp) {
 		return;
 	}
 
-	while (true) {
-		val = spdk_conf_section_get_nmval(sp, "Limit_IOPS", i, 0);
-		if (!val) {
+	while (j < SPDK_BDEV_QOS_NUM_TYPES) {
+		i = 0;
+		while (true) {
+			val = spdk_conf_section_get_nmval(sp, qos_type_str[j], i, 0);
+			if (!val) {
+				break;
+			}
+
+			if (strcmp(bdev->name, val) != 0) {
+				i++;
+				continue;
+			}
+
+			val = spdk_conf_section_get_nmval(sp, qos_type_str[j], i, 1);
+			if (val) {
+				qos_set = strtoull(val, NULL, 10);
+				_spdk_bdev_qos_config_type(bdev, qos_set, j);
+			}
+
 			break;
 		}
 
-		if (strcmp(bdev->name, val) != 0) {
-			i++;
-			continue;
-		}
-
-		val = spdk_conf_section_get_nmval(sp, "Limit_IOPS", i, 1);
-		if (!val) {
-			return;
-		}
-
-		ios_per_sec = strtoull(val, NULL, 10);
-		if (ios_per_sec > 0) {
-			if (ios_per_sec % SPDK_BDEV_QOS_MIN_IOS_PER_SEC) {
-				SPDK_ERRLOG("Assigned IOPS %" PRIu64 " on bdev %s is not multiple of %u\n",
-					    ios_per_sec, bdev->name, SPDK_BDEV_QOS_MIN_IOS_PER_SEC);
-				SPDK_ERRLOG("Failed to enable QoS on this bdev %s\n", bdev->name);
-			} else {
-				bdev->qos = calloc(1, sizeof(*bdev->qos));
-				if (!bdev->qos) {
-					SPDK_ERRLOG("Unable to allocate memory for QoS tracking\n");
-					return;
-				}
-				bdev->qos->rate_limit = ios_per_sec;
-				SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Bdev:%s QoS:%lu\n",
-					      bdev->name, bdev->qos->rate_limit);
-			}
-		}
-
-		return;
+		j++;
 	}
+
+	return;
 }
 
 static int
@@ -3098,13 +3150,13 @@ spdk_bdev_set_qos_limit_iops(struct spdk_bdev *bdev, uint64_t ios_per_sec,
 				return;
 			}
 
-			bdev->qos->rate_limit = ios_per_sec;
+			bdev->qos->iops_rate_limit = ios_per_sec;
 			spdk_for_each_channel(__bdev_to_io_dev(bdev),
 					      _spdk_bdev_enable_qos_msg, ctx,
 					      _spdk_bdev_enable_qos_done);
 		} else {
 			/* Updating */
-			bdev->qos->rate_limit = ios_per_sec;
+			bdev->qos->iops_rate_limit = ios_per_sec;
 			spdk_thread_send_msg(bdev->qos->thread, _spdk_bdev_update_qos_limit_iops_msg, ctx);
 		}
 	} else {
