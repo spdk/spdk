@@ -99,6 +99,13 @@ struct nvme_ioctl_item {
 	int		arg_type;
 };
 
+struct blk_ioctl_item {
+	char		*ioctl_name;
+	uint32_t	ioctl_cmd;
+	int		arg_type;
+	int		arg_len;
+};
+
 enum {
 	ARG_INVAL = -1,
 	ARG_NONE = 0,
@@ -141,6 +148,45 @@ static const struct nvme_ioctl_item nvme_items[] = {
 		//#define NVME_IOCTL_RESCAN	_IO('N', 0x46)
 		IOCTL_ITEM(NVME_IOCTL_RESCAN),
 		.arg_type = ARG_NONE,
+	},
+};
+
+static const struct blk_ioctl_item blk_items[] = {
+	{
+		//#define BLKRRPART  _IO(0x12,95)        /* re-read partition table */
+		IOCTL_ITEM(BLKRRPART),
+		.arg_type = ARG_NONE,
+		.arg_len = 0,
+	},
+	{
+		//#define BLKGETSIZE _IO(0x12,96)	/* return device size /512 (long *arg) */
+		IOCTL_ITEM(BLKGETSIZE),
+		.arg_type = ARG_PTR,
+		.arg_len = sizeof(long),
+	},
+	{
+		//#define BLKSSZGET  _IO(0x12,104)	/* get block device sector size */
+		IOCTL_ITEM(BLKSSZGET),
+		.arg_type = ARG_PTR,
+		.arg_len = sizeof(int),
+	},
+	{
+		//#define BLKBSZGET  _IOR(0x12,112,size_t)
+		IOCTL_ITEM(BLKBSZGET),
+		.arg_type = ARG_PTR,
+		.arg_len = sizeof(unsigned int),
+	},
+	{
+		//#define BLKGETSIZE64 _IOR(0x12,114,size_t)	/* return device size in bytes (u64 *arg) */
+		IOCTL_ITEM(BLKGETSIZE64),
+		.arg_type = ARG_PTR,
+		.arg_len = sizeof(unsigned long long),
+	},
+	{
+		//#define BLKPBSZGET _IO(0x12,123)
+		IOCTL_ITEM(BLKPBSZGET),
+		.arg_type = ARG_PTR,
+		.arg_len = sizeof(unsigned int),
 	},
 };
 
@@ -247,6 +293,27 @@ nvme_ioctl_metadata_size(uint32_t ioctl_cmd, char *cmd_buf, int lb_md_size)
 		syslog(LOG_INFO, "nvme_ioctl_metadata_size, Not supported ioctl_nr 0x%x\n", ioctl_nr);
 		return 0;
 	}
+}
+
+/*
+ * Construct request and response structures for BLK ioctl
+ */
+static int
+usr_blk_ioctl_rr_construct(struct usr_nvme_ioctl_req *req, struct usr_nvme_ioctl_resp *resp,
+			   uint32_t ioctl_cmd, char *cmd_buf)
+{
+	unsigned int i;
+
+	for (i = 0; i < sizeof(blk_items) / sizeof(*blk_items); i++) {
+		if (blk_items[i].ioctl_cmd == ioctl_cmd) {
+			resp->cmd_len = blk_items[i].arg_len;
+			resp->cmd_buf = cmd_buf;
+			return 0;
+		}
+	}
+
+	syslog(LOG_INFO, "usr_blk_ioctl_rr_construct, Not supported ioctl_cmd 0x%x\n", ioctl_cmd);
+	return -EINVAL;
 }
 
 static int
@@ -376,6 +443,9 @@ usr_ioctl_rr_construct(struct usr_nvme_ioctl_req *req, struct usr_nvme_ioctl_res
 	req->ioctl_cmd = ioctl_cmd;
 
 	switch (ioctl_magic) {
+	case BLK_IOCTL_MAGIC:
+		ret = usr_blk_ioctl_rr_construct(req, resp, ioctl_cmd, cmd_buf);
+		break;
 	case NVME_IOCTL_MAGIC:
 		ret = usr_nvme_ioctl_rr_construct(req, resp, ioctl_cmd, cmd_buf, sockfd);
 		break;
@@ -408,6 +478,7 @@ usr_ioctl_rr_destruct(uint32_t ioctl_cmd, struct usr_nvme_ioctl_req *req,
 		memcpy(req->cmd_buf, resp->cmd_buf, resp->cmd_len);
 		free(resp->cmd_buf);
 		break;
+	case BLK_IOCTL_MAGIC: /* for blk ioctl, cmd_buf is not allocated */
 	default:
 		return;
 	}
@@ -625,6 +696,14 @@ user_ioctl(int fd, unsigned long request, ...)
 		for (i = 0; i < sizeof(nvme_items) / sizeof(*nvme_items); i++) {
 			if (nvme_items[i].ioctl_cmd == request) {
 				arg_type = nvme_items[i].arg_type;
+				break;
+			}
+		}
+		break;
+	case BLK_IOCTL_MAGIC:
+		for (i = 0; i < sizeof(blk_items) / sizeof(*blk_items); i++) {
+			if (blk_items[i].ioctl_cmd == request) {
+				arg_type = blk_items[i].arg_type;
 				break;
 			}
 		}
