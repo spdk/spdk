@@ -76,6 +76,30 @@
     },
     {
       "key": {
+        "uuid": "84263e76_647b1c5b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-04T17:12:00Z",
+      "side": 1,
+      "message": "We haven\u0027t been able to figure out a way to make the code formatters fix variable alignment in a reasonable way.",
+      "parentUuid": "bc422924_e3d8cccd",
+      "range": {
+        "startLine": 145,
+        "startChar": 0,
+        "endLine": 148,
+        "endChar": 4
+      },
+      "revId": "875974bc53f75088f243ef65977443db8309627b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ff0af742_a5db0699",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 7
