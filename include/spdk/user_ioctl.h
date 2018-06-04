@@ -42,6 +42,25 @@
 extern "C" {
 #endif
 
+/*
+ * user_ioctl_dir is used for applications to get path of
+ * each user_ioctl socket file.
+ * Its default location is "/var/tmp/spdk"
+ */
+extern const char *user_ioctl_dir;
+
+/*
+ * check whether fd or path is user_ioctl specific.
+ * return 1, if yes.
+ * return 0, if not.
+ */
+int user_is_nvme_path(const char *path);
+int user_is_char_path(const char *path);
+int user_is_blk_path(const char *path);
+int user_is_nvme(int fd);
+int user_is_char(int fd);
+int user_is_blk(int fd);
+
 int user_open(const char *path, int oflag);
 int user_ioctl(int fd, unsigned long request, ...);
 
