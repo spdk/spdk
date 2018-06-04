@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "24ee7b40_7790ea06",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 1535,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-04T13:29:25Z",
+      "side": 1,
+      "message": "Those two options are uint16_t but spdk_json_decode_uint32 expect uint32_t. you can change max_queue_depth and max_qpairs_per_ctrlr to be uint32_t or add spdk_json_decode_uint16() wraper.",
+      "range": {
+        "startLine": 1534,
+        "startChar": 0,
+        "endLine": 1535,
+        "endChar": 116
+      },
+      "revId": "1f7f74032cb484cfd12abca3a285ceabc68c8ac0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c676e497_13c65a81",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 1614,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-04T13:29:25Z",
+      "side": 1,
+      "message": "-\u003e nvmf_rpc_subsystem_tgt_conf_decoder",
+      "range": {
+        "startLine": 1614,
+        "startChar": 22,
+        "endLine": 1614,
+        "endChar": 57
+      },
+      "revId": "1f7f74032cb484cfd12abca3a285ceabc68c8ac0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
