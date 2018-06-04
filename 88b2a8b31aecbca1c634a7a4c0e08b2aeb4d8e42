@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d9f561ff_80d2562d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 4477,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-04T20:13:52Z",
+      "side": 1,
+      "message": "building on comment in previous patch - I think we should not allow a resize while a previous resize is in progress\n\nwe already \u0027verify\u0027 (actually assert) that this is called on the md_thread, so a new member in spdk_blob could keep track of whether a resize is in progress - if so, just fail with -EBUSY (and add this to the documentation)\n\nI\u0027m ok if you want to do this in a separate patch though - if you do, i\u0027ll remove my -1",
+      "revId": "88b2a8b31aecbca1c634a7a4c0e08b2aeb4d8e42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
