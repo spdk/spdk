@@ -525,7 +525,7 @@ test_connect(void)
 	rc = spdk_nvmf_ctrlr_connect(&req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
 	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC);
-	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVMF_FABRIC_SC_CONTROLLER_BUSY);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER);
 	CU_ASSERT(qpair.ctrlr == NULL);
 	ctrlr.num_qpairs = 0;
 
@@ -538,8 +538,8 @@ test_connect(void)
 	cmd.connect_cmd.qid = 1;
 	rc = spdk_nvmf_ctrlr_connect(&req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
-	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
-	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER);
 	CU_ASSERT(qpair.ctrlr == NULL);
 	TAILQ_INIT(&ctrlr.qpairs);
 
