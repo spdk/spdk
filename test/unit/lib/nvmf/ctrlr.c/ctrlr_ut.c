@@ -459,7 +459,6 @@ test_connect(void)
 	CU_ASSERT(nvme_status_success(&rsp.nvme_cpl.status));
 	CU_ASSERT(qpair.ctrlr == &ctrlr);
 	qpair.ctrlr = NULL;
-	ctrlr.num_qpairs = 0;
 	TAILQ_INIT(&ctrlr.qpairs);
 
 	/* Non-existent controller */
@@ -524,13 +523,17 @@ test_connect(void)
 
 	/* I/O connect with too many existing qpairs */
 	memset(&rsp, 0, sizeof(rsp));
-	ctrlr.num_qpairs = 3;
+	spdk_bit_array_set(ctrlr.qpair_mask, 0);
+	spdk_bit_array_set(ctrlr.qpair_mask, 1);
+	spdk_bit_array_set(ctrlr.qpair_mask, 2);
 	rc = spdk_nvmf_ctrlr_connect(&req);
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
 	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC);
 	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER);
 	CU_ASSERT(qpair.ctrlr == NULL);
-	ctrlr.num_qpairs = 0;
+	spdk_bit_array_clear(ctrlr.qpair_mask, 0);
+	spdk_bit_array_clear(ctrlr.qpair_mask, 1);
+	spdk_bit_array_clear(ctrlr.qpair_mask, 2);
 
 	/* I/O connect with duplicate queue ID */
 	memset(&rsp, 0, sizeof(rsp));
