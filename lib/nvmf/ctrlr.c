@@ -76,6 +76,22 @@ ctrlr_add_qpair_and_update_rsp(struct spdk_nvmf_qpair *qpair,
 			       struct spdk_nvmf_ctrlr *ctrlr,
 			       struct spdk_nvmf_fabric_connect_rsp *rsp)
 {
+	if (spdk_nvmf_ctrlr_get_qpair(ctrlr, qpair->qid)) {
+		SPDK_ERRLOG("Got I/O connect with duplicate QID %u\n", qpair->qid);
+		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+		rsp->status.sc = SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER;
+		return;
+	}
+
+	/* check if we would exceed ctrlr connection limit */
+	if (ctrlr->num_qpairs >= ctrlr->max_qpairs_allowed) {
+		SPDK_ERRLOG("qpair limit %d\n", ctrlr->num_qpairs);
+		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+		rsp->status.sc = SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER;
+		return;
+	}
+
+
 	qpair->ctrlr = ctrlr;
 	ctrlr->num_qpairs++;
 	TAILQ_INSERT_HEAD(&ctrlr->qpairs, qpair, link);
@@ -211,7 +227,6 @@ static void
 spdk_nvmf_ctrlr_add_io_qpair(void *ctx)
 {
 	struct spdk_nvmf_request *req = ctx;
-	struct spdk_nvmf_fabric_connect_cmd *cmd = &req->cmd->connect_cmd;
 	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
@@ -244,21 +259,6 @@ spdk_nvmf_ctrlr_add_io_qpair(void *ctx)
 		SPDK_ERRLOG("Got I/O connect with invalid IOCQES %u\n",
 			    ctrlr->vcprop.cc.bits.iocqes);
 		SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
-		goto end;
-	}
-
-	if (spdk_nvmf_ctrlr_get_qpair(ctrlr, cmd->qid)) {
-		SPDK_ERRLOG("Got I/O connect with duplicate QID %u\n", cmd->qid);
-		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
-		rsp->status.sc = SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER;
-		goto end;
-	}
-
-	/* check if we would exceed ctrlr connection limit */
-	if (ctrlr->num_qpairs >= ctrlr->max_qpairs_allowed) {
-		SPDK_ERRLOG("qpair limit %d\n", ctrlr->num_qpairs);
-		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
-		rsp->status.sc = SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER;
 		goto end;
 	}
 
