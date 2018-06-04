@@ -140,6 +140,30 @@
     },
     {
       "key": {
+        "uuid": "8a10c04c_946dc073",
+        "filename": "test/nvme/err_injection/err_injection.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-06-04T05:02:03Z",
+      "side": 1,
+      "message": "ok.",
+      "parentUuid": "4084ffa7_392fd901",
+      "range": {
+        "startLine": 77,
+        "startChar": 13,
+        "endLine": 77,
+        "endChar": 21
+      },
+      "revId": "ad4f4eaec71e8c81f1f33bc0910619bb397fc050",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0158b8f6_84e0f3f8",
         "filename": "test/nvme/err_injection/err_injection.c",
         "patchSetId": 7
@@ -151,6 +175,24 @@
       "writtenOn": "2018-06-01T08:56:33Z",
       "side": 1,
       "message": "if failed is a counter variable, failed++ should be used instead?",
+      "revId": "ad4f4eaec71e8c81f1f33bc0910619bb397fc050",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58c8055a_179a2e60",
+        "filename": "test/nvme/err_injection/err_injection.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-06-04T05:02:03Z",
+      "side": 1,
+      "message": "ok, the caller only check the return value is 0 or not, so it makes no difference here.",
+      "parentUuid": "0158b8f6_84e0f3f8",
       "revId": "ad4f4eaec71e8c81f1f33bc0910619bb397fc050",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -180,6 +222,30 @@
     },
     {
       "key": {
+        "uuid": "0f4f92f4_1103e762",
+        "filename": "test/nvme/err_injection/err_injection.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-06-04T05:02:03Z",
+      "side": 1,
+      "message": "good point.",
+      "parentUuid": "3cc3b082_60eb8c7d",
+      "range": {
+        "startLine": 121,
+        "startChar": 0,
+        "endLine": 123,
+        "endChar": 46
+      },
+      "revId": "ad4f4eaec71e8c81f1f33bc0910619bb397fc050",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "64b08977_d6ae9de7",
         "filename": "test/nvme/err_injection/err_injection.c",
         "patchSetId": 7
@@ -197,6 +263,24 @@
     },
     {
       "key": {
+        "uuid": "93715149_a9662221",
+        "filename": "test/nvme/err_injection/err_injection.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-06-04T05:02:03Z",
+      "side": 1,
+      "message": "Just print the failed message is enough for debug.",
+      "parentUuid": "64b08977_d6ae9de7",
+      "revId": "ad4f4eaec71e8c81f1f33bc0910619bb397fc050",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "06a8135a_d52ef077",
         "filename": "test/nvme/err_injection/err_injection.c",
         "patchSetId": 7
@@ -208,6 +292,24 @@
       "writtenOn": "2018-06-01T08:56:33Z",
       "side": 1,
       "message": "Is it OK to return here? Go to the line 181? Outstanding commands may remain to be handled.",
+      "revId": "ad4f4eaec71e8c81f1f33bc0910619bb397fc050",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d661d3a3_15864377",
+        "filename": "test/nvme/err_injection/err_injection.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-06-04T05:02:03Z",
+      "side": 1,
+      "message": "Yeah, it\u0027s better to process exception for multiple NVMe devices.",
+      "parentUuid": "06a8135a_d52ef077",
       "revId": "ad4f4eaec71e8c81f1f33bc0910619bb397fc050",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -242,6 +344,24 @@
       "writtenOn": "2018-06-01T08:56:33Z",
       "side": 1,
       "message": "By get_feature_test() again, \"Admin Get Feature error test, expected successful return\" is possible?",
+      "revId": "ad4f4eaec71e8c81f1f33bc0910619bb397fc050",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bfa3cbd0_5d5d9689",
+        "filename": "test/nvme/err_injection/err_injection.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-06-04T05:02:03Z",
+      "side": 1,
+      "message": "I can add the successful case here.",
+      "parentUuid": "5a26d316_2e722a78",
       "revId": "ad4f4eaec71e8c81f1f33bc0910619bb397fc050",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
