@@ -318,6 +318,8 @@ usr_blk_ioctl_rr_construct(struct usr_nvme_ioctl_req *req, struct usr_nvme_ioctl
 	return -EINVAL;
 }
 
+static int nvme_identify_ns_lbaf(int sockfd, uint32_t *_lba_dsize, uint32_t *_lb_md_size);
+
 static int
 usr_nvme_ioctl_io_rr_construct(struct usr_nvme_ioctl_req *req, struct usr_nvme_ioctl_resp *resp,
 			       uint32_t ioctl_cmd, char *cmd_buf, int sockfd)
@@ -325,9 +327,10 @@ usr_nvme_ioctl_io_rr_construct(struct usr_nvme_ioctl_req *req, struct usr_nvme_i
 	struct nvme_user_io *io_cmd;
 	uint32_t lb_md_size, lba_dsize;
 
-	// TODO: nvme io cmd needs to know lba and metadata size
-	lba_dsize = PAGE_SIZE;
-	lb_md_size = 0;
+	/* nvme io cmd needs to know lba and metadata size */
+	if (nvme_identify_ns_lbaf(sockfd, &lba_dsize, &lb_md_size)) {
+		return -1;
+	}
 
 	if (cmd_buf == NULL) {
 		return 0;
@@ -435,6 +438,8 @@ usr_nvme_ioctl_rr_construct(struct usr_nvme_ioctl_req *req, struct usr_nvme_ioct
  * Construct request and response structures
  * Return <0 if failed, return -errno
  * Return 0 on success.
+ * Return >0:
+ *    For nvme_identify_ns_lbaf, user_ioctl is successfully executed, but ctrlr replied an error.
  */
 static int
 usr_ioctl_rr_construct(struct usr_nvme_ioctl_req *req, struct usr_nvme_ioctl_resp *resp,
@@ -695,6 +700,106 @@ exit:
 
 	/* if no socket or param error, return ioctl_ret */
 	return ret ? ret : ioctl_ret;
+}
+
+/*
+ * Remove dependency on linux/nvme.h
+ * linux/nvme.h is removed in recent kernel versions.
+ */
+#ifndef _LINUX_NVME_H
+
+#define nvme_admin_identify	0x6
+#define NVME_ID_CNS_NS		0x0
+
+#define NVME_NS_FLBAS_LBA_MASK	0xf
+#define NVME_NS_FLBAS_META_EXT	0x10
+
+struct nvme_lbaf {
+	__le16			ms;
+	__u8			ds;
+	__u8			rp;
+};
+
+struct nvme_id_ns {
+	__le64			nsze;
+	__le64			ncap;
+	__le64			nuse;
+	__u8			nsfeat;
+	__u8			nlbaf;
+	__u8			flbas;
+	__u8			mc;
+	__u8			dpc;
+	__u8			dps;
+	__u8			nmic;
+	__u8			rescap;
+	__u8			fpi;
+	__u8			rsvd33;
+	__le16			nawun;
+	__le16			nawupf;
+	__le16			nacwu;
+	__le16			nabsn;
+	__le16			nabo;
+	__le16			nabspf;
+	__le16			noiob;
+	__u8			nvmcap[16];
+	__u8			rsvd64[40];
+	__u8			nguid[16];
+	__u8			eui64[8];
+	struct nvme_lbaf	lbaf[16];
+	__u8			rsvd192[192];
+	__u8			vs[3712];
+};
+#endif
+
+/*
+ * Get lba_dsize and lb_md_size through nvme identify cmd.
+ * Return -errno if failed
+ * Return 0 on success
+ * Return >0 if user_ioctl is successfully executed, but ctrlr replied an error.
+ */
+static int
+nvme_identify_ns_lbaf(int sockfd, uint32_t *_lba_dsize, uint32_t *_lb_md_size)
+{
+	int nsid;
+	int lbaf_inuse;
+	int lb_md_size, lba_dsize, md_ext;
+	int ret;
+	struct nvme_id_ns idns;
+	char *data = (char *)&idns;
+	struct nvme_admin_cmd cmd = {
+		.opcode		= nvme_admin_identify,
+		.addr		= (__u64)(uintptr_t) data,
+		.nsid		= 1,
+		.data_len	= 0x1000,
+		.cdw10		= NVME_ID_CNS_NS,
+	};
+
+	/* Get ns_id of this nvme blk device from its path */
+	nsid = _user_ioctl(sockfd, NVME_IOCTL_ID, NULL);
+	if (nsid <= 0) {
+		return -1;
+	}
+
+	cmd.nsid = nsid;
+
+	ret = _user_ioctl(sockfd, NVME_IOCTL_ADMIN_CMD, (char *)&cmd);
+	if (ret) {
+		return ret;
+	}
+
+	lbaf_inuse = idns.flbas & 0x0f; // bits 3:0 of flbas indicates which LBA formats is in use.
+	lba_dsize = 1 << idns.lbaf[lbaf_inuse].ds;
+	lb_md_size = idns.lbaf[lbaf_inuse].ms;
+	md_ext = lb_md_size && (idns.flbas & NVME_NS_FLBAS_META_EXT);
+	if (md_ext) {
+		lba_dsize += lb_md_size;
+		lb_md_size = 0;
+	}
+
+	*_lba_dsize =  lba_dsize;
+	*_lb_md_size = lb_md_size;
+
+	return 0;
 }
 
 int
