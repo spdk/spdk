@@ -249,8 +249,8 @@ spdk_nvmf_ctrlr_add_io_qpair(void *ctx)
 
 	if (spdk_nvmf_ctrlr_get_qpair(ctrlr, cmd->qid)) {
 		SPDK_ERRLOG("Got I/O connect with duplicate QID %u\n", cmd->qid);
-		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
-		rsp->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+		rsp->status.sc = SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER;
 		goto end;
 	}
 
@@ -258,7 +258,7 @@ spdk_nvmf_ctrlr_add_io_qpair(void *ctx)
 	if (ctrlr->num_qpairs >= ctrlr->max_qpairs_allowed) {
 		SPDK_ERRLOG("qpair limit %d\n", ctrlr->num_qpairs);
 		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
-		rsp->status.sc = SPDK_NVMF_FABRIC_SC_CONTROLLER_BUSY;
+		rsp->status.sc = SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER;
 		goto end;
 	}
 
