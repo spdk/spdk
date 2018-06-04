@@ -1,0 +1,43 @@
+{
+  "subsystems": [
+    {
+      "subsystem": "copy",
+      "config": null
+    },
+    {
+      "subsystem": "interface",
+      "config": null
+    },
+    {
+      "subsystem": "net_framework",
+      "config": null
+    },
+    {
+      "subsystem": "bdev",
+      "config": [
+        {
+          "params": {
+            "block_size": 4096,
+            "num_blocks": 32768
+          },
+          "method": "construct_malloc_bdev"
+        },
+        {
+          "params": {
+            "block_size": 4096,
+            "num_blocks": 32768
+          },
+          "method": "construct_malloc_bdev"
+        }
+      ]
+    },
+    {
+      "subsystem": "nbd",
+      "config": []
+    },
+    {
+      "subsystem": "scsi",
+      "config": null
+    }
+  ]
+}
