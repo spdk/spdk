@@ -629,7 +629,7 @@ basic_qos(void)
 	bdev->qos = calloc(1, sizeof(*bdev->qos));
 	SPDK_CU_ASSERT_FATAL(bdev->qos != NULL);
 	TAILQ_INIT(&bdev->qos->queued);
-	bdev->qos->rate_limit = 2000; /* 2 I/O per millisecond */
+	bdev->qos->iops_rate_limit = 2000; /* 2 I/O per millisecond */
 
 	g_get_io_channel = true;
 
@@ -732,7 +732,7 @@ io_during_qos_queue(void)
 	bdev->qos = calloc(1, sizeof(*bdev->qos));
 	SPDK_CU_ASSERT_FATAL(bdev->qos != NULL);
 	TAILQ_INIT(&bdev->qos->queued);
-	bdev->qos->rate_limit = 1000; /* 1000 I/O per second, or 1 per millisecond */
+	bdev->qos->iops_rate_limit = 1000; /* 1000 I/O per second, or 1 per millisecond */
 
 	g_get_io_channel = true;
 
@@ -815,7 +815,7 @@ io_during_qos_reset(void)
 	bdev->qos = calloc(1, sizeof(*bdev->qos));
 	SPDK_CU_ASSERT_FATAL(bdev->qos != NULL);
 	TAILQ_INIT(&bdev->qos->queued);
-	bdev->qos->rate_limit = 1000; /* 1000 I/O per second, or 1 per millisecond */
+	bdev->qos->iops_rate_limit = 1000; /* 1000 I/O per second, or 1 per millisecond */
 
 	g_get_io_channel = true;
 
