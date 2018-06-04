@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f593fa4c_235aeb7a",
+        "filename": "lib/copy/ioat/copy_engine_ioat.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-04T20:22:43Z",
+      "side": 1,
+      "message": "I think we should keep both Enable and Disable as options for at least one release.  If we find \"Disable\", print a message that it is deprecated and will be removed in next release.  You can also fail if user specifies both Enable and Disable.\n\nCHANGELOG entry should also be added.",
+      "revId": "fb4c7f2e2944386d330f347afce6c4440142564f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
