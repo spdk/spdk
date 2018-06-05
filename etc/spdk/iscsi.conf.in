@@ -121,9 +121,10 @@
 
 # Users may change this section to create a different number or size of
 #  malloc LUNs.
-# If the system has hardware DMA engine, it will use an IOAT
-# (i.e. Crystal Beach DMA) channel to do the copy instead of memcpy.
-# Of course, users can disable offload even it is available.
+# If the system has hardware DMA engine, it can use an IOAT
+# (i.e. Crystal Beach DMA) channel to do the copy instead of memcpy
+# by specifying "Enable Yes" in [Ioat] section.
+# Offload is disabled by default even it is available.
 [Malloc]
   # Number of Malloc targets
   NumberOfLuns 3
@@ -132,11 +133,12 @@
   # Block size. Default is 512 bytes.
   BlockSize 4096
 
-# Users may not want to use offload even it is available.
+# Users can use offload by specifying "Enable Yes" in this section
+# if it is available.
 # Users may use the whitelist to initialize specified devices, IDS
 #  uses BUS:DEVICE.FUNCTION to identify each Ioat channel.
 [Ioat]
-  Disable Yes
+  Enable No
   Whitelist 00:04.0
   Whitelist 00:04.1
 
