@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "73b8e82f_33f0f4f4",
+        "filename": "lib/env_dpdk/env.mk",
+        "patchSetId": 1
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-05T16:42:35Z",
+      "side": 1,
+      "message": "All files that #include any rte_* headers should include rte_config.h first; are we missing this in some specific files?\n\nWe could probably also use -include as in this patch; it does solve the problem, but it seems like a \"big hammer\" approach if we can fix one or two individual files instead.",
+      "revId": "d349fdda7db91f6f67c39769020eb358b68644d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
