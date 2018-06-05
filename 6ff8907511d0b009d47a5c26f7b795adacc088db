@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f023c7dd_7afd78d3",
+        "filename": "lib/user_ioctl/user_ioctl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 707,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-05T21:34:19Z",
+      "side": 1,
+      "message": "We definitely can\u0027t just include the contents of linux/nvme.h without the license header.\n\nHowever, I don\u0027t think we need to add these declarations at all; they should all have counterparts in spdk/nvme_spec.h.  For example, struct nvme_id_ns below is equivalent to struct spdk_nvme_ns_data.",
+      "revId": "6ff8907511d0b009d47a5c26f7b795adacc088db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
