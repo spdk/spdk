@@ -29,7 +29,7 @@ run_test test/nvmf/nvme_cli/nvme_cli.sh
 run_test test/nvmf/lvol/nvmf_lvol.sh
 run_test test/nvmf/shutdown/shutdown.sh
 
-if [ $RUN_NIGHTLY_FAILING -eq 1 ]; then
+if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_test test/nvmf/multiconnection/multiconnection.sh
 fi
 
