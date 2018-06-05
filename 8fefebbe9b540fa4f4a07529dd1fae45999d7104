@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "38543e2a_c9526713",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 517,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-05T14:48:27Z",
+      "side": 1,
+      "message": "As this memory leak was present from I very beginning and no one bothered it I think It can fixed in a separate patch to make this RPC patches merged before next release.\n\nIf you wish to address this issue I will be happy to review.",
+      "parentUuid": "cca08a4e_e49595b7",
+      "range": {
+        "startLine": 514,
+        "startChar": 1,
+        "endLine": 517,
+        "endChar": 10
+      },
+      "revId": "8fefebbe9b540fa4f4a07529dd1fae45999d7104",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "40d588d3_b692f506",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 10
