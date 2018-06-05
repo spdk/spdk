@@ -29,16 +29,16 @@
 # Programmer Guides {#prog_guides}
 
 - @ref blob
+- @ref bdev_pg
+- @ref bdev_module
+- @ref nvmf_tgt_pg
 
 # General Information {#general}
 
-- @ref bdev_pg
-- @ref bdev_module
 - @ref directory_structure
 - [Public API header files](files.html)
-- @ref nvmf_tgt_pg
 - @ref event
-- @ref blob
+- @ref logical_volumes
 
 # Miscellaneous {#misc}
 
