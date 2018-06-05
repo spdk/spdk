@@ -84,7 +84,9 @@ struct nbd_io {
 };
 
 enum nbd_disk_state_t {
-	NBD_DISK_STATE_RUNNING = 0,
+	NBD_DISK_STATE_INVALID = 0,
+	/* nbd kernel is running */
+	NBD_DISK_STATE_RUNNING,
 	/* soft disconnection caused by receiving nbd_cmd_disc */
 	NBD_DISK_STATE_SOFTDISC,
 	/* hard disconnection caused by mandatory conditions */
@@ -109,6 +111,9 @@ struct spdk_nbd_disk {
 	enum nbd_disk_state_t	state;
 	/* count of nbd_io in spdk_nbd_disk */
 	int			io_count;
+
+	bool			kernel_started;
+	pthread_t		kernel_tid;
 
 	TAILQ_ENTRY(spdk_nbd_disk)	tailq;
 };
@@ -342,6 +347,13 @@ spdk_nbd_cleanup_io(struct spdk_nbd_disk *nbd)
 static void
 _nbd_stop(struct spdk_nbd_disk *nbd)
 {
+	if (nbd->kernel_started) {
+		close(nbd->spdk_sp_fd);
+		nbd->spdk_sp_fd = -1;
+		pthread_join(nbd->kernel_tid, NULL);
+	}
+
+
 	if (nbd->ch) {
 		spdk_put_io_channel(nbd->ch);
 	}
@@ -721,7 +733,7 @@ spdk_nbd_io_xmit(struct spdk_nbd_disk *nbd)
 	 * outstanding request are transmitted.
 	 */
 	if (nbd->state == NBD_DISK_STATE_SOFTDISC && !spdk_nbd_io_xmit_check(nbd)) {
-		return -1;
+		return -ECONNRESET;
 	}
 
 	return 0;
@@ -772,12 +784,14 @@ spdk_nbd_poll(void *arg)
 static void *
 nbd_start_kernel(void *arg)
 {
-	int dev_fd = (int)(intptr_t)arg;
+	struct spdk_nbd_disk	*nbd = arg;
 
 	spdk_unaffinitize_thread();
 
+	nbd->state = NBD_DISK_STATE_RUNNING;
+
 	/* This will block in the kernel until we close the spdk_sp_fd. */
-	ioctl(dev_fd, NBD_DO_IT);
+	ioctl(nbd->dev_fd, NBD_DO_IT);
 
 	pthread_exit(NULL);
 }
@@ -795,7 +809,6 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 {
 	struct spdk_nbd_disk	*nbd;
 	struct spdk_bdev	*bdev;
-	pthread_t		tid;
 	int			rc;
 	int			sp[2];
 	int			flag;
@@ -814,6 +827,7 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 	nbd->dev_fd = -1;
 	nbd->spdk_sp_fd = -1;
 	nbd->kernel_sp_fd = -1;
+	nbd->state = NBD_DISK_STATE_INVALID;
 
 	rc = spdk_bdev_open(bdev, true, spdk_nbd_bdev_hot_remove, nbd, &nbd->bdev_desc);
 	if (rc != 0) {
@@ -889,18 +903,16 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 		goto err;
 	}
 #endif
-
-	rc = pthread_create(&tid, NULL, nbd_start_kernel, (void *)(intptr_t)nbd->dev_fd);
+	rc = pthread_create(&nbd->kernel_tid, NULL, nbd_start_kernel, nbd);
 	if (rc != 0) {
 		SPDK_ERRLOG("could not create thread: %s\n", spdk_strerror(rc));
 		goto err;
 	}
 
-	rc = pthread_detach(tid);
-	if (rc != 0) {
-		SPDK_ERRLOG("could not detach thread for nbd kernel: %s\n", spdk_strerror(rc));
-		goto err;
-	}
+	nbd->kernel_started = true;
+	do {
+		usleep(10000);
+	} while (nbd->state == NBD_DISK_STATE_INVALID);
 
 	flag = fcntl(nbd->spdk_sp_fd, F_GETFL);
 	if (fcntl(nbd->spdk_sp_fd, F_SETFL, flag | O_NONBLOCK) < 0) {

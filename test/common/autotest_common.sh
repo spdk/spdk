@@ -266,23 +266,18 @@ function waitfornbd() {
 		fi
 	done
 
-	# The nbd device is now recognized as a block device, but there can be
-	#  a small delay before we can start I/O to that block device.  So loop
-	#  here trying to read the first block of the nbd block device to a temp
-	#  file.  Note that dd returns success when reading an empty file, so we
-	#  need to check the size of the output file instead.
-	for ((i=1; i<=20; i++)); do
-		dd if=/dev/$nbd_name of=/tmp/nbdtest bs=4096 count=1 iflag=direct
-		size=`stat -c %s /tmp/nbdtest`
-		rm -f /tmp/nbdtest
-		if [ "$size" != "0" ]; then
-			return 0
-		else
-			sleep 0.1
-		fi
-	done
+	# The nbd device must be ready by now so check if we can read something from it
+	# Note that dd returns success when reading an empty file, so we need to check
+	# the size of the output file instead.
+	dd if=/dev/$nbd_name of=/tmp/nbdtest bs=4096 count=1 iflag=direct
+	size=`stat -c %s /tmp/nbdtest`
+	rm -f /tmp/nbdtest
 
-	return 1
+	if [ "$size" != "0" ]; then
+		return 0
+	else
+		return 1
+	fi
 }
 
 function killprocess() {
