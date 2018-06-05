@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "683a2fd6_5af926fc",
+        "filename": "lib/bdev/nvme/nvme_ioctl_trans.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-05T17:46:57Z",
+      "side": 1,
+      "message": "I don\u0027t think write() returning 0 is necessarily an error; only read() has this behavior, where read() \u003d\u003d 0 means EOF.",
+      "revId": "1f78bbba3b61b1943ff80f0d879a787c737001e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
