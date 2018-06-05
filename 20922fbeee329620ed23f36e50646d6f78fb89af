@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2e1745f6_f80aeb49",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-06-05T09:07:58Z",
+      "side": 1,
+      "message": "SCSI Block Commands(SBC3 or SBC4) has definition of flush command, probably you can use SYNCHRONIZE_CACHE_10 or SYNCHRONIZE_CACHE_16 for flush commands.",
+      "revId": "20922fbeee329620ed23f36e50646d6f78fb89af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
