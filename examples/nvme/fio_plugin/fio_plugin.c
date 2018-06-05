@@ -416,7 +416,13 @@ spdk_nvme_io_next_sge(void *ref, void **address, uint32_t *length)
 	return 0;
 }
 
-static int spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
+static
+#if (FIO_IOOPS_VERSION >= 24)
+enum fio_q_status
+#else
+int
+#endif /* FIO_IOOPS_VERSION */
+spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 {
 	int rc = 1;
 	struct spdk_fio_thread	*fio_thread = td->io_ops_data;

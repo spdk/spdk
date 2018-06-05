@@ -489,7 +489,12 @@ spdk_fio_completion_cb(struct spdk_bdev_io *bdev_io,
 	spdk_bdev_free_io(bdev_io);
 }
 
-static int
+static
+#if (FIO_IOOPS_VERSION >= 24)
+enum fio_q_status
+#else
+int
+#endif /* FIO_IOOPS_VERSION */
 spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 {
 	int rc = 1;
