@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6c7660d6_f28276fe",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 476,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-05T00:10:28Z",
+      "side": 1,
+      "message": "this should say \"only used clusters from backing blob are copied\"\n\nIt may also help to describe why someone would want to remove this dependency - or even what the dependency is.",
+      "revId": "79f4509d4a842af945e304f23c4a7be1c1f96e21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "64f1e0e2_e5fc0b81",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 482,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-05T00:10:28Z",
+      "side": 1,
+      "message": "instead of naming this \"thin\" - how about something like \"allocate_all\"?  I think allocate_all would be easier to understand for most users.",
+      "revId": "79f4509d4a842af945e304f23c4a7be1c1f96e21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f00ccbab_e11bc46a",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 487,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-05T00:10:28Z",
+      "side": 1,
+      "message": "It might be worth calling this change out in CHANGELOG.md since it is part of the blobstore public API.",
+      "revId": "79f4509d4a842af945e304f23c4a7be1c1f96e21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d61106a1_fdd8b5bb",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 4166,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-05T00:10:28Z",
+      "side": 1,
+      "message": "we should allow inflating a blob that has no parent - it means we want to allocate all of the clusters, even if they will all just contains zeroes for data\n\nbut to make that change, we cannot assume that back_bs_dev points to an spdk_blob_bs_dev - maybe the blob needs a flag to designate whether its backing bs_dev is a blob or not?",
+      "revId": "79f4509d4a842af945e304f23c4a7be1c1f96e21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2cab0bdb_45d450c7",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 3863,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-05T00:10:28Z",
+      "side": 1,
+      "message": "this should just return void",
+      "revId": "79f4509d4a842af945e304f23c4a7be1c1f96e21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e98700ae_3b47f47c",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 4041,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-05T00:10:28Z",
+      "side": 1,
+      "message": "just call _blob_inflate_rw() without a CU_ASSERT - any errors will get logged automatically by asserts in _blob_inflate_rw()",
+      "revId": "79f4509d4a842af945e304f23c4a7be1c1f96e21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
