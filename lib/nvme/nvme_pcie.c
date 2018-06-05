@@ -1171,6 +1171,8 @@ nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 	req->timed_out = false;
 	if (spdk_unlikely(pctrlr->ctrlr.timeout_enabled)) {
 		req->submit_tick = spdk_get_ticks();
+	} else {
+		req->submit_tick = 0;
 	}
 
 	pqpair->tr[tr->cid].active = true;
@@ -2001,7 +2003,7 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 	TAILQ_FOREACH_SAFE(tr, &pqpair->outstanding_tr, tq_list, tmp) {
 		assert(tr->req != NULL);
 
-		if (tr->req->timed_out) {
+		if (tr->req->timed_out || tr->req->submit_tick == 0) {
 			continue;
 		}
 
