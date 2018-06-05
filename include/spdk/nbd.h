@@ -59,16 +59,20 @@ int spdk_nbd_init(void);
  */
 void spdk_nbd_fini(void);
 
+
+typedef void (*spdk_nbd_cb)(void *cb_arg, struct spdk_bdev *nbd, int error);
+
 /**
  * Start a network block device backed by the bdev.
  *
  * \param bdev_name Name of bdev exposed as a network block device.
  * \param nbd_path Path to the registered network block device.
+ * \param cb User callback to call when bdev is started
+ * \param cb_arg User callback data
  *
- * \return a pointer to the configuration of the registered network block device
- * on success, or NULL on failure.
+ * \return 0 if succes or negative error code.
  */
-struct spdk_nbd_disk *spdk_nbd_start(const char *bdev_name, const char *nbd_path);
+int spdk_nbd_start(const char *bdev_name, const char *nbd_path, spdk_nbd_cb cb, void *cb_arg);
 
 /**
  * Stop the running network block device safely.
