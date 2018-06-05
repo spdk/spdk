@@ -32,6 +32,7 @@
  */
 
 #include "spdk/string.h"
+#include "spdk/bdev.h"
 #include "spdk/env.h"
 #include "spdk/rpc.h"
 #include "spdk/util.h"
@@ -59,49 +60,47 @@ static const struct spdk_json_object_decoder rpc_start_nbd_disk_decoders[] = {
 };
 
 static void
+spdk_rpc_start_nbd_disk_done(void *arg, struct spdk_bdev *nbd, int error)
+{
+	struct spdk_jsonrpc_request *request = arg;
+	struct spdk_json_write_ctx *w;
+
+	if (nbd == NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-error));
+	} else {
+		w = spdk_jsonrpc_begin_result(request);
+		if (w == NULL) {
+			return;
+		}
+
+		spdk_json_write_string(w, spdk_bdev_get_name(nbd));
+		spdk_jsonrpc_end_result(request, w);
+	}
+}
+
+static void
 spdk_rpc_start_nbd_disk(struct spdk_jsonrpc_request *request,
 			const struct spdk_json_val *params)
 {
 	struct rpc_start_nbd_disk req = {};
-	struct spdk_json_write_ctx *w;
-	struct spdk_nbd_disk *nbd;
+	int rc;
 
 	if (spdk_json_decode_object(params, rpc_start_nbd_disk_decoders,
 				    SPDK_COUNTOF(rpc_start_nbd_disk_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		rc = -EINVAL;
 		goto invalid;
 	}
 
-	if (req.nbd_device == NULL || req.bdev_name == NULL) {
-		goto invalid;
-	}
-
-	/* make sure nbd_device is not registered */
-	nbd = spdk_nbd_disk_find_by_nbd_path(req.nbd_device);
-	if (nbd) {
-		goto invalid;
-	}
-
-	nbd = spdk_nbd_start(req.bdev_name, req.nbd_device);
-	if (!nbd) {
-		goto invalid;
-	}
-
-	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		free_rpc_start_nbd_disk(&req);
+	rc = spdk_nbd_start(req.bdev_name, req.nbd_device, spdk_rpc_start_nbd_disk_done, request);
+	free_rpc_start_nbd_disk(&req);
+	if (rc == 0) {
 		return;
 	}
 
-	spdk_json_write_string(w, req.nbd_device);
-	spdk_jsonrpc_end_result(request, w);
-	free_rpc_start_nbd_disk(&req);
-	return;
-
 invalid:
-	free_rpc_start_nbd_disk(&req);
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	spdk_rpc_start_nbd_disk_done(request, NULL, rc);
 }
 
 SPDK_RPC_REGISTER("start_nbd_disk", spdk_rpc_start_nbd_disk, SPDK_RPC_RUNTIME)
