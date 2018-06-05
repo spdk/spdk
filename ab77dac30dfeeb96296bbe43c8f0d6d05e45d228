@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "df126da1_e09ab093",
+        "filename": "lib/bdev/nvme/nvme_ioctl_epoll.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-05T17:28:51Z",
+      "side": 1,
+      "message": "These should probably be configurable somehow; also, what happens if multiple SPDK apps that both have NVMe devices start up and try to create /dev/nvme0 (for example) in the dev directory?  Is there any mechanism to generate unique names or distinguish between controllers from different SPDK processes?",
+      "revId": "ab77dac30dfeeb96296bbe43c8f0d6d05e45d228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c6312d0_e2820cb0",
+        "filename": "lib/bdev/nvme/nvme_ioctl_epoll.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-05T17:28:51Z",
+      "side": 1,
+      "message": "This looks like it will clobber any existing file at this path (such as from another SPDK app).  We probably need a locking mechanism like we have for the RPC UNIX domain socket.",
+      "revId": "ab77dac30dfeeb96296bbe43c8f0d6d05e45d228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "70b69b1f_4c437b14",
+        "filename": "lib/bdev/nvme/nvme_ioctl_epoll.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-05T17:28:51Z",
+      "side": 1,
+      "message": "0 is a valid file descriptor.",
+      "revId": "ab77dac30dfeeb96296bbe43c8f0d6d05e45d228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "357ae9f8_f9db8d6b",
+        "filename": "lib/bdev/nvme/nvme_ioctl_epoll.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-05T17:28:51Z",
+      "side": 1,
+      "message": "listen() return value should probably be checked.",
+      "revId": "ab77dac30dfeeb96296bbe43c8f0d6d05e45d228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
