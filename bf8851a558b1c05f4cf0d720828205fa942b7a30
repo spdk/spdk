@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4d84196b_9429fcdb",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-05T16:14:06Z",
+      "side": 1,
+      "message": "nit - newline after declaration",
+      "revId": "bf8851a558b1c05f4cf0d720828205fa942b7a30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3c37ddd1_36d5c385",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 726,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-05T16:14:06Z",
+      "side": 1,
+      "message": "shouldn\u0027t this be removed?",
+      "revId": "bf8851a558b1c05f4cf0d720828205fa942b7a30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
