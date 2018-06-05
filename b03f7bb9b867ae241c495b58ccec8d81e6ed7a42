@@ -45,6 +45,54 @@
       "revId": "b03f7bb9b867ae241c495b58ccec8d81e6ed7a42",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c32c67f_1b2fa7b9",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-06-05T17:08:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "418a124f_c8e4d065",
+      "range": {
+        "startLine": 48,
+        "startChar": 10,
+        "endLine": 48,
+        "endChar": 19
+      },
+      "revId": "b03f7bb9b867ae241c495b58ccec8d81e6ed7a42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "24256a0d_c10a5444",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2018-06-05T17:08:31Z",
+      "side": 1,
+      "message": "I\u0027ll create separated patch with modification of documentation about \u0027thin inflation\u0027 and  add it to the \u0027thin inflation\u0027 patch set.",
+      "parentUuid": "b1800631_3518a517",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 242
+      },
+      "revId": "b03f7bb9b867ae241c495b58ccec8d81e6ed7a42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
