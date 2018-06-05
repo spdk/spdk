@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "cca08a4e_e49595b7",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 517,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-06-05T07:38:26Z",
+      "side": 1,
+      "message": "Line 514,515, 517 can be combined into a separate function as. Thus, If we have further patches, we can directly call that function. And it will help us to prevent potential memory leak of req.",
+      "range": {
+        "startLine": 514,
+        "startChar": 1,
+        "endLine": 517,
+        "endChar": 10
+      },
+      "revId": "8fefebbe9b540fa4f4a07529dd1fae45999d7104",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "40d588d3_b692f506",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 10
