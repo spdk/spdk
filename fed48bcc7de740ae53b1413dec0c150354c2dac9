@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0fb082f1_327c322e",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 800,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-06-05T15:48:50Z",
+      "side": 1,
+      "message": "should we unset nbd-\u003ekernel_started here?",
+      "revId": "fed48bcc7de740ae53b1413dec0c150354c2dac9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
