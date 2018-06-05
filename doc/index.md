@@ -38,7 +38,6 @@
 - [Public API header files](files.html)
 - @ref nvmf_tgt_pg
 - @ref event
-- @ref blob
 - @ref logical_volumes
 
 # Miscellaneous {#misc}
