@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "95308084_8af8b75b",
+        "filename": "test/vhost/other/negative.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-06-05T12:35:52Z",
+      "side": 1,
+      "message": "You can pass config file from line 72 here",
+      "range": {
+        "startLine": 68,
+        "startChar": 29,
+        "endLine": 68,
+        "endChar": 46
+      },
+      "revId": "c82e28ba6c4e619036b67c0f48de77c3ae3196c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b6d1ab03_c1cd042e",
+        "filename": "test/vhost/other/negative.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-06-05T12:35:52Z",
+      "side": 1,
+      "message": "You can load config thru spdk_vhost_run",
+      "range": {
+        "startLine": 72,
+        "startChar": 1,
+        "endLine": 72,
+        "endChar": 52
+      },
+      "revId": "c82e28ba6c4e619036b67c0f48de77c3ae3196c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
