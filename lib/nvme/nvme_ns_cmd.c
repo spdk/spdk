@@ -670,6 +670,36 @@ spdk_nvme_ns_cmd_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 }
 
 int
+spdk_nvme_ns_cmd_readv_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			       uint64_t lba, uint32_t lba_count,
+			       spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t io_flags,
+			       spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
+			       spdk_nvme_req_next_sge_cb next_sge_fn, void *metadata)
+{
+	struct nvme_request *req;
+	struct nvme_payload payload;
+
+	if (reset_sgl_fn == NULL || next_sge_fn == NULL) {
+		return -EINVAL;
+	}
+
+	payload = NVME_PAYLOAD_SGL(reset_sgl_fn, next_sge_fn, cb_arg, metadata);
+
+	req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_READ,
+			      io_flags, 0, 0, true);
+	if (req != NULL) {
+		return nvme_qpair_submit_request(qpair, req);
+	} else if (spdk_nvme_ns_check_request_length(lba_count,
+			ns->sectors_per_max_io,
+			ns->sectors_per_stripe,
+			qpair->ctrlr->opts.io_queue_requests)) {
+		return -EINVAL;
+	} else {
+		return -ENOMEM;
+	}
+}
+
+int
 spdk_nvme_ns_cmd_write(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 		       void *buffer, uint64_t lba,
 		       uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,
@@ -734,6 +764,36 @@ spdk_nvme_ns_cmd_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	}
 
 	payload = NVME_PAYLOAD_SGL(reset_sgl_fn, next_sge_fn, cb_arg, NULL);
+
+	req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_WRITE,
+			      io_flags, 0, 0, true);
+	if (req != NULL) {
+		return nvme_qpair_submit_request(qpair, req);
+	} else if (spdk_nvme_ns_check_request_length(lba_count,
+			ns->sectors_per_max_io,
+			ns->sectors_per_stripe,
+			qpair->ctrlr->opts.io_queue_requests)) {
+		return -EINVAL;
+	} else {
+		return -ENOMEM;
+	}
+}
+
+int
+spdk_nvme_ns_cmd_writev_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+				uint64_t lba, uint32_t lba_count,
+				spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t io_flags,
+				spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
+				spdk_nvme_req_next_sge_cb next_sge_fn, void *metadata)
+{
+	struct nvme_request *req;
+	struct nvme_payload payload;
+
+	if (reset_sgl_fn == NULL || next_sge_fn == NULL) {
+		return -EINVAL;
+	}
+
+	payload = NVME_PAYLOAD_SGL(reset_sgl_fn, next_sge_fn, cb_arg, metadata);
 
 	req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_WRITE,
 			      io_flags, 0, 0, true);
