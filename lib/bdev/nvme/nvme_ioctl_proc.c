@@ -472,6 +472,65 @@ spdk_nvme_ioctl_id_proc(struct spdk_nvme_ioctl_conn *ioctl_conn)
 	return ret;
 }
 
+static inline int
+nvme_spdk_get_error_code(const struct spdk_nvme_cpl *cpl)
+{
+	return (cpl->status.sct << 8) | cpl->status.sc;
+}
+
+static void
+spdk_nvme_ioctl_psthr_cmd_done(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_nvme_ioctl_conn *ioctl_conn = arg;
+	struct nvme_passthru_cmd *adm_cmd;
+	int ioctl_ret;
+
+	adm_cmd = (struct nvme_passthru_cmd *)ioctl_conn->req.cmd_buf;
+	adm_cmd->result = cpl->cdw0;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		SPDK_NOTICELOG("passthru command error: SC %x SCT %x\n", cpl->status.sc, cpl->status.sct);
+		/* keep consistency with kernel driver, return <sct<<8|sc> */
+		ioctl_ret = nvme_spdk_get_error_code(cpl);
+	} else {
+		ioctl_ret = 0;
+	}
+
+	spdk_nvme_ioctl_proc_done(ioctl_conn, ioctl_ret);
+}
+
+static int
+spdk_nvme_ioctl_admin_cmd_proc(struct spdk_nvme_ioctl_conn *ioctl_conn)
+{
+	struct spdk_nvme_ioctl_req *req;
+	struct spdk_nvme_ctrlr *ctrlr = NULL;
+	struct nvme_passthru_cmd *cmd;
+	int ret;
+
+	req = &ioctl_conn->req;
+	cmd = (struct nvme_passthru_cmd *)req->cmd_buf;
+	cmd->addr = (__u64)req->data;
+	cmd->metadata = (__u64)req->metadata;
+
+	if (ioctl_conn->type == IOCTL_CONN_TYPE_BLK) {
+		ctrlr = ((struct nvme_bdev *)ioctl_conn->device)->nvme_ctrlr->ctrlr;
+	} else {
+		ctrlr = ((struct nvme_ctrlr *)ioctl_conn->device)->ctrlr;
+	}
+
+	ret = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr,
+					    (struct spdk_nvme_cmd *)cmd,
+					    (void *)cmd->addr,
+					    cmd->data_len,
+					    spdk_nvme_ioctl_psthr_cmd_done, ioctl_conn);
+
+	if (ret < 0) {
+		ret = spdk_nvme_ioctl_proc_done(ioctl_conn, ret);
+	}
+
+	return ret;
+}
+
 int
 spdk_nvme_ioctl_proc(struct spdk_nvme_ioctl_conn *ioctl_conn)
 {
@@ -492,6 +551,8 @@ spdk_nvme_ioctl_proc(struct spdk_nvme_ioctl_conn *ioctl_conn)
 		ret = spdk_nvme_ioctl_id_proc(ioctl_conn);
 		break;
 	case NVME_IOCTL_ADMIN_CMD:
+		ret = spdk_nvme_ioctl_admin_cmd_proc(ioctl_conn);
+		break;
 	case NVME_IOCTL_IO_CMD:
 	case NVME_IOCTL_SUBMIT_IO:
 	case NVME_IOCTL_RESET:
