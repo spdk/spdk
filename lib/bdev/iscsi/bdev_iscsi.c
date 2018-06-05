@@ -467,6 +467,15 @@ static const struct spdk_bdev_fn_table iscsi_fn_table = {
 	.write_config_json	= bdev_iscsi_write_config_json,
 };
 
+static void
+complete_conn_req(struct bdev_iscsi_conn_req *req, struct spdk_bdev *bdev,
+		  int status)
+{
+	TAILQ_REMOVE(&g_iscsi_conn_req, req, link);
+	req->create_cb(req->create_cb_arg, bdev, status);
+	req->deleted = true;
+}
+
 static int
 create_iscsi_lun(struct iscsi_context *context, char *url, char *initiator_iqn, char *name,
 		 uint64_t num_blocks, uint32_t block_size, struct spdk_bdev **bdev)
@@ -539,10 +548,8 @@ iscsi_readcapacity16_cb(struct iscsi_context *iscsi, int status,
 	}
 
 ret:
-	TAILQ_REMOVE(&g_iscsi_conn_req, req, link);
-	req->create_cb(req->create_cb_arg, bdev, status);
 	scsi_free_scsi_task(task);
-	req->deleted = true;
+	complete_conn_req(req, bdev, status);
 }
 
 static void
@@ -563,9 +570,7 @@ iscsi_connect_cb(struct iscsi_context *iscsi, int status,
 
 ret:
 	SPDK_ERRLOG("iSCSI error: %s\n", iscsi_get_error(req->context));
-	TAILQ_REMOVE(&g_iscsi_conn_req, req, link);
-	req->create_cb(req->create_cb_arg, NULL, status);
-	req->deleted = true;
+	complete_conn_req(req, NULL, status);
 }
 
 static int
