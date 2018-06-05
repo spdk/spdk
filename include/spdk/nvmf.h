@@ -85,12 +85,16 @@ void spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts);
  */
 struct spdk_nvmf_tgt *spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts);
 
+typedef void (spdk_nvmf_tgt_destroy_done_fn)(void *ctx, int status);
+
 /**
  * Destroy an NVMe-oF target.
  *
  * \param tgt The target to destroy. This releases all resources.
  */
-void spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt);
+void spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt,
+			   spdk_nvmf_tgt_destroy_done_fn cb_fn,
+			   void *cb_arg);
 
 /**
  * Function to be called once the target is listening.

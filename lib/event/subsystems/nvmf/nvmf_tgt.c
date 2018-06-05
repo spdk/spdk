@@ -217,6 +217,13 @@ nvmf_tgt_subsystem_stopped(struct spdk_nvmf_subsystem *subsystem,
 }
 
 static void
+nvmf_tgt_destroy_done(void *ctx, int status)
+{
+	g_tgt_state = NVMF_TGT_STOPPED;
+	nvmf_tgt_advance_state();
+}
+
+static void
 nvmf_tgt_advance_state(void)
 {
 	enum nvmf_tgt_state prev_state;
@@ -303,8 +310,7 @@ nvmf_tgt_advance_state(void)
 					     nvmf_tgt_destroy_poll_group_done);
 			break;
 		case NVMF_TGT_FINI_FREE_RESOURCES:
-			spdk_nvmf_tgt_destroy(g_spdk_nvmf_tgt);
-			g_tgt_state = NVMF_TGT_STOPPED;
+			spdk_nvmf_tgt_destroy(g_spdk_nvmf_tgt, nvmf_tgt_destroy_done, NULL);
 			break;
 		case NVMF_TGT_STOPPED:
 			spdk_subsystem_fini_next();
