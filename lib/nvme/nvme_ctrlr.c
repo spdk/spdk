@@ -2013,6 +2013,8 @@ spdk_nvme_ctrlr_register_timeout_callback(struct spdk_nvme_ctrlr *ctrlr,
 		active_proc->timeout_cb_arg = cb_arg;
 	}
 
+	ctrlr->timeout_enabled = true;
+
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 }
 
