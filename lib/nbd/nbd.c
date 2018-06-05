@@ -45,6 +45,7 @@
 #include "spdk/util.h"
 #include "spdk/thread.h"
 #include "spdk/event.h"
+#include "spdk_internal/assert.h"
 
 #include "spdk_internal/log.h"
 #include "spdk/queue.h"
@@ -89,6 +90,20 @@ enum nbd_disk_state_t {
 	NBD_DISK_STATE_HARDDISC,
 };
 
+enum nbd_kernel_state_t {
+	/* No  NBD kernel thread created */
+	NBD_KERNEL_STATE_INVALID = 0,
+	/* NBD kernel thread created and need to be joined. */
+	NBD_KERNEL_STATE_CREATED,
+	/* NBD kernel created but not polling for IO yet. */
+	NBD_KERNEL_STATE_STARTED,
+	/* We are checking NBD kernel when it will be up. */
+	NBD_KERNEL_STATE_CHECKING,
+	NBD_KERNEL_STATE_CHECK_FAILED,
+	/* NBD kernel is running and we are polling for IO. */
+	NBD_KERNEL_STATE_RUNNING,
+};
+
 struct spdk_nbd_disk {
 	struct spdk_bdev	*bdev;
 	struct spdk_bdev_desc	*bdev_desc;
@@ -107,6 +122,13 @@ struct spdk_nbd_disk {
 	enum nbd_disk_state_t	state;
 	/* count of nbd_io in spdk_nbd_disk */
 	int			io_count;
+
+	enum nbd_kernel_state_t	kernel_state;
+	pthread_t		kernel_tid;
+	pthread_t		checking_kernel_tid;
+
+	spdk_nbd_cb		start_cb;
+	void			*start_cb_arg;
 
 	TAILQ_ENTRY(spdk_nbd_disk)	tailq;
 };
@@ -364,6 +386,10 @@ _nbd_stop(struct spdk_nbd_disk *nbd)
 		ioctl(nbd->dev_fd, NBD_CLEAR_QUE);
 		ioctl(nbd->dev_fd, NBD_CLEAR_SOCK);
 		close(nbd->dev_fd);
+	}
+
+	if (nbd->kernel_state != NBD_KERNEL_STATE_INVALID) {
+		pthread_join(nbd->kernel_tid, NULL);
 	}
 
 	if (nbd->nbd_poller) {
@@ -719,7 +745,7 @@ spdk_nbd_io_xmit(struct spdk_nbd_disk *nbd)
 	 * outstanding request are transmitted.
 	 */
 	if (nbd->state == NBD_DISK_STATE_SOFTDISC && !spdk_nbd_io_xmit_check(nbd)) {
-		return -1;
+		return -ECONNRESET;
 	}
 
 	return 0;
@@ -770,14 +796,171 @@ spdk_nbd_poll(void *arg)
 static void *
 nbd_start_kernel(void *arg)
 {
-	int dev_fd = (int)(intptr_t)arg;
+	struct spdk_nbd_disk	*nbd = arg;
 
-	spdk_unaffinitize_thread();
+	nbd->kernel_state = NBD_KERNEL_STATE_STARTED;
 
 	/* This will block in the kernel until we close the spdk_sp_fd. */
-	ioctl(dev_fd, NBD_DO_IT);
+	ioctl(nbd->dev_fd, NBD_DO_IT);
 
 	pthread_exit(NULL);
+}
+
+static void *
+nbd_check_kernel(void *arg)
+{
+	struct spdk_nbd_disk *nbd = arg;
+	ssize_t rc, blklen = spdk_bdev_get_block_size(nbd->bdev);
+	unsigned check_cnt = 1000;
+	void *buff = NULL;
+	int fd;
+
+	while (nbd->kernel_state != NBD_KERNEL_STATE_CHECK_FAILED &&
+	       nbd->kernel_state != NBD_KERNEL_STATE_RUNNING) {
+		if (--check_cnt == 0) {
+			SPDK_DEBUGLOG(SPDK_LOG_NBD, "%s: device not ready after 1000 iterations\n", nbd->nbd_path);
+			nbd->kernel_state = NBD_KERNEL_STATE_CHECK_FAILED;
+			break;
+		}
+
+		usleep(1000);
+		switch (nbd->kernel_state) {
+		case NBD_KERNEL_STATE_INVALID: /* Wait a while for nbd kernel thread to be created. */
+		case NBD_KERNEL_STATE_CREATED: /* Kernel thread not started yet, just wait another period. */
+			SPDK_DEBUGLOG(SPDK_LOG_NBD, "%s: kernel thread not yet ready (%d)\n", nbd->nbd_path,
+				      nbd->kernel_state);
+			break;
+		case NBD_KERNEL_STATE_STARTED:
+			/* Kernel thread should be ready - enable polling for IO. */
+			SPDK_DEBUGLOG(SPDK_LOG_NBD, "%s: Starting IO polling\n", nbd->nbd_path);
+			nbd->kernel_state = NBD_KERNEL_STATE_CHECKING;
+			break;
+		case NBD_KERNEL_STATE_CHECKING:
+			/* Read one LBA to check if the nbd kernel is really ready to serve us. */
+			SPDK_DEBUGLOG(SPDK_LOG_NBD, "%s: Checking if device can be read\n", nbd->nbd_path);
+			rc = posix_memalign(&buff, PAGE_SIZE, blklen);
+			if (rc) {
+				nbd->kernel_state = NBD_KERNEL_STATE_CHECK_FAILED;
+				fprintf(stderr, "posix_memalign(%lu, %zu): failed: %s (%zd)\n", PAGE_SIZE, blklen,
+					spdk_strerror(rc), rc);
+				break;
+			}
+
+			fd = open(nbd->nbd_path, O_DIRECT | O_NONBLOCK | O_RDONLY, 0);
+			if (fd < 0) {
+				fprintf(stderr, "open(%s): failed: %s (%zd)\n", nbd->nbd_path, strerror(rc), rc);
+				free(buff);
+				nbd->kernel_state = NBD_KERNEL_STATE_CHECK_FAILED;
+				break;
+			}
+
+			rc = read(fd, buff, blklen);
+			close(fd);
+			free(buff);
+
+			if (rc == blklen) {
+				nbd->kernel_state = NBD_KERNEL_STATE_RUNNING;
+				SPDK_DEBUGLOG(SPDK_LOG_NBD,
+					      "%s: device read success (checked %u times) - marking device as ready\n", nbd->nbd_path,
+					      1000 - check_cnt);
+			}
+			break;
+		default:
+			/* Don't care other values */
+			break;
+		}
+	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_NBD, "%s: thread exit (%s)\n", nbd->nbd_path,
+		      nbd->kernel_state == NBD_KERNEL_STATE_RUNNING ? "succes" : "failed");
+	pthread_exit(NULL);
+}
+
+static int
+spdk_nbd_check_kernel_start(void *arg)
+{
+	struct spdk_nbd_disk	*nbd = arg;
+	int rc, flag;
+
+	switch (nbd->kernel_state) {
+	case NBD_KERNEL_STATE_INVALID:
+		rc = pthread_create(&nbd->checking_kernel_tid, NULL, nbd_check_kernel, nbd);
+		if (rc != 0) {
+			SPDK_ERRLOG("could not create checking thread: %s\n", spdk_strerror(rc));
+			goto done;
+		}
+
+		nbd->kernel_state = NBD_KERNEL_STATE_CREATED;
+		rc = pthread_create(&nbd->kernel_tid, NULL, nbd_start_kernel, nbd);
+		if (rc != 0) {
+			SPDK_ERRLOG("could not create thread: %s\n", spdk_strerror(rc));
+			goto done_failed;
+		}
+
+		flag = fcntl(nbd->spdk_sp_fd, F_GETFL);
+		if (fcntl(nbd->spdk_sp_fd, F_SETFL, flag | O_NONBLOCK) < 0) {
+			SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n",
+				    nbd->spdk_sp_fd, spdk_strerror(errno));
+			rc = -errno;
+			goto done_failed;
+		}
+
+		nbd->nbd_poller = spdk_poller_register(spdk_nbd_check_kernel_start, nbd, 1000);
+		break;
+	case NBD_KERNEL_STATE_CREATED:
+		/* Thread not started yet. */
+		break;
+	case NBD_KERNEL_STATE_STARTED:
+		/* Kernel thread started - checking thread will move kernel_state to CHECKING */
+		break;
+	case NBD_KERNEL_STATE_CHECKING:
+		/* We are checking if ioctl(NBD_DO_IT) entered kernel state.
+		 * Just poll for IO from checking thread and let the nbd_check_kernel() to move kernel_state
+		 * state to CHECK_FAILED or RUNNING.
+		 */
+		spdk_nbd_poll(nbd);
+		break;
+	case NBD_KERNEL_STATE_CHECK_FAILED:
+		assert(false);
+		rc = -EIO;
+		goto done_failed;
+	case NBD_KERNEL_STATE_RUNNING:
+		SPDK_DEBUGLOG(SPDK_LOG_NBD, "%s is now ready\n", nbd->nbd_path);
+		rc = 0;
+		goto done;
+	default:
+		SPDK_UNREACHABLE();
+	}
+
+	return 0;
+
+done_failed:
+	/* Set to failed to end checking thread */
+	nbd->kernel_state = NBD_KERNEL_STATE_CHECK_FAILED;
+	SPDK_ERRLOG("%s: failed to start device (%d) - %s\n", nbd->nbd_path, rc, spdk_strerror(-rc));
+done:
+	spdk_poller_unregister(&nbd->nbd_poller);
+	nbd->nbd_poller = spdk_poller_register(spdk_nbd_poll, nbd, 0);
+	if (nbd->kernel_state != NBD_KERNEL_STATE_INVALID) {
+		pthread_join(nbd->checking_kernel_tid, NULL);
+	}
+
+	if (nbd->start_cb) {
+		nbd->start_cb(nbd->start_cb_arg, rc == 0 ? nbd->bdev : NULL, rc);
+	}
+
+	if (nbd->kernel_state != NBD_KERNEL_STATE_RUNNING) {
+		spdk_nbd_stop(nbd);
+	}
+
+	return -1;
+}
+
+static void *
+_spdk_nbd_check_kernel_start(void *arg)
+{
+	spdk_nbd_check_kernel_start(arg);
+	return NULL;
 }
 
 static void
@@ -788,25 +971,30 @@ spdk_nbd_bdev_hot_remove(void *remove_ctx)
 	spdk_nbd_stop(nbd);
 }
 
-struct spdk_nbd_disk *
-spdk_nbd_start(const char *bdev_name, const char *nbd_path)
+int
+spdk_nbd_start(const char *bdev_name, const char *nbd_path, spdk_nbd_cb cb, void *cb_arg)
 {
 	struct spdk_nbd_disk	*nbd;
 	struct spdk_bdev	*bdev;
-	pthread_t		tid;
 	int			rc;
 	int			sp[2];
-	int			flag;
 
 	bdev = spdk_bdev_get_by_name(bdev_name);
 	if (bdev == NULL) {
 		SPDK_ERRLOG("no bdev %s exists\n", bdev_name);
-		return NULL;
+		return -ENODEV;
 	}
+
+	/* make sure nbd_device is not registered */
+	nbd = spdk_nbd_disk_find_by_nbd_path(nbd_path);
+	if (nbd) {
+		return -EEXIST;
+	}
+
 
 	nbd = calloc(1, sizeof(*nbd));
 	if (nbd == NULL) {
-		return NULL;
+		return -ENOMEM;
 	}
 
 	nbd->dev_fd = -1;
@@ -826,6 +1014,7 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 
 	rc = socketpair(AF_UNIX, SOCK_STREAM, 0, sp);
 	if (rc != 0) {
+		rc = -errno;
 		SPDK_ERRLOG("socketpair failed\n");
 		goto err;
 	}
@@ -835,6 +1024,7 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 	nbd->nbd_path = strdup(nbd_path);
 	if (!nbd->nbd_path) {
 		SPDK_ERRLOG("strdup allocation failure\n");
+		rc = -ENOMEM;
 		goto err;
 	}
 
@@ -850,25 +1040,25 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 	nbd->dev_fd = open(nbd_path, O_RDWR);
 	if (nbd->dev_fd == -1) {
 		SPDK_ERRLOG("open(\"%s\") failed: %s\n", nbd_path, spdk_strerror(errno));
-		goto err;
+		goto err_errno;
 	}
 
 	rc = ioctl(nbd->dev_fd, NBD_SET_BLKSIZE, spdk_bdev_get_block_size(bdev));
 	if (rc == -1) {
 		SPDK_ERRLOG("ioctl(NBD_SET_BLKSIZE) failed: %s\n", spdk_strerror(errno));
-		goto err;
+		goto err_errno;
 	}
 
 	rc = ioctl(nbd->dev_fd, NBD_SET_SIZE_BLOCKS, spdk_bdev_get_num_blocks(bdev));
 	if (rc == -1) {
 		SPDK_ERRLOG("ioctl(NBD_SET_SIZE_BLOCKS) failed: %s\n", spdk_strerror(errno));
-		goto err;
+		goto err_errno;
 	}
 
 	rc = ioctl(nbd->dev_fd, NBD_CLEAR_SOCK);
 	if (rc == -1) {
 		SPDK_ERRLOG("ioctl(NBD_CLEAR_SOCK) failed: %s\n", spdk_strerror(errno));
-		goto err;
+		goto err_errno;
 	}
 
 	SPDK_INFOLOG(SPDK_LOG_NBD, "Enabling kernel access to bdev %s via %s\n",
@@ -877,44 +1067,27 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 	rc = ioctl(nbd->dev_fd, NBD_SET_SOCK, nbd->kernel_sp_fd);
 	if (rc == -1) {
 		SPDK_ERRLOG("ioctl(NBD_SET_SOCK) failed: %s\n", spdk_strerror(errno));
-		goto err;
+		goto err_errno;
 	}
 
 #ifdef NBD_FLAG_SEND_TRIM
 	rc = ioctl(nbd->dev_fd, NBD_SET_FLAGS, NBD_FLAG_SEND_TRIM);
 	if (rc == -1) {
 		SPDK_ERRLOG("ioctl(NBD_SET_FLAGS) failed: %s\n", spdk_strerror(errno));
-		goto err;
+		goto err_errno;
 	}
 #endif
+	nbd->start_cb = cb;
+	nbd->start_cb_arg = cb_arg;
+	/* From now on callback will receive error code in case of failure */
+	spdk_call_unaffinitized(_spdk_nbd_check_kernel_start, nbd);
+	return 0;
 
-	rc = pthread_create(&tid, NULL, nbd_start_kernel, (void *)(intptr_t)nbd->dev_fd);
-	if (rc != 0) {
-		SPDK_ERRLOG("could not create thread: %s\n", spdk_strerror(rc));
-		goto err;
-	}
-
-	rc = pthread_detach(tid);
-	if (rc != 0) {
-		SPDK_ERRLOG("could not detach thread for nbd kernel: %s\n", spdk_strerror(rc));
-		goto err;
-	}
-
-	flag = fcntl(nbd->spdk_sp_fd, F_GETFL);
-	if (fcntl(nbd->spdk_sp_fd, F_SETFL, flag | O_NONBLOCK) < 0) {
-		SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n",
-			    nbd->spdk_sp_fd, spdk_strerror(errno));
-		goto err;
-	}
-
-	nbd->nbd_poller = spdk_poller_register(spdk_nbd_poll, nbd, 0);
-
-	return nbd;
-
+err_errno:
+	rc = -errno;
 err:
 	spdk_nbd_stop(nbd);
-
-	return NULL;
+	return rc;
 }
 
 SPDK_LOG_REGISTER_COMPONENT("nbd", SPDK_LOG_NBD)
