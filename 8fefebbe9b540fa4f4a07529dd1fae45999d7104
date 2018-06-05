@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "34c4c6d7_744376cd",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 517,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-05T15:25:34Z",
+      "side": 1,
+      "message": "I agree that a function could be added in a separate patch.  Similar lines were duplicated in earlier versions of this patch and were not commented on.  So at this point I\u0027d prefer to merge this version.",
+      "parentUuid": "38543e2a_c9526713",
+      "range": {
+        "startLine": 514,
+        "startChar": 1,
+        "endLine": 517,
+        "endChar": 10
+      },
+      "revId": "8fefebbe9b540fa4f4a07529dd1fae45999d7104",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "40d588d3_b692f506",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 10
