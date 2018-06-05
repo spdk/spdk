@@ -67,6 +67,23 @@
       "revId": "ab77dac30dfeeb96296bbe43c8f0d6d05e45d228",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "43bfe75c_af9b72f1",
+        "filename": "lib/bdev/nvme/nvme_ioctl_epoll.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 297,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-05T17:37:12Z",
+      "side": 1,
+      "message": "It might be simpler to store the socket path in the nvme_ctrlr object so we don\u0027t have to re-generate it later.",
+      "revId": "ab77dac30dfeeb96296bbe43c8f0d6d05e45d228",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
