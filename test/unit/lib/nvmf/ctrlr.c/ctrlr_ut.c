@@ -133,6 +133,12 @@ DEFINE_STUB(spdk_nvmf_request_abort,
 	    (struct spdk_nvmf_request *req),
 	    -1);
 
+static void
+ctrlr_ut_pass_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
+{
+	fn(ctx);
+}
+
 int
 spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *nsdata)
 {
@@ -240,22 +246,11 @@ nvme_status_success(const struct spdk_nvme_status *status)
 	return status->sct == SPDK_NVME_SCT_GENERIC && status->sc == SPDK_NVME_SC_SUCCESS;
 }
 
-struct spdk_thread *
-spdk_get_thread(void)
-{
-	return NULL;
-}
-
-void
-spdk_thread_send_msg(const struct spdk_thread *thread, spdk_thread_fn fn, void *ctx)
-{
-	fn(ctx);
-}
-
 static void
 test_connect(void)
 {
 	struct spdk_nvmf_fabric_connect_data connect_data;
+	struct spdk_thread *thread;
 	struct spdk_nvmf_poll_group group;
 	struct spdk_nvmf_transport transport;
 	struct spdk_nvmf_subsystem subsystem;
@@ -275,7 +270,11 @@ test_connect(void)
 	const char hostnqn[] = "nqn.2016-06.io.spdk:host1";
 	int rc;
 
+	thread = spdk_allocate_thread(ctrlr_ut_pass_msg, NULL, NULL, NULL, "ctrlr_ut");
+	SPDK_CU_ASSERT_FATAL(thread != NULL);
+
 	memset(&group, 0, sizeof(group));
+	group.thread = thread;
 
 	memset(&ctrlr, 0, sizeof(ctrlr));
 	TAILQ_INIT(&ctrlr.qpairs);
@@ -308,6 +307,7 @@ test_connect(void)
 	snprintf(connect_data.hostnqn, sizeof(connect_data.hostnqn), "%s", hostnqn);
 
 	memset(&subsystem, 0, sizeof(subsystem));
+	subsystem.thread = thread;
 	subsystem.id = 1;
 	TAILQ_INIT(&subsystem.ctrlrs);
 	subsystem.tgt = &tgt;
@@ -555,6 +555,7 @@ test_connect(void)
 	MOCK_SET(spdk_nvmf_poll_group_create, struct spdk_nvmf_poll_group *, NULL);
 
 	spdk_bit_array_free(&ctrlr.qpair_mask);
+	spdk_free_thread();
 }
 
 static void
