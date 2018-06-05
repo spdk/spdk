@@ -16,6 +16,24 @@
       "revId": "fed48bcc7de740ae53b1413dec0c150354c2dac9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c54056d_1209290a",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 800,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-06-05T15:50:15Z",
+      "side": 1,
+      "message": "(otherwise you might try to join a thread that\u0027s already dead. I believe that\u0027s what this flag was initially meant for)",
+      "parentUuid": "0fb082f1_327c322e",
+      "revId": "fed48bcc7de740ae53b1413dec0c150354c2dac9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
