@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "5cd2598c_2abced34",
+        "filename": "lib/copy/ioat/copy_engine_ioat.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 328,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-05T07:40:00Z",
+      "side": 1,
+      "message": "I changed the role of this function to turn the flag on.",
+      "parentUuid": "c9b3e06c_6c9cb643",
+      "revId": "96984157f086a01de432b80bd1e1d8bf901e168c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0a1eb06c_795306a3",
         "filename": "lib/copy/ioat/copy_engine_ioat.c",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2018-06-04T20:34:52Z",
       "side": 1,
       "message": "should this variable be renamed, or a new variable created - something like g_ioat_scan_complete?",
+      "revId": "96984157f086a01de432b80bd1e1d8bf901e168c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0825d28e_9bb3f68d",
+        "filename": "lib/copy/ioat/copy_engine_ioat.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-05T07:40:00Z",
+      "side": 1,
+      "message": "Same as above.",
+      "parentUuid": "0a1eb06c_795306a3",
       "revId": "96984157f086a01de432b80bd1e1d8bf901e168c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "415422f1_00cb7348",
+        "filename": "lib/copy/ioat/copy_engine_ioat_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-05T07:40:00Z",
+      "side": 1,
+      "message": "Thank you. I agree with your thought. I changed this to SPDK_RPC_STARTUP. I changed other parts accordingly.",
+      "parentUuid": "0c2138ad_5188f96f",
+      "revId": "96984157f086a01de432b80bd1e1d8bf901e168c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ee6578ef_045e8a7f",
         "filename": "scripts/rpc.py",
         "patchSetId": 3
@@ -64,6 +118,24 @@
       "writtenOn": "2018-06-04T20:34:52Z",
       "side": 1,
       "message": "# copy\n\nshould be removed?",
+      "revId": "96984157f086a01de432b80bd1e1d8bf901e168c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bead88d9_a4683952",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 1098,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-05T07:40:00Z",
+      "side": 1,
+      "message": "Thank you. I intended to mean \"#copy\" copy.py. But \"#ioat\" and ioat.py may be appropriate.",
+      "parentUuid": "ee6578ef_045e8a7f",
       "revId": "96984157f086a01de432b80bd1e1d8bf901e168c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
