@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f7a48969_e9b16d68",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-05T21:57:24Z",
+      "side": 1,
+      "message": "Also, if we do make the change I mentioned below, it would be good to keep a sanity-check assert() or two here just to remind ourselves of the preconditions in this function:\n\n  assert(qpair-\u003eqid \u003e 0);\n  assert(qpair-\u003eqid \u003c spdk_bit_array_capacity(ctrlr-\u003eqpair_mask));",
+      "parentUuid": "74c914fa_8971e0ce",
+      "revId": "dbb1a8677f2b714d6f15613d76f063468785344c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ef05a8dc_902a7ba9",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 1
