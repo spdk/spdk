@@ -629,7 +629,12 @@ basic_qos(void)
 	bdev->qos = calloc(1, sizeof(*bdev->qos));
 	SPDK_CU_ASSERT_FATAL(bdev->qos != NULL);
 	TAILQ_INIT(&bdev->qos->queued);
+	/*
+	 * Enable both IOPS and bandwidth rate limits.
+	 * In this case, both rate limits will take equal effect.
+	 */
 	bdev->qos->iops_rate_limit = 2000; /* 2 I/O per millisecond */
+	bdev->qos->byte_rate_limit = 8192000; /* 8K byte per millisecond with 4K block size */
 
 	g_get_io_channel = true;
 
@@ -732,7 +737,12 @@ io_during_qos_queue(void)
 	bdev->qos = calloc(1, sizeof(*bdev->qos));
 	SPDK_CU_ASSERT_FATAL(bdev->qos != NULL);
 	TAILQ_INIT(&bdev->qos->queued);
+	/*
+	 * Enable both IOPS and bandwidth rate limits.
+	 * In this case, IOPS rate limit will take effect first.
+	 */
 	bdev->qos->iops_rate_limit = 1000; /* 1000 I/O per second, or 1 per millisecond */
+	bdev->qos->byte_rate_limit = 8192000; /* 8K byte per millisecond with 4K block size */
 
 	g_get_io_channel = true;
 
@@ -815,7 +825,12 @@ io_during_qos_reset(void)
 	bdev->qos = calloc(1, sizeof(*bdev->qos));
 	SPDK_CU_ASSERT_FATAL(bdev->qos != NULL);
 	TAILQ_INIT(&bdev->qos->queued);
-	bdev->qos->iops_rate_limit = 1000; /* 1000 I/O per second, or 1 per millisecond */
+	/*
+	 * Enable both IOPS and bandwidth rate limits.
+	 * In this case, bandwidth rate limit will take effect first.
+	 */
+	bdev->qos->iops_rate_limit = 2000; /* 2000 I/O per second, or 2 per millisecond */
+	bdev->qos->byte_rate_limit = 4096000; /* 4K byte per millisecond with 4K block size */
 
 	g_get_io_channel = true;
 
