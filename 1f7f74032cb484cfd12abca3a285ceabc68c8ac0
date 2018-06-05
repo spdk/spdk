@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "48b203ae_137f893b",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 1535,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-05T05:26:27Z",
+      "side": 1,
+      "message": "I took your first suggestion, spdk_json_decode_uint16. Thank you.",
+      "parentUuid": "24ee7b40_7790ea06",
+      "range": {
+        "startLine": 1534,
+        "startChar": 0,
+        "endLine": 1535,
+        "endChar": 116
+      },
+      "revId": "1f7f74032cb484cfd12abca3a285ceabc68c8ac0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c676e497_13c65a81",
         "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
         "patchSetId": 25
@@ -36,6 +60,30 @@
       "writtenOn": "2018-06-04T13:29:25Z",
       "side": 1,
       "message": "-\u003e nvmf_rpc_subsystem_tgt_conf_decoder",
+      "range": {
+        "startLine": 1614,
+        "startChar": 22,
+        "endLine": 1614,
+        "endChar": 57
+      },
+      "revId": "1f7f74032cb484cfd12abca3a285ceabc68c8ac0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "075bfe24_f8b3bada",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 1614,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-05T05:26:27Z",
+      "side": 1,
+      "message": "Thank you.",
+      "parentUuid": "c676e497_13c65a81",
       "range": {
         "startLine": 1614,
         "startChar": 22,
