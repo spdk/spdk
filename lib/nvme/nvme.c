@@ -206,6 +206,63 @@ nvme_allocate_request_user_copy(struct spdk_nvme_qpair *qpair,
 	return req;
 }
 
+/**
+ * Check if a request has exceeded the controller timeout.
+ *
+ * \param req request to check for timeout.
+ * \param cid command ID for command submitted by req (will be passed to timeout_cb_fn)
+ * \param active_proc per-process data for the controller associated with req
+ * \param now_tick current time from spdk_get_ticks()
+ * \return 0 if requests submitted more recently than req should still be checked for timeouts, or
+ * 1 if requests newer than req need not be checked.
+ *
+ * The request's timeout callback will be called if needed; the caller is only responsible for
+ * calling this function on each outstanding request.
+ */
+int
+nvme_request_check_timeout(struct nvme_request *req, uint16_t cid,
+			   struct spdk_nvme_ctrlr_process *active_proc,
+			   uint64_t now_tick)
+{
+	struct spdk_nvme_qpair *qpair = req->qpair;
+	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
+
+	assert(active_proc->timeout_cb_fn != NULL);
+
+	if (req->timed_out || req->submit_tick == 0) {
+		return 0;
+	}
+
+	if (req->pid != g_spdk_nvme_pid) {
+		return 0;
+	}
+
+	if (nvme_qpair_is_admin_queue(qpair) &&
+	    req->cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
+		return 0;
+	}
+
+	if (req->submit_tick + active_proc->timeout_ticks > now_tick) {
+		/*
+		 * The requests are in order, so as soon as one has not timed out,
+		 * stop iterating.
+		 */
+		return 1;
+	}
+
+	req->timed_out = true;
+
+	/*
+	 * We don't want to expose the admin queue to the user,
+	 * so when we're timing out admin commands set the
+	 * qpair to NULL.
+	 */
+	active_proc->timeout_cb_fn(active_proc->timeout_cb_arg, ctrlr,
+				   nvme_qpair_is_admin_queue(qpair) ? NULL : qpair,
+				   cid);
+	return 0;
+}
+
 int
 nvme_robust_mutex_init_shared(pthread_mutex_t *mtx)
 {
