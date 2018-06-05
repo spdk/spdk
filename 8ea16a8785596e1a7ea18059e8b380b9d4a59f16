@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "29e6273b_dcdcfa27",
+        "filename": "lib/env_dpdk/env.mk",
+        "patchSetId": 25
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-06-05T20:22:00Z",
+      "side": 1,
+      "message": "k",
+      "revId": "8ea16a8785596e1a7ea18059e8b380b9d4a59f16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
