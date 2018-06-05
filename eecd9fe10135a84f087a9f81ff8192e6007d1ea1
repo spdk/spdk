@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d2ca80d2_52ef8676",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-05T16:23:32Z",
+      "side": 1,
+      "message": "Nitpick: this comment isn\u0027t accurate and should probably be removed.",
+      "revId": "eecd9fe10135a84f087a9f81ff8192e6007d1ea1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fb56206a_09c4f698",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 483,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-05T16:23:32Z",
+      "side": 1,
+      "message": "io-\u003epayload_size is set to io-\u003ereq.len in spdk_nbd_io_recv_internal(), but only for READ/WRITE commands (since we use it to size the buffer), so this looks right to me.",
+      "revId": "eecd9fe10135a84f087a9f81ff8192e6007d1ea1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
