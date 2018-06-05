@@ -88,15 +88,15 @@ spdk_rpc_start_nbd_disk(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	free_rpc_start_nbd_disk(&req);
-
 	w = spdk_jsonrpc_begin_result(request);
 	if (w == NULL) {
+		free_rpc_start_nbd_disk(&req);
 		return;
 	}
 
-	spdk_json_write_bool(w, true);
+	spdk_json_write_string(w, req.nbd_device);
 	spdk_jsonrpc_end_result(request, w);
+	free_rpc_start_nbd_disk(&req);
 	return;
 
 invalid:
