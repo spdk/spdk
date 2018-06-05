@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "a380888f_13283b8e",
+        "filename": "include/spdk/nvme_ocssd.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-05T18:35:20Z",
+      "side": 1,
+      "message": "I see. I\u0027m reading through the specification now and I\u0027ll follow up with the specification committee to get this clarified. I\u0027m not even sure what a \"namespace\" means for an OCSSD, and certainly none of these commands should be operating at a namespace granularity. Can you try sending all 0xF\u0027s instead of 0 and see what happens?",
+      "parentUuid": "b8a9f5c1_ce8f7514",
+      "revId": "38e33919be2b779fab3851f2d749b402225eecf7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "22b17f10_4e595006",
         "filename": "include/spdk/nvme_ocssd.h",
         "patchSetId": 4
