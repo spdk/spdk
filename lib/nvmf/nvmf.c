@@ -64,6 +64,23 @@ spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts)
 	opts->io_unit_size = SPDK_NVMF_DEFAULT_IO_UNIT_SIZE;
 }
 
+struct spdk_nvmf_tgt_opts *
+spdk_nvmf_tgt_opts_copy(struct spdk_nvmf_tgt_opts *src)
+{
+	struct spdk_nvmf_tgt_opts *dst;
+
+	dst = calloc(1, sizeof(*dst));
+	if (!dst) {
+		SPDK_ERRLOG("calloc() failed for target options\n");
+		return NULL;
+	}
+
+	/* Simple copy is enough because of no string in options. */
+	memcpy(dst, src, sizeof(*dst));
+
+	return dst;
+}
+
 static int
 spdk_nvmf_poll_group_poll(void *ctx)
 {

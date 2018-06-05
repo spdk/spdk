@@ -77,6 +77,15 @@ struct spdk_nvmf_tgt_opts {
 void spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts);
 
 /**
+ * Copy options.
+ *
+ * \param opts Options
+ *
+ * \return Copied options on success, or NULL on failure.
+ */
+struct spdk_nvmf_tgt_opts *spdk_nvmf_tgt_opts_copy(struct spdk_nvmf_tgt_opts *src);
+
+/**
  * Construct an NVMe-oF target.
  *
  * \param opts Options.
