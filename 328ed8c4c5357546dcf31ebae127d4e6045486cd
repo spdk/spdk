@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0603270c_9c26194e",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-05T23:48:36Z",
+      "side": 1,
+      "message": "This error message looks inaccurate after the change; I think it should be swapped with the one below.",
+      "revId": "328ed8c4c5357546dcf31ebae127d4e6045486cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
