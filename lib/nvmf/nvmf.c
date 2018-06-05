@@ -202,9 +202,10 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 	return tgt;
 }
 
-void
-spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt)
+static void
+spdk_nvmf_tgt_destroy_cb(void *io_device)
 {
+	struct spdk_nvmf_tgt *tgt = io_device;
 	struct spdk_nvmf_transport *transport, *transport_tmp;
 	uint32_t i;
 
@@ -227,6 +228,12 @@ spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt)
 	}
 
 	free(tgt);
+}
+
+void
+spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt)
+{
+	spdk_io_device_unregister(tgt, spdk_nvmf_tgt_destroy_cb);
 }
 
 struct spdk_nvmf_tgt_listen_ctx {
