@@ -288,6 +288,13 @@ bdev_iscsi_destruct(void *ctx)
 	return rc;
 }
 
+
+static void
+bdev_iscsi_flush(struct bdev_iscsi_io *bio)
+{
+	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), SPDK_BDEV_IO_STATUS_SUCCESS);
+}
+
 static int
 bdev_iscsi_poll(void *arg)
 {
@@ -341,6 +348,9 @@ static void _bdev_iscsi_submit_request(void *_bdev_io)
 				  bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen,
 				  bdev_io->u.bdev.offset_blocks);
 		break;
+	case SPDK_BDEV_IO_TYPE_FLUSH:
+		bdev_iscsi_flush(iscsi_io);
+		break;
 	default:
 		bdev_iscsi_io_complete(iscsi_io, SPDK_BDEV_IO_STATUS_FAILED);
 		break;
@@ -368,6 +378,7 @@ bdev_iscsi_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	switch (io_type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
+	case SPDK_BDEV_IO_TYPE_FLUSH:
 		return true;
 
 	default:
