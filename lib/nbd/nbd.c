@@ -67,8 +67,6 @@ struct nbd_io {
 	enum nbd_io_state_t	state;
 
 	void			*payload;
-
-	/* NOTE: for TRIM, this represents number of bytes to trim. */
 	uint32_t		payload_size;
 
 	struct nbd_request	req;
@@ -480,7 +478,7 @@ nbd_submit_bdev_io(struct spdk_nbd_disk *nbd, struct nbd_io *io)
 #ifdef NBD_FLAG_SEND_TRIM
 	case NBD_CMD_TRIM:
 		rc = spdk_bdev_unmap(desc, ch, from_be64(&io->req.from),
-				     io->payload_size, nbd_io_done, io);
+				     from_be32(&io->req.len), nbd_io_done, io);
 		break;
 #endif
 	case NBD_CMD_DISC:
