@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fe1e939a_9b2e0cfe",
+        "filename": "etc/spdk/rocksdb.conf.in",
+        "patchSetId": 5
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-05T18:44:15Z",
+      "side": 1,
+      "message": "Did you mean to revert this back to \"Disable Yes\"?",
+      "revId": "6645a444a3466b9d807a8fad014e923e70cff624",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e2bba182_c19ab218",
+        "filename": "lib/copy/ioat/copy_engine_ioat.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 294,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-05T18:44:15Z",
+      "side": 1,
+      "message": "I think this should do spdk_conf_section_get_val(\"Disable\") to determine whether error messages should be printed.  This makes sure we catch case where user specifies:\n\nDisable No",
+      "revId": "6645a444a3466b9d807a8fad014e923e70cff624",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8acf1cc8_f4a41c44",
+        "filename": "lib/copy/ioat/copy_engine_ioat.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-05T18:44:15Z",
+      "side": 1,
+      "message": "I would work this as:\n\n\"Disable\" option is deprecated and will be removed in a future release.\nIOAT is now disabled by default.  It may be enabled by specifying\n\"Enable Yes\".",
+      "revId": "6645a444a3466b9d807a8fad014e923e70cff624",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
