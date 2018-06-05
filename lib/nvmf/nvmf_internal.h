@@ -75,6 +75,9 @@ struct spdk_nvmf_tgt {
 	struct spdk_nvmf_discovery_log_page	*discovery_log_page;
 	size_t					discovery_log_page_size;
 	TAILQ_HEAD(, spdk_nvmf_transport)	transports;
+
+	spdk_nvmf_tgt_destroy_done_fn		*destroy_cb_fn;
+	void					*destroy_cb_arg;
 };
 
 struct spdk_nvmf_host {
