@@ -1188,14 +1188,14 @@ nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 	}
 
 	spdk_wmb();
-	g_thread_mmio_ctrlr = pctrlr;
 	if (spdk_likely(nvme_pcie_qpair_update_mmio_required(qpair,
 			pqpair->sq_tail,
 			pqpair->sq_shadow_tdbl,
 			pqpair->sq_eventidx))) {
+		g_thread_mmio_ctrlr = pctrlr;
 		spdk_mmio_write_4(pqpair->sq_tdbl, pqpair->sq_tail);
+		g_thread_mmio_ctrlr = NULL;
 	}
-	g_thread_mmio_ctrlr = NULL;
 }
 
 static void
@@ -2081,13 +2081,13 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	}
 
 	if (num_completions > 0) {
-		g_thread_mmio_ctrlr = pctrlr;
 		if (spdk_likely(nvme_pcie_qpair_update_mmio_required(qpair, pqpair->cq_head,
 				pqpair->cq_shadow_hdbl,
 				pqpair->cq_eventidx))) {
+			g_thread_mmio_ctrlr = pctrlr;
 			spdk_mmio_write_4(pqpair->cq_hdbl, pqpair->cq_head);
+			g_thread_mmio_ctrlr = NULL;
 		}
-		g_thread_mmio_ctrlr = NULL;
 	}
 
 	/* We don't want to expose the admin queue to the user,
