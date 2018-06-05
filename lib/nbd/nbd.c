@@ -89,6 +89,17 @@ enum nbd_disk_state_t {
 	NBD_DISK_STATE_HARDDISC,
 };
 
+enum nbd_kernel_state_t {
+	/* No  NBD kernel thread created */
+	NBD_KERNEL_STATE_INVALID = 0,
+	/* No  NBD kernel thread created and need to be joined. */
+	NBD_KERNEL_STATE_CREATED,
+	/* NBD kernel created but not polling for IO yet. */
+	NBD_KERNEL_STATE_KERNEL_STARTED,
+	/* NBD kernel is running and we are polling for IO. */
+	NBD_KERNEL_STATE_RUNNING,
+};
+
 struct spdk_nbd_disk {
 	struct spdk_bdev	*bdev;
 	struct spdk_bdev_desc	*bdev_desc;
@@ -107,6 +118,9 @@ struct spdk_nbd_disk {
 	enum nbd_disk_state_t	state;
 	/* count of nbd_io in spdk_nbd_disk */
 	int			io_count;
+
+	enum nbd_kernel_state_t	kernel_state;
+	pthread_t		kernel_tid;
 
 	TAILQ_ENTRY(spdk_nbd_disk)	tailq;
 };
@@ -364,6 +378,10 @@ _nbd_stop(struct spdk_nbd_disk *nbd)
 		ioctl(nbd->dev_fd, NBD_CLEAR_QUE);
 		ioctl(nbd->dev_fd, NBD_CLEAR_SOCK);
 		close(nbd->dev_fd);
+	}
+
+	if (nbd->kernel_state != NBD_KERNEL_STATE_INVALID) {
+		pthread_join(nbd->kernel_tid, NULL);
 	}
 
 	if (nbd->nbd_poller) {
@@ -719,7 +737,7 @@ spdk_nbd_io_xmit(struct spdk_nbd_disk *nbd)
 	 * outstanding request are transmitted.
 	 */
 	if (nbd->state == NBD_DISK_STATE_SOFTDISC && !spdk_nbd_io_xmit_check(nbd)) {
-		return -1;
+		return -ECONNRESET;
 	}
 
 	return 0;
@@ -767,15 +785,47 @@ spdk_nbd_poll(void *arg)
 	return -1;
 }
 
+static int
+spdk_nbd_check_kernel_start(void *arg)
+{
+	struct spdk_nbd_disk	*nbd = arg;
+
+	switch(nbd->kernel_state) {
+	case NBD_KERNEL_STATE_INVALID:
+		/* Not possible. */
+		break;
+	case NBD_KERNEL_STATE_CREATED:
+		/* Thread not started yet. */
+		return 0;
+	case NBD_KERNEL_STATE_KERNEL_STARTED:
+		/* NBD kernel thread is up but we are still racing here. This
+		 * time only against NBD_DO_IT ioctl (not the whole thread
+		 * itself). To make this race less likely just wait another poll
+		 * period.
+		 */
+		nbd->kernel_state = NBD_KERNEL_STATE_RUNNING;
+		return 0;
+	case NBD_KERNEL_STATE_RUNNING:
+		spdk_poller_unregister(&nbd->nbd_poller);
+		nbd->nbd_poller = spdk_poller_register(spdk_nbd_poll, nbd, 0);
+		return 0;
+	}
+
+
+	assert(false);
+}
+
 static void *
 nbd_start_kernel(void *arg)
 {
-	int dev_fd = (int)(intptr_t)arg;
+	struct spdk_nbd_disk	*nbd = arg;
 
 	spdk_unaffinitize_thread();
 
+	nbd->kernel_state = NBD_KERNEL_STATE_RUNNING;
+
 	/* This will block in the kernel until we close the spdk_sp_fd. */
-	ioctl(dev_fd, NBD_DO_IT);
+	ioctl(nbd->dev_fd, NBD_DO_IT);
 
 	pthread_exit(NULL);
 }
@@ -793,7 +843,6 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 {
 	struct spdk_nbd_disk	*nbd;
 	struct spdk_bdev	*bdev;
-	pthread_t		tid;
 	int			rc;
 	int			sp[2];
 	int			flag;
@@ -888,18 +937,13 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 	}
 #endif
 
-	rc = pthread_create(&tid, NULL, nbd_start_kernel, (void *)(intptr_t)nbd->dev_fd);
+	rc = pthread_create(&nbd->kernel_tid, NULL, nbd_start_kernel, nbd);
 	if (rc != 0) {
 		SPDK_ERRLOG("could not create thread: %s\n", spdk_strerror(rc));
 		goto err;
 	}
 
-	rc = pthread_detach(tid);
-	if (rc != 0) {
-		SPDK_ERRLOG("could not detach thread for nbd kernel: %s\n", spdk_strerror(rc));
-		goto err;
-	}
-
+	nbd->kernel_state = NBD_KERNEL_STATE_CREATED;
 	flag = fcntl(nbd->spdk_sp_fd, F_GETFL);
 	if (fcntl(nbd->spdk_sp_fd, F_SETFL, flag | O_NONBLOCK) < 0) {
 		SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n",
@@ -907,7 +951,7 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 		goto err;
 	}
 
-	nbd->nbd_poller = spdk_poller_register(spdk_nbd_poll, nbd, 0);
+	nbd->nbd_poller = spdk_poller_register(spdk_nbd_check_kernel_start, nbd, 10000);
 
 	return nbd;
 
