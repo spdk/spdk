@@ -531,6 +531,65 @@ spdk_nvme_ioctl_admin_cmd_proc(struct spdk_nvme_ioctl_conn *ioctl_conn)
 	return ret;
 }
 
+static void
+spdk_nvme_ioctl_bdev_io_done(struct spdk_bdev_io *bdev_io, bool success, void *arg)
+{
+	struct spdk_nvme_ioctl_conn *ioctl_conn = arg;
+	int ioctl_ret;
+	int sct, sc;
+
+	if (success) {
+		ioctl_ret = 0;
+	} else {
+		spdk_bdev_io_get_nvme_status(bdev_io, &sct, &sc);
+		ioctl_ret = sct << 8 | sc;
+		SPDK_NOTICELOG("submit_io command error: SC %x SCT %x\n", sc, sct);
+	}
+
+	spdk_nvme_ioctl_proc_done(ioctl_conn, ioctl_ret);
+	spdk_bdev_free_io(bdev_io);
+}
+
+static int
+spdk_nvme_ioctl_submit_io_proc(struct spdk_nvme_ioctl_conn *ioctl_conn)
+{
+	struct spdk_nvme_ioctl_req *req;
+	struct nvme_bdev *bdev = NULL;
+	struct nvme_user_io *io_cmd;
+	int ret = 0;
+
+	if (ioctl_conn->type != IOCTL_CONN_TYPE_BLK) {
+		return spdk_nvme_ioctl_proc_done(ioctl_conn, -ENOTBLK);
+	}
+
+	bdev = (struct nvme_bdev *)ioctl_conn->device;
+	req = &ioctl_conn->req;
+	io_cmd = (struct nvme_user_io *)req->cmd_buf;
+
+	switch (io_cmd->opcode) {
+	case SPDK_NVME_OPC_READ:
+		ret = spdk_bdev_read_blocks(bdev->bdev_desc, bdev->bdev_ch,
+					    req->data, io_cmd->slba, io_cmd->nblocks + 1,
+					    spdk_nvme_ioctl_bdev_io_done, ioctl_conn);
+		break;
+	case SPDK_NVME_OPC_WRITE:
+		ret = spdk_bdev_write_blocks(bdev->bdev_desc, bdev->bdev_ch,
+					     req->data, io_cmd->slba, io_cmd->nblocks + 1,
+					     spdk_nvme_ioctl_bdev_io_done, ioctl_conn);
+		break;
+	case SPDK_NVME_OPC_COMPARE:
+	default:
+		SPDK_NOTICELOG("unsupported io_cmd opcode %d\n", io_cmd->opcode);
+		break;
+	}
+
+	if (ret < 0) {
+		ret = spdk_nvme_ioctl_proc_done(ioctl_conn, ret);
+	}
+
+	return ret;
+}
+
 int
 spdk_nvme_ioctl_proc(struct spdk_nvme_ioctl_conn *ioctl_conn)
 {
@@ -553,8 +612,10 @@ spdk_nvme_ioctl_proc(struct spdk_nvme_ioctl_conn *ioctl_conn)
 	case NVME_IOCTL_ADMIN_CMD:
 		ret = spdk_nvme_ioctl_admin_cmd_proc(ioctl_conn);
 		break;
-	case NVME_IOCTL_IO_CMD:
 	case NVME_IOCTL_SUBMIT_IO:
+		ret = spdk_nvme_ioctl_submit_io_proc(ioctl_conn);
+		break;
+	case NVME_IOCTL_IO_CMD:
 	case NVME_IOCTL_RESET:
 	case NVME_IOCTL_SUBSYS_RESET:
 	case NVME_IOCTL_RESCAN:
