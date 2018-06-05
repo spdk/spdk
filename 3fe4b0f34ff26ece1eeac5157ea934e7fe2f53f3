@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "95d9745d_c114611d",
+        "filename": "test/json_config/config_parser.py",
+        "patchSetId": 59
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-05T13:32:53Z",
+      "side": 1,
+      "message": "I think there is no point in keeping the file handle open all time after loading data.\n\nMaybe:\n\nwith open() as jf:\n    data \u003d json.loads\nfor subsystem in data:\n\n(one less indentation level for for loop)",
+      "range": {
+        "startLine": 7,
+        "startChar": 4,
+        "endLine": 9,
+        "endChar": 44
+      },
+      "revId": "3fe4b0f34ff26ece1eeac5157ea934e7fe2f53f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
