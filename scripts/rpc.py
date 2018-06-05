@@ -764,9 +764,9 @@ if __name__ == "__main__":
     # nbd
     @call_cmd
     def start_nbd_disk(args):
-        rpc.nbd.start_nbd_disk(args.client,
-                               bdev_name=args.bdev_name,
-                               nbd_device=args.nbd_device)
+        print(rpc.nbd.start_nbd_disk(args.client,
+                                     bdev_name=args.bdev_name,
+                                     nbd_device=args.nbd_device))
 
     p = subparsers.add_parser('start_nbd_disk', help='Export a bdev as a nbd disk')
     p.add_argument('bdev_name', help='Blockdev name to be exported. Example: Malloc0.')

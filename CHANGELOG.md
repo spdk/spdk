@@ -2,6 +2,11 @@
 
 ## v18.07: (Upcoming Release)
 
+### RPC
+
+The `start_nbd_disk` RPC method now returns the path to the kernel NBD device node
+rather than always returning `true`.
+
 ### Bdev
 
 The spdk_bdev_get_io_stat() function now returns cumulative totals instead of resetting
