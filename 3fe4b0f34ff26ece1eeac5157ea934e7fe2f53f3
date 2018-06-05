@@ -2,6 +2,282 @@
   "comments": [
     {
       "key": {
+        "uuid": "11f1cce2_f97a89c2",
+        "filename": "test/bdev/bdevjson/json_config.sh",
+        "patchSetId": 59
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-05T13:39:11Z",
+      "side": 1,
+      "message": "This should be big juicy warning so we can easly remove this hack when librados is fixed.",
+      "range": {
+        "startLine": 7,
+        "startChar": 1,
+        "endLine": 7,
+        "endChar": 60
+      },
+      "revId": "3fe4b0f34ff26ece1eeac5157ea934e7fe2f53f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "72531d8c_c879a9a7",
+        "filename": "test/bdev/bdevjson/json_config.sh",
+        "patchSetId": 59
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-05T13:39:11Z",
+      "side": 1,
+      "message": "local?",
+      "range": {
+        "startLine": 10,
+        "startChar": 1,
+        "endLine": 10,
+        "endChar": 8
+      },
+      "revId": "3fe4b0f34ff26ece1eeac5157ea934e7fe2f53f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e27bf48_6abd1aef",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 59
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-05T13:39:11Z",
+      "side": 1,
+      "message": "this file shouldn\u0027t be executable.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 19
+      },
+      "revId": "3fe4b0f34ff26ece1eeac5157ea934e7fe2f53f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "95c971e0_ca2c5b2b",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 59
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-05T13:39:11Z",
+      "side": 1,
+      "message": "is this not already set by common/autotest_common.sh ?",
+      "range": {
+        "startLine": 2,
+        "startChar": 0,
+        "endLine": 2,
+        "endChar": 7
+      },
+      "revId": "3fe4b0f34ff26ece1eeac5157ea934e7fe2f53f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b01055b_6d8f2c50",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 59
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-05T13:39:11Z",
+      "side": 1,
+      "message": "\u0027-c\u0027 and \u0027-w\u0027 can\u0027t be passed together. So I deduce that this \u0027if []\u0027 is dead code.",
+      "range": {
+        "startLine": 24,
+        "startChar": 8,
+        "endLine": 24,
+        "endChar": 28
+      },
+      "revId": "3fe4b0f34ff26ece1eeac5157ea934e7fe2f53f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "93a46073_1de55617",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 59
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-05T13:39:11Z",
+      "side": 1,
+      "message": "\u0027-w\u0027 don\u0027t want any patams. The question is why it is working if you pass $1? It shoul die badly on params parsing phase.",
+      "range": {
+        "startLine": 25,
+        "startChar": 16,
+        "endLine": 25,
+        "endChar": 23
+      },
+      "revId": "3fe4b0f34ff26ece1eeac5157ea934e7fe2f53f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59729024_f4d3db24",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 59
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-05T13:39:11Z",
+      "side": 1,
+      "message": "you can unify those two functions just by passing \u0027$1\u0027 eg:\n\n  case \"$1\" in:\n    cofnig)\n      cp $JSON_DIR/spdk_tgt.conf.base $JSON_DIR/spdk_tgt.conf\n      $SPDK_BUILD_DIR/scripts/gen_nvme.sh \u003e\u003e $JSON_DIR/spdk_tgt.conf\n      run_cmd+\u003d \"-c $JSON_DIR/spdk_tgt.conf\"\n      ;;\n    json)\n      run_cmd+\u003d\"-w\" ;;\n    *)\n      some error;\n     ;;\n  esac",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 26
+      },
+      "revId": "3fe4b0f34ff26ece1eeac5157ea934e7fe2f53f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f0466ec_1ef53f9e",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 59
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-05T13:39:11Z",
+      "side": 1,
+      "message": "Which bug?",
+      "range": {
+        "startLine": 109,
+        "startChar": 0,
+        "endLine": 111,
+        "endChar": 54
+      },
+      "revId": "3fe4b0f34ff26ece1eeac5157ea934e7fe2f53f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "37c66d16_ca70aef3",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 59
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-05T13:39:11Z",
+      "side": 1,
+      "message": "aio",
+      "range": {
+        "startLine": 123,
+        "startChar": 21,
+        "endLine": 123,
+        "endChar": 24
+      },
+      "revId": "3fe4b0f34ff26ece1eeac5157ea934e7fe2f53f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ffa9d988_cd155eac",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 59
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-05T13:39:11Z",
+      "side": 1,
+      "message": "Which bug?",
+      "range": {
+        "startLine": 126,
+        "startChar": 3,
+        "endLine": 126,
+        "endChar": 44
+      },
+      "revId": "3fe4b0f34ff26ece1eeac5157ea934e7fe2f53f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a5968c6_33e2cd64",
+        "filename": "test/json_config/config_parser.py",
+        "patchSetId": 59
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-05T13:39:11Z",
+      "side": 1,
+      "message": "Why you use shebang if you invoke this file using \u0027python config_parser.py\u0027 ? Pls decide if this is executable file or meant to be explicitly executed using python app.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 17
+      },
+      "revId": "3fe4b0f34ff26ece1eeac5157ea934e7fe2f53f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a256720a_d932e37f",
+        "filename": "test/json_config/config_parser.py",
+        "patchSetId": 59
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-05T13:39:11Z",
+      "side": 1,
+      "message": "Could use some brief doc what this function do.",
+      "range": {
+        "startLine": 6,
+        "startChar": 0,
+        "endLine": 6,
+        "endChar": 26
+      },
+      "revId": "3fe4b0f34ff26ece1eeac5157ea934e7fe2f53f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "95d9745d_c114611d",
         "filename": "test/json_config/config_parser.py",
         "patchSetId": 59
@@ -18,6 +294,29 @@
         "startChar": 4,
         "endLine": 9,
         "endChar": 44
+      },
+      "revId": "3fe4b0f34ff26ece1eeac5157ea934e7fe2f53f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c660cc0_2af872d1",
+        "filename": "test/json_config/config_parser.py",
+        "patchSetId": 59
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-05T13:39:11Z",
+      "side": 1,
+      "message": "you can wake this out of the \u0027with\u0027 statement.",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 25,
+        "endChar": 46
       },
       "revId": "3fe4b0f34ff26ece1eeac5157ea934e7fe2f53f3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
