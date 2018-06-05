@@ -115,14 +115,12 @@ struct nvme_tracker {
 	struct nvme_request		*req;
 	uint16_t			cid;
 
-	uint16_t			rsvd1: 14;
-	uint16_t			timed_out: 1;
+	uint16_t			rsvd1: 15;
 	uint16_t			active: 1;
 
 	uint32_t			rsvd2;
 
-	/* The value of spdk_get_ticks() when the tracker was submitted to the hardware. */
-	uint64_t			submit_tick;
+	uint64_t			rsvd3;
 
 	uint64_t			prp_sgl_bus_addr;
 
@@ -1168,12 +1166,12 @@ nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
 	struct nvme_pcie_ctrlr	*pctrlr = nvme_pcie_ctrlr(qpair->ctrlr);
 
-	tr->timed_out = 0;
+	req = tr->req;
+	req->timed_out = false;
 	if (spdk_unlikely(pctrlr->ctrlr.timeout_enabled)) {
-		tr->submit_tick = spdk_get_ticks();
+		req->submit_tick = spdk_get_ticks();
 	}
 
-	req = tr->req;
 	pqpair->tr[tr->cid].active = true;
 
 	/* Copy the command from the tracker to the submission queue. */
@@ -2000,7 +1998,7 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 
 	t02 = spdk_get_ticks();
 	TAILQ_FOREACH_SAFE(tr, &pqpair->outstanding_tr, tq_list, tmp) {
-		if (tr->timed_out) {
+		if (tr->req->timed_out) {
 			continue;
 		}
 
@@ -2014,14 +2012,14 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 			}
 		}
 
-		if (tr->submit_tick + active_proc->timeout_ticks > t02) {
+		if (tr->req->submit_tick + active_proc->timeout_ticks > t02) {
 			/* The trackers are in order, so as soon as one has not timed out,
 			 * stop iterating.
 			 */
 			break;
 		}
 
-		tr->timed_out = 1;
+		tr->req->timed_out = true;
 
 		/* We don't want to expose the admin queue to the user,
 		 * so when we're timing out admin commands set the
