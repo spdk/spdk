@@ -1,4 +1,4 @@
-# Logical Volumes Introduction {#logical_volumes}
+# Logical Volumes {#logical_volumes}
 
 The Logical Volumes library is a flexible storage space management system. It provides creating and managing virtual block devices with variable size. The SPDK Logical Volume library is built on top of @ref blob.
 
