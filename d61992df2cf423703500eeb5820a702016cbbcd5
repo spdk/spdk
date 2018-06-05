@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "02ba8f4d_ee356a35",
+        "filename": "doc/index.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-05T21:20:28Z",
+      "side": 1,
+      "message": "I\u0027m not really sure which section the logical volumes doc should be in; it is really a mix of programmer\u0027s guide and user\u0027s guide.  We should probably split this into two pieces, and then we could organize them better.",
+      "revId": "d61992df2cf423703500eeb5820a702016cbbcd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
