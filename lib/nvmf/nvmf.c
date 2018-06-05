@@ -202,10 +202,13 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 	return tgt;
 }
 
-void
-spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt)
+static void
+spdk_nvmf_tgt_destroy_cb(void *io_device)
 {
+	struct spdk_nvmf_tgt *tgt = io_device;
 	struct spdk_nvmf_transport *transport, *transport_tmp;
+	spdk_nvmf_tgt_destroy_done_fn		*destroy_cb_fn;
+	void					*destroy_cb_arg;
 	uint32_t i;
 
 	if (tgt->discovery_log_page) {
@@ -226,7 +229,25 @@ spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt)
 		spdk_nvmf_transport_destroy(transport);
 	}
 
+	destroy_cb_fn = tgt->destroy_cb_fn;
+	destroy_cb_arg = tgt->destroy_cb_arg;
+
 	free(tgt);
+
+	if (destroy_cb_fn) {
+		destroy_cb_fn(destroy_cb_arg, 0);
+	}
+}
+
+void
+spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt,
+		      spdk_nvmf_tgt_destroy_done_fn cb_fn,
+		      void *cb_arg)
+{
+	tgt->destroy_cb_fn = cb_fn;
+	tgt->destroy_cb_arg = cb_arg;
+
+	spdk_io_device_unregister(tgt, spdk_nvmf_tgt_destroy_cb);
 }
 
 struct spdk_nvmf_tgt_listen_ctx {
