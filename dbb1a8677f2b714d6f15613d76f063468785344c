@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "74c914fa_8971e0ce",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-05T19:44:10Z",
+      "side": 1,
+      "message": "I think it would be simpler to ensure that qpair-\u003eqid is in range; this should guarantee that we have not exceeded the num_qpairs limit if the qpair-\u003eqid bit is clear in the next check.\n\nWe might even be able to get rid of num_qpairs entirely, although it\u0027s probably convenient to keep it just to have a fast way to check if all queues have been disconnected.",
+      "revId": "dbb1a8677f2b714d6f15613d76f063468785344c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef05a8dc_902a7ba9",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 416,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-05T19:44:10Z",
+      "side": 1,
+      "message": "We can validate QID against tgt-\u003eopts.max_qpairs_per_ctrlr here before we send the message - that should allow us to remove the num_qpairs check as mentioned above.",
+      "revId": "dbb1a8677f2b714d6f15613d76f063468785344c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
