@@ -288,6 +288,14 @@ nvme_qpair_enable(struct spdk_nvme_qpair *qpair)
 	abort();
 }
 
+int
+nvme_request_check_timeout(struct nvme_request *req, uint16_t cid,
+			   struct spdk_nvme_ctrlr_process *active_proc,
+			   uint64_t now_tick)
+{
+	abort();
+}
+
 struct spdk_nvme_ctrlr *
 spdk_nvme_get_ctrlr_by_trid_unsafe(const struct spdk_nvme_transport_id *trid)
 {

@@ -2003,36 +2003,13 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 	TAILQ_FOREACH_SAFE(tr, &pqpair->outstanding_tr, tq_list, tmp) {
 		assert(tr->req != NULL);
 
-		if (tr->req->timed_out || tr->req->submit_tick == 0) {
-			continue;
-		}
-
-		if (nvme_qpair_is_admin_queue(qpair)) {
-			if (tr->req->pid != getpid()) {
-				continue;
-			}
-
-			if (tr->req->cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
-				continue;
-			}
-		}
-
-		if (tr->req->submit_tick + active_proc->timeout_ticks > t02) {
-			/* The trackers are in order, so as soon as one has not timed out,
+		if (nvme_request_check_timeout(tr->req, tr->cid, active_proc, t02)) {
+			/*
+			 * The requests are in order, so as soon as one has not timed out,
 			 * stop iterating.
 			 */
 			break;
 		}
-
-		tr->req->timed_out = true;
-
-		/* We don't want to expose the admin queue to the user,
-		 * so when we're timing out admin commands set the
-		 * qpair to NULL.
-		 */
-		active_proc->timeout_cb_fn(active_proc->timeout_cb_arg, ctrlr,
-					   nvme_qpair_is_admin_queue(qpair) ? NULL : qpair,
-					   tr->cid);
 	}
 }
 
