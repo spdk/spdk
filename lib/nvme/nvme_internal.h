@@ -100,11 +100,11 @@ extern pid_t g_spdk_nvme_pid;
 #define NVME_QUIRK_IDENTIFY_CNS 0x40
 
 /*
- * The controller supports LightNVM command set if matching additional
+ * The controller supports Open Channel command set if matching additional
  * condition, like the first byte (value 0x1) in the vendor specific
  * bits of the namespace identify structure is set.
  */
-#define NVME_QUIRK_LIGHTNVM 0x80
+#define NVME_QUIRK_OCSSD 0x80
 
 #define NVME_MAX_ASYNC_EVENTS	(8)
 

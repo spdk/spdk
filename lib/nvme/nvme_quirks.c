@@ -74,7 +74,7 @@ static const struct nvme_quirk nvme_quirks[] = {
 	},
 	{	{SPDK_PCI_VID_CNEXLABS, 0x1f1f, SPDK_PCI_ANY_ID, SPDK_PCI_ANY_ID},
 		NVME_QUIRK_IDENTIFY_CNS |
-		NVME_QUIRK_LIGHTNVM
+		NVME_QUIRK_OCSSD
 	},
 	{	{0x0000, 0x0000, 0x0000, 0x0000}, 0}
 };
@@ -121,7 +121,7 @@ nvme_get_quirks(const struct spdk_pci_id *id)
 			PRINT_QUIRK(NVME_QUIRK_DELAY_AFTER_QUEUE_ALLOC);
 			PRINT_QUIRK(NVME_QUIRK_READ_ZERO_AFTER_DEALLOCATE);
 			PRINT_QUIRK(NVME_QUIRK_IDENTIFY_CNS);
-			PRINT_QUIRK(NVME_QUIRK_LIGHTNVM);
+			PRINT_QUIRK(NVME_QUIRK_OCSSD);
 
 			return quirk->flags;
 		}
