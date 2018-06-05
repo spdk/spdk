@@ -95,7 +95,6 @@ ctrlr_add_qpair_and_update_rsp(struct spdk_nvmf_qpair *qpair,
 
 	qpair->ctrlr = ctrlr;
 	spdk_bit_array_set(ctrlr->qpair_mask, qpair->qid);
-	TAILQ_INSERT_HEAD(&ctrlr->qpairs, qpair, link);
 
 	rsp->status.sc = SPDK_NVME_SC_SUCCESS;
 	rsp->status_code_specific.success.cntlid = ctrlr->cntlid;
@@ -162,7 +161,6 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	}
 
 	req->qpair->ctrlr = ctrlr;
-	TAILQ_INIT(&ctrlr->qpairs);
 	ctrlr->subsys = subsystem;
 
 	ctrlr->qpair_mask = spdk_bit_array_create(tgt->opts.max_qpairs_per_ctrlr);
@@ -216,13 +214,7 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 void
 spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 {
-	while (!TAILQ_EMPTY(&ctrlr->qpairs)) {
-		struct spdk_nvmf_qpair *qpair = TAILQ_FIRST(&ctrlr->qpairs);
-
-		TAILQ_REMOVE(&ctrlr->qpairs, qpair, link);
-		spdk_bit_array_clear(ctrlr->qpair_mask, qpair->qid);
-		spdk_nvmf_transport_qpair_fini(qpair);
-	}
+	/* TODO: Sanity check that the qpair mask is empty? */
 
 	spdk_bit_array_free(&ctrlr->qpair_mask);
 
@@ -448,7 +440,6 @@ _spdk_nvmf_ctrlr_remove_qpair(void *ctx)
 
 	assert(ctrlr != NULL);
 
-	TAILQ_REMOVE(&ctrlr->qpairs, qpair, link);
 	spdk_bit_array_clear(ctrlr->qpair_mask, qpair->qid);
 
 	/* Send a message to the thread that owns the qpair and destroy it. */
