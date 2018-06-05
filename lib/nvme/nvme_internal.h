@@ -191,6 +191,8 @@ struct nvme_request {
 
 	uint8_t				retries;
 
+	bool				timed_out;
+
 	/**
 	 * Number of children requests still outstanding for this
 	 *  request which was split into multiple child requests.
@@ -216,6 +218,12 @@ struct nvme_request {
 	STAILQ_ENTRY(nvme_request)	stailq;
 
 	struct spdk_nvme_qpair		*qpair;
+
+	/*
+	 * The value of spdk_get_ticks() when the request was submitted to the hardware.
+	 * Only set if ctrlr->timeout_enabled is true.
+	 */
+	uint64_t			submit_tick;
 
 	/**
 	 * The active admin request can be moved to a per process pending
