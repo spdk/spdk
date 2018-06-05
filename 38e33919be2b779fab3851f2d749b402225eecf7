@@ -90,6 +90,24 @@
     },
     {
       "key": {
+        "uuid": "edfd0160_f3ae6ce4",
+        "filename": "include/spdk/nvme_ocssd.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-05T20:57:16Z",
+      "side": 1,
+      "message": "Ok - it turns out this one is really tricky. Figure 9 from the OCSSD 2.0 spec is supposed to be the OCSSD version of Figure 42 in NVMe 1.3c. Note footnote 3 on Figure 42 that says:\n\n~~~\nA subset of commands uses the Namespace Identifier field (CDW1.NSID). If the Namespace Identifier field is used, then unless otherwise specified, the value FFFFFFFFh is supported in this field. When this field is not used, the field is cleared to 0h as described in Figure 11. \n~~~\n\nThe key to understanding this statement is the meaning of the word \"used\" which isn\u0027t at all clear in this context. However, the footnote used to read as follows in NVMe 1.0:\n\n~~~\nA subset of commands uses the Namespace Identifier field (CDW1.NSID). When not used, the field shall be cleared to 0h. For the Get Features and Set Features command, the Namespace Identifier is only used for the LBA Range Type feature.\n~~~\n\nIn that version of the specification, it\u0027s clear that \"used\" means only if the feature is specifically LBA Range Type - not all Set/Get features commands. So the namespace rules apply only to certain sub-commands, not to the entirety of any command marked as \"Yes\" in Figure 9. It happens that Media Feedback, the new feature in this specification, does not need the namespace (what even is a namespace in OCSSD?), so the correct value to send here is 0.\n\nThat means your firmware developers got it wrong and need to make an update. Further, it\u0027s not really their fault that they got it wrong - this is deeply confusing in the specification. When the language around this was changed in NVMe 1.2, LBA Range Type was never updated to indicate that it uses the namespace identifier at all! I\u0027ll start the process of working with the spec committee to get this cleared up.\n\nIn the mean time, you can add an spdk_nvme_ctrlr_cmd_get_feature_with_nsid to the base SPDK NVMe driver. We don\u0027t have that function and it would be required in order to get/set features for LBA Range Type and Persistent Reservations anyway. Once that\u0027s in the base NVMe driver, you can use it temporarily as a workaround for the device you\u0027re developing against.",
+      "parentUuid": "a380888f_13283b8e",
+      "revId": "38e33919be2b779fab3851f2d749b402225eecf7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "22b17f10_4e595006",
         "filename": "include/spdk/nvme_ocssd.h",
         "patchSetId": 4
