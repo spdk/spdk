@@ -209,7 +209,6 @@ struct spdk_nvmf_ctrlr {
 
 	struct spdk_nvmf_qpair *admin_qpair;
 
-	TAILQ_HEAD(, spdk_nvmf_qpair) qpairs;
 	struct spdk_bit_array *qpair_mask;
 
 	struct spdk_nvmf_request *aer_req;

@@ -134,6 +134,9 @@ spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 
 	TAILQ_FOREACH_SAFE(qpair, &group->qpairs, pg_link, qptmp) {
 		TAILQ_REMOVE(&group->qpairs, qpair, pg_link);
+		// TODO: This also should remove the qpair from the qpair_mask, but needs a lock
+		//spdk_bit_array_clear(qpair->ctrlr->qpair_mask, qpair->qid);
+		spdk_nvmf_transport_qpair_fini(qpair);
 	}
 
 	TAILQ_FOREACH_SAFE(tgroup, &group->tgroups, link, tmp) {
