@@ -46,7 +46,7 @@ DPDK_INC_DIR := $(DPDK_ABS_DIR)/include
 else
 DPDK_INC_DIR := $(DPDK_ABS_DIR)/include/dpdk
 endif
-DPDK_INC := -I$(DPDK_INC_DIR)
+DPDK_INC := -I$(DPDK_INC_DIR) -include rte_config.h
 
 ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_eal.a))
 DPDK_LIB_EXT = .a
