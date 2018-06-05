@@ -51,6 +51,7 @@
 
 /* nvme ioctl uses 'N' as its ioctl magic character */
 #define NVME_IOCTL_MAGIC 'N'
+#define BLK_IOCTL_MAGIC 0x12
 
 struct nvme_ctrlr;
 struct nvme_bdev;

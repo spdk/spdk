@@ -46,6 +46,39 @@
 #define NVME_IOCTL_RESCAN	_IO('N', 0x46)
 #endif
 
+/*
+ * Get cmd_len of blk ioctl from ioctl_cmd
+ */
+static uint32_t
+blk_ioctl_cmd_size(uint32_t ioctl_cmd)
+{
+	uint32_t cmd_len = 0;
+
+	switch (ioctl_cmd) {
+	case BLKRRPART:
+		break;
+	case BLKGETSIZE:
+		cmd_len = sizeof(long);
+		break;
+	case BLKSSZGET:
+		cmd_len = sizeof(int);
+		break;
+	case BLKBSZGET:
+		cmd_len = sizeof(unsigned int);
+		break;
+	case BLKGETSIZE64:
+		cmd_len = sizeof(unsigned long long);
+		break;
+	case BLKPBSZGET:
+		cmd_len = sizeof(unsigned int);
+		break;
+	default:
+		SPDK_NOTICELOG("Unknown blk ioctl_cmd %d\n", ioctl_cmd);
+	}
+
+	return cmd_len;
+}
+
 static uint32_t
 nvme_ioctl_cmd_size(uint32_t ioctl_cmd)
 {
@@ -157,6 +190,18 @@ spdk_nvme_cmd_get_data_transfer(uint32_t ioctl_cmd, char *cmd_buf) {
 }
 
 /*
+ * Determine next recv state for blk ioctl
+ * Get cmd_len of blk ioctl from ioctl_cmd
+ */
+static uint32_t
+blk_ioctl_cmd_recv_check(uint32_t ioctl_cmd, enum ioctl_conn_state_t *_conn_state)
+{
+	*_conn_state = IOCTL_CONN_STATE_PROC;
+
+	return blk_ioctl_cmd_size(ioctl_cmd);
+}
+
+/*
  * Set cmd_len and determine next recv state
  */
 int
@@ -169,6 +214,9 @@ nvme_ioctl_cmd_recv_check(struct spdk_nvme_ioctl_req *req, enum ioctl_conn_state
 	ioctl_magic = _IOC_TYPE(ioctl_cmd);
 
 	switch (ioctl_magic) {
+	case BLK_IOCTL_MAGIC:
+		req->cmd_len = blk_ioctl_cmd_recv_check(ioctl_cmd, _conn_state);
+		break;
 	case NVME_IOCTL_MAGIC:
 		req->cmd_len = nvme_ioctl_cmd_size(ioctl_cmd);
 		if (req->cmd_len) {
@@ -290,7 +338,16 @@ nvme_ioctl_cmdbuf_xmit_check(struct spdk_nvme_ioctl_resp *resp,
 static void
 nvme_ioctl_resp_get_lens(struct spdk_nvme_ioctl_resp *resp, struct spdk_nvme_ioctl_req *req)
 {
+	char ioctl_magic;
+
 	resp->total_len += IOCTL_HEAD_SIZE + sizeof(int);
+
+	ioctl_magic = _IOC_TYPE(resp->ioctl_cmd);
+	if (ioctl_magic != NVME_IOCTL_MAGIC) {
+		resp->cmd_len = blk_ioctl_cmd_size(resp->ioctl_cmd);
+		resp->total_len += resp->cmd_len;
+		return;
+	}
 
 	resp->cmd_len = req->cmd_len;
 	enum spdk_nvme_data_transfer xfer = spdk_nvme_cmd_get_data_transfer(resp->ioctl_cmd, resp->cmd_buf);
