@@ -56,6 +56,9 @@ struct bdev_iscsi_lun;
 #define BDEV_ISCSI_CONNECTION_POLL_US 500
 #define DEFAULT_INITIATOR_NAME "iqn.2016-06.io.spdk:init"
 
+#define SYNC_NV_ALL             0
+#define SYNC_NV_ONLY_VOLATILE   1       /* default */
+
 static int bdev_iscsi_initialize(void);
 static TAILQ_HEAD(, bdev_iscsi_lun) g_iscsi_lun_head = TAILQ_HEAD_INITIALIZER(g_iscsi_lun_head);
 static TAILQ_HEAD(, bdev_iscsi_conn_req) g_iscsi_conn_req = TAILQ_HEAD_INITIALIZER(
@@ -225,6 +228,20 @@ bdev_iscsi_rw_cb(struct iscsi_context *context, int status, void *_task, void *_
 }
 
 static void
+bdev_iscsi_flush_cb(struct iscsi_context *context, int status, void *_task, void *_iscsi_io)
+{
+	struct scsi_task *task = _task;
+	struct bdev_iscsi_io *iscsi_io = _iscsi_io;
+
+	iscsi_io->scsi_status = task->status;
+	iscsi_io->sk = (uint8_t)task->sense.key;
+	iscsi_io->asc = (task->sense.ascq >> 8) & 0xFF;
+	iscsi_io->ascq = task->sense.ascq & 0xFF;
+
+	scsi_free_scsi_task(task);
+}
+
+static void
 bdev_iscsi_readv(struct bdev_iscsi_lun *lun, struct bdev_iscsi_io *iscsi_io,
 		 struct iovec *iov, int iovcnt, uint64_t nbytes, uint64_t lba)
 {
@@ -288,6 +305,23 @@ bdev_iscsi_destruct(void *ctx)
 	return rc;
 }
 
+static void
+bdev_iscsi_flush(struct bdev_iscsi_lun *lun, struct bdev_iscsi_io *iscsi_io, uint32_t num_blocks,
+		 int syncnv, int immed, uint64_t lba)
+{
+	struct scsi_task *task;
+
+	task = iscsi_synchronizecache16_task(lun->context, 0, lba,
+					     num_blocks, syncnv, immed, bdev_iscsi_flush_cb, iscsi_io);
+	if (task == NULL) {
+		SPDK_ERRLOG("failed to get sync16_task\n");
+		bdev_iscsi_io_complete(iscsi_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
+
+	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(iscsi_io), SPDK_BDEV_IO_STATUS_SUCCESS);
+}
+
 static int
 bdev_iscsi_poll(void *arg)
 {
@@ -341,6 +375,13 @@ static void _bdev_iscsi_submit_request(void *_bdev_io)
 				  bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen,
 				  bdev_io->u.bdev.offset_blocks);
 		break;
+	case SPDK_BDEV_IO_TYPE_FLUSH:
+		bdev_iscsi_flush(lun, iscsi_io,
+				 bdev_io->u.bdev.num_blocks,
+				 SYNC_NV_ONLY_VOLATILE,
+				 ISCSI_IMMEDIATE_DATA_YES,
+				 bdev_io->u.bdev.offset_blocks);
+		break;
 	default:
 		bdev_iscsi_io_complete(iscsi_io, SPDK_BDEV_IO_STATUS_FAILED);
 		break;
@@ -368,6 +409,7 @@ bdev_iscsi_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	switch (io_type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
+	case SPDK_BDEV_IO_TYPE_FLUSH:
 		return true;
 
 	default:
