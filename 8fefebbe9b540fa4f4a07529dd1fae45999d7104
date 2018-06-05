@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "dfe003d0_b28f0a36",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 517,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-05T15:54:52Z",
+      "side": 1,
+      "message": "Agreed, this is probably a candidate for factoring out into another function, but I think it can be cleaned up separately so that we can merge the rest of the iSCSI bdev RPC config patches.",
+      "parentUuid": "34c4c6d7_744376cd",
+      "range": {
+        "startLine": 514,
+        "startChar": 1,
+        "endLine": 517,
+        "endChar": 10
+      },
+      "revId": "8fefebbe9b540fa4f4a07529dd1fae45999d7104",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "40d588d3_b692f506",
         "filename": "lib/bdev/iscsi/bdev_iscsi.c",
         "patchSetId": 10
