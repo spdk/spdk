@@ -174,8 +174,7 @@ bdev_aio_writev(struct file_disk *fdisk, struct spdk_io_channel *ch,
 }
 
 static void
-bdev_aio_flush(struct file_disk *fdisk, struct bdev_aio_task *aio_task,
-	       uint64_t offset, uint64_t nbytes)
+bdev_aio_flush(struct file_disk *fdisk, struct bdev_aio_task *aio_task)
 {
 	int rc = fsync(fdisk->fd);
 
@@ -329,9 +328,7 @@ static int _bdev_aio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev
 		return 0;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		bdev_aio_flush((struct file_disk *)bdev_io->bdev->ctxt,
-			       (struct bdev_aio_task *)bdev_io->driver_ctx,
-			       bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen,
-			       bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
+			       (struct bdev_aio_task *)bdev_io->driver_ctx);
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_RESET:
