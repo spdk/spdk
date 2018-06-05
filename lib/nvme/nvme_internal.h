@@ -432,6 +432,8 @@ struct spdk_nvme_ctrlr {
 
 	bool				is_failed;
 
+	bool				timeout_enabled;
+
 	uint16_t			max_sges;
 
 	/** Controller support flags */
