@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7fb1615a_bb00d1f2",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 470,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-06-05T00:53:04Z",
+      "side": 1,
+      "message": "sounds good, will change the logic of this part.",
+      "parentUuid": "e1f8dc58_f5fa5e00",
+      "revId": "95c2cf89a2631337fc22e31d5c97d790ad8a376a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7c8c4106_80c767a5",
         "filename": "lib/nvme/nvme_qpair.c",
         "patchSetId": 8
@@ -30,6 +48,24 @@
       "writtenOn": "2018-06-04T23:41:36Z",
       "side": 1,
       "message": "should we overwrite an existing entry that has the same opc?\n\nan alternative would be to add another entry in the queue; once the first one is exhausted, it will get removed from the list, and then the new one would get a chance to execute\n\neither way - the API header should specify this behavior if the same OPC is specified",
+      "revId": "95c2cf89a2631337fc22e31d5c97d790ad8a376a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f6aa063_38e811b4",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 545,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-06-05T00:53:04Z",
+      "side": 1,
+      "message": "This is used for update in place, I will update the header file to make the API clear.",
+      "parentUuid": "7c8c4106_80c767a5",
       "revId": "95c2cf89a2631337fc22e31d5c97d790ad8a376a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
