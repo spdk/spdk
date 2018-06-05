@@ -36,6 +36,12 @@ Results are recorded in the `make.log` file.
 To enable type: 'git config core.hooksPath .githooks'. To override after configuration use
 the `git --no-verify` flag.
 
+### IOAT
+
+IOAT for copy engine is disabled by default. It can be enabled by specifying the Enable
+option with "Yes" in `[Ioat]` section of the configuration file. The Disable option is
+now deprecated and will be removed in a future release.
+
 ## v18.04: Logical Volume Snapshot/Clone, iSCSI Initiator, Bdev QoS, VPP Userspace TCP/IP
 
 ### vhost
