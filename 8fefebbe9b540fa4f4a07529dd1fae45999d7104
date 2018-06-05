@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "40d588d3_b692f506",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 540,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-06-05T07:36:19Z",
+      "side": 1,
+      "message": "Can we merge the three statemetns into a function, which will be clear.",
+      "range": {
+        "startLine": 538,
+        "startChar": 1,
+        "endLine": 540,
+        "endChar": 11
+      },
+      "revId": "8fefebbe9b540fa4f4a07529dd1fae45999d7104",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
