@@ -65,6 +65,7 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define SPDK_BDEV_QOS_TIMESLICE_IN_USEC		1000
 #define SPDK_BDEV_SEC_TO_USEC			1000000ULL
 #define SPDK_BDEV_QOS_MIN_IO_PER_TIMESLICE	1
+#define SPDK_BDEV_QOS_MIN_BYTE_PER_TIMESLICE	512
 #define SPDK_BDEV_QOS_MIN_IOS_PER_SEC		10000
 #define SPDK_BDEV_QOS_MIN_BW_IN_MB_PER_SEC	10
 
@@ -130,8 +131,15 @@ struct spdk_bdev_qos {
 	 *  only valid for the master channel which manages the outstanding IOs. */
 	uint64_t max_ios_per_timeslice;
 
+	/** Maximum allowed bytes to be issued in one timeslice (e.g., 1ms) and
+	 *  only valid for the master channel which manages the outstanding IOs. */
+	uint64_t max_byte_per_timeslice;
+
 	/** Submitted IO in one timeslice (e.g., 1ms) */
 	uint64_t io_submitted_this_timeslice;
+
+	/** Submitted byte in one timeslice (e.g., 1ms) */
+	uint64_t byte_submitted_this_timeslice;
 
 	/** Polller that processes queued I/O commands each time slice. */
 	struct spdk_poller *poller;
@@ -862,6 +870,21 @@ spdk_bdev_put_io(struct spdk_bdev_io *bdev_io)
 	}
 }
 
+static uint64_t
+_spdk_bdev_get_io_size_in_byte(struct spdk_bdev_io *bdev_io)
+{
+	struct spdk_bdev	*bdev = bdev_io->bdev;
+
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
+	case SPDK_BDEV_IO_TYPE_NVME_IO:
+	case SPDK_BDEV_IO_TYPE_NVME_IO_MD:
+		return bdev_io->u.nvme_passthru.nbytes;
+	default:
+		return bdev_io->u.bdev.num_blocks * bdev->blocklen;
+	}
+}
+
 static void
 _spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch)
 {
@@ -871,16 +894,23 @@ _spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch)
 	struct spdk_bdev_shared_resource *shared_resource = ch->shared_resource;
 
 	while (!TAILQ_EMPTY(&qos->queued)) {
-		if (qos->io_submitted_this_timeslice < qos->max_ios_per_timeslice) {
-			bdev_io = TAILQ_FIRST(&qos->queued);
-			TAILQ_REMOVE(&qos->queued, bdev_io, link);
-			qos->io_submitted_this_timeslice++;
-			ch->io_outstanding++;
-			shared_resource->io_outstanding++;
-			bdev->fn_table->submit_request(ch->channel, bdev_io);
-		} else {
+		if (qos->max_ios_per_timeslice > 0 &&
+		    qos->io_submitted_this_timeslice >= qos->max_ios_per_timeslice) {
 			break;
 		}
+
+		if (qos->max_byte_per_timeslice > 0 &&
+		    qos->byte_submitted_this_timeslice >= qos->max_byte_per_timeslice) {
+			break;
+		}
+
+		bdev_io = TAILQ_FIRST(&qos->queued);
+		TAILQ_REMOVE(&qos->queued, bdev_io, link);
+		qos->io_submitted_this_timeslice++;
+		qos->byte_submitted_this_timeslice += _spdk_bdev_get_io_size_in_byte(bdev_io);
+		ch->io_outstanding++;
+		shared_resource->io_outstanding++;
+		bdev->fn_table->submit_request(ch->channel, bdev_io);
 	}
 }
 
@@ -1000,14 +1030,23 @@ spdk_bdev_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 }
 
 static void
-spdk_bdev_qos_update_max_ios_per_timeslice(struct spdk_bdev_qos *qos)
+spdk_bdev_qos_update_max_quota_per_timeslice(struct spdk_bdev_qos *qos)
 {
-	uint64_t max_ios_per_timeslice = 0;
+	uint64_t max_ios_per_timeslice = 0, max_byte_per_timeslice = 0;
 
-	max_ios_per_timeslice = qos->iops_rate_limit * SPDK_BDEV_QOS_TIMESLICE_IN_USEC /
-				SPDK_BDEV_SEC_TO_USEC;
-	qos->max_ios_per_timeslice = spdk_max(max_ios_per_timeslice,
-					      SPDK_BDEV_QOS_MIN_IO_PER_TIMESLICE);
+	if (qos->iops_rate_limit > 0) {
+		max_ios_per_timeslice = qos->iops_rate_limit * SPDK_BDEV_QOS_TIMESLICE_IN_USEC /
+					SPDK_BDEV_SEC_TO_USEC;
+		qos->max_ios_per_timeslice = spdk_max(max_ios_per_timeslice,
+						      SPDK_BDEV_QOS_MIN_IO_PER_TIMESLICE);
+	}
+
+	if (qos->byte_rate_limit > 0) {
+		max_byte_per_timeslice = qos->byte_rate_limit * SPDK_BDEV_QOS_TIMESLICE_IN_USEC /
+					 SPDK_BDEV_SEC_TO_USEC;
+		qos->max_byte_per_timeslice = spdk_max(max_byte_per_timeslice,
+						       SPDK_BDEV_QOS_MIN_BYTE_PER_TIMESLICE);
+	}
 }
 
 static int
@@ -1017,6 +1056,7 @@ spdk_bdev_channel_poll_qos(void *arg)
 
 	/* Reset for next round of rate limiting */
 	qos->io_submitted_this_timeslice = 0;
+	qos->byte_submitted_this_timeslice = 0;
 
 	_spdk_bdev_qos_io_submit(qos->ch);
 
@@ -1075,8 +1115,9 @@ _spdk_bdev_enable_qos(struct spdk_bdev *bdev, struct spdk_bdev_channel *ch)
 			qos->thread = spdk_io_channel_get_thread(io_ch);
 
 			TAILQ_INIT(&qos->queued);
-			spdk_bdev_qos_update_max_ios_per_timeslice(qos);
+			spdk_bdev_qos_update_max_quota_per_timeslice(qos);
 			qos->io_submitted_this_timeslice = 0;
+			qos->byte_submitted_this_timeslice = 0;
 
 			qos->poller = spdk_poller_register(spdk_bdev_channel_poll_qos,
 							   qos,
@@ -1266,7 +1307,9 @@ spdk_bdev_qos_destroy(struct spdk_bdev *bdev)
 	new_qos->ch = NULL;
 	new_qos->thread = NULL;
 	new_qos->max_ios_per_timeslice = 0;
+	new_qos->max_byte_per_timeslice = 0;
 	new_qos->io_submitted_this_timeslice = 0;
+	new_qos->byte_submitted_this_timeslice = 0;
 	new_qos->poller = NULL;
 	TAILQ_INIT(&new_qos->queued);
 
@@ -3077,7 +3120,7 @@ _spdk_bdev_update_qos_limit_iops_msg(void *cb_arg)
 	struct spdk_bdev *bdev = ctx->bdev;
 
 	pthread_mutex_lock(&bdev->mutex);
-	spdk_bdev_qos_update_max_ios_per_timeslice(bdev->qos);
+	spdk_bdev_qos_update_max_quota_per_timeslice(bdev->qos);
 	pthread_mutex_unlock(&bdev->mutex);
 
 	_spdk_bdev_set_qos_limit_done(ctx, 0);
