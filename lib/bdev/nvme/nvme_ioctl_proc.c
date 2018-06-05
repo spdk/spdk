@@ -410,6 +410,51 @@ spdk_nvme_ioctl_proc_done(struct spdk_nvme_ioctl_conn *ioctl_conn, int ioctl_ret
 }
 
 static int
+spdk_nvme_ioctl_blk_proc(struct spdk_nvme_ioctl_conn *ioctl_conn)
+{
+	struct spdk_nvme_ioctl_req *req;
+	int ioctl_ret = 0;
+	uint32_t ioctl_cmd;
+	struct spdk_nvme_ns *ns;
+	unsigned int val_uint;
+	long val_l;
+	unsigned long long val_ull;
+
+	if (ioctl_conn->type != IOCTL_CONN_TYPE_BLK) {
+		ioctl_ret = -ENOTBLK;
+		goto end;
+	}
+
+	req = &ioctl_conn->req;
+	ioctl_cmd = req->ioctl_cmd;
+	ns = ((struct nvme_bdev *)ioctl_conn->device)->ns;
+	switch (ioctl_cmd) {
+	case BLKRRPART:
+		break;
+	case BLKGETSIZE:
+		val_l = spdk_nvme_ns_get_num_sectors(ns);
+		memcpy(req->cmd_buf, &val_l, sizeof(val_l));
+		break;
+	case BLKGETSIZE64:
+		val_ull = spdk_nvme_ns_get_size(ns);
+		memcpy(req->cmd_buf, &val_ull, sizeof(val_ull));
+		break;
+	case BLKBSZGET:
+	case BLKSSZGET:
+	case BLKPBSZGET:
+		val_uint = spdk_nvme_ns_get_sector_size(ns);
+		memcpy(req->cmd_buf, &val_uint, sizeof(val_uint));
+		break;
+	default:
+		SPDK_NOTICELOG("Unknown blk ioctl_cmd %d\n", ioctl_cmd);
+		ioctl_ret = -1;
+	}
+
+end:
+	return spdk_nvme_ioctl_proc_done(ioctl_conn, ioctl_ret);
+}
+
+static int
 spdk_nvme_ioctl_id_proc(struct spdk_nvme_ioctl_conn *ioctl_conn)
 {
 	struct spdk_nvme_ns *ns = NULL;
@@ -431,9 +476,16 @@ int
 spdk_nvme_ioctl_proc(struct spdk_nvme_ioctl_conn *ioctl_conn)
 {
 	uint32_t ioctl_cmd;
+	char ioctl_magic;
 	int ret = 0;
 
 	ioctl_cmd = ioctl_conn->req.ioctl_cmd;
+
+	/* filter out blk ioctl */
+	ioctl_magic = _IOC_TYPE(ioctl_cmd);
+	if (ioctl_magic == BLK_IOCTL_MAGIC) {
+		return spdk_nvme_ioctl_blk_proc(ioctl_conn);
+	}
 
 	switch (ioctl_cmd) {
 	case NVME_IOCTL_ID:
