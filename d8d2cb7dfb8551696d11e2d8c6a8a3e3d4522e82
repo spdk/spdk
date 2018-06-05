@@ -117,6 +117,24 @@
       "revId": "d8d2cb7dfb8551696d11e2d8c6a8a3e3d4522e82",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fb4100b4_b3b23eb3",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-05T21:44:04Z",
+      "side": 1,
+      "message": "I meant that locking the ctrlr_lock mutex around the check below might be the fix, e.g.:\n\n  nvme_robust_mutex_lock(\u0026ctrlr-\u003ectrlr_lock);\n  // operate on ctrlr\n  nvme_robust_mutex_unlock(\u0026ctrlr-\u003ectrlr_lock);\n\nHowever, this needs to be carefully checked to make sure we never take the ctrlr_lock and driver lock in the other order (to avoid deadlocks).",
+      "parentUuid": "ef14287a_6ce96008",
+      "revId": "d8d2cb7dfb8551696d11e2d8c6a8a3e3d4522e82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
