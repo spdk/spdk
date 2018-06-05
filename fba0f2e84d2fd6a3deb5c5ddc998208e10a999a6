@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9d0e73f3_f1764f87",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 897,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-05T17:13:38Z",
+      "side": 1,
+      "message": "Hi Gang,\n\nThis logic looks right, but I think we could simplify it to something like this:\n\n  while (!TAILQ_EMPTY(\u0026qos-\u003equeued)) {\n    if (qos-\u003emax_ios_per_timeslice \u003e 0 \u0026\u0026\n        qos-\u003eio_submitted_this_timeslice \u003e\u003d qos-\u003emax_ios_per_timeslice) {\n      break;\n    }\n    if (qos-\u003emax_bw_per_timeslice \u003e 0 \u0026\u0026\n        qos-\u003ebyte_submitted_this_timeslice \u003e\u003d qos-\u003emax_bw_per_timeslice) {\n      break;\n    }\n\n    bdev-\u003efn_table-\u003esubmit_request(...);\n  }",
+      "revId": "fba0f2e84d2fd6a3deb5c5ddc998208e10a999a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
