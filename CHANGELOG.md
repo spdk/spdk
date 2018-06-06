@@ -1,7 +1,15 @@
 # Changelog
 
-## v18.04.1: (Maintenance Release)
+## v18.04.1: Maintenance Release
 
+SPDK v18.04.1 is a bug fix and maintenance release.
+
+A bug in the blobstore recovery code for thin provisioned blobs has been fixed
+(GitHub issue #291).
+
+The `env_dpdk` environment layer has been updated to work with DPDK 18.05.
+
+The NVMe and bdev `fio_plugin` examples have been updated to work with FIO 3.7.
 
 ## v18.04: Logical Volume Snapshot/Clone, iSCSI Initiator, Bdev QoS, VPP Userspace TCP/IP
 
