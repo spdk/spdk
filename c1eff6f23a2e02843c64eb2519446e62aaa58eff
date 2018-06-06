@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fb3bb731_4a088ccc",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-06T21:28:26Z",
+      "side": 1,
+      "message": "Note that this is only safe if all freeze and unfreeze requests occur on a single thread. I believe that\u0027s the case for the blobstore still (with the rules about the metadata thread), but we should audit quickly to confirm.",
+      "revId": "c1eff6f23a2e02843c64eb2519446e62aaa58eff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "097d8a7f_0172299b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 1817,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-06T21:28:26Z",
+      "side": 1,
+      "message": "This can be called from any thread, so you can\u0027t reference shared memory without a lock. Instead, put a per-thread cache of the blob state in the channel and reference that.",
+      "revId": "c1eff6f23a2e02843c64eb2519446e62aaa58eff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "89167105_4ff9f53e",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 2080,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-06T21:28:26Z",
+      "side": 1,
+      "message": "I think this if statement makes logical sense as a part of the other existing block - make if (read) and else if (read) below.",
+      "revId": "c1eff6f23a2e02843c64eb2519446e62aaa58eff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
