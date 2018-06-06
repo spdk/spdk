@@ -48,6 +48,40 @@
     },
     {
       "key": {
+        "uuid": "131cb391_ccb63c5c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-06-06T09:21:15Z",
+      "side": 1,
+      "message": "I\u0027m not seeing that in my failure scenario. /dev/nbd0 is working fine, it\u0027s just the following JSON RPC call which doesn\u0027t get a response.",
+      "revId": "fed48bcc7de740ae53b1413dec0c150354c2dac9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3ed2c773_2b9c65f3",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1013793
+      },
+      "writtenOn": "2018-06-06T09:21:15Z",
+      "side": 1,
+      "message": "Unfortunately not :-/ #322 is something else.",
+      "revId": "fed48bcc7de740ae53b1413dec0c150354c2dac9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ce69037d_53e24cbc",
         "filename": "lib/nbd/nbd.c",
         "patchSetId": 3
