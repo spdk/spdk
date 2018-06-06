@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d3187832_37b665c0",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 358,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-06T08:17:14Z",
+      "side": 1,
+      "message": "I have added max_subsystems and io_unit_size into set_nvmf_tgt_options. Please add them if accepted.",
+      "revId": "e64642704101c5336722fa0dfe396a585da552e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
