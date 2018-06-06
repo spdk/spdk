@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "292c6d34_22527904",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-06T20:18:23Z",
+      "side": 1,
+      "message": "Max QID should actually be capacity - 1, I think. (This only affects the error message - the actual check is already correct.)\n\nSince the admin queue is counted in tgt-\u003eopts.max_qpairs_per_ctrlr, the capacity will be the max valid QID + 1; for example, if max_qpairs \u003d\u003d 2, then the bit array capacity will be 2, and valid QIDs are 0 (admin queue) and 1 (first I/O queue).",
+      "revId": "ec0a81e6d996f1cfbd7ede0d2b562a6d71b67db2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
