@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "12922359_387b9e72",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1325,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-06T20:30:42Z",
+      "side": 1,
+      "message": "I think this will cause a use after free for admin qpair.\n\nThis frees qpair-\u003ereq_buf, which is the storage for all of the requests on this queue; then we call nvme_pcie_admin_qpair_destroy(), which eventually iterates over each outstanding tracker to find the AERs, accessing tr-\u003ereq (which is a request from somewhere in req_buf) in the process.\n\nCan you move the nvme_qpair_deinit() call to the end of this function, just before spdk_dma_free(pqpair)? I think that would make this correct again.",
+      "revId": "dca8bbf1f4c797d2684aac8a8ff82869f1fbcb76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
