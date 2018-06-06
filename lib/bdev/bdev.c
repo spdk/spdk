@@ -240,6 +240,7 @@ struct spdk_bdev_desc {
 	struct spdk_bdev		*bdev;
 	spdk_bdev_remove_cb_t		remove_cb;
 	void				*remove_ctx;
+	bool				remove_scheduled;
 	bool				write;
 	TAILQ_ENTRY(spdk_bdev_desc)	link;
 };
@@ -2912,7 +2913,11 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 			 *  we don't recursively unregister this bdev again if the remove_cb
 			 *  immediately closes its descriptor.
 			 */
-			spdk_thread_send_msg(thread, _remove_notify, desc);
+			if (!desc->remove_scheduled) {
+				/* Avoid scheduling removal of the same descriptor multiple times. */
+				desc->remove_scheduled = true;
+				spdk_thread_send_msg(thread, _remove_notify, desc);
+			}
 		}
 	}
 
