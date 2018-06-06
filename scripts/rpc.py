@@ -1166,6 +1166,16 @@ if __name__ == "__main__":
     p.add_argument('name', help='Name for the bdev')
     p.set_defaults(func=construct_virtio_pci_blk_bdev)
 
+    # ioat
+    @call_cmd
+    def scan_ioat_copy_engine(args):
+        rpc.ioat.scan_ioat_copy_engine(args.client, args)
+
+    p = subparsers.add_parser('scan_ioat_copy_engine', help='Set scan and enable IOAT copy engine offload.')
+    p.add_argument('-w', '--pci-whitelist', help="""Whitespace-separated list of PCI addresses in dom:bus:dev:func
+    format or dom.bus.dev.func format""")
+    p.set_defaults(func=scan_ioat_copy_engine)
+
     args = parser.parse_args()
 
     try:

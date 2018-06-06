@@ -12,6 +12,7 @@ from . import nvmf
 from . import pmem
 from . import subsystem
 from . import vhost
+from . import ioat
 from . import client as rpc_client
 
 
