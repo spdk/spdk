@@ -701,6 +701,12 @@ bdevperf_run(void *arg1, void *arg2)
 
 	bdevperf_construct_targets();
 
+	if (g_target_count == 0) {
+		fprintf(stderr, "No valid bdevs found.\n");
+		spdk_app_stop(1);
+		return;
+	}
+
 	rc = bdevperf_construct_targets_tasks();
 	if (rc) {
 		blockdev_heads_destroy();
@@ -964,13 +970,14 @@ main(int argc, char **argv)
 	}
 
 	if (g_time_in_usec) {
-		performance_dump(g_time_in_usec, 0);
+		if (!g_run_failed) {
+			performance_dump(g_time_in_usec, 0);
+		}
 	} else {
 		printf("Test time less than one microsecond, no performance data will be shown\n");
 	}
 
 	blockdev_heads_destroy();
 	spdk_app_fini();
-	printf("done.\n");
 	return g_run_failed;
 }
