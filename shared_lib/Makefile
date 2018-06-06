@@ -69,7 +69,6 @@ SPDK_LIB_LIST += nbd
 
 ifeq ($(CONFIG_VHOST),y)
 SPDK_LIB_LIST += event_vhost
-SPDK_LIB_LIST += rte_vhost
 SPDK_LIB_LIST += vhost
 endif
 

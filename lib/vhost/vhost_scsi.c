@@ -107,6 +107,8 @@ struct spdk_vhost_scsi_task {
 
 static int spdk_vhost_scsi_start(struct spdk_vhost_dev *, void *);
 static int spdk_vhost_scsi_stop(struct spdk_vhost_dev *, void *);
+static int spdk_vhost_scsi_start_queue(struct spdk_vhost_dev *vdev, void *event_ctx);
+static int spdk_vhost_scsi_stop_queue(struct spdk_vhost_dev *vdev, void *event_ctx);
 static void spdk_vhost_scsi_dump_info_json(struct spdk_vhost_dev *vdev,
 		struct spdk_json_write_ctx *w);
 static void spdk_vhost_scsi_write_config_json(struct spdk_vhost_dev *vdev,
@@ -118,6 +120,11 @@ const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
 	.disabled_features = SPDK_VHOST_SCSI_DISABLED_FEATURES,
 	.start_device =  spdk_vhost_scsi_start,
 	.stop_device = spdk_vhost_scsi_stop,
+
+	//New API for vhost2
+	.start_queue =  spdk_vhost_scsi_start_queue,
+	.stop_queue = spdk_vhost_scsi_stop_queue,
+
 	.dump_info_json = spdk_vhost_scsi_dump_info_json,
 	.write_config_json = spdk_vhost_scsi_write_config_json,
 	.remove_device = spdk_vhost_scsi_dev_remove,
@@ -331,11 +338,12 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
 			    vdev->name, task->req_idx);
 		goto out;
 	}
-
+#if 0
 	SPDK_DEBUGLOG(SPDK_LOG_VHOST_SCSI_QUEUE,
 		      "Processing controlq descriptor: desc %d/%p, desc_addr %p, len %d, flags %d, last_used_idx %d; kickfd %d; size %d\n",
 		      task->req_idx, desc, (void *)desc->addr, desc->len, desc->flags, task->vq->vring.last_used_idx,
-		      task->vq->vring.kickfd, task->vq->vring.size);
+		      task->vq->vring.kickfd, task->vq->vring.vring.num);
+#endif
 	SPDK_TRACEDUMP(SPDK_LOG_VHOST_SCSI_QUEUE, "Request descriptor", (uint8_t *)ctrl_req,
 		       desc->len);
 
@@ -580,9 +588,9 @@ process_controlq(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_virtqueue 
 
 	reqs_cnt = spdk_vhost_vq_avail_ring_get(vq, reqs, SPDK_COUNTOF(reqs));
 	for (i = 0; i < reqs_cnt; i++) {
-		if (spdk_unlikely(reqs[i] >= vq->vring.size)) {
+		if (spdk_unlikely(reqs[i] >= vq->vring.vring.num)) {
 			SPDK_ERRLOG("%s: invalid entry in avail ring. Buffer '%"PRIu16"' exceeds virtqueue size (%"PRIu16")\n",
-				    svdev->vdev.name, reqs[i], vq->vring.size);
+				    svdev->vdev.name, reqs[i], vq->vring.vring.num);
 			spdk_vhost_vq_used_ring_enqueue(&svdev->vdev, vq, reqs[i], 0);
 			continue;
 		}
@@ -618,14 +626,15 @@ process_requestq(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_virtqueue 
 		SPDK_DEBUGLOG(SPDK_LOG_VHOST_SCSI, "====== Starting processing request idx %"PRIu16"======\n",
 			      reqs[i]);
 
-		if (spdk_unlikely(reqs[i] >= vq->vring.size)) {
+		if (spdk_unlikely(reqs[i] >= vq->vring.vring.num)) {
 			SPDK_ERRLOG("%s: request idx '%"PRIu16"' exceeds virtqueue size (%"PRIu16").\n",
-				    svdev->vdev.name, reqs[i], vq->vring.size);
+				    svdev->vdev.name, reqs[i], vq->vring.vring.num);
 			spdk_vhost_vq_used_ring_enqueue(&svdev->vdev, vq, reqs[i], 0);
 			continue;
 		}
 
 		task = &((struct spdk_vhost_scsi_task *)vq->tasks)[reqs[i]];
+		assert(task != NULL);
 		if (spdk_unlikely(task->used)) {
 			SPDK_ERRLOG("%s: request with idx '%"PRIu16"' is already pending.\n",
 				    svdev->vdev.name, reqs[i]);
@@ -1017,11 +1026,11 @@ alloc_task_pool(struct spdk_vhost_scsi_dev *svdev)
 
 	for (i = 0; i < svdev->vdev.max_queues; i++) {
 		vq = &svdev->vdev.virtqueue[i];
-		if (vq->vring.desc == NULL) {
+		if (vq->vring.vring.desc == NULL) {
 			continue;
 		}
 
-		task_cnt = vq->vring.size;
+		task_cnt = vq->vring.vring.num;
 		if (task_cnt > SPDK_VHOST_MAX_VQ_SIZE) {
 			/* sanity check */
 			SPDK_ERRLOG("Controller %s: virtuque %"PRIu16" is too big. (size = %"PRIu32", max = %"PRIu32")\n",
@@ -1049,6 +1058,94 @@ alloc_task_pool(struct spdk_vhost_scsi_dev *svdev)
 	return 0;
 }
 
+static int
+queue_worker(void *arg)
+{
+	struct spdk_vhost_scsi_dev *svdev = arg;
+	uint32_t q_idx;
+
+	printf("queue_worker\n");
+
+	//for (q_idx = VIRTIO_SCSI_REQUESTQ; q_idx < svdev->vdev.max_queues; q_idx++) {
+		process_requestq(svdev, &svdev->vdev.virtqueue[q_idx]);
+	//}
+
+	//spdk_vhost_dev_used_signal(&svdev->vdev);
+
+	return -1;
+}
+
+static int
+spdk_vhost_scsi_start_queue(struct spdk_vhost_dev *vdev, void *event_ctx)
+{
+	printf("[SCSI] start_queue\n");
+
+	struct spdk_vhost_scsi_dev *svdev;
+
+	struct spdk_vhost_virtqueue *vq = (struct spdk_vhost_virtqueue *)event_ctx;
+	//struct rte_vhost2_vq *vq
+	struct spdk_vhost_scsi_task *task;
+	uint32_t task_cnt;
+	uint16_t i;
+	uint32_t j;
+	int rc = 0;
+
+	svdev = to_scsi_dev(vdev);
+	if (svdev == NULL) {
+		SPDK_ERRLOG("Trying to start non-scsi controller as a scsi one.\n");
+		rc = -1;
+		goto out;
+	}
+
+
+	/* FIXIT: Initialize vq multiple times */
+
+	//vq = &svdev->vdev.virtqueue[i];
+	//if (vq->vring.vring.desc == NULL) {
+	//	continue;
+	//}
+
+	task_cnt = vq->vring.vring.num;
+	if (task_cnt > SPDK_VHOST_MAX_VQ_SIZE) {
+		/* sanity check */
+		SPDK_ERRLOG("Controller %s: virtuque %"PRIu16" is too big. (size = %"PRIu32", max = %"PRIu32")\n",
+			    svdev->vdev.name, i, task_cnt, SPDK_VHOST_MAX_VQ_SIZE);
+		free_task_pool(svdev);
+		return -1;
+	}
+	vq->tasks = spdk_dma_zmalloc(sizeof(struct spdk_vhost_scsi_task) * task_cnt,
+				     SPDK_CACHE_LINE_SIZE, NULL);
+	if (vq->tasks == NULL) {
+		SPDK_ERRLOG("Controller %s: failed to allocate %"PRIu32" tasks for virtqueue %"PRIu16"\n",
+			    svdev->vdev.name, task_cnt, i);
+		free_task_pool(svdev);
+		return -1;
+	}
+
+	for (j = 0; j < task_cnt; j++) {
+		task = &((struct spdk_vhost_scsi_task *)vq->tasks)[j];
+		task->svdev = svdev;
+		task->vq = vq;
+		task->req_idx = j;
+	}
+
+	//register poller per queue
+	struct spdk_poller *requestq_poller = spdk_poller_register(queue_worker, event_ctx, 0);
+
+out:
+	spdk_vhost_dev_backend_event_done(event_ctx, rc);
+	return 0;
+}
+
+static int
+spdk_vhost_scsi_stop_queue(struct spdk_vhost_dev *vdev, void *event_ctx)
+{
+	printf("[SCSI] stop_queue\n");
+	//svdev->requestq_poller = spdk_poller_register(vdev_worker, svdev, 0);
+	spdk_vhost_dev_backend_event_done(event_ctx, 0);
+	return 0;
+}
+
 /*
  * A new device is added to a data core. First the device is added to the main linked list
  * and then allocated to a specific data core.
@@ -1060,6 +1157,8 @@ spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 	uint32_t i;
 	int rc;
 
+	printf("[B] spdk_vhost_scsi_start\n");
+
 	svdev = to_scsi_dev(vdev);
 	if (svdev == NULL) {
 		SPDK_ERRLOG("Trying to start non-scsi controller as a scsi one.\n");
@@ -1069,13 +1168,14 @@ spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 
 	/* validate all I/O queues are in a contiguous index range */
 	for (i = VIRTIO_SCSI_REQUESTQ; i < vdev->max_queues; i++) {
-		if (vdev->virtqueue[i].vring.desc == NULL) {
+		if (vdev->virtqueue[i].vring.vring.desc == NULL) {
 			SPDK_ERRLOG("%s: queue %"PRIu32" is empty\n", vdev->name, i);
 			rc = -1;
 			goto out;
 		}
 	}
 
+#if 0
 	rc = alloc_task_pool(svdev);
 	if (rc != 0) {
 		SPDK_ERRLOG("%s: failed to alloc task pool.\n", vdev->name);
@@ -1090,13 +1190,16 @@ spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 	}
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Started poller for vhost controller %s on lcore %d\n",
 		     vdev->name, vdev->lcore);
+#endif
 
+#if 0
 	svdev->requestq_poller = spdk_poller_register(vdev_worker, svdev, 0);
-	if (vdev->virtqueue[VIRTIO_SCSI_CONTROLQ].vring.desc &&
-	    vdev->virtqueue[VIRTIO_SCSI_EVENTQ].vring.desc) {
+	if (vdev->virtqueue[VIRTIO_SCSI_CONTROLQ].vring.vring.desc &&
+	    vdev->virtqueue[VIRTIO_SCSI_EVENTQ].vring.vring.desc) {
 		svdev->mgmt_poller = spdk_poller_register(vdev_mgmt_worker, svdev,
 				     MGMT_POLL_PERIOD_US);
 	}
+#endif
 out:
 	spdk_vhost_dev_backend_event_done(event_ctx, rc);
 	return rc;

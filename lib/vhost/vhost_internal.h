@@ -36,7 +36,8 @@
 
 #include "spdk/stdinc.h"
 
-#include <rte_vhost.h>
+#include <rte_config.h>
+#include <rte_vhost2.h>
 
 #include "spdk_internal/log.h"
 #include "spdk/event.h"
@@ -94,7 +95,7 @@
 	(1ULL << VIRTIO_F_NOTIFY_ON_EMPTY))
 
 struct spdk_vhost_virtqueue {
-	struct rte_vhost_vring vring;
+	struct rte_vhost2_vq vring;
 	void *tasks;
 
 	/* Request count from last stats check */
@@ -124,6 +125,9 @@ struct spdk_vhost_dev_backend {
 	spdk_vhost_event_fn start_device;
 	spdk_vhost_event_fn stop_device;
 
+	spdk_vhost_event_fn start_queue;
+	spdk_vhost_event_fn stop_queue;
+
 	int (*vhost_get_config)(struct spdk_vhost_dev *vdev, uint8_t *config, uint32_t len);
 	int (*vhost_set_config)(struct spdk_vhost_dev *vdev, uint8_t *config,
 				uint32_t offset, uint32_t size, uint32_t flags);
@@ -134,7 +138,8 @@ struct spdk_vhost_dev_backend {
 };
 
 struct spdk_vhost_dev {
-	struct rte_vhost_memory *mem;
+	struct rte_vhost2_dev *dev;
+	//struct rte_vhost2_memory *mem;
 	char *name;
 	char *path;
 

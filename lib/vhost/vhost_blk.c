@@ -295,9 +295,9 @@ process_vq(struct spdk_vhost_blk_dev *bvdev, struct spdk_vhost_virtqueue *vq)
 		SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "====== Starting processing request idx %"PRIu16"======\n",
 			      reqs[i]);
 
-		if (spdk_unlikely(reqs[i] >= vq->vring.size)) {
+		if (spdk_unlikely(reqs[i] >= vq->vring.vring.num)) {
 			SPDK_ERRLOG("%s: request idx '%"PRIu16"' exceeds virtqueue size (%"PRIu16").\n",
-				    bvdev->vdev.name, reqs[i], vq->vring.size);
+				    bvdev->vdev.name, reqs[i], vq->vring.vring.num);
 			spdk_vhost_vq_used_ring_enqueue(&bvdev->vdev, vq, reqs[i], 0);
 			continue;
 		}
@@ -455,11 +455,11 @@ alloc_task_pool(struct spdk_vhost_blk_dev *bvdev)
 
 	for (i = 0; i < bvdev->vdev.max_queues; i++) {
 		vq = &bvdev->vdev.virtqueue[i];
-		if (vq->vring.desc == NULL) {
+		if (vq->vring.vring.desc == NULL) {
 			continue;
 		}
 
-		task_cnt = vq->vring.size;
+		task_cnt = vq->vring.vring.num;
 		if (task_cnt > SPDK_VHOST_MAX_VQ_SIZE) {
 			/* sanity check */
 			SPDK_ERRLOG("Controller %s: virtuque %"PRIu16" is too big. (size = %"PRIu32", max = %"PRIu32")\n",
@@ -507,7 +507,7 @@ spdk_vhost_blk_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 
 	/* validate all I/O queues are in a contiguous index range */
 	for (i = 0; i < vdev->max_queues; i++) {
-		if (vdev->virtqueue[i].vring.desc == NULL) {
+		if (vdev->virtqueue[i].vring.vring.desc == NULL) {
 			SPDK_ERRLOG("%s: queue %"PRIu32" is empty\n", vdev->name, i);
 			rc = -1;
 			goto out;
@@ -804,6 +804,7 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 		goto out;
 	}
 
+#if 0
 	if (readonly && rte_vhost_driver_enable_features(bvdev->vdev.path, (1ULL << VIRTIO_BLK_F_RO))) {
 		SPDK_ERRLOG("Controller %s: failed to set as a readonly\n", name);
 		spdk_bdev_close(bvdev->bdev_desc);
@@ -815,6 +816,7 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 		ret = -1;
 		goto out;
 	}
+#endif
 
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Controller %s: using bdev '%s'\n", name, dev_name);
 out:

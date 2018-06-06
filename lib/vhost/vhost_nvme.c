@@ -32,6 +32,8 @@
  */
 
 #include "spdk/stdinc.h"
+//TODO: move to stdinc.h
+#include <sys/eventfd.h>
 
 #include "spdk/nvme.h"
 #include "spdk/env.h"
