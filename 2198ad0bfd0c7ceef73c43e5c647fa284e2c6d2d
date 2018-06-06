@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "034b1bef_4604a579",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-06-06T02:55:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b840b59b_d0a4188f",
+      "range": {
+        "startLine": 171,
+        "startChar": 28,
+        "endLine": 171,
+        "endChar": 37
+      },
+      "revId": "2198ad0bfd0c7ceef73c43e5c647fa284e2c6d2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f82e9ad5_b0cbfce9",
         "filename": "include/spdk/scsi.h",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2018-06-06T01:14:05Z",
       "side": 1,
       "message": "associated",
+      "range": {
+        "startLine": 175,
+        "startChar": 32,
+        "endLine": 175,
+        "endChar": 41
+      },
+      "revId": "2198ad0bfd0c7ceef73c43e5c647fa284e2c6d2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea773d7e_dcbb3fcc",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-06-06T02:55:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f82e9ad5_b0cbfce9",
       "range": {
         "startLine": 175,
         "startChar": 32,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "8d6bd396_14d10895",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-06-06T02:55:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2c93b6c8_16872d9c",
+      "range": {
+        "startLine": 180,
+        "startChar": 16,
+        "endLine": 180,
+        "endChar": 25
+      },
+      "revId": "2198ad0bfd0c7ceef73c43e5c647fa284e2c6d2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "72355ea1_d6f65989",
         "filename": "include/spdk/scsi.h",
         "patchSetId": 3
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "64e6fa22_722d672a",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-06-06T02:55:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "72355ea1_d6f65989",
+      "range": {
+        "startLine": 184,
+        "startChar": 20,
+        "endLine": 184,
+        "endChar": 29
+      },
+      "revId": "2198ad0bfd0c7ceef73c43e5c647fa284e2c6d2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a304b7ac_366e1ac9",
         "filename": "include/spdk/scsi.h",
         "patchSetId": 3
@@ -105,6 +201,24 @@
       "writtenOn": "2018-06-06T01:14:05Z",
       "side": 1,
       "message": "I think this can be changed to private. Will you wait for the result of review of my patch?",
+      "revId": "2198ad0bfd0c7ceef73c43e5c647fa284e2c6d2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d8d5ed6_4632ec5c",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 394,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-06-06T02:55:45Z",
+      "side": 1,
+      "message": "Do you means remove these declaration to a private header file?",
+      "parentUuid": "a304b7ac_366e1ac9",
       "revId": "2198ad0bfd0c7ceef73c43e5c647fa284e2c6d2d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -145,6 +259,24 @@
     },
     {
       "key": {
+        "uuid": "b95c9e2f_9733b718",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 420,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-06-06T02:55:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fd8e4804_f155f7cd",
+      "revId": "2198ad0bfd0c7ceef73c43e5c647fa284e2c6d2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7a62101f_741a6211",
         "filename": "include/spdk/scsi.h",
         "patchSetId": 3
@@ -159,6 +291,24 @@
       "revId": "2198ad0bfd0c7ceef73c43e5c647fa284e2c6d2d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b8534497_8ed7a84c",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-06-06T02:55:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7a62101f_741a6211",
+      "revId": "2198ad0bfd0c7ceef73c43e5c647fa284e2c6d2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
