@@ -1062,6 +1062,17 @@ bdev_nvme_library_init(void)
 			rc = -1;
 			goto end;
 		}
+
+		for (i = 0; i < probe_ctx->count; i++) {
+			if (probe_ctx->trids[i].trtype != SPDK_NVME_TRANSPORT_PCIE) {
+				continue;
+			}
+
+			if (!nvme_ctrlr_get(&probe_ctx->trids[i])) {
+				SPDK_ERRLOG("NVMe SSD \"%s\" could not be found.\n", probe_ctx->trids[i].traddr);
+				SPDK_ERRLOG("Check PCIe BDF and that it is attached for UIO/VFIO driver.\n");
+			}
+		}
 	}
 
 	if (g_nvme_hotplug_enabled) {
