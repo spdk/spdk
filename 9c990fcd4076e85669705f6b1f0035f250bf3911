@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e6e93178_ef1184a1",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-06T14:55:13Z",
+      "side": 1,
+      "message": "Don\u0027t think this can be public API. To reliably use this, user should hold lvol-\u003emutex. But from other hand maybe I don\u0027t know something?",
+      "range": {
+        "startLine": 212,
+        "startChar": 0,
+        "endLine": 212,
+        "endChar": 49
+      },
+      "revId": "9c990fcd4076e85669705f6b1f0035f250bf3911",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
