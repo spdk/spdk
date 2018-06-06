@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2f5c6493_427ac59e",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2030,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-06-06T02:00:10Z",
+      "side": 1,
+      "message": "This is not related with this patch, but SPDK should check Controller Fatal Status for timeout commands, and then reset the controller to recovery.",
+      "revId": "1bfd6c09d0bed2da939f220da492aa3e40cc89d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
