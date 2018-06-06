@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "fc3f480b_db693de8",
+        "filename": "doc/bdev.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-06-06T11:34:51Z",
+      "side": 1,
+      "message": "that call is",
+      "range": {
+        "startLine": 75,
+        "startChar": 6,
+        "endLine": 75,
+        "endChar": 21
+      },
+      "revId": "4abc9bd36469ec84374371ae4e7c18f4d2d0976d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7d93f1c1_9c3d4567",
         "filename": "doc/bdev.md",
         "patchSetId": 1
