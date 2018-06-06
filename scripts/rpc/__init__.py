@@ -3,6 +3,7 @@ import sys
 
 from . import app
 from . import bdev
+from . import ioat
 from . import iscsi
 from . import log
 from . import lvol

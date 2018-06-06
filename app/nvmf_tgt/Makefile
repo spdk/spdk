@@ -41,7 +41,7 @@ APP = nvmf_tgt
 C_SRCS := nvmf_main.c
 
 SPDK_LIB_LIST = event_bdev event_copy event_nvmf
-SPDK_LIB_LIST += nvmf event log trace conf util bdev copy rpc jsonrpc json
+SPDK_LIB_LIST += nvmf event log trace conf util bdev copy copy_ioat rpc jsonrpc json
 SPDK_LIB_LIST += app_rpc log_rpc bdev_rpc
 
 ifeq ($(OS),Linux)
@@ -56,7 +56,7 @@ all : $(APP)
 	@:
 
 $(APP) : $(OBJS) $(SPDK_LIB_FILES) $(SPDK_WHOLE_LIBS) $(BLOCKDEV_MODULES_FILES) $(LINKER_MODULES) $(ENV_LIBS)
-	$(LINK_C)
+	$(LINK_C) $(COPY_MODULE_FILES)
 
 clean :
 	$(CLEAN_C) $(APP)

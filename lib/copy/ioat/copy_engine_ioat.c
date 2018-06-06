@@ -31,6 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "copy_engine_ioat.h"
+
 #include "spdk/stdinc.h"
 
 #include "spdk_internal/copy_engine.h"
@@ -41,8 +43,6 @@
 #include "spdk/event.h"
 #include "spdk/io_channel.h"
 #include "spdk/ioat.h"
-
-#define IOAT_MAX_CHANNELS		64
 
 static bool g_ioat_enable = false;
 
@@ -278,43 +278,99 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_ioat_chan *
 	TAILQ_INSERT_TAIL(&g_devices, dev, tailq);
 }
 
+void
+copy_engine_ioat_enable_probe(void)
+{
+	g_ioat_enable = true;
+}
+
+static int
+copy_engine_ioat_add_whitelist_device(const char *pci_bdf)
+{
+	if (pci_bdf == NULL) {
+		return -1;
+	}
+
+	if (g_probe_ctx.num_whitelist_devices >= IOAT_MAX_CHANNELS) {
+		SPDK_ERRLOG("Ioat whitelist is full (max size is %d)\n",
+			    IOAT_MAX_CHANNELS);
+		return -1;
+	}
+
+	if (spdk_pci_addr_parse(&g_probe_ctx.whitelist[g_probe_ctx.num_whitelist_devices],
+				pci_bdf) < 0) {
+		SPDK_ERRLOG("Invalid address %s\n", pci_bdf);
+		return -1;
+	}
+
+	g_probe_ctx.num_whitelist_devices++;
+
+	return 0;
+}
+
+int
+copy_engine_ioat_add_whitelist_devices(const char *pci_bdfs[], size_t num_pci_bdfs)
+{
+	size_t i;
+
+	for (i = 0; i < num_pci_bdfs; i++) {
+		if (copy_engine_ioat_add_whitelist_device(pci_bdfs[i]) < 0) {
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+static int
+copy_engine_ioat_read_config_file_params(struct spdk_conf_section *sp)
+{
+	int i;
+	char *val, *pci_bdf;
+
+	if (spdk_conf_section_get_boolval(sp, "Enable", false)) {
+		g_ioat_enable = true;
+		/* Enable Ioat */
+	}
+
+	val = spdk_conf_section_get_val(sp, "Disable");
+	if (val != NULL) {
+		SPDK_WARNLOG("\"Disable\" option is deprecated and will be removed in a future release.\n");
+		SPDK_WARNLOG("IOAT is now disabled by default. It may be enabled by \"Enable Yes\"\n");
+
+		if (g_ioat_enable && (strcasecmp(val, "Yes") == 0)) {
+			SPDK_ERRLOG("\"Enable Yes\" and \"Disable Yes\" cannot be set at the same time\n");
+			return -1;
+		}
+	}
+
+	/* Init the whitelist */
+	for (i = 0; ; i++) {
+		pci_bdf = spdk_conf_section_get_nmval(sp, "Whitelist", i, 0);
+		if (!pci_bdf) {
+			break;
+		}
+
+		if (copy_engine_ioat_add_whitelist_device(pci_bdf) < 0) {
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
 static int
 copy_engine_ioat_init(void)
 {
-	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Ioat");
-	const char *val, *pci_bdf;
-	int i;
+	struct spdk_conf_section *sp;
+	int rc;
 
+	sp = spdk_conf_find_section(NULL, "Ioat");
 	if (sp != NULL) {
-		if (spdk_conf_section_get_boolval(sp, "Enable", false)) {
-			g_ioat_enable = true;
-			/* Enable Ioat */
-		}
-
-		val = spdk_conf_section_get_val(sp, "Disable");
-		if (val != NULL) {
-			SPDK_WARNLOG("\"Disable\" option is deprecated and will be removed in a future release.\n");
-			SPDK_WARNLOG("IOAT is now disabled by default. It may be enabled by \"Enable Yes\"\n");
-
-			if (g_ioat_enable && (strcasecmp(val, "Yes") == 0)) {
-				SPDK_ERRLOG("\"Enable Yes\" and \"Disable Yes\" cannot be set at the same time\n");
-				return -1;
-			}
-		}
-
-		/* Init the whitelist */
-		for (i = 0; i < IOAT_MAX_CHANNELS; i++) {
-			pci_bdf = spdk_conf_section_get_nmval(sp, "Whitelist", i, 0);
-			if (!pci_bdf) {
-				break;
-			}
-
-			if (spdk_pci_addr_parse(&g_probe_ctx.whitelist[g_probe_ctx.num_whitelist_devices],
-						pci_bdf) < 0) {
-				SPDK_ERRLOG("Invalid Ioat Whitelist address %s\n", pci_bdf);
-				return -1;
-			}
-			g_probe_ctx.num_whitelist_devices++;
+		rc = copy_engine_ioat_read_config_file_params(sp);
+		if (rc != 0) {
+			SPDK_ERRLOG("copy_engine_ioat_read_config_file_params() failed\n");
+			return rc;
 		}
 	}
 
