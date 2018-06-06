@@ -135,6 +135,24 @@
       "revId": "d8d2cb7dfb8551696d11e2d8c6a8a3e3d4522e82",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "734fa17a_6342c0d3",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-06-06T14:07:35Z",
+      "side": 1,
+      "message": "I have added the ctrlr_lock codes as below:\n                nvme_robust_mutex_lock(\u0026ctrlr-\u003ectrlr_lock);\n                csts \u003d spdk_nvme_ctrlr_get_regs_csts(ctrlr);\n                if (csts.raw \u003d\u003d 0xffffffffU) {\n                        nvme_ctrlr_fail(ctrlr, true);\n                        if (remove_cb) {\n                                nvme_robust_mutex_unlock(\u0026g_spdk_nvme_driver-\u003elock);\n                                remove_cb(cb_ctx, ctrlr);\n                                nvme_robust_mutex_lock(\u0026g_spdk_nvme_driver-\u003elock);\n                        }\n                }\n                nvme_robust_mutex_unlock(\u0026ctrlr-\u003ectrlr_lock);\n\nBut the iscsi_tgt still crash. Maybe I added at wrong place?",
+      "parentUuid": "fb4100b4_b3b23eb3",
+      "revId": "d8d2cb7dfb8551696d11e2d8c6a8a3e3d4522e82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
