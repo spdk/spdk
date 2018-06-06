@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "8a115b77_45c0c2f2",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 1817,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-06T22:00:34Z",
+      "side": 1,
+      "message": "Jim has convinced me that the memory model of x86 saves us here.",
+      "parentUuid": "097d8a7f_0172299b",
+      "revId": "c1eff6f23a2e02843c64eb2519446e62aaa58eff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "89167105_4ff9f53e",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 36
