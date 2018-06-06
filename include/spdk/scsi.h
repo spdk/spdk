@@ -206,7 +206,6 @@ void spdk_scsi_task_construct(struct spdk_scsi_task *task,
 			      spdk_scsi_task_free free_fn);
 void spdk_scsi_task_put(struct spdk_scsi_task *task);
 
-void spdk_scsi_task_free_data(struct spdk_scsi_task *task);
 /**
  * Set internal buffer to given one. Caller is owner of that buffer.
  *
@@ -215,20 +214,6 @@ void spdk_scsi_task_free_data(struct spdk_scsi_task *task);
  * \param len Buffer length
  */
 void spdk_scsi_task_set_data(struct spdk_scsi_task *task, void *data, uint32_t len);
-
-/**
- * Allocate internal buffer of requested size. Caller is not owner of
- * returned buffer and must not free it. Caller is permitted to call
- * spdk_scsi_task_free_data() to free internal buffer if it is not required
- * anymore, but must assert that task is done and not used by library.
- *
- * Allocated buffer is stored in iov field of task object.
- *
- * \param task Task struct
- * \param alloc_len Size of allocated buffer.
- * \return Pointer to buffer or NULL on error.
- */
-void *spdk_scsi_task_alloc_data(struct spdk_scsi_task *task, uint32_t alloc_len);
 
 int spdk_scsi_task_scatter_data(struct spdk_scsi_task *task, const void *src, size_t len);
 void *spdk_scsi_task_gather_data(struct spdk_scsi_task *task, int *len);
