@@ -1,0 +1,174 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fe9fb846_e26a4082",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 1570,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-06T20:23:31Z",
+      "side": 1,
+      "message": "this explanation \"True for submission error path\" is not very clear.  This would be better:\n\n\"True if matching requests should not be submitted to the controller, but instead completed manually after timeout_in_us has expired.  False if matching requests should be submitted to the controller and have their completion status modified after the controller completes the request.\"",
+      "revId": "c092e7fa1ae5f8298450c774bc6677849a9bc9d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0fe61761_006712e5",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 1571,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-06T20:23:31Z",
+      "side": 1,
+      "message": "this says microseconds (which I like) but the code is doing milliseconds\n\nlet\u0027s also rename to timeout_in_us",
+      "revId": "c092e7fa1ae5f8298450c774bc6677849a9bc9d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cdbb13dd_a69de3ce",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 1572,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-06T20:23:31Z",
+      "side": 1,
+      "message": "\"Number of matching requests to inject errors.\"",
+      "revId": "c092e7fa1ae5f8298450c774bc6677849a9bc9d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f1636456_56ad5a6b",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 1584,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-06T20:23:31Z",
+      "side": 1,
+      "message": "The function can be called multiple times to inject errors for different commands.  If the opcode matches an existing entry, the existing entry will be updated with the values specified.",
+      "revId": "c092e7fa1ae5f8298450c774bc6677849a9bc9d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "61904139_206f52fd",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 367,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-06T20:23:31Z",
+      "side": 1,
+      "message": "I think a loop here would be more intuitive.  It is a bit confusing that we only look at the first request, and then we always remove it and then put it back at the end of the STAILQ if it has not expired.",
+      "revId": "c092e7fa1ae5f8298450c774bc6677849a9bc9d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd9015e7_62ba19f0",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 371,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-06T20:23:31Z",
+      "side": 1,
+      "message": "You could just call spdk_get_ticks() in the if statement, and get rid of the extra time_tsc variable.",
+      "revId": "c092e7fa1ae5f8298450c774bc6677849a9bc9d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f6961511_2e804a14",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 375,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-06T20:23:31Z",
+      "side": 1,
+      "message": "I would just ignore completions due to error injection for purposes of counting.  So don\u0027t increment ret here.",
+      "revId": "c092e7fa1ae5f8298450c774bc6677849a9bc9d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aa913001_327fca52",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 500,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-06T20:23:31Z",
+      "side": 1,
+      "message": "\"last_poll_tsc\" is unclear here - isn\u0027t this just when the request was submitted?  What does \"last_poll_tsc\" mean?",
+      "revId": "c092e7fa1ae5f8298450c774bc6677849a9bc9d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f48cc5df_2b3e4c91",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 574,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-06T20:23:31Z",
+      "side": 1,
+      "message": "I think timeout should be specified in microseconds, not milliseconds.  It allows for some more specific types of error injection.\n\nNaming it timeout_in_us would also make it more clear exactly what unit this is specified in.",
+      "revId": "c092e7fa1ae5f8298450c774bc6677849a9bc9d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5029d183_1f4907c3",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 585,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-06T20:23:31Z",
+      "side": 1,
+      "message": "initialize cmd to NULL above, then just break here if cmd-\u003eopc \u003d\u003d opc\n\nthen below, only spdk_dma_zmalloc if cmd \u003d\u003d NULL\n\nthen you avoid duplicating this code",
+      "revId": "c092e7fa1ae5f8298450c774bc6677849a9bc9d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
