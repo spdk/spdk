@@ -442,8 +442,6 @@ lun_append_task_null_lun_task_cdb_spc_inquiry(void)
 
 	CU_ASSERT_EQUAL(task.status, SPDK_SCSI_STATUS_GOOD);
 
-	spdk_scsi_task_free_data(&task);
-
 	/* spdk_scsi_task_process_null_lun() does not call cpl_fn */
 	CU_ASSERT_EQUAL(g_task_count, 1);
 	g_task_count = 0;
