@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a6e7d6c_9214a395",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 4477,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-06T21:07:33Z",
+      "side": 1,
+      "message": "we should set resize_in_progress back to false here",
+      "revId": "97735321d5863aad5d92557df057af2eff7513d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
