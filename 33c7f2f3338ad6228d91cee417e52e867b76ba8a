@@ -16,6 +16,24 @@
       "revId": "33c7f2f3338ad6228d91cee417e52e867b76ba8a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d28fedde_c0eba8fa",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-06T21:36:27Z",
+      "side": 1,
+      "message": "This will get automatically converted to a link by the GitHub Markdown generator when it\u0027s posted as the release notes.\n\nSince the docs for branches never get published anywhere, I think this is good enough. (We should probably note this change in the master version of CHANGELOG.md as well, and there I\u0027d agree that we should make it a real link.)",
+      "parentUuid": "ec2583ae_012a681c",
+      "revId": "33c7f2f3338ad6228d91cee417e52e867b76ba8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
