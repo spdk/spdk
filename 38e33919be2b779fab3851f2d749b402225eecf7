@@ -108,6 +108,24 @@
     },
     {
       "key": {
+        "uuid": "4898869d_7db0bd1b",
+        "filename": "include/spdk/nvme_ocssd.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-06-06T14:32:56Z",
+      "side": 1,
+      "message": "Thank you for clarifying this. It is really confused.\n\nBen: Can you try sending all 0xF\u0027s instead of 0 and see what happens?\n\nON POC HW/FW when nsid\u003d0 I see error (I will clarify with FW team), 0xFFFFFFFF is ok\n\nBen: It happens that Media Feedback, the new feature in this specification, does not need the namespace (what even is a namespace in OCSSD?), so the correct value to send here is 0.\n\nI agree with you, I will start email thread with FW team about this\n\nBen: In the mean time, you can add an spdk_nvme_ctrlr_cmd_get_feature_with_nsid to the base SPDK NVMe driver. \n\nDone",
+      "parentUuid": "edfd0160_f3ae6ce4",
+      "revId": "38e33919be2b779fab3851f2d749b402225eecf7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "22b17f10_4e595006",
         "filename": "include/spdk/nvme_ocssd.h",
         "patchSetId": 4
