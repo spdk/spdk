@@ -1,0 +1,8 @@
+Code-Review+2: Daniel Verkamp <daniel.verkamp@intel.com>
+Code-Review+2: Shuhei Matsumoto <shuhei.matsumoto.xt@hitachi.com>
+Verified+1: SPDK Automated Test System <sys_sgsw@intel.com>
+Submitted-by: Jim Harris <james.r.harris@intel.com>
+Submitted-at: Wed, 06 Jun 2018 17:10:57 +0000
+Reviewed-on: https://review.gerrithub.io/413858
+Project: spdk/spdk
+Branch: refs/heads/master
