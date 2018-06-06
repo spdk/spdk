@@ -220,6 +220,24 @@
       "revId": "fed48bcc7de740ae53b1413dec0c150354c2dac9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f2c02fae_8a3b95c6",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 919,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-06T14:37:01Z",
+      "side": 1,
+      "message": "https://review.gerrithub.io/#/c/spdk/spdk/+/413828/4/test/common/autotest_common.sh@269\n\nThis is the reason why we need this \u0027sketchy\u0027 loop.",
+      "parentUuid": "212b6427_5ec05483",
+      "revId": "fed48bcc7de740ae53b1413dec0c150354c2dac9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
