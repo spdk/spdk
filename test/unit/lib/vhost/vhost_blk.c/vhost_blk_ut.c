@@ -41,7 +41,7 @@
 #include "vhost/vhost_blk.c"
 #include "unit/lib/vhost/test_vhost.c"
 
-#include "spdk_internal/bdev.h"
+#include "spdk/bdev_module.h"
 #include "spdk/env.h"
 
 DEFINE_STUB(spdk_bdev_free_io, int, (struct spdk_bdev_io *bdev_io), 0);

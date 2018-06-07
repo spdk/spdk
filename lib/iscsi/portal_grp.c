@@ -676,6 +676,8 @@ static void
 spdk_iscsi_portal_grp_config_json(struct spdk_iscsi_portal_grp *pg,
 				  struct spdk_json_write_ctx *w)
 {
+	spdk_json_write_object_begin(w);
+
 	spdk_json_write_named_string(w, "method", "add_portal_group");
 
 	spdk_json_write_name(w, "params");

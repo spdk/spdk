@@ -60,6 +60,18 @@ extern "C" {
 #error Unknown architecture
 #endif
 
+/** Read memory barrier */
+#ifdef __PPC64__
+#define spdk_rmb()	__asm volatile("sync" ::: "memory")
+#elif defined(__aarch64__)
+#define spdk_rmb()	__asm volatile("dsb lt" ::: "memory")
+#elif defined(__i386__) || defined(__x86_64__)
+#define spdk_rmb()	__asm volatile("lfence" ::: "memory")
+#else
+#define spdk_rmb()
+#error Unknown architecture
+#endif
+
 /** Full read/write memory barrier */
 #ifdef __PPC64__
 #define spdk_mb()	__asm volatile("sync" ::: "memory")

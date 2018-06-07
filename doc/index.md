@@ -14,6 +14,7 @@
 - @ref memory
 - @ref concurrency
 - @ref ssd_internals
+- @ref vhost_processing
 - @ref porting
 
 # User Guides {#user_guides}
@@ -28,16 +29,16 @@
 # Programmer Guides {#prog_guides}
 
 - @ref blob
+- @ref bdev_pg
+- @ref bdev_module
+- @ref nvmf_tgt_pg
 
 # General Information {#general}
 
-- @ref bdev_pg
-- @ref bdev_module
 - @ref directory_structure
 - [Public API header files](files.html)
-- @ref nvmf_tgt_pg
 - @ref event
-- @ref blob
+- @ref logical_volumes
 
 # Miscellaneous {#misc}
 

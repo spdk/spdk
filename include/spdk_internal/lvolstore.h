@@ -37,7 +37,7 @@
 #include "spdk/blob.h"
 #include "spdk/lvol.h"
 #include "spdk/uuid.h"
-#include "spdk_internal/bdev.h"
+#include "spdk/bdev_module.h"
 
 /* Default size of blobstore cluster */
 #define SPDK_LVS_OPTS_CLUSTER_SZ (4 * 1024 * 1024)
@@ -54,6 +54,7 @@ struct spdk_lvol_req {
 	void                    *cb_arg;
 	struct spdk_lvol	*lvol;
 	size_t			sz;
+	struct spdk_io_channel	*channel;
 	char			name[SPDK_LVOL_NAME_MAX];
 };
 

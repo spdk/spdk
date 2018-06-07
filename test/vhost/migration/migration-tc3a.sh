@@ -1,16 +1,28 @@
 source $SPDK_BUILD_DIR/test/nvmf/common.sh
-source $BASE_DIR/autotest.config
+source $MIGRATION_DIR/autotest.config
 
-MGMT_TARGET_IP="10.102.17.181"
-MGMT_INITIATOR_IP="10.102.17.180"
-RDMA_TARGET_IP="10.0.0.1"
-RDMA_INITIATOR_IP="10.0.0.2"
 incoming_vm=1
 target_vm=2
 incoming_vm_ctrlr=naa.VhostScsi0.$incoming_vm
 target_vm_ctrlr=naa.VhostScsi0.$target_vm
 share_dir=$TEST_DIR/share
-job_file=$BASE_DIR/migration-tc3.job
+job_file=$MIGRATION_DIR/migration-tc3.job
+
+if [ -z "$MGMT_TARGET_IP" ]; then
+	error "No IP address of target is given"
+fi
+
+if [ -z "$MGMT_INITIATOR_IP" ]; then
+	error "No IP address of initiator  is given"
+fi
+
+if [ -z "$RDMA_TARGET_IP" ]; then
+	error "No IP address of targets RDMA capable NIC is given"
+fi
+
+if [ -z "$RDMA_INITIATOR_IP" ]; then
+	error "No IP address of initiators RDMA capable NIC is given"
+fi
 
 function ssh_remote()
 {
@@ -106,7 +118,7 @@ function host1_start_vhost()
 
 	notice "Starting vhost0 instance on local server"
 	trap 'host1_cleanup_vhost; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR EXIT
-	spdk_vhost_run --conf-path=$BASE_DIR --vhost-num=0
+	spdk_vhost_run --vhost-num=0 --no-pci
 	$rpc_0 construct_nvme_bdev -b Nvme0 -t rdma -f ipv4 -a $RDMA_TARGET_IP -s 4420 -n "nqn.2018-02.io.spdk:cnode1"
 	$rpc_0 construct_vhost_scsi_controller $incoming_vm_ctrlr
 	$rpc_0 add_vhost_scsi_lun $incoming_vm_ctrlr 0 Nvme0n1
@@ -149,8 +161,12 @@ function host_2_create_share()
 	ssh_remote $MGMT_INITIATOR_IP "uname -a"
 	ssh_remote $MGMT_INITIATOR_IP "mkdir -p $share_dir"
 	ssh_remote $MGMT_INITIATOR_IP "mkdir -p $VM_BASE_DIR"
-	ssh_remote $MGMT_INITIATOR_IP "sshfs -o ssh_command=\"ssh -i $SPDK_VHOST_SSH_KEY_FILE\" root@$MGMT_TARGET_IP:$VM_BASE_DIR $VM_BASE_DIR"
-	ssh_remote $MGMT_INITIATOR_IP "sshfs -o ssh_command=\"ssh -i $SPDK_VHOST_SSH_KEY_FILE\" root@$MGMT_TARGET_IP:$share_dir $share_dir"
+	ssh_remote $MGMT_INITIATOR_IP "sshfs -o\
+	 ssh_command=\"ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ControlMaster=auto\
+	 -i $SPDK_VHOST_SSH_KEY_FILE\" root@$MGMT_TARGET_IP:$VM_BASE_DIR $VM_BASE_DIR"
+	ssh_remote $MGMT_INITIATOR_IP "sshfs -o\
+	 ssh_command=\"ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ControlMaster=auto\
+	 -i $SPDK_VHOST_SSH_KEY_FILE\" root@$MGMT_TARGET_IP:$share_dir $share_dir"
 	ssh_remote $MGMT_INITIATOR_IP "mkdir -p $share_dir/spdk"
 	ssh_remote $MGMT_INITIATOR_IP "tar -zxf $share_dir/spdk.tar.gz -C $share_dir/spdk --strip-components=1"
 	ssh_remote $MGMT_INITIATOR_IP "cd $share_dir/spdk; make clean; ./configure --with-rdma --enable-debug; make -j40"
@@ -158,7 +174,9 @@ function host_2_create_share()
 
 function host_2_start_vhost()
 {
-	ssh_remote $MGMT_INITIATOR_IP "nohup $share_dir/spdk/test/vhost/migration/migration.sh --test-cases=3b --work-dir=$TEST_DIR --os=$share_dir/migration.qcow2 &>$share_dir/output.log &"
+	ssh_remote $MGMT_INITIATOR_IP "nohup $share_dir/spdk/test/vhost/migration/migration.sh\
+	 --test-cases=3b --work-dir=$TEST_DIR --os=$share_dir/migration.qcow2\
+	 --rdma-tgt-ip=$RDMA_TARGET_IP &>$share_dir/output.log &"
 	notice "Waiting for remote to be done with vhost & VM setup..."
 	wait_for_remote
 }

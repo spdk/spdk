@@ -54,17 +54,6 @@ char *g_xattr_names[] = {"first", "second", "third"};
 char *g_xattr_values[] = {"one", "two", "three"};
 uint64_t g_ctx = 1729;
 
-bool g_scheduler_delay = false;
-
-struct scheduled_ops {
-	spdk_thread_fn	fn;
-	void		*ctx;
-
-	TAILQ_ENTRY(scheduled_ops)	ops_queue;
-};
-
-static TAILQ_HEAD(, scheduled_ops) g_scheduled_ops = TAILQ_HEAD_INITIALIZER(g_scheduled_ops);
-
 struct spdk_bs_super_block_ver1 {
 	uint8_t		signature[8];
 	uint32_t        version;
@@ -121,35 +110,6 @@ _get_xattr_value_null(void *arg, const char *name,
 }
 
 
-static void
-_bs_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
-{
-	if (g_scheduler_delay) {
-		struct scheduled_ops *ops = calloc(1, sizeof(*ops));
-
-		SPDK_CU_ASSERT_FATAL(ops != NULL);
-		ops->fn = fn;
-		ops->ctx = ctx;
-		TAILQ_INSERT_TAIL(&g_scheduled_ops, ops, ops_queue);
-	} else {
-		fn(ctx);
-	}
-}
-
-#if 0
-static void
-_bs_flush_scheduler(void)
-{
-	struct scheduled_ops *ops;
-
-	while (!TAILQ_EMPTY(&g_scheduled_ops)) {
-		ops = TAILQ_FIRST(&g_scheduled_ops);
-		TAILQ_REMOVE(&g_scheduled_ops, ops, ops_queue);
-		ops->fn(ops->ctx);
-		free(ops);
-	}
-}
-#endif
 
 static void
 bs_op_complete(void *cb_arg, int bserrno)
@@ -669,6 +629,107 @@ blob_snapshot(void)
 
 	spdk_blob_close(snapshot2, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+}
+
+static void
+blob_snapshot_freeze_io(void)
+{
+	struct spdk_io_channel *channel;
+	struct spdk_bs_channel *bs_channel;
+	struct spdk_blob_store *bs;
+	struct spdk_bs_dev *dev;
+	struct spdk_blob *blob;
+	struct spdk_blob_opts opts;
+	spdk_blob_id blobid;
+	uint32_t num_of_pages = 10;
+	uint8_t payload_read[num_of_pages * SPDK_BS_PAGE_SIZE];
+	uint8_t payload_write[num_of_pages * SPDK_BS_PAGE_SIZE];
+	uint8_t payload_zero[num_of_pages * SPDK_BS_PAGE_SIZE];
+
+	memset(payload_write, 0xE5, sizeof(payload_write));
+	memset(payload_read, 0x00, sizeof(payload_read));
+	memset(payload_zero, 0x00, sizeof(payload_zero));
+
+	dev = init_dev();
+	memset(g_dev_buffer, 0, DEV_BUFFER_SIZE);
+
+	/* Test freeze I/O during snapshot */
+
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	channel = spdk_bs_alloc_io_channel(bs);
+	bs_channel = spdk_io_channel_get_ctx(channel);
+
+	/* Create blob with 10 clusters */
+	spdk_blob_opts_init(&opts);
+	opts.num_clusters = 10;
+	opts.thin_provision = false;
+
+	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10);
+
+	/* Enable explicitly calling callbacks. On each read/write to back device
+	 * execution will stop and wait until _bs_flush_scheduler is called */
+	g_scheduler_delay = true;
+
+	spdk_bs_create_snapshot(bs, blobid, NULL, blob_op_with_id_complete, NULL);
+
+	/* This is implementation specific.
+	 * Flag 'frozen_io' is set in _spdk_bs_snapshot_freeze_cpl callback.
+	 * Four async I/O operations happen before that. */
+
+	_bs_flush_scheduler(4);
+
+	CU_ASSERT(TAILQ_EMPTY(&bs_channel->queued_io));
+
+	/* Blob I/O should be frozen here */
+	CU_ASSERT(blob->frozen_refcnt == 1);
+
+	/* Write to the blob */
+	spdk_blob_io_write(blob, channel, payload_write, 0, num_of_pages, blob_op_complete, NULL);
+
+	/* Verify that I/O is queued */
+	CU_ASSERT(!TAILQ_EMPTY(&bs_channel->queued_io));
+	/* Verify that payload is not written to disk */
+	CU_ASSERT(memcmp(payload_zero, &g_dev_buffer[blob->active.clusters[0]*SPDK_BS_PAGE_SIZE],
+			 SPDK_BS_PAGE_SIZE) == 0);
+
+	/* Disable scheduler delay.
+	 * Finish all operations including spdk_bs_create_snapshot */
+	g_scheduler_delay = false;
+	_bs_flush_scheduler(1);
+
+	/* Verify snapshot */
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+
+	/* Verify that blob has unset frozen_io */
+	CU_ASSERT(blob->frozen_refcnt == 0);
+
+	/* Verify that postponed I/O completed successfully by comparing payload */
+	spdk_blob_io_read(blob, channel, payload_read, 0, num_of_pages, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(memcmp(payload_write, payload_read, num_of_pages * SPDK_BS_PAGE_SIZE) == 0);
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_free_io_channel(channel);
 
 	spdk_bs_unload(g_bs, bs_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -1903,12 +1964,16 @@ bs_load(void)
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 
 	super_block = (struct spdk_bs_super_block *)g_dev_buffer;
-	CU_ASSERT(super_block->clean == 0);
+	CU_ASSERT(super_block->clean == 1);
 
 	spdk_bs_open_blob(g_bs, blobid, blob_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blob != NULL);
 	blob = g_blob;
+
+	/* Verify that blobstore is marked dirty after first metadata sync */
+	spdk_blob_sync_md(blob, blob_op_complete, NULL);
+	CU_ASSERT(super_block->clean == 1);
 
 	/* Get the xattrs */
 	value = NULL;
@@ -4350,7 +4415,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "blob_snapshot_rw", blob_snapshot_rw) == NULL ||
 		CU_add_test(suite, "blob_snapshot_rw_iov", blob_snapshot_rw_iov) == NULL ||
 		CU_add_test(suite, "blob_inflate_rw", blob_inflate_rw) == NULL ||
-		CU_add_test(suite, "blob_relations", blob_relations) == NULL
+		CU_add_test(suite, "blob_relations", blob_relations) == NULL ||
+		CU_add_test(suite, "blob_snapshot_freeze_io", blob_snapshot_freeze_io) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

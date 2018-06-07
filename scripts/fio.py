@@ -37,7 +37,7 @@ filename=%(device)s
 
 def interrupt_handler(signum, frame):
     fio.terminate()
-    print "FIO terminated"
+    print("FIO terminated")
     sys.exit(0)
 
 
@@ -45,11 +45,11 @@ def main():
 
     global fio
     if (len(sys.argv) < 5):
-        print "usage:"
-        print "  " + sys.argv[0] + " <io_size> <queue_depth> <test_type> <runtime>"
-        print "advanced usage:"
-        print "If you want to run fio with verify, please add verify string after runtime."
-        print "Currently fio.py only support write rw randwrite randrw with verify enabled."
+        print("usage:")
+        print("  " + sys.argv[0] + " <io_size> <queue_depth> <test_type> <runtime>")
+        print("advanced usage:")
+        print("If you want to run fio with verify, please add verify string after runtime.")
+        print("Currently fio.py only support write rw randwrite randrw with verify enabled.")
         sys.exit(1)
 
     io_size = int(sys.argv[1])
@@ -62,7 +62,7 @@ def main():
         verify = False
 
     devices = get_target_devices()
-    print "Found devices: ", devices
+    print("Found devices: ", devices)
 
     configure_devices(devices)
     fio_executable = '/usr/bin/fio'
@@ -72,17 +72,17 @@ def main():
     signal.signal(signal.SIGTERM, interrupt_handler)
     signal.signal(signal.SIGINT, interrupt_handler)
     fio = Popen([fio_executable, '-'], stdin=PIPE)
-    fio.communicate(create_fio_config(io_size, queue_depth, device_paths, test_type, runtime, verify))
+    fio.communicate(create_fio_config(io_size, queue_depth, device_paths, test_type, runtime, verify).encode())
     fio.stdin.close()
     rc = fio.wait()
-    print "FIO completed with code %d\n" % rc
+    print("FIO completed with code %d\n" % rc)
     sys.stdout.flush()
     sys.exit(rc)
 
 
 def get_target_devices():
     output = check_output('iscsiadm -m session -P 3', shell=True)
-    return re.findall("Attached scsi disk (sd[a-z]+)", output)
+    return re.findall("Attached scsi disk (sd[a-z]+)", output.decode("ascii"))
 
 
 def create_fio_config(size, q_depth, devices, test, run_time, verify):
@@ -98,11 +98,19 @@ def create_fio_config(size, q_depth, devices, test, run_time, verify):
 
 
 def set_device_parameter(devices, filename_template, value):
+    valid_value = True
+
     for dev in devices:
         filename = filename_template % dev
         f = open(filename, 'r+b')
-        f.write(value)
-        f.close()
+        try:
+            f.write(value.encode())
+            f.close()
+        except OSError:
+            valid_value = False
+            continue
+
+    return valid_value
 
 
 def configure_devices(devices):
@@ -117,10 +125,11 @@ def configure_devices(devices):
         except IOError:
             qd = qd - 1
     if qd == 0:
-        print "Could not set block device queue depths."
+        print("Could not set block device queue depths.")
     else:
-        print "Requested queue_depth {} but only {} is supported.".format(str(requested_qd), str(qd))
-    set_device_parameter(devices, "/sys/block/%s/queue/scheduler", "noop")
+        print("Requested queue_depth {} but only {} is supported.".format(str(requested_qd), str(qd)))
+    if not set_device_parameter(devices, "/sys/block/%s/queue/scheduler", "noop"):
+        set_device_parameter(devices, "/sys/block/%s/queue/scheduler", "none")
 
 
 if __name__ == "__main__":

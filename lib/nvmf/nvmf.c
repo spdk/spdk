@@ -51,6 +51,7 @@ SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 #define SPDK_NVMF_DEFAULT_IN_CAPSULE_DATA_SIZE 4096
 #define SPDK_NVMF_DEFAULT_MAX_IO_SIZE 131072
 #define SPDK_NVMF_DEFAULT_MAX_SUBSYSTEMS 1024
+#define SPDK_NVMF_DEFAULT_IO_UNIT_SIZE 131072
 
 void
 spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts)
@@ -60,6 +61,7 @@ spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts)
 	opts->in_capsule_data_size = SPDK_NVMF_DEFAULT_IN_CAPSULE_DATA_SIZE;
 	opts->max_io_size = SPDK_NVMF_DEFAULT_MAX_IO_SIZE;
 	opts->max_subsystems = SPDK_NVMF_DEFAULT_MAX_SUBSYSTEMS;
+	opts->io_unit_size = SPDK_NVMF_DEFAULT_IO_UNIT_SIZE;
 }
 
 static int
@@ -165,6 +167,14 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 		tgt->opts = *opts;
 	}
 
+	if ((tgt->opts.max_io_size % tgt->opts.io_unit_size != 0) ||
+	    (tgt->opts.max_io_size / tgt->opts.io_unit_size > SPDK_NVMF_MAX_SGL_ENTRIES)) {
+		SPDK_ERRLOG("Unsupported IO size, MaxIO:%d, UnitIO:%d\n", tgt->opts.max_io_size,
+			    tgt->opts.io_unit_size);
+		free(tgt);
+		return NULL;
+	}
+
 	tgt->discovery_genctr = 0;
 	tgt->discovery_log_page = NULL;
 	tgt->discovery_log_page_size = 0;
@@ -187,6 +197,7 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Max In Capsule Data: %d bytes\n",
 		      tgt->opts.in_capsule_data_size);
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Max I/O Size: %d bytes\n", tgt->opts.max_io_size);
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "I/O Unit Size: %d bytes\n", tgt->opts.io_unit_size);
 
 	return tgt;
 }
@@ -383,13 +394,21 @@ spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 	int rc = -1;
 	struct spdk_nvmf_transport_poll_group *tgroup;
 
+	TAILQ_INIT(&qpair->outstanding);
 	qpair->group = group;
+	qpair->state = SPDK_NVMF_QPAIR_ACTIVATING;
 
 	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
 		if (tgroup->transport == qpair->transport) {
 			rc = spdk_nvmf_transport_poll_group_add(tgroup, qpair);
 			break;
 		}
+	}
+
+	if (rc == 0) {
+		qpair->state = SPDK_NVMF_QPAIR_ACTIVE;
+	} else {
+		qpair->state = SPDK_NVMF_QPAIR_INACTIVE;
 	}
 
 	return rc;
@@ -549,7 +568,6 @@ spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
 	sgroup = &group->sgroups[subsystem->id];
 	sgroup->state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
 	TAILQ_INIT(&sgroup->queued);
-	TAILQ_INIT(&sgroup->outstanding);
 
 	return 0;
 }

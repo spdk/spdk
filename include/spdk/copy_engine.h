@@ -44,7 +44,19 @@
 extern "C" {
 #endif
 
+/**
+ * Copy operation callback.
+ *
+ * \param ref 'copy_req' passed to the corresponding spdk_copy_submit() call.
+ * \param status 0 if it completed successfully, or negative errno if it failed.
+ */
 typedef void (*spdk_copy_completion_cb)(void *ref, int status);
+
+/**
+ * Copy engine finish callback.
+ *
+ * \param cb_arg Callback argument.
+ */
 typedef void (*spdk_copy_fini_cb)(void *cb_arg);
 
 struct spdk_io_channel;

@@ -331,11 +331,13 @@ spdk_rpc_create_virtio_user_blk_bdev(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_construct_virtio_user_blk_dev,
 				    SPDK_COUNTOF(rpc_construct_virtio_user_blk_dev),
 				    &req)) {
+		free_rpc_construct_virtio_blk_dev(&req);
 		rc = -EINVAL;
 		goto invalid;
 	}
 
 	bdev = bdev_virtio_user_blk_dev_create(req.name, req.path, req.vq_count, req.vq_size);
+	free_rpc_construct_virtio_blk_dev(&req);
 	if (bdev == NULL) {
 		rc = -EINVAL;
 		goto invalid;
@@ -355,7 +357,6 @@ spdk_rpc_create_virtio_user_blk_bdev(struct spdk_jsonrpc_request *request,
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 					 spdk_strerror(-rc));
-	free_rpc_construct_virtio_blk_dev(&req);
 }
 SPDK_RPC_REGISTER("construct_virtio_user_blk_bdev", spdk_rpc_create_virtio_user_blk_bdev,
 		  SPDK_RPC_RUNTIME);
@@ -380,17 +381,20 @@ spdk_rpc_create_virtio_pci_blk_bdev(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_construct_virtio_pci_blk_dev,
 				    SPDK_COUNTOF(rpc_construct_virtio_pci_blk_dev),
 				    &req)) {
+		free_rpc_construct_virtio_blk_dev(&req);
 		rc = -EINVAL;
 		goto invalid;
 	}
 
 	if (spdk_pci_addr_parse(&pci_addr, req.pci_address) != 0) {
 		SPDK_ERRLOG("Invalid PCI address '%s'\n", req.pci_address);
+		free_rpc_construct_virtio_blk_dev(&req);
 		rc = -EINVAL;
 		goto invalid;
 	}
 
 	bdev = bdev_virtio_pci_blk_dev_create(req.name, &pci_addr);
+	free_rpc_construct_virtio_blk_dev(&req);
 	if (bdev == NULL) {
 		rc = -EINVAL;
 		goto invalid;
@@ -410,7 +414,6 @@ spdk_rpc_create_virtio_pci_blk_bdev(struct spdk_jsonrpc_request *request,
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 					 spdk_strerror(-rc));
-	free_rpc_construct_virtio_blk_dev(&req);
 }
 SPDK_RPC_REGISTER("construct_virtio_pci_blk_bdev", spdk_rpc_create_virtio_pci_blk_bdev,
 		  SPDK_RPC_RUNTIME);

@@ -809,6 +809,7 @@ INPUT                  = ../include/spdk \
                          userspace.md \
                          vagrant.md \
                          vhost.md \
+                         vhost_processing.md \
                          virtio.md
 
 # This tag can be used to specify the character encoding of the source files
@@ -906,7 +907,7 @@ EXAMPLE_RECURSIVE      = NO
 # that contain images that are to be included in the documentation (see the
 # \image command).
 
-IMAGE_PATH             =
+IMAGE_PATH             = img
 
 # The INPUT_FILTER tag can be used to specify a program that doxygen should
 # invoke to filter for each input file. Doxygen will invoke the filter program

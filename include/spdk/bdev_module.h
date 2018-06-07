@@ -34,10 +34,12 @@
 
 /** \file
  * Block Device Module Interface
+ *
+ * For information on how to write a bdev module, see @ref bdev_module.
  */
 
-#ifndef SPDK_INTERNAL_BDEV_H
-#define SPDK_INTERNAL_BDEV_H
+#ifndef SPDK_BDEV_MODULE_H
+#define SPDK_BDEV_MODULE_H
 
 #include "spdk/stdinc.h"
 
@@ -46,35 +48,6 @@
 #include "spdk/scsi_spec.h"
 #include "spdk/io_channel.h"
 #include "spdk/uuid.h"
-
-/** \page block_backend_modules Block Device Backend Modules
- *
- * To implement a backend block device driver, a number of functions
- * dictated by struct spdk_bdev_fn_table must be provided.
- *
- * The module should register itself using SPDK_BDEV_MODULE_REGISTER to
- * define the parameters for the module.
- *
- * <hr>
- *
- * In the module initialization code, the config file sections can be parsed to
- * acquire custom configuration parameters. For example, if the config file has
- * a section such as below:
- * <blockquote><pre>
- * [MyBE]
- * MyParam 1234
- * </pre></blockquote>
- *
- * The value can be extracted as the example below:
- * <blockquote><pre>
- * struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "MyBe");
- * int my_param = spdk_conf_section_get_intval(sp, "MyParam");
- * </pre></blockquote>
- *
- * The backend initialization routine also need to create "disks". A virtual
- * representation of each LUN must be constructed. Mainly a struct spdk_bdev
- * must be passed to the bdev database via spdk_bdev_register().
- */
 
 /** Block device module */
 struct spdk_bdev_module {
@@ -434,14 +407,16 @@ struct spdk_bdev_io {
 	/** Callback for when buf is allocated */
 	spdk_bdev_io_get_buf_cb get_buf_cb;
 
-	/** Entry to the list need_buf of struct spdk_bdev. */
-	STAILQ_ENTRY(spdk_bdev_io) buf_link;
-
 	/** Member used for linking child I/Os together. */
 	TAILQ_ENTRY(spdk_bdev_io) link;
 
 	/** It may be used by modules to put the bdev_io into its own list. */
 	TAILQ_ENTRY(spdk_bdev_io) module_link;
+
+	struct {
+		/** Entry to the list need_buf of struct spdk_bdev. */
+		STAILQ_ENTRY(spdk_bdev_io) buf_link;
+	} internal;
 
 	/**
 	 * Per I/O context for use by the bdev module.
@@ -648,4 +623,4 @@ void spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spd
  */
 #define SPDK_BDEV_MODULE_REGISTER_FN_NAME_(line) spdk_bdev_module_register_ ## line
 
-#endif /* SPDK_INTERNAL_BDEV_H */
+#endif /* SPDK_BDEV_MODULE_H */

@@ -52,7 +52,7 @@ capture_val(const struct spdk_json_val *val, void *out)
 }
 
 static const struct spdk_json_object_decoder jsonrpc_request_decoders[] = {
-	{"jsonrpc", offsetof(struct jsonrpc_request, version), capture_val},
+	{"jsonrpc", offsetof(struct jsonrpc_request, version), capture_val, true},
 	{"method", offsetof(struct jsonrpc_request, method), capture_val},
 	{"params", offsetof(struct jsonrpc_request, params), capture_val, true},
 	{"id", offsetof(struct jsonrpc_request, id), capture_val, true},
@@ -71,8 +71,8 @@ parse_single_request(struct spdk_jsonrpc_request *request, struct spdk_json_val 
 		goto done;
 	}
 
-	if (!req.version || req.version->type != SPDK_JSON_VAL_STRING ||
-	    !spdk_json_strequal(req.version, "2.0")) {
+	if (req.version && (req.version->type != SPDK_JSON_VAL_STRING ||
+			    !spdk_json_strequal(req.version, "2.0"))) {
 		invalid = true;
 	}
 

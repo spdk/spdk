@@ -67,6 +67,7 @@ struct spdk_nvmf_tgt_opts {
 	uint32_t in_capsule_data_size;
 	uint32_t max_io_size;
 	uint32_t max_subsystems;
+	uint32_t io_unit_size;
 };
 /**
  * Initialize the default value of opts.
@@ -91,6 +92,12 @@ struct spdk_nvmf_tgt *spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts);
  */
 void spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt);
 
+/**
+ * Function to be called once the target is listening.
+ *
+ * \param ctx Context argument passed to this function.
+ * \param status 0 if it completed successfully, or negative errno if it failed.
+ */
 typedef void (*spdk_nvmf_tgt_listen_done_fn)(void *ctx, int status);
 
 /**
@@ -113,6 +120,11 @@ void spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 			  spdk_nvmf_tgt_listen_done_fn cb_fn,
 			  void *cb_arg);
 
+/**
+ * Function to be called for each newly discovered qpair.
+ *
+ * \param qpair The newly discovered qpair.
+ */
 typedef void (*new_qpair_fn)(struct spdk_nvmf_qpair *qpair);
 
 /**
@@ -194,6 +206,13 @@ struct spdk_nvmf_subsystem *spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt
  */
 void spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem);
 
+/**
+ * Function to be called once the subsystem has changed state.
+ *
+ * \param subsytem NVMe-oF subsystem that has changed state.
+ * \param cb_arg Argument passed to callback function.
+ * \param status 0 if it completed successfully, or negative errno if it failed.
+ */
 typedef void (*spdk_nvmf_subsystem_state_change_done)(struct spdk_nvmf_subsystem *subsystem,
 		void *cb_arg, int status);
 

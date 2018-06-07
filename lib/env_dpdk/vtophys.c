@@ -214,12 +214,23 @@ static uint64_t
 vtophys_get_paddr_memseg(uint64_t vaddr)
 {
 	uintptr_t paddr;
-	struct rte_mem_config *mcfg;
 	struct rte_memseg *seg;
+
+#if RTE_VERSION >= RTE_VERSION_NUM(18, 05, 0, 0)
+	seg = rte_mem_virt2memseg((void *)(uintptr_t)vaddr, NULL);
+	if (seg != NULL) {
+		paddr = seg->phys_addr;
+		if (paddr == RTE_BAD_IOVA) {
+			return SPDK_VTOPHYS_ERROR;
+		}
+		paddr += (vaddr - (uintptr_t)seg->addr);
+		return paddr;
+	}
+#else
+	struct rte_mem_config *mcfg;
 	uint32_t seg_idx;
 
 	mcfg = rte_eal_get_configuration()->mem_config;
-
 	for (seg_idx = 0; seg_idx < RTE_MAX_MEMSEG; seg_idx++) {
 		seg = &mcfg->memseg[seg_idx];
 		if (seg->addr == NULL) {
@@ -240,6 +251,7 @@ vtophys_get_paddr_memseg(uint64_t vaddr)
 			return paddr;
 		}
 	}
+#endif
 
 	return SPDK_VTOPHYS_ERROR;
 }
@@ -250,20 +262,37 @@ vtophys_get_paddr_pagemap(uint64_t vaddr)
 {
 	uintptr_t paddr;
 
-	paddr = rte_mem_virt2phy((void *)vaddr);
-	if (paddr == 0) {
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
+#define BAD_ADDR RTE_BAD_IOVA
+#define VTOPHYS rte_mem_virt2iova
+#else
+#define BAD_ADDR RTE_BAD_PHYS_ADDR
+#define VTOPHYS rte_mem_virt2phy
+#endif
+
+	/*
+	 * Note: the virt2phy/virt2iova functions have changed over time, such
+	 * that older versions may return 0 while recent versions will never
+	 * return 0 but RTE_BAD_PHYS_ADDR/IOVA instead.  To support older and
+	 * newer versions, check for both return values.
+	 */
+	paddr = VTOPHYS((void *)vaddr);
+	if (paddr == 0 || paddr == BAD_ADDR) {
 		/*
-		 * The vaddr was valid but returned 0.  Touch the page
-		 * to ensure a backing page gets assigned, then call
-		 * rte_mem_virt2phy() again.
+		 * The vaddr may be valid but doesn't have a backing page
+		 * assigned yet.  Touch the page to ensure a backing page
+		 * gets assigned, then try to translate again.
 		 */
 		rte_atomic64_read((rte_atomic64_t *)vaddr);
-		paddr = rte_mem_virt2phy((void *)vaddr);
+		paddr = VTOPHYS((void *)vaddr);
 	}
-	if (paddr == RTE_BAD_PHYS_ADDR) {
+	if (paddr == 0 || paddr == BAD_ADDR) {
 		/* Unable to get to the physical address. */
 		return SPDK_VTOPHYS_ERROR;
 	}
+
+#undef BAD_ADDR
+#undef VTOPHYS
 
 	return paddr;
 }
@@ -375,7 +404,7 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 				 * we need to unmap the range from the IOMMU
 				 */
 				if (g_vfio.enabled) {
-					paddr = spdk_mem_map_translate(map, (uint64_t)vaddr);
+					paddr = spdk_mem_map_translate(map, (uint64_t)vaddr, VALUE_2MB);
 					rc = vtophys_iommu_unmap_dma(paddr, VALUE_2MB);
 					if (rc) {
 						return -EFAULT;
@@ -589,7 +618,7 @@ spdk_vtophys(void *buf)
 
 	vaddr = (uint64_t)buf;
 
-	paddr_2mb = spdk_mem_map_translate(g_vtophys_map, vaddr);
+	paddr_2mb = spdk_mem_map_translate(g_vtophys_map, vaddr, VALUE_2MB);
 
 	/*
 	 * SPDK_VTOPHYS_ERROR has all bits set, so if the lookup returned SPDK_VTOPHYS_ERROR,

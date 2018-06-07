@@ -200,6 +200,7 @@ spdk_iscsi_poll_group_add_conn(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
 
+	conn->is_stopped = false;
 	STAILQ_INSERT_TAIL(&poll_group->connections, conn, link);
 	spdk_iscsi_poll_group_add_conn_sock(conn);
 }
@@ -209,6 +210,7 @@ spdk_iscsi_poll_group_remove_conn(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_poll_group *poll_group = &g_spdk_iscsi.poll_group[spdk_env_get_current_core()];
 
+	conn->is_stopped = true;
 	STAILQ_REMOVE(&poll_group->connections, conn, spdk_iscsi_conn, link);
 }
 
@@ -737,8 +739,14 @@ spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int bytes,
 		if (errno == EAGAIN || errno == EWOULDBLOCK) {
 			return 0;
 		} else {
-			SPDK_ERRLOG("spdk_sock_recv() failed, errno %d: %s\n",
-				    errno, spdk_strerror(errno));
+			/* For connect reset issue, do not output error log */
+			if (errno == ECONNRESET) {
+				SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_sock_recv() failed, errno %d: %s\n",
+					      errno, spdk_strerror(errno));
+			} else {
+				SPDK_ERRLOG("spdk_sock_recv() failed, errno %d: %s\n",
+					    errno, spdk_strerror(errno));
+			}
 		}
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
@@ -1147,6 +1155,10 @@ spdk_iscsi_conn_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 				    conn->target_port != NULL ? spdk_scsi_port_get_name(conn->target_port) : "NULL",
 				    conn->initiator_port != NULL ? spdk_scsi_port_get_name(conn->initiator_port) : "NULL");
 			return rc;
+		}
+
+		if (conn->is_stopped) {
+			break;
 		}
 	}
 

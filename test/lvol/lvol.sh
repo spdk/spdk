@@ -64,6 +64,8 @@ function usage() {
                                     753: 'snapshot_of_snapshot',
                                     754: 'clone_bdev_only',
                                     755: 'clone_writing_clone',
+                                    756: 'clone_and_snapshot_consistency',
+                                    757: 'clone_inflate',
                                     800: 'rename_positive',
                                     801: 'rename_lvs_nonexistent',
                                     802: 'rename_lvs_EEXIST',

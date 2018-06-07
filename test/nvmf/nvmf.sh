@@ -29,7 +29,7 @@ run_test test/nvmf/nvme_cli/nvme_cli.sh
 run_test test/nvmf/lvol/nvmf_lvol.sh
 run_test test/nvmf/shutdown/shutdown.sh
 
-if [ $RUN_NIGHTLY_FAILING -eq 1 ]; then
+if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_test test/nvmf/multiconnection/multiconnection.sh
 fi
 
@@ -38,7 +38,8 @@ timing_enter host
 run_test test/nvmf/host/bdevperf.sh
 run_test test/nvmf/host/identify.sh
 run_test test/nvmf/host/perf.sh
-run_test test/nvmf/host/identify_kernel_nvmf.sh
+# TODO: disabled due to intermittent failures (RDMA_CM_EVENT_UNREACHABLE/ETIMEDOUT)
+#run_test test/nvmf/host/identify_kernel_nvmf.sh
 run_test test/nvmf/host/aer.sh
 run_test test/nvmf/host/fio.sh
 

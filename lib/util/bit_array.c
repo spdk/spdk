@@ -41,6 +41,7 @@
 
 typedef uint64_t spdk_bit_array_word;
 #define SPDK_BIT_ARRAY_WORD_TZCNT(x)	(__builtin_ctzll(x))
+#define SPDK_BIT_ARRAY_WORD_POPCNT(x)	(__builtin_popcountll(x))
 #define SPDK_BIT_ARRAY_WORD_C(x)	((spdk_bit_array_word)(x))
 #define SPDK_BIT_ARRAY_WORD_BYTES	sizeof(spdk_bit_array_word)
 #define SPDK_BIT_ARRAY_WORD_BITS	(SPDK_BIT_ARRAY_WORD_BYTES * 8)
@@ -269,4 +270,28 @@ uint32_t
 spdk_bit_array_find_first_clear(const struct spdk_bit_array *ba, uint32_t start_bit_index)
 {
 	return _spdk_bit_array_find_first(ba, start_bit_index, SPDK_BIT_ARRAY_WORD_C(-1));
+}
+
+uint32_t
+spdk_bit_array_count_set(const struct spdk_bit_array *ba)
+{
+	const spdk_bit_array_word *cur_word = ba->words;
+	uint32_t word_count = spdk_bit_array_word_count(ba->bit_count);
+	uint32_t set_count = 0;
+
+	while (word_count--) {
+		/*
+		 * No special treatment is needed for the last (potentially partial) word, since
+		 * spdk_bit_array_resize() makes sure the bits past bit_count are cleared.
+		 */
+		set_count += SPDK_BIT_ARRAY_WORD_POPCNT(*cur_word++);
+	}
+
+	return set_count;
+}
+
+uint32_t
+spdk_bit_array_count_clear(const struct spdk_bit_array *ba)
+{
+	return ba->bit_count - spdk_bit_array_count_set(ba);
 }

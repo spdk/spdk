@@ -52,6 +52,11 @@ extern "C" {
 #define SPDK_BDEV_SMALL_BUF_MAX_SIZE 8192
 #define SPDK_BDEV_LARGE_BUF_MAX_SIZE (64 * 1024)
 
+/**
+ * Block device remove callback.
+ *
+ * \param remove_ctx Context for the removed block device.
+ */
 typedef void (*spdk_bdev_remove_cb_t)(void *remove_ctx);
 
 /**
@@ -104,9 +109,9 @@ enum spdk_bdev_io_type {
  * Block device completion callback.
  *
  * \param bdev_io Block device I/O that has completed.
- * \param success true if I/O completed successfully or false if it failed; additional error
- *                information may be retrieved from bdev_io by calling
- *                spdk_bdev_io_get_nvme_status() or spdk_bdev_io_get_scsi_status().
+ * \param success True if I/O completed successfully or false if it failed;
+ * additional error information may be retrieved from bdev_io by calling
+ * spdk_bdev_io_get_nvme_status() or spdk_bdev_io_get_scsi_status().
  * \param cb_arg Callback argument specified when bdev_io was submitted.
  */
 typedef void (*spdk_bdev_io_completion_cb)(struct spdk_bdev_io *bdev_io,
@@ -123,8 +128,22 @@ struct spdk_bdev_io_stat {
 	uint64_t ticks_rate;
 };
 
+/**
+ * Block device initialization callback.
+ *
+ * \param cb_arg Callback argument.
+ * \param rc 0 if block device initialized successfully or negative errno if it failed.
+ */
 typedef void (*spdk_bdev_init_cb)(void *cb_arg, int rc);
+
+/**
+ * Block device finish callback.
+ *
+ * \param cb_arg Callback argument.
+ */
 typedef void (*spdk_bdev_fini_cb)(void *cb_arg);
+typedef void (*spdk_bdev_get_device_stat_cb)(struct spdk_bdev *bdev,
+		struct spdk_bdev_io_stat *stat, void *cb_arg, int rc);
 
 /**
  * Initialize block device modules.
@@ -774,8 +793,7 @@ int spdk_bdev_nvme_io_passthru_md(struct spdk_bdev_desc *bdev_desc,
 int spdk_bdev_free_io(struct spdk_bdev_io *bdev_io);
 
 /**
- * Return I/O statistics for this channel. After returning stats, zero out
- * the current state of the statistics.
+ * Return I/O statistics for this channel.
  *
  * \param bdev Block device.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
@@ -784,6 +802,17 @@ int spdk_bdev_free_io(struct spdk_bdev_io *bdev_io);
  */
 void spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 			   struct spdk_bdev_io_stat *stat);
+
+/**
+ * Return I/O statistics for this bdev. All the required information will be passed
+ * via the callback function.
+ *
+ * \param bdev Block device to query.
+ * \param cb Called when this operation completes.
+ * \param cb_arg Argument passed to callback function.
+ */
+void spdk_bdev_get_device_stat(struct spdk_bdev *bdev, struct spdk_bdev_io_stat *stat,
+			       spdk_bdev_get_device_stat_cb cb, void *cb_arg);
 
 /**
  * Get the status of bdev_io as an NVMe status code.

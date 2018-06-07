@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 set -e
-BASE_DIR=$(readlink -f $(dirname $0))
-[[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $BASE_DIR/../common && pwd)"
-ROOT_DIR=$(readlink -f $BASE_DIR/../../..)
+INITIATOR_DIR=$(readlink -f $(dirname $0))
+[[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $INITIATOR_DIR/../common && pwd)"
+ROOT_DIR=$(readlink -f $INITIATOR_DIR/../../..)
 
 function usage()
 {
@@ -31,7 +31,7 @@ while getopts 'h-:' optchar; do
 done
 
 source $COMMON_DIR/common.sh
-source $BASE_DIR/autotest.config
+source $INITIATOR_DIR/autotest.config
 PLUGIN_DIR=$ROOT_DIR/examples/bdev/fio_plugin
 RPC_PY="$ROOT_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 FIO_BIN="/usr/src/fio/fio"
@@ -62,6 +62,8 @@ function create_bdev_config()
 		error "Nvme0n1 bdev not found!"
 	fi
 
+	$RPC_PY construct_split_vbdev Nvme0n1 6
+
 	$RPC_PY construct_vhost_scsi_controller naa.Nvme0n1_scsi0.0
 	$RPC_PY add_vhost_scsi_lun naa.Nvme0n1_scsi0.0 0 Nvme0n1p0
 	$RPC_PY add_vhost_scsi_lun naa.Nvme0n1_scsi0.0 1 Nvme0n1p1
@@ -79,14 +81,14 @@ function create_bdev_config()
 	$RPC_PY construct_vhost_scsi_controller naa.Malloc1.0
 	$RPC_PY add_vhost_scsi_lun naa.Malloc1.0 0 Malloc1
 
-	vbdevs=$(discover_bdevs $ROOT_DIR $BASE_DIR/bdev.conf)
+	vbdevs=$(discover_bdevs $ROOT_DIR $INITIATOR_DIR/bdev.conf)
 	virtio_bdevs=$(jq -r '[.[].name] | join(":")' <<< $vbdevs)
 	virtio_with_unmap=$(jq -r '[.[] | select(.supported_io_types.unmap==true).name]
 	 | join(":")' <<< $vbdevs)
 }
 
 timing_enter spdk_vhost_run
-spdk_vhost_run --conf-path=$BASE_DIR
+spdk_vhost_run
 timing_exit spdk_vhost_run
 
 timing_enter create_bdev_config
@@ -94,14 +96,14 @@ create_bdev_config
 timing_exit create_bdev_config
 
 timing_enter run_spdk_fio
-run_spdk_fio $BASE_DIR/bdev.fio --filename=$virtio_bdevs --section=job_randwrite --section=job_randrw \
-	--section=job_write --section=job_rw --spdk_conf=$BASE_DIR/bdev.conf
+run_spdk_fio $INITIATOR_DIR/bdev.fio --filename=$virtio_bdevs --section=job_randwrite --section=job_randrw \
+	--section=job_write --section=job_rw --spdk_conf=$INITIATOR_DIR/bdev.conf
 report_test_completion "vhost_run_spdk_fio"
 timing_exit run_spdk_fio
 
 timing_enter run_spdk_fio_unmap
-run_spdk_fio $BASE_DIR/bdev.fio --filename=$virtio_with_unmap --spdk_conf=$BASE_DIR/bdev.conf \
-	--spdk_conf=$BASE_DIR/bdev.conf
+run_spdk_fio $INITIATOR_DIR/bdev.fio --filename=$virtio_with_unmap --spdk_conf=$INITIATOR_DIR/bdev.conf \
+	--spdk_conf=$INITIATOR_DIR/bdev.conf
 timing_exit run_spdk_fio_unmap
 
 timing_enter setup_vm

@@ -41,7 +41,7 @@
 #include "spdk/queue.h"
 #include "spdk/bdev.h"
 
-#include "spdk_internal/bdev.h"
+#include "spdk/bdev_module.h"
 
 struct bdev_aio_task {
 	struct iocb			iocb;

@@ -50,7 +50,7 @@ sudo dnf install -y numactl-devel
 sudo dnf install -y libaio-devel
 sudo dnf install -y CUnit-devel
 sudo dnf install -y clang-analyzer
-sudo dnf install -y libpmemblk-devel nvml-tools
+sudo dnf install -y libpmemblk-devel pmempool
 sudo dnf install -y libibverbs libibverbs-devel librdmacm librdmacm-devel
 sudo dnf install -y perl-open
 sudo dnf install -y glib2-devel

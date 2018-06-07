@@ -35,7 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 DIRS-y += bdev blob blobfs conf copy cunit event json jsonrpc \
-          log lvol env_dpdk net rpc trace util nvme nvmf scsi ioat \
+          log lvol net rpc trace util nvme nvmf scsi ioat \
 	  ut_mock iscsi
 ifeq ($(OS),Linux)
 DIRS-y += nbd
@@ -43,6 +43,12 @@ DIRS-$(CONFIG_VHOST) += vhost
 DIRS-$(CONFIG_VIRTIO) += virtio
 endif
 
+# If CONFIG_ENV is pointing at a directory in lib, build it.
+# Out-of-tree env implementations must be built separately by the user.
+ENV_NAME := $(notdir $(CONFIG_ENV))
+ifeq ($(abspath $(CONFIG_ENV)),$(SPDK_ROOT_DIR)/lib/$(ENV_NAME))
+DIRS-y += $(ENV_NAME)
+endif
 
 .PHONY: all clean $(DIRS-y)
 

@@ -49,31 +49,32 @@ int
 spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
-	struct spdk_nvmf_capsule_cmd *cap_hdr;
+	struct spdk_nvmf_qpair *qpair;
 
 	rsp->sqid = 0;
 	rsp->status.p = 0;
 	rsp->cid = req->cmd->nvme_cmd.cid;
+
+	qpair = req->qpair;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF,
 		      "cpl: cid=%u cdw0=0x%08x rsvd1=%u status=0x%04x\n",
 		      rsp->cid, rsp->cdw0, rsp->rsvd1,
 		      *(uint16_t *)&rsp->status);
 
-	cap_hdr = &req->cmd->nvmf_cmd;
-
-	if (spdk_unlikely(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC &&
-			  cap_hdr->fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT)) {
-		/* CONNECT commands don't actually get placed on the outstanding list. */
-	} else {
-		struct spdk_nvmf_subsystem_poll_group *sgroup;
-
-		sgroup = &req->qpair->group->sgroups[req->qpair->ctrlr->subsys->id];
-		TAILQ_REMOVE(&sgroup->outstanding, req, link);
-	}
-
+	TAILQ_REMOVE(&qpair->outstanding, req, link);
 	if (spdk_nvmf_transport_req_complete(req)) {
 		SPDK_ERRLOG("Transport request completion error!\n");
+	}
+
+	if (qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING) {
+		assert(qpair->state_cb != NULL);
+
+		if (TAILQ_EMPTY(&qpair->outstanding)) {
+			qpair->state_cb(qpair->state_cb_arg, 0);
+		}
+	} else {
+		assert(qpair->state == SPDK_NVMF_QPAIR_ACTIVE);
 	}
 
 	return 0;
@@ -131,6 +132,13 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 
 	nvmf_trace_command(req->cmd, spdk_nvmf_qpair_is_admin_queue(qpair));
 
+	if (qpair->state != SPDK_NVMF_QPAIR_ACTIVE) {
+		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+		spdk_nvmf_request_complete(req);
+		return;
+	}
+
 	/* Check if the subsystem is paused (if there is a subsystem) */
 	if (qpair->ctrlr) {
 		struct spdk_nvmf_subsystem_poll_group *sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
@@ -140,9 +148,10 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 			return;
 		}
 
-		/* Place the request on the outstanding list so we can keep track of it */
-		TAILQ_INSERT_TAIL(&sgroup->outstanding, req, link);
 	}
+
+	/* Place the request on the outstanding list so we can keep track of it */
+	TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
 
 	if (spdk_unlikely(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC)) {
 		status = spdk_nvmf_ctrlr_process_fabrics_cmd(req);
@@ -155,11 +164,4 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 	if (status == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
 		spdk_nvmf_request_complete(req);
 	}
-}
-
-int
-spdk_nvmf_request_abort(struct spdk_nvmf_request *req)
-{
-	/* TODO: implement abort, at least for commands that are still queued in software */
-	return -1;
 }

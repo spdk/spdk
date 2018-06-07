@@ -43,7 +43,7 @@
 #include "spdk/queue.h"
 #include "spdk/util.h"
 
-#define SPDK_NVMF_DEFAULT_NUM_CTRLRS_PER_LCORE 1
+#define SPDK_NVMF_MAX_SGL_ENTRIES	16
 
 enum spdk_nvmf_subsystem_state {
 	SPDK_NVMF_SUBSYSTEM_INACTIVE = 0,
@@ -54,6 +54,15 @@ enum spdk_nvmf_subsystem_state {
 	SPDK_NVMF_SUBSYSTEM_RESUMING,
 	SPDK_NVMF_SUBSYSTEM_DEACTIVATING,
 };
+
+enum spdk_nvmf_qpair_state {
+	SPDK_NVMF_QPAIR_INACTIVE = 0,
+	SPDK_NVMF_QPAIR_ACTIVATING,
+	SPDK_NVMF_QPAIR_ACTIVE,
+	SPDK_NVMF_QPAIR_DEACTIVATING,
+};
+
+typedef void (*spdk_nvmf_state_change_done)(void *cb_arg, int status);
 
 struct spdk_nvmf_tgt {
 	struct spdk_nvmf_tgt_opts		opts;
@@ -92,7 +101,6 @@ struct spdk_nvmf_subsystem_poll_group {
 	enum spdk_nvmf_subsystem_state state;
 
 	TAILQ_HEAD(, spdk_nvmf_request)	queued;
-	TAILQ_HEAD(, spdk_nvmf_request)	outstanding;
 };
 
 struct spdk_nvmf_poll_group {
@@ -134,6 +142,8 @@ struct spdk_nvmf_request {
 	void				*data;
 	union nvmf_h2c_msg		*cmd;
 	union nvmf_c2h_msg		*rsp;
+	struct iovec			iov[SPDK_NVMF_MAX_SGL_ENTRIES];
+	uint32_t			iovcnt;
 
 	TAILQ_ENTRY(spdk_nvmf_request)	link;
 };
@@ -146,6 +156,10 @@ struct spdk_nvmf_ns {
 };
 
 struct spdk_nvmf_qpair {
+	enum spdk_nvmf_qpair_state		state;
+	spdk_nvmf_state_change_done		state_cb;
+	void					*state_cb_arg;
+
 	struct spdk_nvmf_transport		*transport;
 	struct spdk_nvmf_ctrlr			*ctrlr;
 	struct spdk_nvmf_poll_group		*group;
@@ -154,6 +168,7 @@ struct spdk_nvmf_qpair {
 	uint16_t				sq_head;
 	uint16_t				sq_head_max;
 
+	TAILQ_HEAD(, spdk_nvmf_request)		outstanding;
 	TAILQ_ENTRY(spdk_nvmf_qpair)		link;
 };
 
@@ -218,7 +233,6 @@ struct spdk_nvmf_subsystem {
 	uint32_t				max_nsid;
 	/* This is the maximum allowed nsid to a subsystem */
 	uint32_t				max_allowed_nsid;
-	uint32_t				num_allocated_nsid;
 
 	TAILQ_HEAD(, spdk_nvmf_ctrlr)		ctrlrs;
 
@@ -246,7 +260,6 @@ int spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 		struct spdk_nvmf_subsystem *subsystem);
 void spdk_nvmf_request_exec(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_complete(struct spdk_nvmf_request *req);
-int spdk_nvmf_request_abort(struct spdk_nvmf_request *req);
 
 void spdk_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt,
 				      void *buffer, uint64_t offset,

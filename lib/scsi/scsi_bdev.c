@@ -38,7 +38,7 @@
  * TODO: move bdev SCSI error code translation tests to bdev unit test
  * and remove this include.
  */
-#include "spdk_internal/bdev.h"
+#include "spdk/bdev_module.h"
 
 #include "spdk/env.h"
 #include "spdk/bdev.h"

@@ -11,7 +11,10 @@ declare -A vms_ctrlrs_disks
 # By default use Guest fio
 fio_bin=""
 test_cases=""
-
+MGMT_TARGET_IP=""
+MGMT_INITIATOR_IP=""
+RDMA_TARGET_IP=""
+RDMA_INITIATOR_IP=""
 function usage()
 {
 	[[ ! -z $2 ]] && ( echo "$2"; echo ""; )
@@ -23,6 +26,10 @@ function usage()
 	echo "    --fio-bin=FIO         Use specific fio binary (will be uploaded to VM)"
 	echo "    --test-cases=TESTS    Coma-separated list of tests to run. Implemented test cases are: 1"
 	echo "                          See test/vhost/test_plan.md for more info."
+	echo "    --mgmt-tgt-ip=IP      IP address of target."
+	echo "    --mgmt-init-ip=IP     IP address of initiator."
+	echo "    --rdma-tgt-ip=IP      IP address of targets rdma capable NIC."
+	echo "    --rdma-init-ip=IP     IP address of initiators rdma capable NIC."
 	echo "-x                        set -x for script debug"
 }
 
@@ -36,6 +43,10 @@ for param in "$@"; do
 		--os=*) os_image="${param#*=}" ;;
 		--fio-bin=*) fio_bin="${param}" ;;
 		--test-cases=*) test_cases="${param#*=}" ;;
+		--mgmt-tgt-ip=*) MGMT_TARGET_IP="${param#*=}" ;;
+		--mgmt-init-ip=*) MGMT_INITIATOR_IP="${param#*=}" ;;
+		--rdma-tgt-ip=*) RDMA_TARGET_IP="${param#*=}" ;;
+		--rdma-init-ip=*) RDMA_INITIATOR_IP="${param#*=}" ;;
 		-x) set -x ;;
 		-v) SPDK_VHOST_VERBOSE=true	;;
 		*)
@@ -45,6 +56,7 @@ for param in "$@"; do
 done
 
 . $(readlink -e "$(dirname $0)/../common/common.sh") || exit 1
+MIGRATION_DIR=$(readlink -f $(dirname $0))
 
 [[ ! -z "$test_cases" ]] || fail "Need '--test-cases=' parameter"
 
@@ -131,7 +143,7 @@ for test_case in ${test_cases//,/ }; do
 	notice "==============================="
 
 	timing_enter migration-tc${test_case}
-	source $BASE_DIR/migration-tc${test_case}.sh
+	source $MIGRATION_DIR/migration-tc${test_case}.sh
 	timing_exit migration-tc${test_case}
 done
 

@@ -245,7 +245,7 @@ free_rpc_get_nbd_disks(struct rpc_get_nbd_disks *r)
 }
 
 static const struct spdk_json_object_decoder rpc_get_nbd_disks_decoders[] = {
-	{"nbd_device", offsetof(struct rpc_get_nbd_disks, nbd_device), spdk_json_decode_string},
+	{"nbd_device", offsetof(struct rpc_get_nbd_disks, nbd_device), spdk_json_decode_string, true},
 };
 
 static void
@@ -262,12 +262,9 @@ spdk_rpc_get_nbd_disks(struct spdk_jsonrpc_request *request,
 					    &req)) {
 			SPDK_ERRLOG("spdk_json_decode_object failed\n");
 			goto invalid;
-		} else {
-			if (req.nbd_device == NULL) {
-				SPDK_ERRLOG("missing nbd_device param\n");
-				goto invalid;
-			}
+		}
 
+		if (req.nbd_device) {
 			nbd = spdk_nbd_disk_find_by_nbd_path(req.nbd_device);
 			if (nbd == NULL) {
 				SPDK_ERRLOG("nbd device '%s' does not exist\n", req.nbd_device);

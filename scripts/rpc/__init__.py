@@ -12,6 +12,7 @@ from . import nvmf
 from . import pmem
 from . import subsystem
 from . import vhost
+from . import client as rpc_client
 
 
 def start_subsystem_init(client):
@@ -57,17 +58,49 @@ def save_config(client, args):
 
 def load_config(client, args):
     if not args.filename or args.filename == '-':
+        json_config = json.load(sys.stdin)
+    else:
+        with open(args.filename, 'r') as file:
+            json_config = json.load(file)
+
+    subsystems = json_config['subsystems']
+    while subsystems:
+        allowed_methods = client.call('get_rpc_methods', {'current': True})
+        allowed_found = False
+
+        for subsystem in list(subsystems):
+            if not subsystem['config']:
+                subsystems.remove(subsystem)
+                continue
+
+            config = subsystem['config']
+            for elem in list(config):
+                if not elem or 'method' not in elem or elem['method'] not in allowed_methods:
+                    continue
+
+                client.call(elem['method'], elem['params'])
+                config.remove(elem)
+                allowed_found = True
+
+            if not config:
+                subsystems.remove(subsystem)
+
+        if 'start_subsystem_init' in allowed_methods:
+            client.call('start_subsystem_init')
+            allowed_found = True
+
+        if subsystems and not allowed_found:
+            raise rpc_client.JSONRPCException("Some config left but did not found any allowed method to execute")
+
+
+def load_subsystem_config(client, args):
+    if not args.filename or args.filename == '-':
         config = json.load(sys.stdin)
     else:
         with open(args.filename, 'r') as file:
             config = json.load(file)
 
-    for subsystem in config['subsystems']:
-        name = subsystem['subsystem']
-        config = subsystem['config']
-        if not config:
+    for elem in config['config']:
+        if not elem or 'method' not in elem:
             continue
-        for elem in subsystem['config']:
-            if not elem or 'method' not in elem:
-                continue
-            client.call(elem['method'], elem['params'])
+        client.call(elem['method'], elem['params'])

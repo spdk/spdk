@@ -293,7 +293,7 @@ submit_single_io(void)
 	offset_in_ios = rand_r(&seed) % entry->size_in_ios;
 
 	start = spdk_get_ticks();
-	spdk_mb();
+	spdk_rmb();
 #if HAVE_LIBAIO
 	if (entry->type == ENTRY_TYPE_AIO_FILE) {
 		rc = aio_submit(g_ns->u.aio.ctx, &g_task->iocb, entry->u.aio.fd, IO_CMD_PREAD, g_task->buf,
@@ -306,7 +306,7 @@ submit_single_io(void)
 					   entry->io_size_blocks, io_complete, g_task, 0);
 	}
 
-	spdk_mb();
+	spdk_rmb();
 	tsc_submit = spdk_get_ticks() - start;
 	g_tsc_submit += tsc_submit;
 	if (tsc_submit < g_tsc_submit_min) {
@@ -334,11 +334,12 @@ io_complete(void *ctx, const struct spdk_nvme_cpl *completion)
 
 uint64_t g_complete_tsc_start;
 
-static void
+static uint64_t
 check_io(void)
 {
 	uint64_t end, tsc_complete;
-	spdk_mb();
+
+	spdk_rmb();
 #if HAVE_LIBAIO
 	if (g_ns->type == ENTRY_TYPE_AIO_FILE) {
 		aio_check_io();
@@ -347,7 +348,7 @@ check_io(void)
 	{
 		spdk_nvme_qpair_process_completions(g_ns->u.nvme.qpair, 0);
 	}
-	spdk_mb();
+	spdk_rmb();
 	end = spdk_get_ticks();
 	if (g_ns->current_queue_depth == 1) {
 		/*
@@ -377,8 +378,10 @@ check_io(void)
 		if (!g_ns->is_draining) {
 			submit_single_io();
 		}
-		g_complete_tsc_start = spdk_get_ticks();
+		end = g_complete_tsc_start = spdk_get_ticks();
 	}
+
+	return end;
 }
 
 static void
@@ -437,7 +440,7 @@ cleanup_ns_worker_ctx(void)
 static int
 work_fn(void)
 {
-	uint64_t tsc_end;
+	uint64_t tsc_end, current;
 
 	/* Allocate a queue pair for each namespace. */
 	if (init_ns_worker_ctx() != 0) {
@@ -457,9 +460,9 @@ work_fn(void)
 		 * I/O will be submitted in the io_complete callback
 		 * to replace each I/O that is completed.
 		 */
-		check_io();
+		current = check_io();
 
-		if (spdk_get_ticks() > tsc_end) {
+		if (current > tsc_end) {
 			break;
 		}
 	}
@@ -585,7 +588,7 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	static uint32_t ctrlr_found = 0;
 
 	if (ctrlr_found == 1) {
-		fprintf(stderr, "only attching to one controller, so skipping\n");
+		fprintf(stderr, "only attaching to one controller, so skipping\n");
 		fprintf(stderr, " controller at PCI address %s\n",
 			trid->traddr);
 		return false;
@@ -680,9 +683,11 @@ int main(int argc, char **argv)
 	print_stats();
 
 cleanup:
-	spdk_histogram_data_free(g_ns->submit_histogram);
-	spdk_histogram_data_free(g_ns->complete_histogram);
-	free(g_ns);
+	if (g_ns) {
+		spdk_histogram_data_free(g_ns->submit_histogram);
+		spdk_histogram_data_free(g_ns->complete_histogram);
+		free(g_ns);
+	}
 	if (g_ctrlr) {
 		spdk_nvme_detach(g_ctrlr->ctrlr);
 		free(g_ctrlr);

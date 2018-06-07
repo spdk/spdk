@@ -38,6 +38,8 @@
 
 #define CTRLR_CDATA_ELPE   5
 
+pid_t g_spdk_nvme_pid;
+
 struct nvme_request g_req;
 
 uint32_t error_num_entries;
@@ -246,57 +248,11 @@ static void verify_fw_image_download(struct nvme_request *req)
 }
 
 struct nvme_request *
-nvme_allocate_request(struct spdk_nvme_qpair *qpair,
-		      const struct nvme_payload *payload, uint32_t payload_size,
-		      spdk_nvme_cmd_cb cb_fn,
-		      void *cb_arg)
-{
-	struct nvme_request *req = &g_req;
-
-	memset(req, 0, sizeof(*req));
-
-	req->payload = *payload;
-	req->payload_size = payload_size;
-
-	req->cb_fn = cb_fn;
-	req->cb_arg = cb_arg;
-	req->qpair = qpair;
-	req->pid = getpid();
-
-	return req;
-}
-
-struct nvme_request *
-nvme_allocate_request_contig(struct spdk_nvme_qpair *qpair, void *buffer, uint32_t payload_size,
-			     spdk_nvme_cmd_cb cb_fn, void *cb_arg)
-{
-	struct nvme_payload payload;
-
-	payload.type = NVME_PAYLOAD_TYPE_CONTIG;
-	payload.u.contig = buffer;
-	payload.md = NULL;
-
-	return nvme_allocate_request(qpair, &payload, payload_size, cb_fn, cb_arg);
-}
-
-struct nvme_request *
-nvme_allocate_request_null(struct spdk_nvme_qpair *qpair, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
-{
-	return nvme_allocate_request_contig(qpair, NULL, 0, cb_fn, cb_arg);
-}
-
-struct nvme_request *
 nvme_allocate_request_user_copy(struct spdk_nvme_qpair *qpair, void *buffer, uint32_t payload_size,
 				spdk_nvme_cmd_cb cb_fn, void *cb_arg, bool host_to_controller)
 {
 	/* For the unit test, we don't actually need to copy the buffer */
 	return nvme_allocate_request_contig(qpair, buffer, payload_size, cb_fn, cb_arg);
-}
-
-void
-nvme_free_request(struct nvme_request *req)
-{
-	return;
 }
 
 int
@@ -319,10 +275,19 @@ nvme_ctrlr_submit_admin_request(struct spdk_nvme_ctrlr *ctrlr, struct nvme_reque
 	return 0;
 }
 
+#define DECLARE_AND_CONSTRUCT_CTRLR()	\
+	struct spdk_nvme_ctrlr	ctrlr = {};	\
+	struct spdk_nvme_qpair	adminq = {};	\
+	struct nvme_request	req;		\
+						\
+	STAILQ_INIT(&adminq.free_req);		\
+	STAILQ_INSERT_HEAD(&adminq.free_req, &req, stailq);	\
+	ctrlr.adminq = &adminq;
+
 static void
 test_firmware_get_log_page(void)
 {
-	struct spdk_nvme_ctrlr			ctrlr = {};
+	DECLARE_AND_CONSTRUCT_CTRLR();
 	struct spdk_nvme_firmware_page		payload = {};
 
 	verify_fn = verify_firmware_log_page;
@@ -335,7 +300,7 @@ test_firmware_get_log_page(void)
 static void
 test_health_get_log_page(void)
 {
-	struct spdk_nvme_ctrlr				ctrlr = {};
+	DECLARE_AND_CONSTRUCT_CTRLR();
 	struct spdk_nvme_health_information_page	payload = {};
 
 	verify_fn = verify_health_log_page;
@@ -348,7 +313,7 @@ test_health_get_log_page(void)
 static void
 test_error_get_log_page(void)
 {
-	struct spdk_nvme_ctrlr				ctrlr = {};
+	DECLARE_AND_CONSTRUCT_CTRLR();
 	struct spdk_nvme_error_information_entry	payload = {};
 
 	ctrlr.cdata.elpe = CTRLR_CDATA_ELPE;
@@ -363,7 +328,7 @@ test_error_get_log_page(void)
 
 static void test_intel_smart_get_log_page(void)
 {
-	struct spdk_nvme_ctrlr			ctrlr = {};
+	DECLARE_AND_CONSTRUCT_CTRLR();
 	struct spdk_nvme_intel_smart_information_page	payload = {};
 
 	verify_fn = verify_intel_smart_log_page;
@@ -374,7 +339,7 @@ static void test_intel_smart_get_log_page(void)
 
 static void test_intel_temperature_get_log_page(void)
 {
-	struct spdk_nvme_ctrlr			ctrlr = {};
+	DECLARE_AND_CONSTRUCT_CTRLR();
 	struct spdk_nvme_intel_temperature_page	payload = {};
 
 	verify_fn = verify_intel_temperature_log_page;
@@ -385,7 +350,7 @@ static void test_intel_temperature_get_log_page(void)
 
 static void test_intel_read_latency_get_log_page(void)
 {
-	struct spdk_nvme_ctrlr			ctrlr = {};
+	DECLARE_AND_CONSTRUCT_CTRLR();
 	struct spdk_nvme_intel_rw_latency_page	payload = {};
 
 	verify_fn = verify_intel_read_latency_log_page;
@@ -397,7 +362,7 @@ static void test_intel_read_latency_get_log_page(void)
 
 static void test_intel_write_latency_get_log_page(void)
 {
-	struct spdk_nvme_ctrlr			ctrlr = {};
+	DECLARE_AND_CONSTRUCT_CTRLR();
 	struct spdk_nvme_intel_rw_latency_page	payload = {};
 
 	verify_fn = verify_intel_write_latency_log_page;
@@ -409,7 +374,7 @@ static void test_intel_write_latency_get_log_page(void)
 
 static void test_intel_get_log_page_directory(void)
 {
-	struct spdk_nvme_ctrlr				ctrlr = {};
+	DECLARE_AND_CONSTRUCT_CTRLR();
 	struct spdk_nvme_intel_log_page_directory	payload = {};
 
 	verify_fn = verify_intel_get_log_page_directory;
@@ -421,7 +386,7 @@ static void test_intel_get_log_page_directory(void)
 
 static void test_intel_marketing_description_get_log_page(void)
 {
-	struct spdk_nvme_ctrlr					ctrlr = {};
+	DECLARE_AND_CONSTRUCT_CTRLR();
 	struct spdk_nvme_intel_marketing_description_page	payload = {};
 
 	verify_fn = verify_intel_marketing_description_log_page;
@@ -451,7 +416,7 @@ static void test_intel_get_log_pages(void)
 static void
 test_set_feature_cmd(void)
 {
-	struct spdk_nvme_ctrlr  ctrlr = {};
+	DECLARE_AND_CONSTRUCT_CTRLR();
 
 	verify_fn = verify_set_feature_cmd;
 
@@ -462,7 +427,7 @@ test_set_feature_cmd(void)
 static void
 test_get_feature_cmd(void)
 {
-	struct spdk_nvme_ctrlr	ctrlr = {};
+	DECLARE_AND_CONSTRUCT_CTRLR();
 
 	verify_fn = verify_get_feature_cmd;
 
@@ -472,7 +437,7 @@ test_get_feature_cmd(void)
 static void
 test_abort_cmd(void)
 {
-	struct spdk_nvme_ctrlr	ctrlr = {};
+	DECLARE_AND_CONSTRUCT_CTRLR();
 	struct spdk_nvme_qpair	qpair = {};
 
 	STAILQ_INIT(&ctrlr.queued_aborts);
@@ -486,7 +451,7 @@ test_abort_cmd(void)
 static void
 test_io_raw_cmd(void)
 {
-	struct spdk_nvme_ctrlr	ctrlr = {};
+	DECLARE_AND_CONSTRUCT_CTRLR();
 	struct spdk_nvme_qpair	qpair = {};
 	struct spdk_nvme_cmd	cmd = {};
 
@@ -498,7 +463,7 @@ test_io_raw_cmd(void)
 static void
 test_io_raw_cmd_with_md(void)
 {
-	struct spdk_nvme_ctrlr	ctrlr = {};
+	DECLARE_AND_CONSTRUCT_CTRLR();
 	struct spdk_nvme_qpair	qpair = {};
 	struct spdk_nvme_cmd	cmd = {};
 
@@ -517,7 +482,7 @@ test_get_log_pages(void)
 static void
 test_namespace_attach(void)
 {
-	struct spdk_nvme_ctrlr			ctrlr = {};
+	DECLARE_AND_CONSTRUCT_CTRLR();
 	struct spdk_nvme_ctrlr_list		payload = {};
 
 	verify_fn = verify_namespace_attach;
@@ -528,7 +493,7 @@ test_namespace_attach(void)
 static void
 test_namespace_detach(void)
 {
-	struct spdk_nvme_ctrlr			ctrlr = {};
+	DECLARE_AND_CONSTRUCT_CTRLR();
 	struct spdk_nvme_ctrlr_list		payload = {};
 
 	verify_fn = verify_namespace_detach;
@@ -539,7 +504,7 @@ test_namespace_detach(void)
 static void
 test_namespace_create(void)
 {
-	struct spdk_nvme_ctrlr			ctrlr = {};
+	DECLARE_AND_CONSTRUCT_CTRLR();
 	struct spdk_nvme_ns_data		payload = {};
 
 	verify_fn = verify_namespace_create;
@@ -549,7 +514,7 @@ test_namespace_create(void)
 static void
 test_namespace_delete(void)
 {
-	struct spdk_nvme_ctrlr			ctrlr = {};
+	DECLARE_AND_CONSTRUCT_CTRLR();
 
 	verify_fn = verify_namespace_delete;
 	nvme_ctrlr_cmd_delete_ns(&ctrlr, namespace_management_nsid, NULL, NULL);
@@ -558,7 +523,7 @@ test_namespace_delete(void)
 static void
 test_format_nvme(void)
 {
-	struct spdk_nvme_ctrlr	ctrlr = {};
+	DECLARE_AND_CONSTRUCT_CTRLR();
 	struct spdk_nvme_format format = {};
 
 	verify_fn = verify_format_nvme;
@@ -569,7 +534,7 @@ test_format_nvme(void)
 static void
 test_fw_commit(void)
 {
-	struct spdk_nvme_ctrlr	ctrlr = {};
+	DECLARE_AND_CONSTRUCT_CTRLR();
 	struct spdk_nvme_fw_commit fw_commit = {};
 
 	fw_commit.ca = SPDK_NVME_FW_COMMIT_REPLACE_AND_ENABLE_IMG;
@@ -583,7 +548,7 @@ test_fw_commit(void)
 static void
 test_fw_image_download(void)
 {
-	struct spdk_nvme_ctrlr	ctrlr = {};
+	DECLARE_AND_CONSTRUCT_CTRLR();
 
 	verify_fn = verify_fw_image_download;
 

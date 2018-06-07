@@ -46,7 +46,7 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 
-#include "spdk_internal/bdev.h"
+#include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
 
 static int vbdev_gpt_init(void);

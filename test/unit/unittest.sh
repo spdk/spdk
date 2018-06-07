@@ -118,6 +118,7 @@ if [ $(uname -s) = Linux ]; then
 $valgrind $testdir/lib/vhost/vhost.c/vhost_ut
 $valgrind $testdir/lib/vhost/vhost_scsi.c/vhost_scsi_ut
 $valgrind $testdir/lib/vhost/vhost_blk.c/vhost_blk_ut
+$valgrind $testdir/lib/vhost/vhost_nvme.c/vhost_nvme_ut
 fi
 
 # local unit test coverage

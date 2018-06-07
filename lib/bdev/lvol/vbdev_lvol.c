@@ -33,7 +33,7 @@
 
 #include "spdk/blob_bdev.h"
 #include "spdk/rpc.h"
-#include "spdk_internal/bdev.h"
+#include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
 #include "spdk/string.h"
 #include "spdk/uuid.h"
@@ -899,6 +899,7 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 	assert((total_size % bdev->blocklen) == 0);
 	bdev->blockcnt = total_size / bdev->blocklen;
 	bdev->uuid = lvol->uuid;
+	bdev->need_aligned_buffer = lvs_bdev->bdev->need_aligned_buffer;
 
 	bdev->ctxt = lvol;
 	bdev->fn_table = &vbdev_lvol_fn_table;

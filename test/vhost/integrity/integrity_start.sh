@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
+INTEGRITY_BASE_DIR=$(readlink -f $(dirname $0))
 ctrl_type="spdk_vhost_scsi"
 vm_fs="ext4"
 
@@ -55,7 +56,7 @@ trap 'error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
 vm_kill_all
 
 notice "Starting SPDK vhost"
-spdk_vhost_run --conf-path=$BASE_DIR
+spdk_vhost_run
 notice "..."
 
 # Set up lvols and vhost controllers
@@ -82,7 +83,7 @@ vm_run 0
 vm_wait_for_boot 600 0
 
 # Run tests on VM
-vm_scp 0 $BASE_DIR/integrity_vm.sh root@127.0.0.1:/root/integrity_vm.sh
+vm_scp 0 $INTEGRITY_BASE_DIR/integrity_vm.sh root@127.0.0.1:/root/integrity_vm.sh
 vm_ssh 0 "~/integrity_vm.sh $ctrl_type \"$vm_fs\""
 
 notice "Shutting down virtual machine..."

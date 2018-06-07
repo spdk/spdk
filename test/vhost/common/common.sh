@@ -3,7 +3,7 @@ set -e
 : ${SPDK_VHOST_VERBOSE=false}
 : ${QEMU_PREFIX="/usr/local/qemu/spdk-2.12-pre"}
 
-BASE_DIR=$(readlink -f $(dirname $0))
+BASE_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
 
 # Default running dir -> spdk/..
 [[ -z "$TEST_DIR" ]] && TEST_DIR=$BASE_DIR/../../../../
@@ -121,7 +121,9 @@ function spdk_vhost_run()
 				assert_number "$vhost_num"
 				;;
 			--conf-path=*) local vhost_conf_path="${param#*=}" ;;
+			--json-path=*) local vhost_json_path="${param#*=}" ;;
 			--memory=*) local memory=${param#*=} ;;
+			--no-pci*) local no_pci="-u" ;;
 			*)
 				error "Invalid parameter '$param'"
 				return 1
@@ -130,10 +132,6 @@ function spdk_vhost_run()
 	done
 
 	local vhost_dir="$(get_vhost_dir $vhost_num)"
-	if [[ -z "$vhost_conf_path" ]]; then
-		error "Missing mandatory parameter '--conf-path'"
-		return 1
-	fi
 	local vhost_app="$SPDK_BUILD_DIR/app/vhost/vhost"
 	local vhost_log_file="$vhost_dir/vhost.log"
 	local vhost_pid_file="$vhost_dir/vhost.pid"
@@ -161,13 +159,14 @@ function spdk_vhost_run()
 		return 1
 	fi
 
-	cp $vhost_conf_template $vhost_conf_file
-	$SPDK_BUILD_DIR/scripts/gen_nvme.sh >> $vhost_conf_file
-
-	local cmd="$vhost_app -m $reactor_mask -p $master_core -c $vhost_conf_file -s $memory -r $vhost_dir/rpc.sock"
+	local cmd="$vhost_app -m $reactor_mask -p $master_core -s $memory -r $vhost_dir/rpc.sock $no_pci"
+	if [[ -n "$vhost_conf_path" ]]; then
+		cp $vhost_conf_template $vhost_conf_file
+		$SPDK_BUILD_DIR/scripts/gen_nvme.sh >> $vhost_conf_file
+		cmd="$vhost_app -m $reactor_mask -p $master_core -c $vhost_conf_file -s $memory -r $vhost_dir/rpc.sock $no_pci"
+	fi
 
 	notice "Loging to:   $vhost_log_file"
-	notice "Config file: $vhost_conf_file"
 	notice "Socket:      $vhost_socket"
 	notice "Command:     $cmd"
 
@@ -178,10 +177,21 @@ function spdk_vhost_run()
 
 	notice "waiting for app to run..."
 	waitforlisten "$vhost_pid" "$vhost_dir/rpc.sock"
+	#do not generate nvmes if pci access is disabled
+	if [[ -z "$vhost_conf_path" ]] && [[ -z "$no_pci" ]]; then
+		$SPDK_BUILD_DIR/scripts/gen_nvme.sh "--json" | $SPDK_BUILD_DIR/scripts/rpc.py\
+		 -s $vhost_dir/rpc.sock load_subsystem_config
+	fi
+
+	if [[ -n "$vhost_json_path" ]]; then
+		$SPDK_BUILD_DIR/scripts/rpc.py -s $vhost_dir/rpc.sock load_config\
+		 --filename "$vhost_json_path/conf.json"
+	fi
+
 	notice "vhost started - pid=$vhost_pid"
 	timing_exit vhost_start
 
-	rm $vhost_conf_file
+	rm -f $vhost_conf_file
 }
 
 function spdk_vhost_kill()
@@ -715,7 +725,7 @@ function vm_setup()
 			spdk_vhost_blk)
 				notice "using socket $vhost_dir/naa.$disk.$vm_num"
 				cmd+="-chardev socket,id=char_$disk,path=$vhost_dir/naa.$disk.$vm_num ${eol}"
-				cmd+="-device vhost-user-blk-pci,num-queues=$queue_number,chardev=char_$disk,config-ro=$read_only ${eol}"
+				cmd+="-device vhost-user-blk-pci,num-queues=$queue_number,chardev=char_$disk ${eol}"
 				;;
 			kernel_vhost)
 				if [[ -z $disk ]]; then

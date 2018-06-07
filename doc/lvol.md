@@ -1,4 +1,4 @@
-# Logical Volumes Introduction {#logical_volumes}
+# Logical Volumes {#logical_volumes}
 
 The Logical Volumes library is a flexible storage space management system. It provides creating and managing virtual block devices with variable size. The SPDK Logical Volume library is built on top of @ref blob.
 
@@ -33,6 +33,13 @@ By default lvol bdevs claim part of lvol store equal to their set size. When thi
 Logical volumes support snapshots and clones functionality. User may at any given time create snapshot of existing logical volume to save a backup of current volume state.
 When creating snapshot original volume becomes thin provisioned and saves only incremental differences from its underlying snapshot. This means that every read from unallocated cluster is actually a read from the snapshot and
 every write to unallocated cluster triggers new cluster allocation and data copy from corresponding cluster in snapshot to the new cluster in logical volume before the actual write occurs.
+
+The read operation is performed as shown in the diagram below:
+![Reading cluster from clone](lvol_clone_snapshot_read.svg)
+
+The write operation is performed as shown in the diagram below:
+![Writing cluster to the clone](lvol_clone_snapshot_write.svg)
+
 User may also create clone of existing snapshot that will be thin provisioned and it will behave in the same way as logical volume from which snapshot is created.
 There is no limit of clones and snapshots that may be created as long as there is enough space on logical volume store. Snapshots are read only. Clones may be created only from snapshots.
 

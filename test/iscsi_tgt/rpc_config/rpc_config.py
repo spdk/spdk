@@ -89,7 +89,7 @@ def verify_trace_flag_rpc_methods(rpc_py, rpc_param):
     verify(not jsonvalue[rpc_param['trace_flag']], 1,
            "get_trace_flags returned {}, expected false".format(jsonvalue))
 
-    print "verify_trace_flag_rpc_methods passed"
+    print("verify_trace_flag_rpc_methods passed")
 
 
 def verify_iscsi_connection_rpc_methods(rpc_py):
@@ -130,7 +130,7 @@ def verify_iscsi_connection_rpc_methods(rpc_py):
     verify(not jsonvalues, 1,
            "get_iscsi_connections returned {}, expected empty".format(jsonvalues))
 
-    print "verify_iscsi_connection_rpc_methods passed"
+    print("verify_iscsi_connection_rpc_methods passed")
 
 
 def verify_scsi_devices_rpc_methods(rpc_py):
@@ -170,7 +170,7 @@ def verify_scsi_devices_rpc_methods(rpc_py):
     verify(not jsonvalues, 1,
            "get_scsi_devices returned {}, expected empty".format(jsonvalues))
 
-    print "verify_scsi_devices_rpc_methods passed"
+    print("verify_scsi_devices_rpc_methods passed")
 
 
 def create_malloc_bdevs_rpc_methods(rpc_py, rpc_param):
@@ -179,7 +179,7 @@ def create_malloc_bdevs_rpc_methods(rpc_py, rpc_param):
     for i in range(1, rpc_param['lun_total'] + 1):
         rpc.construct_malloc_bdev(rpc_param['malloc_bdev_size'], rpc_param['malloc_block_size'])
 
-    print "create_malloc_bdevs_rpc_methods passed"
+    print("create_malloc_bdevs_rpc_methods passed")
 
 
 def verify_portal_groups_rpc_methods(rpc_py, rpc_param):
@@ -238,7 +238,7 @@ def verify_portal_groups_rpc_methods(rpc_py, rpc_param):
         if x["ifc_index"] == 'lo':
             rpc.delete_ip_address(x["ifc_index"], lo_ip[1])
 
-    print "verify_portal_groups_rpc_methods passed"
+    print("verify_portal_groups_rpc_methods passed")
 
 
 def verify_initiator_groups_rpc_methods(rpc_py, rpc_param):
@@ -319,7 +319,7 @@ def verify_initiator_groups_rpc_methods(rpc_py, rpc_param):
             verify(jvalue['netmasks'][0] == rpc_param['netmask'][idx + jidx + 1], 1,
                    "netmasks value is {}, expected {}".format(jvalue['netmasks'][0], rpc_param['netmask'][idx + jidx + 1]))
 
-    print "verify_initiator_groups_rpc_method passed."
+    print("verify_initiator_groups_rpc_method passed.")
 
 
 def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
@@ -351,8 +351,8 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
            "target name value is {}, expected {}".format(name, nodebase + ":" + rpc_param['target_name']))
     verify(jsonvalues[0]['alias_name'] == rpc_param['alias_name'], 1,
            "target alias_name value is {}, expected {}".format(jsonvalues[0]['alias_name'], rpc_param['alias_name']))
-    verify(jsonvalues[0]['luns'][0]['id'] == 0, 1,
-           "lun id value is {}, expected 0".format(jsonvalues[0]['luns'][0]['id']))
+    verify(jsonvalues[0]['luns'][0]['lun_id'] == 0, 1,
+           "lun id value is {}, expected 0".format(jsonvalues[0]['luns'][0]['lun_id']))
     verify(jsonvalues[0]['pg_ig_maps'][0]['ig_tag'] == int(initiator_tag), 1,
            "initiator group tag value is {}, expected {}".format(jsonvalues[0]['pg_ig_maps'][0]['ig_tag'], initiator_tag))
     verify(jsonvalues[0]['queue_depth'] == rpc_param['queue_depth'], 1,
@@ -377,8 +377,8 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
     jsonvalues = json.loads(output)
     verify(jsonvalues[0]['luns'][1]['bdev_name'] == "Malloc" + str(rpc_param['lun_total']), 1,
            "bdev_name value is {}, expected Malloc{}".format(jsonvalues[0]['luns'][0]['bdev_name'], str(rpc_param['lun_total'])))
-    verify(jsonvalues[0]['luns'][1]['id'] == 1, 1,
-           "lun id value is {}, expected 1".format(jsonvalues[0]['luns'][1]['id']))
+    verify(jsonvalues[0]['luns'][1]['lun_id'] == 1, 1,
+           "lun id value is {}, expected 1".format(jsonvalues[0]['luns'][1]['lun_id']))
 
     rpc.delete_target_node(name)
     output = rpc.get_target_nodes()
@@ -394,26 +394,26 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
     output = rpc.get_target_nodes()
     jsonvalues = json.loads(output)
     if not jsonvalues:
-        print "This issue will be fixed later."
+        print("This issue will be fixed later.")
 
-    print "verify_target_nodes_rpc_methods passed."
+    print("verify_target_nodes_rpc_methods passed.")
 
 
 def verify_get_interfaces(rpc_py):
     rpc = spdk_rpc(rpc_py)
     nics = json.loads(rpc.get_interfaces())
-    nics_names = set(x["name"].encode('ascii', 'ignore') for x in nics)
+    nics_names = set(x["name"] for x in nics)
     # parse ip link show to verify the get_interfaces result
     ip_show = ns_cmd + " ip link show"
-    ifcfg_nics = set(re.findall("\S+:\s(\S+?)(?:@\S+){0,1}:\s<.*", check_output(ip_show.split())))
+    ifcfg_nics = set(re.findall("\S+:\s(\S+?)(?:@\S+){0,1}:\s<.*", check_output(ip_show.split()).decode()))
     verify(nics_names == ifcfg_nics, 1, "get_interfaces returned {}".format(nics))
-    print "verify_get_interfaces passed."
+    print("verify_get_interfaces passed.")
 
 
 def help_get_interface_ip_list(rpc_py, nic_name):
     rpc = spdk_rpc(rpc_py)
     nics = json.loads(rpc.get_interfaces())
-    nic = filter(lambda x: x["name"] == nic_name, nics)
+    nic = list(filter(lambda x: x["name"] == nic_name, nics))
     verify(len(nic) != 0, 1,
            "Nic name: {} is not found in {}".format(nic_name, [x["name"] for x in nics]))
     return nic[0]["ip_addr"]
@@ -452,29 +452,29 @@ def verify_add_delete_ip_address(rpc_py):
             verify(False, 1,
                    "ip {} for {} could be pinged after delete ip(adding/ping/delete were successful)".format
                    (faked_ip, x["name"]))
-    print "verify_add_delete_ip_address passed."
+    print("verify_add_delete_ip_address passed.")
 
 
 def verify_add_nvme_bdev_rpc_methods(rpc_py):
     rpc = spdk_rpc(rpc_py)
     test_pass = 0
     output = check_output(["lspci", "-mm", "-nn"])
-    addrs = re.findall('^([0-9]{2}:[0-9]{2}.[0-9]) "Non-Volatile memory controller \[0108\]".*-p02', output, re.MULTILINE)
+    addrs = re.findall('^([0-9]{2}:[0-9]{2}.[0-9]) "Non-Volatile memory controller \[0108\]".*-p02', output.decode(), re.MULTILINE)
     for addr in addrs:
-        ctrlr_address = "-b Nvme0 -t pcie -a 0000:{}".format(addr)
+        ctrlr_address = "-b Nvme{} -t pcie -a 0000:{}".format(addrs.index(addr), addr)
         rpc.construct_nvme_bdev(ctrlr_address)
-        print "add nvme device passed first time"
+        print("add nvme device passed first time")
         test_pass = 0
         try:
             rpc.construct_nvme_bdev(ctrlr_address)
         except Exception as e:
-            print "add nvme device passed second time"
+            print("add nvme device passed second time")
             test_pass = 1
             pass
         else:
             pass
         verify(test_pass == 1, 1, "add nvme device passed second time")
-    print "verify_add_nvme_bdev_rpc_methods passed."
+    print("verify_add_nvme_bdev_rpc_methods passed.")
 
 
 if __name__ == "__main__":
@@ -493,7 +493,7 @@ if __name__ == "__main__":
         verify_iscsi_connection_rpc_methods(rpc_py)
         verify_add_nvme_bdev_rpc_methods(rpc_py)
     except RpcException as e:
-        print "{}. Exiting with status {}".format(e.message, e.retval)
+        print("{}. Exiting with status {}".format(e.message, e.retval))
         raise e
     except Exception as e:
         raise e

@@ -1216,7 +1216,7 @@ spdk_vhost_nvme_ctrlr_identify_update(struct spdk_vhost_nvme_dev *dev)
 	dev->cap.bits.cqr = 1;
 	dev->cap.bits.to = 1;
 	dev->cap.bits.dstrd = 0;
-	dev->cap.bits.css_nvm = 1;
+	dev->cap.bits.css = SPDK_NVME_CAP_CSS_NVM;
 	dev->cap.bits.mpsmin = 0;
 	dev->cap.bits.mpsmax = 0;
 	/* MQES is 0 based value */

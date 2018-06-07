@@ -39,8 +39,24 @@
 
 #include "nvme/nvme_pcie.c"
 
+pid_t g_spdk_nvme_pid;
+
 DEFINE_STUB(spdk_mem_register, int, (void *vaddr, size_t len), 0);
 DEFINE_STUB(spdk_mem_unregister, int, (void *vaddr, size_t len), 0);
+
+DEFINE_STUB(spdk_nvme_ctrlr_get_process,
+	    struct spdk_nvme_ctrlr_process *,
+	    (struct spdk_nvme_ctrlr *ctrlr, pid_t pid),
+	    NULL);
+
+DEFINE_STUB(spdk_nvme_ctrlr_get_current_process,
+	    struct spdk_nvme_ctrlr_process *,
+	    (struct spdk_nvme_ctrlr *ctrlr),
+	    NULL);
+
+DEFINE_STUB(spdk_nvme_wait_for_completion, int,
+	    (struct spdk_nvme_qpair *qpair,
+	     struct nvme_completion_poll_status *status), 0);
 
 struct spdk_trace_flag SPDK_LOG_NVME = {
 	.name = "nvme",
@@ -223,12 +239,6 @@ nvme_get_quirks(const struct spdk_pci_id *id)
 	abort();
 }
 
-void
-nvme_free_request(struct nvme_request *req)
-{
-	abort();
-}
-
 bool
 nvme_completion_is_retry(const struct spdk_nvme_cpl *cpl)
 {
@@ -256,12 +266,6 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 int
 nvme_ctrlr_submit_admin_request(struct spdk_nvme_ctrlr *ctrlr,
 				struct nvme_request *req)
-{
-	abort();
-}
-
-struct nvme_request *
-nvme_allocate_request_null(struct spdk_nvme_qpair *qpair, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	abort();
 }
@@ -448,10 +452,7 @@ test_sgl_req(void)
 	uint64_t		i;
 	struct io_request	io_req = {};
 
-	payload.type = NVME_PAYLOAD_TYPE_SGL;
-	payload.u.sgl.reset_sgl_fn = nvme_request_reset_sgl;
-	payload.u.sgl.next_sge_fn = nvme_request_next_sge;
-	payload.u.sgl.cb_arg = &io_req;
+	payload = NVME_PAYLOAD_SGL(nvme_request_reset_sgl, nvme_request_next_sge, &io_req, NULL);
 
 	prepare_submit_request_test(&qpair, &ctrlr);
 	req = nvme_allocate_request(&payload, 0x1000, NULL, &io_req);
@@ -526,10 +527,7 @@ test_hw_sgl_req(void)
 	uint64_t		i;
 	struct io_request	io_req = {};
 
-	payload.type = NVME_PAYLOAD_TYPE_SGL;
-	payload.u.sgl.reset_sgl_fn = nvme_request_reset_sgl;
-	payload.u.sgl.next_sge_fn = nvme_request_next_sge;
-	payload.u.sgl.cb_arg = &io_req;
+	payload = NVME_PAYLOAD_SGL(nvme_request_reset_sgl, nvme_request_next_sge, &io_req, NULL);
 
 	prepare_submit_request_test(&qpair, &ctrlr);
 	req = nvme_allocate_request(&payload, 0x1000, NULL, &io_req);

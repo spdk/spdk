@@ -144,6 +144,15 @@ struct spdk_nvme_ctrlr_opts {
 	 * Set to all zeroes to specify that no host ID should be provided to the controller.
 	 */
 	uint8_t extended_host_id[16];
+
+	/**
+	 * The I/O command set to select.
+	 *
+	 * If the requested command set is not supported, the controller
+	 * initialization process will not proceed. By default, the NVM
+	 * command set is used.
+	 */
+	enum spdk_nvme_cc_css command_set;
 };
 
 /**
@@ -802,7 +811,7 @@ int spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr,
  *              For admin commands, pass NULL for the qpair.
  * \param cid Command ID of the command to abort.
  * \param cb_fn Callback function to invoke when the abort has completed.
- * \param cb_arg Argument to pass to the callback function.\
+ * \param cb_arg Argument to pass to the callback function.
  *
  * \return 0 if successfully submitted, negated errno value otherwise.
  *
@@ -1204,6 +1213,34 @@ int spdk_nvme_ns_cmd_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpa
  *
  * \param ns NVMe namespace to submit the write I/O
  * \param qpair I/O queue pair to submit the request
+ * \param lba starting LBA to write the data
+ * \param lba_count length (in sectors) for the write operation
+ * \param cb_fn callback function to invoke when the I/O is completed
+ * \param cb_arg argument to pass to the callback function
+ * \param io_flags set flags, defined in nvme_spec.h, for this I/O
+ * \param reset_sgl_fn callback function to reset scattered payload
+ * \param next_sge_fn callback function to iterate each scattered
+ * payload memory segment
+ * \param metadata virtual address pointer to the metadata payload, the length
+ *	           of metadata is specified by spdk_nvme_ns_get_md_size()
+ *
+ * \return 0 if successfully submitted, ENOMEM if an nvme_request
+ *	     structure cannot be allocated for the I/O request
+ *
+ * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
+ * The user must ensure that only one thread submits I/O on a given qpair at any given time.
+ */
+int spdk_nvme_ns_cmd_writev_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+				    uint64_t lba, uint32_t lba_count,
+				    spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t io_flags,
+				    spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
+				    spdk_nvme_req_next_sge_cb next_sge_fn, void *metadata);
+
+/**
+ * \brief Submits a write I/O to the specified NVMe namespace.
+ *
+ * \param ns NVMe namespace to submit the write I/O
+ * \param qpair I/O queue pair to submit the request
  * \param payload virtual address pointer to the data payload
  * \param metadata virtual address pointer to the metadata payload, the length
  *	           of metadata is specified by spdk_nvme_ns_get_md_size()
@@ -1298,6 +1335,34 @@ int spdk_nvme_ns_cmd_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpai
 			   spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t io_flags,
 			   spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
 			   spdk_nvme_req_next_sge_cb next_sge_fn);
+
+/**
+ * \brief Submits a read I/O to the specified NVMe namespace.
+ *
+ * \param ns NVMe namespace to submit the read I/O
+ * \param qpair I/O queue pair to submit the request
+ * \param lba starting LBA to read the data
+ * \param lba_count length (in sectors) for the read operation
+ * \param cb_fn callback function to invoke when the I/O is completed
+ * \param cb_arg argument to pass to the callback function
+ * \param io_flags set flags, defined in nvme_spec.h, for this I/O
+ * \param reset_sgl_fn callback function to reset scattered payload
+ * \param next_sge_fn callback function to iterate each scattered
+ * payload memory segment
+ * \param metadata virtual address pointer to the metadata payload, the length
+ *	           of metadata is specified by spdk_nvme_ns_get_md_size()
+ *
+ * \return 0 if successfully submitted, ENOMEM if an nvme_request
+ *	     structure cannot be allocated for the I/O request
+ *
+ * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
+ * The user must ensure that only one thread submits I/O on a given qpair at any given time.
+ */
+int spdk_nvme_ns_cmd_readv_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+				   uint64_t lba, uint32_t lba_count,
+				   spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t io_flags,
+				   spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
+				   spdk_nvme_req_next_sge_cb next_sge_fn, void *metadata);
 
 /**
  * \brief Submits a read I/O to the specified NVMe namespace.

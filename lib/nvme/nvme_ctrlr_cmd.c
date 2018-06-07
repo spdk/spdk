@@ -63,9 +63,7 @@ spdk_nvme_ctrlr_cmd_io_raw_with_md(struct spdk_nvme_ctrlr *ctrlr,
 	struct nvme_request *req;
 	struct nvme_payload payload;
 
-	payload.type = NVME_PAYLOAD_TYPE_CONTIG;
-	payload.u.contig = buf;
-	payload.md = md_buf;
+	payload = NVME_PAYLOAD_CONTIG(buf, md_buf);
 
 	req = nvme_allocate_request(qpair, &payload, len, cb_fn, cb_arg);
 	if (req == NULL) {
@@ -467,11 +465,11 @@ spdk_nvme_ctrlr_cmd_abort_cpl(void *ctx, const struct spdk_nvme_cpl *cpl)
 		rc = nvme_ctrlr_submit_admin_request(ctrlr, next);
 		if (rc < 0) {
 			SPDK_ERRLOG("Failed to submit queued abort.\n");
+			memset(&next->cpl, 0, sizeof(next->cpl));
 			next->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 			next->cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			next->cpl.status.dnr = 1;
-			next->cb_fn(next->cb_arg, &req->cpl);
-
+			nvme_complete_request(next, &req->cpl);
 			nvme_free_request(next);
 		} else {
 			/* If the first abort succeeds, stop iterating. */

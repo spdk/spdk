@@ -47,7 +47,7 @@
 #include "spdk/io_channel.h"
 #include "spdk/util.h"
 
-#include "spdk_internal/bdev.h"
+#include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
 
 
@@ -410,8 +410,7 @@ vbdev_passthru_get_spdk_running_config(FILE *fp)
 
 	fprintf(fp, "\n[Passthru]\n");
 	TAILQ_FOREACH(names, &g_bdev_names, link) {
-		fprintf(fp, "  PT %s %s ", names->bdev_name, names->vbdev_name);
-		fprintf(fp, "\n");
+		fprintf(fp, "  PT %s %s\n", names->bdev_name, names->vbdev_name);
 	}
 	fprintf(fp, "\n");
 }
@@ -446,7 +445,7 @@ static const struct spdk_bdev_fn_table vbdev_passthru_fn_table = {
 
 /* Called when the underlying base bdev goes away. */
 static void
-vbdev_passthru_examine_hotremove_cb(void *ctx)
+vbdev_passthru_base_bdev_hotremove_cb(void *ctx)
 {
 	struct vbdev_passthru *pt_node, *tmp;
 	struct spdk_bdev *bdev_find = ctx;
@@ -512,7 +511,7 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 					sizeof(struct pt_io_channel));
 		SPDK_NOTICELOG("io_device created at: 0x%p\n", pt_node);
 
-		rc = spdk_bdev_open(bdev, true, vbdev_passthru_examine_hotremove_cb,
+		rc = spdk_bdev_open(bdev, true, vbdev_passthru_base_bdev_hotremove_cb,
 				    bdev, &pt_node->base_desc);
 		if (rc) {
 			SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(bdev));
