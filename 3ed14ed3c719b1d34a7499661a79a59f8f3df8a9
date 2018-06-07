@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fdc086aa_85c60806",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-07T18:18:22Z",
+      "side": 1,
+      "message": "Can we put this check in test/common/autotest_common.sh instead and make it turn off SPDK_TEST_RBD if ceph is not found?  We have a few flags that are autodetected this way, but not all of them do it.",
+      "revId": "3ed14ed3c719b1d34a7499661a79a59f8f3df8a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f916944f_044cc3a3",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-07T18:18:22Z",
+      "side": 1,
+      "message": "Same for this check.",
+      "revId": "3ed14ed3c719b1d34a7499661a79a59f8f3df8a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
