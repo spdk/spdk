@@ -821,7 +821,7 @@ if __name__ == "__main__":
     # NVMe-oF
     @call_cmd
     def get_nvmf_subsystems(args):
-        print_dict(rpc.nvmf.get_nvmf_subsystems(args.client, args))
+        print_dict(rpc.nvmf.get_nvmf_subsystems(args.client))
 
     p = subparsers.add_parser('get_nvmf_subsystems',
                               help='Display nvmf subsystems')
@@ -829,7 +829,15 @@ if __name__ == "__main__":
 
     @call_cmd
     def construct_nvmf_subsystem(args):
-        rpc.nvmf.construct_nvmf_subsystem(args.client, args)
+        rpc.nvmf.construct_nvmf_subsystem(
+            args.client,
+            nqn=args.nqn,
+            listen_addresses=args.listen,
+            hosts=args.hosts,
+            allow_any_host=args.allow_any_host,
+            serial_number=args.serial_number,
+            namespaces=args.namespaces,
+            max_namespaces=args.max_namespaces)
 
     p = subparsers.add_parser('construct_nvmf_subsystem', help='Add a nvmf subsystem')
     p.add_argument('nqn', help='Target nqn(ASCII)')
@@ -853,7 +861,7 @@ if __name__ == "__main__":
 
     @call_cmd
     def delete_nvmf_subsystem(args):
-        rpc.nvmf.delete_nvmf_subsystem(args.client, args)
+        rpc.nvmf.delete_nvmf_subsystem(args.client, subsystem_nqn=args.subsystem_nqn)
 
     p = subparsers.add_parser('delete_nvmf_subsystem',
                               help='Delete a nvmf subsystem')
@@ -863,7 +871,13 @@ if __name__ == "__main__":
 
     @call_cmd
     def nvmf_subsystem_add_listener(args):
-        rpc.nvmf.nvmf_subsystem_add_listener(args.client, args)
+        rpc.nvmf.nvmf_subsystem_add_listener(
+            args.client,
+            nqn=args.nqn,
+            trtype=args.trtype,
+            traddr=args.traddr,
+            adrfam=args.adrfam,
+            trsvcid=args.trsvcid)
 
     p = subparsers.add_parser('nvmf_subsystem_add_listener', help='Add a listener to an NVMe-oF subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
@@ -875,7 +889,13 @@ if __name__ == "__main__":
 
     @call_cmd
     def nvmf_subsystem_remove_listener(args):
-        rpc.nvmf.nvmf_subsystem_remove_listener(args.client, args)
+        rpc.nvmf.nvmf_subsystem_remove_listener(
+            args.client,
+            nqn=args.nqn,
+            trtype=args.trtype,
+            traddr=args.traddr,
+            adrfam=args.adrfam,
+            trsvcid=args.trsvcid)
 
     p = subparsers.add_parser('nvmf_subsystem_remove_listener', help='Remove a listener from an NVMe-oF subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
@@ -887,7 +907,13 @@ if __name__ == "__main__":
 
     @call_cmd
     def nvmf_subsystem_add_ns(args):
-        rpc.nvmf.nvmf_subsystem_add_ns(args.client, args)
+        rpc.nvmf.nvmf_subsystem_add_ns(
+            args.client,
+            nqn=args.nqn,
+            bdev_name=args.bdev_name,
+            nsid=args.nsid,
+            nguid=args.nguid,
+            eui64=args.eui64)
 
     p = subparsers.add_parser('nvmf_subsystem_add_ns', help='Add a namespace to an NVMe-oF subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
@@ -899,7 +925,7 @@ if __name__ == "__main__":
 
     @call_cmd
     def nvmf_subsystem_remove_ns(args):
-        rpc.nvmf.nvmf_subsystem_remove_ns(args.client, args)
+        rpc.nvmf.nvmf_subsystem_remove_ns(args.client, nqn=args.nqn, nsid=args.nsid)
 
     p = subparsers.add_parser('nvmf_subsystem_remove_ns', help='Remove a namespace to an NVMe-oF subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
@@ -908,7 +934,7 @@ if __name__ == "__main__":
 
     @call_cmd
     def nvmf_subsystem_add_host(args):
-        rpc.nvmf.nvmf_subsystem_add_host(args.client, args)
+        rpc.nvmf.nvmf_subsystem_add_host(args.client, nqn=args.nqn, host=args.host)
 
     p = subparsers.add_parser('nvmf_subsystem_add_host', help='Add a host to an NVMe-oF subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
@@ -917,7 +943,7 @@ if __name__ == "__main__":
 
     @call_cmd
     def nvmf_subsystem_remove_host(args):
-        rpc.nvmf.nvmf_subsystem_remove_host(args.client, args)
+        rpc.nvmf.nvmf_subsystem_remove_host(args.client, nqn=args.nqn, host=args.host)
 
     p = subparsers.add_parser('nvmf_subsystem_remove_host', help='Remove a host from an NVMe-oF subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
@@ -926,7 +952,7 @@ if __name__ == "__main__":
 
     @call_cmd
     def nvmf_subsystem_allow_any_host(args):
-        rpc.nvmf.nvmf_subsystem_allow_any_host(args.client, args)
+        rpc.nvmf.nvmf_subsystem_allow_any_host(args.client, nqn=args.nqn, disable=args.disable)
 
     p = subparsers.add_parser('nvmf_subsystem_allow_any_host', help='Allow any host to connect to the subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
