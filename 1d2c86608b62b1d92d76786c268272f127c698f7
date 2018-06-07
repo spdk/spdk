@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0e26bd33_2cfec1e2",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-06-07T02:51:19Z",
+      "side": 1,
+      "message": "Not sure whether \"blobstore device\" is more proper.",
+      "range": {
+        "startLine": 123,
+        "startChar": 13,
+        "endLine": 123,
+        "endChar": 18
+      },
+      "revId": "1d2c86608b62b1d92d76786c268272f127c698f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
