@@ -59,6 +59,7 @@ static int g_is_random;
 static bool g_verify = false;
 static bool g_reset = false;
 static bool g_unmap = false;
+static bool g_flush = false;
 static int g_queue_depth;
 static uint64_t g_time_in_usec;
 static int g_show_performance_real_time = 0;
@@ -396,6 +397,15 @@ bdevperf_submit_single(struct io_target *target, struct bdevperf_task *task)
 			g_run_failed = true;
 			return;
 		}
+	} else if (g_flush) {
+		rc = spdk_bdev_flush_blocks(desc, ch, task->offset_blocks,
+					    target->io_size_blocks, bdevperf_complete, task);
+		if (rc) {
+			printf("Failed to submit flush: %d\n", rc);
+			target->is_draining = true;
+			g_run_failed = true;
+			return;
+		}
 	} else if (g_unmap) {
 		rc = spdk_bdev_unmap_blocks(desc, ch, task->offset_blocks,
 					    target->io_size_blocks, bdevperf_complete, task);
@@ -546,7 +556,7 @@ static void usage(char *program_name)
 	printf("\t[-q io depth]\n");
 	printf("\t[-s io size in bytes]\n");
 	printf("\t[-w io pattern type, must be one of\n");
-	printf("\t\t(read, write, randread, randwrite, rw, randrw, verify, reset)]\n");
+	printf("\t\t(read, write, randread, randwrite, rw, randrw, verify, reset, unmap, flush)]\n");
 	printf("\t[-M rwmixread (100 for reads, 0 for writes)]\n");
 	printf("\t[-t time in seconds]\n");
 	printf("\t[-P Number of moving average period]\n");
@@ -865,10 +875,11 @@ main(int argc, char **argv)
 	    strcmp(workload_type, "randrw") &&
 	    strcmp(workload_type, "verify") &&
 	    strcmp(workload_type, "reset") &&
-	    strcmp(workload_type, "unmap")) {
+	    strcmp(workload_type, "unmap") &&
+	    strcmp(workload_type, "flush")) {
 		fprintf(stderr,
 			"io pattern type must be one of\n"
-			"(read, write, randread, randwrite, rw, randrw, verify, reset, unmap)\n");
+			"(read, write, randread, randwrite, rw, randrw, verify, reset, unmap, flush)\n");
 		exit(1);
 	}
 
@@ -884,6 +895,10 @@ main(int argc, char **argv)
 
 	if (!strcmp(workload_type, "unmap")) {
 		g_unmap = true;
+	}
+
+	if (!strcmp(workload_type, "flush")) {
+		g_flush = true;
 	}
 
 	if (!strcmp(workload_type, "verify") ||
@@ -910,7 +925,8 @@ main(int argc, char **argv)
 	    !strcmp(workload_type, "randwrite") ||
 	    !strcmp(workload_type, "verify") ||
 	    !strcmp(workload_type, "reset") ||
-	    !strcmp(workload_type, "unmap")) {
+	    !strcmp(workload_type, "unmap") ||
+	    !strcmp(workload_type, "flush")) {
 		if (mix_specified) {
 			fprintf(stderr, "Ignoring -M option... Please use -M option"
 				" only when using rw or randrw.\n");
