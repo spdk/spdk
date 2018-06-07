@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "33628f79_61c50317",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-07T10:12:49Z",
+      "side": 1,
+      "message": "As this is major change pls also update changelog.",
+      "range": {
+        "startLine": 122,
+        "startChar": 0,
+        "endLine": 124,
+        "endChar": 45
+      },
+      "revId": "ad9b80d88428446d85fca232bbb0866d05b95c1d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
