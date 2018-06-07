@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d0694894_ecf840e2",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-06-07T02:55:33Z",
+      "side": 1,
+      "message": "Daniel is refactoring out timeout feature in NVMe library, so submit_tsc here can reuse submit_ticks after his patch, and timeout_tsc can be used for per-request timeout in future.",
+      "revId": "79f062afe264d78d1ea81da36f32004d13fae5ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
