@@ -34,17 +34,49 @@
 #include "jsonrpc_internal.h"
 #include "spdk/string.h"
 
+static void
+free_server(struct spdk_jsonrpc_server *server)
+{
+	struct spdk_jsonrpc_server_conn *conn;
+
+	while ((conn = TAILQ_FIRST(&server->free_conns)) != NULL) {
+		TAILQ_REMOVE(&server->conns, conn, link);
+		free(conn);
+	}
+
+	while ((conn = TAILQ_FIRST(&server->conns)) != NULL) {
+		TAILQ_REMOVE(&server->conns, conn, link);
+		free(conn);
+	}
+
+	free(server);
+}
+
 struct spdk_jsonrpc_server *
 spdk_jsonrpc_server_listen(int domain, int protocol,
 			   struct sockaddr *listen_addr, socklen_t addrlen,
 			   spdk_jsonrpc_handle_request_fn handle_request)
 {
 	struct spdk_jsonrpc_server *server;
-	int rc, val, flag;
+	struct spdk_jsonrpc_server_conn *conns;
+	int rc, val, flag, i;
+
+	conns = calloc(SPDK_JSONRPC_MAX_CONNS, sizeof(conns[0]));
+	if (conns == NULL) {
+		return NULL;
+	}
 
 	server = calloc(1, sizeof(struct spdk_jsonrpc_server));
 	if (server == NULL) {
+		free(conns);
 		return NULL;
+	}
+
+	TAILQ_INIT(&server->free_conns);
+	TAILQ_INIT(&server->conns);
+
+	for (i = 0; i < SPDK_JSONRPC_MAX_CONNS; i++) {
+		TAILQ_INSERT_TAIL(&server->free_conns, &conns[i], link);
 	}
 
 	server->handle_request = handle_request;
@@ -52,7 +84,7 @@ spdk_jsonrpc_server_listen(int domain, int protocol,
 	server->sockfd = socket(domain, SOCK_STREAM, protocol);
 	if (server->sockfd < 0) {
 		SPDK_ERRLOG("socket() failed\n");
-		free(server);
+		free_server(server);
 		return NULL;
 	}
 
@@ -67,7 +99,7 @@ spdk_jsonrpc_server_listen(int domain, int protocol,
 		SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n",
 			    server->sockfd, spdk_strerror(errno));
 		close(server->sockfd);
-		free(server);
+		free_server(server);
 		return NULL;
 	}
 
@@ -75,7 +107,7 @@ spdk_jsonrpc_server_listen(int domain, int protocol,
 	if (rc != 0) {
 		SPDK_ERRLOG("could not bind JSON-RPC server: %s\n", spdk_strerror(errno));
 		close(server->sockfd);
-		free(server);
+		free_server(server);
 		return NULL;
 	}
 
@@ -83,7 +115,7 @@ spdk_jsonrpc_server_listen(int domain, int protocol,
 	if (rc != 0) {
 		SPDK_ERRLOG("listen() failed, errno = %d\n", errno);
 		close(server->sockfd);
-		free(server);
+		free_server(server);
 		return NULL;
 	}
 
@@ -93,15 +125,15 @@ spdk_jsonrpc_server_listen(int domain, int protocol,
 void
 spdk_jsonrpc_server_shutdown(struct spdk_jsonrpc_server *server)
 {
-	int i;
+	struct spdk_jsonrpc_server_conn *conn;
 
 	close(server->sockfd);
 
-	for (i = 0; i < server->num_conns; i++) {
-		close(server->conns[i].sockfd);
+	TAILQ_FOREACH(conn, &server->conns, link) {
+		close(conn->sockfd);
 	}
 
-	free(server);
+	free_server(server);
 }
 
 static void
@@ -119,29 +151,27 @@ static void
 spdk_jsonrpc_server_conn_remove(struct spdk_jsonrpc_server_conn *conn)
 {
 	struct spdk_jsonrpc_server *server = conn->server;
-	int conn_idx = conn - server->conns;
 
 	spdk_jsonrpc_server_conn_close(conn);
 
 	pthread_spin_destroy(&conn->queue_lock);
 	assert(STAILQ_EMPTY(&conn->send_queue));
 
-	/* Swap conn with the last entry in conns */
-	server->conns[conn_idx] = server->conns[server->num_conns - 1];
-	server->num_conns--;
+	TAILQ_REMOVE(&server->conns, conn, link);
+	TAILQ_INSERT_HEAD(&server->free_conns, conn, link);
 }
 
 static int
 spdk_jsonrpc_server_accept(struct spdk_jsonrpc_server *server)
 {
 	struct spdk_jsonrpc_server_conn *conn;
-	int rc, conn_idx, flag;
+	int rc, flag;
 
 	rc = accept(server->sockfd, NULL, NULL);
 	if (rc >= 0) {
-		assert(server->num_conns < SPDK_JSONRPC_MAX_CONNS);
-		conn_idx = server->num_conns;
-		conn = &server->conns[conn_idx];
+		conn = TAILQ_FIRST(&server->free_conns);
+		assert(conn != NULL);
+
 		conn->server = server;
 		conn->sockfd = rc;
 		conn->closed = false;
@@ -159,8 +189,8 @@ spdk_jsonrpc_server_accept(struct spdk_jsonrpc_server *server)
 			return -1;
 		}
 
-		server->num_conns++;
-
+		TAILQ_REMOVE(&server->free_conns, conn, link);
+		TAILQ_INSERT_TAIL(&server->conns, conn, link);
 		return 0;
 	}
 
@@ -332,12 +362,10 @@ more:
 int
 spdk_jsonrpc_server_poll(struct spdk_jsonrpc_server *server)
 {
-	int rc, i;
-	struct spdk_jsonrpc_server_conn *conn;
+	int rc;
+	struct spdk_jsonrpc_server_conn *conn, *conn_tmp;
 
-	for (i = 0; i < server->num_conns; i++) {
-		conn = &server->conns[i];
-
+	TAILQ_FOREACH_SAFE(conn, &server->conns, link, conn_tmp) {
 		if (conn->closed) {
 			struct spdk_jsonrpc_request *request;
 
@@ -365,13 +393,11 @@ spdk_jsonrpc_server_poll(struct spdk_jsonrpc_server *server)
 	}
 
 	/* Check listen socket */
-	if (server->num_conns < SPDK_JSONRPC_MAX_CONNS) {
+	if (!TAILQ_EMPTY(&server->free_conns)) {
 		spdk_jsonrpc_server_accept(server);
 	}
 
-	for (i = 0; i < server->num_conns; i++) {
-		conn = &server->conns[i];
-
+	TAILQ_FOREACH(conn, &server->conns, link) {
 		if (conn->closed) {
 			continue;
 		}
