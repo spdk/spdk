@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bcbe3e05_226a7040",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 475,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-07T21:23:49Z",
+      "side": 1,
+      "message": "I know we are in user context here and we can use all the memory we want for stack but it just not look right for me. Maybe it deserve its own function? Maybe some static or smaller arrays?",
+      "range": {
+        "startLine": 473,
+        "startChar": 0,
+        "endLine": 475,
+        "endChar": 38
+      },
+      "revId": "46e41e60b9056832ab9ed2430e6f458f938fe749",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17f74a0b_1ff68921",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-07T21:23:49Z",
+      "side": 1,
+      "message": "Pls don\u0027t cast if you don\u0027t have to. It don\u0027t bring you any benefits and just makes static code inspection useless.",
+      "range": {
+        "startLine": 480,
+        "startChar": 33,
+        "endLine": 480,
+        "endChar": 58
+      },
+      "revId": "46e41e60b9056832ab9ed2430e6f458f938fe749",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "34276b5c_47a89739",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 491,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-07T21:23:49Z",
+      "side": 1,
+      "message": "This is not a boolean expession. You should use \u0027!!( )\u0027 idiom",
+      "range": {
+        "startLine": 491,
+        "startChar": 58,
+        "endLine": 491,
+        "endChar": 59
+      },
+      "revId": "46e41e60b9056832ab9ed2430e6f458f938fe749",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f4d5472_ccdb99ba",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 512,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-07T21:23:49Z",
+      "side": 1,
+      "message": "It is my personal opinion but if you are using \"struct rte_*\" pls use rte_* API\n\nThe same comment reamin valid for all over this file.",
+      "range": {
+        "startLine": 512,
+        "startChar": 6,
+        "endLine": 512,
+        "endChar": 69
+      },
+      "revId": "46e41e60b9056832ab9ed2430e6f458f938fe749",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9bcae417_719490c5",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 536,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-07T21:23:49Z",
+      "side": 1,
+      "message": "Amazing :)",
+      "range": {
+        "startLine": 536,
+        "startChar": 35,
+        "endLine": 536,
+        "endChar": 53
+      },
+      "revId": "46e41e60b9056832ab9ed2430e6f458f938fe749",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "20b849d7_8d784848",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 537,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-07T21:23:49Z",
+      "side": 1,
+      "message": "This can be in the same line.",
+      "range": {
+        "startLine": 537,
+        "startChar": 10,
+        "endLine": 537,
+        "endChar": 20
+      },
+      "revId": "46e41e60b9056832ab9ed2430e6f458f938fe749",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "abdb1b76_0043221f",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 539,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-07T21:23:49Z",
+      "side": 1,
+      "message": "Amazing^2 :)",
+      "range": {
+        "startLine": 539,
+        "startChar": 36,
+        "endLine": 539,
+        "endChar": 54
+      },
+      "revId": "46e41e60b9056832ab9ed2430e6f458f938fe749",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c818ec8_1b629f9d",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 554,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-07T21:23:49Z",
+      "side": 1,
+      "message": "Amazing^3 and so on....",
+      "range": {
+        "startLine": 554,
+        "startChar": 35,
+        "endLine": 554,
+        "endChar": 53
+      },
+      "revId": "46e41e60b9056832ab9ed2430e6f458f938fe749",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4cba9709_f2b9aca5",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 1342,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-07T21:23:49Z",
+      "side": 1,
+      "message": "I see too many \u0027free(...)\u0027 calls all over this file. Is this really needed?",
+      "range": {
+        "startLine": 1339,
+        "startChar": 0,
+        "endLine": 1342,
+        "endChar": 21
+      },
+      "revId": "46e41e60b9056832ab9ed2430e6f458f938fe749",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
