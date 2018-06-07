@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a28bd534_384de74e",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-07T19:59:20Z",
+      "side": 1,
+      "message": "Agreed - I\u0027ll change it (and the one below too).",
+      "parentUuid": "fdc086aa_85c60806",
+      "revId": "3ed14ed3c719b1d34a7499661a79a59f8f3df8a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f916944f_044cc3a3",
         "filename": "test/bdev/blockdev.sh",
         "patchSetId": 1
