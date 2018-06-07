@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9e0a3cd0_cca8d080",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 2952,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-07T10:09:06Z",
+      "side": 1,
+      "message": "Those lines could be swapped.",
+      "range": {
+        "startLine": 2952,
+        "startChar": 1,
+        "endLine": 2952,
+        "endChar": 20
+      },
+      "revId": "54db899b5aea14e9257c1eb0957dad9654bb3b64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "89ca4731_f79ac171",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 2960,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-07T10:09:06Z",
+      "side": 1,
+      "message": "This could be debug or notice. Also include bdev name and super-\u003esize and bdev size in the message.",
+      "range": {
+        "startLine": 2960,
+        "startChar": 2,
+        "endLine": 2960,
+        "endChar": 49
+      },
+      "revId": "54db899b5aea14e9257c1eb0957dad9654bb3b64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aabf99af_f3284939",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 2974,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-07T10:09:06Z",
+      "side": 1,
+      "message": "Not needed line.",
+      "revId": "54db899b5aea14e9257c1eb0957dad9654bb3b64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a0fa1ff3_7a132fc6",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 2989,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-07T10:09:06Z",
+      "side": 1,
+      "message": "You can use `update_super_cb !\u003d NULL` to eliminate `update_super`",
+      "range": {
+        "startLine": 2989,
+        "startChar": 1,
+        "endLine": 2989,
+        "endChar": 27
+      },
+      "revId": "54db899b5aea14e9257c1eb0957dad9654bb3b64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
