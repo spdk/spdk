@@ -49,6 +49,7 @@ class UIBdevs(UINode):
     def refresh(self):
         self._children = set([])
         UIMallocBdev(self)
+        UIOcssdBdev(self)
         UIAIOBdev(self)
         UILvolBdev(self)
         UINvmeBdev(self)
@@ -198,6 +199,23 @@ class UIMallocBdev(UIBdev):
         ret_name = self.get_root().create_malloc_bdev(num_blocks=size * 1024 * 1024 // block_size,
                                                       block_size=block_size,
                                                       name=name, uuid=uuid)
+        self.shell.log.info(ret_name)
+        self.get_root().refresh()
+        self.refresh()
+
+class UIOcssdBdev(UIBdev):
+    def __init__(self, parent):
+        UIBdev.__init__(self, "OCSSD_disk", parent)
+
+    def ui_command_create(self, name):
+        """
+        Construct a Ocssd bdev.
+
+        Arguments:
+        name - base bdev name
+        """
+
+        ret_name = self.get_root().create_ocssd_bdev(name=name)
         self.shell.log.info(ret_name)
         self.get_root().refresh()
         self.refresh()

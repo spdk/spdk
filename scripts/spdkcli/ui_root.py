@@ -53,6 +53,10 @@ class UIRoot(UINode):
         response = rpc.bdev.construct_malloc_bdev(self.client, **kwargs)
         return self.print_array(response)
 
+    def create_ocssd_bdev(self, **kwargs):
+        response = rpc.bdev.construct_ocssd_bdev(self.client, **kwargs)
+        return self.print_array(response)
+
     def create_aio_bdev(self, **kwargs):
         response = rpc.bdev.construct_aio_bdev(self.client, **kwargs)
         return self.print_array(response)
