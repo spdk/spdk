@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab5a0157_24c02a38",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-07T00:53:48Z",
+      "side": 1,
+      "message": "your stats code probably should be added here?\nIt looks that\n-  you want to know poller is simply busy or not, and\n-  in a iteration of the main loop, we cannot limit so that only one of event, poller, and timer is executed.",
+      "revId": "6d89cd2bf2634a517891f2a8be62586412ce8ffd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
