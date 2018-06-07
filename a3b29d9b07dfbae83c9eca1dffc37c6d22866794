@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f3862a4b_62a9ad71",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 921,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-07T18:17:51Z",
+      "side": 1,
+      "message": "I will rework this so there will be no sleep here.",
+      "range": {
+        "startLine": 913,
+        "startChar": 0,
+        "endLine": 921,
+        "endChar": 14
+      },
+      "revId": "a3b29d9b07dfbae83c9eca1dffc37c6d22866794",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
