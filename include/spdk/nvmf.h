@@ -650,13 +650,6 @@ const char *spdk_nvmf_subsystem_get_nqn(struct spdk_nvmf_subsystem *subsystem);
 enum spdk_nvmf_subtype spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem);
 
 /**
- * Handle the NVMe-oF request for connection.
- *
- * \param req NVMe-oF request to handle.
- */
-void spdk_nvmf_handle_connect(struct spdk_nvmf_request *req);
-
-/**
  * Disconnect the NVMe-oF controller.
  *
  * \param qpair The NVMe-oF qpair associated with the controller.
