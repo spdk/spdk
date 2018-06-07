@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2f81ef44_386e556e",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-07T17:57:04Z",
+      "side": 1,
+      "message": "rc_stats is not a very descriptive name; we also typically prefix public structs with spdk_\n\nMaybe spdk_reactor_tsc_stats?",
+      "revId": "d03ad28e3b4dff4cb1fcb6d261b1060a8da8474f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4025e642_5d24e99d",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-07T17:57:04Z",
+      "side": 1,
+      "message": "last_tsc should not be part of the public API - this is used by the reactor internally for tracking",
+      "revId": "d03ad28e3b4dff4cb1fcb6d261b1060a8da8474f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ad83a02_fa4b24d2",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-07T17:57:04Z",
+      "side": 1,
+      "message": "I don\u0027t think this should be part of the public API.  We don\u0027t want anyone calling this function - only reactor.c should be calling it.",
+      "revId": "d03ad28e3b4dff4cb1fcb6d261b1060a8da8474f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cdee778d_505af20b",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-07T17:57:04Z",
+      "side": 1,
+      "message": "last_tsc should move here",
+      "revId": "d03ad28e3b4dff4cb1fcb6d261b1060a8da8474f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "31c9d90e_2ca463a6",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 420,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-07T17:57:04Z",
+      "side": 1,
+      "message": "I think you should just set last_tsc to now in spdk_reactor_run, before the loop starts.  Then you don\u0027t need to do this check every time you add tsc stats.",
+      "revId": "d03ad28e3b4dff4cb1fcb6d261b1060a8da8474f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d84740b9_11a27dd3",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 448,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-07T17:57:04Z",
+      "side": 1,
+      "message": "it is not possible for rc_stats to be NULL - even if reactor was NULL, \u0026reactor-\u003erc_stats would be something not NULL",
+      "revId": "d03ad28e3b4dff4cb1fcb6d261b1060a8da8474f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
