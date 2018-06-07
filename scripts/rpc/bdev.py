@@ -45,6 +45,19 @@ def delete_malloc_bdev(client, name):
     return client.call('delete_malloc_bdev', params)
 
 
+def construct_ocssd_bdev(client, name):
+    """Construct a Ocssd block device.
+
+    Args:
+        name: name of block device
+
+    Returns:
+        List of created block devices.
+    """
+    params = {'name': name }
+    return client.call('construct_ocssd_bdev', params)
+
+
 def construct_null_bdev(client, num_blocks, block_size, name, uuid=None):
     """Construct a null block device.
 
