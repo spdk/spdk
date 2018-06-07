@@ -41,6 +41,7 @@
 #include "spdk/log.h"
 #include "spdk/version.h"
 #include "spdk/string.h"
+#include "spdk/uuid.h"
 
 /*
  * The following is not a public header file, but the CLI does expose
@@ -80,6 +81,7 @@ enum cli_action_type {
 	CLI_LIST_BDEVS,
 	CLI_LIST_BLOBS,
 	CLI_INIT_BS,
+	CLI_DUMP_BS,
 	CLI_SHELL_EXIT,
 	CLI_HELP,
 };
@@ -147,6 +149,7 @@ print_cmds(void)
 	printf("\nCommands include:\n");
 	printf("\t-b bdev - name of the block device to use (example: Nvme0n1)\n");
 	printf("\t-d <blobid> filename - dump contents of a blob to a file\n");
+	printf("\t-D - dump metadata contents of an existing blobstore\n");
 	printf("\t-f <blobid> value - fill a blob with a decimal value\n");
 	printf("\t-h - this help screen\n");
 	printf("\t-i - initialize a blobstore\n");
@@ -958,6 +961,77 @@ init_bs(struct cli_context_t *cli_context)
 		     cli_context);
 }
 
+static void
+spdk_bsdump_done(void *arg, int bserrno)
+{
+	struct cli_context_t *cli_context = arg;
+
+	if (cli_context->cli_mode == CLI_MODE_CMD) {
+		spdk_app_stop(0);
+	} else {
+		cli_context->action = CLI_NONE;
+		cli_start(cli_context, NULL);
+	}
+}
+
+static void
+bsdump_print_xattr(FILE *fp, const char *bstype, const char *name, const void *value,
+		   size_t value_len)
+{
+	if (strncmp(bstype, "BLOBFS", SPDK_BLOBSTORE_TYPE_LENGTH) == 0) {
+		if (strcmp(name, "name") == 0) {
+			fprintf(fp, "%.*s", (int)value_len, (char *)value);
+		} else if (strcmp(name, "length") == 0 && value_len == sizeof(uint64_t)) {
+			uint64_t length;
+
+			memcpy(&length, value, sizeof(length));
+			fprintf(fp, "%" PRIu64, length);
+		} else {
+			fprintf(fp, "?");
+		}
+	} else if (strncmp(bstype, "LVOLSTORE", SPDK_BLOBSTORE_TYPE_LENGTH) == 0) {
+		if (strcmp(name, "name") == 0) {
+			fprintf(fp, "%s", (char *)value);
+		} else if (strcmp(name, "uuid") == 0 && value_len == sizeof(struct spdk_uuid)) {
+			char uuid[SPDK_UUID_STRING_LEN];
+
+			spdk_uuid_fmt_lower(uuid, sizeof(uuid), (struct spdk_uuid *)value);
+			fprintf(fp, "%s", uuid);
+		} else {
+			fprintf(fp, "?");
+		}
+	} else {
+		fprintf(fp, "?");
+	}
+}
+
+/*
+ * Dump metadata of an existing blobstore in a human-readable format.
+ */
+static void
+dump_bs(struct cli_context_t *cli_context)
+{
+	struct spdk_bdev *bdev = NULL;
+
+	bdev = spdk_bdev_get_by_name(cli_context->bdev_name);
+	if (bdev == NULL) {
+		printf("Could not find a bdev\n");
+		spdk_app_stop(-1);
+		return;
+	}
+	printf("Init blobstore using bdev Product Name: %s\n",
+	       spdk_bdev_get_product_name(bdev));
+
+	cli_context->bs_dev = spdk_bdev_create_bs_dev(bdev, NULL, NULL);
+	if (cli_context->bs_dev == NULL) {
+		printf("Could not create blob bdev!!\n");
+		spdk_app_stop(-1);
+		return;
+	}
+
+	spdk_bs_dump(cli_context->bs_dev, stdout, bsdump_print_xattr, spdk_bsdump_done, cli_context);
+}
+
 /*
  * Common cmd/option parser for command and shell modes.
  */
@@ -968,7 +1042,7 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 	int cmd_chosen = 0;
 	char resp;
 
-	while ((op = getopt(argc, argv, "b:c:d:f:hil:m:n:p:r:s:ST:Xx:")) != -1) {
+	while ((op = getopt(argc, argv, "b:c:d:f:hil:m:n:p:r:s:DST:Xx:")) != -1) {
 		switch (op) {
 		case 'b':
 			if (strcmp(cli_context->bdev_name, "") == 0) {
@@ -984,6 +1058,10 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 			} else {
 				usage(cli_context, "ERROR: -c option not valid during shell mode.\n");
 			}
+			break;
+		case 'D':
+			cmd_chosen++;
+			cli_context->action = CLI_DUMP_BS;
 			break;
 		case 'd':
 			if (argv[optind] != NULL) {
@@ -1380,6 +1458,9 @@ cli_start(void *arg1, void *arg2)
 		break;
 	case CLI_INIT_BS:
 		init_bs(cli_context);
+		break;
+	case CLI_DUMP_BS:
+		dump_bs(cli_context);
 		break;
 	case CLI_LIST_BDEVS:
 		list_bdevs(cli_context);
