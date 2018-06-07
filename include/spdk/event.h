@@ -237,6 +237,13 @@ spdk_app_parse_args_rvals_t spdk_app_parse_args(int argc, char **argv,
 		void (*parse)(int ch, char *arg), void (*usage)(void));
 
 /**
+ * Print usage strings for common SPDK command line options.
+ *
+ * May only be called after spdk_app_parse_args().
+ */
+void spdk_app_usage(void);
+
+/**
  * Allocate an event to be passed to spdk_event_call().
  *
  * \param lcore Lcore to run this event.
