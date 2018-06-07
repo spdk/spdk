@@ -47,6 +47,9 @@ extern "C" {
 
 #include "spdk/assert.h"
 
+/** A maximum number of LBAs that can be issued by vector I/O commands */
+#define SPDK_NVME_OCSSD_MAX_LBAL_ENTRIES	64
+
 struct spdk_ocssd_dev_lba_fmt {
 	/**  Contiguous number of bits assigned to Group addressing */
 	uint8_t grp_len;
