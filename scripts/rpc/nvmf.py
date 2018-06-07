@@ -1,3 +1,29 @@
+def set_nvmf_target_options(client, args):
+    params = {}
+
+    if args.max_queue_depth:
+        params['max_queue_depth'] = args.max_queue_depth
+    if args.max_qpairs_per_session:
+        params['max_qpairs_per_session'] = args.max_qpairs_per_session
+    if args.in_capsule_data_size:
+        params['in_capsule_data_size'] = args.in_capsule_data_size
+    if args.max_io_size:
+        params['max_io_size'] = args.max_io_size
+    if args.max_subsystems:
+        params['max_subsystems'] = args.max_subsystems
+    if args.io_unit_size:
+        params['io_unit_size'] = args.io_unit_size
+    return client.call('set_nvmf_target_options', params)
+
+
+def set_nvmf_target_config(client, args):
+    params = {}
+
+    if args.acceptor_poll_rate:
+        params['acceptor_poll_rate'] = args.acceptor_poll_rate
+    return client.call('set_nvmf_target_config', params)
+
+
 def get_nvmf_subsystems(client, args):
     return client.call('get_nvmf_subsystems')
 
