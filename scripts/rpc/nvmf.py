@@ -1,124 +1,212 @@
-def get_nvmf_subsystems(client, args):
+def get_nvmf_subsystems(client):
     return client.call('get_nvmf_subsystems')
 
 
-def construct_nvmf_subsystem(client, args):
+def construct_nvmf_subsystem(
+        client,
+        nqn,
+        listen_addresses,
+        hosts,
+        allow_any_host,
+        serial_number,
+        namespaces,
+        max_namespaces):
+    """Construct an NVMe over Fabrics target subsystem.
+
+    Args:
+        nqn: Subsystem NQN.
+        listen_addresses: Array of listen_address objects.
+        hosts: Array of strings containing allowed host NQNs. Default: No hosts allowed.
+        allow_any_host: Allow any host (true) or enforce allowed host whitelist (false). Default: false.
+        serial_number: Serial number of virtual controller.
+        namespaces: Array of namespace objects. Default: No namespaces.
+        max_namespaces: Maximum number of namespaces that can be attached to the subsystem. Default: 0 (Unlimited).
+
+    Returns:
+        True or False
+    """
     params = {
-        'nqn': args.nqn,
-        'serial_number': args.serial_number,
+        'nqn': nqn,
+        'serial_number': serial_number,
     }
 
-    if args.max_namespaces:
-        params['max_namespaces'] = args.max_namespaces
+    if max_namespaces:
+        params['max_namespaces'] = max_namespaces
 
-    if args.listen:
-        params['listen_addresses'] = [dict(u.split(":", 1) for u in a.split(" "))
-                                      for a in args.listen.split(",")]
+    if listen_addresses:
+        params['listen_addresses'] = listen_addresses
 
-    if args.hosts:
-        hosts = []
-        for u in args.hosts.strip().split(" "):
-            hosts.append(u)
+    if hosts:
         params['hosts'] = hosts
 
-    if args.allow_any_host:
+    if allow_any_host:
         params['allow_any_host'] = True
 
-    if args.namespaces:
-        namespaces = []
-        for u in args.namespaces.strip().split(" "):
-            bdev_name = u
-            nsid = 0
-            if ':' in u:
-                (bdev_name, nsid) = u.split(":")
-
-            ns_params = {'bdev_name': bdev_name}
-
-            nsid = int(nsid)
-            if nsid != 0:
-                ns_params['nsid'] = nsid
-
-            namespaces.append(ns_params)
+    if namespaces:
         params['namespaces'] = namespaces
 
     return client.call('construct_nvmf_subsystem', params)
 
 
-def nvmf_subsystem_add_listener(client, args):
-    listen_address = {'trtype': args.trtype,
-                      'traddr': args.traddr,
-                      'trsvcid': args.trsvcid}
+def nvmf_subsystem_add_listener(client, trtype, traddr, trsvcid, adrfam, nqn):
+    """Add a new listen address to an NVMe-oF subsystem.
 
-    if args.adrfam:
-        listen_address['adrfam'] = args.adrfam
+    Args:
+        trtype: Transport type ("RDMA").
+        traddr: Transport address.
+        trsvcid: Transport service ID.
+        adrfam: Address family ("IPv4", "IPv6", "IB", or "FC").
+        nqn: Subsystem NQN.
 
-    params = {'nqn': args.nqn,
+    Returns:
+        True or False
+    """
+    listen_address = {'trtype': trtype,
+                      'traddr': traddr,
+                      'trsvcid': trsvcid}
+
+    if adrfam:
+        listen_address['adrfam'] = adrfam
+
+    params = {'nqn': nqn,
               'listen_address': listen_address}
 
     return client.call('nvmf_subsystem_add_listener', params)
 
 
-def nvmf_subsystem_remove_listener(client, args):
-    listen_address = {'trtype': args.trtype,
-                      'traddr': args.traddr,
-                      'trsvcid': args.trsvcid}
+def nvmf_subsystem_remove_listener(
+        client,
+        trtype,
+        traddr,
+        trsvcid,
+        adrfam,
+        nqn):
+    """Remove existing listen address from an NVMe-oF subsystem.
 
-    if args.adrfam:
-        listen_address['adrfam'] = args.adrfam
+    Args:
+        trtype: Transport type ("RDMA").
+        traddr: Transport address.
+        trsvcid: Transport service ID.
+        adrfam: Address family ("IPv4", "IPv6", "IB", or "FC").
+        nqn: Subsystem NQN.
 
-    params = {'nqn': args.nqn,
+    Returns:
+            True or False
+    """
+    listen_address = {'trtype': trtype,
+                      'traddr': traddr,
+                      'trsvcid': trsvcid}
+
+    if adrfam:
+        listen_address['adrfam'] = adrfam
+
+    params = {'nqn': nqn,
               'listen_address': listen_address}
 
     return client.call('nvmf_subsystem_remove_listener', params)
 
 
-def nvmf_subsystem_add_ns(client, args):
-    ns = {'bdev_name': args.bdev_name}
+def nvmf_subsystem_add_ns(client, bdev_name, nsid, nguid, eui64, nqn):
+    """Add a namespace to a subsystem.
 
-    if args.nsid:
-        ns['nsid'] = args.nsid
+    Args:
+        bdev_name: Name of bdev to expose as a namespace.
+        nsid: Namespace ID.
+        nguid: 16-byte namespace globally unique identifier in hexadecimal.
+        eui64: 8-byte namespace EUI-64 in hexadecimal (e.g. "ABCDEF0123456789").
+        nqn: Subsystem NQN.
 
-    if args.nguid:
-        ns['nguid'] = args.nguid
+    Returns:
+        The namespace ID
+    """
+    ns = {'bdev_name': bdev_name}
 
-    if args.eui64:
-        ns['eui64'] = args.eui64
+    if nsid:
+        ns['nsid'] = nsid
 
-    params = {'nqn': args.nqn,
+    if nguid:
+        ns['nguid'] = nguid
+
+    if eui64:
+        ns['eui64'] = eui64
+
+    params = {'nqn': nqn,
               'namespace': ns}
 
     return client.call('nvmf_subsystem_add_ns', params)
 
 
-def nvmf_subsystem_remove_ns(client, args):
+def nvmf_subsystem_remove_ns(client, nqn, nsid):
+    """Remove a existing namespace from a subsystem.
 
-    params = {'nqn': args.nqn,
-              'nsid': args.nsid}
+    Args:
+        nsid: Namespace ID.
+        nqn: Subsystem NQN.
+
+    Returns:
+        True or False
+    """
+    params = {'nqn': nqn,
+              'nsid': nsid}
 
     return client.call('nvmf_subsystem_remove_ns', params)
 
 
-def nvmf_subsystem_add_host(client, args):
-    params = {'nqn': args.nqn,
-              'host': args.host}
+def nvmf_subsystem_add_host(client, nqn, host):
+    """Add a host NQN to the whitelist of allowed hosts.
+
+    Args:
+        nqn: Subsystem NQN.
+        host: Host NQN to add to the list of allowed host NQNs
+
+    Returns:
+        True or False
+    """
+    params = {'nqn': nqn,
+              'host': host}
 
     return client.call('nvmf_subsystem_add_host', params)
 
 
-def nvmf_subsystem_remove_host(client, args):
-    params = {'nqn': args.nqn,
-              'host': args.host}
+def nvmf_subsystem_remove_host(client, nqn, host):
+    """Remove a host NQN from the whitelist of allowed hosts.
+
+    Args:
+        nqn: Subsystem NQN.
+        host: Host NQN to remove to the list of allowed host NQNs
+
+    Returns:
+        True or False
+    """
+    params = {'nqn': nqn,
+              'host': host}
 
     return client.call('nvmf_subsystem_remove_host', params)
 
 
-def nvmf_subsystem_allow_any_host(client, args):
-    params = {'nqn': args.nqn}
-    params['allow_any_host'] = False if args.disable else True
+def nvmf_subsystem_allow_any_host(client, nqn, disable):
+    """Configure a subsystem to allow any host to connect or to enforce the host NQN whitelist.
+
+    Args:
+        nqn: Subsystem NQN.
+        disable: Allow any host (true) or enforce allowed host whitelist (false).
+
+        Returns:
+        True or False
+    """
+    params = {'nqn': nqn, 'allow_any_host': False if disable else True}
 
     return client.call('nvmf_subsystem_allow_any_host', params)
 
 
-def delete_nvmf_subsystem(client, args):
-    params = {'nqn': args.subsystem_nqn}
+def delete_nvmf_subsystem(client, subsystem_nqn):
+    """Delete an existing NVMe-oF subsystem.
+
+    Args:
+        subsystem_nqn: Subsystem NQN.
+
+        Returns:
+        True or False
+    """
+    params = {'nqn': subsystem_nqn}
     return client.call('delete_nvmf_subsystem', params)
