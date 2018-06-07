@@ -220,6 +220,7 @@ static void
 nvmf_tgt_destroy_done(void *ctx, int status)
 {
 	g_tgt_state = NVMF_TGT_STOPPED;
+	free(g_spdk_nvmf_tgt_conf);
 	nvmf_tgt_advance_state();
 }
 
@@ -280,7 +281,7 @@ nvmf_tgt_advance_state(void)
 		}
 		case NVMF_TGT_INIT_START_ACCEPTOR:
 			g_acceptor_poller = spdk_poller_register(acceptor_poll, g_spdk_nvmf_tgt,
-					    g_spdk_nvmf_tgt_conf.acceptor_poll_rate);
+					    g_spdk_nvmf_tgt_conf->acceptor_poll_rate);
 			SPDK_INFOLOG(SPDK_LOG_NVMF, "Acceptor running\n");
 			g_tgt_state = NVMF_TGT_RUNNING;
 			break;

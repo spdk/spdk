@@ -1529,3 +1529,108 @@ nvmf_rpc_subsystem_allow_any_host(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("nvmf_subsystem_allow_any_host", nvmf_rpc_subsystem_allow_any_host,
 		  SPDK_RPC_RUNTIME)
+
+static const struct spdk_json_object_decoder nvmf_rpc_subsystem_tgt_opts_decoder[] = {
+	{"max_queue_depth", offsetof(struct spdk_nvmf_tgt_opts, max_queue_depth), spdk_json_decode_uint16, true},
+	{"max_qpairs_per_ctrlr", offsetof(struct spdk_nvmf_tgt_opts, max_qpairs_per_ctrlr), spdk_json_decode_uint16, true},
+	{"in_capsule_data_size", offsetof(struct spdk_nvmf_tgt_opts, in_capsule_data_size), spdk_json_decode_uint32, true},
+	{"max_io_size", offsetof(struct spdk_nvmf_tgt_opts, max_io_size), spdk_json_decode_uint32, true},
+	{"max_subsystems", offsetof(struct spdk_nvmf_tgt_opts, max_subsystems), spdk_json_decode_uint32, true},
+	{"io_unit_size", offsetof(struct spdk_nvmf_tgt_opts, io_unit_size), spdk_json_decode_uint32, true},
+};
+
+static void
+nvmf_rpc_subsystem_set_tgt_opts(struct spdk_jsonrpc_request *request,
+				const struct spdk_json_val *params)
+{
+	struct spdk_nvmf_tgt_opts *opts;
+	struct spdk_json_write_ctx *w;
+
+	if (g_spdk_nvmf_tgt_opts != NULL) {
+		SPDK_ERRLOG("this RPC must not be called more than once.\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Must not call more than once");
+		return;
+	}
+
+	opts = calloc(1, sizeof(*opts));
+	if (opts == NULL) {
+		SPDK_ERRLOG("malloc() failed for target options\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Out of memory");
+		return;
+	}
+
+	spdk_nvmf_tgt_opts_init(opts);
+
+	if (params != NULL) {
+		if (spdk_json_decode_object(params, nvmf_rpc_subsystem_tgt_opts_decoder,
+					    SPDK_COUNTOF(nvmf_rpc_subsystem_tgt_opts_decoder), opts)) {
+			SPDK_ERRLOG("spdk_json_decode_object() failed\n");
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							 "Invalid parameters");
+			return;
+		}
+	}
+
+	g_spdk_nvmf_tgt_opts = opts;
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("set_nvmf_target_options", nvmf_rpc_subsystem_set_tgt_opts, SPDK_RPC_STARTUP)
+
+static const struct spdk_json_object_decoder nvmf_rpc_subsystem_tgt_conf_decoder[] = {
+	{"acceptor_poll_rate", offsetof(struct spdk_nvmf_tgt_conf, acceptor_poll_rate), spdk_json_decode_uint32, true},
+};
+
+static void
+nvmf_rpc_subsystem_set_tgt_conf(struct spdk_jsonrpc_request *request,
+				const struct spdk_json_val *params)
+{
+	struct spdk_nvmf_tgt_conf *conf;
+	struct spdk_json_write_ctx *w;
+
+	if (g_spdk_nvmf_tgt_conf != NULL) {
+		SPDK_ERRLOG("this RPC must not be called more than once.\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Must not call more than once");
+		return;
+	}
+
+	conf = calloc(1, sizeof(*conf));
+	if (conf == NULL) {
+		SPDK_ERRLOG("calloc() failed for target config\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Out of memory");
+		return;
+	}
+
+	conf->acceptor_poll_rate = ACCEPT_TIMEOUT_US;
+
+	if (params != NULL) {
+		if (spdk_json_decode_object(params, nvmf_rpc_subsystem_tgt_conf_decoder,
+					    SPDK_COUNTOF(nvmf_rpc_subsystem_tgt_conf_decoder), conf)) {
+			SPDK_ERRLOG("spdk_json_decode_object() failed\n");
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							 "Invalid parameters");
+			return;
+		}
+	}
+
+	g_spdk_nvmf_tgt_conf = conf;
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("set_nvmf_target_config", nvmf_rpc_subsystem_set_tgt_conf, SPDK_RPC_STARTUP)
