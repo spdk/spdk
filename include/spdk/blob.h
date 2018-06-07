@@ -198,6 +198,20 @@ void spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts,
 void spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts,
 		  spdk_bs_op_with_handle_complete cb_fn, void *cb_arg);
 
+typedef void (*spdk_bs_dump_print_xattr)(FILE *fp, const char *bstype, const char *name,
+		const void *value, size_t value_length);
+
+/**
+ * Dump a blobstore's metadata to a given FILE in human-readable format.
+ *
+ * \param dev Blobstore block device.
+ * \param fp FILE pointer to dump the metadata contents.
+ * \param print_xattr_fn Callback function to interpret external xattrs.
+ * \param cb_fn Called when the dump is complete.
+ * \param cb_arg Argument passed to function cb_fn.
+ */
+void spdk_bs_dump(struct spdk_bs_dev *dev, FILE *fp, spdk_bs_dump_print_xattr print_xattr_fn,
+		  spdk_bs_op_complete cb_fn, void *cb_arg);
 /**
  * Destroy the blobstore.
  *
