@@ -1,6 +1,4 @@
 #
-#  BSD LICENSE
-#
 #  Copyright (c) Intel Corporation.
 #  All rights reserved.
 #
@@ -31,14 +29,28 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-DIRS-y += hello_world cli bsdump
+APP = bsdump
 
-.PHONY: all clean $(DIRS-y)
+C_SRCS := bsdump.c
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+SPDK_LIB_LIST = event_bdev event_copy
+SPDK_LIB_LIST += blob bdev blob_bdev copy event util conf trace log jsonrpc json rpc
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+LIBS += $(BLOCKDEV_NO_LVOL_MODULES_LINKER_ARGS)
+LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
+
+all : $(APP)
+	@:
+
+$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(BLOCKDEV_NO_LVOL_MODULES_FILES) $(LINKER_MODULES) $(ENV_LIBS)
+	$(LINK_C)
+
+clean :
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
