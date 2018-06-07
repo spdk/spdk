@@ -3194,6 +3194,280 @@ spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 
 /* END spdk_bs_load */
 
+/* START spdk_bs_dump */
+
+struct spdk_bs_dump_ctx {
+	struct spdk_blob_store		*bs;
+	struct spdk_bs_super_block	*super;
+
+	struct spdk_bs_md_mask		*mask;
+	bool				in_page_chain;
+	uint32_t			page_index;
+	uint32_t			cur_page;
+	struct spdk_blob_md_page	*page;
+	bool				is_load;
+
+	spdk_bs_sequence_t			*seq;
+	spdk_blob_op_with_handle_complete	iter_cb_fn;
+	void					*iter_cb_arg;
+
+	FILE				*fp;
+	spdk_bs_dump_print_xattr	print_xattr_fn;
+};
+
+static void
+_spdk_bs_dump_finish(spdk_bs_sequence_t *seq, struct spdk_bs_dump_ctx *ctx, int bserrno)
+{
+	spdk_dma_free(ctx->super);
+
+	/*
+	 * We need to defer calling spdk_bs_call_cpl() until after
+	 * dev destuction, so tuck these away for later use.
+	 */
+	ctx->bs->unload_err = bserrno;
+	memcpy(&ctx->bs->unload_cpl, &seq->cpl, sizeof(struct spdk_bs_cpl));
+	seq->cpl.type = SPDK_BS_CPL_TYPE_NONE;
+
+	spdk_bs_sequence_finish(seq, 0);
+	_spdk_bs_free(ctx->bs);
+	free(ctx);
+}
+
+static void _spdk_bs_dump_read_md_page(spdk_bs_sequence_t *seq, void *cb_arg);
+
+static void
+_spdk_bs_dump_print_md_page(struct spdk_bs_dump_ctx *ctx)
+{
+	uint32_t page_idx = ctx->cur_page;
+	struct spdk_blob_md_page *page = ctx->page;
+	struct spdk_blob_md_descriptor *desc;
+	size_t cur_desc = 0;
+	uint32_t crc;
+
+	fprintf(ctx->fp, "=========\n");
+	fprintf(ctx->fp, "Metadata Page Index: %" PRIu32 " (0x%" PRIx32 ")\n", page_idx, page_idx);
+	fprintf(ctx->fp, "Blob ID: 0x%" PRIx64 "\n", page->id);
+
+	crc = _spdk_blob_md_page_calc_crc(page);
+	fprintf(ctx->fp, "CRC: 0x%" PRIx32 " (%s)\n", page->crc, crc == page->crc ? "OK" : "Mismatch");
+
+	desc = (struct spdk_blob_md_descriptor *)page->descriptors;
+	while (cur_desc < sizeof(page->descriptors)) {
+		if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_PADDING) {
+			if (desc->length == 0) {
+				/* If padding and length are 0, this terminates the page */
+				break;
+			}
+		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_EXTENT) {
+			struct spdk_blob_md_descriptor_extent	*desc_extent;
+			unsigned int				i;
+
+			desc_extent = (struct spdk_blob_md_descriptor_extent *)desc;
+
+			for (i = 0; i < desc_extent->length / sizeof(desc_extent->extents[0]); i++) {
+				if (desc_extent->extents[i].cluster_idx != 0) {
+					fprintf(ctx->fp, "Allocated Extent - Start: %" PRIu32,
+						desc_extent->extents[i].cluster_idx);
+				} else {
+					fprintf(ctx->fp, "Unallocated Extent - ");
+				}
+				fprintf(ctx->fp, " Length: %" PRIu32, desc_extent->extents[i].length);
+				fprintf(ctx->fp, "\n");
+			}
+		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_XATTR) {
+			struct spdk_blob_md_descriptor_xattr *desc_xattr;
+			char name[4096];
+			uint32_t i;
+
+			desc_xattr = (struct spdk_blob_md_descriptor_xattr *)desc;
+
+			if (desc_xattr->length !=
+			    sizeof(desc_xattr->name_length) + sizeof(desc_xattr->value_length) +
+			    desc_xattr->name_length + desc_xattr->value_length) {
+			}
+
+			memcpy(name, desc_xattr->name, desc_xattr->name_length);
+			name[desc_xattr->name_length] = '\0';
+			fprintf(ctx->fp, "XATTR: name = \"%s\"\n", name);
+			fprintf(ctx->fp, "       value = \"");
+			ctx->print_xattr_fn(ctx->fp, ctx->super->bstype.bstype, name,
+					    (void *)((uintptr_t)desc_xattr->name + desc_xattr->name_length),
+					    desc_xattr->value_length);
+			fprintf(ctx->fp, "\"\n");
+			for (i = 0; i < desc_xattr->value_length; i++) {
+				if (i % 16 == 0) {
+					fprintf(ctx->fp, "               ");
+				}
+				fprintf(ctx->fp, "%02" PRIx8 " ", *((uint8_t *)desc_xattr->name + desc_xattr->name_length + i));
+				if ((i + 1) % 16 == 0) {
+					fprintf(ctx->fp, "\n");
+				}
+			}
+			if (i % 16 != 0) {
+				fprintf(ctx->fp, "\n");
+			}
+		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_XATTR_INTERNAL) {
+			/* Skip this item */
+		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_FLAGS) {
+			/* Skip this item */
+		} else {
+			/* Error */
+		}
+		/* Advance to the next descriptor */
+		cur_desc += sizeof(*desc) + desc->length;
+		if (cur_desc + sizeof(*desc) > sizeof(page->descriptors)) {
+			break;
+		}
+		desc = (struct spdk_blob_md_descriptor *)((uintptr_t)page->descriptors + cur_desc);
+	}
+}
+
+static void
+_spdk_bs_dump_read_md_page_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_bs_dump_ctx *ctx = cb_arg;
+
+	if (bserrno != 0) {
+		_spdk_bs_dump_finish(seq, ctx, bserrno);
+		return;
+	}
+
+	if (ctx->page->id != 0) {
+		_spdk_bs_dump_print_md_page(ctx);
+	}
+
+	ctx->cur_page++;
+
+	if (ctx->cur_page < ctx->super->md_len) {
+		_spdk_bs_dump_read_md_page(seq, cb_arg);
+	} else {
+		spdk_dma_free(ctx->page);
+		_spdk_bs_dump_finish(seq, ctx, 0);
+	}
+}
+
+static void
+_spdk_bs_dump_read_md_page(spdk_bs_sequence_t *seq, void *cb_arg)
+{
+	struct spdk_bs_dump_ctx *ctx = cb_arg;
+	uint64_t lba;
+
+	assert(ctx->cur_page < ctx->super->md_len);
+	lba = _spdk_bs_page_to_lba(ctx->bs, ctx->super->md_start + ctx->cur_page);
+	spdk_bs_sequence_read_dev(seq, ctx->page, lba,
+				  _spdk_bs_byte_to_lba(ctx->bs, SPDK_BS_PAGE_SIZE),
+				  _spdk_bs_dump_read_md_page_cpl, ctx);
+}
+
+static void
+_spdk_bs_dump_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_bs_dump_ctx *ctx = cb_arg;
+
+	fprintf(ctx->fp, "Signature: \"%.8s\" ", ctx->super->signature);
+	if (memcmp(ctx->super->signature, SPDK_BS_SUPER_BLOCK_SIG,
+		   sizeof(ctx->super->signature)) != 0) {
+		fprintf(ctx->fp, "(Mismatch)\n");
+		_spdk_bs_dump_finish(seq, ctx, bserrno);
+		return;
+	} else {
+		fprintf(ctx->fp, "(OK)\n");
+	}
+	fprintf(ctx->fp, "Version: %" PRIu32 "\n", ctx->super->version);
+	fprintf(ctx->fp, "CRC: 0x%x (%s)\n", ctx->super->crc,
+		(ctx->super->crc == _spdk_blob_md_page_calc_crc(ctx->super)) ? "OK" : "Mismatch");
+	fprintf(ctx->fp, "Blobstore Type: %.*s\n", SPDK_BLOBSTORE_TYPE_LENGTH, ctx->super->bstype.bstype);
+	fprintf(ctx->fp, "Cluster Size: %" PRIu32 "\n", ctx->super->cluster_size);
+	fprintf(ctx->fp, "Super Blob ID: ");
+	if (ctx->super->super_blob == SPDK_BLOBID_INVALID) {
+		fprintf(ctx->fp, "(None)\n");
+	} else {
+		fprintf(ctx->fp, "%" PRIu64 "\n", ctx->super->super_blob);
+	}
+	fprintf(ctx->fp, "Clean: %" PRIu32 "\n", ctx->super->clean);
+	fprintf(ctx->fp, "Used Metadata Page Mask Start: %" PRIu32 "\n", ctx->super->used_page_mask_start);
+	fprintf(ctx->fp, "Used Metadata Page Mask Length: %" PRIu32 "\n", ctx->super->used_page_mask_len);
+	fprintf(ctx->fp, "Used Cluster Mask Start: %" PRIu32 "\n", ctx->super->used_cluster_mask_start);
+	fprintf(ctx->fp, "Used Cluster Mask Length: %" PRIu32 "\n", ctx->super->used_cluster_mask_len);
+	fprintf(ctx->fp, "Used Blob ID Mask Start: %" PRIu32 "\n", ctx->super->used_blobid_mask_start);
+	fprintf(ctx->fp, "Used Blob ID Mask Length: %" PRIu32 "\n", ctx->super->used_blobid_mask_len);
+	fprintf(ctx->fp, "Metadata Start: %" PRIu32 "\n", ctx->super->md_start);
+	fprintf(ctx->fp, "Metadata Length: %" PRIu32 "\n", ctx->super->md_len);
+
+	ctx->cur_page = 0;
+	ctx->page = spdk_dma_zmalloc(SPDK_BS_PAGE_SIZE,
+				     SPDK_BS_PAGE_SIZE,
+				     NULL);
+	if (!ctx->page) {
+		_spdk_bs_dump_finish(seq, ctx, -ENOMEM);
+		return;
+	}
+	_spdk_bs_dump_read_md_page(seq, cb_arg);
+}
+
+void
+spdk_bs_dump(struct spdk_bs_dev *dev, FILE *fp, spdk_bs_dump_print_xattr print_xattr_fn,
+	     spdk_bs_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_blob_store	*bs;
+	struct spdk_bs_cpl	cpl;
+	spdk_bs_sequence_t	*seq;
+	struct spdk_bs_dump_ctx *ctx;
+	struct spdk_bs_opts	opts = {};
+
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Dumping blobstore from dev %p\n", dev);
+
+	spdk_bs_opts_init(&opts);
+
+	bs = _spdk_bs_alloc(dev, &opts);
+	if (!bs) {
+		dev->destroy(dev);
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		_spdk_bs_free(bs);
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	ctx->bs = bs;
+	ctx->is_load = false;
+	ctx->fp = fp;
+	ctx->print_xattr_fn = print_xattr_fn;
+
+	/* Allocate memory for the super block */
+	ctx->super = spdk_dma_zmalloc(sizeof(*ctx->super), 0x1000, NULL);
+	if (!ctx->super) {
+		free(ctx);
+		_spdk_bs_free(bs);
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	cpl.type = SPDK_BS_CPL_TYPE_BS_BASIC;
+	cpl.u.bs_basic.cb_fn = cb_fn;
+	cpl.u.bs_basic.cb_arg = cb_arg;
+
+	seq = spdk_bs_sequence_start(bs->md_channel, &cpl);
+	if (!seq) {
+		spdk_dma_free(ctx->super);
+		free(ctx);
+		_spdk_bs_free(bs);
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	/* Read the super block */
+	spdk_bs_sequence_read_dev(seq, ctx->super, _spdk_bs_page_to_lba(bs, 0),
+				  _spdk_bs_byte_to_lba(bs, sizeof(*ctx->super)),
+				  _spdk_bs_dump_super_cpl, ctx);
+}
+
+/* END spdk_bs_dump */
+
 /* START spdk_bs_init */
 
 struct spdk_bs_init_ctx {
