@@ -280,7 +280,7 @@ nvmf_tgt_advance_state(void)
 		}
 		case NVMF_TGT_INIT_START_ACCEPTOR:
 			g_acceptor_poller = spdk_poller_register(acceptor_poll, g_spdk_nvmf_tgt,
-					    g_spdk_nvmf_tgt_conf.acceptor_poll_rate);
+					    g_spdk_nvmf_tgt_conf->acceptor_poll_rate);
 			SPDK_INFOLOG(SPDK_LOG_NVMF, "Acceptor running\n");
 			g_tgt_state = NVMF_TGT_RUNNING;
 			break;
@@ -311,6 +311,7 @@ nvmf_tgt_advance_state(void)
 			break;
 		case NVMF_TGT_FINI_FREE_RESOURCES:
 			spdk_nvmf_tgt_destroy(g_spdk_nvmf_tgt, nvmf_tgt_destroy_done, NULL);
+			free(g_spdk_nvmf_tgt_conf);
 			break;
 		case NVMF_TGT_STOPPED:
 			spdk_subsystem_fini_next();
