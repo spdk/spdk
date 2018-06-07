@@ -80,13 +80,18 @@ struct spdk_jsonrpc_server_conn {
 	STAILQ_HEAD(, spdk_jsonrpc_request) send_queue;
 
 	struct spdk_jsonrpc_request *send_request;
+
+	TAILQ_ENTRY(spdk_jsonrpc_server_conn) link;
 };
 
 struct spdk_jsonrpc_server {
 	int sockfd;
 	spdk_jsonrpc_handle_request_fn handle_request;
-	struct spdk_jsonrpc_server_conn conns[SPDK_JSONRPC_MAX_CONNS];
-	int num_conns;
+
+	TAILQ_HEAD(, spdk_jsonrpc_server_conn) free_conns;
+	TAILQ_HEAD(, spdk_jsonrpc_server_conn) conns;
+
+	struct spdk_jsonrpc_server_conn conns_array[SPDK_JSONRPC_MAX_CONNS];
 };
 
 /* jsonrpc_server_tcp */
