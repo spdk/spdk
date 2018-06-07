@@ -87,6 +87,24 @@
     },
     {
       "key": {
+        "uuid": "905b9a5b_0ee971c8",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 367,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-06-07T01:47:33Z",
+      "side": 1,
+      "message": "ok, will iterate all the error requests here, at first I think this may cost some time.",
+      "parentUuid": "61904139_206f52fd",
+      "revId": "c092e7fa1ae5f8298450c774bc6677849a9bc9d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bd9015e7_62ba19f0",
         "filename": "lib/nvme/nvme_qpair.c",
         "patchSetId": 10
@@ -121,6 +139,24 @@
     },
     {
       "key": {
+        "uuid": "b679cf47_e0069047",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 375,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-06-07T01:47:33Z",
+      "side": 1,
+      "message": "ok.",
+      "parentUuid": "f6961511_2e804a14",
+      "revId": "c092e7fa1ae5f8298450c774bc6677849a9bc9d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "aa913001_327fca52",
         "filename": "lib/nvme/nvme_qpair.c",
         "patchSetId": 10
@@ -132,6 +168,24 @@
       "writtenOn": "2018-06-06T20:23:31Z",
       "side": 1,
       "message": "\"last_poll_tsc\" is unclear here - isn\u0027t this just when the request was submitted?  What does \"last_poll_tsc\" mean?",
+      "revId": "c092e7fa1ae5f8298450c774bc6677849a9bc9d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ea84368_308e1ce5",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 500,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-06-07T01:47:33Z",
+      "side": 1,
+      "message": "submit_tsc maybe better.",
+      "parentUuid": "aa913001_327fca52",
       "revId": "c092e7fa1ae5f8298450c774bc6677849a9bc9d8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -155,6 +209,24 @@
     },
     {
       "key": {
+        "uuid": "54e72b14_aecc9176",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 574,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-06-07T01:47:33Z",
+      "side": 1,
+      "message": "ok.",
+      "parentUuid": "f48cc5df_2b3e4c91",
+      "revId": "c092e7fa1ae5f8298450c774bc6677849a9bc9d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5029d183_1f4907c3",
         "filename": "lib/nvme/nvme_qpair.c",
         "patchSetId": 10
@@ -166,6 +238,24 @@
       "writtenOn": "2018-06-06T20:23:31Z",
       "side": 1,
       "message": "initialize cmd to NULL above, then just break here if cmd-\u003eopc \u003d\u003d opc\n\nthen below, only spdk_dma_zmalloc if cmd \u003d\u003d NULL\n\nthen you avoid duplicating this code",
+      "revId": "c092e7fa1ae5f8298450c774bc6677849a9bc9d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a0f66377_ece16952",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 585,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-06-07T01:47:33Z",
+      "side": 1,
+      "message": "nice optimization.",
+      "parentUuid": "5029d183_1f4907c3",
       "revId": "c092e7fa1ae5f8298450c774bc6677849a9bc9d8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
