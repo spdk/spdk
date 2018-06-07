@@ -64,6 +64,19 @@ struct spdk_jsonrpc_request {
 
 	uint8_t *send_buf;
 
+	int batch_request_completed_count;
+
+	int batch_request_count;
+
+	/* Flag to add commas in batch request's response */
+	bool responses_written;
+
+	bool is_batch_request;
+
+	struct spdk_jsonrpc_request *parent_request;
+
+	pthread_mutex_t batch_request_lock;
+
 	STAILQ_ENTRY(spdk_jsonrpc_request) link;
 };
 
