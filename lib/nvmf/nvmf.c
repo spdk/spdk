@@ -670,26 +670,3 @@ spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 
 	return 0;
 }
-
-SPDK_TRACE_REGISTER_FN(nvmf_trace)
-{
-	spdk_trace_register_object(OBJECT_NVMF_IO, 'r');
-	spdk_trace_register_description("NVMF_IO_START", "", TRACE_NVMF_IO_START,
-					OWNER_NONE, OBJECT_NVMF_IO, 1, 0, 0, "");
-	spdk_trace_register_description("NVMF_RDMA_READ_START", "", TRACE_RDMA_READ_START,
-					OWNER_NONE, OBJECT_NVMF_IO, 0, 0, 0, "");
-	spdk_trace_register_description("NVMF_RDMA_WRITE_START", "", TRACE_RDMA_WRITE_START,
-					OWNER_NONE, OBJECT_NVMF_IO, 0, 0, 0, "");
-	spdk_trace_register_description("NVMF_RDMA_READ_COMPLETE", "", TRACE_RDMA_READ_COMPLETE,
-					OWNER_NONE, OBJECT_NVMF_IO, 0, 0, 0, "");
-	spdk_trace_register_description("NVMF_RDMA_WRITE_COMPLETE", "", TRACE_RDMA_WRITE_COMPLETE,
-					OWNER_NONE, OBJECT_NVMF_IO, 0, 0, 0, "");
-	spdk_trace_register_description("NVMF_LIB_READ_START", "", TRACE_NVMF_LIB_READ_START,
-					OWNER_NONE, OBJECT_NVMF_IO, 0, 0, 0, "");
-	spdk_trace_register_description("NVMF_LIB_WRITE_START", "", TRACE_NVMF_LIB_WRITE_START,
-					OWNER_NONE, OBJECT_NVMF_IO, 0, 0, 0, "");
-	spdk_trace_register_description("NVMF_LIB_COMPLETE", "", TRACE_NVMF_LIB_COMPLETE,
-					OWNER_NONE, OBJECT_NVMF_IO, 0, 0, 0, "");
-	spdk_trace_register_description("NVMF_IO_COMPLETION_DONE", "", TRACE_NVMF_IO_COMPLETE,
-					OWNER_NONE, OBJECT_NVMF_IO, 0, 0, 0, "");
-}

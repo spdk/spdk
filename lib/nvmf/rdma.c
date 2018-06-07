@@ -109,6 +109,59 @@ enum spdk_nvmf_rdma_request_state {
 	RDMA_REQUEST_STATE_COMPLETED,
 };
 
+#define OBJECT_NVMF_RDMA_IO				0x40
+
+#define									TRACE_GROUP_NVMF_RDMA 0x4
+#define TRACE_RDMA_REQUEST_STATE_NEW					SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x0)
+#define TRACE_RDMA_REQUEST_STATE_NEED_BUFFER				SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x1)
+#define TRACE_RDMA_REQUEST_STATE_TRANSFER_PENDING_HOST_TO_CONTROLLER	SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x2)
+#define TRACE_RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER	SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x3)
+#define TRACE_RDMA_REQUEST_STATE_READY_TO_EXECUTE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x4)
+#define TRACE_RDMA_REQUEST_STATE_EXECUTING				SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x5)
+#define TRACE_RDMA_REQUEST_STATE_EXECUTED				SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x6)
+#define TRACE_RDMA_REQUEST_STATE_TRANSFER_PENDING_CONTROLLER_TO_HOST	SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x7)
+#define TRACE_RDMA_REQUEST_STATE_READY_TO_COMPLETE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x8)
+#define TRACE_RDMA_REQUEST_STATE_COMPLETING				SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x9)
+#define TRACE_RDMA_REQUEST_STATE_COMPLETED				SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x10)
+
+SPDK_TRACE_REGISTER_FN(nvmf_trace)
+{
+	spdk_trace_register_object(OBJECT_NVMF_RDMA_IO, 'r');
+	spdk_trace_register_description("RDMA_REQ_NEW", "",
+					TRACE_RDMA_REQUEST_STATE_NEW,
+					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 1, 0, 0, "");
+	spdk_trace_register_description("RDMA_REQ_NEED_BUFFER", "",
+					TRACE_RDMA_REQUEST_STATE_NEED_BUFFER,
+					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0, 0, 0, "");
+	spdk_trace_register_description("RDMA_REQ_TX_PENDING_H_TO_C", "",
+					TRACE_RDMA_REQUEST_STATE_TRANSFER_PENDING_HOST_TO_CONTROLLER,
+					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0, 0, 0, "");
+	spdk_trace_register_description("RDMA_REQ_TX_H_TO_C", "",
+					TRACE_RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER,
+					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0, 0, 0, "");
+	spdk_trace_register_description("RDMA_REQ_RDY_TO_EXECUTE", "",
+					TRACE_RDMA_REQUEST_STATE_READY_TO_EXECUTE,
+					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0, 0, 0, "");
+	spdk_trace_register_description("RDMA_REQ_EXECUTING", "",
+					TRACE_RDMA_REQUEST_STATE_EXECUTING,
+					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0, 0, 0, "");
+	spdk_trace_register_description("RDMA_REQ_EXECUTED", "",
+					TRACE_RDMA_REQUEST_STATE_EXECUTED,
+					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0, 0, 0, "");
+	spdk_trace_register_description("RDMA_REQ_TX_PENDING_C_TO_H", "",
+					TRACE_RDMA_REQUEST_STATE_TRANSFER_PENDING_CONTROLLER_TO_HOST,
+					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0, 0, 0, "");
+	spdk_trace_register_description("RDMA_REQ_RDY_TO_COMPLETE", "",
+					TRACE_RDMA_REQUEST_STATE_READY_TO_COMPLETE,
+					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0, 0, 0, "");
+	spdk_trace_register_description("RDMA_REQ_COMPLETING", "",
+					TRACE_RDMA_REQUEST_STATE_COMPLETING,
+					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0, 0, 0, "");
+	spdk_trace_register_description("RDMA_REQ_COMPLETED", "",
+					TRACE_RDMA_REQUEST_STATE_COMPLETED,
+					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0, 0, 0, "");
+}
+
 /* This structure holds commands as they are received off the wire.
  * It must be dynamically paired with a full request object
  * (spdk_nvmf_rdma_request) to service a request. It is separate
@@ -483,7 +536,6 @@ request_transfer_in(struct spdk_nvmf_request *req)
 	rqpair->cur_rdma_rw_depth++;
 
 	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "RDMA READ POSTED. Request: %p Connection: %p\n", req, qpair);
-	spdk_trace_record(TRACE_RDMA_READ_START, 0, 0, (uintptr_t)req, 0);
 
 	rdma_req->data.wr.opcode = IBV_WR_RDMA_READ;
 	rdma_req->data.wr.next = NULL;
@@ -545,7 +597,6 @@ request_transfer_out(struct spdk_nvmf_request *req)
 	if (rsp->status.sc == SPDK_NVME_SC_SUCCESS &&
 	    req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
 		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "RDMA WRITE POSTED. Request: %p Connection: %p\n", req, qpair);
-		spdk_trace_record(TRACE_RDMA_WRITE_START, 0, 0, (uintptr_t)req, 0);
 
 		rqpair->cur_rdma_rw_depth++;
 		rdma_req->data.wr.opcode = IBV_WR_RDMA_WRITE;
@@ -555,7 +606,6 @@ request_transfer_out(struct spdk_nvmf_request *req)
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "RDMA SEND POSTED. Request: %p Connection: %p\n", req, qpair);
-	spdk_trace_record(TRACE_NVMF_IO_COMPLETE, 0, 0, (uintptr_t)req, 0);
 
 	/* Send the completion */
 	rc = ibv_post_send(rqpair->cm_id->qp, send_wr, &bad_send_wr);
@@ -1009,6 +1059,8 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			 * to escape this state. */
 			break;
 		case RDMA_REQUEST_STATE_NEW:
+			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_NEW, 0, 0, (uintptr_t)rdma_req, 0);
+
 			rqpair->cur_queue_depth++;
 			rdma_recv = rdma_req->recv;
 
@@ -1032,6 +1084,8 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			TAILQ_INSERT_TAIL(&rqpair->ch->pending_data_buf_queue, rdma_req, link);
 			break;
 		case RDMA_REQUEST_STATE_NEED_BUFFER:
+			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_NEED_BUFFER, 0, 0, (uintptr_t)rdma_req, 0);
+
 			assert(rdma_req->req.xfer != SPDK_NVME_DATA_NONE);
 
 			if (rdma_req != TAILQ_FIRST(&rqpair->ch->pending_data_buf_queue)) {
@@ -1067,6 +1121,9 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			rdma_req->state = RDMA_REQUEST_STATE_READY_TO_EXECUTE;
 			break;
 		case RDMA_REQUEST_STATE_TRANSFER_PENDING_HOST_TO_CONTROLLER:
+			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_TRANSFER_PENDING_HOST_TO_CONTROLLER, 0, 0,
+					  (uintptr_t)rdma_req, 0);
+
 			if (rdma_req != TAILQ_FIRST(&rqpair->pending_rdma_rw_queue)) {
 				/* This request needs to wait in line to perform RDMA */
 				break;
@@ -1083,18 +1140,23 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			}
 			break;
 		case RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER:
+			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER, 0, 0,
+					  (uintptr_t)rdma_req, 0);
 			/* Some external code must kick a request into RDMA_REQUEST_STATE_READY_TO_EXECUTE
 			 * to escape this state. */
 			break;
 		case RDMA_REQUEST_STATE_READY_TO_EXECUTE:
+			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_READY_TO_EXECUTE, 0, 0, (uintptr_t)rdma_req, 0);
 			rdma_req->state = RDMA_REQUEST_STATE_EXECUTING;
 			spdk_nvmf_request_exec(&rdma_req->req);
 			break;
 		case RDMA_REQUEST_STATE_EXECUTING:
+			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_EXECUTING, 0, 0, (uintptr_t)rdma_req, 0);
 			/* Some external code must kick a request into RDMA_REQUEST_STATE_EXECUTED
 			 * to escape this state. */
 			break;
 		case RDMA_REQUEST_STATE_EXECUTED:
+			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_EXECUTED, 0, 0, (uintptr_t)rdma_req, 0);
 			if (rdma_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
 				rdma_req->state = RDMA_REQUEST_STATE_TRANSFER_PENDING_CONTROLLER_TO_HOST;
 				TAILQ_INSERT_TAIL(&rqpair->pending_rdma_rw_queue, rdma_req, link);
@@ -1103,6 +1165,8 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			}
 			break;
 		case RDMA_REQUEST_STATE_TRANSFER_PENDING_CONTROLLER_TO_HOST:
+			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_TRANSFER_PENDING_CONTROLLER_TO_HOST, 0, 0,
+					  (uintptr_t)rdma_req, 0);
 			if (rdma_req != TAILQ_FIRST(&rqpair->pending_rdma_rw_queue)) {
 				/* This request needs to wait in line to perform RDMA */
 				break;
@@ -1114,16 +1178,19 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			}
 			break;
 		case RDMA_REQUEST_STATE_READY_TO_COMPLETE:
+			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_READY_TO_COMPLETE, 0, 0, (uintptr_t)rdma_req, 0);
 			rdma_req->state = RDMA_REQUEST_STATE_COMPLETING;
 
 			rc = request_transfer_out(&rdma_req->req);
 			assert(rc == 0); /* No good way to handle this currently */
 			break;
 		case RDMA_REQUEST_STATE_COMPLETING:
+			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_COMPLETING, 0, 0, (uintptr_t)rdma_req, 0);
 			/* Some external code must kick a request into RDMA_REQUEST_STATE_COMPLETED
 			 * to escape this state. */
 			break;
 		case RDMA_REQUEST_STATE_COMPLETED:
+			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_COMPLETED, 0, 0, (uintptr_t)rdma_req, 0);
 			assert(rqpair->cur_queue_depth > 0);
 			rqpair->cur_queue_depth--;
 
