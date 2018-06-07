@@ -74,6 +74,7 @@ $valgrind $testdir/lib/nvme/nvme_ctrlr_cmd.c/nvme_ctrlr_cmd_ut
 $valgrind $testdir/lib/nvme/nvme_ctrlr_ocssd_cmd.c/nvme_ctrlr_ocssd_cmd_ut
 $valgrind $testdir/lib/nvme/nvme_ns.c/nvme_ns_ut
 $valgrind $testdir/lib/nvme/nvme_ns_cmd.c/nvme_ns_cmd_ut
+$valgrind $testdir/lib/nvme/nvme_ns_ocssd_cmd.c/nvme_ns_ocssd_cmd_ut
 $valgrind $testdir/lib/nvme/nvme_qpair.c/nvme_qpair_ut
 $valgrind $testdir/lib/nvme/nvme_pcie.c/nvme_pcie_ut
 $valgrind $testdir/lib/nvme/nvme_quirks.c/nvme_quirks_ut
