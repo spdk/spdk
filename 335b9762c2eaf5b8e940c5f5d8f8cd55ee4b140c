@@ -16,6 +16,24 @@
       "revId": "335b9762c2eaf5b8e940c5f5d8f8cd55ee4b140c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10e6a365_7460ab93",
+        "filename": "lib/nvme/nvme_lnvm.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-06-07T01:26:04Z",
+      "side": 1,
+      "message": "yes, Daniel, \"is supported\" API should be added.\nI\u0027ve synced with Jakub before. That this API would not block the patch working of OCSSD other drivers, so I can extract and resubmit it later before we are going to setup related test.\n\nSince it maybe placed into files \"nvme_ocssd.h\" and \"nvme_ocssd_ctrlr_cmd.c\" which are also new added files in Jakub\u0027s patch https://review.gerrithub.io/c/spdk/spdk/+/412816 \nSo I\u0027m going to add this patch after Jakub\u0027s above patch is merged.",
+      "parentUuid": "8687fe82_16acfd91",
+      "revId": "335b9762c2eaf5b8e940c5f5d8f8cd55ee4b140c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
