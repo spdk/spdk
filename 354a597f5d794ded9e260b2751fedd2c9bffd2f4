@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7e3376f5_6ab43329",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 4479,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-07T15:42:01Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we set resize_in_progress \u003d true before we call the cb_fn?",
+      "revId": "354a597f5d794ded9e260b2751fedd2c9bffd2f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
