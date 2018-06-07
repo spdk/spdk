@@ -49,6 +49,7 @@ class UIBdevs(UINode):
     def refresh(self):
         self._children = set([])
         UIMallocBdev(self)
+        UIOcssdBdev(self)
         UIAIOBdev(self)
         UILvolBdev(self)
         UINvmeBdev(self)
@@ -212,6 +213,24 @@ class UIMallocBdev(UIBdev):
         name - Is a unique identifier of the malloc bdev to be deleted - UUID number or name alias.
         """
         self.get_root().delete_malloc_bdev(name=name)
+        self.get_root().refresh()
+        self.refresh()
+
+
+class UIOcssdBdev(UIBdev):
+    def __init__(self, parent):
+        UIBdev.__init__(self, "OCSSD_disk", parent)
+
+    def ui_command_create(self, name):
+        """
+        Construct a Ocssd bdev.
+
+        Arguments:
+        name - base bdev name
+        """
+
+        ret_name = self.get_root().create_ocssd_bdev(name=name)
+        self.shell.log.info(ret_name)
         self.get_root().refresh()
         self.refresh()
 
