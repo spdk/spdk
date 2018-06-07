@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aec883e4_2382ce07",
+        "filename": "test/json_config/config_parser.py",
+        "patchSetId": 61
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-07T12:36:48Z",
+      "side": 1,
+      "message": "skip_params() and get_params() look very much alike.\nIs there any chance you could refactor this into smaller functions so that they can be re-used instead of copy-pasting?\n\nThis is a nice-to-have so my vote is 0 instead of -1",
+      "range": {
+        "startLine": 6,
+        "startChar": 4,
+        "endLine": 6,
+        "endChar": 15
+      },
+      "revId": "4fbc45b6c73af8e6a5acbcba0c9002fad95c573c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2f6f2e5e_9d20e5ec",
+        "filename": "test/json_config/config_parser.py",
+        "patchSetId": 61
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-07T12:36:48Z",
+      "side": 1,
+      "message": "skip_params() and get_params() look very much alike.\nIs there any chance you could refactor this into smaller functions so that they can be re-used instead of copy-pasting?\n\nThis is a nice-to-have so my vote is 0 instead of -1",
+      "range": {
+        "startLine": 6,
+        "startChar": 0,
+        "endLine": 6,
+        "endChar": 26
+      },
+      "revId": "4fbc45b6c73af8e6a5acbcba0c9002fad95c573c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
