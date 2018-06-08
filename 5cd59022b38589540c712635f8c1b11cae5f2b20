@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "48588062_ea7e6f49",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 509,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-08T07:19:52Z",
+      "side": 1,
+      "message": "if you want to get run time of event handler in this patch, rc should be updated here. Otherwise now should not be updated.",
+      "revId": "5cd59022b38589540c712635f8c1b11cae5f2b20",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c4ff2c0_a9702ff8",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 515,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-08T07:19:52Z",
+      "side": 1,
+      "message": "if you want to get run time of poller function, now probably should be updated after running poller function.",
+      "revId": "5cd59022b38589540c712635f8c1b11cae5f2b20",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "94bf9b2b_9bfff8ec",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 530,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-08T07:19:52Z",
+      "side": 1,
+      "message": "now probably should be different variable because if now \u003c poller-\u003enext_run_tick then timer will not run in the iteration.",
+      "range": {
+        "startLine": 530,
+        "startChar": 3,
+        "endLine": 530,
+        "endChar": 6
+      },
+      "revId": "5cd59022b38589540c712635f8c1b11cae5f2b20",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
