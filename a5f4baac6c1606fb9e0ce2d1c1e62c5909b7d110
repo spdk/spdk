@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bd0fbc33_151cb69d",
+        "filename": "examples/blob/bsdump/Makefile",
+        "patchSetId": 6
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-08T23:11:03Z",
+      "side": 1,
+      "message": "You are linking $(COPY_MODULES_LINKER_ARGS), but the dependency list is missing $(COPY_MODULES_FILES) - if you copied this from somewhere, we should go fix that case up too.",
+      "revId": "a5f4baac6c1606fb9e0ce2d1c1e62c5909b7d110",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
