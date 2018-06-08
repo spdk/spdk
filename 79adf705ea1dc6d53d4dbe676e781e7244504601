@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e7a0a1b8_136fe8ce",
+        "filename": "dpdk",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1014342
+      },
+      "writtenOn": "2018-06-08T15:35:47Z",
+      "side": 1,
+      "message": "No reason to change. It was a result of some merge/rebase activity. Will be pulled out.",
+      "parentUuid": "65d41081_474ef594",
+      "revId": "79adf705ea1dc6d53d4dbe676e781e7244504601",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2c90f23b_e6c111c4",
         "filename": "include/spdk/env.h",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2018-06-08T15:16:12Z",
       "side": 1,
       "message": "Why not forward declare \u0027struct spdk_thread\u0027 and return \u0027struct spdk_thread *\u0027 here?",
+      "revId": "79adf705ea1dc6d53d4dbe676e781e7244504601",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3b8598c4_716c9b2a",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1052,
+      "author": {
+        "id": 1014342
+      },
+      "writtenOn": "2018-06-08T15:35:47Z",
+      "side": 1,
+      "message": "Yes. that can be done.",
+      "parentUuid": "2c90f23b_e6c111c4",
       "revId": "79adf705ea1dc6d53d4dbe676e781e7244504601",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "ea744a04_02b29479",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1065,
+      "author": {
+        "id": 1014342
+      },
+      "writtenOn": "2018-06-08T15:35:47Z",
+      "side": 1,
+      "message": "Ok.",
+      "parentUuid": "2fd21a9a_be60f376",
+      "revId": "79adf705ea1dc6d53d4dbe676e781e7244504601",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "69be4fe2_35ba8f2d",
         "filename": "include/spdk/io_channel.h",
         "patchSetId": 1
@@ -64,6 +118,24 @@
       "writtenOn": "2018-06-08T15:16:12Z",
       "side": 1,
       "message": "nit: How about calling this function \u0027spdk_thread_find_id\u0027?",
+      "revId": "79adf705ea1dc6d53d4dbe676e781e7244504601",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "73c9cc4e_0a093c30",
+        "filename": "include/spdk/io_channel.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1014342
+      },
+      "writtenOn": "2018-06-08T15:35:47Z",
+      "side": 1,
+      "message": "Ok. I can always do better with names.",
+      "parentUuid": "69be4fe2_35ba8f2d",
       "revId": "79adf705ea1dc6d53d4dbe676e781e7244504601",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "d789cbe1_01ddf7ce",
+        "filename": "include/spdk/io_channel.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1014342
+      },
+      "writtenOn": "2018-06-08T15:35:47Z",
+      "side": 1,
+      "message": "No. It returns the thread_id which can be different from the lcore. The lcore can be obtained by spdk_env_get_current_core.",
+      "parentUuid": "42e5a485_b58cd498",
+      "revId": "79adf705ea1dc6d53d4dbe676e781e7244504601",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8eaba0a7_2378b9ea",
         "filename": "lib/event/reactor.c",
         "patchSetId": 1
@@ -104,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "fb53999f_1af6c61f",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1014342
+      },
+      "writtenOn": "2018-06-08T15:35:47Z",
+      "side": 1,
+      "message": "The function is a \"clone\" of spdk_event_call. So, the assert statement came from there. But, ok to change.",
+      "parentUuid": "8eaba0a7_2378b9ea",
+      "revId": "79adf705ea1dc6d53d4dbe676e781e7244504601",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "aa6cd452_6acb0ed6",
         "filename": "lib/event/reactor.c",
         "patchSetId": 1
@@ -115,6 +223,24 @@
       "writtenOn": "2018-06-08T15:16:12Z",
       "side": 1,
       "message": "spdk_thread_get_given_id requires taking a lock as currently implemented.  Is spdk_event_call on the I/O path ?",
+      "revId": "79adf705ea1dc6d53d4dbe676e781e7244504601",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2640ceae_26006523",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 438,
+      "author": {
+        "id": 1014342
+      },
+      "writtenOn": "2018-06-08T15:35:47Z",
+      "side": 1,
+      "message": "Good catch. Agreed on the locking issue. \nThe idea is to NOT use this function for the dynamic threading enabled case. We would be using the spdk_thread_event_call. Trying to keep the old ones around until we agree on the approach. There are some other apps that need modification. \n\nI can fix this by calling spdk_thread_event_call instead of spdk_event_call when dynamic threading is enabled. Will hold off on pushing a new patch until I hear back from more folks.",
+      "parentUuid": "aa6cd452_6acb0ed6",
       "revId": "79adf705ea1dc6d53d4dbe676e781e7244504601",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
