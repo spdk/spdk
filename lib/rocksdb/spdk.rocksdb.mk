@@ -59,7 +59,7 @@ SPDK_LIB_LIST += blobfs bdev copy event util conf trace \
 
 AM_LINK += $(COPY_MODULES_LINKER_ARGS) $(BLOCKDEV_MODULES_LINKER_ARGS)
 AM_LINK += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
-AM_LINK += -luuid
+AM_LINK += $(SYS_LIBS)
 
 ifeq ($(CONFIG_UBSAN),y)
 AM_LINK += -fsanitize=undefined
