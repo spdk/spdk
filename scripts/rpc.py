@@ -121,6 +121,16 @@ if __name__ == "__main__":
     p.add_argument('-d', '--disable', action='store_true', help='Disable context switch monitoring')
     p.set_defaults(func=context_switch_monitor)
 
+    @call_cmd
+    def get_reactor_tsc_stats(args):
+        print_dict(rpc.app.get_reactor_tsc_stats(args.client,
+                                                 core_id=args.core_id))
+
+    p = subparsers.add_parser('get_reactor_tsc_stats', help='Get reactor tsc stats')
+    p.add_argument('-c', '--core_id', help='Reactor core ID. If omitted, get stats for all reactor cores',
+                   type=int, required=False)
+    p.set_defaults(func=get_reactor_tsc_stats)
+
     # bdev
     @call_cmd
     def set_bdev_options(args):
