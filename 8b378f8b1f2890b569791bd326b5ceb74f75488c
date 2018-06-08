@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3d57e6a0_229a0e11",
+        "filename": "doc/lvol.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-06-08T09:41:08Z",
+      "side": 1,
+      "message": "I think we need to mention that lvol will be inflated. That means all unallocated clusters in underlying blob will be allocated and data will be copied from snapshot.\n\nWe should mention what does it mean if lvol remains thin provisioned even if all clusters are allocated. (i.e. it is possible to resize it without allocating additional clusters)",
+      "revId": "8b378f8b1f2890b569791bd326b5ceb74f75488c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
