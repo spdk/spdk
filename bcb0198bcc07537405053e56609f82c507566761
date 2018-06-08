@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7abb32f8_660d03cb",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1368,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-08T17:50:19Z",
+      "side": 1,
+      "message": "You should move the code that updates the block device size if 0 to here. That way, it is only written with a new value if the super block is updated.",
+      "revId": "bcb0198bcc07537405053e56609f82c507566761",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b25c695d_e52ee2eb",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 2953,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-08T17:50:19Z",
+      "side": 1,
+      "message": "If the size is 0, it\u0027s fine to set the size in ctx-\u003esuper-\u003esize here and refer to that value for the remainder of the load process, but we don\u0027t want to write the new super block out to disk because we want loading the metadata to be a read-only operation. I made a comment on where you should move the actual super block update above.",
+      "revId": "bcb0198bcc07537405053e56609f82c507566761",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38374ed3_6f4c1fab",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 2962,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-08T17:50:19Z",
+      "side": 1,
+      "message": "Similar to the above comment, this is a missed case from the patch to only set the dirty bit on the first update. We do want to do metadata recovery here to get loaded, but we don\u0027t want to write out the new metadata until the first modification. You can fix this in a separate patch though.",
+      "revId": "bcb0198bcc07537405053e56609f82c507566761",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
