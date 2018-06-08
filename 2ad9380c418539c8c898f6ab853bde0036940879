@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0bac9729_74ffdaae",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-08T20:06:08Z",
+      "side": 1,
+      "message": "Do we want to allow the user to specify a usage function pointer here?\n\nOtherwise, it seems like this will only print the common options without any possibility of app-specific options.\n\nThe user could still pass NULL as the usage function pointer if they don\u0027t have any app-specific options.",
+      "revId": "2ad9380c418539c8c898f6ab853bde0036940879",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
