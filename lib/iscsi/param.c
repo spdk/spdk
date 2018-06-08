@@ -143,13 +143,12 @@ spdk_iscsi_param_add(struct iscsi_param **params, const char *key,
 		spdk_iscsi_param_del(params, key);
 	}
 
-	param = malloc(sizeof(*param));
+	param = calloc(1, sizeof(*param));
 	if (!param) {
-		SPDK_ERRLOG("malloc() failed for parameter\n");
+		SPDK_ERRLOG("calloc() failed for parameter\n");
 		return -ENOMEM;
 	}
 
-	memset(param, 0, sizeof(*param));
 	param->next = NULL;
 	param->key = xstrdup(key);
 	param->val = xstrdup(val);
