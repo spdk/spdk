@@ -181,19 +181,25 @@ spdk_scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *tas
 	}
 }
 
+static void
+spdk_scsi_lun_remove(struct spdk_scsi_lun *lun)
+{
+	spdk_scsi_lun_free_io_channel(lun);
+
+	spdk_bdev_close(lun->bdev_desc);
+	spdk_poller_unregister(&lun->hotremove_poller);
+
+	spdk_scsi_dev_delete_lun(lun->dev, lun);
+	free(lun);
+}
+
 static int
-spdk_scsi_lun_hotplug(void *arg)
+spdk_scsi_lun_hot_remove_poll(void *arg)
 {
 	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)arg;
 
 	if (!spdk_scsi_lun_has_pending_tasks(lun)) {
-		spdk_scsi_lun_free_io_channel(lun);
-
-		spdk_bdev_close(lun->bdev_desc);
-		spdk_poller_unregister(&lun->hotplug_poller);
-
-		spdk_scsi_dev_delete_lun(lun->dev, lun);
-		free(lun);
+		spdk_scsi_lun_remove(lun);
 	}
 
 	return -1;
@@ -209,9 +215,10 @@ _spdk_scsi_lun_hot_remove(void *arg1)
 	}
 
 	if (spdk_scsi_lun_has_pending_tasks(lun)) {
-		lun->hotplug_poller = spdk_poller_register(spdk_scsi_lun_hotplug, lun, 10);
+		lun->hotremove_poller = spdk_poller_register(spdk_scsi_lun_hot_remove_poll,
+					lun, 10);
 	} else {
-		spdk_scsi_lun_hotplug(lun);
+		spdk_scsi_lun_remove(lun);
 	}
 }
 
