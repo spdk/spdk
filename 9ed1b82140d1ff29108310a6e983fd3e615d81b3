@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8f16a5c1_7704121a",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-08T22:17:30Z",
+      "side": 1,
+      "message": "These can probably be static for consistency.",
+      "revId": "9ed1b82140d1ff29108310a6e983fd3e615d81b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52e41feb_e965f38d",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-08T22:17:30Z",
+      "side": 1,
+      "message": "Rather than using a global variable that is touched from both threads, we could loop infinitely here and use pthread_cancel() to bail out, since sleep() is a cancellation point.\n\nThat\u0027s probably worthy of a comment so we don\u0027t accidentally remove the sleep() later.",
+      "revId": "9ed1b82140d1ff29108310a6e983fd3e615d81b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c68410eb_c701f66c",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 734,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-08T22:17:30Z",
+      "side": 1,
+      "message": "The pthread_self() man page (which documents the pthread_t type) says to use pthread_equal() to compare thread IDs; we also probably shouldn\u0027t be assuming that 0 is not a valid thread ID unless you can point at docs somewhere that specify this.\n\nThe simplest fix would be to avoid looking at g_init_thread_id at all and just add a separate flag to indicate whether the thread was created.",
+      "revId": "9ed1b82140d1ff29108310a6e983fd3e615d81b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
