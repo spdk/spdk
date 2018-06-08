@@ -182,7 +182,7 @@ spdk_scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *tas
 }
 
 static int
-spdk_scsi_lun_hotplug(void *arg)
+spdk_scsi_lun_hot_remove_poll(void *arg)
 {
 	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)arg;
 
@@ -190,7 +190,7 @@ spdk_scsi_lun_hotplug(void *arg)
 		spdk_scsi_lun_free_io_channel(lun);
 
 		spdk_bdev_close(lun->bdev_desc);
-		spdk_poller_unregister(&lun->hotplug_poller);
+		spdk_poller_unregister(&lun->hot_remove_poller);
 
 		spdk_scsi_dev_delete_lun(lun->dev, lun);
 		free(lun);
@@ -204,15 +204,12 @@ _spdk_scsi_lun_hot_remove(void *arg1)
 {
 	struct spdk_scsi_lun *lun = arg1;
 
-	if (lun->hotremove_cb) {
-		lun->hotremove_cb(lun, lun->hotremove_ctx);
+	if (lun->hot_remove_cb) {
+		lun->hot_remove_cb(lun, lun->hot_remove_ctx);
 	}
 
-	if (spdk_scsi_lun_has_pending_tasks(lun)) {
-		lun->hotplug_poller = spdk_poller_register(spdk_scsi_lun_hotplug, lun, 10);
-	} else {
-		spdk_scsi_lun_hotplug(lun);
-	}
+	lun->hot_remove_poller = spdk_poller_register(spdk_scsi_lun_hot_remove_poll,
+				 lun, 10);
 }
 
 static void
@@ -232,11 +229,7 @@ spdk_scsi_lun_hot_remove(void *remove_ctx)
 	}
 
 	thread = spdk_io_channel_get_thread(lun->io_channel);
-	if (thread != spdk_get_thread()) {
-		spdk_thread_send_msg(thread, _spdk_scsi_lun_hot_remove, lun);
-	} else {
-		_spdk_scsi_lun_hot_remove(lun);
-	}
+	spdk_thread_send_msg(thread, _spdk_scsi_lun_hot_remove, lun);
 }
 
 /**
@@ -249,8 +242,8 @@ spdk_scsi_lun_hot_remove(void *remove_ctx)
  */
 _spdk_scsi_lun *
 spdk_scsi_lun_construct(struct spdk_bdev *bdev,
-			void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
-			void *hotremove_ctx)
+			void (*hot_remove_cb)(const struct spdk_scsi_lun *, void *),
+			void *hot_remove_ctx)
 {
 	struct spdk_scsi_lun *lun;
 	int rc;
@@ -278,8 +271,8 @@ spdk_scsi_lun_construct(struct spdk_bdev *bdev,
 
 	lun->bdev = bdev;
 	lun->io_channel = NULL;
-	lun->hotremove_cb = hotremove_cb;
-	lun->hotremove_ctx = hotremove_ctx;
+	lun->hot_remove_cb = hot_remove_cb;
+	lun->hot_remove_ctx = hot_remove_ctx;
 
 	return lun;
 }

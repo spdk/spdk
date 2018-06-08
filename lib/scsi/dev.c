@@ -97,6 +97,7 @@ spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev)
 	}
 
 	if (lun_cnt == 0) {
+		SPDK_ERRLOG("SCSI dev must not be empty when deleted\n");
 		free_dev(dev);
 		return;
 	}

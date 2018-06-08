@@ -97,16 +97,16 @@ struct spdk_scsi_lun {
 	uint32_t ref;
 
 	/** Poller to release the resource of the lun when it is hot removed */
-	struct spdk_poller *hotplug_poller;
+	struct spdk_poller *hot_remove_poller;
 
 	/** The LUN is removed */
-	bool				removed;
+	bool removed;
 
 	/** Callback to be fired when LUN removal is first triggered. */
-	void (*hotremove_cb)(const struct spdk_scsi_lun *lun, void *arg);
+	void (*hot_remove_cb)(const struct spdk_scsi_lun *lun, void *arg);
 
 	/** Argument for hotremove_cb */
-	void *hotremove_ctx;
+	void *hot_remove_ctx;
 
 	TAILQ_HEAD(tasks, spdk_scsi_task) tasks;			/* pending tasks */
 };
