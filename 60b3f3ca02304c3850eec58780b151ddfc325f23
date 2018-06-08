@@ -1,0 +1,163 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7f90530c_99b7fcaa",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 1181,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-08T16:33:50Z",
+      "side": 1,
+      "message": "This looks accidental - please check scripts/check_format.sh to verify that the file has the right line endings.",
+      "revId": "60b3f3ca02304c3850eec58780b151ddfc325f23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "297d3226_48eed814",
+        "filename": "scripts/rpc/nvmf.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-08T16:33:50Z",
+      "side": 1,
+      "message": "For consistency with the other doc strings, I think these should be lined up in column 4 (under the first \" of \"\"\").",
+      "revId": "60b3f3ca02304c3850eec58780b151ddfc325f23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c5b92661_9edfa25c",
+        "filename": "scripts/rpc/nvmf.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-08T16:33:50Z",
+      "side": 1,
+      "message": "I think we can move this parsing code to scripts/rpc.py to make the library API cleaner (see my post to the mailing list).\n\nFor example, \u0027listen_addresses\u0027 should probably be passed as a list of objects that each contain fields corresponding to the parameters to nvmf_subsystem_add_listener, something like:\n\n    [{\u0027trtype\u0027: \u0027RDMA\u0027, \u0027traddr\u0027: \u002710.0.0.1\u0027, \u0027trsvcid\u0027: \u00274420\u0027, ...",
+      "revId": "60b3f3ca02304c3850eec58780b151ddfc325f23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dcd0f05b_32f8aed8",
+        "filename": "scripts/rpc/nvmf.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-08T16:33:50Z",
+      "side": 1,
+      "message": "Same here, it would be ideal if the split() call was in scripts/rpc.py, and then the hosts parameter to this function could be a native Python list.",
+      "revId": "60b3f3ca02304c3850eec58780b151ddfc325f23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5bae2a19_3bec8af6",
+        "filename": "scripts/rpc/nvmf.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-08T16:33:50Z",
+      "side": 1,
+      "message": "Similar comment for namespaces - these should be objects matching the parameters to nvmf_subsystem_add_ns.",
+      "revId": "60b3f3ca02304c3850eec58780b151ddfc325f23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8f670c16_7dc6a62c",
+        "filename": "scripts/rpc/nvmf.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-08T16:33:50Z",
+      "side": 1,
+      "message": "Please re-align this doc comment as well as the ones below.",
+      "revId": "60b3f3ca02304c3850eec58780b151ddfc325f23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0578b667_e657743b",
+        "filename": "scripts/rpc/nvmf.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-08T16:33:50Z",
+      "side": 1,
+      "message": "These comments look copy-pasted from a different method.",
+      "revId": "60b3f3ca02304c3850eec58780b151ddfc325f23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e41a9a98_944b867c",
+        "filename": "scripts/rpc/nvmf.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-08T16:33:50Z",
+      "side": 1,
+      "message": "Same, comments need to be updated to match their actual meanings.",
+      "revId": "60b3f3ca02304c3850eec58780b151ddfc325f23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "80fbf86a_98ac3c63",
+        "filename": "scripts/rpc/nvmf.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-08T16:33:50Z",
+      "side": 1,
+      "message": "add -\u003e remove",
+      "range": {
+        "startLine": 191,
+        "startChar": 42,
+        "endLine": 191,
+        "endChar": 45
+      },
+      "revId": "60b3f3ca02304c3850eec58780b151ddfc325f23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
