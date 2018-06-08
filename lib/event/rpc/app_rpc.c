@@ -34,10 +34,13 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/event.h"
+#include "spdk/env.h"
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 
 #include "spdk_internal/log.h"
+
+#define MAX_CORES	64
 
 struct rpc_kill_instance {
 	char *sig_name;
@@ -153,3 +156,86 @@ spdk_rpc_context_switch_monitor(struct spdk_jsonrpc_request *request,
 }
 
 SPDK_RPC_REGISTER("context_switch_monitor", spdk_rpc_context_switch_monitor, SPDK_RPC_RUNTIME)
+
+
+struct rpc_get_reactor_tsc_stats {
+	int32_t core_id;
+};
+
+static const struct spdk_json_object_decoder rpc_get_reactor_tsc_stats_decoders[] = {
+	{"core_id", offsetof(struct rpc_get_reactor_tsc_stats, core_id), spdk_json_decode_int32},
+};
+
+static void
+spdk_rpc_dump_reactor_tsc_stats_info(struct spdk_json_write_ctx *w,
+				     uint32_t core_id)
+{
+	struct spdk_reactor_tsc_stats *tsc_stats;
+	uint64_t busy_tsc[MAX_CORES];
+	uint64_t idle_tsc[MAX_CORES];
+	uint64_t unknown_tsc[MAX_CORES];
+
+	spdk_json_write_object_begin(w);
+	tsc_stats = spdk_reactor_get_tsc_stats(core_id);
+	busy_tsc[core_id] = tsc_stats->busy_tsc;
+	idle_tsc[core_id] = tsc_stats->idle_tsc;
+	unknown_tsc[core_id] = tsc_stats->unknown_tsc;
+
+	spdk_json_write_name(w, "core_id");
+	spdk_json_write_uint32(w, core_id);
+
+	spdk_json_write_name(w, "busy tsc");
+	spdk_json_write_uint64(w, busy_tsc[core_id]);
+
+	spdk_json_write_name(w, "idle tsc");
+	spdk_json_write_uint64(w, idle_tsc[core_id]);
+
+	spdk_json_write_name(w, "unknown tsc");
+	spdk_json_write_uint64(w, unknown_tsc[core_id]);
+
+	spdk_json_write_object_end(w);
+}
+
+static void
+spdk_rpc_get_reactor_tsc_stats(struct spdk_jsonrpc_request *request,
+			       const struct spdk_json_val *params)
+{
+	struct rpc_get_reactor_tsc_stats req = {};
+	struct spdk_json_write_ctx *w;
+	uint32_t i;
+
+	if (params && spdk_json_decode_object(params, rpc_get_reactor_tsc_stats_decoders,
+					      SPDK_COUNTOF(rpc_get_reactor_tsc_stats_decoders),
+					      &req)) {
+		SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "spdk_json_decode_object failed\n");
+		goto invalid;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_array_begin(w);
+
+	if (req.core_id >= 0) {
+		if (req.core_id >= MAX_CORES) {
+			SPDK_ERRLOG("core_id '%d' not valid\n", req.core_id);
+			goto invalid;
+		}
+		spdk_rpc_dump_reactor_tsc_stats_info(w, req.core_id);
+	} else {
+		SPDK_ENV_FOREACH_CORE(i) {
+			spdk_rpc_dump_reactor_tsc_stats_info(w, i);
+		}
+	}
+
+	spdk_json_write_array_end(w);
+	spdk_jsonrpc_end_result(request, w);
+
+	return;
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+};
+
+SPDK_RPC_REGISTER("get_reactor_tsc_stats", spdk_rpc_get_reactor_tsc_stats, SPDK_RPC_RUNTIME)
