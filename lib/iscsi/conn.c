@@ -733,6 +733,7 @@ spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int bytes,
 
 	if (ret > 0) {
 		spdk_trace_record(TRACE_READ_FROM_SOCKET_DONE, conn->id, ret, 0, 0);
+		return ret;
 	}
 
 	if (ret < 0) {
@@ -747,16 +748,12 @@ spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int bytes,
 				SPDK_ERRLOG("spdk_sock_recv() failed, errno %d: %s\n",
 					    errno, spdk_strerror(errno));
 			}
+			return SPDK_ISCSI_CONNECTION_FATAL;
 		}
-		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
 
 	/* connection closed */
-	if (ret == 0) {
-		return SPDK_ISCSI_CONNECTION_FATAL;
-	}
-
-	return ret;
+	return SPDK_ISCSI_CONNECTION_FATAL;
 }
 
 void
