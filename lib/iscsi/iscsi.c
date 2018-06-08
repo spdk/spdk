@@ -4582,10 +4582,6 @@ spdk_create_iscsi_sess(struct spdk_iscsi_conn *conn,
 	/* configuration values */
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 
-	if (target != NULL) {
-		pthread_mutex_lock(&target->mutex);
-	}
-
 	sess->MaxConnections = g_spdk_iscsi.MaxConnectionsPerSession;
 	sess->MaxOutstandingR2T = DEFAULT_MAXOUTSTANDINGR2T;
 
@@ -4598,10 +4594,6 @@ spdk_create_iscsi_sess(struct spdk_iscsi_conn *conn,
 	sess->DataPDUInOrder = DEFAULT_DATAPDUINORDER;
 	sess->DataSequenceInOrder = DEFAULT_DATASEQUENCEINORDER;
 	sess->ErrorRecoveryLevel = g_spdk_iscsi.ErrorRecoveryLevel;
-
-	if (target != NULL) {
-		pthread_mutex_unlock(&target->mutex);
-	}
 
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 
