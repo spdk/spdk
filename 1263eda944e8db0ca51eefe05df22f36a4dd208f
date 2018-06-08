@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "2c12f4f7_e81a574d",
+        "filename": "examples/blob/bsdump/bsdump.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-08T23:07:55Z",
+      "side": 1,
+      "message": "This does get null-terminated in the blobstore.c code - what gets passed here is a copy of what\u0027s in the metadata descriptor itself.",
+      "parentUuid": "74a1a275_57b88872",
+      "revId": "1263eda944e8db0ca51eefe05df22f36a4dd208f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a91b710c_be95bfd9",
         "filename": "examples/blob/bsdump/bsdump.c",
         "patchSetId": 4
