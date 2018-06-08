@@ -16,6 +16,24 @@
       "revId": "a5f4baac6c1606fb9e0ce2d1c1e62c5909b7d110",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "72ca6cf2_f2751cdc",
+        "filename": "examples/blob/bsdump/Makefile",
+        "patchSetId": 6
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-08T23:13:57Z",
+      "side": 1,
+      "message": "Great catch.  I\u0027m actually going to remove COPY_MODULES from this - it\u0027s not really needed.\n\nBut there are a lot of other places where these are missing too.  I\u0027ll fix that up in a separate commit.",
+      "parentUuid": "bd0fbc33_151cb69d",
+      "revId": "a5f4baac6c1606fb9e0ce2d1c1e62c5909b7d110",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
