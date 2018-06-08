@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8684ce9d_a901bc1e",
+        "filename": "test/vhost/initiator/json_config.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-06-08T12:55:43Z",
+      "side": 1,
+      "message": "it\u0027d be more portable to match by Vendor and Device ID\n`lspci -nn` returns those\n0x1AF4 Virtio Vendor ID\n0x1004 Virtio SCSI Device ID\n0x1001 Virtio Block Device ID\n\nyou can also grep pci_ids.h from SPDK to get those magic numbers\n`grep PCI_DEVICE_ID_VIRTIO_BLK_MODERN include/spdk/pci_ids.h`\nMaybe we could have a script like gen_nvme.sh but for virtio in future?\n\npci_scsi\u003d$(lspci -nn | grep -i \u00271AF4:1004\u0027 | awk \u0027{print $1}\u0027)",
+      "range": {
+        "startLine": 14,
+        "startChar": 25,
+        "endLine": 14,
+        "endChar": 42
+      },
+      "revId": "21fb594387b668e2b603f6c76939cfd4f07cddb5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9b7ea28a_51101896",
+        "filename": "test/vhost/initiator/json_config.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-06-08T12:55:43Z",
+      "side": 1,
+      "message": "this won\u0027t work if we have more than one device, right?",
+      "range": {
+        "startLine": 17,
+        "startChar": 47,
+        "endLine": 17,
+        "endChar": 56
+      },
+      "revId": "21fb594387b668e2b603f6c76939cfd4f07cddb5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "904300c2_15ebb672",
+        "filename": "test/vhost/initiator/json_config.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-06-08T12:55:43Z",
+      "side": 1,
+      "message": "you can use `lspci -D` instead",
+      "range": {
+        "startLine": 17,
+        "startChar": 41,
+        "endLine": 17,
+        "endChar": 46
+      },
+      "revId": "21fb594387b668e2b603f6c76939cfd4f07cddb5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
