@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "74a1a275_57b88872",
+        "filename": "examples/blob/bsdump/bsdump.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-08T22:57:56Z",
+      "side": 1,
+      "message": "We should probably sanity-check this somehow - if value isn\u0027t null terminated, this can run off into the weeds.  Maybe alloc up a temporary buffer of size value_len + 1 and add a \u0027\\0\u0027 at the end?\n\nWe probably don\u0027t want the tool to crash if there are bugs in the code we are using it to debug. :)",
+      "revId": "1263eda944e8db0ca51eefe05df22f36a4dd208f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a91b710c_be95bfd9",
+        "filename": "examples/blob/bsdump/bsdump.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-08T22:57:56Z",
+      "side": 1,
+      "message": "This cast isn\u0027t strictly valid C (UBSan complains about this in the next patch when it actually gets executed).\n\nSimplest thing is probably to do something like:\n\n    uint64_t v;\n    memcpy(\u0026v, value, sizeof(v));\n    fprintf(fp, \"%\" PRIu64, v);\n\n(Also probably could use a sanity check that value_len \u003d\u003d sizeof(uint64_t) before copying.)",
+      "revId": "1263eda944e8db0ca51eefe05df22f36a4dd208f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bc19d1db_d70094c3",
+        "filename": "examples/blob/bsdump/bsdump.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-08T22:57:56Z",
+      "side": 1,
+      "message": "Same here, probably safest to check that value_len \u003d\u003d sizeof(struct spdk_uuid) before handing it off.",
+      "revId": "1263eda944e8db0ca51eefe05df22f36a4dd208f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
