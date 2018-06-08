@@ -51,6 +51,24 @@
       "revId": "f1e6061a686f44a7faf4eec862d6fc2a90d2fd52",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c8e5f9e_99cf6666",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-08T19:07:28Z",
+      "side": 1,
+      "message": "\u0027took_action\u0027 just means that we ran some poller - not that the poller did any real work.  It\u0027s used to decide if we should put the reactor to sleep.\n\nMaybe we need to change what all of the \"idle_started\" stuff means now that we have these stats, but I think we can do that later - after this patch.",
+      "parentUuid": "2ac1229b_3345d525",
+      "revId": "f1e6061a686f44a7faf4eec862d6fc2a90d2fd52",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
