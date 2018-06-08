@@ -37,6 +37,23 @@
     },
     {
       "key": {
+        "uuid": "83e42761_4d206ab5",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 444,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-08T19:59:23Z",
+      "side": 1,
+      "message": "This is directly returning a pointer to the stats structure inside the reactor; if we want to access this from other cores, that won\u0027t be thread safe.  We should probably let the user provide a stats struct pointer and copy the current stats into it.\n\nIf we require this function to be called on the corresponding core, then it\u0027s OK, but that needs to be documented in the doc comment in event.h.  Otherwise, we need a thread-safe way to provide access to the stats.\n\nI see a few options:\n- spdk_reactor_get_tsc_stats() always returns stats for the current core, instead of taking a parameter; this makes the \"current core only\" restriction obvious.  We should still probably copy the stats so that it\u0027s not possible to accidentally access the reactor\u0027s stats pointer from another core.\n- spdk_reactor_get_tsc_stats() still takes a core parameter but becomes asynchronous (add a callback) so that we can send a message to the desired core, get its stats, then message pass back to the original core that called spdk_reactor_get_tsc_stats() to call the callback.\n\nAlternatively, if we don\u0027t care too much about thread safety and getting precise stats, it might be okay to just copy the reactor stats from any thread; this is probably workable at least on the x86 memory model.",
+      "revId": "f1e6061a686f44a7faf4eec862d6fc2a90d2fd52",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2ac1229b_3345d525",
         "filename": "lib/event/reactor.c",
         "patchSetId": 6
