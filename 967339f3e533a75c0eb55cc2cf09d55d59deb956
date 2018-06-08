@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c151c3d3_5bd3fc6a",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 484,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-08T07:26:54Z",
+      "side": 0,
+      "message": "I\u0027m afraid that the cost of checking if TAILQ_FIRST(\u0026reactor-\u003etimer_pollers) is not NULL is higher than of checking if timer_poll_count \u003e\u003d SPDK_TIMER_POLL_IETRATIONS. This may affect poller execution.\n\nOf course OK if acceptable.",
+      "revId": "967339f3e533a75c0eb55cc2cf09d55d59deb956",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
