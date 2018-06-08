@@ -22,6 +22,30 @@
       "revId": "96bd43aa3974d650adcedacb153163d7848c19c5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2124a577_ecb91051",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-08T13:21:12Z",
+      "side": 1,
+      "message": "Thank you for reviewing and correcting my fault. I remove this because this is not critical.",
+      "parentUuid": "f478f885_0029fde6",
+      "range": {
+        "startLine": 100,
+        "startChar": 2,
+        "endLine": 100,
+        "endChar": 59
+      },
+      "revId": "96bd43aa3974d650adcedacb153163d7848c19c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
