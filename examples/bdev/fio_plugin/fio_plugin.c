@@ -95,6 +95,7 @@ struct spdk_fio_thread {
 };
 
 static struct spdk_fio_thread *g_init_thread = NULL;
+static pthread_t g_init_thread_id = 0;
 static bool g_spdk_env_initialized = false;
 
 static int spdk_fio_init(struct thread_data *td);
@@ -207,6 +208,36 @@ spdk_fio_init_thread(struct thread_data *td)
 	return 0;
 }
 
+static void *
+spdk_init_thread_poll(void *arg)
+{
+	struct spdk_fio_thread *thread = arg;
+	int oldstate;
+	int rc;
+
+	/* Loop until the thread is cancelled */
+	while (true) {
+		rc = pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &oldstate);
+		if (rc != 0) {
+			SPDK_ERRLOG("Unable to set cancel state disabled on g_init_thread (%d): %s\n",
+				    rc, spdk_strerror(rc));
+		}
+
+		spdk_fio_poll_thread(thread);
+
+		rc = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &oldstate);
+		if (rc != 0) {
+			SPDK_ERRLOG("Unable to set cancel state enabled on g_init_thread (%d): %s\n",
+				    rc, spdk_strerror(rc));
+		}
+
+		/* This is a pthread cancellation point and cannot be removed. */
+		sleep(1);
+	}
+
+	return NULL;
+}
+
 static int
 spdk_fio_init_env(struct thread_data *td)
 {
@@ -287,6 +318,16 @@ spdk_fio_init_env(struct thread_data *td)
 	do {
 		count = spdk_fio_poll_thread(fio_thread);
 	} while (count > 0);
+
+	/*
+	 * Spawn a thread to continue polling this thread
+	 * occasionally.
+	 */
+
+	rc = pthread_create(&g_init_thread_id, NULL, &spdk_init_thread_poll, fio_thread);
+	if (rc != 0) {
+		SPDK_ERRLOG("Unable to spawn thread to poll admin queue. It won't be polled.\n");
+	}
 
 	return 0;
 }
@@ -699,6 +740,10 @@ spdk_fio_finish_env(void)
 
 	/* the same thread that called spdk_fio_init_env */
 	fio_thread = g_init_thread;
+
+	if (pthread_cancel(g_init_thread_id) == 0) {
+		pthread_join(g_init_thread_id, NULL);
+	}
 
 	spdk_bdev_finish(spdk_fio_module_finish_done, &done);
 
