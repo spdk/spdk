@@ -16,6 +16,24 @@
       "revId": "2ad9380c418539c8c898f6ab853bde0036940879",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a675fc2_561eebf5",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-08T21:09:51Z",
+      "side": 1,
+      "message": "I coded it as you suggested in my first version locally.\n\nBut then I figured that the caller already has a function to print the app-specific options - it\u0027s the \"usage\" parameter to spdk_app_parse_args.  So the caller can just call that function after calling spdk_app_usage().\n\nI\u0027m OK adding it back in if you think it\u0027s better.  Or I can clarify here in the comment how we intend it to work.",
+      "parentUuid": "0bac9729_74ffdaae",
+      "revId": "2ad9380c418539c8c898f6ab853bde0036940879",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
