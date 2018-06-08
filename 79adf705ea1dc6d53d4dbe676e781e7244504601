@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "65d41081_474ef594",
+        "filename": "dpdk",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011300
+      },
+      "writtenOn": "2018-06-08T15:16:12Z",
+      "side": 1,
+      "message": "Why is this changing?",
+      "revId": "79adf705ea1dc6d53d4dbe676e781e7244504601",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2c90f23b_e6c111c4",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1052,
+      "author": {
+        "id": 1011300
+      },
+      "writtenOn": "2018-06-08T15:16:12Z",
+      "side": 1,
+      "message": "Why not forward declare \u0027struct spdk_thread\u0027 and return \u0027struct spdk_thread *\u0027 here?",
+      "revId": "79adf705ea1dc6d53d4dbe676e781e7244504601",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2fd21a9a_be60f376",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1065,
+      "author": {
+        "id": 1011300
+      },
+      "writtenOn": "2018-06-08T15:16:12Z",
+      "side": 1,
+      "message": "Passing in \u0027struct spdk_thread *\u0027 here would be better.",
+      "revId": "79adf705ea1dc6d53d4dbe676e781e7244504601",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "69be4fe2_35ba8f2d",
+        "filename": "include/spdk/io_channel.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1011300
+      },
+      "writtenOn": "2018-06-08T15:16:12Z",
+      "side": 1,
+      "message": "nit: How about calling this function \u0027spdk_thread_find_id\u0027?",
+      "revId": "79adf705ea1dc6d53d4dbe676e781e7244504601",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "42e5a485_b58cd498",
+        "filename": "include/spdk/io_channel.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1011300
+      },
+      "writtenOn": "2018-06-08T15:16:12Z",
+      "side": 1,
+      "message": "Is this returning the lcore the thread is currently running on?",
+      "revId": "79adf705ea1dc6d53d4dbe676e781e7244504601",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8eaba0a7_2378b9ea",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011300
+      },
+      "writtenOn": "2018-06-08T15:16:12Z",
+      "side": 1,
+      "message": "nit: assert(rc \u003d\u003d 1) will be more efficient unless you think its useful to place a breakpoint to be hit if when rc !\u003d 1.",
+      "revId": "79adf705ea1dc6d53d4dbe676e781e7244504601",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa6cd452_6acb0ed6",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 438,
+      "author": {
+        "id": 1011300
+      },
+      "writtenOn": "2018-06-08T15:16:12Z",
+      "side": 1,
+      "message": "spdk_thread_get_given_id requires taking a lock as currently implemented.  Is spdk_event_call on the I/O path ?",
+      "revId": "79adf705ea1dc6d53d4dbe676e781e7244504601",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
