@@ -1058,13 +1058,11 @@ spdk_iscsi_reject(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
 		alloc_len += ISCSI_DIGEST_LEN;
 	}
 
-	data = malloc(alloc_len);
+	data = calloc(1, alloc_len);
 	if (!data) {
-		SPDK_ERRLOG("malloc() failed for data segment\n");
+		SPDK_ERRLOG("calloc() failed for data segment\n");
 		return -ENOMEM;
 	}
-
-	memset(data, 0, alloc_len);
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Reject PDU reason=%d\n", reason);
 
@@ -1855,13 +1853,11 @@ spdk_iscsi_op_login_rsp_init(struct spdk_iscsi_conn *conn,
 		*alloc_len = conn->MaxRecvDataSegmentLength;
 	}
 
-	rsp_pdu->data = malloc(*alloc_len);
+	rsp_pdu->data = calloc(1, *alloc_len);
 	if (!rsp_pdu->data) {
-		SPDK_ERRLOG("malloc() failed for data segment\n");
+		SPDK_ERRLOG("calloc() failed for data segment\n");
 		return -ENOMEM;
 	}
-
-	memset(rsp_pdu->data, 0, *alloc_len);
 
 	reqh = (struct iscsi_bhs_login_req *)&pdu->bhs;
 	rsph->flags |= (reqh->flags & ISCSI_LOGIN_TRANSIT);
@@ -2341,14 +2337,12 @@ spdk_iscsi_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		return -1;
 	}
 
-	data = malloc(alloc_len);
+	data = calloc(1, alloc_len);
 	if (!data) {
-		SPDK_ERRLOG("malloc() failed for data segment\n");
+		SPDK_ERRLOG("calloc() failed for data segment\n");
 		spdk_iscsi_param_free(params);
 		return -ENOMEM;
 	}
-
-	memset(data, 0, alloc_len);
 
 	/* negotiate parameters */
 	data_len = spdk_iscsi_negotiate_params(conn, params_p,
@@ -3515,12 +3509,11 @@ spdk_iscsi_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		}
 	}
 
-	data = malloc(data_len);
+	data = calloc(1, data_len);
 	if (!data) {
-		SPDK_ERRLOG("malloc() failed for ping data\n");
+		SPDK_ERRLOG("calloc() failed for ping data\n");
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
-	memset(data, 0, data_len);
 
 	/* response of NOPOUT */
 	if (data_len > 0) {
@@ -4599,13 +4592,12 @@ spdk_create_iscsi_sess(struct spdk_iscsi_conn *conn,
 
 	sess->tag = conn->portal->group->tag;
 
-	sess->conns = malloc(sizeof(*sess->conns) * sess->MaxConnections);
+	sess->conns = calloc(sess->MaxConnections, sizeof(*sess->conns));
 	if (!sess->conns) {
-		SPDK_ERRLOG("malloc() failed for connection array\n");
+		SPDK_ERRLOG("calloc() failed for connection array\n");
 		return -ENOMEM;
 	}
 
-	memset(sess->conns, 0, sizeof(*sess->conns) * sess->MaxConnections);
 	sess->connections = 0;
 
 	sess->conns[sess->connections] = conn;
