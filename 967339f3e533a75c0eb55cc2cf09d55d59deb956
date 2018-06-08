@@ -16,6 +16,24 @@
       "revId": "967339f3e533a75c0eb55cc2cf09d55d59deb956",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8decbdfe_e8c9d8eb",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 484,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-08T21:59:22Z",
+      "side": 0,
+      "message": "Hi Shuhei,\n\nThe original goal of the timer_poll_count check was to avoid calling spdk_get_ticks() more often than needed; the actual TAILQ_FIRST() check should not be very expensive, since it is reading data from the reactor that should already be in CPU cache.\n\nJim has posted some benchmarks in the comments on the next patch in the series that shows this shouldn\u0027t cause any significant overhead.",
+      "parentUuid": "c151c3d3_5bd3fc6a",
+      "revId": "967339f3e533a75c0eb55cc2cf09d55d59deb956",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
