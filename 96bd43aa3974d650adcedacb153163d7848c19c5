@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f478f885_0029fde6",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-06-08T11:45:04Z",
+      "side": 1,
+      "message": "spdk_scsi_dev_destruct() is also called from spdk_scsi_dev_construct() on failure. We will now print this error if the first lun couldn\u0027t be added for whatever reason.\nIf we really need a log here, how about a debug log instead?",
+      "range": {
+        "startLine": 100,
+        "startChar": 2,
+        "endLine": 100,
+        "endChar": 59
+      },
+      "revId": "96bd43aa3974d650adcedacb153163d7848c19c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
