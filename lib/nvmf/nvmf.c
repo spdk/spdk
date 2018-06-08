@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/bdev.h"
+#include "spdk/bit_array.h"
 #include "spdk/conf.h"
 #include "spdk/thread.h"
 #include "spdk/nvmf.h"
@@ -133,10 +134,7 @@ spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 	spdk_poller_unregister(&group->poller);
 
 	TAILQ_FOREACH_SAFE(qpair, &group->qpairs, pg_link, qptmp) {
-		spdk_nvmf_poll_group_remove(group, qpair);
-		// TODO: This also should remove the qpair from the qpair_mask, but needs a lock
-		//spdk_bit_array_clear(qpair->ctrlr->qpair_mask, qpair->qid);
-		spdk_nvmf_transport_qpair_fini(qpair);
+		spdk_nvmf_qpair_disconnect(qpair);
 	}
 
 	TAILQ_FOREACH_SAFE(tgroup, &group->tgroups, link, tmp) {
@@ -465,6 +463,80 @@ spdk_nvmf_poll_group_remove(struct spdk_nvmf_poll_group *group,
 	}
 
 	return rc;
+}
+
+static void
+_spdk_nvmf_ctrlr_free(void *ctx)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = ctx;
+
+	spdk_nvmf_ctrlr_destruct(ctrlr);
+}
+
+static void
+_spdk_nvmf_qpair_destroy(void *ctx, int status)
+{
+	struct spdk_nvmf_qpair *qpair = ctx;
+	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
+	uint16_t qid = qpair->qid;
+
+	spdk_nvmf_poll_group_remove(qpair->group, qpair);
+
+	assert(qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING);
+	qpair->state = SPDK_NVMF_QPAIR_INACTIVE;
+
+	spdk_nvmf_transport_qpair_fini(qpair);
+
+	if (!ctrlr) {
+		return;
+	}
+
+	/* TODO: Take lock */
+	spdk_bit_array_clear(ctrlr->qpair_mask, qid);
+
+	/* TODO: Lock */
+	if (spdk_bit_array_count_set(ctrlr->qpair_mask) == 0) {
+		/* If this was the last queue pair on the controller, also send a message
+		 * to the subsystem to remove the controller. */
+		spdk_thread_send_msg(ctrlr->subsys->thread, _spdk_nvmf_ctrlr_free, ctrlr);
+	}
+}
+
+static void
+_spdk_nvmf_qpair_deactivate(void *ctx)
+{
+	struct spdk_nvmf_qpair *qpair = ctx;
+
+	if (qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING ||
+	    qpair->state == SPDK_NVMF_QPAIR_INACTIVE) {
+		/* This can occur if the connection is killed by the target,
+		 * which results in a notification that the connection
+		 * died. */
+		return;
+	}
+
+	assert(qpair->state == SPDK_NVMF_QPAIR_ACTIVE);
+	qpair->state = SPDK_NVMF_QPAIR_DEACTIVATING;
+
+	/* Check for outstanding I/O */
+	if (!TAILQ_EMPTY(&qpair->outstanding)) {
+		qpair->state_cb = _spdk_nvmf_qpair_destroy;
+		qpair->state_cb_arg = qpair;
+		return;
+	}
+
+	_spdk_nvmf_qpair_destroy(qpair, 0);
+}
+
+void
+spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair)
+{
+	if (qpair->group->thread == spdk_get_thread()) {
+		_spdk_nvmf_qpair_deactivate(qpair);
+	} else {
+		/* Send a message to the thread that owns this qpair */
+		spdk_thread_send_msg(qpair->group->thread, _spdk_nvmf_qpair_deactivate, qpair);
+	}
 }
 
 int
