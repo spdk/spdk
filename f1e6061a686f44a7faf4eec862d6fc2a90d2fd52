@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "faac606d_8e66d760",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 428,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-08T18:11:43Z",
+      "side": 1,
+      "message": "What does unknown mean? Isn\u0027t the reactor either busy or idle?",
+      "revId": "f1e6061a686f44a7faf4eec862d6fc2a90d2fd52",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ac1229b_3345d525",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-06-08T18:11:43Z",
+      "side": 1,
+      "message": "I think you need to do a separate patch that first changes the way \u0027took_action\u0027 is updated. It should only be set to true if the poller returns a status code that it did real work. That will simplify the math on when to update idle and when to update busy in this patch.",
+      "revId": "f1e6061a686f44a7faf4eec862d6fc2a90d2fd52",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
