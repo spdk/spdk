@@ -21,3 +21,18 @@ def context_switch_monitor(client, enabled=None):
     if enabled is not None:
         params['enabled'] = enabled
     return client.call('context_switch_monitor', params)
+
+
+def get_reactor_tsc_stats(client, core_id=None):
+    """Get reactor tsc stats
+
+    Args:
+        core: Specific core id to query (optional; if omitted, query all cores)
+
+    Returns:
+        Cumulative time stamp counters for a given core in terms of busy, idle and unknown.
+    """
+    params = {}
+    if core_id is not None:
+        params['core_id'] = core_id
+    return client.call('get_reactor_tsc_stats', params)
