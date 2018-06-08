@@ -17,6 +17,10 @@ run_step() {
 	echo done.
 }
 
+run_bsdump() {
+	$rootdir/examples/blob/cli/blobcli -c $ROCKSDB_CONF -b Nvme0n1 -D &> bsdump.txt
+}
+
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
@@ -44,7 +48,7 @@ timing_exit db_bench_build
 cp $rootdir/etc/spdk/rocksdb.conf.in $ROCKSDB_CONF
 $rootdir/scripts/gen_nvme.sh >> $ROCKSDB_CONF
 
-trap 'rm -f $ROCKSDB_CONF; exit 1' SIGINT SIGTERM EXIT
+trap 'run_bsdump; rm -f $ROCKSDB_CONF; exit 1' SIGINT SIGTERM EXIT
 
 timing_enter mkfs
 $rootdir/test/blobfs/mkfs/mkfs $ROCKSDB_CONF Nvme0n1
@@ -124,6 +128,7 @@ timing_exit rocksdb_randread
 
 trap - SIGINT SIGTERM EXIT
 
+run_bsdump
 rm -f $ROCKSDB_CONF
 
 report_test_completion "blobfs"
