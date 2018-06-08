@@ -349,6 +349,10 @@ spdk_nvmf_rdma_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 	}
 }
 
+static int
+spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
+			   struct spdk_nvmf_rdma_poller *rpoller);
+
 static void
 spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 {
@@ -780,7 +784,7 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 	/* ack the disconnect event before rdma_destroy_id */
 	rdma_ack_cm_event(evt);
 
-	spdk_nvmf_ctrlr_disconnect(qpair);
+	spdk_nvmf_qpair_disconnect(qpair);
 
 	return 0;
 }
