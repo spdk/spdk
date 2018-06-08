@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bd309dcd_cc74b1e5",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 742,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-06-08T11:47:23Z",
+      "side": 1,
+      "message": "you could also drop this else ;)",
+      "range": {
+        "startLine": 742,
+        "startChar": 3,
+        "endLine": 742,
+        "endChar": 10
+      },
+      "revId": "c68da8e1767d44cff88316b57714ce43014b3562",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
