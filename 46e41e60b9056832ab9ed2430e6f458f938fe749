@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "2a721e2e_d828d420",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 475,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-06-08T00:00:59Z",
+      "side": 1,
+      "message": "Not sure I understand what you mean by \"deserve its own function\", can you explain more about that? I can probably dynamically allocate these as well based on the # of IOVECs in the bdev_io, that\u0027s probably the best thing to do once I get the next big thing working which is to get rid of the cipher only usage now and go with AEAD for both drivers, I also have to switch to a different driver for AESNI but I\u0027ll make this change here soon so I don\u0027t forget :)",
+      "parentUuid": "bcbe3e05_226a7040",
+      "range": {
+        "startLine": 473,
+        "startChar": 0,
+        "endLine": 475,
+        "endChar": 38
+      },
+      "revId": "46e41e60b9056832ab9ed2430e6f458f938fe749",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "17f74a0b_1ff68921",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 27
@@ -36,6 +60,30 @@
       "writtenOn": "2018-06-07T21:23:49Z",
       "side": 1,
       "message": "Pls don\u0027t cast if you don\u0027t have to. It don\u0027t bring you any benefits and just makes static code inspection useless.",
+      "range": {
+        "startLine": 480,
+        "startChar": 33,
+        "endLine": 480,
+        "endChar": 58
+      },
+      "revId": "46e41e60b9056832ab9ed2430e6f458f938fe749",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de894ff6_e16e74cc",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-06-08T00:00:59Z",
+      "side": 1,
+      "message": "I personally think its very useful from a readability point of view, the ctx is passed in as a void * soI this as very explicit",
+      "parentUuid": "17f74a0b_1ff68921",
       "range": {
         "startLine": 480,
         "startChar": 33,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "0a8f540c_010e28d1",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 491,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-06-08T00:00:59Z",
+      "side": 1,
+      "message": "This is a bitwise AND to test whether a flag is set or not - same method that all of the DPDK cryto apps use.  What exactly is your issue with it?",
+      "parentUuid": "34276b5c_47a89739",
+      "range": {
+        "startLine": 491,
+        "startChar": 58,
+        "endLine": 491,
+        "endChar": 59
+      },
+      "revId": "46e41e60b9056832ab9ed2430e6f458f938fe749",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6f4d5472_ccdb99ba",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 27
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "70f31d7f_c33bce23",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 512,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-06-08T00:00:59Z",
+      "side": 1,
+      "message": "Its not avoidable to use some spdk* and some rte* API so what I went with was to use spdk* wherever possible.  In an earlier review where I was using all rte* API someone else expressed their opinion that we should use spdk* as much as possible. I\u0027m inclined to leave it as is to preserve the spdk interface as much as possible.",
+      "parentUuid": "6f4d5472_ccdb99ba",
+      "range": {
+        "startLine": 512,
+        "startChar": 6,
+        "endLine": 512,
+        "endChar": 69
+      },
+      "revId": "46e41e60b9056832ab9ed2430e6f458f938fe749",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9bcae417_719490c5",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 27
@@ -105,6 +201,30 @@
       "writtenOn": "2018-06-07T21:23:49Z",
       "side": 1,
       "message": "Amazing :)",
+      "range": {
+        "startLine": 536,
+        "startChar": 35,
+        "endLine": 536,
+        "endChar": 53
+      },
+      "revId": "46e41e60b9056832ab9ed2430e6f458f938fe749",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a490db8_c1be646c",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 536,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-06-08T00:00:59Z",
+      "side": 1,
+      "message": "Hmm, I don\u0027t remember typing that :)",
+      "parentUuid": "9bcae417_719490c5",
       "range": {
         "startLine": 536,
         "startChar": 35,
@@ -163,6 +283,30 @@
     },
     {
       "key": {
+        "uuid": "e23191af_717d1ce5",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 539,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-06-08T00:00:59Z",
+      "side": 1,
+      "message": "copy-n-paste 2 :)",
+      "parentUuid": "abdb1b76_0043221f",
+      "range": {
+        "startLine": 539,
+        "startChar": 36,
+        "endLine": 539,
+        "endChar": 54
+      },
+      "revId": "46e41e60b9056832ab9ed2430e6f458f938fe749",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0c818ec8_1b629f9d",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 27
@@ -186,6 +330,30 @@
     },
     {
       "key": {
+        "uuid": "6876c140_a6acaacf",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 554,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-06-08T00:00:59Z",
+      "side": 1,
+      "message": "LOL",
+      "parentUuid": "0c818ec8_1b629f9d",
+      "range": {
+        "startLine": 554,
+        "startChar": 35,
+        "endLine": 554,
+        "endChar": 53
+      },
+      "revId": "46e41e60b9056832ab9ed2430e6f458f938fe749",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4cba9709_f2b9aca5",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 27
@@ -197,6 +365,30 @@
       "writtenOn": "2018-06-07T21:23:49Z",
       "side": 1,
       "message": "I see too many \u0027free(...)\u0027 calls all over this file. Is this really needed?",
+      "range": {
+        "startLine": 1339,
+        "startChar": 0,
+        "endLine": 1342,
+        "endChar": 21
+      },
+      "revId": "46e41e60b9056832ab9ed2430e6f458f938fe749",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1bdba2a9_9a07a05b",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 1342,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-06-08T00:00:59Z",
+      "side": 1,
+      "message": "Yeah, I need to clean all that up later but this driver is still in development so I\u0027m not at the \"clean up\" stage just yet.  Before I remove the RFC I knock this kind of stuff out",
+      "parentUuid": "4cba9709_f2b9aca5",
       "range": {
         "startLine": 1339,
         "startChar": 0,
