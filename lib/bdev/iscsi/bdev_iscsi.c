@@ -309,7 +309,7 @@ bdev_iscsi_poll(void *arg)
 		}
 	}
 
-	return 0;
+	return -1;
 }
 
 static void bdev_iscsi_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
@@ -599,7 +599,7 @@ iscsi_bdev_conn_poll(void *arg)
 		}
 	}
 
-	return 0;
+	return -1;
 }
 
 int
