@@ -337,7 +337,7 @@ bdev_iscsi_poll_lun(struct bdev_iscsi_lun *lun)
 		}
 	}
 
-	return 0;
+	return -1;
 }
 
 static int
@@ -667,7 +667,7 @@ iscsi_bdev_conn_poll(void *arg)
 		}
 	}
 
-	return 0;
+	return -1;
 }
 
 int
