@@ -128,6 +128,15 @@ struct spdk_bdev_io_stat {
 	uint64_t ticks_rate;
 };
 
+struct spdk_bdev_opts {
+	uint32_t bdev_io_pool_size;
+	uint32_t bdev_io_cache_size;
+};
+
+void spdk_bdev_get_opts(struct spdk_bdev_opts *opts);
+
+int spdk_bdev_set_opts(struct spdk_bdev_opts *opts);
+
 /**
  * Block device initialization callback.
  *

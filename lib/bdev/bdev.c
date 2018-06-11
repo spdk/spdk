@@ -94,6 +94,11 @@ static struct spdk_bdev_mgr g_bdev_mgr = {
 	.module_init_complete = false,
 };
 
+static struct spdk_bdev_opts	g_bdev_opts = {
+	.bdev_io_pool_size = SPDK_BDEV_IO_POOL_SIZE,
+	.bdev_io_cache_size = SPDK_BDEV_IO_CACHE_SIZE,
+};
+
 static spdk_bdev_init_cb	g_init_cb_fn = NULL;
 static void			*g_init_cb_arg = NULL;
 
@@ -138,6 +143,7 @@ struct spdk_bdev_mgmt_channel {
 	 */
 	bdev_io_stailq_t per_thread_cache;
 	uint32_t	per_thread_cache_count;
+	uint32_t	bdev_io_cache_size;
 
 	TAILQ_HEAD(, spdk_bdev_shared_resource) shared_resources;
 };
@@ -228,6 +234,26 @@ struct spdk_bdev_iostat_ctx {
 #define __bdev_from_io_dev(io_dev)	((struct spdk_bdev *)(((char *)io_dev) - 1))
 
 static void spdk_bdev_write_zeroes_split(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
+
+void
+spdk_bdev_get_opts(struct spdk_bdev_opts *opts)
+{
+	*opts = g_bdev_opts;
+}
+
+int
+spdk_bdev_set_opts(struct spdk_bdev_opts *opts)
+{
+	if (opts->bdev_io_pool_size < opts->bdev_io_cache_size * spdk_thread_get_count()) {
+		SPDK_ERRLOG("bdev_io_pool_size %" PRIu32 " is not compatible with bdev_io_cache_size %" PRIu32
+			    " and %" PRIu32 " threads\n", opts->bdev_io_pool_size, opts->bdev_io_cache_size,
+			    spdk_thread_get_count());
+		return -1;
+	}
+
+	g_bdev_opts = *opts;
+	return 0;
+}
 
 struct spdk_bdev *
 spdk_bdev_first(void)
@@ -463,6 +489,7 @@ spdk_bdev_mgmt_channel_create(void *io_device, void *ctx_buf)
 
 	STAILQ_INIT(&ch->per_thread_cache);
 	ch->per_thread_cache_count = 0;
+	ch->bdev_io_cache_size = g_bdev_opts.bdev_io_cache_size;
 
 	TAILQ_INIT(&ch->shared_resources);
 
@@ -586,6 +613,7 @@ spdk_bdev_modules_init(void)
 	g_bdev_mgr.module_init_complete = true;
 	return rc;
 }
+
 void
 spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 {
@@ -601,7 +629,7 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 	snprintf(mempool_name, sizeof(mempool_name), "bdev_io_%d", getpid());
 
 	g_bdev_mgr.bdev_io_pool = spdk_mempool_create(mempool_name,
-				  SPDK_BDEV_IO_POOL_SIZE,
+				  g_bdev_opts.bdev_io_pool_size,
 				  sizeof(struct spdk_bdev_io) +
 				  spdk_bdev_module_get_max_ctx_size(),
 				  0,
@@ -677,10 +705,10 @@ spdk_bdev_mgr_unregister_cb(void *io_device)
 {
 	spdk_bdev_fini_cb cb_fn = g_fini_cb_fn;
 
-	if (spdk_mempool_count(g_bdev_mgr.bdev_io_pool) != SPDK_BDEV_IO_POOL_SIZE) {
+	if (spdk_mempool_count(g_bdev_mgr.bdev_io_pool) != g_bdev_opts.bdev_io_pool_size) {
 		SPDK_ERRLOG("bdev IO pool count is %zu but should be %u\n",
 			    spdk_mempool_count(g_bdev_mgr.bdev_io_pool),
-			    SPDK_BDEV_IO_POOL_SIZE);
+			    g_bdev_opts.bdev_io_pool_size);
 	}
 
 	if (spdk_mempool_count(g_bdev_mgr.buf_small_pool) != BUF_SMALL_POOL_SIZE) {
@@ -842,7 +870,7 @@ spdk_bdev_put_io(struct spdk_bdev_io *bdev_io)
 		spdk_bdev_io_put_buf(bdev_io);
 	}
 
-	if (ch->per_thread_cache_count < SPDK_BDEV_IO_CACHE_SIZE) {
+	if (ch->per_thread_cache_count < ch->bdev_io_cache_size) {
 		ch->per_thread_cache_count++;
 		STAILQ_INSERT_TAIL(&ch->per_thread_cache, bdev_io, internal.buf_link);
 	} else {
