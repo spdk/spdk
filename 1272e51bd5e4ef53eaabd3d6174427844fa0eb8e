@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3134ee9a_cb0ac8eb",
+        "filename": "test/unit/lib/nvme/nvme_ctrlr_ocssd_cmd.c/nvme_ctrlr_ocssd_cmd_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-11T21:54:32Z",
+      "side": 1,
+      "message": "This new unit test needs to be added to test/unit/unittest.sh so it gets executed by the automated tests.",
+      "revId": "1272e51bd5e4ef53eaabd3d6174427844fa0eb8e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
