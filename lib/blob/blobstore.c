@@ -51,7 +51,7 @@
 static int spdk_bs_register_md_thread(struct spdk_blob_store *bs);
 static int spdk_bs_unregister_md_thread(struct spdk_blob_store *bs);
 static void _spdk_blob_close_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno);
-void _spdk_blob_insert_cluster_on_md_thread(struct spdk_blob *blob, uint32_t cluster_num,
+static void _spdk_blob_insert_cluster_on_md_thread(struct spdk_blob *blob, uint32_t cluster_num,
 		uint64_t cluster, spdk_blob_op_complete cb_fn, void *cb_arg);
 
 static int _spdk_blob_set_xattr(struct spdk_blob *blob, const char *name, const void *value,
@@ -4824,7 +4824,7 @@ _spdk_blob_insert_cluster_msg(void *arg)
 	_spdk_blob_sync_md(ctx->blob, _spdk_blob_insert_cluster_msg_cb, ctx);
 }
 
-void
+static void
 _spdk_blob_insert_cluster_on_md_thread(struct spdk_blob *blob, uint32_t cluster_num,
 				       uint64_t cluster, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
