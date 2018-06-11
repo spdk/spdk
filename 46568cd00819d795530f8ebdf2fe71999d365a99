@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "248dcc31_be3254b4",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-11T08:54:59Z",
+      "side": 1,
+      "message": "use tabs",
+      "range": {
+        "startLine": 40,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 8
+      },
+      "revId": "46568cd00819d795530f8ebdf2fe71999d365a99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c8e9468f_8ccf58b9",
+        "filename": "test/vhost/json_config/json_config.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-11T08:54:59Z",
+      "side": 1,
+      "message": "It\u0027s almost a direct copy of what is here:\nhttps://review.gerrithub.io/#/c/spdk/spdk/+/406326/63/test/bdev/bdevjson/json_config.sh\n\nAny way to re-use this chunk of script?",
+      "revId": "46568cd00819d795530f8ebdf2fe71999d365a99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
