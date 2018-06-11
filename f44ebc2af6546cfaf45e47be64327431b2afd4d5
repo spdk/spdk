@@ -22,6 +22,30 @@
       "revId": "f44ebc2af6546cfaf45e47be64327431b2afd4d5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c129ead_fe4da230",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 874,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-11T21:39:44Z",
+      "side": 1,
+      "message": "Good catch.\n\nNow that I look at this again, it might be better to explicitly list just the I/O types that have meaningful num_blocks as well.  For example, SPDK_BDEV_IO_TYPE_RESET doesn\u0027t set num_blocks, and FLUSH should probably not be counted as taking disk bandwidth. (I\u0027m not sure if we want to count UNMAP either.)\n\nSomething like:\n\n    switch (bdev_io-\u003etype) {\n    case SPDK_BDEV_IO_TYPE_NVME_...:\n        return bdev_io-\u003eu.nvme_passthru.nbytes;\n    case SPDK_BDEV_IO_TYPE_READ:\n    case SPDK_BDEV_IO_TYPE_WRITE:\n        return bdev_io-\u003eu.bdev.num_blocks * bdev-\u003eblocklen;\n    default:\n        return 0;\n    }",
+      "parentUuid": "784bad59_c4b52b22",
+      "range": {
+        "startLine": 874,
+        "startChar": 0,
+        "endLine": 874,
+        "endChar": 30
+      },
+      "revId": "f44ebc2af6546cfaf45e47be64327431b2afd4d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
