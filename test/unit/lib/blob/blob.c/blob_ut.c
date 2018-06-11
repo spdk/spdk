@@ -4587,6 +4587,53 @@ blob_relations(void)
 	g_bs = NULL;
 }
 
+static void
+blob_small_sector(void)
+{
+	struct spdk_bs_opts opts;
+	struct spdk_bs_dev *dev;
+	struct spdk_blob *blob;
+	spdk_blob_id blobid;
+
+	/* Create dev with 512 bytes sector size */
+	dev = init_dev();
+	dev->blocklen = 512;
+
+	spdk_bs_opts_init(&opts);
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
+	opts.sector_sz = 512;
+
+	/* Initialize a new blob store */
+	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	/* Create a blob */
+	spdk_bs_create_blob(g_bs, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(g_bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	blob = g_blob;
+
+	/* Try to perform I/O with 512 block size */
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	blob = NULL;
+	g_blob = NULL;
+
+	/* Unload the blob store */
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+	g_blob = NULL;
+	g_blobid = 0;
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -4649,7 +4696,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "blob_snapshot_rw_iov", blob_snapshot_rw_iov) == NULL ||
 		CU_add_test(suite, "blob_relations", blob_relations) == NULL ||
 		CU_add_test(suite, "blob_inflate_rw", blob_inflate_rw) == NULL ||
-		CU_add_test(suite, "blob_snapshot_freeze_io", blob_snapshot_freeze_io) == NULL
+		CU_add_test(suite, "blob_snapshot_freeze_io", blob_snapshot_freeze_io) == NULL ||
+		CU_add_test(suite, "blob_small_sector", blob_small_sector) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
