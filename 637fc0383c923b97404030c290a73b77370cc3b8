@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "08276471_2d325b29",
+        "filename": "app/nvmf_tgt/Makefile",
+        "patchSetId": 10
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-11T02:30:32Z",
+      "side": 1,
+      "message": "This was needed to use scan_copy_ioat_engine RPC to nvmf-tgt as well as iscsi-tgt, spdk-tgt, and vhost.\n\nWithout this, nvmf-tgt discarded scan_copy_ioat_engine RPC silently. There was no explicit error but nvmf-tgt didn\u0027t receive the RPC.\n\nWill you help to clarify the reason if possible?",
+      "parentUuid": "be503883_d41af74f",
+      "revId": "637fc0383c923b97404030c290a73b77370cc3b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5f3d2177_89e18271",
         "filename": "lib/copy/ioat/copy_engine_ioat_rpc.c",
         "patchSetId": 10
@@ -30,6 +48,24 @@
       "writtenOn": "2018-06-08T18:04:55Z",
       "side": 1,
       "message": "This error path also needs to call free_rpc_copy_engine(\u0026req), since spdk_json_decode_object() may have allocated some strings successfully before failing.",
+      "revId": "637fc0383c923b97404030c290a73b77370cc3b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1c05d77_d4ad1c90",
+        "filename": "lib/copy/ioat/copy_engine_ioat_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-11T02:30:32Z",
+      "side": 1,
+      "message": "I got it.",
+      "parentUuid": "5f3d2177_89e18271",
       "revId": "637fc0383c923b97404030c290a73b77370cc3b8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -59,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "00410177_e5c393bb",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 1175,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-11T02:30:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ac87d172_d6f9e177",
+      "range": {
+        "startLine": 1175,
+        "startChar": 98,
+        "endLine": 1175,
+        "endChar": 114
+      },
+      "revId": "637fc0383c923b97404030c290a73b77370cc3b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a3d38d13_56e7b93b",
         "filename": "scripts/rpc/__init__.py",
         "patchSetId": 10
@@ -76,6 +136,24 @@
     },
     {
       "key": {
+        "uuid": "20a57010_1a30d567",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-11T02:30:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a3d38d13_56e7b93b",
+      "revId": "637fc0383c923b97404030c290a73b77370cc3b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ecec84da_716fb4f9",
         "filename": "scripts/rpc/ioat.py",
         "patchSetId": 10
@@ -87,6 +165,30 @@
       "writtenOn": "2018-06-08T18:04:55Z",
       "side": 1,
       "message": "Can we pass pci_whitelist directly as a Python list here? The string parsing code below could be placed in scripts/rpc.py rather than in scripts/rpc/ioat.py.\n\nThat would avoid having to fix this args parameter up in a second patch (see commit 1ea97654602c (\"scripts/rpc.py: pass named args to bdev.py\") for an example of how this should look).",
+      "range": {
+        "startLine": 1,
+        "startChar": 34,
+        "endLine": 1,
+        "endChar": 38
+      },
+      "revId": "637fc0383c923b97404030c290a73b77370cc3b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f46799a_3c7dd2e8",
+        "filename": "scripts/rpc/ioat.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-11T02:30:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ecec84da_716fb4f9",
       "range": {
         "startLine": 1,
         "startChar": 34,
