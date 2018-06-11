@@ -35,7 +35,7 @@
 
 #include "spdk/blob_bdev.h"
 #include "spdk/blob.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk/log.h"
 #include "spdk/endian.h"
 #include "spdk/bdev_module.h"

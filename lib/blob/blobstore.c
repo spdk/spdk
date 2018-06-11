@@ -37,7 +37,7 @@
 #include "spdk/crc32.h"
 #include "spdk/env.h"
 #include "spdk/queue.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk/bit_array.h"
 #include "spdk/likely.h"
 

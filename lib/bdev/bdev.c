@@ -39,7 +39,7 @@
 
 #include "spdk/env.h"
 #include "spdk/event.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk/likely.h"
 #include "spdk/queue.h"
 #include "spdk/nvme_spec.h"

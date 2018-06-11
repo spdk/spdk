@@ -41,7 +41,7 @@
 #include "spdk/env.h"
 #include "spdk/copy_engine.h"
 #include "spdk/json.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk/queue.h"
 #include "spdk/string.h"
 

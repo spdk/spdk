@@ -44,7 +44,7 @@
 #include "spdk/conf.h"
 #include "spdk/endian.h"
 #include "spdk/string.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk/util.h"
 
 #include "spdk/bdev_module.h"

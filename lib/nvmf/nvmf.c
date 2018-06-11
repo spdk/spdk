@@ -35,7 +35,7 @@
 
 #include "spdk/bdev.h"
 #include "spdk/conf.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk/nvmf.h"
 #include "spdk/trace.h"
 

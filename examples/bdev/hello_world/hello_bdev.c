@@ -32,7 +32,7 @@
  */
 
 #include "spdk/stdinc.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk/bdev.h"
 #include "spdk/env.h"
 #include "spdk/event.h"

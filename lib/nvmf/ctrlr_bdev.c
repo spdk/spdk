@@ -37,7 +37,7 @@
 
 #include "spdk/bdev.h"
 #include "spdk/endian.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk/likely.h"
 #include "spdk/nvme.h"
 #include "spdk/nvmf_spec.h"

@@ -34,7 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/event.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 
 static int g_time_in_sec;
 static struct spdk_poller *test_end_poller;

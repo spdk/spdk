@@ -38,7 +38,7 @@
 
 #include "spdk/bit_array.h"
 #include "spdk/endian.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk/trace.h"
 #include "spdk/nvme_spec.h"
 #include "spdk/string.h"

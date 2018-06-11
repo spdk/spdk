@@ -36,7 +36,7 @@
 #include "blobstore.h"
 #include "request.h"
 
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk/queue.h"
 
 #include "spdk_internal/log.h"

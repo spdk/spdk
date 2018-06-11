@@ -40,7 +40,7 @@
 #include "spdk/blobfs.h"
 #include "spdk/bdev.h"
 #include "spdk/event.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk/blob_bdev.h"
 #include "spdk/log.h"
 

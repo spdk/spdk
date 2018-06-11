@@ -37,7 +37,7 @@
 #include "spdk/copy_engine.h"
 #include "spdk/conf.h"
 #include "spdk/env.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk/log.h"
 #include "spdk/string.h"
 #include "spdk/queue.h"

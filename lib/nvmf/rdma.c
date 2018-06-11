@@ -41,7 +41,7 @@
 #include "transport.h"
 
 #include "spdk/assert.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk/nvmf.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/string.h"

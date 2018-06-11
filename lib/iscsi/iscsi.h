@@ -40,7 +40,7 @@
 #include "spdk/bdev.h"
 #include "spdk/iscsi_spec.h"
 #include "spdk/event.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 
 #include "iscsi/param.h"
 #include "iscsi/tgt_node.h"

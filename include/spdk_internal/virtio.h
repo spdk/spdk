@@ -44,7 +44,7 @@
 #include "spdk/likely.h"
 #include "spdk/queue.h"
 #include "spdk/json.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk/pci_ids.h"
 #include "spdk/env.h"
 
