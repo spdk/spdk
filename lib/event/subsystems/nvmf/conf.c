@@ -220,6 +220,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		struct spdk_nvmf_ns_opts ns_opts;
 		struct spdk_bdev *bdev;
 		const char *bdev_name;
+		const char *uuid_str;
 		char *nsid_str;
 
 		bdev_name = spdk_conf_section_get_nmval(sp, "Namespace", i, 0);
@@ -250,6 +251,16 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 			}
 
 			ns_opts.nsid = (uint32_t)nsid_ul;
+		}
+
+		uuid_str = spdk_conf_section_get_nmval(sp, "Namespace", i, 2);
+		if (uuid_str) {
+			if (spdk_uuid_parse(&ns_opts.uuid, uuid_str)) {
+				SPDK_ERRLOG("Invalid UUID %s\n", uuid_str);
+				spdk_nvmf_subsystem_destroy(subsystem);
+				subsystem = NULL;
+				goto done;
+			}
 		}
 
 		if (spdk_nvmf_subsystem_add_ns(subsystem, bdev, &ns_opts, sizeof(ns_opts)) == 0) {
