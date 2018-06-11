@@ -169,7 +169,7 @@ spdk_tracelog_usage(FILE *f, const char *trace_arg)
 #ifdef DEBUG
 	struct spdk_trace_flag *flag;
 
-	fprintf(f, " %s flag    enable trace flag (all", trace_arg);
+	fprintf(f, " %s flag    enable debug log flag (all", trace_arg);
 
 	TAILQ_FOREACH(flag, &g_trace_flags, tailq) {
 		fprintf(f, ", %s", flag->name);
@@ -177,7 +177,7 @@ spdk_tracelog_usage(FILE *f, const char *trace_arg)
 
 	fprintf(f, ")\n");
 #else
-	fprintf(f, " %s flag    enable trace flag (not supported - must rebuild with CONFIG_DEBUG=y)\n",
+	fprintf(f, " %s flag    enable debug log flag (not supported - must rebuild with CONFIG_DEBUG=y)\n",
 		trace_arg);
 #endif
 }
