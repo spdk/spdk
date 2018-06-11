@@ -232,6 +232,30 @@
     },
     {
       "key": {
+        "uuid": "450b993d_ab6c8e6c",
+        "filename": "test/json_config/config_parser.py",
+        "patchSetId": 63
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-11T12:45:48Z",
+      "side": 1,
+      "message": "Still not changed in PS 64.\nPawel, please, if there is a comment and you don\u0027t apply changes then at least reply and explain in future. Thanks!",
+      "parentUuid": "22dd7684_e557d097",
+      "range": {
+        "startLine": 26,
+        "startChar": 16,
+        "endLine": 26,
+        "endChar": 42
+      },
+      "revId": "c69056fdb194d3c70db94c7e27aa574d089677b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9ae9fa77_8b19b1cf",
         "filename": "test/json_config/config_parser.py",
         "patchSetId": 63
