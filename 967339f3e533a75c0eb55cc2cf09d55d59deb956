@@ -34,6 +34,24 @@
       "revId": "967339f3e533a75c0eb55cc2cf09d55d59deb956",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2016d63a_72f702d3",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 484,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-11T21:51:59Z",
+      "side": 0,
+      "message": "Hi Daniel, thank you for explaining well. I could understand the original goal and this will not cause any overhead in the Jim\u0027s comment.",
+      "parentUuid": "8decbdfe_e8c9d8eb",
+      "revId": "967339f3e533a75c0eb55cc2cf09d55d59deb956",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
