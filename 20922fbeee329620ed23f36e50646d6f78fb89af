@@ -16,6 +16,24 @@
       "revId": "20922fbeee329620ed23f36e50646d6f78fb89af",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b09834b7_dec4a40b",
+        "filename": "lib/bdev/iscsi/bdev_iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-06-11T07:34:28Z",
+      "side": 1,
+      "message": "Updated. Thank you for reviewing my code.",
+      "parentUuid": "2e1745f6_f80aeb49",
+      "revId": "20922fbeee329620ed23f36e50646d6f78fb89af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
