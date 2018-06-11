@@ -26,6 +26,15 @@
   #PciWhitelist 0000:03:00.0
   #PciWhitelist 0000:04:00.0
 
+# Users may activate entries in this section to override default values for
+# global parameters in the block device (bdev) subsystem.
+[Bdev]
+  # Number of spdk_bdev_io structures allocated in the global bdev subsystem pool.
+  #BdevIoPoolSize 65536
+
+  # Maximum number of spdk_bdev_io structures to cache per thread.
+  #BdevIoCacheSize 256
+
 # Users may change this section to create a different number or size of
 #  malloc LUNs.
 # This will generate 8 LUNs with a malloc-allocated backend.

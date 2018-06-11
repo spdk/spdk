@@ -45,6 +45,7 @@ DEFINE_STUB(spdk_conf_find_section, struct spdk_conf_section *, (struct spdk_con
 		const char *name), NULL);
 DEFINE_STUB(spdk_conf_section_get_nmval, char *,
 	    (struct spdk_conf_section *sp, const char *key, int idx1, int idx2), NULL);
+DEFINE_STUB(spdk_conf_section_get_intval, int, (struct spdk_conf_section *sp, const char *key), -1);
 
 static void
 _bdev_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
