@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3e923b9b_ebeb99e7",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-06-11T12:54:24Z",
+      "side": 1,
+      "message": "Maybe \"Blobstore\" not needed.",
+      "range": {
+        "startLine": 66,
+        "startChar": 3,
+        "endLine": 66,
+        "endChar": 12
+      },
+      "revId": "cdcac234a1463cbbf622268816dcb7eedff35075",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b3a37ca_4f3038fc",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-06-11T12:54:24Z",
+      "side": 1,
+      "message": "fs instead of bs",
+      "range": {
+        "startLine": 69,
+        "startChar": 10,
+        "endLine": 69,
+        "endChar": 12
+      },
+      "revId": "cdcac234a1463cbbf622268816dcb7eedff35075",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a60a3866_9519995e",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-06-11T12:54:24Z",
+      "side": 1,
+      "message": "stat",
+      "range": {
+        "startLine": 94,
+        "startChar": 8,
+        "endLine": 94,
+        "endChar": 13
+      },
+      "revId": "cdcac234a1463cbbf622268816dcb7eedff35075",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d331156_6295c106",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-06-11T12:54:24Z",
+      "side": 1,
+      "message": "stat",
+      "range": {
+        "startLine": 97,
+        "startChar": 29,
+        "endLine": 97,
+        "endChar": 34
+      },
+      "revId": "cdcac234a1463cbbf622268816dcb7eedff35075",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c509fe8_8a5ace7b",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-06-11T12:54:24Z",
+      "side": 1,
+      "message": "Function",
+      "range": {
+        "startLine": 103,
+        "startChar": 3,
+        "endLine": 103,
+        "endChar": 11
+      },
+      "revId": "cdcac234a1463cbbf622268816dcb7eedff35075",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "03824141_b2ab0074",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-06-11T12:54:24Z",
+      "side": 1,
+      "message": "maybe needed to change as:\n\ntypedef void (*fs_request_fn)(void *arg)\n\n\\param arg argument to the function\n\nSimilar to below send_request_fn.",
+      "range": {
+        "startLine": 105,
+        "startChar": 30,
+        "endLine": 105,
+        "endChar": 36
+      },
+      "revId": "cdcac234a1463cbbf622268816dcb7eedff35075",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2f2ef401_4c633597",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-06-11T12:54:24Z",
+      "side": 1,
+      "message": "maybe not needed.",
+      "range": {
+        "startLine": 110,
+        "startChar": 51,
+        "endLine": 110,
+        "endChar": 60
+      },
+      "revId": "cdcac234a1463cbbf622268816dcb7eedff35075",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
