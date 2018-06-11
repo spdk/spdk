@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dffc3616_1ad389b7",
+        "filename": "test/bdev/bdevjson/json_config.sh",
+        "patchSetId": 63
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-11T08:31:07Z",
+      "side": 1,
+      "message": "After some time we can forget what the bug was. Can you use the same message with link or bug ID so if bug is resolved someone can just grep sources to enable those tests.",
+      "range": {
+        "startLine": 8,
+        "startChar": 1,
+        "endLine": 8,
+        "endChar": 52
+      },
+      "revId": "c69056fdb194d3c70db94c7e27aa574d089677b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3784c652_a9e90322",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 63
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-11T08:31:07Z",
+      "side": 1,
+      "message": "Where you used \u0027$spdk_rpc_py\u0027? Can we have just one variable?",
+      "range": {
+        "startLine": 5,
+        "startChar": 0,
+        "endLine": 5,
+        "endChar": 73
+      },
+      "revId": "c69056fdb194d3c70db94c7e27aa574d089677b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e9cf99e_7e01c716",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 63
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-11T08:31:07Z",
+      "side": 1,
+      "message": "ditto https://review.gerrithub.io/#/c/spdk/spdk/+/406326/63/test/bdev/bdevjson/json_config.sh@8",
+      "range": {
+        "startLine": 89,
+        "startChar": 1,
+        "endLine": 91,
+        "endChar": 54
+      },
+      "revId": "c69056fdb194d3c70db94c7e27aa574d089677b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a776b6e_c4f6b130",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 63
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-11T08:31:07Z",
+      "side": 1,
+      "message": "https://review.gerrithub.io/#/c/spdk/spdk/+/406326/63/test/bdev/bdevjson/json_config.sh@8",
+      "range": {
+        "startLine": 106,
+        "startChar": 1,
+        "endLine": 107,
+        "endChar": 14
+      },
+      "revId": "c69056fdb194d3c70db94c7e27aa574d089677b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ae9fa77_8b19b1cf",
+        "filename": "test/json_config/config_parser.py",
+        "patchSetId": 63
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-11T08:31:07Z",
+      "side": 1,
+      "message": "I\u0027m not python expert but I think you should make a copy of data[\u0027subsystems\u0027] something like here https://github.com/spdk/spdk/blob/57ae6bf646e6aaddf621fca007edfc7d937f92f6/scripts/rpc/__init__.py#L71",
+      "range": {
+        "startLine": 37,
+        "startChar": 21,
+        "endLine": 37,
+        "endChar": 39
+      },
+      "revId": "c69056fdb194d3c70db94c7e27aa574d089677b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
