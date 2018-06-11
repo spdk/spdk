@@ -192,6 +192,11 @@ struct spdk_thread *spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 void spdk_free_thread(void);
 
 /**
+ * Get count of allocated threads.
+ */
+uint32_t spdk_thread_get_count(void);
+
+/**
  * Get a handle to the current thread.
  *
  * This handle may be passed to other threads and used as the target of

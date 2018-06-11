@@ -75,6 +75,7 @@ struct spdk_thread {
 };
 
 static TAILQ_HEAD(, spdk_thread) g_threads = TAILQ_HEAD_INITIALIZER(g_threads);
+static uint32_t g_thread_count = 0;
 
 static struct spdk_thread *
 _get_thread(void)
@@ -137,6 +138,7 @@ spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 	thread->thread_ctx = thread_ctx;
 	TAILQ_INIT(&thread->io_channels);
 	TAILQ_INSERT_TAIL(&g_threads, thread, tailq);
+	g_thread_count++;
 	if (name) {
 		_set_thread_name(name);
 		thread->name = strdup(name);
@@ -161,11 +163,24 @@ spdk_free_thread(void)
 		return;
 	}
 
+	assert(g_thread_count > 0);
+	g_thread_count--;
 	TAILQ_REMOVE(&g_threads, thread, tailq);
 	free(thread->name);
 	free(thread);
 
 	pthread_mutex_unlock(&g_devlist_mutex);
+}
+
+uint32_t
+spdk_thread_get_count(void)
+{
+	/*
+	 * Return cached value of the current thread count.  We could acquire the
+	 *  lock and iterate through the TAILQ of threads to count them, but that
+	 *  count could still be invalidated after we release the lock.
+	 */
+	return g_thread_count;
 }
 
 struct spdk_thread *
