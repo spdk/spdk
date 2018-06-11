@@ -111,6 +111,15 @@ if __name__ == "__main__":
 
     # bdev
     @call_cmd
+    def set_bdev_options(args):
+        rpc.bdev.set_bdev_options(args.client, args.bdev_io_pool_size, args.bdev_io_cache_size)
+
+    p = subparsers.add_parser('set_bdev_options', help="""Set options of bdev subsystem""")
+    p.add_argument('-p', '--bdev-io-pool-size', help='Number of bdev_io structures in shared buffer pool', type=int)
+    p.add_argument('-c', '--bdev-io-cache-size', help='Maximum number of bdev_io structures cached per thread', type=int)
+    p.set_defaults(func=set_bdev_options)
+
+    @call_cmd
     def construct_malloc_bdev(args):
         num_blocks = (args.total_size * 1024 * 1024) // args.block_size
         print_array(rpc.bdev.construct_malloc_bdev(args.client,
