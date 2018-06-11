@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fde6bdaf_cc0d6fcd",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-11T13:17:25Z",
+      "side": 1,
+      "message": "use tabs",
+      "revId": "e36ec47ceb8e37bf9041c61f416ff880a6ab6c97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "173445bc_e260b607",
+        "filename": "test/vhost/json_config/json_config.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-11T13:17:25Z",
+      "side": 1,
+      "message": "I still think this should be somehow re-used as suggested in PS4 comment.\nIf you think different - please reply and clarify.",
+      "range": {
+        "startLine": 6,
+        "startChar": 0,
+        "endLine": 6,
+        "endChar": 28
+      },
+      "revId": "e36ec47ceb8e37bf9041c61f416ff880a6ab6c97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
