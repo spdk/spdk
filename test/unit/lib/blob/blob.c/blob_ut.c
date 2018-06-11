@@ -4832,6 +4832,105 @@ blob_relations(void)
 	g_bs = NULL;
 }
 
+static void
+blob_sector(void)
+{
+	struct spdk_bs_opts opts;
+	struct spdk_bs_dev *dev;
+	struct spdk_blob *blob;
+	spdk_blob_id blobid;
+	struct spdk_io_channel *channel;
+	uint8_t payload_read[10 * 4096];
+	uint8_t payload_write[10 * 4096];
+	uint8_t payload_zero[10 * 4096];
+	uint8_t *payload_verify;
+
+	/* Create dev with 512 bytes sector size */
+
+	spdk_bs_opts_init(&opts);
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
+
+	dev = init_dev();
+	opts.sector_sz = 8192;
+	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == -ENOMEM);
+
+	dev = init_dev();
+	opts.sector_sz = 256;
+	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == -ENOMEM);
+
+	/* Try to initialize a new blob store with unsupported sector_sz */
+	dev = init_dev();
+	dev->blocklen = 512;
+	dev->blockcnt =  DEV_BUFFER_SIZE / dev->blocklen;
+
+	/* Initialize a new blob store */
+	opts.sector_sz = 512;
+	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	CU_ASSERT(spdk_bs_get_sector_size(g_bs) == 512);
+	channel = spdk_bs_alloc_io_channel(g_bs);
+
+	/* Create a blob */
+	spdk_bs_create_blob(g_bs, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(g_bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	blob = g_blob;
+
+	/* Try to perform I/O with 512 block size */
+
+	spdk_blob_resize(blob, 32, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+
+	/* Fill whole payload_write buffer with data */
+	memset(payload_write, 0xE5, sizeof(payload_write));
+	memset(payload_read, 0x00, sizeof(payload_read));
+	memset(payload_zero, 0x00, sizeof(payload_read));
+
+	/* Write only first sector */
+	spdk_blob_io_write(blob, channel, payload_write, 0, 1, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Verify that only 512b was written to device */
+	payload_verify = &g_dev_buffer[blob->active.clusters[0] * 512];
+	/* First 512 bytes */
+	CU_ASSERT(memcmp(payload_verify, payload_write, 512) == 0);
+	/* Rest of buffer should not be written */
+	CU_ASSERT(memcmp(payload_verify + 512, payload_zero, 4096 - 512) == 0);
+
+	/* Write whole 4k buffer */
+	spdk_blob_io_write(blob, channel, payload_write, 0, 4, blob_op_complete, NULL);
+
+	/* Read only first sector */
+	spdk_blob_io_read(blob, channel, payload_read, 0, 1, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	/* First 512 bytes */
+	CU_ASSERT(memcmp(payload_read, payload_write, 512) == 0);
+	/* Rest of buffer should not be read */
+	CU_ASSERT(memcmp(payload_read + 512, payload_zero, 4096 - 512) == 0);
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	blob = NULL;
+	g_blob = NULL;
+
+	/* Unload the blob store */
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+	g_blob = NULL;
+	g_blobid = 0;
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -4895,7 +4994,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "blob_relations", blob_relations) == NULL ||
 		CU_add_test(suite, "blob_inflate_rw", blob_inflate_rw) == NULL ||
 		CU_add_test(suite, "blob_snapshot_freeze_io", blob_snapshot_freeze_io) == NULL ||
-		CU_add_test(suite, "blob_operation_split_rw", blob_operation_split_rw) == NULL
+		CU_add_test(suite, "blob_operation_split_rw", blob_operation_split_rw) == NULL ||
+		CU_add_test(suite, "blob_sector", blob_sector) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
