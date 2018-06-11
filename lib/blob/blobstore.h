@@ -169,6 +169,7 @@ struct spdk_blob_store {
 
 	pthread_mutex_t			used_clusters_mutex;
 
+	uint32_t			sector_sz;
 	uint32_t			cluster_sz;
 	uint64_t			total_clusters;
 	uint64_t			total_data_clusters;
@@ -403,6 +404,12 @@ static inline uint64_t
 _spdk_bs_dev_page_to_lba(struct spdk_bs_dev *bs_dev, uint64_t page)
 {
 	return page * SPDK_BS_PAGE_SIZE / bs_dev->blocklen;
+}
+
+static inline uint64_t
+_spdk_bs_dev_sector_to_lba(struct spdk_bs_dev *bs_dev, uint64_t sector)
+{
+	return page * bs_dev->blocklen / bs_dev->blocklen;
 }
 
 static inline uint32_t

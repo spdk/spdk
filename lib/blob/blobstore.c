@@ -1682,14 +1682,16 @@ _spdk_bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 }
 
 static void
-_spdk_blob_calculate_lba_and_lba_count(struct spdk_blob *blob, uint64_t page, uint64_t length,
+_spdk_blob_calculate_lba_and_lba_count(struct spdk_blob *blob, uint64_t sector, uint64_t length,
 				       uint64_t *lba,	uint32_t *lba_count)
 {
-	*lba_count = _spdk_bs_page_to_lba(blob->bs, length);
+	uint32_t page;
 
+	*lba_count = _spdk_bs_sector_to_lba(blob->bs, length);
+	page = _spdk_bs_sector_to_page(blob->bs, sector);
 	if (!_spdk_bs_page_is_allocated(blob, page)) {
 		assert(blob->back_bs_dev != NULL);
-		*lba = _spdk_bs_dev_page_to_lba(blob->back_bs_dev, page);
+		*lba = _spdk_bs_dev_sector_to_lba(blob->back_bs_dev, sector);
 		*lba_count = _spdk_bs_blob_lba_to_back_dev_lba(blob, *lba_count);
 	} else {
 		*lba = _spdk_bs_blob_page_to_lba(blob, page);
@@ -3693,6 +3695,12 @@ uint64_t
 spdk_bs_get_page_size(struct spdk_blob_store *bs)
 {
 	return SPDK_BS_PAGE_SIZE;
+}
+
+uint64_t
+spdk_bs_get_sector_size(struct spdk_blob_store *bs)
+{
+	return bs->sector_sz;
 }
 
 uint64_t
