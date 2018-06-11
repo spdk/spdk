@@ -20,6 +20,10 @@ The spdk_mem_map_translate() function now takes a size parameter to indicate the
 the memory region.  This can be used by environment implementations to validate the
 requested translation.
 
+The I/O Channel implementation has been moved to its own library - lib/thread. The
+public API that was previously in spdk/io_channel.h is now in spdk/thread.h The
+file spdk/io_channel.h remains and includes spdk/thread.h.
+
 ### NVMe Over Fabrics
 
 The spdk_nvmf_tgt_destroy() function is now asynchronous and takes a callback
