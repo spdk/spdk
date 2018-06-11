@@ -238,6 +238,12 @@ INSTALL_LIB=\
 	install -d -m 755 "$(DESTDIR)$(libdir)"; \
 	install -m 644 "$(LIB)" "$(DESTDIR)$(libdir)/"
 
+# Install a shared library
+INSTALL_SHARED_LIB=\
+	$(Q)echo "  INSTALL $(DESTDIR)$(libdir)/$(notdir $(SHARED_LIB))"; \
+	install -d -m 755 "$(DESTDIR)$(libdir)"; \
+	install -m 644 "$(SHARED_LIB)" "$(DESTDIR)$(libdir)/"
+
 # Install an app binary
 INSTALL_APP=\
 	$(Q)echo "  INSTALL $(DESTDIR)$(bindir)/$(APP)"; \
