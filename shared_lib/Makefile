@@ -31,57 +31,76 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-S :=
-
-SPDK_ROOT_DIR := $(CURDIR)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-DIRS-y += lib shared_lib examples app include
-DIRS-$(CONFIG_TESTS) += test
+# Build combined libspdk.so shared library
+SHARED_LIB = $(SPDK_ROOT_DIR)/build/lib/libspdk.so
 
-.PHONY: all clean $(DIRS-y) config.h CONFIG.local mk/cc.mk cc_version cxx_version
+SPDK_LIB_LIST += app_rpc
+SPDK_LIB_LIST += bdev
+SPDK_LIB_LIST += bdev_rpc
+SPDK_LIB_LIST += blobfs
+SPDK_LIB_LIST += conf
+SPDK_LIB_LIST += copy
+SPDK_LIB_LIST += event
+SPDK_LIB_LIST += event_bdev
+SPDK_LIB_LIST += event_copy
+SPDK_LIB_LIST += event_iscsi
+SPDK_LIB_LIST += event_net
+SPDK_LIB_LIST += event_nvmf
+SPDK_LIB_LIST += event_scsi
+SPDK_LIB_LIST += iscsi
+SPDK_LIB_LIST += json
+SPDK_LIB_LIST += jsonrpc
+SPDK_LIB_LIST += log
+SPDK_LIB_LIST += log_rpc
+SPDK_LIB_LIST += nvmf
+SPDK_LIB_LIST += rpc
+SPDK_LIB_LIST += scsi
+SPDK_LIB_LIST += trace
+SPDK_LIB_LIST += util
 
-ifeq ($(CURDIR)/dpdk/build,$(CONFIG_DPDK_DIR))
-ifneq ($(SKIP_DPDK_BUILD),1)
-DPDKBUILD = dpdkbuild
-DIRS-y += dpdkbuild
+ifeq ($(OS),Linux)
+SPDK_LIB_LIST += event_nbd
+SPDK_LIB_LIST += event_nbd nbd
+
+ifeq ($(CONFIG_VHOST),y)
+SPDK_LIB_LIST += event_vhost
+SPDK_LIB_LIST += rte_vhost
+SPDK_LIB_LIST += vhost
 endif
+
 endif
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
-	$(Q)rm -f mk/cc.mk
-	$(Q)rm -f config.h
+LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS)
+LIBS += $(COPY_MODULES_LINKER_ARGS)
+LIBS += $(NET_MODULES_LINKER_ARGS)
+LIBS += $(SPDK_LIB_LINKER_ARGS)
+LIBS += $(ENV_LINKER_ARGS)
 
-install: all
-	$(Q)echo "Installed to $(DESTDIR)$(CONFIG_PREFIX)"
+comma := ,
 
-shared_lib: lib
-lib: $(DPDKBUILD)
-app: lib
-test: lib
-examples: lib
-pkgdep:
-	sh ./scripts/pkgdep.sh
+$(SHARED_LIB): $(SPDK_LIB_FILES) $(SPDK_WHOLE_LIBS) $(BLOCKDEV_MODULES_FILES) $(COPY_MODULES_FILES) $(NET_MODULES_FILES) $(LINKER_MODULES) $(ENV_LIBS) $(MAKEFILE_LIST)
+	$(Q)echo "  SO $(notdir $@)"; \
+	rm -f $@; \
+	$(CC) -o $@ -shared $(CPPFLAGS) $(LDFLAGS) \
+		-Wl,--whole-archive \
+		$(filter-out -Wl$(comma)--no-whole-archive,$(LIBS)) \
+		-Wl,--no-whole-archive \
+		-lcrypto \
+		$(SYS_LIBS)
 
-$(DIRS-y): mk/cc.mk config.h
+.PHONY: all clean $(DIRS-y)
 
-mk/cc.mk:
-	$(Q)scripts/detect_cc.sh --cc=$(CC) --cxx=$(CXX) --lto=$(CONFIG_LTO) > $@.tmp; \
-	cmp -s $@.tmp $@ || mv $@.tmp $@ ; \
-	rm -f $@.tmp
+all: $(SHARED_LIB)
 
-config.h: CONFIG CONFIG.local scripts/genconfig.py
-	$(Q)PYCMD=$$(cat PYTHON_COMMAND 2>/dev/null) ; \
-	test -z "$$PYCMD" && PYCMD=python ; \
-	$$PYCMD scripts/genconfig.py $(MAKEFLAGS) > $@.tmp; \
-	cmp -s $@.tmp $@ || mv $@.tmp $@ ; \
-	rm -f $@.tmp
+clean:
+	$(CLEAN_C) $(SHARED_LIB)
 
-cc_version: mk/cc.mk
-	$(Q)echo "SPDK using CC=$(CC)"; $(CC) -v
-
-cxx_version: mk/cc.mk
-	$(Q)echo "SPDK using CXX=$(CXX)"; $(CXX) -v
+install:
+	$(INSTALL_SHARED_LIB)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
