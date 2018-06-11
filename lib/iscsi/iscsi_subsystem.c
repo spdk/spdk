@@ -271,7 +271,7 @@ spdk_iscsi_check_pools(void)
 	spdk_iscsi_check_pool(iscsi->session_pool, SESSION_POOL_SIZE(iscsi));
 	spdk_iscsi_check_pool(iscsi->pdu_immediate_data_pool, IMMEDIATE_DATA_POOL_SIZE(iscsi));
 	spdk_iscsi_check_pool(iscsi->pdu_data_out_pool, DATA_OUT_POOL_SIZE(iscsi));
-	/* TODO: check the task_pool on exit */
+	spdk_iscsi_check_pool(iscsi->task_pool, DEFAULT_TASK_POOL_SIZE);
 }
 
 static void
