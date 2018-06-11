@@ -78,3 +78,20 @@ FIO test, the performance is worse than SPDK perf (also using one CPU core) agai
 multiple jobs for FIO test, the performance of FIO is similiar with SPDK perf. After analyzing this phenomenon, we
 think that is caused by the FIO architecture. Mainly FIO can scale with multiple threads (i.e., using CPU cores),
 but it is not good to use one thread against many I/O devices.
+
+# End-to-end Data Protection (Optional)
+
+Running with PI setting, following settings steps are required.
+First, format device namespace with proper PI setting. For example:
+
+    nvme format /dev/nvme0n1 -l 1 -i 1 -p 0 -m 1
+
+In fio configure file, add PRACT and set PRCHK by flags(GUARD|REFTAG|APPTAG) properly. For example:
+
+    pi_act=0
+    pi_chk=GUARD
+
+Blocksize should be set as the sum of data and metadata. For example, if data blocksize is 512 Byte, host generated
+PI metadata is 8 Byte, then blocksize in fio configure file should be 520 Byte:
+
+    bs=520
