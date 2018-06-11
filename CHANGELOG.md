@@ -2,6 +2,15 @@
 
 ## v18.07: (Upcoming Release)
 
+### Build System
+
+The build system now generates a combined shared library (libspdk.so) that may be used
+in place of the individual static libraries (libspdk_*.a).
+The combined library includes all components of SPDK and is intended to make linking
+against SPDK easier.
+The static libraries are also still provided for users that prefer to link only the
+minimal set of components required.
+
 ### RPC
 
 The `start_nbd_disk` RPC method now returns the path to the kernel NBD device node
