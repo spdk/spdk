@@ -56,7 +56,6 @@
 	memset(&(conn)->portal, 0, sizeof(*(conn)) -	\
 		offsetof(struct spdk_iscsi_conn, portal));
 
-#define SPDK_MAX_POLLERS_PER_CORE	4096
 static int g_connections_per_lcore;
 static uint32_t *g_num_connections;
 
