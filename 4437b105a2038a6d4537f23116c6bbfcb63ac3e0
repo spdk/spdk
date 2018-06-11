@@ -160,6 +160,30 @@
       "revId": "4437b105a2038a6d4537f23116c6bbfcb63ac3e0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d3eb8973_933ef6fb",
+        "filename": "test/vhost/initiator/json_config.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-06-11T12:04:59Z",
+      "side": 1,
+      "message": "I usee different rpc for different socket. $spdk_rpc_py is for spdk_tgt, $initiator_rp_py is for initiator",
+      "parentUuid": "681bfa12_01ca53aa",
+      "range": {
+        "startLine": 50,
+        "startChar": 0,
+        "endLine": 51,
+        "endChar": 45
+      },
+      "revId": "4437b105a2038a6d4537f23116c6bbfcb63ac3e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
