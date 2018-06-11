@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "21fc27a7_4ff8d789",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-06-11T04:14:41Z",
+      "side": 1,
+      "message": "SCSI device",
+      "range": {
+        "startLine": 184,
+        "startChar": 15,
+        "endLine": 184,
+        "endChar": 19
+      },
+      "revId": "ae142bb1588960b9f4fad5fd3a742df2ccdeca75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
