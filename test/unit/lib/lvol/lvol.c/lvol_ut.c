@@ -33,7 +33,7 @@
 
 #include "spdk_cunit.h"
 #include "spdk/blob.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk/util.h"
 
 #include "common/lib/test_env.c"

@@ -33,7 +33,7 @@
 
 #include "spdk/stdinc.h"
 
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk/log.h"
 
 #ifdef __linux__

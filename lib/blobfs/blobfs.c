@@ -38,7 +38,7 @@
 #include "blobfs_internal.h"
 
 #include "spdk/queue.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk/assert.h"
 #include "spdk/env.h"
 #include "spdk/util.h"

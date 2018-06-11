@@ -35,7 +35,7 @@
 
 #include "CUnit/Basic.h"
 #include "spdk_cunit.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk_internal/mock.h"
 #include "common/lib/test_env.c"
 #include "unit/lib/json_mock.c"

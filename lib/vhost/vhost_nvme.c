@@ -38,7 +38,7 @@
 #include "spdk/conf.h"
 #include "spdk/util.h"
 #include "spdk/string.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk/barrier.h"
 #include "spdk/vhost.h"
 #include "spdk/bdev.h"

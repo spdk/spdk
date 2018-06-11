@@ -31,7 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "bs_scheduler.c"
 
 

@@ -37,7 +37,7 @@
 #include "spdk/endian.h"
 #include "spdk/env.h"
 #include "spdk/event.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk/queue.h"
 #include "spdk/trace.h"
 #include "spdk/net.h"

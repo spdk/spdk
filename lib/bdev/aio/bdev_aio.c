@@ -39,7 +39,7 @@
 #include "spdk/conf.h"
 #include "spdk/env.h"
 #include "spdk/fd.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk/json.h"
 #include "spdk/util.h"
 #include "spdk/string.h"
