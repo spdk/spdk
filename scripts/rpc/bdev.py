@@ -1,3 +1,20 @@
+def set_bdev_options(client, bdev_io_pool_size=None, bdev_io_cache_size=None):
+    """Set parameters for the bdev subsystem.
+
+    Args:
+        bdev_io_pool_size: number of bdev_io structures in shared buffer pool (optional)
+        bdev_io_cache_size: maximum number of bdev_io structures cached per thread (optional)
+    """
+    params = {}
+
+    if bdev_io_pool_size:
+        params['bdev_io_pool_size'] = bdev_io_pool_size
+    if bdev_io_cache_size:
+        params['bdev_io_cache_size'] = bdev_io_cache_size
+
+    return client.call('set_bdev_options', params)
+
+
 def construct_malloc_bdev(client, num_blocks, block_size, name=None, uuid=None):
     """Construct a malloc block device.
 

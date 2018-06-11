@@ -80,6 +80,42 @@ Example response:
 
 # Block Device Abstraction Layer {#jsonrpc_components_bdev}
 
+## set_bdev_options (#rpc_set_bdev_options}
+
+Set global parameters for the block device (bdev) subsystem.  This RPC may only be called
+before subsystems have been initialized.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+bdev_io_pool_size       | Optional | number      | Number of spdk_bdev_io structures in shared buffer pool
+bdev_io_cache_size      | Optional | number      | Maximum number of spdk_bdev_io structures cached per thread
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "set_bdev_options",
+  "params": {
+    "bdev_io_pool_size": 65536,
+    "bdev_io_cache_size": 256
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## get_bdevs {#rpc_get_bdevs}
 
 Get information about block devices (bdevs).

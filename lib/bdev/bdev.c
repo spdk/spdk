@@ -486,6 +486,15 @@ spdk_bdev_subsystem_config_json(struct spdk_json_write_ctx *w)
 
 	spdk_json_write_array_begin(w);
 
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "method", "set_bdev_options");
+	spdk_json_write_name(w, "params");
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_uint32(w, "bdev_io_pool_size", g_bdev_opts.bdev_io_pool_size);
+	spdk_json_write_named_uint32(w, "bdev_io_cache_size", g_bdev_opts.bdev_io_cache_size);
+	spdk_json_write_object_end(w);
+	spdk_json_write_object_end(w);
+
 	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, tailq) {
 		if (bdev_module->config_json) {
 			bdev_module->config_json(w);
