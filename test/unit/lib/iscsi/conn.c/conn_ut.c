@@ -175,6 +175,12 @@ spdk_scsi_port_get_name(const struct spdk_scsi_port *port)
 }
 
 void
+spdk_scsi_task_copy_status(struct spdk_scsi_task *dst,
+			   struct spdk_scsi_task *src)
+{
+}
+
+void
 spdk_put_pdu(struct spdk_iscsi_pdu *pdu)
 {
 }

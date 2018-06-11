@@ -792,10 +792,7 @@ process_read_task_completion(struct spdk_iscsi_conn *conn,
 
 	if (task->scsi.status != SPDK_SCSI_STATUS_GOOD) {
 		TAILQ_FOREACH(tmp, &primary->subtask_list, subtask_link) {
-			memcpy(tmp->scsi.sense_data, task->scsi.sense_data,
-			       task->scsi.sense_data_len);
-			tmp->scsi.sense_data_len = task->scsi.sense_data_len;
-			tmp->scsi.status = task->scsi.status;
+			spdk_scsi_task_copy_status(&tmp->scsi, &task->scsi);
 		}
 	}
 
@@ -843,10 +840,7 @@ spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task)
 		primary->bytes_completed += task->scsi.length;
 		if ((task != primary) &&
 		    (task->scsi.status != SPDK_SCSI_STATUS_GOOD)) {
-			memcpy(primary->scsi.sense_data, task->scsi.sense_data,
-			       task->scsi.sense_data_len);
-			primary->scsi.sense_data_len = task->scsi.sense_data_len;
-			primary->scsi.status = task->scsi.status;
+			spdk_scsi_task_copy_status(&primary->scsi, &task->scsi);
 		}
 
 		if (primary->bytes_completed == primary->scsi.transfer_len) {

@@ -245,3 +245,12 @@ spdk_scsi_task_set_status(struct spdk_scsi_task *task, int sc, int sk,
 	}
 	task->status = sc;
 }
+
+void
+spdk_scsi_task_copy_status(struct spdk_scsi_task *dst,
+			   struct spdk_scsi_task *src)
+{
+	memcpy(dst->sense_data, src->sense_data, src->sense_data_len);
+	dst->sense_data_len = src->sense_data_len;
+	dst->status = src->status;
+}

@@ -221,6 +221,7 @@ void spdk_scsi_task_build_sense_data(struct spdk_scsi_task *task, int sk, int as
 				     int ascq);
 void spdk_scsi_task_set_status(struct spdk_scsi_task *task, int sc, int sk, int asc,
 			       int ascq);
+void spdk_scsi_task_copy_status(struct spdk_scsi_task *dst, struct spdk_scsi_task *src);
 void spdk_scsi_task_process_null_lun(struct spdk_scsi_task *task);
 
 #ifdef __cplusplus
