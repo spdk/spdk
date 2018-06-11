@@ -617,11 +617,36 @@ spdk_bdev_modules_init(void)
 void
 spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 {
+	struct spdk_conf_section *sp;
+	struct spdk_bdev_opts bdev_opts;
+	int32_t bdev_io_pool_size, bdev_io_cache_size;
 	int cache_size;
 	int rc = 0;
 	char mempool_name[32];
 
 	assert(cb_fn != NULL);
+
+	sp = spdk_conf_find_section(NULL, "Bdev");
+	if (sp != NULL) {
+		spdk_bdev_get_opts(&bdev_opts);
+
+		bdev_io_pool_size = spdk_conf_section_get_intval(sp, "BdevIoPoolSize");
+		if (bdev_io_pool_size >= 0) {
+			bdev_opts.bdev_io_pool_size = bdev_io_pool_size;
+		}
+
+		bdev_io_cache_size = spdk_conf_section_get_intval(sp, "BdevIoCacheSize");
+		if (bdev_io_cache_size >= 0) {
+			bdev_opts.bdev_io_cache_size = bdev_io_cache_size;
+		}
+
+		if (spdk_bdev_set_opts(&bdev_opts)) {
+			spdk_bdev_init_complete(-1);
+			return;
+		}
+
+		assert(memcmp(&bdev_opts, &g_bdev_opts, sizeof(bdev_opts)) == 0);
+	}
 
 	g_init_cb_fn = cb_fn;
 	g_init_cb_arg = cb_arg;
