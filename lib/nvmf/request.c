@@ -36,7 +36,7 @@
 #include "nvmf_internal.h"
 #include "transport.h"
 
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk/likely.h"
 #include "spdk/nvme.h"
 #include "spdk/nvmf_spec.h"

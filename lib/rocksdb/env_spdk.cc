@@ -43,7 +43,7 @@ extern "C" {
 #include "spdk/blobfs.h"
 #include "spdk/blob_bdev.h"
 #include "spdk/log.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk/bdev.h"
 }
 

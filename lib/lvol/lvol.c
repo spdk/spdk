@@ -34,7 +34,7 @@
 #include "spdk_internal/lvolstore.h"
 #include "spdk_internal/log.h"
 #include "spdk/string.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk/blob_bdev.h"
 #include "spdk/util.h"
 

@@ -41,7 +41,7 @@
 #include "spdk/event.h"
 #include "spdk/log.h"
 #include "spdk/util.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk/string.h"
 
 struct bdevperf_task {

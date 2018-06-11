@@ -35,7 +35,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/env.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk/log.h"
 #include "spdk/sock.h"
 #include "spdk/string.h"

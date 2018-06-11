@@ -38,7 +38,7 @@
 #include "spdk/env.h"
 #include "spdk/event.h"
 #include "spdk/log.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 
 static size_t g_max_copy_module_size = 0;
 

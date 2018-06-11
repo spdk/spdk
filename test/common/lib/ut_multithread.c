@@ -32,7 +32,7 @@
  */
 
 #include "spdk_cunit.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk_internal/mock.h"
 
 static uint32_t g_ut_num_threads;

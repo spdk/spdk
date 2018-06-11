@@ -36,7 +36,7 @@
 #include <linux/virtio_scsi.h>
 
 #include "spdk/env.h"
-#include "spdk/io_channel.h"
+#include "spdk/thread.h"
 #include "spdk/scsi.h"
 #include "spdk/scsi_spec.h"
 #include "spdk/conf.h"
