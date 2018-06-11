@@ -46,6 +46,30 @@
       "revId": "f44ebc2af6546cfaf45e47be64327431b2afd4d5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "39d1d9fa_66f7ad5a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 874,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2018-06-11T21:40:46Z",
+      "side": 1,
+      "message": "(WRITE_ZEROES should probably also be counted along with READ and WRITE; I didn\u0027t mean to leave that out of my list above.)",
+      "parentUuid": "1c129ead_fe4da230",
+      "range": {
+        "startLine": 874,
+        "startChar": 0,
+        "endLine": 874,
+        "endChar": 30
+      },
+      "revId": "f44ebc2af6546cfaf45e47be64327431b2afd4d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
