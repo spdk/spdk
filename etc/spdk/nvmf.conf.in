@@ -133,9 +133,9 @@
 #   The user must specify a bdev name for each namespace, and may optionally
 #   specify a namespace ID. If nsid is omitted, the namespace will be
 #   assigned the next available NSID. The NSID must be unique within the
-#   subsystem.
+#   subsystem. An optional namespace UUID may also be specified.
 #   Syntax:
-#     Namespace <bdev_name> [<nsid>]
+#     Namespace <bdev_name> [<nsid> [<uuid>]]
 
 # Namespaces backed by physical NVMe devices
 [Subsystem1]
