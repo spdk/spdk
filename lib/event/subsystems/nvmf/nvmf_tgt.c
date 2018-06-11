@@ -179,9 +179,7 @@ nvmf_tgt_create_poll_group(void *ctx)
 	assert(pg != NULL);
 
 	pg->group = spdk_nvmf_poll_group_create(g_spdk_nvmf_tgt);
-	if (pg->group == NULL) {
-		SPDK_ERRLOG("Failed to create poll group for core %u\n", spdk_env_get_current_core());
-	}
+	assert(pg->group != NULL);
 
 	g_active_poll_groups++;
 }
