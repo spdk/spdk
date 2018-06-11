@@ -48,6 +48,29 @@
     },
     {
       "key": {
+        "uuid": "8e1b4cbc_632ca914",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 63
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-11T08:34:08Z",
+      "side": 1,
+      "message": "Use tabs instead",
+      "range": {
+        "startLine": 16,
+        "startChar": 0,
+        "endLine": 16,
+        "endChar": 8
+      },
+      "revId": "c69056fdb194d3c70db94c7e27aa574d089677b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8e9cf99e_7e01c716",
         "filename": "test/json_config/common.sh",
         "patchSetId": 63
@@ -87,6 +110,98 @@
         "startChar": 1,
         "endLine": 107,
         "endChar": 14
+      },
+      "revId": "c69056fdb194d3c70db94c7e27aa574d089677b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "709e79b4_b89b1689",
+        "filename": "test/json_config/config_parser.py",
+        "patchSetId": 63
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-11T08:34:08Z",
+      "side": 1,
+      "message": "You can use enumerate instead",
+      "range": {
+        "startLine": 8,
+        "startChar": 20,
+        "endLine": 8,
+        "endChar": 42
+      },
+      "revId": "c69056fdb194d3c70db94c7e27aa574d089677b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c7b63d6_598668ac",
+        "filename": "test/json_config/config_parser.py",
+        "patchSetId": 63
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-11T08:34:08Z",
+      "side": 1,
+      "message": "To be honest I had no idea what is happening in these functions at first glance:) Could you please add a short description in comment whats happening so that we don\u0027t forget in a week after it\u0027s merged? Thanks!",
+      "range": {
+        "startLine": 19,
+        "startChar": 4,
+        "endLine": 19,
+        "endChar": 15
+      },
+      "revId": "c69056fdb194d3c70db94c7e27aa574d089677b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e18ee1c_d7d0431b",
+        "filename": "test/json_config/config_parser.py",
+        "patchSetId": 63
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-11T08:34:08Z",
+      "side": 1,
+      "message": "variable not used",
+      "range": {
+        "startLine": 24,
+        "startChar": 12,
+        "endLine": 24,
+        "endChar": 26
+      },
+      "revId": "c69056fdb194d3c70db94c7e27aa574d089677b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22dd7684_e557d097",
+        "filename": "test/json_config/config_parser.py",
+        "patchSetId": 63
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-06-11T08:34:08Z",
+      "side": 1,
+      "message": "ANy reason why we do it using \"del\" and index number instead of list \"remove\" operation? \nNot a real issue, but if it\u0027s possible to use \"remove\" then we could avoid using list index numbers.",
+      "range": {
+        "startLine": 26,
+        "startChar": 16,
+        "endLine": 26,
+        "endChar": 42
       },
       "revId": "c69056fdb194d3c70db94c7e27aa574d089677b0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
