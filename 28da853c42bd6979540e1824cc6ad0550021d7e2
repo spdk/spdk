@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b14d5c14_959c4fb9",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5c58a247_27254879",
+      "revId": "28da853c42bd6979540e1824cc6ad0550021d7e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "48469189_b28df623",
         "filename": "lib/bdev/pvol/bdev_pvol.c",
         "patchSetId": 16
@@ -30,6 +48,24 @@
       "writtenOn": "2018-06-08T17:27:38Z",
       "side": 1,
       "message": "You can declare strip as part of the for loop. We use C99.",
+      "revId": "28da853c42bd6979540e1824cc6ad0550021d7e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f382758e_f8a5c938",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 421,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "48469189_b28df623",
       "revId": "28da853c42bd6979540e1824cc6ad0550021d7e2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "c317ec24_bc59f2d5",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 535,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f72801d7_1f237ff2",
+      "revId": "28da853c42bd6979540e1824cc6ad0550021d7e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "85f358fd_f719b81a",
         "filename": "lib/bdev/pvol/bdev_pvol.c",
         "patchSetId": 16
@@ -64,6 +118,24 @@
       "writtenOn": "2018-06-08T17:27:38Z",
       "side": 1,
       "message": "We recognize that handling this -ENOMEM condition is universal for all bdev modules that split I/O. We\u0027re going to add some functionality to SPDK\u0027s bdev layer to make this much simpler for you. The idea is that we\u0027ll create a new function called spdk_bdev_io_reserve(int count), which will attempt to reserve a number of bdev_io objects on the current thread. If it succeeds, then it guarantees that the next \u0027count\u0027 number of calls to spdk_bdev_[read|write|etc]_blocks on the current thread will not return -ENOMEM.\n\nOnce that function exists, you can call it up front, after calculating how many splits you are going to make. If it fails, fail the parent bdev_io with -ENOMEM (which already correctly queues). If it succeeds, you can guarantee you won\u0027t get an -ENOMEM condition as you submit child I/O. That means you can eliminate your io_waitq and poller code entirely.",
+      "revId": "28da853c42bd6979540e1824cc6ad0550021d7e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "530ab093_b3eed410",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 592,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Sure, in that case the issue I am facing with RocksDB test case also will go away. So I will wait for this spdk API (spdk_bdev_io_reserve) to get implemented before merging.",
+      "parentUuid": "85f358fd_f719b81a",
       "revId": "28da853c42bd6979540e1824cc6ad0550021d7e2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "6011af98_328d3dfa",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 597,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0b8ff8da_ab78d8c1",
+      "revId": "28da853c42bd6979540e1824cc6ad0550021d7e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7916c0c5_ca44f1f1",
         "filename": "lib/bdev/pvol/bdev_pvol.c",
         "patchSetId": 16
@@ -98,6 +188,24 @@
       "writtenOn": "2018-06-08T17:27:38Z",
       "side": 1,
       "message": "This is deciding which disks belong in a RAID volume based on configuration file data. I think we should be using an on-disk format instead, as that is persistent and travels with the disks. Implementing this standardized metadata format seems like a good idea:\n\nhttps://www.snia.org/tech_activities/standards/curr_standards/ddf",
+      "revId": "28da853c42bd6979540e1824cc6ad0550021d7e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36cfb8e7_0fb47dc9",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1098,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Yes, pvol_bdev_config data structure is the in-memory configuration of various pvols (physical volumes). This in-memory structure can be filled from persistent metadata during bootup in either one of the two ways : 1) config file options 2) on-disk metadata i.e. DDF.\nAs of now we are doing this with option 1) which is config file persistent metadata. There is a pre-defined generic format of PVOL (as mentioned in comments around line number 900).\n *   [Pvol1]\n *   Name pvol1\n *   StripSize 64\n *   NumDevices 2\n *   RaidLevel 0\n *   Devices Nvme0n1 Nvme1n1",
+      "parentUuid": "7916c0c5_ca44f1f1",
       "revId": "28da853c42bd6979540e1824cc6ad0550021d7e2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false

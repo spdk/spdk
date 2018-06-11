@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "42bcb097_67bd7beb",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8d2ba32a_86c9b4df",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fb91ae95_742fd3e6",
         "filename": "/COMMIT_MSG",
         "patchSetId": 1
@@ -66,6 +84,54 @@
     },
     {
       "key": {
+        "uuid": "62bf07bd_b3e82be6",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fb91ae95_742fd3e6",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 24,
+        "endChar": 116
+      },
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "67be7d39_dab6dfac",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bca8f07a_abbebe55",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 24,
+        "endChar": 116
+      },
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bdeb678a_235a9162",
         "filename": "lib/bdev/pvol/Makefile",
         "patchSetId": 1
@@ -77,6 +143,24 @@
       "writtenOn": "2018-05-08T20:33:19Z",
       "side": 1,
       "message": "bdev_pvol --\u003e vbdev_pool",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8bf1814_67bf9089",
+        "filename": "lib/bdev/pvol/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bdeb678a_235a9162",
       "revId": "9bb45194318175859359aa83c8baf152913b2995",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -100,6 +184,24 @@
     },
     {
       "key": {
+        "uuid": "5ce1a7ff_bf39d69d",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dfa1b2b8_7af4b638",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "13e192aa_753b9523",
         "filename": "lib/bdev/pvol/bdev_pvol.c",
         "patchSetId": 1
@@ -111,6 +213,24 @@
       "writtenOn": "2018-05-08T20:33:19Z",
       "side": 1,
       "message": "you can remove this first (c) from wherever you are using it",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fbcfb491_557241eb",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "13e192aa_753b9523",
       "revId": "9bb45194318175859359aa83c8baf152913b2995",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -134,6 +254,24 @@
     },
     {
       "key": {
+        "uuid": "0f640491_5487e444",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "[CarryForward] - will work on this\n\nThis was mostly checking how many reads/writes etc are executed by pvol module, so these are debug counters which I have put if in future some sort of debugging required on how many IOs went down etc? Could you please elabroate how it fits",
+      "parentUuid": "1747879f_bc160537",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ff7a325a_72f927c1",
         "filename": "lib/bdev/pvol/bdev_pvol.c",
         "patchSetId": 1
@@ -151,6 +289,24 @@
     },
     {
       "key": {
+        "uuid": "bfa97634_0255e479",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ff7a325a_72f927c1",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "23110bee_da77ff0d",
         "filename": "lib/bdev/pvol/bdev_pvol.c",
         "patchSetId": 1
@@ -162,6 +318,24 @@
       "writtenOn": "2018-05-08T22:07:00Z",
       "side": 1,
       "message": "This should probably be static (same for all of the variables below) unless it really needs to be used outside this file, in which case it needs to have an spdk_ prefix to avoid polluting the global namespace.",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f4cc632_4bfddd57",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Done\nThese are used in bdev_pvol_rpc.c file so prefix it with spdk_",
+      "parentUuid": "23110bee_da77ff0d",
       "revId": "9bb45194318175859359aa83c8baf152913b2995",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -191,6 +365,30 @@
     },
     {
       "key": {
+        "uuid": "ff5b4387_3f6932ee",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Done\nRemoved this function and using spdk_u32log2()",
+      "parentUuid": "165f955d_b4e1f326",
+      "range": {
+        "startLine": 84,
+        "startChar": 0,
+        "endLine": 96,
+        "endChar": 1
+      },
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d7c03b3c_844794fe",
         "filename": "lib/bdev/pvol/bdev_pvol.c",
         "patchSetId": 1
@@ -202,6 +400,30 @@
       "writtenOn": "2018-05-08T19:50:36Z",
       "side": 1,
       "message": "Just \"waitq\" will be more than enought as variable name.",
+      "range": {
+        "startLine": 110,
+        "startChar": 31,
+        "endLine": 110,
+        "endChar": 49
+      },
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d6826b2d_4c215101",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d7c03b3c_844794fe",
       "range": {
         "startLine": 110,
         "startChar": 31,
@@ -249,6 +471,24 @@
     },
     {
       "key": {
+        "uuid": "0ea73c8e_91cca45c",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "This function is called in the module init. For pvol, module init is asynchronous, here in this error condition I did not find anything in spdk which helps in returning error status in async type of module initialization. Could you please point me if any such thing is there in spdk? Till then I have put assert for safer side",
+      "parentUuid": "eaff01ee_9cbe350b",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "542f127b_3606d1bb",
         "filename": "lib/bdev/pvol/bdev_pvol.c",
         "patchSetId": 1
@@ -266,6 +506,24 @@
     },
     {
       "key": {
+        "uuid": "be4b4175_0f92ee84",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Done\nThis was required mainly for IO counters in per channel which are currently under debug flag. So as of now I have put memset in debug flag.",
+      "parentUuid": "542f127b_3606d1bb",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5249a51d_0e3b9aa5",
         "filename": "lib/bdev/pvol/bdev_pvol.c",
         "patchSetId": 1
@@ -277,6 +535,24 @@
       "writtenOn": "2018-05-08T22:07:00Z",
       "side": 1,
       "message": "Same as above - any error path that can actually be reached in practice (not due to programming error) needs to propagate the error back up the call stack, not just assert.",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8802eea_a52315f6",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "[CarryForward] - will work on this",
+      "parentUuid": "5249a51d_0e3b9aa5",
       "revId": "9bb45194318175859359aa83c8baf152913b2995",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -306,6 +582,30 @@
     },
     {
       "key": {
+        "uuid": "a34fdd25_91ffc266",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "For all the loops in the code I have mostly used \"iter\" (iterator) throughout to be more meaningful.",
+      "parentUuid": "4df78b02_e83ba694",
+      "range": {
+        "startLine": 188,
+        "startChar": 9,
+        "endLine": 188,
+        "endChar": 13
+      },
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "908bad12_266d33f0",
         "filename": "lib/bdev/pvol/bdev_pvol.c",
         "patchSetId": 1
@@ -317,6 +617,24 @@
       "writtenOn": "2018-05-08T20:33:19Z",
       "side": 1,
       "message": "I had another question about the context structure somwhere but this reminds me of it again.  If you set the ctxt element of the vbdev that you register to the address of the vbdev that\u0027s what you\u0027ll get back here as a parm and elsewhere.  Somewhere I think I saw some CONTAINER_OF macros that you might not need (simplify) if you don\u0027t really need the separate context structure.\n\nI certainly don\u0027t have a complete grasp of everything you\u0027re doing here yet so keep that in mind :)",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b71fd4e4_79735160",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 729,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "pvol_bdev_ctxt is the single entity which is allocated which has mainly generic bdev (spdk_bdev) and one pvol bdev specific data structure. We mainly register spdk_bdev and get back spdk_bdev itself but in the module sometimes we have pvol_bdev and we need to get back to spdk_bdev and at that time we are using ContainerOf at some places",
+      "parentUuid": "908bad12_266d33f0",
       "revId": "9bb45194318175859359aa83c8baf152913b2995",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -340,6 +658,24 @@
     },
     {
       "key": {
+        "uuid": "a6b0a16b_f7f8d28b",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 776,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "44745dba_e01a0391",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6f8f1b20_0cab8a27",
         "filename": "lib/bdev/pvol/bdev_pvol.c",
         "patchSetId": 1
@@ -357,6 +693,24 @@
     },
     {
       "key": {
+        "uuid": "461526f2_3c0e9b59",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 777,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "In future when DDF comes, per PD (per base bdev) there will be multiple elements like \"name\" for now. So I thought of just storing in json as separate as grouping one attribute in array of objects separately does not tell us the second or third attribute\u0027s value w.r.t first attribute. So just stored the bdev index to make the name unique in json.",
+      "parentUuid": "6f8f1b20_0cab8a27",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ef24684b_8e38cacd",
         "filename": "lib/bdev/pvol/bdev_pvol.c",
         "patchSetId": 1
@@ -368,6 +722,24 @@
       "writtenOn": "2018-05-08T22:07:00Z",
       "side": 1,
       "message": "Why are we writing something that is always \"NA\"? Can this just be removed for now?",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a3a395ba_56155aa4",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 795,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ef24684b_8e38cacd",
       "revId": "9bb45194318175859359aa83c8baf152913b2995",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -397,6 +769,30 @@
     },
     {
       "key": {
+        "uuid": "3ea0b916_d84d7fe1",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1144,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f91bb06d_6220b99e",
+      "range": {
+        "startLine": 1144,
+        "startChar": 20,
+        "endLine": 1144,
+        "endChar": 24
+      },
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "31027782_74d67b51",
         "filename": "lib/bdev/pvol/bdev_pvol.c",
         "patchSetId": 1
@@ -414,6 +810,24 @@
     },
     {
       "key": {
+        "uuid": "5f50ed87_5a7830a5",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1368,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "This function as of now is not dealing with other modules\u0027 functions and its return value is used inside the same module which expects 0 or non-zero. So for the time being -ENOMEM was not used as it is internal to module.",
+      "parentUuid": "31027782_74d67b51",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4a0ba8e9_0fc7cc27",
         "filename": "lib/bdev/pvol/bdev_pvol.c",
         "patchSetId": 1
@@ -425,6 +839,24 @@
       "writtenOn": "2018-05-08T20:33:19Z",
       "side": 1,
       "message": "I\u0027m not toally following the structure linkeage - specifically what\u0027s the benefit to having the context structure?",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "39f5d2eb_51b13e1b",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1425,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Explained the use of context structure in previous comments.",
+      "parentUuid": "4a0ba8e9_0fc7cc27",
       "revId": "9bb45194318175859359aa83c8baf152913b2995",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -454,6 +886,30 @@
     },
     {
       "key": {
+        "uuid": "9c460323_364f3fa4",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1444,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "703bad6b_bbdf7cdf",
+      "range": {
+        "startLine": 1444,
+        "startChar": 36,
+        "endLine": 1444,
+        "endChar": 57
+      },
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "03138759_57af601a",
         "filename": "lib/bdev/pvol/bdev_pvol.c",
         "patchSetId": 1
@@ -465,6 +921,24 @@
       "writtenOn": "2018-05-08T20:33:19Z",
       "side": 1,
       "message": "you\u0027ll want to use spdk_vbdev_register() here, see the latest passthru example.  I used the bdev version early on and can\u0027t remember exactly when it came back to bite me, not a huge deal but it wasn\u0027t easy to track down for a newbie",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dbca7d4c_d132af2c",
+        "filename": "lib/bdev/pvol/bdev_pvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1458,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Management of base bdevs for this pooled bdev is unique in the sense that in spdk_bdev_unregister, the base bdevs actually should not be removed. Also there are lot of per pd (per base bdev) parameters which are handled in this module itself and are not in spdk_bdev. So spdk_vbdev_register() was not used for now.",
+      "parentUuid": "03138759_57af601a",
       "revId": "9bb45194318175859359aa83c8baf152913b2995",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -488,6 +962,24 @@
     },
     {
       "key": {
+        "uuid": "4719c711_6b4627f8",
+        "filename": "lib/bdev/pvol/bdev_pvol.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bf0cdba0_384aacc6",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a3ba23d5_384de81e",
         "filename": "lib/bdev/pvol/bdev_pvol.h",
         "patchSetId": 1
@@ -499,6 +991,24 @@
       "writtenOn": "2018-05-08T19:50:36Z",
       "side": 1,
       "message": "Something could be added here.",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b066c1f_4375960b",
+        "filename": "lib/bdev/pvol/bdev_pvol.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Done\nRemoved this file",
+      "parentUuid": "a3ba23d5_384de81e",
       "revId": "9bb45194318175859359aa83c8baf152913b2995",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -522,6 +1032,24 @@
     },
     {
       "key": {
+        "uuid": "00ad3671_60f89d81",
+        "filename": "lib/bdev/pvol/bdev_pvol_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "330649c5_1608d134",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6d30e7a5_86dac454",
         "filename": "lib/bdev/pvol/bdev_pvol_internal.h",
         "patchSetId": 1
@@ -533,6 +1061,24 @@
       "writtenOn": "2018-05-08T22:07:00Z",
       "side": 1,
       "message": "Another reserved field that is probably not needed.",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "248d867f_4b4c1388",
+        "filename": "lib/bdev/pvol/bdev_pvol_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6d30e7a5_86dac454",
       "revId": "9bb45194318175859359aa83c8baf152913b2995",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -562,6 +1108,30 @@
     },
     {
       "key": {
+        "uuid": "c245fd81_5cf81594",
+        "filename": "lib/bdev/pvol/bdev_pvol_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f6dcf68b_47ccedfd",
+      "range": {
+        "startLine": 174,
+        "startChar": 42,
+        "endLine": 174,
+        "endChar": 66
+      },
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "24d98381_2d2c68aa",
         "filename": "lib/bdev/pvol/bdev_pvol_internal.h",
         "patchSetId": 1
@@ -573,6 +1143,24 @@
       "writtenOn": "2018-05-08T22:07:00Z",
       "side": 1,
       "message": "I\u0027m not sure that we actually need this waitq concept; the generic bdev layer should handle cases where resources aren\u0027t available as long as all modules correctly return -ENOMEM for that situation.\n\nCan you expand on the scenarios that this is handling? Maybe we can extend the ENOMEM handling if it isn\u0027t currently sufficient.",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17c0c83e_8029caa5",
+        "filename": "lib/bdev/pvol/bdev_pvol_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "In pooled volume case when submit function receives bdev_io, the actual IO can span across multiple base devices which results in sending multiple bdev_io. There are cases when bdev_io is not available (-ENOMEM), in that case the parent bdev_io stores the context where it should start again so that it will not start the split from beginning. This context is stored in bdev_io module specific context. If we return the bdev_io to bdev layer with -ENOMEM, then bdev layer itself does not distinguish between new bdev_io (first time) or older bdev_io (which has context of where to start) as bdev layer itself does not initialize module context for bdev_io before sending. So module will confuse where to start as there may be garbage values in bdev_io module context which will confuse pvol module. So module itself is maintaining this kind of bdev_io for now as it can know from context that it is new IO or older and should not start from beginning. Please let me know if I am not clear.",
+      "parentUuid": "24d98381_2d2c68aa",
       "revId": "9bb45194318175859359aa83c8baf152913b2995",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -596,6 +1184,24 @@
     },
     {
       "key": {
+        "uuid": "d3526c12_f632d829",
+        "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8053a96c_8c7ef926",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ceac9076_ac62beab",
         "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
         "patchSetId": 1
@@ -607,6 +1213,24 @@
       "writtenOn": "2018-05-08T22:07:00Z",
       "side": 1,
       "message": "If spdk_jsonrpc_begin_result() returns NULL, that could just mean that the user did not specify a request id, but we will skip the whole rest of the function.  This check should be right at the end of the RPC method before writing anything to w, not before the implementation of the method.",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "97fa5ea4_c7b3d390",
+        "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 358,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "If w is null, then did not want below body to execute so returned from here. Like does not want any memory allocation also like below calloc, so returned if w is null.",
+      "parentUuid": "ceac9076_ac62beab",
       "revId": "9bb45194318175859359aa83c8baf152913b2995",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -630,6 +1254,24 @@
     },
     {
       "key": {
+        "uuid": "6dcd022e_159180d8",
+        "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 398,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "61cea459_8b2e1271",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "10215116_64fa683f",
         "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
         "patchSetId": 1
@@ -641,6 +1283,24 @@
       "writtenOn": "2018-05-08T22:07:00Z",
       "side": 1,
       "message": "Please add handling for allocation failure here (not just assert).",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ef1a09f_251549e7",
+        "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 526,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "10215116_64fa683f",
       "revId": "9bb45194318175859359aa83c8baf152913b2995",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -670,6 +1330,30 @@
     },
     {
       "key": {
+        "uuid": "d2247856_fe0345ff",
+        "filename": "lib/bdev/pvol/bdev_pvol_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 529,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b55a2a6d_41bf37e7",
+      "range": {
+        "startLine": 529,
+        "startChar": 129,
+        "endLine": 529,
+        "endChar": 136
+      },
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b11fbb15_a051f9ee",
         "filename": "mk/spdk.modules.mk",
         "patchSetId": 1
@@ -687,6 +1371,24 @@
     },
     {
       "key": {
+        "uuid": "f70dc24d_a6f81f70",
+        "filename": "mk/spdk.modules.mk",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b11fbb15_a051f9ee",
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "53b2b431_a568ba94",
         "filename": "scripts/rpc.py",
         "patchSetId": 1
@@ -698,6 +1400,30 @@
       "writtenOn": "2018-05-08T22:07:00Z",
       "side": 1,
       "message": "Long argument names should have dashes, not underscores (Python argparse will convert to underscores automatically in the args object).",
+      "range": {
+        "startLine": 638,
+        "startChar": 28,
+        "endLine": 638,
+        "endChar": 38
+      },
+      "revId": "9bb45194318175859359aa83c8baf152913b2995",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c02e8ab_a507ed30",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 638,
+      "author": {
+        "id": 1014253
+      },
+      "writtenOn": "2018-06-11T16:07:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "53b2b431_a568ba94",
       "range": {
         "startLine": 638,
         "startChar": 28,
