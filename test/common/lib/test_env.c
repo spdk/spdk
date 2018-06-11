@@ -316,9 +316,3 @@ spdk_pci_addr_compare(const struct spdk_pci_addr *a1, const struct spdk_pci_addr
 
 	return 0;
 }
-
-uint32_t
-spdk_env_get_core_count(void)
-{
-	return 1;
-}

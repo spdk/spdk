@@ -168,6 +168,21 @@ spdk_free_thread(void)
 	pthread_mutex_unlock(&g_devlist_mutex);
 }
 
+uint32_t
+spdk_thread_get_count(void)
+{
+	struct spdk_thread *thread;
+	uint32_t count = 0;
+
+	pthread_mutex_lock(&g_devlist_mutex);
+	TAILQ_FOREACH(thread, &g_threads, tailq) {
+		count++;
+	}
+	pthread_mutex_unlock(&g_devlist_mutex);
+
+	return count;
+}
+
 struct spdk_thread *
 spdk_get_thread(void)
 {
