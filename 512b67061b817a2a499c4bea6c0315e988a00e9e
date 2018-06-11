@@ -16,6 +16,24 @@
       "revId": "512b67061b817a2a499c4bea6c0315e988a00e9e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "512d0e37_f1a42569",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 967,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-06-11T19:30:20Z",
+      "side": 1,
+      "message": "Good catch.  I fixed this up and uploaded a new version.",
+      "parentUuid": "687dc840_4ad2e918",
+      "revId": "512b67061b817a2a499c4bea6c0315e988a00e9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
