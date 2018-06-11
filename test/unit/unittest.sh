@@ -107,11 +107,12 @@ $valgrind $testdir/lib/iscsi/iscsi.c/iscsi_ut
 $valgrind $testdir/lib/iscsi/init_grp.c/init_grp_ut $testdir/lib/iscsi/init_grp.c/init_grp.conf
 $valgrind $testdir/lib/iscsi/portal_grp.c/portal_grp_ut $testdir/lib/iscsi/portal_grp.c/portal_grp.conf
 
+$valgrind $testdir/lib/thread/thread.c/thread_ut
+
 $valgrind $testdir/lib/util/bit_array.c/bit_array_ut
 $valgrind $testdir/lib/util/crc16.c/crc16_ut
 $valgrind $testdir/lib/util/crc32_ieee.c/crc32_ieee_ut
 $valgrind $testdir/lib/util/crc32c.c/crc32c_ut
-$valgrind $testdir/lib/util/io_channel.c/io_channel_ut
 $valgrind $testdir/lib/util/string.c/string_ut
 
 if [ $(uname -s) = Linux ]; then

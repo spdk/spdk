@@ -36,6 +36,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.mock.unittest.mk
 
-TEST_FILE = io_channel_ut.c
+TEST_FILE = thread_ut.c
 
 include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
