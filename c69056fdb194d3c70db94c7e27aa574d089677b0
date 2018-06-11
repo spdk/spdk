@@ -71,6 +71,29 @@
     },
     {
       "key": {
+        "uuid": "6ec20847_02df333d",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 63
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-06-11T08:44:50Z",
+      "side": 1,
+      "message": "Can this be just:\n$SPDK_BUILD_DIR/app/spdk_tgt/spdk_tgt -m 0x1 -p 0 -s 1024 -r /var/tmp/spdk.sock \u0026",
+      "range": {
+        "startLine": 17,
+        "startChar": 8,
+        "endLine": 18,
+        "endChar": 21
+      },
+      "revId": "c69056fdb194d3c70db94c7e27aa574d089677b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8e9cf99e_7e01c716",
         "filename": "test/json_config/common.sh",
         "patchSetId": 63
