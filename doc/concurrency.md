@@ -65,7 +65,7 @@ fundamental libraries in SPDK, for instance, don't do any message passing on
 their own and instead enumerate rules about when functions may be called in
 their documentation (e.g. @ref nvme). Most libraries, however, depend on SPDK's
 [io_channel](http://www.spdk.io/doc/io__channel_8h.html) infrastructure,
-located in `libspdk_util.a`. The io_channel infrastructure is an abstraction
+located in `libspdk_thread.a`. The io_channel infrastructure is an abstraction
 around a basic message passing framework and defines a few key abstractions.
 
 First, spdk_thread is an abstraction for a thread of execution and

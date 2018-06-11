@@ -35,7 +35,7 @@
 
 #include "spdk_cunit.h"
 
-#include "util/io_channel.c"
+#include "thread/thread.c"
 #include "common/lib/test_env.c"
 #include "common/lib/ut_multithread.c"
 
